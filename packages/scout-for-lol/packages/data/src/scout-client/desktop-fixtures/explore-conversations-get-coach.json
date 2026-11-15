@@ -1,0 +1,82 @@
+{
+  "route": "explore_conversations_get",
+  "note": "A champ-select answer with multiple-choice options. A client below contract 7 is sent the same message without coachOptions.",
+  "request": {
+    "conversationId": "5d2a7c90-3e41-4b8f-a6d5-1c9e0f8b7a23"
+  },
+  "response": {
+    "conversation": {
+      "id": "5d2a7c90-3e41-4b8f-a6d5-1c9e0f8b7a23",
+      "title": "Champ select options",
+      "preferredModel": null,
+      "origin": "desktop",
+      "shareToken": null,
+      "sharedLeafId": null,
+      "createdAt": "2026-11-14T18:01:02.000Z",
+      "updatedAt": "2026-11-14T18:01:40.000Z"
+    },
+    "messages": [
+      {
+        "id": "c1d2e3f4-0a1b-4c2d-8e3f-4a5b6c7d8e01",
+        "role": "user",
+        "parentId": null,
+        "siblingIds": ["c1d2e3f4-0a1b-4c2d-8e3f-4a5b6c7d8e01"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "What are my options for this pick?",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "coachOptions": null,
+        "preview": null,
+        "visualization": null,
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": [],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T18:01:02.000Z"
+      },
+      {
+        "id": "d2e3f4a5-1b2c-4d3e-9f40-5b6c7d8e9f02",
+        "role": "assistant",
+        "parentId": "c1d2e3f4-0a1b-4c2d-8e3f-4a5b6c7d8e01",
+        "siblingIds": ["d2e3f4a5-1b2c-4d3e-9f40-5b6c7d8e9f02"],
+        "versionIndex": 0,
+        "versionCount": 1,
+        "content": "Your team has no frontline yet, so here are three directions to weigh.",
+        "queryText": null,
+        "caveats": [],
+        "followUps": [],
+        "coachOptions": [
+          {
+            "label": "Ornn",
+            "rationale": "Adds the frontline your team lacks and scales with items."
+          },
+          {
+            "label": "Orianna",
+            "rationale": "Pairs with your jungler's engage and keeps your damage ranged."
+          },
+          {
+            "label": "Ahri",
+            "rationale": "Safe into their picks if you prefer mobility over a frontline."
+          }
+        ],
+        "preview": null,
+        "visualization": null,
+        "matchCards": [],
+        "loadoutCards": [],
+        "guildIds": [],
+        "attachments": [],
+        "trace": [],
+        "createdAt": "2026-11-14T18:01:40.000Z"
+      }
+    ]
+  },
+  "invalidRequests": [
+    {
+      "reason": "a missing conversation id",
+      "body": {}
+    }
+  ]
+}

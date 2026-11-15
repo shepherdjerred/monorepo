@@ -34,4 +34,36 @@ describe("Scout Discord messages", () => {
       "Only tracked matches are included.",
     );
   });
+
+  test("renders coach options as a compact numbered list between prose and caveats", () => {
+    const withOptions = ExploreMessageSchema.parse({
+      ...answer,
+      content: "Your team lacks a frontline.",
+      coachOptions: [
+        { label: "Ornn", rationale: "Adds the frontline you lack." },
+        { label: "Ahri *mid*", rationale: "Safe if you prefer mobility." },
+      ],
+    });
+
+    const [chunk] = exploreAnswerChunks(withOptions);
+
+    expect(chunk).toBe(
+      [
+        "Your team lacks a frontline.",
+        "",
+        "**Options**",
+        "1. **Ornn** - Adds the frontline you lack.",
+        String.raw`2. **Ahri \*mid\*** - Safe if you prefer mobility.`,
+        "",
+        "**Caveats**",
+        "- Only tracked matches are included.",
+      ].join("\n"),
+    );
+  });
+
+  test("an answer without options reads exactly as before", () => {
+    expect(exploreAnswerChunks({ ...answer, content: "Short." })[0]).toBe(
+      "Short.\n\n**Caveats**\n- Only tracked matches are included.",
+    );
+  });
 });

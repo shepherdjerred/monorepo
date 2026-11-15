@@ -909,6 +909,16 @@ const fn one() -> u32 {
     1
 }
 
+/// One option of a multiple-choice coach answer (contract 7).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CoachOption {
+    /// The short label.
+    pub label: String,
+    /// One line on why it is worth considering.
+    pub rationale: String,
+}
+
 /// One persisted turn, as `conversations/get` returns it.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -946,6 +956,10 @@ pub struct ExploreMessage {
     /// Suggested follow-up questions.
     #[serde(default)]
     pub follow_ups: Vec<String>,
+    /// Two to four options for a choice the player is making. A server below
+    /// contract 7 never sends the key.
+    #[serde(default)]
+    pub coach_options: Option<Vec<CoachOption>>,
     /// The answer's table.
     #[serde(default)]
     pub preview: Option<PreviewSummary>,

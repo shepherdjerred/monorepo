@@ -77,6 +77,65 @@ describe("enabledExploreSkills", () => {
     expect(names("discord")).toContain("loadouts");
   });
 
+  test("the live-game skills are enabled only for a turn that carries a game context", () => {
+    const LIVE = [
+      "champ-select-coach",
+      "pre-game-plan",
+      "in-game-coach",
+    ] as const;
+    for (const surface of ["web", "discord", "voice", "desktop"] as const) {
+      for (const name of LIVE) {
+        expect(skillsOn(surface), `${surface} ${name}`).not.toContain(name);
+      }
+      const gated = enabledExploreSkills({ liveGame: true, surface }).map(
+        (candidate) => candidate.name,
+      );
+      for (const name of LIVE) {
+        expect(gated, `${surface} ${name}`).toContain(name);
+      }
+    }
+    for (const name of LIVE) {
+      expect(skill(name).capability).toBe("live-game");
+      expect(skill(name).outputFor).toBeUndefined();
+    }
+    expect(
+      enabledExploreSkills({ liveGame: false, surface: "desktop" }).map(
+        (candidate) => candidate.name,
+      ),
+    ).not.toContain("in-game-coach");
+  });
+
+  test("live-game skills hold the content limit and the options rule", () => {
+    for (const name of [
+      "champ-select-coach",
+      "pre-game-plan",
+      "in-game-coach",
+    ]) {
+      const body = renderExploreSkillBody(skill(name), WEB_CONTEXT);
+      expect(body, name).toContain("Content limit");
+      expect(body, name).toContain("enemy cooldowns");
+      expect(body, name).toContain("summoner spell timers");
+      expect(body, name).toContain("fog");
+      expect(body, name).toContain("hidden champion-select identities");
+    }
+    const select = renderExploreSkillBody(
+      skill("champ-select-coach"),
+      WEB_CONTEXT,
+    );
+    expect(select).toContain("two to four options");
+    expect(select).toContain("never as an instruction");
+    expect(skill("champ-select-coach").tripwires.join(" ")).toContain(
+      "never commanded",
+    );
+  });
+
+  test("game-review covers the post-game section under the same limit", () => {
+    const body = renderExploreSkillBody(skill("game-review"), WEB_CONTEXT);
+    expect(body).toContain("`postgame` section");
+    expect(body).toContain("hidden champion-select identities");
+    expect(skill("game-review").capability).toBe("always");
+  });
+
   test("delivery skills reach only the surface they shape", () => {
     expect(skillsOn("voice")).toContain("voice-response");
     expect(skillsOn("web")).not.toContain("voice-response");

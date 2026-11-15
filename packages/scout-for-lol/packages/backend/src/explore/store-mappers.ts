@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  CoachOptionsSchema,
   ExploreConversationSchema,
   ExploreMatchCardSchema,
   ExploreLoadoutCardSchema,
@@ -46,6 +47,7 @@ export type MessageRow = {
   queryText: string | null;
   caveats: string;
   followUps: string;
+  coachOptions: string | null;
   preview: string | null;
   visualization: string | null;
   matchCards: string | null;
@@ -54,6 +56,11 @@ export type MessageRow = {
   trace: string | null;
   createdAt: Date;
 };
+
+/** The column a message's coach options are stored in; null when it has none. */
+export function coachOptionsColumn(options: ExploreMessage["coachOptions"]) {
+  return options === null ? null : JSON.stringify(options);
+}
 
 function parseJsonColumn<T>(
   raw: string | null,
@@ -109,6 +116,11 @@ export function toMessage(
     caveats: parseJsonColumn(row.caveats, StringArraySchema, "caveats") ?? [],
     followUps:
       parseJsonColumn(row.followUps, StringArraySchema, "followUps") ?? [],
+    coachOptions: parseJsonColumn(
+      row.coachOptions,
+      CoachOptionsSchema,
+      "coachOptions",
+    ),
     preview: parseJsonColumn(
       row.preview,
       ReportAiPreviewSummarySchema,

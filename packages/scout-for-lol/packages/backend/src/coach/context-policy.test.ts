@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { COACH_CONTEXT_SECTIONS } from "@scout-for-lol/data";
+import {
+  COACH_APP_INITIATION_SECTION,
+  COACH_APP_INITIATIONS,
+  COACH_CONTEXT_SECTIONS,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 import fixtures from "@scout-for-lol/data/scout-client/coach-context.fixtures.json" with { type: "json" };
 import {
@@ -134,10 +138,60 @@ describe("projectGameContext", () => {
 
   test("only player_typed is player-initiated", () => {
     expect([...PLAYER_INITIATIONS]).toEqual(["player_typed"]);
-    expect(INITIATIONS).toContain("app_initiated");
+    expect(INITIATIONS).toEqual(["player_typed", ...COACH_APP_INITIATIONS]);
   });
 
-  test("every other section passes exactly when the coach is on, whoever started the turn", () => {
+  test.each(COACH_APP_INITIATIONS)(
+    "live is refused on a %s turn under every flag, and never reaches the agent",
+    (initiation) => {
+      for (const flags of FLAG_STATES) {
+        const result = projectGameContext(
+          {
+            [COACH_APP_INITIATION_SECTION[initiation]]:
+              complete[COACH_APP_INITIATION_SECTION[initiation]],
+            live: complete["live"],
+          },
+          { initiation, flags },
+        );
+        if (!result.ok) throw new Error("the complete context was refused");
+        const { projection } = result;
+        expect(projection.accepted, JSON.stringify(flags)).not.toContain(
+          "live",
+        );
+        expect(projection.context?.live).toBeUndefined();
+        expect(projection.withheld).toContainEqual({
+          section: "live",
+          reason: flags.coachEnabled
+            ? "not_player_initiated"
+            : "coach_disabled",
+        });
+      }
+    },
+  );
+
+  test.each(COACH_APP_INITIATIONS)(
+    "a %s turn carries only the section it exists for",
+    (initiation) => {
+      const own = COACH_APP_INITIATION_SECTION[initiation];
+      const result = projectGameContext(
+        {
+          champSelect: complete["champSelect"],
+          pregame: complete["pregame"],
+          postgame: complete["postgame"],
+        },
+        { initiation, flags: { coachEnabled: true, liveAnswersEnabled: true } },
+      );
+      if (!result.ok) throw new Error("the complete context was refused");
+      expect(result.projection.accepted).toEqual([own]);
+      expect(
+        result.projection.withheld.every(
+          (entry) => entry.reason === "section_outside_initiation",
+        ),
+      ).toBe(true);
+    },
+  );
+
+  test("every other section passes exactly when the coach is on and the turn is one it belongs to", () => {
     everyCase(0xc_0a_c4, ({ raw, initiation, flags, label }) => {
       const { present, accepted, withheld, context } = projected(
         raw,
@@ -149,7 +203,12 @@ describe("projectGameContext", () => {
         COACH_CONTEXT_SECTIONS.filter((section) => section in raw),
       );
       for (const section of present.filter((name) => name !== "live")) {
-        expect(accepted.includes(section), label).toBe(flags.coachEnabled);
+        const belongs =
+          initiation === "player_typed" ||
+          COACH_APP_INITIATION_SECTION[initiation] === section;
+        expect(accepted.includes(section), label).toBe(
+          flags.coachEnabled && belongs,
+        );
       }
       // Accepted and withheld split what was sent, and only accepted
       // sections reach the agent, unchanged.
@@ -219,7 +278,12 @@ describe("projectGameContext", () => {
       "coach_disabled",
     ],
     [
-      "app_initiated",
+      "app_champ_select",
+      { coachEnabled: true, liveAnswersEnabled: true },
+      "not_player_initiated",
+    ],
+    [
+      "app_pregame",
       { coachEnabled: true, liveAnswersEnabled: true },
       "not_player_initiated",
     ],

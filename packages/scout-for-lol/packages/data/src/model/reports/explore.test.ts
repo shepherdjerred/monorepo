@@ -32,6 +32,7 @@ describe("ExploreAnswerSchema", () => {
         queryText: null,
         caveats: [],
         followUps: [],
+        coachOptions: null,
       }),
     ).toThrow();
     expect(
@@ -46,6 +47,7 @@ describe("ExploreAnswerSchema", () => {
           loadoutCards: [],
           caveats: [],
           followUps: [],
+          coachOptions: null,
         }),
       ).includeVisualization,
     ).toBe(true);
@@ -157,6 +159,7 @@ describe("parseExploreStreamEvent", () => {
     const {
       matchCards: _matchCards,
       loadoutCards: _loadoutCards,
+      coachOptions: _coachOptions,
       guildIds: _guildIds,
       attachments: _attachments,
       ...streamMessage
@@ -168,6 +171,7 @@ describe("parseExploreStreamEvent", () => {
     // A tab whose bundle predates a column parses this event strictly, so an
     // extra key means the terminal event never parses and the answer never
     // lands. Every field added to ExploreMessageSchema has to be omitted here.
+    expect(parsed).not.toHaveProperty("coachOptions");
     expect(parsed).not.toHaveProperty("guildIds");
     expect(parsed).not.toHaveProperty("attachments");
     expect(() => ExploreStreamMessageSchema.parse(message)).toThrow();

@@ -22,6 +22,7 @@ import {
   toConversation,
   toMessage,
   versionsOf,
+  coachOptionsColumn,
 } from "#src/explore/store-mappers.ts";
 import { deepestLeafFrom } from "#src/explore/tree.ts";
 import { graphemePrefix } from "@shepherdjerred/text";
@@ -377,6 +378,7 @@ export async function appendExploreAnswer(
       queryText: input.answer.queryText,
       caveats: JSON.stringify(input.answer.caveats),
       followUps: JSON.stringify(input.answer.followUps),
+      coachOptions: coachOptionsColumn(input.answer.coachOptions),
       // Running a query is not enough to persist a chart or table. The agent
       // must opt in via includeVisualization; ScoutQL stays on queryText.
       preview:

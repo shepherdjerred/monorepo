@@ -17,17 +17,18 @@ type ExploreProviderOptions = NonNullable<
 /**
  * Options every Explore provider call sends. Sol uses Ultrafast; Luna stays
  * on Fast, the fastest tier it offers. High reasoning stays the quality
- * setting the conversation already records.
+ * setting the conversation already records; an in-game coach turn lowers it.
  */
 export function exploreOpenAiProviderOptions(
   model: string,
   providerOptions: ExploreProviderOptions | undefined,
+  reasoningEffort: "low" | "medium" | "high" = "high",
 ): ExploreProviderOptions {
   return {
     ...providerOptions,
     openai: {
       ...providerOptions?.["openai"],
-      reasoningEffort: "high",
+      reasoningEffort,
       serviceTier: supportsOpenAiUltrafast(model) ? "ultrafast" : "fast",
     },
   };
@@ -38,12 +39,15 @@ export function exploreSpendMiddleware(input: {
   ownerId: string;
   runId: string;
   model: string;
+  /** Provider reasoning effort; every Explore turn but an in-game one runs high. */
+  reasoningEffort?: "low" | "medium" | "high";
 }): LanguageModelMiddleware {
+  const { reasoningEffort = "high", ...reservationInput } = input;
   return {
     wrapGenerate: async ({ params, model }) => {
       const inputBound = exploreProviderInputBound(params);
       const reservation = await reserveExploreCall({
-        ...input,
+        ...reservationInput,
         inputBound,
         maxOutputTokens: params.maxOutputTokens ?? 32_768,
         policy: exploreSpendPolicy(),
@@ -54,6 +58,7 @@ export function exploreSpendMiddleware(input: {
         providerOptions: exploreOpenAiProviderOptions(
           input.model,
           params.providerOptions,
+          reasoningEffort,
         ),
       });
       await settleExploreCall(reservation, result.usage, result.response?.id);
@@ -62,7 +67,7 @@ export function exploreSpendMiddleware(input: {
     wrapStream: async ({ params, model }) => {
       const inputBound = exploreProviderInputBound(params);
       const reservation = await reserveExploreCall({
-        ...input,
+        ...reservationInput,
         inputBound,
         maxOutputTokens: params.maxOutputTokens ?? 32_768,
         policy: exploreSpendPolicy(),
@@ -73,6 +78,7 @@ export function exploreSpendMiddleware(input: {
         providerOptions: exploreOpenAiProviderOptions(
           input.model,
           params.providerOptions,
+          reasoningEffort,
         ),
       });
       let responseId: string | undefined;
@@ -102,5 +108,5 @@ export function exploreSpendMiddleware(input: {
 
 export const withExploreSpend = (
   model: Parameters<typeof wrapLanguageModel>[0]["model"],
-  input: { ownerId: string; runId: string; model: string },
+  input: Parameters<typeof exploreSpendMiddleware>[0],
 ) => wrapLanguageModel({ model, middleware: exploreSpendMiddleware(input) });

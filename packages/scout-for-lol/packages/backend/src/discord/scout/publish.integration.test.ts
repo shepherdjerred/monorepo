@@ -82,6 +82,7 @@ async function savedAnswer(answerText = "Ahri wins most often.") {
       loadoutCards: [],
       caveats: ["Tracked matches only."],
       followUps: ["Which champion has the most games?"],
+      coachOptions: null,
     },
     preview: null,
     visualization: scoutTestVisualization,

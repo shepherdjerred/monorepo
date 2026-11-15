@@ -113,6 +113,7 @@ const successfulAgent = async (_params: ExploreAgentParams) => ({
     loadoutCards: [],
     caveats: ["Tracked matches only."],
     followUps: [],
+    coachOptions: null,
   },
   preview: null,
   visualization: scoutTestVisualization,
@@ -315,6 +316,7 @@ async function followingAgent(params: ExploreAgentParams) {
     answer: {
       ...base.answer,
       followUps: ["How does that change in ranked solo?"],
+      coachOptions: null,
     },
   };
 }

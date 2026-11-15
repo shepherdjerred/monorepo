@@ -1,4 +1,6 @@
 import {
+  COACH_APP_INITIATION_SECTION,
+  COACH_APP_INITIATIONS,
   COACH_CONTEXT_SECTIONS,
   CoachGameContextSchema,
   type CoachContextSection,
@@ -37,12 +39,17 @@ import { z } from "zod";
  *
  * - `player_typed`: free text the player typed in the composer, sent as the
  *   turn's question (`runs/start` with a non-null `question`).
- * - `app_initiated`: anything Scout started on its own, such as a pre-game
- *   plan at the start of a game. Never carries live state.
+ * - `app_champ_select`: Scout asked for advice because a pick or ban changed
+ *   (`COACH_APP_INITIATIONS`). Carries only `champSelect`.
+ * - `app_pregame`: Scout asked for the plan at the start of a game. Carries
+ *   only `pregame`.
+ *
+ * Neither app initiation is player-initiated, so neither ever carries `live`:
+ * the gate withholds it, and the app route refuses a request that names it.
  */
 export const CoachTurnInitiationSchema = z.enum([
   "player_typed",
-  "app_initiated",
+  ...COACH_APP_INITIATIONS,
 ]);
 export type CoachTurnInitiation = z.infer<typeof CoachTurnInitiationSchema>;
 
@@ -57,7 +64,10 @@ export type CoachPolicyFlags = {
 };
 
 export type CoachWithheldReason =
-  "coach_disabled" | "not_player_initiated" | "live_answers_disabled";
+  | "coach_disabled"
+  | "not_player_initiated"
+  | "section_outside_initiation"
+  | "live_answers_disabled";
 
 export type CoachContextProjection = {
   /** What the agent may see; null when every section was withheld. */
@@ -83,7 +93,18 @@ function withheldReason(
   flags: CoachPolicyFlags,
 ): CoachWithheldReason | null {
   if (!flags.coachEnabled) return "coach_disabled";
-  if (section !== "live") return null;
+  if (section === "live") return liveWithheldReason(initiation, flags);
+  // An app-started turn carries the one section it exists for and no other.
+  return initiation !== "player_typed" &&
+    COACH_APP_INITIATION_SECTION[initiation] !== section
+    ? "section_outside_initiation"
+    : null;
+}
+
+function liveWithheldReason(
+  initiation: CoachTurnInitiation,
+  flags: CoachPolicyFlags,
+): CoachWithheldReason | null {
   if (!PLAYER_INITIATIONS.has(initiation)) return "not_player_initiated";
   return flags.liveAnswersEnabled ? null : "live_answers_disabled";
 }

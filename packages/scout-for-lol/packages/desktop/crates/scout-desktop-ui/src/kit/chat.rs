@@ -387,6 +387,36 @@ fn tool_summary(rows: &[ToolRow]) -> Option<AnyElement> {
     )
 }
 
+/// The options an answer offers for a choice: a chip each, with the reason
+/// the answer gave under it. Picking one asks Scout about it; it records no
+/// decision.
+fn option_chips(row: &TranscriptRow, handler: &ControlHandler) -> Option<AnyElement> {
+    let tokens = theme();
+    (!row.options.is_empty()).then(|| {
+        h_flex()
+            .gap_3()
+            .flex_wrap()
+            .items_start()
+            .children(row.options.iter().map(|option| {
+                v_flex()
+                    .max_w(px(220.))
+                    .gap_1()
+                    .child(control_button(
+                        &option.control,
+                        ButtonStyle::Secondary,
+                        handler,
+                    ))
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(color(tokens.text_muted))
+                            .child(SharedString::from(option.rationale.clone())),
+                    )
+            }))
+            .into_any_element()
+    })
+}
+
 /// One transcript row: a question bubble, or an answer with its steps.
 #[derive(IntoElement)]
 struct Row {
@@ -422,6 +452,7 @@ impl RenderOnce for Row {
         let fade = stream_fade(row.streaming, cx.reduce_motion());
         let visuals = super::visuals::visuals(&row);
         let actions = row_actions(&row, &handler);
+        let options = option_chips(&row, &handler);
         v_flex()
             .w_full()
             .gap_2()
@@ -434,6 +465,7 @@ impl RenderOnce for Row {
                 )
             }))
             .children(visuals)
+            .children(options)
             .children(row.activity.map(|activity| {
                 div()
                     .text_sm()

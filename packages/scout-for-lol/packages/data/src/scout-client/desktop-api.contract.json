@@ -1,5 +1,5 @@
 {
-  "contractVersion": 6,
+  "contractVersion": 7,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],
@@ -38,6 +38,12 @@
     "explore_runs_start": {
       "method": "POST",
       "path": "/api/scout-client/v1/explore/runs/start",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_runs_start_app": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/runs/start-app",
       "scope": "explore",
       "response": "json"
     },

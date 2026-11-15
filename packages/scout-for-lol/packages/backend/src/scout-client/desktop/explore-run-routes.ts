@@ -1,4 +1,6 @@
 import {
+  CoachAppInitiationSchema,
+  CoachGameKeySchema,
   ExploreActiveRunSchema,
   ExploreRunObserveRequestSchema,
   ExploreRunOutcomeResultSchema,
@@ -10,6 +12,13 @@ import {
   type ScoutDesktopApiErrorCode,
 } from "@scout-for-lol/data";
 import { z } from "zod";
+import {
+  APP_TURN_QUESTIONS,
+  appTurnAllowed,
+  appTurnLimit,
+  appTurnsStarted,
+} from "#src/coach/app-turns.ts";
+import { prisma } from "#src/database/index.ts";
 import type { CoachTurnRecord } from "#src/coach/audit.ts";
 import {
   projectGameContext,
@@ -152,6 +161,7 @@ async function gateGameContext(
   return {
     deviceId: caller.device.deviceId,
     initiation,
+    gameKey: null,
     flags,
     projection: result.projection,
   };
@@ -185,6 +195,121 @@ const startRun: DesktopRouteHandler = async ({ caller, body }) => {
       turn,
       caller.guildIds,
       coach === null ? { surface: "desktop" } : { surface: "desktop", coach },
+    );
+    return desktopJsonResponse(ExploreActiveRunSchema.parse(run));
+  } catch (error) {
+    const refusal = classifyExploreStartError(error);
+    if (refusal === null) throw error;
+    return startRefusalResponse(refusal);
+  }
+};
+
+/**
+ * `runs/start-app`: a turn Scout starts itself, because a pick or ban changed
+ * or the game began. It is the one route that answers without a question the
+ * player wrote, so it is held tighter than `runs/start`:
+ *
+ * - the body names an initiation, never free text; the server words the
+ *   question;
+ * - the context may carry only the section that initiation exists for, and
+ *   never `live`: Riot's policy prohibits unprompted alerts from live state;
+ * - at most 4 champ-select turns per champ select and 1 pre-game turn per
+ *   game, by the client's `gameKey`, counted from the audit rows;
+ * - the turn runs under `scout_desktop_coach` like every coach turn. It is a
+ *   public-tier feature and never reads `scout_coach_proactive`.
+ */
+const AppTurnEnvelopeSchema = z.strictObject({
+  conversationId: z.uuid().nullable(),
+  initiation: CoachAppInitiationSchema,
+  gameKey: CoachGameKeySchema,
+  gameContext: z.unknown(),
+});
+
+function carriesLive(gameContext: unknown): boolean {
+  return (
+    typeof gameContext === "object" &&
+    gameContext !== null &&
+    Object.hasOwn(gameContext, "live")
+  );
+}
+
+const startAppTurn: DesktopRouteHandler = async ({ caller, body }) => {
+  const input = AppTurnEnvelopeSchema.safeParse(body);
+  if (!input.success) return invalidRequest();
+  const { conversationId, initiation, gameKey, gameContext } = input.data;
+  if (carriesLive(gameContext)) {
+    return desktopErrorResponse(
+      "invalid_game_context",
+      "A turn Scout starts never carries live game state.",
+    );
+  }
+  const flags: CoachPolicyFlags = {
+    coachEnabled: await isOwnerFlagEnabled(
+      "scout_desktop_coach",
+      caller.userId,
+      caller.guildIds,
+    ),
+    liveAnswersEnabled: await isOwnerFlagEnabled(
+      "scout_coach_live_answers",
+      caller.userId,
+      caller.guildIds,
+    ),
+  };
+  if (!flags.coachEnabled) {
+    return desktopErrorResponse(
+      "feature_disabled",
+      "Scout Coach is turned off for you.",
+    );
+  }
+  const result = projectGameContext(gameContext, { initiation, flags });
+  if (!result.ok) {
+    const where = result.issues.slice(0, 5).join(", ");
+    return desktopErrorResponse(
+      "invalid_game_context",
+      `The game context does not match the coach contract at ${where}.`.slice(
+        0,
+        MESSAGE_MAX_LENGTH,
+      ),
+    );
+  }
+  if (result.projection.withheld.length > 0) {
+    return desktopErrorResponse(
+      "invalid_game_context",
+      "This turn carries a section it does not exist for.",
+    );
+  }
+  const started = await appTurnsStarted(prisma, {
+    ownerId: caller.userId,
+    initiation,
+    gameKey,
+  });
+  if (!appTurnAllowed(initiation, started)) {
+    return desktopErrorResponse(
+      "rate_limited",
+      `Scout has already given its ${appTurnLimit(initiation).toString()} ${
+        initiation === "app_pregame" ? "plan" : "champion select suggestions"
+      } for this game.`,
+    );
+  }
+  try {
+    const run = await exploreRunManager.start(
+      { userId: caller.userId },
+      ExploreTurnRequestSchema.parse({
+        conversationId,
+        question: APP_TURN_QUESTIONS[initiation],
+        attach: { kind: "leaf" },
+      }),
+      caller.guildIds,
+      {
+        surface: "desktop",
+        coach: {
+          deviceId: caller.device.deviceId,
+          initiation,
+          gameKey,
+          flags,
+          projection: result.projection,
+        },
+      },
     );
     return desktopJsonResponse(ExploreActiveRunSchema.parse(run));
   } catch (error) {
@@ -291,6 +416,11 @@ export const DESKTOP_RUN_ROUTES: readonly {
   {
     path: SCOUT_DESKTOP_API_ROUTES.explore_runs_start.path,
     handler: startRun,
+    turn: true,
+  },
+  {
+    path: SCOUT_DESKTOP_API_ROUTES.explore_runs_start_app.path,
+    handler: startAppTurn,
     turn: true,
   },
   {

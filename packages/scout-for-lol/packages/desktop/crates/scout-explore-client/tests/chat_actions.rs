@@ -606,3 +606,40 @@ fn an_edit_cutoff_applies_only_to_the_conversation_it_runs_in() -> TestResult {
     assert_eq!(shown.messages.len(), 4, "the other conversation is whole");
     Ok(())
 }
+
+#[test]
+fn picking_an_option_asks_about_its_label_and_never_carries_the_game() -> TestResult {
+    let mut session = golden::coach_options()?;
+    let request = session
+        .choose_option(golden::COACH_ANSWER, 0)
+        .ok_or("the session refused a real option")?;
+    assert_eq!(request.question.as_deref(), Some("Tell me more about Ornn"));
+    assert_eq!(request.game_context, None);
+    Ok(())
+}
+
+#[test]
+fn an_option_that_is_not_on_the_answer_is_not_asked() -> TestResult {
+    let mut session = golden::coach_options()?;
+    assert!(session.choose_option(golden::COACH_ANSWER, 3).is_none());
+    assert!(session.choose_option(Uuid::from_u128(1), 0).is_none());
+    // The question is not an answer, so it has no options to pick.
+    assert!(
+        session
+            .choose_option(golden::BRANCHED_QUESTION, 0)
+            .is_none()
+    );
+    Ok(())
+}
+
+#[test]
+fn the_options_reach_the_window_as_chips_data() -> TestResult {
+    let parts = golden::coach_options()?.parts();
+    let options = parts
+        .transcript
+        .as_ref()
+        .and_then(|transcript| transcript.messages.last())
+        .map(|message| message.coach_options.len());
+    assert_eq!(options, Some(3));
+    Ok(())
+}

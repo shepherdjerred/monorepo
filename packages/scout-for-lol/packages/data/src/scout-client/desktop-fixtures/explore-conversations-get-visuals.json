@@ -26,6 +26,7 @@
         "queryText": null,
         "caveats": [],
         "followUps": [],
+        "coachOptions": null,
         "preview": null,
         "visualization": null,
         "matchCards": [],
@@ -46,6 +47,7 @@
         "queryText": null,
         "caveats": [],
         "followUps": [],
+        "coachOptions": null,
         "preview": {
           "columns": [
             {
@@ -214,6 +216,7 @@
         "queryText": null,
         "caveats": [],
         "followUps": [],
+        "coachOptions": null,
         "preview": null,
         "visualization": null,
         "matchCards": [],
@@ -234,6 +237,7 @@
         "queryText": null,
         "caveats": [],
         "followUps": [],
+        "coachOptions": null,
         "preview": {
           "columns": [
             {
@@ -395,6 +399,7 @@
         "queryText": null,
         "caveats": [],
         "followUps": [],
+        "coachOptions": null,
         "preview": null,
         "visualization": null,
         "matchCards": [],
@@ -415,6 +420,7 @@
         "queryText": null,
         "caveats": [],
         "followUps": [],
+        "coachOptions": null,
         "preview": null,
         "visualization": null,
         "matchCards": [
@@ -728,6 +734,7 @@
         "queryText": null,
         "caveats": [],
         "followUps": [],
+        "coachOptions": null,
         "preview": null,
         "visualization": null,
         "matchCards": [],
@@ -748,6 +755,7 @@
         "queryText": null,
         "caveats": [],
         "followUps": [],
+        "coachOptions": null,
         "preview": null,
         "visualization": null,
         "matchCards": [],

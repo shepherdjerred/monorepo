@@ -694,6 +694,27 @@ mod render {
         Ok(())
     }
 
+    /// A champion-select answer's options render as chips with their reasons,
+    /// and picking one sends the answer and the option's place, never text.
+    fn coach_options(harness: &mut Harness) -> Result<(), Error> {
+        let parts = golden::coach_options()?.parts();
+        harness.chat(parts)?;
+        harness.capture("chat-coach-options")?;
+        let sent = click_sends(harness, COACH_FIRST_OPTION)?;
+        if sent
+            != [chat_command(ChatCommand::ChooseOption {
+                message_id: golden::COACH_ANSWER,
+                index: 0,
+            })]
+        {
+            return Err(format!("the first option sent {sent:?}").into());
+        }
+        Ok(())
+    }
+
+    /// The first option chip of the golden champion-select answer.
+    const COACH_FIRST_OPTION: (f32, f32) = (334., 234.);
+
     /// The live game chip, above the composer while a game is live.
     const LIVE_GAME_CHIP: (f32, f32) = (330., 444.);
 
@@ -857,6 +878,7 @@ mod render {
         chat_states(&mut harness)?;
         visual_states(&mut harness)?;
         chat_actions(&mut harness)?;
+        coach_options(&mut harness)?;
         live_game_chip(&mut harness)?;
         status_pages(&mut harness)?;
 

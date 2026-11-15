@@ -1015,6 +1015,31 @@ digest rides just ahead of the question, quoting every device string as game
 data, and `read_game_state(section)` returns one projected section whole. It
 is never replayed with history.
 
+#### Coach skills, options and app-started turns
+
+Four skills ride on the context. `champ-select-coach`, `pre-game-plan` and
+`in-game-coach` sit under the `live-game` capability, which is enabled only for
+a turn whose projected context is non-null; `game-review` also covers a
+`postgame` section. Each states the content limit: nothing the player cannot
+see in their own client, so no enemy cooldown or summoner timers, no fog
+inference and no hidden champion-select identities. Champion-select advice is
+two to four `coachOptions` (a label and a one-line rationale each), a nullable
+field of the answer that every surface renders: web option cards, desktop chips
+and a compact Discord list. Desktop contract 7 adds it to `conversations/get`;
+the server leaves the key out for an older client, and the terminal stream
+event never carries it.
+
+`runs/start-app` is the one route on which Scout starts a turn itself, for
+champion-select advice when a pick or ban changes and for the plan at the first
+`InProgress`. It takes an initiation (`app_champ_select` or `app_pregame`), the
+client's `gameKey` and exactly the section that initiation names, never
+`live`, and the server words the question. It allows 4 champion-select turns and
+1 pre-game turn per game key, counted from `ScoutCoachTurn`. A champion-select
+or in-game context runs the in-game profile (`coach/execution-profile.ts`: low
+effort, 6 steps, 1,200 output tokens); a pre-game plan runs the Explore
+settings. These are public-tier features behind `scout_desktop_coach`; they do
+not read `scout_coach_proactive`.
+
 ### Raw observation archive
 
 Every persisted Scout Client observation is a durable S3 archive job, including

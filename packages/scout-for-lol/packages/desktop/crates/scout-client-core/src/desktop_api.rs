@@ -26,9 +26,11 @@ use crate::coach_context::GameContext;
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 6;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 7;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
+/// Path of the route that starts a turn Scout asks for itself.
+pub const EXPLORE_RUNS_START_APP_PATH: &str = "/api/scout-client/v1/explore/runs/start-app";
 /// Path of the route that stops a running turn.
 pub const EXPLORE_RUNS_STOP_PATH: &str = "/api/scout-client/v1/explore/runs/stop";
 /// Path of the route that lists the owner's running turns.
@@ -405,6 +407,89 @@ pub struct RunStartRequest {
     pub game_context: Option<GameContext>,
 }
 
+/// Why Scout started a turn without the player asking.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AppInitiation {
+    /// A pick or ban changed in champion select. Carries `champ_select` only.
+    AppChampSelect,
+    /// The game began. Carries `pregame` only.
+    AppPregame,
+}
+
+/// Request to `explore/runs/start-app`: a turn the app asks for. It has no
+/// question (the server words it) and no `live` section, which the server
+/// refuses on any turn the player did not start. Parsing holds the same line:
+/// a body naming another section, a bad game key or a context that breaks the
+/// coach contract is refused here as the server refuses it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(
+    rename_all = "camelCase",
+    deny_unknown_fields,
+    try_from = "RawAppTurnRequest"
+)]
+pub struct AppTurnRequest {
+    /// The conversation to continue, or none to start a new one.
+    pub conversation_id: Option<Uuid>,
+    /// Why the turn starts.
+    pub initiation: AppInitiation,
+    /// This champion select or game, which the server's per-game limit
+    /// counts by: 1 to 64 letters, digits, `_` or `-`.
+    pub game_key: String,
+    /// The one section the initiation carries.
+    pub game_context: GameContext,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct RawAppTurnRequest {
+    conversation_id: Option<Uuid>,
+    initiation: AppInitiation,
+    game_key: String,
+    game_context: GameContext,
+}
+
+impl TryFrom<RawAppTurnRequest> for AppTurnRequest {
+    type Error = String;
+
+    fn try_from(raw: RawAppTurnRequest) -> Result<Self, String> {
+        let key_ok = (1..=64).contains(&raw.game_key.len())
+            && raw
+                .game_key
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-');
+        if !key_ok {
+            return Err("gameKey is 1 to 64 letters, digits, _ or -".to_owned());
+        }
+        raw.game_context
+            .validate()
+            .map_err(|error| error.to_string())?;
+        let context = &raw.game_context;
+        let carries = |champ_select: bool, pregame: bool| {
+            context.champ_select.is_some() == champ_select
+                && context.pregame.is_some() == pregame
+                && context.live.is_none()
+                && context.postgame.is_none()
+        };
+        let allowed = match raw.initiation {
+            AppInitiation::AppChampSelect => carries(true, false),
+            AppInitiation::AppPregame => carries(false, true),
+        };
+        if !allowed {
+            return Err(
+                "an app-started turn carries only the section its initiation names, never live state"
+                    .to_owned(),
+            );
+        }
+        Ok(Self {
+            conversation_id: raw.conversation_id,
+            initiation: raw.initiation,
+            game_key: raw.game_key,
+            game_context: raw.game_context,
+        })
+    }
+}
+
 /// A turn the server is answering: the answer to `runs/start`, and each entry
 /// of `runs/active`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -624,17 +709,17 @@ mod tests {
     use serde_json::Value;
 
     use super::{
-        ActiveRun, AssetsResponse, AttachmentDiscardRequest, ConversationGetRequest,
-        ConversationListResponse, DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION,
-        DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError, DeviceScope,
-        EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH,
-        EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_PATH,
-        EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH,
-        EXPLORE_VISUALIZATION_PATH, EmptyRequest, ExploreStatusResponse, ModelsResponse,
-        OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE, PairingV2Response, PngResponse,
-        RouteResponseKind, RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest,
-        RunStopResponse, ScopeRequest, ScopeRequestResponse, SetLeafRequest, ShareResponse,
-        VisualizationRequest,
+        ActiveRun, AppInitiation, AppTurnRequest, AssetsResponse, AttachmentDiscardRequest,
+        ConversationGetRequest, ConversationListResponse, DESKTOP_CONTRACT_HEADER,
+        DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError,
+        DeviceScope, EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH,
+        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
+        EXPLORE_RUNS_START_APP_PATH, EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH,
+        EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EXPLORE_VISUALIZATION_PATH, EmptyRequest,
+        ExploreStatusResponse, ModelsResponse, OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE,
+        PairingV2Response, PngResponse, RouteResponseKind, RunActiveResponse, RunOutcomeResponse,
+        RunRequest, RunStartRequest, RunStopResponse, ScopeRequest, ScopeRequestResponse,
+        SetLeafRequest, ShareResponse, VisualizationRequest,
     };
     use crate::protocol::CreatePairingRequest;
 
@@ -689,6 +774,9 @@ mod tests {
     );
     const ATTACHMENTS_DISCARD: &str = include_str!(
         "../../../../data/src/scout-client/desktop-fixtures/explore-attachments-discard.json"
+    );
+    const RUNS_START_APP: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/explore-runs-start-app.json"
     );
     const START_ACTIONS: &str = include_str!(
         "../../../../data/src/scout-client/desktop-fixtures/explore-runs-start-actions.json"
@@ -777,6 +865,7 @@ mod tests {
                 ("explore_runs_active", EXPLORE_RUNS_ACTIVE_PATH),
                 ("explore_runs_outcome", EXPLORE_RUNS_OUTCOME_PATH),
                 ("explore_runs_start", EXPLORE_RUNS_START_PATH),
+                ("explore_runs_start_app", EXPLORE_RUNS_START_APP_PATH),
                 ("explore_runs_stop", EXPLORE_RUNS_STOP_PATH),
                 ("explore_runs_stream", EXPLORE_RUNS_STREAM_PATH),
                 ("explore_status", EXPLORE_STATUS_PATH),
@@ -817,6 +906,7 @@ mod tests {
             LIST,
             GET,
             RUNS_START,
+            RUNS_START_APP,
             RUNS_STOP,
             RUNS_ACTIVE,
             RUNS_OUTCOME,
@@ -841,6 +931,34 @@ mod tests {
     #[test]
     fn runs_start_fixture_parses_strictly() -> TestResult {
         check_route::<RunStartRequest, ActiveRun>(RUNS_START, "explore_runs_start")
+    }
+
+    #[test]
+    fn runs_start_app_fixture_parses_strictly() -> TestResult {
+        check_route::<AppTurnRequest, ActiveRun>(RUNS_START_APP, "explore_runs_start_app")
+    }
+
+    #[test]
+    fn the_app_route_refuses_what_it_never_takes() -> TestResult {
+        let fixture: Value = serde_json::from_str(RUNS_START_APP)?;
+        // A question and a player initiation are refused by the client's own
+        // strict types, as the server refuses them.
+        for case in fixture["invalidRequests"].as_array().ok_or("invalid")? {
+            let reason = case["reason"].as_str().unwrap_or("?");
+            let parsed = serde_json::from_value::<AppTurnRequest>(case["body"].clone());
+            if matches!(reason, "a question" | "a player-started initiation") {
+                assert!(parsed.is_err(), "{reason}");
+            }
+        }
+        assert_eq!(
+            serde_json::to_value(AppInitiation::AppChampSelect)?,
+            "app_champ_select"
+        );
+        assert_eq!(
+            serde_json::to_value(AppInitiation::AppPregame)?,
+            "app_pregame"
+        );
+        Ok(())
     }
 
     #[test]

@@ -49,10 +49,19 @@ import {
  *   gained: a request field changes nothing a client reads, a client that
  *   predates it never sends it, and the code it can be refused with is
  *   answered only to a client that sent one. The server deploys first.
+ * - 7: multiple-choice coach answers. A message in `conversations/get` may
+ *   carry `coachOptions` (2 to 4 labeled options); the server leaves the key
+ *   out for a client on an earlier version, whose strict message type would
+ *   refuse it. `runs/start-app` is the one route on which Scout starts a turn
+ *   itself (a pick or ban changed, or the game began): it takes no question,
+ *   only an initiation and the section that initiation may carry, never live
+ *   state. The server deploys first.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 6;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 7;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
+/** The first contract version whose messages may carry `coachOptions`. */
+export const SCOUT_DESKTOP_COACH_OPTIONS_CONTRACT_VERSION = 7;
 /** The first contract version that knows the `desktop` conversation origin. */
 export const SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION = 2;
 
@@ -118,6 +127,12 @@ export const SCOUT_DESKTOP_API_ROUTES = {
   explore_runs_start: {
     method: "POST",
     path: "/api/scout-client/v1/explore/runs/start",
+    scope: "explore",
+    response: "json",
+  },
+  explore_runs_start_app: {
+    method: "POST",
+    path: "/api/scout-client/v1/explore/runs/start-app",
     scope: "explore",
     response: "json",
   },
@@ -210,6 +225,7 @@ export const ScoutDesktopApiRouteSchema = z.enum([
   "explore_conversations_list",
   "explore_conversations_get",
   "explore_runs_start",
+  "explore_runs_start_app",
   "explore_runs_stop",
   "explore_runs_active",
   "explore_runs_outcome",
@@ -351,6 +367,7 @@ export const ScoutDesktopConversationGetResponseSchema = z.strictObject({
  * | Route          | Request                          | Response                              |
  * | -------------- | -------------------------------- | ------------------------------------- |
  * | `runs/start`   | `ScoutDesktopRunStartRequestSchema` | `ExploreActiveRunSchema`           |
+ * | `runs/start-app` | `ScoutDesktopAppTurnRequestSchema` (`coach-context.schema.ts`) | `ExploreActiveRunSchema` |
  * | `runs/stop`    | `ExploreRunObserveRequestSchema` | `ScoutDesktopRunStopResponseSchema`   |
  * | `runs/active`  | `ScoutDesktopEmptyRequestSchema` | `ScoutDesktopRunActiveResponseSchema` |
  * | `runs/outcome` | `ExploreRunObserveRequestSchema` | `ExploreRunOutcomeResultSchema`       |

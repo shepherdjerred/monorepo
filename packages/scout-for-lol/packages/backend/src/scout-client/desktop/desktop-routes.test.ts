@@ -27,6 +27,8 @@ import streamFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/exp
 import assetsFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-assets.json" with { type: "json" };
 import visualizationFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-visualization.json" with { type: "json" };
 import visualsFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-conversations-get-visuals.json" with { type: "json" };
+import appTurnFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-runs-start-app.json" with { type: "json" };
+import coachTranscriptFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/explore-conversations-get-coach.json" with { type: "json" };
 import coachFixtures from "@scout-for-lol/data/scout-client/coach-context.fixtures.json" with { type: "json" };
 import { exploreQuotaLimits } from "#src/config/dynamic.ts";
 
@@ -48,11 +50,13 @@ const mocks = vi.hoisted(() => ({
   subscribeRun: vi.fn(),
   loadVisualization: vi.fn(),
   renderChart: vi.fn(),
+  countCoachTurns: vi.fn(),
 }));
 
 vi.mock("#src/database/index.ts", () => ({
   prisma: {
     scoutClientDevice: { findUnique: mocks.findDevice },
+    scoutCoachTurn: { count: mocks.countCoachTurns },
     user: { findUniqueOrThrow: mocks.findUser },
     scoutClientPairing: {
       create: mocks.createPairing,
@@ -202,6 +206,7 @@ beforeEach(() => {
   resetDesktopStreamSlotsForTests();
   resetExploreRateLimitStateForTests();
   mocks.isPolicyEnabled.mockResolvedValue(true);
+  mocks.countCoachTurns.mockResolvedValue(0);
   mocks.findDevice.mockResolvedValue(device());
   mocks.findUser.mockResolvedValue({
     discordId: OWNER_ID,
@@ -348,6 +353,7 @@ describe("desktop Explore flag", () => {
       "explore_runs_active",
       "explore_runs_outcome",
       "explore_runs_start",
+      "explore_runs_start_app",
       "explore_runs_stop",
       "explore_runs_stream",
       "explore_status",
@@ -479,7 +485,14 @@ describe("desktop Explore read routes", () => {
     mocks.loadTranscript.mockResolvedValue(getFixture.response);
 
     const response = await send(
-      desktopRequest(GET_PATH, { body: { conversationId: CONVERSATION_ID } }),
+      desktopRequest(GET_PATH, {
+        body: { conversationId: CONVERSATION_ID },
+        headers: {
+          [SCOUT_DESKTOP_CONTRACT_HEADER]: String(
+            SCOUT_DESKTOP_CONTRACT_VERSION,
+          ),
+        },
+      }),
     );
 
     expect(response.status).toBe(200);
@@ -845,6 +858,7 @@ describe("a game context on runs/start", () => {
         coach: {
           deviceId: DEVICE_ID,
           initiation: "player_typed",
+          gameKey: null,
           flags: { coachEnabled: true, liveAnswersEnabled: true },
           projection: {
             context: liveTurn.gameContext,
@@ -1326,5 +1340,161 @@ describe("desktop chart and asset routes", () => {
     // Reads are counted apart, so a device out of renders still reads.
     const read = await send(desktopRequest(STATUS_PATH));
     expect(read.status).toBe(200);
+  });
+});
+
+describe("runs/start-app", () => {
+  const APP_PATH = SCOUT_DESKTOP_API_ROUTES.explore_runs_start_app.path;
+  const turn = appTurnFixture.request;
+  const pregame = {
+    conversationId: null,
+    initiation: "app_pregame",
+    gameKey: "g-1",
+    gameContext: {
+      pregame: z
+        .record(z.string(), z.unknown())
+        .parse(coachFixtures.valid[0]?.body)["pregame"],
+    },
+  };
+
+  function handed() {
+    return z
+      .tuple([
+        z.unknown(),
+        z.looseObject({ question: z.string() }),
+        z.unknown(),
+        z.looseObject({}),
+      ])
+      .parse(mocks.startRun.mock.calls[0]);
+  }
+
+  test("a champ-select turn starts with a question the server worded, and writes its game key", async () => {
+    mocks.startRun.mockResolvedValue(appTurnFixture.response);
+
+    const response = await send(desktopRequest(APP_PATH, { body: turn }));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(appTurnFixture.response);
+    const [, request, , context] = handed();
+    expect(request.question).toBe(
+      "Champion select changed. What are my options for my pick or ban?",
+    );
+    expect(context["surface"]).toBe("desktop");
+    expect(context["coach"]).toMatchObject({
+      deviceId: DEVICE_ID,
+      initiation: "app_champ_select",
+      gameKey: turn.gameKey,
+      projection: { accepted: ["champSelect"], withheld: [] },
+    });
+  });
+
+  test.each(appTurnFixture.invalidRequests)(
+    "refuses $reason before any run",
+    async ({ body }) => {
+      const response = await send(desktopRequest(APP_PATH, { body }));
+
+      expect(response.status).toBe(400);
+      expect(mocks.startRun).not.toHaveBeenCalled();
+    },
+  );
+
+  test("a live section is refused as invalid_game_context under every flag", async () => {
+    const live = z
+      .record(z.string(), z.unknown())
+      .parse(coachFixtures.valid[0]?.body)["live"];
+    for (const values of [
+      { coach: true, live: true },
+      { coach: true, live: false },
+      { coach: false, live: true },
+    ]) {
+      coachFlags(values);
+      for (const initiation of ["app_champ_select", "app_pregame"]) {
+        const response = await send(
+          desktopRequest(APP_PATH, {
+            body: { ...turn, initiation, gameContext: { live } },
+          }),
+        );
+        expect(response.status).toBe(400);
+        expect(await errorCode(response)).toBe("invalid_game_context");
+      }
+    }
+    expect(mocks.startRun).not.toHaveBeenCalled();
+    expect(mocks.countCoachTurns).not.toHaveBeenCalled();
+  });
+
+  test("the turn never reads scout_coach_proactive", async () => {
+    mocks.startRun.mockResolvedValue(appTurnFixture.response);
+
+    await send(desktopRequest(APP_PATH, { body: turn }));
+
+    expect(
+      mocks.isPolicyEnabled.mock.calls.map(([name]) => name),
+    ).not.toContain("scout_coach_proactive");
+  });
+
+  test("with the coach switched off the route answers feature_disabled", async () => {
+    coachFlags({ coach: false, live: true });
+
+    const response = await send(desktopRequest(APP_PATH, { body: turn }));
+
+    expect(response.status).toBe(503);
+    expect(await errorCode(response)).toBe("feature_disabled");
+    expect(mocks.startRun).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    [turn, 3, 200],
+    [turn, 4, 429],
+    [pregame, 0, 200],
+    [pregame, 1, 429],
+  ] as const)(
+    "%#: with %o turns already started for the game key, the next answers %i",
+    async (body, started, status) => {
+      mocks.countCoachTurns.mockResolvedValue(started);
+      mocks.startRun.mockResolvedValue(appTurnFixture.response);
+
+      const response = await send(desktopRequest(APP_PATH, { body }));
+
+      expect(response.status).toBe(status);
+      if (status === 429) {
+        expect(await errorCode(response)).toBe("rate_limited");
+        expect(mocks.startRun).not.toHaveBeenCalled();
+      }
+      expect(mocks.countCoachTurns).toHaveBeenCalledWith({
+        where: {
+          ownerId: OWNER_ID,
+          initiation: body.initiation,
+          gameKey: body.gameKey,
+        },
+      });
+    },
+  );
+});
+
+describe("coachOptions across contract versions", () => {
+  const GET = SCOUT_DESKTOP_API_ROUTES.explore_conversations_get.path;
+
+  test.each([
+    [SCOUT_DESKTOP_CONTRACT_VERSION, true],
+    [SCOUT_DESKTOP_CONTRACT_VERSION - 1, false],
+    [1, false],
+  ])("a client on contract %i receives the key: %s", async (version, kept) => {
+    mocks.loadTranscript.mockResolvedValue(coachTranscriptFixture.response);
+
+    const response = await send(
+      desktopRequest(GET, {
+        body: coachTranscriptFixture.request,
+        headers: { [SCOUT_DESKTOP_CONTRACT_HEADER]: String(version) },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const body = z
+      .object({ messages: z.array(z.record(z.string(), z.unknown())) })
+      .parse(await response.json());
+    for (const message of body.messages) {
+      expect("coachOptions" in message).toBe(kept);
+    }
+    if (kept) expect(body.messages[1]?.["coachOptions"]).toHaveLength(3);
   });
 });

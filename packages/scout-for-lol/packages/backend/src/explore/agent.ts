@@ -2,6 +2,7 @@ import { exploreAnalysisEnabled, exploreModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import { hydrateExploreLoadoutCards } from "#src/explore-match/loadout-view.ts";
 import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
+import { coachRunSettings } from "#src/coach/execution-profile.ts";
 import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
 import { gameContextDigest } from "#src/explore/tools/game-state-tools.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
@@ -43,7 +44,6 @@ import { scoutExploreTokensUsedTotal } from "#src/metrics/explore.ts";
 import {
   EXPLORE_MAX_HISTORY_TURNS,
   EXPLORE_MAX_OUTPUT_TOKENS,
-  EXPLORE_MAX_STEPS,
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
   type ExploreAnswer,
@@ -77,6 +77,11 @@ export type ExploreAgentResult = {
   matchCards: ExploreMatchCard[];
   loadoutCards: ExploreLoadoutCard[];
 };
+
+/** Whether the turn carries a game context the coach policy projected. */
+function hasGameContext(coach: ExploreAgentParams["coach"]): boolean {
+  return coach !== undefined && coach !== null;
+}
 
 export async function streamExploreAgent(
   params: ExploreAgentParams,
@@ -140,8 +145,12 @@ async function streamExploreAgentInternal(
     riotHistory: riotHistoryEnabled,
     clash: clashEnabled,
     hallOfFame: hallCapability !== null,
+    liveGame: hasGameContext(params.coach),
     surface: params.surface,
   };
+
+  // Chosen from what the projected context carries, never from the client.
+  const settings = coachRunSettings(params.coach);
 
   const asker = await loadExploreAsker({
     requesterId: params.requesterId,
@@ -157,6 +166,7 @@ async function streamExploreAgentInternal(
       ownerId: params.requesterId,
       runId: params.runId,
       model,
+      reasoningEffort: settings.reasoningEffort,
     }),
     maxRetries: 0,
     tools: createExploreTools({
@@ -172,7 +182,7 @@ async function streamExploreAgentInternal(
       clashEnabled,
       hallCapability,
     }),
-    stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
+    stopWhen: stepCountIs(settings.maxSteps),
     // Most current models (every GPT-5.x, most Claude) declare
     // supportsTemperature: false, and the provider rejects the parameter
     // outright: OpenAI answers a reasoning model's temperature with a 400
@@ -181,7 +191,7 @@ async function streamExploreAgentInternal(
     ...(getModel(model)?.capabilities.supportsTemperature === true
       ? { temperature: 0.2 }
       : {}),
-    maxOutputTokens: EXPLORE_MAX_OUTPUT_TOKENS,
+    maxOutputTokens: settings.maxOutputTokens,
     output: Output.object({ schema: ExploreAnswerWireSchema }),
     ...runtime.callOptions({
       workload: "scout.explore",

@@ -131,6 +131,17 @@ pub struct ChatAttachment {
     pub thumbnail: Option<String>,
 }
 
+/// One choice in a multiple-choice coach answer: shown as a chip the player
+/// can pick, with the reason the answer gave for it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChatCoachOption {
+    /// The short label on the chip.
+    pub label: String,
+    /// One line on why it is worth considering.
+    pub rationale: String,
+}
+
 /// One persisted message on the open branch.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -145,6 +156,8 @@ pub struct ChatMessage {
     pub tools: Vec<ChatToolStep>,
     /// Caveats under an answer.
     pub caveats: Vec<String>,
+    /// Two to four options the answer offers for a choice, or none.
+    pub coach_options: Vec<ChatCoachOption>,
     /// The answer's chart or table and its cards.
     pub visuals: ChatVisuals,
     /// Which version of its turn this is; none when the turn has one version.
@@ -271,6 +284,15 @@ pub enum ChatCommand {
         /// supervisor attaches its own latest snapshot, never one from the
         /// window, and none when no game is live.
         live_game: bool,
+    },
+    /// Pick one of the options an answer offered. The window names the
+    /// answer and the option's place, never text: the supervisor reads the
+    /// label from the saved answer and asks Scout about it, without the game.
+    ChooseOption {
+        /// The answer that offered the option.
+        message_id: Uuid,
+        /// The option's place among the answer's options, from 0.
+        index: u8,
     },
     /// Stop the running answer; Scout keeps what it has written.
     Stop,

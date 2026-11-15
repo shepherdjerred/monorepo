@@ -226,6 +226,39 @@ export const InterruptedQuestion: Story = {
   },
 };
 
+const COACH_ANSWER: ExploreMessage = ExploreMessageSchema.parse({
+  id: ANSWER_ID,
+  role: "assistant",
+  parentId: QUESTION_ID,
+  content:
+    "Your team has no frontline yet, so here are three directions to weigh. The pick is yours.",
+  coachOptions: [
+    {
+      label: "Ornn",
+      rationale: "Adds the frontline your team lacks and scales with items.",
+    },
+    {
+      label: "Orianna",
+      rationale: "Pairs with your jungler's engage and keeps damage ranged.",
+    },
+    {
+      label: "Ahri",
+      rationale:
+        "Safe into their picks if you prefer mobility over a frontline.",
+    },
+  ],
+  createdAt: "2026-08-14T12:00:30.000Z",
+});
+
+/** A champion-select answer: options to weigh, never a command. */
+export const CoachOptions: Story = {
+  args: {
+    messages: [QUESTION, COACH_ANSWER],
+    turnActive: false,
+    actions: ACTIONS,
+  },
+};
+
 export const AssistantTurnAlone: Story = {
   args: { messages: [] },
   render: () => (

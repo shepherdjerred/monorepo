@@ -1,0 +1,167 @@
+{
+  "route": "explore_runs_start_app",
+  "note": "Scout starts these turns itself: no question, no live section. 4 per champ select, 1 per game.",
+  "request": {
+    "conversationId": null,
+    "initiation": "app_champ_select",
+    "gameKey": "cs-2026-11-14T18-00-31Z",
+    "gameContext": {
+      "champSelect": {
+        "phase": "BAN_PICK",
+        "localCellId": 2,
+        "myTeam": [
+          {
+            "cellId": 0,
+            "championId": 54,
+            "assignedRole": "top"
+          },
+          {
+            "cellId": 2,
+            "championId": 0,
+            "assignedRole": "middle"
+          }
+        ],
+        "theirTeam": [
+          {
+            "cellId": 5,
+            "championId": 64
+          }
+        ],
+        "myBans": [157],
+        "theirBans": [238]
+      }
+    }
+  },
+  "response": {
+    "runId": "8e1f3a52-6c7d-4b90-a1e2-3f4a5b6c7d80",
+    "conversationId": "5d2a7c90-3e41-4b8f-a6d5-1c9e0f8b7a23",
+    "questionMessageId": "c1d2e3f4-0a1b-4c2d-8e3f-4a5b6c7d8e01",
+    "leafIdAtStart": null,
+    "versionCountAtStart": 0,
+    "startedAt": "2026-11-14T18:01:02.000Z"
+  },
+  "invalidRequests": [
+    {
+      "reason": "a live section on a champ-select turn",
+      "body": {
+        "conversationId": null,
+        "initiation": "app_champ_select",
+        "gameKey": "cs-1",
+        "gameContext": {
+          "live": {
+            "game": {
+              "mode": "CLASSIC",
+              "map": "Map11",
+              "gameTimeSecs": 10
+            },
+            "own": {
+              "gold": 500,
+              "maxHealth": 600,
+              "health": 600,
+              "resource": "MANA",
+              "maxResource": 300,
+              "currentResource": 300,
+              "armor": 30,
+              "magicResist": 30,
+              "attackDamage": 60,
+              "abilityPower": 0,
+              "attackSpeed": 0.7,
+              "moveSpeed": 340,
+              "critChance": 0
+            },
+            "participants": [],
+            "eventCount": 0,
+            "latestEvent": null
+          }
+        }
+      }
+    },
+    {
+      "reason": "a pregame section on a champ-select turn",
+      "body": {
+        "conversationId": null,
+        "initiation": "app_champ_select",
+        "gameKey": "cs-1",
+        "gameContext": {
+          "pregame": {
+            "game": {
+              "mode": "CLASSIC",
+              "map": "Map11"
+            },
+            "participants": []
+          }
+        }
+      }
+    },
+    {
+      "reason": "a champ-select section on a pre-game turn",
+      "body": {
+        "conversationId": null,
+        "initiation": "app_pregame",
+        "gameKey": "g-1",
+        "gameContext": {
+          "champSelect": {
+            "phase": null,
+            "localCellId": 0,
+            "myTeam": [],
+            "theirTeam": [],
+            "myBans": [],
+            "theirBans": []
+          }
+        }
+      }
+    },
+    {
+      "reason": "a question",
+      "body": {
+        "conversationId": null,
+        "initiation": "app_pregame",
+        "gameKey": "g-1",
+        "question": "free text",
+        "gameContext": {
+          "pregame": {
+            "game": {
+              "mode": "CLASSIC",
+              "map": "Map11"
+            },
+            "participants": []
+          }
+        }
+      }
+    },
+    {
+      "reason": "a player-started initiation",
+      "body": {
+        "conversationId": null,
+        "initiation": "player_typed",
+        "gameKey": "g-1",
+        "gameContext": {
+          "pregame": {
+            "game": {
+              "mode": "CLASSIC",
+              "map": "Map11"
+            },
+            "participants": []
+          }
+        }
+      }
+    },
+    {
+      "reason": "a game key with a character outside the allowed set",
+      "body": {
+        "conversationId": null,
+        "initiation": "app_pregame",
+        "gameKey": "has space",
+        "gameContext": {
+          "pregame": {
+            "game": {
+              "mode": "CLASSIC",
+              "map": "Map11"
+            },
+            "participants": []
+          }
+        }
+      }
+    }
+  ]
+}

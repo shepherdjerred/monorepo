@@ -18,6 +18,32 @@ const ExploreFollowUpSchema = z
     "Follow-up questions the user can ask next. Phrased from the user's perspective (e.g. 'Show win rates for ADC'), never as the bot asking the user.",
   );
 
+export const COACH_OPTIONS_MIN = 2;
+export const COACH_OPTIONS_MAX = 4;
+
+/**
+ * One choice in a multiple-choice coach suggestion: a short label the player
+ * can pick and one line on why it is worth considering. Options are offered,
+ * never commanded, so the rationale argues for the option rather than
+ * ordering it.
+ */
+export const CoachOptionSchema = z
+  .object({
+    label: z.string().trim().min(1).max(60),
+    rationale: z.string().trim().min(1).max(200),
+  })
+  .strict();
+export type CoachOption = z.infer<typeof CoachOptionSchema>;
+
+/** Two to four options; a single option is advice, not a choice. */
+export const CoachOptionsSchema = z
+  .array(CoachOptionSchema)
+  .min(COACH_OPTIONS_MIN)
+  .max(COACH_OPTIONS_MAX);
+
+const COACH_OPTIONS_DESCRIPTION =
+  "Two to four labeled options with a short rationale each, for a champion-select or pre-game choice the player makes. Null for every other answer.";
+
 /**
  * The agent's structured answer for one turn.
  *
@@ -80,6 +106,12 @@ export const ExploreAnswerSchema = z
     caveats: z.array(z.string().trim().min(1).max(300)).max(5).default([]),
     /** Suggested next questions, offered as chips in the UI. */
     followUps: z.array(ExploreFollowUpSchema).max(3).default([]),
+    /**
+     * Multiple-choice suggestions for a choice the player is making, such as
+     * a champion pick. Null unless the turn offers options; a client that
+     * predates the field never receives it (desktop contract 7).
+     */
+    coachOptions: CoachOptionsSchema.nullable().default(null),
   })
   .strict();
 
@@ -122,5 +154,8 @@ export const ExploreAnswerWireSchema = z
     loadoutCards: ExploreLoadoutCardRequestsSchema,
     caveats: z.array(z.string().trim().min(1).max(300)).max(5),
     followUps: z.array(ExploreFollowUpSchema).max(3),
+    coachOptions: CoachOptionsSchema.nullable().describe(
+      COACH_OPTIONS_DESCRIPTION,
+    ),
   })
   .strict();
