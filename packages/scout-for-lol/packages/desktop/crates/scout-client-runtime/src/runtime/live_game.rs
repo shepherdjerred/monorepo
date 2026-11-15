@@ -6,11 +6,14 @@ use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics,
 };
 use scout_client_core::lcu::LiveClient;
-use scout_client_core::live::recording::{
-    LiveRecorder, LocalOnly, RECORDINGS_FILE, RecordingStore,
-};
+use scout_client_core::live::recording::{LiveRecorder, RECORDINGS_FILE, RecordingStore};
 use scout_client_core::live::session::LiveGameSession;
+use scout_client_core::live::upload::{OutboxHandoff, UploadContext};
+use scout_client_core::outbox::ObservationOutbox;
+use std::collections::HashMap;
+use std::sync::Arc;
 
+use super::gameflow::IN_PROGRESS_GAME_KEY;
 use super::paths::data_directory;
 use super::state::{StateHub, update_state};
 
@@ -18,12 +21,14 @@ use super::state::{StateHub, update_state};
 /// the two-second live-data cadence.
 pub(super) struct LiveGame {
     /// Absent when the loopback client could not be built.
-    session: Option<LiveGameSession<LiveClient, LocalOnly>>,
+    session: Option<LiveGameSession<LiveClient, OutboxHandoff>>,
+    /// What the hand-off needs to know when a game ends.
+    upload: UploadContext,
     last_problem: Option<String>,
 }
 
 impl LiveGame {
-    pub(super) fn new(client: Option<LiveClient>, diagnostics: &Diagnostics) -> Self {
+    pub(super) fn new(client: Option<LiveClient>, diagnostics: &Arc<Diagnostics>) -> Self {
         let recorder = open_recorder().map_or_else(
             |problem| {
                 record(
@@ -36,14 +41,39 @@ impl LiveGame {
             },
             Some,
         );
+        let upload = UploadContext::default();
+        let handoff = OutboxHandoff::new(
+            upload.clone(),
+            env!("CARGO_PKG_VERSION"),
+            Arc::clone(diagnostics),
+        );
         Self {
-            session: client.map(|client| LiveGameSession::new(client, recorder, LocalOnly)),
+            session: client.map(|client| LiveGameSession::new(client, recorder, handoff)),
+            upload,
             last_problem: None,
         }
     }
 
     /// Poll for the current gameflow phase and publish the result.
-    pub(super) async fn tick(&mut self, state: &StateHub, diagnostics: &Diagnostics) {
+    ///
+    /// `outbox` is the paired device's outbox, or `None` while unpaired, in
+    /// which case a finished recording stays on this device. `payloads` holds
+    /// the observer and the game in progress, for the recording's envelope.
+    pub(super) async fn tick(
+        &mut self,
+        state: &StateHub,
+        diagnostics: &Diagnostics,
+        outbox: Option<&ObservationOutbox>,
+        payloads: &HashMap<String, Vec<u8>>,
+    ) {
+        let text = |key: &str| {
+            payloads
+                .get(key)
+                .and_then(|bytes| std::str::from_utf8(bytes).ok())
+        };
+        self.upload.set_outbox(outbox.cloned());
+        self.upload
+            .observe(text("observer"), text(IN_PROGRESS_GAME_KEY));
         let Some(session) = &mut self.session else {
             return;
         };

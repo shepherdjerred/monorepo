@@ -38,6 +38,7 @@ import {
   startAcceptedClientMatches,
 } from "./ingress.ts";
 import { ClientBindingReconciliationPending } from "./late-binding.ts";
+import { ScoutClientLiveRecordingRefused } from "./live-recording/live-recording.ts";
 import { MAX_REPLAY_BYTES, uploadReplay } from "./replay-upload.ts";
 import { ReplayUploadError } from "./replay/upload-result.ts";
 import { drainRequestBody } from "./replay/drain.ts";
@@ -398,6 +399,11 @@ function typedErrorResponse(error: unknown): Response | null {
   }
   if (error instanceof ScoutClientObservationConflict) {
     return jsonResponse({ error: "observation_conflict" }, 409);
+  }
+  if (error instanceof ScoutClientLiveRecordingRefused) {
+    // 422 is a plain failure to every released client: the outbox keeps the
+    // batch and nothing about it reads as revocation or deferral.
+    return jsonResponse(error.body(), 422);
   }
   if (error instanceof ClientBindingReconciliationPending) {
     // The observations are durable; the outbox keeps the batch and retries

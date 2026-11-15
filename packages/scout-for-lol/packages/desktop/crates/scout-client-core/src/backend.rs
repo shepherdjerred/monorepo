@@ -543,10 +543,58 @@ fn rejection(status: u16, body: &str) -> BackendError {
     {
         return BackendError::UpgradeRequired(refusal);
     }
+    if status == RECORDING_REFUSED_STATUS
+        && let Ok(refusal) = serde_json::from_str::<RecordingRefusal>(body)
+        && refusal.error == "live_game_recording_refused"
+    {
+        return BackendError::RecordingRefused(refusal);
+    }
     BackendError::Rejected {
         status,
         message: sanitize_detail(body),
     }
+}
+
+/// The status of a `live_game_recording_refused` answer.
+pub const RECORDING_REFUSED_STATUS: u16 = 422;
+
+/// Why the server refused a live game recording.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RecordingRefusalReason {
+    /// Over the payload cap.
+    TooLarge,
+    /// A key that names a player or other withheld data.
+    ForbiddenKey,
+    /// Not the allowlisted shape.
+    InvalidShape,
+}
+
+impl RecordingRefusalReason {
+    /// The reason as the server spells it.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::TooLarge => "too_large",
+            Self::ForbiddenKey => "forbidden_key",
+            Self::InvalidShape => "invalid_shape",
+        }
+    }
+}
+
+/// The server's typed refusal of one `live_game_recording`. It is terminal for
+/// that observation: resending the same bytes can never succeed.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RecordingRefusal {
+    /// Always `live_game_recording_refused`; anything else is not this refusal.
+    pub error: String,
+    /// Why it was refused.
+    pub reason: RecordingRefusalReason,
+    /// The refused observation.
+    pub observation_id: Uuid,
+    /// A key name, path or size from the server; never a value.
+    pub detail: String,
 }
 
 /// Scout backend boundary failure.
@@ -572,6 +620,9 @@ pub enum BackendError {
         .0.minimum_version
     )]
     UpgradeRequired(ClientUpgradeRequired),
+    /// Server refused one recording for good.
+    #[error("Scout backend refused a live game recording: {}", .0.reason.as_str())]
+    RecordingRefused(RecordingRefusal),
     /// Local replay could not be opened or inspected.
     #[error("local replay file could not be read: {0}")]
     ReplayFile(std::io::Error),
@@ -596,6 +647,7 @@ impl BackendError {
         match self {
             Self::Rejected { status, .. } => Some(*status),
             Self::UpgradeRequired(_) => Some(CLIENT_UPGRADE_REQUIRED_STATUS),
+            Self::RecordingRefused(_) => Some(RECORDING_REFUSED_STATUS),
             Self::Request(error) => error.status().map(|status| status.as_u16()),
             _ => None,
         }
@@ -712,6 +764,24 @@ mod tests {
         revocation_is_complete_without_receipt, scope_granted_from_refusal,
     };
     use crate::desktop_api::DesktopApiErrorCode;
+
+    #[test]
+    fn a_typed_recording_refusal_is_recognised_and_other_422s_are_not() {
+        let body = r#"{"error":"live_game_recording_refused","reason":"too_large","observationId":"4fa2a856-53af-42a4-85af-5cc085a942a3","detail":"2000000 bytes"}"#;
+        assert!(matches!(
+            super::rejection(422, body),
+            BackendError::RecordingRefused(refusal)
+                if refusal.reason == super::RecordingRefusalReason::TooLarge
+        ));
+        assert!(matches!(
+            super::rejection(422, r#"{"error":"something_else"}"#),
+            BackendError::Rejected { status: 422, .. }
+        ));
+        assert!(matches!(
+            super::rejection(500, body),
+            BackendError::Rejected { status: 500, .. }
+        ));
+    }
 
     #[test]
     fn an_expired_owner_login_means_the_scope_is_held() {
