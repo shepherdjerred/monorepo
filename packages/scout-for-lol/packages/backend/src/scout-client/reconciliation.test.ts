@@ -102,3 +102,16 @@ test("an Arena post-game row completes as unsupported_mode and is not retried", 
     data: expect.objectContaining({ recoveryComplete: true }),
   });
 });
+
+test("a skipped post-game row completes as terminal and is not retried", async () => {
+  mocks.findMany.mockResolvedValue([row("skipped-obs")]);
+  mocks.project.mockResolvedValue("skipped");
+
+  await expect(reconcileAcceptedClientEvidence(now)).resolves.toBe(1);
+
+  expect(mocks.start).not.toHaveBeenCalled();
+  expect(mocks.update).toHaveBeenLastCalledWith({
+    where: { observationId: "skipped-obs" },
+    data: expect.objectContaining({ recoveryComplete: true }),
+  });
+});

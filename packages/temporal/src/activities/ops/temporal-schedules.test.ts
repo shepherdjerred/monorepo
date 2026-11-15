@@ -85,6 +85,16 @@ describe("Temporal current schedule health", () => {
     ).toBe(true);
     expect(scheduleOutcome(observation([]), now).unknown).toBe(true);
   });
+  test("a newly provisioned schedule that has never run is not unknown", () => {
+    expect(
+      scheduleOutcome(
+        observation([], {
+          numActionsTaken: 0,
+        }),
+        now,
+      ).unknown,
+    ).toBe(false);
+  });
   test("paused inventory preserves note and failures without inventing a new action", () => {
     const mapped = mapTemporalSchedules(
       [

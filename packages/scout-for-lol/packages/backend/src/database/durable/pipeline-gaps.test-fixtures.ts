@@ -36,6 +36,7 @@ export type OwedMatch = {
     filters?: string | null;
     isMuted?: boolean;
     createdTime?: Date;
+    updatedTime?: Date;
   } | null;
 };
 
@@ -99,7 +100,7 @@ export async function seedOwedMatch(
       filters: match.subscription?.filters ?? null,
       isMuted: match.subscription?.isMuted ?? false,
       createdTime: match.subscription?.createdTime ?? earlier,
-      updatedTime: earlier,
+      updatedTime: match.subscription?.updatedTime ?? earlier,
     },
   });
 }

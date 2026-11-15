@@ -32,7 +32,10 @@ export type StoredParticipantIdentity = z.input<
 export function participantKindOf(
   participant: StoredParticipantIdentity,
 ): ParticipantKind {
-  return participant.participantKind ?? "player";
+  if (participant.participantKind !== undefined) {
+    return participant.participantKind;
+  }
+  return participant.puuid === "BOT" ? "bot" : "player";
 }
 
 /** A validated row in the shared identity vocabulary of Scout results. */
@@ -121,10 +124,11 @@ export function storedIdentityIssue(
         : "A player row requires a 78-character Riot PUUID";
     }
     case "bot": {
-      return participant.puuid === null &&
-        participant.leagueClientUuid === undefined
-        ? null
-        : "A bot row carries no identity";
+      const validBot =
+        (participant.puuid === null ||
+          (!scoutBuilt && participant.puuid === "BOT")) &&
+        participant.leagueClientUuid === undefined;
+      return validBot ? null : "A bot row carries no identity";
     }
     case "unresolved": {
       return participant.puuid === null

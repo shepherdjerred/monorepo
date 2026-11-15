@@ -149,6 +149,19 @@ describe("countUnmintedLivePostmatchMatches", () => {
     expect(await unminted()).toBe(1);
   });
 
+  test("does not count a match whose subscription was updated after match completion", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_9361");
+    await seedOwedMatch(
+      prisma,
+      owed(matchId, {
+        subscription: {
+          updatedTime: new Date(NOW),
+        },
+      }),
+    );
+    expect(await unminted()).toBe(0);
+  });
+
   test("a prematch intent is not a report", async () => {
     await seedOwedMatch(prisma, owed(RiotMatchIdSchema.parse("NA1_9312")));
     await seedIntent(prisma, {

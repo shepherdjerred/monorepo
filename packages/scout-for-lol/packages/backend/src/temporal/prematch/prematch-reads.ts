@@ -167,9 +167,15 @@ export async function discoverPrematchGames(): Promise<ScoutPrematchScanResult> 
     .toSorted(compareByLastCheckedAt);
   const polled = eligible.slice(0, MAX_PLAYERS_PER_RUN);
 
+  const startTime = Date.now();
+  const TIME_BUDGET_MS = 60_000;
   const games = new Map<string, ScoutPrematchGameRef>();
   let sawEveryPolledAccount = true;
   for (const { config } of polled) {
+    if (Date.now() - startTime > TIME_BUDGET_MS) {
+      sawEveryPolledAccount = false;
+      break;
+    }
     if (spectatorCircuit.shouldSkip()) {
       sawEveryPolledAccount = false;
       continue;
