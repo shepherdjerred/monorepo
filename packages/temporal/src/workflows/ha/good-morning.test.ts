@@ -1,6 +1,10 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import type { EntityState } from "@shepherdjerred/home-assistant";
-import { ApplicationFailure } from "@temporalio/common";
+import {
+  ActivityFailure,
+  ApplicationFailure,
+  RetryState,
+} from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { OutcomeRecord } from "#activities/outcome.ts";
@@ -207,11 +211,9 @@ async function runWorker<T>(
   );
 }
 
-async function expectNonRetryableApplicationFailure(
+async function workflowFailureCause(
   execution: Promise<unknown>,
-  expectedType: string,
-  expectedMessage: string,
-): Promise<void> {
+): Promise<unknown> {
   let failure: unknown;
   try {
     await execution;
@@ -221,15 +223,62 @@ async function expectNonRetryableApplicationFailure(
   if (!(failure instanceof Error)) {
     throw new Error("Expected workflow execution to fail");
   }
-  const cause = failure.cause;
-  if (!(cause instanceof ApplicationFailure)) {
+  return failure.cause;
+}
+
+function describeFailure(value: unknown): string {
+  return value instanceof Error
+    ? `${value.constructor.name}: ${value.message}`
+    : String(value);
+}
+
+function expectNonRetryable(
+  failure: unknown,
+  expectedType: string,
+  expectedMessage: string,
+): void {
+  if (!(failure instanceof ApplicationFailure)) {
     throw new TypeError(
-      "Expected workflow failure to include an ApplicationFailure cause",
+      `Expected a non-retryable ApplicationFailure, got ${describeFailure(failure)}`,
     );
   }
-  expect(cause.type).toBe(expectedType);
-  expect(cause.nonRetryable).toBe(true);
-  expect(cause.message).toBe(expectedMessage);
+  expect(failure.type).toBe(expectedType);
+  expect(failure.nonRetryable).toBe(true);
+  expect(failure.message).toBe(expectedMessage);
+}
+
+/** The workflow's own code threw: the run's failure cause is the failure itself. */
+async function expectNonRetryableApplicationFailure(
+  execution: Promise<unknown>,
+  expectedType: string,
+  expectedMessage: string,
+): Promise<void> {
+  expectNonRetryable(
+    await workflowFailureCause(execution),
+    expectedType,
+    expectedMessage,
+  );
+}
+
+/**
+ * An activity threw and the workflow let it propagate: Temporal reports the
+ * run's cause as the ActivityFailure, which in turn wraps the activity's own
+ * failure. Asserting the whole chain keeps "which activity ended the run, and
+ * was it retried" part of the contract.
+ */
+async function expectNonRetryableActivityFailure(
+  execution: Promise<unknown>,
+  expected: { activityType: string; type: string; message: string },
+): Promise<void> {
+  const cause = await workflowFailureCause(execution);
+  if (!(cause instanceof ActivityFailure)) {
+    throw new TypeError(
+      `Expected workflow failure to be caused by an ActivityFailure, got ${describeFailure(cause)}`,
+    );
+  }
+  expect(cause.activityType).toBe(expected.activityType);
+  expect(cause.retryState).toBe(RetryState.NON_RETRYABLE_FAILURE);
+  expectNonRetryable(cause.cause, expected.type, expected.message);
 }
 
 describe("shouldHeatFloor", () => {
@@ -417,16 +466,22 @@ describe("goodMorningWakeUp", () => {
         "malformed body",
         "ZodError",
       );
-      await expectNonRetryableApplicationFailure(
+      await expectNonRetryableActivityFailure(
         runWorker(
           scenario,
           goodMorningWakeUp,
           `wake-weather-contract-${crypto.randomUUID()}`,
         ),
-        "ZodError",
-        "malformed body",
+        {
+          activityType: "getOutdoorTemperatureC",
+          type: "ZodError",
+          message: "malformed body",
+        },
       );
+      // Non-retryable: one attempt, and nothing of the wake routine ran.
+      expect(scenario.weatherAttempts).toBe(1);
       expect(scenario.notifications).toEqual([]);
+      expect(scenario.outcomes).toEqual([]);
     },
     WORKFLOW_TEST_TIMEOUT_MS,
   );
