@@ -8,6 +8,7 @@ import {
 import type {
   CommitInput,
   CrawlStore,
+  FrontierPlayer,
   NewFrontierPlayer,
   SeedCursor,
 } from "./crawl-store.ts";
@@ -144,19 +145,33 @@ export function createPrismaCrawlStore(
     admit: (players, now) => admitPlayers(prisma, players, now),
 
     async claimEligible(now, limit) {
-      const rows = await prisma.crawlFrontier.findMany({
-        where: { nextEligibleAt: { lte: now } },
-        orderBy: [{ depth: "asc" }, { nextEligibleAt: "asc" }],
-        take: limit * 3,
-        select: { puuid: true, platformRoute: true, depth: true },
-      });
-      const erased = await erasedHashes(
-        prisma,
-        rows.map((row) => row.puuid),
-      );
-      return rows
-        .filter((row) => !erased.has(puuidHash(row.puuid)))
-        .slice(0, limit);
+      // Erased rows are only recognizable by hash after the read, so page past
+      // them until `limit` players are found or the frontier is exhausted;
+      // otherwise a run of erased rows at the head would stall every tick.
+      const pageSize = limit * 3;
+      const claimed: FrontierPlayer[] = [];
+      for (let skip = 0; claimed.length < limit; skip += pageSize) {
+        const rows = await prisma.crawlFrontier.findMany({
+          where: { nextEligibleAt: { lte: now } },
+          orderBy: [
+            { depth: "asc" },
+            { nextEligibleAt: "asc" },
+            { puuid: "asc" },
+          ],
+          skip,
+          take: pageSize,
+          select: { puuid: true, platformRoute: true, depth: true },
+        });
+        const erased = await erasedHashes(
+          prisma,
+          rows.map((row) => row.puuid),
+        );
+        for (const row of rows) {
+          if (!erased.has(puuidHash(row.puuid))) claimed.push(row);
+        }
+        if (rows.length < pageSize) break;
+      }
+      return claimed.slice(0, limit);
     },
 
     async erasedAmong(puuids) {
