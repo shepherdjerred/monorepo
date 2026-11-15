@@ -103,6 +103,34 @@ pub struct ChatToolStep {
     pub duration_ms: Option<u64>,
 }
 
+/// Where a message stands among the versions of its turn: the "2 of 3" the
+/// switcher shows, and the messages its arrows move to.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChatVersion {
+    /// This version's place, counting from 1.
+    pub position: u32,
+    /// How many versions the turn has.
+    pub count: u32,
+    /// The version before this one, if any.
+    pub previous: Option<Uuid>,
+    /// The version after this one, if any.
+    pub next: Option<Uuid>,
+}
+
+/// An image attached to a question.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChatAttachment {
+    /// The stored image's id.
+    pub id: Uuid,
+    /// The image type, such as `image/png`.
+    pub media_type: String,
+    /// A file on this computer the window can draw as the thumbnail, when
+    /// this session attached the image; none for one attached elsewhere.
+    pub thumbnail: Option<String>,
+}
+
 /// One persisted message on the open branch.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -119,6 +147,10 @@ pub struct ChatMessage {
     pub caveats: Vec<String>,
     /// The answer's chart or table and its cards.
     pub visuals: ChatVisuals,
+    /// Which version of its turn this is; none when the turn has one version.
+    pub version: Option<ChatVersion>,
+    /// Images attached to a question.
+    pub attachments: Vec<ChatAttachment>,
 }
 
 /// The open conversation's persisted branch.
@@ -131,6 +163,10 @@ pub struct ChatTranscript {
     pub title: String,
     /// Messages, oldest first.
     pub messages: Vec<ChatMessage>,
+    /// The conversation on the Scout website, for "Open in browser".
+    pub web_url: String,
+    /// The conversation's public share link, while it is shared.
+    pub share_url: Option<String>,
 }
 
 /// The in-flight turn, as the reducer says to render it over the transcript.
@@ -141,6 +177,8 @@ pub struct ChatTurn {
     pub stoppable: bool,
     /// The optimistic question, until the transcript holds it.
     pub question: Option<String>,
+    /// The images that went with it.
+    pub attachments: Vec<ChatAttachment>,
     /// The streamed answer so far, until the persisted one lands.
     pub answer: Option<String>,
     /// The live status line.
@@ -151,6 +189,60 @@ pub struct ChatTurn {
     pub tools: Vec<ChatToolStep>,
     /// The error the run reported; safe to show.
     pub error: Option<String>,
+}
+
+/// How an image waiting in the composer stands.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "state", rename_all = "snake_case", deny_unknown_fields)]
+pub enum ChatDraftState {
+    /// Still being sent to Scout.
+    Uploading,
+    /// Stored and ready to go with the question.
+    Ready,
+    /// Refused or unreadable; the image will not be sent.
+    Failed {
+        /// Why, safe to show.
+        message: String,
+    },
+}
+
+/// One image attached in the composer, before the question is sent.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChatDraft {
+    /// A local id the window removes it by.
+    pub key: Uuid,
+    /// The file's name.
+    pub name: String,
+    /// A file on this computer the window draws as the thumbnail.
+    pub thumbnail: String,
+    /// How it stands.
+    pub state: ChatDraftState,
+}
+
+/// One model the picker offers.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChatModelOption {
+    /// The id sent with the question.
+    pub id: String,
+    /// What the picker shows.
+    pub label: String,
+}
+
+/// What the composer holds besides its text: images and the model choice.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChatComposer {
+    /// Images attached to the next question, in order.
+    pub drafts: Vec<ChatDraft>,
+    /// How many images a question may carry.
+    pub max_images: u32,
+    /// The models the owner may choose between; empty when the server
+    /// chooses, in which case the picker is not shown.
+    pub models: Vec<ChatModelOption>,
+    /// The model the next question uses, when there is a choice.
+    pub model: Option<String>,
 }
 
 /// A chat request from the window. The supervisor answers with chat parts.
@@ -173,9 +265,46 @@ pub enum ChatCommand {
     },
     /// Stop the running answer; Scout keeps what it has written.
     Stop,
+    /// Ask the question again with new words: a new version of that turn.
+    Edit {
+        /// The question being edited.
+        message_id: Uuid,
+        /// The new question as typed.
+        question: String,
+    },
+    /// Answer a question again: a new version of that answer.
+    Regenerate {
+        /// The answer to replace.
+        message_id: Uuid,
+    },
+    /// Show another version of a turn.
+    SwitchVersion {
+        /// The version to show.
+        message_id: Uuid,
+    },
+    /// Attach an image file to the next question.
+    Attach {
+        /// The file on this computer: picked, or a pasted image the window
+        /// saved first.
+        path: String,
+    },
+    /// Remove an image from the composer.
+    RemoveAttachment {
+        /// The draft's key.
+        key: Uuid,
+    },
+    /// Create a share link for the open conversation.
+    Share,
+    /// Stop sharing the open conversation.
+    RevokeShare,
+    /// Choose the model for the next questions; none leaves it to the server.
+    ChooseModel {
+        /// A model id from the composer's list.
+        model: Option<String>,
+    },
 }
 
-/// Everything chat renders: the five parts the supervisor sends.
+/// Everything chat renders: the six parts the supervisor sends.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ChatParts {
     /// Availability, connection and notice.
@@ -188,6 +317,8 @@ pub struct ChatParts {
     pub turn: Option<ChatTurn>,
     /// Where each picture the transcript names stands, by key.
     pub images: BTreeMap<String, ChatImage>,
+    /// The composer's images and model choice.
+    pub composer: ChatComposer,
 }
 
 impl ChatParts {
@@ -222,6 +353,11 @@ impl ChatParts {
                 images: self.images.clone(),
             });
         }
+        if changed(|now, then| now.composer != then.composer) {
+            messages.push(SupervisorMessage::ChatComposer {
+                composer: self.composer.clone(),
+            });
+        }
         messages
     }
 
@@ -235,6 +371,7 @@ impl ChatParts {
             SupervisorMessage::ChatTranscript { transcript } => self.transcript = transcript,
             SupervisorMessage::ChatTurn { turn } => self.turn = turn,
             SupervisorMessage::ChatImages { images } => self.images = images,
+            SupervisorMessage::ChatComposer { composer } => self.composer = composer,
             _ => return false,
         }
         true
@@ -249,7 +386,7 @@ mod tests {
     #[test]
     fn a_new_window_gets_every_part_and_a_delta_only_what_changed() {
         let before = ChatParts::default();
-        assert_eq!(before.changes_since(None).len(), 5);
+        assert_eq!(before.changes_since(None).len(), 6);
         assert_eq!(before.changes_since(Some(&before)), []);
 
         let streaming = ChatParts {
@@ -322,5 +459,37 @@ mod tests {
                 status: reconnecting.status.clone()
             }]
         );
+    }
+
+    #[test]
+    fn a_composer_change_is_one_message_and_a_new_window_gets_it() {
+        use super::{ChatComposer, ChatDraft, ChatDraftState};
+        use uuid::Uuid;
+
+        let before = ChatParts::default();
+        let attached = ChatParts {
+            composer: ChatComposer {
+                drafts: vec![ChatDraft {
+                    key: Uuid::from_u128(1),
+                    name: "build.png".to_owned(),
+                    thumbnail: "/tmp/build.png".to_owned(),
+                    state: ChatDraftState::Uploading,
+                }],
+                max_images: 4,
+                ..ChatComposer::default()
+            },
+            ..before.clone()
+        };
+        assert_eq!(
+            attached.changes_since(Some(&before)),
+            [SupervisorMessage::ChatComposer {
+                composer: attached.composer.clone()
+            }]
+        );
+        let mut window = ChatParts::default();
+        for message in attached.changes_since(None) {
+            assert!(window.receive(message));
+        }
+        assert_eq!(window, attached);
     }
 }

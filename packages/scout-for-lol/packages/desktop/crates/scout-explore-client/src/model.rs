@@ -564,6 +564,55 @@ pub struct Attachment {
     pub media_type: AttachmentMediaType,
 }
 
+impl AttachmentMediaType {
+    /// The image type as the server names it, such as `image/png`.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Png => "image/png",
+            Self::Jpeg => "image/jpeg",
+            Self::Webp => "image/webp",
+        }
+    }
+
+    /// The image type for a file extension, or none for one Explore refuses.
+    #[must_use]
+    pub fn from_extension(extension: &str) -> Option<Self> {
+        match extension.to_ascii_lowercase().as_str() {
+            "png" => Some(Self::Png),
+            "jpg" | "jpeg" => Some(Self::Jpeg),
+            "webp" => Some(Self::Webp),
+            _ => None,
+        }
+    }
+
+    /// The image type the first bytes of a file say it is, the way the
+    /// server checks them: PNG signature, JPEG start marker, `RIFF....WEBP`.
+    #[must_use]
+    pub fn sniff(bytes: &[u8]) -> Option<Self> {
+        if bytes.starts_with(&[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]) {
+            Some(Self::Png)
+        } else if bytes.starts_with(&[0xFF, 0xD8]) {
+            Some(Self::Jpeg)
+        } else if bytes.len() >= 12 && &bytes[..4] == b"RIFF" && &bytes[8..12] == b"WEBP" {
+            Some(Self::Webp)
+        } else {
+            None
+        }
+    }
+}
+
+/// Request to `explore/attachments/upload`: one image, base64 encoded, with
+/// the web's size and type limits.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AttachmentUploadRequest {
+    /// The image type.
+    pub media_type: AttachmentMediaType,
+    /// The image bytes, standard base64.
+    pub base64: String,
+}
+
 /// Match card size.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MatchCardSize {

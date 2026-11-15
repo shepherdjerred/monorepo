@@ -4,8 +4,11 @@
 use std::time::Duration;
 
 use crate::support::{MockServer, Reply, TOKEN, TestResult};
+use base64::Engine as _;
+use base64::engine::general_purpose::STANDARD;
 use scout_client_core::desktop_api::{ActiveRun, DesktopApiErrorCode, RunOutcome, RunStartRequest};
 use scout_explore_client::contract::{CONTRACT_HEADER, CONTRACT_VERSION, Route};
+use scout_explore_client::model::AttachmentMediaType;
 use scout_explore_client::{ExploreClient, ExploreClientError, Recovery};
 use serde_json::Value;
 use uuid::Uuid;
@@ -107,6 +110,134 @@ async fn every_route_sends_its_golden_request_and_reads_its_golden_answer() -> T
         assert_authenticated(&server, route, fixture)?;
     }
     Ok(())
+}
+
+#[tokio::test]
+async fn every_chat_action_sends_its_golden_request_and_reads_its_golden_answer() -> TestResult {
+    let models = golden(fixture!("explore-models.json"))?;
+    let set_leaf = golden(fixture!("explore-conversations-set-leaf.json"))?;
+    let share = golden(fixture!("explore-conversations-share.json"))?;
+    let revoke = golden(fixture!("explore-conversations-revoke-share.json"))?;
+    let upload = golden(fixture!("explore-attachments-upload.json"))?;
+    let discard = golden(fixture!("explore-attachments-discard.json"))?;
+    let server = MockServer::start(vec![
+        served(Route::ExploreModels, &models),
+        served(Route::ExploreConversationsSetLeaf, &set_leaf),
+        served(Route::ExploreConversationsShare, &share),
+        served(Route::ExploreConversationsRevokeShare, &revoke),
+        served(Route::ExploreAttachmentsUpload, &upload),
+        served(Route::ExploreAttachmentsDiscard, &discard),
+    ])
+    .await?;
+    let client = server.client()?;
+    let id = |value: &Value| Uuid::parse_str(value.as_str().unwrap_or_default());
+
+    let answer = client.models().await?;
+    assert_eq!(answer, serde_json::from_value(models["response"].clone())?);
+    client
+        .set_leaf(
+            id(&set_leaf["request"]["conversationId"])?,
+            id(&set_leaf["request"]["messageId"])?,
+        )
+        .await?;
+    let token = client
+        .share(id(&share["request"]["conversationId"])?)
+        .await?;
+    assert_eq!(Value::from(token), share["response"]["shareToken"]);
+    client
+        .revoke_share(id(&revoke["request"]["conversationId"])?)
+        .await?;
+    client
+        .discard_attachment(id(&discard["request"]["id"])?)
+        .await?;
+
+    // The golden upload body is a 1x1 PNG: the client encodes exactly it.
+    let png = STANDARD.decode(upload["request"]["base64"].as_str().ok_or("base64")?)?;
+    assert_eq!(
+        AttachmentMediaType::sniff(&png),
+        Some(AttachmentMediaType::Png)
+    );
+    let stored = client
+        .upload_attachment(AttachmentMediaType::Png, &png)
+        .await?;
+    assert_eq!(stored, serde_json::from_value(upload["response"].clone())?);
+
+    for (route, fixture) in [
+        (Route::ExploreModels, &models),
+        (Route::ExploreConversationsSetLeaf, &set_leaf),
+        (Route::ExploreConversationsShare, &share),
+        (Route::ExploreConversationsRevokeShare, &revoke),
+        (Route::ExploreAttachmentsUpload, &upload),
+        (Route::ExploreAttachmentsDiscard, &discard),
+    ] {
+        assert_authenticated(&server, route, fixture)?;
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_refused_chat_action_keeps_its_recovery() -> TestResult {
+    let not_found = r#"{"error":"not_found","message":"Conversation not found."}"#;
+    let limited = r#"{"error":"rate_limited","message":"Too many changes from this device. Try again shortly."}"#;
+    let server = MockServer::start(vec![
+        (
+            Route::ExploreConversationsShare.path(),
+            vec![Reply::json(404, not_found)],
+        ),
+        (
+            Route::ExploreAttachmentsUpload.path(),
+            vec![Reply::json(429, limited).with_header("Retry-After", "60")],
+        ),
+    ])
+    .await?;
+    let client = server.client()?;
+
+    let missing = client.share(Uuid::new_v4()).await;
+    assert_eq!(
+        missing
+            .as_ref()
+            .err()
+            .and_then(ExploreClientError::recovery),
+        Some(Recovery::NotFound),
+        "{missing:?}"
+    );
+    let slow = client
+        .upload_attachment(AttachmentMediaType::Png, b"png")
+        .await;
+    assert!(
+        matches!(
+            slow.as_ref().err().and_then(ExploreClientError::recovery),
+            Some(Recovery::RetryLater { .. })
+        ),
+        "{slow:?}"
+    );
+    Ok(())
+}
+
+#[test]
+fn an_image_is_told_by_its_first_bytes_and_its_extension() {
+    let png = [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0];
+    let jpeg = [0xFF, 0xD8, 0xFF, 0xE0];
+    let webp = *b"RIFF\x24\0\0\0WEBPVP8 ";
+    assert_eq!(
+        AttachmentMediaType::sniff(&png),
+        Some(AttachmentMediaType::Png)
+    );
+    assert_eq!(
+        AttachmentMediaType::sniff(&jpeg),
+        Some(AttachmentMediaType::Jpeg)
+    );
+    assert_eq!(
+        AttachmentMediaType::sniff(&webp),
+        Some(AttachmentMediaType::Webp)
+    );
+    assert_eq!(AttachmentMediaType::sniff(b"GIF89a"), None);
+    assert_eq!(AttachmentMediaType::sniff(b"RIFF\x24\0\0\0WAVEfmt "), None);
+    assert_eq!(
+        AttachmentMediaType::from_extension("JPG"),
+        Some(AttachmentMediaType::Jpeg)
+    );
+    assert_eq!(AttachmentMediaType::from_extension("gif"), None);
 }
 
 #[tokio::test]

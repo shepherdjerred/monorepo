@@ -1,5 +1,5 @@
 {
-  "contractVersion": 4,
+  "contractVersion": 5,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],
@@ -76,6 +76,42 @@
       "path": "/api/scout-client/v1/explore/visualization",
       "scope": "explore",
       "response": "png"
+    },
+    "explore_models": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/models",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_conversations_set_leaf": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/conversations/set-leaf",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_conversations_share": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/conversations/share",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_conversations_revoke_share": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/conversations/revoke-share",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_attachments_upload": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/attachments/upload",
+      "scope": "explore",
+      "response": "json"
+    },
+    "explore_attachments_discard": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/explore/attachments/discard",
+      "scope": "explore",
+      "response": "json"
     }
   },
   "streamEvents": [

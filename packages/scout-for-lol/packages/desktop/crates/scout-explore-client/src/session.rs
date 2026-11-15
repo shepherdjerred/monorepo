@@ -7,37 +7,113 @@
 //! [`ChatSession::parts`]. Keeping the transitions pure is what lets the
 //! golden reducer fixtures drive the same code the app runs.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
+use std::path::{Path, PathBuf};
 
 use scout_client_core::desktop_api::{
-    ActiveRun, AttachPoint, ConversationListResponse, ConversationSummary, RunStartRequest,
+    ActiveRun, AttachPoint, ConversationListResponse, ConversationSummary, ExploreModel,
+    ModelsResponse, RunStartRequest,
 };
 use scout_desktop_ipc::{
-    ChatAvailability, ChatConversation, ChatImage, ChatMessage, ChatParts, ChatRole, ChatStatus,
-    ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVisuals,
+    ChatAttachment, ChatAvailability, ChatComposer, ChatConversation, ChatDraft, ChatDraftState,
+    ChatImage, ChatMessage, ChatModelOption, ChatParts, ChatRole, ChatStatus, ChatToolStatus,
+    ChatToolStep, ChatTranscript, ChatTurn, ChatVersion, ChatVisuals,
 };
 use uuid::Uuid;
 
 use crate::data_dragon::DataDragon;
 use crate::error::{ExploreClientError, Recovery};
-use crate::model::{ExploreMessage, MessageRole, TraceEntry, TraceStatus, Transcript};
+use crate::model::{
+    Attachment, AttachmentMediaType, ExploreMessage, MessageRole, TraceEntry, TraceStatus,
+    Transcript,
+};
 use crate::reducer::{PendingTurn, TurnPhase, TurnView, visible_pending};
 use crate::stream::{StreamEnd, StreamSignal};
 use crate::visuals::{ImageSource, chat_visuals, image_sources};
 
 /// The longest question the composer sends, matching the web's limit.
 pub const MAX_QUESTION_CHARS: usize = 4_000;
+/// Images one question may carry: the web's `EXPLORE_MAX_ATTACHMENTS`.
+pub const MAX_IMAGES: usize = 4;
+/// The largest image Explore accepts: the web's 10 MiB.
+pub const MAX_IMAGE_BYTES: u64 = 10 * 1024 * 1024;
+/// Where the Scout website lives until the session is told the backend's
+/// origin; the golden sessions use it.
+pub const DEFAULT_WEB_ORIGIN: &str = "https://scout-for-lol.com";
+
+/// An image the composer holds for the next question.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Draft {
+    key: Uuid,
+    name: String,
+    path: PathBuf,
+    media_type: AttachmentMediaType,
+    state: DraftState,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum DraftState {
+    Uploading,
+    /// Stored on the server under this id.
+    Ready(Uuid),
+    Failed(String),
+}
+
+/// The image file the relay should read and upload.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AttachJob {
+    /// The draft the answer belongs to.
+    pub key: Uuid,
+    /// The file to read.
+    pub path: PathBuf,
+}
+
+/// Why an image did not upload.
+#[derive(Debug)]
+pub enum UploadFailure {
+    /// The file could not be used: too large, unreadable, or not an image
+    /// Explore takes. Safe to show.
+    Local(String),
+    /// Scout refused it, or could not be reached.
+    Remote(ExploreClientError),
+}
+
+/// Read an image file for upload: at most [`MAX_IMAGE_BYTES`], and an image
+/// type Explore stores, told by its first bytes as the server tells it.
+///
+/// # Errors
+///
+/// A user-facing reason when the file cannot be used.
+pub fn load_image(path: &Path) -> Result<(AttachmentMediaType, Vec<u8>), String> {
+    let metadata =
+        std::fs::metadata(path).map_err(|_| "That image could not be read.".to_owned())?;
+    if metadata.len() > MAX_IMAGE_BYTES {
+        return Err("Images can be at most 10 MiB.".to_owned());
+    }
+    let bytes = std::fs::read(path).map_err(|_| "That image could not be read.".to_owned())?;
+    let media_type = AttachmentMediaType::sniff(&bytes)
+        .ok_or_else(|| "Choose a PNG, JPEG, or WebP image.".to_owned())?;
+    Ok((media_type, bytes))
+}
 
 /// The turn being followed, and the run the server created for it.
 #[derive(Debug, Clone)]
 struct FollowedTurn {
     view: TurnView,
     run: Option<ActiveRun>,
+    /// For an edit or regenerate: how many of the persisted messages stay on
+    /// screen above it while it runs. A plain question keeps them all.
+    keep: Option<usize>,
+    /// The images that went with the question, shown beside it.
+    images: Vec<ChatAttachment>,
+    /// The drafts the question took, put back if the server refuses it.
+    stash: Vec<Draft>,
 }
 
 /// One desktop chat session.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ChatSession {
+    web_origin: String,
     availability: ChatAvailability,
     reconnecting: bool,
     notice: Option<String>,
@@ -49,6 +125,17 @@ pub struct ChatSession {
     art: Option<DataDragon>,
     /// Pictures fetched or failed, by key; anything else wanted is loading.
     images: BTreeMap<String, ChatImage>,
+    drafts: Vec<Draft>,
+    /// Local files of the images this session uploaded, by stored id.
+    thumbnails: HashMap<Uuid, PathBuf>,
+    models: Option<ModelsResponse>,
+    chosen_model: Option<ExploreModel>,
+}
+
+impl Default for ChatSession {
+    fn default() -> Self {
+        Self::with_web_origin(DEFAULT_WEB_ORIGIN)
+    }
 }
 
 /// What a failed request means for chat as a whole.
@@ -81,11 +168,56 @@ fn classify(error: &ExploreClientError) -> Failure {
     }
 }
 
+/// Where the open conversation, and its share link, live on the website.
+struct Links<'a> {
+    origin: &'a str,
+}
+
+impl Links<'_> {
+    fn conversation(&self, id: Uuid) -> String {
+        format!("{}/app/explore/{id}", self.origin)
+    }
+
+    fn share(&self, token: &str) -> String {
+        format!("{}/app/explore/s/{token}", self.origin)
+    }
+}
+
 impl ChatSession {
-    /// A session that has not heard from Scout yet.
+    /// A session that has not heard from Scout yet, for the production site.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// A session whose "Open in browser" and share links point at the Scout
+    /// website served from `origin`, the same origin the API answers on (the
+    /// pairing approval page is served from it too).
+    #[must_use]
+    pub fn with_web_origin(origin: &str) -> Self {
+        let web_origin = url::Url::parse(origin)
+            .ok()
+            .filter(|parsed| matches!(parsed.scheme(), "http" | "https"))
+            .map_or_else(
+                || DEFAULT_WEB_ORIGIN.to_owned(),
+                |parsed| parsed.origin().ascii_serialization(),
+            );
+        Self {
+            web_origin,
+            availability: ChatAvailability::default(),
+            reconnecting: false,
+            notice: None,
+            conversations: Vec::new(),
+            open: None,
+            transcript: None,
+            turn: None,
+            art: None,
+            images: BTreeMap::new(),
+            drafts: Vec::new(),
+            thumbnails: HashMap::new(),
+            models: None,
+            chosen_model: None,
+        }
     }
 
     /// Whether chat currently works.
@@ -201,14 +333,127 @@ impl ChatSession {
         }
     }
 
-    /// Ask `question` in the open conversation. Returns the request to send,
-    /// or none when chat does not work, a turn is already running, or the
-    /// question is blank or too long (the composer says why).
-    pub fn submit(&mut self, question: &str) -> Option<RunStartRequest> {
-        let question = question.trim();
-        if self.availability != ChatAvailability::Ready || self.turn.is_some() {
+    /// The models the owner may choose between loaded. A choice the server no
+    /// longer offers is forgotten.
+    pub fn models_loaded(&mut self, models: ModelsResponse) {
+        if let Some(chosen) = self.chosen_model
+            && !models.models.iter().any(|model| model.id == chosen)
+        {
+            self.chosen_model = None;
+        }
+        self.models = Some(models);
+    }
+
+    /// Choose the model for the next questions; `id` is one the server
+    /// offered, or none to leave it to the server. Anything else is ignored.
+    pub fn choose_model(&mut self, id: Option<&str>) {
+        let Some(models) = self.models.as_ref().filter(|models| models.picker_enabled) else {
+            return;
+        };
+        self.chosen_model = match id {
+            None => None,
+            Some(id) => models
+                .models
+                .iter()
+                .find(|model| model.id.id() == id)
+                .map(|model| model.id),
+        };
+    }
+
+    /// Put an image file in the composer. Returns the file to read and
+    /// upload, or none when it is refused (a notice says why).
+    pub fn begin_attach(&mut self, path: &str) -> Option<AttachJob> {
+        if self.availability != ChatAvailability::Ready {
             return None;
         }
+        let path = PathBuf::from(path);
+        if self.drafts.len() >= MAX_IMAGES {
+            self.notice = Some(format!("A question can carry at most {MAX_IMAGES} images."));
+            return None;
+        }
+        let Some(media_type) = path
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .and_then(AttachmentMediaType::from_extension)
+        else {
+            self.notice = Some("Choose a PNG, JPEG, or WebP image.".to_owned());
+            return None;
+        };
+        self.notice = None;
+        let key = Uuid::new_v4();
+        self.drafts.push(Draft {
+            key,
+            name: path.file_name().map_or_else(
+                || "image".to_owned(),
+                |name| name.to_string_lossy().into_owned(),
+            ),
+            path: path.clone(),
+            media_type,
+            state: DraftState::Uploading,
+        });
+        Some(AttachJob { key, path })
+    }
+
+    /// An upload finished. A refusal marks the draft failed and names why; a
+    /// refusal that gates chat gates it.
+    pub fn upload_finished(&mut self, key: Uuid, result: Result<Attachment, UploadFailure>) {
+        let Some(draft) = self.drafts.iter_mut().find(|draft| draft.key == key) else {
+            return;
+        };
+        match result {
+            Ok(attachment) => {
+                draft.media_type = attachment.media_type;
+                draft.state = DraftState::Ready(attachment.id);
+                self.thumbnails.insert(attachment.id, draft.path.clone());
+            }
+            Err(UploadFailure::Local(message)) => draft.state = DraftState::Failed(message),
+            Err(UploadFailure::Remote(error)) => {
+                draft.state = DraftState::Failed(match classify(&error) {
+                    Failure::Notice(message) => message,
+                    Failure::Gate(_) => "Scout needs you before it can take images.".to_owned(),
+                });
+                self.request_failed(&error);
+            }
+        }
+    }
+
+    /// Take an image out of the composer. Returns the stored image to
+    /// discard on the server, when it had been uploaded.
+    pub fn remove_attachment(&mut self, key: Uuid) -> Option<Uuid> {
+        let at = self.drafts.iter().position(|draft| draft.key == key)?;
+        match self.drafts.remove(at).state {
+            DraftState::Ready(id) => Some(id),
+            DraftState::Uploading | DraftState::Failed(_) => None,
+        }
+    }
+
+    /// Whether a new turn may start now.
+    fn can_start(&self) -> bool {
+        self.availability == ChatAvailability::Ready && self.turn.is_none()
+    }
+
+    /// The images that go with the next question, or none when one is still
+    /// uploading (a notice says so). Failed images are left behind.
+    fn take_drafts(&mut self) -> Option<Vec<Draft>> {
+        if self
+            .drafts
+            .iter()
+            .any(|draft| draft.state == DraftState::Uploading)
+        {
+            self.notice = Some("Wait for your images to finish uploading.".to_owned());
+            return None;
+        }
+        let (ready, failed): (Vec<_>, Vec<_>) = std::mem::take(&mut self.drafts)
+            .into_iter()
+            .partition(|draft| matches!(draft.state, DraftState::Ready(_)));
+        drop(failed);
+        Some(ready)
+    }
+
+    /// The question text after the composer's checks, or none (the composer
+    /// says why).
+    fn checked_question(&mut self, question: &str) -> Option<String> {
+        let question = question.trim();
         if question.is_empty() {
             return None;
         }
@@ -218,23 +463,154 @@ impl ChatSession {
             ));
             return None;
         }
+        Some(question.to_owned())
+    }
+
+    /// Begin a turn: the optimistic state and the request to send.
+    fn begin_turn(
+        &mut self,
+        question: Option<String>,
+        attach: AttachPoint,
+        keep: Option<usize>,
+        drafts: Vec<Draft>,
+    ) -> RunStartRequest {
         self.notice = None;
         let leaf = self
             .transcript
             .as_ref()
             .and_then(|transcript| transcript.messages.last())
             .map(|message| message.id);
+        let attachment_ids: Vec<Uuid> = drafts
+            .iter()
+            .filter_map(|draft| match draft.state {
+                DraftState::Ready(id) => Some(id),
+                DraftState::Uploading | DraftState::Failed(_) => None,
+            })
+            .collect();
+        let images = drafts
+            .iter()
+            .filter_map(|draft| match draft.state {
+                DraftState::Ready(id) => {
+                    Some(self.attachment(id, draft.media_type, Some(&draft.path)))
+                }
+                DraftState::Uploading | DraftState::Failed(_) => None,
+            })
+            .collect();
         self.turn = Some(FollowedTurn {
-            view: TurnView::new(PendingTurn::new(self.open, Some(question.to_owned()), leaf)),
+            view: TurnView::new(PendingTurn::new(self.open, question.clone(), leaf)),
             run: None,
+            keep,
+            images,
+            stash: drafts,
         });
-        Some(RunStartRequest {
+        RunStartRequest {
             conversation_id: self.open,
-            question: Some(question.to_owned()),
-            attach: AttachPoint::Leaf,
-            model: None,
-            attachment_ids: None,
-        })
+            question,
+            attach,
+            model: self
+                .models
+                .as_ref()
+                .filter(|models| models.picker_enabled)
+                .and(self.chosen_model),
+            attachment_ids: (!attachment_ids.is_empty()).then_some(attachment_ids),
+        }
+    }
+
+    fn attachment(
+        &self,
+        id: Uuid,
+        media_type: AttachmentMediaType,
+        local: Option<&Path>,
+    ) -> ChatAttachment {
+        ChatAttachment {
+            id,
+            media_type: media_type.as_str().to_owned(),
+            thumbnail: local
+                .or_else(|| self.thumbnails.get(&id).map(PathBuf::as_path))
+                .map(|path| path.to_string_lossy().into_owned()),
+        }
+    }
+
+    /// Ask `question` in the open conversation. Returns the request to send,
+    /// or none when chat does not work, a turn is already running, or the
+    /// question is blank or too long (the composer says why).
+    pub fn submit(&mut self, question: &str) -> Option<RunStartRequest> {
+        if !self.can_start() {
+            return None;
+        }
+        let question = self.checked_question(question)?;
+        let drafts = self.take_drafts()?;
+        Some(self.begin_turn(Some(question), AttachPoint::Leaf, None, drafts))
+    }
+
+    /// Edit the question `message_id` into a new version of its turn.
+    /// Returns the request to send, or none when it cannot be edited now.
+    pub fn edit(&mut self, message_id: Uuid, question: &str) -> Option<RunStartRequest> {
+        if !self.can_start() || self.open.is_none() {
+            return None;
+        }
+        let messages = &self.transcript.as_ref()?.messages;
+        let index = messages
+            .iter()
+            .position(|message| message.id == message_id && message.role == MessageRole::User)?;
+        // A fork attaches under the edited question's parent; the opening
+        // question has none, which `root` names.
+        let attach = messages[index]
+            .parent_id
+            .map_or(AttachPoint::Root, |parent| AttachPoint::Message {
+                message_id: parent,
+            });
+        let question = self.checked_question(question)?;
+        let drafts = self.take_drafts()?;
+        Some(self.begin_turn(Some(question), attach, Some(index), drafts))
+    }
+
+    /// Answer the question behind `message_id` again, as a new version of the
+    /// answer. Returns the request to send, or none when it cannot run now.
+    pub fn regenerate(&mut self, message_id: Uuid) -> Option<RunStartRequest> {
+        if !self.can_start() || self.open.is_none() {
+            return None;
+        }
+        let messages = &self.transcript.as_ref()?.messages;
+        let answer = messages
+            .iter()
+            .find(|message| message.id == message_id && message.role == MessageRole::Assistant)?;
+        // The parent of an answer is the question it belongs to.
+        let question = answer.parent_id?;
+        let at = messages.iter().position(|message| message.id == question)?;
+        Some(self.begin_turn(
+            None,
+            AttachPoint::Message {
+                message_id: question,
+            },
+            Some(at + 1),
+            Vec::new(),
+        ))
+    }
+
+    /// Show another version of a turn. Returns the conversation and the
+    /// message whose branch to show, to send to the server.
+    pub fn switch_version(&mut self, message_id: Uuid) -> Option<(Uuid, Uuid)> {
+        if !self.can_start() {
+            return None;
+        }
+        let transcript = self.transcript.as_ref()?;
+        let known = transcript
+            .messages
+            .iter()
+            .any(|message| message.sibling_ids.contains(&message_id));
+        known.then_some((transcript.conversation.id, message_id))
+    }
+
+    /// The open conversation to share or stop sharing, when it can be.
+    #[must_use]
+    pub fn shareable(&self) -> Option<Uuid> {
+        if self.availability != ChatAvailability::Ready {
+            return None;
+        }
+        self.transcript
+            .as_ref()
+            .map(|transcript| transcript.conversation.id)
     }
 
     /// The server created the run. A new conversation becomes the open one.
@@ -248,12 +624,18 @@ impl ChatSession {
         turn.view.turn.run_id = Some(run.run_id);
         turn.view.turn.conversation_id = Some(run.conversation_id);
         turn.view.turn.question_message_id = Some(run.question_message_id);
+        turn.stash.clear();
         turn.run = Some(run);
     }
 
-    /// `runs/start` refused the turn; the optimistic question goes away.
+    /// `runs/start` refused the turn; the optimistic question goes away and
+    /// the images go back to the composer.
     pub fn start_failed(&mut self, error: &ExploreClientError) {
-        self.turn = None;
+        if let Some(turn) = self.turn.take() {
+            let mut restored = turn.stash;
+            restored.append(&mut self.drafts);
+            self.drafts = restored;
+        }
         self.request_failed(error);
     }
 
@@ -265,7 +647,7 @@ impl ChatSession {
                 if let Some(turn) = self.turn.take() {
                     self.turn = Some(FollowedTurn {
                         view: turn.view.apply(event),
-                        run: turn.run,
+                        ..turn
                     });
                 }
             }
@@ -286,10 +668,7 @@ impl ChatSession {
         } else {
             turn.view
         };
-        self.turn = Some(FollowedTurn {
-            view,
-            run: turn.run,
-        });
+        self.turn = Some(FollowedTurn { view, ..turn });
         run_id.filter(|_| streaming)
     }
 
@@ -352,6 +731,9 @@ impl ChatSession {
     /// The window's view of the session.
     #[must_use]
     pub fn parts(&self) -> ChatParts {
+        let links = Links {
+            origin: &self.web_origin,
+        };
         ChatParts {
             status: ChatStatus {
                 availability: self.availability.clone(),
@@ -367,10 +749,15 @@ impl ChatSession {
                     title: summary.title.clone(),
                 })
                 .collect(),
-            transcript: self
-                .transcript
-                .as_ref()
-                .map(|transcript| chat_transcript(transcript, self.art.as_ref())),
+            transcript: self.transcript.as_ref().map(|transcript| {
+                project_transcript(
+                    transcript,
+                    self.shown(),
+                    &links,
+                    &self.thumbnails,
+                    self.art.as_ref(),
+                )
+            }),
             turn: self.turn.as_ref().map(|turn| self.chat_turn(turn)),
             images: self
                 .wanted_images()
@@ -380,6 +767,60 @@ impl ChatSession {
                     (key, image)
                 })
                 .collect(),
+            composer: self.composer(),
+        }
+    }
+
+    /// How many of the open transcript's messages are on screen: all of
+    /// them, except while an edit or regenerate runs, which replaces the
+    /// rest of the branch.
+    fn shown(&self) -> usize {
+        let held = self
+            .transcript
+            .as_ref()
+            .map_or(0, |transcript| transcript.messages.len());
+        self.turn
+            .as_ref()
+            .and_then(|turn| turn.keep)
+            .map_or(held, |keep| keep.min(held))
+    }
+
+    fn composer(&self) -> ChatComposer {
+        let picker = self.models.as_ref().filter(|models| models.picker_enabled);
+        ChatComposer {
+            drafts: self
+                .drafts
+                .iter()
+                .map(|draft| ChatDraft {
+                    key: draft.key,
+                    name: draft.name.clone(),
+                    thumbnail: draft.path.to_string_lossy().into_owned(),
+                    state: match &draft.state {
+                        DraftState::Uploading => ChatDraftState::Uploading,
+                        DraftState::Ready(_) => ChatDraftState::Ready,
+                        DraftState::Failed(message) => ChatDraftState::Failed {
+                            message: message.clone(),
+                        },
+                    },
+                })
+                .collect(),
+            max_images: u32::try_from(MAX_IMAGES).unwrap_or(u32::MAX),
+            models: picker.map_or_else(Vec::new, |models| {
+                models
+                    .models
+                    .iter()
+                    .map(|model| ChatModelOption {
+                        id: model.id.id().to_owned(),
+                        label: model.label.clone(),
+                    })
+                    .collect()
+            }),
+            model: picker.map(|models| {
+                self.chosen_model
+                    .unwrap_or(models.default_model)
+                    .id()
+                    .to_owned()
+            }),
         }
     }
 
@@ -387,12 +828,17 @@ impl ChatSession {
         let messages = self
             .transcript
             .as_ref()
-            .map_or(&[][..], |transcript| transcript.messages.as_slice());
+            .map_or(&[][..], |transcript| &transcript.messages[..self.shown()]);
         let visible = visible_pending(Some(&turn.view.turn), self.open, messages);
         ChatTurn {
             stoppable: turn.run.is_some()
                 && turn.view.turn.phase == TurnPhase::Streaming
                 && !turn.view.is_finished(),
+            attachments: if visible.pending_question.is_some() {
+                turn.images.clone()
+            } else {
+                Vec::new()
+            },
             question: visible.pending_question,
             answer: visible.pending_answer,
             activity: visible.activity,
@@ -418,13 +864,31 @@ pub fn tool_step(entry: &TraceEntry) -> ChatToolStep {
     }
 }
 
+/// Where a message stands among its turn's versions; none for a turn with
+/// one version.
+fn chat_version(message: &ExploreMessage) -> Option<ChatVersion> {
+    if message.version_count < 2 {
+        return None;
+    }
+    let at = usize::try_from(message.version_index).ok()?;
+    Some(ChatVersion {
+        position: message.version_index + 1,
+        count: message.version_count,
+        previous: at
+            .checked_sub(1)
+            .and_then(|before| message.sibling_ids.get(before))
+            .copied(),
+        next: message.sibling_ids.get(at + 1).copied(),
+    })
+}
+
 /// One persisted message as the transcript renders it, with card art from
 /// `art` once it has loaded.
-#[must_use]
-pub fn chat_message(
+fn project_message(
     message: &ExploreMessage,
     conversation_id: Uuid,
     art: Option<&DataDragon>,
+    thumbnails: &HashMap<Uuid, PathBuf>,
 ) -> ChatMessage {
     let visuals = match message.role {
         MessageRole::User => ChatVisuals::default(),
@@ -440,12 +904,28 @@ pub fn chat_message(
         tools: message.trace.iter().map(tool_step).collect(),
         caveats: message.caveats.clone(),
         visuals,
+        version: chat_version(message),
+        attachments: message
+            .attachments
+            .iter()
+            .map(|attachment| ChatAttachment {
+                id: attachment.id,
+                media_type: attachment.media_type.as_str().to_owned(),
+                thumbnail: thumbnails
+                    .get(&attachment.id)
+                    .map(|path| path.to_string_lossy().into_owned()),
+            })
+            .collect(),
     }
 }
 
-/// A transcript as the window renders it.
-#[must_use]
-pub fn chat_transcript(transcript: &Transcript, art: Option<&DataDragon>) -> ChatTranscript {
+fn project_transcript(
+    transcript: &Transcript,
+    shown: usize,
+    links: &Links<'_>,
+    thumbnails: &HashMap<Uuid, PathBuf>,
+    art: Option<&DataDragon>,
+) -> ChatTranscript {
     let conversation_id = transcript.conversation.id;
     ChatTranscript {
         conversation_id,
@@ -453,9 +933,31 @@ pub fn chat_transcript(transcript: &Transcript, art: Option<&DataDragon>) -> Cha
         messages: transcript
             .messages
             .iter()
-            .map(|message| chat_message(message, conversation_id, art))
+            .take(shown)
+            .map(|message| project_message(message, conversation_id, art, thumbnails))
             .collect(),
+        web_url: links.conversation(transcript.conversation.id),
+        share_url: transcript
+            .conversation
+            .share_token
+            .as_deref()
+            .map(|token| links.share(token)),
     }
+}
+
+/// A transcript as the window renders it, for the production site and with
+/// no local thumbnails.
+#[must_use]
+pub fn chat_transcript(transcript: &Transcript, art: Option<&DataDragon>) -> ChatTranscript {
+    project_transcript(
+        transcript,
+        transcript.messages.len(),
+        &Links {
+            origin: DEFAULT_WEB_ORIGIN,
+        },
+        &HashMap::new(),
+        art,
+    )
 }
 
 #[cfg(test)]

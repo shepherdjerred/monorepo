@@ -73,13 +73,15 @@ The two talk over the child's stdio, one JSON object per line, tagged by
 `type` (`scout-desktop-ipc`). The supervisor sends a `hello` with the protocol
 version and whether a tray exists, then `state` snapshots (the runtime state
 plus diagnostics counters and recent events), `phase` changes, `update` (the
-self-update state), the five chat parts (`chat_status`,
-`chat_conversations`, `chat_transcript`, `chat_turn`, `chat_images`; see
+self-update state), the six chat parts (`chat_status`,
+`chat_conversations`, `chat_transcript`, `chat_turn`, `chat_images`,
+`chat_composer`; see
 "Explore chat"), the
 diagnostics bundle on request, `show`, and `close`. The window sends its own
 `hello`, then `pair`, `disconnect`, `open_url` (http and https only),
 `open_log_folder`, `request_diagnostics`, `set_start_at_login`, `set_privacy`,
-`chat` (refresh, open, new, send, stop), and `quit`. Decoding is strict: an
+`chat` (refresh, open, new, send, stop, edit, regenerate, switch version,
+attach, remove attachment, share, revoke share, choose model), and `quit`. Decoding is strict: an
 unknown type is a broken contract, and the supervisor treats it as a window
 crash. Logging goes to stderr in both processes, because the window's stdout
 carries the protocol.
@@ -318,11 +320,12 @@ already holds the device credential for uploads, and the window renders on
 the GPU and can be lost with it, so the bearer never enters the window
 process. Only when the `gpui-kit` window is selected does the supervisor
 start a `ChatRelay`; it asks Scout nothing until a window opens. The window
-sends `chat` commands and renders five parts, each sent only when it changes,
-so a streamed answer re-sends only the in-flight turn and a picture landing
-re-sends only `chat_images` (`ChatParts::changes_since`). The parts carry no
-bearer, query text or raw tool payloads; cards cross as their rendered
-projection, and pictures as paths to files in the supervisor's cache.
+sends `chat` commands and renders six parts, each sent only when it changes,
+so a streamed answer re-sends only the in-flight turn, a picture landing
+re-sends only `chat_images`, and a draft or model change only `chat_composer`
+(`ChatParts::changes_since`). The parts carry no bearer, query text or raw
+tool payloads; cards cross as their rendered projection, and pictures as paths
+to files in the supervisor's cache.
 
 Screens follow the relay's availability:
 
@@ -347,13 +350,35 @@ Screens follow the relay's availability:
   "Reconnecting…" in the header until the next frame. The composer sends on
   Return or Send; Stop appears while a run can be stopped.
 
-Keyboard order is the composer, Send, Stop, then the sidebar (New chat, each
-conversation, the status pages); a focused sidebar entry takes Return or
+Chat actions, each a `chat` command the supervisor answers through the same
+routes the web's procedures use:
+
+- **Edit and regenerate.** Edit puts a question back in the composer; sending
+  adds a new version of that turn (`runs/start` with the question's parent, or
+  `root` for the opening question). Regenerate answers the question again.
+  While either runs, the old branch under it is replaced rather than shown
+  above the new one. A turn with several versions shows "2 of 3" with arrows
+  that call `conversations/set-leaf`.
+- **Images.** Attach image opens the file picker, and a pasted picture or
+  copied image file is saved to the temp folder and attached the same way. The
+  supervisor reads the file (PNG, JPEG or WebP by its first bytes, 10 MiB, four
+  per question, as on the web), uploads it, and the composer shows its
+  thumbnail until the question goes. The transcript draws thumbnails for images
+  attached on this computer and a labelled tile for the rest.
+- **Share links.** Share link creates a link and copies it; the header then
+  offers Copy link and Stop sharing. Links point at the website origin the
+  client talks to, the same origin the pairing approval page is served from.
+- **Model picker.** Shown only while the server's picker flag is on; it lists
+  `explore/models` and sends the choice with each question.
+- **Open in browser** opens the conversation on the website.
+
+Keyboard order is the composer, Send, Stop, Attach image, the model picker,
+then the sidebar (New chat, each conversation, the status pages); a focused sidebar entry takes Return or
 Space like a click. The focus ring is the theme's `focus` token.
 
-Not in the window yet: native interactive charts, attachments, edit,
-regenerate and version switching, share links, the model picker and the
-@-mention picker.
+Not in the window yet: native interactive charts, the @-mention picker, export,
+the raw payload viewer and native intent confirmation (a confirmation card opens
+the web conversation).
 
 ## Release profiles
 

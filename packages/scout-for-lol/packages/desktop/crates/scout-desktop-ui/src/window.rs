@@ -5,12 +5,16 @@ use std::io::{Stdout, Write};
 use std::process::ExitCode;
 use std::rc::Rc;
 
-use scout_desktop_ipc::WindowMessage;
+use std::path::PathBuf;
 
-use crate::chat_model::{ChatScreen, SidebarModel, send_message};
+use scout_desktop_ipc::{ChatCommand, WindowMessage};
+
+use crate::chat_model::{ChatScreen, ChatUi, SidebarModel, UiAction, edit_message, send_message};
 use crate::chat_view::{self, ChatControls, TAB_SIDEBAR};
 use crate::kit::prelude::{App, Context, IntoElement, Render, Subscription, Task, Window};
-use crate::kit::{self, ComposerState, Handler, NavItem, NavSection, Shell, TranscriptState};
+use crate::kit::{
+    self, ComposerState, ControlHandler, Handler, NavItem, NavSection, Shell, TranscriptState,
+};
 use crate::link::{Effect, Incoming, Outbound, WindowState, read_lines};
 use crate::view_model::{
     ActivityModel, BuildInfo, DiagnosticsModel, OverviewModel, PageId, SettingsModel,
@@ -93,6 +97,10 @@ pub struct ScoutWindow<W> {
     build: BuildInfo,
     composer: ComposerState,
     transcript: TranscriptState,
+    /// What only this window knows about the chat page.
+    ui: ChatUi,
+    /// Share was clicked: copy the link when the supervisor reports it.
+    copy_share_link: bool,
     _composer_events: Subscription,
     _listener: Task<()>,
 }
@@ -136,6 +144,8 @@ impl<W: Write + 'static> ScoutWindow<W> {
             closing: false,
             build,
             transcript: TranscriptState::new(cx),
+            ui: ChatUi::default(),
+            copy_share_link: false,
             composer,
             _composer_events: composer_events,
             _listener: listener,
@@ -144,7 +154,12 @@ impl<W: Write + 'static> ScoutWindow<W> {
 
     /// The chat screen for the latest parts.
     fn chat_screen(&self) -> ChatScreen {
-        ChatScreen::new(&self.link.chat, &self.link.state, &self.link.update)
+        ChatScreen::with_ui(
+            &self.link.chat,
+            &self.link.state,
+            &self.link.update,
+            self.ui,
+        )
     }
 
     /// Keep the transcript's virtual list in step with the rows it renders.
@@ -164,16 +179,97 @@ impl<W: Write + 'static> ScoutWindow<W> {
         if !model.composer.can_send {
             return;
         }
-        let Some(message) = send_message(&self.composer.text(cx)) else {
+        let text = self.composer.text(cx);
+        // While a question is being edited, sending adds a version of that
+        // turn instead of asking a new question.
+        let editing = model.composer.editing.is_some().then_some(self.ui.editing);
+        let message = match editing.flatten() {
+            Some(message_id) => edit_message(message_id, &text),
+            None => send_message(&text),
+        };
+        let Some(message) = message else {
             return;
         };
         if self.outbound.send(&message) {
             self.composer.clear(window, cx);
+            self.ui.editing = None;
+            cx.notify();
         } else {
             // The supervisor is gone; the close handler exits with the crash
             // status.
             kit::close_window(window);
         }
+    }
+
+    /// Copy the share link once the supervisor reports it, if the user
+    /// just asked for one.
+    fn copy_new_share_link(&mut self, cx: &mut Context<Self>) {
+        if !self.copy_share_link {
+            return;
+        }
+        let link = self
+            .link
+            .chat
+            .transcript
+            .as_ref()
+            .and_then(|transcript| transcript.share_url.clone());
+        if let Some(link) = link {
+            self.copy_share_link = false;
+            kit::copy_to_clipboard(cx, link);
+        }
+    }
+
+    /// Do what a chat button asked.
+    fn perform(&mut self, action: &UiAction, window: &mut Window, cx: &mut Context<Self>) {
+        match action {
+            UiAction::Send(message) => {
+                if !self.outbound.send(message) {
+                    // The supervisor is gone; the close handler exits with
+                    // the crash status.
+                    kit::close_window(window);
+                    return;
+                }
+                match message {
+                    WindowMessage::Chat {
+                        command: ChatCommand::Share,
+                    } => self.copy_share_link = true,
+                    WindowMessage::Chat {
+                        command: ChatCommand::ChooseModel { .. },
+                    } => self.ui.picker_open = false,
+                    _ => {}
+                }
+            }
+            UiAction::Edit { message_id, text } => {
+                self.ui.editing = Some(*message_id);
+                self.composer.set_text(text, window, cx);
+            }
+            UiAction::CancelEdit => {
+                self.ui.editing = None;
+                self.composer.clear(window, cx);
+            }
+            UiAction::TogglePicker => self.ui.picker_open = !self.ui.picker_open,
+            UiAction::PickImage => {
+                let attach = self.attach_files();
+                kit::pick_images(cx, move |paths| attach(paths));
+            }
+            UiAction::CopyLink(url) => kit::copy_to_clipboard(cx, url.clone()),
+        }
+        cx.notify();
+    }
+
+    /// Sends one attach command per image file: for the file picker and for
+    /// pasted pictures.
+    fn attach_files(&self) -> Rc<dyn Fn(Vec<PathBuf>)> {
+        let outbound = self.outbound.clone();
+        Rc::new(move |paths| {
+            for path in paths {
+                let _delivered = outbound.send(&WindowMessage::Chat {
+                    command: ChatCommand::Attach {
+                        path: path.to_string_lossy().into_owned(),
+                    },
+                });
+            }
+        })
     }
 
     /// Whether the composer has the keyboard, for the offscreen test.
@@ -206,6 +302,7 @@ impl<W: Write + 'static> ScoutWindow<W> {
                         listener(self.link.state.privacy.send_error_reports);
                     }
                     self.sync_transcript(cx);
+                    self.copy_new_share_link(cx);
                     cx.notify();
                     true
                 }
@@ -284,13 +381,25 @@ impl<W: Write + 'static> Render for ScoutWindow<W> {
             Rc::new(move |window: &mut Window, cx: &mut App| submit(&(), window, cx)) as Handler
         };
         let send = self.sender();
+        let perform = Rc::new(cx.listener(
+            |this: &mut Self, action: &UiAction, window: &mut Window, cx: &mut Context<Self>| {
+                this.perform(action, window, cx);
+            },
+        ));
+        let handler: ControlHandler = Rc::new(move |action: &UiAction| -> Handler {
+            let action = action.clone();
+            let perform = Rc::clone(&perform);
+            Rc::new(move |window: &mut Window, cx: &mut App| perform(&action, window, cx))
+        });
         let chat = ChatControls {
             composer: &self.composer,
             transcript: &self.transcript,
             submit,
             send: &send,
+            handler,
+            on_images: self.attach_files(),
         };
-        frame(self.page, &self.link, self.build, chat, &navigate)
+        frame(self.page, &self.link, self.build, self.ui, chat, &navigate)
     }
 }
 
@@ -354,6 +463,7 @@ fn frame(
     current: PageId,
     link: &WindowState,
     build: BuildInfo,
+    ui: ChatUi,
     chat: ChatControls<'_>,
     navigate: &dyn Fn(PageId) -> Handler,
 ) -> Shell {
@@ -361,10 +471,11 @@ fn frame(
     let (conversations, status) = sidebar(current, link, send, navigate);
     let state = &link.state;
     let page = match current {
-        PageId::Chat => {
-            chat_view::chat_page(ChatScreen::new(&link.chat, state, &link.update), chat)
-                .into_any_element()
-        }
+        PageId::Chat => chat_view::chat_page(
+            ChatScreen::with_ui(&link.chat, state, &link.update, ui),
+            chat,
+        )
+        .into_any_element(),
         PageId::Overview => {
             views::overview(OverviewModel::new(state).with_update(&link.update)).into_any_element()
         }

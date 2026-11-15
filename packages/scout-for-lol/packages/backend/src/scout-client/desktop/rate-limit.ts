@@ -79,3 +79,40 @@ export function desktopRenderAllowed(
 export function resetDesktopRenderRateLimitForTests(now = Date.now()): void {
   renderLimiter.reset(now);
 }
+
+/**
+ * Desktop Explore writes per device, by what they change. These sit on top of
+ * the read limit and the per-user Explore quota, not instead of them: a turn
+ * an edit or regenerate starts still spends the owner's quota and takes the
+ * conversation's one active-run slot in `exploreRunManager.start`.
+ *
+ * - `share`: creating or revoking a share link, which changes who can read.
+ * - `edit`: editing a question, regenerating an answer, and switching which
+ *   version of a turn is on screen.
+ * - `attachment`: image uploads and discards, which write to object storage.
+ *   The owner's unsent and hourly upload caps still bound them in the store.
+ */
+export const DESKTOP_WRITE_LIMITS_PER_MINUTE = {
+  share: 10,
+  edit: 30,
+  attachment: 20,
+} as const;
+export type DesktopWriteKind = keyof typeof DESKTOP_WRITE_LIMITS_PER_MINUTE;
+
+const writeLimiters: Record<DesktopWriteKind, DeviceWindowLimiter> = {
+  share: deviceWindowLimiter(DESKTOP_WRITE_LIMITS_PER_MINUTE.share),
+  edit: deviceWindowLimiter(DESKTOP_WRITE_LIMITS_PER_MINUTE.edit),
+  attachment: deviceWindowLimiter(DESKTOP_WRITE_LIMITS_PER_MINUTE.attachment),
+};
+
+export function desktopWriteAllowed(
+  kind: DesktopWriteKind,
+  deviceId: string,
+  now = Date.now(),
+): boolean {
+  return writeLimiters[kind].allow(deviceId, now);
+}
+
+export function resetDesktopWriteRateLimitsForTests(now = Date.now()): void {
+  for (const limiter of Object.values(writeLimiters)) limiter.reset(now);
+}

@@ -20,7 +20,9 @@ import {
   desktopErrorResponse,
   desktopHeaders,
   desktopJsonResponse,
+  writeLimitedResponse,
 } from "./contract.ts";
+import { desktopWriteAllowed } from "./rate-limit.ts";
 
 /**
  * Explore runs over REST for Scout Desktop: start, stop, list, outcome and
@@ -91,6 +93,17 @@ function startRefusalResponse(refusal: ExploreStartRefusal): Response {
 const startRun: DesktopRouteHandler = async ({ caller, body }) => {
   const input = ExploreTurnRequestSchema.safeParse(body);
   if (!input.success) return invalidRequest();
+  // An edit or a regenerate names where it attaches; a plain question
+  // continues the branch on screen. Both start through the same manager and
+  // spend the same quota, so this limit only paces how fast one device may
+  // fork a conversation.
+  if (
+    input.data.conversationId !== null &&
+    input.data.attach.kind !== "leaf" &&
+    !desktopWriteAllowed("edit", caller.device.deviceId)
+  ) {
+    return writeLimitedResponse();
+  }
   try {
     const run = await exploreRunManager.start(
       { userId: caller.userId },

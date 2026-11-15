@@ -1,0 +1,41 @@
+{
+  "route": "explore_attachments_upload",
+  "request": {
+    "mediaType": "image/png",
+    "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAHb1ZxQAAAABJRU5ErkJggg=="
+  },
+  "response": {
+    "id": "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9",
+    "mediaType": "image/png"
+  },
+  "invalidRequests": [
+    {
+      "reason": "a media type the web refuses too",
+      "body": {
+        "mediaType": "image/gif",
+        "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAHb1ZxQAAAABJRU5ErkJggg=="
+      }
+    },
+    {
+      "reason": "base64 with characters outside the alphabet",
+      "body": {
+        "mediaType": "image/png",
+        "base64": "not base64!"
+      }
+    },
+    {
+      "reason": "a missing payload",
+      "body": {
+        "mediaType": "image/png"
+      }
+    },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "mediaType": "image/png",
+        "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAHb1ZxQAAAABJRU5ErkJggg==",
+        "name": "a.png"
+      }
+    }
+  ]
+}

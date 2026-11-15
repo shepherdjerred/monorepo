@@ -335,8 +335,14 @@ describe("desktop Explore flag", () => {
   test("every Explore route is covered", () => {
     expect(EXPLORE_ROUTES.map(([name]) => name).toSorted()).toEqual([
       "explore_assets",
+      "explore_attachments_discard",
+      "explore_attachments_upload",
       "explore_conversations_get",
       "explore_conversations_list",
+      "explore_conversations_revoke_share",
+      "explore_conversations_set_leaf",
+      "explore_conversations_share",
+      "explore_models",
       "explore_runs_active",
       "explore_runs_outcome",
       "explore_runs_start",

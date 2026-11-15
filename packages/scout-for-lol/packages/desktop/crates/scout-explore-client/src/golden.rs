@@ -11,11 +11,14 @@
 //! native table, a match card and a loadout card, with card art resolved
 //! against trimmed Data Dragon documents ([`data_dragon`]).
 
-use scout_client_core::desktop_api::{ActiveRun, ConversationListResponse, RunOutcome};
+use scout_client_core::desktop_api::{
+    ActiveRun, ConversationListResponse, ModelsResponse, RunOutcome,
+};
 use serde_json::{Value, json};
+use uuid::Uuid;
 
 use crate::data_dragon::{DataDragon, DataDragonError};
-use crate::model::{RunStreamFrames, StreamEvent, Transcript};
+use crate::model::{Attachment, AttachmentMediaType, RunStreamFrames, StreamEvent, Transcript};
 use crate::reducer::PendingTurn;
 use crate::session::ChatSession;
 use crate::stream::{StreamEnd, StreamSignal};
@@ -250,4 +253,168 @@ pub fn settled() -> Result<ChatSession, GoldenError> {
 /// A golden file does not parse, or the run did not settle.
 pub fn interrupted() -> Result<ChatSession, GoldenError> {
     finish(true)
+}
+
+/// The golden model list, as `explore/models` answers it with the picker on.
+pub const MODELS: &str =
+    include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-models.json");
+
+/// The id of the conversation [`branched`] opens.
+pub const BRANCHED_CONVERSATION: Uuid = Uuid::from_u128(0x7c3e_5a91_2b64_4d0f_8e17_5a9c_4b2d_6f30);
+/// The edited question of [`branched`], the second of its three versions.
+pub const BRANCHED_QUESTION: Uuid = Uuid::from_u128(0x0a00_0000_0000_4000_8000_0000_0000_0002);
+/// The first version of that question.
+pub const BRANCHED_QUESTION_FIRST: Uuid =
+    Uuid::from_u128(0x0a00_0000_0000_4000_8000_0000_0000_0001);
+/// The third version of that question.
+pub const BRANCHED_QUESTION_LAST: Uuid = Uuid::from_u128(0x0a00_0000_0000_4000_8000_0000_0000_0003);
+/// The answer to the second version, the first of its two.
+pub const BRANCHED_ANSWER: Uuid = Uuid::from_u128(0x0b00_0000_0000_4000_8000_0000_0000_0001);
+/// The regenerated version of that answer.
+pub const BRANCHED_ANSWER_NEXT: Uuid = Uuid::from_u128(0x0b00_0000_0000_4000_8000_0000_0000_0002);
+/// The follow-up question under that answer, which has one version.
+pub const BRANCHED_FOLLOW_UP: Uuid = Uuid::from_u128(0x0a00_0000_0000_4000_8000_0000_0000_0010);
+/// The answer to the follow-up.
+pub const BRANCHED_FOLLOW_UP_ANSWER: Uuid =
+    Uuid::from_u128(0x0b00_0000_0000_4000_8000_0000_0000_0010);
+/// The share token [`shared`] puts on the conversation.
+pub const SHARE_TOKEN: &str = "aaaaaaaabbbbbbbbccccccccdddddddd";
+
+fn models() -> Result<ModelsResponse, GoldenError> {
+    Ok(serde_json::from_value(response(MODELS)?)?)
+}
+
+/// A conversation whose opening question was edited twice, so it has three
+/// versions and this is the second, and whose answer was regenerated once.
+///
+/// # Errors
+/// A golden file does not parse.
+pub fn branched_transcript(share_token: Option<&str>) -> Result<Transcript, GoldenError> {
+    let created = "2026-11-14T09:12:30.000Z";
+    Ok(serde_json::from_value(json!({
+        "conversation": {
+            "id": BRANCHED_CONVERSATION,
+            "title": "Best ADC pair this week",
+            "preferredModel": null,
+            "origin": "desktop",
+            "shareToken": share_token,
+            "sharedLeafId": share_token.map(|_| BRANCHED_ANSWER),
+            "createdAt": created,
+            "updatedAt": created,
+        },
+        "messages": [
+            {
+                "id": BRANCHED_QUESTION,
+                "role": "user",
+                "parentId": null,
+                "siblingIds": [BRANCHED_QUESTION_FIRST, BRANCHED_QUESTION, BRANCHED_QUESTION_LAST],
+                "versionIndex": 1,
+                "versionCount": 3,
+                "content": "Which bot lane pair wins most in ARAM this month?",
+                "attachments": [{
+                    "id": "b1c2d3e4-5f60-4718-8293-a4b5c6d7e8f9",
+                    "mediaType": "image/png"
+                }],
+                "createdAt": created,
+            },
+            {
+                "id": BRANCHED_ANSWER,
+                "role": "assistant",
+                "parentId": BRANCHED_QUESTION,
+                "siblingIds": [BRANCHED_ANSWER, BRANCHED_ANSWER_NEXT],
+                "versionIndex": 0,
+                "versionCount": 2,
+                "content": "Jinx and Lulu lead with a 61% win rate.",
+                "createdAt": created,
+            },
+            {
+                "id": BRANCHED_FOLLOW_UP,
+                "role": "user",
+                "parentId": BRANCHED_ANSWER,
+                "siblingIds": [BRANCHED_FOLLOW_UP],
+                "versionIndex": 0,
+                "versionCount": 1,
+                "content": "And on Summoner's Rift?",
+                "createdAt": created,
+            },
+            {
+                "id": BRANCHED_FOLLOW_UP_ANSWER,
+                "role": "assistant",
+                "parentId": BRANCHED_FOLLOW_UP,
+                "siblingIds": [BRANCHED_FOLLOW_UP_ANSWER],
+                "versionIndex": 0,
+                "versionCount": 1,
+                "content": "Jinx and Lulu stay on top at 54%.",
+                "createdAt": created,
+            },
+        ],
+    }))?)
+}
+
+/// The conversation [`branched_transcript`] describes, open on screen.
+///
+/// # Errors
+/// A golden file does not parse.
+pub fn branched() -> Result<ChatSession, GoldenError> {
+    let mut session = ready()?;
+    session.models_loaded(models()?);
+    session.open(BRANCHED_CONVERSATION);
+    session.opened(branched_transcript(None)?);
+    Ok(session)
+}
+
+/// The first two messages of [`branched`]: the edited question with its
+/// versions and the answer with its own, short enough to show whole.
+fn compact_transcript(share_token: Option<&str>) -> Result<Transcript, GoldenError> {
+    let mut transcript = branched_transcript(share_token)?;
+    transcript.messages.truncate(2);
+    Ok(transcript)
+}
+
+/// [`branched`] without its follow-up, so the version switcher on the
+/// opening question is on screen.
+///
+/// # Errors
+/// A golden file does not parse.
+pub fn versioned() -> Result<ChatSession, GoldenError> {
+    let mut session = branched()?;
+    session.opened(compact_transcript(None)?);
+    Ok(session)
+}
+
+/// [`versioned`], with its share link created.
+///
+/// # Errors
+/// A golden file does not parse.
+pub fn shared() -> Result<ChatSession, GoldenError> {
+    let mut session = branched()?;
+    session.opened(compact_transcript(Some(SHARE_TOKEN))?);
+    Ok(session)
+}
+
+/// A blank conversation with two images attached and uploaded, and the model
+/// picker on. The files are the thumbnails the composer draws.
+///
+/// # Errors
+/// A golden file does not parse, or the session refused an image.
+pub fn composing(first: &str, second: &str) -> Result<ChatSession, GoldenError> {
+    let mut session = ready()?;
+    session.models_loaded(models()?);
+    session.start_new();
+    for (path, id) in [
+        (first, Uuid::from_u128(0xa1)),
+        (second, Uuid::from_u128(0xa2)),
+    ] {
+        let job = session
+            .begin_attach(path)
+            .ok_or("a ready session refused an image")?;
+        session.upload_finished(
+            job.key,
+            Ok(Attachment {
+                id,
+                media_type: AttachmentMediaType::Png,
+            }),
+        );
+    }
+    Ok(session)
 }

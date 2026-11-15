@@ -33,6 +33,7 @@ import {
   desktopHeaders,
   desktopJsonResponse,
 } from "./contract.ts";
+import { DESKTOP_ACTION_ROUTES } from "./explore-action-routes.ts";
 import {
   DESKTOP_RUN_ROUTES,
   invalidRequest,
@@ -187,6 +188,7 @@ const ROUTES = new Map<string, DesktopRoute>([
     SCOUT_DESKTOP_API_ROUTES.explore_visualization.path,
     { handler: visualization, maxBodyBytes: MAX_READ_BODY_BYTES },
   ],
+  ...DESKTOP_ACTION_ROUTES,
   ...DESKTOP_RUN_ROUTES.map(
     ({ path, handler, turn }) =>
       [

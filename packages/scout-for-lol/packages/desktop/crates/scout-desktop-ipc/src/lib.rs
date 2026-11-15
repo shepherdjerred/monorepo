@@ -25,8 +25,9 @@ mod chat;
 mod chat_visuals;
 
 pub use chat::{
-    ChatAvailability, ChatCommand, ChatConversation, ChatMessage, ChatParts, ChatRole, ChatStatus,
-    ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn,
+    ChatAttachment, ChatAvailability, ChatCommand, ChatComposer, ChatConversation, ChatDraft,
+    ChatDraftState, ChatMessage, ChatModelOption, ChatParts, ChatRole, ChatStatus, ChatToolStatus,
+    ChatToolStep, ChatTranscript, ChatTurn, ChatVersion,
 };
 pub use chat_visuals::{
     ChatIcon, ChatImage, ChatLoadoutCard, ChatMatchCard, ChatMatchPlayer, ChatMatchTeam, ChatTable,
@@ -34,7 +35,7 @@ pub use chat_visuals::{
 };
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 5;
+pub const PROTOCOL_VERSION: u32 = 6;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -93,6 +94,11 @@ pub enum SupervisorMessage {
     ChatImages {
         /// The pictures.
         images: BTreeMap<String, ChatImage>,
+    },
+    /// The composer's images and model choice.
+    ChatComposer {
+        /// The composer.
+        composer: ChatComposer,
     },
     /// Bring the window to the front (the tray's "Open" while it is running).
     Show,
@@ -359,8 +365,9 @@ mod tests {
     use uuid::Uuid;
 
     use super::{
-        ChatAvailability, ChatCommand, ChatConversation, ChatImage, ChatMessage, ChatRole,
-        ChatStatus, ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVisual,
+        ChatAttachment, ChatAvailability, ChatCommand, ChatComposer, ChatConversation, ChatDraft,
+        ChatDraftState, ChatImage, ChatMessage, ChatModelOption, ChatRole, ChatStatus,
+        ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion, ChatVisual,
         ChatVisuals, CounterReading, DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION,
         PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus,
         WindowMessage, check_protocol, decode_line, encode_line,
@@ -413,7 +420,20 @@ mod tests {
                             match_cards: Vec::new(),
                             loadout_cards: Vec::new(),
                         },
+                        version: Some(ChatVersion {
+                            position: 2,
+                            count: 3,
+                            previous: Some(Uuid::from_u128(1)),
+                            next: Some(Uuid::from_u128(3)),
+                        }),
+                        attachments: vec![ChatAttachment {
+                            id: Uuid::from_u128(9),
+                            media_type: "image/png".to_owned(),
+                            thumbnail: Some("/tmp/scout/build.png".to_owned()),
+                        }],
                     }],
+                    web_url: "https://scout-for-lol.com/app/explore/abc".to_owned(),
+                    share_url: Some("https://scout-for-lol.com/app/explore/s/abc".to_owned()),
                 }),
             },
             SupervisorMessage::ChatTranscript { transcript: None },
@@ -421,6 +441,7 @@ mod tests {
                 turn: Some(ChatTurn {
                     stoppable: true,
                     question: Some("How is my Jinx?".to_owned()),
+                    attachments: Vec::new(),
                     answer: Some("Your Jinx".to_owned()),
                     activity: Some("Running the query".to_owned()),
                     stopping: false,
@@ -433,6 +454,14 @@ mod tests {
                 }),
             },
             SupervisorMessage::ChatTurn { turn: None },
+        ]
+        .into_iter()
+        .chain(chat_picture_and_composer_messages())
+        .collect()
+    }
+
+    fn chat_picture_and_composer_messages() -> Vec<SupervisorMessage> {
+        vec![
             SupervisorMessage::ChatImages {
                 images: [
                     ("chart:a:b".to_owned(), ChatImage::Loading),
@@ -445,6 +474,32 @@ mod tests {
                     ),
                 ]
                 .into(),
+            },
+            SupervisorMessage::ChatComposer {
+                composer: ChatComposer {
+                    drafts: vec![
+                        ChatDraft {
+                            key: Uuid::from_u128(5),
+                            name: "build.png".to_owned(),
+                            thumbnail: "/tmp/scout/build.png".to_owned(),
+                            state: ChatDraftState::Ready,
+                        },
+                        ChatDraft {
+                            key: Uuid::from_u128(6),
+                            name: "huge.png".to_owned(),
+                            thumbnail: "/tmp/scout/huge.png".to_owned(),
+                            state: ChatDraftState::Failed {
+                                message: "Images can be at most 10 MiB.".to_owned(),
+                            },
+                        },
+                    ],
+                    max_images: 4,
+                    models: vec![ChatModelOption {
+                        id: "gpt-6-luna".to_owned(),
+                        label: "GPT-6 Luna · High".to_owned(),
+                    }],
+                    model: Some("gpt-6-luna".to_owned()),
+                },
             },
         ]
     }
@@ -571,6 +626,44 @@ mod tests {
             WindowMessage::Chat {
                 command: ChatCommand::Stop,
             },
+            WindowMessage::Chat {
+                command: ChatCommand::Edit {
+                    message_id: CONVERSATION,
+                    question: "Who carries in October?".to_owned(),
+                },
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::Regenerate {
+                    message_id: CONVERSATION,
+                },
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::SwitchVersion {
+                    message_id: CONVERSATION,
+                },
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::Attach {
+                    path: "/tmp/scout/build.png".to_owned(),
+                },
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::RemoveAttachment { key: CONVERSATION },
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::Share,
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::RevokeShare,
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::ChooseModel {
+                    model: Some("gpt-6.1-sol".to_owned()),
+                },
+            },
+            WindowMessage::Chat {
+                command: ChatCommand::ChooseModel { model: None },
+            },
             WindowMessage::SetStartAtLogin { enabled: true },
             WindowMessage::SetPrivacy {
                 send_error_reports: false,
@@ -601,6 +694,25 @@ mod tests {
         assert_eq!(
             decode_line::<WindowMessage>("{\"type\":\"quit\"}\r\n")?,
             WindowMessage::Quit
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn the_chat_action_commands_have_a_fixed_wire_shape() -> Result<(), super::CodecError> {
+        assert_eq!(
+            encode_line(&WindowMessage::Chat {
+                command: ChatCommand::SwitchVersion {
+                    message_id: Uuid::nil()
+                }
+            })?,
+            "{\"type\":\"chat\",\"command\":{\"action\":\"switch_version\",\"message_id\":\"00000000-0000-0000-0000-000000000000\"}}\n"
+        );
+        assert_eq!(
+            encode_line(&WindowMessage::Chat {
+                command: ChatCommand::Share
+            })?,
+            "{\"type\":\"chat\",\"command\":{\"action\":\"share\"}}\n"
         );
         Ok(())
     }
@@ -638,7 +750,7 @@ mod tests {
         // An unknown command, a stray field, a malformed id and a missing
         // field all break the link.
         for line in [
-            r#"{"type":"chat","command":{"action":"share"}}"#,
+            r#"{"type":"chat","command":{"action":"export"}}"#,
             r#"{"type":"chat","command":{"action":"send","question":"x","model":"sol"}}"#,
             r#"{"type":"chat","command":{"action":"open","conversation_id":"not-a-uuid"}}"#,
             r#"{"type":"chat","command":{"action":"send"}}"#,
@@ -649,8 +761,8 @@ mod tests {
         // the sidebar does not carry are refused on the supervisor's side too.
         for line in [
             r#"{"type":"chat_status","status":{"availability":{"state":"maybe"},"open_conversation":null,"reconnecting":false,"notice":null}}"#,
-            r#"{"type":"chat_turn","turn":{"stoppable":true,"question":null,"answer":null,"activity":null,"stopping":false,"tools":[{"summary":"x","status":"paused","duration_ms":null}],"error":null}}"#,
-            r#"{"type":"chat_turn","turn":{"stoppable":true,"question":null,"answer":null,"activity":null,"stopping":false,"tools":[],"error":null,"raw":"{}"}}"#,
+            r#"{"type":"chat_turn","turn":{"stoppable":true,"question":null,"attachments":[],"answer":null,"activity":null,"stopping":false,"tools":[{"summary":"x","status":"paused","duration_ms":null}],"error":null}}"#,
+            r#"{"type":"chat_turn","turn":{"stoppable":true,"question":null,"attachments":[],"answer":null,"activity":null,"stopping":false,"tools":[],"error":null,"raw":"{}"}}"#,
             r#"{"type":"chat_conversations","conversations":[{"id":"0b5e4a1c-7f00-4e5a-9c1d-2f3e4a5b6c7d","title":"x","origin":"web"}]}"#,
         ] {
             assert!(decode_line::<SupervisorMessage>(line).is_err(), "{line}");

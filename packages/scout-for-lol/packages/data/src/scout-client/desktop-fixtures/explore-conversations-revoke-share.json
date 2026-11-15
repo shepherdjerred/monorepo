@@ -1,0 +1,17 @@
+{
+  "route": "explore_conversations_revoke_share",
+  "request": {
+    "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30"
+  },
+  "response": {
+    "ok": true
+  },
+  "invalidRequests": [
+    {
+      "reason": "a malformed conversation id",
+      "body": {
+        "conversationId": "one"
+      }
+    }
+  ]
+}

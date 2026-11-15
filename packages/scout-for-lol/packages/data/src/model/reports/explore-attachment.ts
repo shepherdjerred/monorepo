@@ -11,6 +11,12 @@ export const EXPLORE_MAX_ATTACHMENTS = 4;
  */
 export const EXPLORE_ATTACHMENT_HOLD_MS = 15 * 60_000;
 
+/**
+ * The largest image Explore accepts, in bytes. The backend's screenshot
+ * validator enforces the same number; a test holds the two together.
+ */
+export const EXPLORE_ATTACHMENT_MAX_BYTES = 10 * 1024 * 1024;
+
 /** The image types Explore stores and sends to the model. */
 export const ExploreAttachmentMediaTypeSchema = z.enum([
   "image/png",

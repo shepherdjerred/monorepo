@@ -11,6 +11,7 @@ import { EXPLORE_ANSWER_MAX_LENGTH } from "#src/model/reports/explore-answer.ts"
 import { ExploreMatchCardSchema } from "#src/model/reports/explore-match-card.ts";
 import { ExploreLoadoutCardSchema } from "#src/model/reports/explore-loadout-card.ts";
 import { ExploreConversationOriginSchema } from "#src/model/reports/explore-origin.ts";
+import { ExploreModelSchema } from "#src/model/reports/explore-model.ts";
 
 /**
  * Contracts for the explore surface — a conversation over the whole report
@@ -121,7 +122,7 @@ export const ExploreTurnRequestSchema = z
     conversationId: ExploreConversationIdSchema.nullable().default(null),
     question: ExploreQuestionSchema.nullable().default(null),
     attach: ExploreAttachPointSchema.default({ kind: "leaf" }),
-    model: z.enum(["gpt-6-luna", "gpt-6.1-sol"]).optional(),
+    model: ExploreModelSchema.optional(),
     /**
      * Images uploaded first through `explore.uploadAttachment`, by id. They
      * belong to the new question, so answering again carries none.
@@ -372,7 +373,7 @@ export const ExploreConversationSchema = z
   .object({
     id: ExploreConversationIdSchema,
     title: ExploreConversationTitleSchema,
-    preferredModel: z.enum(["gpt-6-luna", "gpt-6.1-sol"]).nullable().optional(),
+    preferredModel: ExploreModelSchema.nullable().optional(),
     origin: ExploreConversationOriginSchema.default("legacy"),
     shareToken: ExploreShareTokenSchema.nullable().default(null),
     /** The leaf a share link is pinned to, if the conversation is shared. */

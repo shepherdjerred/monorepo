@@ -15,6 +15,13 @@ import streamFixture from "./desktop-fixtures/explore-runs-stream.json" with { t
 import assetsFixture from "./desktop-fixtures/explore-assets.json" with { type: "json" };
 import visualizationFixture from "./desktop-fixtures/explore-visualization.json" with { type: "json" };
 import visualsFixture from "./desktop-fixtures/explore-conversations-get-visuals.json" with { type: "json" };
+import modelsFixture from "./desktop-fixtures/explore-models.json" with { type: "json" };
+import setLeafFixture from "./desktop-fixtures/explore-conversations-set-leaf.json" with { type: "json" };
+import shareFixture from "./desktop-fixtures/explore-conversations-share.json" with { type: "json" };
+import revokeShareFixture from "./desktop-fixtures/explore-conversations-revoke-share.json" with { type: "json" };
+import uploadFixture from "./desktop-fixtures/explore-attachments-upload.json" with { type: "json" };
+import discardFixture from "./desktop-fixtures/explore-attachments-discard.json" with { type: "json" };
+import startActionsFixture from "./desktop-fixtures/explore-runs-start-actions.json" with { type: "json" };
 import { ScoutClientCreatePairingSchema } from "./protocol.schema.ts";
 import {
   ExploreActiveRunSchema,
@@ -22,6 +29,11 @@ import {
   ExploreRunOutcomeResultSchema,
   ExploreTurnRequestSchema,
 } from "#src/model/reports/explore.ts";
+import { EXPLORE_ATTACHMENT_MAX_BYTES } from "#src/model/reports/explore-attachment.ts";
+import {
+  EXPLORE_MODEL_OPTIONS,
+  ExploreModelSchema,
+} from "#src/model/reports/explore-model.ts";
 import {
   SCOUT_DESKTOP_API_ERRORS,
   SCOUT_DESKTOP_API_ROUTES,
@@ -38,8 +50,15 @@ import {
   ScoutDesktopApiErrorCodeSchema,
   ScoutDesktopApiErrorSchema,
   ScoutDesktopApiRouteSchema,
+  ScoutDesktopAttachmentDiscardRequestSchema,
+  ScoutDesktopAttachmentUploadRequestSchema,
+  ScoutDesktopAttachmentUploadResponseSchema,
   ScoutDesktopConversationGetRequestSchema,
   ScoutDesktopConversationGetResponseSchema,
+  ScoutDesktopModelsResponseSchema,
+  ScoutDesktopOkResponseSchema,
+  ScoutDesktopSetLeafRequestSchema,
+  ScoutDesktopShareResponseSchema,
   ScoutDesktopConversationListRequestSchema,
   ScoutDesktopConversationListResponseSchema,
   ScoutDesktopExploreStatusRequestSchema,
@@ -126,6 +145,36 @@ const ROUTE_SCHEMAS: Record<
     request: ScoutDesktopVisualizationRequestSchema,
     response: ScoutDesktopPngResponseSchema,
     fixture: visualizationFixture,
+  },
+  explore_models: {
+    request: ScoutDesktopEmptyRequestSchema,
+    response: ScoutDesktopModelsResponseSchema,
+    fixture: modelsFixture,
+  },
+  explore_conversations_set_leaf: {
+    request: ScoutDesktopSetLeafRequestSchema,
+    response: ScoutDesktopOkResponseSchema,
+    fixture: setLeafFixture,
+  },
+  explore_conversations_share: {
+    request: ScoutDesktopConversationGetRequestSchema,
+    response: ScoutDesktopShareResponseSchema,
+    fixture: shareFixture,
+  },
+  explore_conversations_revoke_share: {
+    request: ScoutDesktopConversationGetRequestSchema,
+    response: ScoutDesktopOkResponseSchema,
+    fixture: revokeShareFixture,
+  },
+  explore_attachments_upload: {
+    request: ScoutDesktopAttachmentUploadRequestSchema,
+    response: ScoutDesktopAttachmentUploadResponseSchema,
+    fixture: uploadFixture,
+  },
+  explore_attachments_discard: {
+    request: ScoutDesktopAttachmentDiscardRequestSchema,
+    response: ScoutDesktopOkResponseSchema,
+    fixture: discardFixture,
   },
 };
 
@@ -231,6 +280,41 @@ describe("Scout desktop API contract", () => {
     ),
   )("$name refuses $reason", ({ name, body }) => {
     expect(ROUTE_SCHEMAS[name].request.safeParse(body).success).toBe(false);
+  });
+
+  test("editing, regenerating and asking with images are runs/start bodies", () => {
+    expect(startActionsFixture.route).toBe("explore_runs_start");
+    for (const { flow, request } of startActionsFixture.requests) {
+      expect(ExploreTurnRequestSchema.parse(request), flow).toEqual(request);
+    }
+    for (const { reason, body } of startActionsFixture.invalidRequests) {
+      expect(ExploreTurnRequestSchema.safeParse(body).success, reason).toBe(
+        false,
+      );
+    }
+  });
+
+  test("the model list is the web picker's list, and a model outside it is refused", () => {
+    expect(ExploreModelSchema.options).toEqual(
+      EXPLORE_MODEL_OPTIONS.map((option) => option.id),
+    );
+    const models = ScoutDesktopModelsResponseSchema.parse(
+      modelsFixture.response,
+    );
+    expect(models.models).toEqual([...EXPLORE_MODEL_OPTIONS]);
+  });
+
+  test("an upload holds the web's size cap", () => {
+    expect(EXPLORE_ATTACHMENT_MAX_BYTES).toBe(10 * 1024 * 1024);
+    const tooLong = "A".repeat(
+      4 * Math.ceil(EXPLORE_ATTACHMENT_MAX_BYTES / 3) + 4,
+    );
+    expect(
+      ScoutDesktopAttachmentUploadRequestSchema.safeParse({
+        mediaType: "image/png",
+        base64: tooLong,
+      }).success,
+    ).toBe(false);
   });
 
   test("a scope request must name at least one scope", () => {

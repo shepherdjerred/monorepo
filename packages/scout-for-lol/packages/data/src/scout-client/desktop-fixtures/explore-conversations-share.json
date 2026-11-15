@@ -1,0 +1,22 @@
+{
+  "route": "explore_conversations_share",
+  "request": {
+    "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30"
+  },
+  "response": {
+    "shareToken": "aaaaaaaabbbbbbbbccccccccdddddddd"
+  },
+  "invalidRequests": [
+    {
+      "reason": "a missing conversation id",
+      "body": {}
+    },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+        "public": true
+      }
+    }
+  ]
+}

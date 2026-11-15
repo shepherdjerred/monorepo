@@ -29,6 +29,9 @@ pub enum ButtonStyle {
     Secondary,
     /// An action that removes something.
     Destructive,
+    /// A small action beside content, such as a row's Edit or the version
+    /// arrows.
+    Quiet,
 }
 
 /// A Scout button.
@@ -89,6 +92,7 @@ impl RenderOnce for ScoutButton {
             ButtonStyle::Primary => button.primary(),
             ButtonStyle::Secondary => button.secondary(),
             ButtonStyle::Destructive => button.danger(),
+            ButtonStyle::Quiet => button.ghost().compact(),
         }
     }
 }

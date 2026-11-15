@@ -77,3 +77,11 @@ export function contractRefusal(request: Request): Response | null {
     ? contractUnsupportedResponse()
     : null;
 }
+
+/** A write refused for this device: it has used its minute. */
+export function writeLimitedResponse(): Response {
+  return desktopErrorResponse(
+    "rate_limited",
+    "Too many changes from this device. Try again shortly.",
+  );
+}
