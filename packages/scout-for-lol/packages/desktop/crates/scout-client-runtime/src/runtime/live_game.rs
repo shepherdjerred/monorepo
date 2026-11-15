@@ -72,13 +72,18 @@ impl LiveGame {
                 .and_then(|bytes| std::str::from_utf8(bytes).ok())
         };
         self.upload.set_outbox(outbox.cloned());
-        self.upload
-            .observe(text("observer"), text(IN_PROGRESS_GAME_KEY));
         let Some(session) = &mut self.session else {
+            self.upload
+                .observe(text("observer"), text(IN_PROGRESS_GAME_KEY));
             return;
         };
         let phase = state.current_phase();
         let outcome = session.tick(&phase, Utc::now()).await;
+        // Observe after the tick: when a missed transition makes the recorder
+        // hand off the previous game inside this tick, the hand-off must still
+        // read that game's id, not the new game's.
+        self.upload
+            .observe(text("observer"), text(IN_PROGRESS_GAME_KEY));
         let live = session.latest().cloned();
         update_state(state, |snapshot| snapshot.live_game = live);
         // One diagnostic per distinct problem, not one per two-second poll.
