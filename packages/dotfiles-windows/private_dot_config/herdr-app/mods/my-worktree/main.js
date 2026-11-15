@@ -28,6 +28,7 @@ import {
   home,
   knownAgents,
   window,
+  checking,
 } from "herdr";
 import {
   CLAUDE_MODELS,
@@ -372,6 +373,7 @@ export default class Worktree extends View {
     this.opening = props()?.action === "open";
     // New without a given branch: the agent's first message, which names it.
     this.messaging = props()?.action === "new" && !props()?.branch;
+    this.sendMessage = true;
     this.text = props()?.branch ?? "";
     this.choice = {}; // provider -> { mode, model, effort }, null = its default
     this.catalogs = {}; // provider -> { models, error } once read
@@ -379,33 +381,12 @@ export default class Worktree extends View {
     this.optionAt = 0;
     this.list = undefined; // open: the checkouts, once read
     this.at = 0;
-    this.input = this.messaging
-      ? TextareaState.new({ placeholder: "First message for the agent" })
-      : InputState.new({ value: this.text, placeholder: "filter worktrees" });
-    if (this.messaging) this.input.set_auto_grow(3, 8);
-    this.input.on("change", (_e, cx) => {
-      this.text = this.input.value();
-      this.error = "";
-      this.at = 0;
-      cx.notify();
-    });
-    // Enter in the filter opens the highlighted checkout; only New and Remove
-    // run work(). Shift-Enter in the message is a new line.
-    this.input.on("submit", (e, cx) => {
-      if (this.opening) this.open(this.shown()[this.at]);
-      else if (e?.shift) return;
-      else if (this.choosing) this.chooseAt(this.optionAt, cx);
-      else this.go(cx);
-    });
     this.inputFocused = true;
-    this.input.on("focus", (_e, cx) => {
-      this.inputFocused = true;
-      cx.notify();
-    });
-    this.input.on("blur", (_e, cx) => {
-      this.inputFocused = false;
-      cx.notify();
-    });
+    this.input = this.messaging
+      ? this.makeTextarea("First message for the agent")
+      : this.bindInput(
+          InputState.new({ value: this.text, placeholder: "filter worktrees" }),
+        );
     if (props()?.action !== "remove") {
       this.input.focus();
       cx.timer.after(600, () => this.input.focus());
@@ -424,6 +405,7 @@ export default class Worktree extends View {
     // Whether the space's machine is Windows: no Brim, agents start through
     // the PowerShell profile. Known before the agents are listed.
     this.windowsTarget = !this.on && window()?.platform === "windows";
+    if (checking()) return;
     cx.spawn(async (cx) => {
       try {
         if (this.on) {
@@ -582,6 +564,65 @@ export default class Worktree extends View {
       : null;
   }
 
+  hasAgentTarget() {
+    return this.picking
+      ? !this.agents || Boolean(this.provider())
+      : Boolean(props()?.argv);
+  }
+
+  bindInput(state) {
+    state.on("change", (_e, cx) => {
+      this.text = state.value();
+      this.error = "";
+      this.at = 0;
+      cx.notify();
+    });
+    // Enter in the filter opens the highlighted checkout; only New and Remove
+    // run work(). Shift-Enter in the message is a new line.
+    state.on("submit", (e, cx) => {
+      if (this.opening) this.open(this.shown()[this.at]);
+      else if (e?.shift) return;
+      else if (this.choosing) this.chooseAt(this.optionAt, cx);
+      else this.go(cx);
+    });
+    state.on("focus", (_e, cx) => {
+      this.inputFocused = true;
+      cx.notify();
+    });
+    state.on("blur", (_e, cx) => {
+      this.inputFocused = false;
+      cx.notify();
+    });
+    return state;
+  }
+
+  makeTextarea(placeholder) {
+    this.lastPlaceholder = placeholder;
+    const state = TextareaState.new({ placeholder, value: this.text });
+    state.set_auto_grow(3, 8);
+    return this.bindInput(state);
+  }
+
+  refreshPlaceholder() {
+    if (!this.messaging || this.text !== "") return;
+    const placeholder =
+      this.sendMessage && this.hasAgentTarget()
+        ? "First message for the agent"
+        : "Describe the worktree (names the branch and tab)";
+    if (this.lastPlaceholder === placeholder) return;
+    this.lastPlaceholder = placeholder;
+    const focusedNow = this.inputFocused;
+    this.input = this.makeTextarea(placeholder);
+    if (focusedNow) this.input.focus();
+  }
+
+  toggleSendMessage(cx) {
+    this.sendMessage = !this.sendMessage;
+    this.error = "";
+    this.refreshPlaceholder();
+    cx.notify();
+  }
+
   choiceFor(provider) {
     return (
       this.choice[provider] ??
@@ -595,7 +636,11 @@ export default class Worktree extends View {
   // Hands the work to the detached worker; "" once it is started.
   startInBackground() {
     const message = this.text.trim();
-    if (!message) return "Type a first message.";
+    const sendMessage = Boolean(this.sendMessage && this.hasAgentTarget());
+    if (!message)
+      return sendMessage
+        ? "Type a first message."
+        : "Describe the worktree to name its branch and tab.";
     if (this.picking && !this.agents)
       return "Still asking Brim for the agents.";
     const provider = this.provider();
@@ -620,6 +665,7 @@ export default class Worktree extends View {
       // A caller's own program and tab, when it gave them instead of a pick.
       argv: this.picking ? null : (props().argv ?? null),
       tab: props().tab ?? null,
+      sendMessage,
     };
     // The dialog closes now and its tasks with it; a process it started keeps
     // running. Results: ~/.local/state/herdr-worktree/events.jsonl, the unified
@@ -850,6 +896,10 @@ export default class Worktree extends View {
       return cx.notify();
     }
     if (e.key === "enter" && props()?.action === "remove") return this.go(cx);
+    if (this.messaging && e.keystroke === "alt-s") {
+      this.toggleSendMessage(cx);
+      return cx.stop_propagation();
+    }
     const shortcut = {
       "alt-m": ["mode", 1],
       "alt-shift-m": ["mode", -1],
@@ -873,20 +923,19 @@ export default class Worktree extends View {
     if (this.picking && n && vertical) {
       this.pick = (this.pick + (e.key === "down" ? 1 : n - 1)) % n;
       this.loadCatalog(this.provider(), cx);
+      this.refreshPlaceholder();
       cx.stop_propagation();
       cx.notify();
     }
   }
 
-  // Mode, model and effort for the highlighted agent: each a chip that opens
-  // its list; only the ones the agent takes are shown.
+  // Mode, model and effort for the highlighted agent, plus the first-message toggle.
   renderChoices(t) {
     const provider = this.provider();
-    if (!provider) return div();
-    const choice = this.choiceFor(provider);
-    const kinds = ["mode", "model", "effort"].filter((k) =>
-      this.offers(k, provider),
-    );
+    const choice = provider ? this.choiceFor(provider) : null;
+    const kinds = provider
+      ? ["mode", "model", "effort"].filter((k) => this.offers(k, provider))
+      : [];
     const chip = (kind) => {
       const label =
         this.options(kind, provider).find((o) => o.id === choice[kind])
@@ -928,7 +977,67 @@ export default class Worktree extends View {
             .child(`${label} \u25be`),
         );
     };
-    return h_flex().flex_none().gap(6).items_center().children(kinds.map(chip));
+    const canSend = this.messaging && this.hasAgentTarget();
+    const on = Boolean(this.sendMessage && canSend);
+    return h_flex()
+      .flex_none()
+      .w_full()
+      .min_h(24)
+      .gap(8)
+      .items_center()
+      .justify_between()
+      .child(h_flex().gap(6).items_center().children(kinds.map(chip)))
+      .when(canSend, (el) =>
+        el.child(
+          h_flex()
+            .id("send-first-message")
+            .flex_none()
+            .gap(6)
+            .px(4)
+            .py(2)
+            .rounded(6)
+            .items_center()
+            .cursor_pointer()
+            .hover((s) => s.bg(t.hover))
+            .tooltip(
+              "Toggle sending your input as the agent's first message (⌥S)",
+            )
+            .on_click((_e, cx) => this.toggleSendMessage(cx))
+            .child(
+              h_flex()
+                .w(28)
+                .h(16)
+                .rounded(8)
+                .px(2)
+                .items_center()
+                .flex_none()
+                .border(1)
+                .border_color(on ? t.accent : t.input)
+                .bg(on ? t.accent : t.background)
+                .when(on, (track) => track.justify_end())
+                .child(
+                  div()
+                    .size(10)
+                    .rounded(5)
+                    .bg(on ? t.accent_foreground : t.muted),
+                ),
+            )
+            .child(
+              div()
+                .text_size(12)
+                .text_color(on ? t.foreground : t.muted)
+                .child("Send as first message"),
+            ),
+        ),
+      )
+      .when(this.messaging && !canSend, (el) =>
+        el.child(
+          div()
+            .text_size(11.5)
+            .text_color(t.dim)
+            .child("Names branch & tab only (plain shell)"),
+        ),
+      );
   }
 
   // The open control's choices, in place of the agent list.
@@ -1026,6 +1135,7 @@ export default class Worktree extends View {
         .on_click((_e, cx) => {
           this.pick = i;
           this.loadCatalog(this.provider(), cx);
+          this.refreshPlaceholder();
           cx.notify();
         })
         .child(providerIcon(e, t, off && !on))
@@ -1278,10 +1388,62 @@ export default class Worktree extends View {
       )
       .child(
         h_flex()
-          .justify_end()
-          .text_size(11)
-          .text_color(t.dim)
-          .child("\u2191\u2193 choose \u00b7 \u21b5 open \u00b7 esc close"),
+          .items_center()
+          .justify_between()
+          .gap(12)
+          .pt(2)
+          .child(
+            div()
+              .flex_1()
+              .min_w(0)
+              .truncate()
+              .text_size(11)
+              .text_color(t.dim)
+              .child("\u2191\u2193 choose \u00b7 \u21b5 open \u00b7 esc close"),
+          )
+          .child(
+            h_flex()
+              .flex_none()
+              .gap(8)
+              .items_center()
+              .child(
+                div()
+                  .id("wt-open-cancel")
+                  .h(28)
+                  .px(12)
+                  .rounded(6)
+                  .border(1)
+                  .border_color(t.border)
+                  .bg(t.raised)
+                  .text_size(12.5)
+                  .text_color(t.foreground)
+                  .cursor_pointer()
+                  .flex()
+                  .items_center()
+                  .hover((s) => s.bg(t.hover))
+                  .on_click(() => this.close())
+                  .child("Cancel"),
+              )
+              .when(rows.length > 0, (el) =>
+                el.child(
+                  div()
+                    .id("wt-open-submit")
+                    .h(28)
+                    .px(14)
+                    .rounded(6)
+                    .bg(t.accent)
+                    .text_size(12.5)
+                    .font_semibold()
+                    .text_color(t.accent_foreground)
+                    .cursor_pointer()
+                    .flex()
+                    .items_center()
+                    .hover((s) => s.opacity(0.9))
+                    .on_click(() => this.open(rows[this.at]))
+                    .child("Open worktree"),
+                ),
+              ),
+          ),
       );
   }
 
@@ -1291,6 +1453,8 @@ export default class Worktree extends View {
     const remove = props()?.action === "remove";
     const s = this.space();
     const r = this.repo;
+    const hasAgent = this.hasAgentTarget();
+    const willSend = Boolean(this.sendMessage && hasAgent);
     const title = remove
       ? `Remove worktree ${s?.name ?? ""}?`
       : `New worktree${r ? ` of ${r.name}` : ""}`;
@@ -1304,9 +1468,37 @@ export default class Worktree extends View {
               ? "This is the repository's main checkout, not a worktree."
               : `Closes the space and deletes ${tilde(r.top, this.userHome)}. The branch stays.`
             : this.messaging
-              ? `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and tab are named from the message, which the agent starts with.`
+              ? willSend
+                ? `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and tab are named from the message, which the agent starts with.`
+                : hasAgent
+                  ? `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and tab are named from your description; the agent opens without a first message.`
+                  : `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/, on a new branch from here. The branch and tab are named from your description.`
               : `A new space on a checkout in ${tilde(ROOT(this.userHome), this.userHome)}/${r.name}/. A branch that exists is checked out; a new one starts from here.`;
     const blocked = !r || (remove && !r.linked);
+    const hint = this.busy
+      ? "working…"
+      : blocked
+        ? "esc close"
+        : remove
+          ? "↵ remove · esc cancel"
+          : this.picking
+            ? this.messaging
+              ? this.choosing
+                ? "↑↓ choose · ↵ pick · esc back"
+                : "↑↓ agent · ⌥M/O/E options · ⌥S first msg · ⇧↵ newline"
+              : "↑↓ agent · ↵ create · esc cancel"
+            : this.messaging
+              ? "⌥S first msg · ↵ submit · ⇧↵ newline"
+              : "↵ create · esc cancel";
+    const submitLabel = this.busy
+      ? "Working…"
+      : this.choosing
+        ? "Select"
+        : remove
+          ? "Remove worktree"
+          : this.messaging && willSend
+            ? "Start agent"
+            : "Create worktree";
     return v_flex()
       .id("worktree")
       .track_focus(this.handle)
@@ -1359,7 +1551,7 @@ export default class Worktree extends View {
             .text_color(t.foreground),
         ),
       )
-      .when(this.picking && !blocked && !remove, (el) =>
+      .when((this.picking || this.messaging) && !blocked && !remove, (el) =>
         el.child(this.renderChoices(t)),
       )
       .when(Boolean(this.error), (el) =>
@@ -1374,23 +1566,71 @@ export default class Worktree extends View {
       .when(!(this.picking && !blocked), (el) => el.child(div().flex_1()))
       .child(
         h_flex()
-          .justify_end()
-          .text_size(11)
-          .text_color(t.dim)
+          .items_center()
+          .justify_between()
+          .gap(12)
+          .pt(2)
           .child(
-            this.busy
-              ? "working…"
-              : blocked
-                ? "esc close"
-                : remove
-                  ? "↵ remove · esc cancel"
-                  : this.picking
-                    ? this.messaging
-                      ? this.choosing
-                        ? "↑↓ choose · ↵ pick · esc back"
-                        : "↑↓ agent · ⌥M ⌥O ⌥E mode, model, effort · ↵ start · ⇧↵ new line · esc cancel"
-                      : "↑↓ agent · ↵ create · esc cancel"
-                    : "↵ create · esc cancel",
+            div()
+              .flex_1()
+              .min_w(0)
+              .truncate()
+              .text_size(11)
+              .text_color(t.dim)
+              .child(hint),
+          )
+          .child(
+            h_flex()
+              .flex_none()
+              .gap(8)
+              .items_center()
+              .child(
+                div()
+                  .id("wt-cancel")
+                  .h(28)
+                  .px(12)
+                  .rounded(6)
+                  .border(1)
+                  .border_color(t.border)
+                  .bg(t.raised)
+                  .text_size(12.5)
+                  .text_color(t.foreground)
+                  .cursor_pointer()
+                  .flex()
+                  .items_center()
+                  .hover((s) => s.bg(t.hover))
+                  .on_click((_e, cx) => {
+                    if (this.choosing) {
+                      this.choosing = null;
+                      cx.notify();
+                    } else this.close();
+                  })
+                  .child(this.choosing ? "Back" : blocked ? "Close" : "Cancel"),
+              )
+              .when(!blocked, (el) =>
+                el.child(
+                  div()
+                    .id("wt-submit")
+                    .h(28)
+                    .px(14)
+                    .rounded(6)
+                    .bg(remove ? t.blocked : t.accent)
+                    .text_size(12.5)
+                    .font_semibold()
+                    .text_color(remove ? "#ffffff" : t.accent_foreground)
+                    .cursor_pointer()
+                    .flex()
+                    .items_center()
+                    .when(this.busy, (b) => b.opacity(0.6))
+                    .when(!this.busy, (b) => b.hover((s) => s.opacity(0.9)))
+                    .on_click((_e, cx) => {
+                      if (this.busy) return;
+                      if (this.choosing) this.chooseAt(this.optionAt, cx);
+                      else this.go(cx);
+                    })
+                    .child(submitLabel),
+                ),
+              ),
           ),
       );
   }

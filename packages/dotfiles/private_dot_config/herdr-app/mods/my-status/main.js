@@ -52,7 +52,7 @@ const headroom = (q, out, t) => {
         : t.done;
 };
 
-function chip(q, t, out, onHover) {
+function chip(q, t, out, onHover, onMove) {
   const pic = ICON[q.provider]
     ? svg(ICON[q.provider]).size(15).text_color(t.muted)
     : div()
@@ -73,7 +73,8 @@ function chip(q, t, out, onHover) {
     .rounded(5)
     .cursor_pointer()
     .hover((s) => s.bg(t.hover))
-    .on_hover((h) => onHover(q, h))
+    .on_mouse_move((e) => onMove(q, e))
+    .on_hover((h, cx) => onHover(q, h, cx))
     .on_click(() =>
       setShared("hide.exhausted", shared("hide.exhausted") === false),
     )
@@ -101,19 +102,33 @@ function chip(q, t, out, onHover) {
     );
 }
 
-// The hover card: this mod again, as a window above the bar (the shell's
-// tooltip shows no multi-line label here).
+// The hover card: this mod again, as a window strictly above the bar (the shell's
+// tooltip shows no multi-line label here). Closes on outside click, click, or hover exit.
 function card(provider, t) {
+  const overlay = props().overlay;
   const q = (shared("brim.quotas") ?? []).find((k) => k.provider === provider);
-  if (!q) return div();
+  if (!q) {
+    closeOverlay(overlay);
+    return div();
+  }
   const out = (shared("brim.exhausted") ?? {})[provider];
   return v_flex()
+    .id("quota-card")
     .size_full()
     .p(10)
     .gap(3)
     .bg(t.popover)
     .text_size(12)
     .text_color(t.muted)
+    .cursor_pointer()
+    .on_mouse_down_out(() => closeOverlay(overlay))
+    .on_hover((h) => {
+      if (!h) closeOverlay(overlay);
+    })
+    .on_click(() => {
+      setShared("hide.exhausted", shared("hide.exhausted") === false);
+      closeOverlay(overlay);
+    })
     .child(
       h_flex()
         .gap(6)
@@ -140,25 +155,57 @@ function card(provider, t) {
         ),
     );
 }
-const CARD_W = 230;
+const CARD_W = 248;
+
+function estimatedCardHeight(lines) {
+  const wrapped = lines.reduce(
+    (sum, line) => sum + Math.max(1, Math.ceil(String(line).length / 26)),
+    0,
+  );
+  return 74 + wrapped * 20;
+}
 
 export default class WorkspaceStatus extends View {
   init() {
     if (props()?.card) return;
     this.pos = { x: 0, y: 0 };
-    // A card left open by an earlier build closes itself (see render).
-    setShared("my-status.card", null);
-    // One card at a time; moving to the next icon replaces it before the old one's exit.
-    this.onHover = (q, h) => {
+    this.barTop = null;
+    this.chipBounds = {};
+    this.card = null;
+    this.cardFor = null;
+    this.leaveSeq = 0;
+    // Close any card left open by an earlier build that still watched shared state.
+    if (shared("my-status.card") != null) setShared("my-status.card", null);
+
+    this.dismiss = () => {
+      this.leaveSeq++;
+      if (!this.card) return;
+      closeOverlay(this.card);
+      this.card = null;
+      this.cardFor = null;
+    };
+
+    this.onChipMove = (q, e) => {
+      this.pos = e.position;
+      if (e.bounds) this.chipBounds[q.provider] = e.bounds;
+    };
+
+    this.onHover = (q, h, cx) => {
       if (h) {
+        this.leaveSeq++;
+        if (this.card && this.cardFor === q.provider) return;
         if (this.card) closeOverlay(this.card);
-        // Sized by its content; this estimate only keeps it clear of the pointer.
-        const height =
-          70 +
-          22 * details(q, (shared("brim.exhausted") ?? {})[q.provider]).length;
+        const lines = details(q, (shared("brim.exhausted") ?? {})[q.provider]);
+        const height = estimatedCardHeight(lines);
+        const bounds = this.chipBounds[q.provider];
+        const anchorRight = bounds
+          ? bounds.origin.x + bounds.size.width
+          : this.pos.x + 12;
+        const topEdge =
+          this.barTop ?? (bounds ? bounds.origin.y - 4 : this.pos.y - 18);
         const at = {
-          x: Math.max(8, Math.round(this.pos.x - CARD_W + 40)),
-          y: Math.max(8, Math.round(this.pos.y - height - 24)),
+          x: Math.max(8, Math.round(anchorRight - CARD_W + 12)),
+          y: Math.max(8, Math.round(topEdge - height - 14)),
         };
         this.card = openOverlay({
           mod: "my-status",
@@ -168,28 +215,23 @@ export default class WorkspaceStatus extends View {
           at,
         });
         this.cardFor = q.provider;
-        setShared("my-status.card", this.card);
       } else if (this.cardFor === q.provider) {
-        closeOverlay(this.card);
-        this.card = this.cardFor = null;
-        setShared("my-status.card", null);
+        const seq = ++this.leaveSeq;
+        cx.timer.after(60, () => {
+          if (this.leaveSeq === seq) this.dismiss();
+        });
       }
     };
   }
 
   async close() {
-    if (this.card) closeOverlay(this.card);
+    if (this.dismiss) this.dismiss();
   }
 
   render() {
     const t = theme();
-    if (props()?.card) {
-      if (shared("my-status.card") !== props().overlay) {
-        closeOverlay(props().overlay);
-        return div();
-      }
-      return card(props().card, t);
-    }
+    if (props()?.card) return card(props().card, t);
+    if (!window()?.active && this.card) this.dismiss();
     const space = spaces().find((s) => s.active);
     const list = agents();
     const needs = list.filter((a) => a.status === "blocked").length;
@@ -201,11 +243,14 @@ export default class WorkspaceStatus extends View {
         .child(text);
     const quotas = shared("brim.quotas") ?? [];
     const limits = shared("brim.exhausted") ?? {};
-    // Where the pointer is, for placing the hover card.
     return h_flex()
       .id("status-root")
       .on_mouse_move((e) => {
         this.pos = e.position;
+        if (e.bounds) this.barTop = e.bounds.origin.y;
+      })
+      .on_hover((h) => {
+        if (!h) this.dismiss();
       })
       .size_full()
       .px(14)
@@ -217,32 +262,53 @@ export default class WorkspaceStatus extends View {
       .text_size(11.8)
       .text_color(t.muted)
       .child(
-        label(
-          space?.machine ? "server" : "monitor",
-          space?.machine ?? "This computer",
-        ),
-      )
-      .when(Boolean(space?.branch), (el) =>
-        el.child(label("branch", space.branch)),
-      )
-      .child(
         h_flex()
-          .gap(6)
+          .id("status-info")
+          .gap(16)
           .items_center()
-          .child(div().size(6).rounded(3).bg(t.dim))
-          .child(`${list.length} agents`)
-          .when(needs > 0, (el) =>
-            el.child(div().text_color(t.blocked).child(`· ${needs} needs you`)),
+          .on_mouse_move(() => this.dismiss())
+          .child(
+            label(
+              space?.machine ? "server" : "monitor",
+              space?.machine ?? "This computer",
+            ),
+          )
+          .when(Boolean(space?.branch), (el) =>
+            el.child(label("branch", space.branch)),
+          )
+          .child(
+            h_flex()
+              .gap(6)
+              .items_center()
+              .child(div().size(6).rounded(3).bg(t.dim))
+              .child(`${list.length} ${list.length === 1 ? "agent" : "agents"}`)
+              .when(needs > 0, (el) =>
+                el.child(
+                  div().text_color(t.blocked).child(`· ${needs} waiting`),
+                ),
+              ),
           ),
       )
-      .child(div().flex_1())
+      .child(
+        div()
+          .id("status-spacer")
+          .flex_1()
+          .h_full()
+          .on_mouse_move(() => this.dismiss()),
+      )
       .when(quotas.length > 0, (el) =>
         el.child(
           h_flex()
+            .id("quota-strip")
             .gap(3)
             .items_center()
+            .on_hover((h) => {
+              if (!h) this.dismiss();
+            })
             .children(
-              quotas.map((q) => chip(q, t, limits[q.provider], this.onHover)),
+              quotas.map((q) =>
+                chip(q, t, limits[q.provider], this.onHover, this.onChipMove),
+              ),
             ),
         ),
       )
@@ -250,7 +316,11 @@ export default class WorkspaceStatus extends View {
         div()
           .id("palette")
           .text_color(t.dim)
-          .on_click(() => run("app.palette"))
+          .on_mouse_move(() => this.dismiss())
+          .on_click(() => {
+            this.dismiss();
+            run("app.palette");
+          })
           .child(
             `${window()?.platform === "macos" ? "⌘" : "Ctrl"} Shift P  commands`,
           ),

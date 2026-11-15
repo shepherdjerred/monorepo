@@ -1,4 +1,5 @@
-// Agents in grouped or priority views; parents take their most urgent sub-agent's place.
+// Agents in status, priority, recent, space, machine, agent, or name views;
+// parents take their most urgent sub-agent's place.
 // A viewed done agent stays in Done until left.
 
 import { View, div, image, svg } from "gpui-kit";
@@ -20,6 +21,7 @@ import {
   window,
   layout,
   nextCommand,
+  checking,
   exec,
   hc,
 } from "herdr";
@@ -42,6 +44,15 @@ const PROVIDER = {
   "grok-build": "grok",
   kimi: "kimi",
   muse: "muse",
+};
+const PROVIDER_LABELS = {
+  "claude-code": "Claude Code",
+  codex: "Codex",
+  antigravity: "Antigravity",
+  cursor: "Cursor",
+  grok: "Grok",
+  kimi: "Kimi Code",
+  muse: "Meta Muse",
 };
 const atLimit = (a) =>
   Boolean(limits()[a.provider ?? PROVIDER[a.app] ?? PROVIDER[a.program?.key]]);
@@ -70,10 +81,9 @@ function fromArgv(argv) {
 // status, like `claude attach`, still get a row, with no status: shaped like agents()
 // from their pane and tab.
 function quiet(listed, all) {
-  const live = new Set(
-    all.filter((k) => k.state === "live").map((k) => k.address),
+  const byAddr = new Map(
+    all.filter((k) => k.state === "live").map((k) => [k.address, k]),
   );
-  const argvOf = new Map(all.map((k) => [k.address, k.argv ?? []]));
   const where = new Map(
     spaces().flatMap((s) =>
       (s.tabs ?? []).map((tab, i) => [tab.id, { s, tab, i }]),
@@ -81,16 +91,10 @@ function quiet(listed, all) {
   );
   return panes().flatMap((p) => {
     const w = where.get(p.tab);
-    if (
-      !p.terminal ||
-      p.status ||
-      listed.has(p.terminal) ||
-      !live.has(p.terminal) ||
-      !w
-    )
+    const term = p.terminal ? byAddr.get(p.terminal) : null;
+    if (!p.terminal || p.status || listed.has(p.terminal) || !term || !w)
       return [];
-    const provider =
-      PROVIDER[p.program?.key] ?? fromArgv(argvOf.get(p.terminal) ?? []);
+    const provider = PROVIDER[p.program?.key] ?? fromArgv(term.argv ?? []);
     if (!provider) return [];
     return [
       {
@@ -108,6 +112,7 @@ function quiet(listed, all) {
         title: p.title,
         seq: 0,
         focused: p.focused,
+        pinned: Boolean(term.labels?.["herdr.pinned"]),
       },
     ];
   });
@@ -188,11 +193,27 @@ const kidStatus = (k, listed) => {
   return s === "error" ? "blocked" : s === "done" ? "idle" : s;
 };
 const SORTS = [
-  { id: "priority", label: "Priority", icon: "clock" },
-  { id: "grouped", label: "Grouped by space", icon: "layers" },
+  {
+    id: "status",
+    label: "Status",
+    icon: "mods/workspace-chrome/circle-check.svg",
+  },
+  { id: "rank", label: "Priority", icon: "mods/my-agents/flag.svg" },
+  { id: "recent", label: "Recent", icon: "mods/workspace-chrome/clock.svg" },
+  { id: "grouped", label: "Space", icon: "mods/workspace-chrome/layers.svg" },
+  { id: "machine", label: "Machine", icon: "mods/workspace-chrome/server.svg" },
+  {
+    id: "agent",
+    label: "Coding agent",
+    icon: "mods/workspace-chrome/terminal.svg",
+  },
+  { id: "name", label: "Name", icon: "mods/workspace-chrome/file-text.svg" },
 ];
-const sortOf = () =>
-  SORTS.find((s) => s.id === shared("agents.sort")) ?? SORTS[0];
+const sortOf = () => {
+  const raw = shared("agents.sort");
+  if (!raw || raw === "priority") return SORTS[0];
+  return SORTS.find((s) => s.id === raw) ?? SORTS[0];
+};
 const SECTION = { 4: "Needs you", 3: "Done", 2: "Working", 1: "Idle" };
 const SECTION_STATUS = { 4: "blocked", 3: "done", 2: "working" };
 
@@ -208,6 +229,8 @@ function duration(ms) {
 // `target`, which stays put when Herdr renames a machine after its host), its name or
 // its host; this computer by its platform. An unlisted machine shows its name.
 const DEVICES = {
+  "jerreds-macbook-pro": "laptop",
+  macbook: "laptop",
   karpathy: "mac-mini-top",
   "mac-mini": "mac-mini-top",
   jobs: "mac-mini-top",
@@ -216,6 +239,8 @@ const DEVICES = {
   "jerred-desktop": "windows",
 };
 const DEVICE_TITLES = {
+  "jerreds-macbook-pro": "MacBook",
+  macbook: "MacBook",
   karpathy: "Karpathy",
   "mac-mini": "Karpathy",
   jobs: "Jobs",
@@ -223,6 +248,21 @@ const DEVICE_TITLES = {
   desktop: "Windows",
   "jerred-desktop": "Windows",
 };
+const MACHINE_ORDER = {
+  MacBook: 1,
+  Karpathy: 2,
+  Windows: 3,
+  Jobs: 4,
+};
+
+function hostKey(value) {
+  if (value == null) return "";
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/\.local$/, "");
+}
+
 // Machine name -> [target, host], refreshed with the machine list.
 let machineAliases = {};
 async function loadMachineAliases() {
@@ -235,20 +275,28 @@ async function loadMachineAliases() {
 }
 function device(machine) {
   if (!machine) return window()?.platform === "windows" ? "windows" : "laptop";
-  const key = [machine, ...(machineAliases[machine] ?? [])].find(
-    (k) => k in DEVICES,
-  );
+  const key = [machine, ...(machineAliases[machine] ?? [])]
+    .map(hostKey)
+    .find((k) => k in DEVICES);
   return key ? DEVICES[key] : null;
 }
-function deviceTitle(machine) {
-  if (!machine) return "This computer";
-  const key = [machine, ...(machineAliases[machine] ?? [])].find(
-    (k) => k in DEVICE_TITLES,
-  );
+function deviceTitle(machine, localHost = "") {
+  if (!machine) {
+    const local = DEVICE_TITLES[hostKey(localHost)];
+    if (local) return local;
+    return window()?.platform === "windows" ? "Windows" : "This computer";
+  }
+  const key = [machine, ...(machineAliases[machine] ?? [])]
+    .map(hostKey)
+    .find((k) => k in DEVICE_TITLES);
   return key ? DEVICE_TITLES[key] : machine;
 }
+function machineRank(machine, localHost) {
+  if (!machine) return 0;
+  return MACHINE_ORDER[deviceTitle(machine, localHost)] ?? 99;
+}
 
-// A mark the person sets on a chat. "none" is only a filter bucket.
+// A mark the person sets on a chat. "none" is only a filter/sort bucket.
 const PRIORITIES = [
   { id: "p0", label: "P0", tone: "blocked" },
   { id: "p1", label: "P1", tone: "working" },
@@ -256,6 +304,15 @@ const PRIORITIES = [
   { id: "p3", label: "P3", tone: "foreground" },
   { id: "p4", label: "P4", tone: "muted" },
   { id: "later", label: "Later", tone: "dim" },
+];
+const PRIORITY_BUCKETS = [
+  { id: "p0", label: "P0", tone: "blocked", order: 0 },
+  { id: "p1", label: "P1", tone: "working", order: 1 },
+  { id: "p2", label: "P2", tone: "accent", order: 2 },
+  { id: "p3", label: "P3", tone: "foreground", order: 3 },
+  { id: "p4", label: "P4", tone: "muted", order: 4 },
+  { id: "none", label: "No priority", tone: "dim", order: 5 },
+  { id: "later", label: "Later", tone: "dim", order: 6 },
 ];
 const priorityMarks = () => {
   const marks = shared("agents.priorities");
@@ -277,6 +334,13 @@ function writePriority(address, level) {
   setShared("agents.priorities", marks);
 }
 
+function agentTypeName(a) {
+  if (a.program?.name) return a.program.name;
+  const prov = a.provider ?? PROVIDER[a.app] ?? PROVIDER[a.program?.key];
+  if (prov && PROVIDER_LABELS[prov]) return PROVIDER_LABELS[prov];
+  return a.app || "Agent";
+}
+
 // The agent's icon from the app's program table: a one-color glyph or a picture.
 function icon(p, size, color) {
   if (!p?.icon) return null;
@@ -290,16 +354,29 @@ export default class Agents extends View {
     if (props()?.sortMenu || props()?.priorityMenu || props()?.filterMenu)
       return;
     this.folded = new Set();
+    this.hostName = "";
     // Each agent's last state and when it changed (ms), kept across restarts.
     this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}");
-    this.pins = JSON.parse(localStorage.getItem("pins") ?? "[]");
+    this.pendingPins = JSON.parse(localStorage.getItem("pins") ?? "[]");
+    if (!this.pendingPins.length) localStorage.removeItem("pins");
+    this.migratingPins = new Set();
+    if (checking()) return;
+    cx.spawn(async (cx) => {
+      try {
+        const r = await exec("hostname", []);
+        if (r.code === 0) {
+          this.hostName = r.stdout.trim();
+          cx.notify();
+        }
+      } catch {}
+    });
     cx.timer.every(30000, (cx) => cx.notify());
     cx.timer.every(60000, (cx) => this.pollBrim(cx));
     this.pollBrim(cx);
     // Machines can be renamed or added while the app runs; their icons follow.
     const aliases = (cx) =>
       cx.spawn(async (cx) => {
-        await loadMachineAliases();
+        await loadMachineAliases().catch(() => {});
         cx.notify();
       });
     cx.timer.every(60000, aliases);
@@ -369,9 +446,31 @@ export default class Agents extends View {
     localStorage.setItem("changed", JSON.stringify(this.changed));
   }
 
-  setPins(pins) {
-    this.pins = pins;
-    localStorage.setItem("pins", JSON.stringify(pins));
+  // Migrate legacy localStorage pins into Herdr's native terminal.pin label so both
+  // this list and right-click context menus share the same pin state.
+  migratePins(all) {
+    if (!this.pendingPins.length) return;
+    const listed = new Map(
+      all.filter((k) => k.state === "live").map((k) => [k.address, k]),
+    );
+    const pending = this.pendingPins.filter((address) => {
+      const terminal = listed.get(address);
+      if (!terminal) return true;
+      if (terminal.labels?.["herdr.pinned"]) return false;
+      if (!this.migratingPins.has(address)) {
+        this.migratingPins.add(address);
+        run("terminal.pin", { terminal: address, pinned: true });
+      }
+      return true;
+    });
+    if (pending.length === this.pendingPins.length) return;
+    this.pendingPins = pending;
+    if (pending.length) localStorage.setItem("pins", JSON.stringify(pending));
+    else localStorage.removeItem("pins");
+  }
+
+  isPinned(a) {
+    return Boolean(a.pinned || this.pendingPins.includes(a.address));
   }
 
   // Drops marks for chats that ended. A machine the list has not heard from yet keeps its marks.
@@ -396,18 +495,6 @@ export default class Agents extends View {
       next[addr] = level;
     }
     if (dirty) setShared("agents.priorities", next);
-  }
-
-  // Drops pins of agents that ended. Only for machines the list has heard from:
-  // right after a start, or while a machine connects, its agents aren't listed yet.
-  prunePins(all) {
-    const machine = (addr) => (addr.includes("/") ? addr.split("/")[0] : "");
-    const heard = new Set(all.map((k) => machine(k.address)));
-    const live = new Set(
-      all.filter((k) => k.state === "live").map((k) => k.address),
-    );
-    const kept = this.pins.filter((p) => !heard.has(machine(p)) || live.has(p));
-    if (kept.length !== this.pins.length) this.setPins(kept);
   }
 
   since(a) {
@@ -465,12 +552,7 @@ export default class Agents extends View {
               setShared("agents.sort", s.id);
               closeOverlay(props().overlay);
             })
-            .child(
-              svg(`mods/workspace-chrome/${s.icon}.svg`)
-                .size(14)
-                .flex_none()
-                .text_color(t.muted),
-            )
+            .child(svg(s.icon).size(14).flex_none().text_color(t.muted))
             .child(div().flex_1().child(s.label))
             .when(s.id === on, (el) =>
               el.child(
@@ -582,6 +664,40 @@ export default class Agents extends View {
     run("terminal.peek", { terminal: addr });
   }
 
+  agentMenu(a) {
+    openOverlay({
+      mod: "my-menu",
+      kind: "popup",
+      width: 205,
+      height: 320,
+      props: {
+        tab: "agent",
+        target: {
+          address: a.address,
+          pane: a.pane,
+          tab: a.tab,
+          space: a.space,
+        },
+      },
+    });
+  }
+
+  subAgentMenu(k) {
+    openOverlay({
+      mod: "my-menu",
+      kind: "popup",
+      width: 200,
+      height: 180,
+      props: {
+        tab: "subagent",
+        target: {
+          address: k.address,
+          hasPane: this.listed.has(k.address),
+        },
+      },
+    });
+  }
+
   // Live sub-agents of `addr`, depth first, each with the tree lines in front of it.
   tree(all, addr, lead = []) {
     const kids = all.filter((k) => k.parent === addr && k.state === "live");
@@ -594,14 +710,15 @@ export default class Agents extends View {
     });
   }
 
-  subRow(t, s, shown, compact) {
+  subRow(t, s, shown) {
     const k = s.t;
     const st = kidStatus(k, this.listed);
     const pic = icon(k.program, 14, t.foreground);
     const on = k.address === shown;
+    const hasPane = this.listed.has(k.address);
     return h_flex()
       .id(`sub-${k.address}`)
-      .pl(39)
+      .pl(32)
       .pr(8)
       .rounded(8)
       .h(26)
@@ -609,9 +726,18 @@ export default class Agents extends View {
       .gap(0)
       .items_center()
       .text_size(12.5)
+      .cursor_pointer()
       .when(on, (el) => el.bg(t.raised))
       .hover((s) => s.bg(t.hover))
-      .on_click(() => this.peek(k.address))
+      .on_click(() =>
+        hasPane
+          ? run("pane.focus", { terminal: k.address })
+          : this.peek(k.address),
+      )
+      .on_mouse_down("right", (_e, cx) => {
+        cx.stop_propagation();
+        this.subAgentMenu(k);
+      })
       .children(
         s.lines.map((l) =>
           div()
@@ -631,25 +757,34 @@ export default class Agents extends View {
       .child(
         div()
           .flex_1()
+          .min_w(0)
           .truncate()
           .text_color(on ? t.foreground : t.muted)
           .child(k.name || k.template || k.program?.name || k.address),
       )
-      .child(this.status(t, { status: st }, compact));
+      .child(
+        div()
+          .w(16)
+          .h(18)
+          .flex_none()
+          .flex()
+          .items_center()
+          .justify_center()
+          .child(this.status(t, { address: k.address, status: st })),
+      );
   }
 
-  // compact: a ! for blocked where a header already says "Needs you".
-  status(t, a, compact = false) {
+  // Fixed-size status glyph so the status column never shifts width across rows.
+  status(t, a) {
     const color = t[a.status] ?? t.dim;
     if (a.status === "working")
       return svg("mods/workspace-chrome/spinner.svg")
         .size(12)
-        .mx(1)
         .flex_none()
         .text_color(t.working)
         .spin(900);
-    if (a.status === "blocked" && compact)
-      return div()
+    if (a.status === "blocked") {
+      const badge = div()
         .size(14)
         .flex_none()
         .rounded(4)
@@ -661,50 +796,41 @@ export default class Agents extends View {
         .items_center()
         .justify_center()
         .child("!");
-    if (a.status === "blocked")
-      return div()
-        .flex_none()
-        .px(6)
-        .h(18)
-        .rounded(5)
-        .bg(t.blocked + "26")
-        .text_size(10.5)
-        .font_semibold()
-        .text_color(t.blocked)
-        .flex()
-        .items_center()
-        .child("Needs you");
+      return a.address
+        ? badge.id(`blocked-${a.address}`).tooltip("Needs you")
+        : badge;
+    }
     // Idle: a ring; done: a dot; no status reported: a faint ring.
-    if (!a.status)
-      return div()
-        .id(`quiet-${a.address}`)
-        .flex_none()
-        .p(3)
-        .tooltip("No status: this program doesn't report one")
-        .child(
-          div()
-            .size(7)
-            .rounded(4)
-            .border(1.5)
-            .border_color(t.dim + "80"),
-        );
+    if (!a.status) {
+      const ring = div()
+        .size(7)
+        .rounded(4)
+        .border(1.5)
+        .border_color(t.dim + "80");
+      return a.address
+        ? div()
+            .id(`quiet-${a.address}`)
+            .flex_none()
+            .p(2)
+            .tooltip("No status: this program doesn't report one")
+            .child(ring)
+        : ring;
+    }
     if (a.status === "idle")
       return div()
         .size(7)
-        .mx(3)
         .flex_none()
         .rounded(4)
         .border(1.5)
         .border_color(t.idle ?? t.dim);
     return div()
       .size(7)
-      .mx(3)
       .flex_none()
       .rounded(4)
       .bg(a.status === "done" ? color : t.dim + "00");
   }
 
-  render(cx) {
+  render() {
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
     if (props()?.priorityMenu) return this.priorityMenu(t);
@@ -712,6 +838,7 @@ export default class Agents extends View {
     const collapsed = narrow();
     const sort = sortOf();
     const all = terminals();
+    this.migratePins(all);
     let list = agents();
     list = [...list, ...quiet(new Set(list.map((a) => a.address)), all)];
     const hidden = hidingExhausted() ? list.filter(atLimit).length : 0;
@@ -736,7 +863,29 @@ export default class Agents extends View {
       ? list.filter((a) => !hiddenPri.includes(priorityOf(a.address) ?? "none"))
       : list;
     list = matched;
-    const byPriority = sort.id === "priority";
+
+    // Compute row labels/details before sorting so Name sort matches displayed text.
+    const tabs = spaces().flatMap((s) => s.tabs);
+    const allPanes = panes();
+    const label = (a) => {
+      const tab = tabs.find((tab) => tab.id === a.tab);
+      return tab
+        ? title(tab, lead(tab, allPanes))
+        : a.title || a.program?.name || "";
+    };
+    const detail = new Map(
+      list.map((a) => [a.address, /^\d+$/.test(label(a)) ? null : label(a)]),
+    );
+    const seen = {};
+    for (const a of list) {
+      const k = `${a.space_name}\u0000${detail.get(a.address) ?? ""}`;
+      seen[k] = (seen[k] ?? 0) + 1;
+    }
+    for (const a of list) {
+      if (detail.get(a.address) == null && seen[`${a.space_name}\u0000`] > 1)
+        detail.set(a.address, label(a));
+    }
+
     const urgency = new Map(
       list.map((a) => [
         a.address,
@@ -748,28 +897,68 @@ export default class Agents extends View {
         ),
       ]),
     );
-    const rankOf = (a) => urgency.get(a.address);
-    if (byPriority)
-      list = [...list].sort(
+    const rankOf = (a) => urgency.get(a.address) ?? 0;
+    const byUrgency = (x, y) =>
+      rankOf(y) - rankOf(x) || this.since(y) - this.since(x) || y.seq - x.seq;
+    const machineOf = (a) =>
+      a.address.includes("/") ? a.address.split("/")[0] : null;
+    const bucketOf = (a) => {
+      const id = priorityOf(a.address) ?? "none";
+      return (
+        PRIORITY_BUCKETS.find((b) => b.id === id) ??
+        PRIORITY_BUCKETS.find((b) => b.id === "none")
+      );
+    };
+    const displayKey = (a) =>
+      `${a.space_name || label(a)} ${detail.get(a.address) ?? ""}`
+        .trim()
+        .toLowerCase();
+
+    const pinned = list.filter((a) => this.isPinned(a));
+    let rest = list.filter((a) => !this.isPinned(a));
+
+    if (sort.id === "status") {
+      rest = [...rest].sort(byUrgency);
+    } else if (sort.id === "rank") {
+      rest = [...rest].sort(
+        (x, y) => bucketOf(x).order - bucketOf(y).order || byUrgency(x, y),
+      );
+    } else if (sort.id === "recent") {
+      rest = [...rest].sort(
         (x, y) =>
-          rankOf(y) - rankOf(x) ||
           this.since(y) - this.since(x) ||
+          rankOf(y) - rankOf(x) ||
           y.seq - x.seq,
       );
-    this.prunePins(all);
-    const pinned = this.pins
-      .map((p) => list.find((a) => a.address === p))
-      .filter(Boolean);
-    const rest = list.filter((a) => !this.pins.includes(a.address));
+    } else if (sort.id === "machine") {
+      rest = [...rest].sort((x, y) => {
+        const mx = machineOf(x);
+        const my = machineOf(y);
+        return (
+          machineRank(mx, this.hostName) - machineRank(my, this.hostName) ||
+          deviceTitle(mx, this.hostName).localeCompare(
+            deviceTitle(my, this.hostName),
+          ) ||
+          byUrgency(x, y)
+        );
+      });
+    } else if (sort.id === "agent") {
+      rest = [...rest].sort(
+        (x, y) =>
+          agentTypeName(x).localeCompare(agentTypeName(y)) || byUrgency(x, y),
+      );
+    } else if (sort.id === "name") {
+      rest = [...rest].sort(
+        (x, y) =>
+          displayKey(x).localeCompare(displayKey(y), undefined, {
+            numeric: true,
+            sensitivity: "base",
+          }) || byUrgency(x, y),
+      );
+    }
+
     list = [...pinned, ...rest];
     setAgentOrder(list.map((a) => a.address));
-
-    const withKids = (a, i) => {
-      const subs = collapsed ? [] : this.tree(all, a.address);
-      const r = row(a, i, subs);
-      if (this.folded.has(a.address)) return [r];
-      return [r, ...subs.map((s) => this.subRow(t, s, shown, byPriority))];
-    };
 
     // The fold chevron; folded, the count too, colored by the most urgent one.
     const fold = (a, subs) => {
@@ -784,6 +973,7 @@ export default class Agents extends View {
         .h(18)
         .px(3)
         .gap(3)
+        .flex_none()
         .flex()
         .items_center()
         .rounded(4)
@@ -804,32 +994,10 @@ export default class Agents extends View {
         .when(!open, (el) => el.child(String(subs.length)));
     };
 
-    // A row reads "space \u00b7 detail": the detail is a tab someone named or the
-    // agent's own title, never an automatic tab number unless two rows would
-    // otherwise read the same.
-    const tabs = spaces().flatMap((s) => s.tabs);
-    const label = (a) => {
-      const tab = tabs.find((tab) => tab.id === a.tab);
-      return tab ? title(tab, lead(tab)) : a.title || a.program?.name || "";
-    };
-    const detail = new Map(
-      list.map((a) => [a.address, /^\d+$/.test(label(a)) ? null : label(a)]),
-    );
-    const seen = {};
-    for (const a of list) {
-      const k = `${a.space_name}\u0000${detail.get(a.address) ?? ""}`;
-      seen[k] = (seen[k] ?? 0) + 1;
-    }
-    for (const a of list) {
-      if (detail.get(a.address) == null && seen[`${a.space_name}\u0000`] > 1)
-        detail.set(a.address, label(a));
-    }
-
     const row = (a, i, subs = []) => {
       const pic = icon(a.program, 16, t.foreground);
       const more = detail.get(a.address);
-      // An agent on another machine (`vps/t7`) says which.
-      const machine = a.address.includes("/") ? a.address.split("/")[0] : null;
+      const machine = machineOf(a);
       const host = device(machine);
       if (collapsed) {
         return h_flex()
@@ -839,8 +1007,13 @@ export default class Agents extends View {
           .flex_none()
           .items_center()
           .gap(4)
+          .cursor_pointer()
           .hover((s) => s.bg(t.hover))
           .on_click(() => run("pane.focus", { pane: a.pane }))
+          .on_mouse_down("right", (_e, cx) => {
+            cx.stop_propagation();
+            this.agentMenu(a);
+          })
           .child(
             div()
               .flex_1()
@@ -856,45 +1029,50 @@ export default class Agents extends View {
               .flex_none()
               .items_center()
               .justify_center()
-              .child(this.status(t, a, true)),
+              .child(this.status(t, a)),
           );
       }
       const when = this.since(a);
       const idle = (a.status === "idle" || !a.status) && !a.focused;
       const pri = PRIORITIES.find((p) => p.id === priorityOf(a.address));
-      const isPinned = this.pins.includes(a.address);
+      const pinnedRow = this.isPinned(a);
+      const hovered = this.hovered === a.address;
       const pin = div()
         .id(`pin-${a.address}`)
+        .size(20)
         .flex_none()
-        .p(2)
         .rounded(4)
         .text_color(t.dim)
         .cursor_pointer()
+        .flex()
+        .items_center()
+        .justify_center()
         .hover((s) => s.bg(t.hover).text_color(t.foreground))
-        .tooltip(isPinned ? "Unpin" : "Pin to the top")
+        .tooltip(pinnedRow ? "Unpin" : "Pin to the top")
         .on_click((_e, cx) => {
           cx.stop_propagation();
-          this.setPins(
-            isPinned
-              ? this.pins.filter((p) => p !== a.address)
-              : [...this.pins, a.address],
-          );
-          // The row moves away from under the pointer, and no hover-out comes.
+          run("terminal.pin", { terminal: a.address, pinned: !pinnedRow });
+          if (pinnedRow && this.pendingPins.includes(a.address)) {
+            this.pendingPins = this.pendingPins.filter((p) => p !== a.address);
+            if (this.pendingPins.length)
+              localStorage.setItem("pins", JSON.stringify(this.pendingPins));
+            else localStorage.removeItem("pins");
+          }
           this.hovered = null;
           cx.notify();
         })
         .child(
-          svg(`mods/workspace-chrome/${isPinned ? "pin-off" : "pin"}.svg`).size(
-            13,
-          ),
+          svg(
+            `mods/workspace-chrome/${pinnedRow ? "pin-off" : "pin"}.svg`,
+          ).size(13),
         );
-      // Under a space header the space goes without saying; an automatic tab number says nothing.
-      // Without a space header above (priority, pinned) the row names its space.
-      const full = byPriority || isPinned;
+      // Under a space header the space goes without saying; in all other views, include space.
+      const full = sort.id !== "grouped" || pinnedRow;
       const name = full
         ? a.space_name || label(a)
         : (more ??
           (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a)));
+      const hasDetail = full && Boolean(more);
       return h_flex()
         .id(`ag-${a.address}`)
         .px(8)
@@ -902,7 +1080,7 @@ export default class Agents extends View {
         .flex_none()
         .rounded(8)
         .items_center()
-        .gap(9)
+        .gap(7)
         .when(a.focused, (el) => el.bg(t.selected))
         .cursor_pointer()
         .hover((s) => s.bg(t.hover))
@@ -912,21 +1090,29 @@ export default class Agents extends View {
           cx.notify();
         })
         .on_click(() => run("pane.focus", { pane: a.pane }))
-        .when(Boolean(pic), (el) =>
-          el.child(
-            div()
-              .id(`agent-fold-${a.address}`)
-              .when(subs.length > 0, (el) =>
-                el.on_click((_e, cx) => {
-                  cx.stop_propagation();
-                  this.folded.has(a.address)
-                    ? this.folded.delete(a.address)
-                    : this.folded.add(a.address);
-                  cx.notify();
-                }),
-              )
-              .child(pic),
-          ),
+        .on_mouse_down("right", (_e, cx) => {
+          cx.stop_propagation();
+          this.agentMenu(a);
+        })
+        .child(
+          div()
+            .id(`agent-fold-${a.address}`)
+            .w(16)
+            .h(16)
+            .flex_none()
+            .flex()
+            .items_center()
+            .justify_center()
+            .when(subs.length > 0, (el) =>
+              el.on_click((_e, cx) => {
+                cx.stop_propagation();
+                this.folded.has(a.address)
+                  ? this.folded.delete(a.address)
+                  : this.folded.add(a.address);
+                cx.notify();
+              }),
+            )
+            .when(Boolean(pic), (el) => el.child(pic)),
         )
         .child(
           h_flex()
@@ -934,98 +1120,186 @@ export default class Agents extends View {
             .min_w(0)
             .gap(5)
             .items_center()
-            .child(
-              div()
-                .flex_none()
-                .max_w(full && more ? 120 : 200)
-                .truncate()
-                .text_color(idle ? t.muted : t.foreground)
-                .child(name),
+            .when(hasDetail, (el) =>
+              el
+                .child(
+                  div()
+                    .flex_none()
+                    .max_w(98)
+                    .truncate()
+                    .text_color(idle ? t.muted : t.foreground)
+                    .child(name),
+                )
+                .child(
+                  div()
+                    .flex_1()
+                    .min_w(0)
+                    .truncate()
+                    .text_color(t.dim)
+                    .child(`\u00b7 ${more}`),
+                ),
             )
-            .when(full && Boolean(more), (el) =>
+            .when(!hasDetail, (el) =>
               el.child(
                 div()
                   .flex_1()
                   .min_w(0)
                   .truncate()
-                  .text_color(t.dim)
-                  .child(`\u00b7 ${more}`),
+                  .text_color(idle ? t.muted : t.foreground)
+                  .child(name),
               ),
-            ),
-        )
-        .when(Boolean(pri) || this.hovered === a.address, (el) =>
-          el.child(
-            div()
-              .id(`pri-${a.address}`)
-              .flex_none()
-              .px(4)
-              .rounded(4)
-              .text_size(10)
-              .font_semibold()
-              .text_color(pri ? (t[pri.tone] ?? t.foreground) : t.dim)
-              .cursor_pointer()
-              .tooltip(pri ? `Priority ${pri.label}` : "Set priority")
-              .hover((s) => s.bg(t.hover))
-              .on_click((_e, cx) => {
-                cx.stop_propagation();
-                openOverlay({
-                  mod: "my-agents",
-                  kind: "popup",
-                  width: 160,
-                  height: 64 + (PRIORITIES.length + 1) * 31,
-                  props: { priorityMenu: true, address: a.address },
-                });
-              })
-              .child(pri ? pri.label : "P"),
-          ),
+            )
+            .when(subs.length > 0, (el) => el.child(fold(a, subs))),
         )
         .child(
-          div()
-            .id(`host-${a.address}`)
+          h_flex()
             .flex_none()
-            .tooltip(deviceTitle(machine))
+            .items_center()
+            .gap(4)
             .child(
-              host
-                ? svg(`mods/my-agents/${host}.svg`)
+              div()
+                .w(28)
+                .h(18)
+                .flex_none()
+                .flex()
+                .items_center()
+                .justify_center()
+                .when(Boolean(pri) || hovered, (el) =>
+                  el.child(
+                    div()
+                      .id(`pri-${a.address}`)
+                      .px(3)
+                      .rounded(4)
+                      .text_size(pri?.id === "later" ? 9.5 : 10)
+                      .font_semibold()
+                      .whitespace_nowrap()
+                      .text_color(pri ? (t[pri.tone] ?? t.foreground) : t.dim)
+                      .cursor_pointer()
+                      .tooltip(pri ? `Priority ${pri.label}` : "Set priority")
+                      .hover((s) => s.bg(t.hover))
+                      .on_click((_e, cx) => {
+                        cx.stop_propagation();
+                        openOverlay({
+                          mod: "my-agents",
+                          kind: "popup",
+                          width: 160,
+                          height: 64 + (PRIORITIES.length + 1) * 31,
+                          props: { priorityMenu: true, address: a.address },
+                        });
+                      })
+                      .child(pri ? pri.label : "P"),
+                  ),
+                ),
+            )
+            .child(
+              div()
+                .id(`host-${a.address}`)
+                .w(16)
+                .h(18)
+                .flex_none()
+                .flex()
+                .items_center()
+                .justify_center()
+                .tooltip(deviceTitle(machine, this.hostName))
+                .child(
+                  svg(
+                    host
+                      ? `mods/my-agents/${host}.svg`
+                      : "mods/workspace-chrome/server.svg",
+                  )
                     .size(12)
                     .flex_none()
-                    .text_color(t.dim)
-                : div()
-                    .text_size(10)
-                    .text_color(t.dim)
-                    .child(deviceTitle(machine)),
+                    .text_color(t.dim),
+                ),
+            )
+            .child(
+              div()
+                .w(26)
+                .h(18)
+                .flex_none()
+                .flex()
+                .items_center()
+                .justify_center()
+                .when(hovered, (el) => el.child(pin))
+                .when(!hovered && Boolean(when), (el) =>
+                  el.child(
+                    div()
+                      .text_size(11)
+                      .text_color(t.dim)
+                      .whitespace_nowrap()
+                      .child(duration(now - when)),
+                  ),
+                ),
+            )
+            .child(
+              div()
+                .w(16)
+                .h(18)
+                .flex_none()
+                .flex()
+                .items_center()
+                .justify_center()
+                .child(this.status(t, a)),
             ),
-        )
-        .when(subs.length > 0, (el) => el.child(fold(a, subs)))
-        .when(this.hovered === a.address, (el) => el.child(pin))
-        .when(this.hovered !== a.address && Boolean(when), (el) =>
-          el.child(
-            div()
-              .flex_none()
-              .text_size(11)
-              .text_color(t.dim)
-              .child(duration(now - when)),
-          ),
-        )
-        .child(this.status(t, a, byPriority && !isPinned));
+        );
     };
 
-    // Groups in list order: spaces (grouped) or priority sections. Agents of a
-    // space are next to each other in agents(), so neighbours make a group.
+    const withKids = (a, i) => {
+      const subs = collapsed ? [] : this.tree(all, a.address);
+      const r = row(a, i, subs);
+      if (this.folded.has(a.address)) return [r];
+      return [r, ...subs.map((s) => this.subRow(t, s, shown))];
+    };
+
+    // Groups in list order according to the active sort mode.
     const groups = pinned.length
-      ? [{ id: "pinned", label: "Pinned", status: null, members: pinned }]
+      ? [
+          {
+            id: "pinned",
+            label: "Pinned",
+            tone: null,
+            showCount: true,
+            members: pinned,
+          },
+        ]
       : [];
-    for (const a of rest) {
-      const r = rankOf(a) || RANK.idle;
-      const id = byPriority ? `sec-${r}` : `sp-${a.space}`;
-      if (groups.at(-1)?.id === id) groups.at(-1).members.push(a);
+    const pushGroup = (id, labelText, tone, showCount, member) => {
+      if (groups.at(-1)?.id === id) groups.at(-1).members.push(member);
       else
         groups.push({
           id,
-          label: byPriority ? SECTION[r] : a.space_name || "",
-          status: byPriority ? SECTION_STATUS[r] : null,
-          members: [a],
+          label: labelText,
+          tone,
+          showCount,
+          members: [member],
         });
+    };
+    for (const a of rest) {
+      if (sort.id === "status") {
+        const r = rankOf(a) || RANK.idle;
+        pushGroup(`sec-${r}`, SECTION[r], SECTION_STATUS[r], true, a);
+      } else if (sort.id === "rank") {
+        const b = bucketOf(a);
+        pushGroup(`pri-${b.id}`, b.label, b.tone, true, a);
+      } else if (sort.id === "recent") {
+        pushGroup("recent", "Recent", null, true, a);
+      } else if (sort.id === "grouped") {
+        pushGroup(`sp-${a.space}`, a.space_name || "", null, false, a);
+      } else if (sort.id === "machine") {
+        const m = machineOf(a);
+        pushGroup(
+          `mc-${m ?? "local"}`,
+          deviceTitle(m, this.hostName),
+          null,
+          true,
+          a,
+        );
+      } else if (sort.id === "agent") {
+        const kind = agentTypeName(a);
+        pushGroup(`agp-${kind}`, kind, null, true, a);
+      } else {
+        pushGroup("alpha", "By name", null, true, a);
+      }
     }
 
     // A group's header; it folds the group. Folded, it says how many and the most urgent state.
@@ -1054,17 +1328,17 @@ export default class Agents extends View {
         .child(
           div()
             .truncate()
-            .text_color(t[g.status] ?? t.dim)
+            .text_color((g.tone && t[g.tone]) || t.dim)
             .child(g.label),
         )
-        .when(byPriority || !open, (el) =>
+        .when(g.showCount || !open, (el) =>
           el.child(div().text_color(t.dim).child(String(g.members.length))),
         )
         .child(div().flex_1())
         .when(!open, (el) =>
           el
-            .when(!byPriority && top && top !== "idle", (el) =>
-              el.child(this.status(t, { status: top }, true)),
+            .when(sort.id !== "status" && top && top !== "idle", (el) =>
+              el.child(this.status(t, { status: top })),
             )
             .child(
               svg("mods/workspace-chrome/chevron-right.svg")
@@ -1114,6 +1388,7 @@ export default class Agents extends View {
                     .id("ag-filter")
                     .text_size(11)
                     .text_color(hiddenPri.length ? t.foreground : t.dim)
+                    .cursor_pointer()
                     .hover((s) => s.text_color(t.foreground))
                     .on_click(() =>
                       openOverlay({
@@ -1145,20 +1420,19 @@ export default class Agents extends View {
                     .id("ag-sort")
                     .text_size(11)
                     .text_color(t.dim)
+                    .cursor_pointer()
                     .hover((s) => s.text_color(t.foreground))
                     .on_click(() =>
                       openOverlay({
                         mod: "my-agents",
                         kind: "popup",
-                        width: 200,
-                        height: 140,
+                        width: 205,
+                        height: 54 + SORTS.length * 31,
                         props: { sortMenu: true },
                       }),
                     )
                     .tooltip(`Sort agents: ${sort.label}`)
-                    .child(
-                      svg(`mods/workspace-chrome/${sort.icon}.svg`).size(14),
-                    ),
+                    .child(svg(sort.icon).size(14)),
                 ),
             ),
         ),

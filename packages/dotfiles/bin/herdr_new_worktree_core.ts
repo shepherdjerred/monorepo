@@ -29,6 +29,8 @@ export type Request = {
   readonly argv: readonly string[] | null;
   /** A caller's own first-tab name instead of the generated title. */
   readonly tab: string | null;
+  /** Whether `message` is also sent to the started agent (`false` only names the branch and tab). */
+  readonly sendMessage: boolean;
 };
 
 export type Launcher = "brim" | "profile";
@@ -163,6 +165,9 @@ export function parseRequest(json: string): Request {
   const launcher = r.get("launcher");
   if (launcher !== "brim" && launcher !== "profile")
     throw new TypeError('Request launcher must be "brim" or "profile".');
+  const rawSend = r.get("sendMessage");
+  if (rawSend !== undefined && typeof rawSend !== "boolean")
+    throw new TypeError("Request sendMessage must be a boolean.");
   return {
     message: text(r.get("message"), "message").trim(),
     provider: nullableText(r.get("provider"), "provider"),
@@ -175,6 +180,7 @@ export function parseRequest(json: string): Request {
     launcher,
     argv: nullableStrings(r.get("argv"), "argv"),
     tab: r.get("tab") === undefined ? null : nullableText(r.get("tab"), "tab"),
+    sendMessage: rawSend ?? true,
   };
 }
 
@@ -218,13 +224,23 @@ export function launch(
   request: Request,
   named: Named,
 ): { argv: string[] | null; task: string | null; typed: boolean } {
-  const { provider, message } = request;
+  const { provider, message, sendMessage } = request;
   if (provider === null)
     return request.argv === null
       ? { argv: null, task: null, typed: false }
-      : { argv: [...request.argv], task: message, typed: false };
+      : {
+          argv: [...request.argv],
+          task: sendMessage ? message : null,
+          typed: false,
+        };
   const extra = [...request.agentArgs];
   if (provider === "claude-code") extra.push("--name", named.title);
+  if (!sendMessage)
+    return {
+      argv: agentCommand(request, provider, extra),
+      task: null,
+      typed: false,
+    };
   if (provider === "antigravity") extra.push("-i", message);
   const typed = provider === "kimi";
   const asTask = provider !== "antigravity" && !typed;
@@ -344,6 +360,11 @@ export async function createWorktree(
     title: named.title,
     path,
     terminal,
-    messageSent: argv === null ? "none" : typed ? "typed" : "argument",
+    messageSent:
+      argv === null || !request.sendMessage
+        ? "none"
+        : typed
+          ? "typed"
+          : "argument",
   };
 }
