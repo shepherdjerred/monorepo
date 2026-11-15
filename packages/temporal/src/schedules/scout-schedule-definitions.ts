@@ -26,6 +26,10 @@ const BETA_RETIRED_PAUSE_NOTES = [
   "Paused until the matching Scout Temporal feature family is enabled",
 ];
 
+// Not in BETA_RETIRED_PAUSE_NOTES: reconciliation must not clear this pause.
+const CRAWL_PAUSE_NOTE =
+  "Paused until the Scout beta worker bundle exports scoutParticipantCrawlWorkflow and the crawl is enabled";
+
 type ScoutInterval =
   | "20 seconds"
   | "30 seconds"
@@ -45,6 +49,8 @@ type ScoutIntervalSchedule = ScoutSchedule & {
   readonly catchupWindow?: "1 minute" | "5 minutes" | "1 hour";
   readonly offset?: "5 minutes";
   readonly initiallyActive?: true;
+  /** Created paused in every stage, with this note, until an enablement PR clears it. */
+  readonly pauseNote?: string;
 };
 
 type ScoutCronSchedule = ScoutSchedule & {
@@ -78,9 +84,11 @@ function intervalSchedule(
     ...(stage === "beta"
       ? { retiredPauseNotes: BETA_RETIRED_PAUSE_NOTES }
       : {}),
-    ...(stage === "beta" || schedule.initiallyActive
-      ? {}
-      : { initialPauseNote: INITIAL_PAUSE_NOTE }),
+    ...(schedule.pauseNote === undefined
+      ? stage === "beta" || schedule.initiallyActive
+        ? {}
+        : { initialPauseNote: INITIAL_PAUSE_NOTE }
+      : { initialPauseNote: schedule.pauseNote }),
   };
 }
 
@@ -132,10 +140,12 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       catchupWindow: CATCHUP_TIGHT,
     }),
     intervalSchedule(stage, {
-      // The participant crawl ships dark: each tick is one Activity that
-      // returns at once while `scout-participant-crawl-enabled` is off (and
-      // production is hard-disabled in code). Like every non-beta Scout
-      // schedule it is created paused in prod.
+      // The participant crawl ships dark. Schedules deploy with the central
+      // worker, independently of the Scout images, so nothing orders this
+      // schedule's first tick after the routed beta bundle exports the
+      // workflow. It is created paused in both stages; the enablement PR
+      // unpauses beta once that bundle is live.
+      pauseNote: CRAWL_PAUSE_NOTE,
       name: "participant-crawl",
       workflowType: SCOUT_WORKFLOW_NAMES.participantCrawl,
       args: [{ stage, trigger: "schedule" }],

@@ -9,7 +9,9 @@ const retiredNotes = [
 
 describe("declared beta Scout schedule activation", () => {
   for (const schedule of SCOUT_SCHEDULES.filter(
-    (candidate) => candidate.namespace === "beta",
+    (candidate) =>
+      candidate.namespace === "beta" &&
+      candidate.initialPauseNote === undefined,
   )) {
     test(`${schedule.id} activates only recognized migration pauses`, () => {
       expect(buildScheduleState(schedule, {})).toEqual({ paused: false });
@@ -50,4 +52,21 @@ describe("declared beta Scout schedule activation", () => {
       }
     }
   });
+});
+
+describe("declared beta Scout schedules created paused", () => {
+  for (const schedule of SCOUT_SCHEDULES.filter(
+    (candidate) =>
+      candidate.namespace === "beta" &&
+      candidate.initialPauseNote !== undefined,
+  )) {
+    test(`${schedule.id} stays paused through reconciliation`, () => {
+      const created = buildScheduleState(schedule, {});
+      expect(created).toEqual({
+        paused: true,
+        note: schedule.initialPauseNote,
+      });
+      expect(buildScheduleState(schedule, {}, created)).toEqual(created);
+    });
+  }
 });

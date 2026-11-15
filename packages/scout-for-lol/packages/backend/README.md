@@ -2343,7 +2343,8 @@ declaration are live. `scout-participant-crawl-daily-match-budget` (default
 stored per UTC day.
 
 - **Schedule and queue.** `scoutParticipantCrawlWorkflow` runs every minute
-  (overlap SKIP) and calls one Activity on `scout-{stage}-crawl`, polled by the
+  (overlap SKIP; both Schedules are created paused, and the enablement change
+  unpauses beta once the routed worker bundle exports the Workflow) and calls one Activity on `scout-{stage}-crawl`, polled by the
   `activity-worker` pod. Each tick seeds from participants of tracked
   `MatchObservation` rows, visits a few eligible players (7-day cooldown,
   depth at most 2, both CHECKed in PostgreSQL), looks up their rank bracket

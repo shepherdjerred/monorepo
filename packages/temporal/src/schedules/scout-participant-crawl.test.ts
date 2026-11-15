@@ -37,8 +37,14 @@ describe("Scout participant crawl schedule", () => {
     },
   );
 
-  test("is created paused in production, like every non-beta Scout schedule", () => {
-    expect(crawlSchedule("prod").initialPauseNote).toBeDefined();
-    expect(crawlSchedule("beta").initialPauseNote).toBeUndefined();
-  });
+  test.each(["beta", "prod"] as const)(
+    "is created paused on %s until the enablement PR",
+    (stage) => {
+      const schedule = crawlSchedule(stage);
+      expect(schedule.initialPauseNote).toBeDefined();
+      expect(schedule.retiredPauseNotes ?? []).not.toContain(
+        schedule.initialPauseNote,
+      );
+    },
+  );
 });
