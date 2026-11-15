@@ -141,6 +141,7 @@ const prometheusRules: readonly [namespace: string, name: string][] = [
   ["tasknotes", "tasknotes"],
   ["prometheus", "cluster-hygiene"],
   ["kube-system", "etcd-custom"],
+  ["kube-system", "network-policy-enforcement"],
   ["prometheus", "zfs-maintenance"],
   ["temporal", "temporal"],
   ["media", "streambot"],
@@ -172,6 +173,7 @@ const grafanaDashboards = [
   "discord-plays-dashboard",
   "feature-flags-dashboard",
   "gitckup-dashboard",
+  "network-policy-enforcement-dashboard",
   "scout-for-lol-dashboard",
   "scout-for-lol-durable-dashboard",
   "smartctl-dashboard",
@@ -188,6 +190,7 @@ const CLUSTER_OBSERVABILITY_INVENTORY = [
   "v1/ConfigMap/prometheus/prometheus-auth-gateway-config",
   "v1/ConfigMap/prometheus/alertmanager-auth-gateway-config",
   "monitoring.coreos.com/v1/PodMonitor/woodpecker/woodpecker-server",
+  "monitoring.coreos.com/v1/PodMonitor/kube-system/kube-network-policies",
   "monitoring.coreos.com/v1/ServiceMonitor/buildkitd/buildkitd-service-monitor",
   "monitoring.coreos.com/v1/ServiceMonitor/kueue-system/kueue-controller-manager-metrics",
   ...prometheusRules.map(

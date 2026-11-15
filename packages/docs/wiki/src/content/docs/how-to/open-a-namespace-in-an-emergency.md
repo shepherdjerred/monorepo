@@ -46,6 +46,9 @@ exits non-zero if the namespace is not open afterwards.
 
 ArgoCD acts only on objects it tracks, and the break-glass policy carries no
 tracking label or annotation. Nothing reverts it. It stays until you close it.
+While it exists, the `NetworkPolicyBreakGlassActive` alert fires for it and
+the **Break-glass policies** table of the **NetworkPolicy enforcement** Grafana
+dashboard (uid `network-policy-enforcement`) lists it.
 
 If the denied connection is to a pod in another enforced namespace, that
 namespace's Ingress policy is the one dropping it. Open that namespace too.
@@ -104,8 +107,11 @@ bun run netpol:check --all-staged
 ```
 
 This fails while any namespace still has a break-glass policy, including one
-with no staging policy of its own. Then fix the policy that caused the
-outage, and cut the namespace over again.
+with no staging policy of its own. `NetworkPolicyBreakGlassActive` resolves
+within a few minutes of the last close. Then fix the policy that caused the
+outage, and cut the namespace over again. The denials that led here are on
+the same dashboard; see
+[Watching the enforcer](/how-to/cut-a-namespace-over-to-enforced-policies/#watching-the-enforcer).
 
 ## Related
 

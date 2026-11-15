@@ -183,7 +183,9 @@ If the agent container stops, traffic passes. It does not fail closed.
 That is the safer default for a cluster with one production node, where a
 crashed enforcer that dropped everything would take down every service. The
 cost is silence. A dead agent looks exactly like a cluster with no policies,
-and nothing a user does reveals it.
+and nothing a user does reveals it. Only monitoring does: an alert fires when
+a node has no running enforcer or one restarts, as listed under
+[Watching the enforcer](/how-to/cut-a-namespace-over-to-enforced-policies/#watching-the-enforcer).
 
 Policies are therefore a second boundary, not the only one. The workloads that
 must not reach a destination under any failure keep a pod-local firewall, as

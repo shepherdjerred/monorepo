@@ -22,6 +22,10 @@ kubectl --namespace kube-system get daemonset kube-flannel \
   -o jsonpath='{.spec.template.spec.containers[*].name}{"\n"}'
 ```
 
+The enforcer fails open. Do not cut a namespace over while
+`NetworkPolicyEnforcerNotRunning` or `NetworkPolicyEnforcerRestarted` is
+firing. [Watching the enforcer](#watching-the-enforcer) lists what reports it.
+
 :::
 
 ## 1. Pick the namespace
@@ -132,20 +136,33 @@ The staging policy ships with the namespace's own release. `argocd` and
    here and nowhere else.
 
 4. Read the enforcer's log for the window that covers step 3. The `denials`
-   check is a note, not a gate, so read it yourself:
+   check is a note, not a gate, so read it yourself.
+
+   The enforcer's denial line names only the packet's `id`. The
+   `Evaluating packet` line logged just before it, with the same `id`, names
+   the source and destination pods. This prints each denial that involves the
+   namespace, after the line that names its pods:
 
    ```bash
    kubectl --namespace kube-system logs \
      --selector k8s-app=flannel,tier=node \
      --container kube-network-policies \
      --since=10m --tail=-1 --prefix \
-     | grep -iE 'den(y|ied)|drop|reject' \
-     | grep -E '(^|[^a-z0-9-])NAMESPACE([^a-z0-9-]|$)'
+     | grep -E '"(Evaluating packet|Packet denied by (egress|ingress) policy)"' \
+     | grep -B1 '"Packet denied by' \
+     | grep -A1 -E '(srcPod|dstPod)="NAMESPACE/'
    ```
 
-   A denial that names the namespace is either a rule the policy is missing or
-   traffic it was written to stop. Decide which before you move on. The peer
-   on the other end may be the one that needs the rule.
+   An egress denial needs a rule on the `srcPod` side, an ingress denial on
+   the `dstPod` side. `external` is an address outside the pod network. Each
+   denial is either a rule the policy is missing or traffic it was written to
+   stop. Decide which before you move on. The peer on the other end may be the
+   one that needs the rule.
+
+   The **NetworkPolicy enforcement** Grafana dashboard (uid
+   `network-policy-enforcement`) charts denials per node and direction over
+   the same window, and its **Denials with their packets** panel shows these
+   line pairs for every namespace.
 
 5. Check the namespaces that call this one. A caller in an `"open"` namespace
    is still limited by this namespace's Ingress policy. Run the gate for each
@@ -173,6 +190,26 @@ then make the same change in source.
 
 Fix the policy before trying again. A revert restores service. It does not
 explain the denial.
+
+## Watching the enforcer
+
+These ship with the cluster's observability chart and match nothing until the
+enforcer container exists.
+
+| Signal                              | Source                                   | Reports                                                                     |
+| ----------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------- |
+| `NetworkPolicyEnforcerNotRunning`   | kube-state-metrics                       | A node of `kube-flannel` without a running enforcer for five minutes        |
+| `NetworkPolicyEnforcerRestarted`    | kube-state-metrics                       | An enforcer restart in the last fifteen minutes, with its node              |
+| `NetworkPolicyBreakGlassActive`     | kube-state-metrics                       | An `enforcement-break-glass-*` policy that has existed for five minutes     |
+| NetworkPolicy enforcement dashboard | Prometheus, the enforcer's metrics, Loki | Enforcers and restarts, verdicts, latency, denials and break-glass policies |
+
+The alerts are defined in
+`packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/network-policy-enforcement.ts`
+and the dashboard in
+`packages/homelab/src/cdk8s/grafana/network-policy-enforcement-dashboard.ts`.
+The enforcer's metrics count verdicts per node only. No metric names a
+namespace or a policy, so a rise in one namespace's denials shows up only in
+the log, and no alert watches it.
 
 ## Related
 
