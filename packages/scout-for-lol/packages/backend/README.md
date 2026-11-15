@@ -2264,6 +2264,14 @@ Notes that are easy to get wrong:
   lake Activities; production retains its embedded Workflow poller. Beta's
   dedicated Workflow Deployment owns Workflow routing. Rollback uses an
   accepted image with the same split roles.
+- **The release canary never borrows a work slot.** Each `realtime`,
+  `interactive`, `background` and `lake` worker has a sibling on
+  `scout-{stage}-{class}-probe` in the same process. The sibling has its own
+  two slots and registers only `probeQueue`. Its probe reports the work queue
+  only while that queue's worker is `RUNNING`. Real work can hold the single
+  `background` slot for minutes, and a probe queued behind it timed out prod
+  promotes (AI-544). `temporal/activity-worker-plan.ts` owns the layout and
+  the slot budgets.
 - **A lake-reading role that does not publish verifies instead.** An empty or
   unmounted lake is not an error for DuckDB — it scans zero parquet files and
   returns zero rows — so a worker would record every report run and dare

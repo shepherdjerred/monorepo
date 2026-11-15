@@ -35,7 +35,21 @@ import {
   scoutReportScheduleId,
   scoutReportScheduleReconcilerWorkflowId,
   scoutTaskQueues,
+  scoutProbeTaskQueues,
+  scoutQueueCanaryProbeRoutes,
+  assertScoutQueueCanaryProbe,
 } from "./identifiers.ts";
+
+function canaryRoute(reservedProbeSlots: boolean): string[][] {
+  return scoutQueueCanaryProbeRoutes("prod", {
+    includeGateway: true,
+    reservedProbeSlots,
+  }).map(({ queueClass, dispatchTaskQueue, servedTaskQueue }) => [
+    queueClass,
+    dispatchTaskQueue,
+    servedTaskQueue,
+  ]);
+}
 
 describe("Scout Temporal identifiers", () => {
   test("derives one workflow queue and isolated activity queues per stage", () => {
@@ -226,5 +240,68 @@ describe("the generation rename", () => {
     );
     // Not a pipeline Activity, so never renamed.
     expect(scoutPreRenameActivityType("runReport")).toBe("runReport");
+  });
+
+  test("gives each slot-budgeted work queue a reserved canary probe queue", () => {
+    expect(scoutProbeTaskQueues("prod")).toEqual({
+      realtime: "scout-prod-realtime-probe",
+      interactive: "scout-prod-interactive-probe",
+      background: "scout-prod-background-probe",
+      lake: "scout-prod-lake-probe",
+    });
+  });
+
+  test("routes canary probes to reserved queues only under the patch", () => {
+    expect(canaryRoute(true)).toEqual([
+      ["realtime", "scout-prod-realtime-probe", "scout-prod-realtime"],
+      ["interactive", "scout-prod-interactive-probe", "scout-prod-interactive"],
+      ["background", "scout-prod-background-probe", "scout-prod-background"],
+      ["lake", "scout-prod-lake-probe", "scout-prod-lake"],
+      ["gateway", "scout-prod-gateway", "scout-prod-gateway"],
+    ]);
+    // Retained pre-patch histories scheduled every probe on its work queue.
+    expect(canaryRoute(false)).toEqual([
+      ["realtime", "scout-prod-realtime", "scout-prod-realtime"],
+      ["interactive", "scout-prod-interactive", "scout-prod-interactive"],
+      ["background", "scout-prod-background", "scout-prod-background"],
+      ["lake", "scout-prod-lake", "scout-prod-lake"],
+      ["gateway", "scout-prod-gateway", "scout-prod-gateway"],
+    ]);
+  });
+
+  test("refuses a canary probe that does not prove its route", () => {
+    const background = scoutQueueCanaryProbeRoutes("prod", {
+      includeGateway: false,
+      reservedProbeSlots: true,
+    }).find((candidate) => candidate.queueClass === "background");
+    if (background === undefined) throw new Error("No background route");
+    const probe = {
+      stage: "prod",
+      canaryId: "ai-544",
+      queueClass: "background",
+      taskQueue: "scout-prod-background",
+      probeTaskQueue: "scout-prod-background-probe",
+    } as const;
+    expect(() => {
+      assertScoutQueueCanaryProbe(background, probe);
+    }).not.toThrow();
+    expect(() => {
+      assertScoutQueueCanaryProbe(background, {
+        ...probe,
+        taskQueue: "scout-prod-realtime",
+      });
+    }).toThrow(/ran on scout-prod-realtime, expected scout-prod-background/);
+    expect(() => {
+      assertScoutQueueCanaryProbe(background, {
+        ...probe,
+        probeTaskQueue: "scout-prod-background",
+      });
+    }).toThrow(/probe ran on scout-prod-background/);
+    expect(() => {
+      assertScoutQueueCanaryProbe(background, {
+        ...probe,
+        queueClass: "lake",
+      });
+    }).toThrow(/expected scout-prod-background/);
   });
 });

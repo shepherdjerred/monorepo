@@ -1,5 +1,6 @@
 import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
 import { createLogger } from "#src/logger.ts";
+import { scoutActivityWorkerPlans } from "#src/temporal/activity-worker-plan.ts";
 import { getTracingRuntime } from "#src/observability/tracing.ts";
 import type {
   ScoutBackgroundActivities,
@@ -331,65 +332,24 @@ export async function createConnectedRuntime(
         }),
       );
     }
-    if (queueClasses.has("interactive")) {
-      workers.push(
-        await Worker.create({
-          ...commonOptions,
-          taskQueue: queues.interactive,
-          activities: options.activities.interactive,
-          maxConcurrentActivityTaskExecutions: 2,
-        }),
-      );
-    }
-    if (queueClasses.has("gateway")) {
-      workers.push(
-        await Worker.create({
-          ...commonOptions,
-          taskQueue: queues.gateway,
-          activities: options.activities.gateway,
-          maxConcurrentActivityTaskExecutions: 2,
-        }),
-      );
-    }
-    if (queueClasses.has("lake")) {
-      workers.push(
-        await Worker.create({
-          ...commonOptions,
-          taskQueue: queues.lake,
-          activities: options.activities.lake,
-          maxConcurrentActivityTaskExecutions: 1,
-        }),
-      );
-    }
-    if (queueClasses.has("realtime")) {
-      workers.push(
-        await Worker.create({
-          ...commonOptions,
-          taskQueue: queues.realtime,
-          activities: options.activities.realtime,
-          maxConcurrentActivityTaskExecutions: 4,
-        }),
-      );
-    }
-    if (queueClasses.has("crawl")) {
-      workers.push(
-        await Worker.create({
-          ...commonOptions,
-          taskQueue: queues.crawl,
-          activities: options.activities.crawl,
-          maxConcurrentActivityTaskExecutions: 1,
-        }),
-      );
-    }
-    if (queueClasses.has("background")) {
-      workers.push(
-        await Worker.create({
-          ...commonOptions,
-          taskQueue: queues.background,
-          activities: options.activities.background,
-          maxConcurrentActivityTaskExecutions: 1,
-        }),
-      );
+    // Each work queue is followed by its reserved canary probe queue, so the
+    // release canary never waits for a work slot (`activity-worker-plan.ts`).
+    const created = new Map<string, Worker>();
+    for (const plan of scoutActivityWorkerPlans(
+      options.stage,
+      queueClasses,
+      options.activities,
+      (taskQueue) => created.get(taskQueue)?.getState(),
+    )) {
+      const worker = await Worker.create({
+        ...commonOptions,
+        taskQueue: plan.taskQueue,
+        activities: plan.activities,
+        maxConcurrentActivityTaskExecutions:
+          plan.maxConcurrentActivityTaskExecutions,
+      });
+      workers.push(worker);
+      created.set(plan.taskQueue, worker);
     }
     return {
       workers,

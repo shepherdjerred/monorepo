@@ -8,10 +8,13 @@ import {
   NotificationAttemptNonceSchema,
   type NotificationAttemptNonce,
 } from "@scout-for-lol/domain/notifications/intent.ts";
-import type {
-  ScoutDetachedWorkInput,
-  ScoutQueueClass,
-  ScoutStage,
+import {
+  SCOUT_RESERVED_PROBE_QUEUE_CLASSES,
+  type ScoutDetachedWorkInput,
+  type ScoutQueueCanaryProbeResult,
+  type ScoutQueueClass,
+  type ScoutReservedProbeQueueClass,
+  type ScoutStage,
 } from "./contracts.ts";
 import type {
   ScoutPrematchGameRef,
@@ -230,6 +233,96 @@ export function scoutTaskQueues(stage: ScoutStage) {
     crawl: `${prefix}-crawl`,
     gateway: `${prefix}-gateway`,
   } as const;
+}
+
+/**
+ * The reserved probe queue beside each work queue, `scout-{stage}-{class}-probe`.
+ *
+ * The same process that polls a work queue also polls its probe queue with a
+ * worker of its own slots that registers only `probeQueue`. A probe executed
+ * there proves that process is up and runs this build's Activity code, and the
+ * probe attests that its sibling work-queue worker is running — without
+ * competing with real work for the work queue's slots.
+ */
+export function scoutProbeTaskQueues(
+  stage: ScoutStage,
+): Record<ScoutReservedProbeQueueClass, string> {
+  const queues = scoutTaskQueues(stage);
+  return {
+    realtime: `${queues.realtime}-probe`,
+    interactive: `${queues.interactive}-probe`,
+    background: `${queues.background}-probe`,
+    lake: `${queues.lake}-probe`,
+  };
+}
+
+/** One probe the queue canary dispatches, and the queue it must prove. */
+export type ScoutQueueCanaryProbeRoute = {
+  readonly queueClass: ScoutQueueClass;
+  /** Where the probe is dispatched. */
+  readonly dispatchTaskQueue: string;
+  /** The work queue whose poller the probe must attest. */
+  readonly servedTaskQueue: string;
+};
+
+/**
+ * The queue canary's probe routes, in result order.
+ *
+ * `reservedProbeSlots` is the `scout-queue-canary-reserved-probe-slots` patch:
+ * an execution that predates it dispatched every probe onto the work queue
+ * itself and must keep doing so under replay.
+ */
+export function scoutQueueCanaryProbeRoutes(
+  stage: ScoutStage,
+  options: { includeGateway: boolean; reservedProbeSlots: boolean },
+): ScoutQueueCanaryProbeRoute[] {
+  const queues = scoutTaskQueues(stage);
+  const probeQueues = scoutProbeTaskQueues(stage);
+  return [
+    ...SCOUT_RESERVED_PROBE_QUEUE_CLASSES.map((queueClass) => ({
+      queueClass,
+      dispatchTaskQueue: options.reservedProbeSlots
+        ? probeQueues[queueClass]
+        : queues[queueClass],
+      servedTaskQueue: queues[queueClass],
+    })),
+    ...(options.includeGateway
+      ? [
+          {
+            queueClass: "gateway" as const,
+            dispatchTaskQueue: queues.gateway,
+            servedTaskQueue: queues.gateway,
+          },
+        ]
+      : []),
+  ];
+}
+
+/**
+ * Refuse a probe result that does not prove its route: it must name the work
+ * queue it attests, and a probe dispatched to a reserved queue must report
+ * that it executed there.
+ */
+export function assertScoutQueueCanaryProbe(
+  route: ScoutQueueCanaryProbeRoute,
+  result: ScoutQueueCanaryProbeResult,
+): void {
+  if (
+    result.queueClass !== route.queueClass ||
+    result.taskQueue !== route.servedTaskQueue
+  ) {
+    throw new Error(
+      `Scout ${route.queueClass} canary ran on ${result.taskQueue}, expected ${route.servedTaskQueue}`,
+    );
+  }
+  if (
+    route.dispatchTaskQueue !== route.servedTaskQueue &&
+    result.probeTaskQueue !== route.dispatchTaskQueue
+  ) {
+    throw new Error(
+      `Scout ${route.queueClass} canary probe ran on ${result.probeTaskQueue ?? "no reserved queue"}, expected ${route.dispatchTaskQueue}`,
+    );
+  }
 }
 
 export function scoutInteractiveWorkflowId(
