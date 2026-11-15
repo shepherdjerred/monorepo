@@ -14,6 +14,24 @@ import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/reso
  * evaluate. The phase series is aggregated by claim so a second
  * kube-state-metrics instance during a rollout cannot duplicate it.
  */
+const ZFS_PVC_OWNER = `max by (volumename, namespace, persistentvolumeclaim) (
+  kube_persistentvolumeclaim_info{volumename!=""}
+  * on (namespace, persistentvolumeclaim) group_left()
+  max by (namespace, persistentvolumeclaim) (
+    kube_persistentvolumeclaim_status_phase{phase="Bound"} == 1
+  )
+)`;
+
+export const zfsPvcUsedBytesExpression = `label_replace(
+  zfs_dataset_used_bytes{dataset_name=~".*/pvc-.*"},
+  "volumename",
+  "$1",
+  "dataset_name",
+  ".*/(pvc-.*)"
+)
+* on (volumename) group_left(namespace, persistentvolumeclaim)
+${ZFS_PVC_OWNER}`;
+
 export const zfsPvcUsageExpression = `label_replace(
   zfs_dataset_used_bytes{dataset_name=~".*/pvc-.*"}
   /
@@ -27,13 +45,7 @@ export const zfsPvcUsageExpression = `label_replace(
   ".*/(pvc-.*)"
 )
 * on (volumename) group_left(namespace, persistentvolumeclaim)
-max by (volumename, namespace, persistentvolumeclaim) (
-  kube_persistentvolumeclaim_info{volumename!=""}
-  * on (namespace, persistentvolumeclaim) group_left()
-  max by (namespace, persistentvolumeclaim) (
-    kube_persistentvolumeclaim_status_phase{phase="Bound"} == 1
-  )
-)`;
+${ZFS_PVC_OWNER}`;
 
 const BUILDKITD_CACHE_PVC_SELECTOR =
   'kube_persistentvolumeclaim_info{namespace="buildkitd",persistentvolumeclaim=~"buildkitd-cache.*"}';
