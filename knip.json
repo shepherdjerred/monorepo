@@ -499,6 +499,7 @@
   "ignore": [
     "**/eslint.config.ts",
     "**/generated/**",
+    "packages/tasknotes-server/src/protocol/generated.ts",
     "sandbox/archive/**",
     "sandbox/practice/**",
     "packages/resume/**",
