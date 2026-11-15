@@ -385,6 +385,31 @@ fn a_capture_ends_at_the_contract_limit() -> TestResult {
 }
 
 #[test]
+fn a_short_request_spoken_straight_after_the_wake_phrase_ends_at_end_of_speech() -> TestResult {
+    // "hey scout what's my CS" in one breath: the spotter only fires once the
+    // whole burst is over, so every frame of speech is in the pre-roll and
+    // none arrives after the candidate. The VAD must be primed with all of
+    // it, or it never hears speech and the capture runs to the 15 s cap.
+    let mut pipeline = pipeline("HEY_SCOUT", true)?;
+    pipeline.set_gameflow_phase(&GameflowPhase::InProgress);
+    let wav = fixture(&[(1.0, 0.0), (0.6, 1_000.0), (1.0, 300.0), (16.0, 0.0)])?;
+    let utterances = play(&mut pipeline, &wav)?;
+    let [utterance] = utterances.as_slice() else {
+        return Err(format!("expected one utterance, got {}", utterances.len()).into());
+    };
+    assert_eq!(utterance.trigger, Trigger::Wake);
+    assert_eq!(utterance.reason, EndReason::EndOfSpeech);
+    // The 2 s pre-roll plus the 650 ms end-of-speech silence and the 300 ms
+    // post-verification hold, nowhere near the cap.
+    let duration = utterance.duration_ms();
+    assert!(
+        (2_500..=3_500).contains(&duration),
+        "utterance was {duration} ms"
+    );
+    Ok(())
+}
+
+#[test]
 fn a_fragment_missing_from_the_tail_table_fails_loudly() -> TestResult {
     let mut pipeline = pipeline("SCOUT_PLEASE", true)?;
     pipeline.set_gameflow_phase(&GameflowPhase::InProgress);
