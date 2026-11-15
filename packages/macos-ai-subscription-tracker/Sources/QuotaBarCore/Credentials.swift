@@ -54,6 +54,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private let grokHome: URL?
   private let cursorStateDatabase: URL?
   private let claudeKeychain: any KeychainReading
+  private let cursorKeychain: any KeychainReading
   private let selectionLock = NSLock()
   private var rejectedTokens: [ProviderID: Set<String>] = [:]
 
@@ -63,7 +64,8 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     kimiCodeHome: URL? = nil,
     grokHome: URL? = nil,
     cursorStateDatabase: URL? = nil,
-    claudeKeychain: any KeychainReading = SecurityToolKeychainClient()
+    claudeKeychain: any KeychainReading = SecurityToolKeychainClient(),
+    cursorKeychain: (any KeychainReading)? = nil
   ) {
     self.fileManager = fileManager
     self.homeDirectory = homeDirectory ?? fileManager.homeDirectoryForCurrentUser
@@ -71,6 +73,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     self.grokHome = Self.configuredHome(grokHome, environmentKey: "GROK_HOME")
     self.cursorStateDatabase = cursorStateDatabase
     self.claudeKeychain = claudeKeychain
+    self.cursorKeychain = cursorKeychain ?? claudeKeychain
   }
 
   private static func configuredHome(_ explicit: URL?, environmentKey: String) -> URL? {
@@ -221,6 +224,31 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   }
 
   private func readCursor(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
+    if let credential = try readCursorKeychain(excluding: excludedTokens) {
+      return credential
+    }
+    return try readCursorDatabase(excluding: excludedTokens)
+  }
+
+  private func readCursorKeychain(
+    excluding excludedTokens: Set<String>
+  ) throws -> ProviderCredential? {
+    guard
+      let data = try cursorKeychain.read(service: "cursor-access-token", account: "cursor-user")
+        ?? cursorKeychain.read(service: "cursor-access-token", account: nil),
+      let token = String(data: data, encoding: .utf8)?.trimmingCharacters(
+        in: .whitespacesAndNewlines),
+      !token.isEmpty
+    else {
+      return nil
+    }
+    let credential = try ProviderCredential(accessToken: token, source: "Cursor Keychain")
+    return excludedTokens.contains(credential.accessToken) ? nil : credential
+  }
+
+  private func readCursorDatabase(
+    excluding excludedTokens: Set<String>
+  ) throws -> ProviderCredential? {
     let database = resolvedCursorStateDatabase
     guard fileManager.fileExists(atPath: database.path) else { return nil }
     var connection: OpaquePointer?
@@ -246,10 +274,14 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     defer { sqlite3_finalize(statement) }
     switch sqlite3_step(statement) {
     case SQLITE_ROW:
-      let token = try sqliteString(statement: statement, column: 0)
+      let rawToken = try sqliteString(statement: statement, column: 0)
       guard sqlite3_step(statement) == SQLITE_DONE else {
         throw QuotaError.commandFailed("SQLite")
       }
+      let token = try CursorSafeStorageCodec.decrypt(
+        encryptedToken: rawToken,
+        keychain: cursorKeychain
+      )
       let credential = try ProviderCredential(accessToken: token, source: database.path)
       return excludedTokens.contains(credential.accessToken) ? nil : credential
     case SQLITE_DONE:
