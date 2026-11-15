@@ -28,6 +28,7 @@ import { finalizeReportDraft } from "#src/reports/ai/report-query-finalizer.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import { getLlmRuntime } from "#src/lib/llm-runtime.ts";
+import { supportsOpenAiUltrafast } from "#src/lib/openai-service-tier.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   createFormatTool,
@@ -60,6 +61,29 @@ type RunState = {
   toolCalls: number;
   previewCalls: number;
 };
+
+function reportAiCallOptions(
+  runtime: NonNullable<ReturnType<typeof getLlmRuntime>>,
+  model: string,
+  sessionId: string,
+) {
+  const options = runtime.callOptions({
+    workload: "scout.report-query.tool-loop",
+    model,
+    sessionId,
+  });
+  if (!supportsOpenAiUltrafast(model)) return options;
+  return {
+    ...options,
+    providerOptions: {
+      ...options.providerOptions,
+      openai: {
+        ...options.providerOptions?.openai,
+        serviceTier: "ultrafast" as const,
+      },
+    },
+  };
+}
 
 export async function streamReportQueryAgent(
   params: ReportQueryAgentParams,
@@ -96,11 +120,7 @@ async function streamReportQueryAgentInternal(
       ? { temperature: 0.2 }
       : {}),
     maxOutputTokens: REPORT_AI_MAX_OUTPUT_TOKENS,
-    ...runtime.callOptions({
-      workload: "scout.report-query.tool-loop",
-      model,
-      sessionId: params.runId,
-    }),
+    ...reportAiCallOptions(runtime, model, params.runId),
   });
 
   const stream = await agent.stream({

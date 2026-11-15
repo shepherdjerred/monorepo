@@ -23,7 +23,7 @@ import { formatDateForChangelog } from "./update-changelog.ts";
 
 // Structured extraction is a bigger reasoning task than the old one-line
 // highlights, so use the strongest model. This runs at most weekly.
-const MODEL = "claude-opus-5";
+const MODEL = "claude-opus-5-5";
 const TIMEOUT_MS = 240_000;
 
 // The fields Claude fills in — patch/title/url/date are added deterministically.

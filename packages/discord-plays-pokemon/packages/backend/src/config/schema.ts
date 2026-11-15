@@ -15,7 +15,7 @@ const ReasoningEffortSchema = z.enum(["low", "medium", "high", "xhigh"]);
 const GoalConfigSchema = z
   .strictObject({
     enabled: z.boolean().default(false),
-    model: z.string().min(1).default("gpt-5.6-sol"),
+    model: z.string().min(1).default("gpt-6.1-sol"),
     // Codex `model_reasoning_effort` — medium is the goal-mode default so
     // navigation/vision turns retain the established reasoning baseline.
     reasoning_effort: ReasoningEffortSchema.default("medium"),
@@ -59,7 +59,7 @@ const GoalConfigSchema = z
   })
   .default({
     enabled: false,
-    model: "gpt-5.6-sol",
+    model: "gpt-6.1-sol",
     reasoning_effort: "medium",
     runtime_directory: ".",
     screenshot_dir: "goal-screenshots",

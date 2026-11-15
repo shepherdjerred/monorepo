@@ -12,7 +12,7 @@ Each case in
 `packages/scout-for-lol/packages/data/src/model/reports/explore-scenario-corpus.json`
 seeds an asker, a server, its players, reports and earlier confirmation cards.
 It then runs on every surface the case lists. Deterministic checks and a
-`gpt-5.6-terra` rubric judge decide each turn. A full run is about 40 live
+`gpt-6.1-terra` rubric judge decide each turn. A full run is about 40 live
 conversations and a few dollars.
 
 The runner lives in `packages/scout-for-lol/packages/backend/scripts/explore-scenarios/`.

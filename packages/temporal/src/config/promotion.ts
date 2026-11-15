@@ -39,7 +39,7 @@ export async function promotionConfig() {
           ),
         sources: ["flag", "default"],
         default: JSON.stringify({
-          model: "gpt-5.6-luna",
+          model: "gpt-6-luna",
           maxSteps: 80,
           timeoutMinutes: 15,
           monthlySolverUsd: 10,

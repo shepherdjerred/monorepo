@@ -29,7 +29,7 @@ afterAll(async () => {
 
 test("reserves before a call and settles cached input plus total reasoning output once", async () => {
   const held = await reserveExploreCall(base, db.prisma);
-  expect(held.amount).toBe(12_500);
+  expect(held.amount).toBe(75_000);
   await settleExploreCall(
     held,
     {
@@ -42,7 +42,7 @@ test("reserves before a call and settles cached input plus total reasoning outpu
   const row = await db.prisma.exploreSpend.findUniqueOrThrow({
     where: { id: held.id },
   });
-  expect(row.budgetMicros).toBe(3100);
+  expect(row.budgetMicros).toBe(18_600);
   expect(row.state).toBe("settled");
   expect(row.responseId).toBe("response-one");
   await settleExploreCall(
@@ -54,7 +54,7 @@ test("reserves before a call and settles cached input plus total reasoning outpu
   const settled = await db.prisma.exploreSpend.findUniqueOrThrow({
     where: { id: held.id },
   });
-  expect(settled.budgetMicros).toBe(3100);
+  expect(settled.budgetMicros).toBe(18_600);
 });
 
 test("ambiguous usage retains the full durable hold", async () => {
@@ -74,9 +74,9 @@ test("ambiguous usage retains the full durable hold", async () => {
 
 test("concurrent processes cannot reserve the same last allowance", async () => {
   const policy = {
-    globalMonthlyMicros: 15_000,
-    userMonthlyMicros: 15_000,
-    turnMicros: 15_000,
+    globalMonthlyMicros: 45_000,
+    userMonthlyMicros: 45_000,
+    turnMicros: 45_000,
   };
   const results = await Promise.allSettled([
     reserveExploreCall({ ...base, policy }, db.prisma),
@@ -91,14 +91,14 @@ test("concurrent processes cannot reserve the same last allowance", async () => 
   const total = await db.prisma.exploreSpend.aggregate({
     _sum: { budgetMicros: true },
   });
-  expect(total._sum.budgetMicros).toBeLessThanOrEqual(15_000);
+  expect(total._sum.budgetMicros).toBeLessThanOrEqual(45_000);
 });
 
 test("UTC month rollover grants a new monthly allowance but keeps the turn ceiling", async () => {
   const policy = {
-    globalMonthlyMicros: 12_500,
-    userMonthlyMicros: 12_500,
-    turnMicros: 12_500,
+    globalMonthlyMicros: 37_500,
+    userMonthlyMicros: 37_500,
+    turnMicros: 37_500,
   };
   await reserveExploreCall(
     { ...base, policy, now: new Date("2026-10-31T23:59:59.999Z") },
@@ -123,13 +123,13 @@ test("UTC month rollover grants a new monthly allowance but keeps the turn ceili
       },
       db.prisma,
     ),
-  ).resolves.toHaveProperty("amount", 12_500);
+  ).resolves.toHaveProperty("amount", 37_500);
 });
 
 test("zero disables calls and invalid or expanded policies fail validation", async () => {
   expect(
     ExploreSpendPolicySchema.safeParse({
-      globalMonthlyMicros: 20_000_001,
+      globalMonthlyMicros: 80_000_001,
       userMonthlyMicros: 1,
       turnMicros: 1,
     }).success,

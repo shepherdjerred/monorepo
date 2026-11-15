@@ -325,7 +325,7 @@ function computeConfiguration() {
     // configured" means the runtime can see OpenAI credentials. Asked of the
     // runtime's own resolver so the environment contract has one home.
     inferenceConfigured: providerCredentialsFromEnv().openai !== undefined,
-    reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
+    reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-6.1-sol"),
     // expose that route.
     exploreModel: env.get("EXPLORE_MODEL").default("gpt-6-luna").asString(),
     // Beta Explore access is an explicit Discord server allowlist. Production

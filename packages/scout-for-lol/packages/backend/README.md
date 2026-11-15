@@ -487,8 +487,8 @@ high reasoning. The conversation remembers the choice; each answer records
 its model and reasoning setting. Legacy clients retain their strict SSE and
 REST contracts; version 3 transcript reads include the new metadata.
 
-The typed `scout-explore-spend-policy` defaults to $20 shared per UTC month,
-$5 per user per month and $0.50 per turn. PostgreSQL reservations in integer
+The typed `scout-explore-spend-policy` defaults to $40 shared per UTC month,
+$15 per user per month and $10 per turn. PostgreSQL reservations in integer
 microdollars precede every provider step and repair, with retries disabled.
 Actual usage includes cached input and hidden reasoning output. Missing usage
 or an uncertain response keeps its maximum hold; stopping or restarting a run

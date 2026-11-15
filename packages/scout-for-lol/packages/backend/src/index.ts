@@ -76,7 +76,7 @@ await initializeDynamicConfig({
     exploreQuotaLimits: configuration.exploreQuotaLimits,
     llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
     llmDailyTokenBudget: configuration.llmDailyTokenBudget,
-    reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
+    reportAiModel: configuration.reportAiModel ?? "gpt-6.1-sol",
     exploreModel: configuration.exploreModel,
     featureTipPercent: configuration.featureTipPercent,
     featureTipCooldownHours: configuration.featureTipCooldownHours,

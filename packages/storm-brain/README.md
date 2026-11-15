@@ -82,7 +82,7 @@ metered even on 502s.
 request. See
 [`managed-flag-inventory.json`](../feature-flags/src/managed-flag-inventory.json)
 for the remaining flags. The `storm-brain-model` variant selects the model at service startup; changing
-it takes effect after the service restarts. It defaults to `gpt-5.6-luna`; the
+it takes effect after the service restarts. It defaults to `gpt-6-luna`; the
 selected model must exist in `@shepherdjerred/llm-models` with a native route.
 
 Conversation is separately controlled by `storm-brain-conversation-enabled`,

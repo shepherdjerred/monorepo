@@ -3,7 +3,7 @@ import type { ConfigSource } from "@shepherdjerred/config/source.ts";
 import { requireNativeRoute } from "@shepherdjerred/llm-models";
 import { z } from "zod";
 
-const DEFAULT_MODEL = "gpt-5.6-luna";
+const DEFAULT_MODEL = "gpt-6-luna";
 const DEFAULT_MAX_BODY_BYTES = 256 * 1024;
 const DEFAULT_LLM_TIMEOUT_MS = 60_000;
 

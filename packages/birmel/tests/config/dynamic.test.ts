@@ -51,7 +51,7 @@ describe("Birmel dynamic config", () => {
     });
 
     expect(config.persona.enabled).toBe(false);
-    expect(config.llm.model).toBe("gpt-5.6-sol");
+    expect(config.llm.model).toBe("gpt-6.1-sol");
   });
 
   test("keeps the seed when a flag has the wrong type", async () => {

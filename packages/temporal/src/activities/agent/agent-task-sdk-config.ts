@@ -10,7 +10,7 @@ import {
 } from "#shared/agent/agent-task-prompt.ts";
 import { jsonSchemaFingerprint } from "#shared/agent/agent-task-json-schema.ts";
 
-const DEFAULT_CODEX_MODEL = "gpt-5.6-luna";
+const DEFAULT_CODEX_MODEL = "gpt-6-luna";
 const DEFAULT_MAX_TURNS = 80;
 
 export const AGENT_ALLOWED_TOOLS = [

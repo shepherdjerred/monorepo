@@ -30,7 +30,10 @@ import {
  * keeps the warning active.
  */
 
-/** OpenAI only: the Scout worker holds no other provider credential. */
+/**
+ * OpenAI only: the Scout worker holds no other provider credential.
+ * Stays on gpt-5.6-sol because gpt-6.1-sol has no web search.
+ */
 export const QUEUE_LIVENESS_MODEL = "gpt-5.6-sol";
 export const QUEUE_LIVENESS_RESEARCH_WORKLOAD =
   "scout.queue-window-liveness.research";

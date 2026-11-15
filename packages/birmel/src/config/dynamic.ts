@@ -70,19 +70,19 @@ const DEFINITION = {
   llmModel: {
     schema: StringSchema,
     sources: ["flag", "env", "default"],
-    default: "gpt-5.6-sol",
+    default: "gpt-6.1-sol",
     names: { flag: "birmel-llm-model", env: "LLM_MODEL" },
   },
   classifierModel: {
     schema: StringSchema,
     sources: ["flag", "env", "default"],
-    default: "gpt-5.4-nano",
+    default: "gpt-6-luna",
     names: { flag: "birmel-llm-classifier-model", env: "LLM_CLASSIFIER_MODEL" },
   },
   memoryModel: {
     schema: StringSchema,
     sources: ["flag", "env", "default"],
-    default: "gpt-5.4-nano",
+    default: "gpt-6-luna",
     names: { flag: "birmel-llm-memory-model", env: "LLM_MEMORY_MODEL" },
   },
   embeddingModel: {
@@ -100,7 +100,7 @@ const DEFINITION = {
   personaStyleModel: {
     schema: StringSchema,
     sources: ["flag", "env", "default"],
-    default: "gpt-5.4-nano",
+    default: "gpt-6-luna",
     names: { flag: "birmel-persona-style-model", env: "PERSONA_STYLE_MODEL" },
   },
   reasoningEffort: {

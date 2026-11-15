@@ -75,7 +75,7 @@ export const ExploreQuotaLimitsSchema = z
 export type ExploreQuotaLimits = z.infer<typeof ExploreQuotaLimitsSchema>;
 
 /**
- * The shipped policy, sized for gpt-5.6-luna's per-turn cost.
+ * The shipped policy, sized for gpt-6-luna's per-turn cost.
  *
  * The globals are three times the user rules on purpose rather than by
  * coincidence: they have to stay clear of one person's allowance or they

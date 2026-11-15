@@ -68,11 +68,11 @@ spec:
                   key: GEMINI_API_KEY
                   name: llm-gemini-birmel-prod
             - name: LLM_MODEL
-              value: gpt-5.6-sol
+              value: gpt-6.1-sol
             - name: LLM_CLASSIFIER_MODEL
-              value: gpt-5.4-nano
+              value: gpt-6-luna
             - name: LLM_MEMORY_MODEL
-              value: gpt-5.4-nano
+              value: gpt-6-luna
             - name: LLM_EMBEDDING_MODEL
               value: text-embedding-3-small
             - name: LLM_REASONING_EFFORT

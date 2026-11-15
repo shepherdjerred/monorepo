@@ -69,7 +69,7 @@ describe("Glitter capped requests", () => {
     });
     const weeklyBudget = new GenerationBudget(1);
 
-    expect(SYNTHESIS_MODEL).toBe("gpt-5.6-luna");
+    expect(SYNTHESIS_MODEL).toBe("gpt-6-luna");
     expect(() => {
       weeklyBudget.authorizeUncachedCall(reservation);
     }).not.toThrow();
@@ -85,7 +85,7 @@ describe("Glitter capped requests", () => {
     });
     const weeklyBudget = new GenerationBudget(1);
 
-    expect(RELATIONSHIP_MODEL).toBe("gpt-5.6-luna");
+    expect(RELATIONSHIP_MODEL).toBe("gpt-6-luna");
     expect(() => {
       weeklyBudget.authorizeUncachedCall(reservation);
     }).not.toThrow();

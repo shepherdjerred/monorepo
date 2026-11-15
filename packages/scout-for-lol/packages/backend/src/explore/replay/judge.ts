@@ -33,7 +33,7 @@ import { z } from "zod";
 /**
  * Deliberately not the model under test.
  *
- * Explore runs on `gpt-5.6-luna`, and a model is a lenient grader of its own
+ * Explore runs on `gpt-6-luna`, and a model is a lenient grader of its own
  * output — most of all on the honesty dimension here, where the judgement is
  * about whether an answer overstated what it knew. Grading luna with luna
  * would fold that bias straight into the only quality number this harness
@@ -43,7 +43,7 @@ import { z } from "zod";
  * the judge makes one short call per case against text already on disk, where
  * a sweep makes many long tool-using turns against a live lake.
  */
-export const EXPLORE_JUDGE_MODEL = "gpt-5.6-terra";
+export const EXPLORE_JUDGE_MODEL = "gpt-6.1-terra";
 
 /**
  * What the judge is asked to observe, and nothing more.

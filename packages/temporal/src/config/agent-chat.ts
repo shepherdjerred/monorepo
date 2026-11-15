@@ -7,7 +7,7 @@ const DEFINITION = {
   discordClaudeDefaultModel: {
     schema: z.string().min(1).max(200),
     sources: ["flag", "default"],
-    default: "claude-opus-5",
+    default: "claude-opus-5-5",
     names: {
       flag: "temporal-agent-chat-discord-claude-default-model",
     },
@@ -15,7 +15,7 @@ const DEFINITION = {
   discordCodexDefaultModel: {
     schema: z.string().min(1).max(200),
     sources: ["flag", "default"],
-    default: "gpt-5.6-luna",
+    default: "gpt-6-luna",
     names: {
       flag: "temporal-agent-chat-discord-codex-default-model",
     },

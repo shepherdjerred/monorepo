@@ -47,7 +47,7 @@ const { values } = parseArgs({
     apply: { type: "boolean", default: false },
     limit: { type: "string", default: "0" },
     "rebuild-index": { type: "boolean", default: false },
-    model: { type: "string", default: "gpt-5.6-luna" },
+    model: { type: "string", default: "gpt-6-luna" },
     concurrency: { type: "string", default: "3" },
     "candidates-only": { type: "boolean", default: false },
     // A note is additive: it documents a transaction and displaces nothing.

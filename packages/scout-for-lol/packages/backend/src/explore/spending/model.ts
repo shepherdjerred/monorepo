@@ -5,7 +5,33 @@ import {
 } from "#src/explore/spending/ledger.ts";
 import { exploreSpendPolicy } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
+import { supportsOpenAiUltrafast } from "#src/lib/openai-service-tier.ts";
 import { exploreProviderInputBound } from "./input-bound.ts";
+
+type ExploreProviderOptions = NonNullable<
+  Parameters<
+    NonNullable<LanguageModelMiddleware["wrapGenerate"]>
+  >[0]["params"]["providerOptions"]
+>;
+
+/**
+ * Options every Explore provider call sends. Sol uses Ultrafast; Luna stays
+ * on Fast, the fastest tier it offers. High reasoning stays the quality
+ * setting the conversation already records.
+ */
+export function exploreOpenAiProviderOptions(
+  model: string,
+  providerOptions: ExploreProviderOptions | undefined,
+): ExploreProviderOptions {
+  return {
+    ...providerOptions,
+    openai: {
+      ...providerOptions?.["openai"],
+      reasoningEffort: "high",
+      serviceTier: supportsOpenAiUltrafast(model) ? "ultrafast" : "fast",
+    },
+  };
+}
 
 /** Wrap the lowest provider boundary: every step and repair passes here. */
 export function exploreSpendMiddleware(input: {
@@ -25,13 +51,10 @@ export function exploreSpendMiddleware(input: {
       const result = await model.doGenerate({
         ...params,
         maxOutputTokens: reservation.maxOutputTokens,
-        providerOptions: {
-          ...params.providerOptions,
-          openai: {
-            ...params.providerOptions?.["openai"],
-            reasoningEffort: "high",
-          },
-        },
+        providerOptions: exploreOpenAiProviderOptions(
+          input.model,
+          params.providerOptions,
+        ),
       });
       await settleExploreCall(reservation, result.usage, result.response?.id);
       return result;
@@ -47,13 +70,10 @@ export function exploreSpendMiddleware(input: {
       const result = await model.doStream({
         ...params,
         maxOutputTokens: reservation.maxOutputTokens,
-        providerOptions: {
-          ...params.providerOptions,
-          openai: {
-            ...params.providerOptions?.["openai"],
-            reasoningEffort: "high",
-          },
-        },
+        providerOptions: exploreOpenAiProviderOptions(
+          input.model,
+          params.providerOptions,
+        ),
       });
       let responseId: string | undefined;
       return {

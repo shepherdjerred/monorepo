@@ -181,7 +181,7 @@ max_clients = 4
 
 [emeraldGoal]
 enabled = true
-model = "gpt-5.6-sol"
+model = "gpt-6.1-sol"
 `,
     },
   });

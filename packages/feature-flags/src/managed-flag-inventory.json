@@ -1788,7 +1788,7 @@
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel classifier model.",
       "type": "variant",
-      "default": "gpt-5.4-nano",
+      "default": "gpt-6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1836,7 +1836,7 @@
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel memory model.",
       "type": "variant",
-      "default": "gpt-5.4-nano",
+      "default": "gpt-6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1848,7 +1848,7 @@
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel primary LLM model.",
       "type": "variant",
-      "default": "gpt-5.6-sol",
+      "default": "gpt-6.1-sol",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1884,7 +1884,7 @@
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel persona style model.",
       "type": "variant",
-      "default": "gpt-5.4-nano",
+      "default": "gpt-6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -2741,7 +2741,7 @@
       "source": "scout-dynamic",
       "purpose": "Set shared monthly, user monthly, and turn spending ceilings in integer microdollars.",
       "type": "variant",
-      "default": "{\"globalMonthlyMicros\":20000000,\"userMonthlyMicros\":5000000,\"turnMicros\":500000}",
+      "default": "{\"globalMonthlyMicros\":40000000,\"userMonthlyMicros\":15000000,\"turnMicros\":10000000}",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -2801,7 +2801,7 @@
       "source": "scout-dynamic",
       "purpose": "Select the Scout report AI model.",
       "type": "variant",
-      "default": "gpt-5.6-sol",
+      "default": "gpt-6.1-sol",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -3001,7 +3001,7 @@
       "source": "storm-brain",
       "purpose": "Select the Storm brain LLM model.",
       "type": "variant",
-      "default": "gpt-5.6-luna",
+      "default": "gpt-6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -3807,7 +3807,7 @@
       "source": "temporal-agent-chat",
       "purpose": "Select the default Claude Code model for new durable chats started from Discord.",
       "type": "variant",
-      "default": "claude-opus-5",
+      "default": "claude-opus-5-5",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -3819,7 +3819,7 @@
       "source": "temporal-agent-chat",
       "purpose": "Select the default Codex model for new durable chats started from Discord.",
       "type": "variant",
-      "default": "gpt-5.6-luna",
+      "default": "gpt-6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -3831,7 +3831,7 @@
       "source": "temporal-agent-chat",
       "purpose": "Select the Claude model for new durable iMessage chats.",
       "type": "variant",
-      "default": "claude-opus-5",
+      "default": "claude-opus-5-5",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -3843,7 +3843,7 @@
       "source": "temporal-agent-chat",
       "purpose": "Select the Codex model for new durable iMessage chats.",
       "type": "variant",
-      "default": "gpt-5.6-luna",
+      "default": "gpt-6-luna",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -4163,7 +4163,7 @@
       "source": "the-storm-promotion",
       "purpose": "Validated promotion agent model, step/time budgets, solver allowance and enabled target IDs.",
       "type": "variant",
-      "default": "{\"model\":\"gpt-5.6-luna\",\"maxSteps\":80,\"timeoutMinutes\":15,\"monthlySolverUsd\":10,\"dailySpendUsd\":5,\"enabledTargets\":[]}",
+      "default": "{\"model\":\"gpt-6-luna\",\"maxSteps\":80,\"timeoutMinutes\":15,\"monthlySolverUsd\":10,\"dailySpendUsd\":5,\"enabledTargets\":[]}",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -4971,7 +4971,7 @@
         {
           "key": "the-storm-promotion-settings",
           "type": "variant",
-          "default": "{\"model\":\"gpt-5.6-luna\",\"maxSteps\":80,\"timeoutMinutes\":15,\"monthlySolverUsd\":10,\"dailySpendUsd\":5,\"enabledTargets\":[\"pmc\",\"minecraftserver-buzz\",\"reddit-mcservers\",\"disboard-native-bump\",\"discord-mcadverts\",\"discord-lfg-fast\",\"discord-lfg-find-forum\",\"discord-lfg-6-hour\",\"discord-lfg-2-hour\",\"discord-lfg-1-hour\",\"discord-lfg-bedrock\",\"discord-lfg-java\",\"discord-lfg-smp\",\"discord-lfg-5-minute\",\"discord-lfg-15-minute\",\"discord-lfg-30-minute\"]}",
+          "default": "{\"model\":\"gpt-6-luna\",\"maxSteps\":80,\"timeoutMinutes\":15,\"monthlySolverUsd\":10,\"dailySpendUsd\":5,\"enabledTargets\":[\"pmc\",\"minecraftserver-buzz\",\"reddit-mcservers\",\"disboard-native-bump\",\"discord-mcadverts\",\"discord-lfg-fast\",\"discord-lfg-find-forum\",\"discord-lfg-6-hour\",\"discord-lfg-2-hour\",\"discord-lfg-1-hour\",\"discord-lfg-bedrock\",\"discord-lfg-java\",\"discord-lfg-smp\",\"discord-lfg-5-minute\",\"discord-lfg-15-minute\",\"discord-lfg-30-minute\"]}",
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []

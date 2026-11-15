@@ -2,6 +2,7 @@ import { getPricing } from "@shepherdjerred/llm-models";
 import { prisma, type Db } from "#src/database/index.ts";
 import { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { supportsOpenAiUltrafast } from "#src/lib/openai-service-tier.ts";
 import { EXPLORE_MAX_PROVIDER_INPUT_BOUND } from "./input-bound.ts";
 
 import {
@@ -30,6 +31,15 @@ export class ExploreBudgetError extends Error {
   }
 }
 
+/**
+ * Explore chat uses the fastest OpenAI tier the model offers. Ultrafast is 6×
+ * Standard and only exists for Astra and 6.1 Sol; everything else runs on
+ * Fast, which is 2×. The allowance reserves and settles at that rate.
+ */
+export function exploreRateMultiplier(model: string): number {
+  return supportsOpenAiUltrafast(model) ? 6 : 2;
+}
+
 export function pricingForExplore(model: string) {
   const pricing = z
     .object({
@@ -40,11 +50,12 @@ export function pricingForExplore(model: string) {
       cacheWrite: z.number().nonnegative().optional(),
     })
     .parse(getPricing(model));
+  const scale = (rate: number) => rate * exploreRateMultiplier(model);
   return {
-    input: pricing.input,
-    cachedInput: pricing.cachedInput ?? pricing.input,
-    cacheWrite: pricing.cacheWrite ?? pricing.input,
-    output: pricing.output,
+    input: scale(pricing.input),
+    cachedInput: scale(pricing.cachedInput ?? pricing.input),
+    cacheWrite: scale(pricing.cacheWrite ?? pricing.input),
+    output: scale(pricing.output),
   };
 }
 

@@ -74,7 +74,7 @@ export function getConfig(): Config {
       apply: { type: "boolean", default: false },
       limit: { type: "string", default: "0" },
       "batch-size": { type: "string", default: "25" },
-      model: { type: "string", default: "gpt-5.6-luna" },
+      model: { type: "string", default: "gpt-6-luna" },
       since: { type: "string" },
       until: { type: "string" },
       "notes-only": { type: "boolean", default: false },

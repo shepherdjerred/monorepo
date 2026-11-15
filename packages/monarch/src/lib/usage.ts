@@ -19,7 +19,7 @@ type UsageTracker = {
 
 // Pricing comes from the central catalog (@shepherdjerred/llm-models).
 // Monarch defaults to Sonnet; fall back to its pricing for unknown models.
-const FALLBACK_MODEL = "claude-sonnet-5";
+const FALLBACK_MODEL = "claude-sonnet-5-5";
 
 export function createUsageTracker(model: string): UsageTracker {
   const pricing =

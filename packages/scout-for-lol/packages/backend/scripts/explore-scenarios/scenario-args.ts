@@ -24,7 +24,7 @@ export const SCENARIO_USAGE = [
   "  --no-judge              Skip the rubric judge; deterministic checks only",
   "  --write                 Write the summary report next to the code",
   "  --source-lake <dir>     Lake to copy (default: the pulled prod dataset)",
-  "  --model <id>            Explore model (default gpt-5.6-luna, prod's)",
+  "  --model <id>            Explore model (default gpt-6-luna, prod's)",
 ].join("\n");
 
 function defaultSourceLake(): string {
@@ -49,7 +49,7 @@ export function parseScenarioArgs(
   let judge = true;
   let write = false;
   let sourceLake = defaultSourceLake();
-  let model = "gpt-5.6-luna";
+  let model = "gpt-6-luna";
 
   const value = (index: number, flag: string): string => {
     const next = argv[index + 1];
