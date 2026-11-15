@@ -9,6 +9,7 @@ publish.workspace = true
 
 [dependencies]
 scout-desktop-ipc = { path = "../scout-desktop-ipc" }
+uuid.workspace = true
 
 # The only GPUI dependencies in the workspace, and only where the window can
 # run. Linux builds and tests the view models, link and tokens without them.
@@ -27,6 +28,9 @@ gpui-platform = { workspace = true, features = ["runtime_shaders"] }
 serde_json.workspace = true
 
 [dev-dependencies]
+# The golden Explore fixtures played through a chat session, so the view
+# models and the offscreen render start from the server's contract frames.
+scout-explore-client = { path = "../scout-explore-client", features = ["golden"] }
 serde_json.workspace = true
 
 # The offscreen renderer behind `tests/render_pages.rs`. Dev-only, so release

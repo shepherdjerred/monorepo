@@ -6,6 +6,7 @@
 //! [`prelude`] of GPUI types a view needs to name. An upgrade that changes
 //! gpui-kit's API should only have to touch this directory.
 
+mod chat;
 mod components;
 mod theme;
 
@@ -14,14 +15,30 @@ use gpui_kit::{
     WindowOptions, px, size,
 };
 
+pub use chat::{ComposerState, Transcript, TranscriptState, status_line};
 pub use components::{
-    ButtonStyle, Handler, KeyValueTable, MonoLine, NavItem, Page, ScoutButton, ScoutToggle,
-    ScrollLog, Shell, StatusRow, action_row, body_text, error_notice, note_text, section_heading,
+    ButtonStyle, Handler, KeyValueTable, MonoLine, NavItem, NavSection, Page, ScoutButton,
+    ScoutToggle, ScrollLog, Shell, StatusRow, action_row, body_text, error_notice, note_text,
+    section_heading,
 };
 
 /// The GPUI types a view names, re-exported so views never import gpui-kit.
 pub mod prelude {
-    pub use gpui_kit::{App, Context, IntoElement, ParentElement, Render, Task, Window};
+    pub use gpui_kit::{
+        App, Context, IntoElement, ParentElement, Render, Styled, Subscription, Task, Window,
+    };
+}
+
+/// A vertical stack, for views that lay out kit components.
+#[must_use]
+pub fn column() -> gpui_kit::Div {
+    gpui_kit::component::v_flex()
+}
+
+/// A horizontal row whose children are vertically centered.
+#[must_use]
+pub fn row() -> gpui_kit::Div {
+    gpui_kit::component::h_flex()
 }
 
 use prelude::{App, Context, Window};

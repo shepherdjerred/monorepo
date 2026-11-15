@@ -11,6 +11,9 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::credentials::DeviceCredential;
+use crate::desktop_api::{
+    DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, PAIRINGS_V2_PATH, PairingV2Response,
+};
 use crate::diagnostics::sanitize_detail;
 use crate::protocol::{
     CLIENT_UPGRADE_REQUIRED_STATUS, CheckInRequest, CheckInResponse, ClientUpgradeRequired,
@@ -144,6 +147,34 @@ impl ScoutBackendClient {
     ) -> Result<CreatePairingResponse, BackendError> {
         self.http
             .post(self.endpoint("/api/scout-client/v1/pairings")?)
+            .json(request)
+            .send()
+            .await
+            .map_err(BackendError::Request)?
+            .checked()
+            .await?
+            .json()
+            .await
+            .map_err(BackendError::Request)
+    }
+
+    /// Create a Scout Desktop pairing request, which asks the approver for
+    /// both uploads and Explore chat and returns the code the approval page
+    /// shows beside it. It is exchanged like any other pairing.
+    ///
+    /// # Errors
+    ///
+    /// Returns a typed transport or server-status error.
+    pub async fn create_desktop_pairing(
+        &self,
+        request: &CreatePairingRequest,
+    ) -> Result<PairingV2Response, BackendError> {
+        self.http
+            .post(self.endpoint(PAIRINGS_V2_PATH)?)
+            .header(
+                DESKTOP_CONTRACT_HEADER,
+                DESKTOP_CONTRACT_VERSION.to_string(),
+            )
             .json(request)
             .send()
             .await

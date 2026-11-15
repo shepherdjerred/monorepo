@@ -9,14 +9,22 @@
 //! - [`stream`]: following a run over SSE, reconnecting until `done`.
 //! - [`reducer`]: the web's turn reducer, folding stream events into what a
 //!   turn renders.
+//! - [`session`]: one desktop chat session as pure state, projected onto the
+//!   window's IPC chat parts.
+//! - [`relay`]: the supervisor's task that runs the client against a session
+//!   and publishes those parts, so the credential never leaves the supervisor.
 //!
-//! The crate has no UI dependency; the window builds on it.
+//! The crate has no UI dependency; the window renders the parts it publishes.
 
 mod client;
 pub mod contract;
 mod error;
+#[cfg(feature = "golden")]
+pub mod golden;
 pub mod model;
 pub mod reducer;
+pub mod relay;
+pub mod session;
 pub mod stream;
 
 pub use client::{ExploreClient, STREAM_IDLE_TIMEOUT};

@@ -7,8 +7,10 @@ use std::rc::Rc;
 
 use scout_desktop_ipc::WindowMessage;
 
-use crate::kit::prelude::{App, Context, IntoElement, Render, Task, Window};
-use crate::kit::{self, Handler, NavItem, Shell};
+use crate::chat_model::{ChatScreen, SidebarModel, send_message};
+use crate::chat_view::{self, ChatControls, TAB_SIDEBAR};
+use crate::kit::prelude::{App, Context, IntoElement, Render, Subscription, Task, Window};
+use crate::kit::{self, ComposerState, Handler, NavItem, NavSection, Shell, TranscriptState};
 use crate::link::{Effect, Incoming, Outbound, WindowState, read_lines};
 use crate::view_model::{
     ActivityModel, BuildInfo, DiagnosticsModel, OverviewModel, PageId, SettingsModel,
@@ -89,6 +91,9 @@ pub struct ScoutWindow<W> {
     page: PageId,
     closing: bool,
     build: BuildInfo,
+    composer: ComposerState,
+    transcript: TranscriptState,
+    _composer_events: Subscription,
     _listener: Task<()>,
 }
 
@@ -116,6 +121,13 @@ impl<W: Write + 'static> ScoutWindow<W> {
         kit::on_close_requested(window, cx, move |_, cx| {
             let _ = this.update(cx, |this, _| this.close_requested());
         });
+        let (composer, composer_events) =
+            ComposerState::new(window, cx, |this: &mut Self, window, cx| {
+                this.submit(window, cx);
+            });
+        // Chat is the main screen, and its composer is first in the keyboard
+        // order, so the window opens ready to type.
+        composer.focus(window, cx);
         Self {
             privacy_listener: None,
             link: WindowState::default(),
@@ -123,8 +135,51 @@ impl<W: Write + 'static> ScoutWindow<W> {
             page: PageId::default(),
             closing: false,
             build,
+            transcript: TranscriptState::new(cx),
+            composer,
+            _composer_events: composer_events,
             _listener: listener,
         }
+    }
+
+    /// The chat screen for the latest parts.
+    fn chat_screen(&self) -> ChatScreen {
+        ChatScreen::new(&self.link.chat, &self.link.state, &self.link.update)
+    }
+
+    /// Keep the transcript's virtual list in step with the rows it renders.
+    fn sync_transcript(&mut self, cx: &mut App) {
+        let keys = match self.chat_screen() {
+            ChatScreen::Conversation(model) => model.rows.into_iter().map(|row| row.key).collect(),
+            ChatScreen::Loading | ChatScreen::Gate(_) => Vec::new(),
+        };
+        self.transcript.sync(keys, cx);
+    }
+
+    /// Send what the composer holds, when the chat can take a question.
+    fn submit(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let ChatScreen::Conversation(model) = self.chat_screen() else {
+            return;
+        };
+        if !model.composer.can_send {
+            return;
+        }
+        let Some(message) = send_message(&self.composer.text(cx)) else {
+            return;
+        };
+        if self.outbound.send(&message) {
+            self.composer.clear(window, cx);
+        } else {
+            // The supervisor is gone; the close handler exits with the crash
+            // status.
+            kit::close_window(window);
+        }
+    }
+
+    /// Whether the composer has the keyboard, for the offscreen test.
+    #[doc(hidden)]
+    pub fn composer_focused(&self, window: &Window, cx: &App) -> bool {
+        self.composer.is_focused(window, cx)
     }
 
     /// Follow the user's error-report choice from every snapshot.
@@ -150,6 +205,7 @@ impl<W: Write + 'static> ScoutWindow<W> {
                     {
                         listener(self.link.state.privacy.send_error_reports);
                     }
+                    self.sync_transcript(cx);
                     cx.notify();
                     true
                 }
@@ -222,25 +278,93 @@ impl<W: Write + 'static> Render for ScoutWindow<W> {
             });
             Rc::new(move |window, cx| select(&(), window, cx))
         };
-        frame(self.page, &self.link, self.build, &self.sender(), &navigate)
+        let submit = {
+            let submit =
+                cx.listener(|this: &mut Self, (): &(), window, cx| this.submit(window, cx));
+            Rc::new(move |window: &mut Window, cx: &mut App| submit(&(), window, cx)) as Handler
+        };
+        let send = self.sender();
+        let chat = ChatControls {
+            composer: &self.composer,
+            transcript: &self.transcript,
+            submit,
+            send: &send,
+        };
+        frame(self.page, &self.link, self.build, chat, &navigate)
     }
 }
 
-/// The whole window for `current`: navigation and the page, from the
+/// Both handlers, in order: a sidebar entry that sends a chat command also
+/// shows the chat page.
+fn both(first: Handler, second: Handler) -> Handler {
+    Rc::new(move |window, cx| {
+        first(window, cx);
+        second(window, cx);
+    })
+}
+
+/// The sidebar: New chat and the conversations, then the status pages.
+fn sidebar(
+    current: PageId,
+    link: &WindowState,
+    send: &views::Send,
+    navigate: &dyn Fn(PageId) -> Handler,
+) -> (NavSection, NavSection) {
+    let model = SidebarModel::new(&link.chat, current == PageId::Chat);
+    let mut tab = TAB_SIDEBAR;
+    let mut next_tab = || {
+        let index = tab;
+        tab += 1;
+        index
+    };
+    let mut conversations = vec![
+        NavItem::new(
+            model.new_chat.id,
+            model.new_chat.label,
+            model.new_chat_selected,
+            both(send(model.new_chat.message.clone()), navigate(PageId::Chat)),
+        )
+        .tab_index(next_tab()),
+    ];
+    conversations.extend(model.conversations.into_iter().map(|entry| {
+        NavItem::new(
+            format!("conversation-{}", entry.id),
+            entry.title,
+            entry.selected,
+            both(send(entry.message), navigate(PageId::Chat)),
+        )
+        .tab_index(next_tab())
+    }));
+    let status = PageId::STATUS
+        .into_iter()
+        .map(|page| {
+            NavItem::new(page.label(), page.label(), page == current, navigate(page))
+                .tab_index(next_tab())
+        })
+        .collect();
+    (
+        NavSection::new("Chats", conversations),
+        NavSection::new("Status", status),
+    )
+}
+
+/// The whole window for `current`: the sidebar and the page, from the
 /// supervisor's state.
 fn frame(
     current: PageId,
     link: &WindowState,
     build: BuildInfo,
-    send: &views::Send,
+    chat: ChatControls<'_>,
     navigate: &dyn Fn(PageId) -> Handler,
 ) -> Shell {
-    let navigation = PageId::ALL
-        .into_iter()
-        .map(|page| NavItem::new(page.label(), page.label(), page == current, navigate(page)))
-        .collect();
+    let send = chat.send;
+    let (conversations, status) = sidebar(current, link, send, navigate);
     let state = &link.state;
     let page = match current {
+        PageId::Chat => {
+            chat_view::chat_page(ChatScreen::new(&link.chat, state, &link.update), chat)
+                .into_any_element()
+        }
         PageId::Overview => {
             views::overview(OverviewModel::new(state).with_update(&link.update)).into_any_element()
         }
@@ -251,7 +375,7 @@ fn frame(
                 .into_any_element()
         }
     };
-    Shell::new("Scout", navigation, page)
+    Shell::new("Scout", conversations, status, page)
 }
 
 /// The pieces the offscreen render test drives the real window with.

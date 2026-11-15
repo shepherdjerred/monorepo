@@ -31,6 +31,7 @@ use scout_client_core::reporting::{
 };
 use scout_client_runtime::instance::InstanceLock;
 use scout_client_runtime::runtime::ClientRuntime;
+use scout_explore_client::relay::ChatRelay;
 use tokio::sync::mpsc;
 use tracing_subscriber::EnvFilter;
 
@@ -187,6 +188,7 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
             format!("--server={}", backend_origin(arguments)),
         ],
     );
+    let origin = backend_origin(arguments);
     let (control, control_receiver) = mpsc::unbounded_channel();
     let server_overridden = arguments
         .iter()
@@ -214,6 +216,13 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
                             Some(updates) => supervisor.with_updates(updates),
                             None => supervisor,
                         };
+                    // Only the gpui window renders chat. The relay holds the
+                    // device credential here, never in the window process.
+                    let supervisor = if toolkit == WindowToolkit::Gpui {
+                        supervisor.with_chat(ChatRelay::spawn(origin))
+                    } else {
+                        supervisor
+                    };
                     supervisor.run().await
                 })
             }))

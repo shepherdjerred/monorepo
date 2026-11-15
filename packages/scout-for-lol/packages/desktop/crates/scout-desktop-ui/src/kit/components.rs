@@ -5,7 +5,7 @@ use std::rc::Rc;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::scroll::ScrollableElement as _;
-use gpui_kit::component::{ActiveTheme as _, h_flex, v_flex};
+use gpui_kit::component::{ActiveTheme as _, Disableable as _, h_flex, v_flex};
 use gpui_kit::{
     AnyElement, App, ElementId, FontWeight, InteractiveElement as _, IntoElement, ParentElement,
     RenderOnce, SharedString, StatefulInteractiveElement as _, Styled, Window, div, px,
@@ -16,6 +16,9 @@ use crate::view_model::Tone;
 
 /// A click handler that needs no view state: it sends an IPC command.
 pub type Handler = Rc<dyn Fn(&mut Window, &mut App)>;
+
+/// The sidebar's width in pixels.
+pub const SIDEBAR_WIDTH: f32 = 200.;
 
 /// How a [`ScoutButton`] reads.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -35,6 +38,8 @@ pub struct ScoutButton {
     label: SharedString,
     style: ButtonStyle,
     on_click: Handler,
+    tab_index: Option<isize>,
+    disabled: bool,
 }
 
 impl ScoutButton {
@@ -50,16 +55,36 @@ impl ScoutButton {
             label: label.into(),
             style,
             on_click,
+            tab_index: None,
+            disabled: false,
         }
+    }
+
+    /// Place the button at `index` in the window's keyboard order.
+    #[must_use]
+    pub const fn tab_index(mut self, index: isize) -> Self {
+        self.tab_index = Some(index);
+        self
+    }
+
+    /// Dim the button and ignore clicks.
+    #[must_use]
+    pub const fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
+        self
     }
 }
 
 impl RenderOnce for ScoutButton {
     fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
         let on_click = self.on_click;
-        let button = Button::new(self.id)
+        let mut button = Button::new(self.id)
             .label(self.label)
+            .disabled(self.disabled)
             .on_click(move |_, window, cx| on_click(window, cx));
+        if let Some(index) = self.tab_index {
+            button = button.tab_index(index);
+        }
         match self.style {
             ButtonStyle::Primary => button.primary(),
             ButtonStyle::Secondary => button.secondary(),
@@ -360,6 +385,7 @@ pub struct NavItem {
     label: SharedString,
     selected: bool,
     on_click: Handler,
+    tab_index: isize,
 }
 
 impl NavItem {
@@ -375,7 +401,16 @@ impl NavItem {
             label: label.into(),
             selected,
             on_click,
+            tab_index: 0,
         }
+    }
+
+    /// Place the entry at `index` in the window's keyboard order. Return or
+    /// Space activates a focused entry like a click.
+    #[must_use]
+    pub const fn tab_index(mut self, index: isize) -> Self {
+        self.tab_index = index;
+        self
     }
 }
 
@@ -385,41 +420,85 @@ impl RenderOnce for NavItem {
         let on_click = self.on_click;
         let item = div()
             .id(self.id)
+            .tab_index(self.tab_index)
             .px_3()
             .py_1p5()
             .rounded(length(tokens.radius_small))
-            .border_l_2()
+            // A transparent ring that the theme's focus token fills when the
+            // keyboard reaches the entry.
+            .border_2()
+            .border_color(color(0))
+            .focus_visible(|style| style.border_color(color(tokens.focus)))
             .cursor_pointer()
+            .truncate()
             .text_color(color(tokens.text))
             .hover(|style| style.bg(color(tokens.interactive_hover)))
             .on_click(move |_, window, cx| on_click(window, cx))
             .child(self.label);
         if self.selected {
             item.bg(color(tokens.interactive_active))
-                .border_color(color(tokens.accent))
+                .font_weight(FontWeight::SEMIBOLD)
         } else {
-            item.border_color(color(0))
+            item
         }
     }
 }
 
-/// The window frame: navigation on the left, the page on the right.
+/// A labelled group of sidebar entries.
+pub struct NavSection {
+    heading: SharedString,
+    items: Vec<NavItem>,
+}
+
+impl NavSection {
+    /// `items` under `heading`.
+    pub fn new(heading: impl Into<SharedString>, items: Vec<NavItem>) -> Self {
+        Self {
+            heading: heading.into(),
+            items,
+        }
+    }
+}
+
+/// The window frame: a sidebar on the left, the page on the right.
+///
+/// The sidebar's main section (the conversations) takes the height left
+/// over and scrolls; the secondary section (the status pages) sits at the
+/// bottom under its own heading.
 #[derive(IntoElement)]
 pub struct Shell {
     brand: SharedString,
-    navigation: Vec<NavItem>,
+    main: NavSection,
+    secondary: NavSection,
     page: AnyElement,
 }
 
 impl Shell {
     /// A frame titled `brand` around `page`.
-    pub fn new(brand: impl Into<SharedString>, navigation: Vec<NavItem>, page: AnyElement) -> Self {
+    pub fn new(
+        brand: impl Into<SharedString>,
+        main: NavSection,
+        secondary: NavSection,
+        page: AnyElement,
+    ) -> Self {
         Self {
             brand: brand.into(),
-            navigation,
+            main,
+            secondary,
             page,
         }
     }
+}
+
+fn sidebar_heading(text: SharedString) -> impl IntoElement {
+    div()
+        .px_3()
+        .pt_3()
+        .pb_1()
+        .text_xs()
+        .font_weight(FontWeight::SEMIBOLD)
+        .text_color(color(theme().text_muted))
+        .child(text)
 }
 
 impl RenderOnce for Shell {
@@ -432,7 +511,7 @@ impl RenderOnce for Shell {
             .text_color(color(tokens.text))
             .child(
                 v_flex()
-                    .w(px(170.))
+                    .w(px(SIDEBAR_WIDTH))
                     .h_full()
                     .p_3()
                     .gap_1()
@@ -444,10 +523,21 @@ impl RenderOnce for Shell {
                             .text_lg()
                             .font_weight(FontWeight::BOLD)
                             .text_color(color(tokens.primary))
-                            .pb_3()
+                            .pb_2()
                             .child(self.brand),
                     )
-                    .children(self.navigation),
+                    .child(sidebar_heading(self.main.heading))
+                    .child(
+                        v_flex()
+                            .id("sidebar-main")
+                            .flex_1()
+                            .min_h_0()
+                            .gap_1()
+                            .overflow_y_scrollbar()
+                            .children(self.main.items),
+                    )
+                    .child(sidebar_heading(self.secondary.heading))
+                    .children(self.secondary.items),
             )
             // `min_w_0` lets the page shrink to the window: a flex item
             // otherwise refuses to be narrower than its longest unwrapped line.

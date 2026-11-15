@@ -20,8 +20,10 @@ pub struct BuildInfo {
 /// A page of the window.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum PageId {
-    /// League, account, and upload status.
+    /// Explore chat, the main screen.
     #[default]
+    Chat,
+    /// League, account, and upload status.
     Overview,
     /// Outbox depth.
     Activity,
@@ -32,8 +34,9 @@ pub enum PageId {
 }
 
 impl PageId {
-    /// Every page, in navigation order.
-    pub const ALL: [Self; 4] = [
+    /// The status pages, in the order of the secondary navigation under the
+    /// conversation sidebar. They are the egui window's four pages.
+    pub const STATUS: [Self; 4] = [
         Self::Overview,
         Self::Activity,
         Self::Settings,
@@ -44,6 +47,7 @@ impl PageId {
     #[must_use]
     pub const fn label(self) -> &'static str {
         match self {
+            Self::Chat => "Chat",
             Self::Overview => "Overview",
             Self::Activity => "Activity",
             Self::Settings => "Settings",
@@ -406,10 +410,11 @@ mod tests {
     }
 
     #[test]
-    fn navigation_matches_the_egui_window() {
-        let labels = PageId::ALL.map(PageId::label);
+    fn chat_opens_first_and_the_status_pages_match_the_egui_window() {
+        let labels = PageId::STATUS.map(PageId::label);
         assert_eq!(labels, ["Overview", "Activity", "Settings", "Diagnostics"]);
-        assert_eq!(PageId::default(), PageId::Overview);
+        assert_eq!(PageId::default(), PageId::Chat);
+        assert!(!PageId::STATUS.contains(&PageId::Chat));
     }
 
     #[test]

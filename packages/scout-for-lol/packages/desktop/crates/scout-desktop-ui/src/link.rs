@@ -9,7 +9,7 @@ use std::io::{BufRead, Write};
 use std::sync::{Arc, Mutex, PoisonError};
 
 use scout_desktop_ipc::{
-    GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, UpdateSnapshot,
+    ChatParts, GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, UpdateSnapshot,
     WindowMessage, check_protocol, decode_line, encode_line,
 };
 
@@ -24,6 +24,8 @@ pub struct WindowState {
     pub phase: GameflowPhase,
     /// Where the self-update stands.
     pub update: UpdateSnapshot,
+    /// Explore chat, as the supervisor relays it.
+    pub chat: ChatParts,
     /// Whether any snapshot has arrived, so a default snapshot is never
     /// mistaken for the user's privacy choice.
     pub state_received: bool,
@@ -83,6 +85,13 @@ impl WindowState {
             SupervisorMessage::DiagnosticsBundle { text } => Effect::CopyBundle(text),
             SupervisorMessage::Show => Effect::Show,
             SupervisorMessage::Close => Effect::Close,
+            chat @ (SupervisorMessage::ChatStatus { .. }
+            | SupervisorMessage::ChatConversations { .. }
+            | SupervisorMessage::ChatTranscript { .. }
+            | SupervisorMessage::ChatTurn { .. }) => {
+                self.chat.receive(chat);
+                Effect::Render
+            }
         })
     }
 }
@@ -196,7 +205,7 @@ mod tests {
     use std::io::Cursor;
 
     use scout_desktop_ipc::{
-        GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, WindowMessage,
+        ChatTurn, GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, WindowMessage,
         decode_line, encode_line,
     };
 
@@ -236,6 +245,23 @@ mod tests {
                 text: "bundle".to_owned()
             })?)?,
             Effect::CopyBundle("bundle".to_owned())
+        );
+        assert_eq!(
+            window.receive(&line(&SupervisorMessage::ChatTurn {
+                turn: Some(ChatTurn {
+                    answer: Some("Jinx".to_owned()),
+                    ..ChatTurn::default()
+                }),
+            })?)?,
+            Effect::Render
+        );
+        assert_eq!(
+            window
+                .chat
+                .turn
+                .as_ref()
+                .and_then(|turn| turn.answer.as_deref()),
+            Some("Jinx")
         );
         assert_eq!(
             window.receive(&line(&SupervisorMessage::Show)?)?,

@@ -39,9 +39,11 @@ The workspace has six crates:
   on `gpui-kit` or GPUI (`gpui-pre`), and only on Windows and macOS:
   - `kit/` is the only module that names `gpui_kit`. It wraps components under
     Scout names (`ScoutButton`, `ScoutToggle`, `StatusRow`, `Page`, `NavItem`,
-    `Shell`, `theme()`), so a gpui-kit API change stays inside it.
-  - `view_model` builds plain structs for each page from the IPC
-    `StateSnapshot`, and maps every control to the `WindowMessage` it sends.
+    `Shell`, `theme()`, and the chat's `Transcript`, `ComposerState` and
+    `TranscriptState`), so a gpui-kit API change stays inside it.
+  - `view_model` builds plain structs for each status page from the IPC
+    `StateSnapshot`, and `chat_model` builds the chat screen from the IPC chat
+    parts. Both map every control to the `WindowMessage` it sends.
   - `link` decodes supervisor lines and writes commands.
   - `tokens` holds theme constants that `build.rs` generates.
 
@@ -71,9 +73,12 @@ The two talk over the child's stdio, one JSON object per line, tagged by
 `type` (`scout-desktop-ipc`). The supervisor sends a `hello` with the protocol
 version and whether a tray exists, then `state` snapshots (the runtime state
 plus diagnostics counters and recent events), `phase` changes, `update` (the
-self-update state), the diagnostics bundle on request, `show`, and `close`. The window sends its own `hello`, then
-`pair`, `disconnect`, `open_url` (http and https only), `open_log_folder`,
-`request_diagnostics`, `set_start_at_login`, `set_privacy`, and `quit`. Decoding is strict: an
+self-update state), the four chat parts (`chat_status`,
+`chat_conversations`, `chat_transcript`, `chat_turn`; see "Explore chat"), the
+diagnostics bundle on request, `show`, and `close`. The window sends its own
+`hello`, then `pair`, `disconnect`, `open_url` (http and https only),
+`open_log_folder`, `request_diagnostics`, `set_start_at_login`, `set_privacy`,
+`chat` (refresh, open, new, send, stop), and `quit`. Decoding is strict: an
 unknown type is a broken contract, and the supervisor treats it as a window
 crash. Logging goes to stderr in both processes, because the window's stdout
 carries the protocol.
@@ -271,8 +276,58 @@ golden bodies in `data/src/scout-client/desktop-fixtures/`.
   and quota the web keeps in its page hook. Both suites run the sequences in
   `desktop-fixtures/explore-turn-reducer.json`.
 
+- `session`: one desktop chat session as pure state (availability, the
+  conversation list, the open transcript, and the `TurnView` in flight),
+  projected onto the window's IPC chat parts.
+- `relay`: `ChatRelay`, the supervisor's task that runs the client against a
+  session and publishes the parts.
+
 The REST and stream tests run against a scripted loopback HTTP server in
-`crates/scout-explore-client/tests/http`.
+`crates/scout-explore-client/tests/http`. With the `golden` feature,
+`scout_explore_client::golden` plays the golden stream through a session, so
+the window's view-model and render tests start from the contract's frames.
+
+### Explore chat
+
+Chat is the main screen of the `gpui-kit` window: a conversation sidebar (New
+chat, then the owner's conversations), with the four status pages in a
+secondary "Status" section under it. The `egui` window has no chat page.
+
+The Explore client runs in the **supervisor**, not the window. The supervisor
+already holds the device credential for uploads, and the window renders on
+the GPU and can be lost with it, so the bearer never enters the window
+process. Only when the `gpui-kit` window is selected does the supervisor
+start a `ChatRelay`; it asks Scout nothing until a window opens. The window
+sends `chat` commands and renders four parts, each sent only when it changes,
+so a streamed answer re-sends only the in-flight turn (`ChatParts::changes_since`).
+The parts carry no bearer, query text, raw tool payloads or cards.
+
+Screens follow the relay's availability:
+
+- **Not approved** (no credential, or a credential paired without the
+  `explore` scope): "Approve chat on the web". Pairing uses `pairings/v2`,
+  which asks the approver for uploads and chat together and returns a match
+  code the window shows beside the approval link. A device paired before chat
+  approves once more this way.
+- **Turned off** (`feature_disabled`): "Chat is turned off".
+- **Too old** (426 or `contract_unsupported`): "Update Scout Desktop", with
+  the updater's status; the supervisor also triggers an update check.
+- **Sign in again**, **no Scout server**, and **unavailable** say what
+  happened and offer "Try again".
+- **Ready**: the transcript is a virtual list (`MessageScroller`) that follows
+  the newest row. Answers render as Markdown with the text view's
+  `stream_fade`, which reduced motion turns off; each answer lists its tool
+  steps as summary rows. A dropped stream shows "Reconnecting…" in the
+  header until the next frame. The composer sends on Return or Send; Stop
+  appears while a run can be stopped.
+
+Keyboard order is the composer, Send, Stop, then the sidebar (New chat, each
+conversation, the status pages); a focused sidebar entry takes Return or
+Space like a click. The focus ring is the theme's `focus` token.
+
+Not in the window yet: charts (the server-rendered PNG), match and loadout
+cards, attachments, edit, regenerate and version switching, share links, the
+model picker and the @-mention picker.
 
 ## Release profiles
 

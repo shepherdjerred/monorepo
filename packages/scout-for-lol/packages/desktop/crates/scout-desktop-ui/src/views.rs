@@ -16,7 +16,8 @@ use crate::view_model::{
 /// Builds the handler that sends one command to the supervisor.
 pub type Send = dyn Fn(WindowMessage) -> Handler;
 
-fn button(action: &Action, send: &Send) -> ScoutButton {
+/// The button for `action`, sending its message.
+pub fn button(action: &Action, send: &Send) -> ScoutButton {
     let style = if action.destructive {
         ButtonStyle::Destructive
     } else if action.primary {

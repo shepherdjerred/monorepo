@@ -13,12 +13,17 @@ fastrand.workspace = true
 futures-util.workspace = true
 reqwest.workspace = true
 scout-client-core = { path = "../scout-client-core" }
+scout-desktop-ipc = { path = "../scout-desktop-ipc" }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 url.workspace = true
 uuid.workspace = true
+
+[features]
+# The golden fixtures played through a chat session, for the window's tests.
+golden = []
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["net"] }
