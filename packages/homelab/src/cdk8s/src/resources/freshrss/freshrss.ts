@@ -178,7 +178,11 @@ export async function createFreshRssDeployment(chart: Chart): Promise<void> {
         FRESHRSS_MANIFEST_PATH: EnvValue.fromValue("/config/desired.json"),
       },
       resources: {
-        cpu: { request: Cpu.millis(5), limit: Cpu.millis(100) },
+        // Measured 2026-11-15: 1.25 millicores average over 30m, but 62% of
+        // CFS periods throttled. The loop starts PHP every 30s, and a 100m
+        // quota (10ms per 100ms period) throttles that burst. One core covers
+        // a single-threaded PHP invocation; the request stays tiny.
+        cpu: { request: Cpu.millis(5), limit: Cpu.millis(1000) },
         memory: {
           request: Size.mebibytes(16),
           limit: Size.mebibytes(64),
