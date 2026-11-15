@@ -10,6 +10,8 @@ import {
   crawlTicksTotal,
 } from "#src/metrics/crawl.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
+import { writeCrawlInboxSegment } from "#src/report-lake/crawl/crawl-inbox.ts";
+import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { crawlHardDisabledIn } from "./crawl-config.ts";
 import { createS3CrawlObjectStore } from "./crawl-object-store.ts";
 import { createPrismaCrawlStore } from "./crawl-prisma-store.ts";
@@ -61,6 +63,9 @@ export async function runParticipantCrawlActivity(
     store: createPrismaCrawlStore(prisma),
     riot: crawlRiotClient(),
     objects: createS3CrawlObjectStore(createS3Client(), bucket),
+    lakeInbox: async (segment) => {
+      await writeCrawlInboxSegment(resolveLakeDir(), segment);
+    },
     now: () => new Date(),
     enabled: crawlEnabledHere,
     dailyMatchBudget: participantCrawlDailyMatchBudget,

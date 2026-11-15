@@ -11,7 +11,7 @@ import {
   TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "#src/report-lake/schema.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { withMaintenanceDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 
 type TimelineWriter = {
   table: string;
@@ -114,7 +114,7 @@ export async function rebuildTimelineParquet(options: {
     await Promise.all(
       writers.entries.map(async (entry) => entry.writer.close()),
     );
-    await withDuckDBConnection(
+    await withMaintenanceDuckDBConnection(
       async (session) => {
         for (const entry of writers.entries) {
           if (entry.writer.rows === 0) continue;

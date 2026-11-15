@@ -14,6 +14,7 @@ import {
   type PlanQueryInput,
 } from "#src/reports/duckdb/compile-plan.ts";
 import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
+import { NO_CRAWL_LAKE_FILES } from "#src/reports/duckdb/lake/crawl-files.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   TEST_GUILD_ID,
@@ -107,6 +108,7 @@ const EMPTY_LAKE: LakeFiles = {
   timelineParticipantFramesStaging: [],
   timelineCoverageParquet: [],
   timelineCoverageStaging: [],
+  crawl: NO_CRAWL_LAKE_FILES,
 };
 
 describe("pushdown", () => {

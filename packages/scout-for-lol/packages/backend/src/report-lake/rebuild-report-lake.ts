@@ -39,10 +39,18 @@ import {
   removeRebuiltGenerations,
   snapshotStagingGenerations,
 } from "#src/report-lake/staging/generations.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { withMaintenanceDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts";
 import type { CompactionOptions } from "#src/report-lake/compaction-types.ts";
+import { foldCrawlInbox } from "#src/report-lake/crawl/crawl-fold.ts";
+import { removeCrawlInboxSegments } from "#src/report-lake/crawl/crawl-inbox.ts";
+import { maintainCrawlTables } from "#src/report-lake/crawl/crawl-maintenance.ts";
+import { sumCrawlRowCounts } from "#src/report-lake/crawl/crawl-parquet-writer.ts";
+import {
+  createCrawlSegmentSource,
+  loadErasedPuuidHashes,
+} from "#src/report-lake/crawl/crawl-sources.ts";
 
 const logger = createLogger("report-lake-rebuild");
 const GC_KEEP_BUILDS = 2;
@@ -170,7 +178,7 @@ export async function rebuildReportLake(
     });
 
     try {
-      await withDuckDBConnection(
+      await withMaintenanceDuckDBConnection(
         async (session) => {
           if (rawWriter.rows > 0) {
             await copyNdjsonToParquet(session, {
@@ -242,6 +250,35 @@ export async function rebuildReportLake(
       skipped: rankHistory.skipped,
     });
     deadline.throwIfAborted();
+    onProgress?.({ phase: "maintaining-crawl" });
+    const erased = await loadErasedPuuidHashes(prisma);
+    const crawlMaintenance = await maintainCrawlTables({
+      previousDir: currentDir,
+      buildDir,
+      buildId,
+      source: createCrawlSegmentSource({
+        prisma,
+        client,
+        bucket,
+        abortSignal: deadline,
+      }),
+      erased,
+      now: new Date(),
+      abortSignal: deadline,
+    });
+    const crawlFold = await foldCrawlInbox({
+      lakeDir,
+      buildDir,
+      buildId,
+      loadErased: () => Promise.resolve(erased),
+      abortSignal: deadline,
+    });
+    if (crawlMaintenance.rebuiltDays.length > 0) {
+      logger.info(
+        `Rebuild re-derived crawl days ${crawlMaintenance.rebuiltDays.join(", ")}; compacted ${crawlMaintenance.compactedDays.length.toString()}, expired ${crawlMaintenance.expiredDays.length.toString()}`,
+      );
+    }
+    deadline.throwIfAborted();
 
     const summary = {
       rawDocumentRows: rawWriter.rows,
@@ -261,11 +298,16 @@ export async function rebuildReportLake(
       skippedPrematches,
       skippedCompetitionRankHistory: rankHistory.skipped,
       skippedTimelines: timelines.skipped,
+      crawl: {
+        segments: crawlMaintenance.segments + crawlFold.summary.segments,
+        rows: sumCrawlRowCounts(crawlMaintenance.rows, crawlFold.summary.rows),
+      },
     };
     await writeCompactionManifest(buildDir, summary);
     await publishBuild(lakeDir, buildId, deadline);
     published = true;
     publishCompactionMetrics(summary);
+    await removeCrawlInboxSegments(crawlFold.consumed);
     await removeFoldedStagingFiles(lakeDir, "matches", foldedMatchIds);
     await removeFoldedStagingFiles(lakeDir, "match_teams", foldedMatchIds);
     await removeFoldedStagingFiles(lakeDir, "match_team_bans", foldedMatchIds);

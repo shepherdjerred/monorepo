@@ -131,7 +131,7 @@ export async function readRawObjectText(
   return await response.Body.transformToString();
 }
 
-async function readRawObjectBytes(
+export async function readRawObjectBytes(
   client: S3Client,
   bucket: string,
   key: string,

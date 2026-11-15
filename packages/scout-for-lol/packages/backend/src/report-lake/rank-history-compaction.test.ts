@@ -26,7 +26,7 @@ vi.mock("#src/report-lake/rebuild-sources.ts", () => ({
   populateCompetitionRankHistoryFromS3: mocks.populate,
 }));
 vi.mock("#src/reports/duckdb/instance.ts", () => ({
-  withDuckDBConnection: mocks.duckDb,
+  withMaintenanceDuckDBConnection: mocks.duckDb,
 }));
 vi.mock("#src/storage/s3-client.ts", () => ({ createS3Client: () => ({}) }));
 
