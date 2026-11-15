@@ -24,7 +24,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
     reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ["workflow", "interactive", "lake"],
-    deferredTemporalWorkers: ["realtime", "background", "gateway"],
+    deferredTemporalWorkers: ["realtime", "background", "crawl", "gateway"],
     discordGateway: true,
     gatewayReadyReconciliation: true,
     httpSurface: "full",
@@ -66,7 +66,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
     voiceAssistant: false,
     reportLakeAccess: true,
     reportLakeFold: false,
-    temporalWorkers: ["realtime", "background"],
+    temporalWorkers: ["realtime", "background", "crawl"],
     deferredTemporalWorkers: [],
     discordGateway: false,
     gatewayReadyReconciliation: false,
@@ -90,6 +90,14 @@ function splitRolesWith(
   return SPLIT_ROLES.filter((role) =>
     predicate(scoutRuntimeCapabilities(role)),
   );
+}
+
+function pollsCrawl(role: ScoutRuntimeRole): boolean {
+  const capabilities = scoutRuntimeCapabilities(role);
+  return [
+    ...capabilities.temporalWorkers,
+    ...capabilities.deferredTemporalWorkers,
+  ].includes("crawl");
 }
 
 describe("scout runtime roles", () => {
@@ -183,6 +191,13 @@ describe("scout runtime roles", () => {
     ]);
     expect(splitRolesWith((c) => c.gatewayReadyReconciliation)).toEqual([
       "gateway",
+    ]);
+  });
+
+  test("the participant crawl worker rides the activity-worker pod and nowhere else hosted", () => {
+    expect(SCOUT_RUNTIME_ROLES.filter((role) => pollsCrawl(role))).toEqual([
+      "combined",
+      "activity-worker",
     ]);
   });
 

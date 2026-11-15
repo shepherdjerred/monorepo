@@ -184,12 +184,15 @@ type LakeActivities = Pick<
 > &
   ScoutLakeActivities;
 
+type CrawlActivities = Pick<ScoutTemporalActivities, "runParticipantCrawl">;
+
 export type ScoutTemporalActivityGroups = {
   readonly gateway: Pick<ScoutTemporalActivities, "probeQueue">;
   readonly realtime: RealtimeActivities;
   readonly interactive: InteractiveActivities;
   readonly background: BackgroundActivities;
   readonly lake: LakeActivities;
+  readonly crawl: CrawlActivities;
 };
 
 export type ScoutTemporalSupervisorOptions = {
@@ -365,6 +368,16 @@ export async function createConnectedRuntime(
           taskQueue: queues.realtime,
           activities: options.activities.realtime,
           maxConcurrentActivityTaskExecutions: 4,
+        }),
+      );
+    }
+    if (queueClasses.has("crawl")) {
+      workers.push(
+        await Worker.create({
+          ...commonOptions,
+          taskQueue: queues.crawl,
+          activities: options.activities.crawl,
+          maxConcurrentActivityTaskExecutions: 1,
         }),
       );
     }

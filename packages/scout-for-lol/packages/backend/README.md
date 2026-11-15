@@ -2332,6 +2332,38 @@ regardless; `enforce` holds refused requests (`deferred`). Switch to `enforce`
 only once realtime has shown zero `would_defer` across 50k realtime requests.
 `riot_api_limiter_wait_seconds{priority}` shows time spent queued.
 
+### Participant crawl
+
+`src/league/crawl/` crawls players near tracked matches on spare Riot rate and
+keeps what it fetches as raw segments. It ships disabled:
+`scout-participant-crawl-enabled` is off in every environment and the code
+hard-disables production until crawl deletion, the privacy page and the Riot
+declaration are live. `scout-participant-crawl-daily-match-budget` (default
+1000, beta's first step; the ladder is 1000, 5500, 20000, 55000) caps matches
+stored per UTC day.
+
+- **Schedule and queue.** `scoutParticipantCrawlWorkflow` runs every minute
+  (overlap SKIP; both Schedules are created paused, and the enablement change
+  unpauses beta once the routed worker bundle exports the Workflow) and calls one Activity on `scout-{stage}-crawl`, polled by the
+  `activity-worker` pod. Each tick seeds from participants of tracked
+  `MatchObservation` rows, visits a few eligible players (7-day cooldown,
+  depth at most 2, both CHECKed in PostgreSQL), looks up their rank bracket
+  once, lists ranked solo, ranked flex and normal draft matches from the last
+  28 days, and stores unseen Summoner's Rift games. A deterministic 20% of
+  matches also get a timeline, reduced to item and skill events.
+- **Riot client.** `crawl-riot-client.ts` is a dedicated `RiotClient` with no
+  retries and no payload capture; every call is the `crawl` priority class, so
+  the budget ledger stops it at a quarter of each window. A 429 ends the tick.
+- **Storage.** Segments are minified NDJSON compressed with zstd at
+  `crawl/v1/route=…/dt=…/seg-{sha256}.ndjson.zst`. The crawl writes no receipt
+  and no `MatchObservation`, and nothing under `crawl/` is under a prefix the
+  competition scan, the nightly rebuild's `games/` read or `recovery-scan.ts`
+  lists; `crawl-storage-isolation.test.ts` pins that. `ErasedPuuid` (hashes
+  only) is checked at admission, at claim, and before a match is stored.
+- **Metrics.** `scout_crawl_matches_crawled_total`, `scout_crawl_frontier_size`,
+  `scout_crawl_budget_refusals_total{reason}`, `scout_crawl_riot_429_total` and
+  `scout_crawl_ticks_total`.
+
 ## Configuration
 
 Environment variables are validated with `env-var`/Zod at startup. Discord and

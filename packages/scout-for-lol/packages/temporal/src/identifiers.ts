@@ -24,6 +24,7 @@ export const SCOUT_WORKFLOW_NAMES = {
   exploreHistory: "scoutExploreHistoryWorkflow",
   exploreTimeline: "scoutExploreTimelineWorkflow",
   ingestionReconciliation: "scoutIngestionReconciliationWorkflow",
+  participantCrawl: "scoutParticipantCrawlWorkflow",
   backgroundJob: "scoutBackgroundJobWorkflow",
   detachedWork: "scoutDetachedWorkWorkflow",
   reportLake: "scoutReportLakeWorkflow",
@@ -226,6 +227,7 @@ export function scoutTaskQueues(stage: ScoutStage) {
     interactive: `${prefix}-interactive`,
     background: `${prefix}-background`,
     lake: `${prefix}-lake`,
+    crawl: `${prefix}-crawl`,
     gateway: `${prefix}-gateway`,
   } as const;
 }

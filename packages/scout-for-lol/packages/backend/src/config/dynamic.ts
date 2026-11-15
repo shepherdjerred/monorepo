@@ -65,6 +65,9 @@ export function evidenceRecoveryDefault(
  */
 export const DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS = 360;
 
+/** The first step of the plan's budget ladder: 1k matches a day, on beta. */
+export const DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET = 1000;
+
 /**
  * The oldest Scout Client build check-in and observation batch accept.
  *
@@ -251,6 +254,24 @@ const DEFINITION = {
     default: "observe",
     names: { flag: "scout-riot-budget-mode" },
   },
+  /**
+   * Whether the participant crawl runs. Off everywhere by default; production
+   * stays hard-disabled in code (`crawl/crawl-config.ts`) until deletion, the
+   * privacy page and the Riot declaration are live, whatever this answers.
+   */
+  participantCrawlEnabled: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: false,
+    names: { flag: "scout-participant-crawl-enabled" },
+  },
+  /** Matches the participant crawl may store per UTC day. */
+  participantCrawlDailyMatchBudget: {
+    schema: z.coerce.number().int().nonnegative().max(1_000_000),
+    sources: ["flag", "default"],
+    default: DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET,
+    names: { flag: "scout-participant-crawl-daily-match-budget" },
+  },
   /** See {@link DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS}. */
   scoutClientEndOfGameDeadlineSeconds: {
     schema: z.coerce.number().int().positive().max(3600),
@@ -332,6 +353,8 @@ function buildSnapshot(
                 exploreModelPickerEnabled: "boolean",
                 evidenceRecoveryEnabled: "boolean",
                 riotBudgetMode: "string",
+                participantCrawlEnabled: "boolean",
+                participantCrawlDailyMatchBudget: "number",
                 scoutClientEndOfGameDeadlineSeconds: "number",
                 scoutClientMinimumVersion: "string",
               },
@@ -355,6 +378,9 @@ function buildSnapshot(
       exploreModelPickerEnabled: false,
       evidenceRecoveryEnabled: evidenceRecoveryDefault(environment),
       riotBudgetMode: "observe",
+      participantCrawlEnabled: false,
+      participantCrawlDailyMatchBudget:
+        DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET,
       scoutClientEndOfGameDeadlineSeconds:
         DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS,
       scoutClientMinimumVersion: DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION,
@@ -558,6 +584,19 @@ export function evidenceRecoveryBootDecision(): boolean | undefined {
 /** Per-attempt read by the Riot rate limiter; `observe` until refreshed. */
 export function riotBudgetMode(): RiotBudgetMode {
   return snapshot?.get("riotBudgetMode") ?? "observe";
+}
+
+/** Per-tick read by the participant crawl; the flag's answer, `false` until refreshed. */
+export function participantCrawlEnabled(): boolean {
+  return snapshot?.get("participantCrawlEnabled") ?? false;
+}
+
+/** Per-tick read by the participant crawl: matches it may store per UTC day. */
+export function participantCrawlDailyMatchBudget(): number {
+  return (
+    snapshot?.get("participantCrawlDailyMatchBudget") ??
+    DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET
+  );
 }
 
 export async function shutdownDynamicConfig(): Promise<void> {

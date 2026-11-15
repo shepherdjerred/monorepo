@@ -78,6 +78,27 @@ export const LAKE_ACTIVITY_OPTIONS = {
   },
 } satisfies QueueActivityOptions;
 
+/**
+ * A crawl tick is idempotent and runs again a minute later, so a failed
+ * attempt is not retried: the next scheduled tick is the retry.
+ */
+export const CRAWL_ACTIVITY_OPTIONS = {
+  startToCloseTimeout: "10 minutes",
+  scheduleToCloseTimeout: "12 minutes",
+  heartbeatTimeout: "60 seconds",
+  retry: {
+    maximumAttempts: 1,
+    nonRetryableErrorTypes: [...NON_RETRYABLE_FAILURES],
+  },
+} satisfies QueueActivityOptions;
+
+export function crawlActivities(stage: ScoutStage) {
+  return proxyActivities<ScoutTemporalActivities>({
+    taskQueue: scoutTaskQueues(stage).crawl,
+    ...CRAWL_ACTIVITY_OPTIONS,
+  });
+}
+
 export function realtimeActivities(stage: ScoutStage) {
   return proxyActivities<ScoutTemporalActivities>({
     taskQueue: scoutTaskQueues(stage).realtime,

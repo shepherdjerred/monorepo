@@ -355,6 +355,19 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
     },
   };
 }
+function createCrawlActivities(): ScoutTemporalActivityGroups["crawl"] {
+  return {
+    runParticipantCrawl: async () => {
+      const { runParticipantCrawlActivity } =
+        await import("#src/league/crawl/crawl-activity.ts");
+      return await heartbeatWhile({ phase: "crawling-participants" }, () =>
+        runParticipantCrawlActivity(() => {
+          Context.current().heartbeat({ phase: "crawling-participants" });
+        }),
+      );
+    },
+  };
+}
 export function createScoutTemporalActivityGroups(): ScoutTemporalActivityGroups {
   return {
     gateway: { probeQueue },
@@ -362,5 +375,6 @@ export function createScoutTemporalActivityGroups(): ScoutTemporalActivityGroups
     interactive: createInteractiveActivities(),
     background: createBackgroundActivities(),
     lake: createLakeActivities(),
+    crawl: createCrawlActivities(),
   };
 }
