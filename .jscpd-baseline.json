@@ -965,8 +965,8 @@
       "tokens": 91
     },
     "packages/media/src/automation/movie-editions/retention/notification-authority.integration.test.ts|packages/media/src/automation/movie-editions/retention/warning-budget.integration.test.ts": {
-      "clones": 2,
-      "tokens": 197
+      "clones": 1,
+      "tokens": 80
     },
     "packages/media/src/automation/movie-editions/retention/purge-recovery.integration.test.ts|packages/media/src/automation/movie-editions/retention/purge-recovery.integration.test.ts": {
       "clones": 1,

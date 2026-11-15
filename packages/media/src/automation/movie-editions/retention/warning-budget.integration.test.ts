@@ -10,6 +10,7 @@ import { queueOperation } from "#automation/store.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { evaluateMovieRetentionV4 } from "./evaluate.ts";
 import { observeRequesterWatch } from "#automation/watch.ts";
 import { reconcileRequestInterests } from "#infrastructure/request-interest/reconcile.ts";
@@ -218,7 +219,7 @@ test("an explicit authority-budget failure before the warning attempt rolls back
   expect(await originalHistory(f, decisionId)).toEqual(history);
 }, 60_000);
 
-test("the original warning allowance spans a real household claim and rejects exhaustion before the second composition can send", async () => {
+test("the original warning allowance accounts cumulatively for both real household compositions and the accepted send", async () => {
   const f = await createMovieRetentionFixture("extended_cut", bytes, false);
   closers.push(f.close);
   const requestIds: string[] = [];
@@ -232,44 +233,61 @@ test("the original warning allowance spans a real household claim and rejects ex
   for (const requestId of requestIds) await completeNewRequester(f, requestId);
   const { delivery, command, decisionId } = await warning(f);
   const history = await originalHistory(f, decisionId);
+  const execution = testPlexBindingExecution();
+  const budget = new PublicationAuthorityReadBudget();
+  expect(budget.take).toBe(101);
+  // Five genuine recipients cost 2 preparation + 18 per composition = 38,
+  // within the unchanged 100-record allowance, rather than exhausting it.
   let claimed = false;
+  let receipt: string | undefined;
   expect(
     await createNotificationActivities({
       ...f.context,
+      plexBindingExecution: () => execution,
+      movieManagement: { execution, budget },
       checkpoint: () => {
+        expect(budget.take).toBe(81);
         claimed = true;
         return Promise.resolve();
+      },
+      notify: async (message, options) => {
+        expect(claimed).toBe(true);
+        expect(budget.take).toBe(63);
+        const outcome = await f.context.notify(message, options);
+        receipt = outcome.receipt;
+        return outcome;
       },
     }).deliverMediaNotification({
       operationId: command.id,
       notificationId: delivery.id,
     }),
-  ).toEqual({ status: "failed", reason: "authority_changed_before_send" });
+  ).toEqual({ status: "accepted", reason: null });
   expect(claimed).toBe(true);
-  expect(f.sent).toHaveLength(0);
-  expect(
-    await f.db.notificationDelivery.findUniqueOrThrow({
-      where: { id: delivery.id },
-    }),
-  ).toMatchObject({
-    state: "failed",
+  expect(budget.take).toBe(63);
+  expect(f.sent).toHaveLength(1);
+  const actualReceipt = z.string().min(1).parse(receipt);
+  const accepted = await f.db.notificationDelivery.findUniqueOrThrow({
+    where: { id: delivery.id },
+  });
+  expect(accepted).toMatchObject({
+    state: "accepted",
     attempts: 1,
-    failureReason: "authority_changed_before_send",
-    providerReceipt: null,
-    acceptedAt: null,
+    failureReason: null,
+    providerReceipt: actualReceipt,
+    acceptedAt: expect.any(Date),
   });
   const attempts = await f.db.notificationDeliveryAttempt.findMany({
     where: { deliveryId: delivery.id },
   });
   expect(attempts).toHaveLength(1);
   expect(attempts[0]).toMatchObject({
-    state: "rejected",
-    rejectionReason: "authority_changed_before_send",
-    providerReceipt: null,
+    state: "accepted",
+    rejectionReason: null,
+    providerReceipt: actualReceipt,
   });
   const attempt = attempts[0];
   if (attempt?.finishedAt == null)
-    throw new Error("Rejected warning attempt omitted its finish time");
+    throw new Error("Accepted warning attempt omitted its finish time");
   expect(attempt.finishedAt.getTime()).toBeGreaterThanOrEqual(
     attempt.startedAt.getTime(),
   );
