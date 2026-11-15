@@ -8,6 +8,7 @@ use scout_client_core::diagnostics::{
 use scout_client_core::lcu::LiveClient;
 use scout_client_core::live::recording::{LiveRecorder, RECORDINGS_FILE, RecordingStore};
 use scout_client_core::live::session::LiveGameSession;
+use scout_client_core::live::source::LiveGameSource;
 use scout_client_core::live::upload::{OutboxHandoff, UploadContext};
 use scout_client_core::outbox::ObservationOutbox;
 use std::collections::HashMap;
@@ -19,15 +20,15 @@ use super::state::{StateHub, update_state};
 
 /// The collector's live-game state. Polled once per collection tick, which is
 /// the two-second live-data cadence.
-pub(super) struct LiveGame {
+pub(super) struct LiveGame<S = LiveClient> {
     /// Absent when the loopback client could not be built.
-    session: Option<LiveGameSession<LiveClient, OutboxHandoff>>,
+    session: Option<LiveGameSession<S, OutboxHandoff>>,
     /// What the hand-off needs to know when a game ends.
     upload: UploadContext,
     last_problem: Option<String>,
 }
 
-impl LiveGame {
+impl LiveGame<LiveClient> {
     pub(super) fn new(client: Option<LiveClient>, diagnostics: &Arc<Diagnostics>) -> Self {
         let recorder = open_recorder().map_or_else(
             |problem| {
@@ -53,7 +54,9 @@ impl LiveGame {
             last_problem: None,
         }
     }
+}
 
+impl<S: LiveGameSource> LiveGame<S> {
     /// Poll for the current gameflow phase and publish the result.
     ///
     /// `outbox` is the paired device's outbox, or `None` while unpaired, in
@@ -127,4 +130,93 @@ fn record(
         )
         .with_detail(detail),
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    use scout_client_core::diagnostics::Diagnostics;
+    use scout_client_core::live::gameflow::GameflowPhase;
+    use scout_client_core::live::model::AllGameData;
+    use scout_client_core::live::recording::{LiveRecorder, RecordingStore};
+    use scout_client_core::live::session::LiveGameSession;
+    use scout_client_core::live::snapshot::{LiveSnapshot, project};
+    use scout_client_core::live::source::{ReplayFrame, ReplaySource};
+    use scout_client_core::live::upload::{OutboxHandoff, UploadContext};
+    use scout_client_core::outbox::ObservationOutbox;
+    use scout_client_core::protocol::{ObservationEnvelope, ObservationKind};
+    use uuid::Uuid;
+
+    use super::{IN_PROGRESS_GAME_KEY, LiveGame};
+    use crate::runtime::state::{StateHub, update_state};
+
+    const FRAME: &str = include_str!("../../../scout-client-core/testdata/live/allgamedata.json");
+
+    fn snapshot_at(secs: u32) -> Result<LiveSnapshot, Box<dyn std::error::Error>> {
+        let mut snapshot = project(&serde_json::from_str::<AllGameData>(FRAME)?)?;
+        snapshot.game.game_time_secs = secs;
+        Ok(snapshot)
+    }
+
+    fn payloads(game_id: &str) -> HashMap<String, Vec<u8>> {
+        HashMap::from([
+            ("observer".to_owned(), b"observer-puuid".to_vec()),
+            (IN_PROGRESS_GAME_KEY.to_owned(), game_id.as_bytes().to_vec()),
+        ])
+    }
+
+    /// Game A ends without an observed `EndOfGame` and game B's first tick
+    /// arrives with a different game id. A's finished recording is handed off
+    /// inside that tick, so it must carry A's id, never B's.
+    #[tokio::test]
+    async fn a_missed_transition_uploads_the_finished_game_under_its_own_id()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-livegame-{}.db", Uuid::new_v4()));
+        let outbox = ObservationOutbox::open(&path)?;
+        let upload = UploadContext::default();
+        let diagnostics = Arc::new(Diagnostics::in_memory());
+        let frame = |secs| -> Result<ReplayFrame, Box<dyn std::error::Error>> {
+            Ok(ReplayFrame {
+                phase: GameflowPhase::InProgress,
+                live: Some(snapshot_at(secs)?),
+                champ_select: None,
+            })
+        };
+        let source = ReplaySource::new(vec![frame(100)?, frame(102)?, frame(3)?]);
+        let mut game = LiveGame {
+            session: Some(LiveGameSession::new(
+                source,
+                Some(LiveRecorder::new(RecordingStore::open_in_memory()?)),
+                OutboxHandoff::new(upload.clone(), "test", Arc::clone(&diagnostics)),
+            )),
+            upload,
+            last_problem: None,
+        };
+        let state = StateHub::default();
+        update_state(&state, |snapshot| {
+            snapshot.gameflow_phase = Some("InProgress".to_owned());
+        });
+
+        for (id, step) in [("111", 0), ("111", 1), ("222", 2)] {
+            game.tick(&state, &diagnostics, Some(&outbox), &payloads(id))
+                .await;
+            if step < 2 {
+                assert_eq!(outbox.pending(10)?.len(), 0, "game A is still running");
+            }
+            if let Some(session) = &game.session {
+                session.source().advance();
+            }
+        }
+
+        let pending = outbox.pending(10)?;
+        assert_eq!(pending.len(), 1, "game A's recording, and nothing of B");
+        let sent: ObservationEnvelope = serde_json::from_slice(&pending[0].body)?;
+        assert_eq!(sent.kind, ObservationKind::LiveGameRecording);
+        assert_eq!(sent.game_id.as_deref(), Some("111"));
+        drop(outbox);
+        std::fs::remove_file(path)?;
+        Ok(())
+    }
 }
