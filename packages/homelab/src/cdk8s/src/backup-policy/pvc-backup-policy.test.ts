@@ -119,24 +119,30 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 57 included and 49 excluded PVCs, including the separate BlueMap cache", () => {
+it("classifies 57 included and 50 excluded PVCs, including the separate BlueMap cache", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(106);
-  expect(new Set(keys).size).toBe(106);
+  expect(keys).toHaveLength(107);
+  expect(new Set(keys).size).toBe(107);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
   ).toHaveLength(57);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-  ).toHaveLength(49);
+  ).toHaveLength(50);
   expect(
     getPvcBackupPolicy("minecraft-tsmc", "minecraft-tsmc-bluemap").backup,
   ).toBe("disabled");
   expect(
     getPvcBackupPolicy("minecraft-tsmc", "datadir-minecraft-tsmc-0").backup,
   ).toBe("enabled");
+  expect(
+    getPvcBackupPolicy(
+      "ops-restore-rehearsal-incremental",
+      "tasknotes-vault-pvc",
+    ).backup,
+  ).toBe("disabled");
   expect(
     getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
       .backup,
