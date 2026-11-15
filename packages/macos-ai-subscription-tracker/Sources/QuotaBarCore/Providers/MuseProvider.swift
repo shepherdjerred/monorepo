@@ -49,7 +49,7 @@ public struct MuseProvider: UsageProvider {
     var inspected: Set<String> = []
     for candidate in candidates where inspected.insert(candidate.standardizedFileURL.path).inserted
     {
-      guard !candidate.path.contains("agent-bin") else { continue }
+      guard !candidate.pathComponents.contains("agent-bin") else { continue }
       if fileManager.isExecutableFile(atPath: candidate.path) { return candidate }
     }
     throw QuotaError.credentialsMissing(.muse)

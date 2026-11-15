@@ -28,7 +28,7 @@ public enum Providers {
           commandRunner: commandRunner,
           executableURL: antigravityExecutableURL,
           planSource: AntigravityPlanSource(
-            tokenFile: AntigravityPlanSource.defaultTokenFile(),
+            tokenFiles: AntigravityPlanSource.defaultTokenFiles(),
             executable: { try antigravityExecutableURL ?? AntigravityProvider.locateExecutable() },
             tokenEndpoint: endpoints.antigravityToken,
             codeAssistEndpoint: endpoints.antigravityCodeAssist

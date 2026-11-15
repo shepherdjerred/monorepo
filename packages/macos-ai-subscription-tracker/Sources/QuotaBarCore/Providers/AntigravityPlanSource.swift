@@ -28,7 +28,7 @@ public actor AntigravityPlanSource: AntigravityPlanFetching {
     let modified: Date
   }
 
-  private let tokenFile: URL
+  private let tokenFiles: [URL]
   private let executable: @Sendable () throws -> URL
   private let tokenEndpoint: URL
   private let codeAssistEndpoint: URL
@@ -53,7 +53,25 @@ public actor AntigravityPlanSource: AntigravityPlanFetching {
     send: @escaping Send = AntigravityPlanSource.urlSession,
     now: @escaping @Sendable () -> Date = { Date() }
   ) {
-    self.tokenFile = tokenFile
+    self.init(
+      tokenFiles: [tokenFile],
+      executable: executable,
+      tokenEndpoint: tokenEndpoint,
+      codeAssistEndpoint: codeAssistEndpoint,
+      send: send,
+      now: now
+    )
+  }
+
+  public init(
+    tokenFiles: [URL],
+    executable: @escaping @Sendable () throws -> URL,
+    tokenEndpoint: URL,
+    codeAssistEndpoint: URL,
+    send: @escaping Send = AntigravityPlanSource.urlSession,
+    now: @escaping @Sendable () -> Date = { Date() }
+  ) {
+    self.tokenFiles = tokenFiles
     self.executable = executable
     self.tokenEndpoint = tokenEndpoint
     self.codeAssistEndpoint = codeAssistEndpoint
@@ -61,10 +79,21 @@ public actor AntigravityPlanSource: AntigravityPlanFetching {
     self.now = now
   }
 
-  public static func defaultTokenFile(
+  public static func defaultTokenFiles(
     homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+  ) -> [URL] {
+    [
+      homeDirectory.appendingPathComponent(".gemini/antigravity-cli/antigravity-oauth-token"),
+      homeDirectory.appendingPathComponent(".gemini/jetski-standalone-oauth-token"),
+    ]
+  }
+
+  public static func defaultTokenFile(
+    homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
+    fileManager: FileManager = .default
   ) -> URL {
-    homeDirectory.appendingPathComponent(".gemini/antigravity-cli/antigravity-oauth-token")
+    let files = defaultTokenFiles(homeDirectory: homeDirectory)
+    return files.first(where: { fileManager.fileExists(atPath: $0.path) }) ?? files[0]
   }
 
   public static let urlSession: Send = { request in
@@ -168,16 +197,22 @@ public actor AntigravityPlanSource: AntigravityPlanFetching {
   }
 
   private func readRefreshToken() throws -> String {
-    guard let data = try? Data(contentsOf: tokenFile) else {
-      throw QuotaError.credentialsMissing(.antigravity)
+    var sawMalformed = false
+    for file in tokenFiles {
+      guard let data = try? Data(contentsOf: file) else { continue }
+      guard let decoded = try? JSONDecoder().decode(AgyTokenFile.self, from: data) else {
+        sawMalformed = true
+        continue
+      }
+      guard let refreshToken = decoded.token?.refreshToken, !refreshToken.isEmpty else {
+        continue
+      }
+      return refreshToken
     }
-    guard let file = try? JSONDecoder().decode(AgyTokenFile.self, from: data) else {
+    if sawMalformed {
       throw QuotaError.malformedResponse(.antigravity)
     }
-    guard let refreshToken = file.token?.refreshToken, !refreshToken.isEmpty else {
-      throw QuotaError.credentialsMissing(.antigravity)
-    }
-    return refreshToken
+    throw QuotaError.credentialsMissing(.antigravity)
   }
 
   private func oauthClients() throws -> [OAuthClient] {

@@ -82,7 +82,7 @@ public struct SubscriptionPlan: Identifiable, Equatable, Sendable {
     plans(includingLegacy: includingLegacy).reduce(0) { total, plan in total + plan.monthlyCostUSD }
   }
 
-  /// The provider's reported price when it has one (Cursor), else this table's.
+  /// The provider's reported price when it has one (Cursor, Antigravity), else this table's.
   public static func monthlyCostUSD(for provider: ProviderID, snapshot: UsageSnapshot?) -> Int {
     snapshot?.plan?.monthlyCostUSD ?? plan(for: provider).monthlyCostUSD
   }

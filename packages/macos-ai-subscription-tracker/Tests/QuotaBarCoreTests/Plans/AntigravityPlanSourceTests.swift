@@ -87,6 +87,33 @@ final class AntigravityPlanSourceTests: XCTestCase {
     }
   }
 
+  func testMultipleCandidateTokenFilesUsesFirstValidCandidate() async throws {
+    let fixture = try makeFixture()
+    defer { try? FileManager.default.removeItem(at: fixture.root) }
+    let missingFile = fixture.root.appendingPathComponent("nonexistent-token")
+    let recorder = Recorder(rightID: rightID)
+    let source = AntigravityPlanSource(
+      tokenFiles: [missingFile, fixture.tokenFile],
+      executable: { fixture.binary },
+      tokenEndpoint: tokenEndpoint,
+      codeAssistEndpoint: codeAssistEndpoint,
+      send: { try await recorder.send($0) }
+    )
+    let data = try await source.codeAssistData()
+    XCTAssertEqual(try AntigravityProvider.parsePlan(data: data)?.name, "Google AI Pro")
+  }
+
+  func testDefaultTokenFilesIncludesAntigravityAndJetskiPaths() {
+    let home = URL(fileURLWithPath: "/custom/home")
+    let files = AntigravityPlanSource.defaultTokenFiles(homeDirectory: home)
+    XCTAssertEqual(files.count, 2)
+    XCTAssertTrue(
+      files.contains(home.appendingPathComponent(".gemini/antigravity-cli/antigravity-oauth-token"))
+    )
+    XCTAssertTrue(
+      files.contains(home.appendingPathComponent(".gemini/jetski-standalone-oauth-token")))
+  }
+
   private func makeFixture() throws -> Fixture {
     let root = try temporaryDirectory()
     let binary = root.appendingPathComponent("agy")
