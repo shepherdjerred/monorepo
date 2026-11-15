@@ -595,9 +595,9 @@
   },
   {
     "namespace": "tasknotes",
-    "name": "tasknotes-vault-pvc",
+    "name": "pgdata-tasknotes-postgresql-0",
     "backup": "enabled",
-    "reason": "Tasknotes user vault"
+    "reason": "Tasknotes PostgreSQL database"
   },
   {
     "namespace": "tempo",

@@ -14,6 +14,7 @@ import {
   externalHttpsEgressRule,
   blackboxProbeIngressRule,
   postgresEgress,
+  postgresOperatorIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 function buildPgUrl(): string {
@@ -145,6 +146,8 @@ export function createTasknotesDeployment(chart: Chart) {
           // Allow blackbox-exporter's in-cluster health probe (http service port
           // only — not every port on the pod)
           blackboxProbeIngressRule(3000),
+          // PostgreSQL operator access to database pods in this namespace
+          postgresOperatorIngressRule(),
         ],
       },
       // Allow egress to DNS, external HTTPS, and PostgreSQL
