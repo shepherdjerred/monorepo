@@ -251,11 +251,86 @@ function isRetentionLine(record: Record<string, unknown>): boolean {
   );
 }
 
+/** The run events this reader takes content or usage from. */
+const USED_RUN_EVENTS: ReadonlySet<string> = new Set([
+  "started",
+  "assistant_message_committed",
+  "assistant_tool_calls_committed",
+  "tool_result_batch_committed",
+  "model_completed",
+]);
+
+/**
+ * Whether this reader takes anything from the record. Fork bookkeeping
+ * (`session.fork.created`, `.model_prefix`, `.turn`) is written without a
+ * `recorded_at` and copies the source session's turns, which are indexed
+ * from the source's own log; it is not used, so its missing timestamp is
+ * accepted. A used record must carry a valid one.
+ */
+function isUsedRecord(
+  payloadType: string,
+  payload: Record<string, unknown>,
+): boolean {
+  switch (payloadType) {
+    case "runtime.session.metadata":
+    case "session.workspace_branch.observed": {
+      return true;
+    }
+    case "runtime.session": {
+      return (
+        stringValue(payload["kind"]) === "run" &&
+        USED_RUN_EVENTS.has(
+          stringValue(parseRecord(payload["event"])?.["kind"]) ?? "",
+        )
+      );
+    }
+    default: {
+      return false;
+    }
+  }
+}
+
 function branchName(record: Record<string, unknown> | null): string | null {
   const reference = parseRecord(record?.["reference"]);
   return stringValue(reference?.["kind"]) === "branch"
     ? stringValue(reference?.["name"])
     : null;
+}
+
+type MuseEvent = {
+  readonly payloadType: string;
+  readonly payload: Record<string, unknown>;
+  readonly createdAt: string;
+};
+
+/**
+ * The event a log line carries, or null for a line this reader skips: a
+ * retention artifact, or an unused record written without a timestamp.
+ */
+function museEvent(
+  record: Record<string, unknown> | null,
+  location: UsageFieldLocation,
+): MuseEvent | null {
+  if (record === null || isRetentionLine(record)) {
+    return null;
+  }
+  const payloadType = stringValue(record["payload_type"]);
+  const payload = parseRecord(record["payload"]);
+  if (payloadType === null || payload === null) {
+    throw new Error(
+      `Malformed Muse event envelope on line ${String(location.lineNumber)} in ${location.filePath}`,
+    );
+  }
+  const recordedAt = record["recorded_at"];
+  if (recordedAt == null && !isUsedRecord(payloadType, payload)) {
+    return null;
+  }
+  const createdAt = epochTimestamp(recordedAt, MICROSECONDS_PER_MS, {
+    source: SOURCE,
+    label: "event",
+    location,
+  });
+  return { payloadType, payload, createdAt };
 }
 
 export async function readMuseTranscript(
@@ -270,25 +345,11 @@ export async function readMuseTranscript(
   let firstAt: string | null = null;
   let lastAt: string | null = null;
   for await (const { record, location } of jsonLines(SOURCE, filePath)) {
-    if (record === null || isRetentionLine(record)) {
+    const line = museEvent(record, location);
+    if (line === null) {
       continue;
     }
-    const payloadType = stringValue(record["payload_type"]);
-    const payload = parseRecord(record["payload"]);
-    if (payloadType === null || payload === null) {
-      throw new Error(
-        `Malformed Muse event envelope on line ${String(location.lineNumber)} in ${filePath}`,
-      );
-    }
-    const createdAt = epochTimestamp(
-      record["recorded_at"],
-      MICROSECONDS_PER_MS,
-      {
-        source: SOURCE,
-        label: "event",
-        location,
-      },
-    );
+    const { payloadType, payload, createdAt } = line;
     firstAt ??= createdAt;
     lastAt = createdAt;
     switch (payloadType) {

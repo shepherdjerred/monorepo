@@ -1110,13 +1110,17 @@ text (only usage telemetry), so its indexed dialogue is minimal by design —
 its value here is the token/cost data, not search.
 
 Kimi Code is read from `~/.kimi-code/sessions/wd_*/session_*/`: `state.json`
-supplies the title, workspace, and timestamps, and each
-`agents/<agentId>/wire.jsonl` (the main agent and every subagent) is its own
-session. Kimi records no git branch. Meta Muse is read from
-`~/.local/share/muse`: `session-index.db` (opened read-only) lists root
-sessions with their title, workspace, and branch, each pointing at its
-`session.jsonl` event log, and every `subagent/<uuid>/session.jsonl` beside a
-root log is indexed as its own session titled after its parent.
+supplies the title (an untitled session is named by its first user prompt),
+workspace, and timestamps, and each `agents/<agentId>/wire.jsonl` (the main
+agent and every subagent) is its own session. Background-task notifications
+Kimi injects as prompts are indexed as tool output, not dialogue. Kimi records
+no git branch. Meta Muse is read from `~/.local/share/muse`:
+`session-index.db` (opened read-only) lists root sessions with their title,
+workspace, and branch, each pointing at its `session.jsonl` event log, and
+every `subagent/<uuid>/session.jsonl` beside a root log is indexed as its own
+session titled after its parent. A forked session's title names the session it
+was forked from; the turns a fork copies from its source are indexed only in
+the source's own session.
 
 ##### Read API
 

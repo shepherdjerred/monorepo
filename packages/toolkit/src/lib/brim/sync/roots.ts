@@ -100,6 +100,7 @@ function museIndexProjection(museRoot: string): SqliteProjection {
           "workspace_root",
           "git_branch",
           "msp_branch",
+          "msp_fork_source_session_id",
           "title",
           "created_at_us",
           "updated_at_us",

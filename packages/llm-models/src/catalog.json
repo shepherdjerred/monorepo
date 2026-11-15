@@ -30,7 +30,9 @@
         "modelId": "gpt-6.1-sol",
         "endpoint": "language"
       },
-      "codexSdk": { "modelId": "gpt-6.1-sol" }
+      "codexSdk": {
+        "modelId": "gpt-6.1-sol"
+      }
     }
   },
   "gpt-6-luna": {
@@ -66,6 +68,129 @@
       },
       "codexSdk": {
         "modelId": "gpt-6-luna"
+      }
+    }
+  },
+  "gpt-6.1-terra": {
+    "id": "gpt-6.1-terra",
+    "provider": "openai",
+    "displayName": "GPT-6.1 Terra",
+    "description": "Fast, efficient GPT-6.1 tier for visual reasoning, computer use and writing. Prices from https://developers.openai.com/api/docs/models/gpt-6.1-terra (30-minute cache-write rate).",
+    "pricing": {
+      "modality": "text",
+      "input": 1,
+      "cachedInput": 0.05,
+      "cacheWrite": 1.25,
+      "output": 5,
+      "longContextSurcharge": {
+        "thresholdInputTokens": 272000,
+        "inputMultiplier": 2,
+        "outputMultiplier": 1.5
+      }
+    },
+    "contextWindow": 1050000,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-6.1-terra",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-6.1-terra"
+      }
+    }
+  },
+  "gpt-6-sol": {
+    "id": "gpt-6-sol",
+    "provider": "openai",
+    "displayName": "GPT-6 Sol",
+    "description": "GPT-6 Sol for complex coding and agentic work, superseded by gpt-6.1-sol. Prices from https://developers.openai.com/api/docs/models/gpt-6-sol.",
+    "pricing": {
+      "modality": "text",
+      "input": 2,
+      "cachedInput": 0.2,
+      "cacheWrite": 2.5,
+      "output": 10,
+      "longContextSurcharge": {
+        "thresholdInputTokens": 272000,
+        "inputMultiplier": 2,
+        "outputMultiplier": 1.5
+      }
+    },
+    "contextWindow": 1050000,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-6-sol",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-6-sol"
+      }
+    }
+  },
+  "gpt-6-astra": {
+    "id": "gpt-6-astra",
+    "provider": "openai",
+    "displayName": "GPT-6 Astra",
+    "description": "OpenAI's most capable GPT-6 model for the most demanding work. Prices from https://developers.openai.com/api/docs/models/gpt-6-astra (30-minute cache-write rate).",
+    "pricing": {
+      "modality": "text",
+      "input": 10,
+      "cachedInput": 1,
+      "cacheWrite": 12.5,
+      "output": 50,
+      "longContextSurcharge": {
+        "thresholdInputTokens": 272000,
+        "inputMultiplier": 2,
+        "outputMultiplier": 1.5
+      }
+    },
+    "contextWindow": 1050000,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-6-astra",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-6-astra"
       }
     }
   },
@@ -1108,6 +1233,41 @@
       "supportsTopP": false,
       "maxTokens": 1048576,
       "effortTiers": ["low", "high", "max"]
+    },
+    "status": "current",
+    "routes": {}
+  },
+  "grok-4.7": {
+    "id": "grok-4.7",
+    "provider": "xai",
+    "pricingOnly": true,
+    "displayName": "Grok 4.7",
+    "description": "xAI's Grok 4.7, priced for Grok Build usage logs (which name it grok-4.7-build); never called from this repo. Prices from https://docs.x.ai/developers/models/grok-4.7. Requests whose prompt reaches 200k tokens are billed at 2x for every token, modeled as a surcharge above 199,999 input tokens. Batch is a 20% discount.",
+    "pricing": {
+      "modality": "text",
+      "input": 2,
+      "output": 6,
+      "cachedInput": 0.5,
+      "longContextSurcharge": {
+        "thresholdInputTokens": 199999,
+        "inputMultiplier": 2,
+        "outputMultiplier": 2
+      },
+      "serviceTierMultipliers": {
+        "batch": 0.8
+      }
+    },
+    "contextWindow": 500000,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "effortTiers": ["low", "medium", "high", "xhigh"]
     },
     "status": "current",
     "routes": {}
