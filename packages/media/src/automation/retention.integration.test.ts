@@ -108,6 +108,7 @@ async function fixture(
   episode = false,
   elapsedWarning = false,
   phase: "released" | "following" = "released",
+  sourceFilename?: string,
 ) {
   const db = cluster.database;
   const produced = await verifiedPublicationFixture(
@@ -123,7 +124,12 @@ async function fixture(
           await seedFixtureReleasedEpisodes(currentDb, files.user.id);
           return files;
         }
-      : mappedPublicationFixture,
+      : (currentDb, currentEpisode) =>
+          mappedPublicationFixture(
+            currentDb,
+            currentEpisode,
+            sourceFilename === undefined ? {} : { sourceFilename },
+          ),
   );
   directories.push(produced.files.directory);
   const media = await db.mediaItem.findUniqueOrThrow({
@@ -602,14 +608,11 @@ test("owner confirmation authorizes recoverable removal and rejects subsequent a
 });
 
 test("subtitle acquisition persists exact version evidence and replays without another download", async () => {
-  const item = await fixture(false, false, "following");
+  const releaseStem = "Test.Film.2026.1080p.WEB-DL.H264-GROUP";
+  const item = await fixture(false, false, "following", `${releaseStem}.mkv`);
   await cluster.database.mediaRequest.updateMany({
     where: { mediaId: item.media.id },
     data: { subtitleLanguages: ["en", "zh-Hans"] },
-  });
-  await cluster.database.libraryAsset.update({
-    where: { id: item.asset.id },
-    data: { sourcePath: "/downloads/Fixture.2020.1080p.WEB-GROUP.mkv" },
   });
   await cluster.database.operation.create({
     data: {
@@ -628,7 +631,7 @@ test("subtitle acquisition persists exact version evidence and replays without a
     opensubtitles: async () => {
       searches++;
       return {
-        filename: "Fixture.2020.1080p.WEB-GROUP.en.srt",
+        filename: `${releaseStem}.en.srt`,
         description: "human subtitles",
         actualLanguage: "en",
         forced: false,
@@ -652,7 +655,7 @@ test("subtitle acquisition persists exact version evidence and replays without a
     language: "en",
   };
   const first = await subtitles.findMediaSubtitles(input);
-  expect(first.status).toBe("found");
+  expect(first.status, JSON.stringify(first)).toBe("found");
   await expect(subtitles.findMediaSubtitles(input)).resolves.toEqual(first);
   expect(searches).toBe(1);
   const saved = await cluster.database.subtitleAsset.findUniqueOrThrow({
