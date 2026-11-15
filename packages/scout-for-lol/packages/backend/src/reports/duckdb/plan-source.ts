@@ -13,6 +13,17 @@ import {
   type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
 import { readsMatchDimension } from "#src/reports/duckdb/column-map.ts";
+import type { SourceOptions } from "#src/reports/duckdb/lake/crawl-union.ts";
+import {
+  includesCrawl,
+  type LakePopulation,
+} from "#src/reports/duckdb/lake/population.ts";
+import type {
+  ScoutQlPredicate,
+  ScoutQlScalarExpr,
+} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
+import { REDUCED_EVENT_TYPES } from "#src/league/crawl/crawl-records.ts";
+import { flattenConjuncts } from "#src/reports/duckdb/plan-budget.ts";
 import {
   EVENT_KEYS_SCAN_FILTER,
   FRAME_KEYS_SCAN_FILTER,
@@ -196,17 +207,20 @@ const EMPTY_ASSIST_ROWS =
 function eventLookupSources(
   files: LakeFiles,
   flags: EventLookupFlags | undefined,
+  options: SourceOptions,
 ): FactsCteInput["eventLookups"] {
   if (flags === undefined) return undefined;
   return {
     firstOfKind: flags.firstOfKind,
     killerTeam: flags.killerTeam
-      ? (buildMatchTeamsSource(files, frag("")) ?? frag(EMPTY_TEAM_DIMENSION))
+      ? (buildMatchTeamsSource(files, frag(""), options) ??
+        frag(EMPTY_TEAM_DIMENSION))
       : undefined,
     assists: flags.assists
       ? (buildTimelineEventParticipantsSource(
           files,
           frag(EVENT_KEYS_SCAN_FILTER),
+          options,
         ) ?? frag(EMPTY_ASSIST_ROWS))
       : undefined,
   };
@@ -229,13 +243,16 @@ export function buildLookupSources(
     /** The source scan kept only some frames, so the gold scan can follow. */
     scanFiltered?: boolean;
     eventLookups?: EventLookupFlags | undefined;
+    /** The lookups' population: the same as the plan's own source scan. */
+    population?: LakePopulation | undefined;
   },
 ): LookupSources | undefined {
+  const options: SourceOptions = { population: extras.population };
   const timeline =
     kind.columnSource === "timeline-frame" ||
     kind.columnSource === "timeline-event";
   const participantDimension = timeline
-    ? buildParticipantDimensionSource(files, range)
+    ? buildParticipantDimensionSource(files, range, options)
     : undefined;
   if (participantDimension === undefined && timeline) {
     return undefined;
@@ -244,7 +261,7 @@ export function buildLookupSources(
     readsMatchDimension(kind.columnSource) ||
     kind.columnSource === "timeline-event";
   const matchDimension = needsMatch
-    ? buildMatchDimensionSource(files, range)
+    ? buildMatchDimensionSource(files, range, options)
     : undefined;
   if (matchDimension === undefined && needsMatch) {
     return undefined;
@@ -253,7 +270,8 @@ export function buildLookupSources(
   // only the matches the participant scan already chose.
   const teamDimension =
     extras.teamLookup === true
-      ? (buildMatchTeamsSource(files, frag("")) ?? frag(EMPTY_TEAM_DIMENSION))
+      ? (buildMatchTeamsSource(files, frag(""), options) ??
+        frag(EMPTY_TEAM_DIMENSION))
       : undefined;
   // Not filtered by the query: the source scan may hold player('…'), and a
   // team total computed from filtered frames would sum only that player. It
@@ -277,6 +295,82 @@ export function buildLookupSources(
       gold === undefined || goldSource === undefined
         ? undefined
         : { source: goldSource, narrowed, ...gold },
-    eventLookups: eventLookupSources(files, extras.eventLookups),
+    eventLookups: eventLookupSources(files, extras.eventLookups, options),
   };
+}
+
+/**
+ * Which population a compiled plan actually reads.
+ *
+ * The caller asks; the plan's source and filter decide whether the crawl can
+ * answer it honestly:
+ *
+ * - Only global scope may read the crawl. A server scope joins its tracked
+ *   accounts, and a crawled game of a tracked player that tracking never
+ *   ingested would quietly change that server's reports.
+ * - Participant, team and ban rows are complete in the crawl, so those
+ *   sources read it as asked.
+ * - Crawled timelines keep item and skill events only (`REDUCED_EVENT_TYPES`)
+ *   and no frames. An event query reads the crawl only when its top-level
+ *   filter restricts `event_type` to those; any other event query would
+ *   silently undercount every other event, so it stays on tracked timelines.
+ *   Frames and prematch rows never come from the crawl.
+ */
+export function planPopulation(
+  input: {
+    readonly plan: ScoutQlPlan;
+    readonly scope: LakeQueryScope;
+    readonly population?: LakePopulation | undefined;
+  },
+  kind: SourceKind,
+): LakePopulation {
+  const requested = input.population ?? "tracked";
+  if (!includesCrawl(requested)) return requested;
+  if (input.scope.kind !== "global") {
+    throw new Error(
+      "The crawl population is global-only: a server scope reads its tracked players.",
+    );
+  }
+  return match(kind.columnSource)
+    .with("match", "match-team", "match-team-ban", () => requested)
+    .with("timeline-event", () =>
+      restrictsToCrawlEventTypes(input.plan.where) ? requested : "tracked",
+    )
+    .with("timeline-frame", "prematch", (): LakePopulation => "tracked")
+    .exhaustive();
+}
+
+function isEventTypeColumn(expr: ScoutQlScalarExpr): boolean {
+  return expr.kind === "column" && expr.column === "event_type";
+}
+
+function restrictsConjunct(conjunct: ScoutQlPredicate): boolean {
+  return match(conjunct)
+    .with(
+      { kind: "compare", op: "=" },
+      (compare) =>
+        isEventTypeColumn(compare.left) &&
+        compare.right.kind === "literal" &&
+        typeof compare.right.value === "string" &&
+        REDUCED_EVENT_TYPES.has(compare.right.value),
+    )
+    .with(
+      { kind: "in", negated: false },
+      (inList) =>
+        isEventTypeColumn(inList.operand) &&
+        inList.items.every(
+          (item) => typeof item === "string" && REDUCED_EVENT_TYPES.has(item),
+        ),
+    )
+    .otherwise(() => false);
+}
+
+/** Whether a top-level conjunct limits `event_type` to item and skill events. */
+export function restrictsToCrawlEventTypes(
+  where: ScoutQlPredicate | undefined,
+): boolean {
+  return (
+    where !== undefined &&
+    flattenConjuncts(where).some((conjunct) => restrictsConjunct(conjunct))
+  );
 }

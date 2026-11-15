@@ -9,6 +9,8 @@ import {
 } from "#src/reports/duckdb/scope.ts";
 import { serverNames } from "#src/explore/tools/hall-tools.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import { ALL_POPULATION } from "#src/reports/duckdb/lake/all-population.ts";
+import type { LakePopulation } from "#src/reports/duckdb/lake/population.ts";
 
 /**
  * Which servers' tracked players a query reads.
@@ -42,7 +44,12 @@ export const QueryServersSchema = z
 export type QueryServers = z.infer<typeof QueryServersSchema>;
 
 export type TurnScope =
-  | { ok: true; scope: LakeQueryScope; guildIds: DiscordGuildId[] }
+  | {
+      ok: true;
+      scope: LakeQueryScope;
+      guildIds: DiscordGuildId[];
+      population: LakePopulation;
+    }
   | { ok: false; message: string };
 
 /**
@@ -50,6 +57,10 @@ export type TurnScope =
  *
  * `guildIds` is what `player('…')` names resolve against: the chosen servers,
  * or, for a global query, every server in the turn, as before.
+ *
+ * A global question ("every ingested match") reads the `all` population,
+ * tracked matches plus the participant crawl; a servers question reads its
+ * tracked players only.
  */
 export function resolveTurnScope(
   servers: QueryServers,
@@ -59,7 +70,12 @@ export function resolveTurnScope(
     DiscordGuildIdSchema.parse(guildId),
   );
   if (servers === null) {
-    return { ok: true, scope: GLOBAL_SCOPE, guildIds: turn };
+    return {
+      ok: true,
+      scope: GLOBAL_SCOPE,
+      guildIds: turn,
+      population: ALL_POPULATION,
+    };
   }
   const chosen = servers === "all_my_servers" ? turn : servers;
   const outside = chosen.filter((guildId) => !turn.includes(guildId));
@@ -79,7 +95,12 @@ export function resolveTurnScope(
         "The user is in no Scout servers here, so there are no tracked players to read. Query without servers instead.",
     };
   }
-  return { ok: true, scope: serversScope(chosen), guildIds: [...chosen] };
+  return {
+    ok: true,
+    scope: serversScope(chosen),
+    guildIds: [...chosen],
+    population: "tracked",
+  };
 }
 
 const ListServersInputSchema = z

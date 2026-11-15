@@ -23,6 +23,7 @@ import {
   type LakeFiles,
 } from "#src/reports/duckdb/lake.ts";
 import { loadServerPeople } from "#src/reports/server-people.ts";
+import type { LakePopulation } from "#src/reports/duckdb/lake/population.ts";
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
 import type {
   CompiledOutputColumn,
@@ -77,6 +78,8 @@ export type PlanExecutionInput = {
   /** Stops an Explore query when the caller stops or times out the turn. */
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string | undefined;
+  /** `all` adds the participant crawl to a global query; see planPopulation. */
+  population?: LakePopulation | undefined;
 };
 
 const EMPTY_RESULT: PlanAggregationResult = { rows: [], rowsScanned: 0 };
@@ -112,6 +115,7 @@ async function queryInput(
     limit: input.limit,
     playerPuuids: input.playerPuuids,
     ...(input.playerIds === undefined ? {} : { playerIds: input.playerIds }),
+    population: input.population,
   };
 }
 

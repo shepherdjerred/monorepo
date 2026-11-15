@@ -21,6 +21,11 @@ export const MATCH_VIRTUALS: ScoutQlColumnInfo[] = [
     "varchar",
     "Tracked player (alias in guild scope, Riot ID globally). Filter with player('…').",
   ),
+  virtualColumn(
+    "provenance",
+    "varchar",
+    "Where the match came from: 'tracked' (a game Scout ingested for a tracked player or client) or 'crawl' (sampled from the Riot histories of players near tracked games; only global queries without servers read these).",
+  ),
   assetVirtualColumn(
     "champion",
     "varchar",

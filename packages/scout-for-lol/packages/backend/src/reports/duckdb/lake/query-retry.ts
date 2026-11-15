@@ -10,7 +10,9 @@ function snapshotPaths(files: LakeFiles): string[] {
     ...Object.values(tracked).flatMap((value) =>
       typeof value === "string" ? [value] : Array.isArray(value) ? value : [],
     ),
-    ...Object.values(crawl).flat(),
+    ...Object.values(crawl)
+      .flat()
+      .map((file) => file.path),
   ];
 }
 

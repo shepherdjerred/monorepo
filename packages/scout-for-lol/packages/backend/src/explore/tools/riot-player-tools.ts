@@ -25,6 +25,7 @@ import {
   scalarParam,
 } from "#src/reports/duckdb/lake.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import { ALL_POPULATION } from "#src/reports/duckdb/lake/all-population.ts";
 import {
   getChampionMasterySnapshot,
   topChampionMastery,
@@ -48,10 +49,16 @@ async function inspectCoverage(puuid: LeaguePuuid): Promise<{
   lastGameAt: string | null;
 }> {
   return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
-    const matches = buildMatchesSource(files, {
-      sql: "puuid = ?",
-      params: [scalarParam(puuid)],
-    });
+    // A player Scout does not track may still have crawled games; counting
+    // them is what tells the model the data covers the player before it
+    // spends Riot calls importing history. Timelines stay tracked-only: a
+    // crawled timeline is reduced to items and skills and has no coverage row.
+    const matches = buildMatchesSource(
+      files,
+      { sql: "puuid = ?", params: [scalarParam(puuid)] },
+      [],
+      { population: ALL_POPULATION },
+    );
     if (matches === undefined) {
       return { games: 0, timelines: 0, firstGameAt: null, lastGameAt: null };
     }

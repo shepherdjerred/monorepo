@@ -11,6 +11,7 @@ import {
 import { runPlanAggregation } from "#src/reports/duckdb/execute.ts";
 import { ReportQueryTimeoutError } from "#src/reports/duckdb/instance.ts";
 import { resolvePlayerRefPuuids } from "#src/reports/identity.ts";
+import type { LakePopulation } from "#src/reports/duckdb/lake/population.ts";
 import type { ReportQueryResult } from "#src/reports/query/query-types.ts";
 import {
   requireGuildScope,
@@ -54,6 +55,11 @@ export type ExecuteReportQueryParams = {
   /** The Discord servers a global-scope asker belongs to. Guild-scoped reports
    * resolve aliases from their own scope, including scheduled reports. */
   askerGuildIds?: DiscordGuildId[] | undefined;
+  /**
+   * `all` adds the participant crawl to a global query: its matches, and its
+   * players' Riot IDs for `player('…')`. Every other caller reads `tracked`.
+   */
+  population?: LakePopulation | undefined;
 };
 type ReportExecutionParams = Omit<
   ExecuteReportQueryParams,
@@ -77,7 +83,7 @@ export class InvalidSavedQueryError extends Error {
 async function resolvePlanPlayerRefs(
   params: Pick<
     ExecuteReportQueryParams,
-    "abortSignal" | "askerGuildIds" | "scope"
+    "abortSignal" | "askerGuildIds" | "scope" | "population"
   >,
   plan: ScoutQlPlan,
 ): Promise<Map<number, string[]> | undefined> {
@@ -94,6 +100,8 @@ async function resolvePlanPlayerRefs(
     // A guild report always does: its execution scope is the boundary.
     aliasScopeAvailable: guildIds.length > 0,
     abortSignal: params.abortSignal,
+    // Names resolve over the same players the query reads.
+    population: params.scope.kind === "global" ? params.population : undefined,
   });
 }
 
@@ -191,6 +199,7 @@ async function runReportQueryPlan(
     playerPuuids,
     playerIds,
     abortSignal: params.abortSignal,
+    population: params.population,
   });
   const context = resolveTemporalContext(plan, range);
   if (context === null) {
@@ -213,6 +222,7 @@ async function runReportQueryPlan(
           playerPuuids,
           playerIds,
           abortSignal: params.abortSignal,
+          population: params.population,
         });
   return resultFromPlanRows({
     plan,

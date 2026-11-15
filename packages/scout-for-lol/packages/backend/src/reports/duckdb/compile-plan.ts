@@ -50,6 +50,7 @@ import { LOADOUT_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.
 import {
   buildLookupSources,
   enforceScopeGuards,
+  planPopulation,
   hasTrackedAccounts,
   planSourceKind,
   type EventLookupFlags,
@@ -57,10 +58,17 @@ import {
 } from "#src/reports/duckdb/plan-source.ts";
 import { combineAnd, frag, seq } from "#src/reports/duckdb/sql-fragment.ts";
 import {
+  enforceCrawlScanBudget,
   enforcePlanNodeBudget,
   flattenConjuncts,
   referencedColumnNames,
 } from "#src/reports/duckdb/plan-budget.ts";
+import { PROVENANCE_COLUMN } from "#src/reports/duckdb/column-map.ts";
+import { pruneCrawlFilesToRange } from "#src/reports/duckdb/lake/crawl-files.ts";
+import {
+  includesCrawl,
+  type LakePopulation,
+} from "#src/reports/duckdb/lake/population.ts";
 
 /**
  * ScoutQL v2 plan → parameterized DuckDB SQL for lake-backed sources.
@@ -102,6 +110,11 @@ export type PlanQueryInput = {
   serverPeople?: readonly ServerPerson[] | undefined;
   /** Effective limit, already policy-capped. */
   limit: number;
+  /**
+   * `all` adds the participant crawl to a global-scope read (see
+   * `planPopulation`); every other scope, and the default, is `tracked`.
+   */
+  population?: LakePopulation | undefined;
 };
 
 type SplitWhere = {
@@ -191,6 +204,8 @@ function buildFactsPipeline(
     loadoutNames?: ReadonlySet<string>;
     /** The plan names participant_kind or bot; see globalPlayerFilter. */
     nonPlayersNamed?: boolean;
+    /** Which population every scan reads; decided by `planPopulation`. */
+    population?: LakePopulation;
   },
 ): FactsPipeline | undefined {
   const factsContext: ExprContext = {
@@ -222,24 +237,31 @@ function buildFactsPipeline(
   const pushdown = timeFromLookup(kind.columnSource)
     ? combineAnd(pushedFragments)
     : combineAnd([range, ...pushedFragments]);
+  const options = {
+    population: extras.population,
+    provenance: extras.projected.has(PROVENANCE_COLUMN),
+  };
   const source = match(kind.columnSource)
     .with("match", () =>
       buildMatchesSource(
         input.files,
         pushdown,
         [...extras.projected].filter((name) => LOADOUT.has(name)),
+        options,
       ),
     )
     .with("prematch", () => buildPrematchSource(input.files, pushdown))
-    .with("match-team", () => buildMatchTeamsSource(input.files, pushdown))
+    .with("match-team", () =>
+      buildMatchTeamsSource(input.files, pushdown, options),
+    )
     .with("match-team-ban", () =>
-      buildMatchTeamBansSource(input.files, pushdown),
+      buildMatchTeamBansSource(input.files, pushdown, options),
     )
     .with("timeline-frame", () =>
       buildTimelineParticipantFramesSource(input.files, pushdown),
     )
     .with("timeline-event", () =>
-      buildTimelineEventsSource(input.files, pushdown),
+      buildTimelineEventsSource(input.files, pushdown, options),
     )
     .exhaustive();
   if (source === undefined) {
@@ -296,15 +318,30 @@ function buildFactsPipeline(
 }
 
 export function compileScoutQlPlanQuery(
-  input: PlanQueryInput,
+  planInput: PlanQueryInput,
 ): CompiledPlanQuery | undefined {
-  const { plan } = input;
+  const { plan } = planInput;
   enforcePlanNodeBudget(plan);
   const kind = planSourceKind(plan, false);
-  enforceScopeGuards(input);
-  if (input.playerIds?.length === 0) {
+  enforceScopeGuards(planInput);
+  if (planInput.playerIds?.length === 0) {
     // No competition participants: the answer is structurally empty.
     return undefined;
+  }
+  const population = planPopulation(planInput, kind);
+  // A global read over the crawl opens only the ingest days that can hold a
+  // game in the window, and refuses up front when those are still too large.
+  const input = includesCrawl(population)
+    ? {
+        ...planInput,
+        files: {
+          ...planInput.files,
+          crawl: pruneCrawlFilesToRange(planInput.files.crawl, planInput.range),
+        },
+      }
+    : planInput;
+  if (includesCrawl(population)) {
+    enforceCrawlScanBudget(input.files.crawl, kind.columnSource);
   }
   const columns = buildPlanColumnMap(kind.columnSource);
 
@@ -338,6 +375,7 @@ export function compileScoutQlPlanQuery(
   const pipeline = buildFactsPipeline(input, kind, columns, {
     projected,
     extraItems: [],
+    population,
     playerGrouped: groupings.some((grouping) => grouping.playerIdentity),
     nonPlayersNamed: NON_PLAYER_COLUMNS.some((name) => referenced.has(name)),
     teamLookup:

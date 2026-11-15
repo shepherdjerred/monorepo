@@ -1,13 +1,12 @@
-import path from "node:path";
 import configuration from "#src/configuration.ts";
 import type { ScoutRuntimeCapabilities } from "#src/configuration/runtime-role.ts";
-import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
+  type DuckDbColumnType,
 } from "@scout-for-lol/data";
 import { matchReadColumns } from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import {
@@ -17,16 +16,21 @@ import {
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
 import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
-import { listStagingFiles } from "#src/report-lake/staging.ts";
-import { snapshotStagingGenerations } from "#src/report-lake/staging/generations.ts";
 import { retryLakeQuery } from "#src/reports/duckdb/lake/query-retry.ts";
 import type { LakeFiles as CapturedLakeFiles } from "#src/reports/duckdb/lake/files.ts";
-import { assertReportLakeAccess } from "#src/reports/duckdb/lake/access.ts";
+import { resolveLakeFiles as resolveCapturedLakeFiles } from "#src/reports/duckdb/lake/resolve-files.ts";
 import { columnList } from "#src/reports/duckdb/lake/column-list.ts";
 import {
-  NO_CRAWL_LAKE_FILES,
-  resolveCrawlLakeFiles,
-} from "#src/reports/duckdb/lake/crawl-files.ts";
+  withPopulation,
+  type SourceOptions,
+} from "#src/reports/duckdb/lake/crawl-union.ts";
+import {
+  CRAWL_MATCH_LAKE_COLUMNS,
+  CRAWL_MATCH_TEAM_BAN_LAKE_COLUMNS,
+  CRAWL_MATCH_TEAM_LAKE_COLUMNS,
+  CRAWL_TIMELINE_EVENT_LAKE_COLUMNS,
+  CRAWL_TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+} from "#src/report-lake/crawl/crawl-lake-schema.ts";
 
 /**
  * Lake file resolution and relation-SQL builders for the DuckDB report
@@ -45,6 +49,7 @@ import {
  *   constants.
  */
 
+/** Structurally the same as `LakeBoundParam`, which lake/ modules name. */
 export type BoundParam =
   | { kind: "scalar"; value: string | number | boolean }
   | { kind: "list"; values: string[] | number[] };
@@ -66,6 +71,17 @@ export type LakeFiles = {
   [Key in keyof CapturedLakeFiles]: CapturedLakeFiles[Key];
 };
 
+/** The files one query attempt reads (see lake/resolve-files.ts). */
+export async function resolveLakeFiles(
+  lakeDir: string,
+  capabilities: Pick<
+    ScoutRuntimeCapabilities,
+    "reportLakeAccess"
+  > = configuration.runtimeCapabilities,
+): Promise<LakeFiles> {
+  return await resolveCapturedLakeFiles(lakeDir, capabilities);
+}
+
 export async function withLakeQueryRetry<T>(
   lakeDir: string,
   query: (files: LakeFiles) => Promise<T>,
@@ -75,119 +91,6 @@ export async function withLakeQueryRetry<T>(
   > = configuration.runtimeCapabilities,
 ): Promise<T> {
   return await retryLakeQuery(lakeDir, query, capabilities, resolveLakeFiles);
-}
-
-async function globParquet(root: string, table: string): Promise<string[]> {
-  const glob = new Bun.Glob(`${table}/**/*.parquet`);
-  const files: string[] = [];
-  for await (const file of glob.scan({ cwd: root, absolute: true })) {
-    files.push(file);
-  }
-  return files.toSorted();
-}
-
-export async function resolveLakeFiles(
-  lakeDir: string,
-  capabilities: Pick<
-    ScoutRuntimeCapabilities,
-    "reportLakeAccess"
-  > = configuration.runtimeCapabilities,
-): Promise<LakeFiles> {
-  assertReportLakeAccess(capabilities);
-  const buildDir = await readCurrentBuildDir(lakeDir);
-  const staging = await snapshotStagingGenerations(lakeDir);
-  const [
-    matchesStaging,
-    matchTeamsStaging,
-    matchTeamBansStaging,
-    prematchStaging,
-    competitionRankHistoryStaging,
-    timelineEventsStaging,
-    timelineEventParticipantsStaging,
-    timelineParticipantFramesStaging,
-    timelineCoverageStaging,
-  ] = await Promise.all([
-    listStagingFiles(lakeDir, "matches", staging),
-    listStagingFiles(lakeDir, "match_teams", staging),
-    listStagingFiles(lakeDir, "match_team_bans", staging),
-    listStagingFiles(lakeDir, "prematch", staging),
-    listStagingFiles(lakeDir, "competition_rank_history", staging),
-    listStagingFiles(lakeDir, "timeline_events", staging),
-    listStagingFiles(lakeDir, "timeline_event_participants", staging),
-    listStagingFiles(lakeDir, "timeline_participant_frames", staging),
-    listStagingFiles(lakeDir, "timeline_coverage", staging),
-  ]);
-  if (buildDir === undefined) {
-    return {
-      matchesParquet: [],
-      matchesStaging,
-      matchTeamsParquet: [],
-      matchTeamsStaging,
-      matchTeamBansParquet: [],
-      matchTeamBansStaging,
-      prematchParquet: [],
-      prematchStaging,
-      accountsParquet: undefined,
-      competitionRankHistoryParquet: [],
-      competitionRankHistoryStaging,
-      timelineEventsParquet: [],
-      timelineEventsStaging,
-      timelineEventParticipantsParquet: [],
-      timelineEventParticipantsStaging,
-      timelineParticipantFramesParquet: [],
-      timelineParticipantFramesStaging,
-      timelineCoverageParquet: [],
-      timelineCoverageStaging,
-      crawl: NO_CRAWL_LAKE_FILES,
-    };
-  }
-  const [
-    matchesParquet,
-    matchTeamsParquet,
-    matchTeamBansParquet,
-    prematchParquet,
-    competitionRankHistoryParquet,
-    timelineEventsParquet,
-    timelineEventParticipantsParquet,
-    timelineParticipantFramesParquet,
-    timelineCoverageParquet,
-  ] = await Promise.all([
-    globParquet(buildDir, "matches"),
-    globParquet(buildDir, "match_teams"),
-    globParquet(buildDir, "match_team_bans"),
-    globParquet(buildDir, "prematch"),
-    globParquet(buildDir, "competition_rank_history"),
-    globParquet(buildDir, "timeline_events"),
-    globParquet(buildDir, "timeline_event_participants"),
-    globParquet(buildDir, "timeline_participant_frames"),
-    globParquet(buildDir, "timeline_coverage"),
-  ]);
-  const accountsPath = path.join(buildDir, "accounts", "accounts.parquet");
-  const accountsParquet = (await Bun.file(accountsPath).exists())
-    ? accountsPath
-    : undefined;
-  return {
-    matchesParquet,
-    matchesStaging,
-    matchTeamsParquet,
-    matchTeamsStaging,
-    matchTeamBansParquet,
-    matchTeamBansStaging,
-    prematchParquet,
-    prematchStaging,
-    accountsParquet,
-    competitionRankHistoryParquet,
-    competitionRankHistoryStaging,
-    timelineEventsParquet,
-    timelineEventsStaging,
-    timelineEventParticipantsParquet,
-    timelineEventParticipantsStaging,
-    timelineParticipantFramesParquet,
-    timelineParticipantFramesStaging,
-    timelineCoverageParquet,
-    timelineCoverageStaging,
-    crawl: await resolveCrawlLakeFiles(buildDir),
-  };
 }
 
 type UnionSourceInput = {
@@ -341,19 +244,45 @@ export function buildUnionSource(
   };
 }
 
+/**
+ * Participant rows over `columns` for the requested population: the tracked
+ * `matches` union, plus `matches_crawl` for `all` (see crawl-union.ts).
+ */
+function participantSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+  columns: Record<string, DuckDbColumnType>,
+  options: SourceOptions,
+): SqlFragment | undefined {
+  return withPopulation({
+    files,
+    tracked: buildUnionSource({
+      parquetFiles: files.matchesParquet,
+      stagingFiles: files.matchesStaging,
+      columns,
+      dedupe: "matches",
+      predicate,
+    }),
+    crawl: { files: files.crawl.matches, columns: CRAWL_MATCH_LAKE_COLUMNS },
+    columns,
+    predicate,
+    options,
+  });
+}
+
 /** Participant rows, with the loadout columns the caller reads. */
 export function buildMatchesSource(
   files: LakeFiles,
   predicate: SqlFragment,
   loadout: readonly string[] = [],
+  options: SourceOptions = {},
 ): SqlFragment | undefined {
-  return buildUnionSource({
-    parquetFiles: files.matchesParquet,
-    stagingFiles: files.matchesStaging,
-    columns: matchReadColumns(loadout),
-    dedupe: "matches",
+  return participantSource(
+    files,
     predicate,
-  });
+    matchReadColumns(loadout),
+    options,
+  );
 }
 
 export function buildPrematchSource(
@@ -393,14 +322,14 @@ const MATCH_DIMENSION_LAKE_COLUMNS = {
 export function buildMatchDimensionSource(
   files: LakeFiles,
   predicate: SqlFragment,
+  options: SourceOptions = {},
 ): SqlFragment | undefined {
-  return buildUnionSource({
-    parquetFiles: files.matchesParquet,
-    stagingFiles: files.matchesStaging,
-    columns: MATCH_DIMENSION_LAKE_COLUMNS,
-    dedupe: "matches",
+  return participantSource(
+    files,
     predicate,
-  });
+    MATCH_DIMENSION_LAKE_COLUMNS,
+    options,
+  );
 }
 
 /**
@@ -424,39 +353,91 @@ const PARTICIPANT_DIMENSION_LAKE_COLUMNS = {
 export function buildParticipantDimensionSource(
   files: LakeFiles,
   predicate: SqlFragment,
+  options: SourceOptions = {},
 ): SqlFragment | undefined {
-  return buildUnionSource({
-    parquetFiles: files.matchesParquet,
-    stagingFiles: files.matchesStaging,
-    columns: PARTICIPANT_DIMENSION_LAKE_COLUMNS,
-    dedupe: "matches",
+  return participantSource(
+    files,
     predicate,
-  });
+    PARTICIPANT_DIMENSION_LAKE_COLUMNS,
+    options,
+  );
+}
+
+/**
+ * Who a PUUID has been, and when: the identity dimension `reports/identity.ts`
+ * resolves names against. It reads the Riot ID, the match time and the dedupe
+ * key, never the ninety-odd participant columns, so a name lookup over the
+ * `all` population reads a few narrow crawl columns rather than whole rows.
+ */
+const IDENTITY_DIMENSION_LAKE_COLUMNS = {
+  match_id: MATCH_LAKE_COLUMNS.match_id,
+  puuid: MATCH_LAKE_COLUMNS.puuid,
+  participant_id: MATCH_LAKE_COLUMNS.participant_id,
+  team_id: MATCH_LAKE_COLUMNS.team_id,
+  champion_id: MATCH_LAKE_COLUMNS.champion_id,
+  game_creation_at: MATCH_LAKE_COLUMNS.game_creation_at,
+  riot_id_game_name: MATCH_LAKE_COLUMNS.riot_id_game_name,
+  riot_id_tagline: MATCH_LAKE_COLUMNS.riot_id_tagline,
+} as const;
+
+export function buildIdentityDimensionSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+  options: SourceOptions = {},
+): SqlFragment | undefined {
+  return participantSource(
+    files,
+    predicate,
+    IDENTITY_DIMENSION_LAKE_COLUMNS,
+    options,
+  );
 }
 
 export function buildMatchTeamsSource(
   files: LakeFiles,
   predicate: SqlFragment,
+  options: SourceOptions = {},
 ): SqlFragment | undefined {
-  return buildUnionSource({
-    parquetFiles: files.matchTeamsParquet,
-    stagingFiles: files.matchTeamsStaging,
+  return withPopulation({
+    files,
+    tracked: buildUnionSource({
+      parquetFiles: files.matchTeamsParquet,
+      stagingFiles: files.matchTeamsStaging,
+      columns: MATCH_TEAM_LAKE_COLUMNS,
+      dedupe: "match-teams",
+      predicate,
+    }),
+    crawl: {
+      files: files.crawl.matchTeams,
+      columns: CRAWL_MATCH_TEAM_LAKE_COLUMNS,
+    },
     columns: MATCH_TEAM_LAKE_COLUMNS,
-    dedupe: "match-teams",
     predicate,
+    options,
   });
 }
 
 export function buildMatchTeamBansSource(
   files: LakeFiles,
   predicate: SqlFragment,
+  options: SourceOptions = {},
 ): SqlFragment | undefined {
-  return buildUnionSource({
-    parquetFiles: files.matchTeamBansParquet,
-    stagingFiles: files.matchTeamBansStaging,
+  return withPopulation({
+    files,
+    tracked: buildUnionSource({
+      parquetFiles: files.matchTeamBansParquet,
+      stagingFiles: files.matchTeamBansStaging,
+      columns: MATCH_TEAM_BAN_LAKE_COLUMNS,
+      dedupe: "match-team-bans",
+      predicate,
+    }),
+    crawl: {
+      files: files.crawl.matchTeamBans,
+      columns: CRAWL_MATCH_TEAM_BAN_LAKE_COLUMNS,
+    },
     columns: MATCH_TEAM_BAN_LAKE_COLUMNS,
-    dedupe: "match-team-bans",
     predicate,
+    options,
   });
 }
 
@@ -473,29 +454,57 @@ export function buildCompetitionRankHistorySource(
   });
 }
 
+/**
+ * Timeline events. The crawl keeps only item and skill events, so a caller
+ * asks for the `all` population only for a read restricted to those types
+ * (`restrictsToCrawlEventTypes`); a crawl branch under any other read would
+ * undercount every other event type.
+ */
 export function buildTimelineEventsSource(
   files: LakeFiles,
   predicate: SqlFragment,
+  options: SourceOptions = {},
 ): SqlFragment | undefined {
-  return buildUnionSource({
-    parquetFiles: files.timelineEventsParquet,
-    stagingFiles: files.timelineEventsStaging,
+  return withPopulation({
+    files,
+    tracked: buildUnionSource({
+      parquetFiles: files.timelineEventsParquet,
+      stagingFiles: files.timelineEventsStaging,
+      columns: TIMELINE_EVENT_LAKE_COLUMNS,
+      dedupe: "timeline-events",
+      predicate,
+    }),
+    crawl: {
+      files: files.crawl.timelineEvents,
+      columns: CRAWL_TIMELINE_EVENT_LAKE_COLUMNS,
+    },
     columns: TIMELINE_EVENT_LAKE_COLUMNS,
-    dedupe: "timeline-events",
     predicate,
+    options,
   });
 }
 
 export function buildTimelineEventParticipantsSource(
   files: LakeFiles,
   predicate: SqlFragment,
+  options: SourceOptions = {},
 ): SqlFragment | undefined {
-  return buildUnionSource({
-    parquetFiles: files.timelineEventParticipantsParquet,
-    stagingFiles: files.timelineEventParticipantsStaging,
+  return withPopulation({
+    files,
+    tracked: buildUnionSource({
+      parquetFiles: files.timelineEventParticipantsParquet,
+      stagingFiles: files.timelineEventParticipantsStaging,
+      columns: TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+      dedupe: "timeline-event-participants",
+      predicate,
+    }),
+    crawl: {
+      files: files.crawl.timelineEventParticipants,
+      columns: CRAWL_TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+    },
     columns: TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
-    dedupe: "timeline-event-participants",
     predicate,
+    options,
   });
 }
 

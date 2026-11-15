@@ -8,13 +8,14 @@ import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
-  buildMatchesSource,
+  buildIdentityDimensionSource,
   listParam,
   withLakeQueryRetry,
   scalarParam,
   type BoundParam,
   type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
+import type { LakePopulation } from "#src/reports/duckdb/lake/population.ts";
 
 /**
  * Who a name refers to, as a set of PUUIDs.
@@ -358,6 +359,11 @@ export async function resolvePlayerIdentities(input: {
    * looser rule.
    */
   match?: PlayerMatchMode | undefined;
+  /**
+   * `all` also matches Riot IDs seen only in the participant crawl, for a
+   * global question about a player Scout does not track. Default `tracked`.
+   */
+  population?: LakePopulation | undefined;
 }): Promise<ResolvedIdentity[]> {
   const needle = input.query.trim().toLowerCase();
   if (needle.length === 0) return [];
@@ -366,7 +372,11 @@ export async function resolvePlayerIdentities(input: {
   return await withLakeQueryRetry(
     input.lakeDir ?? resolveLakeDir(),
     async (files) => {
-      const source = buildMatchesSource(files, { sql: "TRUE", params: [] });
+      const source = buildIdentityDimensionSource(
+        files,
+        { sql: "TRUE", params: [] },
+        { population: input.population },
+      );
       if (source === undefined) return [];
 
       const candidates: IdentityCandidate[] = [];
@@ -476,6 +486,7 @@ export async function resolvePlayerRefPuuids(input: {
   aliasScopeAvailable?: boolean;
   lakeDir?: string | undefined;
   abortSignal?: AbortSignal | undefined;
+  population?: LakePopulation | undefined;
 }): Promise<Map<number, string[]>> {
   const byIndex = new Map<number, string[]>();
   for (const [index, ref] of input.playerRefs.entries()) {
@@ -484,6 +495,7 @@ export async function resolvePlayerRefPuuids(input: {
       guildIds: input.guildIds,
       lakeDir: input.lakeDir,
       abortSignal: input.abortSignal,
+      population: input.population,
     });
     if (identities.length === 0) {
       throw new Error(

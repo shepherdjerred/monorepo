@@ -7,6 +7,7 @@ import {
   TimelineEventFilterSchema,
 } from "@scout-for-lol/data";
 import { assertExploreAccess } from "#src/explore/access.ts";
+import { ALL_POPULATION } from "#src/reports/duckdb/lake/all-population.ts";
 import {
   exploreMatchSnapshot,
   isExploreMatchSnapshotSupported,
@@ -47,7 +48,7 @@ async function assertExploreMatch(
   matchId: RiotMatchId,
 ) {
   await assertExploreAccess(user);
-  const rows = await fetchFullMatch({ matchId });
+  const rows = await fetchFullMatch({ matchId, population: ALL_POPULATION });
   const first = rows[0];
   if (
     first === undefined ||
@@ -69,7 +70,10 @@ export const exploreMatchRouter = router({
         limit: 40,
         eventTypes: MATCH_KEY_EVENT_TYPES,
       }),
-      fetchFullMatchTeams({ matchId: input.matchId }),
+      fetchFullMatchTeams({
+        matchId: input.matchId,
+        population: ALL_POPULATION,
+      }),
       fetchTimelineFramesAtTime({
         matchId: input.matchId,
         timestampMs: 900_000,

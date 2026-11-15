@@ -165,9 +165,27 @@ export const TEAM_LOOKUP_COLUMNS: ReadonlySet<string> = new Set([
   "kill_participation",
 ]);
 
+/**
+ * Where a row came from: 'tracked' or 'crawl' (lake/crawl-union.ts).
+ *
+ * It is not a lake column but a constant each union branch adds, and only
+ * when a query names it, so it is bound like a looked-up column: any filter on
+ * it runs against facts, after the branches are unioned, and its dependency
+ * is what asks the scan to add it.
+ */
+export const PROVENANCE_COLUMN = "provenance";
+
+const PROVENANCE_BINDING: ColumnBinding = {
+  sql: PROVENANCE_COLUMN,
+  type: "text",
+  dependencies: [PROVENANCE_COLUMN],
+  identity: true,
+};
+
 /** Virtual dimensions over match facts, mirroring the grouping arms. */
 const MATCH_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ["player", PLAYER_BINDING],
+  [PROVENANCE_COLUMN, PROVENANCE_BINDING],
   ["champion", virtual("champion_name", "text", ["champion_name"])],
   [
     "patch",
