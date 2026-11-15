@@ -105,9 +105,10 @@ function voiceEnv(stage: "beta" | "prod") {
   return containerOf(voiceDeployment(stage), voiceWorkloadName(stage)).env;
 }
 
-function expectOptionalVoiceSecretVolume(
+function expectVoiceSecretVolume(
   deployment: z.infer<typeof DeploymentSpecSchema>,
   container: ReturnType<typeof containerOf>,
+  optional: boolean,
 ) {
   const mount = container.volumeMounts.find(
     (candidate) => candidate.mountPath === "/run/secrets/scout-openai",
@@ -117,7 +118,7 @@ function expectOptionalVoiceSecretVolume(
     (candidate) => candidate.name === mount?.name,
   );
   expect(volume?.secret).toEqual(
-    expect.objectContaining({ secretName: "scout-openai", optional: true }),
+    expect.objectContaining({ secretName: "scout-openai", optional }),
   );
   return volume;
 }
@@ -163,7 +164,8 @@ describe("Hey Scout voice deployment boundary", () => {
   });
 
   /**
-   * `optional: true` is deliberate and load-bearing. Please do not "fix" it.
+   * The GATEWAY's `optional: true` is deliberate and load-bearing. The
+   * application pods, by contrast, require the Secret (fail-fast).
    *
    * It reads like a violation of the fail-fast secrets rule, and has been
    * raised as one. It is not, for three reasons that live in the backend:
@@ -180,8 +182,7 @@ describe("Hey Scout voice deployment boundary", () => {
    *    `voice_assistant_enabled` Flipt flag and a boot-time gate "would only
    *    take the pod down"; the asset set is verified in the image's
    *    `voice-smoke` build stage, which fails the build rather than the pod.
-   * 3. This volume lives on the GATEWAY pod (and, for the desktop voice
-   *    route, the application pod), which owns the Discord shard. A required Secret leaves a pod
+   * 3. This volume lives on the GATEWAY pod, which owns the Discord shard. A required Secret leaves a pod
    *    unschedulable until the Secret exists, so requiring it here would take
    *    the whole bot — every slash command, not just voice — offline whenever
    *    `scout-openai` is missing or mid-rotation, in exchange for a flag-gated
@@ -202,7 +203,7 @@ describe("Hey Scout voice deployment boundary", () => {
       container.env.some((entry) => entry.name === "VOICE_OPENAI_API_KEY"),
     ).toBe(false);
 
-    const volume = expectOptionalVoiceSecretVolume(deployment, container);
+    const volume = expectVoiceSecretVolume(deployment, container, true);
     // Asserted on its own as well, so a flip to required fails on the exact
     // property that matters and lands the reader on the reasoning above rather
     // than on a whole-object shape mismatch.
@@ -232,7 +233,7 @@ describe("Hey Scout voice deployment boundary", () => {
       ]) {
         expect(container.env.some((entry) => entry.name === name)).toBe(false);
       }
-      expectOptionalVoiceSecretVolume(deployment, container);
+      expectVoiceSecretVolume(deployment, container, false);
     }
   });
 

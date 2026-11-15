@@ -166,14 +166,21 @@ export function createScoutDeployment(
       localPathVolume.claim,
     ),
   };
-  // Deliberately optional, not an oversight of the fail-fast secrets rule.
-  // The backend treats an absent credential as a designed state (`unconfigured`
-  // for Discord voice, a typed `unavailable` for the desktop voice route) and
-  // reads the file lazily on each attempt. Requiring it would leave a pod
-  // unschedulable until the Secret exists, and a rotation would take the whole
-  // application (or the Discord shard) down for the sake of a flag-gated
-  // feature. The full argument is on the test that pins this in
-  // scout-voice-boundary.test.ts.
+  // The Scout application pods require the credential: a missing Secret is a
+  // provisioning failure and must stop the rollout (fail-fast secrets rule).
+  const appVoiceSecretMount = {
+    path: "/run/secrets/scout-openai",
+    volume: Volume.fromSecret(
+      chart,
+      "scout-openai-app-volume",
+      voiceOpenAiSecret,
+      { optional: false },
+    ),
+  };
+  // The beta gateway keeps the credential optional on purpose. It owns the
+  // Discord shard, and an absent key is the designed `unconfigured` voice
+  // state rather than a reason to take every slash command offline. The full
+  // argument is on the test that pins this in scout-voice-boundary.test.ts.
   const voiceSecretMount = {
     path: "/run/secrets/scout-openai",
     volume: Volume.fromSecret(chart, "scout-openai-volume", voiceOpenAiSecret, {
@@ -191,7 +198,7 @@ export function createScoutDeployment(
       },
     ),
   };
-  const volumeMounts = [dataVolumeMount, scratchMount, voiceSecretMount];
+  const volumeMounts = [dataVolumeMount, scratchMount, appVoiceSecretMount];
 
   const baseEnvVariables = {
     ...dbEnv,
