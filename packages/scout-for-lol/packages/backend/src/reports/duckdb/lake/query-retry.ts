@@ -5,9 +5,13 @@ import type { LakeFiles } from "#src/reports/duckdb/lake/files.ts";
 const LAKE_QUERY_SNAPSHOT_ATTEMPTS = 3;
 
 function snapshotPaths(files: LakeFiles): string[] {
-  return Object.values(files).flatMap((value) =>
-    typeof value === "string" ? [value] : Array.isArray(value) ? value : [],
-  );
+  const { crawl, ...tracked } = files;
+  return [
+    ...Object.values(tracked).flatMap((value) =>
+      typeof value === "string" ? [value] : Array.isArray(value) ? value : [],
+    ),
+    ...Object.values(crawl).flat(),
+  ];
 }
 
 async function snapshotHasMissingFiles(files: LakeFiles): Promise<boolean> {

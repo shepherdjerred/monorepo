@@ -16,7 +16,7 @@ import {
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "#src/report-lake/schema.ts";
 import type { ReportLakeStagingTable } from "#src/report-lake/staging.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { withMaintenanceDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
 
@@ -77,7 +77,7 @@ export async function writeFoldParquet({
     try {
       for (const row of rows) await writer.write(row);
       await writer.close();
-      await withDuckDBConnection(
+      await withMaintenanceDuckDBConnection(
         async (session) => {
           await copyNdjsonToParquet(session, {
             sourcePath: tmpPath,

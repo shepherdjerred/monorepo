@@ -7,7 +7,7 @@ import {
   ACCOUNT_LAKE_COLUMNS,
   duckDbColumnsSpec,
 } from "#src/report-lake/schema.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { withMaintenanceDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 
 const COMPACTION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -55,7 +55,7 @@ export async function writeAccountsParquet(
       // A fresh build has no previous hardlink to replace.
     }
     if (count > 0) {
-      await withDuckDBConnection(
+      await withMaintenanceDuckDBConnection(
         async (session) => {
           await session.run(
             `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(ACCOUNT_LAKE_COLUMNS)})) TO '${parquetPath}' (${PARQUET_COPY_OPTIONS})`,

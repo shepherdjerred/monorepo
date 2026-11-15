@@ -1,3 +1,4 @@
+import path from "node:path";
 import type * as DuckDBModuleNamespace from "@duckdb/node-api";
 import type { DuckDBInstance, DuckDBValue } from "@duckdb/node-api";
 import configuration from "#src/configuration.ts";
@@ -12,7 +13,8 @@ const logger = createLogger("duckdb");
  * - The NAPI module is loaded lazily via dynamic import (same pattern as
  *   @resvg/resvg-js in the report package) so bot startup and hot paths
  *   never pay for it.
- * - One process-wide in-memory instance amortizes startup; every query gets
+ * - One process-wide in-memory instance per pool (report queries, lake
+ *   maintenance) amortizes startup; every query gets
  *   its own connection because interrupt() is per-connection — one preview's
  *   timeout must not cancel another's query.
  * - threads / memory_limit are capped so analytical queries can't starve the
@@ -48,8 +50,6 @@ async function loadDuckDB(): Promise<DuckDBModule> {
   modulePromise ??= import("@duckdb/node-api");
   return await modulePromise;
 }
-
-let instancePromise: Promise<DuckDBInstance> | undefined;
 
 type SemaphoreWaiter = {
   token: object;
@@ -112,56 +112,126 @@ class AsyncSemaphore {
   }
 }
 
-const reportQuerySemaphore = new AsyncSemaphore(MAX_CONCURRENT_REPORT_QUERIES);
+/**
+ * The two DuckDB instances a process may hold.
+ *
+ * `report` answers user-facing queries (Explore, reports, Dares, web pages)
+ * under the configured thread and memory budget, two at a time.
+ * `maintenance` is the lake's own writer: fold and rebuild COPYs and crawl-day
+ * compaction. Before it existed, a fold or a nightly rebuild held one of the
+ * two report slots for its whole run, so one lake job halved interactive
+ * query capacity. Maintenance runs one connection at a time (the compactor
+ * already serializes lake jobs) with a smaller fixed budget, and spills to its
+ * own subdirectory so the two instances never share temporary files.
+ */
+type DuckDBPool = {
+  name: "report" | "maintenance";
+  semaphore: AsyncSemaphore;
+  instance: Promise<DuckDBInstance> | undefined;
+};
 
-async function getInstance(): Promise<DuckDBInstance> {
-  instancePromise ??= (async () => {
-    const duckdb = await loadDuckDB();
-    // Widened to unknown to survive partial test mocks of the configuration
-    // module (a former process-wide Bun mock leaked here; see auth-web.test.ts);
-    // real runs always have the env-var defaults.
-    const configuredThreads: unknown = configuration.reportDuckDbThreads;
-    const configuredMemory: unknown = configuration.reportDuckDbMemoryLimit;
-    const threads = (
-      typeof configuredThreads === "number" ? configuredThreads : 4
-    ).toString();
-    const memoryLimit =
-      typeof configuredMemory === "string" ? configuredMemory : "3GB";
-    const configuredTempDir: unknown = configuration.reportDuckDbTempDir;
-    const configuredMaxTemp: unknown = configuration.reportDuckDbMaxTempSize;
-    // A query larger than memory_limit spills here instead of failing.
-    const spill =
-      typeof configuredTempDir === "string"
-        ? {
-            temp_directory: configuredTempDir,
-            max_temp_directory_size:
-              typeof configuredMaxTemp === "string"
-                ? configuredMaxTemp
-                : "7GiB",
-          }
-        : {};
-    logger.info(
-      `Creating DuckDB instance (threads=${threads}, memory_limit=${memoryLimit}, temp_directory=${spill.temp_directory ?? "none"})`,
-    );
-    return await duckdb.DuckDBInstance.create(":memory:", {
-      threads,
-      memory_limit: memoryLimit,
-      preserve_insertion_order: "false",
-      ...PARQUET_WRITE_SETTINGS,
-      ...spill,
-    });
-  })();
-  return await instancePromise;
+const MAX_CONCURRENT_MAINTENANCE_CONNECTIONS = 1;
+const MAINTENANCE_THREADS = "2";
+const MAINTENANCE_MEMORY_LIMIT = "2GB";
+const MAINTENANCE_MAX_TEMP_SIZE = "4GiB";
+
+const reportPool: DuckDBPool = {
+  name: "report",
+  semaphore: new AsyncSemaphore(MAX_CONCURRENT_REPORT_QUERIES),
+  instance: undefined,
+};
+
+const maintenancePool: DuckDBPool = {
+  name: "maintenance",
+  semaphore: new AsyncSemaphore(MAX_CONCURRENT_MAINTENANCE_CONNECTIONS),
+  instance: undefined,
+};
+
+function spillSettings(pool: DuckDBPool): Record<string, string> {
+  // Widened to unknown to survive partial test mocks of the configuration
+  // module (a former process-wide Bun mock leaked here; see auth-web.test.ts);
+  // real runs always have the env-var defaults.
+  const configuredTempDir: unknown = configuration.reportDuckDbTempDir;
+  const configuredMaxTemp: unknown = configuration.reportDuckDbMaxTempSize;
+  if (typeof configuredTempDir !== "string") return {};
+  // A query larger than memory_limit spills here instead of failing.
+  if (pool.name === "maintenance") {
+    return {
+      temp_directory: path.join(configuredTempDir, "maintenance"),
+      max_temp_directory_size: MAINTENANCE_MAX_TEMP_SIZE,
+    };
+  }
+  return {
+    temp_directory: configuredTempDir,
+    max_temp_directory_size:
+      typeof configuredMaxTemp === "string" ? configuredMaxTemp : "7GiB",
+  };
 }
 
+function instanceSettings(pool: DuckDBPool): Record<string, string> {
+  const configuredThreads: unknown = configuration.reportDuckDbThreads;
+  const configuredMemory: unknown = configuration.reportDuckDbMemoryLimit;
+  const report = pool.name === "report";
+  return {
+    threads: report
+      ? (typeof configuredThreads === "number"
+          ? configuredThreads
+          : 4
+        ).toString()
+      : MAINTENANCE_THREADS,
+    memory_limit: report
+      ? typeof configuredMemory === "string"
+        ? configuredMemory
+        : "3GB"
+      : MAINTENANCE_MEMORY_LIMIT,
+    preserve_insertion_order: "false",
+    ...PARQUET_WRITE_SETTINGS,
+    ...spillSettings(pool),
+  };
+}
+
+async function getInstance(pool: DuckDBPool): Promise<DuckDBInstance> {
+  pool.instance ??= (async () => {
+    const duckdb = await loadDuckDB();
+    const settings = instanceSettings(pool);
+    logger.info(
+      `Creating ${pool.name} DuckDB instance (threads=${settings["threads"] ?? "default"}, memory_limit=${settings["memory_limit"] ?? "default"}, temp_directory=${settings["temp_directory"] ?? "none"})`,
+    );
+    return await duckdb.DuckDBInstance.create(":memory:", settings);
+  })();
+  return await pool.instance;
+}
+
+type ConnectionOptions = { timeoutMs?: number; abortSignal?: AbortSignal };
+
 /**
- * Run `fn` with a fresh connection. Every statement issued through the
+ * Run `fn` with a fresh report connection. Every statement issued through the
  * session shares one timeout budget; when it expires the connection is
  * interrupted and a ReportQueryTimeoutError is thrown.
  */
 export async function withDuckDBConnection<T>(
   fn: (session: DuckDBSession) => Promise<T>,
-  options: { timeoutMs?: number; abortSignal?: AbortSignal } = {},
+  options: ConnectionOptions = {},
+): Promise<T> {
+  return await withPooledConnection(reportPool, fn, options);
+}
+
+/**
+ * Run `fn` with a connection to the lake-maintenance instance: folds,
+ * rebuilds and crawl-day compaction. It never waits on, or holds, a report
+ * query slot.
+ */
+export async function withMaintenanceDuckDBConnection<T>(
+  fn: (session: DuckDBSession) => Promise<T>,
+  options: ConnectionOptions = {},
+): Promise<T> {
+  return await withPooledConnection(maintenancePool, fn, options);
+}
+
+async function withPooledConnection<T>(
+  pool: DuckDBPool,
+  fn: (session: DuckDBSession) => Promise<T>,
+  options: ConnectionOptions,
 ): Promise<T> {
   const timeoutMs = options.timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS;
   const deadline = Date.now() + timeoutMs;
@@ -182,7 +252,7 @@ export async function withDuckDBConnection<T>(
   let release: (() => void) | undefined;
   try {
     try {
-      release = await reportQuerySemaphore.acquire(acquireController.signal);
+      release = await pool.semaphore.acquire(acquireController.signal);
     } catch (error: unknown) {
       if (acquisition.timedOut) {
         throw new ReportQueryTimeoutError(timeoutMs);
@@ -195,7 +265,7 @@ export async function withDuckDBConnection<T>(
   }
 
   try {
-    return await withDuckDBConnectionSlot(fn, {
+    return await withDuckDBConnectionSlot(pool, fn, {
       ...options,
       timeoutMs: Math.max(0, deadline - Date.now()),
     });
@@ -205,12 +275,13 @@ export async function withDuckDBConnection<T>(
 }
 
 async function withDuckDBConnectionSlot<T>(
+  pool: DuckDBPool,
   fn: (session: DuckDBSession) => Promise<T>,
-  options: { timeoutMs?: number; abortSignal?: AbortSignal },
+  options: ConnectionOptions,
 ): Promise<T> {
   const timeoutMs = options.timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS;
   const duckdb = await loadDuckDB();
-  const instance = await getInstance();
+  const instance = await getInstance(pool);
   const connection = await instance.connect();
 
   const timeoutState = { timedOut: false, aborted: false };
@@ -268,18 +339,20 @@ async function withDuckDBConnectionSlot<T>(
 }
 
 /**
- * Release the process-wide instance.
+ * Release the process-wide instances.
  *
- * The server never calls this: the instance is meant to live as long as the
+ * The server never calls this: the instances are meant to live as long as the
  * process, and connections are already closed per query. A CLI is the other
- * case — left open, the native instance is only released by finalization,
+ * case — left open, a native instance is only released by finalization,
  * which measurably delays exit after the work is done. Idempotent, and a
  * later query simply creates a new instance.
  */
 export async function closeDuckDB(): Promise<void> {
-  const pending = instancePromise;
-  if (pending === undefined) return;
-  instancePromise = undefined;
-  const instance = await pending;
-  instance.closeSync();
+  for (const pool of [reportPool, maintenancePool]) {
+    const pending = pool.instance;
+    if (pending === undefined) continue;
+    pool.instance = undefined;
+    const instance = await pending;
+    instance.closeSync();
+  }
 }

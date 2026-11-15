@@ -23,6 +23,10 @@ import { retryLakeQuery } from "#src/reports/duckdb/lake/query-retry.ts";
 import type { LakeFiles as CapturedLakeFiles } from "#src/reports/duckdb/lake/files.ts";
 import { assertReportLakeAccess } from "#src/reports/duckdb/lake/access.ts";
 import { columnList } from "#src/reports/duckdb/lake/column-list.ts";
+import {
+  NO_CRAWL_LAKE_FILES,
+  resolveCrawlLakeFiles,
+} from "#src/reports/duckdb/lake/crawl-files.ts";
 
 /**
  * Lake file resolution and relation-SQL builders for the DuckDB report
@@ -134,6 +138,7 @@ export async function resolveLakeFiles(
       timelineParticipantFramesStaging,
       timelineCoverageParquet: [],
       timelineCoverageStaging,
+      crawl: NO_CRAWL_LAKE_FILES,
     };
   }
   const [
@@ -181,6 +186,7 @@ export async function resolveLakeFiles(
     timelineParticipantFramesStaging,
     timelineCoverageParquet,
     timelineCoverageStaging,
+    crawl: await resolveCrawlLakeFiles(buildDir),
   };
 }
 

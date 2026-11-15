@@ -40,16 +40,39 @@ const REDUCED_EVENT_TYPES: ReadonlySet<string> = new Set([
   "SKILL_LEVEL_UP",
 ]);
 
-const TimelineEventSchema = z.looseObject({
-  type: z.string(),
-  timestamp: z.number().int(),
-  participantId: z.number().int().optional(),
+/** The item and skill fields a reduced event keeps, when Riot states them. */
+const EVENT_DETAIL_SCHEMAS = {
   itemId: z.number().int().optional(),
   beforeId: z.number().int().optional(),
   afterId: z.number().int().optional(),
   goldGain: z.number().int().optional(),
   skillSlot: z.number().int().optional(),
   levelUpType: z.string().optional(),
+};
+
+const TimelineEventSchema = z.looseObject({
+  type: z.string(),
+  timestamp: z.number().int(),
+  participantId: z.number().int().optional(),
+  ...EVENT_DETAIL_SCHEMAS,
+});
+
+/**
+ * A segment line's reduced timeline, as the lake fold reads it back. The
+ * writer below and this reader share one field list, so the two cannot drift.
+ */
+export const ReducedTimelineSchema = z.object({
+  participants: z.array(
+    z.object({ participantId: z.number().int(), puuid: LeaguePuuidSchema }),
+  ),
+  events: z.array(
+    z.object({
+      t: z.number().int().nonnegative(),
+      type: z.string(),
+      participantId: z.number().int().nullable(),
+      ...EVENT_DETAIL_SCHEMAS,
+    }),
+  ),
 });
 
 const TimelineEnvelopeSchema = z.object({

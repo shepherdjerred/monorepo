@@ -3,7 +3,58 @@ import {
   closeDuckDB,
   ReportQueryTimeoutError,
   withDuckDBConnection,
+  withMaintenanceDuckDBConnection,
 } from "./instance.ts";
+
+describe("withMaintenanceDuckDBConnection", () => {
+  test("runs lake maintenance while both report slots are busy, and takes none", async () => {
+    const reportsHeld = Promise.withResolvers<undefined>();
+    const bothStarted = Promise.withResolvers<undefined>();
+    let started = 0;
+    const reports = Array.from(
+      { length: 2 },
+      async () =>
+        await withDuckDBConnection(async () => {
+          started++;
+          if (started === 2) bothStarted.resolve(undefined);
+          await reportsHeld.promise;
+          return [];
+        }),
+    );
+    await bothStarted.promise;
+
+    const maintenance = await withMaintenanceDuckDBConnection(
+      async (session) => await session.run("select 7 as value"),
+      { timeoutMs: 5000 },
+    );
+    expect(maintenance).toEqual([{ value: 7 }]);
+
+    // A third report query still waits: maintenance did not free a slot.
+    const third = withDuckDBConnection(
+      async (session) => await session.run("select 8 as value"),
+      { timeoutMs: 50 },
+    );
+    await expect(third).rejects.toBeInstanceOf(ReportQueryTimeoutError);
+
+    reportsHeld.resolve(undefined);
+    await Promise.all(reports);
+  });
+
+  test("runs one maintenance connection at a time", async () => {
+    let active = 0;
+    let maximumActive = 0;
+    const run = async () =>
+      await withMaintenanceDuckDBConnection(async (session) => {
+        active++;
+        maximumActive = Math.max(maximumActive, active);
+        await session.run("select 1");
+        await Bun.sleep(5);
+        active--;
+      });
+    await Promise.all([run(), run(), run()]);
+    expect(maximumActive).toBe(1);
+  });
+});
 
 /**
  * The instance is a process-wide singleton the server keeps for its lifetime.

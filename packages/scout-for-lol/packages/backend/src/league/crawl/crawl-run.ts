@@ -40,7 +40,7 @@ import {
   reduceTimeline,
   type CrawlRecord,
 } from "./crawl-records.ts";
-import { encodeSegment } from "./crawl-segment.ts";
+import { encodeSegment, type EncodedSegment } from "./crawl-segment.ts";
 import { platformOfMatchId, seedFromTrackedMatches } from "./crawl-seed.ts";
 import type {
   CommitInput,
@@ -73,6 +73,13 @@ export type CrawlDeps = {
   store: CrawlStore;
   riot: CrawlRiotApi;
   objects: CrawlObjectStore;
+  /**
+   * Hands a committed segment to the report lake's crawl inbox. Called only
+   * after the commit, so the inbox never holds a segment PostgreSQL does not
+   * list; a failure is logged and repaired by the nightly rebuild, which
+   * re-derives any day whose ledger lacks a committed segment.
+   */
+  lakeInbox: (segment: EncodedSegment) => Promise<void>;
   now: () => Date;
   enabled: () => boolean;
   dailyMatchBudget: () => number;
@@ -265,6 +272,16 @@ async function writeAndCommit(
       (child) => child.depth <= CRAWL_MAX_DEPTH,
     ),
   });
+  for (const { segment } of segments) {
+    try {
+      await deps.lakeInbox(segment);
+    } catch (error) {
+      logger.warn(
+        `Crawl segment ${segment.sha256} is committed but not in the lake inbox; the nightly rebuild will fold it`,
+        { error },
+      );
+    }
+  }
   return segments.length;
 }
 

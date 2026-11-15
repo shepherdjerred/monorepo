@@ -4,6 +4,11 @@ import {
   reportLakeLastPublishTimestamp,
 } from "#src/metrics/reports/report-lake.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import {
+  CRAWL_LAKE_TABLES,
+  crawlSchemaFingerprint,
+} from "#src/report-lake/crawl/crawl-lake-schema.ts";
+import type { CrawlRowCounts } from "#src/report-lake/crawl/crawl-parquet-writer.ts";
 
 export type CompactionSummary = {
   buildId: string;
@@ -23,6 +28,8 @@ export type CompactionSummary = {
   skippedPrematches: number;
   skippedCompetitionRankHistory: number;
   skippedTimelines: number;
+  /** Crawl segments folded or re-derived into this build, and their rows. */
+  crawl: { segments: number; rows: CrawlRowCounts };
   durationMs: number;
 };
 
@@ -36,6 +43,7 @@ export async function writeCompactionManifest(
       {
         ...summary,
         schemaFingerprint: lakeSchemaFingerprint(),
+        crawlSchemaFingerprint: crawlSchemaFingerprint(),
         builtAt: new Date().toISOString(),
       },
       null,
@@ -61,6 +69,12 @@ export function publishCompactionMetrics(
     ["timeline_coverage", summary.timelineCoverageRows],
   ] as const) {
     reportLakeCompactionRowsTotal.inc({ table, tier: summary.tier }, rows);
+  }
+  for (const table of CRAWL_LAKE_TABLES) {
+    reportLakeCompactionRowsTotal.inc(
+      { table, tier: summary.tier },
+      summary.crawl.rows[table],
+    );
   }
   reportLakeLastPublishTimestamp.set({ tier: summary.tier }, Date.now() / 1000);
 }

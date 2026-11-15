@@ -1,5 +1,6 @@
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import type { BoundParam, LakeFiles } from "#src/reports/duckdb/lake.ts";
+import { NO_CRAWL_LAKE_FILES } from "#src/reports/duckdb/lake/crawl-files.ts";
 
 /**
  * Shared fixtures for the ScoutQL compiler tests.
@@ -35,6 +36,7 @@ export const TEST_LAKE_FILES: LakeFiles = {
   timelineParticipantFramesStaging: [],
   timelineCoverageParquet: [],
   timelineCoverageStaging: [],
+  crawl: NO_CRAWL_LAKE_FILES,
 };
 
 /** Flatten bound parameters to the scalar values they carry. */

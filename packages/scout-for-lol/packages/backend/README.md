@@ -279,6 +279,13 @@ flushes partition buffers every 2,048 rows, keeps at most four output
 writers open, and targets 8 MB row groups. Bounding both the input reader and
 output writers keeps wide documents within the existing DuckDB budget.
 
+Lake writes — folds, rebuilds and crawl-day compaction — run on a separate
+`maintenance` DuckDB instance: one connection at a time, 2 threads, a 2 GB
+memory limit, spilling to `<REPORT_DUCKDB_TEMP_DIR>/maintenance` (at most
+4 GiB). Report queries keep their own instance and both slots, so a long fold
+or nightly rebuild no longer halves interactive query capacity. The instance
+is created on first use, so only the pod that publishes the lake pays for it.
+
 The GitOps child sync wait covers the same 40-minute cold-start budget as the
 startup probe, plus five minutes for readiness and subsequent sync waves.
 
@@ -2376,6 +2383,35 @@ stored per UTC day.
   competition scan, the nightly rebuild's `games/` read or `recovery-scan.ts`
   lists; `crawl-storage-isolation.test.ts` pins that. `ErasedPuuid` (hashes
   only) is checked at admission, at claim, and before a match is stored.
+- **Report lake.** After each commit the Activity drops the same segment bytes
+  into `<lakeDir>/crawl-inbox/<day>_<sha256>.ndjson.zst` (a temporary file
+  renamed into place, so the folding pod never reads half a segment). The lake
+  fold (`src/report-lake/crawl/`) turns the inbox into sibling Parquet tables
+  in the same build and `CURRENT`: `matches_crawl/`, `match_teams_crawl/`,
+  `match_team_bans_crawl/`, `timeline_events_crawl/` and
+  `timeline_event_participants_crawl/`, each partitioned by `ingest_day`. The
+  participant, team and ban tables carry every tracked column plus the crawl's
+  own (`ingest_day`, `crawled_at`, `crawl_depth`, `bracket_tier`,
+  `bracket_division`); the timeline tables hold only item and skill events,
+  and there is no `timeline_coverage` for a reduced timeline. The tables have
+  their own `crawlSchemaFingerprint`, recorded with the folded segment ledger
+  in each build's `crawl-manifest.json`; the tracked lake fingerprint never
+  covers them, so a crawl column change costs no tracked migration.
+  - The ledger makes the fold idempotent: a segment already listed is never
+    folded twice, and inbox files are deleted only after the build publishes.
+  - The nightly rebuild hardlinks the previous build's crawl tables, then
+    re-derives (`rebuildCrawlDay`) any retained day whose ledger lacks a
+    `CrawlSegment` row — an inbox write that failed, or every day after a
+    crawl schema change — drops days older than 42 (`applyCrawlRetention`),
+    and merges each completed day's fold fragments into one file per table
+    (`compactCrawlDay`).
+  - `ErasedPuuid` is checked again when a segment is read, at fold, at day
+    rebuild and at compaction: a match naming an erased player is dropped.
+    Rewriting already-published days and raw segments on erasure is the later
+    deletion pipeline's job.
+  - Crawl files are listed in `LakeFiles.crawl` only when the build's crawl
+    schema is current, and no reader uses them yet: every tracked read is
+    byte-identical with or without them (`crawl-lake-isolation.test.ts`).
 - **Metrics.** `scout_crawl_matches_crawled_total`, `scout_crawl_frontier_size`,
   `scout_crawl_budget_refusals_total{reason}`, `scout_crawl_riot_429_total` and
   `scout_crawl_ticks_total`.

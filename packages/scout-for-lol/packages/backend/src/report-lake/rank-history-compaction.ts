@@ -8,7 +8,7 @@ import {
   duckDbColumnsSpec,
   duckDbEmptySelect,
 } from "#src/report-lake/schema.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { withMaintenanceDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 
@@ -50,7 +50,7 @@ export async function writeCompetitionRankHistoryParquet(options: {
     } catch {
       // A fresh build has no previous hardlink to replace.
     }
-    await withDuckDBConnection(
+    await withMaintenanceDuckDBConnection(
       async (session) => {
         if (writer.rows === 0) {
           await session.run(

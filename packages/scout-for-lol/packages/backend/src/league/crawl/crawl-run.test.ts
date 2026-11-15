@@ -227,6 +227,7 @@ function objects(): CrawlObjectStore & {
 
 let store: MemoryStore;
 let store2objects: ReturnType<typeof objects>;
+let inboxed: { segment: EncodedSegment; committed: boolean }[];
 
 function deps(
   riot: CrawlRiotApi,
@@ -236,6 +237,13 @@ function deps(
     store,
     riot,
     objects: store2objects,
+    lakeInbox: (segment) => {
+      inboxed.push({
+        segment,
+        committed: store.segments.some((s) => s.sha256 === segment.sha256),
+      });
+      return Promise.resolve();
+    },
     now: () => NOW,
     enabled: () => true,
     dailyMatchBudget: () => 1000,
@@ -256,6 +264,7 @@ function seedPlayer(puuid: string, depth = 0) {
 beforeEach(() => {
   store = new MemoryStore();
   store2objects = objects();
+  inboxed = [];
 });
 
 describe("runCrawlTick", () => {
@@ -331,6 +340,26 @@ describe("runCrawlTick", () => {
       matchId: "NA1_100",
       visited: { puuid: P("p1"), tier: "GOLD", division: "II" },
     });
+    // The lake inbox gets the same segment, and only once it is committed.
+    expect(inboxed.map((entry) => entry.segment.sha256)).toEqual([
+      segment?.sha256,
+    ]);
+    expect(inboxed.every((entry) => entry.committed)).toBe(true);
+  });
+
+  test("a failed lake-inbox write does not undo or fail a committed tick", async () => {
+    seedPlayer("p1", 0);
+    const riot = fakeRiot({
+      ids: { "p1:420": ["NA1_100"] },
+      matches: { NA1_100: rawMatch("NA1_100", { participants: ["p1"] }) },
+    });
+    const result = await runCrawlTick(
+      deps(riot, {
+        lakeInbox: () => Promise.reject(new Error("lake volume full")),
+      }),
+    );
+    expect(result).toMatchObject({ status: "completed", segmentsWritten: 1 });
+    expect(store.matches.has("NA1_100")).toBe(true);
   });
 
   test("looks the rank bracket up once per visited player", async () => {

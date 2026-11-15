@@ -1,6 +1,7 @@
 import { mkdir, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import configuration from "#src/configuration.ts";
+import { crawlInboxDir } from "#src/report-lake/crawl/crawl-inbox.ts";
 
 /**
  * Report-lake directory layout and the atomic CURRENT-pointer publish
@@ -13,7 +14,11 @@ import configuration from "#src/configuration.ts";
  *     matches/month=YYYY-MM/*.parquet
  *     prematch/month=YYYY-MM/*.parquet
  *     accounts/accounts.parquet
+ *     matches_crawl/ingest_day=YYYY-MM-DD/*.parquet   (and the four other
+ *                                   participant-crawl tables; see crawl/)
  *     manifest.json
+ *     crawl-manifest.json        <- crawl schema + folded segment ledger
+ *   crawl-inbox/<day>_<sha256>.ndjson.zst  <- committed crawl segments
  *   matches-recent/<matchId>.jsonl
  *   prematch-recent/<platformId>_<gameId>.jsonl
  *   competition-rank-history-recent/<competitionId>_<date>.jsonl
@@ -116,6 +121,7 @@ export async function ensureLakeScaffold(lakeDir: string): Promise<void> {
     recursive: true,
   });
   await mkdir(timelineCoverageStagingDir(lakeDir), { recursive: true });
+  await mkdir(crawlInboxDir(lakeDir), { recursive: true });
 }
 
 /**

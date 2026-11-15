@@ -42,6 +42,9 @@ import {
 } from "#src/report-lake/read-staging-rows.ts";
 import { rebuildReportLake } from "#src/report-lake/rebuild-report-lake.ts";
 import { withUnpublishedBuildCleanup } from "#src/report-lake/fold/unpublished-build.ts";
+import { foldCrawlInbox } from "#src/report-lake/crawl/crawl-fold.ts";
+import { removeCrawlInboxSegments } from "#src/report-lake/crawl/crawl-inbox.ts";
+import { loadErasedPuuidHashes } from "#src/report-lake/crawl/crawl-sources.ts";
 
 const logger = createLogger("report-lake-compactor");
 
@@ -83,7 +86,8 @@ export async function reportLakeMigrationPending(
 
 /**
  * Tier 1 — fold: hardlink the current build, add staged rows as fold
- * parquet files, refresh the accounts snapshot, publish. Cost scales with
+ * parquet files, fold the crawl inbox into the crawl tables, refresh the
+ * accounts snapshot, publish. Cost scales with
  * the staging backlog (typically a handful of matches), never with total
  * lake size. Falls back to a full rebuild when the lake has never been
  * compacted.
@@ -234,6 +238,14 @@ export async function runReportLakeFold(
           staged: stagedTimelineCoverage,
           abortSignal: options.abortSignal,
         });
+        options.onProgress?.({ phase: "folding-crawl" });
+        const crawlFold = await foldCrawlInbox({
+          lakeDir,
+          buildDir,
+          buildId,
+          loadErased: async () => await loadErasedPuuidHashes(prisma),
+          abortSignal: options.abortSignal,
+        });
         const accountRows = await writeAccountsParquet(
           prisma,
           buildDir,
@@ -263,11 +275,16 @@ export async function runReportLakeFold(
             stagedTimelineEventParticipants.skipped +
             stagedTimelineParticipantFrames.skipped +
             stagedTimelineCoverage.skipped,
+          crawl: {
+            segments: crawlFold.summary.segments,
+            rows: crawlFold.summary.rows,
+          },
         };
         await writeCompactionManifest(buildDir, summary);
         await publishBuild(lakeDir, buildId, options.abortSignal);
         markPublished();
         publishCompactionMetrics(summary);
+        await removeCrawlInboxSegments(crawlFold.consumed);
         await removeFoldedStagingFiles(
           lakeDir,
           "matches",
