@@ -476,9 +476,12 @@ fn frame(
             chat,
         )
         .into_any_element(),
-        PageId::Overview => {
-            views::overview(OverviewModel::new(state).with_update(&link.update)).into_any_element()
-        }
+        PageId::Overview => views::overview(
+            OverviewModel::new(state)
+                .with_update(&link.update)
+                .with_live_game(link.live_game.as_ref()),
+        )
+        .into_any_element(),
         PageId::Activity => views::activity(ActivityModel::new(state)).into_any_element(),
         PageId::Settings => views::settings(&SettingsModel::new(state), send).into_any_element(),
         PageId::Diagnostics => {

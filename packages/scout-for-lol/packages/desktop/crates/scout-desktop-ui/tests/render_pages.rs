@@ -40,8 +40,9 @@ mod render {
     };
     use scout_desktop_ipc::{
         ChatAvailability, ChatCommand, ChatImage, ChatParts, ChatStatus, CounterReading,
-        DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot,
-        SupervisorMessage, UpdateSnapshot, UpdateStatus, WindowMessage, decode_line, encode_line,
+        DiagnosticsSnapshot, GameflowPhase, LiveGameSnapshot, PROTOCOL_VERSION, PrivacySnapshot,
+        StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus, WindowMessage, decode_line,
+        encode_line,
     };
     use scout_desktop_ui::BuildInfo;
     use scout_desktop_ui::preview::{Incoming, Outbound, ScoutWindow, prepare};
@@ -693,7 +694,42 @@ mod render {
         Ok(())
     }
 
+    /// The Overview's "Live game" line: "Not in a game" until the supervisor
+    /// reports one, then the local player's line, then cleared again.
+    fn live_game(harness: &mut Harness) -> Result<(), Error> {
+        let (x, y) = status_point(PageId::Overview)?;
+        harness.click(x, y)?;
+        let idle = harness.capture("overview-no-game")?;
+        harness.receive(&SupervisorMessage::State {
+            state: StateSnapshot {
+                gameflow_phase: Some("InProgress".to_owned()),
+                ..sample_state()
+            },
+        })?;
+        harness.receive(&SupervisorMessage::LiveGame {
+            live: Some(LiveGameSnapshot {
+                game_time_secs: 421,
+                champion: "Ahri".to_owned(),
+                level: 10,
+                kills: 4,
+                deaths: 2,
+                assists: 7,
+                creep_score: 87,
+            }),
+        })?;
+        let playing = harness.capture("live-game")?;
+        if idle == playing {
+            return Err("the live game did not repaint the Overview".into());
+        }
+        harness.receive(&SupervisorMessage::LiveGame { live: None })?;
+        harness.receive(&SupervisorMessage::State {
+            state: sample_state(),
+        })?;
+        Ok(())
+    }
+
     fn status_pages(harness: &mut Harness) -> Result<(), Error> {
+        live_game(harness)?;
         for page in PageId::STATUS {
             let (x, y) = status_point(page)?;
             harness.click(x, y)?;

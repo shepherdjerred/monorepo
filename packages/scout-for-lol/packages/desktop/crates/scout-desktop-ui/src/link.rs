@@ -9,8 +9,8 @@ use std::io::{BufRead, Write};
 use std::sync::{Arc, Mutex, PoisonError};
 
 use scout_desktop_ipc::{
-    ChatParts, GameflowPhase, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage, UpdateSnapshot,
-    WindowMessage, check_protocol, decode_line, encode_line,
+    ChatParts, GameflowPhase, LiveGameSnapshot, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage,
+    UpdateSnapshot, WindowMessage, check_protocol, decode_line, encode_line,
 };
 
 /// What the supervisor has told the window so far.
@@ -24,6 +24,8 @@ pub struct WindowState {
     pub phase: GameflowPhase,
     /// Where the self-update stands.
     pub update: UpdateSnapshot,
+    /// The game in progress, while there is one.
+    pub live_game: Option<LiveGameSnapshot>,
     /// Explore chat, as the supervisor relays it.
     pub chat: ChatParts,
     /// Whether any snapshot has arrived, so a default snapshot is never
@@ -80,6 +82,10 @@ impl WindowState {
             }
             SupervisorMessage::Update { update } => {
                 self.update = update;
+                Effect::Render
+            }
+            SupervisorMessage::LiveGame { live } => {
+                self.live_game = live;
                 Effect::Render
             }
             SupervisorMessage::DiagnosticsBundle { text } => Effect::CopyBundle(text),
@@ -273,6 +279,28 @@ mod tests {
             window.receive(&line(&SupervisorMessage::Close)?)?,
             Effect::Close
         );
+        Ok(())
+    }
+
+    #[test]
+    fn the_live_game_arrives_and_clears() -> Result<(), Box<dyn std::error::Error>> {
+        let mut window = WindowState::default();
+        let live = scout_desktop_ipc::LiveGameSnapshot {
+            game_time_secs: 60,
+            champion: "Ahri".to_owned(),
+            level: 3,
+            kills: 0,
+            deaths: 0,
+            assists: 0,
+            creep_score: 12,
+        };
+        let sent = SupervisorMessage::LiveGame {
+            live: Some(live.clone()),
+        };
+        assert_eq!(window.receive(&line(&sent)?)?, Effect::Render);
+        assert_eq!(window.live_game, Some(live));
+        window.receive(&line(&SupervisorMessage::LiveGame { live: None })?)?;
+        assert_eq!(window.live_game, None);
         Ok(())
     }
 

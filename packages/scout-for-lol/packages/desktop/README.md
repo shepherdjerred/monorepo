@@ -192,10 +192,13 @@ thread and the command channel. The collector is split by concern under
   lobby binding it carries.
 - `profile`, `history`, `clash`, `collection`: the independent, budgeted
   workers and the schedule that drives them.
+- `live_game`: the per-tick live game poll over `scout_client_core::live`; see
+  "Live game state".
 - `replay`: replay scanning, offers, and upload.
 - `observe`: `ObservationSlot` and the `enqueue_*` functions that turn endpoint
   reads into outbox entries.
-- `state`: `RuntimeState`, `GameflowPhase`, and the helpers that publish them.
+- `state`: `RuntimeState`, `GameflowPhase` (re-exported from `scout_client_core::live::gameflow`), and the
+  helpers that publish them.
 - `paths`: the data directory, outbox file names, and log directory.
 
 Tests live beside the code they cover.
@@ -742,6 +745,62 @@ observer. Upgrading preserves older unqualified rows in separate SQLite tables;
 they cannot be attributed safely and do not participate in new joins. History
 recovery itself is keyed by observer, platform and game ID. EOG enrichment must
 also agree with the full game's creation time and any stated platform.
+
+## Live game state
+
+While gameflow is `InProgress` the supervisor polls Riot's Live Client Data
+`allgamedata` every two seconds (`scout_client_core::live`) and publishes the
+result to the window as the `live_game` IPC message; the Overview page shows
+the local player's line. The League client's local API surface is two
+allowlist enums: `LcuEndpoint` for the client and `LiveClientEndpoint` for the
+game, whose base URL is injectable for tests but must be loopback.
+
+**The content limit is enforced by type.** The product shows a player nothing
+they cannot see in their own client, so the snapshot type has no field for
+anything else. `live::model` declares only the `allgamedata` fields the
+projection reads, and `live::snapshot::LiveSnapshot`, the only live type that
+leaves the source boundary, keeps:
+
+- the local player's own stats-panel values; and
+- for both teams, champion, level, K/D/A, CS, items, summoner spell names and
+  the keystone.
+
+It has no field for a Riot ID or summoner name, a skin, the enemy ward score,
+a cooldown (ability haste is not kept either), a respawn timer, a position or
+the players named in an event. A test serialises the projection of a full
+fixture and fails if any of those keys, or a roster name, appears. The same
+holds for `live::champ_select`: champion IDs and bans only, no summoner or
+Riot identity. Recordings decode with `deny_unknown_fields`.
+
+The fixture `crates/scout-client-core/testdata/live/allgamedata.json` is
+synthesised from Riot's documented schema, not captured from a game: every
+name in it is fictional and it carries every forbidden key, so the projection
+test proves they are dropped.
+
+**Recordings** (`recordings.sqlite3`, in the per-user data directory) hold the
+allowlisted snapshots: one when a game starts, one every five seconds (on the
+first two-second poll at or after that age, so about every six), and one on each
+new game event. A game is capped at 1 MB of samples; when the next sample would
+not fit, every second interval sample is thinned away, and a sample that still
+cannot fit is dropped. Twenty games are kept for at most 30 days, whichever
+leaves fewer. A game Scout stopped during is marked `interrupted`.
+`RecordingHandoff` is where a finished recording will be offered for upload
+once the server has a `live_game_recording` observation kind; today the only
+implementation, `LocalOnly`, keeps it on the device.
+
+### What leaves this device, and when
+
+| Data                                                                    | Leaves the device?         | When                                                                          | Controlled by          |
+| ----------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------- | ---------------------- |
+| Live game snapshot (`allgamedata` projection)                           | No                         | Shown in the window only                                                      | Never sent             |
+| Live game recordings (`recordings.sqlite3`)                             | No, local only for now     | Kept 20 games or 30 days; upload arrives with its own server observation kind | Delete the file        |
+| First raw `allgamedata` frame of a game (`live_game_frame` observation) | Yes, to the Scout API      | Once per game, while paired                                                   | Disconnect the device  |
+| Match, lobby, profile and Clash observations                            | Yes, to the Scout API      | While paired, from the outbox                                                 | Disconnect the device  |
+| Replay files                                                            | Yes, to the Scout API      | After a game, while paired                                                    | Disconnect the device  |
+| Explore chat questions                                                  | Yes, to the Scout API      | When you send one                                                             | Not sending            |
+| Error reports                                                           | Yes, to Bugsink, scrubbed  | On an error or crash                                                          | **Send error reports** |
+| Usage events                                                            | Yes, through the Scout API | On a product event                                                            | **Send usage data**    |
+| Champion select (`live::champ_select` projection)                       | No                         | Not collected yet                                                             | Never sent             |
 
 ## Diagnostics
 

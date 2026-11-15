@@ -1,0 +1,170 @@
+{
+  "localPlayerCellId": 2,
+  "myTeam": [
+    {
+      "cellId": 0,
+      "championId": 86,
+      "championPickIntent": 0,
+      "assignedPosition": "top",
+      "summonerId": 100,
+      "puuid": "FIXTURE-puuid-0",
+      "gameName": "Fixture Ally 0",
+      "tagLine": "FX",
+      "spell1Id": 4,
+      "spell2Id": 11,
+      "selectedSkinId": 86001,
+      "team": 1
+    },
+    {
+      "cellId": 1,
+      "championId": 64,
+      "championPickIntent": 0,
+      "assignedPosition": "jungle",
+      "summonerId": 101,
+      "puuid": "FIXTURE-puuid-1",
+      "gameName": "Fixture Ally 1",
+      "tagLine": "FX",
+      "spell1Id": 4,
+      "spell2Id": 11,
+      "selectedSkinId": 64001,
+      "team": 1
+    },
+    {
+      "cellId": 2,
+      "championId": 103,
+      "championPickIntent": 0,
+      "assignedPosition": "middle",
+      "summonerId": 102,
+      "puuid": "FIXTURE-puuid-2",
+      "gameName": "Fixture Ally 2",
+      "tagLine": "FX",
+      "spell1Id": 4,
+      "spell2Id": 11,
+      "selectedSkinId": 103001,
+      "team": 1
+    },
+    {
+      "cellId": 3,
+      "championId": 222,
+      "championPickIntent": 0,
+      "assignedPosition": "bottom",
+      "summonerId": 103,
+      "puuid": "FIXTURE-puuid-3",
+      "gameName": "Fixture Ally 3",
+      "tagLine": "FX",
+      "spell1Id": 4,
+      "spell2Id": 11,
+      "selectedSkinId": 222001,
+      "team": 1
+    },
+    {
+      "cellId": 4,
+      "championId": 412,
+      "championPickIntent": 0,
+      "assignedPosition": "utility",
+      "summonerId": 104,
+      "puuid": "FIXTURE-puuid-4",
+      "gameName": "Fixture Ally 4",
+      "tagLine": "FX",
+      "spell1Id": 4,
+      "spell2Id": 11,
+      "selectedSkinId": 412001,
+      "team": 1
+    }
+  ],
+  "theirTeam": [
+    {
+      "cellId": 5,
+      "championId": 0,
+      "championPickIntent": 0,
+      "assignedPosition": "",
+      "summonerId": 200,
+      "puuid": "FIXTURE-puuid-5",
+      "gameName": "Fixture Enemy 0",
+      "tagLine": "FX",
+      "spell1Id": 0,
+      "spell2Id": 0,
+      "selectedSkinId": 0,
+      "team": 2
+    },
+    {
+      "cellId": 6,
+      "championId": 0,
+      "championPickIntent": 0,
+      "assignedPosition": "",
+      "summonerId": 201,
+      "puuid": "FIXTURE-puuid-6",
+      "gameName": "Fixture Enemy 1",
+      "tagLine": "FX",
+      "spell1Id": 0,
+      "spell2Id": 0,
+      "selectedSkinId": 0,
+      "team": 2
+    },
+    {
+      "cellId": 7,
+      "championId": 0,
+      "championPickIntent": 0,
+      "assignedPosition": "",
+      "summonerId": 202,
+      "puuid": "FIXTURE-puuid-7",
+      "gameName": "Fixture Enemy 2",
+      "tagLine": "FX",
+      "spell1Id": 0,
+      "spell2Id": 0,
+      "selectedSkinId": 0,
+      "team": 2
+    },
+    {
+      "cellId": 8,
+      "championId": 0,
+      "championPickIntent": 0,
+      "assignedPosition": "",
+      "summonerId": 203,
+      "puuid": "FIXTURE-puuid-8",
+      "gameName": "Fixture Enemy 3",
+      "tagLine": "FX",
+      "spell1Id": 0,
+      "spell2Id": 0,
+      "selectedSkinId": 0,
+      "team": 2
+    },
+    {
+      "cellId": 9,
+      "championId": 0,
+      "championPickIntent": 0,
+      "assignedPosition": "",
+      "summonerId": 204,
+      "puuid": "FIXTURE-puuid-9",
+      "gameName": "Fixture Enemy 4",
+      "tagLine": "FX",
+      "spell1Id": 0,
+      "spell2Id": 0,
+      "selectedSkinId": 0,
+      "team": 2
+    }
+  ],
+  "bans": {
+    "myTeamBans": [238, 157],
+    "theirTeamBans": [64],
+    "numBans": 10
+  },
+  "timer": {
+    "phase": "BAN_PICK",
+    "adjustedTimeLeftInPhase": 23000,
+    "isInfinite": false
+  },
+  "actions": [
+    [
+      {
+        "id": 1,
+        "actorCellId": 0,
+        "championId": 238,
+        "completed": true,
+        "type": "ban"
+      }
+    ]
+  ],
+  "benchChampions": [],
+  "isCustomGame": false
+}

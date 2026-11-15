@@ -35,7 +35,7 @@ pub use chat_visuals::{
 };
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 6;
+pub const PROTOCOL_VERSION: u32 = 7;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -99,6 +99,12 @@ pub enum SupervisorMessage {
     ChatComposer {
         /// The composer.
         composer: ChatComposer,
+    },
+    /// The local player's live game, or none when no game is in progress.
+    /// Sent when it changes.
+    LiveGame {
+        /// The allowlisted summary.
+        live: Option<LiveGameSnapshot>,
     },
     /// Bring the window to the front (the tray's "Open" while it is running).
     Show,
@@ -181,6 +187,47 @@ pub struct StateSnapshot {
     pub last_error: Option<String>,
     /// What the Diagnostics page shows.
     pub diagnostics: DiagnosticsSnapshot,
+}
+
+/// The window's view of the game in progress: the local player's line and the
+/// clock. It carries only what the allowlisted live snapshot keeps, so no
+/// Riot ID, summoner name or skin can reach the window.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LiveGameSnapshot {
+    /// Whole seconds on the game clock.
+    pub game_time_secs: u32,
+    /// The local player's champion.
+    pub champion: String,
+    /// The local player's level.
+    pub level: u8,
+    /// Kills.
+    pub kills: u32,
+    /// Deaths.
+    pub deaths: u32,
+    /// Assists.
+    pub assists: u32,
+    /// Creep score.
+    pub creep_score: u32,
+}
+
+impl LiveGameSnapshot {
+    /// The one line the Overview page shows, such as
+    /// "Ahri, level 10, 4/2/7, 42 CS, 7:01".
+    #[must_use]
+    pub fn summary(&self) -> String {
+        format!(
+            "{}, level {}, {}/{}/{}, {} CS, {}:{:02}",
+            self.champion,
+            self.level,
+            self.kills,
+            self.deaths,
+            self.assists,
+            self.creep_score,
+            self.game_time_secs / 60,
+            self.game_time_secs % 60
+        )
+    }
 }
 
 /// Where an update stands.
@@ -368,9 +415,9 @@ mod tests {
         ChatAttachment, ChatAvailability, ChatCommand, ChatComposer, ChatConversation, ChatDraft,
         ChatDraftState, ChatImage, ChatMessage, ChatModelOption, ChatRole, ChatStatus,
         ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion, ChatVisual,
-        ChatVisuals, CounterReading, DiagnosticsSnapshot, GameflowPhase, PROTOCOL_VERSION,
-        PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus,
-        WindowMessage, check_protocol, decode_line, encode_line,
+        ChatVisuals, CounterReading, DiagnosticsSnapshot, GameflowPhase, LiveGameSnapshot,
+        PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot,
+        UpdateStatus, WindowMessage, check_protocol, decode_line, encode_line,
     };
 
     const CONVERSATION: Uuid = Uuid::from_u128(0x0b5e_4a1c_7f00_4e5a_9c1d_2f3e_4a5b_6c7d);
@@ -558,6 +605,18 @@ mod tests {
                     required: false,
                 },
             },
+            SupervisorMessage::LiveGame { live: None },
+            SupervisorMessage::LiveGame {
+                live: Some(LiveGameSnapshot {
+                    game_time_secs: 421,
+                    champion: "Ahri".to_owned(),
+                    level: 10,
+                    kills: 4,
+                    deaths: 2,
+                    assists: 7,
+                    creep_score: 87,
+                }),
+            },
             SupervisorMessage::Show,
             SupervisorMessage::Close,
         ]
@@ -570,6 +629,27 @@ mod tests {
             assert_eq!(decode_line::<SupervisorMessage>(&line)?, message);
         }
         Ok(())
+    }
+
+    #[test]
+    fn the_live_game_line_names_the_player_and_the_clock() {
+        let live = LiveGameSnapshot {
+            game_time_secs: 421,
+            champion: "Ahri".to_owned(),
+            level: 10,
+            kills: 4,
+            deaths: 2,
+            assists: 7,
+            creep_score: 87,
+        };
+        assert_eq!(live.summary(), "Ahri, level 10, 4/2/7, 87 CS, 7:01");
+        assert_eq!(PROTOCOL_VERSION, 7, "a new message bumps the protocol");
+    }
+
+    #[test]
+    fn a_live_game_refuses_a_field_the_allowlist_does_not_name() {
+        let line = r#"{"type":"live_game","live":{"game_time_secs":1,"champion":"Ahri","level":1,"kills":0,"deaths":0,"assists":0,"creep_score":0,"summoner_name":"x"}}"#;
+        assert!(decode_line::<SupervisorMessage>(line).is_err());
     }
 
     #[test]

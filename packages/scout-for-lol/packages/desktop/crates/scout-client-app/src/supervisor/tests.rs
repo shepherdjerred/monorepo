@@ -393,6 +393,7 @@ async fn a_write_to_a_window_that_already_exited_does_not_blame_the_supervisor()
         relaunch: true,
         cause: None,
         last_state: None,
+        last_live: None,
         last_chat: None,
     };
     let (_control, receiver) = mpsc::unbounded_channel();
@@ -935,4 +936,54 @@ async fn a_finished_pairing_asks_chat_to_check_again() -> TestResult {
     assert_eq!(exit, SupervisorExit::Quit);
     std::fs::remove_dir_all(directory)?;
     Ok(())
+}
+
+#[test]
+fn the_window_gets_only_the_local_players_line() {
+    use scout_client_core::live::snapshot::{
+        LiveGameInfo, LiveParticipant, LiveSnapshot, OwnStats, Team,
+    };
+
+    let participant = |champion: &str, is_self: bool, kills: u32| LiveParticipant {
+        team: Team::Order,
+        is_self,
+        champion: champion.to_owned(),
+        level: 9,
+        kills,
+        deaths: 1,
+        assists: 2,
+        creep_score: 70,
+        items: Vec::new(),
+        summoner_spells: ["Flash".to_owned(), "Heal".to_owned()],
+        keystone: None,
+    };
+    let mut state = RuntimeState::default();
+    assert_eq!(super::live_game_snapshot(&state), None);
+    state.live_game = Some(LiveSnapshot {
+        game: LiveGameInfo {
+            mode: "CLASSIC".to_owned(),
+            map: "Map11".to_owned(),
+            game_time_secs: 600,
+        },
+        own: OwnStats {
+            gold: 0,
+            max_health: 1.0,
+            health: 1.0,
+            resource: "MANA".to_owned(),
+            max_resource: 1.0,
+            current_resource: 1.0,
+            armor: 0.0,
+            magic_resist: 0.0,
+            attack_damage: 0.0,
+            ability_power: 0.0,
+            attack_speed: 1.0,
+            move_speed: 340.0,
+            crit_chance: 0.0,
+        },
+        participants: vec![participant("Zed", false, 9), participant("Ahri", true, 3)],
+        event_count: 0,
+        latest_event: None,
+    });
+    let line = super::live_game_snapshot(&state).map(|live| live.summary());
+    assert_eq!(line.as_deref(), Some("Ahri, level 9, 3/1/2, 70 CS, 10:00"));
 }

@@ -136,14 +136,39 @@ pub struct LcuClient {
     authorization: String,
 }
 
+/// Riot's documented loopback address for the Live Client Data API.
+pub const LIVE_CLIENT_BASE_URL: &str = "https://127.0.0.1:2999";
+
+/// Curated read-only Live Client Data resources.
+///
+/// Only `allgamedata` is read. The narrower `liveclientdata` resources are
+/// subsets of it, so nothing else needs to be reachable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LiveClientEndpoint {
+    /// The complete in-game frame.
+    AllGameData,
+}
+
+impl LiveClientEndpoint {
+    /// Static endpoint path. No caller-controlled path segment is accepted.
+    #[must_use]
+    pub const fn path(self) -> &'static str {
+        match self {
+            Self::AllGameData => "/liveclientdata/allgamedata",
+        }
+    }
+}
+
 /// Read-only adapter for League's fixed-port Live Client Data API.
 ///
 /// This surface is intentionally separate from [`LcuClient`]: it is exposed by
 /// the running game rather than the League Client, has no lockfile credential,
-/// and is reachable only on Riot's documented loopback port.
+/// and is reachable only on a loopback address. Production uses Riot's
+/// documented port; tests inject their own loopback listener.
 #[derive(Clone)]
 pub struct LiveClient {
     http: Client,
+    base_url: String,
 }
 
 impl LiveClient {
@@ -154,35 +179,60 @@ impl LiveClient {
     /// Returns [`LcuError::BuildClient`] when the local HTTP client cannot be
     /// constructed.
     pub fn new() -> Result<Self, LcuError> {
+        Self::with_base_url(LIVE_CLIENT_BASE_URL)
+    }
+
+    /// Construct the adapter against another loopback origin, for tests.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`LcuError::NotLoopback`] unless `base_url` is an `http` or
+    /// `https` origin on a loopback host, and [`LcuError::BuildClient`] when
+    /// the local HTTP client cannot be constructed.
+    pub fn with_base_url(base_url: &str) -> Result<Self, LcuError> {
+        let parsed = url::Url::parse(base_url).map_err(|_| LcuError::NotLoopback)?;
+        let loopback = match parsed.host() {
+            Some(url::Host::Ipv4(address)) => address.is_loopback(),
+            Some(url::Host::Ipv6(address)) => address.is_loopback(),
+            Some(url::Host::Domain(domain)) => domain == "localhost",
+            None => false,
+        };
+        if !loopback || !matches!(parsed.scheme(), "http" | "https") {
+            return Err(LcuError::NotLoopback);
+        }
         let http = Client::builder()
             .danger_accept_invalid_certs(true)
             .connect_timeout(Duration::from_millis(500))
             .timeout(Duration::from_secs(2))
             .build()
             .map_err(LcuError::BuildClient)?;
-        Ok(Self { http })
+        Ok(Self {
+            http,
+            base_url: base_url.trim_end_matches('/').to_owned(),
+        })
     }
 
-    /// Read one complete in-game frame when the game process is serving it.
+    /// Read one allowlisted Live Client resource when the game process is
+    /// serving it.
     ///
     /// Connection failures and 404s mean there is no active game and are not
-    /// operational errors. No caller-controlled address or path is accepted.
+    /// operational errors. No caller-controlled path is accepted.
     ///
     /// # Errors
     ///
     /// Returns a typed failure for an unexpected HTTP response or malformed
     /// JSON returned by an active game.
-    pub async fn all_game_data(&self) -> Result<Option<Value>, LcuError> {
+    pub async fn get(&self, endpoint: LiveClientEndpoint) -> Result<Option<Value>, LcuError> {
         let response = match self
             .http
-            .get("https://127.0.0.1:2999/liveclientdata/allgamedata")
+            .get(format!("{}{}", self.base_url, endpoint.path()))
             .header("Accept", "application/json")
             .send()
             .await
         {
             Ok(response) => response,
             Err(error) if error.is_connect() || error.is_timeout() => return Ok(None),
-            Err(error) => return Err(LcuError::Request(error)),
+            Err(error) => return Err(request_error(error)),
         };
         if response.status() == StatusCode::NOT_FOUND {
             return Ok(None);
@@ -190,7 +240,16 @@ impl LiveClient {
         if !response.status().is_success() {
             return Err(LcuError::Status(response.status()));
         }
-        response.json().await.map(Some).map_err(LcuError::Request)
+        response.json().await.map(Some).map_err(request_error)
+    }
+
+    /// Read one complete in-game frame when the game process is serving it.
+    ///
+    /// # Errors
+    ///
+    /// As [`LiveClient::get`].
+    pub async fn all_game_data(&self) -> Result<Option<Value>, LcuError> {
+        self.get(LiveClientEndpoint::AllGameData).await
     }
 }
 
@@ -492,6 +551,9 @@ pub enum LcuError {
     /// LCU returned a non-success response.
     #[error("local League request returned {0}")]
     Status(StatusCode),
+    /// A Live Client base URL was not a loopback origin.
+    #[error("the Live Client address must be a loopback origin")]
+    NotLoopback,
 }
 
 /// Confirm a lockfile path is a regular file before any request is attempted.

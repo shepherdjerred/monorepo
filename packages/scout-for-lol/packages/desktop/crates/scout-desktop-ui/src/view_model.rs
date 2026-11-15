@@ -5,7 +5,7 @@
 //! [`WindowMessage`] it sends.
 
 use scout_desktop_ipc::{
-    GameflowPhase, StateSnapshot, UpdateSnapshot, UpdateStatus, WindowMessage,
+    GameflowPhase, LiveGameSnapshot, StateSnapshot, UpdateSnapshot, UpdateStatus, WindowMessage,
 };
 
 /// What the window was built as, shown on the Diagnostics page.
@@ -108,6 +108,17 @@ impl OverviewModel {
         };
         self.rows
             .push(StatusLine::new("Updates", update.summary(), tone));
+        self
+    }
+
+    /// Add the live game line, after the update line.
+    #[must_use]
+    pub fn with_live_game(mut self, live: Option<&LiveGameSnapshot>) -> Self {
+        let (value, tone) = live.map_or_else(
+            || ("Not in a game".to_owned(), Tone::Waiting),
+            |live| (live.summary(), Tone::Good),
+        );
+        self.rows.push(StatusLine::new("Live game", value, tone));
         self
     }
 
@@ -432,6 +443,40 @@ mod tests {
         assert_eq!(
             last,
             Some(("Updates", "0.2.0 installs when you quit Scout", Tone::Good))
+        );
+    }
+
+    #[test]
+    fn overview_ends_with_the_live_game_line() {
+        use scout_desktop_ipc::LiveGameSnapshot;
+        let idle = OverviewModel::new(&StateSnapshot::default()).with_live_game(None);
+        let last = idle
+            .rows
+            .last()
+            .map(|row| (row.label, row.value.as_str(), row.tone));
+        assert_eq!(last, Some(("Live game", "Not in a game", Tone::Waiting)));
+
+        let playing =
+            OverviewModel::new(&StateSnapshot::default()).with_live_game(Some(&LiveGameSnapshot {
+                game_time_secs: 421,
+                champion: "Ahri".to_owned(),
+                level: 10,
+                kills: 4,
+                deaths: 2,
+                assists: 7,
+                creep_score: 87,
+            }));
+        let last = playing
+            .rows
+            .last()
+            .map(|row| (row.label, row.value.as_str(), row.tone));
+        assert_eq!(
+            last,
+            Some((
+                "Live game",
+                "Ahri, level 10, 4/2/7, 87 CS, 7:01",
+                Tone::Good
+            ))
         );
     }
 

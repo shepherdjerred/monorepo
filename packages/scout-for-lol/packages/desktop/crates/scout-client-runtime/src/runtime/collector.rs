@@ -19,6 +19,7 @@ use uuid::Uuid;
 use super::RuntimeCommand;
 use super::collection;
 use super::gameflow::collect_once;
+use super::live_game::LiveGame;
 use super::pairing::{CommandContext, PendingPairing, handle_command, poll_pairing};
 use super::paths::outbox_path;
 use super::replay::{
@@ -53,7 +54,7 @@ pub(super) async fn run_collector(
     load_startup_state(&state, &backend_origin);
     let mut pending_pairing: Option<PendingPairing> = None;
     let mut payloads = HashMap::new();
-    let live_client = create_live_client(&state);
+    let (live_client, mut live_game) = create_live_game(&state, &diagnostics);
     let mut tick_number = 0_u64;
     let mut checked_in_device: Option<Uuid> = None;
     let mut replay_upload_task: Option<ReplayUploadTask> = None;
@@ -119,6 +120,7 @@ pub(super) async fn run_collector(
                 {
                     set_error(&state, error);
                 }
+                live_game.tick(&state, &diagnostics).await;
                 collection_workers.tick(&state, &outbox, &diagnostics, tick_number, credential.as_ref().is_some_and(|credential| checked_in_device == Some(credential.device_id))).await;
                 usage.flush_after_check_in(&backend, credential.as_ref(), checked_in_device, &diagnostics);
                 if tick_number % 15 == 1
@@ -310,14 +312,17 @@ pub(super) async fn ensure_checked_in(
     Ok(())
 }
 
-pub(super) fn create_live_client(state: &StateHub) -> Option<LiveClient> {
-    match LiveClient::new() {
+/// The loopback Live Client adapter, and the live game state that polls it.
+fn create_live_game(state: &StateHub, diagnostics: &Diagnostics) -> (Option<LiveClient>, LiveGame) {
+    let client = match LiveClient::new() {
         Ok(client) => Some(client),
         Err(error) => {
             set_error(state, error.to_string());
             None
         }
-    }
+    };
+    let live_game = LiveGame::new(client.clone(), diagnostics);
+    (client, live_game)
 }
 
 #[cfg(test)]

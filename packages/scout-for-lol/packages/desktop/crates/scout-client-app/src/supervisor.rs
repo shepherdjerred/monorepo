@@ -21,9 +21,9 @@ use scout_client_runtime::runtime::{
     ClientRuntime, GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver,
 };
 use scout_desktop_ipc::{
-    ChatCommand, ChatParts, CounterReading, DiagnosticsSnapshot, PROTOCOL_VERSION, PrivacySnapshot,
-    StateSnapshot, SupervisorMessage, UpdateSnapshot, WindowMessage, check_protocol, decode_line,
-    encode_line,
+    ChatCommand, ChatParts, CounterReading, DiagnosticsSnapshot, LiveGameSnapshot,
+    PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot,
+    WindowMessage, check_protocol, decode_line, encode_line,
 };
 use scout_explore_client::relay::ChatRelay;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
@@ -442,6 +442,7 @@ impl<C: Collector> Supervisor<C> {
             relaunch: true,
             cause: None,
             last_state: None,
+            last_live: None,
             last_chat: None,
         };
         self.deliver(
@@ -567,11 +568,22 @@ impl<C: Collector> Supervisor<C> {
     }
 
     async fn send_state(&self, window: &mut Window, state: &StateReceiver) {
-        let snapshot = snapshot(
-            &state.borrow(),
-            self.collector.diagnostics(),
-            self.collector.log_directory().is_some(),
-        );
+        let (snapshot, live) = {
+            let runtime = state.borrow();
+            (
+                snapshot(
+                    &runtime,
+                    self.collector.diagnostics(),
+                    self.collector.log_directory().is_some(),
+                ),
+                live_game_snapshot(&runtime),
+            )
+        };
+        if window.last_live != live {
+            self.deliver(window, &SupervisorMessage::LiveGame { live: live.clone() })
+                .await;
+            window.last_live = live;
+        }
         if window.last_state.as_ref() == Some(&snapshot) {
             return;
         }
@@ -686,6 +698,8 @@ struct Window {
     /// Why the supervisor killed it, when it did; otherwise it exited alone.
     cause: Option<WindowCrashCause>,
     last_state: Option<StateSnapshot>,
+    /// The live game this window holds. A new window holds none.
+    last_live: Option<LiveGameSnapshot>,
     /// The chat parts this window holds, so a change sends only its delta.
     last_chat: Option<ChatParts>,
 }
@@ -815,6 +829,22 @@ pub fn snapshot(
                 .collect(),
         },
     }
+}
+
+/// The window's one-line view of the game in progress. It reads the local
+/// player out of the allowlisted snapshot; nothing else of it is forwarded.
+fn live_game_snapshot(state: &RuntimeState) -> Option<LiveGameSnapshot> {
+    let live = state.live_game.as_ref()?;
+    let local = live.local()?;
+    Some(LiveGameSnapshot {
+        game_time_secs: live.game.game_time_secs,
+        champion: local.champion.clone(),
+        level: local.level,
+        kills: local.kills,
+        deaths: local.deaths,
+        assists: local.assists,
+        creep_score: local.creep_score,
+    })
 }
 
 fn phase_message(phase: &GameflowPhase) -> SupervisorMessage {
