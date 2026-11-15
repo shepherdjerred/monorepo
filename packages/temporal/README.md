@@ -235,15 +235,35 @@ fixed traffic bake periods; original hosts remain until independent drainage
 proof permits retirement. A partial routing response is inspected before
 repeating the same step.
 
-A retired host stays in the pool at zero replicas, so the sync keeps rendering
-its Deployment and the pool grows with every rollout. Worker stage Jobs read
-only live hosts, so their request (the `DELIVERY_JOB_REQUEST` environment
-string) freezes only those, and its size does not grow with retirements. The
-image-provenance proof renders the chart with that live pool; retained hosts
-are never control-plane workloads, so its result is unchanged. A request over
-the kernel's 128 KiB exec limit for one environment string is refused before
-the stage records an operation or a Job exists, rather than failing in the
-container with `argument list too long`.
+A retired host stays in the frozen PostgreSQL pool at zero replicas, so that
+pool grows with every rollout, but nothing rendered from it does. Worker stage
+Jobs read only live hosts, so their request (the `DELIVERY_JOB_REQUEST`
+environment string) freezes only those, and its size does not grow with
+retirements. A request over the kernel's 128 KiB exec limit for one environment
+string is refused before the stage records an operation or a Job exists, rather
+than failing in the container with `argument list too long`.
+
+The chart's `delivery.workerPool` parameter carries the live hosts, plus the
+host a `retire-host` deployment is retiring, at zero replicas. A host an
+earlier retirement scaled to zero is left out: that retirement's accepted
+proof showed its build neither current nor ramping and no open execution
+pinned to it, and its Pods are gone, so its objects serve nothing. ArgoCD
+stores the Application whole in etcd, with that parameter copied into its
+spec, sync comparison, operation, result and every history entry, so
+rendering every retired host had pushed the object toward etcd's 1.5 MiB
+request limit. The image-provenance proof renders the chart with the same
+live pool; retained hosts are never control-plane workloads, so its result is
+unchanged. A rollback or redeploy that raises a retired build renders its host
+again, from the frozen pool's retained row.
+
+The next owned sync prunes the left-out hosts' objects (`workerSyncPrunes`).
+It prunes only when every obsolete object of the Application is a left-out
+host's Deployment, ServiceAccount, Service or ServiceMonitor, each with its
+exact UID and Argo tracking, and the Deployment is at zero replicas for that
+build. Any other obsolete object leaves the sync unpruned and prune-pending,
+as before; an object named for a retired host that is still scaled, serves
+another build or is not this Application's fails the sync step before Argo
+syncs.
 
 A worker pod's termination grace is a maximum for in-flight Activities, never
 a wait. On SIGTERM the entrypoint stops polling, lets every Worker's `run()`
@@ -574,7 +594,8 @@ namespace: the build must be neither current nor ramping, drainage must follow
 its last deactivation, and exact visibility must report zero open executions.
 Routing conflict tokens are read twice. Retirement keeps image provenance and
 historical snapshots, and acceptance waits for retired Pods to disappear.
-Resource deletion remains a separate guarded pruning operation. Prepared
+The next owned sync of the worker Application prunes the retired host's
+objects under the guard described above. Prepared
 definitions do not activate source delegation or live worker credentials.
 
 Host-only `adopt-worker` requests independently observe original image build IDs,
