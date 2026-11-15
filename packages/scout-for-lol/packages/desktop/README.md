@@ -448,6 +448,16 @@ the platform the format targets. These scripts produce unsigned installers;
 operating-system code signing (Authenticode, notarization) is not part of
 them yet, and update signing is a separate step in "Releasing an update".
 
+### Release builds and the sherpa-onnx library
+
+`scout-voice` links sherpa-onnx, whose build script downloads a native
+archive without a checksum. `bun run release:package:<channel>` first runs
+`bun run voice:sherpa-libs`, which fetches the archives pinned in
+`sherpa-onnx-libs.json` into `target/sherpa-onnx-archives` and verifies their
+SHA-256, then builds with `SHERPA_ONNX_ARCHIVE_DIR` pointing there. Build
+releases from a clean `target/`, since the build script trusts an
+already-extracted copy. See `crates/scout-voice/README.md` for bumping the pin.
+
 ### Self-update
 
 A packaged build keeps itself current. The supervisor (never the window, and

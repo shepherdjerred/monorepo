@@ -43,6 +43,21 @@ own CI excludes static linking on x86_64 Linux. Linux CI builds and tests
 the contract, resampler, verifier, state machine and pipeline; `cargo tree`
 for a Linux target lists neither crate.
 
+## Native library supply chain
+
+`sherpa-onnx-sys` downloads its static library from GitHub releases in its
+`build.rs`, with no checksum. Its supported override is
+`SHERPA_ONNX_ARCHIVE_DIR`: a directory holding the archive it would have
+downloaded, which it copies instead of fetching. `bun run voice:sherpa-libs`
+(`desktop/scripts/fetch-sherpa-libs.ts`) downloads the archives pinned with
+SHA-256 in `desktop/sherpa-onnx-libs.json` and fails on any mismatch;
+`release:package:*` runs it and sets `SHERPA_ONNX_ARCHIVE_DIR` for the build.
+The pins were taken from the v2.0.1 release assets when first downloaded
+(upstream publishes no checksums). Bumping `sherpa-onnx` means updating the
+version, file names and hashes in that JSON together. A plain `cargo build`
+or `bun run package:*` still uses the unverified download; those are
+development builds.
+
 ## Model files
 
 Models are never committed under `desktop/` and never downloaded at runtime.
