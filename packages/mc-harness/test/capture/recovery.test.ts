@@ -1,8 +1,9 @@
-import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
 import type { z } from "zod";
+import { archiveCaptureFailureDiagnostics } from "#src/capture/suite/archive.ts";
 import { restoreScene } from "#src/capture/recovery.ts";
 import {
   initializeRun,
@@ -349,6 +350,84 @@ describe("capture recovery", () => {
         transport.events.filter((event) => event === "restore-track"),
       ).toHaveLength(2);
       expect(run.cleanup).toEqual([]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("capture failure diagnostics", () => {
+  it("archives harness and Prism logs and removes dead storm-capture instances", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "suite-diag-test-"));
+    try {
+      const directory = path.join(root, "suite-run");
+      const prismInstancesDir = path.join(root, "prism-instances");
+      await mkdir(path.join(directory, "harness", "logs"), { recursive: true });
+      await writeFile(
+        path.join(directory, "harness", "logs", "daemon.log"),
+        "daemon trace\n",
+      );
+
+      const deadCapture = path.join(prismInstancesDir, "storm-capture-dead");
+      await mkdir(path.join(deadCapture, "minecraft", "logs"), {
+        recursive: true,
+      });
+      await writeFile(
+        path.join(deadCapture, "storm-control-owned"),
+        "storm-control-v1\n",
+      );
+      await writeFile(
+        path.join(deadCapture, "instance.cfg"),
+        "[General]\nJvmArgs=-Dstorm.client.session=/tmp/dead/bootstrap.json\n",
+      );
+      await writeFile(
+        path.join(deadCapture, "minecraft", "logs", "latest.log"),
+        "crash stacktrace\n",
+      );
+
+      const liveCapture = path.join(prismInstancesDir, "storm-capture-live");
+      await mkdir(liveCapture, { recursive: true });
+      await writeFile(
+        path.join(liveCapture, "storm-control-owned"),
+        "storm-control-v1\n",
+      );
+      await writeFile(
+        path.join(liveCapture, "instance.cfg"),
+        "[General]\nJvmArgs=-Dstorm.client.session=/tmp/live/bootstrap.json\n",
+      );
+
+      await archiveCaptureFailureDiagnostics({
+        directory,
+        prismInstancesDir,
+        isSessionAlive: (sessionPath) =>
+          sessionPath === "/tmp/live/bootstrap.json",
+      });
+
+      expect(
+        await readFile(
+          path.join(directory, "artifacts", "logs", "daemon.log"),
+          "utf8",
+        ),
+      ).toBe("daemon trace\n");
+      expect(
+        await readFile(
+          path.join(
+            directory,
+            "artifacts",
+            "prism-instances",
+            "storm-capture-dead",
+            "logs",
+            "latest.log",
+          ),
+          "utf8",
+        ),
+      ).toBe("crash stacktrace\n");
+      expect(
+        await Bun.file(path.join(deadCapture, "instance.cfg")).exists(),
+      ).toBe(false);
+      expect(
+        await Bun.file(path.join(liveCapture, "instance.cfg")).exists(),
+      ).toBe(true);
     } finally {
       await rm(root, { recursive: true, force: true });
     }

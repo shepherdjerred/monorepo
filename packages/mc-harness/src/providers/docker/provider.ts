@@ -2,7 +2,11 @@ import { mkdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { CACHE_DIR } from "#protocol/paths.ts";
-import { instanceDirectory, instanceOwner } from "#protocol/instance.ts";
+import {
+  currentInstance,
+  instanceDirectory,
+  instanceOwner,
+} from "#protocol/instance.ts";
 import { stageWorldDirectory } from "#sandbox/world-source.ts";
 import { copyRealMap } from "#sandbox/map-copy.ts";
 import { startCaptureProxy } from "./proxy.ts";
@@ -42,10 +46,12 @@ import {
 
 import {
   LABELS,
+  formatExpiresAtMs,
   parseSandboxRows,
   SANDBOX_ROW_FORMAT,
   currentDockerEndpoints,
 } from "./rows.ts";
+import { reapManagedContainers } from "./reap.ts";
 
 function isPublishedStorm(profileName: string): boolean {
   return profileName === "storm-prod" || profileName === "storm-candidate";
@@ -60,13 +66,16 @@ export function dockerCreateArgs(
     /** Null when the profile stages no plugins (the image keeps its own). */
     pluginsDir: string | null;
     cacheDir: string;
-    expiresAt: string;
+    expiresAt: string | number;
+    daemonPid?: number;
     owner: string;
     keep: boolean;
   },
   platform: NodeJS.Platform = process.platform,
 ): string[] {
   const pluginsDir = options.pluginsDir;
+  const expiresAtMs = formatExpiresAtMs(options.expiresAt);
+  const daemonPid = (options.daemonPid ?? process.pid).toString();
   return [
     "create",
     "--name",
@@ -76,7 +85,9 @@ export function dockerCreateArgs(
     "--label",
     `${LABELS.profile}=${options.profileName}`,
     "--label",
-    `${LABELS.expiresAt}=${options.expiresAt}`,
+    `${LABELS.expiresAt}=${expiresAtMs}`,
+    "--label",
+    `${LABELS.daemonPid}=${daemonPid}`,
     "--label",
     `${LABELS.owner}=${options.owner}`,
     "--label",
@@ -109,9 +120,7 @@ export function dockerCreateArgs(
           `${path.join(pluginsDir, target)}:${path.posix.join("/plugins", target)}:ro`,
         ])),
     ...(options.profile.seedData
-      ? warmMountArgs(
-          instanceDirectory(options.cacheDir, Bun.env["TOOLKIT_MC_INSTANCE"]),
-        )
+      ? warmMountArgs(instanceDirectory(options.cacheDir, currentInstance()))
       : []),
     ...envArgs(options.profile.env),
     options.profile.image,
@@ -146,13 +155,20 @@ export class DockerSandboxProvider implements SandboxProvider {
   }
 
   private get warmCacheDir(): string {
-    return instanceDirectory(this.cacheDir, Bun.env["TOOLKIT_MC_INSTANCE"]);
+    return instanceDirectory(
+      this.cacheDir,
+      currentInstance(this.options.repoRoot),
+    );
+  }
+
+  private get baseOwner(): string {
+    return this.options.owner ?? `${os.userInfo().username}@${os.hostname()}`;
   }
 
   private get owner(): string {
     return instanceOwner(
-      this.options.owner ?? `${os.userInfo().username}@${os.hostname()}`,
-      Bun.env["TOOLKIT_MC_INSTANCE"],
+      this.baseOwner,
+      currentInstance(this.options.repoRoot),
     );
   }
 
@@ -215,9 +231,8 @@ export class DockerSandboxProvider implements SandboxProvider {
     }
 
     const createdAt = new Date(started).toISOString();
-    const expiresAt = new Date(
-      started + request.ttlSeconds * 1000,
-    ).toISOString();
+    const expiresAtMs = started + request.ttlSeconds * 1000;
+    const expiresAt = new Date(expiresAtMs).toISOString();
     const { stdout } = await docker(
       dockerCreateArgs({
         id,
@@ -225,7 +240,8 @@ export class DockerSandboxProvider implements SandboxProvider {
         profile,
         pluginsDir,
         cacheDir: this.cacheDir,
-        expiresAt,
+        expiresAt: expiresAtMs,
+        daemonPid: process.pid,
         owner: this.owner,
         keep: request.keep,
       }),
@@ -441,32 +457,19 @@ export class DockerSandboxProvider implements SandboxProvider {
   }
 
   async reap(now: Date): Promise<string[]> {
-    const reaped: string[] = [];
-    const records = await this.options.store.listFor("docker");
-    const rows = await this.rows();
-    const candidates = new Set([
-      ...records.map((record) => record.id),
-      ...rows.map((row) => row.id),
-    ]);
-    for (const id of candidates) {
-      const removed = await this.lifecycle.run(id, async () => {
-        // Read the record before a fresh Docker inventory. A newly published
-        // creation cannot become a missing-container candidate from an old scan.
-        const record = await this.options.store.read(id);
-        const inventory = await this.rows();
-        const current = inventory.filter((row) => row.id === id);
-        const expired = current.some(
-          (row) => !row.keep && Date.parse(row.expiresAt) <= now.getTime(),
-        );
-        const stale = current.some((row) => row.stale);
-        if (!expired && !stale && !(record !== null && current.length === 0))
-          return false;
-        await this.destroyNow(id);
-        return true;
-      });
-      if (removed) reaped.push(id);
-    }
-    return reaped;
+    return reapManagedContainers({
+      now,
+      baseOwner: this.baseOwner,
+      currentOwner: this.owner,
+      store: this.options.store,
+      lifecycle: this.lifecycle,
+      listRows: (ownerFilter) =>
+        ownerFilter === undefined ? this.allManagedRows() : this.rows(),
+      onDestroyLocal: (id) => {
+        this.proxies.get(id)?.close();
+        this.proxies.delete(id);
+      },
+    });
   }
 
   async logs(record: SandboxRecord, tail: number): Promise<string[]> {
@@ -482,6 +485,18 @@ export class DockerSandboxProvider implements SandboxProvider {
       `label=${LABELS.sandbox}`,
       "--filter",
       `label=${LABELS.owner}=${this.owner}`,
+      "--format",
+      SANDBOX_ROW_FORMAT,
+    ]);
+    return parseSandboxRows(stdout);
+  }
+
+  private async allManagedRows() {
+    const { stdout } = await docker([
+      "ps",
+      "-a",
+      "--filter",
+      `label=${LABELS.sandbox}`,
       "--format",
       SANDBOX_ROW_FORMAT,
     ]);

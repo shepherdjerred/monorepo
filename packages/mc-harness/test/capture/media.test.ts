@@ -77,6 +77,7 @@ describe("capture media", () => {
         version: z.literal(4),
         kind: z.literal("mc-docs-frames"),
         source: z.literal("minecraft-framebuffer"),
+        requiresWindowFocus: z.literal(false),
         fps: z.literal(30),
         width: z.literal(1280),
         height: z.literal(720),

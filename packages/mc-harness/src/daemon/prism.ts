@@ -1,9 +1,12 @@
+import { randomUUID } from "node:crypto";
 import {
   access,
   copyFile,
+  cp,
   mkdir,
   open,
   readFile,
+  rm,
   stat,
   writeFile,
 } from "node:fs/promises";
@@ -15,6 +18,23 @@ import { CLIENT_PROJECT } from "#protocol/paths.ts";
 const INSTANCE = "StormControl";
 const MARKER = "storm-control-owned";
 
+export const AUTOMATED_CLIENT_OPTIONS_TXT =
+  'onboardAccessibility:false\ntutorialStep:none\nenableVsync:false\nmaxFps:120\npauseOnLostFocus:false\ninactivityFpsLimit:"minimized"\n';
+
+export function prismControlInstanceName(
+  clientName: string,
+  shortId: string = randomUUID().slice(0, 8),
+): string {
+  const slug = clientName
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/gu, "-")
+    .replaceAll(/^-+|-+$/gu, "")
+    .slice(0, 24)
+    .replaceAll(/-+$/gu, "");
+  const cleanId = shortId.replaceAll(/[^a-z0-9]+/giu, "").slice(0, 12);
+  return `storm-control-${slug.length > 0 ? slug : "client"}-${cleanId.length > 0 ? cleanId : "session"}`;
+}
+
 async function exists(file: string): Promise<boolean> {
   try {
     await access(file);
@@ -23,6 +43,31 @@ async function exists(file: string): Promise<boolean> {
     if (error instanceof Error && "code" in error && error.code === "ENOENT")
       return false;
     throw error;
+  }
+}
+
+/** Copies logs, crash reports, and instance metadata into `destinationDir` before removing a temporary Prism instance. */
+export async function copyPrismDiagnostics(
+  instanceDir: string,
+  destinationDir: string,
+): Promise<void> {
+  if (!(await exists(instanceDir))) return;
+  const candidates: readonly [string, string][] = [
+    [path.join(instanceDir, "minecraft", "logs"), "logs"],
+    [path.join(instanceDir, "minecraft", "crash-reports"), "crash-reports"],
+    [path.join(instanceDir, "instance.cfg"), "instance.cfg"],
+    [path.join(instanceDir, "mmc-pack.json"), "mmc-pack.json"],
+  ];
+  let createdDestination = false;
+  for (const [source, relativeTarget] of candidates) {
+    if (!(await exists(source))) continue;
+    if (!createdDestination) {
+      await mkdir(destinationDir, { recursive: true, mode: 0o700 });
+      createdDestination = true;
+    }
+    await cp(source, path.join(destinationDir, relativeTarget), {
+      recursive: true,
+    });
   }
 }
 
@@ -62,6 +107,10 @@ export async function preparePrismInstance(options: {
   }
   const mods = path.join(instance, "minecraft", "mods");
   await mkdir(mods, { recursive: true, mode: 0o700 });
+  const optionsFile = path.join(instance, "minecraft", "options.txt");
+  if (!(await exists(optionsFile))) {
+    await writeFile(optionsFile, AUTOMATED_CLIENT_OPTIONS_TXT, { mode: 0o600 });
+  }
   const metadata = z
     .strictObject({
       minecraft: z.string().regex(/^[\w.+-]+$/u),
@@ -106,8 +155,6 @@ export async function preparePrismInstance(options: {
   return created;
 }
 
-export const PRISM_INSTANCE = INSTANCE;
-
 async function readLogTail(logPath: string, offset: number) {
   const file = await open(logPath, "r");
   try {
@@ -128,6 +175,7 @@ async function readLogTail(logPath: string, offset: number) {
 export async function waitForPrismDiscovery(
   logPath: string,
   offset: number,
+  instanceName: string = INSTANCE,
 ): Promise<void> {
   const deadline = Date.now() + 15_000;
   let pending = "";
@@ -141,8 +189,8 @@ export async function waitForPrismDiscovery(
       if (
         lines.some(
           (line) =>
-            line.includes('Loaded instance "The Storm (controlled)"') &&
-            line.includes('/instances/StormControl"'),
+            line.includes('Loaded instance "') &&
+            line.includes(`/instances/${instanceName}"`),
         )
       )
         return;
@@ -157,7 +205,7 @@ export async function waitForPrismDiscovery(
     await Bun.sleep(100);
   }
   throw new Error(
-    "Prism did not discover the new controlled instance; restart Prism and try again",
+    `Prism did not discover controlled instance ${instanceName}; restart Prism and try again`,
   );
 }
 
@@ -169,15 +217,25 @@ async function launcherFailure(child: Bun.Subprocess): Promise<never> {
 
 export async function stageAndLaunchPrism(options: {
   repoRoot: string;
+  name: string;
+  privateDir: string;
   artifacts: string;
   bootstrap: string;
-}): Promise<{ failure: Promise<never>; pid: number }> {
+  prismRoot?: string;
+}): Promise<{
+  failure: Promise<never>;
+  pid: number;
+  instanceName: string;
+  cleanup: () => Promise<void>;
+}> {
   // Neither the bridge token nor the 1Password service account reaches Gradle or Prism.
   const env = {
     ...Bun.env,
     MC_BRIDGE_TOKEN: undefined,
     OP_SERVICE_ACCOUNT_TOKEN: undefined,
   };
+  const stagedMods = path.join(options.privateDir, "prism-mods");
+  const gradleCacheDir = path.join(options.privateDir, "gradle-cache");
   const log = Bun.file(path.join(options.artifacts, "build.log"));
   const stage = Bun.spawn(
     [
@@ -187,8 +245,12 @@ export async function stageAndLaunchPrism(options: {
       "gradle",
       "-p",
       path.join(options.repoRoot, CLIENT_PROJECT),
+      "--project-cache-dir",
+      gradleCacheDir,
       "stagePrism",
+      `-PprismModsDir=${stagedMods}`,
       "--console=plain",
+      "--no-daemon",
     ],
     { cwd: options.repoRoot, env, stdout: log, stderr: log },
   );
@@ -196,10 +258,11 @@ export async function stageAndLaunchPrism(options: {
     throw new Error(
       `Prism mod build failed; see ${options.artifacts}/build.log`,
     );
-  const prismRoot = path.join(
-    os.homedir(),
-    "Library/Application Support/PrismLauncher",
-  );
+  const prismRoot =
+    options.prismRoot ??
+    path.join(os.homedir(), "Library/Application Support/PrismLauncher");
+  const instanceName = prismControlInstanceName(options.name);
+  const instanceDir = path.join(prismRoot, "instances", instanceName);
   const prismLog = path.join(prismRoot, "logs/PrismLauncher-0.log");
   const running =
     Bun.spawnSync(["pgrep", "-x", "prismlauncher"], {
@@ -209,17 +272,59 @@ export async function stageAndLaunchPrism(options: {
   const logInfo =
     running && (await exists(prismLog)) ? await stat(prismLog) : undefined;
   const offset = logInfo?.size ?? 0;
-  const created = await preparePrismInstance({
-    stagedMods: path.join(options.repoRoot, CLIENT_PROJECT, "build/prism-mods"),
-    bootstrap: options.bootstrap,
-  });
-  if (running && created) await waitForPrismDiscovery(prismLog, offset);
-  const launcher = Bun.which("prismlauncher");
-  if (launcher === null) throw new Error("Prism Launcher is not installed");
-  const child = Bun.spawn([launcher, "--launch", PRISM_INSTANCE], {
-    env,
-    stdout: "ignore",
-    stderr: "ignore",
-  });
-  return { failure: launcherFailure(child), pid: child.pid };
+  const awake = Bun.spawn(
+    ["/usr/bin/caffeinate", "-du", "-w", String(process.pid)],
+    {
+      stdout: "ignore",
+      stderr: "ignore",
+    },
+  );
+  let cleanedUp = false;
+  const cleanup = async (retainDiagnostics = false): Promise<void> => {
+    if (cleanedUp) return;
+    cleanedUp = true;
+    try {
+      awake.kill();
+    } catch {
+      // Caffeinate already exited.
+    }
+    if (retainDiagnostics) {
+      try {
+        await copyPrismDiagnostics(
+          instanceDir,
+          path.join(options.artifacts, "prism-diagnostics"),
+        );
+      } catch {
+        // Best-effort diagnostic archive before removing instance.
+      }
+    }
+    await rm(instanceDir, { recursive: true, force: true });
+  };
+  try {
+    const created = await preparePrismInstance({
+      root: prismRoot,
+      stagedMods,
+      bootstrap: options.bootstrap,
+      instanceName,
+    });
+    if (running && created) {
+      await waitForPrismDiscovery(prismLog, offset, instanceName);
+    }
+    const launcher = Bun.which("prismlauncher");
+    if (launcher === null) throw new Error("Prism Launcher is not installed");
+    const child = Bun.spawn([launcher, "--launch", instanceName], {
+      env,
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    return {
+      failure: launcherFailure(child),
+      pid: child.pid,
+      instanceName,
+      cleanup: () => cleanup(true),
+    };
+  } catch (error) {
+    await cleanup(true);
+    throw error;
+  }
 }

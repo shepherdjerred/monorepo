@@ -2,6 +2,7 @@
   "version": 4,
   "kind": "mc-docs-frames",
   "source": "minecraft-framebuffer",
+  "requiresWindowFocus": false,
   "fps": 30,
   "width": 1280,
   "height": 720,

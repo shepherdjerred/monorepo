@@ -1,13 +1,19 @@
+import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { dockerCreateArgs } from "#providers/docker/provider.ts";
+import { reapManagedContainers } from "#providers/docker/reap.ts";
 import {
   currentDockerEndpoints,
   LABELS,
   parseSandboxRows,
+  type SandboxRow,
 } from "#providers/docker/rows.ts";
 import { newSandboxId } from "#sandbox/boot.ts";
 import { parsePortBinding } from "#providers/docker/paper-container.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
+import { SandboxStore } from "#sandbox/record.ts";
 import { publishedStorm } from "#test/fixtures/published-storm.ts";
 
 const secrets = { bridgeToken: "b".repeat(48), rconPassword: "c".repeat(48) };
@@ -63,7 +69,10 @@ describe("docker sandbox argv", () => {
       "127.0.0.1::25580",
     ]);
     expect(args).toContain(`${LABELS.sandbox}=sbx-abc123`);
-    expect(args).toContain(`${LABELS.expiresAt}=2026-10-04T00:00:00.000Z`);
+    expect(args).toContain(
+      `${LABELS.expiresAt}=${Date.parse("2026-10-04T00:00:00.000Z").toString()}`,
+    );
+    expect(args).toContain(`${LABELS.daemonPid}=${process.pid.toString()}`);
     expect(args).toContain(`${LABELS.keep}=false`);
     expect(args).toContain("/tmp/plugins:/plugins:ro");
     expect(args).toContain(`MC_BRIDGE_TOKEN=${secrets.bridgeToken}`);
@@ -106,18 +115,20 @@ describe("docker sandbox argv", () => {
 
   it("parses docker ps rows", () => {
     const rows = parseSandboxRows(
-      "abc123def456\tsbx-abc123\t2026-10-04T00:00:00.000Z\tfalse\trunning\n" +
+      "abc123def456\tsbx-abc123\t1791072000000\tfalse\trunning\t\tme@host:wt-alpha-111111\t4242\n" +
         "fff123def456\tsbx-fff123\t2026-10-04T00:00:00.000Z\ttrue\texited\n",
     );
     expect(rows).toEqual([
       {
         containerId: "abc123def456",
         id: "sbx-abc123",
-        expiresAt: "2026-10-04T00:00:00.000Z",
+        expiresAt: "1791072000000",
         keep: false,
         running: true,
         stale: false,
         ports: "",
+        owner: "me@host:wt-alpha-111111",
+        daemonPid: 4242,
       },
       {
         containerId: "fff123def456",
@@ -127,6 +138,8 @@ describe("docker sandbox argv", () => {
         running: false,
         stale: true,
         ports: "",
+        owner: "",
+        daemonPid: null,
       },
     ]);
   });
@@ -154,6 +167,99 @@ describe("docker sandbox argv", () => {
     expect(() => currentDockerEndpoints("0.0.0.0:32916->25565/tcp")).toThrow(
       "loopback",
     );
+  });
+});
+
+describe("reapManagedContainers", () => {
+  it("reaps current-instance orphans and expired dead-daemon containers across other wt-* instances", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mc-reap-wt-"));
+    try {
+      const sharedDir = path.join(root, "shared");
+      const currentSandboxes = path.join(
+        sharedDir,
+        "instances",
+        "wt-current-aaaaaa",
+        "sandboxes",
+      );
+      const foreignDeadSandboxDir = path.join(
+        sharedDir,
+        "instances",
+        "wt-other-bbbbbb",
+        "sandboxes",
+        "sbx-dead02",
+      );
+      await mkdir(foreignDeadSandboxDir, { recursive: true });
+      const store = new SandboxStore(currentSandboxes);
+      const nowMs = 1_800_000_000_000;
+      const allRows: SandboxRow[] = [
+        {
+          containerId: "cur-expired",
+          id: "sbx-aa0001",
+          expiresAt: String(nowMs - 1000),
+          keep: false,
+          running: true,
+          stale: false,
+          ports: "",
+          owner: "me@host:wt-current-aaaaaa",
+          daemonPid: 100,
+        },
+        {
+          containerId: "wt-expired-dead",
+          id: "sbx-dead02",
+          expiresAt: String(nowMs - 1000),
+          keep: false,
+          running: true,
+          stale: false,
+          ports: "",
+          owner: "me@host:wt-other-bbbbbb",
+          daemonPid: 200,
+        },
+        {
+          containerId: "wt-expired-alive",
+          id: "sbx-bb0003",
+          expiresAt: String(nowMs - 1000),
+          keep: false,
+          running: true,
+          stale: false,
+          ports: "",
+          owner: "me@host:wt-third-cccccc",
+          daemonPid: 300,
+        },
+        {
+          containerId: "wt-future-dead",
+          id: "sbx-cc0004",
+          expiresAt: String(nowMs + 60_000),
+          keep: false,
+          running: true,
+          stale: false,
+          ports: "",
+          owner: "me@host:wt-fourth-dddddd",
+          daemonPid: 200,
+        },
+      ];
+      const removedContainers: string[] = [];
+      const reaped = await reapManagedContainers({
+        now: new Date(nowMs),
+        baseOwner: "me@host",
+        currentOwner: "me@host:wt-current-aaaaaa",
+        sharedDir,
+        currentDaemonPid: 100,
+        isAlive: (pid) => pid === 100 || pid === 300,
+        store,
+        listRows: async (ownerFilter) =>
+          ownerFilter === undefined
+            ? allRows
+            : allRows.filter((row) => row.owner === ownerFilter),
+        removeContainer: async (containerId) => {
+          removedContainers.push(containerId);
+        },
+      });
+      expect(reaped).toEqual(["sbx-aa0001", "sbx-dead02"]);
+      expect(removedContainers).toEqual(["cur-expired", "wt-expired-dead"]);
+      await expect(stat(foreignDeadSandboxDir)).rejects.toThrow();
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });
 

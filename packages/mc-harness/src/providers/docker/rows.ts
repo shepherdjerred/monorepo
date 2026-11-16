@@ -5,6 +5,7 @@ export const LABELS = {
   sandbox: "mc-harness.sandbox",
   profile: "mc-harness.profile",
   expiresAt: "mc-harness.expires-at",
+  daemonPid: "mc-harness.daemon-pid",
   owner: "mc-harness.owner",
   keep: "mc-harness.keep",
 } as const;
@@ -18,7 +19,42 @@ export type SandboxRow = {
   /** Exited or dead: unusable. A just-created container is not stale. */
   stale: boolean;
   ports: string;
+  owner: string;
+  daemonPid: number | null;
 };
+
+export function formatExpiresAtMs(expiresAt: string | number): string {
+  if (typeof expiresAt === "number") {
+    if (!Number.isFinite(expiresAt)) {
+      throw new TypeError(`Invalid sandbox expiresAt: ${String(expiresAt)}`);
+    }
+    return Math.trunc(expiresAt).toString();
+  }
+  if (/^\d+$/u.test(expiresAt)) {
+    return expiresAt;
+  }
+  const parsed = Date.parse(expiresAt);
+  if (Number.isNaN(parsed)) {
+    throw new TypeError(`Invalid sandbox expiresAt: ${expiresAt}`);
+  }
+  return parsed.toString();
+}
+
+export function parseExpiresAtMs(expiresAt: string): number | null {
+  if (expiresAt.length === 0) return null;
+  if (/^\d+$/u.test(expiresAt)) {
+    const numeric = Number(expiresAt);
+    return Number.isSafeInteger(numeric) ? numeric : null;
+  }
+  const parsed = Date.parse(expiresAt);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function parseDaemonPid(raw: string): number | null {
+  if (!/^\d+$/u.test(raw)) return null;
+  const pid = Number(raw);
+  return Number.isSafeInteger(pid) && pid > 0 ? pid : null;
+}
 
 /** Parses `docker ps -a` rows formatted by `SANDBOX_ROW_FORMAT`. */
 export function parseSandboxRows(stdout: string): SandboxRow[] {
@@ -33,6 +69,8 @@ export function parseSandboxRows(stdout: string): SandboxRow[] {
         keep = "",
         state = "",
         ports = "",
+        owner = "",
+        daemonPid = "",
       ] = line.split("\t");
       return {
         containerId,
@@ -42,11 +80,13 @@ export function parseSandboxRows(stdout: string): SandboxRow[] {
         running: state === "running",
         stale: state === "exited" || state === "dead",
         ports,
+        owner,
+        daemonPid: parseDaemonPid(daemonPid),
       };
     });
 }
 
-export const SANDBOX_ROW_FORMAT = `{{.ID}}\t{{.Label "${LABELS.sandbox}"}}\t{{.Label "${LABELS.expiresAt}"}}\t{{.Label "${LABELS.keep}"}}\t{{.State}}\t{{.Ports}}`;
+export const SANDBOX_ROW_FORMAT = `{{.ID}}\t{{.Label "${LABELS.sandbox}"}}\t{{.Label "${LABELS.expiresAt}"}}\t{{.Label "${LABELS.keep}"}}\t{{.State}}\t{{.Ports}}\t{{.Label "${LABELS.owner}"}}\t{{.Label "${LABELS.daemonPid}"}}`;
 
 /** Reconcile the ephemeral loopback ports of a retained plain-world container after restart. */
 export function currentDockerEndpoints(

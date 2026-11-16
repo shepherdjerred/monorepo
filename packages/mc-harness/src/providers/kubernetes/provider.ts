@@ -3,7 +3,7 @@ import path from "node:path";
 import { BridgeClient } from "#bridge/client.ts";
 import type { SandboxCreateRequest } from "#protocol/ipc.ts";
 import { CACHE_DIR } from "#protocol/paths.ts";
-import { instanceOwner } from "#protocol/instance.ts";
+import { currentInstance, instanceOwner } from "#protocol/instance.ts";
 import {
   newSandboxId,
   newSandboxSecrets,
@@ -108,7 +108,7 @@ export class KubernetesSandboxProvider implements SandboxProvider {
   private get owner(): string {
     return instanceOwner(
       this.options.owner ?? `${os.userInfo().username}@${os.hostname()}`,
-      Bun.env["TOOLKIT_MC_INSTANCE"],
+      currentInstance(this.options.repoRoot),
     );
   }
 

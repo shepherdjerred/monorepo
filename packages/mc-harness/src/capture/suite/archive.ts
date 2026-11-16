@@ -1,5 +1,6 @@
+import os from "node:os";
 import path from "node:path";
-import { mkdir } from "node:fs/promises";
+import { access, cp, mkdir, readdir, readFile, rm } from "node:fs/promises";
 import { z } from "zod";
 import { RunSchema, type CaptureRun } from "#src/capture/model.ts";
 import { DocsFramesSchema } from "#protocol/media.ts";
@@ -183,4 +184,154 @@ export async function retainSuiteRun(
     new TextDecoder().decode(pointer)
   )
     throw new Error("Run index readback differs");
+}
+
+async function pathPresent(target: string): Promise<boolean> {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function ignoreBestEffort(action: Promise<unknown>): Promise<void> {
+  try {
+    await action;
+  } catch {
+    // Best-effort diagnostic copy during failure cleanup.
+  }
+}
+
+function defaultSessionAlive(bootstrapPath: string): boolean {
+  const marker = `-Dstorm.client.session=${bootstrapPath}`;
+  const result = Bun.spawnSync(["pgrep", "-f", bootstrapPath], {
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  if (result.exitCode !== 0) return false;
+  const pids = result.stdout
+    .toString()
+    .trim()
+    .split("\n")
+    .map(Number)
+    .filter((pid) => Number.isInteger(pid) && pid > 1 && pid !== process.pid);
+  return pids.some((pid) => {
+    const info = Bun.spawnSync(["ps", "-p", String(pid), "-o", "command="], {
+      stdout: "pipe",
+      stderr: "ignore",
+    });
+    return info.exitCode === 0 && info.stdout.toString().includes(marker);
+  });
+}
+
+async function archiveHarnessDirectories(
+  harnessDir: string,
+  artifactsDir: string,
+): Promise<void> {
+  for (const subdir of ["logs", "clients"]) {
+    const source = path.join(harnessDir, subdir);
+    if (await pathPresent(source)) {
+      await ignoreBestEffort(
+        cp(source, path.join(artifactsDir, subdir), { recursive: true }),
+      );
+    }
+  }
+  const sandboxesDir = path.join(harnessDir, "sandboxes");
+  if (!(await pathPresent(sandboxesDir))) return;
+  const entries = await readdir(sandboxesDir, { withFileTypes: true }).catch(
+    () => [],
+  );
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const bootLog = path.join(sandboxesDir, entry.name, "failed-boot.log");
+    if (!(await pathPresent(bootLog))) continue;
+    const dest = path.join(
+      artifactsDir,
+      "sandboxes",
+      entry.name,
+      "failed-boot.log",
+    );
+    await mkdir(path.dirname(dest), { recursive: true, mode: 0o700 });
+    await ignoreBestEffort(cp(bootLog, dest));
+  }
+}
+
+async function archiveAndRemovePrismCapture(
+  instanceDir: string,
+  diagDir: string,
+  isAlive: (bootstrapPath: string) => boolean,
+): Promise<void> {
+  const marker = await readFile(
+    path.join(instanceDir, "storm-control-owned"),
+    "utf8",
+  ).catch(() => "");
+  if (marker !== "storm-control-v1\n") return;
+  const cfg = await readFile(
+    path.join(instanceDir, "instance.cfg"),
+    "utf8",
+  ).catch(() => "");
+  const sessionMatch = /-Dstorm\.client\.session=(\S+)/u.exec(cfg);
+  if (sessionMatch?.[1] !== undefined && isAlive(sessionMatch[1])) return;
+  const sources: readonly [string, string][] = [
+    [path.join(instanceDir, "minecraft", "logs"), "logs"],
+    [path.join(instanceDir, "minecraft", "crash-reports"), "crash-reports"],
+    [path.join(instanceDir, "instance.cfg"), "instance.cfg"],
+    [path.join(instanceDir, "mmc-pack.json"), "mmc-pack.json"],
+  ];
+  for (const [source, relativeTarget] of sources) {
+    if (await pathPresent(source)) {
+      await mkdir(diagDir, { recursive: true, mode: 0o700 });
+      await ignoreBestEffort(
+        cp(source, path.join(diagDir, relativeTarget), { recursive: true }),
+      );
+    }
+  }
+  await rm(instanceDir, { recursive: true, force: true });
+}
+
+/**
+ * Copies harness and Prism diagnostic logs into `<directory>/artifacts/` and
+ * removes any dead `storm-capture-*` Prism instance directories after a failed capture.
+ */
+export async function archiveCaptureFailureDiagnostics(options: {
+  directory: string;
+  prismInstancesDir?: string;
+  isSessionAlive?: (bootstrapPath: string) => boolean;
+}): Promise<void> {
+  const artifactsDir = path.join(options.directory, "artifacts");
+  await mkdir(artifactsDir, { recursive: true, mode: 0o700 });
+  await archiveHarnessDirectories(
+    path.join(options.directory, "harness"),
+    artifactsDir,
+  );
+
+  const prismInstancesDir =
+    options.prismInstancesDir ??
+    (process.platform === "darwin"
+      ? path.join(
+          os.homedir(),
+          "Library/Application Support/PrismLauncher/instances",
+        )
+      : undefined);
+  if (
+    prismInstancesDir === undefined ||
+    !(await pathPresent(prismInstancesDir))
+  ) {
+    return;
+  }
+  const isAlive = options.isSessionAlive ?? defaultSessionAlive;
+  const instances = await readdir(prismInstancesDir, {
+    withFileTypes: true,
+  }).catch(() => []);
+  for (const entry of instances) {
+    if (!entry.isDirectory() || !entry.name.startsWith("storm-capture-")) {
+      continue;
+    }
+    await archiveAndRemovePrismCapture(
+      path.join(prismInstancesDir, entry.name),
+      path.join(artifactsDir, "prism-instances", entry.name),
+      isAlive,
+    );
+  }
 }

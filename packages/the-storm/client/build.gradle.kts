@@ -61,14 +61,25 @@ dependencies {
 // Prism instance. Prism owns account authentication; no credentials are copied.
 val prismFabricApi = configurations.create("prismFabricApi") { isTransitive = false }
 dependencies { add(prismFabricApi.name, libs.fabric.api) }
+val prismModsDirProvider =
+  providers
+    .gradleProperty("prismModsDir")
+    .map { file(it) }
+    .orElse(layout.buildDirectory.dir("prism-mods").map { it.asFile })
 tasks.register<Copy>("stagePrism") {
   dependsOn(tasks.jar)
+  val minecraftVersion = libs.versions.client.minecraft
+  val fabricLoaderVersion = libs.versions.fabric.loader
+  val clientJarName = tasks.jar.flatMap { it.archiveFileName }
+  inputs.property("minecraftVersion", minecraftVersion)
+  inputs.property("fabricLoaderVersion", fabricLoaderVersion)
+  inputs.property("clientJarName", clientJarName)
   from(tasks.jar)
   from(prismFabricApi) { rename { "fabric-api.jar" } }
-  into(layout.buildDirectory.dir("prism-mods"))
+  into(prismModsDirProvider)
   doLast {
-    layout.buildDirectory.file("prism-mods/metadata.json").get().asFile.writeText(
-      """{"minecraft":"${libs.versions.client.minecraft.get()}","fabricLoader":"${libs.versions.fabric.loader.get()}","clientJar":"${tasks.jar.get().archiveFileName.get()}"}"""
+    destinationDir.resolve("metadata.json").writeText(
+      """{"minecraft":"${minecraftVersion.get()}","fabricLoader":"${fabricLoaderVersion.get()}","clientJar":"${clientJarName.get()}"}"""
     )
   }
 }

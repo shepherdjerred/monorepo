@@ -1,7 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { instanceDirectory } from "./instance.ts";
+import { currentInstance, instanceDirectory } from "./instance.ts";
 
 // Filesystem layout for the session daemon. Everything is private to the user:
 // the socket is chmod 0600 and sandbox records (which hold the bridge token)
@@ -17,13 +17,11 @@ export const McDirectorySchema = z
       value !== path.parse(value).root,
     "Minecraft directory must be a normalized absolute directory",
   );
-const SHARED_DIR = McDirectorySchema.parse(
+export const SHARED_DIR = McDirectorySchema.parse(
   Bun.env["TOOLKIT_MC_DIRECTORY"] ?? path.join(os.homedir(), ".toolkit", "mc"),
 );
-export const MC_DIR = instanceDirectory(
-  SHARED_DIR,
-  Bun.env["TOOLKIT_MC_INSTANCE"],
-);
+export const INSTANCE = currentInstance();
+export const MC_DIR = instanceDirectory(SHARED_DIR, INSTANCE);
 export const SOCKET_PATH = path.join(MC_DIR, "daemon.sock");
 export const STATE_PATH = path.join(MC_DIR, "state.json");
 export const LOGS_DIR = path.join(MC_DIR, "logs");

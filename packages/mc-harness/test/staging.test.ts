@@ -1,7 +1,9 @@
-import { mkdtemp, stat } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { ensureArtifact } from "#sandbox/artifacts.ts";
 import type { ResolvedProfile } from "#sandbox/profiles.ts";
 import { stageSandboxFiles } from "#sandbox/staging.ts";
 
@@ -95,5 +97,41 @@ describe("stageSandboxFiles", () => {
     expect(
       (await mode(path.join(pluginsDir, "Plugin", "config.yml"))) & 0o004,
     ).toBe(0o004);
+  });
+
+  it("serializes concurrent shared-cache downloads so parallel callers download once without torn writes", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "mc-cache-lock-"));
+    try {
+      const payload = new TextEncoder().encode("paperclip-jar-bytes");
+      const sha256 = createHash("sha256").update(payload).digest("hex");
+      const jarPath = path.join(root, "cache", "paper-26.3.jar");
+      let downloads = 0;
+      const fetcher = async (): Promise<Uint8Array> => {
+        downloads += 1;
+        await Bun.sleep(60);
+        return payload;
+      };
+      await Promise.all([
+        ensureArtifact(
+          jarPath,
+          { url: "https://example.invalid/paper.jar", sha256 },
+          fetcher,
+        ),
+        ensureArtifact(
+          jarPath,
+          { url: "https://example.invalid/paper.jar", sha256 },
+          fetcher,
+        ),
+        ensureArtifact(
+          jarPath,
+          { url: "https://example.invalid/paper.jar", sha256 },
+          fetcher,
+        ),
+      ]);
+      expect(downloads).toBe(1);
+      expect(await Bun.file(jarPath).text()).toBe("paperclip-jar-bytes");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

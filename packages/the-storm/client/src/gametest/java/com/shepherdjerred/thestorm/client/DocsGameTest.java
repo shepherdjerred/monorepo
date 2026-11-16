@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 
 /** Proves that the docs recorder captures a genuine ordinary-player inventory screen. */
@@ -26,7 +27,8 @@ public final class DocsGameTest implements FabricClientGameTest {
     try (var world = context.worldBuilder().create()) {
       world.getConnection().waitForChunksRender();
       context.runOnClient(client -> {
-        client.options.pauseOnLostFocus = false;
+        client.options.pauseOnLostFocus = true;
+        client.options.inactivityFpsLimit().set(InactivityFpsLimit.AFK);
         client.options.enableVsync().set(false);
         client.options.framerateLimit().set(120);
       });
@@ -38,6 +40,11 @@ public final class DocsGameTest implements FabricClientGameTest {
       var ready = context.computeOnClient(client -> capture.arm(client, args));
       context.waitFor(client -> ready.isDone(), 600);
       var unusedReply = ready.getNow(null);
+      context.runOnClient(client -> {
+        if (client.options.pauseOnLostFocus
+            || client.options.inactivityFpsLimit().get() != InactivityFpsLimit.MINIMIZED)
+          throw new IllegalStateException("Docs capture did not disable unfocused throttling");
+      });
       context.waitFor(client -> state(capture).equals("READY"), 600);
       context.runOnClient(client -> {
         capture.start();
@@ -50,6 +57,12 @@ public final class DocsGameTest implements FabricClientGameTest {
             return state(capture).equals("COMPLETE");
           },
           600);
+      context.runOnClient(client -> {
+        if (!client.options.pauseOnLostFocus
+            || client.options.inactivityFpsLimit().get() != InactivityFpsLimit.AFK)
+          throw new IllegalStateException("Docs capture did not restore previous focus options");
+        client.options.pauseOnLostFocus = false;
+      });
       var receipt =
           Protocol.JSON.readTree(Files.readString(directory.resolve("inventory/frames.json")));
       if (receipt.required("schema").intValue() != 4
