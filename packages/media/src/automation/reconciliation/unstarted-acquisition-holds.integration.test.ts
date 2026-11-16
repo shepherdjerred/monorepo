@@ -6,6 +6,9 @@ const { database } = automationTestHarness();
 
 test("unstarted acquisition settlement updates only reconcile_media holds", async () => {
   const db = database();
+  const series = await db.mediaItem.create({
+    data: { kind: "series", title: "Fixture" },
+  });
   const release = await db.releaseCandidate.create({
     data: {
       providerId: "knaben",
@@ -46,7 +49,8 @@ test("unstarted acquisition settlement updates only reconcile_media holds", asyn
       operationId: attemptOwner.id,
       coordinatorOperationId: coordinator.id,
       releaseId: release.id,
-      mediaIds: [],
+      sponsorRequestId: crypto.randomUUID(),
+      mediaIds: [series.id],
       generations: {},
       state: "completed",
     },
