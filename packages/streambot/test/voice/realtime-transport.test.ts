@@ -1,5 +1,7 @@
+import { Registry } from "prom-client";
 import { describe, expect, test } from "vitest";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
+import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
@@ -12,6 +14,10 @@ import {
   runRealtimeVoiceTurn,
   verifyWakeTranscript,
 } from "@shepherdjerred/streambot/voice/realtime-voice.ts";
+import {
+  createVoiceDecisionsRuntime,
+  type VoiceDecisionsRuntimeFetch,
+} from "@shepherdjerred/streambot/voice/voice-command-router.ts";
 import {
   createNoopVoiceMetrics,
   PacedAssistantSender,
@@ -920,5 +926,264 @@ describe("local Realtime probe", () => {
       { name: "skip", arguments: {} },
     ]);
     expect(context.result.mutated).toBe(true);
+  });
+});
+
+function createGatedFixture(routerEnabled: boolean) {
+  const base = fixture();
+  const featureGate: MediaFeatureGate = {
+    assistantV2: () => Promise.resolve(true),
+    history: () => Promise.resolve(true),
+    musicOverVoice: () => Promise.resolve(true),
+    voiceDecisionsRouter: () => Promise.resolve(routerEnabled),
+  };
+  const commandDeps: PlaybackCommandServiceDeps = {
+    ...base.commandDeps,
+    guildId: "100000000000000010",
+    channelId: "100000000000000020",
+    featureGate,
+  };
+  return {
+    ...base,
+    commandDeps,
+    service: new PlaybackCommandService(commandDeps),
+  };
+}
+
+function fakeDecisionResponse(
+  answer:
+    | {
+        readonly type: "choice";
+        readonly choice: string;
+        readonly confidence: number;
+      }
+    | { readonly type: "refusal" },
+): Response {
+  return Response.json(
+    {
+      id: "dec_realtime_integration",
+      model: "gpt-6-luna-2026-11",
+      answers: [
+        answer.type === "refusal"
+          ? { type: "refusal", name: "intent" }
+          : {
+              type: "choice",
+              name: "intent",
+              choice: answer.choice,
+              confidence: answer.confidence,
+              probabilities: [
+                { value: answer.choice, probability: answer.confidence },
+              ],
+            },
+      ],
+      usage: {
+        input_tokens: 150,
+        input_tokens_details: { cached_tokens: 120 },
+        output_tokens: 3,
+        total_tokens: 153,
+      },
+    },
+    { status: 200 },
+  );
+}
+
+describe("OpenAI Decisions pre-response voice command routing", () => {
+  test("fast-paths high-confidence closed commands via /v1/decisions with zero Realtime response.create events", async () => {
+    const seenUrls: string[] = [];
+    const metricsRegister = new Registry();
+    const context = createGatedFixture(true);
+    const decisionsFetch: VoiceDecisionsRuntimeFetch = (input) => {
+      seenUrls.push(
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url,
+      );
+      return Promise.resolve(
+        fakeDecisionResponse({
+          type: "choice",
+          choice: "pause",
+          confidence: 0.97,
+        }),
+      );
+    };
+    const decisionsRuntime = createVoiceDecisionsRuntime({
+      apiKey: "test-key",
+      metricsRegister,
+      fetch: decisionsFetch,
+      logger: () => {
+        /* Silence runtime logs in test. */
+      },
+    });
+    const transport = new FakeRealtimeTransport(
+      [{ name: "skip", arguments: "{}" }],
+      "success",
+      "Hey Streambot, pause.",
+    );
+
+    const result = await runRealtimeVoiceTurn(context.config.voice, {
+      pcm16k: new Float32Array(1600),
+      activatedAtMs: Date.now(),
+      userId: USER,
+      service: context.service,
+      streamer: context.streamer,
+      decisionsRuntime,
+      createTransport: () => transport,
+    });
+
+    expect(seenUrls).toEqual(["https://api.openai.com/v1/decisions"]);
+    expect(result.wakeVerified).toBe(true);
+    expect(result.mutated).toBe(true);
+    expect(result.normalizedCommand).toBe("pause");
+    expect(result.toolCalls).toEqual(["pause"]);
+    expect(context.events).toEqual([{ type: "PAUSE", positionSeconds: 90 }]);
+    expect(transport.sentEvents.map((event) => event.type)).toEqual([
+      "conversation.item.delete",
+    ]);
+    expect(transport.sentEvents).not.toContainEqual({
+      type: "response.create",
+    });
+    expect(transport.functionOutputs).toEqual([]);
+    expect(context.replyPackets).toEqual([]);
+    expect(transport.closeCount).toBe(1);
+    expect(await metricsRegister.metrics()).toContain(
+      'llm_requests_total{service="streambot",workload="voice-command-intent",provider="openai",model="gpt-6-luna",outcome="success"} 1',
+    );
+  });
+
+  test("short-circuits high-confidence non_command with zero response.create events and zero mutations", async () => {
+    const context = createGatedFixture(true);
+    const transport = new FakeRealtimeTransport(
+      [{ name: "stop", arguments: "{}" }],
+      "success",
+      "Hey Streambot, never mind that.",
+    );
+
+    const result = await runRealtimeVoiceTurn(context.config.voice, {
+      pcm16k: new Float32Array(1600),
+      activatedAtMs: Date.now(),
+      userId: USER,
+      service: context.service,
+      streamer: context.streamer,
+      decisionsFetch: () =>
+        Promise.resolve(
+          fakeDecisionResponse({
+            type: "choice",
+            choice: "non_command",
+            confidence: 0.93,
+          }),
+        ),
+      createTransport: () => transport,
+    });
+
+    expect(result.wakeVerified).toBe(true);
+    expect(result.mutated).toBe(false);
+    expect(result.toolCalls).toEqual([]);
+    expect(context.events).toEqual([]);
+    expect(transport.sentEvents).not.toContainEqual({
+      type: "response.create",
+    });
+    expect(transport.functionOutputs).toEqual([]);
+  });
+
+  test("delegates open commands, low-confidence answers, and refusals to gpt-realtime-2.1 response.create", async () => {
+    for (const [transcript, realtimeCall, answer] of [
+      [
+        "Hey Streambot, set volume to 35.",
+        { name: "set_volume", arguments: JSON.stringify({ percent: 35 }) },
+        {
+          type: "choice" as const,
+          choice: "delegate_realtime",
+          confidence: 0.99,
+        },
+      ],
+      [
+        "Hey Streambot, pause.",
+        { name: "skip", arguments: "{}" },
+        { type: "choice" as const, choice: "pause", confidence: 0.62 },
+      ],
+      [
+        "Hey Streambot, skip.",
+        { name: "skip", arguments: "{}" },
+        { type: "refusal" as const },
+      ],
+    ] as const) {
+      const context = createGatedFixture(true);
+      let decisionCalls = 0;
+      const transport = new FakeRealtimeTransport(
+        [realtimeCall],
+        "success",
+        transcript,
+      );
+
+      const result = await runRealtimeVoiceTurn(context.config.voice, {
+        pcm16k: new Float32Array(1600),
+        activatedAtMs: Date.now(),
+        userId: USER,
+        service: context.service,
+        streamer: context.streamer,
+        decisionsFetch: () => {
+          decisionCalls += 1;
+          return Promise.resolve(fakeDecisionResponse(answer));
+        },
+        createTransport: () => transport,
+      });
+
+      expect(decisionCalls).toBe(1);
+      expect(result.wakeVerified).toBe(true);
+      expect(result.mutated).toBe(true);
+      expect(transport.sentEvents).toContainEqual({ type: "response.create" });
+      expect(transport.functionOutputs).toHaveLength(1);
+      expect(context.replyPackets.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("bypasses /v1/decisions completely when streambot-voice-decisions-router-enabled is false", async () => {
+    const context = createGatedFixture(false);
+    let decisionCalls = 0;
+    const decisionsFetch: VoiceDecisionsRuntimeFetch = () => {
+      decisionCalls += 1;
+      return Promise.resolve(
+        fakeDecisionResponse({
+          type: "choice",
+          choice: "pause",
+          confidence: 0.99,
+        }),
+      );
+    };
+    const transport = new FakeRealtimeTransport(
+      [{ name: "skip", arguments: "{}" }],
+      "success",
+      "Hey Streambot, skip.",
+    );
+
+    let turnCompleted = false;
+    const assistant = new VoiceAssistantSession({
+      config: context.config,
+      models: markerModels(),
+      streamer: context.streamer,
+      guildId: "100000000000000010",
+      channelId: "100000000000000020",
+      commands: context.commandDeps,
+      afterTurn: () => {
+        turnCompleted = true;
+      },
+      announce: () => Promise.resolve(),
+      holdTeardown: holdTeardownForTest,
+      createDecoder: markerDecoder,
+      decisionsFetch,
+      createRealtimeTransport: () => transport,
+    });
+
+    const listener = context.voiceListener();
+    if (listener === null) throw new Error("Voice listener was not installed");
+    emitMarkerTurn(listener);
+    await expect.poll(() => turnCompleted).toBe(true);
+    assistant.close();
+
+    expect(decisionCalls).toBe(0);
+    expect(transport.sentEvents).toContainEqual({ type: "response.create" });
+    expect(context.events).toEqual([{ type: "SKIP" }]);
   });
 });

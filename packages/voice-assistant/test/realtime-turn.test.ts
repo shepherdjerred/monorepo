@@ -18,24 +18,28 @@ import {
 
 const WAKE_PREFIXES = ["hey streambot", "hey stream bot"];
 
-class RecordingAudioSink implements AssistantAudioSink {
-  readonly chunks: Uint8Array[] = [];
-  finishCount = 0;
-  cancelCount = 0;
+type RecordedAudioSink = AssistantAudioSink & {
+  readonly chunks: Uint8Array[];
+  finishCount: number;
+  cancelCount: number;
+};
 
-  enqueue(pcm24k: Uint8Array): void {
-    this.chunks.push(pcm24k);
-  }
-
-  finish(): Promise<void> {
-    this.finishCount += 1;
-    return Promise.resolve();
-  }
-
-  cancel(): Promise<void> {
-    this.cancelCount += 1;
-    return Promise.resolve();
-  }
+function createRecordedAudioSink(): RecordedAudioSink {
+  const state: RecordedAudioSink = {
+    chunks: [],
+    finishCount: 0,
+    cancelCount: 0,
+    enqueue(pcm24k) {
+      state.chunks.push(pcm24k);
+    },
+    async finish() {
+      state.finishCount += 1;
+    },
+    async cancel() {
+      state.cancelCount += 1;
+    },
+  };
+  return state;
 }
 
 function recordingMetrics() {
@@ -154,7 +158,7 @@ function createTurnFixture(options: {
   );
   const recordedMetrics = recordingMetrics();
   const attempt = recordingAttempt();
-  const assistantAudio = new RecordingAudioSink();
+  const assistantAudio = createRecordedAudioSink();
 
   const turnOptions: RealtimeTurnOptions = {
     apiKey: "test-openai-key",

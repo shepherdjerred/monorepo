@@ -36,6 +36,10 @@ export const VOICE_FRAGMENT_TAIL_MS: Readonly<Record<string, number>> = {
  */
 export const VOICE_REALTIME_MODEL = "gpt-realtime-2.1";
 export const VOICE_ASSISTANT_VOICE = "marin";
+export const VOICE_DECISIONS_MODEL = "gpt-6-luna";
+export const VOICE_DECISIONS_WORKLOAD = "voice-command-intent";
+export const VOICE_DECISIONS_PROMPT_CACHE_KEY = "streambot:voice-intent:v1";
+export const VOICE_DECISIONS_CONFIDENCE_THRESHOLD = 0.8;
 
 /** Normalized leading wake-prefix variants accepted by the strict transcript gate. */
 export const VOICE_WAKE_PREFIXES: readonly string[] = [

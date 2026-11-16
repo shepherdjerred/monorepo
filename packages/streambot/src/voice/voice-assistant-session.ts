@@ -14,10 +14,12 @@ import {
   type RealtimeCommandTurnResult,
   type SpokenFeedbackClips,
 } from "@shepherdjerred/voice-assistant";
+import type { LlmRuntime } from "@shepherdjerred/llm-runtime";
 import {
   runRealtimeVoiceTurn,
   speakClip,
 } from "@shepherdjerred/streambot/voice/realtime-voice.ts";
+import type { VoiceDecisionsRuntimeFetch } from "@shepherdjerred/streambot/voice/voice-command-router.ts";
 import { streambotVoiceLifecycleDeps } from "@shepherdjerred/streambot/voice/local-voice.ts";
 import type { RealtimeTransportLayer } from "@openai/agents/realtime";
 import {
@@ -70,6 +72,8 @@ export type VoiceAssistantSessionOptions = {
   /** Local pre-rendered feedback; absent in probes/tests, which keep the silent behavior. */
   readonly feedbackClips?: SpokenFeedbackClips;
   readonly createRealtimeTransport?: () => RealtimeTransportLayer;
+  readonly decisionsFetch?: VoiceDecisionsRuntimeFetch | undefined;
+  readonly decisionsRuntime?: LlmRuntime | undefined;
   readonly createDecoder?: () => Pick<DiscordOpusDecoder, "decode" | "close">;
   readonly captureManager?: VoiceCaptureManager;
 };
@@ -213,6 +217,8 @@ export class VoiceAssistantSession {
                 streamer: options.streamer,
                 signal: transaction.signal,
                 telemetry: this.telemetry,
+                decisionsFetch: options.decisionsFetch,
+                decisionsRuntime: options.decisionsRuntime,
                 ...(options.feedbackClips === undefined
                   ? {}
                   : { feedbackClips: options.feedbackClips }),

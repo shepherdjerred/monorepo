@@ -281,6 +281,7 @@ export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "streambot-lol-autoplay-enabled",
   "streambot-sports-streaming-enabled",
   "streambot-subtitles-include-auto-generated",
+  "streambot-voice-decisions-router-enabled",
   "streambot-web-ui-enabled",
   "subtitles-enabled",
 ] as const;

@@ -167,96 +167,128 @@ export function bindPlaybackVoiceCommandPort(
 // VoiceMutationGate moved to @shepherdjerred/voice-assistant with the pipeline; consumers
 // import it from the package directly.
 
+export async function invokeStreambotVoiceTool(options: {
+  readonly commands: VoiceCommandPort;
+  readonly mutationGate: VoiceMutationGate;
+  readonly transactionSignal: AbortSignal;
+  readonly attempt: VoiceAttemptHandle;
+  readonly name: ToolName;
+  readonly mutating: boolean;
+  readonly toolArguments: unknown;
+  readonly operation: () => string | Promise<string>;
+}): Promise<string> {
+  const { name, mutating, toolArguments } = options;
+  const startedAt = performance.now();
+  return await options.attempt.runStage(
+    `streambot.voice.tool.${name}`,
+    {
+      "streambot.voice.tool.name": name,
+      "streambot.voice.tool.argument_fields":
+        typeof toolArguments === "object" && toolArguments !== null
+          ? Object.keys(toolArguments).length
+          : 0,
+      "streambot.voice.tool.mutating": mutating,
+    },
+    async (span) => {
+      let outcome = "error";
+      let result: string | undefined;
+      try {
+        if (options.transactionSignal.aborted) {
+          outcome = "expired";
+          result =
+            "That voice command expired. Say Hey Streambot and try again.";
+          return result;
+        }
+        const advanced =
+          ADVANCED_TOOL_NAMES.has(name) || isAdvancedPlay(name, toolArguments);
+        if (
+          advanced &&
+          options.commands.isAssistantV2Enabled !== undefined &&
+          !(await options.commands.isAssistantV2Enabled())
+        ) {
+          outcome = "disabled";
+          result = "That advanced playback control is not enabled here.";
+          return result;
+        }
+        if (mutating && !options.mutationGate.claim()) {
+          outcome = "rejected-second-mutation";
+          result =
+            "Only one playback change is allowed per wake phrase. Ask again for another change.";
+          return result;
+        }
+        try {
+          result = await options.operation();
+          outcome = "success";
+          return result;
+        } catch (error) {
+          if (error instanceof PlaybackCommandBoundaryError) {
+            if (mutating && !(error instanceof PlaybackCommandBlockedError)) {
+              options.mutationGate.release();
+            }
+            outcome = "denied";
+            result = error.message;
+            return result;
+          }
+          throw error;
+        }
+      } finally {
+        const durationMs = performance.now() - startedAt;
+        voiceToolCallsTotal.inc({ tool: name, outcome });
+        voiceToolDurationSeconds.observe(
+          { tool: name, outcome },
+          durationMs / 1000,
+        );
+        span.setAttributes({
+          "streambot.voice.tool.outcome": outcome,
+          "streambot.voice.tool.duration_ms": durationMs,
+        });
+        options.attempt.tool({
+          name,
+          arguments: toolArguments,
+          ...(result === undefined ? {} : { result }),
+          outcome,
+          durationMs,
+        });
+      }
+    },
+  );
+}
+
 export function createStreambotVoiceTools(
   commands: VoiceCommandPort,
   mutationGate: VoiceMutationGate,
   transactionSignal: AbortSignal = new AbortController().signal,
   attempt: VoiceAttemptHandle = NOOP_VOICE_ATTEMPT_OBSERVER.begin(),
 ) {
-  async function invoke(
+  const invoke = (
     name: ToolName,
     mutating: boolean,
     toolArguments: unknown,
     operation: () => string | Promise<string>,
-  ): Promise<string> {
-    const startedAt = performance.now();
-    return await attempt.runStage(
-      `streambot.voice.tool.${name}`,
-      {
-        "streambot.voice.tool.name": name,
-        "streambot.voice.tool.argument_fields":
-          typeof toolArguments === "object" && toolArguments !== null
-            ? Object.keys(toolArguments).length
-            : 0,
-        "streambot.voice.tool.mutating": mutating,
-      },
-      async (span) => {
-        let outcome = "error";
-        let result: string | undefined;
-        try {
-          if (transactionSignal.aborted) {
-            outcome = "expired";
-            result =
-              "That voice command expired. Say Hey Streambot and try again.";
-            return result;
-          }
-          const advanced =
-            ADVANCED_TOOL_NAMES.has(name) ||
-            isAdvancedPlay(name, toolArguments);
-          if (
-            advanced &&
-            commands.isAssistantV2Enabled !== undefined &&
-            !(await commands.isAssistantV2Enabled())
-          ) {
-            outcome = "disabled";
-            result = "That advanced playback control is not enabled here.";
-            return result;
-          }
-          if (mutating && !mutationGate.claim()) {
-            outcome = "rejected-second-mutation";
-            result =
-              "Only one playback change is allowed per wake phrase. Ask again for another change.";
-            return result;
-          }
-          try {
-            result = await operation();
-            outcome = "success";
-            return result;
-          } catch (error) {
-            if (error instanceof PlaybackCommandBoundaryError) {
-              // A blocked-source denial already fired its public shame announce, so its wake stays
-              // burned; only side-effect-free boundary failures earn a corrected retry.
-              if (mutating && !(error instanceof PlaybackCommandBlockedError)) {
-                mutationGate.release();
-              }
-              outcome = "denied";
-              result = error.message;
-              return result;
-            }
-            throw error;
-          }
-        } finally {
-          const durationMs = performance.now() - startedAt;
-          voiceToolCallsTotal.inc({ tool: name, outcome });
-          voiceToolDurationSeconds.observe(
-            { tool: name, outcome },
-            durationMs / 1000,
-          );
-          span.setAttributes({
-            "streambot.voice.tool.outcome": outcome,
-            "streambot.voice.tool.duration_ms": durationMs,
-          });
-          attempt.tool({
-            name,
-            arguments: toolArguments,
-            ...(result === undefined ? {} : { result }),
-            outcome,
-            durationMs,
-          });
-        }
-      },
-    );
-  }
+  ) =>
+    invokeStreambotVoiceTool({
+      commands,
+      mutationGate,
+      transactionSignal,
+      attempt,
+      name,
+      mutating,
+      toolArguments,
+      operation,
+    });
+
+  const actionTool = (
+    name: ToolName,
+    description: string,
+    mutating: boolean,
+    operation: () => string | Promise<string>,
+  ) =>
+    tool({
+      name,
+      description,
+      parameters: voiceToolSchemas.skip,
+      execute: (input) => invoke(name, mutating, input, operation),
+    });
 
   return [
     ...(commands.selectChannel === undefined
@@ -281,21 +313,13 @@ export function createStreambotVoiceTools(
     ...(commands.listChannels === undefined
       ? []
       : [
-          tool({
-            name: "list_channels",
-            description:
-              "List Streambot playback slots in this Discord voice channel, including this speaker's selection.",
-            parameters: voiceToolSchemas.listChannels,
-            execute: (input) =>
-              invoke(
-                "list_channels",
-                false,
-                input,
-                () =>
-                  commands.listChannels?.() ??
-                  "Numbered channels are unavailable.",
-              ),
-          }),
+          actionTool(
+            "list_channels",
+            "List Streambot playback slots in this Discord voice channel, including this speaker's selection.",
+            false,
+            () =>
+              commands.listChannels?.() ?? "Numbered channels are unavailable.",
+          ),
         ]),
     tool({
       name: "play",
@@ -307,18 +331,15 @@ export function createStreambotVoiceTools(
           commands.play(input, transactionSignal),
         ),
     }),
-    tool({
-      name: "skip",
-      description: "Skip the currently playing item.",
-      parameters: voiceToolSchemas.skip,
-      execute: (input) => invoke("skip", true, input, () => commands.skip()),
-    }),
-    tool({
-      name: "stop",
-      description: "Stop playback and clear the queue. Admin only.",
-      parameters: voiceToolSchemas.stop,
-      execute: (input) => invoke("stop", true, input, () => commands.stop()),
-    }),
+    actionTool("skip", "Skip the currently playing item.", true, () =>
+      commands.skip(),
+    ),
+    actionTool(
+      "stop",
+      "Stop playback and clear the queue. Admin only.",
+      true,
+      () => commands.stop(),
+    ),
     tool({
       name: "seek",
       description:
@@ -344,13 +365,9 @@ export function createStreambotVoiceTools(
       execute: (input) =>
         invoke("set_loop", true, input, () => commands.setLoop(input.mode)),
     }),
-    tool({
-      name: "shuffle",
-      description: "Shuffle the queued items.",
-      parameters: voiceToolSchemas.shuffle,
-      execute: (input) =>
-        invoke("shuffle", true, input, () => commands.shuffle()),
-    }),
+    actionTool("shuffle", "Shuffle the queued items.", true, () =>
+      commands.shuffle(),
+    ),
     tool({
       name: "remove",
       description: "Remove a queued item by its 1-based queue position.",
@@ -358,12 +375,9 @@ export function createStreambotVoiceTools(
       execute: (input) =>
         invoke("remove", true, input, () => commands.remove(input.position)),
     }),
-    tool({
-      name: "clear",
-      description: "Clear the whole queue. Admin only.",
-      parameters: voiceToolSchemas.clear,
-      execute: (input) => invoke("clear", true, input, () => commands.clear()),
-    }),
+    actionTool("clear", "Clear the whole queue. Admin only.", true, () =>
+      commands.clear(),
+    ),
     tool({
       name: "move",
       description: "Move a queued item from one 1-based position to another.",
@@ -381,14 +395,12 @@ export function createStreambotVoiceTools(
           commands.jumpToChapter(input.target),
         ),
     }),
-    tool({
-      name: "subtitles_off",
-      description:
-        "Turn subtitles off for the current video. Enabling a specific track needs the /stream subtitles picker.",
-      parameters: voiceToolSchemas.subtitlesOff,
-      execute: (input) =>
-        invoke("subtitles_off", true, input, () => commands.subtitlesOff()),
-    }),
+    actionTool(
+      "subtitles_off",
+      "Turn subtitles off for the current video. Enabling a specific track needs the /stream subtitles picker.",
+      true,
+      () => commands.subtitlesOff(),
+    ),
     tool({
       name: "subtitles",
       description:
@@ -399,35 +411,24 @@ export function createStreambotVoiceTools(
           commands.subtitles(input.mode, input.language),
         ),
     }),
-    tool({
-      name: "pause",
-      description: "Pause the current video.",
-      parameters: voiceToolSchemas.pause,
-      execute: (input) => invoke("pause", true, input, () => commands.pause()),
-    }),
-    tool({
-      name: "resume",
-      description: "Resume a paused video.",
-      parameters: voiceToolSchemas.resume,
-      execute: (input) =>
-        invoke("resume", true, input, () => commands.resume()),
-    }),
-    tool({
-      name: "restart",
-      description: "Restart the current video from the beginning.",
-      parameters: voiceToolSchemas.restart,
-      execute: (input) =>
-        invoke("restart", true, input, () => commands.restart()),
-    }),
-    tool({
-      name: "previous",
-      description: "Play the previous item from this server again.",
-      parameters: voiceToolSchemas.previous,
-      execute: (input) =>
-        invoke("previous", true, input, () =>
-          commands.previous(transactionSignal),
-        ),
-    }),
+    actionTool("pause", "Pause the current video.", true, () =>
+      commands.pause(),
+    ),
+    actionTool("resume", "Resume a paused video.", true, () =>
+      commands.resume(),
+    ),
+    actionTool(
+      "restart",
+      "Restart the current video from the beginning.",
+      true,
+      () => commands.restart(),
+    ),
+    actionTool(
+      "previous",
+      "Play the previous item from this server again.",
+      true,
+      () => commands.previous(transactionSignal),
+    ),
     tool({
       name: "search_library",
       description:
@@ -448,27 +449,24 @@ export function createStreambotVoiceTools(
           commands.searchMedia(input.query, input.source, transactionSignal),
         ),
     }),
-    tool({
-      name: "list_chapters",
-      description: "Read the current video's chapter list without seeking.",
-      parameters: voiceToolSchemas.listChapters,
-      execute: (input) =>
-        invoke("list_chapters", false, input, () => commands.listChapters()),
-    }),
-    tool({
-      name: "get_queue",
-      description: "Read the current playback queue without changing it.",
-      parameters: voiceToolSchemas.getQueue,
-      execute: (input) =>
-        invoke("get_queue", false, input, () => commands.getQueue()),
-    }),
-    tool({
-      name: "get_now_playing",
-      description: "Read the currently playing item without changing it.",
-      parameters: voiceToolSchemas.getNowPlaying,
-      execute: (input) =>
-        invoke("get_now_playing", false, input, () => commands.getNowPlaying()),
-    }),
+    actionTool(
+      "list_chapters",
+      "Read the current video's chapter list without seeking.",
+      false,
+      () => commands.listChapters(),
+    ),
+    actionTool(
+      "get_queue",
+      "Read the current playback queue without changing it.",
+      false,
+      () => commands.getQueue(),
+    ),
+    actionTool(
+      "get_now_playing",
+      "Read the currently playing item without changing it.",
+      false,
+      () => commands.getNowPlaying(),
+    ),
     ...(commands.listSports === undefined
       ? []
       : [

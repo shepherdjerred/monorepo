@@ -31,6 +31,24 @@ export class PlaybackControls {
     return this.deps.playbackChannel !== undefined;
   }
 
+  hasVoiceDecisionsRouterGate(): boolean {
+    return (
+      this.deps.guildId !== undefined &&
+      this.deps.channelId !== undefined &&
+      this.deps.featureGate?.voiceDecisionsRouter !== undefined
+    );
+  }
+
+  async isVoiceDecisionsRouterEnabled(userId: UserId): Promise<boolean> {
+    const gate = this.deps.featureGate?.voiceDecisionsRouter;
+    const { guildId, channelId } = this.deps;
+    return guildId === undefined ||
+      channelId === undefined ||
+      gate === undefined
+      ? false
+      : await gate({ guildId, channelId, userId });
+  }
+
   selectChannel(userId: UserId, number: number | "auto"): Promise<string> {
     if (number === "auto") {
       if (this.deps.resetChannel === undefined)

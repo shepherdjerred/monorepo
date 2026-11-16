@@ -9,92 +9,87 @@ import type {
 } from "@openai/agents/realtime";
 import { z } from "zod";
 
-const DeleteItemEventSchema = z.object({
-  type: z.literal("conversation.item.delete"),
-  item_id: z.string().min(1),
-});
-
-const CreateItemEventSchema = z.object({
-  type: z.literal("conversation.item.create"),
-  item: z.object({
-    id: z.string().min(1),
-    type: z.literal("message"),
-    role: z.literal("user"),
-    content: z.array(
-      z.object({ type: z.literal("input_text"), text: z.string() }),
-    ),
-  }),
-});
-
 export type FakeRealtimeToolCall = {
   readonly name: string;
   readonly arguments: string;
 };
 
-type RealtimeEventListeners = {
-  [K in keyof RealtimeTransportEventTypes]?: Set<
-    (...args: RealtimeTransportEventTypes[K]) => void
-  >;
-};
+type ConnectionStatus =
+  "connected" | "disconnected" | "connecting" | "disconnecting";
+
+const DeletePayloadSchema = z.object({
+  type: z.literal("conversation.item.delete"),
+  item_id: z.string().min(1),
+});
+
+const CreatePayloadSchema = z.object({
+  type: z.literal("conversation.item.create"),
+  item: z.record(z.string(), z.unknown()),
+});
+
+function unsupportedTransportMethod(feature: string): never {
+  throw new Error(`Unsupported transport operation in test stub: ${feature}`);
+}
 
 export class FakeRealtimeTransport implements RealtimeTransportLayer {
-  status: "connected" | "disconnected" | "connecting" | "disconnecting" =
-    "disconnected";
-  readonly muted = false;
-  readonly sentEvents: RealtimeClientMessage[] = [];
-  readonly committedAudio: ArrayBuffer[] = [];
-  readonly functionOutputs: string[] = [];
-  readonly timeline: string[] = [];
-  connectOptions: RealtimeTransportLayerConnectOptions | null = null;
+  private readonly handlers = new Map<
+    keyof RealtimeTransportEventTypes,
+    Set<(...payload: never[]) => void>
+  >();
+  private completedToolOutputs = 0;
+  readonly muted: boolean = false;
   closeCount = 0;
-  private outputCount = 0;
-  private readonly listeners: RealtimeEventListeners = {};
+  connectOptions: RealtimeTransportLayerConnectOptions | null = null;
+  readonly timeline: string[] = [];
+  readonly functionOutputs: string[] = [];
+  readonly committedAudio: ArrayBuffer[] = [];
+  readonly sentEvents: RealtimeClientMessage[] = [];
+  status: ConnectionStatus = "disconnected";
 
   constructor(
-    private readonly calls: readonly FakeRealtimeToolCall[],
+    private readonly scheduledCalls: readonly FakeRealtimeToolCall[],
     private readonly inputTranscript: string | null = "Hey Streambot, pause.",
     private readonly outputTranscript: string | null = null,
   ) {}
 
   on<K extends keyof RealtimeTransportEventTypes>(
-    type: K,
-    listener: (...args: RealtimeTransportEventTypes[K]) => void,
+    eventName: K,
+    handler: (...args: RealtimeTransportEventTypes[K]) => void,
   ): this {
-    const listeners = this.listeners[type];
-    if (listeners) {
-      listeners.add(listener);
-      return this;
-    }
-    this.listeners[type] = new Set([listener]);
+    const group = this.handlers.get(eventName) ?? new Set();
+    group.add(handler);
+    this.handlers.set(eventName, group);
     return this;
   }
 
   off<K extends keyof RealtimeTransportEventTypes>(
-    type: K,
-    listener: (...args: RealtimeTransportEventTypes[K]) => void,
+    eventName: K,
+    handler: (...args: RealtimeTransportEventTypes[K]) => void,
   ): this {
-    this.listeners[type]?.delete(listener);
+    this.handlers.get(eventName)?.delete(handler);
     return this;
   }
 
   once<K extends keyof RealtimeTransportEventTypes>(
-    type: K,
-    listener: (...args: RealtimeTransportEventTypes[K]) => void,
+    eventName: K,
+    handler: (...args: RealtimeTransportEventTypes[K]) => void,
   ): this {
-    const onceListener = (...args: RealtimeTransportEventTypes[K]): void => {
-      this.off(type, onceListener);
-      listener(...args);
+    const wrapper = (...payload: RealtimeTransportEventTypes[K]): void => {
+      this.off(eventName, wrapper);
+      handler(...payload);
     };
-    return this.on(type, onceListener);
+    return this.on(eventName, wrapper);
   }
 
   emit<K extends keyof RealtimeTransportEventTypes>(
-    type: K,
-    ...args: RealtimeTransportEventTypes[K]
+    eventName: K,
+    ...payload: RealtimeTransportEventTypes[K]
   ): boolean {
-    const listeners = this.listeners[type];
-    if (!listeners || listeners.size === 0) return false;
-    for (const listener of listeners) listener(...args);
+    const group = this.handlers.get(eventName);
+    if (group === undefined || group.size === 0) return false;
+    for (const handler of group) {
+      Reflect.apply(handler, undefined, payload);
+    }
     return true;
   }
 
@@ -105,59 +100,42 @@ export class FakeRealtimeTransport implements RealtimeTransportLayer {
     return Promise.resolve();
   }
 
-  sendEvent(event: RealtimeClientMessage): void {
-    this.sentEvents.push(event);
-    this.timeline.push(event.type);
-    const deletion = DeleteItemEventSchema.safeParse(event);
-    if (deletion.success) {
-      const itemId = deletion.data.item_id;
-      queueMicrotask(() => {
-        this.timeline.push("conversation.item.deleted");
-        this.emit("*", {
-          type: "conversation.item.deleted",
-          event_id: `deleted-${itemId}`,
-          item_id: itemId,
+  sendEvent(message: RealtimeClientMessage): void {
+    this.sentEvents.push(message);
+    this.timeline.push(message.type);
+
+    switch (message.type) {
+      case "conversation.item.delete": {
+        const parsedDelete = DeletePayloadSchema.parse(message);
+        queueMicrotask(() => {
+          this.timeline.push("conversation.item.deleted");
+          this.emit("*", {
+            type: "conversation.item.deleted",
+            event_id: `del_${parsedDelete.item_id}`,
+            item_id: parsedDelete.item_id,
+          });
         });
-      });
-      return;
-    }
-    if (event.type === "conversation.item.delete") {
-      throw new Error("Invalid conversation item deletion event");
-    }
-    const creation = CreateItemEventSchema.safeParse(event);
-    if (creation.success) {
-      queueMicrotask(() => {
-        this.timeline.push("conversation.item.added");
-        this.emit("*", {
-          type: "conversation.item.added",
-          event_id: "added-verified-command",
-          item: creation.data.item,
+        return;
+      }
+      case "conversation.item.create": {
+        const parsedCreate = CreatePayloadSchema.parse(message);
+        queueMicrotask(() => {
+          this.timeline.push("conversation.item.added");
+          this.emit("*", {
+            type: "conversation.item.added",
+            event_id: "add_verified_item",
+            item: parsedCreate.item,
+          });
         });
-      });
-      return;
-    }
-    if (event.type === "conversation.item.create") {
-      throw new Error("Invalid verified command item event");
-    }
-    if (event.type !== "response.create") return;
-    const responseId = "fake-response";
-    this.emit("turn_started", {
-      type: "response_started",
-      providerData: { response: { id: responseId } },
-    });
-    for (const [index, call] of this.calls.entries()) {
-      this.emit("function_call", {
-        type: "function_call",
-        name: call.name,
-        arguments: call.arguments,
-        callId: `fake-call-${String(index)}`,
-        responseId,
-      });
-    }
-    if (this.calls.length === 0) {
-      queueMicrotask(() => {
-        this.complete(responseId);
-      });
+        return;
+      }
+      case "response.create": {
+        this.beginScheduledResponse();
+        return;
+      }
+      default: {
+        return;
+      }
     }
   }
 
@@ -166,46 +144,45 @@ export class FakeRealtimeTransport implements RealtimeTransportLayer {
   }
 
   sendMessage(
-    _message: Parameters<RealtimeTransportLayer["sendMessage"]>[0],
-    _otherEventData: Parameters<RealtimeTransportLayer["sendMessage"]>[1],
+    _text: Parameters<RealtimeTransportLayer["sendMessage"]>[0],
+    _meta: Parameters<RealtimeTransportLayer["sendMessage"]>[1],
   ): void {
-    throw new Error("Fake Realtime transport does not accept text messages");
+    unsupportedTransportMethod("sendMessage");
   }
 
   addImage(): void {
-    throw new Error("Fake Realtime transport does not accept images");
+    unsupportedTransportMethod("addImage");
   }
 
-  sendAudio(audio: ArrayBuffer, options: { commit?: boolean }): void {
+  sendAudio(pcmBuffer: ArrayBuffer, options: { commit?: boolean }): void {
     if (options.commit !== true) {
-      throw new Error("Voice turn audio must be committed manually");
+      throw new Error("Expected manual commit=true on sendAudio");
     }
-    this.committedAudio.push(audio);
+    this.committedAudio.push(pcmBuffer);
     this.timeline.push("input_audio_buffer.commit");
-    if (this.inputTranscript !== null) {
-      const transcript = this.inputTranscript;
-      queueMicrotask(() => {
-        this.timeline.push("transcription.completed");
-        this.emit("*", {
-          type: "conversation.item.input_audio_transcription.completed",
-          event_id: "fake-transcription",
-          item_id: "fake-input",
-          content_index: 0,
-          transcript,
-          usage: {
-            type: "tokens",
-            input_tokens: 10,
-            output_tokens: 4,
-            total_tokens: 14,
-            input_token_details: { audio_tokens: 10, text_tokens: 0 },
-          },
-        });
+    const spokenText = this.inputTranscript;
+    if (spokenText === null) return;
+    queueMicrotask(() => {
+      this.timeline.push("transcription.completed");
+      this.emit("*", {
+        type: "conversation.item.input_audio_transcription.completed",
+        event_id: "evt_transcription_done",
+        item_id: "itm_audio_in",
+        content_index: 0,
+        transcript: spokenText,
+        usage: {
+          type: "tokens",
+          input_tokens: 10,
+          output_tokens: 4,
+          total_tokens: 14,
+          input_token_details: { audio_tokens: 10, text_tokens: 0 },
+        },
       });
-    }
+    });
   }
 
   updateSessionConfig(): void {
-    /* Initial configuration is captured by connect(). */
+    /* Session config is asserted via connectOptions. */
   }
 
   close(): void {
@@ -215,20 +192,20 @@ export class FakeRealtimeTransport implements RealtimeTransportLayer {
   }
 
   mute(): void {
-    /* Server WebSocket test transport has no input track to mute. */
+    /* Server transport stub has no microphone track. */
   }
 
   sendFunctionCallOutput(
-    _toolCall: TransportToolCallEvent,
-    output: string,
-    _startResponse: boolean,
+    _call: TransportToolCallEvent,
+    resultText: string,
+    _triggerReply: boolean,
   ): void {
-    this.functionOutputs.push(output);
+    this.functionOutputs.push(resultText);
     this.timeline.push("function_call_output");
-    this.outputCount += 1;
-    if (this.outputCount === this.calls.length) {
+    this.completedToolOutputs += 1;
+    if (this.completedToolOutputs === this.scheduledCalls.length) {
       queueMicrotask(() => {
-        this.complete("fake-response");
+        this.emitCompletedResponse("resp_stub");
       });
     }
   }
@@ -237,53 +214,71 @@ export class FakeRealtimeTransport implements RealtimeTransportLayer {
     this.emit("audio_interrupted");
   }
 
-  resetHistory(_oldHistory: RealtimeItem[], _newHistory: RealtimeItem[]): void {
-    /* No retained history in the deterministic transport. */
+  resetHistory(_prev: RealtimeItem[], _next: RealtimeItem[]): void {
+    /* Stateless test stub. */
   }
 
   sendMcpResponse(
-    _approvalRequest: Parameters<RealtimeTransportLayer["sendMcpResponse"]>[0],
+    _request: Parameters<RealtimeTransportLayer["sendMcpResponse"]>[0],
     _approved: boolean,
   ): void {
-    throw new Error("MCP is not available in FakeRealtimeTransport");
+    unsupportedTransportMethod("sendMcpResponse");
   }
 
-  private complete(responseId: string): void {
+  private beginScheduledResponse(): void {
+    const responseId = "resp_stub";
+    this.emit("turn_started", {
+      type: "response_started",
+      providerData: { response: { id: responseId } },
+    });
+    for (const [idx, toolCall] of this.scheduledCalls.entries()) {
+      this.emit("function_call", {
+        type: "function_call",
+        name: toolCall.name,
+        arguments: toolCall.arguments,
+        callId: `call_${String(idx)}`,
+        responseId,
+      });
+    }
+    if (this.scheduledCalls.length === 0) {
+      queueMicrotask(() => {
+        this.emitCompletedResponse(responseId);
+      });
+    }
+  }
+
+  private emitCompletedResponse(responseId: string): void {
     if (this.outputTranscript !== null) {
       this.emit("*", {
         type: "response.output_audio_transcript.done",
-        event_id: "fake-output-transcript",
+        event_id: "evt_out_transcript",
         response_id: responseId,
-        item_id: "fake-output-item",
+        item_id: "itm_audio_out",
         output_index: 0,
         content_index: 0,
         transcript: this.outputTranscript,
       });
     }
-    const audio = new Uint8Array(960);
-    audio[0] = 1;
-    this.emit("audio", { type: "audio", data: audio.buffer, responseId });
-    const usage = new Usage({
+    const sampleFrame = Uint8Array.of(1, ...new Uint8Array(959));
+    this.emit("audio", {
+      type: "audio",
+      data: sampleFrame.buffer,
+      responseId,
+    });
+    const tokenSummary = {
       requests: 1,
       inputTokens: 12,
       outputTokens: 8,
       totalTokens: 20,
       inputTokensDetails: { audio_tokens: 10 },
       outputTokensDetails: { audio_tokens: 6 },
-    });
-    this.emit("usage_update", usage);
+    };
+    this.emit("usage_update", new Usage(tokenSummary));
     this.emit("turn_done", {
       type: "response_done",
       response: {
         id: responseId,
-        usage: {
-          requests: 1,
-          inputTokens: 12,
-          outputTokens: 8,
-          totalTokens: 20,
-          inputTokensDetails: { audio_tokens: 10 },
-          outputTokensDetails: { audio_tokens: 6 },
-        },
+        usage: tokenSummary,
         output: [],
       },
     });

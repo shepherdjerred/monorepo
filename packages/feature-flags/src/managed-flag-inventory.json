@@ -3734,6 +3734,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-voice-decisions-router-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot",
+      "purpose": "Route closed Streambot voice commands through OpenAI Decisions API (gpt-6-luna) before falling back to Realtime audio generation.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-web-ui-enabled",
       "owner": "streambot",
       "namespace": "streambot",
