@@ -211,11 +211,6 @@
       "count": 2
     }
   },
-  "packages/backend/src/testing/postgres-server.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "packages/backend/src/trpc/context.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

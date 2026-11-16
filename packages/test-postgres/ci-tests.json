@@ -1,0 +1,24 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/test-postgres",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["src", "--exclude", "**/*.integration.test.ts"]
+    },
+    {
+      "runner": "vitest",
+      "name": "integration",
+      "tier": "extended",
+      "args": [
+        "--dir",
+        "src",
+        ".integration.test.ts",
+        "--testTimeout",
+        "60000",
+        "--hookTimeout",
+        "60000"
+      ]
+    }
+  ]
+}

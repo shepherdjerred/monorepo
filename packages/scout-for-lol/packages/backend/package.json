@@ -109,6 +109,7 @@
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",
+    "@shepherdjerred/test-postgres": "workspace:*",
     "@types/node": "^26.1.1",
     "aws-sdk-client-mock": "^4.1.0",
     "bun-types": "1.4.2",

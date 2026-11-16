@@ -1,14 +1,10 @@
 import { PrismaClient } from "#generated/prisma/client/index.js";
 import { PrismaPg } from "@prisma/adapter-pg";
+import {
+  cloneTemplateDatabaseSync,
+  dropOwnedTestDatabase,
+} from "@shepherdjerred/test-postgres";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import {
-  devDatabaseUrl,
-  devPostgresPort,
-} from "#src/testing/postgres-server.ts";
-import {
-  currentDatabaseOwner,
-  formatOwnerComment,
-} from "#src/testing/test-database-owner.ts";
 import {
   ensureTestTemplateSync,
   getTestTemplateDatabase,
@@ -45,28 +41,12 @@ export function connectTestDatabase(databaseUrl: string): ExtendedPrismaClient {
 function testDatabaseName(testName: string): string {
   const sanitized = testName
     .toLowerCase()
-    .replaceAll(/[^a-z0-9_]+/g, "_")
-    .replaceAll(/^_+|_+$/g, "");
+    .replaceAll(/[^a-z0-9_]+/gu, "_")
+    .replaceAll(/^_+|_+$/gu, "");
   const prefix = `scout_test_${Date.now().toString()}_${Math.random().toString(36).slice(2, 6)}_`;
   return `${prefix}${sanitized}`.slice(0, 63);
 }
 
-/**
- * Creates an isolated test database and returns an ExtendedPrismaClient
- * configured to use it.
- *
- * Clones the pre-built hash-scoped test template database on the shared local
- * Postgres server (`createdb -T` is a server-side file copy, ~50–150ms —
- * the Postgres equivalent of the old copy-a-SQLite-file strategy). The first
- * call in a process starts the server and ensures the template; suites that
- * never call this never start Postgres. The database records this process as
- * its owner, so another run's sweep keeps it while this process lives.
- *
- * @param testName - A unique name for this test suite (encoded into the
- *   database name)
- * @returns `prisma` plus the database name (`dbPath`, kept for API
- *   compatibility — it is no longer a filesystem path) and its URL
- */
 export function createTestDatabase(testName: string): {
   prisma: ExtendedPrismaClient;
   dbPath: string;
@@ -74,40 +54,18 @@ export function createTestDatabase(testName: string): {
 } {
   const dbName = testDatabaseName(testName);
   ensureTestTemplateSync();
-  const templateDatabase = getTestTemplateDatabase();
-  const port = devPostgresPort();
-  const result = Bun.spawnSync(
-    [
-      "createdb",
-      "-h",
-      "127.0.0.1",
-      "-p",
-      port.toString(),
-      "-U",
-      "scout",
-      "-T",
-      templateDatabase,
-      dbName,
-      // createdb's description argument: the owner record the sweep reads.
-      formatOwnerComment(currentDatabaseOwner()),
-    ],
-    { stdout: "pipe", stderr: "pipe" },
-  );
-  if (result.exitCode !== 0) {
-    throw new Error(
-      `createdb -T ${templateDatabase} ${dbName} failed: ${result.stderr.toString()}\n` +
-        `Run \`bun test\` from packages/backend once to build the template, ` +
-        `and \`mise install\` at the repo root if Postgres binaries are missing.`,
-    );
-  }
+  const templateName = getTestTemplateDatabase();
+  const handle = cloneTemplateDatabaseSync({
+    prefix: "scout",
+    user: "scout",
+    templateName,
+    dbName,
+  });
 
-  const dbUrl = devDatabaseUrl(dbName);
   return {
-    // Must mirror src/database/index.ts so tests exercise the same adapter
-    // as production.
-    prisma: connectTestDatabase(dbUrl),
+    prisma: connectTestDatabase(handle.url),
     dbPath: dbName,
-    dbUrl,
+    dbUrl: handle.url,
   };
 }
 
@@ -119,33 +77,9 @@ export async function dropTestDatabase(
     throw new Error(`Refusing to drop non-test database ${databaseName}`);
   }
   await prismaClient.$disconnect();
-  const result = Bun.spawnSync(
-    [
-      "dropdb",
-      "-h",
-      "127.0.0.1",
-      "-p",
-      devPostgresPort().toString(),
-      "-U",
-      "scout",
-      "--force",
-      databaseName,
-    ],
-    { stdout: "pipe", stderr: "pipe" },
-  );
-  if (result.exitCode !== 0) {
-    throw new Error(
-      `dropdb ${databaseName} failed: ${result.stderr.toString()}`,
-    );
-  }
+  await dropOwnedTestDatabase(databaseName);
 }
 
-/**
- * Helper function to safely delete from tables that might not exist.
- * Useful in beforeEach/afterEach hooks for cleanup.
- *
- * @param fn - A function that returns a Promise (e.g., prisma.table.deleteMany())
- */
 export async function deleteIfExists(
   fn: () => Promise<unknown>,
 ): Promise<void> {
@@ -156,15 +90,6 @@ export async function deleteIfExists(
   }
 }
 
-/**
- * The `#src/database/index.ts` module with its ambient client replaced.
- *
- * Every integration test that exercises code reaching for the ambient
- * `prisma` needs exactly this and needs it IDENTICAL: a copy that drifted
- * would leave one suite quietly writing to the real client. So it is defined
- * once and each test spreads it into its own `vi.mock` factory, which has to
- * stay at the call site because those factories are hoisted.
- */
 export async function testDatabaseModule(
   prisma: ExtendedPrismaClient,
 ): Promise<Record<string, unknown>> {
