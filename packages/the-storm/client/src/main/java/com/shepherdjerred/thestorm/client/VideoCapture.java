@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -102,6 +103,8 @@ final class VideoCapture implements AutoCloseable {
   private double previousEffect;
   private boolean previousBob;
   private boolean previousHud;
+  private boolean previousPauseOnLostFocus;
+  private InactivityFpsLimit previousInactivityFpsLimit = InactivityFpsLimit.AFK;
   private CameraType previousCamera = CameraType.FIRST_PERSON;
   private int previousWidth;
   private int previousHeight;
@@ -201,6 +204,8 @@ final class VideoCapture implements AutoCloseable {
     previousEffect = client.options.fovEffectScale().get();
     previousBob = client.options.bobView().get();
     previousHud = client.gui.hud.isHidden();
+    previousPauseOnLostFocus = client.options.pauseOnLostFocus;
+    previousInactivityFpsLimit = client.options.inactivityFpsLimit().get();
     previousCamera = client.options.getCameraType();
     var window = client.getWindow();
     previousWidth = window.getScreenWidth();
@@ -208,6 +213,8 @@ final class VideoCapture implements AutoCloseable {
     window.setWindowed(
         (int) Math.round(1280.0 * previousWidth / window.getWidth()),
         (int) Math.round(720.0 * previousHeight / window.getHeight()));
+    client.options.pauseOnLostFocus = false;
+    client.options.inactivityFpsLimit().set(InactivityFpsLimit.MINIMIZED);
     client.options.fov().set(current.fov);
     client.options.fovEffectScale().set(0.0);
     client.options.bobView().set(false);
@@ -396,6 +403,8 @@ final class VideoCapture implements AutoCloseable {
 
   private void restore(Minecraft client, Run current) {
     if (current.position == null) return;
+    client.options.pauseOnLostFocus = previousPauseOnLostFocus;
+    client.options.inactivityFpsLimit().set(previousInactivityFpsLimit);
     client.options.fov().set(previousFov);
     client.options.fovEffectScale().set(previousEffect);
     client.options.bobView().set(previousBob);

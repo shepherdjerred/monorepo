@@ -41,13 +41,13 @@ export function ownPrismGame(
     while (state.pid === undefined) {
       if (state.stopping)
         throw new Error(
-          "Capture stopped before its game identity was observed; retained instance for inspection",
+          "Capture stopped before its game identity was observed; diagnostics copied to artifacts",
         );
       const code = launcher.exitCode();
       if (code !== null && code !== 0) return code;
       if (performance.now() >= deadline)
         throw new Error(
-          "Prism game did not expose its owned control socket; retained instance for inspection",
+          "Prism game did not expose its owned control socket; diagnostics copied to artifacts",
         );
       if (await socketExists(spec.bootstrap.socket)) {
         const status = await clientRequest(
@@ -68,7 +68,7 @@ export function ownPrismGame(
     try {
       const code = await observe();
       state.code = code;
-      await cleanup(true);
+      await cleanup(code === 0);
       return code;
     } catch (error) {
       state.code = 1;

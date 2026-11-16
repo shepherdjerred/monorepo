@@ -22,4 +22,17 @@ describe("Prism process shutdown", () => {
     });
     expect(signal).not.toHaveBeenCalled();
   });
+  it("terminates all JVMs sharing the same session bootstrap property", async () => {
+    const alive = new Set<number>([101, 202]);
+    const find = vi.fn((sessionPath: string) =>
+      sessionPath === "/tmp/shared-session" ? [...alive] : [],
+    );
+    const signal = vi.fn((pid: number) => {
+      alive.delete(pid);
+    });
+    await stopPrism("/tmp/shared-session", 0, { find, signal });
+    expect(signal).toHaveBeenCalledWith(101, "SIGTERM");
+    expect(signal).toHaveBeenCalledWith(202, "SIGTERM");
+    expect(alive.size).toBe(0);
+  });
 });

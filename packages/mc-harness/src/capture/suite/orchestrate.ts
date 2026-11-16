@@ -25,17 +25,18 @@ import {
 } from "./define.ts";
 import {
   archiveCapture,
+  archiveCaptureFailureDiagnostics,
   retainSuiteRun,
   readSuiteRun,
   restoreCapture,
   retainedSuiteFile,
   relativeSuiteFile,
+  SuiteRunSchema,
 } from "./archive.ts";
 import { command } from "./process.ts";
 import type { BlobStore } from "./store.ts";
 import { localRollout } from "./rollout.ts";
 import { syncEmbeds } from "./embeds.ts";
-import { SuiteRunSchema } from "./archive.ts";
 import { awsStore } from "./aws-store.ts";
 import { publishLegacy } from "./legacy.ts";
 import { runScenarioSessions } from "./sessions.ts";
@@ -129,26 +130,30 @@ export async function runSuite(options: SuiteOptions) {
       path.relative(options.repoRoot, options.suiteFile),
     ),
   );
-  selectScenarios(recordedSuite, options);
-  const fixture =
-    options.fixture === undefined
-      ? await withLiveFixture(options.repoRoot, (source) =>
-          retainFixture(source, recordedSuite.patches, store),
-        )
-      : z
-          .string()
-          .regex(/^[a-f0-9]{64}$/u)
-          .parse(options.fixture);
-  await verifyFixturePatches(store, cache, fixture, recordedSuite.patches);
-  return dispatchCapture({
-    ...options,
-    store,
-    directory,
-    cache,
-    id,
-    fixture,
-    runtime,
-  });
+  try {
+    selectScenarios(recordedSuite, options);
+    const fixture =
+      options.fixture === undefined
+        ? await withLiveFixture(options.repoRoot, (source) =>
+            retainFixture(source, recordedSuite.patches, store),
+          )
+        : z
+            .string()
+            .regex(/^[a-f0-9]{64}$/u)
+            .parse(options.fixture);
+    await verifyFixturePatches(store, cache, fixture, recordedSuite.patches);
+    return await dispatchCapture({
+      ...options,
+      store,
+      directory,
+      cache,
+      id,
+      fixture,
+      runtime,
+    });
+  } finally {
+    await removeRuntimeWorktree(options.repoRoot, runtime.sourceDirectory);
+  }
 }
 
 export type CaptureOptions = Omit<SuiteOptions, "runtime"> & {
@@ -161,29 +166,59 @@ export type CaptureOptions = Omit<SuiteOptions, "runtime"> & {
   rolloutSnapshot?: string | null | undefined;
 };
 
+async function removeRuntimeWorktree(
+  repoRoot: string,
+  sourceDirectory: string,
+): Promise<void> {
+  try {
+    await command([
+      "git",
+      "-C",
+      repoRoot,
+      "worktree",
+      "remove",
+      "--force",
+      sourceDirectory,
+    ]);
+  } catch {
+    // Worktree may have already been removed.
+  }
+}
+
 async function dispatchCapture(options: CaptureOptions) {
   const { store: _store, ...request } = options;
   const file = path.join(options.directory, "request.json");
   await Bun.write(file, JSON.stringify(request), { mode: 0o600 });
-  await command(
-    [
-      "bun",
-      path.join(
-        options.runtime.sourceDirectory,
-        "packages/mc-harness/src/capture/suite/worker.ts",
-      ),
-      file,
-    ],
-    undefined,
-    {
-      cwd: options.runtime.sourceDirectory,
-      progress: true,
-      env: { TOOLKIT_MC_DIRECTORY: path.join(options.directory, "harness") },
-    },
-  );
-  return SuiteRunSchema.parse(
-    await Bun.file(path.join(options.directory, "run.json")).json(),
-  );
+  try {
+    await command(
+      [
+        "bun",
+        path.join(
+          options.runtime.sourceDirectory,
+          "packages/mc-harness/src/capture/suite/worker.ts",
+        ),
+        file,
+      ],
+      undefined,
+      {
+        cwd: options.runtime.sourceDirectory,
+        progress: true,
+        env: { TOOLKIT_MC_DIRECTORY: path.join(options.directory, "harness") },
+      },
+    );
+    return SuiteRunSchema.parse(
+      await Bun.file(path.join(options.directory, "run.json")).json(),
+    );
+  } catch (error) {
+    try {
+      await archiveCaptureFailureDiagnostics({
+        directory: options.directory,
+      });
+    } catch {
+      // Preserve the original capture failure.
+    }
+    throw error;
+  }
 }
 async function startRollout(options: CaptureOptions, suite: CaptureSuite) {
   const source =
@@ -316,32 +351,36 @@ export async function replaySuite(
     runtimeHash: previous.runtime,
     destination: path.join(directory, "source"),
   });
-  const selection =
-    options.scenario === undefined && options.shot === undefined
-      ? previous.selection
-      : {};
-  const recordedSuite = await loadSuite(
-    path.join(sourceDirectory, previous.suiteFile),
-  );
-  if (
-    recordedSuite.id !== previous.suite ||
-    selectScenarios(recordedSuite, { ...options, ...selection }).some(
-      (s) => !previous.scenarios.some((original) => original.id === s.id),
+  try {
+    const selection =
+      options.scenario === undefined && options.shot === undefined
+        ? previous.selection
+        : {};
+    const recordedSuite = await loadSuite(
+      path.join(sourceDirectory, previous.suiteFile),
+    );
+    if (
+      recordedSuite.id !== previous.suite ||
+      selectScenarios(recordedSuite, { ...options, ...selection }).some(
+        (s) => !previous.scenarios.some((original) => original.id === s.id),
+      )
     )
-  )
-    throw new Error("Replay selection is outside the retained suite run");
-  return dispatchCapture({
-    ...options,
-    suiteFile: retainedSuiteFile(options.repoRoot, previous),
-    store,
-    ...selection,
-    directory,
-    cache,
-    id,
-    fixture: previous.fixture,
-    runtime: { sourceDirectory, hash: previous.runtime },
-    rolloutSnapshot: previous.rollout,
-  });
+      throw new Error("Replay selection is outside the retained suite run");
+    return await dispatchCapture({
+      ...options,
+      suiteFile: retainedSuiteFile(options.repoRoot, previous),
+      store,
+      ...selection,
+      directory,
+      cache,
+      id,
+      fixture: previous.fixture,
+      runtime: { sourceDirectory, hash: previous.runtime },
+      rolloutSnapshot: previous.rollout,
+    });
+  } finally {
+    await removeRuntimeWorktree(options.repoRoot, sourceDirectory);
+  }
 }
 
 export async function renderSuite(

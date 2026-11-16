@@ -6,14 +6,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.sdl.SDLVideo;
 import tools.jackson.databind.JsonNode;
 
 /** Records ordinary player actions and UI without changing simulation or camera position. */
 final class DocsCapture implements AutoCloseable {
+  static final boolean REQUIRES_WINDOW_FOCUS = false;
+
   record Marker(String name, int frame) {}
 
   private final java.util.List<Marker> markers = new java.util.ArrayList<>();
@@ -30,9 +32,18 @@ final class DocsCapture implements AutoCloseable {
   private int total;
   private int width;
   private int height;
+  private boolean previousPauseOnLostFocus;
+  private InactivityFpsLimit previousInactivityFpsLimit = InactivityFpsLimit.AFK;
+  private boolean optionsOverridden;
 
   DocsCapture(Path artifacts) {
     this.artifacts = artifacts;
+  }
+
+  static void validateWindowState(boolean iconified, boolean fullscreen) {
+    if (iconified || fullscreen) {
+      throw new IllegalStateException("Recording requires a non-minimized windowed client");
+    }
   }
 
   boolean active() {
@@ -45,12 +56,14 @@ final class DocsCapture implements AutoCloseable {
     name = Protocol.text(args, "name", 80);
     if (!name.matches("[a-zA-Z0-9_-]+")) throw new IllegalArgumentException("Invalid clip name");
     total = Protocol.integer(args, "frames", 1, 1800);
-    if (client.getWindow().isIconified() || client.options.fullscreen().get())
-      throw new IllegalStateException("Recording requires a visible windowed client");
+    validateWindowState(client.getWindow().isIconified(), client.options.fullscreen().get());
     width = client.getWindow().getScreenWidth();
     height = client.getWindow().getScreenHeight();
-    if (!SDLVideo.SDL_RaiseWindow(client.getWindow().handle()))
-      throw new IllegalStateException("Capture window could not take focus");
+    previousPauseOnLostFocus = client.options.pauseOnLostFocus;
+    previousInactivityFpsLimit = client.options.inactivityFpsLimit().get();
+    optionsOverridden = true;
+    client.options.pauseOnLostFocus = false;
+    client.options.inactivityFpsLimit().set(InactivityFpsLimit.MINIMIZED);
     DocsViewport.apply(client);
     error = "";
     observations.clear();
@@ -69,7 +82,7 @@ final class DocsCapture implements AutoCloseable {
           if (failure != null) {
             state = "FAILED";
             error = failure.toString();
-            client.getWindow().setWindowed(width, height);
+            restoreWindowAndOptions(client);
             throw new IllegalStateException("Docs capture setup failed", failure);
           }
           return status();
@@ -88,9 +101,7 @@ final class DocsCapture implements AutoCloseable {
     var prepared = preparation;
     if (prepared == null || !prepared.isDone() || prepared.isCompletedExceptionally()) return;
     try {
-      if (client.getWindow().isIconified())
-        throw new IllegalStateException("Capture window minimized");
-      if (!focused(client)) return;
+      validateWindowState(client.getWindow().isIconified(), client.options.fullscreen().get());
       var target = client.gameRenderer.mainRenderTarget();
       if (target.width != DocsViewport.target().width()
           || target.height != DocsViewport.target().height()) {
@@ -125,10 +136,13 @@ final class DocsCapture implements AutoCloseable {
     return marker;
   }
 
-  private boolean focused(Minecraft client) {
-    if (client.isWindowActive()) return true;
-    if (state.equals("ARMING")) return false;
-    throw new IllegalStateException("Capture window lost focus");
+  private void restoreWindowAndOptions(Minecraft client) {
+    if (optionsOverridden) {
+      client.options.pauseOnLostFocus = previousPauseOnLostFocus;
+      client.options.inactivityFpsLimit().set(previousInactivityFpsLimit);
+      optionsOverridden = false;
+    }
+    client.getWindow().setWindowed(width, height);
   }
 
   private void captureFrame(Minecraft client, FrameClock timing, VideoFrames frames, long now) {
@@ -170,7 +184,7 @@ final class DocsCapture implements AutoCloseable {
     if (sealed == null) {
       receipt =
           frames.finishDocs(total, error, Map.copyOf(observations), java.util.List.copyOf(markers));
-      client.getWindow().setWindowed(width, height);
+      restoreWindowAndOptions(client);
     } else if (sealed.isDone()) {
       try {
         sealed.getNow(null);

@@ -2,7 +2,16 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { preparePrismInstance, waitForPrismDiscovery } from "#daemon/prism.ts";
+import { gradleLaunchArgs } from "#daemon/client-launch.ts";
+import {
+  preparePrismInstance,
+  prismControlInstanceName,
+  waitForPrismDiscovery,
+} from "#daemon/prism.ts";
+import {
+  caffeinateArgs,
+  cleanupPrismCaptureInstance,
+} from "#daemon/prism-launcher.ts";
 import { ClientStartRequestSchema } from "#protocol/client.ts";
 import { assessLiveWrite, type LiveGuardConfig } from "#src/live/guard.ts";
 
@@ -172,5 +181,88 @@ describe("authenticated Prism control", () => {
         config,
       ),
     ).toThrow("Unsupported live client action");
+  });
+});
+
+describe("parallel Prism session isolation", () => {
+  it("isolates per-session Prism names, Gradle cache dirs, caffeinate watchdog, and failed capture cleanup", async () => {
+    const { dir, stagedMods, bootstrap } = await fixture();
+    const firstName = prismControlInstanceName("Alpha", "1111aaaa");
+    const secondName = prismControlInstanceName("Beta", "2222bbbb");
+    expect(firstName).toBe("storm-control-alpha-1111aaaa");
+    expect(secondName).toBe("storm-control-beta-2222bbbb");
+    expect(firstName).not.toBe(secondName);
+
+    const log = path.join(dir, "prism-session.log");
+    await writeFile(log, "initial\n");
+    const initialLog = await readFile(log);
+    const offset = initialLog.length;
+    const discovery = waitForPrismDiscovery(log, offset, firstName);
+    await writeFile(
+      log,
+      `Loaded instance "The Storm (controlled)" from "/instances/${firstName}"\n`,
+      { flag: "a" },
+    );
+    await expect(discovery).resolves.toBeUndefined();
+
+    expect(caffeinateArgs(9876)).toEqual([
+      "/usr/bin/caffeinate",
+      "-du",
+      "-w",
+      "9876",
+    ]);
+
+    const launchArgv = gradleLaunchArgs({
+      repoRoot: "/repo",
+      bootstrapPath: "/tmp/mc-client-xyz/bootstrap.json",
+      bootstrap: {
+        socket: "/tmp/mc-client-xyz/client.sock",
+        artifacts: "/tmp/artifacts",
+        server: "127.0.0.1:25565",
+      },
+      gameDir: "/tmp/mc-client-xyz/game",
+      username: "CameraA",
+      logPath: "/tmp/artifacts/client.log",
+    });
+    expect(launchArgv).toContain("--project-cache-dir");
+    expect(launchArgv).toContain("/tmp/mc-client-xyz/gradle-cache");
+
+    const captureName = "storm-capture-fail-case";
+    await preparePrismInstance({
+      root: dir,
+      stagedMods,
+      bootstrap,
+      instanceName: captureName,
+    });
+    const captureInstanceDir = path.join(dir, "instances", captureName);
+    const optionsTxt = await readFile(
+      path.join(captureInstanceDir, "minecraft/options.txt"),
+      "utf8",
+    );
+    expect(optionsTxt).toContain("pauseOnLostFocus:false");
+    expect(optionsTxt).toContain('inactivityFpsLimit:"minimized"');
+
+    await mkdir(path.join(captureInstanceDir, "minecraft/logs"), {
+      recursive: true,
+    });
+    await writeFile(
+      path.join(captureInstanceDir, "minecraft/logs/latest.log"),
+      "fatal render error\n",
+    );
+    const artifactsDir = path.join(dir, "artifacts");
+    await cleanupPrismCaptureInstance({
+      instanceDir: captureInstanceDir,
+      artifactsDir,
+      completed: false,
+    });
+    expect(
+      await readFile(
+        path.join(artifactsDir, "prism-diagnostics/logs/latest.log"),
+        "utf8",
+      ),
+    ).toBe("fatal render error\n");
+    expect(
+      await Bun.file(path.join(captureInstanceDir, "instance.cfg")).exists(),
+    ).toBe(false);
   });
 });

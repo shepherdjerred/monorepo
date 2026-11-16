@@ -15,7 +15,7 @@ export async function startClient(options: {
   await mkdir(gameDir, { recursive: true });
   await Bun.write(
     path.join(gameDir, "options.txt"),
-    "onboardAccessibility:false\ntutorialStep:none\nenableVsync:false\npauseOnLostFocus:false\n",
+    'onboardAccessibility:false\ntutorialStep:none\nenableVsync:false\nmaxFps:120\npauseOnLostFocus:false\ninactivityFpsLimit:"minimized"\n',
   );
   const bootstrap = path.join(privateDir, "bootstrap.json");
   const { control: _control, ...config } = session;
@@ -30,13 +30,15 @@ export async function startClient(options: {
       "gradle",
       "-p",
       path.join(packageRoot, "client"),
+      "--project-cache-dir",
+      path.join(privateDir, "gradle-cache"),
       "runClient",
       `-PpreviewSession=${bootstrap}`,
       `-PpreviewGameDir=${gameDir}`,
       "--console=plain",
       "--no-daemon",
     ],
-    { stdout: log, stderr: log },
+    { stdout: log, stderr: log, detached: process.platform !== "win32" },
   );
   const stop = async () => {
     if (child.exitCode !== null) return;

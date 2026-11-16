@@ -4,7 +4,42 @@ import os from "node:os";
 import path from "node:path";
 import type { ClientLauncher } from "./client-launch.ts";
 import { ownPrismGame } from "./prism-lifetime.ts";
-import { preparePrismInstance } from "./prism.ts";
+import {
+  AUTOMATED_CLIENT_OPTIONS_TXT,
+  copyPrismDiagnostics,
+  preparePrismInstance,
+} from "./prism.ts";
+import { stopPrism } from "./prism-process.ts";
+
+export function caffeinateArgs(watchdogPid: number = process.pid): string[] {
+  return ["/usr/bin/caffeinate", "-du", "-w", String(watchdogPid)];
+}
+
+export async function cleanupPrismCaptureInstance(options: {
+  instanceDir: string;
+  artifactsDir: string;
+  completed: boolean;
+  bootstrapPath?: string;
+}): Promise<void> {
+  if (!options.completed) {
+    try {
+      await copyPrismDiagnostics(
+        options.instanceDir,
+        path.join(options.artifactsDir, "prism-diagnostics"),
+      );
+    } catch {
+      // Best-effort diagnostic archive before removing temporary instance.
+    }
+  }
+  if (options.bootstrapPath !== undefined) {
+    try {
+      await stopPrism(options.bootstrapPath, 2000);
+    } catch {
+      // Best-effort process cleanup.
+    }
+  }
+  await rm(options.instanceDir, { recursive: true, force: true });
+}
 
 /** Owns an isolated instance; account credentials stay inside Prism. */
 export const prismLauncher: ClientLauncher = async (spec) => {
@@ -16,7 +51,10 @@ export const prismLauncher: ClientLauncher = async (spec) => {
   );
   const instanceName = `storm-capture-${randomUUID()}`;
   const instance = path.join(instances, instanceName);
-  const awake = Bun.spawn(["/usr/bin/caffeinate", "-du"], {
+  const privateDir = path.dirname(spec.bootstrapPath);
+  const stagedMods = path.join(privateDir, "prism-mods");
+  const gradleCacheDir = path.join(privateDir, "gradle-cache");
+  const awake = Bun.spawn(caffeinateArgs(process.pid), {
     stdout: "ignore",
     stderr: "ignore",
   });
@@ -29,8 +67,12 @@ export const prismLauncher: ClientLauncher = async (spec) => {
         "gradle",
         "-p",
         path.join(spec.repoRoot, "packages/the-storm/client"),
+        "--project-cache-dir",
+        gradleCacheDir,
         "stagePrism",
+        `-PprismModsDir=${stagedMods}`,
         "--console=plain",
+        "--no-daemon",
       ],
       {
         stdout: Bun.file(spec.logPath),
@@ -46,10 +88,7 @@ export const prismLauncher: ClientLauncher = async (spec) => {
       throw new Error(`Client build failed; inspect ${spec.logPath}`);
     await preparePrismInstance({
       root: path.dirname(instances),
-      stagedMods: path.join(
-        spec.repoRoot,
-        "packages/the-storm/client/build/prism-mods",
-      ),
+      stagedMods,
       bootstrap: spec.bootstrapPath,
       instanceName,
     });
@@ -75,7 +114,7 @@ export const prismLauncher: ClientLauncher = async (spec) => {
     );
     await Bun.write(
       path.join(instance, "minecraft/options.txt"),
-      "onboardAccessibility:false\ntutorialStep:none\n",
+      AUTOMATED_CLIENT_OPTIONS_TXT,
     );
     const child = Bun.spawn(
       [
@@ -108,12 +147,22 @@ export const prismLauncher: ClientLauncher = async (spec) => {
       },
       async (completed) => {
         awake.kill();
-        if (completed) await rm(instance, { recursive: true, force: true });
+        await cleanupPrismCaptureInstance({
+          instanceDir: instance,
+          artifactsDir: spec.bootstrap.artifacts,
+          completed,
+          bootstrapPath: spec.bootstrapPath,
+        });
       },
     );
   } catch (error) {
     awake.kill();
-    await rm(instance, { recursive: true, force: true });
+    await cleanupPrismCaptureInstance({
+      instanceDir: instance,
+      artifactsDir: spec.bootstrap.artifacts,
+      completed: false,
+      bootstrapPath: spec.bootstrapPath,
+    });
     throw error;
   }
 };

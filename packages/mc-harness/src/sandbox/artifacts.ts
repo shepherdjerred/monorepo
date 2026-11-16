@@ -4,13 +4,17 @@
  * throttle-free bukkit.yml. Provider independent; the-storm's E2E harness
  * uses the same helpers.
  */
-import { createHash } from "node:crypto";
-import { chmod, mkdir } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { chmod, mkdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
+import { Database } from "bun:sqlite";
 import { paper, type PluginPin } from "#src/pins.ts";
 
 /** The pinned Paper jar as seeded into `/data`; `basePaperEnv("seeded")` points the image at it. */
 export const paperJarName = `paper-${paper.version}-${paper.build.toString()}.jar`;
+
+const DOWNLOAD_LOCK_TIMEOUT_MS = 300_000;
+const DOWNLOAD_LOCK_POLL_MS = 50;
 
 /**
  * Bukkit throttles reconnects from one address for 4s by default, which breaks
@@ -29,25 +33,92 @@ async function download(url: string): Promise<Uint8Array> {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-/** Downloads once into the cache and verifies the pinned sha256 on every run. */
+function isSqliteBusy(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    (error.code === "SQLITE_BUSY" || error.code === "SQLITE_LOCKED")
+  );
+}
+
+/**
+ * Serializes concurrent cache downloads across worktree daemons and in-process
+ * callers using an OS-backed SQLite exclusive transaction lock.
+ */
+async function withArtifactDownloadLock<T>(
+  file: string,
+  action: () => Promise<T>,
+): Promise<T> {
+  await mkdir(path.dirname(file), { recursive: true });
+  const lockFile = `${file}.lock.sqlite`;
+  const deadline = Date.now() + DOWNLOAD_LOCK_TIMEOUT_MS;
+  for (;;) {
+    const lock = new Database(lockFile, { create: true });
+    let acquired = false;
+    try {
+      lock.run("PRAGMA busy_timeout = 0; BEGIN EXCLUSIVE");
+      acquired = true;
+      return await action();
+    } catch (error) {
+      if (!acquired && isSqliteBusy(error) && Date.now() < deadline) {
+        lock.close(false);
+        await Bun.sleep(DOWNLOAD_LOCK_POLL_MS);
+        continue;
+      }
+      throw error;
+    } finally {
+      if (acquired) {
+        lock.close(false);
+      }
+    }
+  }
+}
+
+function verifyDigest(
+  file: string,
+  bytes: Uint8Array,
+  expectedSha256: string,
+): void {
+  const actual = createHash("sha256").update(bytes).digest("hex");
+  if (actual !== expectedSha256) {
+    throw new Error(
+      `${path.basename(file)} sha256 mismatch: expected ${expectedSha256}, got ${actual}`,
+    );
+  }
+}
+
+/** Downloads once into the shared cache under a cross-process lock and verifies sha256 on every run. */
 export async function ensureArtifact(
   file: string,
   pin: Pick<PluginPin, "url" | "sha256">,
+  fetcher: (url: string) => Promise<Uint8Array> = download,
 ): Promise<void> {
-  const cached = Bun.file(file);
-  const exists = await cached.exists();
-  const bytes = exists
-    ? new Uint8Array(await cached.arrayBuffer())
-    : await download(pin.url);
-  const actual = createHash("sha256").update(bytes).digest("hex");
-  if (actual !== pin.sha256) {
-    throw new Error(
-      `${path.basename(file)} sha256 mismatch: expected ${pin.sha256}, got ${actual}`,
-    );
+  const initial = Bun.file(file);
+  if (await initial.exists()) {
+    verifyDigest(file, new Uint8Array(await initial.arrayBuffer()), pin.sha256);
+    return;
   }
-  if (!exists) {
-    await Bun.write(file, bytes);
-  }
+  await withArtifactDownloadLock(file, async () => {
+    const cached = Bun.file(file);
+    if (await cached.exists()) {
+      verifyDigest(
+        file,
+        new Uint8Array(await cached.arrayBuffer()),
+        pin.sha256,
+      );
+      return;
+    }
+    const bytes = await fetcher(pin.url);
+    verifyDigest(file, bytes, pin.sha256);
+    const tempFile = `${file}.${process.pid.toString()}.${randomUUID()}.tmp`;
+    try {
+      await Bun.write(tempFile, bytes);
+      await rename(tempFile, file);
+    } catch (error) {
+      await rm(tempFile, { force: true });
+      throw error;
+    }
+  });
 }
 
 /** Copies each pinned jar (downloaded once into `downloadsDir`) into `pluginsDir`. */

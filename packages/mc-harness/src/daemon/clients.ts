@@ -19,16 +19,17 @@ import {
 import { ClientRefusedError } from "#protocol/client-socket.ts";
 import { clientRequest } from "./client-socket.ts";
 import { DaemonError } from "./http.ts";
-import { stageAndLaunchPrism } from "./prism.ts";
+import { AUTOMATED_CLIENT_OPTIONS_TXT, stageAndLaunchPrism } from "./prism.ts";
 import { stopPrism } from "./prism-process.ts";
 import { prismLauncher } from "./prism-launcher.ts";
 
-/**
- * Real Minecraft clients (the-storm's Fabric preview mod) owned by the daemon.
- * Each session is a `gradle runClient` process with a private bootstrap and
- * control socket; the mod joins the sandbox's loopback game port in offline
- * mode. The harness never imports the-storm: it only spawns the client.
- */
+async function ignoreError(action: Promise<unknown>): Promise<void> {
+  try {
+    await action;
+  } catch {
+    // Best-effort teardown.
+  }
+}
 
 import type {
   ClientBootstrap,
@@ -42,6 +43,7 @@ type Session = {
   privateDir: string;
   child?: LaunchedClient;
   bootstrapPath?: string;
+  cleanup?: () => Promise<void>;
 };
 
 const POLL_MS = 500;
@@ -80,7 +82,6 @@ export class ClientManager {
   private readonly sessions = new Map<string, Session>();
   /** Names whose start is in flight, so two starts cannot race for one name. */
   private readonly starting = new Set<string>();
-  private startingLive = false;
 
   constructor(
     private readonly options: {
@@ -137,7 +138,7 @@ export class ClientManager {
     }
   }
 
-  /** Launch the dedicated Prism instance using Prism's signed-in account. */
+  /** Launch an ephemeral per-session Prism instance using Prism's signed-in account. */
   async startLive(name: string): Promise<ClientSummary> {
     if (this.sessions.has(name) || this.starting.has(name)) {
       throw new DaemonError(`Client ${name} is already running`, 409);
@@ -148,16 +149,6 @@ export class ClientManager {
         409,
       );
     }
-    if (
-      this.startingLive ||
-      this.list().some((client) => client.target === "live")
-    ) {
-      throw new DaemonError(
-        "A controlled Prism client is already running",
-        409,
-      );
-    }
-    this.startingLive = true;
     this.starting.add(name);
     let privateDir: string | undefined;
     try {
@@ -180,6 +171,8 @@ export class ClientManager {
       await chmod(bootstrapPath, 0o600);
       const launcher = await stageAndLaunchPrism({
         repoRoot: this.options.repoRoot,
+        name,
+        privateDir,
         artifacts,
         bootstrap: bootstrapPath,
       });
@@ -195,6 +188,7 @@ export class ClientManager {
         socket: bootstrap.socket,
         privateDir,
         bootstrapPath,
+        cleanup: launcher.cleanup,
       };
       this.sessions.set(name, session);
       try {
@@ -220,7 +214,6 @@ export class ClientManager {
       throw error;
     } finally {
       this.starting.delete(name);
-      this.startingLive = false;
     }
   }
 
@@ -267,7 +260,7 @@ export class ClientManager {
     await mkdir(gameDir, { recursive: true, mode: 0o700 });
     await Bun.write(
       path.join(gameDir, "options.txt"),
-      "onboardAccessibility:false\ntutorialStep:none\nenableVsync:false\nmaxFps:30\npauseOnLostFocus:false\n",
+      AUTOMATED_CLIENT_OPTIONS_TXT,
     );
     const logPath = path.join(artifacts, "client.log");
     const launcher = target === "live" ? prismLauncher : this.options.launcher;
@@ -297,6 +290,7 @@ export class ClientManager {
       socket: bootstrap.socket,
       privateDir,
       child,
+      bootstrapPath,
     };
     this.sessions.set(name, session);
     void this.reapOnExit(session);
@@ -485,19 +479,22 @@ export class ClientManager {
         }
       }
     }
+    if (session.bootstrapPath !== undefined) {
+      await ignoreError(
+        stopPrism(session.bootstrapPath, Math.min(grace / 3, 5000)),
+      );
+    }
     await this.ended(session, child.exitCode());
   }
 
   private async ended(session: Session, code: number | null): Promise<void> {
-    if (this.sessions.get(session.summary.name) !== session) {
-      return;
-    }
+    if (this.sessions.get(session.summary.name) !== session) return;
     this.sessions.delete(session.summary.name);
-    // privateDir is the exact mkdtemp result for this session.
+    if (session.bootstrapPath !== undefined) {
+      await ignoreError(stopPrism(session.bootstrapPath, 1000));
+    }
+    if (session.cleanup !== undefined) await ignoreError(session.cleanup());
     await rm(session.privateDir, { recursive: true, force: true });
-    this.options.log("client ended", {
-      name: session.summary.name,
-      code,
-    });
+    this.options.log("client ended", { name: session.summary.name, code });
   }
 }
