@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { Worker } from "@temporalio/worker";
 import { WorkflowNotFoundError } from "@temporalio/common";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
+import type { TestWorkflowEnvironment } from "@temporalio/testing";
 import { expect } from "vitest";
 import { z } from "zod";
 import type { createPerEpisodeNativeRecoveryFixtureV1 } from "@shepherdjerred/media/testing/per-episode-native-recovery";
@@ -13,6 +13,7 @@ import {
 } from "#activities/media/acquisition.ts";
 import { createPlexPublicationActivities } from "#activities/media/plex-publication.ts";
 import { createPlexBoundConsumerActivities } from "#activities/media/plex-consumers.ts";
+import { createLeasedLocalTemporalEnvironment } from "#lib/fixtures/temporal-lease.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   pinnedMovieRuntimes,
@@ -108,7 +109,7 @@ export function createNativeRecoveryPrerequisiteV1(scenario: Fixture) {
         path.join(tmpdir(), "media-series-pack-native-recovery-"),
       );
       active();
-      const local = await TestWorkflowEnvironment.createLocal({
+      const local = await createLeasedLocalTemporalEnvironment({
         server: {
           executable: { type: "existing-path", path: temporal },
           ip: "127.0.0.1",

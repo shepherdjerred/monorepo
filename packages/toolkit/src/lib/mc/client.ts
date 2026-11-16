@@ -2,36 +2,24 @@ import path from "node:path";
 import type { z } from "zod";
 import {
   ErrorResponseSchema,
-  StatusResponseSchema,
+  type StatusResponse,
 } from "@shepherdjerred/mc-harness/protocol/ipc.ts";
 import {
   DEFAULT_DAEMON_TTL_SECONDS,
   SOCKET_PATH,
 } from "@shepherdjerred/mc-harness/protocol/paths.ts";
-import { pathExists } from "@shepherdjerred/unix-socket-daemon";
 import { repoRoot } from "#lib/deployed/git.ts";
+import {
+  assertProtocol,
+  cleanDeadMcDaemonFiles,
+  ensureMcDaemon,
+  probeMcDaemonStatus,
+} from "#lib/mc/spawn.ts";
 
 export const START_HINT =
   "The mc daemon is not running. Start it with: toolkit mc daemon start";
 
 export type DaemonMethod = "GET" | "POST" | "DELETE";
-
-/**
- * Starts the daemon (default TTL) on the first request that finds none, so
- * agents never need a separate `daemon start`. The note goes to stderr to keep
- * stdout and `--json` clean. TOOLKIT_MC_NO_AUTOSTART=1 restores the hint.
- */
-async function autoStartDaemon(): Promise<void> {
-  if (Bun.env["TOOLKIT_MC_NO_AUTOSTART"] === "1") {
-    throw new Error(START_HINT);
-  }
-  // Dynamic: spawn.ts imports this module for its readiness probe.
-  const { startMcDaemon } = await import("#lib/mc/spawn.ts");
-  const status = await startMcDaemon(DEFAULT_DAEMON_TTL_SECONDS);
-  console.error(
-    `Started the mc daemon (pid ${String(status.pid)}); stop it with 'toolkit mc daemon stop'.`,
-  );
-}
 
 /**
  * The shared socket may belong to a daemon started from another worktree.
@@ -49,29 +37,44 @@ export function daemonCheckoutMismatch(
     : `The mc daemon at ${SOCKET_PATH} is serving ${daemon}, but this checkout is ${here}. Stop that daemon from its own checkout; this command will not stop a daemon that may own a live sandbox.`;
 }
 
-async function assertDaemonCheckout(): Promise<void> {
+async function assertStatusMatchesCheckout(
+  status: StatusResponse,
+): Promise<void> {
+  assertProtocol(status);
   const checkout = await repoRoot();
   if (checkout === null) {
     throw new Error("toolkit mc must run inside the monorepo checkout");
   }
-  let response: Response;
-  try {
-    response = await fetch("http://daemon/status", { unix: SOCKET_PATH });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Could not read the mc daemon status (${message}). The socket exists but the daemon may have died — run 'toolkit mc daemon stop', then start it again.`,
-      { cause: error },
-    );
-  }
-  if (!response.ok) {
-    throw new Error(
-      `mc daemon status failed (HTTP ${String(response.status)})`,
-    );
-  }
-  const status = StatusResponseSchema.parse(await response.json());
   const mismatch = daemonCheckoutMismatch(status.repoRoot, checkout);
-  if (mismatch !== null) throw new Error(mismatch);
+  if (mismatch !== null) {
+    throw new Error(mismatch);
+  }
+}
+
+/**
+ * Ensures a live, checkout-matched daemon is listening on `SOCKET_PATH`,
+ * recovering stale crashed state/socket files and serializing concurrent
+ * auto-starts through `ensureMcDaemon`.
+ */
+async function ensureReadyCheckoutDaemon(): Promise<void> {
+  const existing = await probeMcDaemonStatus();
+  if (existing !== null) {
+    await assertStatusMatchesCheckout(existing);
+    return;
+  }
+
+  if (Bun.env["TOOLKIT_MC_NO_AUTOSTART"] === "1") {
+    await cleanDeadMcDaemonFiles();
+    throw new Error(START_HINT);
+  }
+
+  const { status, started } = await ensureMcDaemon(DEFAULT_DAEMON_TTL_SECONDS);
+  if (started) {
+    console.error(
+      `Started the mc daemon (pid ${String(status.pid)}); stop it with 'toolkit mc daemon stop'.`,
+    );
+  }
+  await assertStatusMatchesCheckout(status);
 }
 
 /** One request to the mc-harness daemon over its unix socket. */
@@ -95,11 +98,8 @@ export async function daemonSend<Schema extends z.ZodType>(
   init: { body?: unknown; headers?: Record<string, string> },
 ): Promise<z.infer<Schema>> {
   const { body, headers = {} } = init;
-  if (await pathExists(SOCKET_PATH)) {
-    await assertDaemonCheckout();
-  } else {
-    await autoStartDaemon();
-  }
+  await ensureReadyCheckoutDaemon();
+
   let response: Response;
   try {
     response = await fetch(`http://daemon${resourcePath}`, {
@@ -114,7 +114,7 @@ export async function daemonSend<Schema extends z.ZodType>(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Could not reach the mc daemon (${message}). The socket exists but the daemon may have died — run 'toolkit mc daemon stop', then start it again.`,
+      `Could not reach the mc daemon (${message}). The daemon may have exited during the request — retry the command.`,
       { cause: error },
     );
   }

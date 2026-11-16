@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { expect, it } from "vitest";
 import { pinnedMovieRuntimes } from "#activities/media/testing/role-worker.ts";
+import { createLeasedLocalTemporalEnvironment } from "#lib/fixtures/temporal-lease.ts";
 import { collectOutput, waitForLog } from "#lib/fixtures/wait-for-log.ts";
 import { POST_DRAIN_EXIT_MS } from "#lib/worker-exit.ts";
 
@@ -12,7 +12,7 @@ it("exits the real worker entrypoint within seconds of an idle drain", async () 
   expect(EXIT_WITHIN_MS).toBeLessThan(POST_DRAIN_EXIT_MS);
   const runtimePath = Bun.env["PATH"];
   if (runtimePath === undefined) throw new Error("PATH required");
-  const environment = await TestWorkflowEnvironment.createLocal({
+  const environment = await createLeasedLocalTemporalEnvironment({
     server: {
       executable: {
         type: "existing-path",

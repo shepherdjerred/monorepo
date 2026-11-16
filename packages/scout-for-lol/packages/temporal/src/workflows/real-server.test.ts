@@ -1,9 +1,14 @@
-import { afterEach, expect, test } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
+import { afterAll, afterEach, expect, test } from "vitest";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createServer } from "node:net";
-import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import {
+  execFileSync,
+  spawn,
+  spawnSync,
+  type ChildProcess,
+} from "node:child_process";
 import {
   Client,
   Connection,
@@ -12,6 +17,11 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
 import { NativeConnection, Worker } from "@temporalio/worker";
+import {
+  acquireTemporalTendLease,
+  type TemporalTendLeaseHandle,
+  TemporalTendLeaseSchema,
+} from "@shepherdjerred/root-scripts/lib/temporal/temporal-tend-lease.ts";
 import { SCOUT_WORKFLOW_NAMES, scoutTaskQueues } from "#src/identifiers.ts";
 import { scoutPrematchDiscoveryInputCodec } from "#src/workflow-contracts.ts";
 
@@ -29,16 +39,53 @@ type RunningWorkerSet = {
 
 type TestRuntime = {
   server: ChildProcess;
-  connection: Connection;
-  nativeConnection: NativeConnection;
-  client: Client;
+  connection: Connection | undefined;
+  nativeConnection: NativeConnection | undefined;
+  client: Client | undefined;
   workers: RunningWorkerSet;
   directory: string;
+  lease: TemporalTendLeaseHandle;
   address: string;
   port: number;
 };
 
 let runtime: TestRuntime | undefined;
+const activeServers = new Set<ChildProcess>();
+const activeDirectories = new Set<string>();
+const activeLeases = new Set<TemporalTendLeaseHandle>();
+
+function signalServerGroup(server: ChildProcess, signal: NodeJS.Signals): void {
+  if (server.pid !== undefined) {
+    try {
+      process.kill(-server.pid, signal);
+      return;
+    } catch {
+      // Fall back to direct child kill if the process group already exited.
+    }
+  }
+  try {
+    server.kill(signal);
+  } catch {
+    // Child already exited.
+  }
+}
+
+process.once("exit", () => {
+  for (const server of activeServers) {
+    if (server.exitCode === null) {
+      signalServerGroup(server, "SIGKILL");
+    }
+  }
+  activeServers.clear();
+  for (const lease of activeLeases) {
+    spawnSync("rm", ["-f", "--", lease.leasePath], { stdio: "ignore" });
+  }
+  activeLeases.clear();
+  for (const dir of activeDirectories) {
+    spawnSync("rm", ["-rf", "--", dir], { stdio: "ignore" });
+  }
+  activeDirectories.clear();
+});
 
 async function unusedPort(): Promise<number> {
   const server = createServer();
@@ -60,7 +107,7 @@ async function unusedPort(): Promise<number> {
 }
 
 function startServer(port: number, databasePath: string) {
-  return spawn(
+  const child = spawn(
     temporalExecutable,
     [
       "--disable-config-file",
@@ -78,9 +125,19 @@ function startServer(port: number, databasePath: string) {
     ],
     {
       cwd: repositoryRoot,
+      detached: true,
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
+  activeServers.add(child);
+  child.once("exit", () => {
+    activeServers.delete(child);
+  });
+  return child;
+}
+
+function hasServerStopped(server: ChildProcess): boolean {
+  return server.exitCode !== null || server.signalCode !== null;
 }
 
 async function connectEventually(
@@ -90,10 +147,12 @@ async function connectEventually(
   const deadline = Date.now() + 20_000;
   let lastError: unknown;
   while (Date.now() < deadline) {
-    if (server.exitCode !== null) {
-      throw new Error(
-        `Temporal dev server exited with ${server.exitCode.toString()}`,
-      );
+    if (hasServerStopped(server)) {
+      const reason =
+        server.exitCode === null
+          ? `signal ${String(server.signalCode)}`
+          : server.exitCode.toString();
+      throw new Error(`Temporal dev server exited with ${reason}`);
     }
     try {
       return await Connection.connect({ address, connectTimeout: 500 });
@@ -108,17 +167,33 @@ async function connectEventually(
 }
 
 async function stopServer(server: ChildProcess): Promise<void> {
-  if (server.exitCode !== null) return;
-  server.kill("SIGTERM");
-  await new Promise<void>((resolve, reject) => {
+  if (hasServerStopped(server)) {
+    activeServers.delete(server);
+    return;
+  }
+  signalServerGroup(server, "SIGTERM");
+  const exitedGracefully = await new Promise<boolean>((resolve) => {
     const timeout = setTimeout(() => {
-      reject(new Error("Temporal dev server did not stop after SIGTERM"));
-    }, 10_000);
+      resolve(false);
+    }, 5000);
     server.once("exit", () => {
       clearTimeout(timeout);
-      resolve();
+      resolve(true);
     });
   });
+  if (!exitedGracefully && !hasServerStopped(server)) {
+    signalServerGroup(server, "SIGKILL");
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Temporal dev server did not stop after SIGKILL"));
+      }, 5000);
+      server.once("exit", () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+    });
+  }
+  activeServers.delete(server);
 }
 
 async function startWorkers(input: {
@@ -177,28 +252,112 @@ async function stopWorkers(workerSet: RunningWorkerSet): Promise<void> {
   await Promise.all(workerSet.runs);
 }
 
-afterEach(async () => {
+async function cleanupRuntime(): Promise<void> {
+  const errors: unknown[] = [];
+  const attempt = async (step: () => Promise<unknown>): Promise<void> => {
+    try {
+      await step();
+    } catch (error: unknown) {
+      errors.push(error);
+    }
+  };
+
   const active = runtime;
   runtime = undefined;
-  if (active === undefined) return;
-  await stopWorkers(active.workers);
-  await active.nativeConnection.close();
-  await active.connection.close();
-  await stopServer(active.server);
-  await rm(active.directory, { recursive: true });
+  if (active !== undefined) {
+    await attempt(() => stopWorkers(active.workers));
+    await attempt(async () => {
+      await active.nativeConnection?.close();
+    });
+    await attempt(async () => {
+      await active.connection?.close();
+    });
+    await attempt(() => stopServer(active.server));
+    await attempt(async () => {
+      await active.lease.release();
+      activeLeases.delete(active.lease);
+    });
+    await attempt(async () => {
+      await rm(active.directory, { recursive: true, force: true });
+      activeDirectories.delete(active.directory);
+    });
+  }
+  for (const server of activeServers) {
+    await attempt(() => stopServer(server));
+  }
+  for (const lease of activeLeases) {
+    await attempt(async () => {
+      await lease.release();
+      activeLeases.delete(lease);
+    });
+  }
+  for (const dir of activeDirectories) {
+    await attempt(async () => {
+      await rm(dir, { recursive: true, force: true });
+      activeDirectories.delete(dir);
+    });
+  }
+  if (errors.length === 1) {
+    throw errors[0];
+  }
+  if (errors.length > 1) {
+    throw new AggregateError(
+      errors,
+      "Failed to clean up Temporal test runtime",
+    );
+  }
+}
+
+async function createAndVerifyTemporalLease(
+  address: string,
+): Promise<TemporalTendLeaseHandle> {
+  const lease = await acquireTemporalTendLease(address);
+  activeLeases.add(lease);
+  const persistedLease = TemporalTendLeaseSchema.parse(
+    JSON.parse(await readFile(lease.leasePath, "utf8")),
+  );
+  expect(persistedLease.target).toBe(address);
+  expect(persistedLease.ownerPid).toBe(process.pid);
+  return lease;
+}
+
+afterEach(async () => {
+  await cleanupRuntime();
+});
+
+afterAll(async () => {
+  await cleanupRuntime();
 });
 
 test("real server preserves IDs, catches up Schedules, survives outages, and replays history", async () => {
   const directory = await mkdtemp(
     path.join(tmpdir(), "scout-temporal-real-server-"),
   );
+  activeDirectories.add(directory);
   const port = await unusedPort();
   const address = `127.0.0.1:${port.toString()}`;
+  const lease = await createAndVerifyTemporalLease(address);
   const databasePath = path.join(directory, "temporal.db");
   let server = startServer(port, databasePath);
+  const runtimeState: TestRuntime = {
+    server,
+    connection: undefined,
+    nativeConnection: undefined,
+    client: undefined,
+    workers: { workers: [], runs: [] },
+    directory,
+    lease,
+    address,
+    port,
+  };
+  runtime = runtimeState;
+
   let connection = await connectEventually(address, server);
+  runtimeState.connection = connection;
   let nativeConnection = await NativeConnection.connect({ address });
+  runtimeState.nativeConnection = nativeConnection;
   let client = new Client({ connection, namespace: "dev" });
+  runtimeState.client = client;
   const reportRuns: string[] = [];
   const matchRuns: string[] = [];
   const matchGate = Promise.withResolvers<null>();
@@ -208,17 +367,7 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
     matchRuns,
     blockMatch: matchGate.promise,
   });
-  const runtimeState: TestRuntime = {
-    server,
-    connection,
-    nativeConnection,
-    client,
-    workers,
-    directory,
-    address,
-    port,
-  };
-  runtime = runtimeState;
+  runtimeState.workers = workers;
 
   const duplicateOptions = {
     workflowId: "scout-dev-prematch-poll-duplicate",
@@ -354,21 +503,23 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
   workers = { workers: [], runs: [] };
   runtimeState.workers = workers;
   await nativeConnection.close();
+  runtimeState.nativeConnection = undefined;
   await connection.close();
+  runtimeState.connection = undefined;
   await stopServer(server);
   await new Promise((resolve) => setTimeout(resolve, 3000));
   server = startServer(port, databasePath);
+  runtimeState.server = server;
   connection = await connectEventually(address, server);
+  runtimeState.connection = connection;
   nativeConnection = await NativeConnection.connect({ address });
+  runtimeState.nativeConnection = nativeConnection;
   client = new Client({ connection, namespace: "dev" });
+  runtimeState.client = client;
   const restoredSchedule = await client.schedule
     .getHandle("scout-dev-real-server-outage-catchup")
     .describe();
   expect(restoredSchedule.state.paused).toBe(false);
-  runtimeState.server = server;
-  runtimeState.connection = connection;
-  runtimeState.nativeConnection = nativeConnection;
-  runtimeState.client = client;
   const beforeServerOutage = reportRuns.filter((id) => id === "13").length;
   workers = await startWorkers({
     connection: nativeConnection,

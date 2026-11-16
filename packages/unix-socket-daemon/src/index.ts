@@ -1,8 +1,9 @@
 /**
  * Scaffolding shared by the repo's local unix-socket HTTP daemons (toolkit
  * discord, mc-harness): the socket server with a `/shutdown` route, the idle
- * TTL, the 0600 state file, signal handling, and the PID identity check that
- * keeps `stop` from signalling a recycled PID.
+ * TTL, the 0600 state file, signal handling, cross-process startup locking,
+ * and the PID identity check that keeps `stop` and `start` from clobbering a
+ * live daemon or signalling a recycled PID.
  */
 import {
   appendFile,
@@ -14,8 +15,31 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
+import { acquireAndRunWithLock, terminateChildPid } from "#src/start-lock.ts";
 
 export type LogLine = (msg: string, extra?: Record<string, unknown>) => void;
+export type DaemonStartLockOptions = {
+  lockPath: string;
+  /** Startup timeout (ms): locks older than this are treated as wedged and broken. Defaults to 60_000. */
+  timeoutMs?: number;
+  /** Optional explicit stale threshold override (ms). Defaults to `timeoutMs`. */
+  staleMs?: number;
+  /** Optional total wait budget (ms) before giving up on acquiring the lock. */
+  waitMs?: number;
+  pollMs?: number;
+};
+
+export class AlreadyRunningError extends Error {
+  readonly pid: number;
+  readonly socketPath: string;
+
+  constructor(pid: number, socketPath: string) {
+    super(`Daemon is already running (pid ${String(pid)}) on ${socketPath}`);
+    this.name = "AlreadyRunningError";
+    this.pid = pid;
+    this.socketPath = socketPath;
+  }
+}
 
 /** One JSONL line per event in `<logsDir>/daemon-YYYY-MM-DD.log`. Never pass secrets. */
 export function jsonlLogger(logsDir: string): LogLine {
@@ -51,11 +75,18 @@ export async function pathExists(target: string): Promise<boolean> {
 }
 
 export function pidAlive(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) {
+    return false;
+  }
   try {
     process.kill(pid, 0);
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    return !(
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "ESRCH"
+    );
   }
 }
 
@@ -88,21 +119,95 @@ export async function processCommand(pid: number): Promise<string | null> {
   return code === 0 && command.length > 0 ? command : null;
 }
 
+function extractNumericPid(value: unknown): number | null {
+  if (typeof value !== "object" || value === null) {
+    return null;
+  }
+  for (const [key, entry] of Object.entries(value)) {
+    if (
+      key === "pid" &&
+      typeof entry === "number" &&
+      Number.isInteger(entry) &&
+      entry > 0
+    ) {
+      return entry;
+    }
+  }
+  return null;
+}
+
+async function readSavedStatePid(statePath: string): Promise<number | null> {
+  try {
+    const raw = await readFile(statePath, "utf8");
+    return extractNumericPid(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+async function probeSocketStatus(
+  socketPath: string,
+): Promise<{ reachable: false } | { reachable: true; pid: number | null }> {
+  if (!(await pathExists(socketPath))) {
+    return { reachable: false };
+  }
+  try {
+    const response = await fetch("http://daemon/status", {
+      unix: socketPath,
+      signal: AbortSignal.timeout(1500),
+    });
+    const text = await response.text();
+    try {
+      return { reachable: true, pid: extractNumericPid(JSON.parse(text)) };
+    } catch {
+      return { reachable: true, pid: null };
+    }
+  } catch {
+    return { reachable: false };
+  }
+}
+
+export type DaemonIdentityOptions = {
+  statusPid?: number | undefined;
+  marker?: string | undefined;
+  entryMatch?: string | undefined;
+  socketPath?: string | undefined;
+};
+
 /**
  * True only when `pid` is provably the daemon: either its own `/status`
- * reported this PID, or the live process command line contains `marker`
- * (the daemon's entry point). A PID from a stale state file may have been
- * recycled by an unrelated process, which must never be signalled.
+ * reported this PID, `socketPath` responds on behalf of `pid`, or the live
+ * process command line contains `marker` / `entryMatch` (the daemon's entry
+ * point). A PID from a stale state file may have been recycled by an unrelated
+ * process, which must never be signalled or mistaken for a live daemon.
  */
 export async function isDaemonPid(
   pid: number,
-  options: { statusPid?: number | undefined; marker: string },
+  options: DaemonIdentityOptions,
 ): Promise<boolean> {
   if (options.statusPid !== undefined) {
     return options.statusPid === pid;
   }
-  const command = await processCommand(pid);
-  return command?.includes(options.marker) === true;
+  if (!pidAlive(pid)) {
+    return false;
+  }
+  const match = options.marker ?? options.entryMatch;
+  if (options.socketPath !== undefined) {
+    const probe = await probeSocketStatus(options.socketPath);
+    if (probe.reachable) {
+      if (probe.pid !== null) {
+        return probe.pid === pid;
+      }
+      if (match === undefined || match.length === 0) {
+        return true;
+      }
+    }
+  }
+  if (match !== undefined && match.length > 0) {
+    const command = await processCommand(pid);
+    return command?.includes(match) === true;
+  }
+  return false;
 }
 
 /** A state-file PID that is alive and provably still the daemon. */
@@ -147,11 +252,60 @@ export async function stopDaemonPid(
   return "terminated";
 }
 
+/**
+ * Serializes concurrent daemon lifecycle operations across processes via an
+ * atomic `<lockPath>` directory containing `owner.pid` + process identity.
+ * Stale locks from dead or recycled PIDs are broken safely without stealing a
+ * live owner's lock.
+ */
+export function withDaemonStartLock<T>(
+  options: DaemonStartLockOptions,
+  fn: () => Promise<T>,
+): Promise<T> {
+  return acquireAndRunWithLock(options, fn);
+}
+
+/**
+ * Terminates a failed or timed-out spawned daemon process (`SIGTERM`, then
+ * `SIGKILL` after `graceMs`) so wedged `unref()`ed background children never leak.
+ */
+export function terminateDaemonChild(
+  pid: number | undefined,
+  options?: { graceMs?: number; pollMs?: number },
+): Promise<void> {
+  return terminateChildPid(pid, options);
+}
+
+async function assertNoLiveDaemon(
+  statePath: string,
+  socketPath: string,
+  entryMatch: string | undefined,
+): Promise<void> {
+  const savedPid = await readSavedStatePid(statePath);
+  const socketProbe = await probeSocketStatus(socketPath);
+  if (socketProbe.reachable) {
+    const activePid = socketProbe.pid ?? savedPid ?? 0;
+    throw new AlreadyRunningError(activePid, socketPath);
+  }
+  if (savedPid === null || savedPid === process.pid) {
+    return;
+  }
+  if (
+    entryMatch !== undefined &&
+    (await isDaemonPid(savedPid, { socketPath, entryMatch }))
+  ) {
+    throw new AlreadyRunningError(savedPid, socketPath);
+  }
+}
+
 export type UnixDaemonOptions = {
   socketPath: string;
   statePath: string;
   /** Written to `statePath` (mode 0600) once the socket is listening. */
   state: unknown;
+  /** Optional command-line substring identifying this daemon in `ps`. */
+  marker?: string | undefined;
+  entryMatch?: string | undefined;
   ttlSeconds: number;
   /** Epoch ms of the last client request; the daemon exits once idle past the TTL. */
   lastActivity: () => number;
@@ -176,6 +330,12 @@ export async function serveUnixDaemon(
 ): Promise<UnixDaemon> {
   const { socketPath, statePath, ttlSeconds, log } = options;
   const exit = options.exit ?? ((code: number) => process.exit(code));
+  await assertNoLiveDaemon(
+    statePath,
+    socketPath,
+    options.marker ?? options.entryMatch,
+  );
+  await mkdir(path.dirname(socketPath), { recursive: true, mode: 0o700 });
   await rm(socketPath, { force: true });
 
   let shuttingDown = false;
