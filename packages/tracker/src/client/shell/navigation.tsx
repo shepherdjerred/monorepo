@@ -243,91 +243,119 @@ export function MoreSheet({
   );
 }
 
-function IdentityCustomForm({
+export function ActorIdentityForm({
   actor,
+  idPrefix,
+  className,
+  footerNote,
   onSaved,
 }: {
   actor: ActorEnvelope;
-  onSaved: () => void;
+  idPrefix: string;
+  className?: string;
+  footerNote?: string;
+  onSaved?: () => void;
 }) {
   const [name, setName] = useState(actor.name);
   const [key, setKey] = useState(actor.key);
   const [kind, setKind] = useState<ActorEnvelope["kind"]>(actor.kind);
   const [error, setError] = useState<unknown>();
+  const clearError = () => {
+    if (error !== undefined) {
+      setError(undefined);
+    }
+  };
+  const nameField = (
+    <label htmlFor={`${idPrefix}-name`}>
+      Name
+      <input
+        id={`${idPrefix}-name`}
+        value={name}
+        required
+        onChange={(event) => {
+          setName(event.target.value);
+          clearError();
+        }}
+      />
+    </label>
+  );
+  const kindField = (
+    <label htmlFor={`${idPrefix}-kind`}>
+      Kind
+      <select
+        id={`${idPrefix}-kind`}
+        value={kind}
+        onChange={(event) => {
+          setKind(ActorSchema.shape.kind.parse(event.target.value));
+          clearError();
+        }}
+      >
+        {ActorSchema.shape.kind.options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+  const keyField = (
+    <label htmlFor={`${idPrefix}-key`}>
+      Actor key
+      <input
+        id={`${idPrefix}-key`}
+        value={key}
+        required
+        autoCorrect="off"
+        autoCapitalize="none"
+        spellCheck={false}
+        onChange={(event) => {
+          setKey(event.target.value);
+          clearError();
+        }}
+      />
+    </label>
+  );
   return (
     <form
-      className="identity-form"
+      className={className}
       onSubmit={(event) => {
         event.preventDefault();
         try {
           saveActor(ActorSchema.parse({ key, name, kind }));
           setError(undefined);
           notify("Identity saved");
-          onSaved();
+          onSaved?.();
         } catch (error_) {
           setError(error_);
         }
       }}
     >
-      <div className="form-selects">
-        <label htmlFor="identity-modal-name">
-          Name
-          <input
-            id="identity-modal-name"
-            value={name}
-            required
-            onChange={(event) => {
-              setName(event.target.value);
-              if (error !== undefined) {
-                setError(undefined);
-              }
-            }}
-          />
-        </label>
-        <label htmlFor="identity-modal-kind">
-          Kind
-          <select
-            id="identity-modal-kind"
-            value={kind}
-            onChange={(event) => {
-              setKind(ActorSchema.shape.kind.parse(event.target.value));
-              if (error !== undefined) {
-                setError(undefined);
-              }
-            }}
-          >
-            {ActorSchema.shape.kind.options.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <label htmlFor="identity-modal-key">
-        Actor key
-        <input
-          id="identity-modal-key"
-          value={key}
-          required
-          autoCorrect="off"
-          autoCapitalize="none"
-          spellCheck={false}
-          onChange={(event) => {
-            setKey(event.target.value);
-            if (error !== undefined) {
-              setError(undefined);
-            }
-          }}
-        />
-      </label>
-      {error !== undefined && <ErrorNotice error={error} />}
-      <div className="modal-footer">
-        <span className="muted">Saved to this browser profile</span>
-        <button type="submit" className="primary">
-          Save identity
-        </button>
-      </div>
+      {footerNote === undefined ? (
+        <>
+          {nameField}
+          {keyField}
+          {kindField}
+          <button type="submit" className="primary">
+            Save identity
+          </button>
+          {error !== undefined && <ErrorNotice error={error} />}
+        </>
+      ) : (
+        <>
+          <div className="form-selects">
+            {nameField}
+            {kindField}
+          </div>
+          {keyField}
+          {error !== undefined && <ErrorNotice error={error} />}
+          <div className="modal-footer">
+            <span className="muted">{footerNote}</span>
+            <button type="submit" className="primary">
+              Save identity
+            </button>
+          </div>
+        </>
+      )}
     </form>
   );
 }
@@ -389,9 +417,12 @@ export function IdentityModal({
           Use Unclaimed / Automation session
         </button>
       </div>
-      <IdentityCustomForm
+      <ActorIdentityForm
         key={`${actor.key}\u0000${actor.kind}\u0000${actor.name}`}
         actor={actor}
+        idPrefix="identity-modal"
+        className="identity-form"
+        footerNote="Saved to this browser profile"
         onSaved={onClose}
       />
     </Modal>

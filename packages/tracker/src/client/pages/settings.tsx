@@ -17,7 +17,8 @@ import {
   saveActor,
   useCurrentActor,
 } from "#client/data/identity.ts";
-import { ActorChip, ErrorNotice, Swatch } from "#client/ui/ui.tsx";
+import { ActorIdentityForm } from "#client/shell/navigation.tsx";
+import { ActorChip, Swatch } from "#client/ui/ui.tsx";
 import { notify } from "#client/ui/toast.tsx";
 import { applyTheme, savedTheme, type Theme } from "#client/ui/theme.ts";
 import { FeedbackSettings } from "#client/feedback/feedback-settings.tsx";
@@ -30,10 +31,6 @@ function IdentitySection({
   actor: ActorEnvelope;
   saved: boolean;
 }) {
-  const [key, setKey] = useState(actor.key);
-  const [name, setName] = useState(actor.name);
-  const [kind, setKind] = useState<ActorEnvelope["kind"]>(actor.kind);
-  const [error, setError] = useState<unknown>();
   const isJerred = actor.key === "human:jerred" && actor.kind === "human";
   return (
     <section>
@@ -78,73 +75,11 @@ function IdentitySection({
           )}
         </div>
       )}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          try {
-            saveActor(ActorSchema.parse({ key, name, kind }));
-            setError(undefined);
-            notify("Identity saved");
-          } catch (error_) {
-            setError(error_);
-          }
-        }}
-      >
-        <label htmlFor="settings-identity-name">
-          Name
-          <input
-            id="settings-identity-name"
-            value={name}
-            required
-            onChange={(e) => {
-              setName(e.target.value);
-              if (error !== undefined) {
-                setError(undefined);
-              }
-            }}
-          />
-        </label>
-        <label htmlFor="settings-identity-key">
-          Actor key
-          <input
-            id="settings-identity-key"
-            value={key}
-            required
-            autoCorrect="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            onChange={(e) => {
-              setKey(e.target.value);
-              if (error !== undefined) {
-                setError(undefined);
-              }
-            }}
-          />
-        </label>
-        <label htmlFor="settings-identity-kind">
-          Kind
-          <select
-            id="settings-identity-kind"
-            value={kind}
-            onChange={(e) => {
-              setKind(ActorSchema.shape.kind.parse(e.target.value));
-              if (error !== undefined) {
-                setError(undefined);
-              }
-            }}
-          >
-            {ActorSchema.shape.kind.options.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" className="primary">
-          Save identity
-        </button>
-        {error !== undefined && <ErrorNotice error={error} />}
-      </form>
+      <ActorIdentityForm
+        key={`${actor.key}\u0000${actor.kind}\u0000${actor.name}`}
+        actor={actor}
+        idPrefix="settings-identity"
+      />
     </section>
   );
 }
