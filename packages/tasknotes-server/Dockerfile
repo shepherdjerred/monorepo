@@ -61,6 +61,10 @@ COPY --parents \
   packages/bugsink-config \
   ./
 
+# Prisma's CLI records per-run state under $HOME; keep it out of the layer.
+RUN cd packages/tasknotes-server && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
+  && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
+
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
