@@ -123,6 +123,19 @@ describe("postStreambotReconcile", () => {
     expect(sleeps).toEqual([]);
   });
 
+  test("rejects a fetch that never settles once the deadline aborts", async () => {
+    const { request } = harness([]);
+    request.signal = AbortSignal.timeout(20);
+    request.fetch = () =>
+      new Promise<Response>(() => {
+        // Never settles, so the deadline must reject the attempt.
+      });
+
+    await expect(postStreambotReconcile(request)).rejects.toBeInstanceOf(
+      DOMException,
+    );
+  });
+
   test("stops when the retry delay is aborted", async () => {
     const deadline = new DOMException("timed out", "TimeoutError");
     const { request, calls } = harness([transportError("ConnectionRefused")]);

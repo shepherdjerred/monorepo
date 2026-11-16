@@ -20,3 +20,22 @@ it("requires the scheduler credential and exact internal POST route", async () =
   expect(accepted.status).toBe(200);
   expect(reconcile).toHaveBeenCalledTimes(1);
 });
+
+it("returns 503 when reconcile ignores the deadline", async () => {
+  const token = crypto.randomUUID();
+  const handler = scheduleHandler(token, {
+    reconcile: () =>
+      new Promise<void>(() => {
+        // Never settles, so the request abort must answer 503.
+      }),
+  });
+  const response = await handler(
+    new Request("http://localhost/internal/sports/reconcile", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(20),
+    }),
+  );
+  expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({ reconciled: false });
+});

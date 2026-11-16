@@ -32,6 +32,27 @@ type AcquisitionActivities = Pick<
   MediaNetworkActivities,
   "reconcileMediaIntent" | "submitMediaTorrent" | "observeMediaAcquisition"
 >;
+
+async function inactiveRuntimeHold(
+  context: MediaAutomationContext,
+  runtime: { active: boolean },
+): Promise<
+  | { status: "waiting"; attemptId: null; reason: "runtime_observe" }
+  | { status: "blocked"; attemptId: null; reason: "acquisition_disabled" }
+  | null
+> {
+  // Observe mode has not started an external write. Defer so the due sweep
+  // can try again after activation, instead of leaving a reconciling command.
+  if (!runtime.active)
+    return { status: "waiting", attemptId: null, reason: "runtime_observe" };
+  if (!(await context.gates.acquisition()))
+    return {
+      status: "blocked",
+      attemptId: null,
+      reason: "acquisition_disabled",
+    };
+  return null;
+}
 async function reconcile(
   context: MediaAutomationContext,
   input: MediaOperation,
@@ -72,12 +93,8 @@ async function reconcile(
   )
     return { status: "waiting", attemptId: null, reason: "not_yet_aired" };
   const runtime = await requireActiveRuntime(context.db);
-  if (!runtime.active || !(await context.gates.acquisition()))
-    return {
-      status: "blocked",
-      attemptId: null,
-      reason: "acquisition_disabled",
-    };
+  const hold = await inactiveRuntimeHold(context, runtime);
+  if (hold !== null) return hold;
   if (intent.automationEpoch !== runtime.epoch)
     return {
       status: "blocked",

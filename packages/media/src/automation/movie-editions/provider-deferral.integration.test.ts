@@ -453,9 +453,8 @@ test.each(["intent", "authority"] as const)(
           testPlexBindingExecution(),
         ),
       ).toMatchObject({
-        status: changed === "intent" ? "obsolete" : "blocked",
-        reason:
-          changed === "intent" ? "intent_changed" : "acquisition_disabled",
+        status: changed === "intent" ? "obsolete" : "waiting",
+        reason: changed === "intent" ? "intent_changed" : "runtime_observe",
       });
       expect(calls).toEqual(["knaben"]);
       expect(await f.source.db.acquisitionAttempt.count()).toBe(0);

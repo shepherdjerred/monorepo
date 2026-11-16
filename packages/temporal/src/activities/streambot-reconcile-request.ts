@@ -24,6 +24,35 @@ export const STREAMBOT_RECONCILE_RETRY_DELAYS_MS = [
   1000, 2000, 4000, 8000, 15_000,
 ] as const;
 
+function abortError(signal: AbortSignal): Error {
+  return signal.reason instanceof Error
+    ? signal.reason
+    : new Error("Streambot reconciliation deadline exceeded");
+}
+
+/** Rejects when `signal` aborts, even if `work` never settles. */
+export async function settleOnAbort<T>(
+  work: Promise<T>,
+  signal: AbortSignal,
+): Promise<T> {
+  if (signal.aborted) throw abortError(signal);
+  let removeAbort: (() => void) | undefined;
+  const aborted = new Promise<never>((_, reject) => {
+    const onAbort = () => {
+      reject(abortError(signal));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    removeAbort = () => {
+      signal.removeEventListener("abort", onAbort);
+    };
+  });
+  try {
+    return await Promise.race([work, aborted]);
+  } finally {
+    removeAbort?.();
+  }
+}
+
 export function isRefusedOrResetConnection(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
@@ -53,11 +82,16 @@ export async function postStreambotReconcile(
 ): Promise<Response> {
   for (let attempt = 0; ; attempt += 1) {
     try {
-      return await request.fetch(request.url, {
-        method: "POST",
-        headers: { authorization: `Bearer ${request.token}` },
-        signal: request.signal,
-      });
+      // Race the abort as well as passing it to fetch. A fetch that ignores
+      // the signal would otherwise sit until Temporal's start-to-close timeout.
+      return await settleOnAbort(
+        request.fetch(request.url, {
+          method: "POST",
+          headers: { authorization: `Bearer ${request.token}` },
+          signal: request.signal,
+        }),
+        request.signal,
+      );
     } catch (error) {
       const delay = STREAMBOT_RECONCILE_RETRY_DELAYS_MS[attempt];
       if (!isRefusedOrResetConnection(error)) {

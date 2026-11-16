@@ -98,8 +98,9 @@ export async function reconcileMovieIntentV4(
   )
     return { status: "obsolete", attemptId: null, reason: "intent_changed" };
   const runtime = await runtimeAuthority(context.db);
+  if (!runtime.active)
+    return { status: "waiting", attemptId: null, reason: "runtime_observe" };
   if (
-    !runtime.active ||
     runtime.epoch !== recoveryEpoch ||
     target.automationEpoch !== runtime.epoch ||
     !(await context.gates.acquisition())
