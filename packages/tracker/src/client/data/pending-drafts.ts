@@ -7,6 +7,8 @@ export const PendingKindSchema = z.enum([
   "description",
   "new-issue-title",
   "new-issue-description",
+  "forum-post",
+  "forum-reply",
 ]);
 export type PendingKind = z.infer<typeof PendingKindSchema>;
 
@@ -114,6 +116,8 @@ const paths: Record<PendingKind, string> = {
   description: "issues.update",
   "new-issue-title": "issues.create",
   "new-issue-description": "issues.create",
+  "forum-post": "forum.create",
+  "forum-reply": "forum.reply",
 };
 const SentInputSchema = z.object({
   identifier: z.string().optional(),
@@ -155,6 +159,12 @@ export function carries(
       return (
         input.title === pending.subject && input.description === pending.text
       );
+    }
+    case "forum-post": {
+      return input.body === pending.text;
+    }
+    case "forum-reply": {
+      return input.id === pending.subject && input.body === pending.text;
     }
   }
 }

@@ -32,7 +32,9 @@ function linkIdentifiers(node: MarkdownNode): MarkdownNode {
             ? { type: "text", value }
             : {
                 type: "link",
-                url: `/issues/${value}`,
+                url: value.startsWith("FM-")
+                  ? `/forum/${value}`
+                  : `/issues/${value}`,
                 children: [{ type: "text", value }],
               },
         );

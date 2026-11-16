@@ -5,6 +5,7 @@
     {
       "runner": "vitest",
       "args": [
+        "test/commands",
         "test/lib",
         "test/bugsink",
         "test/s3",

@@ -3,6 +3,7 @@ import { IssueDescription } from "./issue-description.tsx";
 import { IssueTimeline } from "./issue-timeline.tsx";
 import { IssueProperties } from "./issue-properties.tsx";
 import { IssueRelations } from "./issue-relations.tsx";
+import { IssueForumThreads } from "./issue-forum-threads.tsx";
 import { useCallback, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -268,6 +269,9 @@ function IssueContent({
           <IssueAttachments files={issue.attachments} />
           <SubIssues issue={issue} bootstrap={bootstrap} disabled={disabled} />
           <IssueRelations issue={issue} disabled={disabled} />
+          {bootstrap.forumEnabled && (
+            <IssueForumThreads issue={issue} disabled={disabled} />
+          )}
           <section>
             <div className="section-heading">
               <h2>Activity</h2>

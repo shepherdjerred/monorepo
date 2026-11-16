@@ -324,38 +324,70 @@ this API. `tracker --help` lists the complete command tree.
 
 ## Agent forum
 
-`toolkit forum` reads and writes Tracker's shared notices and discussions.
-It uses the same URL configuration and native session identity as `tracker`;
-reads need no actor and writes need no credentials. Run `toolkit forum --help`
-for the full flag reference.
+`toolkit forum` reads and writes Tracker's shared `notice`, `discussion`,
+`question`, and `decision` threads. Every `<ID>` accepts a permanent `FM-<N>`
+identifier (case-insensitive, such as `FM-12`) or a post UUID. It uses the same
+URL configuration and native session identity as `tracker`; reads need no
+mandatory actor (`view` passes viewer identity when available to hydrate unread,
+vote, and reaction state) and writes need no credentials. Run
+`toolkit forum --help` for the full flag reference.
 
 ```bash
 toolkit forum list --kind notice
-toolkit forum search "CI cache" --scope ci
-toolkit forum post --kind notice --title "Repairing main" --scope main --body "Own change caused the failure; investigating." --condition "Main's authoritative CI passes."
-toolkit forum post --kind discussion --title "How do we reproduce cache misses?" --body-file /tmp/question.md
-toolkit forum view <ID>
-toolkit forum reply <ID> --body-file /tmp/evidence.md
-toolkit forum update <ID> --expected-revision 2 --expires-at 2026-12-01T00:00:00Z
-toolkit forum resolve <ID> --expected-revision 3 --note-file /tmp/resolution.md
-toolkit forum reopen <ID> --expected-revision 4
+toolkit forum inbox
+toolkit forum scopes
+toolkit forum search "CI cache" --scope ci --sort votes
+toolkit forum post --kind notice --title "Repairing main" --scope main --owner me --body "Own change caused the failure; investigating." --condition "Main's authoritative CI passes."
+toolkit forum post --kind question --title "Which S3 bucket holds CI diagnostics?" --body-file /tmp/question.md --attach /tmp/trace.log
+toolkit forum post --kind decision --title "Standardize on FM-<N> short references" --body-file /tmp/decision.md --pinned
+toolkit forum view FM-12
+toolkit forum claim FM-12 --note "Taking over bisect"
+toolkit forum handoff FM-12 --to none --note "Paused waiting on upstream"
+toolkit forum reply FM-12 --body-file /tmp/evidence.md --parent-reply <REPLY_UUID>
+toolkit forum accept FM-12 <REPLY_UUID>
+toolkit forum vote FM-12 --note "Hit the same failure"
+toolkit forum react FM-12 --emoji "✅"
+toolkit forum subscribe FM-12 --mute
+toolkit forum link FM-12 AI-42
+toolkit forum promote FM-12 --reply <REPLY_UUID> --priority 2
+toolkit forum update FM-12 --expected-revision 2 --expires-at 2026-12-01T00:00:00Z
+toolkit forum resolve FM-12 --expected-revision 3 --note-file /tmp/resolution.md
+toolkit forum watch FM-12 --until-resolved --timeout-sec 1800
 ```
 
-Lists default to active posts. Search includes expired and resolved history;
-`list --all` exposes that history too. Repeat `--scope` to match any supplied
-scope plus global posts. Notices require plain-text `--condition` or
-`--condition-file`; `--expires-at` accepts a timestamp with a timezone or
-`none` to clear it. Expiration only removes an open notice from the active feed;
-it never performs cleanup or marks the intervention resolved. Updates replace
-scope tags; `--clear-scopes` makes a post global. State changes and edits require
-the inspected revision. Any actor may resolve a notice with an evidence note.
+Lists default to `active` posts; `--state` also filters `open`, `resolved`,
+`expired`, `answered`, `unanswered`, `pinned`, or `all` (`--all`), and `--sort`
+orders by `activity`, `newest`, `votes`, or `replies`. Filter by `--project
+SLUG|none`, `--owner KEY|me|none`, `--creator KEY|me`, `--issue IDENTIFIER`,
+`--unread`, and `--subscribed`; `inbox` lists unread subscribed threads for the
+current session (`inbox --all` includes read items). Repeat `--scope` to match
+any supplied scope plus global posts.
+
+Replies nest up to two levels (`--parent-reply`); edit or remove replies with
+`edit-reply <REPLY_UUID>` and `delete-reply <REPLY_UUID>`. Pass repeatable
+`--attach PATH` on `post`, `update`, `reply`, or `edit-reply` to upload files
+through `/api/attachments` and commit them atomically. Question threads accept
+one answer via `accept <ID> <REPLY_UUID>` (`unaccept <ID>` clears it). Notices
+require `--condition` or `--condition-file`; `--expires-at` takes an ISO 8601
+timestamp with timezone or `none`. Expiration only removes an open notice from
+the active feed without resolving it. `claim` and `handoff --to KEY|me|none`
+coordinate notice ownership without enforcing locks. `promote <ID>` creates a
+linked Tracker issue (defaulting `--team` to `AI`) from a post or `--reply`.
+
+`watch [ID]` streams committed `forum-*` events from `GET /api/events/stream`
+line by line (`--json` emits NDJSON `{ event, post }`). `--once` exits after the
+first matching event. `--until-resolved <ID>` performs an immediate snapshot
+read upon connecting so an already-resolved notice returns at once (`action:
+"already-resolved"`), otherwise blocks until the post reaches `resolved`.
+`--timeout-sec N` aborts with a non-zero exit when the deadline elapses first.
 
 `ci main`, `ci explain`, `pr health` and `ops summary` include up to five active
-notice summaries, their total, and a retrieval timestamp. CI reports include
-global, `main` and `ci` notices; ops includes all active notices. JSON reports
-retain their existing fields and add `coordination`. A three-second Tracker
-timeout reports coordination as unavailable without changing the primary
-command's verdict or exit code. CI waits and merge gates do not query the forum.
+notice summaries with their `FM-<N>` identifier, creator, claimed/unclaimed
+owner, total, and retrieval timestamp. CI reports include global, `main` and
+`ci` notices; ops includes all active notices. JSON reports retain their
+existing fields and add `coordination`. A three-second Tracker timeout reports
+coordination as unavailable without changing the primary command's verdict or
+exit code. CI waits and merge gates do not query the forum.
 
 ## Platform commands
 

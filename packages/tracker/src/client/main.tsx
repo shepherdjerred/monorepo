@@ -18,6 +18,7 @@ import { Actors } from "#client/pages/actors.tsx";
 import { GlobalActivity } from "#client/pages/activity-page.tsx";
 import { Projects } from "#client/pages/projects.tsx";
 import { Forum } from "#client/forum/forum.tsx";
+import { ForumThreadPage } from "#client/forum/forum-thread.tsx";
 import { Empty } from "#client/ui/ui.tsx";
 import { SettingsSkeleton } from "#client/ui/skeleton.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
@@ -77,6 +78,11 @@ const router = createBrowserRouter([
       },
       { path: "board", element: <IssueView />, handle: viewHandle("board") },
       { path: "forum", element: <Forum />, handle: viewHandle("forum") },
+      {
+        path: "forum/:identifier",
+        element: <ForumThreadPage />,
+        handle: viewHandle("forum-thread"),
+      },
       {
         path: "projects",
         element: <Projects />,

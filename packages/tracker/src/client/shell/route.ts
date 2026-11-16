@@ -6,6 +6,7 @@ const ViewSchema = z.enum([
   "issues",
   "board",
   "forum",
+  "forum-thread",
   "project",
   "issue",
   "projects",
@@ -31,6 +32,7 @@ export function useRoute() {
     view,
     isList: view === "issues" || view === "board" || view === "project",
     identifier: view === "issue" ? params["identifier"] : undefined,
+    forumIdentifier: view === "forum-thread" ? params["identifier"] : undefined,
     projectSlug: view === "project" ? params["slug"] : undefined,
     actorKey: view === "actor" ? params["key"] : undefined,
   };

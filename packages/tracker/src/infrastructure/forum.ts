@@ -1,42 +1,62 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { UnitOfWork } from "#application/unit-of-work.ts";
-import { TrackerError } from "#domain/error.ts";
 import {
+  AcceptForumReplySchema,
+  ClaimForumNoticeSchema,
   CreateForumPostSchema,
-  type CreateForumPostInput,
-  type UpdateForumPostInput,
-  type ForumListInput,
-} from "#shared/forum.ts";
-import type { z } from "zod";
-import type {
+  DeleteForumReplySchema,
+  ForumInboxSchema,
+  ForumIssueLinkSchema,
+  ForumListSchema,
+  HandoffForumNoticeSchema,
+  MarkForumReadSchema,
+  PinForumSchema,
+  PromoteForumToIssueSchema,
+  ReactForumSchema,
+  ReopenForumSchema,
   ReplyForumSchema,
   ResolveForumSchema,
-  ReopenForumSchema,
+  SubscribeForumSchema,
+  UpdateForumPostSchema,
+  UpdateForumReplySchema,
+  VoteForumSchema,
 } from "#shared/forum.ts";
-import { audit, presentActor } from "./issue-repository.ts";
+import type { z } from "zod";
 import type { Database } from "./database.ts";
-
-const include = {
-  creator: true,
-  resolver: true,
-} satisfies Prisma.ForumPostInclude;
-type Post = Prisma.ForumPostGetPayload<{ include: typeof include }>;
-function present(post: Post, now = new Date()) {
-  return {
-    ...post,
-    creator: presentActor(post.creator),
-    resolver: post.resolver === null ? null : presentActor(post.resolver),
-    expired:
-      post.state === "open" &&
-      post.kind === "notice" &&
-      post.expiresAt !== null &&
-      post.expiresAt <= now,
-    expiresAt: post.expiresAt?.toISOString() ?? null,
-    resolvedAt: post.resolvedAt?.toISOString() ?? null,
-    createdAt: post.createdAt.toISOString(),
-    updatedAt: post.updatedAt.toISOString(),
-  };
-}
+import {
+  linkForumIssue,
+  promoteForumToIssue,
+  unlinkForumIssue,
+} from "./forum-issues.ts";
+import {
+  listForumInbox,
+  listForumPosts,
+  listForumScopes,
+} from "./forum-list.ts";
+import {
+  claimOrHandoffNotice,
+  deleteForumReply,
+  reactOnForum,
+  updateForumPost,
+  voteOnForum,
+} from "./forum-mutations.ts";
+import {
+  findPost,
+  postSummaryInclude,
+  presentForumAttachment,
+  presentPostSummary,
+  presentReply,
+  replyInclude,
+} from "./forum-repository.ts";
+import {
+  acceptForumAnswer,
+  createForumPost,
+  createForumReply,
+  pinForumPost,
+  setForumPostState,
+  updateForumReply,
+} from "./forum-write.ts";
+import { presentActor } from "./issue-repository.ts";
 
 export class Forum {
   constructor(
@@ -44,222 +64,243 @@ export class Forum {
     private readonly unit: UnitOfWork,
   ) {}
 
-  async list(input: ForumListInput, now = new Date()) {
-    const and: Prisma.ForumPostWhereInput[] = [];
-    if (input.kind !== undefined) and.push({ kind: input.kind });
-    if (input.scopes.length > 0)
-      and.push({
-        OR: [
-          { scopes: { isEmpty: true } },
-          { scopes: { hasSome: input.scopes } },
-        ],
-      });
-    if (input.state === "active")
-      and.push({
-        state: "open",
-        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-      });
-    if (input.state === "resolved") and.push({ state: "resolved" });
-    if (input.state === "expired")
-      and.push({ kind: "notice", state: "open", expiresAt: { lte: now } });
-    if (input.query !== undefined && input.query !== "") {
-      const contains = { contains: input.query, mode: "insensitive" } as const;
-      and.push({
-        OR: [
-          { title: contains },
-          { body: contains },
-          { exitCondition: contains },
-          { replies: { some: { body: contains } } },
-        ],
-      });
-    }
-    const where = { AND: and };
-    const [rows, total] = await Promise.all([
-      this.database.forumPost.findMany({
-        where,
-        include,
-        orderBy: [{ kind: "asc" }, { updatedAt: "desc" }, { id: "asc" }],
-        take: input.limit + 1,
-        ...(input.cursor === undefined
-          ? {}
-          : { cursor: { id: input.cursor }, skip: 1 }),
+  list(input: z.input<typeof ForumListSchema>, now = new Date()) {
+    return listForumPosts(this.database, ForumListSchema.parse(input), now);
+  }
+
+  inbox(input: z.input<typeof ForumInboxSchema>, now = new Date()) {
+    return listForumInbox(this.database, ForumInboxSchema.parse(input), now);
+  }
+
+  scopes() {
+    return listForumScopes(this.database);
+  }
+
+  async byId(
+    reference: string,
+    viewerActorKey?: string,
+    db: Prisma.TransactionClient = this.database,
+  ) {
+    const post = await findPost(db, reference, viewerActorKey);
+    const [attachments, votes, replies] = await Promise.all([
+      db.attachment.findMany({
+        where: {
+          forumPostId: post.id,
+          forumReplyId: null,
+          status: "committed",
+        },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       }),
-      this.database.forumPost.count({ where }),
+      db.forumPostVote.findMany({
+        where: { postId: post.id },
+        include: { actor: true },
+        orderBy: [{ createdAt: "asc" }, { actorId: "asc" }],
+      }),
+      db.forumReply.findMany({
+        where: { postId: post.id },
+        include: replyInclude(viewerActorKey),
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      }),
     ]);
-    const items = rows.slice(0, input.limit).map((post) => present(post, now));
     return {
-      items,
-      total,
-      nextCursor: rows.length > input.limit ? (items.at(-1)?.id ?? null) : null,
-      checkedAt: now.toISOString(),
-    };
-  }
-
-  async byId(id: string) {
-    const post = await this.database.forumPost.findUnique({
-      where: { id },
-      include: {
-        ...include,
-        replies: {
-          include: { author: true },
-          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-        },
-      },
-    });
-    if (post === null)
-      throw new TrackerError("NOT_FOUND", "Forum post not found");
-    return {
-      ...present(post),
-      replies: post.replies.map((reply) => ({
-        ...reply,
-        author: presentActor(reply.author),
-        createdAt: reply.createdAt.toISOString(),
+      ...presentPostSummary(post, { viewerActorKey }),
+      attachments: attachments.map((item) => presentForumAttachment(item)),
+      votes: votes.map((vote) => ({
+        actor: presentActor(vote.actor),
+        note: vote.note,
+        createdAt: vote.createdAt.toISOString(),
       })),
+      replies: replies.map((reply) =>
+        presentReply(reply, post.acceptedReplyId, viewerActorKey),
+      ),
     };
   }
 
-  create(input: CreateForumPostInput, requestId: string) {
-    return this.unit.run(input.actor, requestId, async (ctx) => {
-      const post = await ctx.db.forumPost.create({
-        data: {
-          kind: input.kind,
-          title: input.title,
-          body: input.body,
-          scopes: [...new Set(input.scopes)],
-          exitCondition: input.exitCondition ?? null,
-          expiresAt:
-            input.expiresAt === undefined || input.expiresAt === null
-              ? null
-              : new Date(input.expiresAt),
-          creatorId: ctx.actor.id,
-        },
-        include,
-      });
-      await audit(ctx, {
-        entityType: "forum-post",
-        entityId: post.id,
-        action: "created",
-        after: post,
-      });
-      return present(post);
-    });
+  create(rawInput: z.input<typeof CreateForumPostSchema>, requestId: string) {
+    const input = CreateForumPostSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      createForumPost(ctx, input),
+    );
   }
 
-  update(input: UpdateForumPostInput, requestId: string) {
-    return this.unit.run(input.actor, requestId, async (ctx) => {
-      const before = await this.lock(ctx.db, input.id, input.expectedRevision);
-      const validation = CreateForumPostSchema.safeParse({
-        ...before,
-        ...input,
-      });
-      if (!validation.success)
-        throw new TrackerError(
-          "BAD_REQUEST",
-          validation.error.issues.map(({ message }) => message).join("; "),
-        );
-      const merged = validation.data;
-      const post = await ctx.db.forumPost.update({
-        where: { id: input.id },
-        data: {
-          title: merged.title,
-          body: merged.body,
-          scopes: [...new Set(merged.scopes)],
-          exitCondition: merged.exitCondition ?? null,
-          expiresAt:
-            merged.expiresAt == null ? null : new Date(merged.expiresAt),
-          revision: { increment: 1 },
-        },
-        include,
-      });
-      await audit(ctx, {
-        entityType: "forum-post",
-        entityId: post.id,
-        action: "updated",
-        before,
-        after: post,
-      });
-      return present(post);
-    });
+  update(rawInput: z.input<typeof UpdateForumPostSchema>, requestId: string) {
+    const input = UpdateForumPostSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      updateForumPost(ctx, input),
+    );
   }
 
-  reply(input: z.infer<typeof ReplyForumSchema>, requestId: string) {
-    return this.unit.run(input.actor, requestId, async (ctx) => {
-      await this.lock(ctx.db, input.id);
-      const reply = await ctx.db.forumReply.create({
-        data: { postId: input.id, authorId: ctx.actor.id, body: input.body },
-        include: { author: true },
-      });
-      await ctx.db.forumPost.update({
-        where: { id: input.id },
-        data: { updatedAt: new Date() },
-      });
-      await audit(ctx, {
-        entityType: "forum-reply",
-        entityId: input.id,
-        action: "created",
-        after: reply,
-      });
-      return {
-        ...reply,
-        author: presentActor(reply.author),
-        createdAt: reply.createdAt.toISOString(),
-      };
-    });
+  reply(rawInput: z.input<typeof ReplyForumSchema>, requestId: string) {
+    const input = ReplyForumSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      createForumReply(ctx, input),
+    );
   }
 
-  resolve(input: z.infer<typeof ResolveForumSchema>, requestId: string) {
-    return this.setState(input, requestId, "resolved", input.note);
-  }
-  reopen(input: z.infer<typeof ReopenForumSchema>, requestId: string) {
-    return this.setState(input, requestId, "open", null);
-  }
-
-  private setState(
-    input: z.infer<typeof ReopenForumSchema>,
+  updateReply(
+    rawInput: z.input<typeof UpdateForumReplySchema>,
     requestId: string,
-    state: "open" | "resolved",
-    note: string | null,
   ) {
+    const input = UpdateForumReplySchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      updateForumReply(ctx, input),
+    );
+  }
+
+  deleteReply(
+    rawInput: z.input<typeof DeleteForumReplySchema>,
+    requestId: string,
+  ) {
+    const input = DeleteForumReplySchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      deleteForumReply(ctx, input),
+    );
+  }
+
+  resolve(rawInput: z.input<typeof ResolveForumSchema>, requestId: string) {
+    const input = ResolveForumSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      setForumPostState(ctx, input, "resolved", input.note),
+    );
+  }
+
+  reopen(rawInput: z.input<typeof ReopenForumSchema>, requestId: string) {
+    const input = ReopenForumSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      setForumPostState(ctx, input, "open", null),
+    );
+  }
+
+  pin(rawInput: z.input<typeof PinForumSchema>, requestId: string) {
+    const input = PinForumSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      pinForumPost(ctx, input),
+    );
+  }
+
+  acceptReply(
+    rawInput: z.input<typeof AcceptForumReplySchema>,
+    requestId: string,
+  ) {
+    const input = AcceptForumReplySchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      acceptForumAnswer(ctx, input),
+    );
+  }
+
+  claim(rawInput: z.input<typeof ClaimForumNoticeSchema>, requestId: string) {
+    const input = ClaimForumNoticeSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      claimOrHandoffNotice(ctx, {
+        id: input.id,
+        actorKey: input.actor.key,
+        action: "claimed",
+        nextOwnerKey: input.actor.key,
+        note: input.note,
+      }),
+    );
+  }
+
+  handoff(
+    rawInput: z.input<typeof HandoffForumNoticeSchema>,
+    requestId: string,
+  ) {
+    const input = HandoffForumNoticeSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      claimOrHandoffNotice(ctx, {
+        id: input.id,
+        actorKey: input.actor.key,
+        action: "handed-off",
+        nextOwnerKey: input.toActorKey,
+        note: input.note,
+      }),
+    );
+  }
+
+  vote(rawInput: z.input<typeof VoteForumSchema>, requestId: string) {
+    const input = VoteForumSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      voteOnForum(ctx, input),
+    );
+  }
+
+  react(rawInput: z.input<typeof ReactForumSchema>, requestId: string) {
+    const input = ReactForumSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      reactOnForum(ctx, input),
+    );
+  }
+
+  subscribe(rawInput: z.input<typeof SubscribeForumSchema>, requestId: string) {
+    const input = SubscribeForumSchema.parse(rawInput);
     return this.unit.run(input.actor, requestId, async (ctx) => {
-      const before = await this.lock(ctx.db, input.id, input.expectedRevision);
-      if (before.state === state)
-        throw new TrackerError("CONFLICT", `Post is already ${state}`);
-      const post = await ctx.db.forumPost.update({
-        where: { id: input.id },
-        data: {
-          state,
-          resolutionNote: note,
-          resolverId: state === "resolved" ? ctx.actor.id : null,
-          resolvedAt: state === "resolved" ? new Date() : null,
-          revision: { increment: 1 },
-        },
-        include,
+      const post = await findPost(ctx.db, input.id, input.actor.key);
+      await ctx.db.forumThreadState.upsert({
+        where: { postId_actorId: { postId: post.id, actorId: ctx.actor.id } },
+        create: { postId: post.id, actorId: ctx.actor.id, mode: input.mode },
+        update: { mode: input.mode },
       });
-      await audit(ctx, {
-        entityType: "forum-post",
-        entityId: post.id,
-        action: state === "open" ? "reopened" : "resolved",
-        before,
-        after: post,
+      const hydrated = await ctx.db.forumPost.findUniqueOrThrow({
+        where: { id: post.id },
+        include: postSummaryInclude(input.actor.key),
       });
-      return present(post);
+      return presentPostSummary(hydrated, { viewerActorKey: input.actor.key });
     });
   }
 
-  private async lock(
-    db: Prisma.TransactionClient,
-    id: string,
-    revision?: number,
+  markRead(rawInput: z.input<typeof MarkForumReadSchema>, requestId: string) {
+    const input = MarkForumReadSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, async (ctx) => {
+      const post = await findPost(ctx.db, input.id, input.actor.key);
+      const now = new Date();
+      const lastReadAt =
+        input.readAt === null
+          ? null
+          : input.readAt === undefined
+            ? new Date(Math.max(now.getTime(), post.lastActivityAt.getTime()))
+            : new Date(input.readAt);
+      await ctx.db.forumThreadState.upsert({
+        where: { postId_actorId: { postId: post.id, actorId: ctx.actor.id } },
+        create: { postId: post.id, actorId: ctx.actor.id, lastReadAt },
+        update: { lastReadAt },
+      });
+      const hydrated = await ctx.db.forumPost.findUniqueOrThrow({
+        where: { id: post.id },
+        include: postSummaryInclude(input.actor.key),
+      });
+      return presentPostSummary(hydrated, {
+        now,
+        viewerActorKey: input.actor.key,
+      });
+    });
+  }
+
+  linkIssue(rawInput: z.input<typeof ForumIssueLinkSchema>, requestId: string) {
+    const input = ForumIssueLinkSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      linkForumIssue(ctx, input),
+    );
+  }
+
+  unlinkIssue(
+    rawInput: z.input<typeof ForumIssueLinkSchema>,
+    requestId: string,
   ) {
-    await db.$queryRaw`SELECT "id" FROM "ForumPost" WHERE "id" = ${id} FOR UPDATE`;
-    const post = await db.forumPost.findUnique({ where: { id }, include });
-    if (post === null)
-      throw new TrackerError("NOT_FOUND", "Forum post not found");
-    if (revision !== undefined && revision !== post.revision)
-      throw new TrackerError(
-        "CONFLICT",
-        "Forum post changed; reload before updating",
-      );
-    return present(post);
+    const input = ForumIssueLinkSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, (ctx) =>
+      unlinkForumIssue(ctx, input),
+    );
+  }
+
+  promoteToIssue(
+    rawInput: z.input<typeof PromoteForumToIssueSchema>,
+    requestId: string,
+  ) {
+    const input = PromoteForumToIssueSchema.parse(rawInput);
+    return this.unit.run(input.actor, requestId, async (ctx) => {
+      const { issue, postId } = await promoteForumToIssue(ctx, input);
+      const post = await this.byId(postId, input.actor.key, ctx.db);
+      return { issue, post };
+    });
   }
 }

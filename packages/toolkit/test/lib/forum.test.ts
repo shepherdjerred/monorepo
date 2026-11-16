@@ -7,10 +7,12 @@ import { requiredCredentialsFor } from "#lib/credential-commands.ts";
 import { trackerRequest } from "./tracker/request.ts";
 
 const id = "00000000-0000-4000-8000-000000000001";
+const id2 = "00000000-0000-4000-8000-000000000002";
 const servers: ReturnType<typeof Bun.serve>[] = [];
 afterEach(async () => {
   for (const server of servers.splice(0)) await server.stop(true);
 });
+
 function fixture(failure = false) {
   const requests: { procedure: string; input: unknown }[] = [];
   const server = Bun.serve({
@@ -31,25 +33,37 @@ function fixture(failure = false) {
           },
           { status: 500 },
         );
-      const post = {
+      const claimedNotice = {
         id,
+        identifier: "FM-12",
         title: "Repairing main",
         scopes: ["main"],
         exitCondition: "Main passes",
         expiresAt: null,
-        creator: { key: "codex:owner" },
+        creator: { id: "actor-1", key: "codex:owner" },
+        owner: { id: "actor-2", key: "claude-code:fixer" },
+      };
+      const unclaimedNotice = {
+        id: id2,
+        identifier: "FM-13",
+        title: "Investigating cache",
+        scopes: [],
+        exitCondition: "Cache hit rate recovers",
+        expiresAt: null,
+        creator: { id: "actor-1", key: "codex:owner" },
+        owner: null,
       };
       return Response.json({
         result: {
           data:
             procedure === "forum.list" || procedure === "forum.search"
               ? {
-                  items: [post],
+                  items: [claimedNotice, unclaimedNotice],
                   total: 9,
                   nextCursor: null,
                   checkedAt: "2026-11-14T00:00:00Z",
                 }
-              : post,
+              : claimedNotice,
         },
       });
     },
@@ -71,6 +85,7 @@ function fixture(failure = false) {
     context: { url, actor, client: trackerClient(url) },
   };
 }
+
 test("forum reads preserve scopes, history search and pagination without observing an actor", async () => {
   const { context, requests, actor } = fixture();
   await forumCommand(
@@ -109,6 +124,7 @@ test("forum reads preserve scopes, history search and pagination without observi
   expect(actor).not.toHaveBeenCalled();
   expect(requiredCredentialsFor("forum", "post", {})).toEqual([]);
 });
+
 test("forum writes retain native actor, revision, plain text condition and clearing options", async () => {
   const { context, requests } = fixture();
   await forumCommand(
@@ -185,6 +201,7 @@ test("forum writes retain native actor, revision, plain text condition and clear
     { procedure: "forum.reopen", input: { expectedRevision: 4 } },
   ]);
 });
+
 test("forum rejects malformed commands before any request", async () => {
   const { context, requests } = fixture();
   for (const [action, args, flags] of [
@@ -213,14 +230,30 @@ test("forum rejects malformed commands before any request", async () => {
   }
   expect(requests).toEqual([]);
 });
-test("coordination summaries are bounded, retain totals and show attribution and exit conditions", async () => {
+
+test("coordination summaries retain FM-<N> identifiers, claimed/unclaimed owners and exit conditions", async () => {
   const { url, requests } = fixture();
   const report = await coordinationSummary(["main", "ci"], url);
   expect(report).toMatchObject({
     available: true,
     total: 9,
     checkedAt: "2026-11-14T00:00:00Z",
-    items: [{ title: "Repairing main", creator: { key: "codex:owner" } }],
+    items: [
+      {
+        id,
+        identifier: "FM-12",
+        title: "Repairing main",
+        creator: { key: "codex:owner" },
+        owner: { key: "claude-code:fixer" },
+      },
+      {
+        id: id2,
+        identifier: "FM-13",
+        title: "Investigating cache",
+        creator: { key: "codex:owner" },
+        owner: null,
+      },
+    ],
   });
   expect(requests[0]).toMatchObject({
     procedure: "forum.list",
@@ -231,9 +264,17 @@ test("coordination summaries are bounded, retain totals and show attribution and
       limit: 5,
     },
   });
-  expect(formatCoordination(report)).toContain("1 of 9");
-  expect(formatCoordination(report)).toContain("Main passes");
+  const formatted = formatCoordination(report);
+  expect(formatted).toContain("2 of 9");
+  expect(formatted).toContain(
+    `FM-12 (${id}): Repairing main [main] — creator=codex:owner, owner=claude-code:fixer`,
+  );
+  expect(formatted).toContain(
+    `FM-13 (${id2}): Investigating cache [global] — creator=codex:owner, unclaimed`,
+  );
+  expect(formatted).toContain("Main passes");
 });
+
 test("coordination outages are explicit and do not leak upstream payloads or alter exit state", async () => {
   const { url } = fixture(true);
   const exitCode = process.exitCode;

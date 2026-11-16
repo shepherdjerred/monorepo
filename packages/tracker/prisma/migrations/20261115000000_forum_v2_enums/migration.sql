@@ -1,0 +1,2 @@
+ALTER TYPE "ForumKind" ADD VALUE IF NOT EXISTS 'question';
+ALTER TYPE "ForumKind" ADD VALUE IF NOT EXISTS 'decision';

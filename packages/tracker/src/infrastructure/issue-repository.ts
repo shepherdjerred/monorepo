@@ -268,7 +268,7 @@ export class IssueQueries {
     db: Prisma.TransactionClient = this.database,
   ) {
     const issue = await findIssue(db, reference);
-    const [children, comments, attachments, votes, relations] =
+    const [children, comments, attachments, votes, relations, forumLinks] =
       await Promise.all([
         db.issue.findMany({
           where: { parentId: issue.id, archivedAt: null },
@@ -298,7 +298,13 @@ export class IssueQueries {
             to: { include: issueInclude },
           },
         }),
+        db.forumIssueLink.findMany({
+          where: { issueId: issue.id },
+          include: { post: { include: { creator: true, owner: true } } },
+          orderBy: [{ createdAt: "asc" }, { postId: "asc" }],
+        }),
       ]);
+    const now = new Date();
     return {
       ...presentIssue(issue),
       children: children.map((child) => ({
@@ -322,6 +328,26 @@ export class IssueQueries {
         ...relation,
         from: presentIssue(relation.from),
         to: presentIssue(relation.to),
+      })),
+      forumThreads: forumLinks.map((link) => ({
+        id: link.post.id,
+        identifier: `FM-${String(link.post.number)}`,
+        number: link.post.number,
+        kind: link.post.kind,
+        state: link.post.state,
+        title: link.post.title,
+        expired:
+          link.post.state === "open" &&
+          link.post.kind === "notice" &&
+          link.post.expiresAt !== null &&
+          link.post.expiresAt <= now,
+        answered:
+          link.post.kind === "question" && link.post.acceptedReplyId !== null,
+        replyCount: link.post.replyCount,
+        updatedAt: link.post.updatedAt.toISOString(),
+        sourceReplyId: link.sourceReplyId,
+        creator: presentActor(link.post.creator),
+        owner: link.post.owner === null ? null : presentActor(link.post.owner),
       })),
     };
   }

@@ -1,11 +1,50 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test";
+import { z } from "zod";
 import {
   createIssue,
   removeScratchIssues,
   scratchTag,
   scratchTeam,
 } from "./data-helpers.ts";
+
+const forumActor = {
+  key: "codex:a11y-peer",
+  name: "Accessibility Peer",
+  kind: "agent",
+  metadata: { harness: "playwright" },
+};
+const ForumCreatedSchema = z.object({
+  result: z.object({
+    data: z.object({
+      id: z.string(),
+      identifier: z.string(),
+      revision: z.number(),
+    }),
+  }),
+});
+const ForumReplyCreatedSchema = z.object({
+  result: z.object({ data: z.object({ id: z.string() }) }),
+});
+const openScratchNotices: { id: string; revision: number }[] = [];
+
+async function cleanupScratchNotices(request: APIRequestContext) {
+  for (const notice of openScratchNotices.splice(0)) {
+    await request.post("/trpc/forum.resolve", {
+      data: {
+        actor: forumActor,
+        id: notice.id,
+        expectedRevision: notice.revision,
+        note: "Accessibility test cleanup.",
+      },
+    });
+  }
+}
 
 const surfaces: { name: string; open: (page: Page) => Promise<void> }[] = [
   {
@@ -195,9 +234,122 @@ const surfaces: { name: string; open: (page: Page) => Promise<void> }[] = [
       await expect(page.getByRole("switch", { name: "Haptics" })).toBeChecked();
     },
   },
+  {
+    name: "the forum feed with active notices and answered questions",
+    open: async (page) => {
+      const tag = scratchTag();
+      const noticeRes = await page.request.post("/trpc/forum.create", {
+        data: {
+          actor: forumActor,
+          kind: "notice",
+          title: `Accessible notice ${tag}`,
+          body: "Active coordination notice for contrast verification.",
+          scopes: ["ci"],
+          exitCondition: "CI returns to green.",
+          expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+        },
+      });
+      expect(noticeRes.ok()).toBe(true);
+      const notice = ForumCreatedSchema.parse(await noticeRes.json()).result
+        .data;
+      openScratchNotices.push({ id: notice.id, revision: notice.revision });
+
+      const questionRes = await page.request.post("/trpc/forum.create", {
+        data: {
+          actor: forumActor,
+          kind: "question",
+          title: `Accessible question ${tag}`,
+          body: "Does the forum feed pass axe-core?",
+          scopes: ["ui"],
+        },
+      });
+      expect(questionRes.ok()).toBe(true);
+      const question = ForumCreatedSchema.parse(await questionRes.json()).result
+        .data;
+      const replyRes = await page.request.post("/trpc/forum.reply", {
+        data: {
+          actor: forumActor,
+          id: question.id,
+          body: "Yes, in both light and dark themes.",
+        },
+      });
+      const replyId = ForumReplyCreatedSchema.parse(await replyRes.json())
+        .result.data.id;
+      await page.request.post("/trpc/forum.acceptReply", {
+        data: { actor: forumActor, id: question.id, replyId },
+      });
+
+      await page.goto("/forum");
+      await expect(
+        page.getByRole("heading", { name: "Forum", exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: `Accessible notice ${tag}` }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: `Accessible question ${tag}` }),
+      ).toBeVisible();
+    },
+  },
+  {
+    name: "a forum thread detail with nested replies and reactions",
+    open: async (page) => {
+      const tag = scratchTag();
+      const postRes = await page.request.post("/trpc/forum.create", {
+        data: {
+          actor: forumActor,
+          kind: "question",
+          title: `Thread detail ${tag}`,
+          body: "Checking nested replies, accepted callout, and reactions.",
+          scopes: ["accessibility"],
+        },
+      });
+      expect(postRes.ok()).toBe(true);
+      const post = ForumCreatedSchema.parse(await postRes.json()).result.data;
+      const rootReplyRes = await page.request.post("/trpc/forum.reply", {
+        data: {
+          actor: forumActor,
+          id: post.id,
+          body: "Top-level accepted answer.",
+        },
+      });
+      const rootReplyId = ForumReplyCreatedSchema.parse(
+        await rootReplyRes.json(),
+      ).result.data.id;
+      await page.request.post("/trpc/forum.reply", {
+        data: {
+          actor: forumActor,
+          id: post.id,
+          parentReplyId: rootReplyId,
+          body: "Nested follow-up verification note.",
+        },
+      });
+      await page.request.post("/trpc/forum.acceptReply", {
+        data: { actor: forumActor, id: post.id, replyId: rootReplyId },
+      });
+      await page.request.post("/trpc/forum.react", {
+        data: { actor: forumActor, id: post.id, emoji: "🎉" },
+      });
+
+      await page.goto(`/forum/${post.identifier}`);
+      await expect(
+        page.getByRole("heading", {
+          level: 1,
+          name: `Thread detail ${tag}`,
+          exact: true,
+        }),
+      ).toBeVisible();
+      await expect(
+        page.getByText("Nested follow-up verification note.", { exact: true }),
+      ).toBeVisible();
+    },
+  },
 ];
 
-test.afterEach(({ request }) => removeScratchIssues(request));
+test.afterEach(async ({ request }) => {
+  await removeScratchIssues(request);
+  await cleanupScratchNotices(request);
+});
 /**
  * Let opening and closing surfaces finish moving first: half-faded text is
  * a moment of an animation, not a state anyone reads.

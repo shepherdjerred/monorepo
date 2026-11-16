@@ -6,6 +6,7 @@ import {
 import {
   StateTypeSchema as StateType,
   IdentifierSchema as Identifier,
+  TeamKeySchema as TeamKey,
   CreateIssueSchema as CreateIssue,
   UpdateIssueSchema as UpdateIssue,
   BulkUpdateIssuesSchema as BulkUpdateIssues,
@@ -23,22 +24,57 @@ import {
 import type { z } from "zod";
 import {
   ForumKindSchema as ForumKind,
+  ForumEmojiSchema as ForumEmoji,
+  ForumIdentifierSchema as ForumIdentifier,
+  ForumPostIdOrIdentifierSchema as ForumPostIdOrIdentifier,
+  ForumSortSchema as ForumSort,
   ForumListSchema as ForumList,
   ForumReferenceSchema as ForumReference,
   CreateForumPostSchema as CreateForumPost,
   UpdateForumPostSchema as UpdateForumPost,
   ReplyForumSchema as ReplyForum,
+  UpdateForumReplySchema as UpdateForumReply,
+  DeleteForumReplySchema as DeleteForumReply,
   ResolveForumSchema as ResolveForum,
   ReopenForumSchema as ReopenForum,
+  PinForumSchema as PinForum,
+  AcceptForumReplySchema as AcceptForumReply,
+  ClaimForumNoticeSchema as ClaimForumNotice,
+  HandoffForumNoticeSchema as HandoffForumNotice,
+  VoteForumSchema as VoteForum,
+  ReactForumSchema as ReactForum,
+  SubscribeForumSchema as SubscribeForum,
+  MarkForumReadSchema as MarkForumRead,
+  ForumIssueLinkSchema as ForumIssueLink,
+  PromoteForumToIssueSchema as PromoteForumToIssue,
+  ForumInboxSchema as ForumInbox,
 } from "./forum.ts";
+
 export const ForumKindSchema = ForumKind.clone();
+export const ForumEmojiSchema = ForumEmoji.clone();
+export const ForumIdentifierSchema = ForumIdentifier.clone();
+export const ForumPostIdOrIdentifierSchema = ForumPostIdOrIdentifier.clone();
+export const ForumSortSchema = ForumSort.clone();
 export const ForumListSchema = ForumList.clone();
 export const ForumReferenceSchema = ForumReference.clone();
 export const CreateForumPostSchema = CreateForumPost.clone();
 export const UpdateForumPostSchema = UpdateForumPost.clone();
 export const ReplyForumSchema = ReplyForum.clone();
+export const UpdateForumReplySchema = UpdateForumReply.clone();
+export const DeleteForumReplySchema = DeleteForumReply.clone();
 export const ResolveForumSchema = ResolveForum.clone();
 export const ReopenForumSchema = ReopenForum.clone();
+export const PinForumSchema = PinForum.clone();
+export const AcceptForumReplySchema = AcceptForumReply.clone();
+export const ClaimForumNoticeSchema = ClaimForumNotice.clone();
+export const HandoffForumNoticeSchema = HandoffForumNotice.clone();
+export const VoteForumSchema = VoteForum.clone();
+export const ReactForumSchema = ReactForum.clone();
+export const SubscribeForumSchema = SubscribeForum.clone();
+export const MarkForumReadSchema = MarkForumRead.clone();
+export const ForumIssueLinkSchema = ForumIssueLink.clone();
+export const PromoteForumToIssueSchema = PromoteForumToIssue.clone();
+export const ForumInboxSchema = ForumInbox.clone();
 
 export type AppRouter = ServerRouter & { readonly __wireContract?: never };
 export type ActorEnvelope = z.infer<typeof Actor>;
@@ -46,6 +82,7 @@ export const ActorSchema = Actor.clone();
 export const ActorMetadataSchema = Metadata.clone();
 export const StateTypeSchema = StateType.clone();
 export const IdentifierSchema = Identifier.clone();
+export const TeamKeySchema = TeamKey.clone();
 export const CreateIssueSchema = CreateIssue.clone();
 export const UpdateIssueSchema = UpdateIssue.clone();
 export const BulkUpdateIssuesSchema = BulkUpdateIssues.clone();
