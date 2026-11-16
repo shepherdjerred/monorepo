@@ -24,7 +24,7 @@ struct FacetConflictPresentationTests {
         let result = await store.loadConflictPresentation(
             profileID: "owner", ownsEngine: { ownsEngine },
             load: {
-                await Task.yield()
+                await _Concurrency.Task.yield()
                 switch change {
                 case .profile: store.selectedProfileID = "different"
                 case .profileABA:
@@ -51,7 +51,7 @@ struct FacetConflictPresentationTests {
         let store = FacetStore()
         let id = UUID().uuidString
         let completed = await store.runConflictDecision(mutationID: id) {
-            await Task.yield()
+            await _Concurrency.Task.yield()
             #expect(store.isSaving && store.activeMutationID == id)
             let overlapping = await store.runConflictDecision(mutationID: UUID().uuidString) {
                 Issue.record("Overlapping conflict operation must not start.")

@@ -192,7 +192,7 @@ public struct TaskRowState: Sendable, Equatable, Identifiable {
     public var deleteCommand: CommandInput { .delete(taskId: task.id) }
 
     /// The command that gives this row's task a priority.
-    public func priorityCommand(_ priority: Priority) -> CommandInput {
+    public func priorityCommand(_ priority: TaskNotesCore.Priority) -> CommandInput {
         .update(taskId: task.id, payload: UpdateTaskRequest.settingPriority(priority))
     }
 
@@ -283,7 +283,7 @@ extension UpdateTaskRequest {
     /// `unchanged`, `clear` and `set` — so "leave it alone" is expressible and
     /// there is no risk of a partial edit silently clearing a field it did not
     /// mention. Spelling all thirteen fields at each call site would bury that.
-    public static func settingPriority(_ priority: Priority) -> Self {
+    public static func settingPriority(_ priority: TaskNotesCore.Priority) -> Self {
         Self(
             title: nil,
             details: .unchanged,

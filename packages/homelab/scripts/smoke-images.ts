@@ -2,7 +2,7 @@
 /**
  * Smoke tests for the homelab infra images.
  *
- * Boots each freshly-built `<name>:dev` image (caddy-s3proxy, obsidian-headless
+ * Boots each freshly-built `<name>:dev` image (caddy-s3proxy
  * and redlib) and asserts on startup behavior in a dependency-free Bun script.
  *
  * Each check runs a container via `docker run`, inspects stdout/stderr/exit code,
@@ -206,104 +206,6 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
 }
 
 /**
- * Smoke test obsidian-headless.
- * Verifies: the `ob` CLI is installed and `--help` runs, and the better-sqlite3
- * native addon loads AND round-trips a row (from obsidian-headless's install dir
- * so require() resolves the same way the CLI does at runtime).
- */
-async function smokeObsidianHeadless(): Promise<SmokeResult> {
-  const image = "obsidian-headless:dev";
-  const name = "smoke-obsidian-headless";
-  await forceRemove(name);
-  try {
-    const help = await run([
-      "docker",
-      "run",
-      "--rm",
-      "--name",
-      name,
-      "--entrypoint",
-      "ob",
-      image,
-      "--help",
-    ]);
-    if (help.exitCode !== 0) {
-      return {
-        image,
-        ok: false,
-        detail: `ob --help exited ${String(help.exitCode)}\n${help.stderr}`,
-      };
-    }
-
-    // Installed version matches the pin baked into the image. Catches the "stale
-    // cached image serving an outdated ob" failure mode: the Dockerfile installs
-    // OBSIDIAN_HEADLESS_EXPECTED_VERSION, so `ob --version` must equal it.
-    const version = await run([
-      "docker",
-      "run",
-      "--rm",
-      "--name",
-      `${name}-version`,
-      "--entrypoint",
-      "sh",
-      image,
-      "-c",
-      'actual="$(ob --version)"; ' +
-        'if [ "$actual" != "$OBSIDIAN_HEADLESS_EXPECTED_VERSION" ]; then ' +
-        'echo "version mismatch: installed=$actual expected=$OBSIDIAN_HEADLESS_EXPECTED_VERSION" >&2; exit 1; fi; ' +
-        'echo "obsidian-headless version pinned: $actual"',
-    ]);
-    if (version.exitCode !== 0) {
-      return {
-        image,
-        ok: false,
-        detail: `version pin check failed (exit ${String(version.exitCode)})\n${version.stdout}\n${version.stderr}`,
-      };
-    }
-
-    // better-sqlite3 native addon loads and round-trips a row.
-    const sqlite = await run([
-      "docker",
-      "run",
-      "--rm",
-      "--name",
-      `${name}-sqlite`,
-      "--entrypoint",
-      "sh",
-      image,
-      "-c",
-      [
-        'cd "$(npm root -g)/obsidian-headless"',
-        "node -e \"const Database = require('better-sqlite3');" +
-          " const db = new Database(':memory:');" +
-          " db.exec('CREATE TABLE t (x INT)');" +
-          " db.prepare('INSERT INTO t VALUES (?)').run(42);" +
-          " if (db.prepare('SELECT x FROM t').get().x !== 42)" +
-          " throw new Error('better-sqlite3 round-trip failed');" +
-          " console.log('better-sqlite3 OK');\"",
-      ].join(" && "),
-    ]);
-    if (sqlite.exitCode !== 0 || !sqlite.stdout.includes("better-sqlite3 OK")) {
-      return {
-        image,
-        ok: false,
-        detail: `better-sqlite3 check failed (exit ${String(sqlite.exitCode)})\n${sqlite.stdout}\n${sqlite.stderr}`,
-      };
-    }
-
-    return {
-      image,
-      ok: true,
-      detail: `ob --help OK; ${version.stdout.trim()}; better-sqlite3 native addon round-trips`,
-    };
-  } finally {
-    await forceRemove(name);
-    await forceRemove(`${name}-version`);
-    await forceRemove(`${name}-sqlite`);
-  }
-}
-
-/**
  * Smoke test redlib.
  * Verifies: the redlib binary boots, binds its HTTP port, and serves a request.
  * redlib serves an HTTP frontend; the boot check confirms the built binary runs
@@ -375,7 +277,6 @@ async function smokeRedlib(): Promise<SmokeResult> {
 async function main(): Promise<void> {
   const checks: { label: string; fn: () => Promise<SmokeResult> }[] = [
     { label: "caddy-s3proxy", fn: smokeCaddyS3Proxy },
-    { label: "obsidian-headless", fn: smokeObsidianHeadless },
     { label: "redlib", fn: smokeRedlib },
     { label: "velero-plugin", fn: smokeVeleroPlugin },
   ];

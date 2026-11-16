@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "type": "module",
   "imports": {
-    "#architecture": "./architecture.config.ts"
+    "#architecture": "./architecture.config.ts",
+    "#generated/*": "./generated/*"
   },
   "scripts": {
+    "generate": "prisma generate",
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
     "build": "bun build src/index.ts --compile --outfile=dist/tasknotes-server",
@@ -17,6 +19,8 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "^7.10.0",
     "@sentry/bun": "^11.6.0",
     "@shepherdjerred/bugsink-config": "workspace:*",
     "hono": "^4.12.18",
@@ -32,6 +36,7 @@
     "@typescript-eslint/utils": "^8.70.1",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
+    "prisma": "^7.10.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1",
     "@typescript/native": "npm:typescript@7.0.2",

@@ -5176,6 +5176,11 @@
     },
     {
       "dependent": "tasknotes-server/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tasknotes-server/prod",
       "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },

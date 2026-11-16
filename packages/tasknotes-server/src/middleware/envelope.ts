@@ -9,6 +9,11 @@ export async function envelopeMiddleware(
   c: Context,
   next: Next,
 ): Promise<void> {
+  if (c.req.path.startsWith("/api/v1")) {
+    await next();
+    return;
+  }
+
   await next();
 
   const response = c.res;

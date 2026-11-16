@@ -1,0 +1,1227 @@
+{
+  "tasks": [
+    {
+      "filename": "Report larger plants.md",
+      "title": "Report larger plants",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-09-20T17:33:32.656Z",
+      "dateModified": "2026-09-20T17:33:32.656Z"
+    },
+    {
+      "filename": "httpschrisburnell.comhtml-can-do-thatexample-until-found.md",
+      "title": "https://chrisburnell.com/html-can-do-that/#example-until-found",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-21T07:35:49.006Z",
+      "dateModified": "2026-08-21T07:35:49.006Z"
+    },
+    {
+      "filename": "Take some extra trash bags to rooftop.md",
+      "title": "Take some extra trash bags to rooftop",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-22T21:06:19.699Z",
+      "dateModified": "2026-08-24T23:33:52.043Z",
+      "completedDate": "2026-08-24"
+    },
+    {
+      "filename": "Put smart outlet on server and water fountain. Track cat feeder.md",
+      "title": "Put smart outlet on server and water fountain. Track cat feeder",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-11T01:38:18.868Z",
+      "dateModified": "2026-08-22T18:35:29.245Z",
+      "completedDate": "2026-08-22"
+    },
+    {
+      "filename": "Take my car to dealership for maintenance, MMI update.md",
+      "title": "Take my car to dealership for maintenance, MMI update",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:23:28.202Z",
+      "dateModified": "2026-08-24T23:33:49.715Z",
+      "completedDate": "2026-08-24"
+    },
+    {
+      "filename": "Buy ring spacer for shuxin.md",
+      "title": "Buy ring spacer for shuxin",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-08T20:23:50.392Z",
+      "dateModified": "2026-08-08T23:30:32.190Z",
+      "completedDate": "2026-08-08"
+    },
+    {
+      "filename": "Check in on AFSPenFed.md",
+      "title": "Check in on AFS/PenFed",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:28:40.607Z",
+      "dateModified": "2026-08-22T18:35:39.257Z",
+      "completedDate": "2026-08-22"
+    },
+    {
+      "filename": "Pokopia DLC for Shuxin.md",
+      "title": "Pokopia DLC for Shuxin",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-08T19:11:03.824Z",
+      "dateModified": "2026-08-12T07:16:52.754Z",
+      "completedDate": "2026-08-12"
+    },
+    {
+      "filename": "Organize kitchen and pantry.md",
+      "title": "Organize kitchen and pantry",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:30:35.377Z",
+      "dateModified": "2026-08-07T07:30:35.377Z"
+    },
+    {
+      "filename": "Schedule orthotics appointment.md",
+      "title": "Schedule orthotics appointment",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "I did email them but they never got back to me",
+      "dateCreated": "2026-08-07T07:22:26.570Z",
+      "dateModified": "2026-08-07T07:22:38.852Z"
+    },
+    {
+      "filename": "Fix dishwasher tilt.md",
+      "title": "Fix dishwasher tilt",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:30:43.271Z",
+      "dateModified": "2026-08-07T07:30:43.271Z"
+    },
+    {
+      "filename": "Schedule PCP annual checkup.md",
+      "title": "Schedule PCP annual checkup",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:24:33.515Z",
+      "dateModified": "2026-08-07T07:24:33.515Z"
+    },
+    {
+      "filename": "Trip to Vancouver.md",
+      "title": "Trip to Vancouver",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-10-24T21:43:41.769Z",
+      "dateModified": "2026-10-24T21:43:41.769Z"
+    },
+    {
+      "filename": "Schedule allergenist.md",
+      "title": "Schedule allergenist",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:22:03.125Z",
+      "dateModified": "2026-08-07T07:22:03.125Z"
+    },
+    {
+      "filename": "Run second Ethernet cable in house to storage.md",
+      "title": "Run second Ethernet cable in house to storage",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:25:00.804Z",
+      "dateModified": "2026-08-07T07:25:00.804Z"
+    },
+    {
+      "filename": "Setup calendar on devices.md",
+      "title": "Setup calendar on devices",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-09-23T02:49:59.933Z",
+      "dateModified": "2026-09-23T02:49:59.933Z"
+    },
+    {
+      "filename": "Schedule dentist for Invisalign.md",
+      "title": "Schedule dentist for Invisalign",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "Dr. Emard mentioned they couldn’t do in house",
+      "dateCreated": "2026-08-07T07:22:13.070Z",
+      "dateModified": "2026-08-07T07:23:01.663Z"
+    },
+    {
+      "filename": "Clean up guest room a bit.md",
+      "title": "Clean up guest room a bit",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:29:12.729Z",
+      "dateModified": "2026-08-19T16:24:23.782Z",
+      "completedDate": "2026-08-19"
+    },
+    {
+      "filename": "Install the final light switches for my house.md",
+      "title": "Install the final light switches for my house",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:24:50.802Z",
+      "dateModified": "2026-08-19T16:24:30.624Z",
+      "completedDate": "2026-08-19"
+    },
+    {
+      "filename": "Reschedule urologist for phimosis.md",
+      "title": "Reschedule urologist for phimosis",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "I missed the first appointment — I believe I was just having a very bad day. I’ll need to reschedule",
+      "dateCreated": "2026-08-07T07:21:23.233Z",
+      "dateModified": "2026-08-07T07:21:52.484Z"
+    },
+    {
+      "filename": "Goodwill electronics trip.md",
+      "title": "Goodwill electronics trip",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:28:17.327Z",
+      "dateModified": "\"2026-11-09T05:48:33Z\""
+    },
+    {
+      "filename": "Setup auto pay for penfed.md",
+      "title": "Setup auto pay for penfed",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-22T16:11:20.507Z",
+      "dateModified": "2026-08-24T23:18:24.003Z",
+      "completedDate": "2026-08-24"
+    },
+    {
+      "filename": "Call Costco about GLP1.md",
+      "title": "Call Costco about GLP1",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "They are trying to charge me a large amount. A call should clear it up",
+      "dateCreated": "2026-08-07T07:21:00.583Z",
+      "dateModified": "2026-08-11T22:31:45.635Z",
+      "completedDate": "2026-08-11"
+    },
+    {
+      "filename": "Trip to Bellingham.md",
+      "title": "Trip to Bellingham",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-23T22:35:42.757Z",
+      "dateModified": "2026-08-23T22:35:42.757Z"
+    },
+    {
+      "filename": "Dispose of mattress.md",
+      "title": "Dispose of mattress",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-09-20T17:33:45.088Z",
+      "dateModified": "2026-10-03T03:53:01.300Z",
+      "completedDate": "2026-10-02"
+    },
+    {
+      "filename": "Plant new plants outdoors.md",
+      "title": "Plant new plants outdoors",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:27:55.743Z",
+      "dateModified": "2026-08-09T22:31:12.406Z",
+      "completedDate": "2026-08-09"
+    },
+    {
+      "filename": "Add no-go zone for Roborock.md",
+      "title": "Add no-go zone for Roborock",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:25:17.969Z",
+      "dateModified": "2026-08-15T07:11:53.963Z",
+      "completedDate": "2026-08-08"
+    },
+    {
+      "filename": "Organize closet, order clothes by colors.md",
+      "title": "Organize closet, order clothes by colors",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:31:11.475Z",
+      "dateModified": "2026-08-07T07:31:11.475Z"
+    },
+    {
+      "filename": "Fix kitchen cabinet.md",
+      "title": "Fix kitchen cabinet",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-22T16:11:32.976Z",
+      "dateModified": "2026-09-07T02:32:06.038Z",
+      "completedDate": "2026-09-06"
+    },
+    {
+      "filename": "Spray outdoors for weeds.md",
+      "title": "Spray outdoors for weeds",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:28:01.761Z",
+      "dateModified": "2026-08-07T07:28:01.761Z"
+    },
+    {
+      "filename": "Organize storage room.md",
+      "title": "Organize storage room",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:28:09.951Z",
+      "dateModified": "2026-08-19T16:24:33.501Z",
+      "completedDate": "2026-08-19"
+    },
+    {
+      "filename": "Format dashcam every month.md",
+      "title": "Format dashcam",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-10T23:17:48.413Z",
+      "dateModified": "2026-08-30T20:22:54.445Z",
+      "scheduled": "2026-10-01",
+      "recurrence": "DTSTART:20261001;FREQ=MONTHLY;BYMONTHDAY=1"
+    },
+    {
+      "filename": "Install my car dashcam properly.md",
+      "title": "Install my car dashcam properly",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:24:42.312Z",
+      "dateModified": "2026-08-21T07:35:50.824Z",
+      "completedDate": "2026-08-21"
+    },
+    {
+      "filename": "Wash and clean my car.md",
+      "title": "Wash car",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:23:16.531Z",
+      "dateModified": "2026-09-09T00:23:57.676Z",
+      "scheduled": "2026-10-01",
+      "recurrence": "DTSTART:20260901;FREQ=MONTHLY;BYMONTHDAY=1"
+    },
+    {
+      "filename": "Check next dentist appointment.md",
+      "title": "Check next dentist appointment",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:23:09.474Z",
+      "dateModified": "2026-08-12T07:16:41.167Z",
+      "completedDate": "2026-08-12"
+    },
+    {
+      "filename": "Fix outlet for outdoor lights.md",
+      "title": "Fix outlet for outdoor lights",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-12T07:17:08.548Z",
+      "dateModified": "2026-08-12T07:17:08.548Z"
+    },
+    {
+      "filename": "Distribute mulch.md",
+      "title": "Distribute mulch",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-09-20T17:33:28.389Z",
+      "dateModified": "2026-09-22T01:38:00.840Z",
+      "completedDate": "2026-09-21"
+    },
+    {
+      "filename": "Hire cleaners for house.md",
+      "title": "Hire cleaners for house",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:29:20.804Z",
+      "dateModified": "2026-08-09T22:31:01.012Z",
+      "completedDate": "2026-08-09"
+    },
+    {
+      "filename": "Use Marine Layer credits.md",
+      "title": "Use Marine Layer credits",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-30T19:05:44.236Z",
+      "dateModified": "2026-08-30T21:00:37.157Z"
+    },
+    {
+      "filename": "Schedule appointment for leg length.md",
+      "title": "Schedule appointment for leg length",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-09-20T06:38:18.260Z",
+      "dateModified": "2026-09-20T06:38:18.260Z"
+    },
+    {
+      "filename": "Buy ticket for spiderman.md",
+      "title": "Buy ticket for spiderman",
+      "status": "done",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-08T20:19:07.500Z",
+      "dateModified": "2026-08-15T21:02:57.175Z",
+      "completedDate": "2026-08-08"
+    },
+    {
+      "filename": "Fix master bathroom floor heat.md",
+      "title": "Fix master bathroom floor heat",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-08-07T07:30:26.675Z",
+      "dateModified": "2026-08-07T07:30:26.675Z"
+    },
+    {
+      "filename": "Buy new pots for some plants.md",
+      "title": "Buy new pots for some plants",
+      "status": "open",
+      "priority": "P4",
+      "tags": ["task"],
+      "description": "",
+      "dateCreated": "2026-09-20T17:33:39.971Z",
+      "dateModified": "2026-09-20T17:33:39.971Z"
+    }
+  ],
+  "commands": [
+    {
+      "uuid": "03edac19-c447-4309-81f2-ef110e35d6bd",
+      "temp_id": "project-inbox",
+      "command": {
+        "type": "ProjectAdd",
+        "args": {
+          "name": "Inbox"
+        }
+      }
+    },
+    {
+      "uuid": "eeb56a0a-e0cd-490d-a584-3f4cbf5bd890",
+      "temp_id": "task-1",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Report larger plants",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 0
+        }
+      }
+    },
+    {
+      "uuid": "c88e92c7-dd77-44d6-a08c-ac73e849e6f0",
+      "temp_id": "task-2",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "https://chrisburnell.com/html-can-do-that/#example-until-found",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 10
+        }
+      }
+    },
+    {
+      "uuid": "810caa05-c8f5-4aba-9c25-e36f7c486555",
+      "temp_id": "task-3",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Take some extra trash bags to rooftop",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 20
+        }
+      }
+    },
+    {
+      "uuid": "2442dd81-7a81-43b2-8722-5d5b6b48ba66",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-3",
+          "completed_at": "2026-08-24T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "e250a67c-244c-40ef-a202-5ba9aa8d17f7",
+      "temp_id": "task-4",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Put smart outlet on server and water fountain. Track cat feeder",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 30
+        }
+      }
+    },
+    {
+      "uuid": "1dc07f25-1f32-49d1-b167-8537c686db06",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-4",
+          "completed_at": "2026-08-22T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "dd414698-86a6-4547-bf22-1a776e34563a",
+      "temp_id": "task-5",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Take my car to dealership for maintenance, MMI update",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 40
+        }
+      }
+    },
+    {
+      "uuid": "6539c646-f354-436e-867f-91dc48584ddb",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-5",
+          "completed_at": "2026-08-24T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "36985e8e-0877-4637-bcbe-6345e0d75607",
+      "temp_id": "task-6",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Buy ring spacer for shuxin",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 50
+        }
+      }
+    },
+    {
+      "uuid": "9d0568a3-0386-42fd-919d-acdef15456ca",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-6",
+          "completed_at": "2026-08-08T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "1c064364-48b9-43ec-b7c5-b7d5d57e48fe",
+      "temp_id": "task-7",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Check in on AFS/PenFed",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 60
+        }
+      }
+    },
+    {
+      "uuid": "60b0dfce-ce22-462a-9ec4-7b61fd209483",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-7",
+          "completed_at": "2026-08-22T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "8bb3dafd-1f07-4ebe-9fe3-e6f48e18f446",
+      "temp_id": "task-8",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Pokopia DLC for Shuxin",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 70
+        }
+      }
+    },
+    {
+      "uuid": "64d5cc2f-38bc-4c65-8d91-885e5c484155",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-8",
+          "completed_at": "2026-08-12T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "5fca0fb6-8f3a-48ef-a15a-2b8c50f9054d",
+      "temp_id": "task-9",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Organize kitchen and pantry",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 80
+        }
+      }
+    },
+    {
+      "uuid": "07fc88cd-8316-424b-9c22-089826c2e2a2",
+      "temp_id": "task-10",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Schedule orthotics appointment",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 90,
+          "description": "I did email them but they never got back to me"
+        }
+      }
+    },
+    {
+      "uuid": "26a6ebd3-8617-4297-9f72-818a483c7485",
+      "temp_id": "task-11",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Fix dishwasher tilt",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 100
+        }
+      }
+    },
+    {
+      "uuid": "d209573d-748b-4bc0-983d-cd9e8d3179b0",
+      "temp_id": "task-12",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Schedule PCP annual checkup",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 110
+        }
+      }
+    },
+    {
+      "uuid": "c511e15d-ff4f-4957-8a87-ec5c45f9dc61",
+      "temp_id": "task-13",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Trip to Vancouver",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 120
+        }
+      }
+    },
+    {
+      "uuid": "22405039-e516-4993-be3d-eb672327cce8",
+      "temp_id": "task-14",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Schedule allergenist",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 130
+        }
+      }
+    },
+    {
+      "uuid": "a440a52f-481c-4761-a810-156df79f0607",
+      "temp_id": "task-15",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Run second Ethernet cable in house to storage",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 140
+        }
+      }
+    },
+    {
+      "uuid": "5c9aa375-7883-4ab0-b0c6-6ae62c3762d4",
+      "temp_id": "task-16",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Setup calendar on devices",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 150
+        }
+      }
+    },
+    {
+      "uuid": "cefd6b10-8b9f-4eed-a330-042bbfaae08d",
+      "temp_id": "task-17",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Schedule dentist for Invisalign",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 160,
+          "description": "Dr. Emard mentioned they couldn’t do in house"
+        }
+      }
+    },
+    {
+      "uuid": "9ef01d78-aa7d-4dda-8be1-c80ac1a7eeb3",
+      "temp_id": "task-18",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Clean up guest room a bit",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 170
+        }
+      }
+    },
+    {
+      "uuid": "3073b49a-1593-47be-b1de-ab98c7b829fa",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-18",
+          "completed_at": "2026-08-19T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "535699e8-99c1-4407-bec3-231863d516cd",
+      "temp_id": "task-19",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Install the final light switches for my house",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 180
+        }
+      }
+    },
+    {
+      "uuid": "7b10740c-aff4-4f65-8da7-8795af9c3a81",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-19",
+          "completed_at": "2026-08-19T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "f5f30976-eff6-499b-b73c-ec7ba070986a",
+      "temp_id": "task-20",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Reschedule urologist for phimosis",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 190,
+          "description": "I missed the first appointment — I believe I was just having a very bad day. I’ll need to reschedule"
+        }
+      }
+    },
+    {
+      "uuid": "bbe9c26f-d3cc-46bc-ac72-4cfd8ea0e5ab",
+      "temp_id": "task-21",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Goodwill electronics trip",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 200
+        }
+      }
+    },
+    {
+      "uuid": "4aaab489-772a-4608-a30c-497d1d5afbe9",
+      "temp_id": "task-22",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Setup auto pay for penfed",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 210
+        }
+      }
+    },
+    {
+      "uuid": "01771772-718a-4e96-8f6d-9aa8979f9fec",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-22",
+          "completed_at": "2026-08-24T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "205fb18d-105b-4f40-ba7a-c9e172a95fe6",
+      "temp_id": "task-23",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Call Costco about GLP1",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 220,
+          "description": "They are trying to charge me a large amount. A call should clear it up"
+        }
+      }
+    },
+    {
+      "uuid": "4e601f39-cc09-484e-be5b-11cd9774639a",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-23",
+          "completed_at": "2026-08-11T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "46efaedf-e798-4c3e-b5f9-aa11a5c89bcc",
+      "temp_id": "task-24",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Trip to Bellingham",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 230
+        }
+      }
+    },
+    {
+      "uuid": "07cab00b-bd97-45be-aee7-b8519a195844",
+      "temp_id": "task-25",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Dispose of mattress",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 240
+        }
+      }
+    },
+    {
+      "uuid": "dbb42a95-e515-4872-9327-fa2ee5a9d8e0",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-25",
+          "completed_at": "2026-10-02T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "af04d7fd-f47f-451a-90bb-447af48e9890",
+      "temp_id": "task-26",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Plant new plants outdoors",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 250
+        }
+      }
+    },
+    {
+      "uuid": "6c0e9ca1-98ce-47bb-aa95-d69f18b036dc",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-26",
+          "completed_at": "2026-08-09T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "d6c77f07-4048-47dc-975a-14306949229f",
+      "temp_id": "task-27",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Add no-go zone for Roborock",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 260
+        }
+      }
+    },
+    {
+      "uuid": "03e165e2-1ef2-4720-9fb8-295d3732685e",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-27",
+          "completed_at": "2026-08-08T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "76654924-a486-4c0d-b0d7-8acc4d5798ee",
+      "temp_id": "task-28",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Organize closet, order clothes by colors",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 270
+        }
+      }
+    },
+    {
+      "uuid": "71c1dc6e-cb5f-48f1-9647-87863b6e7f9b",
+      "temp_id": "task-29",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Fix kitchen cabinet",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 280
+        }
+      }
+    },
+    {
+      "uuid": "2d32577f-dac3-43a2-afdf-b6d3ab16525a",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-29",
+          "completed_at": "2026-09-06T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "e48127d5-97df-4352-ab22-25ca3f339c82",
+      "temp_id": "task-30",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Spray outdoors for weeds",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 290
+        }
+      }
+    },
+    {
+      "uuid": "9c0e821c-4cdc-4ecb-8eb2-ed5a9861b7e3",
+      "temp_id": "task-31",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Organize storage room",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 300
+        }
+      }
+    },
+    {
+      "uuid": "4d3f7a1e-b9b9-4fb1-adb0-0c0f279c4735",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-31",
+          "completed_at": "2026-08-19T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "f301b886-c2a2-42d4-8a45-a11aeec3d6b6",
+      "temp_id": "task-32",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Format dashcam",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 310,
+          "due_date": "2026-10-01",
+          "recurrence_rule": "DTSTART:20261001;FREQ=MONTHLY;BYMONTHDAY=1"
+        }
+      }
+    },
+    {
+      "uuid": "4f3a0abf-770c-4b0e-9c4e-c9cde63bc150",
+      "temp_id": "task-33",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Install my car dashcam properly",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 320
+        }
+      }
+    },
+    {
+      "uuid": "ca51dcb4-a043-49f1-8ff8-4f118b7ce183",
+      "temp_id": "task-34",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Wash car",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 330,
+          "due_date": "2026-10-01",
+          "recurrence_rule": "DTSTART:20260901;FREQ=MONTHLY;BYMONTHDAY=1"
+        }
+      }
+    },
+    {
+      "uuid": "fcb13136-a08f-48ba-b60b-f122353bb306",
+      "temp_id": "task-35",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Check next dentist appointment",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 340
+        }
+      }
+    },
+    {
+      "uuid": "cccf0fda-0883-42fd-8ff8-4d766bbed1fe",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-35",
+          "completed_at": "2026-08-12T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "16c27916-eecf-4759-a940-708b0687d6aa",
+      "temp_id": "task-36",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Fix outlet for outdoor lights",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 350
+        }
+      }
+    },
+    {
+      "uuid": "64ec8cdd-a63e-4bae-a5bb-4c911355f89c",
+      "temp_id": "task-37",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Distribute mulch",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 360
+        }
+      }
+    },
+    {
+      "uuid": "b7fb7fa8-8070-4226-86a3-889567f9fbe3",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-37",
+          "completed_at": "2026-09-21T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "72e8221e-8a17-4fea-b263-2f90ae66d3b4",
+      "temp_id": "task-38",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Hire cleaners for house",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 370
+        }
+      }
+    },
+    {
+      "uuid": "a3e733b0-7fd6-4cc3-803a-03babcdee989",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-38",
+          "completed_at": "2026-08-09T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "1dfb0be0-344d-408e-818e-87900cffd141",
+      "temp_id": "task-39",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Use Marine Layer credits",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 380
+        }
+      }
+    },
+    {
+      "uuid": "a1c68342-3340-4ed4-97d5-33a55ba8d47f",
+      "temp_id": "task-40",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Schedule appointment for leg length",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 390
+        }
+      }
+    },
+    {
+      "uuid": "50a2fd35-eecb-46e1-86e6-0a535c278689",
+      "temp_id": "task-41",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Buy ticket for spiderman",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 400
+        }
+      }
+    },
+    {
+      "uuid": "69fdc957-372e-4e72-98b5-93f41f423e88",
+      "command": {
+        "type": "TaskComplete",
+        "args": {
+          "id": "task-41",
+          "completed_at": "2026-08-08T12:00:00.000Z"
+        }
+      }
+    },
+    {
+      "uuid": "b727111f-1a9d-4bd5-a97c-c255af0c3fa7",
+      "temp_id": "task-42",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Fix master bathroom floor heat",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 410
+        }
+      }
+    },
+    {
+      "uuid": "e738f211-35bb-4e71-877a-de1065f98186",
+      "temp_id": "task-43",
+      "command": {
+        "type": "TaskAdd",
+        "args": {
+          "title": "Buy new pots for some plants",
+          "project_id": "project-inbox",
+          "priority": "P4",
+          "child_order": 420
+        }
+      }
+    }
+  ]
+}

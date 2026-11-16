@@ -51,5 +51,4 @@ export const ZFS_NVME_UNCOMPRESSED_CLAIMS: ReadonlySet<string> = new Set([
   "storm-forum/storm-forum-files",
   "syncthing/syncthing-config",
   "syncthing/syncthing-data",
-  "tasknotes/tasknotes-vault-pvc",
 ]);

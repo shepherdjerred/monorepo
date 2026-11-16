@@ -3,6 +3,7 @@ import { z } from "zod";
 import { isNoopScript } from "../misc/migration-core.ts";
 import { loadLocalVerification } from "../lib/local-verification.ts";
 import {
+  complianceExemptions as exemptions,
   requiredScriptName,
   satisfiedByTransitTask,
 } from "./compliance-required-scripts.ts";
@@ -317,70 +318,6 @@ function collectTypeScriptToolchainErrors(
   }
   return errors;
 }
-
-const exemptions = new Set(
-  `
-packages/glitter:lint
-packages/glitter:typecheck
-packages/resume:test
-packages/resume:lint
-packages/resume:typecheck
-packages/monarch:build
-packages/llm-observability:build
-packages/discord-plays-core:build
-packages/trmnl-dashboard:build
-packages/tasks-for-obsidian:build
-packages/starlight-karma-bot:build
-packages/tasknotes-types:build
-packages/tasknotes-fixtures:build
-packages/tasknotes-fixtures:test
-packages/tasknotes-fixtures:lint
-packages/tasknotes-fixtures:typecheck
-packages/tasknotes-macos:build
-packages/tasknotes-macos:typecheck
-packages/windows-cross-compiler:build
-packages/code-review:build
-packages/architecture:build
-packages/cooklang-rich-preview:test
-packages/cross-compilers-site:test
-packages/stocks-sjer-red:test
-packages/landing-pages:test
-packages/discord-video-stream:lint
-packages/discord-plays-mario-kart/packages/common:test
-packages/discord-plays-pokemon/packages/common:test
-packages/scout-for-lol/packages/data:build
-packages/scout-for-lol/packages/report:build
-packages/hkctl:build
-packages/hkctl:test
-packages/hkctl:typecheck
-packages/macos-cross-compiler:build
-packages/macos-cross-compiler:test
-packages/macos-cross-compiler:lint
-packages/macos-cross-compiler:typecheck
-packages/sjer.red:test
-packages/release-tools:build
-packages/release-tools:lint
-packages/release-tools:typecheck
-packages/temporal:build
-packages/temporal-observability:build
-packages/discord-plays-pokemon/packages/backend:build
-packages/discord-plays-mario-kart/packages/backend:build
-packages/macos-ai-subscription-tracker:build
-packages/macos-ai-subscription-tracker:test
-packages/macos-ai-subscription-tracker:lint
-packages/macos-ai-subscription-tracker:typecheck
-packages/homelab:build
-packages/dotfiles:build
-packages/tasknotes-e2e:build
-packages/discord-plays-mario-kart:build
-packages/discord-plays-pokemon:build
-packages/scout-for-lol:build
-packages/scout-for-lol/packages/temporal:build
-packages/scout-for-lol/packages/domain:build
-`
-    .trim()
-    .split("\n"),
-);
 
 function getWorkspacePatterns(
   rootPackageJson: z.infer<typeof RootPackageJsonSchema>,

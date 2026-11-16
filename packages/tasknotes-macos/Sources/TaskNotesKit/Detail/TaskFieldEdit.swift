@@ -53,7 +53,7 @@ public enum TaskFieldEdit: Sendable, Equatable {
     case status(TaskStatus)
 
     /// A new priority.
-    case priority(Priority)
+    case priority(TaskNotesCore.Priority)
 
     /// The due date as `YYYY-MM-DD`; `nil` deletes the key.
     case due(String?)

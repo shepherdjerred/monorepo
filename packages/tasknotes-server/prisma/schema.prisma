@@ -1,0 +1,143 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String             @id @default(uuid())
+  email             String             @unique
+  name              String
+  syncSequence      BigInt             @default(0)
+  projects          Project[]
+  tasks             Task[]
+  sections          Section[]
+  labels            Label[]
+  filters           Filter[]
+  processedCommands ProcessedCommand[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model Project {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  name        String
+  color       String    @default("charcoal")
+  parentId    String?
+  childOrder  Float     @default(0)
+  isInbox     Boolean   @default(false)
+  isFavorite  Boolean   @default(false)
+  isArchived  Boolean   @default(false)
+  isDeleted   Boolean   @default(false)
+  tasks       Task[]
+  sections    Section[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Section {
+  id           String   @id @default(uuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id])
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  name         String
+  sectionOrder Float    @default(0)
+  isArchived   Boolean  @default(false)
+  isDeleted    Boolean  @default(false)
+  tasks        Task[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Task {
+  id             String      @id @default(uuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  projectId      String
+  project        Project     @relation(fields: [projectId], references: [id])
+  sectionId      String?
+  section        Section?    @relation(fields: [sectionId], references: [id])
+  parentId       String?
+  title          String
+  description    String      @default("")
+  priority       String      @default("P4")
+  childOrder     Float       @default(0)
+  dueDate        DateTime?   @db.Date
+  dueDatetime    DateTime?   @db.Timestamptz
+  dueTimezone    String?
+  dueString      String?
+  isRecurring    Boolean     @default(false)
+  recurrenceRule String?
+  completed      Boolean     @default(false)
+  completedAt    DateTime?
+  isDeleted      Boolean     @default(false)
+  labels         TaskLabel[]
+  reminders      Reminder[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Label {
+  id         String      @id @default(uuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id])
+  name       String
+  color      String      @default("grey")
+  itemOrder  Float       @default(0)
+  isFavorite Boolean     @default(false)
+  isDeleted  Boolean     @default(false)
+  tasks      TaskLabel[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model TaskLabel {
+  taskId  String
+  labelId String
+  task    Task   @relation(fields: [taskId], references: [id])
+  label   Label  @relation(fields: [labelId], references: [id])
+
+  @@id([taskId, labelId])
+}
+
+model Reminder {
+  id           String    @id @default(uuid())
+  taskId       String
+  task         Task      @relation(fields: [taskId], references: [id])
+  reminderType String
+  minuteOffset Int?
+  dueDatetime  DateTime? @db.Timestamptz
+  isNotified   Boolean   @default(false)
+  isDeleted    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+}
+
+model Filter {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  name       String
+  query      String
+  color      String   @default("charcoal")
+  itemOrder  Float    @default(0)
+  isFavorite Boolean  @default(false)
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model ProcessedCommand {
+  uuid      String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  status    String
+  createdAt DateTime @default(now())
+}

@@ -9,6 +9,8 @@ const config = [
       // already exclude them.
       "**/architecture-fixtures/**/*",
       "**/dist/**/*",
+      "**/generated/**/*",
+      "src/protocol/generated.ts",
       "**/node_modules/**/*",
       "**/*.md",
       "**/*.js",
@@ -17,6 +19,12 @@ const config = [
       "eslint.config.ts",
     ],
   }),
+  {
+    files: ["prisma.config.ts"],
+    rules: {
+      "custom-rules/prefer-bun-apis": "off",
+    },
+  },
   {
     rules: {
       "no-console": "off",

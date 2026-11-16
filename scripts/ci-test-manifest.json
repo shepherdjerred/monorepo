@@ -38,6 +38,11 @@
       "reason": "Static Astro site; no test files exist."
     },
     {
+      "package": "@shepherdjerred/facet-protocol",
+      "directory": "packages/facet-protocol",
+      "reason": "Shared protocol definitions and generators; no test files exist."
+    },
+    {
       "package": "stocks-sjer-red",
       "directory": "packages/stocks-sjer-red",
       "reason": "Static Astro site; no test files exist."

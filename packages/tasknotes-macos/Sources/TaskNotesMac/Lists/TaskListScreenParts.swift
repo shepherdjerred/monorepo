@@ -236,7 +236,7 @@ struct TaskRowMenu: View {
     let onNewTask: () -> Void
     let onToggle: ([TaskRowState]) -> Void
     let onSchedule: (ScheduleChoice) -> Void
-    let onPriority: (Priority) -> Void
+    let onPriority: (TaskNotesUniFFI.Priority) -> Void
     let onDelete: () -> Void
 
     /// The inspector, when there is one in front of the user.

@@ -17,7 +17,7 @@ struct FacetPresentationTests {
         let afterProfileABA = await store.loadWidgetEnvelope(
             profileID: "owning-profile",
             load: {
-                await Task.yield()
+                await _Concurrency.Task.yield()
                 store.selectedProfileID = "other-profile"
                 store.requestGeneration += 1
                 store.selectedProfileID = "owning-profile"
@@ -27,7 +27,7 @@ struct FacetPresentationTests {
         let afterAccountIntent = await store.loadWidgetEnvelope(
             profileID: "owning-profile",
             load: {
-                await Task.yield()
+                await _Concurrency.Task.yield()
                 store.syncGeneration += 1
                 return payload
             }, ownsEngine: { true })

@@ -31,10 +31,6 @@
       "delivery.images.tasknotes-server": {
         "component": "image:tasknotes-server",
         "format": "reference"
-      },
-      "delivery.images.obsidian-headless": {
-        "component": "image:obsidian-headless",
-        "format": "reference"
       }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },

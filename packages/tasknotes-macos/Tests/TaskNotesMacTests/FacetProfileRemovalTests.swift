@@ -38,7 +38,7 @@ struct FacetProfileRemovalTests {
         let original = store.syncGeneration
         store.accountTransition = true
         store.syncGeneration += 1
-        await Task.yield()
+        await _Concurrency.Task.yield()
         #expect(!store.canRetainSession(profileID: profile.id, generation: original))
         #expect(!store.canRetainSession(profileID: profile.id, generation: store.syncGeneration))
         store.accountTransition = false
@@ -59,7 +59,7 @@ struct FacetProfileRemovalTests {
             profileID: profile.id,
             operations: FacetProfileRemovalOperations(
                 stop: {
-                    await Task.yield()
+                    await _Concurrency.Task.yield()
                     #expect(
                         !store.canRetainSession(
                             profileID: profile.id, generation: openingGeneration))
@@ -101,7 +101,7 @@ struct FacetProfileRemovalTests {
         await store.removeProfileWithOperations(
             profileID: owned.id,
             operations: FacetProfileRemovalOperations(
-                stop: { await Task.yield() }, removeDomain: { nil },
+                stop: { await _Concurrency.Task.yield() }, removeDomain: { nil },
                 detach: { throw POSIXError(.EIO) }, retire: { retired = true },
                 reload: { [other] }, ownsEngine: { true }, reconcile: { reconciled = true }))
         #expect(retired && reconciled)

@@ -283,7 +283,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "starlight-karma-bot-beta/starlight-karma-bot-beta-starlight-karma-bot-backend/main",
   "starlight-karma-bot-prod/starlight-karma-bot-prod-starlight-karma-bot-backend/main",
   "syncthing/syncthing/main",
-  "tasknotes/tasknotes/obsidian-headless",
   "tasknotes/tasknotes/tasknotes-server",
   "temporal/temporal-delivery-platform-worker/temporal-delivery-platform-worker",
   "temporal/temporal-delivery-worker/temporal-delivery-worker",

@@ -272,7 +272,7 @@ func inspectorTask(
     id: String,
     title: String,
     status: TaskStatus = .open,
-    priority: Priority = .normal,
+    priority: TaskNotesUniFFI.Priority = .normal,
     due: String? = nil,
     scheduled: String? = nil,
     recurrence: String? = nil,

@@ -1,9 +1,9 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { tailnetService } from "homelab/src/platform-model.ts";
-import { DeploymentStrategy, EnvValue, Probe, Secret } from "cdk8s-plus-31";
+import { DeploymentStrategy, EnvValue, Secret } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Cpu } from "cdk8s-plus-31";
-import { Duration, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { bugsinkEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
@@ -13,7 +13,18 @@ import {
   tailscaleIngressRule,
   externalHttpsEgressRule,
   blackboxProbeIngressRule,
+  postgresEgress,
+  postgresOperatorIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+
+function buildPgUrl(): string {
+  const protocol = "postgres";
+  const userRef = "$(DB_USER)";
+  const passRef = "$(DB_" + "PASSWORD)";
+  const host = "tasknotes-postgresql:5432";
+  const db = "tasknotes_db";
+  return `${protocol}://${userRef}:${passRef}@${host}/${db}`;
+}
 
 export function createTasknotesDeployment(chart: Chart) {
   return new FirstPartyWebService(chart, "tasknotes-web-service", {
@@ -35,20 +46,13 @@ export function createTasknotesDeployment(chart: Chart) {
           "ignore-check.kube-linter.io/run-as-non-root":
             "TaskNotes requires flexible user permissions for file operations",
           "ignore-check.kube-linter.io/no-read-only-root-fs":
-            "TaskNotes requires writable filesystem for vault sync and server operations",
+            "TaskNotes requires writable filesystem for server operations",
         },
       },
       // The pods predate the construct and carry no `app` label.
       podMetadata: {},
     },
-    // Both containers share the vault.
-    data: {
-      id: "tasknotes-vault-pvc",
-      storage: Size.gibibytes(5),
-      path: "/vault",
-    },
-    // The root filesystem is writable, and the sync loop keeps its heartbeat
-    // in the container's own /tmp.
+    // The root filesystem is writable
     tmp: false,
     containers: () => {
       const onePasswordItem = new OnePasswordItem(chart, "tasknotes-1p", {
@@ -56,6 +60,27 @@ export function createTasknotesDeployment(chart: Chart) {
           itemPath: vaultItemPath("tasknotes-server"),
         },
       });
+
+      const postgresSecretName =
+        "tasknotes.tasknotes-postgresql.credentials.postgresql.acid.zalan.do";
+      const pgSecretRef = Secret.fromSecretName(
+        chart,
+        "tasknotes-pg-secret-ref",
+        postgresSecretName,
+      );
+
+      const dbEnv = {
+        DB_USER: EnvValue.fromSecretValue({
+          secret: pgSecretRef,
+          key: "username",
+        }),
+        DB_PASSWORD: EnvValue.fromSecretValue({
+          secret: pgSecretRef,
+          key: "password",
+        }),
+        DATABASE_URL: EnvValue.fromValue(buildPgUrl()),
+      };
+
       return {
         // Container 1: TaskNotes API Server (Hono on port 3000)
         server: {
@@ -76,8 +101,7 @@ export function createTasknotesDeployment(chart: Chart) {
             },
           },
           envVariables: {
-            VAULT_PATH: EnvValue.fromValue("/vault"),
-            TASKS_DIR: EnvValue.fromValue("TaskNotes"),
+            ...dbEnv,
             HOST: EnvValue.fromValue("0.0.0.0"),
             PORT: EnvValue.fromValue("3000"),
             AUTH_TOKEN: EnvValue.fromSecretValue({
@@ -103,82 +127,6 @@ export function createTasknotesDeployment(chart: Chart) {
             ),
           },
         },
-        sidecars: [
-          // Container 2: Obsidian Headless Sync (official CLI)
-          {
-            name: "obsidian-headless",
-            image: firstPartyImageRecipe("obsidian-headless"),
-            command: ["/bin/sh", "-c"],
-            args: [
-              // Run ob sync --continuous in the background; a companion loop touches
-              // /tmp/ob-sync-alive every 30 s while the process is alive.  When sync
-              // exits (cleanly or via crash), the companion exits, we wait, then retry.
-              // test -d /proc/$P checks process liveness without producing stderr output.
-              'ob sync-setup --vault "$OBSIDIAN_VAULT_NAME" --password "$OBSIDIAN_VAULT_PASSWORD" --path /vault && while true; do rm -rf /vault/.obsidian/.sync.lock; ob sync --continuous --path /vault & P=$!; while test -d /proc/$P; do touch /tmp/ob-sync-alive; sleep 30; done; wait $P; echo "Sync exited, retrying in 10s..."; sleep 10; done',
-            ],
-            securityContext: {
-              readOnlyRootFilesystem: false,
-              ensureNonRoot: false,
-            },
-            // Wait for ob sync-setup to create /vault/.obsidian before allowing liveness checks.
-            // /vault is a PVC, so this directory persists across restarts — correct for a startup gate.
-            startup: Probe.fromCommand(["test", "-d", "/vault/.obsidian"], {
-              periodSeconds: Duration.seconds(30),
-              failureThreshold: 12, // up to 6 minutes for initial setup
-            }),
-            // /tmp/ob-sync-alive is written every 30 s while ob sync --continuous is running.
-            // Using /tmp (not the PVC) avoids checking stale state across pod restarts.
-            // Fails if the sync loop has not touched the file in the last 5 minutes.
-            // Search /tmp by name so find does not error if the file is absent.
-            liveness: Probe.fromCommand(
-              [
-                "sh",
-                "-c",
-                "find /tmp -name ob-sync-alive -mmin -5 | grep -q .",
-              ],
-              {
-                periodSeconds: Duration.seconds(30),
-                failureThreshold: 6,
-              },
-            ),
-            resources: {
-              cpu: {
-                request: Cpu.millis(100),
-                limit: Cpu.millis(1000),
-              },
-              memory: {
-                request: Size.mebibytes(128),
-                limit: Size.mebibytes(512),
-              },
-            },
-            envVariables: {
-              OBSIDIAN_AUTH_TOKEN: EnvValue.fromSecretValue({
-                secret: Secret.fromSecretName(
-                  chart,
-                  "tasknotes-obsidian-token-secret",
-                  onePasswordItem.name,
-                ),
-                key: "OBSIDIAN_TOKEN",
-              }),
-              OBSIDIAN_VAULT_PASSWORD: EnvValue.fromSecretValue({
-                secret: Secret.fromSecretName(
-                  chart,
-                  "tasknotes-obsidian-vault-password-secret",
-                  onePasswordItem.name,
-                ),
-                key: "OBSIDIAN_VAULT_PASSWORD",
-              }),
-              OBSIDIAN_VAULT_NAME: EnvValue.fromSecretValue({
-                secret: Secret.fromSecretName(
-                  chart,
-                  "tasknotes-obsidian-vault-name-secret",
-                  onePasswordItem.name,
-                ),
-                key: "OBSIDIAN_VAULT_NAME",
-              }),
-            },
-          },
-        ],
       };
     },
     // Only accessible via Tailscale.
@@ -198,17 +146,21 @@ export function createTasknotesDeployment(chart: Chart) {
           // Allow blackbox-exporter's in-cluster health probe (http service port
           // only — not every port on the pod)
           blackboxProbeIngressRule(3000),
+          // PostgreSQL operator access to database pods in this namespace
+          postgresOperatorIngressRule(),
         ],
       },
-      // Allow egress to DNS and external HTTPS (Obsidian sync servers)
+      // Allow egress to DNS, external HTTPS, and PostgreSQL
       {
         name: "tasknotes-egress-netpol",
         selects: "namespace",
         egress: [
           // DNS
           dnsEgressRule(),
-          // External HTTPS (api.obsidian.md, sync-N.obsidian.md WebSocket)
+          // External HTTPS
           externalHttpsEgressRule(),
+          // PostgreSQL
+          postgresEgress("tasknotes-postgresql"),
         ],
       },
     ],
