@@ -1,3 +1,4 @@
+import path from "node:path";
 import { z } from "zod";
 import { formatDurationCompact } from "./paths.ts";
 import { processStartsMatch } from "./process-probe.ts";
@@ -319,4 +320,78 @@ export async function sweepSharedPostgresDatabases(options: {
     );
     return 0;
   }
+}
+
+export function isPostgresCommandName(proc: OsProcessEntry): boolean {
+  const argv0 = proc.args.trim().split(/\s+/u)[0] ?? proc.command;
+  const lower = argv0.toLowerCase();
+  return (
+    argv0 === "postgres" ||
+    argv0 === "postgres:" ||
+    argv0.endsWith("/postgres") ||
+    lower === "postgres.exe" ||
+    lower.endsWith(String.raw`\postgres.exe`) ||
+    lower.endsWith("/postgres.exe")
+  );
+}
+
+export function isPostgresServerProcess(
+  proc: OsProcessEntry,
+  verifiedPostmasterPid: number | undefined,
+): boolean {
+  return (
+    (verifiedPostmasterPid !== undefined &&
+      (proc.pid === verifiedPostmasterPid ||
+        proc.ppid === verifiedPostmasterPid)) ||
+    isPostgresCommandName(proc)
+  );
+}
+
+export type PostmasterInfo = {
+  readonly dataDir: string;
+  readonly pid: number;
+  readonly port?: number | undefined;
+};
+
+export async function readPostmasterInfo(
+  clusterDir: string,
+): Promise<PostmasterInfo | null> {
+  const candidateDataDirs = [path.join(clusterDir, "data"), clusterDir];
+  for (const dataDir of candidateDataDirs) {
+    const pidFile = Bun.file(path.join(dataDir, "postmaster.pid"));
+    if (!(await pidFile.exists())) {
+      continue;
+    }
+    try {
+      const content = await pidFile.text();
+      const lines = content.split(/\r?\n/u);
+      const pid = Number(lines[0]?.trim() ?? "");
+      const portRaw = Number(lines[3]?.trim() ?? "");
+      if (Number.isInteger(pid) && pid > 0) {
+        return {
+          dataDir,
+          pid,
+          ...(Number.isInteger(portRaw) && portRaw > 0 && portRaw <= 65_535
+            ? { port: portRaw }
+            : {}),
+        };
+      }
+    } catch {
+      // Ignore unreadable postmaster.pid.
+    }
+  }
+  return null;
+}
+
+export function resolveVerifiedPostmasterPid(
+  postmaster: PostmasterInfo | null,
+  liveness: LivenessSnapshot,
+): number | undefined {
+  if (postmaster === null) {
+    return undefined;
+  }
+  const live = liveness.processes.get(postmaster.pid);
+  return live !== undefined && isPostgresCommandName(live)
+    ? postmaster.pid
+    : undefined;
 }

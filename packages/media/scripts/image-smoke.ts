@@ -1,16 +1,116 @@
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { chown, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
-const database = await startMediaTestPostgres();
-const probe = Bun.serve({
-  hostname: "127.0.0.1",
-  port: 0,
-  fetch: () => new Response(),
-});
-const port = probe.port;
-await probe.stop(true);
+const packageRoot = `${import.meta.dir}/..`;
+
+function runSmokeCommand(
+  args: string[],
+  environment: Record<string, string | undefined> = {},
+): string {
+  const result = Bun.spawnSync(args, {
+    cwd: packageRoot,
+    env: { ...Bun.env, ...environment },
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `${args[0] ?? "Command"} failed: ${result.stderr.toString()}`,
+    );
+  }
+  return result.stdout.toString().trim();
+}
+
+function postgresSmokeCommand(args: string[]): string[] {
+  if (process.getuid?.() !== 0) return args;
+  const command = args[0];
+  if (command === undefined) throw new Error("PostgreSQL command missing");
+  const resolved = Bun.which(command) ?? command;
+  return ["runuser", "-u", "nobody", "--", resolved, ...args.slice(1)];
+}
+
+async function allocateEphemeralPort(): Promise<number> {
+  const probe = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch: () => new Response(),
+  });
+  const allocated = probe.port;
+  await probe.stop(true);
+  if (allocated === undefined) {
+    throw new Error("Failed to allocate ephemeral port");
+  }
+  return allocated;
+}
+
+async function startDisposableSmokePostgres(): Promise<{
+  readonly url: string;
+  readonly close: () => Promise<void>;
+}> {
+  const directory = await mkdtemp(path.join(tmpdir(), "media-smoke-pg-"));
+  if (process.getuid?.() === 0) await chown(directory, 65_534, 65_534);
+  const pgPort = await allocateEphemeralPort();
+  const data = path.join(directory, "data");
+  let started = false;
+  const close = async () => {
+    if (started) {
+      runSmokeCommand(
+        postgresSmokeCommand([
+          "pg_ctl",
+          "-D",
+          data,
+          "-m",
+          "fast",
+          "-w",
+          "stop",
+        ]),
+      );
+    }
+    await rm(directory, { recursive: true, force: true });
+  };
+  try {
+    runSmokeCommand(
+      postgresSmokeCommand([
+        "initdb",
+        "-D",
+        data,
+        "-U",
+        "media",
+        "-A",
+        "trust",
+        "--no-locale",
+        "--encoding=UTF8",
+      ]),
+    );
+    runSmokeCommand(
+      postgresSmokeCommand([
+        "pg_ctl",
+        "-D",
+        data,
+        "-l",
+        path.join(directory, "server.log"),
+        "-o",
+        `-h 127.0.0.1 -p ${String(pgPort)} -k ${directory}`,
+        "-w",
+        "start",
+      ]),
+    );
+    started = true;
+    const url = `postgres://media@127.0.0.1:${String(pgPort)}/postgres`;
+    runSmokeCommand(["bun", "run", "migrate:deploy"], { DATABASE_URL: url });
+    return { url, close };
+  } catch (error) {
+    await close();
+    throw error;
+  }
+}
+
+const database = await startDisposableSmokePostgres();
+const port = await allocateEphemeralPort();
 const origin = `http://127.0.0.1:${String(port)}`;
 const server = Bun.spawn(["bun", "src/server/index.ts"], {
-  cwd: `${import.meta.dir}/..`,
+  cwd: packageRoot,
   env: {
     PATH: Bun.env["PATH"],
     HOME: Bun.env["HOME"],

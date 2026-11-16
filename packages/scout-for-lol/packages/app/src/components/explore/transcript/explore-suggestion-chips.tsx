@@ -95,8 +95,8 @@ export function ExploreSuggestionChips(props: {
           size="sm"
           className="shrink-0 gap-1.5 text-xs text-scout-subtle hover:text-scout-ink"
           onClick={handleShuffle}
-          title="Show different suggestions"
-          aria-label="Show different suggestions"
+          title="Shuffle suggestions"
+          aria-label="Shuffle suggestions"
         >
           <RefreshCw className="size-3.5" />
           <span className="hidden sm:inline">Shuffle</span>

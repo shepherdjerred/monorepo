@@ -184,6 +184,7 @@
     "packages/temporal",
     "packages/temporal-observability",
     "packages/terraform-provider-asuswrt",
+    "packages/test-postgres",
     "packages/text",
     "packages/the-storm",
     "packages/toolkit",

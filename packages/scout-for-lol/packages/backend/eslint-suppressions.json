@@ -166,11 +166,6 @@
       "count": 2
     }
   },
-  "src/testing/postgres-server.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/trpc/image-routes.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

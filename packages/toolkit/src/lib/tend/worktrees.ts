@@ -1,4 +1,4 @@
-import { readdir, rmdir } from "node:fs/promises";
+import { readdir, rm, rmdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
@@ -23,7 +23,9 @@ import {
   directoryExists,
   evaluateBranchAndPrEligibility,
   fileOrDirExists,
+  isGitPathTooLongDeletionError,
   isMidGitOperation,
+  isWorktreeCleanForFallbackRemoval,
   parseBatchPullRequests,
   parsePorcelainWorktrees,
   type RepoPrRecord,
@@ -90,6 +92,44 @@ function collectActiveProtectedWorktreePaths(
   return protectedSet;
 }
 
+async function removeWorktreeDirectory(
+  repoPath: string,
+  wtPath: string,
+  runner: CommandRunner,
+): Promise<{ readonly ok: boolean; readonly detail?: string | undefined }> {
+  const rmRes = await runner(["git", "worktree", "remove", wtPath], {
+    cwd: repoPath,
+    timeoutMs: 15_000,
+  });
+  if (rmRes.exitCode === 0) {
+    return { ok: true };
+  }
+  if (
+    !isGitPathTooLongDeletionError(rmRes.stderr) ||
+    !(await isWorktreeCleanForFallbackRemoval(wtPath, runner))
+  ) {
+    return {
+      ok: false,
+      detail:
+        rmRes.stderr.trim() ||
+        `git worktree remove exited ${String(rmRes.exitCode)}`,
+    };
+  }
+  try {
+    await rm(wtPath, { recursive: true, force: true });
+    await runner(["git", "worktree", "prune"], {
+      cwd: repoPath,
+      timeoutMs: 5000,
+    });
+    return { ok: true };
+  } catch (error: unknown) {
+    return {
+      ok: false,
+      detail: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 async function applyWorktreeRemoval(options: {
   readonly repoPath: string;
   readonly wt: WorktreePorcelainEntry;
@@ -103,17 +143,9 @@ async function applyWorktreeRemoval(options: {
       timeoutMs: 5000,
     });
   }
-  const rmRes = await runner(["git", "worktree", "remove", wt.path], {
-    cwd: repoPath,
-    timeoutMs: 15_000,
-  });
-  if (rmRes.exitCode !== 0) {
-    return {
-      ok: false,
-      detail:
-        rmRes.stderr.trim() ||
-        `git worktree remove exited ${String(rmRes.exitCode)}`,
-    };
+  const removed = await removeWorktreeDirectory(repoPath, wt.path, runner);
+  if (!removed.ok) {
+    return removed;
   }
   if (wt.branch !== undefined) {
     const flag = options.forceDeleteBranch ? "-D" : "-d";
@@ -277,22 +309,28 @@ async function fetchRepoPullRequestMap(
   if (!hasNamedBranches || !ctx.checkPullRequests) {
     return new Map();
   }
-  const ghRes = await ctx.runner(
-    [
-      "gh",
-      "pr",
-      "list",
-      "--state",
-      "all",
-      "--limit",
-      "500",
-      "--json",
-      "headRefName,state,updatedAt,headRefOid",
-    ],
-    { cwd: ctx.repoPath, timeoutMs: 15_000 },
-  );
-  if (ghRes.exitCode === 0) {
-    return parseBatchPullRequests(ghRes.stdout);
+  const ghArgs = [
+    "pr",
+    "list",
+    "--state",
+    "all",
+    "--limit",
+    "500",
+    "--json",
+    "headRefName,state,updatedAt,headRefOid",
+  ];
+  const ghCandidates =
+    ctx.platform === "win32"
+      ? ["gh", String.raw`C:\Program Files\GitHub CLI\gh.exe`]
+      : ["gh"];
+  for (const ghBin of ghCandidates) {
+    const ghRes = await ctx.runner([ghBin, ...ghArgs], {
+      cwd: ctx.repoPath,
+      timeoutMs: 15_000,
+    });
+    if (ghRes.exitCode === 0) {
+      return parseBatchPullRequests(ghRes.stdout);
+    }
   }
   warnings.push(
     `gh pr list unavailable in ${ctx.repoPath}; checking git ancestry only`,

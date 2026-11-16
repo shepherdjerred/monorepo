@@ -185,13 +185,27 @@ describe("sweepPostgres", () => {
           ppid: 1,
           processStart: "Mon Nov 15 08:00:01 2026",
           elapsedSeconds: 7200,
-          command: "postgres",
+          command: "/Users/jerred/.l",
           args: `postgres -D ${deadCluster}`,
+          cwd: deadCluster,
+        },
+      ],
+      [
+        5556,
+        {
+          pid: 5556,
+          ppid: 5555,
+          processStart: "Mon Nov 15 08:00:01 2026",
+          elapsedSeconds: 7200,
+          command: "postgres: checkp",
+          args: "postgres: checkpointer",
+          cwd: deadCluster,
         },
       ],
     ]);
 
     const pgCtlCalls: string[][] = [];
+    const killedSignals: [number, NodeJS.Signals][] = [];
     const droppedDbs: string[] = [];
 
     const res = await sweepPostgres({
@@ -199,6 +213,9 @@ describe("sweepPostgres", () => {
       tempDirs: [root],
       apply: true,
       nowMs,
+      killProcess: (pid, signal) => {
+        killedSignals.push([pid, signal]);
+      },
       runner: (argv) => {
         if (argv[0] === "pg_ctl") {
           pgCtlCalls.push([...argv]);
@@ -255,6 +272,7 @@ describe("sweepPostgres", () => {
     expect(pgCtlCalls).toEqual([
       ["pg_ctl", "-D", deadCluster, "-m", "immediate", "-w", "stop"],
     ]);
+    expect(killedSignals).toEqual([[5555, "SIGTERM"]]);
     expect(await Bun.file(path.join(deadCluster, "owner.pid")).exists()).toBe(
       false,
     );

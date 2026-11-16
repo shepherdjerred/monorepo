@@ -1,137 +1,138 @@
-import { mkdtemp, chown, rm, readdir } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  createEmptyTestDatabase,
+  createTemplateTestDatabase,
+  envWithPostgresBin,
+  postgresBinaryPath,
+  runCommandAsync,
+  runCommandSync,
+} from "@shepherdjerred/test-postgres";
 import { createDatabase } from "#infrastructure/database.ts";
 import { historicalIntentFixtureDatabase } from "./historical-intent-client.ts";
 
-const packageRoot = `${import.meta.dir}/../..`;
-function run(
-  args: string[],
-  environment: Record<string, string | undefined> = {},
-) {
-  const result = Bun.spawnSync(args, {
-    cwd: packageRoot,
-    env: { ...Bun.env, ...environment },
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  if (result.exitCode !== 0)
-    throw new Error(
-      `${args[0] ?? "Command"} failed: ${result.stderr.toString()}`,
-    );
-  return result.stdout.toString().trim();
-}
-function postgresCommand(args: string[]): string[] {
-  if (process.getuid?.() !== 0) return args;
-  const command = args[0];
-  if (command === undefined) throw new Error("PostgreSQL command missing");
-  return [
-    "runuser",
-    "-u",
-    "nobody",
-    "--",
-    run(["mise", "which", command]),
-    ...args.slice(1),
-  ];
+const packageRoot = fileURLToPath(new URL("../..", import.meta.url));
+const migrationsDir = path.join(packageRoot, "prisma/migrations");
+
+export type MediaMigrationCeiling =
+  | "20261017001600_visibility"
+  | "20261017001700_default_edition_scope"
+  | "20261017001800_capacity_observation"
+  | "20261017001900_watch_observation_fence"
+  | "20261017002000_native_archive_cleanup"
+  | "20261017002100_publication_compensation"
+  | "20261017002200_movie_edition_choice"
+  | "20261017002300_plex_association_binding";
+
+function optionalAdminUrl(): string | undefined {
+  const raw = Bun.env["MEDIA_TEST_ADMIN_DATABASE_URL"]?.trim();
+  return raw !== undefined && raw !== "" ? raw : undefined;
 }
 
-/** Private short-lived PostgreSQL cluster; no developer or production database access. */
+async function listMediaMigrations(): Promise<string[]> {
+  const entries = await readdir(migrationsDir);
+  return entries.filter((name) => /^\d{14}_[a-z0-9_]+$/u.test(name)).sort();
+}
+
+function buildApplyMigration(
+  url: string,
+  migrations: readonly string[],
+  allowAnyMajor: boolean,
+): (name: string) => void {
+  return (name: string) => {
+    if (!migrations.includes(name)) {
+      throw new Error("Unknown test migration");
+    }
+    const psql = postgresBinaryPath("psql", { allowAnyMajor });
+    const migrationFile = path.join(migrationsDir, name, "migration.sql");
+    const result = runCommandSync(
+      [psql, url, "-v", "ON_ERROR_STOP=1", "-f", migrationFile],
+      { cwd: packageRoot },
+    );
+    if (result.exitCode !== 0) {
+      throw new Error(`psql failed (${name}): ${result.stderr}`);
+    }
+  };
+}
+
+/** Isolated owned database on the shared local PostgreSQL harness; never touches production. */
 export async function startMediaTestPostgres(
   options: {
-    migrationCeiling?:
-      | "20261017001600_visibility"
-      | "20261017001700_default_edition_scope"
-      | "20261017001800_capacity_observation"
-      | "20261017001900_watch_observation_fence"
-      | "20261017002000_native_archive_cleanup"
-      | "20261017002100_publication_compensation"
-      | "20261017002200_movie_edition_choice"
-      | "20261017002300_plex_association_binding";
+    migrationCeiling?: MediaMigrationCeiling;
   } = {},
 ) {
-  const directory = await mkdtemp(path.join(tmpdir(), "media-pg-"));
-  if (process.getuid?.() === 0) await chown(directory, 65_534, 65_534);
-  const probe = Bun.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    fetch: () => new Response(),
-  });
-  const port = probe.port;
-  await probe.stop(true);
-  const data = path.join(directory, "data");
-  let started = false;
-  const stop = async () => {
-    if (started)
-      run(postgresCommand(["pg_ctl", "-D", data, "-m", "fast", "-w", "stop"]));
-    await rm(directory, { recursive: true, force: true });
-  };
+  const adminUrl = optionalAdminUrl();
+  const allowAnyMajor = adminUrl !== undefined;
+  const migrations = await listMediaMigrations();
+  const ceiling = options.migrationCeiling;
+
+  const handle =
+    ceiling === undefined
+      ? await createTemplateTestDatabase({
+          prefix: "media",
+          user: "media",
+          adminUrl,
+          migrationsDir,
+          populate: async (templateUrl) => {
+            const result = await runCommandAsync(
+              ["bun", "run", "migrate:deploy"],
+              {
+                cwd: packageRoot,
+                env: envWithPostgresBin(
+                  { DATABASE_URL: templateUrl },
+                  { allowAnyMajor },
+                ),
+              },
+            );
+            if (result.exitCode !== 0) {
+              throw new Error(
+                `Media template migrate:deploy failed: ${result.stderr || result.stdout}`,
+              );
+            }
+          },
+        })
+      : await createEmptyTestDatabase({
+          prefix: "media",
+          user: "media",
+          adminUrl,
+        });
+
+  const applyMigration = buildApplyMigration(
+    handle.url,
+    migrations,
+    allowAnyMajor,
+  );
+
   try {
-    run(
-      postgresCommand([
-        "initdb",
-        "-D",
-        data,
-        "-U",
-        "media",
-        "-A",
-        "trust",
-        "--no-locale",
-        "--encoding=UTF8",
-      ]),
-    );
-    run(
-      postgresCommand([
-        "pg_ctl",
-        "-D",
-        data,
-        "-l",
-        path.join(directory, "server.log"),
-        "-o",
-        `-h 127.0.0.1 -p ${String(port)} -k ${directory}`,
-        "-w",
-        "start",
-      ]),
-    );
-    started = true;
-    const url = `postgres://media@127.0.0.1:${String(port)}/postgres`;
-    const entries = await readdir(path.join(packageRoot, "prisma/migrations"));
-    const migrations = entries
-      .filter((name) => /^\d{14}_[a-z0-9_]+$/.test(name))
-      .sort();
-    const applyMigration = (name: string) => {
-      if (!migrations.includes(name)) throw new Error("Unknown test migration");
-      run([
-        "psql",
-        url,
-        "-v",
-        "ON_ERROR_STOP=1",
-        "-f",
-        path.join(packageRoot, "prisma/migrations", name, "migration.sql"),
-      ]);
-    };
-    const ceiling = options.migrationCeiling;
-    if (ceiling === undefined)
-      run(["bun", "run", "migrate:deploy"], { DATABASE_URL: url });
-    else
-      for (const migration of migrations.filter((name) => name <= ceiling))
+    if (ceiling !== undefined) {
+      for (const migration of migrations.filter((name) => name <= ceiling)) {
         applyMigration(migration);
-    const base = createDatabase(url);
-    const database =
-      ceiling === undefined
-        ? base
-        : await historicalIntentFixtureDatabase(base, url);
-    return {
-      database,
-      url,
-      applyMigration,
-      async close() {
+      }
+    }
+    const base = createDatabase(handle.url);
+    try {
+      const database =
+        ceiling === undefined
+          ? base
+          : await historicalIntentFixtureDatabase(base, handle.url);
+      const close = async () => {
         await database.$disconnect();
         if (database !== base) await base.$disconnect();
-        await stop();
-      },
-    };
+        await handle.drop();
+      };
+      return {
+        database,
+        url: handle.url,
+        applyMigration,
+        close,
+      };
+    } catch (error) {
+      await base.$disconnect();
+      throw error;
+    }
   } catch (error) {
-    await stop();
+    await handle.drop();
     throw error;
   }
 }

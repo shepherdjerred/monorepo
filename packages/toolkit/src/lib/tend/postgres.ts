@@ -10,7 +10,10 @@ import {
 import {
   createPsqlSharedAdapter,
   isOwnerDeadOnThisHost,
+  isPostgresServerProcess,
   parseClusterOwnerPidFile,
+  readPostmasterInfo,
+  resolveVerifiedPostmasterPid,
   type SharedPostgresAdapter,
   sweepSharedPostgresDatabases,
 } from "./postgres-databases.ts";
@@ -32,6 +35,7 @@ const SHARED_DEV_PG_PORT = 5471;
 function isClusterHeldExternally(
   canonicalClusterDir: string,
   liveness: LivenessSnapshot,
+  postmasterPid: number | undefined,
 ): boolean {
   if (
     isUnderProtectedPrefix(
@@ -64,12 +68,10 @@ function isClusterHeldExternally(
   }
   const nonPostgresCwds = new Set<string>();
   for (const proc of liveness.processes.values()) {
-    const argv0 = proc.args.trim().split(/\s+/u)[0] ?? proc.command;
     if (
-      argv0 !== "postgres" &&
       proc.cwd !== undefined &&
       proc.cwd.length > 0 &&
-      !argv0.endsWith("/postgres")
+      !isPostgresServerProcess(proc, postmasterPid)
     ) {
       nonPostgresCwds.add(proc.cwd);
     }
@@ -79,42 +81,6 @@ function isClusterHeldExternally(
     nonPostgresCwds,
     liveness.platform,
   );
-}
-
-type PostmasterInfo = {
-  readonly dataDir: string;
-  readonly pid: number;
-  readonly port?: number | undefined;
-};
-
-async function readPostmasterInfo(
-  clusterDir: string,
-): Promise<PostmasterInfo | null> {
-  const candidateDataDirs = [path.join(clusterDir, "data"), clusterDir];
-  for (const dataDir of candidateDataDirs) {
-    const pidFile = Bun.file(path.join(dataDir, "postmaster.pid"));
-    if (!(await pidFile.exists())) {
-      continue;
-    }
-    try {
-      const content = await pidFile.text();
-      const lines = content.split(/\r?\n/u);
-      const pid = Number(lines[0]?.trim() ?? "");
-      const portRaw = Number(lines[3]?.trim() ?? "");
-      if (Number.isInteger(pid) && pid > 0) {
-        return {
-          dataDir,
-          pid,
-          ...(Number.isInteger(portRaw) && portRaw > 0 && portRaw <= 65_535
-            ? { port: portRaw }
-            : {}),
-        };
-      }
-    } catch {
-      // Ignore unreadable postmaster.pid.
-    }
-  }
-  return null;
 }
 
 async function resolveDataDirForStop(
@@ -288,15 +254,29 @@ async function discoverTempRoots(
   return roots;
 }
 
-async function removeClusterDirectory(
-  clusterDir: string,
-  candidate: TendCandidate,
-  liveness: LivenessSnapshot,
-  runner: CommandRunner,
-): Promise<TendActionOutcome> {
+type SignalProcessFn = (pid: number, signal: NodeJS.Signals) => void;
+
+const defaultSignalProcess: SignalProcessFn = (pid, signal) => {
+  process.kill(pid, signal);
+};
+
+async function removeClusterDirectory(options: {
+  readonly clusterDir: string;
+  readonly candidate: TendCandidate;
+  readonly liveness: LivenessSnapshot;
+  readonly runner: CommandRunner;
+  readonly killProcess: SignalProcessFn;
+}): Promise<TendActionOutcome> {
+  const { clusterDir, candidate, liveness, runner, killProcess } = options;
   const postmaster = await readPostmasterInfo(clusterDir);
+  const verifiedPostmasterPid = resolveVerifiedPostmasterPid(
+    postmaster,
+    liveness,
+  );
   const livePostmaster =
-    postmaster === null ? undefined : liveness.processes.get(postmaster.pid);
+    verifiedPostmasterPid === undefined
+      ? undefined
+      : liveness.processes.get(verifiedPostmasterPid);
   const pgCtlBin = postmasterBinExecutable(livePostmaster?.args, "pg_ctl");
   const dataDir = await resolveDataDirForStop(clusterDir);
   if (dataDir !== null) {
@@ -304,9 +284,9 @@ async function removeClusterDirectory(
       timeoutMs: 8000,
     });
   }
-  if (postmaster !== null && livePostmaster !== undefined) {
+  if (verifiedPostmasterPid !== undefined) {
     try {
-      process.kill(postmaster.pid, "SIGTERM");
+      killProcess(verifiedPostmasterPid, "SIGTERM");
     } catch {
       // Already exited via pg_ctl stop.
     }
@@ -336,6 +316,7 @@ async function sweepSingleTempRootClusters(options: {
   readonly rootDir: string;
   readonly liveness: LivenessSnapshot;
   readonly runner: CommandRunner;
+  readonly killProcess: SignalProcessFn;
   readonly apply: boolean;
   readonly nowMs: number;
   readonly candidates: TendCandidate[];
@@ -362,7 +343,18 @@ async function sweepSingleTempRootClusters(options: {
       clusterDir,
       options.liveness.platform,
     );
-    if (isClusterHeldExternally(canonical, options.liveness)) {
+    const postmaster = await readPostmasterInfo(clusterDir);
+    const verifiedPostmasterPid = resolveVerifiedPostmasterPid(
+      postmaster,
+      options.liveness,
+    );
+    if (
+      isClusterHeldExternally(
+        canonical,
+        options.liveness,
+        verifiedPostmasterPid,
+      )
+    ) {
       continue;
     }
     const reason = await evaluateClusterDirectory({
@@ -386,12 +378,13 @@ async function sweepSingleTempRootClusters(options: {
     options.candidates.push(candidate);
     options.actions.push(
       options.apply
-        ? await removeClusterDirectory(
+        ? await removeClusterDirectory({
             clusterDir,
             candidate,
-            options.liveness,
-            options.runner,
-          )
+            liveness: options.liveness,
+            runner: options.runner,
+            killProcess: options.killProcess,
+          })
         : { candidate, status: "planned" },
     );
   }
@@ -401,6 +394,7 @@ async function sweepSingleTempRootClusters(options: {
 export type SweepPostgresOptions = {
   readonly liveness: LivenessSnapshot;
   readonly runner?: CommandRunner | undefined;
+  readonly killProcess?: SignalProcessFn | undefined;
   readonly probePort?: TcpPortProbe | undefined;
   readonly sharedAdapter?: SharedPostgresAdapter | undefined;
   readonly sharedPort?: number | undefined;
@@ -425,6 +419,7 @@ export async function sweepPostgres(
   }
 
   const runner = options.runner ?? defaultCommandRunner;
+  const killProcess = options.killProcess ?? defaultSignalProcess;
   const probePort = options.probePort ?? defaultTcpPortProbe;
   const sharedPort = options.sharedPort ?? SHARED_DEV_PG_PORT;
   const nowMs = options.nowMs ?? Date.now();
@@ -443,6 +438,7 @@ export async function sweepPostgres(
       rootDir,
       liveness: options.liveness,
       runner,
+      killProcess,
       apply: options.apply,
       nowMs,
       candidates,

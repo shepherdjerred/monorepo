@@ -123,8 +123,7 @@ describe("pinchtab lease tracking & tab cleanup", () => {
     expect(observedLeasesDuringShot).toHaveLength(2);
     expect(events).toEqual([
       "createSession",
-      "navigateNewTab:about:blank",
-      "navigateTab:tab_test_1:http://localhost:4321/",
+      "navigateNewTab:http://localhost:4321/",
       "screenshot:tab_test_1",
       "closeTab:tab_test_1",
       "revokeSession:ses_test_1",
@@ -132,6 +131,29 @@ describe("pinchtab lease tracking & tab cleanup", () => {
 
     const remaining = await readdir(nodePath.join(tempTendDir, "leases"));
     expect(remaining).toEqual([]);
+  });
+
+  test("opens loopback HTTP blank page (not about:blank) when pre-paint theme/viewport emulation is requested", async () => {
+    const { client, events } = makeFakeClient();
+
+    await captureScreenshot({
+      baseUrl: "http://localhost:4321",
+      route: "/",
+      outPath: nodePath.join(tempTendDir, "themed.png"),
+      theme: "dark",
+      viewport: { width: 1280, height: 800 },
+      waitForSelector: "main",
+      client,
+    });
+
+    expect(events[0]).toBe("createSession");
+    expect(events[1]).toMatch(/^navigateNewTab:http:\/\/127\.0\.0\.1:\d+\/$/);
+    expect(events.slice(2)).toEqual([
+      "navigateTab:tab_test_1:http://localhost:4321/",
+      "screenshot:tab_test_1",
+      "closeTab:tab_test_1",
+      "revokeSession:ses_test_1",
+    ]);
   });
 
   test("closes opened PinchTab tab and removes leases in finally when capture fails", async () => {
@@ -152,8 +174,7 @@ describe("pinchtab lease tracking & tab cleanup", () => {
 
     expect(events).toEqual([
       "createSession",
-      "navigateNewTab:about:blank",
-      "navigateTab:tab_test_1:http://localhost:4321/",
+      "navigateNewTab:http://localhost:4321/",
       "closeTab:tab_test_1",
       "revokeSession:ses_test_1",
     ]);
