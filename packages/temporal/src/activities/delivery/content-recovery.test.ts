@@ -1,5 +1,7 @@
 import { expect, test } from "vitest";
+import { Connection } from "@temporalio/client";
 import {
+  ContentBarrierRestorationSchema,
   ContentRecoveryContextSchema,
   ContentRecoveryOwnershipSchema,
   DispatchBarrierSchema,
@@ -10,6 +12,12 @@ import {
   executeContentRecovery,
   type ContentOperatorEffects,
 } from "#lib/delivery/content-recovery/execute.ts";
+import {
+  contentFingerprint,
+  contentOwnership,
+} from "#lib/delivery/content-recovery/ownership.ts";
+import { restoreContentDispatch } from "#lib/delivery/content-recovery/restoration.ts";
+import type { BarrierEffects } from "#lib/delivery/platform/control-plane-barrier.ts";
 
 async function fixture() {
   const detail = await minecraftDetailFixture();
@@ -240,4 +248,119 @@ test("lost restoration acknowledgement resumes succeeded intent without replayin
   f.events.length = 0;
   await executeContentRecovery(f.context.intent.id, "repair", f.effects, f.api);
   expect(f.events).toEqual(["paused", "restore"]);
+});
+
+test("contentOwnership and restoreContentDispatch preserve frozen expectedEnvironmentGeneration on succeeded intents", async () => {
+  const f = await fixture();
+  f.context.intent.expectedEnvironmentGeneration = 100;
+  f.context.intent.dispatchBarrier = DispatchBarrierSchema.parse({
+    adapter: "control-plane-dispatch-barrier/v1",
+    deploymentUID: "host",
+    templateFingerprint: contentFingerprint({}),
+    priorReplicas: 1,
+    podUIDs: ["old-pod"],
+    replicaSetUIDs: ["old-rs"],
+  });
+
+  let replicas = 0;
+  const barrier: BarrierEffects = {
+    read: async () => ({
+      metadata: {
+        name: "temporal-delivery-worker",
+        namespace: "temporal",
+        uid: "host",
+        resourceVersion: "1",
+      },
+      spec: { replicas, template: {} },
+      status: { replicas, readyReplicas: replicas },
+    }),
+    pods: async () =>
+      replicas === 0
+        ? []
+        : [
+            {
+              metadata: {
+                uid: "new-pod",
+                labels: { component: "delivery-worker" },
+                ownerReferences: [
+                  { kind: "ReplicaSet", uid: "new-rs", controller: true },
+                ],
+              },
+              status: {
+                phase: "Running",
+                conditions: [{ type: "Ready", status: "True" }],
+              },
+            },
+          ],
+    replicaSet: async (uid) => ({
+      metadata: {
+        uid,
+        ownerReferences: [
+          { kind: "Deployment", uid: "host", controller: true },
+        ],
+      },
+    }),
+    patch: async () => {
+      replicas = 1;
+    },
+    checkpoint: () => Promise.resolve(),
+    fence: () => Promise.resolve(),
+    wait: () => Promise.resolve(),
+  };
+  const read = {
+    job: () => Promise.reject(new Error("no native jobs expected")),
+    pods: () => Promise.resolve([]),
+  };
+  const sourceWorkflow = (_connection: Connection, id: string) =>
+    Promise.resolve({
+      workflowId: `delivery/${id}`,
+      status: "FAILED" as const,
+    });
+  const lazyConnection = Connection.lazy({ address: "127.0.0.1:7233" });
+
+  const pendingProof = await contentOwnership(f.context, lazyConnection, read, {
+    barrier,
+    sourceWorkflow,
+  });
+  expect(pendingProof.expectedEnvironmentGeneration).toBe(100);
+
+  f.context.intent.status = "succeeded";
+  const succeededProof = await contentOwnership(
+    f.context,
+    lazyConnection,
+    read,
+    {
+      barrier,
+      sourceWorkflow,
+    },
+  );
+  expect(succeededProof.expectedEnvironmentGeneration).toBe(100);
+
+  const admitGenerations: number[] = [];
+  const restoredGenerations: number[] = [];
+  const api: typeof deliveryRequest = (path, schema, body) => {
+    if (path.endsWith("/admit-restore")) {
+      const parsed = ContentRecoveryOwnershipSchema.parse(body);
+      admitGenerations.push(parsed.expectedEnvironmentGeneration);
+      return Promise.resolve(schema.parse(f.context.intent));
+    }
+    if (path.endsWith("/restored")) {
+      const parsed = ContentBarrierRestorationSchema.parse(body);
+      restoredGenerations.push(parsed.expectedEnvironmentGeneration);
+      f.context.intent.barrierRestoredAt = parsed.observedAt;
+      return Promise.resolve(schema.parse(f.context.intent));
+    }
+    return Promise.resolve(schema.parse(f.context));
+  };
+
+  await restoreContentDispatch(f.context, lazyConnection, read, {
+    api,
+    effects: barrier,
+    sourceWorkflow,
+  });
+  await lazyConnection.close();
+
+  expect(admitGenerations).toEqual([100, 100]);
+  expect(restoredGenerations).toEqual([100]);
+  expect(f.context.intent.barrierRestoredAt).not.toBeNull();
 });

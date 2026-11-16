@@ -17,9 +17,9 @@ type HostEffects = {
 };
 
 /**
- * A model sync that failed before any routing step: the candidate host may
- * exist but serves nothing. No execution references it, and every retained
- * host still runs its exact image.
+ * A model sync that failed before any routing step: a rollout candidate host
+ * may exist but serves nothing and no execution references it, while every
+ * retained host still runs its exact image.
  */
 async function requireUnroutedCandidateHosts(
   context: WorkerRecoveryContext,
@@ -27,14 +27,22 @@ async function requireUnroutedCandidateHosts(
   effects: HostEffects,
   application: string,
 ) {
-  await effects.noCandidateReferences(pool);
-  verifyWorkerBaselinePods(await effects.resources(application, "Pod"), {
-    ...pool,
-    versions: pool.versions.filter(
-      (worker) =>
-        worker.introducedByDeploymentId !== context.deployment.deployment.id,
-    ),
-  });
+  if (pool.workerOperation === "rollout") {
+    await effects.noCandidateReferences(pool);
+  }
+  verifyWorkerBaselinePods(
+    await effects.resources(application, "Pod"),
+    pool.workerOperation === "retire"
+      ? pool
+      : {
+          ...pool,
+          versions: pool.versions.filter(
+            (worker) =>
+              worker.introducedByDeploymentId !==
+              context.deployment.deployment.id,
+          ),
+        },
+  );
 }
 
 function requireCandidateUnrouted(
@@ -80,7 +88,9 @@ export async function classifyFailedSync(
     source: "failed-sync" as const,
     receipt,
     checkRoutes: (routes: CompleteWorkerRecovery["routes"]) => {
-      requireCandidateUnrouted(pool, routes);
+      if (pool.workerOperation === "rollout") {
+        requireCandidateUnrouted(pool, routes);
+      }
     },
     sync: (raw: unknown) => {
       const observed = requireFailedOwnedSync(raw, detail, target.model);

@@ -1,5 +1,3 @@
-import { Connection } from "@temporalio/client";
-import { KubeConfig } from "@kubernetes/client-node";
 import { z } from "zod";
 import {
   WorkerRecoveryContextSchema,
@@ -10,13 +8,11 @@ import { deliveryUrl } from "@shepherdjerred/toolkit/lib/delivery/client.ts";
 import {
   parseFlagArguments,
   requiredParsedArgument,
-  requiredEnvironment,
 } from "#scripts/cli-arguments.ts";
-import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { workerRecoveryEffects } from "#lib/delivery/workers/worker-recovery-effects.ts";
 import { proveSettledWorkerRecovery } from "#lib/delivery/workers/worker-recovery.ts";
-import { resolveOperatorTemporalApiKey } from "./temporal-operator-credentials.ts";
+import { openOperatorRecovery } from "./temporal-operator-credentials.ts";
 
 /** Outage path: same readonly verifier and CAS, without a healthy Temporal Workflow/Activity worker. */
 async function main(): Promise<void> {
@@ -32,17 +28,7 @@ async function main(): Promise<void> {
     requiredParsedArgument(flags, "--url"),
   );
   await resolveCredentials(["DELIVERY_EXECUTOR_TOKEN", "GRAFANA_API_KEY"]);
-  await resolveOperatorTemporalApiKey();
-  Reflect.deleteProperty(Bun.env, "OP_SERVICE_ACCOUNT_TOKEN");
-  const connection = await Connection.connect(
-    temporalConnectionOptions({
-      environment: Bun.env,
-      defaultAddress: requiredEnvironment(Bun.env, "TEMPORAL_ADDRESS"),
-    }),
-  );
-  const kubernetes = new KubeConfig();
-  kubernetes.loadFromDefault();
-  kubernetes.setCurrentContext(context);
+  const { kubernetes, connection } = await openOperatorRecovery(context);
   try {
     const path = `worker-recovery/${encodeURIComponent(id)}`;
     const requested = await deliveryRequest(path, WorkerRecoveryContextSchema);
