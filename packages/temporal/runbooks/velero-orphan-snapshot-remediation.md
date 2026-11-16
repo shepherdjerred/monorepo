@@ -12,7 +12,7 @@ dashboard ledger and the operator email.
 
 - The alert dashboard records `VeleroOrphanLocalSnapshots` (orphan ZFS snapshots present > 24h)
 - The alert dashboard records `VeleroOrphanLocalBytesExcessive` (orphan ZFS snapshot bytes over threshold)
-- The alert dashboard records `ZFSDatasetSnapshotCountExcessive` (any PVC dataset > ~26 snapshots — backstop alert)
+- The alert dashboard records `ZFSDatasetSnapshotCountExcessive` (any PVC dataset with > ~26 Velero-managed snapshots — backstop alert; manual recovery snapshots are excluded)
 - A PVC reads `100%` full unexpectedly and `zfs list` shows large `USED` vs small `REFER` (snapshot bloat — same root cause)
 - Velero was just re-deployed (helm uninstall + reinstall, ArgoCD app re-creation, etc.)
 
@@ -169,7 +169,7 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
 ## Step 5: Verify post-prune state
 
 ```bash
-# Local: each dataset's snapshot count should now match its live Backup count
+# Local: each dataset's managed snapshot count should now match its live Backup count
 LIVE=$(velero backup get -o json | jq -r '.items[]? | .metadata.name' | sort -u)
 NODE_POD=$(kubectl -n openebs get pod -l role=openebs-zfs,app=openebs-zfs-node -o jsonpath='{.items[0].metadata.name}')
 kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '

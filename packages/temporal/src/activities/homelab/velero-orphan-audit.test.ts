@@ -91,6 +91,7 @@ describe("parseZfsInventory", () => {
         orphanCount: 0,
         orphanBytes: 0,
         liveCount: 0,
+        managedCount: 0,
       },
       {
         node: "torvalds",
@@ -99,6 +100,32 @@ describe("parseZfsInventory", () => {
         orphanCount: 1,
         orphanBytes: 64,
         liveCount: 1,
+        managedCount: 0,
+      },
+    ]);
+  });
+
+  it("counts only schedule-managed snapshots toward Velero retention", () => {
+    const result = parseZfsInventory(
+      "torvalds",
+      [
+        "zfspv-pool-nvme/pvc-a\tfilesystem\t512",
+        "zfspv-pool-nvme/pvc-a@daily-backup-v2-20261115023043\tsnapshot\t128",
+        "zfspv-pool-nvme/pvc-a@6hourly-backup-v2-20261030181543\tsnapshot\t64",
+        "zfspv-pool-nvme/pvc-a@mc-harness-20261006t004400z\tsnapshot\t32",
+      ].join("\n"),
+      ["daily-backup-v2-20261115023043"],
+    );
+
+    expect(result).toEqual([
+      {
+        node: "torvalds",
+        pool: "zfspv-pool-nvme",
+        dataset: "zfspv-pool-nvme/pvc-a",
+        orphanCount: 2,
+        orphanBytes: 96,
+        liveCount: 1,
+        managedCount: 2,
       },
     ]);
   });
@@ -121,6 +148,7 @@ describe("parseZfsInventory", () => {
         orphanCount: 0,
         orphanBytes: 0,
         liveCount: 0,
+        managedCount: 0,
       },
     ]);
   });

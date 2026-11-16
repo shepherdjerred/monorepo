@@ -476,15 +476,15 @@ function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "ZFSDatasetSnapshotCountExcessive",
         annotations: {
-          summary: "PVC dataset has excessive ZFS snapshot count",
+          summary: "PVC dataset has excessive Velero-managed snapshot count",
           message: escapePrometheusTemplate(
-            "Dataset {{ $labels.dataset }} on {{ $labels.node }} has {{ $value }} ZFS snapshots; expected at most ~26 (sum of schedule retention slots). May indicate orphan accumulation; cross-check with velero_orphan_local_snapshots.",
+            "Dataset {{ $labels.dataset }} on {{ $labels.node }} has {{ $value }} Velero-managed ZFS snapshots; expected at most ~26 (sum of schedule retention slots). Manual recovery snapshots are excluded. May indicate orphan accumulation; cross-check with velero_orphan_local_snapshots.",
           ),
         },
-        // Backstop: catches accumulation regardless of whether the audit workflow runs.
+        // Backstop: catches managed accumulation independently of orphan classification.
         // Threshold is generous — 35 = 26 expected + 35% headroom for transient overlap.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          "max by (node, dataset) (zfs_dataset_snapshot_count) > 35",
+          "max by (node, dataset) (velero_managed_snapshot_count) > 35",
         ),
         for: "6h",
         labels: {

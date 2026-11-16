@@ -600,6 +600,12 @@
     "reason": "Tasknotes PostgreSQL database"
   },
   {
+    "namespace": "ops-restore-rehearsal-incremental",
+    "name": "tasknotes-vault-pvc",
+    "backup": "disabled",
+    "reason": "Isolated TaskNotes restore rehearsal; original offsite backup remains protected"
+  },
+  {
     "namespace": "tempo",
     "name": "storage-tempo-0",
     "backup": "disabled",

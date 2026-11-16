@@ -10,6 +10,15 @@ function alertExpression(name: string): string {
   return String(rule.expr.value);
 }
 
+describe("ZFS dataset snapshot count alert", () => {
+  it("counts Velero-managed snapshots without charging manual recovery points", () => {
+    const expression = alertExpression("ZFSDatasetSnapshotCountExcessive");
+
+    expect(expression).toContain("velero_managed_snapshot_count");
+    expect(expression).not.toContain("zfs_dataset_snapshot_count");
+  });
+});
+
 describe("Velero backup duration alert", () => {
   it("counts each backup over 30 minutes instead of averaging durations", () => {
     const expression = alertExpression("VeleroBackupDurationExcessive");

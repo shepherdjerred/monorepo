@@ -3,6 +3,7 @@ import * as k8s from "@kubernetes/client-node";
 import { z } from "zod";
 import {
   veleroLiveBackupCount,
+  veleroManagedSnapshotCount,
   veleroOrphanAuditDurationSeconds,
   veleroOrphanAuditRunsTotal,
   veleroOrphanBackupCrOldestAgeSeconds,
@@ -45,6 +46,7 @@ export type VeleroOrphanDataset = {
   orphanCount: number;
   orphanBytes: number;
   liveCount: number;
+  managedCount: number;
 };
 
 type ZfsNodePod = KubernetesNodePod;
@@ -123,6 +125,7 @@ export const veleroOrphanAuditActivities = {
       veleroOrphanLocalSnapshots.reset();
       veleroOrphanLocalBytes.reset();
       zfsDatasetSnapshotCount.reset();
+      veleroManagedSnapshotCount.reset();
       for (const d of datasets) {
         veleroOrphanLocalSnapshots.set(
           { node: d.node, pool: d.pool, dataset: d.dataset },
@@ -135,6 +138,10 @@ export const veleroOrphanAuditActivities = {
         zfsDatasetSnapshotCount.set(
           { node: d.node, pool: d.pool, dataset: d.dataset },
           d.orphanCount + d.liveCount,
+        );
+        veleroManagedSnapshotCount.set(
+          { node: d.node, pool: d.pool, dataset: d.dataset },
+          d.managedCount,
         );
       }
       veleroOrphanLocalSnapshotsTotal.set(totalOrphanCount);
@@ -346,6 +353,7 @@ type MutableDatasetSummary = {
   orphanCount: number;
   orphanBytes: number;
   liveCount: number;
+  managedCount: number;
 };
 
 type ZfsInventoryRow = {
@@ -437,6 +445,7 @@ export function parseZfsInventory(
       orphanCount: 0,
       orphanBytes: 0,
       liveCount: 0,
+      managedCount: 0,
     });
   }
 
@@ -446,6 +455,13 @@ export function parseZfsInventory(
       throw new Error(
         `Snapshot ${snapshot.dataset}@${snapshot.snapshot} on ${node} has no dataset row`,
       );
+    }
+    if (
+      /^(?:6hourly|daily|weekly|monthly)-backup(?:-v\d+)?-\d{14}$/.test(
+        snapshot.snapshot,
+      )
+    ) {
+      dataset.managedCount += 1;
     }
     if (liveSet.has(snapshot.snapshot)) {
       dataset.liveCount += 1;
