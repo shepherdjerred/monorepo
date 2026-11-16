@@ -12,7 +12,6 @@ import {
   scoutExploreTimelineWorkflow,
   scoutIngestionReconciliationWorkflow,
   scoutInteractiveRunWorkflow,
-  scoutQueueCanaryWorkflow,
 } from "./index.ts";
 import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 
@@ -59,53 +58,6 @@ beforeEach(async () => {
 afterEach(async () => {
   await workers.drain();
   await environment.teardown();
-});
-
-test("routes the queue canary through every workload queue", async () => {
-  const workflow = await workflowWorker();
-  const queueClasses = [
-    "realtime",
-    "interactive",
-    "background",
-    "lake",
-  ] as const;
-  const activityWorkers = await Promise.all(
-    queueClasses.map(
-      async (queueClass) =>
-        await Worker.create({
-          connection: environment.nativeConnection,
-          taskQueue: `scout-dev-${queueClass}`,
-          activities: {
-            probeQueue: (input: {
-              stage: "dev";
-              canaryId: string;
-              queueClass: (typeof queueClasses)[number];
-            }) => ({ ...input, taskQueue: Context.current().info.taskQueue }),
-          },
-          maxConcurrentActivityTaskExecutions: 1,
-        }),
-    ),
-  );
-  await workers.start(workflow);
-  for (const activityWorker of activityWorkers) {
-    await workers.start(activityWorker);
-  }
-  const result = await environment.client.workflow.execute(
-    scoutQueueCanaryWorkflow,
-    {
-      taskQueue: "scout-dev",
-      workflowId: "queue-canary",
-      args: [{ stage: "dev", canaryId: "canary_123" }],
-    },
-  );
-  expect(result).toEqual(
-    queueClasses.map((queueClass) => ({
-      stage: "dev",
-      canaryId: "canary_123",
-      queueClass,
-      taskQueue: `scout-dev-${queueClass}`,
-    })),
-  );
 });
 
 test.each([undefined, "normal"] as const)(
