@@ -2,12 +2,14 @@
 
 The content-screening and ticket service for The Storm. The Paper plugin
 holds player publications while `POST /v1/moderate` checks them with OpenAI's
-dedicated Moderation API through `@shepherdjerred/llm-runtime`. The shared runtime
-owns the authenticated transport, bounded timeout and score validation; this
-service owns the content policy and contextual advertising/ambiguity checks.
+dedicated Moderation API and OpenAI's Decisions API (`runtime.decide()`) through
+`@shepherdjerred/llm-runtime`. The shared runtime owns the authenticated
+transport, bounded timeout and score validation; this service owns the content
+policy and contextual advertising/ambiguity checks.
 The agent calls `POST /v1/triage` for tickets. Unscreened Global chat retains the
-existing prefilters and `/v1/classify` flow until content screening is enabled;
-screened publications bypass that legacy enforcement.
+existing prefilters and `/v1/classify` (also backed by OpenAI's Decisions API)
+until content screening is enabled; screened publications bypass that legacy
+enforcement.
 The companions module also calls `POST /v1/conversation` for open-ended chat.
 Companion gameplay runs entirely in the Paper plugin.
 
@@ -81,9 +83,14 @@ metered even on 502s.
 `POST /v1/classify` and `/v1/triage` always answer an authenticated, valid
 request. See
 [`managed-flag-inventory.json`](../feature-flags/src/managed-flag-inventory.json)
-for the remaining flags. The `storm-brain-model` variant selects the model at service startup; changing
-it takes effect after the service restarts. It defaults to `gpt-6-luna`; the
-selected model must exist in `@shepherdjerred/llm-models` with a native route.
+for the remaining flags. The `storm-brain-decisions-model` variant selects the
+OpenAI Decisions API model used by `/v1/moderate` contextual checks and
+`/v1/classify` at service startup (default `gpt-6-luna`; must exist in
+`@shepherdjerred/llm-models` with a native `decisions` route). The
+`storm-brain-model` variant selects the generative model used by `/v1/triage`
+at service startup (default `gpt-6-luna`; must exist in
+`@shepherdjerred/llm-models` with a native route). Changing model flags takes
+effect after the service restarts.
 
 Conversation is separately controlled by `storm-brain-conversation-enabled`,
 default on in production. An explicit false disables it. Its typed model selection is `gpt-6-luna`.

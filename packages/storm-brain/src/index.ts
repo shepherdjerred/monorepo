@@ -18,11 +18,16 @@ await initBrainFlags((message) => {
 const config = await loadBrainConfig({
   flagSource: createFlagConfigSource({
     targetingKey: "storm-brain",
-    kinds: { model: "string", conversationModel: "string" },
+    kinds: {
+      model: "string",
+      decisionsModel: "string",
+      conversationModel: "string",
+    },
   }),
 });
 const brain = createBrain({
   model: config.model,
+  decisionsModel: config.decisionsModel,
   timeoutMs: config.llmTimeoutMs,
 });
 
@@ -53,6 +58,7 @@ const metricsServer = Bun.serve({
 });
 
 logger.info("Storm brain listening", {
+  decisionsModel: config.decisionsModel,
   metricsPort: metricsServer.port,
   model: config.model,
   port: appServer.port,

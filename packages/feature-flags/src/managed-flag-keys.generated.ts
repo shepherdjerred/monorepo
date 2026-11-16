@@ -470,6 +470,7 @@ export type StormBooleanFlagKey = (typeof STORM_BOOLEAN_FLAG_KEYS)[number];
 export const STORM_VARIANT_FLAG_KEYS = [
   "storm-forum-season",
   "storm-brain-conversation-model",
+  "storm-brain-decisions-model",
   "storm-brain-model",
 ] as const;
 

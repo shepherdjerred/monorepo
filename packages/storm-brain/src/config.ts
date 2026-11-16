@@ -4,6 +4,7 @@ import { requireNativeRoute } from "@shepherdjerred/llm-models";
 import { z } from "zod";
 
 const DEFAULT_MODEL = "gpt-6-luna";
+const DEFAULT_DECISIONS_MODEL = "gpt-6-luna";
 const DEFAULT_MAX_BODY_BYTES = 256 * 1024;
 const DEFAULT_LLM_TIMEOUT_MS = 60_000;
 
@@ -13,6 +14,12 @@ const ModelConfigDefinition = {
     sources: ["flag", "default"],
     default: "gpt-6-luna",
     names: { flag: "storm-brain-conversation-model" },
+  },
+  decisionsModel: {
+    schema: z.string().min(1),
+    sources: ["flag", "default"],
+    default: DEFAULT_DECISIONS_MODEL,
+    names: { flag: "storm-brain-decisions-model" },
   },
   model: {
     schema: z.string().min(1),
@@ -25,6 +32,7 @@ const ModelConfigDefinition = {
 const ServiceConfigSchema = z.object({
   bearerToken: z.string().min(32),
   model: z.string().min(1),
+  decisionsModel: z.string().min(1),
   conversationModel: z.literal("gpt-6-luna"),
   maxBodyBytes: z
     .number()
@@ -71,6 +79,7 @@ export async function loadBrainConfig(
   const config = ServiceConfigSchema.parse({
     bearerToken: required(env, "STORM_BRAIN_BEARER_TOKEN"),
     model: await resolver.value("model"),
+    decisionsModel: await resolver.value("decisionsModel"),
     conversationModel: await resolver.value("conversationModel"),
     maxBodyBytes: integer(
       env,
@@ -89,9 +98,10 @@ export async function loadBrainConfig(
   if (config.port === config.metricsPort) {
     throw new Error("storm-brain: PORT and METRICS_PORT must differ");
   }
-  // Fail fast on an unknown model or one without a native provider route.
+  // Fail fast on an unknown model or one without the required native provider route.
   // Provider credentials are validated when the brain is constructed.
   requireNativeRoute(config.model);
+  requireNativeRoute(config.decisionsModel, "decisions");
 
   return config;
 }
