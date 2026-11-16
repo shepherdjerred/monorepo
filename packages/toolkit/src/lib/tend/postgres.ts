@@ -254,12 +254,20 @@ async function discoverTempRoots(
   return roots;
 }
 
-async function removeClusterDirectory(
-  clusterDir: string,
-  candidate: TendCandidate,
-  liveness: LivenessSnapshot,
-  runner: CommandRunner,
-): Promise<TendActionOutcome> {
+type SignalProcessFn = (pid: number, signal: NodeJS.Signals) => void;
+
+const defaultSignalProcess: SignalProcessFn = (pid, signal) => {
+  process.kill(pid, signal);
+};
+
+async function removeClusterDirectory(options: {
+  readonly clusterDir: string;
+  readonly candidate: TendCandidate;
+  readonly liveness: LivenessSnapshot;
+  readonly runner: CommandRunner;
+  readonly killProcess: SignalProcessFn;
+}): Promise<TendActionOutcome> {
+  const { clusterDir, candidate, liveness, runner, killProcess } = options;
   const postmaster = await readPostmasterInfo(clusterDir);
   const verifiedPostmasterPid = resolveVerifiedPostmasterPid(
     postmaster,
@@ -278,7 +286,7 @@ async function removeClusterDirectory(
   }
   if (verifiedPostmasterPid !== undefined) {
     try {
-      process.kill(verifiedPostmasterPid, "SIGTERM");
+      killProcess(verifiedPostmasterPid, "SIGTERM");
     } catch {
       // Already exited via pg_ctl stop.
     }
@@ -308,6 +316,7 @@ async function sweepSingleTempRootClusters(options: {
   readonly rootDir: string;
   readonly liveness: LivenessSnapshot;
   readonly runner: CommandRunner;
+  readonly killProcess: SignalProcessFn;
   readonly apply: boolean;
   readonly nowMs: number;
   readonly candidates: TendCandidate[];
@@ -369,12 +378,13 @@ async function sweepSingleTempRootClusters(options: {
     options.candidates.push(candidate);
     options.actions.push(
       options.apply
-        ? await removeClusterDirectory(
+        ? await removeClusterDirectory({
             clusterDir,
             candidate,
-            options.liveness,
-            options.runner,
-          )
+            liveness: options.liveness,
+            runner: options.runner,
+            killProcess: options.killProcess,
+          })
         : { candidate, status: "planned" },
     );
   }
@@ -384,6 +394,7 @@ async function sweepSingleTempRootClusters(options: {
 export type SweepPostgresOptions = {
   readonly liveness: LivenessSnapshot;
   readonly runner?: CommandRunner | undefined;
+  readonly killProcess?: SignalProcessFn | undefined;
   readonly probePort?: TcpPortProbe | undefined;
   readonly sharedAdapter?: SharedPostgresAdapter | undefined;
   readonly sharedPort?: number | undefined;
@@ -408,6 +419,7 @@ export async function sweepPostgres(
   }
 
   const runner = options.runner ?? defaultCommandRunner;
+  const killProcess = options.killProcess ?? defaultSignalProcess;
   const probePort = options.probePort ?? defaultTcpPortProbe;
   const sharedPort = options.sharedPort ?? SHARED_DEV_PG_PORT;
   const nowMs = options.nowMs ?? Date.now();
@@ -426,6 +438,7 @@ export async function sweepPostgres(
       rootDir,
       liveness: options.liveness,
       runner,
+      killProcess,
       apply: options.apply,
       nowMs,
       candidates,
