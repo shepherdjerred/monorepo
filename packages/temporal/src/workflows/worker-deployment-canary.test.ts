@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { describe, expect, test } from "vitest";
+import { createLeasedLocalTemporalEnvironment } from "#lib/fixtures/temporal-lease.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const DEPLOYMENT_NAME = "monorepo-central-workflows";
@@ -67,7 +68,7 @@ describe("workerDeploymentCanaryWorkflow", () => {
   }, 60_000);
 
   test("normal routing reaches and verifies the current Worker Deployment version", async () => {
-    const environment = await TestWorkflowEnvironment.createLocal({
+    const environment = await createLeasedLocalTemporalEnvironment({
       server: {
         executable: {
           type: "existing-path",

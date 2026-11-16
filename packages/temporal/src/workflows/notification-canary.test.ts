@@ -2,12 +2,13 @@ import { execFileSync } from "node:child_process";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { describe, expect, test } from "vitest";
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
+import { createLeasedLocalTemporalEnvironment } from "#lib/fixtures/temporal-lease.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runWorkflowWithActivityWorker } from "./test-support.ts";
 
 describe("beta daily notification canary", () => {
   test("executes attention and recovery reports through the beta reports queue", async () => {
-    const environment = await TestWorkflowEnvironment.createLocal({
+    const environment = await createLeasedLocalTemporalEnvironment({
       server: {
         namespace: "beta",
         executable: {

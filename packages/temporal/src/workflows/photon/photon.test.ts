@@ -180,7 +180,9 @@ describe("Photon durable conversation and delivery", () => {
 describe("Photon durable conversation admission", () => {
   test("serializes commands, durably rejects conflicts/full queues, and resumes pending admission after a worker restart", async () => {
     // Exercise poller restarts against the current full Temporal server.
-    const env = await TestWorkflowEnvironment.createLocal();
+    const { createLeasedLocalTemporalEnvironment } =
+      await import("#lib/fixtures/temporal-lease.ts");
+    const env = await createLeasedLocalTemporalEnvironment();
     const first = message("first");
     const workflowId = photonConversationWorkflowId(first.conversationId);
     const prepared: PhotonCommand[] = [];

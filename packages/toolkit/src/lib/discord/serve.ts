@@ -199,6 +199,7 @@ async function startDaemon(opts: {
     socketPath: SOCKET_PATH,
     statePath: STATE_PATH,
     state,
+    marker: "discord serve",
     ttlSeconds,
     lastActivity: () => ctx.lastActivity,
     handle: async (url, request) => {

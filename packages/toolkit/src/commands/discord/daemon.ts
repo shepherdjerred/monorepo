@@ -1,185 +1,42 @@
-import { spawn } from "node:child_process";
-import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import { daemonRequest } from "#lib/discord/client.ts";
-import {
-  type DaemonState,
-  DaemonStateSchema,
-  DISCORD_DIR,
-  LOGS_DIR,
-  SOCKET_PATH,
-  STATE_PATH,
-  StatusResponseSchema,
-} from "#lib/discord/ipc.ts";
+import { DISCORD_DIR } from "#lib/discord/ipc.ts";
 import { renderStatus } from "#lib/discord/render.ts";
-import { discordDaemonEnvironment } from "#lib/discord/auth.ts";
 import {
-  daemonRunning,
-  pathExists,
-  pidAlive,
-  stopDaemonPid,
-} from "@shepherdjerred/unix-socket-daemon";
-
-/** Every daemon process command line contains this (`<toolkit|bun run main> discord serve`). */
-const DAEMON_MARKER = "discord serve";
-
-async function readState(): Promise<DaemonState | null> {
-  if (!(await pathExists(STATE_PATH))) {
-    return null;
-  }
-  const raw: unknown = JSON.parse(await Bun.file(STATE_PATH).text());
-  return DaemonStateSchema.parse(raw);
-}
-
-function daemonLogPath(): string {
-  const day = new Date().toISOString().slice(0, 10);
-  return path.join(LOGS_DIR, `daemon-${day}.log`);
-}
-
-// When running from source, process.execPath is the bun binary and Bun.main is
-// the entry script; in the compiled binary, process.execPath IS the toolkit
-// binary and re-invoking it directly is correct.
-function serveArgv(passwordLogin: boolean, userOnly: boolean): string[] {
-  const isCompiled = !path.basename(process.execPath).startsWith("bun");
-  const argv = isCompiled
-    ? [process.execPath, "discord", "serve"]
-    : [process.execPath, "run", Bun.main, "discord", "serve"];
-  return [
-    ...argv,
-    ...(passwordLogin ? ["--password-login"] : []),
-    ...(userOnly ? ["--user-only"] : []),
-  ];
-}
-
-function assertDaemonCredentials(
-  passwordLogin: boolean,
-  userOnly: boolean,
-): void {
-  const botToken =
-    passwordLogin || userOnly ? undefined : Bun.env["DISCORD_BOT_TOKEN"];
-  const userToken = passwordLogin ? undefined : Bun.env["DISCORD_USER_TOKEN"];
-  if (userOnly && (userToken === undefined || userToken === ""))
-    throw new Error("User-only Discord daemon requires DISCORD_USER_TOKEN");
-  if (
-    passwordLogin &&
-    ((Bun.env["DISCORD_USER_EMAIL"] ?? "") === "" ||
-      (Bun.env["DISCORD_USER_PASSWORD"] ?? "") === "")
-  )
-    throw new Error(
-      "Password login requires parent-injected DISCORD_USER_EMAIL and DISCORD_USER_PASSWORD",
-    );
-  if (
-    !passwordLogin &&
-    (botToken == null || botToken.length === 0) &&
-    (userToken == null || userToken.length === 0)
-  ) {
-    console.error(
-      "toolkit could not resolve DISCORD_BOT_TOKEN or DISCORD_USER_TOKEN (env, ~/.toolkit/config.toml [credentials], macOS Keychain).\nEnroll each token in the Keychain, then retry:\nswift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-bot-token --ref op://Personal/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN\nswift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-user-token --ref op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN",
-    );
-    process.exit(1);
-  }
-}
+  cleanDeadDiscordDaemonFiles,
+  ensureDiscordDaemon,
+  probeDiscordDaemonStatus,
+  stopDiscordDaemon,
+} from "#lib/discord/spawn.ts";
 
 export async function daemonStartCommand(options: {
   ttlSeconds: number;
   passwordLogin?: boolean;
   userOnly?: boolean;
 }): Promise<void> {
-  const existing = await readState();
-  if (existing !== null && (await daemonRunning(existing.pid, DAEMON_MARKER))) {
-    console.error(
-      `Discord daemon is already running (pid ${String(existing.pid)}). Use 'toolkit discord daemon stop' first.`,
-    );
-    process.exit(1);
-  }
-  const passwordLogin = options.passwordLogin === true;
-  const userOnly = options.userOnly === true;
-  const env = discordDaemonEnvironment(Bun.env, { passwordLogin, userOnly });
-  env["TOOLKIT_DISCORD_TTL_SECONDS"] = String(options.ttlSeconds);
-  assertDaemonCredentials(passwordLogin, userOnly);
-
-  await mkdir(LOGS_DIR, { recursive: true });
-  await rm(SOCKET_PATH, { force: true });
-  await rm(STATE_PATH, { force: true });
-
-  const [command, ...args] = serveArgv(passwordLogin, userOnly);
-  if (command === undefined) {
-    throw new Error("could not determine daemon command");
-  }
-  // Detached + stdio ignore: the daemon writes its own logs to LOGS_DIR.
-  const child = spawn(command, args, {
-    detached: true,
-    stdio: "ignore",
-    env,
-  });
-  child.unref();
-
-  // Logins can take a while; poll until the daemon reports ready.
-  const deadline = Date.now() + 60_000;
-  while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    if (child.exitCode !== null) {
-      console.error(
-        `Daemon exited early with code ${String(child.exitCode)}. Logs: ${daemonLogPath()}`,
-      );
-      process.exit(1);
-    }
-    if (!(await pathExists(SOCKET_PATH))) {
-      continue;
-    }
-    try {
-      const status = await daemonRequest(StatusResponseSchema, "/status");
-      console.log(renderStatus(status));
-      console.log(
-        "\nDaemon started. Tokens stay in daemon memory — no further op calls needed this session.",
-      );
-      return;
-    } catch {
-      // socket exists but server not accepting yet — keep polling
-    }
-  }
-  console.error(`Daemon did not become ready in 60s. Logs: ${daemonLogPath()}`);
-  process.exit(1);
+  const { status, started } = await ensureDiscordDaemon(options);
+  console.log(renderStatus(status));
+  console.log(
+    started
+      ? "\nDaemon started. Tokens stay in daemon memory — no further op calls needed this session."
+      : "\nDaemon already running; attached to existing session.",
+  );
 }
 
 export async function daemonStopCommand(): Promise<void> {
-  const state = await readState();
-  let statusPid: number | undefined;
-  if (await pathExists(SOCKET_PATH)) {
-    try {
-      const status = await daemonRequest(StatusResponseSchema, "/status");
-      statusPid = status.pid;
-      await daemonRequest(StatusResponseSchema.partial(), "/shutdown", {});
-    } catch {
-      // A dead socket: fall through to the identity-checked PID stop.
-    }
-  }
-  await stopDaemonPid(state?.pid ?? null, {
-    statusPid,
-    marker: DAEMON_MARKER,
-    waitMs: 5000,
-  });
-  await rm(SOCKET_PATH, { force: true });
-  await rm(STATE_PATH, { force: true });
+  await stopDiscordDaemon();
   console.log("Discord daemon stopped.");
 }
 
 export async function daemonStatusCommand(options: {
   json: boolean;
 }): Promise<void> {
-  if (!(await pathExists(SOCKET_PATH))) {
-    const state = await readState();
-    if (state !== null && !pidAlive(state.pid)) {
-      console.log(
-        "Discord daemon is not running (stale state file — run 'toolkit discord daemon stop' to clean up).",
-      );
-    } else {
-      console.log("Discord daemon is not running.");
-    }
+  const status = await probeDiscordDaemonStatus();
+  if (status === null) {
+    await cleanDeadDiscordDaemonFiles();
+    console.log("Discord daemon is not running.");
     process.exitCode = 1;
     return;
   }
-  const status = await daemonRequest(StatusResponseSchema, "/status");
   if (options.json) {
     console.log(JSON.stringify(status, null, 2));
     return;

@@ -1,9 +1,9 @@
 import { Context } from "@temporalio/activity";
 import { execFileSync } from "node:child_process";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { expect, test } from "vitest";
 import { z } from "zod";
+import { createLeasedLocalTemporalEnvironment } from "#lib/fixtures/temporal-lease.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { createDeliveryWorkers } from "#workflows/testing/delivery-workers.ts";
 import {
@@ -14,7 +14,7 @@ import {
 } from "#lib/delivery/platform/control-plane-history.ts";
 
 test("dedicated SDK poller preserves its own pending upgrade history; incompatible candidate, enabled Schedule, foreign run and sibling execution fail", async () => {
-  const environment = await TestWorkflowEnvironment.createLocal({
+  const environment = await createLeasedLocalTemporalEnvironment({
     server: {
       executable: {
         type: "existing-path",

@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
 import { Worker } from "@temporalio/worker";
 import { Context, heartbeat } from "@temporalio/activity";
@@ -9,6 +8,7 @@ import {
   createMediaSystemSandbox,
   createMediaWorkflowStarter,
 } from "@shepherdjerred/media/testing/system";
+import { createLeasedLocalTemporalEnvironment } from "#lib/fixtures/temporal-lease.ts";
 import { watchExecution } from "#activities/media/watch-execution.ts";
 import { compensationExecution } from "#activities/media/compensation-execution.ts";
 import { plexBindingExecution } from "#activities/media/plex-binding-execution.ts";
@@ -31,7 +31,7 @@ const nodeResolution = Bun.spawnSync(["mise", "which", "node"], {
 if (nodeResolution.exitCode !== 0)
   throw new Error("Pinned Node resolution failed");
 const node = nodeResolution.stdout.toString().trim();
-const environment = await TestWorkflowEnvironment.createLocal({
+const environment = await createLeasedLocalTemporalEnvironment({
   server: {
     executable: { type: "existing-path", path: temporal },
     ip: "127.0.0.1",
@@ -74,7 +74,7 @@ try {
     [node, "--experimental-strip-types", script, "run", address, marker],
     {
       env: workflowEnvironment,
-      stdin: "ignore",
+      stdin: "pipe",
       stdout: Bun.file(path.join(scenario.root, "workflow.log")),
       stderr: Bun.file(path.join(scenario.root, "workflow-errors.log")),
     },

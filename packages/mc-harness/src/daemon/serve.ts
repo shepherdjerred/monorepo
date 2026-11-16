@@ -6,6 +6,7 @@ import {
 import { type DaemonState, DaemonStateSchema } from "#protocol/ipc.ts";
 import {
   CLIENTS_DIR,
+  DAEMON_ENTRY,
   LOGS_DIR,
   SOCKET_PATH,
   STATE_PATH,
@@ -101,6 +102,7 @@ export async function startDaemon(options: {
     socketPath: SOCKET_PATH,
     statePath: STATE_PATH,
     state,
+    marker: DAEMON_ENTRY,
     ttlSeconds,
     lastActivity: () => ctx.lastActivity,
     handle: (url, request) => routeRequest(ctx, url, request),

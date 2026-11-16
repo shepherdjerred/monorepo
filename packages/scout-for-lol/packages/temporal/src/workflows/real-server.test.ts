@@ -1,9 +1,23 @@
-import { afterEach, expect, test } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { afterAll, afterEach, expect, test } from "vitest";
+import { randomUUID } from "node:crypto";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import os, { tmpdir } from "node:os";
 import path from "node:path";
+import { env } from "node:process";
 import { createServer } from "node:net";
-import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import {
+  execFileSync,
+  spawn,
+  spawnSync,
+  type ChildProcess,
+} from "node:child_process";
 import {
   Client,
   Connection,
@@ -12,6 +26,7 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
 import { NativeConnection, Worker } from "@temporalio/worker";
+import { z } from "zod";
 import { SCOUT_WORKFLOW_NAMES, scoutTaskQueues } from "#src/identifiers.ts";
 import { scoutPrematchDiscoveryInputCodec } from "#src/workflow-contracts.ts";
 
@@ -21,6 +36,18 @@ const temporalExecutable = execFileSync("mise", ["which", "temporal"], {
   cwd: repositoryRoot,
   encoding: "utf8",
 }).trim();
+const TEMPORAL_LEASE_TTL_MS = 30 * 60 * 1000;
+
+const TemporalTendLeaseSchema = z.strictObject({
+  version: z.literal(1),
+  id: z.string().min(1),
+  kind: z.literal("temporal"),
+  target: z.string().min(1),
+  ownerPid: z.number().int().positive(),
+  processStart: z.string().min(1),
+  createdAt: z.string().min(1),
+  expiresAt: z.string().min(1),
+});
 
 type RunningWorkerSet = {
   workers: Worker[];
@@ -29,16 +56,109 @@ type RunningWorkerSet = {
 
 type TestRuntime = {
   server: ChildProcess;
-  connection: Connection;
-  nativeConnection: NativeConnection;
-  client: Client;
+  connection: Connection | undefined;
+  nativeConnection: NativeConnection | undefined;
+  client: Client | undefined;
   workers: RunningWorkerSet;
   directory: string;
+  leasePath: string;
   address: string;
   port: number;
 };
 
 let runtime: TestRuntime | undefined;
+let cachedProcessStart: string | undefined;
+const activeServers = new Set<ChildProcess>();
+const activeDirectories = new Set<string>();
+const activeLeasePaths = new Set<string>();
+
+function currentProcessStart(): string {
+  if (cachedProcessStart !== undefined) {
+    return cachedProcessStart;
+  }
+  const started = execFileSync(
+    "ps",
+    ["-o", "lstart=", "-p", String(process.pid)],
+    {
+      env: { ...env, TZ: "UTC", LC_ALL: "C" },
+      encoding: "utf8",
+    },
+  ).trim();
+  if (started.length === 0) {
+    throw new Error(
+      `Cannot read process start time via ps -o lstart= -p ${String(process.pid)}`,
+    );
+  }
+  cachedProcessStart = started;
+  return started;
+}
+
+async function writeTemporalLease(target: string): Promise<string> {
+  const configured = env["TOOLKIT_TEND_DIR"];
+  const tendRoot =
+    configured !== undefined && configured.length > 0
+      ? configured
+      : path.join(os.homedir(), ".toolkit", "tend");
+  const leasesDir = path.join(tendRoot, "leases");
+  await mkdir(leasesDir, { recursive: true, mode: 0o700 });
+  const nowMs = Date.now();
+  const id = `temporal-${String(process.pid)}-${randomUUID()}`;
+  const record = TemporalTendLeaseSchema.parse({
+    version: 1,
+    id,
+    kind: "temporal",
+    target,
+    ownerPid: process.pid,
+    processStart: currentProcessStart(),
+    createdAt: new Date(nowMs).toISOString(),
+    expiresAt: new Date(nowMs + TEMPORAL_LEASE_TTL_MS).toISOString(),
+  });
+  const leasePath = path.join(leasesDir, `${id}.json`);
+  const temporaryPath = path.join(leasesDir, `.${id}.tmp`);
+  try {
+    await writeFile(temporaryPath, `${JSON.stringify(record, null, 2)}\n`, {
+      mode: 0o600,
+    });
+    await rename(temporaryPath, leasePath);
+  } finally {
+    await rm(temporaryPath, { force: true });
+  }
+  activeLeasePaths.add(leasePath);
+  return leasePath;
+}
+
+function signalServerGroup(server: ChildProcess, signal: NodeJS.Signals): void {
+  if (server.pid !== undefined) {
+    try {
+      process.kill(-server.pid, signal);
+      return;
+    } catch {
+      // Fall back to direct child kill if the process group already exited.
+    }
+  }
+  try {
+    server.kill(signal);
+  } catch {
+    // Child already exited.
+  }
+}
+
+process.once("exit", () => {
+  for (const server of activeServers) {
+    if (server.exitCode === null) {
+      signalServerGroup(server, "SIGKILL");
+    }
+  }
+  activeServers.clear();
+  for (const leasePath of activeLeasePaths) {
+    spawnSync("rm", ["-f", "--", leasePath], { stdio: "ignore" });
+  }
+  activeLeasePaths.clear();
+  for (const dir of activeDirectories) {
+    spawnSync("rm", ["-rf", "--", dir], { stdio: "ignore" });
+  }
+  activeDirectories.clear();
+});
 
 async function unusedPort(): Promise<number> {
   const server = createServer();
@@ -60,7 +180,7 @@ async function unusedPort(): Promise<number> {
 }
 
 function startServer(port: number, databasePath: string) {
-  return spawn(
+  const child = spawn(
     temporalExecutable,
     [
       "--disable-config-file",
@@ -78,9 +198,15 @@ function startServer(port: number, databasePath: string) {
     ],
     {
       cwd: repositoryRoot,
+      detached: true,
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
+  activeServers.add(child);
+  child.once("exit", () => {
+    activeServers.delete(child);
+  });
+  return child;
 }
 
 async function connectEventually(
@@ -108,17 +234,33 @@ async function connectEventually(
 }
 
 async function stopServer(server: ChildProcess): Promise<void> {
-  if (server.exitCode !== null) return;
-  server.kill("SIGTERM");
-  await new Promise<void>((resolve, reject) => {
+  if (server.exitCode !== null) {
+    activeServers.delete(server);
+    return;
+  }
+  signalServerGroup(server, "SIGTERM");
+  const exitedGracefully = await new Promise<boolean>((resolve) => {
     const timeout = setTimeout(() => {
-      reject(new Error("Temporal dev server did not stop after SIGTERM"));
-    }, 10_000);
+      resolve(false);
+    }, 5000);
     server.once("exit", () => {
       clearTimeout(timeout);
-      resolve();
+      resolve(true);
     });
   });
+  if (!exitedGracefully && server.exitCode === null) {
+    signalServerGroup(server, "SIGKILL");
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Temporal dev server did not stop after SIGKILL"));
+      }, 5000);
+      server.once("exit", () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+    });
+  }
+  activeServers.delete(server);
 }
 
 async function startWorkers(input: {
@@ -177,28 +319,79 @@ async function stopWorkers(workerSet: RunningWorkerSet): Promise<void> {
   await Promise.all(workerSet.runs);
 }
 
-afterEach(async () => {
+async function cleanupRuntime(): Promise<void> {
   const active = runtime;
   runtime = undefined;
-  if (active === undefined) return;
-  await stopWorkers(active.workers);
-  await active.nativeConnection.close();
-  await active.connection.close();
-  await stopServer(active.server);
-  await rm(active.directory, { recursive: true });
+  if (active !== undefined) {
+    await stopWorkers(active.workers);
+    await active.nativeConnection?.close();
+    await active.connection?.close();
+    await stopServer(active.server);
+    await rm(active.leasePath, { force: true });
+    activeLeasePaths.delete(active.leasePath);
+    await rm(active.directory, { recursive: true, force: true });
+    activeDirectories.delete(active.directory);
+  }
+  for (const server of activeServers) {
+    await stopServer(server);
+  }
+  for (const leasePath of activeLeasePaths) {
+    await rm(leasePath, { force: true });
+    activeLeasePaths.delete(leasePath);
+  }
+  for (const dir of activeDirectories) {
+    await rm(dir, { recursive: true, force: true });
+    activeDirectories.delete(dir);
+  }
+}
+
+async function createAndVerifyTemporalLease(address: string): Promise<string> {
+  const leasePath = await writeTemporalLease(address);
+  const persistedLease = TemporalTendLeaseSchema.parse(
+    JSON.parse(await readFile(leasePath, "utf8")),
+  );
+  expect(persistedLease.target).toBe(address);
+  expect(persistedLease.ownerPid).toBe(process.pid);
+  return leasePath;
+}
+
+afterEach(async () => {
+  await cleanupRuntime();
+});
+
+afterAll(async () => {
+  await cleanupRuntime();
 });
 
 test("real server preserves IDs, catches up Schedules, survives outages, and replays history", async () => {
   const directory = await mkdtemp(
     path.join(tmpdir(), "scout-temporal-real-server-"),
   );
+  activeDirectories.add(directory);
   const port = await unusedPort();
   const address = `127.0.0.1:${port.toString()}`;
+  const leasePath = await createAndVerifyTemporalLease(address);
   const databasePath = path.join(directory, "temporal.db");
   let server = startServer(port, databasePath);
+  const runtimeState: TestRuntime = {
+    server,
+    connection: undefined,
+    nativeConnection: undefined,
+    client: undefined,
+    workers: { workers: [], runs: [] },
+    directory,
+    leasePath,
+    address,
+    port,
+  };
+  runtime = runtimeState;
+
   let connection = await connectEventually(address, server);
+  runtimeState.connection = connection;
   let nativeConnection = await NativeConnection.connect({ address });
+  runtimeState.nativeConnection = nativeConnection;
   let client = new Client({ connection, namespace: "dev" });
+  runtimeState.client = client;
   const reportRuns: string[] = [];
   const matchRuns: string[] = [];
   const matchGate = Promise.withResolvers<null>();
@@ -208,17 +401,7 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
     matchRuns,
     blockMatch: matchGate.promise,
   });
-  const runtimeState: TestRuntime = {
-    server,
-    connection,
-    nativeConnection,
-    client,
-    workers,
-    directory,
-    address,
-    port,
-  };
-  runtime = runtimeState;
+  runtimeState.workers = workers;
 
   const duplicateOptions = {
     workflowId: "scout-dev-prematch-poll-duplicate",
@@ -354,21 +537,23 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
   workers = { workers: [], runs: [] };
   runtimeState.workers = workers;
   await nativeConnection.close();
+  runtimeState.nativeConnection = undefined;
   await connection.close();
+  runtimeState.connection = undefined;
   await stopServer(server);
   await new Promise((resolve) => setTimeout(resolve, 3000));
   server = startServer(port, databasePath);
+  runtimeState.server = server;
   connection = await connectEventually(address, server);
+  runtimeState.connection = connection;
   nativeConnection = await NativeConnection.connect({ address });
+  runtimeState.nativeConnection = nativeConnection;
   client = new Client({ connection, namespace: "dev" });
+  runtimeState.client = client;
   const restoredSchedule = await client.schedule
     .getHandle("scout-dev-real-server-outage-catchup")
     .describe();
   expect(restoredSchedule.state.paused).toBe(false);
-  runtimeState.server = server;
-  runtimeState.connection = connection;
-  runtimeState.nativeConnection = nativeConnection;
-  runtimeState.client = client;
   const beforeServerOutage = reportRuns.filter((id) => id === "13").length;
   workers = await startWorkers({
     connection: nativeConnection,

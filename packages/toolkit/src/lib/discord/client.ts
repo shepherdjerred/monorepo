@@ -1,6 +1,15 @@
 import type { z } from "zod";
-import { pathExists } from "@shepherdjerred/unix-socket-daemon";
-import { ErrorResponseSchema, SOCKET_PATH } from "#lib/discord/ipc.ts";
+import {
+  DEFAULT_TTL_SECONDS,
+  ErrorResponseSchema,
+  SOCKET_PATH,
+} from "#lib/discord/ipc.ts";
+import {
+  cleanDeadDiscordDaemonFiles,
+  ensureDiscordDaemon,
+  hasAutoStartDiscordTokens,
+  probeDiscordDaemonStatus,
+} from "#lib/discord/spawn.ts";
 
 const START_HINT = [
   "Discord daemon is not running. toolkit resolves DISCORD_BOT_TOKEN / DISCORD_USER_TOKEN itself",
@@ -13,14 +22,37 @@ const START_HINT = [
   "  swift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-user-token --ref op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN",
 ].join("\n");
 
+async function ensureReadyDiscordDaemon(): Promise<void> {
+  const existing = await probeDiscordDaemonStatus();
+  if (existing !== null) {
+    return;
+  }
+
+  if (
+    Bun.env["TOOLKIT_DISCORD_NO_AUTOSTART"] === "1" ||
+    !hasAutoStartDiscordTokens()
+  ) {
+    await cleanDeadDiscordDaemonFiles();
+    throw new Error(START_HINT);
+  }
+
+  const { status, started } = await ensureDiscordDaemon({
+    ttlSeconds: DEFAULT_TTL_SECONDS,
+  });
+  if (started) {
+    console.error(
+      `Started the Discord daemon (pid ${String(status.pid)}); stop it with 'toolkit discord daemon stop'.`,
+    );
+  }
+}
+
 export async function daemonRequest<Schema extends z.ZodType>(
   schema: Schema,
   path: string,
   body?: unknown,
 ): Promise<z.infer<Schema>> {
-  if (!(await pathExists(SOCKET_PATH))) {
-    throw new Error(START_HINT);
-  }
+  await ensureReadyDiscordDaemon();
+
   let response: Response;
   try {
     response = await fetch(`http://daemon${path}`, {
@@ -31,7 +63,7 @@ export async function daemonRequest<Schema extends z.ZodType>(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Could not reach the Discord daemon (${message}). The socket file exists but the daemon may have died — run 'toolkit discord daemon stop' to clean up, then start it again.\n\n${START_HINT}`,
+      `Could not reach the Discord daemon (${message}). The daemon may have exited during the request — retry the command.\n\n${START_HINT}`,
       { cause: error },
     );
   }

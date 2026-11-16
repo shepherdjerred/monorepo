@@ -1,7 +1,8 @@
 import path from "node:path";
 import { rm } from "node:fs/promises";
 import type { Worker } from "@temporalio/worker";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
+import type { TestWorkflowEnvironment } from "@temporalio/testing";
+import { createLeasedLocalTemporalEnvironment } from "#lib/fixtures/temporal-lease.ts";
 
 export const mediaWorkflowWorkerScript = new URL(
   "../../../../scripts/media-system/workflow-worker.ts",
@@ -16,7 +17,7 @@ export function movieWorkflowChildEnvironment() {
 }
 
 export function createMovieRoleEnvironment(temporal: string) {
-  return TestWorkflowEnvironment.createLocal({
+  return createLeasedLocalTemporalEnvironment({
     server: {
       executable: { type: "existing-path", path: temporal },
       ip: "127.0.0.1",
@@ -117,7 +118,7 @@ export async function startMovieWorkflowWorker(options: {
     ],
     {
       env: options.childEnvironment,
-      stdin: "ignore",
+      stdin: "pipe",
       stdout: Bun.file(path.join(options.directory, "workflow.log")),
       stderr: Bun.file(path.join(options.directory, "workflow-errors.log")),
     },

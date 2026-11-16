@@ -1,4 +1,4 @@
-import { mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, test } from "vitest";
@@ -6,6 +6,11 @@ import { replayWorkflowFile } from "./process.ts";
 import {
   closeMovieRoleFixture,
   closeMovieRoleFixtureSequential,
+  createMovieRoleEnvironment,
+  mediaWorkflowWorkerScript,
+  movieWorkflowChildEnvironment,
+  pinnedMovieRuntimes,
+  startMovieWorkflowWorker,
 } from "./role-worker.ts";
 
 test("replay transport drains both child streams and retains a nonzero exit", async () => {
@@ -116,3 +121,62 @@ test.each(
     await expect(stat(directory)).rejects.toMatchObject({ code: "ENOENT" });
   },
 );
+
+test("spawned workflow-worker exits within seconds when its parent stdin pipe closes abruptly without SIGTERM", async () => {
+  const { temporal, node } = pinnedMovieRuntimes();
+  const directory = await mkdtemp(
+    path.join(tmpdir(), "media-workflow-worker-eof-"),
+  );
+  const tendDir = await mkdtemp(path.join(tmpdir(), "media-tend-leases-"));
+  const previousTendDir = Bun.env["TOOLKIT_TEND_DIR"];
+  Bun.env["TOOLKIT_TEND_DIR"] = tendDir;
+
+  let environment:
+    Awaited<ReturnType<typeof createMovieRoleEnvironment>> | undefined;
+  let workflow:
+    Awaited<ReturnType<typeof startMovieWorkflowWorker>> | undefined;
+
+  try {
+    environment = await createMovieRoleEnvironment(temporal);
+    const leaseEntries = await readdir(path.join(tendDir, "leases"));
+    expect(leaseEntries).toHaveLength(1);
+
+    workflow = await startMovieWorkflowWorker({
+      node,
+      script: mediaWorkflowWorkerScript,
+      address: environment.address,
+      directory,
+      childEnvironment: movieWorkflowChildEnvironment(),
+    });
+    expect(workflow.exitCode).toBeNull();
+    expect(() => process.kill(workflow?.pid ?? 0, 0)).not.toThrow();
+
+    // Simulate parent SIGKILL: kernel closes the parent's write end of stdin
+    // without delivering SIGTERM to the child Node worker.
+    const closedAt = performance.now();
+    await workflow.stdin.end();
+    const exitCode = await workflow.exited;
+    const elapsedMs = performance.now() - closedAt;
+
+    expect(exitCode).toBe(0);
+    expect(elapsedMs).toBeLessThan(5000);
+    expect(() => process.kill(workflow?.pid ?? 0, 0)).toThrow();
+  } finally {
+    if (previousTendDir === undefined) {
+      delete Bun.env["TOOLKIT_TEND_DIR"];
+    } else {
+      Bun.env["TOOLKIT_TEND_DIR"] = previousTendDir;
+    }
+    if (workflow?.exitCode === null) {
+      workflow.kill("SIGKILL");
+      await workflow.exited;
+    }
+    if (environment !== undefined) {
+      await environment.teardown();
+      const remainingLeases = await readdir(path.join(tendDir, "leases"));
+      expect(remainingLeases).toEqual([]);
+    }
+    await rm(directory, { recursive: true, force: true });
+    await rm(tendDir, { recursive: true, force: true });
+  }
+}, 60_000);
