@@ -181,7 +181,7 @@ describe("configureOperatorKubeConfig", () => {
           keyData: Buffer.from(keyPem).toString("base64"),
           exec: {
             apiVersion: "client.authentication.k8s.io/v1",
-            command: "toolkit",
+            command: "nonexistent-kube-credential-plugin",
             args: ["kube", "credential"],
           },
         },

@@ -242,6 +242,31 @@ const stoppedInSync: Stages = [
   { key: "step-sync", status: "running" },
 ];
 
+function unsyncedFixture(
+  introduced: boolean,
+  transform: (base: DeploymentDetail) => DeploymentDetail,
+) {
+  const prior = application(failed([], []), { request: "earlier-request" });
+  const stages: Stages = [
+    {
+      key: "worker-prior-source",
+      status: "succeeded",
+      operationId: workerSourceFingerprint(prior),
+    },
+    { key: "worker-image-provenance", status: "succeeded" },
+    { key: "step-apply-safety", status: "running" },
+  ];
+  const detail = transform(failed(stages, [], { introduced }));
+  const recipe = stepRecipeOf(detail.pipeline.definition, "worker-rollout");
+  if (recipe === null) throw new Error("Fixture lacks its worker recipe");
+  const written = application(detail, {
+    request: "earlier-request",
+    source: renderApplication(detail, recipe).body.spec.source,
+    sync: "OutOfSync",
+  });
+  return { prior, detail, written };
+}
+
 /** The worker Application Argo left: this request's sync Failed, the rendered body in place. */
 function failedSync(
   detail: DeploymentDetail,
@@ -371,24 +396,7 @@ describe("model worker recovery (T3, E5)", () => {
   });
 
   test("an unsynced apply-safety leaves the original hosts; a sync request that reached the Application without a recorded step fails closed", async () => {
-    const prior = application(failed([], []), { request: "earlier-request" });
-    const stages: Stages = [
-      {
-        key: "worker-prior-source",
-        status: "succeeded",
-        operationId: workerSourceFingerprint(prior),
-      },
-      { key: "worker-image-provenance", status: "succeeded" },
-      { key: "step-apply-safety", status: "running" },
-    ];
-    const detail = failed(stages, [], { introduced: true });
-    const recipe = stepRecipeOf(detail.pipeline.definition, "worker-rollout");
-    if (recipe === null) throw new Error("Fixture lacks its worker recipe");
-    const written = application(detail, {
-      request: "earlier-request",
-      source: renderApplication(detail, recipe).body.spec.source,
-      sync: "OutOfSync",
-    });
+    const { prior, detail, written } = unsyncedFixture(true, (base) => base);
     const proof = await proveSettledWorkerRecovery(
       context(detail),
       boundary(detail, { application: written, hosts: [STABLE], prod: STABLE }),
@@ -520,24 +528,9 @@ describe("an owned sync that failed before any routing step", () => {
 
 describe("retire-host worker recovery", () => {
   test("an unsynced retire-host settles while candidateBuildId owns active routing and retiringWorkerId remains live", async () => {
-    const prior = application(failed([], []), { request: "earlier-request" });
-    const stages: Stages = [
-      {
-        key: "worker-prior-source",
-        status: "succeeded",
-        operationId: workerSourceFingerprint(prior),
-      },
-      { key: "worker-image-provenance", status: "succeeded" },
-      { key: "step-apply-safety", status: "running" },
-    ];
-    const detail = retiringStable(failed(stages, []));
-    const recipe = stepRecipeOf(detail.pipeline.definition, "worker-rollout");
-    if (recipe === null) throw new Error("Fixture lacks its worker recipe");
-    const written = application(detail, {
-      request: "earlier-request",
-      source: renderApplication(detail, recipe).body.spec.source,
-      sync: "OutOfSync",
-    });
+    const { prior, detail, written } = unsyncedFixture(false, (base) =>
+      retiringStable(base),
+    );
 
     const polledBuilds: string[][] = [];
     const priorProof = await proveSettledWorkerRecovery(

@@ -143,7 +143,7 @@ export function configureOperatorKubeConfig(
     });
     const config = createConfiguration({
       baseServer: new ServerConfiguration(cluster.server, {}),
-      authMethods: { default: kubernetes },
+      authMethods: {},
       httpApi,
     });
     return new apiClientType(config);
