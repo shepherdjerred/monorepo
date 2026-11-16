@@ -1,14 +1,17 @@
 import { spawn } from "node:child_process";
 import { mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import {
-  daemonRunning,
-  pathExists,
-  stopDaemonPid,
-  terminateDaemonChild,
-  withDaemonStartLock,
-} from "@shepherdjerred/unix-socket-daemon";
+import { withDaemonStartLock } from "@shepherdjerred/unix-socket-daemon";
 import { discordDaemonEnvironment } from "#lib/discord/auth.ts";
+import {
+  attachRunningDaemon,
+  cleanDeadDaemonFiles,
+  cleanupFailedDaemonStart,
+  dailyDaemonLogPath,
+  probeUnixDaemonStatus,
+  readDaemonStateFile,
+  shutdownUnixDaemon,
+} from "#lib/unix-daemon-client.ts";
 import {
   type DaemonState,
   DaemonStateSchema,
@@ -33,22 +36,15 @@ const MISSING_TOKEN_MESSAGE = [
   "swift scripts/onepassword/enroll-workstation-secret.swift --service monorepo-workstation-discord-user-token --ref op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN",
 ].join("\n");
 
-export async function readDiscordDaemonState(): Promise<DaemonState | null> {
-  if (!(await pathExists(STATE_PATH))) {
-    return null;
-  }
-  try {
-    const raw: unknown = JSON.parse(await Bun.file(STATE_PATH).text());
+export function readDiscordDaemonState(): Promise<DaemonState | null> {
+  return readDaemonStateFile(STATE_PATH, (raw) => {
     const parsed = DaemonStateSchema.safeParse(raw);
     return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
+  });
 }
 
 export function discordDaemonLogPath(): string {
-  const day = new Date().toISOString().slice(0, 10);
-  return path.join(LOGS_DIR, `daemon-${day}.log`);
+  return dailyDaemonLogPath(LOGS_DIR);
 }
 
 export function hasAutoStartDiscordTokens(
@@ -107,42 +103,23 @@ function assertDaemonCredentials(
  * Probes `/status` directly over `SOCKET_PATH` without triggering auto-start.
  * Returns `null` when the socket is absent or refuses connection.
  */
-export async function probeDiscordDaemonStatus(): Promise<StatusResponse | null> {
-  if (!(await pathExists(SOCKET_PATH))) {
-    return null;
-  }
-  let response: Response;
-  try {
-    response = await fetch("http://daemon/status", {
-      unix: SOCKET_PATH,
-      signal: AbortSignal.timeout(3000),
-    });
-  } catch {
-    return null;
-  }
-  if (!response.ok) {
-    throw new Error(
-      `Discord daemon status failed (HTTP ${String(response.status)})`,
-    );
-  }
-  return StatusResponseSchema.parse(await response.json());
+export function probeDiscordDaemonStatus(): Promise<StatusResponse | null> {
+  return probeUnixDaemonStatus({
+    socketPath: SOCKET_PATH,
+    label: "Discord daemon",
+    parse: (raw) => StatusResponseSchema.parse(raw),
+  });
 }
 
 /** Removes leftover `daemon.sock` / `state.json` when no live daemon owns them. */
-export async function cleanDeadDiscordDaemonFiles(): Promise<boolean> {
-  const state = await readDiscordDaemonState();
-  if (
-    state !== null &&
-    (await daemonRunning(state.pid, DISCORD_DAEMON_MARKER))
-  ) {
-    return false;
-  }
-  if ((await probeDiscordDaemonStatus()) !== null) {
-    return false;
-  }
-  await rm(SOCKET_PATH, { force: true });
-  await rm(STATE_PATH, { force: true });
-  return true;
+export function cleanDeadDiscordDaemonFiles(): Promise<boolean> {
+  return cleanDeadDaemonFiles({
+    socketPath: SOCKET_PATH,
+    statePath: STATE_PATH,
+    marker: DISCORD_DAEMON_MARKER,
+    readState: readDiscordDaemonState,
+    probeStatus: probeDiscordDaemonStatus,
+  });
 }
 
 function assertCompatibleRunningDaemon(
@@ -159,43 +136,6 @@ function assertCompatibleRunningDaemon(
       `Discord daemon is already running with bot credentials (pid ${String(status.pid)}). Use 'toolkit discord daemon stop' before starting --user-only.`,
     );
   }
-}
-
-async function waitForRunningDiscordStatus(
-  waitMs: number,
-): Promise<StatusResponse | null> {
-  const deadline = Date.now() + waitMs;
-  while (Date.now() < deadline) {
-    const status = await probeDiscordDaemonStatus();
-    if (status !== null) {
-      return status;
-    }
-    await Bun.sleep(150);
-  }
-  return null;
-}
-
-async function attachIfRunning(options: {
-  passwordLogin: boolean;
-  userOnly: boolean;
-}): Promise<StatusResponse | null> {
-  const immediate = await probeDiscordDaemonStatus();
-  if (immediate !== null) {
-    assertCompatibleRunningDaemon(immediate, options);
-    return immediate;
-  }
-  const existing = await readDiscordDaemonState();
-  if (
-    existing !== null &&
-    (await daemonRunning(existing.pid, DISCORD_DAEMON_MARKER))
-  ) {
-    const settled = await waitForRunningDiscordStatus(5000);
-    if (settled !== null) {
-      assertCompatibleRunningDaemon(settled, options);
-      return settled;
-    }
-  }
-  return null;
 }
 
 export async function awaitDiscordDaemonReady(
@@ -249,7 +189,14 @@ export function ensureDiscordDaemon(
   return withDaemonStartLock(
     { lockPath: START_LOCK_PATH, timeoutMs: STARTUP_TIMEOUT_MS + 5000 },
     async () => {
-      const attached = await attachIfRunning({ passwordLogin, userOnly });
+      const attached = await attachRunningDaemon({
+        marker: DISCORD_DAEMON_MARKER,
+        readState: readDiscordDaemonState,
+        probeStatus: probeDiscordDaemonStatus,
+        validate: (status) => {
+          assertCompatibleRunningDaemon(status, { passwordLogin, userOnly });
+        },
+      });
       if (attached !== null) {
         return { status: attached, started: false };
       }
@@ -281,11 +228,12 @@ export function ensureDiscordDaemon(
         const status = await awaitDiscordDaemonReady(() => child.exitCode);
         return { status, started: true };
       } catch (error) {
-        if (child.exitCode === null) {
-          await terminateDaemonChild(child.pid, { graceMs: 2000 });
-        }
-        await rm(SOCKET_PATH, { force: true });
-        await rm(STATE_PATH, { force: true });
+        await cleanupFailedDaemonStart({
+          pid: child.pid,
+          exitCode: child.exitCode,
+          socketPath: SOCKET_PATH,
+          statePath: STATE_PATH,
+        });
         throw error;
       } finally {
         child.unref();
@@ -294,29 +242,13 @@ export function ensureDiscordDaemon(
   );
 }
 
-export async function stopDiscordDaemon(): Promise<void> {
-  const state = await readDiscordDaemonState();
-  let statusPid: number | undefined;
-  const status = await probeDiscordDaemonStatus().catch(() => null);
-  if (status !== null) {
-    statusPid = status.pid;
-    try {
-      await fetch("http://daemon/shutdown", {
-        unix: SOCKET_PATH,
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: "{}",
-        signal: AbortSignal.timeout(3000),
-      });
-    } catch {
-      // A dead or closing socket: fall through to identity-checked PID stop.
-    }
-  }
-  await stopDaemonPid(state?.pid ?? null, {
-    statusPid,
+export function stopDiscordDaemon(): Promise<void> {
+  return shutdownUnixDaemon({
+    socketPath: SOCKET_PATH,
+    statePath: STATE_PATH,
     marker: DISCORD_DAEMON_MARKER,
     waitMs: 5000,
+    readState: readDiscordDaemonState,
+    probeStatus: probeDiscordDaemonStatus,
   });
-  await rm(SOCKET_PATH, { force: true });
-  await rm(STATE_PATH, { force: true });
 }

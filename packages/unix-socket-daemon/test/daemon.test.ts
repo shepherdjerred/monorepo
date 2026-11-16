@@ -367,7 +367,10 @@ describe("serveUnixDaemon", () => {
   });
 });
 
-describe("withDaemonStartLock concurrency", () => {
+function registerDaemonTestCleanup(): {
+  createTempDir: (prefix: string) => Promise<string>;
+  trackPid: (pid: number | undefined) => void;
+} {
   let dir = "";
   const trackedPids = new Set<number>();
 
@@ -382,8 +385,24 @@ describe("withDaemonStartLock concurrency", () => {
     }
   });
 
+  return {
+    async createTempDir(prefix: string): Promise<string> {
+      dir = await mkdtemp(path.join(tmpdir(), prefix));
+      return dir;
+    },
+    trackPid(pid: number | undefined): void {
+      if (pid !== undefined) {
+        trackedPids.add(pid);
+      }
+    },
+  };
+}
+
+describe("withDaemonStartLock concurrency", () => {
+  const { createTempDir, trackPid } = registerDaemonTestCleanup();
+
   test("5 concurrent callers serialize via withDaemonStartLock, spawn 1 daemon, and all 5 connect", async () => {
-    dir = await mkdtemp(path.join(tmpdir(), "usd-race-"));
+    const dir = await createTempDir("usd-race-");
     const socketPath = path.join(dir, "daemon.sock");
     const statePath = path.join(dir, "state.json");
     const lockPath = `${socketPath}.lock`;
@@ -415,9 +434,7 @@ describe("withDaemonStartLock concurrency", () => {
             ["run", entryScript, socketPath, statePath, spawnsLog, "120"],
             { detached: true, stdio: "ignore" },
           );
-          if (child.pid !== undefined) {
-            trackedPids.add(child.pid);
-          }
+          trackPid(child.pid);
 
           try {
             const deadline = Date.now() + 8000;
@@ -471,7 +488,7 @@ describe("withDaemonStartLock concurrency", () => {
   });
 
   test("breaks stale locks from dead PIDs and expired timestamps", async () => {
-    dir = await mkdtemp(path.join(tmpdir(), "usd-stale-lock-"));
+    const dir = await createTempDir("usd-stale-lock-");
     const lockPath = path.join(dir, "daemon.sock.lock");
 
     const exited = Bun.spawn(["true"]);
@@ -514,22 +531,10 @@ describe("withDaemonStartLock concurrency", () => {
 });
 
 describe("daemon crash and timeout recovery", () => {
-  let dir = "";
-  const trackedPids = new Set<number>();
-
-  afterEach(async () => {
-    for (const pid of trackedPids) {
-      await terminateDaemonChild(pid, { graceMs: 100 });
-    }
-    trackedPids.clear();
-    if (dir !== "") {
-      await rm(dir, { recursive: true, force: true });
-      dir = "";
-    }
-  });
+  const { createTempDir, trackPid } = registerDaemonTestCleanup();
 
   test("recovers automatically when dead state.json and daemon.sock remain from a crashed daemon", async () => {
-    dir = await mkdtemp(path.join(tmpdir(), "usd-crash-"));
+    const dir = await createTempDir("usd-crash-");
     const socketPath = path.join(dir, "daemon.sock");
     const statePath = path.join(dir, "state.json");
     const lockPath = `${socketPath}.lock`;
@@ -543,9 +548,7 @@ describe("daemon crash and timeout recovery", () => {
     );
     const crashedPid = crashed.pid;
     expect(crashedPid).toBeDefined();
-    if (crashedPid !== undefined) {
-      trackedPids.add(crashedPid);
-    }
+    trackPid(crashedPid);
     await expect.poll(() => probeStatusPid(socketPath)).toBe(crashedPid);
     crashed.unref();
 
@@ -569,9 +572,7 @@ describe("daemon crash and timeout recovery", () => {
           ["run", entryScript, socketPath, statePath, spawnsLog, "0"],
           { detached: true, stdio: "ignore" },
         );
-        if (replacement.pid !== undefined) {
-          trackedPids.add(replacement.pid);
-        }
+        trackPid(replacement.pid);
         replacement.unref();
         await expect
           .poll(() => probeStatusPid(socketPath))
@@ -585,7 +586,7 @@ describe("daemon crash and timeout recovery", () => {
   });
 
   test("kills a wedged child with SIGTERM -> SIGKILL when startup times out", async () => {
-    dir = await mkdtemp(path.join(tmpdir(), "usd-timeout-"));
+    const dir = await createTempDir("usd-timeout-");
     const socketPath = path.join(dir, "daemon.sock");
     const lockPath = `${socketPath}.lock`;
 
@@ -606,9 +607,7 @@ describe("daemon crash and timeout recovery", () => {
           stdio: "ignore",
         });
         spawnedPid = child.pid;
-        if (spawnedPid !== undefined) {
-          trackedPids.add(spawnedPid);
-        }
+        trackPid(spawnedPid);
 
         try {
           const deadline = Date.now() + 250;

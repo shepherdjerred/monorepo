@@ -1,16 +1,7 @@
 import { afterAll, afterEach, expect, test } from "vitest";
-import { randomUUID } from "node:crypto";
-import {
-  mkdir,
-  mkdtemp,
-  readFile,
-  rename,
-  rm,
-  writeFile,
-} from "node:fs/promises";
-import os, { tmpdir } from "node:os";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
-import { env } from "node:process";
 import { createServer } from "node:net";
 import {
   execFileSync,
@@ -26,7 +17,11 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
 import { NativeConnection, Worker } from "@temporalio/worker";
-import { z } from "zod";
+import {
+  acquireTemporalTendLease,
+  type TemporalTendLeaseHandle,
+  TemporalTendLeaseSchema,
+} from "@shepherdjerred/root-scripts/lib/temporal/temporal-tend-lease.ts";
 import { SCOUT_WORKFLOW_NAMES, scoutTaskQueues } from "#src/identifiers.ts";
 import { scoutPrematchDiscoveryInputCodec } from "#src/workflow-contracts.ts";
 
@@ -36,18 +31,6 @@ const temporalExecutable = execFileSync("mise", ["which", "temporal"], {
   cwd: repositoryRoot,
   encoding: "utf8",
 }).trim();
-const TEMPORAL_LEASE_TTL_MS = 30 * 60 * 1000;
-
-const TemporalTendLeaseSchema = z.strictObject({
-  version: z.literal(1),
-  id: z.string().min(1),
-  kind: z.literal("temporal"),
-  target: z.string().min(1),
-  ownerPid: z.number().int().positive(),
-  processStart: z.string().min(1),
-  createdAt: z.string().min(1),
-  expiresAt: z.string().min(1),
-});
 
 type RunningWorkerSet = {
   workers: Worker[];
@@ -61,71 +44,15 @@ type TestRuntime = {
   client: Client | undefined;
   workers: RunningWorkerSet;
   directory: string;
-  leasePath: string;
+  lease: TemporalTendLeaseHandle;
   address: string;
   port: number;
 };
 
 let runtime: TestRuntime | undefined;
-let cachedProcessStart: string | undefined;
 const activeServers = new Set<ChildProcess>();
 const activeDirectories = new Set<string>();
-const activeLeasePaths = new Set<string>();
-
-function currentProcessStart(): string {
-  if (cachedProcessStart !== undefined) {
-    return cachedProcessStart;
-  }
-  const started = execFileSync(
-    "ps",
-    ["-o", "lstart=", "-p", String(process.pid)],
-    {
-      env: { ...env, TZ: "UTC", LC_ALL: "C" },
-      encoding: "utf8",
-    },
-  ).trim();
-  if (started.length === 0) {
-    throw new Error(
-      `Cannot read process start time via ps -o lstart= -p ${String(process.pid)}`,
-    );
-  }
-  cachedProcessStart = started;
-  return started;
-}
-
-async function writeTemporalLease(target: string): Promise<string> {
-  const configured = env["TOOLKIT_TEND_DIR"];
-  const tendRoot =
-    configured !== undefined && configured.length > 0
-      ? configured
-      : path.join(os.homedir(), ".toolkit", "tend");
-  const leasesDir = path.join(tendRoot, "leases");
-  await mkdir(leasesDir, { recursive: true, mode: 0o700 });
-  const nowMs = Date.now();
-  const id = `temporal-${String(process.pid)}-${randomUUID()}`;
-  const record = TemporalTendLeaseSchema.parse({
-    version: 1,
-    id,
-    kind: "temporal",
-    target,
-    ownerPid: process.pid,
-    processStart: currentProcessStart(),
-    createdAt: new Date(nowMs).toISOString(),
-    expiresAt: new Date(nowMs + TEMPORAL_LEASE_TTL_MS).toISOString(),
-  });
-  const leasePath = path.join(leasesDir, `${id}.json`);
-  const temporaryPath = path.join(leasesDir, `.${id}.tmp`);
-  try {
-    await writeFile(temporaryPath, `${JSON.stringify(record, null, 2)}\n`, {
-      mode: 0o600,
-    });
-    await rename(temporaryPath, leasePath);
-  } finally {
-    await rm(temporaryPath, { force: true });
-  }
-  activeLeasePaths.add(leasePath);
-  return leasePath;
-}
+const activeLeases = new Set<TemporalTendLeaseHandle>();
 
 function signalServerGroup(server: ChildProcess, signal: NodeJS.Signals): void {
   if (server.pid !== undefined) {
@@ -150,10 +77,10 @@ process.once("exit", () => {
     }
   }
   activeServers.clear();
-  for (const leasePath of activeLeasePaths) {
-    spawnSync("rm", ["-f", "--", leasePath], { stdio: "ignore" });
+  for (const lease of activeLeases) {
+    spawnSync("rm", ["-f", "--", lease.leasePath], { stdio: "ignore" });
   }
-  activeLeasePaths.clear();
+  activeLeases.clear();
   for (const dir of activeDirectories) {
     spawnSync("rm", ["-rf", "--", dir], { stdio: "ignore" });
   }
@@ -327,17 +254,17 @@ async function cleanupRuntime(): Promise<void> {
     await active.nativeConnection?.close();
     await active.connection?.close();
     await stopServer(active.server);
-    await rm(active.leasePath, { force: true });
-    activeLeasePaths.delete(active.leasePath);
+    await active.lease.release();
+    activeLeases.delete(active.lease);
     await rm(active.directory, { recursive: true, force: true });
     activeDirectories.delete(active.directory);
   }
   for (const server of activeServers) {
     await stopServer(server);
   }
-  for (const leasePath of activeLeasePaths) {
-    await rm(leasePath, { force: true });
-    activeLeasePaths.delete(leasePath);
+  for (const lease of activeLeases) {
+    await lease.release();
+    activeLeases.delete(lease);
   }
   for (const dir of activeDirectories) {
     await rm(dir, { recursive: true, force: true });
@@ -345,14 +272,17 @@ async function cleanupRuntime(): Promise<void> {
   }
 }
 
-async function createAndVerifyTemporalLease(address: string): Promise<string> {
-  const leasePath = await writeTemporalLease(address);
+async function createAndVerifyTemporalLease(
+  address: string,
+): Promise<TemporalTendLeaseHandle> {
+  const lease = await acquireTemporalTendLease(address);
+  activeLeases.add(lease);
   const persistedLease = TemporalTendLeaseSchema.parse(
-    JSON.parse(await readFile(leasePath, "utf8")),
+    JSON.parse(await readFile(lease.leasePath, "utf8")),
   );
   expect(persistedLease.target).toBe(address);
   expect(persistedLease.ownerPid).toBe(process.pid);
-  return leasePath;
+  return lease;
 }
 
 afterEach(async () => {
@@ -370,7 +300,7 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
   activeDirectories.add(directory);
   const port = await unusedPort();
   const address = `127.0.0.1:${port.toString()}`;
-  const leasePath = await createAndVerifyTemporalLease(address);
+  const lease = await createAndVerifyTemporalLease(address);
   const databasePath = path.join(directory, "temporal.db");
   let server = startServer(port, databasePath);
   const runtimeState: TestRuntime = {
@@ -380,7 +310,7 @@ test("real server preserves IDs, catches up Schedules, survives outages, and rep
     client: undefined,
     workers: { workers: [], runs: [] },
     directory,
-    leasePath,
+    lease,
     address,
     port,
   };

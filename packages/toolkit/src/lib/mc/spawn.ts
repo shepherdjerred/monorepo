@@ -15,34 +15,30 @@ import {
   STATE_PATH,
 } from "@shepherdjerred/mc-harness/protocol/paths.ts";
 import { PROTOCOL_VERSION } from "@shepherdjerred/mc-harness/protocol/version.ts";
-import {
-  daemonRunning,
-  pathExists,
-  stopDaemonPid,
-  terminateDaemonChild,
-  withDaemonStartLock,
-} from "@shepherdjerred/unix-socket-daemon";
+import { withDaemonStartLock } from "@shepherdjerred/unix-socket-daemon";
 import { repoRoot } from "#lib/deployed/git.ts";
+import {
+  attachRunningDaemon,
+  cleanDeadDaemonFiles,
+  cleanupFailedDaemonStart,
+  dailyDaemonLogPath,
+  probeUnixDaemonStatus,
+  readDaemonStateFile,
+  shutdownUnixDaemon,
+} from "#lib/unix-daemon-client.ts";
 
 const START_LOCK_PATH = `${SOCKET_PATH}.lock`;
 const STARTUP_TIMEOUT_MS = 30_000;
 
-export async function readDaemonState(): Promise<DaemonState | null> {
-  if (!(await pathExists(STATE_PATH))) {
-    return null;
-  }
-  try {
-    const raw: unknown = JSON.parse(await Bun.file(STATE_PATH).text());
+export function readDaemonState(): Promise<DaemonState | null> {
+  return readDaemonStateFile(STATE_PATH, (raw) => {
     const parsed = DaemonStateSchema.safeParse(raw);
     return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
+  });
 }
 
 export function daemonLogPath(): string {
-  const day = new Date().toISOString().slice(0, 10);
-  return path.join(LOGS_DIR, `daemon-${day}.log`);
+  return dailyDaemonLogPath(LOGS_DIR);
 }
 
 /** Fails when the running daemon speaks a different IPC version than this CLI. */
@@ -58,70 +54,23 @@ export function assertProtocol(status: StatusResponse): void {
  * Probes `/status` directly over `SOCKET_PATH` without triggering auto-start.
  * Returns `null` when the socket is absent or refuses connection.
  */
-export async function probeMcDaemonStatus(): Promise<StatusResponse | null> {
-  if (!(await pathExists(SOCKET_PATH))) {
-    return null;
-  }
-  let response: Response;
-  try {
-    response = await fetch("http://daemon/status", {
-      unix: SOCKET_PATH,
-      signal: AbortSignal.timeout(3000),
-    });
-  } catch {
-    return null;
-  }
-  if (!response.ok) {
-    throw new Error(
-      `mc daemon status failed (HTTP ${String(response.status)})`,
-    );
-  }
-  return StatusResponseSchema.parse(await response.json());
+export function probeMcDaemonStatus(): Promise<StatusResponse | null> {
+  return probeUnixDaemonStatus({
+    socketPath: SOCKET_PATH,
+    label: "mc daemon",
+    parse: (raw) => StatusResponseSchema.parse(raw),
+  });
 }
 
 /** Removes leftover `daemon.sock` / `state.json` when no live daemon owns them. */
-export async function cleanDeadMcDaemonFiles(): Promise<boolean> {
-  const state = await readDaemonState();
-  if (state !== null && (await daemonRunning(state.pid, DAEMON_ENTRY))) {
-    return false;
-  }
-  if ((await probeMcDaemonStatus()) !== null) {
-    return false;
-  }
-  await rm(SOCKET_PATH, { force: true });
-  await rm(STATE_PATH, { force: true });
-  return true;
-}
-
-async function waitForRunningDaemonStatus(
-  waitMs: number,
-): Promise<StatusResponse | null> {
-  const deadline = Date.now() + waitMs;
-  while (Date.now() < deadline) {
-    const status = await probeMcDaemonStatus();
-    if (status !== null) {
-      return status;
-    }
-    await Bun.sleep(150);
-  }
-  return null;
-}
-
-async function attachIfRunning(): Promise<StatusResponse | null> {
-  const immediate = await probeMcDaemonStatus();
-  if (immediate !== null) {
-    assertProtocol(immediate);
-    return immediate;
-  }
-  const existing = await readDaemonState();
-  if (existing !== null && (await daemonRunning(existing.pid, DAEMON_ENTRY))) {
-    const settled = await waitForRunningDaemonStatus(5000);
-    if (settled !== null) {
-      assertProtocol(settled);
-      return settled;
-    }
-  }
-  return null;
+export function cleanDeadMcDaemonFiles(): Promise<boolean> {
+  return cleanDeadDaemonFiles({
+    socketPath: SOCKET_PATH,
+    statePath: STATE_PATH,
+    marker: DAEMON_ENTRY,
+    readState: readDaemonState,
+    probeStatus: probeMcDaemonStatus,
+  });
 }
 
 /**
@@ -135,7 +84,12 @@ export function ensureMcDaemon(
   return withDaemonStartLock(
     { lockPath: START_LOCK_PATH, timeoutMs: STARTUP_TIMEOUT_MS + 5000 },
     async () => {
-      const attached = await attachIfRunning();
+      const attached = await attachRunningDaemon({
+        marker: DAEMON_ENTRY,
+        readState: readDaemonState,
+        probeStatus: probeMcDaemonStatus,
+        validate: assertProtocol,
+      });
       if (attached !== null) {
         return { status: attached, started: false };
       }
@@ -183,11 +137,12 @@ export function ensureMcDaemon(
         assertProtocol(status);
         return { status, started: true };
       } catch (error) {
-        if (child.exitCode === null) {
-          await terminateDaemonChild(child.pid, { graceMs: 2000 });
-        }
-        await rm(SOCKET_PATH, { force: true });
-        await rm(STATE_PATH, { force: true });
+        await cleanupFailedDaemonStart({
+          pid: child.pid,
+          exitCode: child.exitCode,
+          socketPath: SOCKET_PATH,
+          statePath: STATE_PATH,
+        });
         throw error;
       } finally {
         child.stderr.destroy();
@@ -237,30 +192,14 @@ export async function awaitDaemonReady(
   );
 }
 
-export async function stopMcDaemon(): Promise<void> {
-  const state = await readDaemonState();
-  let statusPid: number | undefined;
-  const status = await probeMcDaemonStatus().catch(() => null);
-  if (status !== null) {
-    statusPid = status.pid;
-    try {
-      await fetch("http://daemon/shutdown", {
-        unix: SOCKET_PATH,
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: "{}",
-        signal: AbortSignal.timeout(3000),
-      });
-    } catch {
-      // Dead or closing socket: fall through to identity-checked PID stop.
-    }
-  }
+export function stopMcDaemon(): Promise<void> {
   // Shutdown removes non-kept sandboxes first, which takes a few seconds.
-  await stopDaemonPid(state?.pid ?? null, {
-    statusPid,
+  return shutdownUnixDaemon({
+    socketPath: SOCKET_PATH,
+    statePath: STATE_PATH,
     marker: DAEMON_ENTRY,
     waitMs: 30_000,
+    readState: readDaemonState,
+    probeStatus: probeMcDaemonStatus,
   });
-  await rm(SOCKET_PATH, { force: true });
-  await rm(STATE_PATH, { force: true });
 }
