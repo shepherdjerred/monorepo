@@ -1,7 +1,7 @@
 // Context menus (Herdr's items). Opened as a popup with
 // props { tab: "pane" | "tab" | "space" | "agent" | "subagent" | "global", target }.
 // ↑/↓ move, Enter runs, Esc closes. An item is [label, command, args];
-// "worktree" opens the my-worktree dialog; "priority" opens an inline priority list.
+// "worktree" opens my-worktree, "takeover"/"migrate" opens my-takeover, and "priority" opens an inline priority list.
 
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
@@ -14,6 +14,7 @@ import {
   keys,
   terminals,
   spaces,
+  machines,
   panes,
   agents,
   shared,
@@ -21,6 +22,72 @@ import {
   checking,
   exec,
 } from "herdr";
+
+const PROVIDER = {
+  "claude-code": "claude-code",
+  claude: "claude-code",
+  codex: "codex",
+  antigravity: "antigravity",
+  agy: "antigravity",
+  gemini: "antigravity",
+  cursor: "cursor",
+  "cursor-agent": "cursor",
+  grok: "grok",
+  "grok-build": "grok",
+  kimi: "kimi",
+  muse: "muse",
+};
+
+function fromArgv(argv) {
+  const list = argv ?? [];
+  const word = (a) => (a ?? "").replace(/^[&\s'"]+/, "").split(/['"\s]/)[0];
+  const leaf = (w) =>
+    w
+      .split(/[\\/]/)
+      .pop()
+      .replace(/\.exe$/i, "")
+      .toLowerCase();
+  const head = list.includes("--") ? list.slice(0, list.indexOf("--")) : list;
+  const brimAt = head.findIndex(
+    (a, i) =>
+      leaf(word(a)) === "brim" ||
+      (leaf(word(a)) === "toolkit" && head[i + 1] === "brim"),
+  );
+  if (brimAt >= 0) {
+    for (let i = brimAt + 1; i < head.length; i++) {
+      if (head[i] === "--provider")
+        return PROVIDER[(head[i + 1] ?? "").toLowerCase()];
+      if (head[i]?.startsWith("--provider="))
+        return PROVIDER[head[i].slice("--provider=".length).toLowerCase()];
+    }
+  }
+  if (
+    /^-[a-z]*c$/i.test(head[1] ?? "") &&
+    head[4] &&
+    leaf(word(head[3])) === leaf(word(head[0]))
+  ) {
+    const wrapped = PROVIDER[leaf(word(head[4]))];
+    if (wrapped) return wrapped;
+  }
+  return list
+    .map(word)
+    .filter((w, i) => i === 0 || /[\\/]/.test(w))
+    .map((w) => PROVIDER[leaf(w)])
+    .find(Boolean);
+}
+
+function findAgentPane(tabId, all = terminals(), ps = panes()) {
+  const argvOf = new Map(all.map((k) => [k.address, k.argv ?? []]));
+  const inTab = ps.filter((pane) => pane.tab === tabId && pane.terminal);
+  const isAgentPane = (pane) =>
+    Boolean(
+      pane.program?.agent || pane.status || fromArgv(argvOf.get(pane.terminal)),
+    );
+  return (
+    inTab.find((pane) => pane.focused && isAgentPane(pane)) ??
+    inTab.find(isAgentPane)
+  );
+}
 
 const PRIORITIES = [
   { id: "p0", label: "P0", tone: "blocked" },
@@ -78,6 +145,17 @@ function isPinned(address) {
   return Boolean(term?.labels?.["herdr.pinned"]);
 }
 
+const canMigrate = () =>
+  machines().length > 1 ||
+  machines().some((m) => m.name !== null && m.layout !== "unavailable");
+
+const takeoverItems = (targetProps) => [
+  ["Take over…", "takeover", targetProps],
+  ...(canMigrate()
+    ? [["Move to machine…", "migrate", { ...targetProps, pickMachine: true }]]
+    : []),
+];
+
 function items(p, git) {
   p = p ?? {};
   const tg = p.target ?? {};
@@ -85,14 +163,41 @@ function items(p, git) {
     case "pane": {
       // A kept sub-agent can go back under its parent, still running.
       const all = terminals();
+      const ps = panes();
+      const pane = ps.find((entry) => entry.pane === tg.pane);
+      const inTab = Boolean(pane);
       const term = all.find((t) => t.address === tg.terminal);
       const parent = term?.parent && all.find((t) => t.address === term.parent);
       // Once they go to the program, Shift+right-click still opens this menu.
       const toProgram = term?.labels?.["herdr.right-click"] === "program";
+      const isAgent = Boolean(
+        inTab &&
+        term &&
+        (pane.program?.agent ||
+          pane.status ||
+          term.program?.agent ||
+          term.status ||
+          fromArgv(term.argv)),
+      );
       return [
-        ["Split right", "pane.split", { direction: "right", pane: tg.pane }],
-        ["Split down", "pane.split", { direction: "down", pane: tg.pane }],
-        ["Zoom", "pane.zoom", { pane: tg.pane }],
+        ...(inTab
+          ? [
+              [
+                "Split right",
+                "pane.split",
+                { direction: "right", pane: tg.pane },
+              ],
+              [
+                "Split down",
+                "pane.split",
+                { direction: "down", pane: tg.pane },
+              ],
+              ["Zoom", "pane.zoom", { pane: tg.pane }],
+            ]
+          : []),
+        ...(isAgent
+          ? takeoverItems({ terminal: term.address, pane: tg.pane })
+          : []),
         ...(term
           ? [
               toProgram
@@ -117,16 +222,42 @@ function items(p, git) {
               ],
             ]
           : []),
-        ["Close pane", "pane.close", { pane: tg.pane }],
+        ...(inTab ? [["Close pane", "pane.close", { pane: tg.pane }]] : []),
       ];
     }
-    case "tab":
+    case "tab": {
+      const agentPane = findAgentPane(tg.id);
       return [
         ["Rename", "tab.rename", { id: tg.id }],
         ["New tab", "tab.new", { space: tg.space }],
+        ...(agentPane
+          ? takeoverItems({
+              terminal: agentPane.terminal,
+              pane: agentPane.pane,
+              tab: tg.id,
+              space: tg.space,
+            })
+          : []),
         ["Close", "tab.close", { id: tg.id }],
       ];
-    case "space":
+    }
+    case "space": {
+      const all = terminals();
+      const ps = panes();
+      const spaceObj = spaces().find((s) => s.id === tg.id);
+      const tabs = spaceObj?.tabs ?? [];
+      const orderedTabs = [
+        ...tabs.filter((c) => c.active),
+        ...tabs.filter((c) => !c.active),
+      ];
+      let spaceAgent = null;
+      for (const c of orderedTabs) {
+        const found = findAgentPane(c.id, all, ps);
+        if (found) {
+          spaceAgent = { ...found, tab: c.id };
+          break;
+        }
+      }
       return [
         ["Rename", "space.rename", { id: tg.id }],
         ...(git
@@ -144,8 +275,17 @@ function items(p, git) {
               ],
             ]
           : []),
+        ...(spaceAgent
+          ? takeoverItems({
+              terminal: spaceAgent.terminal,
+              pane: spaceAgent.pane,
+              tab: spaceAgent.tab,
+              space: tg.id,
+            })
+          : []),
         ["Close", "space.close", { id: tg.id }],
       ];
+    }
     case "agent": {
       const pinned = isPinned(tg.address);
       const pri = PRIORITIES.find((k) => k.id === priorityOf(tg.address));
@@ -156,6 +296,12 @@ function items(p, git) {
       const space = tg.space ? spaces().find((s) => s.id === tg.space) : null;
       const spaceTabs = space?.tabs?.length ?? 0;
       return [
+        ...takeoverItems({
+          terminal: tg.address,
+          pane: tg.pane,
+          tab: tg.tab,
+          space: tg.space,
+        }),
         ...(tg.tab ? [["Rename tab", "tab.rename", { id: tg.tab }]] : []),
         ...(tg.space
           ? [["Rename space", "space.rename", { id: tg.space }]]
@@ -202,6 +348,7 @@ function items(p, git) {
         ...(tg.hasPane
           ? [
               ["Focus pane", "pane.focus", { terminal: tg.address }],
+              ...takeoverItems({ terminal: tg.address }),
               ["Park under parent", "terminal.park", { terminal: tg.address }],
             ]
           : [
@@ -223,6 +370,8 @@ function items(p, git) {
 }
 
 function menuIcon(command, args) {
+  if (command === "takeover") return "mods/my-takeover/takeover.svg";
+  if (command === "migrate") return "mods/workspace-chrome/server.svg";
   if (command === "priority") return "mods/my-agents/flag.svg";
   if (command === "terminal.pin")
     return `mods/workspace-chrome/${args?.pinned === false ? "pin-off" : "pin"}.svg`;
@@ -251,6 +400,12 @@ const isCloseCmd = (cmd) => cmd.endsWith(".close") || cmd === "terminal.kill";
 
 // The key bound to a command, for the hint on the right.
 function shortcut(name, args) {
+  if (name === "takeover") {
+    const k = keys().find(
+      (b) => b.section === "global" && b.action === "mod.open:my-takeover",
+    );
+    return k ? k.keys : "";
+  }
   // `pane.split:right` binds pane.split with { direction: "right" }.
   const value = args && Object.values(args)[0];
   const k = keys().find(
@@ -319,6 +474,14 @@ export default class Menu extends View {
           : it[2].action === "new"
             ? { width: 640, height: 520 }
             : { width: 440, height: 260 }),
+        props: it[2],
+      });
+    else if (it[1] === "takeover" || it[1] === "migrate")
+      openOverlay({
+        mod: "my-takeover",
+        kind: "dialog",
+        width: 560,
+        height: 500,
         props: it[2],
       });
     else run(it[1], it[2]);

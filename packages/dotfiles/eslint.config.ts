@@ -19,6 +19,8 @@ export default [
       "bin/codex_theme_restart_*.ts",
       "bin/executable_herdr_new_worktree.ts",
       "bin/herdr_new_worktree_core.ts",
+      "bin/executable_herdr_takeover.ts",
+      "bin/herdr_takeover_core.ts",
     ],
     rules: {
       "unicorn/filename-case": [

@@ -20,6 +20,7 @@ const shared = [
   "mods/my-spaces",
   "mods/my-status",
   "mods/my-tabs",
+  "mods/my-takeover",
   "mods/my-worktree",
   "mods/spaces-nobranch",
 ];

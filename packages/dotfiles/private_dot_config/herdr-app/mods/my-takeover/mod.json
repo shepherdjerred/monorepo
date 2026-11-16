@@ -1,0 +1,9 @@
+{
+  "place": "none",
+  "title": "Take over session",
+  "overlay": {
+    "kind": "dialog",
+    "width": 560,
+    "height": 500
+  }
+}

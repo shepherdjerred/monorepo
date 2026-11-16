@@ -181,5 +181,6 @@
     "color": "border"
   },
   "titlebar": "none",
+  "terminal_menu": "my-menu",
   "traffic_lights": [12, 16]
 }

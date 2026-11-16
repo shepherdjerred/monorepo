@@ -16,6 +16,7 @@ import {
 } from "#lib/brim/launch.ts";
 import { findRequested, formatPickerRow } from "#lib/brim/selection.ts";
 import {
+  excludeProviders,
   rankSnapshots,
   withKnownProviders,
   withoutQuotaData,
@@ -30,8 +31,9 @@ Ranks live Brim quota snapshots (5-hour gate, then budget usage with pacing)
 and runs the pick's agent command from PATH (the wrappers in
 ~/.local/share/agent-bin own credential scrubbing and bypass flags):
 
-  toolkit brim [--provider <id>] [--min-5h <pct>] [--dry-run] [-- <agent args...>]
-  toolkit brim --json [--min-5h <pct>]
+  toolkit brim [--provider <id>] [--exclude <id>] [--min-5h <pct>] [--dry-run] [-- <agent args...>]
+  toolkit brim --json [--exclude <id>] [--min-5h <pct>]
+  toolkit brim takeover [<history-id>] [--herdr] [--prepare --json]
 
 In a terminal, brim shows an interactive list: move with ↑↓, spawn with
 Enter, cancel with Esc.
@@ -40,6 +42,7 @@ Options:
   --provider <id>     Skip picking; use this provider (id or display name),
                       even without usable quota data or a Brim cache on this
                       machine (warns)
+  --exclude <id>      Exclude provider(s) from ranking (repeatable or comma-separated)
   --min-5h <pct>      Minimum 5-hour remaining percent to stay available (default 10)
   --dry-run           Print the resolved command path and args without spawning
   --no-interactive    Never prompt; take the top-ranked provider
@@ -49,6 +52,7 @@ Options:
 
 type BrimOptions = {
   readonly provider: string | undefined;
+  readonly exclude: readonly string[];
   readonly minRemaining: number;
   readonly dryRun: boolean;
   readonly noInteractive: boolean;
@@ -91,6 +95,15 @@ function availableEntries(result: RankResult): RankedEntry[] {
   return [...result.ranked, ...result.other];
 }
 
+function parseExcludeList(raw: readonly string[] | undefined): string[] {
+  return raw === undefined
+    ? []
+    : raw
+        .flatMap((item) => item.split(","))
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+}
+
 function parseOptions(args: string[]): {
   help: boolean;
   options: BrimOptions;
@@ -101,6 +114,7 @@ function parseOptions(args: string[]): {
     allowPositionals: true,
     options: {
       provider: { type: "string" },
+      exclude: { type: "string", multiple: true },
       "min-5h": { type: "string", default: "10" },
       "dry-run": { type: "boolean", default: false },
       "no-interactive": { type: "boolean", default: false },
@@ -121,6 +135,7 @@ function parseOptions(args: string[]): {
     help: parsed.values.help,
     options: {
       provider: parsed.values.provider,
+      exclude: parseExcludeList(parsed.values.exclude),
       minRemaining,
       dryRun: parsed.values["dry-run"],
       noInteractive: parsed.values["no-interactive"],
@@ -236,6 +251,7 @@ export async function handleBrimCommand(args: string[]): Promise<void> {
     }
     result = withoutQuotaData("no Brim snapshot cache on this machine");
   }
+  result = excludeProviders(result, options.exclude);
 
   if (options.json) {
     console.log(

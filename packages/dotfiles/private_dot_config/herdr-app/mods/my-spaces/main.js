@@ -587,8 +587,8 @@ export default class Spaces extends View {
     openOverlay({
       mod: "my-menu",
       kind: "popup",
-      width: 200,
-      height: 260,
+      width: 220,
+      height: 330,
       props: { tab: "space", target: { id: w.id } },
     });
   }

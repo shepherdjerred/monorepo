@@ -71,16 +71,29 @@ function lineTime(
 
 type TranscriptEntry = z.infer<typeof TranscriptLineSchema>;
 
+function unwrapAntigravityUserInput(raw: string): string {
+  const trimmed = raw.trimStart();
+  if (!trimmed.startsWith("<USER_REQUEST>")) {
+    return raw;
+  }
+  const endIndex = trimmed.indexOf("</USER_REQUEST>");
+  return endIndex === -1
+    ? raw
+    : trimmed.slice("<USER_REQUEST>".length, endIndex).trim();
+}
+
 function transcriptEntryMessages(
   entry: TranscriptEntry,
   createdAt: string | null,
 ): HistoryMessage[] {
   const content = entry.content ?? "";
   switch (entry.type) {
-    case "USER_INPUT":
-      return content.length > 0
-        ? [{ role: "user", text: content, createdAt }]
+    case "USER_INPUT": {
+      const userText = unwrapAntigravityUserInput(content);
+      return userText.length > 0
+        ? [{ role: "user", text: userText, createdAt }]
         : [];
+    }
     case "PLANNER_RESPONSE":
       return [
         ...(content.length > 0
@@ -156,7 +169,15 @@ export async function readAntigravityTranscript(
 export type AntigravitySummary = {
   readonly title: string | null;
   readonly workspace: string | null;
+  readonly isSubagent: boolean;
 };
+
+const ColumnInfoSchema = z.object({ name: z.string() });
+const ExtendedSummaryRowSchema = SummaryRowSchema.extend({
+  conversation_id: z.string(),
+  parent_conversation_id: z.string().nullish(),
+  nesting_depth: z.number().nullish(),
+});
 
 function workspaceFromUris(
   raw: string | null,
@@ -187,32 +208,77 @@ function workspaceFromUris(
   return first.startsWith("file://") ? fileURLToPath(first) : first;
 }
 
-/** Title and first workspace per conversation id; empty when the root has no summaries db. */
+function summarySelectSql(database: Database): string {
+  const cols = new Set(
+    rows(
+      database,
+      "PRAGMA table_info(conversation_summaries)",
+      ColumnInfoSchema,
+    ).map((col) => col.name),
+  );
+  const parentExpr = cols.has("parent_conversation_id")
+    ? "parent_conversation_id"
+    : "NULL AS parent_conversation_id";
+  const depthExpr = cols.has("nesting_depth")
+    ? "nesting_depth"
+    : "0 AS nesting_depth";
+  return `SELECT conversation_id, title, workspace_uris, ${parentExpr}, ${depthExpr} FROM conversation_summaries WHERE conversation_id IS NOT NULL`;
+}
+
+function populateSummariesFromRows(
+  summaryRows: readonly z.infer<typeof ExtendedSummaryRowSchema>[],
+): ReadonlyMap<string, AntigravitySummary> {
+  const summaries = new Map<string, AntigravitySummary>();
+  const childWorkspaces = new Map<string, string>();
+  for (const row of summaryRows) {
+    const parentId = row.parent_conversation_id ?? "";
+    const isSubagent = (row.nesting_depth ?? 0) > 0 || parentId.length > 0;
+    const workspace = workspaceFromUris(
+      row.workspace_uris,
+      row.conversation_id,
+    );
+    if (
+      workspace !== null &&
+      parentId.length > 0 &&
+      !childWorkspaces.has(parentId)
+    ) {
+      childWorkspaces.set(parentId, workspace);
+    }
+    summaries.set(row.conversation_id, {
+      title: row.title === null || row.title.length === 0 ? null : row.title,
+      workspace,
+      isSubagent,
+    });
+  }
+  for (const [parentId, fallbackWorkspace] of childWorkspaces) {
+    const existing = summaries.get(parentId);
+    if (existing?.workspace === null) {
+      summaries.set(parentId, { ...existing, workspace: fallbackWorkspace });
+    }
+  }
+  return summaries;
+}
+
+/** Title, first workspace, and subagent flag per conversation id; empty when the root has no summaries db. */
 export async function readAntigravitySummaries(
   root: string,
 ): Promise<ReadonlyMap<string, AntigravitySummary>> {
   const filePath = antigravitySummariesPath(root);
-  const summaries = new Map<string, AntigravitySummary>();
   if (!(await pathExists(filePath))) {
-    return summaries;
+    return new Map();
   }
   const database: Database = await readImmutableDatabase(
     filePath,
     "Antigravity summaries",
   );
   try {
-    for (const row of rows(
+    const summaryRows = rows(
       database,
-      "SELECT conversation_id, title, workspace_uris FROM conversation_summaries WHERE conversation_id IS NOT NULL",
-      SummaryRowSchema.extend({ conversation_id: z.string() }),
-    )) {
-      summaries.set(row.conversation_id, {
-        title: row.title === null || row.title.length === 0 ? null : row.title,
-        workspace: workspaceFromUris(row.workspace_uris, row.conversation_id),
-      });
-    }
+      summarySelectSql(database),
+      ExtendedSummaryRowSchema,
+    );
+    return populateSummariesFromRows(summaryRows);
   } finally {
     database.close();
   }
-  return summaries;
 }

@@ -60,6 +60,7 @@
     "f2": "tab.rename",
     "shift-f2": "space.rename",
     "ctrl-alt-x": "my-agents.toggle-exhausted",
+    "ctrl-alt-o": "mod.open:my-takeover",
     "ctrl-alt-left": "my-tabs.back",
     "ctrl-alt-right": "my-tabs.forward"
   },

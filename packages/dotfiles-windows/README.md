@@ -79,7 +79,8 @@ layout, the Catppuccin themes, and the `my-*`, `agents-filter` and
 `spaces-nobranch` mods. Select the layout once with
 `herdr-app do layout.switch '{"name":"mine"}'`. `settings.json` and `keys.json`
 are Windows-specific. The key bindings use Ctrl and Alt in place of Cmd, and
-add `ctrl-alt-x` to toggle exhausted agents and `ctrl-alt-left` and
+add `ctrl-alt-x` to toggle exhausted agents, `ctrl-alt-o` to take over the
+focused agent session, and `ctrl-alt-left` and
 `ctrl-alt-right` for tab history.
 
 The shared files are real copies of
@@ -90,12 +91,16 @@ folder here. `packages/dotfiles/scripts/herdr-windows-copy.test.ts` fails when
 a copy differs. `herdr-app check` writes `gpui-kit.d.ts` and `jsconfig.json`
 into a mod folder; they are generated and never committed.
 
-The `my-worktree` dialog's New worktree runs the shared worker
-`~/bin/herdr-new-worktree.ts`, a symlink into
-`../dotfiles/bin/executable_herdr_new_worktree.ts` that needs `bun` on PATH.
+The `my-worktree` dialog's New worktree and `my-takeover` dialog (both
+same-machine provider takeover and cross-machine session migration via
+**Move to machine…** or the `Alt+D` `Machine` pill, guarded by a clean, pushed
+`origin` git preflight) run the shared workers `~/bin/herdr-new-worktree.ts`
+and `~/bin/herdr-takeover.ts`, symlinks into `../dotfiles/bin/` that need `bun`
+on PATH.
 The first naming call asks 1Password to approve reading the OpenAI key; a
 failure posts a Windows toast. See
-[New worktree dialog](../dotfiles/README.md#new-worktree-dialog).
+[New worktree dialog](../dotfiles/README.md#new-worktree-dialog) and
+[Session takeover](../dotfiles/README.md#session-takeover).
 
 ## Changing a managed file
 

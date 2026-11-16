@@ -96,6 +96,51 @@ request in `HERDR_WORKTREE_REQUEST`. A failure there posts a Windows toast and
 writes no unified log. [`../dotfiles-windows`](../dotfiles-windows/README.md)
 links the script into `~/bin`.
 
+## Session takeover
+
+The Herdr `my-takeover` dialog hands a stalled or quota-exhausted coding-agent
+session to another Brim-ranked provider in the same space, or migrates the
+session to another Herdr machine. Open it from the global keybind (`cmd-shift-o`
+on macOS, `ctrl-alt-o` on Windows), the takeover button on an agent row in
+`my-agents` (always shown when a provider is at its limit, and on hover
+otherwise), or **Take over…** / **Move to machine…** in a pane, tab, space, or
+agent context menu (`my-menu`).
+
+On the same machine, the dialog excludes the current terminal's provider from
+the top choices. Choosing another target machine via **Move to machine…** or the
+`Machine` pill (`⌥D` on macOS, `Alt+D` on Windows) switches the dialog to
+cross-machine migration: it keeps the current provider selectable (and
+pre-selects it when under quota), runs a live git preflight on the source
+checkout to block dirty or unpushed work, and offers the same ⌥M / ⌥O / ⌥E
+mode, model, and effort controls as `my-worktree` plus an optional handoff note.
+Enter closes the dialog immediately and starts `~/bin/herdr-takeover` detached:
+
+1. It runs `brim takeover --prepare --json --terminal <addr>` (locally or on the
+   source machine via `hc exec --on <machine>`) to extract the structured
+   transcript and write a handoff bundle before changing any Herdr UI state. On
+   Windows spaces (`profile` launcher), it falls back to `hc read --lines 200`
+   and writes a local handoff markdown file. If preparation fails, the source
+   tab or pane stays untouched.
+2. On the same machine, a single-pane tab opens the replacement tab (`tab.new`),
+   moves it into the original tab's index (`tab.move`), and only then closes the
+   old tab (`tab.close`), so a single-tab space never closes; a split tab splits
+   beside the stalled pane (`pane.split`, passing the handoff prompt in `argv`)
+   and closes only the stalled pane (`pane.close`). Across machines, the worker
+   verifies a clean, pushed git checkout, fetches the branch from `origin` into
+   a checkout or worktree on the target machine (or verifies a matching folder
+   for non-git sessions), transfers the handoff bundle, opens the target space
+   and agent, and closes the source pane, tab, or single-tab space once live.
+   For Kimi, it waits for `idle` and sends the prompt via `hc send`.
+
+Every run appends a summary line (without prompt or note text) to
+`~/.local/state/herdr-takeover/events.jsonl` and to the macOS unified log, and
+posts a macOS or Windows notification on failure. `~/bin/herdr-takeover --status`
+prints the last runs and exits non-zero when the latest failed:
+
+```bash
+/usr/bin/log show --last 1d --style compact --predicate 'eventMessage CONTAINS "herdr-takeover"'
+```
+
 ## Codex appearance changes
 
 macOS switches between light and dark at local sunrise and sunset. Herdr and

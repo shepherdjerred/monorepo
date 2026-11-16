@@ -1317,17 +1317,54 @@ machine that spent them already exports them.
 starts the least-used provider:
 
 ```bash
-brim [--provider <id>] [--min-5h <pct>] [--dry-run] [-- <agent args...>]
-brim --json
+brim [--provider <id>] [--exclude <id>] [--min-5h <pct>] [--dry-run] [-- <agent args...>]
+brim --json [--exclude <id>]
 ```
 
 Each provider maps to one agent wrapper in `~/.local/share/agent-bin`:
 `claude`, `codex`, `agy`, `cursor-agent`, `grok`, `kimi`, and `muse`. The
 wrappers own credential scrubbing, the agent git identity, and bypass flags;
 brim adds none of its own. Brim finds them by that fixed path, never `PATH`, so
-a launcher with a stale `PATH` cannot start a bare agent binary. Args after
-`--` pass through verbatim without a shell. An unmapped provider or a missing
-wrapper is an error, and `--dry-run` prints the resolved wrapper path and args.
+a launcher with a stale `PATH` cannot start a bare agent binary. `--exclude`
+(repeatable or comma-separated) moves matching providers into `unavailable` with
+reason `"excluded"`. Args after `--` pass through verbatim without a shell. An
+unmapped provider or a missing wrapper is an error, and `--dry-run` prints the
+resolved wrapper path and args.
+
+#### Brim takeover
+
+`brim takeover` (also `toolkit brim takeover`) hands off an interrupted or
+quota-exhausted agent session to another Brim subscription:
+
+```bash
+brim takeover [<history-id>] [--from <provider>] [--to <provider>] [--note <text>] [-- <agent args...>]
+brim takeover [<history-id>] --herdr [--terminal <addr>] [--keep-open] [--to <provider>]
+brim takeover [<history-id>] --prepare [--json] [--terminal <addr>] [--cwd <dir>] [--output-dir <dir>]
+```
+
+Session lookup accepts an explicit `<history-id>` from `toolkit history` or
+resolves the active workspace session from `--cwd` / `--terminal` (using
+`hc get <addr> --json` for `cwd`, `status.app` / `argv` provider inference,
+`created_ms`, and initial-prompt hash tie-breaking, falling back to a direct
+source scan when the history daemon has not yet indexed a fresh session).
+
+Each takeover writes a `0600` Markdown handoff file under
+`~/.toolkit/takeovers/` (`0700`) with session metadata, collapsed tool-call
+summaries, and bounded dialogue (~120,000 characters, keeping the opening
+prompt and most recent turns while pointing at the raw transcript when middle
+turns are omitted).
+
+- `--prepare --json` writes the handoff file and prints the `PreparedTakeover`
+  JSON payload without launching an agent.
+- Standalone launch excludes the source provider (plus any `--exclude` entries),
+  picks a target provider interactively or via `--to` / `--no-interactive`, and
+  passes the takeover prompt (`--` for Claude Code, Codex, Cursor, Grok, and
+  Muse; `-i` for Antigravity; clipboard fallback for Kimi).
+- `--herdr` defaults `--terminal` to `$HC_TERMINAL_ID`, opens the replacement
+  tab or split pane in the same Herdr space before closing the old tab/pane
+  (skipping the close when `--keep-open` is passed, and detaching self-close
+  when run from inside the replaced terminal), and delivers Kimi's prompt via
+  `hc send` once idle.
 
 #### Brim sync
 

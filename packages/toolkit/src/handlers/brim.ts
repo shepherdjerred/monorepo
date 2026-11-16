@@ -9,6 +9,12 @@ export async function handleBrimCommand(args: string[]): Promise<void> {
     process.exitCode = await handleCaptureCommand(args.slice(1), ["brim"]);
     return;
   }
+  if (args[0] === "takeover") {
+    const { handleTakeoverCommand } =
+      await import("#commands/brim/takeover.ts");
+    process.exitCode = await handleTakeoverCommand(args.slice(1), ["brim"]);
+    return;
+  }
   const { handleBrimCommand: handle } = await import("#commands/brim/brim.ts");
   await handle(args);
 }
