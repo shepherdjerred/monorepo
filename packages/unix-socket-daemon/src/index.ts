@@ -253,9 +253,10 @@ export async function stopDaemonPid(
 }
 
 /**
- * Serializes concurrent daemon auto-starts across processes via an atomic
- * `<lockPath>` directory containing `owner.pid` + timestamp. Stale locks
- * (`!pidAlive(ownerPid)` or lock age exceeding `timeoutMs`) are broken safely.
+ * Serializes concurrent daemon lifecycle operations across processes via an
+ * atomic `<lockPath>` directory containing `owner.pid` + process identity.
+ * Stale locks from dead or recycled PIDs are broken safely without stealing a
+ * live owner's lock.
  */
 export function withDaemonStartLock<T>(
   options: DaemonStartLockOptions,

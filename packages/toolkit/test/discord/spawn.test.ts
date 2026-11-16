@@ -2,12 +2,20 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
-import { pathExists } from "@shepherdjerred/unix-socket-daemon";
+import {
+  daemonRunning,
+  pathExists,
+  pidAlive,
+} from "@shepherdjerred/unix-socket-daemon";
 import {
   awaitDiscordDaemonReady,
   discordDaemonLogPath,
   hasAutoStartDiscordTokens,
 } from "#lib/discord/spawn.ts";
+import {
+  attachRunningDaemon,
+  shutdownUnixDaemon,
+} from "#lib/unix-daemon-client.ts";
 
 describe("discord daemon spawn helpers", () => {
   let tempDir = "";
@@ -84,5 +92,57 @@ describe("discord daemon spawn helpers", () => {
     expect(stdout).toContain("Discord daemon is not running.");
     expect(await pathExists(socketPath)).toBe(false);
     expect(await pathExists(statePath)).toBe(false);
+  });
+
+  test("attachRunningDaemon fails loudly when a live matching daemon stays unresponsive", async () => {
+    const sleeper = Bun.spawn(["sleep", "30"]);
+    try {
+      await expect
+        .poll(() => daemonRunning(sleeper.pid, "sleep 30"))
+        .toBe(true);
+      await expect(
+        attachRunningDaemon({
+          label: "Discord daemon",
+          marker: "sleep 30",
+          readState: () => Promise.resolve({ pid: sleeper.pid }),
+          probeStatus: () => Promise.resolve(null),
+          settleMs: 120,
+        }),
+      ).rejects.toThrow(/is running but unresponsive/);
+    } finally {
+      sleeper.kill();
+      await sleeper.exited;
+    }
+  });
+
+  test("shutdownUnixDaemon stops the responding statusPid even when saved state is missing", async () => {
+    tempDir = await mkdtemp(path.join(tmpdir(), "toolkit-daemon-stop-"));
+    const socketPath = path.join(tempDir, "daemon.sock");
+    const statePath = path.join(tempDir, "state.json");
+    const lockPath = `${socketPath}.lock`;
+    await writeFile(socketPath, "placeholder", "utf8");
+
+    const sleeper = Bun.spawn(["sleep", "30"]);
+    try {
+      await expect
+        .poll(() => daemonRunning(sleeper.pid, "sleep 30"))
+        .toBe(true);
+      await shutdownUnixDaemon({
+        lockPath,
+        socketPath,
+        statePath,
+        marker: "sleep 30",
+        waitMs: 120,
+        readState: () => Promise.resolve(null),
+        probeStatus: () => Promise.resolve({ pid: sleeper.pid }),
+      });
+      expect(pidAlive(sleeper.pid)).toBe(false);
+      expect(await pathExists(socketPath)).toBe(false);
+    } finally {
+      if (sleeper.exitCode === null) {
+        sleeper.kill();
+      }
+      await sleeper.exited;
+    }
   });
 });

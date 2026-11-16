@@ -487,7 +487,7 @@ describe("withDaemonStartLock concurrency", () => {
     expect(await pathExists(lockPath)).toBe(false);
   });
 
-  test("breaks stale locks from dead PIDs and expired timestamps", async () => {
+  test("breaks stale locks from dead or recycled PIDs without stealing live owners", async () => {
     const dir = await createTempDir("usd-stale-lock-");
     const lockPath = path.join(dir, "daemon.sock.lock");
 
@@ -516,16 +516,50 @@ describe("withDaemonStartLock concurrency", () => {
       JSON.stringify({
         pid: process.pid,
         timestamp: Date.now() - 5000,
-        token: "wedged-owner",
+        token: "recycled-owner",
+        identity: `${String(process.pid)}:recycled-stale-incarnation`,
       }),
       "utf8",
     );
 
-    const ranAfterExpiredLock = await withDaemonStartLock(
+    const ranAfterRecycledLock = await withDaemonStartLock(
       { lockPath, timeoutMs: 200, pollMs: 15 },
-      () => Promise.resolve("recovered-expired"),
+      () => Promise.resolve("recovered-recycled"),
     );
-    expect(ranAfterExpiredLock).toBe("recovered-expired");
+    expect(ranAfterRecycledLock).toBe("recovered-recycled");
+
+    const releaseFirst = Promise.withResolvers<boolean>();
+    const firstEntered = Promise.withResolvers<boolean>();
+    const firstRun = withDaemonStartLock(
+      { lockPath, timeoutMs: 50, pollMs: 15 },
+      async () => {
+        firstEntered.resolve(true);
+        await releaseFirst.promise;
+        return "first-owner";
+      },
+    );
+    await firstEntered.promise;
+    await Bun.sleep(100);
+    await expect(
+      withDaemonStartLock(
+        { lockPath, timeoutMs: 50, waitMs: 90, pollMs: 15 },
+        () => Promise.resolve("stole-live-lock"),
+      ),
+    ).rejects.toThrow("Timed out after 90ms waiting for daemon startup lock");
+    releaseFirst.resolve(true);
+    expect(await firstRun).toBe("first-owner");
+    expect(await pathExists(lockPath)).toBe(false);
+
+    let attempts = 0;
+    await expect(
+      withDaemonStartLock({ lockPath, timeoutMs: 1000, pollMs: 15 }, () => {
+        attempts += 1;
+        return Promise.reject(
+          Object.assign(new Error("callback EEXIST"), { code: "EEXIST" }),
+        );
+      }),
+    ).rejects.toThrow("callback EEXIST");
+    expect(attempts).toBe(1);
     expect(await pathExists(lockPath)).toBe(false);
   });
 });
@@ -553,7 +587,11 @@ describe("daemon crash and timeout recovery", () => {
     crashed.unref();
 
     if (crashedPid !== undefined) {
-      await terminateDaemonChild(crashedPid, { graceMs: 0 });
+      try {
+        process.kill(-crashedPid, "SIGKILL");
+      } catch {
+        process.kill(crashedPid, "SIGKILL");
+      }
     }
     await expect.poll(() => pidAlive(crashedPid ?? -1)).toBe(false);
 

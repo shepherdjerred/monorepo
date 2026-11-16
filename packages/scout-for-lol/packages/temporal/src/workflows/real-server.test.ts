@@ -136,6 +136,10 @@ function startServer(port: number, databasePath: string) {
   return child;
 }
 
+function hasServerStopped(server: ChildProcess): boolean {
+  return server.exitCode !== null || server.signalCode !== null;
+}
+
 async function connectEventually(
   address: string,
   server: ChildProcess,
@@ -143,10 +147,12 @@ async function connectEventually(
   const deadline = Date.now() + 20_000;
   let lastError: unknown;
   while (Date.now() < deadline) {
-    if (server.exitCode !== null) {
-      throw new Error(
-        `Temporal dev server exited with ${server.exitCode.toString()}`,
-      );
+    if (hasServerStopped(server)) {
+      const reason =
+        server.exitCode === null
+          ? `signal ${String(server.signalCode)}`
+          : server.exitCode.toString();
+      throw new Error(`Temporal dev server exited with ${reason}`);
     }
     try {
       return await Connection.connect({ address, connectTimeout: 500 });
@@ -161,7 +167,7 @@ async function connectEventually(
 }
 
 async function stopServer(server: ChildProcess): Promise<void> {
-  if (server.exitCode !== null) {
+  if (hasServerStopped(server)) {
     activeServers.delete(server);
     return;
   }
@@ -175,7 +181,7 @@ async function stopServer(server: ChildProcess): Promise<void> {
       resolve(true);
     });
   });
-  if (!exitedGracefully && server.exitCode === null) {
+  if (!exitedGracefully && !hasServerStopped(server)) {
     signalServerGroup(server, "SIGKILL");
     await new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -247,28 +253,58 @@ async function stopWorkers(workerSet: RunningWorkerSet): Promise<void> {
 }
 
 async function cleanupRuntime(): Promise<void> {
+  const errors: unknown[] = [];
+  const attempt = async (step: () => Promise<unknown>): Promise<void> => {
+    try {
+      await step();
+    } catch (error: unknown) {
+      errors.push(error);
+    }
+  };
+
   const active = runtime;
   runtime = undefined;
   if (active !== undefined) {
-    await stopWorkers(active.workers);
-    await active.nativeConnection?.close();
-    await active.connection?.close();
-    await stopServer(active.server);
-    await active.lease.release();
-    activeLeases.delete(active.lease);
-    await rm(active.directory, { recursive: true, force: true });
-    activeDirectories.delete(active.directory);
+    await attempt(() => stopWorkers(active.workers));
+    await attempt(async () => {
+      await active.nativeConnection?.close();
+    });
+    await attempt(async () => {
+      await active.connection?.close();
+    });
+    await attempt(() => stopServer(active.server));
+    await attempt(async () => {
+      await active.lease.release();
+      activeLeases.delete(active.lease);
+    });
+    await attempt(async () => {
+      await rm(active.directory, { recursive: true, force: true });
+      activeDirectories.delete(active.directory);
+    });
   }
   for (const server of activeServers) {
-    await stopServer(server);
+    await attempt(() => stopServer(server));
   }
   for (const lease of activeLeases) {
-    await lease.release();
-    activeLeases.delete(lease);
+    await attempt(async () => {
+      await lease.release();
+      activeLeases.delete(lease);
+    });
   }
   for (const dir of activeDirectories) {
-    await rm(dir, { recursive: true, force: true });
-    activeDirectories.delete(dir);
+    await attempt(async () => {
+      await rm(dir, { recursive: true, force: true });
+      activeDirectories.delete(dir);
+    });
+  }
+  if (errors.length === 1) {
+    throw errors[0];
+  }
+  if (errors.length > 1) {
+    throw new AggregateError(
+      errors,
+      "Failed to clean up Temporal test runtime",
+    );
   }
 }
 

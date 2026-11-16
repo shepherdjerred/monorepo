@@ -114,6 +114,7 @@ export function probeDiscordDaemonStatus(): Promise<StatusResponse | null> {
 /** Removes leftover `daemon.sock` / `state.json` when no live daemon owns them. */
 export function cleanDeadDiscordDaemonFiles(): Promise<boolean> {
   return cleanDeadDaemonFiles({
+    lockPath: START_LOCK_PATH,
     socketPath: SOCKET_PATH,
     statePath: STATE_PATH,
     marker: DISCORD_DAEMON_MARKER,
@@ -187,9 +188,10 @@ export function ensureDiscordDaemon(
   }
 
   return withDaemonStartLock(
-    { lockPath: START_LOCK_PATH, timeoutMs: STARTUP_TIMEOUT_MS + 5000 },
+    { lockPath: START_LOCK_PATH, timeoutMs: STARTUP_TIMEOUT_MS + 15_000 },
     async () => {
       const attached = await attachRunningDaemon({
+        label: "Discord daemon",
         marker: DISCORD_DAEMON_MARKER,
         readState: readDiscordDaemonState,
         probeStatus: probeDiscordDaemonStatus,
@@ -244,6 +246,7 @@ export function ensureDiscordDaemon(
 
 export function stopDiscordDaemon(): Promise<void> {
   return shutdownUnixDaemon({
+    lockPath: START_LOCK_PATH,
     socketPath: SOCKET_PATH,
     statePath: STATE_PATH,
     marker: DISCORD_DAEMON_MARKER,

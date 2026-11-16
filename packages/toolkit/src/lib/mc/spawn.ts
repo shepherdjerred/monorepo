@@ -65,6 +65,7 @@ export function probeMcDaemonStatus(): Promise<StatusResponse | null> {
 /** Removes leftover `daemon.sock` / `state.json` when no live daemon owns them. */
 export function cleanDeadMcDaemonFiles(): Promise<boolean> {
   return cleanDeadDaemonFiles({
+    lockPath: START_LOCK_PATH,
     socketPath: SOCKET_PATH,
     statePath: STATE_PATH,
     marker: DAEMON_ENTRY,
@@ -82,9 +83,10 @@ export function ensureMcDaemon(
   ttlSeconds: number = DEFAULT_DAEMON_TTL_SECONDS,
 ): Promise<{ status: StatusResponse; started: boolean }> {
   return withDaemonStartLock(
-    { lockPath: START_LOCK_PATH, timeoutMs: STARTUP_TIMEOUT_MS + 5000 },
+    { lockPath: START_LOCK_PATH, timeoutMs: STARTUP_TIMEOUT_MS + 15_000 },
     async () => {
       const attached = await attachRunningDaemon({
+        label: "mc daemon",
         marker: DAEMON_ENTRY,
         readState: readDaemonState,
         probeStatus: probeMcDaemonStatus,
@@ -195,6 +197,7 @@ export async function awaitDaemonReady(
 export function stopMcDaemon(): Promise<void> {
   // Shutdown removes non-kept sandboxes first, which takes a few seconds.
   return shutdownUnixDaemon({
+    lockPath: START_LOCK_PATH,
     socketPath: SOCKET_PATH,
     statePath: STATE_PATH,
     marker: DAEMON_ENTRY,

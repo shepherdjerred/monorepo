@@ -60,6 +60,35 @@ function watchParentLifetime(onParentLost: () => void): () => void {
   };
 }
 
+function requestWorkerShutdown(worker: Worker): void {
+  if (worker.getState() === "RUNNING") {
+    worker.shutdown();
+  }
+}
+
+async function drainStartedWorker(
+  worker: Worker,
+  marker: string,
+  isParentLost: () => boolean,
+  onActive: (worker: Worker) => void,
+): Promise<void> {
+  const running = worker.run();
+  onActive(worker);
+  try {
+    if (!isParentLost()) {
+      await writeFile(marker, "ready\n");
+    }
+    if (isParentLost()) {
+      requestWorkerShutdown(worker);
+    }
+  } catch (error) {
+    requestWorkerShutdown(worker);
+    throw error;
+  } finally {
+    await running;
+  }
+}
+
 async function runWorkflowWorker(
   target: string | undefined,
   marker: string | undefined,
@@ -97,11 +126,7 @@ async function runWorkflowWorker(
     timer.unref();
     parentWatchState.forceExitTimer = timer;
     if (parentWatchState.activeWorker !== undefined) {
-      try {
-        parentWatchState.activeWorker.shutdown();
-      } catch {
-        // Worker may already be stopping; the unref'd timer bounds any hang.
-      }
+      requestWorkerShutdown(parentWatchState.activeWorker);
     }
   });
 
@@ -114,16 +139,9 @@ async function runWorkflowWorker(
         workflowsPath,
         taskQueue: TASK_QUEUES.WORKFLOWS,
       });
-      parentWatchState.activeWorker = worker;
-      if (isParentLost()) {
-        return;
-      }
-      const running = worker.run();
-      await writeFile(marker, "ready\n");
-      if (isParentLost()) {
-        worker.shutdown();
-      }
-      await running;
+      await drainStartedWorker(worker, marker, isParentLost, (active) => {
+        parentWatchState.activeWorker = active;
+      });
     } finally {
       await connection.close();
     }

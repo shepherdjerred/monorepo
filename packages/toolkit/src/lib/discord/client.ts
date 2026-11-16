@@ -63,7 +63,7 @@ export async function daemonRequest<Schema extends z.ZodType>(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `Could not reach the Discord daemon (${message}). The daemon may have exited during the request — retry the command.\n\n${START_HINT}`,
+      `Could not reach the Discord daemon (${message}). The daemon may have exited after accepting the request, so a send or slash command may already have run. Check the target before retrying.\n\n${START_HINT}`,
       { cause: error },
     );
   }
