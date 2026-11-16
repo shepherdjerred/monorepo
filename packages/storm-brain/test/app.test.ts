@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import { Registry } from "prom-client";
-import { z } from "zod";
 import { createBrainApp, type BrainAppDependencies } from "#src/app.ts";
 import { BrainUpstreamError, createBrain } from "#src/brain.ts";
 import { ConversationBudgetError } from "#src/conversation-budget.ts";
@@ -8,7 +7,7 @@ import type { BrainConfig } from "#src/config.ts";
 import { createBrainMetrics } from "#src/metrics.ts";
 import { ClassifyResponseSchema, OffenseSchema } from "#src/schemas.ts";
 import type { AggregateLlmUsage } from "@shepherdjerred/llm-runtime";
-import { triageRequestBody } from "./fixtures.ts";
+import { CapturedDecisionWireSchema, triageRequestBody } from "./fixtures.ts";
 
 const TOKEN = "test-bearer-token-that-is-long-enough";
 
@@ -22,26 +21,6 @@ const config: BrainConfig = {
   metricsPort: 9090,
   port: 3000,
 };
-
-const CapturedClassifyWireSchema = z.object({
-  model: z.string(),
-  prompt_cache_key: z.string().optional(),
-  input: z.string(),
-  system: z.array(
-    z.object({
-      type: z.literal("input_text"),
-      text: z.string(),
-      prompt_cache_breakpoint: z.boolean().optional(),
-    }),
-  ),
-  questions: z.array(
-    z.object({
-      type: z.literal("choice"),
-      name: z.string(),
-      choices: z.array(z.object({ value: z.string() })),
-    }),
-  ),
-});
 
 function usage(overrides: Partial<AggregateLlmUsage> = {}): AggregateLlmUsage {
   return {
@@ -502,11 +481,11 @@ describe("storm-brain classify decisions", () => {
     expect(cleanPayload.costMicros).toBe(2100);
 
     expect(calls[0]?.url).toBe("https://api.openai.com/v1/decisions");
-    const wire = CapturedClassifyWireSchema.parse(calls[0]?.body);
+    const wire = CapturedDecisionWireSchema.parse(calls[0]?.body);
     expect(wire.model).toBe("gpt-6-luna");
     expect(wire.prompt_cache_key).toBe("storm-brain:classify:v1");
     expect(wire.system[0]?.prompt_cache_breakpoint).toBe(true);
-    expect(wire.input).toContain("Alice");
+    expect(String(wire.input)).toContain("Alice");
     expect(wire.questions).toHaveLength(1);
     expect(wire.questions[0]?.name).toBe("offense");
     expect(wire.questions[0]?.choices.map((choice) => choice.value)).toEqual([

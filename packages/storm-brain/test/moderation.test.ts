@@ -3,7 +3,6 @@ import {
   type LlmRuntimeOptions,
 } from "@shepherdjerred/llm-runtime";
 import { describe, expect, test, vi } from "vitest";
-import { z } from "zod";
 import {
   createModeration,
   PROMOTION,
@@ -13,6 +12,7 @@ import {
   ModerationRequestSchema,
   ModerationResponseSchema,
 } from "#src/moderation-schema.ts";
+import { CapturedDecisionWireSchema } from "./fixtures.ts";
 
 type RuntimeFetch = NonNullable<LlmRuntimeOptions["fetch"]>;
 
@@ -62,30 +62,6 @@ function provider(scores: Record<string, number> = {}) {
     ],
   });
 }
-
-const CapturedDecisionBodySchema = z.object({
-  model: z.string(),
-  prompt_cache_key: z.string().optional(),
-  system: z.array(
-    z.object({
-      type: z.literal("input_text"),
-      text: z.string(),
-      prompt_cache_breakpoint: z.boolean().optional(),
-    }),
-  ),
-  questions: z.array(
-    z.object({
-      type: z.literal("choice"),
-      name: z.string(),
-      choices: z.array(
-        z.object({
-          value: z.string(),
-          description: z.string().optional(),
-        }),
-      ),
-    }),
-  ),
-});
 
 describe("purpose-built screening", () => {
   test("screens the visible author without truncating the allowed body", async () => {
@@ -432,7 +408,7 @@ describe("OpenAI Decisions API contextual moderation", () => {
 
     expect(capturedCalls).toHaveLength(1);
     expect(capturedCalls[0]?.url).toBe("https://api.openai.com/v1/decisions");
-    const wire = CapturedDecisionBodySchema.parse(capturedCalls[0]?.body);
+    const wire = CapturedDecisionWireSchema.parse(capturedCalls[0]?.body);
     expect(wire.model).toBe("gpt-6-luna");
     expect(wire.prompt_cache_key).toBe("storm-brain:moderate:v1");
     expect(wire.system[0]?.prompt_cache_breakpoint).toBe(true);

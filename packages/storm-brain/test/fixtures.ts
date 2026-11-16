@@ -1,3 +1,30 @@
+import { z } from "zod";
+
+export const CapturedDecisionWireSchema = z.object({
+  model: z.string(),
+  prompt_cache_key: z.string().optional(),
+  input: z.unknown(),
+  system: z.array(
+    z.object({
+      type: z.literal("input_text"),
+      text: z.string(),
+      prompt_cache_breakpoint: z.boolean().optional(),
+    }),
+  ),
+  questions: z.array(
+    z.object({
+      type: z.literal("choice"),
+      name: z.string(),
+      choices: z.array(
+        z.object({
+          value: z.string(),
+          description: z.string().optional(),
+        }),
+      ),
+    }),
+  ),
+});
+
 /** A valid triage request body, fresh per call so tests share no mutation. */
 export function triageRequestBody() {
   return {
