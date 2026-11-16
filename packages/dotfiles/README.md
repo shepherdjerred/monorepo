@@ -36,7 +36,8 @@ Each wrapper execs `agent-exec`, which:
 - removes direct provider API keys and the homelab service tokens, so agents
   always use their subscription logins;
 - sets the agent git and GitHub identity (`~/.config/agent/gitconfig`,
-  `~/.config/gh-agent`) and no-op editors and pagers;
+  `~/.config/gh-agent`), exports `AGENT_CLI`, `AI_AGENT`, and a per-launch
+  `AGENT_LAUNCH_ID` UUID, and sets no-op editors and pagers;
 - adds the agent's approval and sandbox bypass flags, unless `AGENT_SAFE=1`;
 - runs the next binary of that name on `PATH` after the wrapper directory,
   passing every argument through, so `codex resume` and `claude --resume`

@@ -17,7 +17,8 @@ import {
 } from "#client/due/due-picker.tsx";
 import { api, queryClient, type BootstrapData } from "#client/data/api.ts";
 import { drafts } from "#client/data/drafts.ts";
-import { currentActor } from "#client/data/identity.ts";
+import { useCurrentActor } from "#client/data/identity.ts";
+import type { ActorEnvelope } from "#shared/actor.ts";
 import { issueWasCreated, type Pending } from "#client/data/pending-drafts.ts";
 import { useDraft } from "#client/data/use-draft.ts";
 import { createIssue } from "#client/data/mutations.ts";
@@ -201,7 +202,7 @@ function useNewIssueDrafts(currentTeamKey: string) {
       drafts.pending(titleKey) !== undefined ||
       drafts.pending(descriptionKey) !== undefined,
   );
-  const actorKey = currentActor().key;
+  const actorKey = useCurrentActor().key;
   const recentKey = ["recent-created", actorKey];
   const recent = useQuery({
     queryKey: recentKey,
@@ -238,6 +239,17 @@ function useNewIssueDrafts(currentTeamKey: string) {
   return { title, description };
 }
 
+function chosenAssignee(
+  actors: BootstrapData["actors"],
+  assigneeKey: string | null,
+  me: ActorEnvelope,
+) {
+  return (
+    actors.find(({ key }) => key === assigneeKey) ??
+    (assigneeKey === me.key ? me : undefined)
+  );
+}
+
 export function NewIssue({
   open,
   close,
@@ -269,12 +281,11 @@ export function NewIssue({
   const stateName =
     choices.stateName ??
     (states.find(({ type }) => type === "triage") ?? states[0])?.name;
+  const me = useCurrentActor();
   const project = bootstrap.projects.find(
     ({ slug }) => slug === choices.projectSlug,
   );
-  const assignee = bootstrap.actors.find(
-    ({ key }) => key === choices.assigneeKey,
-  );
+  const assignee = chosenAssignee(bootstrap.actors, choices.assigneeKey, me);
   const create = useMutation({
     // What was typed stops being a draft while it is sent, so a reload during
     // the request cannot offer an issue that already exists a second time.

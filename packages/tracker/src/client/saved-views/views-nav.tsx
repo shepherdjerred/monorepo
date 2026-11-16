@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router";
 import { Menu } from "@base-ui/react/menu";
 import { ArrowDown, ArrowUp, Ellipsis, Pencil, Trash2 } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
-import { currentActor } from "#client/data/identity.ts";
+import { useCurrentActor } from "#client/data/identity.ts";
 import { Modal } from "#client/ui/ui.tsx";
 import { deleteView, reorderViews, updateView } from "./view-mutations.ts";
 import { viewDialog, withViewDialog } from "./save-view.tsx";
@@ -27,13 +27,14 @@ const dragType = "application/x-tracker-view";
 /** Whether the list shown is this view, or was opened from it. */
 function useActiveView(teamKey: string | undefined) {
   const location = useLocation();
+  const me = useCurrentActor().key;
   const search = new URLSearchParams(location.search);
   const onList =
     location.pathname === "/issues" || location.pathname === "/board";
   const current = viewParamsFrom(search, {
     board: location.pathname === "/board",
     teamKey,
-    me: currentActor().key,
+    me,
   });
   return (view: SavedView) =>
     onList &&
@@ -142,7 +143,7 @@ export function ViewsNav({
   const [deleting, setDeleting] = useState<SavedView>();
   const [dragging, setDragging] = useState<string>();
   const [over, setOver] = useState<string>();
-  const me = currentActor().key;
+  const me = useCurrentActor().key;
   const writable = bootstrap.writesEnabled;
   // Views being saved have no server ID to reorder by yet.
   const settled = shown.every((view) => !view.id.startsWith("optimistic-"));

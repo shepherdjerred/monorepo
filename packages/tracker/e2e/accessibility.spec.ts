@@ -167,6 +167,20 @@ const surfaces: { name: string; open: (page: Page) => Promise<void> }[] = [
     },
   },
   {
+    name: "the browser identity dialog",
+    open: async (page) => {
+      await page.goto("/issues");
+      const more = page.getByRole("button", { name: "More", exact: true });
+      if (await more.isVisible()) {
+        await more.click();
+      }
+      await page.getByRole("button", { name: /^Acting as /u }).click();
+      await expect(
+        page.getByRole("dialog", { name: "Browser identity" }),
+      ).toBeVisible();
+    },
+  },
+  {
     name: "the settings feedback switches",
     open: async (page) => {
       await page.goto("/settings");

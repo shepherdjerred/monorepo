@@ -18,7 +18,8 @@ import {
   X,
 } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
-import { currentActor } from "#client/data/identity.ts";
+import { useCurrentActor } from "#client/data/identity.ts";
+import type { ActorEnvelope } from "#shared/actor.ts";
 import { actorNamespace, groupActors } from "#client/controls/actor-order.ts";
 import {
   priorityOptions,
@@ -54,8 +55,11 @@ const dueBefore = "before";
 
 type Options = { value: string; label: string; icon?: ReactNode }[];
 
-function actorOptions(bootstrap: BootstrapData, withMe: boolean): Options {
-  const me = currentActor();
+function actorOptions(
+  bootstrap: BootstrapData,
+  me: ActorEnvelope,
+  withMe: boolean,
+): Options {
   const actors = groupActors(bootstrap.actors, {
     query: "",
     expanded: new Set(bootstrap.actors.map((actor) => actorNamespace(actor))),
@@ -82,6 +86,7 @@ function fieldOptions(
   field: FilterField,
   bootstrap: BootstrapData,
   teamId: string,
+  me: ActorEnvelope,
 ): Options {
   switch (field) {
     case "state": {
@@ -91,10 +96,10 @@ function fieldOptions(
       return priorityOptions;
     }
     case "assignee": {
-      return actorOptions(bootstrap, true);
+      return actorOptions(bootstrap, me, true);
     }
     case "creator": {
-      return actorOptions(bootstrap, false);
+      return actorOptions(bootstrap, me, false);
     }
     case "label": {
       return bootstrap.labels
@@ -145,6 +150,7 @@ export function FilterBar({
   projectRoute: boolean;
 }) {
   const [params, setParams] = useSearchParams();
+  const me = useCurrentActor();
   const [open, setOpen] = useState(false);
   const [field, setField] = useState<FilterField>();
   const [pickingDay, setPickingDay] = useState(false);
@@ -176,7 +182,7 @@ export function FilterBar({
             ? { hint: String(filterValues(params, item.field).length) }
             : {}),
         }))
-      : fieldOptions(field, bootstrap, team?.id ?? "").map((option) => ({
+      : fieldOptions(field, bootstrap, team?.id ?? "", me).map((option) => ({
           id: option.value,
           label: option.label,
           icon: option.icon,

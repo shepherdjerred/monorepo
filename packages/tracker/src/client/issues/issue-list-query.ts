@@ -10,7 +10,7 @@ import { api } from "#client/data/api.ts";
 import type { IssuePage } from "#client/data/cache.ts";
 import { hiddenIssues } from "#client/data/mutations.ts";
 import { IssueListSchema, type IssueListInput } from "#shared/schema.ts";
-import { currentActor } from "#client/data/identity.ts";
+import { useCurrentActor } from "#client/data/identity.ts";
 import type { RouteInfo } from "#client/shell/route.ts";
 import { localToday } from "#client/due/dates.ts";
 import { dueFilterInput, isDueFilter } from "#client/due/due-filter.ts";
@@ -122,6 +122,7 @@ function planningFilters(params: URLSearchParams) {
  */
 export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
   const [params] = useSearchParams();
+  const actor = useCurrentActor();
   const [remembered, setRemembered] = useState<IssueListInput>();
   const fromUrl =
     teamKey !== undefined && route.isList
@@ -134,7 +135,7 @@ export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
           labels: params.getAll("label"),
           assigneeKey:
             params.get("mine") === "true"
-              ? currentActor().key
+              ? actor.key
               : (params.get("assignee") ?? undefined),
           creatorKey: params.get("creator") ?? undefined,
           priority: params.has("priority")

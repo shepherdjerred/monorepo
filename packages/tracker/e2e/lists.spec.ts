@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   createIssue,
+  inFlightTrpc,
   recordCalls,
   scratchTeam,
   seedLongList,
@@ -190,17 +191,36 @@ test("the app pages its lists and an edit refetches only what it touched", async
   expect(calls.some((call) => call.includes("issues.list"))).toBe(true);
 
   calls.length = 0;
+  const pendingTrpc = inFlightTrpc(page);
+
+  // The unclaimed session actor (`webdriver:<tab>`) is recorded on its first
+  // mutation, which refetches `meta.bootstrap` once so it becomes assignable.
+  await peek.locator("#property-priority").selectOption("Urgent");
+  await expect(toastSaying(page, `${identifier} priority set`)).toBeVisible();
+  await expect
+    .poll(() => calls.some((call) => call.includes("meta.bootstrap")))
+    .toBe(true);
+  await expect
+    .poll(() => calls.some((call) => call.includes("issues.byIdentifier")))
+    .toBe(true);
+  await expect.poll(pendingTrpc).toBe(0);
+
+  // Subsequent edits by a known actor refetch only what they touched.
+  calls.length = 0;
   const refetched = page.waitForResponse(
     (response) =>
       response.url().includes("issues.list") &&
       response.request().method() === "GET",
   );
-  await peek.locator("#property-priority").selectOption("Urgent");
+  await peek.locator("#property-priority").selectOption("High");
   await refetched;
-  await expect(toastSaying(page, `${identifier} priority set`)).toBeVisible();
+  await expect(
+    toastSaying(page, `${identifier} priority set to High`),
+  ).toBeVisible();
   await expect
     .poll(() => calls.filter((call) => call.includes("issues.byIdentifier")))
     .not.toEqual([]);
+  await expect.poll(pendingTrpc).toBe(0);
   expect(calls.filter((call) => call.includes("meta.bootstrap"))).toEqual([]);
   expect(calls.filter((call) => call.includes("issues.update"))).toHaveLength(
     1,

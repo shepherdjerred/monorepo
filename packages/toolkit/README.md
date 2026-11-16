@@ -286,12 +286,20 @@ CLI `--actor-key`, `--actor-kind`, and `--actor-name` override those values.
 optional metadata. Arbitrary environment variables are never recorded.
 
 Codex uses `CODEX_THREAD_ID` directly. Grok uses `GROK_SESSION_ID` directly;
-`GROK_AGENT` still fails closed when that session id is missing. The dotfiles
-install a Claude SessionStart hook through `CLAUDE_ENV_FILE` and a Cursor Shell
-`preToolUse` hook through `updated_input`.
+`GROK_AGENT` still fails closed when that session id is missing. Antigravity
+uses `ANTIGRAVITY_CONVERSATION_ID` (or `ANTIGRAVITY_TRAJECTORY_ID`);
+`ANTIGRAVITY_AGENT` fails closed when neither is set. Kimi (`KIMI_SESSION_ID`)
+and Muse (`MUSE_SESSION_ID`) fall back to the per-launch `AGENT_LAUNCH_ID` UUID
+exported by `agent-exec` when `AGENT_CLI` (or `AI_AGENT`) names `kimi` or
+`muse`; harnesses with native session hooks never fall back to
+`AGENT_LAUNCH_ID`. The dotfiles install a Claude SessionStart hook through
+`CLAUDE_ENV_FILE` and a Cursor Shell `preToolUse` hook through `updated_input`.
 They forward the native session ID and select the child harness when another
 harness launched it. An earlier session id wins when several are set, unless
-`TRACKER_ACTOR_HARNESS` names the child.
+`TRACKER_ACTOR_HARNESS` names the child. Agent environments (including
+`agent-exec` git/GitHub config paths and harness markers) never default to a
+human identity in interactive PTYs and refuse `human:*` actor keys or
+`TRACKER_ACTOR_KIND=human`.
 Claude model detection reads only the transcript explicitly provided by that
 session's hook. Missing session identity fails with an actionable error.
 Install the compiled toolkit before activating these hooks; existing sessions

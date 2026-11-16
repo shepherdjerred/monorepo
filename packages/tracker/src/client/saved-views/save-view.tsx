@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { BookmarkPlus, RefreshCw } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
-import { currentActor } from "#client/data/identity.ts";
+import { useCurrentActor } from "#client/data/identity.ts";
 import { createView, updateView } from "./view-mutations.ts";
 import { deferred } from "#client/ui/lazy.ts";
 import { notifyError } from "#client/ui/toast.tsx";
@@ -34,6 +34,7 @@ function useCurrentView(
   scope: { teamKey: string; board: boolean; projectSlug: string | undefined },
 ) {
   const [params] = useSearchParams();
+  const me = useCurrentActor().key;
   const search = new URLSearchParams(params);
   if (scope.projectSlug !== undefined) {
     search.set("project", scope.projectSlug);
@@ -41,7 +42,7 @@ function useCurrentView(
   const current = viewParamsFrom(search, {
     board: scope.board,
     teamKey: scope.teamKey,
-    me: currentActor().key,
+    me,
   });
   const source = bootstrap.views.find(
     (view) => view.id === params.get(savedViewParam),

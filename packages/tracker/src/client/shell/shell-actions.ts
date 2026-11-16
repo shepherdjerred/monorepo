@@ -25,7 +25,7 @@ import { viewUrl, type SavedView } from "#client/saved-views/view-params.ts";
 import { feedback } from "#client/feedback/index.ts";
 import { hasAppHistory, type RouteInfo } from "./route.ts";
 
-export type Overlay = "create" | "palette" | "help" | "more";
+export type Overlay = "create" | "palette" | "help" | "more" | "identity";
 
 export type Shell = {
   route: RouteInfo;
