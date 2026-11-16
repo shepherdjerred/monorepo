@@ -643,3 +643,33 @@ describe("durable iMessage ingress rollout", () => {
     expect(prodFlag?.default).toBe(true);
   });
 });
+
+describe("The Storm two-stage chat moderation rollout", () => {
+  test.each(["beta", "prod"])(
+    "enables async chat moderation globally in %s",
+    (environment) => {
+      const flag = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        "the-storm",
+      ).find(
+        (candidate) =>
+          candidate.key === "the-storm-async-chat-moderation-enabled",
+      );
+      if (flag?.type !== "boolean") throw new Error("Expected a boolean flag");
+      expect(flag).toMatchObject({
+        default: true,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+      expect(classifyManagedBoolean(flag)).toBe("on");
+      expect(
+        managedBooleanDefault(
+          "the-storm-async-chat-moderation-enabled",
+          environment,
+        ),
+      ).toBe(true);
+    },
+  );
+});

@@ -416,6 +416,7 @@ export const THE_STORM_BOOLEAN_FLAG_KEYS = [
   "the-storm-staff-tools-enabled",
   "the-storm-identity-enabled",
   "the-storm-content-safety-enabled",
+  "the-storm-async-chat-moderation-enabled",
   "the-storm-anticheat-corrections-enabled",
   "the-storm-letters-enabled",
   "the-storm-ip-enforcement-enabled",

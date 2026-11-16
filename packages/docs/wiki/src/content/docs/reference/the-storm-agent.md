@@ -73,22 +73,24 @@ A 503 completes the plugin flow silently and records nothing.
 
 The source of truth is the [Storm server configuration](https://github.com/shepherdjerred/monorepo/tree/main/packages/the-storm/server).
 
-| Boundary                                      | Behavior                                                                                                                 |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Screening rollout                             | `the-storm-content-safety-enabled`, namespace `the-storm`; production and beta on, Flipt-outage fallback off             |
-| Correction rollout                            | `the-storm-anticheat-corrections-enabled`; default off in both environments                                              |
-| New text                                      | Held until approved; outage rejects without a misconduct strike                                                          |
-| Private evidence                              | Allowed and blocked attempts, components, scores, decisions and receipts retained indefinitely                           |
-| Evidence access                               | `thestorm.safety.evidence`; `/safety search` in game, authenticated `toolkit mc evidence` for complete JSON and exports  |
-| Ordinary length                               | Filter accepts 2,000 code points; command transport 4,096 characters; vanilla chat UI 256                                |
-| Explicit slur or identical repeated-link spam | Block plus ten-minute mute; another clear offense within seven days gets one hour                                        |
-| Cold advertising                              | First confirmed offense blocked with explanation; repeat after a recorded warning within 24 hours may get the short mute |
-| Ambiguous or model-only offense               | Publication withheld for review; no automatic mute                                                                       |
-| Bans                                          | Human decision                                                                                                           |
-| Saved-content snapshots                       | Loaded signs, container metadata and entity names; creator unknown, no observer offense                                  |
-| Anticheat scope                               | Grim records Java findings and game context; Floodgate players are exempt                                                |
-| Xray                                          | Paper mode 3 with air and Overworld ore heights; Nether ancient debris; authored arenas excluded                         |
-| Visual content                                | Map art and builds use activity evidence and human review; no image classifier                                           |
+| Boundary                                      | Behavior                                                                                                                                                        |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Screening rollout                             | `the-storm-content-safety-enabled`, namespace `the-storm`; production and beta on, Flipt-outage fallback off                                                    |
+| Async chat rollout                            | `the-storm-async-chat-moderation-enabled`, namespace `the-storm`; production and beta on, Flipt-outage fallback on                                              |
+| Correction rollout                            | `the-storm-anticheat-corrections-enabled`; default off in both environments                                                                                     |
+| Live chat and whispers                        | Synchronous Stage-1 block on credentials, egregious abuse, link spam, and bursts; 0 ms delivery; async Stage-2 `deleteMessage` and `#server` Discord retraction |
+| Persistent and gated text                     | Books, signs, item names, nicknames, town names, mail, tickets, and Discord ingress held until approved; outage rejects without a misconduct strike             |
+| Private evidence                              | Allowed and blocked attempts, components, scores, decisions and receipts retained indefinitely                                                                  |
+| Evidence access                               | `thestorm.safety.evidence`; `/safety search` in game, authenticated `toolkit mc evidence` for complete JSON and exports                                         |
+| Ordinary length                               | Filter accepts 2,000 code points; command transport 4,096 characters; vanilla chat UI 256                                                                       |
+| Explicit slur or identical repeated-link spam | Block plus ten-minute mute; another clear offense within seven days gets one hour                                                                               |
+| Cold advertising                              | First confirmed offense blocked with explanation; repeat after a recorded warning within 24 hours may get the short mute                                        |
+| Ambiguous or model-only offense               | Publication withheld for review; no automatic mute                                                                                                              |
+| Bans                                          | Human decision                                                                                                                                                  |
+| Saved-content snapshots                       | Loaded signs, container metadata and entity names; creator unknown, no observer offense                                                                         |
+| Anticheat scope                               | Grim records Java findings and game context; Floodgate players are exempt                                                                                       |
+| Xray                                          | Paper mode 3 with air and Overworld ore heights; Nether ancient debris; authored arenas excluded                                                                |
+| Visual content                                | Map art and builds use activity evidence and human review; no image classifier                                                                                  |
 
 `safety.yml` supplies the brain bootstrap and bounded transport settings. CoreProtect
 owns block/item rollback, while Safety owns redacted player text. The current LiveMap

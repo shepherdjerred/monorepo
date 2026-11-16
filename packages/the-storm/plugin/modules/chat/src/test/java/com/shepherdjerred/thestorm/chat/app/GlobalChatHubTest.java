@@ -54,8 +54,20 @@ final class GlobalChatHubTest {
           hub.published(line(ChannelKey.GLOBAL, "screened"));
           return "delivered";
         });
+    var submissionId = java.util.UUID.randomUUID();
+    hub.published(
+        line(ChannelKey.GLOBAL, "optimistic")
+            .withPublication(
+                new com.shepherdjerred.thestorm.core.safety.ContentPublication.Context(
+                    java.util.Optional.of(submissionId), true)));
     hub.published(line(ChannelKey.GLOBAL, "legacy"));
-    assertThat(lines).extracting(ChatLine::screened).containsExactly(true, false);
+    assertThat(lines).extracting(ChatLine::screened).containsExactly(true, true, false);
+    assertThat(lines)
+        .extracting(ChatLine::submissionId)
+        .containsExactly(
+            java.util.Optional.empty(),
+            java.util.Optional.of(submissionId),
+            java.util.Optional.empty());
   }
 
   @Test

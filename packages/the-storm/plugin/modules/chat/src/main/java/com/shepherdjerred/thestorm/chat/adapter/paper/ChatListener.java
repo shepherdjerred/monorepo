@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.chat.app.GlobalChatHub;
 import com.shepherdjerred.thestorm.chat.app.OutgoingLine;
 import com.shepherdjerred.thestorm.chat.domain.ChatDenial;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.core.safety.ContentPublication;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +44,9 @@ public final class ChatListener implements Listener {
     var focus = service.profile(player.getUniqueId()).focus();
     var routed = service.route(player.getUniqueId(), focus, raw, false);
     switch (service.prepare(Speakers.of(player), routed.channel().key(), routed.text())) {
-      case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> {
+      case Result.Ok<OutgoingLine, List<ChatDenial>>(var prepared) -> {
+        var line =
+            ContentPublication.eventContext(event).map(prepared::withPublication).orElse(prepared);
         event
             .viewers()
             .removeIf(viewer ->

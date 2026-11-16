@@ -53,6 +53,7 @@ public final class DiscordRelay {
 
   public void contentSafety(com.shepherdjerred.thestorm.core.safety.ContentSafety value) {
     safety = value;
+    value.retractions(this::retractChatLine);
   }
 
   public DiscordRelay(
@@ -66,21 +67,34 @@ public final class DiscordRelay {
   /** Posts a Global line to Discord, unless it came from outside the game (such as Discord). */
   public void onChatLine(ChatLine line) {
     switch (line.author()) {
-      case ChatAuthor.InGame(var _, var name) ->
-          post(
-              config
-                  .messages()
-                  .chatTemplate()
-                  .render(
-                      Map.of(
-                          "player",
-                          DiscordText.forDiscord(name),
-                          "message",
-                          DiscordText.forDiscord(line.text()))));
+      case ChatAuthor.InGame(var _, var name) -> {
+        var rendered =
+            DiscordText.truncate(
+                config
+                    .messages()
+                    .chatTemplate()
+                    .render(
+                        Map.of(
+                            "player",
+                            DiscordText.forDiscord(name),
+                            "message",
+                            DiscordText.forDiscord(line.text()))),
+                DiscordText.DISCORD_LIMIT);
+        if (line.submissionId().isPresent()) {
+          gateway.postTracked(line.submissionId().orElseThrow(), rendered);
+        } else {
+          gateway.post(rendered);
+        }
+      }
       case ChatAuthor.External _ -> {
         // Relayed lines are already visible where they came from.
       }
     }
+  }
+
+  /** Retracts a relayed Global chat message from Discord if tracked or still in flight. */
+  public void retractChatLine(UUID submissionId) {
+    gateway.retract(submissionId);
   }
 
   /**

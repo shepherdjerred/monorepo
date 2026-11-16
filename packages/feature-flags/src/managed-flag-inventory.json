@@ -3954,6 +3954,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-async-chat-moderation-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-safety",
+      "purpose": "Deliver clean chat immediately after synchronous egregious filtering and retract violations asynchronously.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-anticheat-corrections-enabled",
       "owner": "the-storm",
       "namespace": "the-storm",

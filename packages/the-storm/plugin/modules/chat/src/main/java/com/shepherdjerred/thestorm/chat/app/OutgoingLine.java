@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.chat.app;
 import com.shepherdjerred.thestorm.chat.domain.AcceptedMessage;
 import com.shepherdjerred.thestorm.chat.domain.ChannelKey;
 import com.shepherdjerred.thestorm.chat.domain.Speaker;
+import com.shepherdjerred.thestorm.core.safety.ContentPublication;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Set;
@@ -18,6 +19,7 @@ import java.util.UUID;
  * @param emote whether it is a {@code /me} action rather than a message
  * @param npc the NPC's own trusted prefix when an NPC said it through {@link NpcChat}; empty for a
  *     player
+ * @param publication Safety admission metadata attached to this line, if any
  */
 public record OutgoingLine(
     ChannelKey channel,
@@ -25,10 +27,15 @@ public record OutgoingLine(
     AcceptedMessage message,
     Set<UUID> members,
     boolean emote,
-    Optional<String> npc) {
+    Optional<String> npc,
+    Optional<ContentPublication.Context> publication) {
 
   public OutgoingLine {
     members = Set.copyOf(members);
+  }
+
+  public OutgoingLine withPublication(ContentPublication.Context value) {
+    return new OutgoingLine(channel, speaker, message, members, emote, npc, Optional.of(value));
   }
 
   /** The cleaned text. */

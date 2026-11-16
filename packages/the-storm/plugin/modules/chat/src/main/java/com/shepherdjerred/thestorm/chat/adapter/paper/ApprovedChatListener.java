@@ -6,7 +6,9 @@ import com.shepherdjerred.thestorm.chat.app.OutgoingLine;
 import com.shepherdjerred.thestorm.chat.domain.ChatDenial;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.safety.ApprovedChatEvent;
+import com.shepherdjerred.thestorm.core.safety.ContentPublication;
 import java.util.List;
+import java.util.Optional;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -33,7 +35,11 @@ public final class ApprovedChatListener implements Listener {
     var routed =
         chat.route(player.getUniqueId(), chat.profile(player.getUniqueId()).focus(), text, false);
     switch (chat.prepare(Speakers.of(player), routed.channel().key(), routed.text())) {
-      case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> {
+      case Result.Ok<OutgoingLine, List<ChatDenial>>(var prepared) -> {
+        var line =
+            prepared.withPublication(
+                new ContentPublication.Context(
+                    Optional.of(event.submission()), ContentPublication.screened()));
         output.deliver(line);
         hub.published(line);
         chat.delivered(line);

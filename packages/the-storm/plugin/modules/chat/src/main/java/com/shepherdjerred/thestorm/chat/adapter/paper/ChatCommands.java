@@ -17,6 +17,7 @@ import com.shepherdjerred.thestorm.chat.domain.ChatDenial;
 import com.shepherdjerred.thestorm.chat.domain.ChatProfile;
 import com.shepherdjerred.thestorm.chat.domain.ProfileError;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.core.safety.ContentPublication;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
@@ -96,13 +97,17 @@ public final class ChatCommands {
   }
 
   private int emote(Player player, String action) {
+    var command = ContentPublication.commandContext(player.getUniqueId());
     switch (service.prepareEmote(Speakers.of(player), action)) {
       case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> {
+        command.ifPresent(ContentPublication.CommandContext::markDelivered);
         output.deliver(line);
         Feedback.noticeCalmed(player, line.message(), service.capsNotice());
       }
-      case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) ->
-          player.sendMessage(Feedback.denials(denials));
+      case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) -> {
+        command.ifPresent(ContentPublication.CommandContext::markRejected);
+        player.sendMessage(Feedback.denials(denials));
+      }
     }
     return Command.SINGLE_SUCCESS;
   }
@@ -184,16 +189,21 @@ public final class ChatCommands {
   }
 
   private int say(Player player, ChannelKey channel, String message) {
+    var command = ContentPublication.commandContext(player.getUniqueId());
     var routed = service.route(player.getUniqueId(), channel, message, true);
     switch (service.prepare(Speakers.of(player), routed.channel().key(), routed.text())) {
-      case Result.Ok<OutgoingLine, List<ChatDenial>>(var line) -> {
+      case Result.Ok<OutgoingLine, List<ChatDenial>>(var prepared) -> {
+        var line = command.map(ctx -> prepared.withPublication(ctx.publication())).orElse(prepared);
+        command.ifPresent(ContentPublication.CommandContext::markDelivered);
         output.deliver(line);
         hub.published(line);
         service.delivered(line);
         Feedback.noticeCalmed(player, line.message(), service.capsNotice());
       }
-      case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) ->
-          player.sendMessage(Feedback.denials(denials));
+      case Result.Err<OutgoingLine, List<ChatDenial>>(var denials) -> {
+        command.ifPresent(ContentPublication.CommandContext::markRejected);
+        player.sendMessage(Feedback.denials(denials));
+      }
     }
     return Command.SINGLE_SUCCESS;
   }

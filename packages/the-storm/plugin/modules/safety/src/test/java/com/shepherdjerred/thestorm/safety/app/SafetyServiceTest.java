@@ -327,4 +327,122 @@ final class SafetyServiceTest {
       assertThat(store.strikes(ALICE, "penalty", NOW.minusSeconds(1)).join()).isZero();
     }
   }
+
+  @Test
+  void stageOneInstantBlocksPersistEvidenceAndPenaltiesWithoutCallingClassifier() {
+    try (var db = database()) {
+      var store = new JooqEvidenceStore(db);
+      var classifierCalls = new AtomicInteger();
+      var penalties = new AtomicInteger();
+      var now = new java.util.concurrent.atomic.AtomicReference<>(NOW);
+      var service =
+          new SafetyService(
+              store,
+              (submission, text, context) -> {
+                classifierCalls.incrementAndGet();
+                return CompletableFuture.completedFuture(allow());
+              },
+              new SafetyService.Policy(
+                  now::get, CONFIG, player -> CompletableFuture.completedFuture(true)));
+      service.penalties(request -> {
+        penalties.incrementAndGet();
+        return CompletableFuture.completedFuture(null);
+      });
+
+      var slurSubmission = submission("kys right now");
+      var slurBlock = service.instantBlock(slurSubmission).orElseThrow();
+      var review = service.recordInstantBlock(slurSubmission, slurBlock).join();
+      assertThat(review.allowed()).isFalse();
+      assertThat(review.muteSeconds()).isEqualTo(600);
+      assertThat(penalties.get()).isEqualTo(1);
+      assertThat(classifierCalls.get()).isZero();
+
+      var credential = "sk-proj-" + "z".repeat(28);
+      var secretSubmission = submission("token " + credential);
+      var secretBlock = service.instantBlock(secretSubmission).orElseThrow();
+      var secretReview = service.recordInstantBlock(secretSubmission, secretBlock).join();
+      assertThat(secretReview.muteSeconds()).isZero();
+      assertThat(penalties.get()).isEqualTo(1);
+      assertThat(store.search("Alice", "", 100).join()).doesNotContain(credential);
+      assertThat(store.recover(NOW.plusSeconds(5)).join()).isZero();
+
+      for (var i = 0; i < 24; i++) {
+        service.recordRecentWindow(submission("line " + i));
+      }
+      assertThat(service.instantBlock(submission("twenty fifth"))).isPresent();
+      now.set(NOW.plusSeconds(21));
+      assertThat(service.instantBlock(submission("after window expiry"))).isEmpty();
+    }
+  }
+
+  @Test
+  void optimisticDeliveriesFeedConversationContextUnlessRetroactivelyDeleted() {
+    try (var db = database()) {
+      var store = new JooqEvidenceStore(db);
+      var seenContext = new java.util.concurrent.atomic.AtomicReference<>("");
+      var service =
+          new SafetyService(
+              store,
+              (submission, text, context) -> {
+                seenContext.set(context);
+                return CompletableFuture.completedFuture(allow());
+              },
+              new SafetyService.Policy(
+                  InstantSource.fixed(NOW),
+                  CONFIG,
+                  player -> CompletableFuture.completedFuture(true)));
+
+      var kept = submission("kept context message");
+      service.checkDelivered(kept).join();
+      service.finish(kept.id(), "delivered-optimistic").join();
+
+      var retracted = submission("removed context message");
+      service.checkDelivered(retracted).join();
+      service.finish(retracted.id(), "delivered-optimistic").join();
+      service.finish(retracted.id(), "deleted-retroactively").join();
+
+      service.checkDelivered(submission("follow-up")).join();
+      assertThat(seenContext.get())
+          .contains("kept context message")
+          .doesNotContain("removed context message");
+    }
+  }
+
+  @Test
+  void concurrentBurstSubmissionsDoNotCountSubsequentQueuedLinksAgainstEarlierMessages() {
+    try (var db = database()) {
+      var store = new JooqEvidenceStore(db);
+      var penalties = new AtomicInteger();
+      var gate = new CompletableFuture<ContentReview>();
+      var service =
+          new SafetyService(
+              store,
+              (submission, text, context) -> gate,
+              new SafetyService.Policy(
+                  InstantSource.fixed(NOW),
+                  CONFIG,
+                  player -> CompletableFuture.completedFuture(true)));
+      service.penalties(request -> {
+        penalties.incrementAndGet();
+        return CompletableFuture.completedFuture(null);
+      });
+
+      var first = submission("https://example.com");
+      var second = submission("https://example.com");
+      var third = submission("https://example.com");
+
+      service.recordRecentWindow(first);
+      var firstCheck = service.checkDelivered(first);
+      service.recordRecentWindow(second);
+      var secondCheck = service.checkDelivered(second);
+      var thirdBlock = service.instantBlock(third).orElseThrow();
+      var thirdRecord = service.recordInstantBlock(third, thirdBlock);
+
+      gate.complete(allow());
+      assertThat(firstCheck.join().allowed()).isTrue();
+      assertThat(secondCheck.join().allowed()).isTrue();
+      assertThat(thirdRecord.join().allowed()).isFalse();
+      assertThat(penalties.get()).isEqualTo(1);
+    }
+  }
 }

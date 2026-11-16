@@ -56,19 +56,27 @@ the trust boundary.
 ## Content admission and evidence
 
 The `safety` module runs before chat. Its shared `core.safety.ContentSafety`
-port holds publications asynchronously and records attempts, window verdicts,
+port screens publications and records attempts, window verdicts,
 scores, final decisions and publication receipts in the permanent
 `safety_submission` and `safety_event` tables. The shared moderation contract
 comes from `../storm-brain/contracts/content-moderation.json`; the evidence
 query contract comes from `../mc-harness/src/protocol/evidence-contract.json`.
 Both Java and TypeScript validate their wire fields against these files.
 
-Native chat, message commands, proposed signs and books, anvil names, name tags,
-and Discord ingress pass admission before publication. Unknown command arguments
-are screened; commands containing only known identifiers are audited directly.
-An approved command runs as its sender, and a command that is unknown, not
-permitted or malformed gets the same error a typed command would.
-Authentication commands and credential-shaped strings are redacted before storage.
+When `the-storm-async-chat-moderation-enabled` is on (default), native `AsyncChatEvent`
+chat and live chat/whisper commands (`/g`, `/war`, `/tc`, `/sc`, `/t`, `/me`, `/msg`,
+`/w`, `/r`) use two-stage moderation: Stage 1 synchronously blocks credential leaks,
+egregious slurs/threats/CSAM, repeated-link spam, and burst floods in under 1 ms while
+delivering ordinary speech and mild profanity with 0 ms hold and native chat signatures
+intact; Stage 2 screens delivered lines asynchronously through `storm-brain`,
+retroactively deleting signed Java messages (`Server.deleteMessage`), retracting relayed
+`#server` Discord messages, notifying the sender, and applying strikes/mutes when blocked.
+Persistent and world-visible surfaces — proposed signs and books, anvil and creative item
+names, name tags, nicknames, town names, mail/letters, tickets, other unknown-argument
+commands, and Discord ingress — remain pre-gated before publication. Commands containing
+only known identifiers are audited directly. An approved command runs as its sender, and a
+command that is unknown, not permitted or malformed gets the same error a typed command
+would. Authentication commands and credential-shaped strings are redacted before storage.
 Allowed and rejected text, including DMs, stays in the private archive indefinitely.
 Loaded saved signs, containers and entity names are snapshots with unknown creators;
 their observers receive no offense attribution. Visual map art is not text screening.

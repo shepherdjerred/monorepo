@@ -65,7 +65,7 @@ final class ContentAdmission {
                             submission.id(),
                             () ->
                                 com.shepherdjerred.thestorm.core.safety.ContentPublication.deliver(
-                                    review.screened(), publish));
+                                    submission.id(), review.screened(), publish));
                   record(submission.id(), outcome);
                 },
                 context.scheduler().mainThread());

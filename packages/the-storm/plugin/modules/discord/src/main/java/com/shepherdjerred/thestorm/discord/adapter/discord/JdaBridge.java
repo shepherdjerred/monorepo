@@ -8,10 +8,15 @@ import com.shepherdjerred.thestorm.discord.app.Links;
 import com.shepherdjerred.thestorm.discord.domain.DiscordCredentials;
 import java.time.Duration;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -39,14 +44,117 @@ public final class JdaBridge implements DiscordGateway {
   /** How long stop then waits for JDA to close before cutting it. */
   static final Duration CLOSE_WAIT = Duration.ofSeconds(2);
 
+  static final int MAX_TRACKED_MESSAGES = 256;
+
+  interface SentMessage {
+    long idLong();
+
+    void delete(Runnable onSuccess, Consumer<Throwable> onError);
+  }
+
+  interface TrackedTransport {
+    boolean sendTracked(String text, Consumer<SentMessage> onSent, Consumer<Throwable> onError);
+
+    boolean deleteById(long messageId, Runnable onSuccess, Consumer<Throwable> onError);
+  }
+
+  static final class TrackedPosts {
+    private final Object lock = new Object();
+    private final LinkedHashMap<UUID, Long> messageIds = new LinkedHashMap<>();
+    private final LinkedHashSet<UUID> retractedBeforeAck = new LinkedHashSet<>();
+
+    boolean onAck(UUID submissionId, long messageId) {
+      synchronized (lock) {
+        if (retractedBeforeAck.remove(submissionId)) {
+          return true;
+        }
+        if (!messageIds.containsKey(submissionId) && messageIds.size() >= MAX_TRACKED_MESSAGES) {
+          messageIds.pollFirstEntry();
+        }
+        messageIds.put(submissionId, messageId);
+        return false;
+      }
+    }
+
+    Optional<Long> onRetract(UUID submissionId) {
+      synchronized (lock) {
+        var existing = messageIds.remove(submissionId);
+        if (existing != null) {
+          return Optional.of(existing);
+        }
+        if (!retractedBeforeAck.contains(submissionId)
+            && retractedBeforeAck.size() >= MAX_TRACKED_MESSAGES) {
+          retractedBeforeAck.removeFirst();
+        }
+        retractedBeforeAck.add(submissionId);
+        return Optional.empty();
+      }
+    }
+
+    int trackedCount() {
+      synchronized (lock) {
+        return messageIds.size();
+      }
+    }
+
+    int pendingRetractCount() {
+      synchronized (lock) {
+        return retractedBeforeAck.size();
+      }
+    }
+  }
+
   private final Logger logger;
   private final Object lifecycle = new Object();
   private final AtomicReference<@Nullable JDA> jda = new AtomicReference<>();
+  private final TrackedPosts trackedPosts = new TrackedPosts();
+  private final TrackedTransport transport;
   private volatile @Nullable TextChannel channel;
   private volatile boolean stopped;
 
   public JdaBridge(Logger logger) {
     this.logger = logger;
+    this.transport =
+        new TrackedTransport() {
+          @Override
+          public boolean sendTracked(
+              String text, Consumer<SentMessage> onSent, Consumer<Throwable> onError) {
+            var target = channel;
+            if (target == null) return false;
+            quietMessage(target.sendMessage(text))
+                .queue(
+                    sent ->
+                        onSent.accept(
+                            new SentMessage() {
+                              @Override
+                              public long idLong() {
+                                return sent.getIdLong();
+                              }
+
+                              @Override
+                              public void delete(
+                                  Runnable onSuccess, Consumer<Throwable> deleteError) {
+                                sent.delete().queue(ignored -> onSuccess.run(), deleteError);
+                              }
+                            }),
+                    onError);
+            return true;
+          }
+
+          @Override
+          public boolean deleteById(
+              long messageId, Runnable onSuccess, Consumer<Throwable> onError) {
+            var target = channel;
+            if (target == null) return false;
+            target.deleteMessageById(messageId).queue(ignored -> onSuccess.run(), onError);
+            return true;
+          }
+        };
+  }
+
+  JdaBridge(Logger logger, TrackedTransport transport) {
+    this.logger = logger;
+    this.transport = transport;
   }
 
   /** Logs in on a virtual thread so the server never waits on Discord. */
@@ -153,6 +261,48 @@ public final class JdaBridge implements DiscordGateway {
     }
     quietMessage(target.sendMessage(text))
         .queue(sent -> {}, error -> logger.warn("Posting to Discord failed", error));
+  }
+
+  @Override
+  public void postTracked(UUID submissionId, String text) {
+    var sentToChannel =
+        transport.sendTracked(
+            text,
+            sent -> {
+              if (trackedPosts.onAck(submissionId, sent.idLong())) {
+                sent.delete(
+                    () -> {},
+                    error -> logger.warn("Deleting retracted Discord post failed", error));
+              }
+            },
+            error -> logger.warn("Posting to Discord failed", error));
+    if (!sentToChannel) {
+      logger.debug("Discord is not connected; dropped a tracked post");
+    }
+  }
+
+  @Override
+  public void retract(UUID submissionId) {
+    var messageId = trackedPosts.onRetract(submissionId);
+    if (messageId.isEmpty()) {
+      return;
+    }
+    var deleted =
+        transport.deleteById(
+            messageId.orElseThrow(),
+            () -> {},
+            error -> logger.warn("Deleting retracted Discord post failed", error));
+    if (!deleted) {
+      logger.debug("Discord is not connected; could not retract {}", submissionId);
+    }
+  }
+
+  int trackedMessageCount() {
+    return trackedPosts.trackedCount();
+  }
+
+  int pendingRetractionCount() {
+    return trackedPosts.pendingRetractCount();
   }
 
   @Override
