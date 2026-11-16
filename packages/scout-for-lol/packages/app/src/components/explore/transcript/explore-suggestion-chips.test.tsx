@@ -25,7 +25,7 @@ describe("ExploreSuggestionChips", () => {
     expect(markup).toContain("Ask about your players, champions, or matches.");
     expect(markup).not.toContain("League ladder");
     expect(markup).toContain("Shuffle");
-    expect(markup).toContain('aria-label="Show different suggestions"');
+    expect(markup).toContain('aria-label="Shuffle suggestions"');
     expect(markup).toContain("scout-button--outline");
   });
 
