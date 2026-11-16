@@ -22,6 +22,7 @@ import {
   watchFolder,
   window,
   layout,
+  checking,
 } from "herdr";
 import { readdir } from "fs/promises";
 
@@ -96,12 +97,19 @@ const folderBase = (folder) => {
 // Display names only. hc machine names and addresses stay as they are.
 const MACHINE_TITLES = {
   "jerreds-macbook-pro": "MacBook",
+  macbook: "MacBook",
   "jerred-desktop": "Windows",
   desktop: "Windows",
   "mac-mini": "Karpathy",
   karpathy: "Karpathy",
   jobs: "Jobs",
   "jerreds-mac-mini": "Jobs",
+};
+const MACHINE_ORDER = {
+  MacBook: 1,
+  Karpathy: 2,
+  Windows: 3,
+  Jobs: 4,
 };
 
 function hostKey(value) {
@@ -249,6 +257,7 @@ export default class Spaces extends View {
     this.folded = new Set(
       JSON.parse(localStorage.getItem("machines.folded") ?? "[]"),
     );
+    if (checking()) return;
     this.refreshMachines(cx);
     this.watchJobs(cx);
     cx.timer.every(15000, (cx) => this.refreshMachines(cx));
@@ -699,12 +708,23 @@ export default class Spaces extends View {
   grouped(t, collapsed) {
     const rows = this.ordered();
     const draw = (r) => (collapsed ? this.compact(r, t) : this.row(r, t));
+    const platform = window()?.platform;
+    const titleOf = (name) =>
+      machineTitle(
+        name,
+        this.machines.find((m) => m.name === name),
+        this.hostName,
+        platform,
+      );
+    const rankOf = (name) => MACHINE_ORDER[titleOf(name)] ?? 99;
     const remote = [
       ...new Set([
         ...rows.map((r) => r.w.machine).filter(Boolean),
         ...this.machines.map((m) => m.name),
       ]),
-    ].sort();
+    ].sort(
+      (a, b) => rankOf(a) - rankOf(b) || titleOf(a).localeCompare(titleOf(b)),
+    );
     const loading = (m) => {
       const layout = machines().find((k) => k.name === m)?.layout;
       return (
@@ -781,7 +801,12 @@ export default class Spaces extends View {
                   .id("machine-awake")
                   .flex_none()
                   .gap(5)
+                  .px(3)
+                  .py(1)
+                  .rounded(5)
                   .items_center()
+                  .cursor_pointer()
+                  .hover((s) => s.text_color(t.foreground))
                   .tooltip(
                     this.awake ? "Keeping this Mac awake" : "Allow sleep",
                   )
@@ -791,24 +816,26 @@ export default class Spaces extends View {
                   })
                   .child(
                     div()
-                      .text_color(this.awake ? t.accent : t.foreground)
+                      .text_color(this.awake ? t.accent : t.dim)
                       .child(this.awake ? "Awake" : "Off"),
                   )
                   .child(
                     h_flex()
-                      .w(22)
-                      .h(12)
-                      .rounded(6)
+                      .w(26)
+                      .h(14)
+                      .rounded(7)
                       .px(2)
                       .items_center()
                       .flex_none()
-                      .bg(this.awake ? t.accent : t.raised)
+                      .border(1)
+                      .border_color(this.awake ? t.accent : t.input)
+                      .bg(this.awake ? t.accent : t.background)
                       .when(this.awake, (track) => track.justify_end())
                       .child(
                         div()
                           .size(8)
                           .rounded(4)
-                          .bg(this.awake ? t.accent_foreground : t.foreground),
+                          .bg(this.awake ? t.accent_foreground : t.muted),
                       ),
                   ),
               ),

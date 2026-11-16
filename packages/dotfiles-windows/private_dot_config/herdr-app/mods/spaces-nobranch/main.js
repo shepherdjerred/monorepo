@@ -20,6 +20,7 @@ import {
   watchFolder,
   window,
   layout,
+  checking,
 } from "herdr";
 
 function find(node, id) {
@@ -34,12 +35,19 @@ function find(node, id) {
 // Display names only. hc machine names and addresses stay as they are.
 const MACHINE_TITLES = {
   "jerreds-macbook-pro": "MacBook",
+  macbook: "MacBook",
   "jerred-desktop": "Windows",
   desktop: "Windows",
   "mac-mini": "Karpathy",
   karpathy: "Karpathy",
   jobs: "Jobs",
   "jerreds-mac-mini": "Jobs",
+};
+const MACHINE_ORDER = {
+  MacBook: 1,
+  Karpathy: 2,
+  Windows: 3,
+  Jobs: 4,
 };
 
 function hostKey(value) {
@@ -165,6 +173,7 @@ export default class Spaces extends View {
     this.folded = new Set(
       JSON.parse(localStorage.getItem("machines.folded") ?? "[]"),
     );
+    if (checking()) return;
     this.refreshMachines(cx);
     cx.timer.every(15000, (cx) => this.refreshMachines(cx));
     // `git status` walks the whole tree, on another machine a process there:
@@ -411,12 +420,23 @@ export default class Spaces extends View {
   grouped(t, collapsed) {
     const rows = this.ordered();
     const draw = (r) => (collapsed ? this.compact(r, t) : this.row(r, t));
+    const platform = window()?.platform;
+    const titleOf = (name) =>
+      machineTitle(
+        name,
+        this.machines.find((m) => m.name === name),
+        this.hostName,
+        platform,
+      );
+    const rankOf = (name) => MACHINE_ORDER[titleOf(name)] ?? 99;
     const remote = [
       ...new Set([
         ...rows.map((r) => r.w.machine).filter(Boolean),
         ...this.machines.map((m) => m.name),
       ]),
-    ].sort();
+    ].sort(
+      (a, b) => rankOf(a) - rankOf(b) || titleOf(a).localeCompare(titleOf(b)),
+    );
     const loading = (m) => {
       const layout = machines().find((k) => k.name === m)?.layout;
       return (

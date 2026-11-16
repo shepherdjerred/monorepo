@@ -23,6 +23,7 @@ const base: Request = {
   launcher: "brim",
   argv: null,
   tab: null,
+  sendMessage: true,
 };
 const named = { branch: "fix-cache", title: "Fix the cache" };
 const ok: ExecResult = { code: 0, stdout: "", stderr: "" };
@@ -89,6 +90,12 @@ test("requests are checked strictly", () => {
   expect(() =>
     parseRequest(JSON.stringify({ ...base, launcher: "fish" })),
   ).toThrow("launcher");
+  expect(() =>
+    parseRequest(JSON.stringify({ ...base, sendMessage: "yes" })),
+  ).toThrow("sendMessage");
+  expect(
+    parseRequest(JSON.stringify({ ...base, sendMessage: undefined })),
+  ).toMatchObject({ sendMessage: true });
 });
 
 test("on Windows an agent starts as its profile wrapper, agent-safe for plan modes", () => {
@@ -226,6 +233,52 @@ test("Antigravity takes -i, Kimi is typed, a shell gets nothing", () => {
     argv: null,
     task: null,
     typed: false,
+  });
+});
+
+test("when sendMessage is false, branch and tab are still named from description without sending a prompt", async () => {
+  expect(launch({ ...base, sendMessage: false }, named)).toEqual({
+    argv: ["brim", "--provider", "codex", "--"],
+    task: null,
+    typed: false,
+  });
+  expect(
+    launch({ ...base, provider: "antigravity", sendMessage: false }, named),
+  ).toEqual({
+    argv: ["brim", "--provider", "antigravity", "--"],
+    task: null,
+    typed: false,
+  });
+  expect(
+    launch({ ...base, provider: "claude-code", sendMessage: false }, named),
+  ).toEqual({
+    argv: [
+      "brim",
+      "--provider",
+      "claude-code",
+      "--",
+      "--name",
+      "Fix the cache",
+    ],
+    task: null,
+    typed: false,
+  });
+  const fake = fakeRuntime();
+  const outcome = await createWorktree(
+    { ...base, provider: "kimi", sendMessage: false },
+    fake.runtime,
+    (update) => {
+      steps.push(update.step);
+    },
+  );
+  expect(outcome.messageSent).toBe("none");
+  expect(fake.hc).toEqual([]);
+  expect(fake.spaces[0]).toEqual({
+    folder: "/home/.herdr/worktrees/repo/fix-cache",
+    machine: "",
+    name: "Fix the cache",
+    tab: "Fix the cache",
+    argv: ["brim", "--provider", "kimi", "--"],
   });
 });
 
