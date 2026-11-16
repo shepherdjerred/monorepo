@@ -6,6 +6,9 @@
 /** Named auth flows a package's routes may require before navigating. */
 export type AuthFlow = "scout-dev-login";
 
+/** How `ensureDevServer` passes an isolated bound port to `devCommand`. */
+export type DevRunner = "astro" | "vite" | "scout-dev-web";
+
 /** A screenshot-able package and how to boot/reach it. */
 export type PackageEntry = {
   /** CLI selector, e.g. "sjer-red", "scout-app". */
@@ -14,13 +17,12 @@ export type PackageEntry = {
   cwd: string;
   /** Command + args to boot the dev server, e.g. ["bun", "run", "dev"]. */
   devCommand: string[];
+  /** How `ensureDevServer` injects the allocated port into the child process. */
+  devRunner: DevRunner;
   /**
-   * The port the dev server must bind. It is authoritative, not a hint: every
-   * run spawns a fresh server that must bind exactly this port (we never reuse
-   * an already-running one — a probe can't verify it's the right app — and we
-   * don't parse an auto-bumped port back from stdout, since dev commands print
-   * inconsistent/hard-coded banners). If the port is already in use,
-   * `ensureDevServer` fails fast rather than guessing.
+   * Preferred default port hint. `ensureDevServer` binds this port when free
+   * and falls back automatically to an unused loopback port when busy so
+   * concurrent worktrees never collide or reuse an unrelated server.
    */
   expectedPort: number;
   /** Path navigated to when no route is given on the CLI. */

@@ -5,6 +5,7 @@ import { OverviewSchema, DeploymentSchema } from "#shared/contract.ts";
 test("saved-plan approval exposes exact public identity without encrypted provider data", async ({
   page,
   request,
+  baseURL,
 }) => {
   const response = await request.get("/api/v1/overview");
   const overview = OverviewSchema.parse(await response.json());
@@ -19,7 +20,8 @@ test("saved-plan approval exposes exact public identity without encrypted provid
   );
   if (environment === undefined || plan === undefined)
     throw new Error("Real persisted plan required");
-  const headers = { Origin: "http://127.0.0.1:17353" };
+  if (baseURL === undefined) throw new Error("Playwright baseURL required");
+  const headers = { Origin: baseURL };
   for (const deployment of overview.deployments.filter(
     (entry) =>
       entry.environmentId === environment.id &&

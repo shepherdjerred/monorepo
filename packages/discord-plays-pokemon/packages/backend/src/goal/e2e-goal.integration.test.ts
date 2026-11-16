@@ -140,7 +140,10 @@ function makeStubSpawner(): SpawnerRecord {
   return { spawner, spawnedArgs: () => capturedArgs };
 }
 
-function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
+function makeGoalConfig(
+  runtimeDirectory: string,
+  controlPort: number,
+): Config["game"]["goal"] {
   return {
     enabled: true,
     model: "gpt-5.6-sol",
@@ -150,7 +153,7 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     state_path: "goal-state.json",
     memory_dir: "goal-memory",
     control_host: "127.0.0.1",
-    control_port: 8082,
+    control_port: controlPort,
     max_runtime_minutes: 1,
     lock_minutes: 1,
     progress_update_interval_seconds: 60,
@@ -181,8 +184,19 @@ describe("e2e: /goal pipeline (T1–T7 integration)", () => {
     const messages: GoalDiscordMessage[] = [];
     const { spawner, spawnedArgs } = makeStubSpawner();
 
+    const controlServer = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch: () => new Response("ok"),
+    });
+    const boundPort = controlServer.port;
+    if (boundPort === undefined) {
+      await controlServer.stop(true);
+      throw new Error("expected bound ephemeral TCP port");
+    }
+
     const manager = new GoalManager({
-      config: makeGoalConfig(runtimeDirectory),
+      config: makeGoalConfig(runtimeDirectory, boundPort),
       controlToken: "stub-token",
       spawner,
       sendMessage: async (m) => {
@@ -191,74 +205,78 @@ describe("e2e: /goal pipeline (T1–T7 integration)", () => {
       snapshotProvider: () => emerald1BadgeSnapshot(),
       now: () => new Date("2026-06-13T00:00:00.000Z"),
     });
+    manager.setControlPort(boundPort);
 
-    const start = await manager.startGoal({
-      goal: "Advance the dialog and walk one tile",
-      requesterId: "e2e-user",
-      channelId: "e2e-channel",
-    });
-    expect(start.kind).toBe("started");
+    try {
+      const start = await manager.startGoal({
+        goal: "Advance the dialog and walk one tile",
+        requesterId: "e2e-user",
+        channelId: "e2e-channel",
+      });
+      expect(start.kind).toBe("started");
 
-    // observeProcess fires asynchronously after exit + persistState. Wait for
-    // the final cost-bearing message — the forwarded milestone lands first.
-    await waitForCondition(
-      () => messages.some((m) => /Cost: \$\d/.test(m.content)),
-      5000,
-    );
-
-    // ---- T8: the first agent_message is forwarded to Discord verbatim ----
-    expect(messages[0]?.content).toBe("Took a screenshot, see a dialog box.");
-    expect(messages[0]?.allowedUserIds).toEqual([]);
-    // The second agent_message is throttled: the fixed test clock keeps it
-    // inside the progress_update_interval_seconds window.
-    expect(
-      messages.filter((m) => m.content === "Advanced dialog 3x."),
-    ).toHaveLength(0);
-
-    // The test seam does not invoke a Codex executable. Production uses the
-    // SDK while the fixture preserves v1 CLI JSONL reader coverage.
-    const args = spawnedArgs();
-    expect(args[0]).toBe("codex-sdk-fixture");
-    expect(args).toContain("--output-last-message");
-
-    // ---- T2: Discord message ends with the cost+token line ----
-    const finalContent = messages.at(-1)?.content ?? "";
-    expect(finalContent).toContain(FINAL_REPORT);
-    expect(finalContent).toMatch(/Cost: \$\d/);
-    expect(finalContent).toMatch(/Tokens: \S+ in \/ \S+ out/);
-
-    // ---- T4: persisted goal-state.json carries a history entry ----
-    const statePath = path.resolve(runtimeDirectory, "goal-state.json");
-    const persisted: { current?: unknown; history?: unknown } =
-      await Bun.file(statePath).json();
-    expect(persisted.current).toBeDefined();
-    expect(Array.isArray(persisted.history)).toBe(true);
-    const history = Array.isArray(persisted.history) ? persisted.history : [];
-    expect(history).toHaveLength(1);
-    const entry: { goal?: string; status?: string } = history[0];
-    expect(entry.goal).toBe("Advance the dialog and walk one tile");
-    expect(entry.status).toBe("completed");
-
-    // ---- T7: spans recorded ----
-    const spans = exporter.getFinishedSpans();
-    const spanNames = spans.map((s) => s.name);
-    expect(spanNames).toContain("pokemon.goal.run");
-    expect(
-      spanNames.filter((n) => n === "pokemon.goal.turn").length,
-    ).toBeGreaterThanOrEqual(2);
-    expect(
-      spanNames.filter((n) => n === "pokemon.goal.tool").length,
-    ).toBeGreaterThanOrEqual(2);
-    const turnSpans = spans.filter((s) => s.name === "pokemon.goal.turn");
-    for (const span of turnSpans) {
-      expect(typeof span.attributes["gen_ai.usage.input_tokens"]).toBe(
-        "number",
+      // observeProcess fires asynchronously after exit + persistState. Wait for
+      // the final cost-bearing message — the forwarded milestone lands first.
+      await waitForCondition(
+        () => messages.some((m) => /Cost: \$\d/.test(m.content)),
+        5000,
       );
-      expect(typeof span.attributes["gen_ai.usage.output_tokens"]).toBe(
-        "number",
-      );
+
+      // ---- T8: the first agent_message is forwarded to Discord verbatim ----
+      expect(messages[0]?.content).toBe("Took a screenshot, see a dialog box.");
+      expect(messages[0]?.allowedUserIds).toEqual([]);
+      // The second agent_message is throttled: the fixed test clock keeps it
+      // inside the progress_update_interval_seconds window.
+      expect(
+        messages.filter((m) => m.content === "Advanced dialog 3x."),
+      ).toHaveLength(0);
+
+      // The test seam does not invoke a Codex executable. Production uses the
+      // SDK while the fixture preserves v1 CLI JSONL reader coverage.
+      const args = spawnedArgs();
+      expect(args[0]).toBe("codex-sdk-fixture");
+      expect(args).toContain("--output-last-message");
+
+      // ---- T2: Discord message ends with the cost+token line ----
+      const finalContent = messages.at(-1)?.content ?? "";
+      expect(finalContent).toContain(FINAL_REPORT);
+      expect(finalContent).toMatch(/Cost: \$\d/);
+      expect(finalContent).toMatch(/Tokens: \S+ in \/ \S+ out/);
+
+      // ---- T4: persisted goal-state.json carries a history entry ----
+      const statePath = path.resolve(runtimeDirectory, "goal-state.json");
+      const persisted: { current?: unknown; history?: unknown } =
+        await Bun.file(statePath).json();
+      expect(persisted.current).toBeDefined();
+      expect(Array.isArray(persisted.history)).toBe(true);
+      const history = Array.isArray(persisted.history) ? persisted.history : [];
+      expect(history).toHaveLength(1);
+      const entry: { goal?: string; status?: string } = history[0];
+      expect(entry.goal).toBe("Advance the dialog and walk one tile");
+      expect(entry.status).toBe("completed");
+
+      // ---- T7: spans recorded ----
+      const spans = exporter.getFinishedSpans();
+      const spanNames = spans.map((s) => s.name);
+      expect(spanNames).toContain("pokemon.goal.run");
+      expect(
+        spanNames.filter((n) => n === "pokemon.goal.turn").length,
+      ).toBeGreaterThanOrEqual(2);
+      expect(
+        spanNames.filter((n) => n === "pokemon.goal.tool").length,
+      ).toBeGreaterThanOrEqual(2);
+      const turnSpans = spans.filter((s) => s.name === "pokemon.goal.turn");
+      for (const span of turnSpans) {
+        expect(typeof span.attributes["gen_ai.usage.input_tokens"]).toBe(
+          "number",
+        );
+        expect(typeof span.attributes["gen_ai.usage.output_tokens"]).toBe(
+          "number",
+        );
+      }
+    } finally {
+      await manager.shutdown();
+      await controlServer.stop(true);
     }
-
-    await manager.shutdown();
   });
 });

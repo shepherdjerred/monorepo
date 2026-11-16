@@ -20,6 +20,17 @@ import {
 } from "#testing/platform-execution.ts";
 import { VersionCatalogEntrySchema } from "@shepherdjerred/version-catalog";
 
+const harnessPort = Number(
+  Bun.argv[2] ?? Bun.env["DELIVERY_E2E_PORT"] ?? "17353",
+);
+if (
+  !Number.isSafeInteger(harnessPort) ||
+  harnessPort < 1 ||
+  harnessPort > 65_535
+) {
+  throw new Error("DELIVERY_E2E_PORT must be a valid TCP port");
+}
+
 // This executable is an isolated acceptance harness, never a production entrypoint.
 const cluster = await createTestDatabase();
 async function startHarness() {
@@ -117,7 +128,7 @@ async function startHarness() {
   await serveHarness({
     cluster,
     delivery: platform.delivery,
-    port: 17_353,
+    port: harnessPort,
     enabledEnvironments: [
       "arcade/prod",
       scout.environmentId,

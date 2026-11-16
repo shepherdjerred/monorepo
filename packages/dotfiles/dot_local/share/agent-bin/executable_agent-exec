@@ -8,7 +8,8 @@
 #   wrapper's default flags. AGENT_SAFE=1 skips the default flags for one run;
 #   the environment is still scrubbed.
 # - Agents commit and push as the agent identity (~/.config/agent/gitconfig,
-#   ~/.config/gh-agent) and never wait on an editor or pager.
+#   ~/.config/gh-agent), keep Astro 7 dev/preview servers in the foreground,
+#   and never wait on an editor or pager.
 # - When Brim request capture is on for the agent, it runs through the local
 #   capture proxy (`brim capture env`).
 #
@@ -63,9 +64,10 @@ unset ANTHROPIC_API_KEY OPENAI_API_KEY CODEX_API_KEY GEMINI_API_KEY \
   CF_API_TOKEN CLOUDFLARE_API_TOKEN
 
 EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat
+ASTRO_DEV_BACKGROUND=0 ASTRO_PREVIEW_BACKGROUND=0
 GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig"
 GH_CONFIG_DIR="$HOME/.config/gh-agent"
-export EDITOR VISUAL GIT_EDITOR PAGER GIT_PAGER GIT_CONFIG_GLOBAL GH_CONFIG_DIR
+export EDITOR VISUAL GIT_EDITOR PAGER GIT_PAGER ASTRO_DEV_BACKGROUND ASTRO_PREVIEW_BACKGROUND GIT_CONFIG_GLOBAL GH_CONFIG_DIR
 
 # Brim request capture: when brim.capture.enabled is on and brim.capture.clis
 # lists this CLI, route it through the local capture proxy. `brim capture env`

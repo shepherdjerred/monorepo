@@ -15,6 +15,7 @@ export const PACKAGES: PackageEntry[] = [
     alias: "glitter-boys",
     cwd: "packages/glitter-boys",
     devCommand: ["bun", "run", "dev"],
+    devRunner: "astro",
     expectedPort: 4321,
     defaultRoute: "/",
   },
@@ -22,6 +23,7 @@ export const PACKAGES: PackageEntry[] = [
     alias: "sjer-red",
     cwd: "packages/sjer.red",
     devCommand: ["bun", "run", "dev"],
+    devRunner: "astro",
     expectedPort: 4321,
     defaultRoute: "/",
   },
@@ -29,6 +31,7 @@ export const PACKAGES: PackageEntry[] = [
     alias: "stocks-sjer-red",
     cwd: "packages/stocks-sjer-red",
     devCommand: ["bun", "run", "dev"],
+    devRunner: "astro",
     expectedPort: 4321,
     defaultRoute: "/",
   },
@@ -36,6 +39,7 @@ export const PACKAGES: PackageEntry[] = [
     alias: "cooklang-rich-preview",
     cwd: "packages/cooklang-rich-preview",
     devCommand: ["bun", "run", "dev"],
+    devRunner: "astro",
     expectedPort: 4321,
     defaultRoute: "/",
   },
@@ -43,6 +47,7 @@ export const PACKAGES: PackageEntry[] = [
     alias: "better-skill-capped",
     cwd: "packages/better-skill-capped",
     devCommand: ["bun", "run", "start"],
+    devRunner: "vite",
     expectedPort: 5173,
     defaultRoute: "/",
   },
@@ -50,6 +55,7 @@ export const PACKAGES: PackageEntry[] = [
     alias: "scout-marketing",
     cwd: "packages/scout-for-lol/packages/frontend",
     devCommand: ["bun", "run", "dev"],
+    devRunner: "astro",
     expectedPort: 4321,
     defaultRoute: "/",
   },
@@ -57,6 +63,7 @@ export const PACKAGES: PackageEntry[] = [
     alias: "mario-kart-frontend",
     cwd: "packages/discord-plays-mario-kart/packages/frontend",
     devCommand: ["bun", "run", "dev"],
+    devRunner: "vite",
     expectedPort: 5173,
     defaultRoute: "/",
   },
@@ -64,6 +71,7 @@ export const PACKAGES: PackageEntry[] = [
     alias: "pokemon-frontend",
     cwd: "packages/discord-plays-pokemon/packages/frontend",
     devCommand: ["bun", "run", "dev"],
+    devRunner: "vite",
     expectedPort: 5173,
     defaultRoute: "/",
   },
@@ -71,13 +79,14 @@ export const PACKAGES: PackageEntry[] = [
     alias: "scout-app",
     cwd: "packages/scout-for-lol",
     devCommand: ["bun", "run", "dev:design-audit"],
+    devRunner: "scout-dev-web",
     serverEnv: { SCOUT_DESIGN_AUDIT_LOCAL_BOOT: "true" },
-    // dev:web boots the backend (:3000) AND the Vite dev server; the Vite
-    // port is what a browser actually navigates to (it proxies /trpc +
+    // dev:web boots the backend (:3000 preferred) AND the Vite dev server; the
+    // Vite port is what a browser actually navigates to (it proxies /trpc +
     // /api to the backend), so that's the port this entry probes/waits on.
     expectedPort: 5180,
     defaultRoute: "/app/",
-    // Wait on a backend-backed path (Vite proxies /api → :3000), not just the
+    // Wait on a backend-backed path (Vite proxies /api → backend), not just the
     // SPA shell. The backend takes ~5s to open its listener after Vite is up;
     // probing /app/ alone would let the auth flow navigate to the proxied
     // /api/dev/login before the backend exists, yielding a proxy error.

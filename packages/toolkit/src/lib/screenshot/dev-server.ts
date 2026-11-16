@@ -1,13 +1,20 @@
 /**
- * Boot a registered package's dev server for `toolkit screenshot`.
+ * Boot a registered package's dev server on an isolated free port for
+ * `toolkit screenshot` and `toolkit screenshot-server`.
  */
+import net from "node:net";
 import { repoRoot } from "#lib/deployed/git.ts";
 import type { PackageEntry } from "./types.ts";
 
 export type DevServerHandle = {
   baseUrl: string;
+  port: number;
   stop: () => Promise<void>;
 };
+
+const SCOUT_DEFAULT_BACKEND_PORT = 3000;
+const SCOUT_TEMPORAL_PORT_OFFSET = 4233;
+const SCOUT_TEMPORAL_UI_PORT_OFFSET = 5233;
 
 /** Readiness probe: a non-5xx response on `url` means the app is up. */
 async function probeReady(url: string, timeoutMs: number): Promise<boolean> {
@@ -41,6 +48,9 @@ function devServerEnvironment(): Record<string, string> {
       environment[key] = value;
     }
   }
+  // Never let Astro 7 detach a silent background daemon in coding-agent runs.
+  environment["ASTRO_DEV_BACKGROUND"] = "0";
+  environment["ASTRO_PREVIEW_BACKGROUND"] = "0";
   return environment;
 }
 
@@ -67,16 +77,214 @@ async function canConnect(hostname: string, port: number): Promise<boolean> {
 }
 
 /**
- * Occupancy probe: is *anything* bound to this port? A TCP connect (not an HTTP
- * fetch) so it detects every listener — a non-HTTP service or an HTTPS-only
- * server would make `fetch()` reject and be misreported as free, letting a
- * fresh Astro/Vite spawn auto-increment while we probe the wrong port until the
- * timeout. Checks both loopback families so an IPv6-only listener still counts.
+ * Occupancy probe: is *anything* bound to this port? Checks both loopback
+ * families via TCP connect so an IPv6-only listener (`localhost` -> `::1`) is
+ * detected even when `127.0.0.1` appears unbound.
  */
 async function isPortInUse(port: number): Promise<boolean> {
   return (
     (await canConnect("127.0.0.1", port)) || (await canConnect("::1", port))
   );
+}
+
+/**
+ * Ephemerally bind `host:port` (or `127.0.0.1:0` when `port === 0`) and return
+ * the bound port, or `null` if `EADDRINUSE` / unavailable.
+ */
+function tryBindPort(host: string, port: number): Promise<number | null> {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.unref();
+    server.once("error", () => {
+      resolve(null);
+    });
+    server.listen({ host, port, exclusive: true }, () => {
+      const address = server.address();
+      const boundPort =
+        address !== null && typeof address === "object" ? address.port : null;
+      server.close(() => {
+        resolve(boundPort);
+      });
+    });
+  });
+}
+
+async function isPortAvailable(port: number): Promise<boolean> {
+  if (await isPortInUse(port)) {
+    return false;
+  }
+  const boundLoopback = await tryBindPort("127.0.0.1", port);
+  if (boundLoopback === null) {
+    return false;
+  }
+  const boundWildcard = await tryBindPort("0.0.0.0", port);
+  return boundWildcard !== null;
+}
+
+/**
+ * Allocate an unused local TCP port. Prefers `preferredPort` when provided and
+ * free across IPv4/IPv6 loopback and wildcard interfaces; otherwise binds
+ * `127.0.0.1:0` to pick an ephemeral unused port not in `excludedPorts`.
+ */
+export async function allocateFreePort(
+  preferredPort?: number,
+  excludedPorts: ReadonlySet<number> = new Set(),
+): Promise<number> {
+  if (
+    preferredPort !== undefined &&
+    preferredPort >= 1 &&
+    preferredPort <= 65_535 &&
+    !excludedPorts.has(preferredPort) &&
+    (await isPortAvailable(preferredPort))
+  ) {
+    return preferredPort;
+  }
+
+  for (let attempt = 0; attempt < 32; attempt += 1) {
+    const candidate = await tryBindPort("127.0.0.1", 0);
+    if (
+      candidate !== null &&
+      !excludedPorts.has(candidate) &&
+      !(await canConnect("::1", candidate)) &&
+      (await tryBindPort("0.0.0.0", candidate)) !== null
+    ) {
+      return candidate;
+    }
+  }
+
+  throw new Error("Failed to allocate an unused local TCP port after 32 tries");
+}
+
+function parseExplicitPortOverride(
+  value: string | undefined,
+): number | undefined {
+  if (value === undefined || !/^\d+$/.test(value)) {
+    return undefined;
+  }
+  const port = Number(value);
+  return port >= 1 && port <= 65_535 ? port : undefined;
+}
+
+export async function buildIsolatedDevLaunch(
+  entry: PackageEntry,
+  envOverrides: Record<string, string> = {},
+): Promise<{ port: number; command: string[]; env: Record<string, string> }> {
+  if (entry.devRunner === "astro") {
+    const port = await allocateFreePort(entry.expectedPort);
+    return {
+      port,
+      command: [
+        ...entry.devCommand,
+        "--",
+        "--ignore-lock",
+        "--port",
+        String(port),
+      ],
+      env: { ...envOverrides },
+    };
+  }
+
+  if (entry.devRunner === "vite") {
+    const port = await allocateFreePort(entry.expectedPort);
+    return {
+      port,
+      command: [
+        ...entry.devCommand,
+        "--",
+        "--port",
+        String(port),
+        "--strictPort",
+      ],
+      env: { ...envOverrides },
+    };
+  }
+
+  // `scout-dev-web` (`bun scripts/dev/dev-web.ts`) starts Vite, the Scout API
+  // backend, and Temporal dev + UI listeners. Allocate 4 distinct free ports so
+  // concurrent worktrees never collide on any of the 4 sockets.
+  const used = new Set<number>();
+  const webPort =
+    parseExplicitPortOverride(envOverrides["SCOUT_DEV_WEB_PORT"]) ??
+    (await allocateFreePort(entry.expectedPort, used));
+  used.add(webPort);
+
+  const backendPort =
+    parseExplicitPortOverride(envOverrides["SCOUT_DEV_BACKEND_PORT"]) ??
+    (await allocateFreePort(SCOUT_DEFAULT_BACKEND_PORT, used));
+  used.add(backendPort);
+
+  const preferredTemporal =
+    backendPort + SCOUT_TEMPORAL_PORT_OFFSET <= 65_535
+      ? backendPort + SCOUT_TEMPORAL_PORT_OFFSET
+      : SCOUT_DEFAULT_BACKEND_PORT + SCOUT_TEMPORAL_PORT_OFFSET;
+  const temporalPort =
+    parseExplicitPortOverride(envOverrides["SCOUT_DEV_TEMPORAL_PORT"]) ??
+    (await allocateFreePort(preferredTemporal, used));
+  used.add(temporalPort);
+
+  const preferredTemporalUi =
+    backendPort + SCOUT_TEMPORAL_UI_PORT_OFFSET <= 65_535
+      ? backendPort + SCOUT_TEMPORAL_UI_PORT_OFFSET
+      : SCOUT_DEFAULT_BACKEND_PORT + SCOUT_TEMPORAL_UI_PORT_OFFSET;
+  const temporalUiPort =
+    parseExplicitPortOverride(envOverrides["SCOUT_DEV_TEMPORAL_UI_PORT"]) ??
+    (await allocateFreePort(preferredTemporalUi, used));
+
+  return {
+    port: webPort,
+    command: [...entry.devCommand],
+    env: {
+      ...envOverrides,
+      SCOUT_DEV_WEB_PORT: String(webPort),
+      SCOUT_DEV_BACKEND_PORT: String(backendPort),
+      SCOUT_DEV_TEMPORAL_PORT: String(temporalPort),
+      SCOUT_DEV_TEMPORAL_UI_PORT: String(temporalUiPort),
+    },
+  };
+}
+
+async function terminateProcessGroup(
+  proc: Bun.Subprocess<"ignore", "pipe", "pipe">,
+): Promise<void> {
+  if (process.platform === "win32") {
+    try {
+      const killer = Bun.spawn(
+        ["taskkill", "/T", "/F", "/PID", String(proc.pid)],
+        {
+          stdout: "ignore",
+          stderr: "ignore",
+        },
+      );
+      await killer.exited;
+    } catch {
+      proc.kill();
+    }
+  } else {
+    try {
+      process.kill(-proc.pid, "SIGTERM");
+    } catch {
+      proc.kill();
+    }
+  }
+
+  let killTimer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    proc.exited,
+    new Promise((resolve) => {
+      killTimer = setTimeout(resolve, 5000);
+    }),
+  ]);
+  if (killTimer !== undefined) {
+    clearTimeout(killTimer);
+  }
+
+  if (proc.exitCode === null && process.platform !== "win32") {
+    try {
+      process.kill(-proc.pid, "SIGKILL");
+    } catch {
+      proc.kill("SIGKILL");
+    }
+  }
 }
 
 export async function ensureDevServer(
@@ -94,24 +302,6 @@ export async function ensureDevServer(
 ): Promise<DevServerHandle> {
   const timeoutMs = options.timeoutMs ?? 60_000;
   const readyPath = entry.readyPath ?? entry.defaultRoute;
-  const baseUrl = `http://localhost:${String(entry.expectedPort)}`;
-
-  // Always spawn a fresh, isolated dev server on the package's fixed
-  // `expectedPort` — never reuse whatever is already listening there. A status
-  // probe can't prove the running server is actually the requested app: an
-  // unrelated process, a stale build, or (for auth-gated entries) a stack
-  // started without ENABLE_DEV_LOGIN could be on that port. Dev commands also
-  // print inconsistent/hard-coded banners, so the bound port can't be read
-  // back from stdout either. So: require the port to be free and let the child
-  // bind exactly it; if it's occupied, fail fast rather than capture the wrong
-  // server or auto-bump to an unknown port.
-  if (await isPortInUse(entry.expectedPort)) {
-    throw new Error(
-      `${entry.alias}: port ${String(entry.expectedPort)} is already in use. ` +
-        `toolkit screenshot always spawns its own server on this fixed port (it can't verify an already-running one is the right app), ` +
-        `so stop whatever is on :${String(entry.expectedPort)} and retry.`,
-    );
-  }
 
   const root = await repoRoot();
   if (root === null) {
@@ -119,26 +309,29 @@ export async function ensureDevServer(
       "Not inside the monorepo (git rev-parse --show-toplevel failed or the version catalog is missing) — toolkit screenshot must run from within the repo checkout.",
     );
   }
+
+  const launch = await buildIsolatedDevLaunch(entry, options.envOverrides);
+  const baseUrl = `http://localhost:${String(launch.port)}`;
+
   // `detached` puts the child in its own process group so `stop()` can signal
-  // the whole tree (dev commands spawn descendants — see stop()).
+  // the whole tree (dev commands spawn descendants).
   // `BROWSER=none` stops a dev command that auto-opens a browser from popping
   // the user's default browser — Vite honors this env var — since we drive an
   // isolated PinchTab tab instead.
-  const proc = Bun.spawn(entry.devCommand, {
+  const proc = Bun.spawn(launch.command, {
     cwd: `${root}/${entry.cwd}`,
     env: {
       ...devServerEnvironment(),
-      ...options.envOverrides,
+      ...launch.env,
       BROWSER: "none",
     },
+    stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
     detached: true,
   });
 
-  // Drain stdout/stderr purely for diagnostics — the bound port is known
-  // (expectedPort), so nothing is parsed out of it. Draining keeps the pipes
-  // from filling and stalling the child.
+  // Drain stdout/stderr purely for diagnostics so pipes cannot fill and stall.
   let combinedOutput = "";
   const readStream = async (stream: ReadableStream<Uint8Array>) => {
     const reader = stream.getReader();
@@ -152,51 +345,23 @@ export async function ensureDevServer(
   const stdoutDone = readStream(proc.stdout);
   const stderrDone = readStream(proc.stderr);
 
-  const stop = async () => {
-    // The dev command may spawn descendants (scout's dev-web.ts starts backend
-    // and Vite).
-    // The child is a group leader (spawned `detached`), so signal the whole
-    // group with a negative PID — killing only `bun run` would orphan those
-    // servers and leave their ports occupied for the next run.
-    try {
-      process.kill(-proc.pid, "SIGTERM");
-    } catch {
-      // No such group (already exited, or a platform without process groups)
-      // — fall back to signaling the child directly.
-      proc.kill();
-    }
-    // Clear the loser of the race: if the process exits promptly, an
-    // un-cleared 5s timer would keep Bun's event loop (and thus the CLI)
-    // alive for the full 5s after cleanup.
-    let killTimer: ReturnType<typeof setTimeout> | undefined;
-    await Promise.race([
-      proc.exited,
-      new Promise((resolve) => {
-        killTimer = setTimeout(resolve, 5000);
-      }),
-    ]);
-    if (killTimer !== undefined) {
-      clearTimeout(killTimer);
-    }
+  let stopPromise: Promise<void> | undefined;
+  const stop = (): Promise<void> => {
+    stopPromise ??= terminateProcessGroup(proc);
+    return stopPromise;
   };
 
   // Register teardown NOW — before the readiness wait — so a signal delivered
   // during startup still tears the child (and its group) down.
   options.registerCleanup?.(stop);
 
-  // Wait until the freshly-spawned server answers on the expected port, the
-  // process exits (fail fast — e.g. missing tool, `op` not signed in), or we
-  // hit the deadline.
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (await probeReady(`${baseUrl}${readyPath}`, 2000)) {
       void stdoutDone;
       void stderrDone;
-      return { baseUrl, stop };
+      return { baseUrl, port: launch.port, stop };
     }
-    // `exitCode` is null until the child exits — a non-null value means it
-    // died before becoming ready (missing tool, `op` not signed in, …), so
-    // surface the captured output immediately instead of waiting the deadline.
     if (proc.exitCode !== null) {
       await stop();
       throw new Error(
@@ -208,6 +373,6 @@ export async function ensureDevServer(
 
   await stop();
   throw new Error(
-    `${entry.alias}: dev server did not become ready on :${String(entry.expectedPort)}${readyPath} within ${String(timeoutMs)}ms.\n--- output ---\n${combinedOutput}`,
+    `${entry.alias}: dev server did not become ready on :${String(launch.port)}${readyPath} within ${String(timeoutMs)}ms.\n--- output ---\n${combinedOutput}`,
   );
 }

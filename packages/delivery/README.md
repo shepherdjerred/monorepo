@@ -40,8 +40,10 @@ The API listens on port 7353 by default. `bun run dev` starts its watcher;
 `bun run dev:client` runs Vite on port 7354 and proxies API requests to the
 backend. The browser requires the same authenticated proxy as production.
 The Playwright harness supplies a separate real proxy and disposable database
-for local interaction tests: `e2e/server.ts` on port 17353 for the release
-specs, and `e2e/model-server.ts` on port 17355 for `model.spec.ts`. The model
+for local interaction tests (`e2e/server.ts` for the release specs and
+`e2e/model-server.ts` for `model.spec.ts`), picking worktree-isolated free
+ports automatically unless `DELIVERY_E2E_PORT` or `DELIVERY_MODEL_E2E_PORT` is
+explicitly set. The model
 harness reconciles its own catalog and records Arcade's releases, a
 configuration rebind, monitor observations and a quarantined deploy through Delivery's own APIs (`e2e/model.ts`), plus a tofu stack waiting
 at its approve step and archives for an operator-run stack and a channel

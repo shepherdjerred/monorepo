@@ -17,6 +17,11 @@ for _front in "$HOME/.local/share/toolkit/shims" "$HOME/.local/share/agent-bin";
 done
 unset _front
 
+# Keep Astro 7 dev/preview servers attached in the foreground instead of
+# detaching background daemons in coding-agent shells.
+export ASTRO_DEV_BACKGROUND=0
+export ASTRO_PREVIEW_BACKGROUND=0
+
 # Local-only is the safe default for mobile and unreliable networks. This file
 # is private chezmoi output; it contains the remote credentials only for an
 # explicit `turbo_cache_remote` session switch.
