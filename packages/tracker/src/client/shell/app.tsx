@@ -59,6 +59,7 @@ subscribeActor(() => {
   void queryClient.invalidateQueries({ queryKey: bootstrapKey });
   void queryClient.invalidateQueries({ queryKey: ["issue"] });
   void queryClient.invalidateQueries({ queryKey: listsKey });
+  void queryClient.invalidateQueries({ queryKey: ["forum"] });
 });
 
 const headings = {
@@ -66,6 +67,7 @@ const headings = {
   issues: "Issues",
   board: "Board",
   forum: "Forum",
+  "forum-thread": "Forum",
   projects: "Projects",
   actors: "Actors",
   activity: "Activity",
@@ -76,6 +78,9 @@ const headings = {
 function pageHeading(route: RouteInfo, data: BootstrapData | undefined) {
   if (route.view === "issue") {
     return route.identifier ?? headings.issues;
+  }
+  if (route.view === "forum-thread") {
+    return route.forumIdentifier ?? headings.forum;
   }
   if (route.view === "project") {
     return (
@@ -112,7 +117,8 @@ function WorkspaceSkeleton({ route }: { route: RouteInfo }) {
         </div>
       );
     }
-    case "forum": {
+    case "forum":
+    case "forum-thread": {
       return (
         <div className="reading-page">
           <ActivitySkeleton />
@@ -269,7 +275,9 @@ export function Shell() {
       />
       <div className="main-content">
         <header className="page-header">
-          {route.view === "issue" ? (
+          {route.view === "issue" ||
+          route.view === "forum" ||
+          route.view === "forum-thread" ? (
             <p className="page-title">{heading}</p>
           ) : (
             <h1 className="page-title">{heading}</h1>
@@ -361,9 +369,11 @@ export function Shell() {
           action={(key) => actions[key]?.()}
           close={closeOverlay}
           navigate={(to) => {
-            // Opening an issue page from the palette morphs into it.
+            // Opening an issue or forum thread from the palette morphs into it.
             void navigate(to, {
-              viewTransition: viewTransitions && to.startsWith("/issues/"),
+              viewTransition:
+                viewTransitions &&
+                (to.startsWith("/issues/") || to.startsWith("/forum")),
             });
           }}
           create={create}

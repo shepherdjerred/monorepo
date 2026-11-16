@@ -1,15 +1,6 @@
-import { TRPCError } from "@trpc/server";
 import { t, procedure, mutation } from "./rpc.ts";
 import { z } from "zod";
-import {
-  ForumListSchema,
-  ForumReferenceSchema,
-  CreateForumPostSchema,
-  UpdateForumPostSchema,
-  ReplyForumSchema,
-  ResolveForumSchema,
-  ReopenForumSchema,
-} from "#shared/forum.ts";
+import { forumRouter } from "./forum-router.ts";
 import { presentActor } from "#infrastructure/issue-repository.ts";
 import {
   BulkUpdateIssuesSchema,
@@ -30,21 +21,6 @@ import {
 } from "#shared/schema.ts";
 
 const teamInput = z.object({ teamKey: TeamKeySchema.optional() }).default({});
-const forumProcedure = procedure.use(async ({ ctx, next }) => {
-  if (!(await ctx.forumEnabled()))
-    throw new TRPCError({ code: "FORBIDDEN", message: "Forum is disabled" });
-  return next();
-});
-const forumMutation = forumProcedure
-  .input(MutationSchema)
-  .use(async ({ ctx, next }) => {
-    if (!(await ctx.writesEnabled()))
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Tracker writes are paused",
-      });
-    return next();
-  });
 const eventsInput = z
   .object({
     identifier: IdentifierSchema.optional(),
@@ -132,36 +108,7 @@ const activity = procedure
   });
 
 export const appRouter = t.router({
-  forum: t.router({
-    list: forumProcedure
-      .input(ForumListSchema)
-      .query(({ ctx, input }) => ctx.forum.list(input)),
-    search: forumProcedure
-      .input(
-        ForumListSchema.extend({
-          state: ForumListSchema.shape.state.default("all"),
-        }),
-      )
-      .query(({ ctx, input }) => ctx.forum.list(input)),
-    byId: forumProcedure
-      .input(ForumReferenceSchema)
-      .query(({ ctx, input }) => ctx.forum.byId(input.id)),
-    create: forumMutation
-      .input(CreateForumPostSchema)
-      .mutation(({ ctx, input }) => ctx.forum.create(input, ctx.requestId)),
-    update: forumMutation
-      .input(UpdateForumPostSchema)
-      .mutation(({ ctx, input }) => ctx.forum.update(input, ctx.requestId)),
-    reply: forumMutation
-      .input(ReplyForumSchema)
-      .mutation(({ ctx, input }) => ctx.forum.reply(input, ctx.requestId)),
-    resolve: forumMutation
-      .input(ResolveForumSchema)
-      .mutation(({ ctx, input }) => ctx.forum.resolve(input, ctx.requestId)),
-    reopen: forumMutation
-      .input(ReopenForumSchema)
-      .mutation(({ ctx, input }) => ctx.forum.reopen(input, ctx.requestId)),
-  }),
+  forum: forumRouter,
   maintenance: t.router({
     cleanupStaged: mutation.mutation(({ ctx, input }) =>
       ctx.attachments.cleanupStaged(

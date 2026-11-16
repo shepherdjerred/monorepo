@@ -198,5 +198,20 @@ describe("recognising the request that carries a pending send", () => {
         input: undefined,
       }),
     ).toBe(false);
+    expect(
+      carries(pending({ kind: "forum-post", text: "Post body" }), {
+        path: "forum.create",
+        input: { title: "Title", body: "Post body" },
+      }),
+    ).toBe(true);
+    expect(
+      carries(
+        pending({ kind: "forum-reply", subject: "FM-7", text: "Reply body" }),
+        {
+          path: "forum.reply",
+          input: { id: "FM-7", body: "Reply body" },
+        },
+      ),
+    ).toBe(true);
   });
 });

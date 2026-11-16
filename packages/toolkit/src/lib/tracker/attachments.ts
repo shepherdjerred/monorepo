@@ -9,22 +9,21 @@ const UploadedSchema = z.object({
   url: z.string(),
 });
 
-export async function attachFiles(
-  connection: { url: string; client: TrackerClient },
-  identifier: string,
-  files: string[],
+export type UploadedAttachment = z.infer<typeof UploadedSchema>;
+
+export async function uploadAttachments(
+  url: string,
+  files: readonly string[],
   actor: ActorEnvelope,
-) {
-  const { url, client } = connection;
-  if (files.length === 0) throw new Error("Provide at least one file");
-  const issue = await client.issues.byIdentifier.query({ identifier });
-  const uploaded: z.infer<typeof UploadedSchema>[] = [];
+): Promise<UploadedAttachment[]> {
+  const baseUrl = url.replace(/\/$/u, "");
+  const uploaded: UploadedAttachment[] = [];
   for (const path of files) {
     const file = Bun.file(path);
     if (!(await file.exists())) throw new Error(`File does not exist: ${path}`);
     const form = new FormData();
     form.set("file", file, nodePath.basename(path));
-    const response = await fetch(`${url}/api/attachments`, {
+    const response = await fetch(`${baseUrl}/api/attachments`, {
       method: "POST",
       body: form,
       signal: AbortSignal.timeout(120_000),
@@ -40,6 +39,19 @@ export async function attachFiles(
       );
     uploaded.push(UploadedSchema.parse(await response.json()));
   }
+  return uploaded;
+}
+
+export async function attachFiles(
+  connection: { url: string; client: TrackerClient },
+  identifier: string,
+  files: string[],
+  actor: ActorEnvelope,
+) {
+  const { url, client } = connection;
+  if (files.length === 0) throw new Error("Provide at least one file");
+  const issue = await client.issues.byIdentifier.query({ identifier });
+  const uploaded = await uploadAttachments(url, files, actor);
   await client.issues.update.mutate({
     actor,
     identifier,

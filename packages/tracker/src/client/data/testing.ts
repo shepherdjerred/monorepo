@@ -124,6 +124,7 @@ export function detailFixture(issue: Issue): IssueDetailData {
     viewerVoted: false,
     relations: [],
     children: [],
+    forumThreads: [],
   };
 }
 

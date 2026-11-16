@@ -10,11 +10,18 @@ export const StateTypeSchema = z.enum([
   "canceled",
   "duplicate",
 ]);
-export const IdentifierSchema = z.string().regex(/^[A-Z][A-Z0-9]*-[1-9]\d*$/u);
+export const IdentifierSchema = z
+  .string()
+  .regex(/^[A-Z][A-Z0-9]*-[1-9]\d*$/u)
+  .refine(
+    (value) => !value.startsWith("FM-"),
+    "FM-* identifiers refer to forum threads",
+  );
 export const TeamKeySchema = z
   .string()
   .regex(/^[A-Z][A-Z0-9]*$/u)
-  .max(20);
+  .max(20)
+  .refine((value) => value !== "FM", "FM is reserved for forum threads");
 export const ColorSchema = z.string().regex(/^#[0-9a-f]{6}$/iu);
 export const SlugSchema = z
   .string()

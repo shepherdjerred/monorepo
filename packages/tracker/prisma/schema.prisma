@@ -79,6 +79,7 @@ model Project {
   color String
   archivedAt DateTime?
   issues Issue[]
+  forumPosts ForumPost[]
 }
 
 model Actor {
@@ -100,12 +101,22 @@ model Actor {
   views View[]
   forumPosts ForumPost[] @relation("forumCreator")
   forumResolutions ForumPost[] @relation("forumResolver")
+  ownedForumPosts ForumPost[] @relation("forumOwner")
+  pinnedForumPosts ForumPost[] @relation("forumPinner")
+  lastRepliedForumPosts ForumPost[] @relation("forumLastReplier")
   forumReplies ForumReply[]
+  forumPostVotes ForumPostVote[]
+  forumReplyVotes ForumReplyVote[]
+  forumReactions ForumReaction[]
+  createdForumIssueLinks ForumIssueLink[]
+  forumThreadStates ForumThreadState[]
 }
 
 enum ForumKind {
   notice
   discussion
+  question
+  decision
 }
 
 enum ForumState {
@@ -115,6 +126,7 @@ enum ForumState {
 
 model ForumPost {
   id String @id @default(uuid())
+  number Int @unique @default(autoincrement())
   kind ForumKind
   title String
   body String
@@ -124,27 +136,124 @@ model ForumPost {
   state ForumState @default(open)
   creatorId String
   creator Actor @relation("forumCreator", fields: [creatorId], references: [id])
+  ownerId String?
+  owner Actor? @relation("forumOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  projectId String?
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  pinnedAt DateTime?
+  pinnedById String?
+  pinnedBy Actor? @relation("forumPinner", fields: [pinnedById], references: [id], onDelete: SetNull)
+  acceptedReplyId String?
+  acceptedReply ForumReply? @relation("acceptedForumReply", fields: [acceptedReplyId], references: [id], onDelete: SetNull)
   resolverId String?
   resolver Actor? @relation("forumResolver", fields: [resolverId], references: [id])
   resolutionNote String?
   resolvedAt DateTime?
+  editedAt DateTime?
+  replyCount Int @default(0)
+  voteCount Int @default(0)
+  lastActivityAt DateTime @default(now())
+  lastReplyAt DateTime?
+  lastReplyAuthorId String?
+  lastReplyAuthor Actor? @relation("forumLastReplier", fields: [lastReplyAuthorId], references: [id], onDelete: SetNull)
   revision Int @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  replies ForumReply[]
+  searchVector Unsupported("tsvector")? @default(dbgenerated())
+  replies ForumReply[] @relation("forumPostReplies")
+  votes ForumPostVote[]
+  reactions ForumReaction[]
+  issueLinks ForumIssueLink[]
+  threadStates ForumThreadState[]
+  attachments Attachment[]
   @@index([kind, state, updatedAt, id])
+  @@index([pinnedAt, lastActivityAt, id])
+  @@index([projectId, lastActivityAt, id])
   @@index([scopes], type: Gin)
 }
 
 model ForumReply {
   id String @id @default(uuid())
   postId String
-  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post ForumPost @relation("forumPostReplies", fields: [postId], references: [id], onDelete: Cascade)
+  parentReplyId String?
+  parentReply ForumReply? @relation("forumReplyThread", fields: [parentReplyId, postId], references: [id, postId], onDelete: Cascade)
+  childReplies ForumReply[] @relation("forumReplyThread")
+  acceptedForPosts ForumPost[] @relation("acceptedForumReply")
   authorId String
   author Actor @relation(fields: [authorId], references: [id])
   body String
   createdAt DateTime @default(now())
+  editedAt DateTime?
+  deletedAt DateTime?
+  voteCount Int @default(0)
+  searchVector Unsupported("tsvector")? @default(dbgenerated())
+  votes ForumReplyVote[]
+  reactions ForumReaction[]
+  issueLinks ForumIssueLink[]
+  attachments Attachment[]
+  @@unique([id, postId])
   @@index([postId, createdAt, id])
+  @@index([parentReplyId, postId])
+}
+
+model ForumPostVote {
+  postId String
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  actorId String
+  actor Actor @relation(fields: [actorId], references: [id])
+  note String?
+  createdAt DateTime @default(now())
+  @@id([postId, actorId])
+}
+
+model ForumReplyVote {
+  replyId String
+  reply ForumReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  actorId String
+  actor Actor @relation(fields: [actorId], references: [id])
+  createdAt DateTime @default(now())
+  @@id([replyId, actorId])
+}
+
+model ForumReaction {
+  id String @id @default(uuid())
+  postId String?
+  post ForumPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  replyId String?
+  reply ForumReply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  actorId String
+  actor Actor @relation(fields: [actorId], references: [id])
+  emoji String
+  createdAt DateTime @default(now())
+  @@index([postId])
+  @@index([replyId])
+}
+
+model ForumIssueLink {
+  postId String
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  issueId String
+  issue Issue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  sourceReplyId String?
+  sourceReply ForumReply? @relation(fields: [sourceReplyId], references: [id], onDelete: SetNull)
+  createdById String
+  createdBy Actor @relation(fields: [createdById], references: [id])
+  createdAt DateTime @default(now())
+  @@id([postId, issueId])
+  @@index([issueId])
+}
+
+model ForumThreadState {
+  postId String
+  post ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  actorId String
+  actor Actor @relation(fields: [actorId], references: [id])
+  mode String?
+  lastReadAt DateTime?
+  updatedAt DateTime @updatedAt
+  @@id([postId, actorId])
+  @@index([actorId, mode, updatedAt])
 }
 
 model Issue {
@@ -186,6 +295,7 @@ model Issue {
   events Event[]
   relationsFrom IssueRelation[] @relation("from")
   relationsTo IssueRelation[] @relation("to")
+  forumLinks ForumIssueLink[]
   @@unique([teamId, number])
   @@unique([id, teamId])
   @@index([updatedAt, id])
@@ -241,8 +351,14 @@ model Attachment {
   issue Issue? @relation(fields: [issueId], references: [id], onDelete: SetNull)
   commentId String?
   comment Comment? @relation(fields: [commentId], references: [id], onDelete: SetNull)
+  forumPostId String?
+  forumPost ForumPost? @relation(fields: [forumPostId], references: [id], onDelete: SetNull)
+  forumReplyId String?
+  forumReply ForumReply? @relation(fields: [forumReplyId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   @@index([status, createdAt])
+  @@index([forumPostId])
+  @@index([forumReplyId])
 }
 
 model Vote {

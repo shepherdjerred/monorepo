@@ -1,37 +1,23 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router";
-import {
-  ArrowUpRight,
-  Check,
-  ChevronLeft,
-  History,
-  Search,
-} from "lucide-react";
+import { ChevronLeft, Search } from "lucide-react";
 import { api, type BootstrapData } from "#client/data/api.ts";
 import { Modal, ErrorNotice } from "#client/ui/ui.tsx";
-import { StateIcon } from "#client/ui/icons.tsx";
 import type { IssuePrefill } from "#client/issues/issue-form.tsx";
 import { rootEntries } from "./palette-commands.tsx";
 import { matchesEntry, rankEntries } from "./palette-rank.ts";
+import {
+  PaletteResults,
+  paletteListId,
+  paletteOptionId,
+  type ForumResult,
+  type IssueResult,
+} from "./palette-results.tsx";
 import type { PaletteEntry, PaletteStep } from "./palette-steps.tsx";
 import { recentIssues } from "./recent-issues.ts";
-import { isPlainClick } from "./route.ts";
 import type { Targets } from "./shell-actions.ts";
 import { isComposing } from "#client/ui/ime.ts";
 import type { SavedView } from "#client/saved-views/view-params.ts";
-import { useViewTransitions } from "#client/feedback/motion.ts";
-
-const listId = "palette-results";
-const optionId = (index: number) => `palette-option-${String(index)}`;
-
-type IssueResult = {
-  id: string;
-  identifier: string;
-  title: string;
-  subtitle?: string;
-  state?: { type: BootstrapData["states"][number]["type"]; color: string };
-};
 
 /** Issues to offer: search results while typing, else the recent ones. */
 function offeredIssues(
@@ -62,159 +48,116 @@ function subjectOf(targets: Targets | undefined) {
     : `${String(targets.identifiers.length)} issues`;
 }
 
-/** One row of the palette, in the order arrows and Enter step through. */
 type Option =
   | { kind: "issue"; issue: IssueResult }
+  | { kind: "forum"; thread: ForumResult }
   | { kind: "entry"; entry: PaletteEntry };
 
-/** Consecutive entries of one section share a heading. */
-function sections(entries: readonly PaletteEntry[]) {
-  const groups: { name: string; entries: PaletteEntry[]; start: number }[] = [];
-  entries.forEach((entry, index) => {
-    const last = groups.at(-1);
-    if (last?.name === entry.section) {
-      last.entries.push(entry);
-    } else {
-      groups.push({ name: entry.section, entries: [entry], start: index });
-    }
-  });
-  return groups;
-}
-
-function IssueOption({
-  issue,
-  index,
-  active,
-  close,
-  pick,
-}: {
-  issue: IssueResult;
-  index: number;
-  active: boolean;
-  close: () => void;
-  /** Choosing the issue picks it for a step instead of opening it. */
-  pick: (() => void) | undefined;
-}) {
-  const viewTransition = useViewTransitions();
-  if (pick !== undefined) {
-    return (
-      <button
-        type="button"
-        role="option"
-        id={optionId(index)}
-        aria-selected={active}
-        tabIndex={-1}
-        onClick={pick}
-      >
-        {issue.state !== undefined && (
-          <StateIcon type={issue.state.type} color={issue.state.color} />
-        )}
-        <span className="identifier">{issue.identifier}</span>
-        <span className="palette-issue-copy">
-          <span>{issue.title}</span>
-        </span>
-      </button>
-    );
+function handlePaletteKey(
+  event: KeyboardEvent<HTMLInputElement>,
+  options: {
+    count: number;
+    active: number;
+    hasStep: boolean;
+    query: string;
+    move: (delta: number) => void;
+    choose: (index: number) => void;
+    back: () => void;
+  },
+) {
+  if (isComposing(event.nativeEvent)) return;
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    event.preventDefault();
+    options.move(event.key === "ArrowDown" ? 1 : -1);
+  } else if (event.key === "Enter" && options.count > 0) {
+    event.preventDefault();
+    options.choose(options.active);
+  } else if (
+    options.hasStep &&
+    options.query === "" &&
+    event.key === "Backspace"
+  ) {
+    event.preventDefault();
+    options.back();
   }
-  return (
-    <Link
-      role="option"
-      id={optionId(index)}
-      aria-selected={active}
-      tabIndex={-1}
-      to={`/issues/${issue.identifier}`}
-      viewTransition={viewTransition}
-      onClick={(event) => {
-        if (isPlainClick(event)) {
-          close();
-        }
-      }}
-    >
-      {issue.state === undefined ? (
-        <History size={15} aria-hidden="true" />
-      ) : (
-        <StateIcon type={issue.state.type} color={issue.state.color} />
-      )}
-      <span className="identifier">{issue.identifier}</span>
-      <span className="palette-issue-copy">
-        <span>{issue.title}</span>
-        {issue.subtitle !== undefined && issue.subtitle !== "" && (
-          <small className="muted">{issue.subtitle}</small>
-        )}
-      </span>
-      <ArrowUpRight size={14} aria-hidden="true" />
-    </Link>
-  );
 }
 
-/** Commands under their section headings; `start` is the first row's index. */
-function EntryGroups({
-  entries,
-  start,
-  active,
-  choose,
-}: {
-  entries: readonly PaletteEntry[];
-  start: number;
-  active: number;
-  choose: (index: number) => void;
-}) {
-  return (
-    <>
-      {sections(entries).map((group) => (
-        <div
-          role="group"
-          aria-labelledby={`palette-section-${String(start + group.start)}`}
-          key={`${group.name}-${String(start + group.start)}`}
-        >
-          <div
-            className="palette-group"
-            id={`palette-section-${String(start + group.start)}`}
-          >
-            {group.name}
-          </div>
-          {group.entries.map((entry, offset) => {
-            const index = start + group.start + offset;
-            return (
-              <button
-                role="option"
-                id={optionId(index)}
-                aria-selected={active === index}
-                tabIndex={-1}
-                key={entry.id}
-                onClick={() => {
-                  choose(index);
-                }}
-              >
-                <span className="option-icon">{entry.icon}</span>
-                <span className="option-label">{entry.label}</span>
-                {entry.checked === true && (
-                  <>
-                    <Check
-                      size={14}
-                      className="menu-check"
-                      aria-hidden="true"
-                    />
-                    <span className="sr-only">, current</span>
-                  </>
-                )}
-                {entry.hint !== undefined && (
-                  <kbd aria-hidden="true">{entry.hint}</kbd>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      ))}
-    </>
-  );
+function executePaletteChoice(
+  option: Option | undefined,
+  handlers: {
+    picking: PaletteStep["issues"] | undefined;
+    close: () => void;
+    navigate: (to: string) => void;
+    pushStep: (next: PaletteStep) => void;
+    bumpVersion: () => void;
+  },
+) {
+  if (option === undefined) return;
+  if (option.kind === "issue") {
+    const { identifier } = option.issue;
+    handlers.close();
+    requestAnimationFrame(() => {
+      if (handlers.picking === undefined) {
+        handlers.navigate(`/issues/${identifier}`);
+      } else {
+        handlers.picking.pick(identifier);
+      }
+    });
+    return;
+  }
+  if (option.kind === "forum") {
+    const { identifier } = option.thread;
+    handlers.close();
+    requestAnimationFrame(() => {
+      handlers.navigate(`/forum/${identifier}`);
+    });
+    return;
+  }
+  const { entry } = option;
+  if (entry.step !== undefined) {
+    handlers.pushStep(entry.step);
+    return;
+  }
+  if (entry.stay === true) {
+    entry.run?.();
+    handlers.bumpVersion();
+    return;
+  }
+  handlers.close();
+  requestAnimationFrame(() => {
+    entry.run?.();
+  });
 }
 
-/**
- * Search and commands. Commands act on the open issue, the selection or the
- * focused row; a command ending in "…" steps into a nested list without
- * leaving the palette, and Escape or Backspace on an empty query steps out.
- */
+function usePaletteQueries(
+  open: boolean,
+  query: string,
+  step: PaletteStep | undefined,
+  forumEnabled: boolean,
+) {
+  const trimmed = query.trim();
+  const searching =
+    (step === undefined || step.issues !== undefined) && trimmed.length > 0;
+  const searchForum = open && searching && step === undefined && forumEnabled;
+  const results = useQuery({
+    queryKey: ["search", query],
+    queryFn: () => api.search.query.query({ query }),
+    enabled: open && searching,
+  });
+  const forumResults = useQuery({
+    queryKey: ["forum", "palette-search", trimmed],
+    queryFn: () => api.forum.search.query({ query: trimmed, limit: 6 }),
+    enabled: searchForum,
+  });
+  return {
+    searching,
+    issues: offeredIssues(step, searching, results.data?.items),
+    forumThreads: searchForum ? (forumResults.data?.items ?? []) : [],
+    error: results.error ?? forumResults.error,
+    fetching: results.isFetching || forumResults.isFetching,
+  };
+}
+
 export function Palette({
   open,
   close,
@@ -241,19 +184,11 @@ export function Palette({
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const [steps, setSteps] = useState<readonly PaletteStep[]>([]);
-  // A command that keeps the palette open changes what its rows show.
   const [, setVersion] = useState(0);
   const step = steps.at(-1);
-  const searching =
-    (step === undefined || step.issues !== undefined) &&
-    query.trim().length > 0;
-  const results = useQuery({
-    queryKey: ["search", query],
-    queryFn: () => api.search.query.query({ query }),
-    enabled: open && searching,
-  });
-  const issues = offeredIssues(step, searching, results.data?.items);
-  const entries = (
+  const { searching, issues, forumThreads, error, fetching } =
+    usePaletteQueries(open, query, step, bootstrap.forumEnabled);
+  const rawEntries =
     step === undefined
       ? rootEntries({
           bootstrap,
@@ -265,12 +200,15 @@ export function Palette({
           views,
           teamKey,
         })
-      : step.entries(query)
-  ).filter((entry) => entry.always === true || matchesEntry(entry, query));
+      : step.entries(query);
+  const entries = rawEntries.filter(
+    (entry) => entry.always === true || matchesEntry(entry, query),
+  );
   const { leading, trailing } = rankEntries(entries, query);
   const ordered: Option[] = [
     ...leading.map((entry) => ({ kind: "entry" as const, entry })),
     ...issues.map((issue) => ({ kind: "issue" as const, issue })),
+    ...forumThreads.map((thread) => ({ kind: "forum" as const, thread })),
     ...trailing.map((entry) => ({ kind: "entry" as const, entry })),
   ];
   const count = ordered.length;
@@ -281,49 +219,26 @@ export function Palette({
     setSelected(0);
   }
   function choose(index: number) {
-    const option = ordered[index];
-    if (option === undefined) {
-      return;
-    }
-    const picking = step?.issues;
-    if (option.kind === "issue") {
-      const { identifier } = option.issue;
-      close();
-      requestAnimationFrame(() => {
-        if (picking === undefined) {
-          navigate(`/issues/${identifier}`);
-        } else {
-          picking.pick(identifier);
-        }
-      });
-      return;
-    }
-    const { entry } = option;
-    const next = entry.step;
-    if (next !== undefined) {
-      setSteps((known) => [...known, next]);
-      setQuery("");
-      setSelected(0);
-      return;
-    }
-    if (entry.stay === true) {
-      entry.run?.();
-      setVersion((version) => version + 1);
-      return;
-    }
-    close();
-    requestAnimationFrame(() => {
-      entry.run?.();
+    executePaletteChoice(ordered[index], {
+      picking: step?.issues,
+      close,
+      navigate,
+      pushStep: (next) => {
+        setSteps((known) => [...known, next]);
+        setQuery("");
+        setSelected(0);
+      },
+      bumpVersion: () => {
+        setVersion((version) => version + 1);
+      },
     });
   }
   function move(delta: number) {
-    if (count === 0) {
-      return;
-    }
+    if (count === 0) return;
     const next = (active + delta + count) % count;
     setSelected(next);
     document
-      .querySelector(`#${optionId(next)}`)
+      .querySelector(`#${paletteOptionId(next)}`)
       ?.scrollIntoView({ block: "nearest" });
   }
   const subject = subjectOf(targets);
@@ -334,9 +249,7 @@ export function Palette({
       onClose={close}
       className="palette"
       onEscape={() => {
-        if (step === undefined) {
-          return false;
-        }
+        if (step === undefined) return false;
         back();
         return true;
       }}
@@ -363,9 +276,11 @@ export function Palette({
             step === undefined ? "Search issues and commands" : step.title
           }
           aria-expanded="true"
-          aria-controls={listId}
+          aria-controls={paletteListId}
           aria-autocomplete="list"
-          aria-activedescendant={count === 0 ? undefined : optionId(active)}
+          aria-activedescendant={
+            count === 0 ? undefined : paletteOptionId(active)
+          }
           placeholder={step?.placeholder ?? "Search issues, or type a command…"}
           value={query}
           onChange={(e) => {
@@ -373,70 +288,31 @@ export function Palette({
             setSelected(0);
           }}
           onKeyDown={(e) => {
-            // An IME uses these keys to pick and confirm its candidates.
-            if (isComposing(e.nativeEvent)) return;
-            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-              e.preventDefault();
-              move(e.key === "ArrowDown" ? 1 : -1);
-            }
-            if (e.key === "Enter" && count > 0) {
-              e.preventDefault();
-              choose(active);
-            }
-            if (step !== undefined && query === "" && e.key === "Backspace") {
-              e.preventDefault();
-              back();
-            }
+            handlePaletteKey(e, {
+              count,
+              active,
+              hasStep: step !== undefined,
+              query,
+              move,
+              choose,
+              back,
+            });
           }}
         />
       </div>
-      {results.error !== null && <ErrorNotice error={results.error} />}
-      <div
-        className="palette-results"
-        id={listId}
-        role="listbox"
-        aria-label="Results"
-      >
-        <EntryGroups
-          entries={leading}
-          start={0}
-          active={active}
-          choose={choose}
-        />
-        {issues.length > 0 && (
-          <div role="group" aria-labelledby="palette-issues">
-            <div className="palette-group" id="palette-issues">
-              {searching ? "Issues" : "Recent issues"}
-            </div>
-            {issues.map((issue, offset) => {
-              const index = leading.length + offset;
-              return (
-                <IssueOption
-                  key={issue.id}
-                  issue={issue}
-                  index={index}
-                  active={active === index}
-                  close={close}
-                  pick={
-                    step?.issues === undefined
-                      ? undefined
-                      : () => {
-                          choose(index);
-                        }
-                  }
-                />
-              );
-            })}
-          </div>
-        )}
-        <EntryGroups
-          entries={trailing}
-          start={leading.length + issues.length}
-          active={active}
-          choose={choose}
-        />
-      </div>
-      {count === 0 && !results.isFetching && (
+      {error !== null && <ErrorNotice error={error} />}
+      <PaletteResults
+        leading={leading}
+        issues={issues}
+        forumThreads={forumThreads}
+        trailing={trailing}
+        searching={searching}
+        active={active}
+        step={step}
+        close={close}
+        choose={choose}
+      />
+      {count === 0 && !fetching && (
         <p className="palette-empty muted">
           No results. Try an identifier or a different phrase.
         </p>

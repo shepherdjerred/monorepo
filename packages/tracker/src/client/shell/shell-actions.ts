@@ -316,7 +316,9 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
     },
     "?": show("help"),
     "/": () => {
-      const search = document.querySelector<HTMLInputElement>("#issue-search");
+      const search = document.querySelector<HTMLInputElement>(
+        "#issue-search, #forum-search",
+      );
       search?.focus();
       return search !== null;
     },
@@ -344,6 +346,10 @@ export function shellActions(shell: Shell): Record<string, () => boolean> {
         return true;
       }
       if (selection.clear()) {
+        return true;
+      }
+      if (route.view === "forum-thread") {
+        void (hasAppHistory() ? navigate(-1) : navigate("/forum"));
         return true;
       }
       if (route.identifier === undefined) {

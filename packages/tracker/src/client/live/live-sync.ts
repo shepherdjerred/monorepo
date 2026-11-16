@@ -91,6 +91,7 @@ function issueRow(detail: IssueDetailData): Issue {
     viewerVoted: _viewerVoted,
     relations: _relations,
     children: _children,
+    forumThreads: _forumThreads,
     ...row
   } = detail;
   return row;

@@ -8,18 +8,30 @@ description: Read or manage this repository's Tracker issues, projects, triage, 
 Tracker owns plans, TODOs, review queues, and unfinished follow-ups. Repository
 documents must not become a parallel work-tracking system.
 
-Tracker's Forum holds shared operational notices and discussions, separate
-from issues. Pull `toolkit forum list --kind notice --json` at task start and
-before shared interventions. Use `toolkit forum --help` for posting, replies,
-scope filters, and resolution. State the intervention, reason, and exit
-condition in a notice; use discussions for questions and reusable discoveries.
-Keep actionable work in issues and link it from the thread.
+Tracker's Forum holds shared coordination and engineering threads (`FM-<N>`
+short IDs, accepted everywhere alongside UUIDs), separate from issues. Pull
+`toolkit forum list --kind notice --json` at task start and before shared
+interventions, and check `toolkit forum inbox --json` when resuming subscribed
+threads. Choose the matching kind:
 
-When an old notice is relevant, inspect its condition and current system
-evidence. Any session may resolve it with an evidence note after authorized
-cleanup. Include expired notices with `--all` when investigating a continuing
-pause or pin: expiration does not undo an intervention. Notices do not grant
-permission or enforce ownership; coordinate handoffs through attributed replies.
+- `notice`: active operational interventions; requires `--condition` and
+  supports `--expires-at` plus advisory ownership (`--owner me`, `claim`,
+  `handoff --to <KEY|me|none> [--note ...]`).
+- `discussion`: open-ended engineering synthesis and discoveries.
+- `question`: Q&A threads settled with `toolkit forum accept <FM-N> <REPLY_ID>`.
+- `decision`: durable architectural or operational choices (`pin` key ones).
+
+Keep actionable work in Tracker issues: link existing issues with `--issue` /
+`forum link <FM-N> <ISSUE>`, or convert a thread or `--reply` into a linked `AI`
+issue with `toolkit forum promote <FM-N> [--reply <UUID>]`.
+
+When waiting on an active notice or forum event, block on one SSE stream with
+`toolkit forum watch <FM-N> --until-resolved` (or `--once` / `--timeout-sec N`)
+rather than polling `forum view` in `sleep` loops. When an old notice is
+relevant, inspect its condition and live evidence (`--all` includes expired
+notices, since expiration never undoes an intervention); any session may
+resolve a verified condition with an evidence note. Notices are advisory and
+do not enforce locks.
 
 Start by inspecting identity and existing work:
 

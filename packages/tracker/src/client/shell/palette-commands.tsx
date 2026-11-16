@@ -15,6 +15,8 @@ import {
   List,
   ListFilter,
   ListPlus,
+  MessageSquarePlus,
+  MessagesSquare,
   Monitor,
   Moon,
   Palette as PaletteIcon,
@@ -295,6 +297,41 @@ const themes: { value: Theme; label: string; icon: ReactNode }[] = [
   { value: "dark", label: "Dark", icon: <Moon size={15} /> },
 ];
 
+function forumCommandEntries(context: PaletteContext): PaletteEntry[] {
+  const { bootstrap } = context;
+  if (!bootstrap.forumEnabled || !bootstrap.writesEnabled) {
+    return [];
+  }
+  return [
+    {
+      id: "create-forum-post",
+      label: "Create forum post",
+      icon: <MessageSquarePlus size={15} />,
+      section: "Commands",
+      run: () => {
+        context.navigate("/forum?compose=1");
+      },
+    },
+  ];
+}
+
+function forumNavEntries(context: PaletteContext): PaletteEntry[] {
+  if (!context.bootstrap.forumEnabled) {
+    return [];
+  }
+  return [
+    {
+      id: "go:/forum",
+      label: "Go to forum",
+      icon: <MessagesSquare size={15} />,
+      section: "Navigation",
+      run: () => {
+        context.navigate("/forum");
+      },
+    },
+  ];
+}
+
 function workspaceEntries(context: PaletteContext): PaletteEntry[] {
   const { bootstrap } = context;
   return [
@@ -318,6 +355,7 @@ function workspaceEntries(context: PaletteContext): PaletteEntry[] {
         context.create(context.prefill);
       },
     },
+    ...forumCommandEntries(context),
     {
       id: "filter",
       label: "Filter issues…",
@@ -399,17 +437,26 @@ function workspaceEntries(context: PaletteContext): PaletteEntry[] {
         context.action("?");
       },
     },
-    ...pages.map(([name, path, icon, shortcut]) => ({
-      id: `go:${path}`,
-      label: `Go to ${name.toLowerCase()}`,
-      icon,
-      hint: shortcut === undefined ? undefined : shortcutKeys(shortcut),
-      section: "Navigation",
-      run: () => {
-        context.navigate(path);
-      },
-    })),
+    ...pages.slice(0, 2).map((page) => pageNavEntry(context, page)),
+    ...forumNavEntries(context),
+    ...pages.slice(2).map((page) => pageNavEntry(context, page)),
   ];
+}
+
+function pageNavEntry(
+  context: PaletteContext,
+  [name, path, icon, shortcut]: (typeof pages)[number],
+): PaletteEntry {
+  return {
+    id: `go:${path}`,
+    label: `Go to ${name.toLowerCase()}`,
+    icon,
+    hint: shortcut === undefined ? undefined : shortcutKeys(shortcut),
+    section: "Navigation",
+    run: () => {
+      context.navigate(path);
+    },
+  };
 }
 
 export function rootEntries(context: PaletteContext): PaletteEntry[] {

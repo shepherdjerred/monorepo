@@ -9,7 +9,14 @@ export type CoordinationSummary = {
   checkedAt: string;
   items: Pick<
     Notice,
-    "id" | "title" | "scopes" | "exitCondition" | "expiresAt" | "creator"
+    | "id"
+    | "identifier"
+    | "title"
+    | "scopes"
+    | "exitCondition"
+    | "expiresAt"
+    | "creator"
+    | "owner"
   >[];
   total: number | null;
   error: string | null;
@@ -34,8 +41,18 @@ export async function coordinationSummary(
       available: true,
       checkedAt: result.checkedAt,
       items: result.items.map(
-        ({ id, title, scopes, exitCondition, expiresAt, creator }) => ({
+        ({
           id,
+          identifier,
+          title,
+          scopes,
+          exitCondition,
+          expiresAt,
+          creator,
+          owner,
+        }) => ({
+          id,
+          identifier,
           title,
           scopes,
           exitCondition:
@@ -44,6 +61,7 @@ export async function coordinationSummary(
               : `${exitCondition.slice(0, 1000)}… [read full condition with toolkit forum view]`,
           expiresAt,
           creator,
+          owner,
         }),
       ),
       total: result.total,
@@ -69,7 +87,7 @@ export function formatCoordination(summary: CoordinationSummary): string {
     `Active notices: ${String(summary.items.length)} of ${String(summary.total)} (checked ${summary.checkedAt})`,
     ...summary.items.map(
       (item) =>
-        `  ${item.id}: ${item.title} [${item.scopes.join(", ") || "global"}] — ${item.creator.key}\n    Exit: ${item.exitCondition ?? ""}`,
+        `  ${item.identifier} (${item.id}): ${item.title} [${item.scopes.join(", ") || "global"}] — creator=${item.creator.key}${item.owner === null ? ", unclaimed" : `, owner=${item.owner.key}`}\n    Exit: ${item.exitCondition ?? ""}`,
     ),
     "Read threads: toolkit forum list --kind notice; toolkit forum view <ID>",
   ].join("\n");

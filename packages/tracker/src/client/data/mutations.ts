@@ -1,4 +1,10 @@
-import { api, keepaliveApi, queryClient, type BootstrapData } from "./api.ts";
+import {
+  api,
+  keepaliveApi,
+  queryClient,
+  type BootstrapData,
+  type IssueDetailData,
+} from "./api.ts";
 import {
   bootstrapKey,
   cachedIssue,
@@ -393,7 +399,7 @@ export async function createIssue(
     ...input,
   });
   if ((input.attachmentIds ?? []).length === 0) {
-    queryClient.setQueryData(issueKey(issue.identifier), {
+    queryClient.setQueryData<IssueDetailData>(issueKey(issue.identifier), {
       ...issue,
       comments: [],
       attachments: [],
@@ -401,6 +407,7 @@ export async function createIssue(
       viewerVoted: false,
       relations: [],
       children: [],
+      forumThreads: [],
     });
   }
   void queryClient.invalidateQueries({ queryKey: listsKey });
