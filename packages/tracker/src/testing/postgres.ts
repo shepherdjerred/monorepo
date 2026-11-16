@@ -10,23 +10,6 @@ import { createDatabase } from "#infrastructure/database.ts";
 const packageRoot = `${import.meta.dir}/../..`;
 const migrationsDir = path.join(packageRoot, "prisma/migrations");
 
-export function run(
-  args: string[],
-  env: Record<string, string | undefined> = {},
-) {
-  const result = Bun.spawnSync(args, {
-    cwd: packageRoot,
-    env: { ...Bun.env, ...env },
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  if (result.exitCode !== 0)
-    throw new Error(
-      `${args[0] ?? "Command"} failed: ${result.stderr.toString()}`,
-    );
-  return result.stdout.toString().trim();
-}
-
 async function populateTrackerTemplate(
   templateUrl: string,
   allowAnyMajor: boolean,

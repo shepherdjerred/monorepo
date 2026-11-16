@@ -16,22 +16,14 @@ export type CommandRunner = (
 export function sanitizedEnv(
   overrides?: Readonly<Record<string, string | undefined>>,
 ): Record<string, string> {
-  const entries = new Map<string, string>();
-  for (const [key, value] of Object.entries(Bun.env)) {
-    if (typeof value === "string" && key !== "OP_SERVICE_ACCOUNT_TOKEN") {
-      entries.set(key, value);
+  const combined = { ...Bun.env, ...overrides };
+  const result: Record<string, string> = {};
+  for (const [name, val] of Object.entries(combined)) {
+    if (name !== "OP_SERVICE_ACCOUNT_TOKEN" && typeof val === "string") {
+      result[name] = val;
     }
   }
-  if (overrides !== undefined) {
-    for (const [key, value] of Object.entries(overrides)) {
-      if (typeof value === "string") {
-        entries.set(key, value);
-      } else {
-        entries.delete(key);
-      }
-    }
-  }
-  return Object.fromEntries(entries);
+  return result;
 }
 
 export function runCommandSync(
