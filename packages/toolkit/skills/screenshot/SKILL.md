@@ -9,9 +9,9 @@ allowed-tools:
 # Screenshot Skill
 
 Visually verify a frontend change without a manual browser session: boots
-a package's dev server (a fresh, isolated one on its fixed port — never
-reused), drives a real PinchTab-controlled Chrome tab to a route,
-screenshots it, and cleans up after itself.
+a package's dev server on an isolated free port (never reusing an existing
+listener), drives a real PinchTab-controlled Chrome tab to a route,
+screenshots it, and cleans up its tab, leases, and server tree on exit.
 
 Prerequisite: PinchTab must already be running (`pinchtab health`). See the
 `pinchtab-helper` skill for setup — this tool is a thin wrapper around the
@@ -78,12 +78,11 @@ toolkit screenshot sjer-red /blog --theme dark --viewport 1440x900 \
 - Setup cost: PinchTab itself must be running and configured
   (`pinchtab-helper` skill) — this tool does not install or launch the
   PinchTab daemon.
-- **One server per port.** A fresh spawn binds the package's fixed
-  `expectedPort`; if that port is already in use (another dev server, or a
-  shared-port sibling like the other `:4321` sites) the tool fails fast with an
-  actionable message rather than auto-bumping to an unknown port and risking a
-  screenshot of the wrong app. Stop the other server (or screenshot that one)
-  and retry.
+- **Isolated ports per invocation.** A fresh spawn prefers the package's catalog
+  default port when free and allocates an unused loopback port when busy,
+  passing `--ignore-lock --port <port>` (Astro), `--port <port> --strictPort`
+  (Vite), or `SCOUT_DEV_*_PORT` overrides (`scout-app`) so concurrent worktrees
+  never collide or capture an unrelated server.
 
 ## One-time setup
 

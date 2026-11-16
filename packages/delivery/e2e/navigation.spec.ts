@@ -159,7 +159,10 @@ test("keyboard users reach content first and dialogs return focus", async ({
   await expect(trigger).toBeFocused();
 });
 
-test("committed changes appear live without a reload", async ({ page }) => {
+test("committed changes appear live without a reload", async ({
+  page,
+  baseURL,
+}) => {
   await page.goto("/deployments?environment=arcade%2Fprod");
   await expect(
     page.getByRole("status").filter({ hasText: "Live" }),
@@ -173,7 +176,8 @@ test("committed changes appear live without a reload", async ({ page }) => {
   );
   const version = detail.versionSets[0];
   if (version === undefined) throw new Error("Arcade version fixture required");
-  const headers = { Origin: "http://127.0.0.1:17353" };
+  if (baseURL === undefined) throw new Error("Playwright baseURL required");
+  const headers = { Origin: baseURL };
   const created = await page.request.post("/api/v1/deployments", {
     headers,
     data: {

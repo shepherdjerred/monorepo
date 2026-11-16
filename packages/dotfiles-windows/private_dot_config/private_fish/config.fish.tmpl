@@ -8,6 +8,8 @@ set -gx SHELL /usr/bin/fish
 set -gx EDITOR "subl -w"
 set -gx LANG en_US.UTF-8
 set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
+set -gx ASTRO_DEV_BACKGROUND 0
+set -gx ASTRO_PREVIEW_BACKGROUND 0
 
 set -gx GRAFANA_URL 'https://grafana.tailnet-1a49.ts.net'
 set -gx BUGSINK_URL 'https://bugsink.sjer.red'
@@ -47,6 +49,7 @@ function __agent_exec
     set -a unset -u $var
   end
   env $unset EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat \
+    ASTRO_DEV_BACKGROUND=0 ASTRO_PREVIEW_BACKGROUND=0 \
     (command -s $name) $bypass $rest
 end
 

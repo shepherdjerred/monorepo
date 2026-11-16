@@ -64,6 +64,10 @@ set -gx TESSDATA_PREFIX /opt/homebrew/share/tessdata
 {{ end -}}
 
 set -gx CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS "1"
+# Keep Astro 7 dev/preview servers attached in the foreground instead of
+# detaching background daemons when coding-agent environments are detected.
+set -gx ASTRO_DEV_BACKGROUND 0
+set -gx ASTRO_PREVIEW_BACKGROUND 0
 
 # CLI tool credentials (via 1Password) - only set if op CLI is available.
 # Brokered secrets (Grafana/PostHog/ArgoCD/Discord/Bugsink/Cloudflare

@@ -275,4 +275,10 @@ const app = createApp({
   digests: opsFixture.digests,
   opsIngestToken: "fixture-ops-ingest-token-with-32-characters",
 });
-Bun.serve({ hostname: "127.0.0.1", port: 17_341, fetch: app.fetch });
+const port = Number(
+  Bun.argv[2] ?? Bun.env["ALERT_DASHBOARD_E2E_PORT"] ?? "17341",
+);
+if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
+  throw new Error("ALERT_DASHBOARD_E2E_PORT must be a valid TCP port");
+}
+Bun.serve({ hostname: "127.0.0.1", port, fetch: app.fetch });

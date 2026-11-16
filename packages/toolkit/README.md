@@ -794,9 +794,11 @@ missing, or it differs from the catalog delegation or Argo ownership annotation.
 Historical Git pins cannot
 substitute for that evidence.
 
-`toolkit screenshot <package> [route]` starts a registered package on its fixed
-development port and drives a PinchTab-controlled browser. It fails if the port
-is already occupied rather than capturing an unrelated process.
+`toolkit screenshot <package> [route]` starts a registered package on an
+isolated free loopback port (preferring the catalog default when free and
+falling back automatically when busy), tracks its PinchTab session and tab
+leases under `~/.toolkit/tend/leases`, and closes the tab and dev-server
+process group on exit.
 
 For credential-separated captures, run `toolkit screenshot-server <package>` in
 one container and pass its URL to `toolkit screenshot <package> [route]

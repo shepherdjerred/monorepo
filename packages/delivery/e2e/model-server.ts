@@ -5,6 +5,17 @@ import { MachineCredentialSchema } from "#infrastructure/config.ts";
 import { serveHarness } from "./harness.ts";
 import { MODEL_ENVIRONMENTS, seedModelBrowser } from "./model.ts";
 
+const harnessPort = Number(
+  Bun.argv[2] ?? Bun.env["DELIVERY_MODEL_E2E_PORT"] ?? "17355",
+);
+if (
+  !Number.isSafeInteger(harnessPort) ||
+  harnessPort < 1 ||
+  harnessPort > 65_535
+) {
+  throw new Error("DELIVERY_MODEL_E2E_PORT must be a valid TCP port");
+}
+
 // This executable is an isolated acceptance harness, never a production
 // entrypoint. Its catalog owns every environment of its own database, so the
 // model specs never share state with the release harness.
@@ -15,7 +26,7 @@ try {
   await serveHarness({
     cluster,
     delivery,
-    port: 17_355,
+    port: harnessPort,
     enabledEnvironments: MODEL_ENVIRONMENTS,
     // Optional disposable machine tokens, so toolkit verbs can be run
     // against this harness; none are accepted unless the variable is set.

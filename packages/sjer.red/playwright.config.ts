@@ -1,3 +1,5 @@
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import {
   defineConfig,
   devices,
@@ -8,17 +10,27 @@ const isCI = process.env.CI === "true";
 const includeBrandedBrowsers =
   process.env.PLAYWRIGHT_BRANDED_BROWSERS === "true";
 
-const PORT = 4321;
-// Probe and browse the address the server actually binds. `astro preview
-// --host 127.0.0.1` listens on IPv4 only, so a `localhost` URL can resolve to
-// ::1 in the browser-E2E pod and never answer — which is exactly how this
-// suite intermittently burned its full 120s webServer budget on main. Every
-// other suite in that pod already probes the address it binds.
+const siteProbe = spawnSync(
+  "bun",
+  [
+    "run",
+    fileURLToPath(
+      new URL("../../scripts/lib/e2e/e2e-port.ts", import.meta.url),
+    ),
+    "--",
+    fileURLToPath(new URL("../..", import.meta.url)),
+    "SJER_RED_E2E_PORT",
+  ],
+  { encoding: "utf8", env: process.env, stdio: ["ignore", "pipe", "pipe"] },
+);
+if (siteProbe.status !== 0) {
+  throw new Error(siteProbe.stderr || "SJER_RED_E2E_PORT probe failed");
+}
+const [sitePortText = "", siteReuseFlag = "0"] = siteProbe.stdout.split(":");
+const PORT = Number(sitePortText);
+process.env._PLAYWRIGHT_RESOLVED_SJER_RED_E2E_PORT = String(PORT);
 const baseURL = `http://127.0.0.1:${PORT.toString()}`;
-// Astro 7 detects agent environments and daemonizes preview automatically.
-// Disable that behavior so Playwright owns the server process, observes
-// startup failures, and tears it down with the test run.
-const previewCommand = `ASTRO_PREVIEW_BACKGROUND=0 bun run preview --host 127.0.0.1 --port ${PORT.toString()}`;
+const previewCommand = `bun run preview -- --ignore-lock --host 127.0.0.1 --port ${PORT.toString()}`;
 
 const brandedBrowserProjects = [
   {
@@ -124,11 +136,12 @@ export default defineConfig({
   ],
   webServer: {
     command: previewCommand,
+    env: {
+      ASTRO_DEV_BACKGROUND: "0",
+      ASTRO_PREVIEW_BACKGROUND: "0",
+    },
     url: baseURL,
-    // Playwright defaults to 60s, which the browser-E2E pod exceeds under load:
-    // it runs several suites at --concurrency=2, so a server can be starved
-    // well past a minute. 120s matches docs-wiki, alert-dashboard, and evals.
     timeout: 120 * 1000,
-    reuseExistingServer: !isCI,
+    reuseExistingServer: siteReuseFlag === "1",
   },
 });

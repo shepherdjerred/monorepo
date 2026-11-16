@@ -48,4 +48,9 @@ unset _front
 # Fix gRPC DNS resolution for Tailscale split DNS on macOS
 # Required for tools like talosctl to resolve Tailscale hostnames
 export GRPC_DNS_RESOLVER=native
+
+# Keep Astro 7 dev/preview servers attached in the foreground instead of
+# detaching background daemons in coding-agent shells.
+export ASTRO_DEV_BACKGROUND=0
+export ASTRO_PREVIEW_BACKGROUND=0
 [[ -f "$HOME/.config/turbo-cache/env.sh" ]] && source "$HOME/.config/turbo-cache/env.sh"

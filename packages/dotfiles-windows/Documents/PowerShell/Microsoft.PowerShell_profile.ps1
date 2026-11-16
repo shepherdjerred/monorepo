@@ -7,7 +7,11 @@
 #   homelab service tokens are removed for the duration of the call.
 # - Agents run with approvals and sandboxing bypassed. AGENT_SAFE=1 drops the
 #   bypass flags for one run; the environment is still scrubbed.
-# - Agents never wait on an editor or pager.
+# - Agents keep Astro 7 dev/preview servers in the foreground and never wait on
+#   an editor or pager.
+$env:ASTRO_DEV_BACKGROUND = "0"
+$env:ASTRO_PREVIEW_BACKGROUND = "0"
+
 $script:AgentScrubbed = @(
     @('ANTHROPIC', 'OPENAI', 'CODEX', 'GEMINI', 'GOOGLE', 'XAI', 'GROK', 'MOONSHOT', 'KIMI', 'CURSOR') |
         ForEach-Object { $_, '_API_KEY' -join '' }
@@ -33,6 +37,7 @@ function Invoke-AgentCli {
     $set = @{
         EDITOR = $noEditor; VISUAL = $noEditor; GIT_EDITOR = $noEditor
         PAGER = 'cat'; GIT_PAGER = 'cat'
+        ASTRO_DEV_BACKGROUND = '0'; ASTRO_PREVIEW_BACKGROUND = '0'
     }
     $flags = @(if ($env:AGENT_SAFE -ne '1') { $Bypass })
     $saved = @{}

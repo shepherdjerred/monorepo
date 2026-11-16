@@ -53,9 +53,11 @@ bun run --filter='./packages/scout-for-lol' dev:login  # prints a signed session
   guild-picker and channel-picker flows need. A secondary copy only needs
   distinct `--backend-port` and `--web-port`.
   (`packages/scout-for-lol/scripts/dev/dev-web.ts`.)
-- `Failed to start server. Is port 3000 in use?` means something else already
-  holds the default backend port (OrbStack and other container runtimes commonly
-  do). Pass `--backend-port`/`--web-port` rather than killing the holder.
+- Concurrent worktrees must isolate ports instead of sharing `:3000`/`:5180`
+  (or `:4321` on Astro sites): pass distinct `--backend-port`/`--web-port` (or
+  `SCOUT_DEV_*_PORT` overrides) rather than killing an existing holder. For
+  one-shot captures, `toolkit screenshot scout-app /app/` allocates isolated
+  free ports automatically.
 - For visual inspection with no 1Password session and no Discord login, boot
   the design-audit way instead, against a separate `.design-audit-report-lake`:
   `SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true bun run --filter='./packages/scout-for-lol' dev:design-audit`.
@@ -68,11 +70,14 @@ the SPA behind `dev:web`, `frontend` and `docs-site` are Astro, and
 `design-system` serves its Storybook catalog on port 6006.
 
 Verify UI changes in the browser rather than from source, and keep the
-screenshot or recording for the PR:
+screenshot or recording for the PR (scope `PINCHTAB_SESSION` and close opened
+tabs when driving PinchTab directly, or use `toolkit screenshot`):
 
 ```bash
-pinchtab nav http://localhost:5180/app/
-pinchtab screenshot -o /tmp/scout-app.png
+toolkit screenshot scout-app /app/ --out /tmp/scout-app.png
+# Or against your own isolated dev:web port with a scoped PinchTab session:
+PINCHTAB_SESSION="$SES" pinchtab nav "http://localhost:${WEB_PORT}/app/"
+PINCHTAB_SESSION="$SES" pinchtab screenshot -o /tmp/scout-app.png
 ```
 
 Run focused tasks for only the affected Scout workspaces, then the relevant

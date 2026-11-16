@@ -18,7 +18,7 @@ export const BootstrapSchema = z
     TEMPORAL_ADDRESS: z.string().min(1),
     TEMPORAL_NAMESPACE: z.string().min(1),
     HOST: z.string().default("0.0.0.0"),
-    PORT: z.coerce.number().int().min(1).max(65_535).default(7352),
+    PORT: z.coerce.number().int().min(1).max(65_535).default(7357),
     ENVIRONMENT: z
       .enum(["production", "beta", "development", "test"])
       .default("production"),

@@ -6,8 +6,8 @@ export default defineConfig({
   build: { outDir: "dist", emptyOutDir: true, sourcemap: true },
   server: {
     host: "127.0.0.1",
-    port: 7354,
+    port: 7358,
     strictPort: true,
-    proxy: { "/api": "http://127.0.0.1:7352" },
+    proxy: { "/api": "http://127.0.0.1:7357" },
   },
 });

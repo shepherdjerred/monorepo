@@ -17,10 +17,12 @@ rebase, or create a feature PR with `gh pr create`.
 3. Run the extended test tier for affected workspaces; Woodpecker does not run
    it on pull requests:
    `bunx turbo run test:extended --filter='...[origin/main]' --continue`.
-4. For a browser-visible change, render it with PinchTab and capture the proof
-   now, not after review: `pinchtab screenshot -o <file>` for a state,
-   `pinchtab record` for a flow. A terminal, CLI, or TUI change records an
-   asciinema cast:
+4. For a browser-visible change, render it and capture the proof now, not after
+   review: prefer `toolkit screenshot <package> [route]` (allocates an isolated
+   free port and cleans up its PinchTab session/tab), or scope an isolated
+   `PINCHTAB_SESSION` for `pinchtab screenshot -o <file>` / `pinchtab record`
+   and close opened tabs (`pinchtab tab close`) when done. A terminal, CLI, or
+   TUI change records an asciinema cast:
    `asciinema rec --headless --window-size 120x32 --idle-time-limit 2 --return --command '<cmd>' demo.cast`.
    Other user-visible surfaces use their own tool — a rendered asset or a
    Discord acceptance message.
