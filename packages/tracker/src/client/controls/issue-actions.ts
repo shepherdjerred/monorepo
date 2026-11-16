@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { BulkChange } from "#client/data/bulk-changes.ts";
+import { currentActor } from "#client/data/identity.ts";
 import {
   bulkEdit,
   editIssue,
@@ -86,7 +87,10 @@ export function pickProperty(
     mixed: [...new Set(everyLabel)].filter((name) => !all.includes(name)),
     pick: (value, add) => {
       if (kind === "assignee") {
-        applyChange(identifiers, { kind: "assignee", assigneeKey: value });
+        applyChange(identifiers, {
+          kind: "assignee",
+          assigneeKey: value === currentActor().key ? selfAssignee() : value,
+        });
       } else if (kind === "project") {
         applyChange(identifiers, { kind: "project", projectSlug: value });
       } else if (value !== null) {

@@ -110,6 +110,15 @@
 .settings-page > section > form:not(.inline-form) {
   max-width: 400px;
 }
+.settings-identity-current {
+  max-width: 400px;
+  margin-top: 16px;
+  margin-bottom: 12px;
+}
+.settings-identity-presets {
+  max-width: 480px;
+  margin-bottom: 14px;
+}
 .theme-options {
   display: flex;
   gap: 14px;

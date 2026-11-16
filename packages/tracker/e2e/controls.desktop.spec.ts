@@ -47,11 +47,11 @@ test("S, I and the arrow keys edit the focused row without opening it", async ({
   // Focus rests on the row's own picker, where the row's keys still work.
   await page.keyboard.press("i");
   await expect(
-    toastSaying(page, `${identifier} assigned to Jerred`),
+    toastSaying(page, `${identifier} assigned to Browser Automation`),
   ).toBeVisible();
   await expect(picker(page, "assignee", identifier)).toHaveAttribute(
     "aria-label",
-    `Assignee of ${identifier}: Jerred`,
+    `Assignee of ${identifier}: Browser Automation`,
   );
   await page.keyboard.press("a");
   const search = page.getByRole("combobox", {
@@ -62,6 +62,47 @@ test("S, I and the arrow keys edit the focused row without opening it", async ({
   await page.keyboard.press("2");
   await expect(toastSaying(page, `${identifier} unassigned`)).toBeVisible();
   await expect(search).toHaveCount(0);
+});
+
+test("the sidebar identity switcher claims Jerred and reverts to the session actor", async ({
+  page,
+}) => {
+  const { tag, identifiers } = await scratchIssues(page, 1);
+  const [identifier = ""] = identifiers;
+  await page.goto(`/issues?team=${scratchTeam}&q=${tag}`);
+  const switcher = page.getByRole("button", {
+    name: "Acting as Browser Automation",
+  });
+  await expect(switcher).toBeVisible();
+  await switcher.click();
+  const dialog = page.getByRole("dialog", { name: "Browser identity" });
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByRole("button", { name: "Use Jerred (human:jerred)" })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Acting as Jerred" }),
+  ).toBeVisible();
+
+  await link(page, identifier).focus();
+  await page.keyboard.press("i");
+  await expect(
+    toastSaying(page, `${identifier} assigned to Jerred`),
+  ).toBeVisible();
+  await expect(picker(page, "assignee", identifier)).toHaveAttribute(
+    "aria-label",
+    `Assignee of ${identifier}: Jerred`,
+  );
+
+  await page.getByRole("button", { name: "Acting as Jerred" }).click();
+  await page
+    .getByRole("dialog", { name: "Browser identity" })
+    .getByRole("button", { name: "Use Unclaimed / Automation session" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Acting as Browser Automation" }),
+  ).toBeVisible();
 });
 
 test("x, Shift+J, ⌘ A and Esc select rows, and one Undo reverts a bulk edit", async ({

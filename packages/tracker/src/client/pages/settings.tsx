@@ -9,14 +9,145 @@ import {
   createState,
   deleteLabel,
 } from "#client/data/catalog-mutations.ts";
-import { ActorSchema } from "#shared/actor.ts";
+import { ActorSchema, type ActorEnvelope } from "#shared/actor.ts";
 import { StateTypeSchema } from "#shared/schema.ts";
-import { currentActor, saveActor } from "#client/data/identity.ts";
-import { ErrorNotice, Swatch } from "#client/ui/ui.tsx";
+import {
+  clearSavedActor,
+  hasSavedActor,
+  saveActor,
+  useCurrentActor,
+} from "#client/data/identity.ts";
+import { ActorChip, ErrorNotice, Swatch } from "#client/ui/ui.tsx";
 import { notify } from "#client/ui/toast.tsx";
 import { applyTheme, savedTheme, type Theme } from "#client/ui/theme.ts";
 import { FeedbackSettings } from "#client/feedback/feedback-settings.tsx";
 import { originOf, revealTheme } from "#client/feedback/motion.ts";
+
+function IdentitySection({
+  actor,
+  saved,
+}: {
+  actor: ActorEnvelope;
+  saved: boolean;
+}) {
+  const [key, setKey] = useState(actor.key);
+  const [name, setName] = useState(actor.name);
+  const [kind, setKind] = useState<ActorEnvelope["kind"]>(actor.kind);
+  const [error, setError] = useState<unknown>();
+  const isJerred = actor.key === "human:jerred" && actor.kind === "human";
+  return (
+    <section>
+      <h2>Your identity</h2>
+      <p className="muted">
+        Changes are attributed to this actor. Tracker is private to the tailnet
+        and does not use accounts.
+      </p>
+      <div className="identity-current settings-identity-current">
+        <ActorChip actor={actor} />
+        <code className="identifier">{actor.key}</code>
+      </div>
+      {(!isJerred || saved) && (
+        <div className="identity-presets settings-identity-presets">
+          {!isJerred && (
+            <button
+              type="button"
+              onClick={() => {
+                saveActor(
+                  ActorSchema.parse({
+                    key: "human:jerred",
+                    kind: "human",
+                    name: "Jerred",
+                  }),
+                );
+                notify("Identity saved");
+              }}
+            >
+              Claim Jerred (human:jerred)
+            </button>
+          )}
+          {saved && (
+            <button
+              type="button"
+              onClick={() => {
+                clearSavedActor();
+                notify("Using session identity");
+              }}
+            >
+              Use Unclaimed / Automation session
+            </button>
+          )}
+        </div>
+      )}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          try {
+            saveActor(ActorSchema.parse({ key, name, kind }));
+            setError(undefined);
+            notify("Identity saved");
+          } catch (error_) {
+            setError(error_);
+          }
+        }}
+      >
+        <label htmlFor="settings-identity-name">
+          Name
+          <input
+            id="settings-identity-name"
+            value={name}
+            required
+            onChange={(e) => {
+              setName(e.target.value);
+              if (error !== undefined) {
+                setError(undefined);
+              }
+            }}
+          />
+        </label>
+        <label htmlFor="settings-identity-key">
+          Actor key
+          <input
+            id="settings-identity-key"
+            value={key}
+            required
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            onChange={(e) => {
+              setKey(e.target.value);
+              if (error !== undefined) {
+                setError(undefined);
+              }
+            }}
+          />
+        </label>
+        <label htmlFor="settings-identity-kind">
+          Kind
+          <select
+            id="settings-identity-kind"
+            value={kind}
+            onChange={(e) => {
+              setKind(ActorSchema.shape.kind.parse(e.target.value));
+              if (error !== undefined) {
+                setError(undefined);
+              }
+            }}
+          >
+            {ActorSchema.shape.kind.options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit" className="primary">
+          Save identity
+        </button>
+        {error !== undefined && <ErrorNotice error={error} />}
+      </form>
+    </section>
+  );
+}
 
 export function Settings({
   bootstrap,
@@ -26,10 +157,8 @@ export function Settings({
   teamKey: string;
 }) {
   const [theme, setTheme] = useState<Theme>(savedTheme);
-  const actor = currentActor();
-  const [key, setKey] = useState(actor.key);
-  const [name, setName] = useState(actor.name);
-  const [error, setError] = useState<unknown>();
+  const actor = useCurrentActor();
+  const saved = hasSavedActor();
   const [teamKey, setTeam] = useState(currentTeamKey);
   const [labelName, setLabelName] = useState("");
   const [color, setColor] = useState("#8b5cf6");
@@ -80,6 +209,7 @@ export function Settings({
           {(["system", "light", "dark"] as const).map((value) => (
             <button
               key={value}
+              type="button"
               aria-pressed={theme === value}
               className={theme === value ? "selected" : ""}
               onClick={(event) => {
@@ -107,48 +237,11 @@ export function Settings({
         </div>
       </section>
       <FeedbackSettings />
-      <section>
-        <h2>Your identity</h2>
-        <p className="muted">
-          Changes are attributed to this actor. Tracker is private to the
-          tailnet and does not use accounts.
-        </p>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            try {
-              saveActor(ActorSchema.parse({ key, name, kind: actor.kind }));
-              setError(undefined);
-              notify("Identity saved");
-            } catch (error_) {
-              setError(error_);
-            }
-          }}
-        >
-          <label>
-            Name
-            <input
-              value={name}
-              required
-              onChange={(e) => {
-                setName(e.target.value);
-              }}
-            />
-          </label>
-          <label>
-            Actor key
-            <input
-              value={key}
-              required
-              onChange={(e) => {
-                setKey(e.target.value);
-              }}
-            />
-          </label>
-          <button className="primary">Save identity</button>
-          {error !== undefined && <ErrorNotice error={error} />}
-        </form>
-      </section>
+      <IdentitySection
+        key={`${actor.key}\u0000${actor.kind}\u0000${actor.name}`}
+        actor={actor}
+        saved={saved}
+      />
       <section>
         <h2>Workspace</h2>
         <div className="form-selects">

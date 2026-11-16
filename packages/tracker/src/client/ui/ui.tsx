@@ -69,7 +69,8 @@ export function Avatar({
       className="avatar"
       src={`/avatars/${encodeURIComponent(actor.key)}.svg`}
       alt={decorative ? "" : actor.name}
-      title={actor.name}
+      aria-hidden={decorative ? true : undefined}
+      title={decorative ? undefined : actor.name}
       width={22}
       height={22}
     />

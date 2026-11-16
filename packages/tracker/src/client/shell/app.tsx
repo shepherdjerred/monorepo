@@ -8,17 +8,23 @@ import {
   useSearchParams,
 } from "react-router";
 import { Plus, Search } from "lucide-react";
-import { api, type BootstrapData } from "#client/data/api.ts";
+import { api, queryClient, type BootstrapData } from "#client/data/api.ts";
+import { bootstrapKey, listsKey } from "#client/data/cache.ts";
 import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
 import { NewIssue, type IssuePrefill } from "#client/issues/issue-form.tsx";
 import { ControlsLayer } from "#client/controls/bulk-bar.tsx";
 import { SearchPickerHost } from "#client/controls/search-picker.tsx";
 import { selectionScope } from "#client/controls/selection.ts";
-import { currentActor } from "#client/data/identity.ts";
+import { subscribeActor, useCurrentActor } from "#client/data/identity.ts";
 import { viewPrefill } from "#client/views/filters.ts";
 import { IssueDetail } from "#client/issues/issue-detail.tsx";
 import { Palette } from "./palette.tsx";
-import { Sidebar, BottomNavigation, MoreSheet } from "./navigation.tsx";
+import {
+  Sidebar,
+  BottomNavigation,
+  MoreSheet,
+  IdentityModal,
+} from "./navigation.tsx";
 import { useIssueList, usePeek } from "#client/issues/issue-list-query.ts";
 import { useIssue } from "#client/issues/issue-query.ts";
 import { useShortcuts } from "./shortcuts.ts";
@@ -48,6 +54,12 @@ import { DuePickerHost } from "#client/due/due-picker.tsx";
 import { useCreateRequests } from "#client/hierarchy/hierarchy-actions.ts";
 import { ParentDialog } from "#client/hierarchy/parent-field.tsx";
 import { useVisibleViews } from "#client/saved-views/view-params.ts";
+
+subscribeActor(() => {
+  void queryClient.invalidateQueries({ queryKey: bootstrapKey });
+  void queryClient.invalidateQueries({ queryKey: ["issue"] });
+  void queryClient.invalidateQueries({ queryKey: listsKey });
+});
 
 const headings = {
   home: "Tracker",
@@ -167,13 +179,14 @@ export function Shell() {
     id: 0,
     prefill: {},
   });
+  const actor = useCurrentActor();
   const scope = route.isList
     ? selectionScope(location.pathname, location.search)
     : "";
   const prefill = viewPrefill(params, {
     teamKey: teamKey ?? "",
     projectSlug: route.projectSlug,
-    me: currentActor().key,
+    me: actor.key,
   });
   const create = (next: IssuePrefill = {}) => {
     setDraft((known) => ({ id: known.id + 1, prefill: next }));
@@ -249,6 +262,9 @@ export function Shell() {
         }}
         help={() => {
           setOverlay("help");
+        }}
+        identity={() => {
+          setOverlay("identity");
         }}
       />
       <div className="main-content">
@@ -360,6 +376,7 @@ export function Shell() {
       >
         <ShortcutSheet />
       </Modal>
+      <IdentityModal open={overlay === "identity"} onClose={closeOverlay} />
       <MoreSheet
         bootstrap={data}
         teamKey={teamKey}
@@ -367,6 +384,9 @@ export function Shell() {
         close={closeOverlay}
         help={() => {
           setOverlay("help");
+        }}
+        identity={() => {
+          setOverlay("identity");
         }}
       />
       <BottomNavigation
