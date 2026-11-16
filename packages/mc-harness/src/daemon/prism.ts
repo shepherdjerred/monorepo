@@ -155,8 +155,6 @@ export async function preparePrismInstance(options: {
   return created;
 }
 
-export const PRISM_INSTANCE = INSTANCE;
-
 async function readLogTail(logPath: string, offset: number) {
   const file = await open(logPath, "r");
   try {
