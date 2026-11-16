@@ -1,4 +1,5 @@
 import type { RealtimeTransportLayer } from "@openai/agents/realtime";
+import type { LlmRuntime } from "@shepherdjerred/llm-runtime";
 import {
   buildRealtimeSessionConfig as buildVoiceAssistantSessionConfig,
   runRealtimeCommandTurn as runVoiceAssistantCommandTurn,
@@ -8,6 +9,7 @@ import {
   type AssistantAudioTransport,
   type RealtimeCommandTurnResult,
   type RealtimeTurnOptions,
+  type RealtimeVerifiedCommandRouter,
   type SpokenFeedbackClips,
   type VerifiedWakeTranscript,
 } from "@shepherdjerred/voice-assistant";
@@ -29,6 +31,11 @@ import {
 } from "@shepherdjerred/streambot/observability/voice-metrics-ports.ts";
 import type { VoiceAttemptHandle } from "@shepherdjerred/voice-assistant/realtime/attempt.ts";
 import type { VoiceSessionTelemetry } from "@shepherdjerred/streambot/observability/voice-session.ts";
+import {
+  createStreambotVoiceCommandRouter,
+  getOrCreateVoiceDecisionsRuntime,
+  type VoiceDecisionsRuntimeFetch,
+} from "@shepherdjerred/streambot/voice/voice-command-router.ts";
 import {
   bindPlaybackVoiceCommandPort,
   createStreambotVoiceTools,
@@ -56,6 +63,10 @@ export type RealtimeVoiceTurnInput = {
   readonly attempt?: VoiceAttemptHandle;
   readonly telemetry?: VoiceSessionTelemetry;
   readonly wakeRequired?: boolean;
+  readonly routeVerifiedCommand?: RealtimeVerifiedCommandRouter | undefined;
+  readonly decisionsRuntime?: LlmRuntime | undefined;
+  readonly decisionsFetch?: VoiceDecisionsRuntimeFetch | undefined;
+  readonly decisionsRouterEnabled?: boolean | undefined;
 };
 
 export type RealtimeCommandTurnInput = {
@@ -71,16 +82,68 @@ export type RealtimeCommandTurnInput = {
   /** No-op in local probes/corpus evaluation. */
   readonly attempt?: VoiceAttemptHandle;
   readonly wakeRequired?: boolean;
+  readonly routeVerifiedCommand?: RealtimeVerifiedCommandRouter | undefined;
+  readonly decisionsRuntime?: LlmRuntime | undefined;
+  readonly decisionsFetch?: VoiceDecisionsRuntimeFetch | undefined;
 };
 
 function clarificationVersionOf(commands: VoiceCommandPort): number {
   return commands.clarificationVersion?.() ?? 0;
 }
 
+function buildDecisionsRouter(
+  config: Config["voice"],
+  commands: VoiceCommandPort,
+  options: {
+    readonly decisionsRuntime?: LlmRuntime | undefined;
+    readonly decisionsFetch?: VoiceDecisionsRuntimeFetch | undefined;
+  },
+): RealtimeVerifiedCommandRouter | undefined {
+  if (config.openAiApiKey === undefined) return undefined;
+  const runtime =
+    options.decisionsRuntime ??
+    getOrCreateVoiceDecisionsRuntime({
+      apiKey: config.openAiApiKey,
+      fetch: options.decisionsFetch,
+    });
+  return createStreambotVoiceCommandRouter({ commands, runtime });
+}
+
+function resolveCommandTurnRouter(
+  config: Config["voice"],
+  input: RealtimeCommandTurnInput,
+): RealtimeVerifiedCommandRouter | undefined {
+  if (input.routeVerifiedCommand !== undefined) {
+    return input.routeVerifiedCommand;
+  }
+  return input.decisionsRuntime === undefined &&
+    input.decisionsFetch === undefined
+    ? undefined
+    : buildDecisionsRouter(config, input.commands, input);
+}
+
+async function resolveVoiceTurnRouter(
+  config: Config["voice"],
+  input: RealtimeVoiceTurnInput,
+  commands: VoiceCommandPort,
+): Promise<RealtimeVerifiedCommandRouter | undefined> {
+  if (input.routeVerifiedCommand !== undefined) {
+    return input.routeVerifiedCommand;
+  }
+  const enabled =
+    input.decisionsRouterEnabled ??
+    (input.service.hasVoiceDecisionsRouterGate()
+      ? await input.service.isVoiceDecisionsRouterEnabled(input.userId)
+      : input.decisionsRuntime !== undefined ||
+        input.decisionsFetch !== undefined);
+  return enabled ? buildDecisionsRouter(config, commands, input) : undefined;
+}
+
 /** The streambot-specific turn options for one wake, bound to a user/session command port. */
 export function streambotRealtimeTurnOptions(
   config: Config["voice"],
   commands: VoiceCommandPort,
+  routeVerifiedCommand?: RealtimeVerifiedCommandRouter,
 ): RealtimeTurnOptions {
   return {
     apiKey: config.openAiApiKey,
@@ -92,6 +155,7 @@ export function streambotRealtimeTurnOptions(
     wakePrefixes: VOICE_WAKE_PREFIXES,
     tools: ({ mutationGate, signal, attempt }) =>
       createStreambotVoiceTools(commands, mutationGate, signal, attempt),
+    ...(routeVerifiedCommand === undefined ? {} : { routeVerifiedCommand }),
     metrics: streambotRealtimeTurnMetrics,
     observability: streambotVoiceObservability("voice-realtime"),
   };
@@ -122,8 +186,9 @@ export async function runRealtimeCommandTurn(
   input: RealtimeCommandTurnInput,
 ): Promise<RealtimeCommandTurnResult> {
   const clarificationVersion = clarificationVersionOf(input.commands);
+  const routeVerifiedCommand = resolveCommandTurnRouter(config, input);
   const result = await runVoiceAssistantCommandTurn(
-    streambotRealtimeTurnOptions(config, input.commands),
+    streambotRealtimeTurnOptions(config, input.commands, routeVerifiedCommand),
     {
       pcm16k: input.pcm16k,
       activatedAtMs: input.activatedAtMs,
@@ -153,14 +218,21 @@ export async function runRealtimeVoiceTurn(
   config: Config["voice"],
   input: RealtimeVoiceTurnInput,
 ): Promise<RealtimeCommandTurnResult> {
+  const commands = bindPlaybackVoiceCommandPort(
+    input.service,
+    input.userId,
+    input.attempt,
+  );
+  const routeVerifiedCommand = await resolveVoiceTurnRouter(
+    config,
+    input,
+    commands,
+  );
   return await runRealtimeCommandTurn(config, {
     pcm16k: input.pcm16k,
     activatedAtMs: input.activatedAtMs,
-    commands: bindPlaybackVoiceCommandPort(
-      input.service,
-      input.userId,
-      input.attempt,
-    ),
+    commands,
+    routeVerifiedCommand,
     assistantAudio: new PacedAssistantSender(input.streamer, {
       stagePrefix: STREAMBOT_VOICE_STAGE_PREFIX,
       metrics: streambotVoiceReplyMetrics,

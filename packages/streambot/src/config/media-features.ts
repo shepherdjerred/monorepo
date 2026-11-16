@@ -24,6 +24,7 @@ export type MediaFeatureGate = {
   readonly automaticChannelRouting?: (
     scope: DiscoveryScope,
   ) => Promise<boolean>;
+  readonly voiceDecisionsRouter?: (scope: DiscoveryScope) => Promise<boolean>;
 };
 
 async function enabled(
@@ -60,6 +61,8 @@ export const mediaFeatureGate: MediaFeatureGate = {
     enabled("streambot-music-over-voice-enabled", scope),
   sportsStreaming: (scope) =>
     enabled("streambot-sports-streaming-enabled", scope),
+  voiceDecisionsRouter: (scope) =>
+    enabled("streambot-voice-decisions-router-enabled", scope),
 };
 
 export async function webUiEnabled(

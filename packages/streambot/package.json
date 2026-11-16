@@ -67,6 +67,7 @@
     "@shepherdjerred/discord-stream-lifecycle": "workspace:*",
     "@shepherdjerred/discord-video-stream": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
+    "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/text": "workspace:*",
     "@shepherdjerred/voice-assistant": "workspace:*",
     "discord.js": "^14.26.4",

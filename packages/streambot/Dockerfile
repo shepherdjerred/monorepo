@@ -83,9 +83,11 @@ COPY --exclude=packages/streambot/test/fixtures/voice-corpus \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   packages/voice-assistant \
+  packages/llm-models \
   ./
 RUN cd packages/discord-stream-lifecycle && bun run build \
  && cd /app/packages/discord-video-stream && bun run build \
+ && cd /app/packages/llm-models && bun run build \
  && cd /app/packages/streambot && bun run build
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
@@ -205,9 +207,14 @@ COPY --exclude=packages/streambot/test/fixtures/voice-corpus \
   packages/bugsink-config \
   packages/text \
   packages/feature-flags \
+  packages/llm-models \
+  packages/llm-observability \
+  packages/s3-signed-request \
+  packages/llm-runtime \
   ./
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/discord-video-stream/dist packages/discord-video-stream/dist
+COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/streambot/dist/web packages/streambot/dist/web
 COPY --from=voice-models /opt/streambot/voice /opt/streambot/voice
 

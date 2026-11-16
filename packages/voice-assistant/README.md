@@ -18,9 +18,9 @@ voice channel says a wake phrase and gets one grounded spoken answer":
   and the erase-everything buffer hygiene.
 - **Realtime turn** (`realtime-turn.ts`): one fresh audio-only OpenAI Realtime
   WebSocket per accepted wake — transcription, strict wake-prefix gate, audio
-  item delete → text item insert (privacy), tool-calling response, and paced
-  reply drain, with abort/timeout races and `historyStoreAudio: false`,
-  `tracingDisabled: true` preserved.
+  item delete, optional pre-response verified-command routing, text item insert
+  (privacy), tool-calling response, and paced reply drain, with abort/timeout
+  races and `historyStoreAudio: false`, `tracingDisabled: true` preserved.
 - **Reply path** (`assistant-sink.ts`, `spoken-feedback.ts`): the paced
   20 ms-per-packet sender and pre-rendered local feedback clips (rejected and
   bare wakes never bill a Realtime response).
@@ -37,14 +37,14 @@ phrase. Everything operational or phrase-specific is an injected port
 (`ports.ts`), so each consumer keeps its own metric series, trace names, tools,
 and trained assets:
 
-| Port                                                           | Consumer supplies                                                            |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `AssistantAudioTransport`                                      | `setAssistantSpeaking(bool)` + `sendAssistantOpus(opus)`                     |
-| `VoiceObservability`                                           | a `VoiceLogger` + the OTel `stagePrefix`                                     |
-| `VoiceLifecycleMetrics`, `RealtimeTurnMetrics`, `ReplyMetrics` | counter/histogram/gauge adapters                                             |
-| `VoiceAttemptHandle`                                           | per-wake observation (spans, capture); noop provided                         |
-| `VoiceAssetManifest`                                           | explicit filenames for the trained phrase's assets                           |
-| `RealtimeTurnOptions`                                          | apiKey, model, voice, agent name, instructions, wake prefixes, tools factory |
+| Port                                                           | Consumer supplies                                                                                             |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `AssistantAudioTransport`                                      | `setAssistantSpeaking(bool)` + `sendAssistantOpus(opus)`                                                      |
+| `VoiceObservability`                                           | a `VoiceLogger` + the OTel `stagePrefix`                                                                      |
+| `VoiceLifecycleMetrics`, `RealtimeTurnMetrics`, `ReplyMetrics` | counter/histogram/gauge adapters                                                                              |
+| `VoiceAttemptHandle`                                           | per-wake observation (spans, capture); noop provided                                                          |
+| `VoiceAssetManifest`                                           | explicit filenames for the trained phrase's assets                                                            |
+| `RealtimeTurnOptions`                                          | apiKey, model, voice, agent name, instructions, wake prefixes, tools factory, optional `routeVerifiedCommand` |
 
 Every span and span attribute this package records is
 `` `${stagePrefix}.<fixed suffix>` `` — streambot passes

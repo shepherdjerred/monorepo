@@ -35,7 +35,7 @@ with the metric adapters in
 ```mermaid
 flowchart LR
   accTitle: Streambot hybrid voice command lifecycle
-  accDescr: Identified Discord voice passes through local wake verification and endpointing before a bounded OpenAI turn. A short same-speaker clarification may reuse established conversation context without another wake phrase.
+  accDescr: Identified Discord voice passes through local wake verification and endpointing, then routes closed intents through gpt-6-luna Decisions before falling back to a bounded gpt-realtime-2.1 turn.
 
   D[Discord normal voice<br/>identified Opus] --> L[Local decode and<br/>per-speaker pre-roll]
   L --> K{Permissive sherpa<br/>phrase or fragment?}
@@ -47,14 +47,20 @@ flowchart LR
   V --> O[Commit audio to<br/>gpt-transcribe]
   O --> C{Leading normalized<br/>Hey Streambot?}
   C -->|reject| L
-  C -->|pass| T[Delete audio item; add verified command text;<br/>request one gpt-realtime-2.1 response]
-  T --> P[One typed, permission-checked<br/>playback tool]
-  P --> R[Short spoken reply<br/>over normal voice]
+  C -->|pass| X[Delete audio item;<br/>classify via gpt-6-luna /v1/decisions]
+  X -->|closed intent >= 0.80| P[One typed, permission-checked<br/>playback tool]
+  X -->|non_command >= 0.80| L
+  X -->|open args / < 0.80 / refusal| T[Add verified command text;<br/>request one gpt-realtime-2.1 response]
+  T --> P
+  P -->|Realtime turn| R[Short spoken reply<br/>over normal voice]
+  P -->|Decisions fast path| L
   R --> L
   P -->|needs a choice| F[Arm same-speaker follow-up<br/>15 s, at most twice]
   F --> V
   G[Separate Go Live<br/>movie audio and video] -. duck to 20% .-> R
 ```
+
+Once the transcript gate strips **Hey Streambot** and deletes the raw audio item, `voice-command-router.ts` classifies the normalized command with `gpt-6-luna` on OpenAI's `/v1/decisions` endpoint before requesting Realtime speech. Closed parameterless and fixed-enum controls (`pause`, `resume`, `skip`, `previous`, `restart`, `stop`, `clear`, `shuffle`, `subtitles_off`, loop modes, and numbered channel switches) update playback and the player card immediately, so synthesizing a spoken confirmation only adds latency, audio-token cost, and movie ducking. High-confidence `non_command` classifications close silently instead of babbling over accidental wakes. Requests with open arguments, status questions that need a spoken answer, refusals, and classifications below `0.80` confidence fall through to `gpt-realtime-2.1`. Fast-pathed intents invoke the same `VoiceMutationGate` and permission-checked tool wrapper in [`voice-tools.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/streambot/src/voice/voice-tools.ts) as Realtime tool calls.
 
 Endpointing cannot be purely packet-driven: Discord clients negotiate DTX and stop sending RTP at
 the end of speech, so while a candidate is pending the lifecycle runs a wall-clock ticker and,
