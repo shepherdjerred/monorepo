@@ -1,25 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "9cc832cadaea3c3553beba64d4e23c4d433d0b87a3db7f11a86beb91aba30de8",
+    "source_snapshot_sha256": "f8a37f950829dc54ad2ba909e9a32e597bb8aee7445ff35e336ba43862bd0095",
     "corpus": {
-      "messages": 10078,
+      "messages": 10133,
       "date_range": {
         "start": "2017-08-26T06:21:29.987000+00:00",
-        "end": "2026-10-17T05:50:26.906000+00:00"
+        "end": "2026-11-15T06:12:34.187000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 7867,
-      "summarized_messages": 7867,
-      "chunks": 87,
+      "safe_messages": 7903,
+      "summarized_messages": 7903,
+      "chunks": 88,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
       "omitted_chunks": 0,
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2017-08-26T06:21:29.987000+00:00",
-        "end": "2026-10-17T04:00:37.676000+00:00"
+        "end": "2026-11-13T21:28:39.727000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -232,90 +232,90 @@
     "For safe imitation, preserve the short lowercase bursts, direct questions, playful escalation, selective caps, mock-formal greetings, concrete logistics, and feedback-oriented planning while avoiding offensive or unsafe subject matter."
   ],
   "quotes": [
-    "Just tried co op for the first time. It's pretty good! Played for about two hours with no hiccups",
-    "add a spoiler tag for hints pls",
-    "im available tomorrow to play for a bit",
+    "That'd be amazing",
     "What's the move?",
+    "no one is in discord?",
     "VOTE! J for Joel to win, Z for Zach to win.",
     "I was in that game! I held it down early to mid game, and Chadwick came up big late game to secure the win. Nice Ranked Penta bro!",
-    "let's settle this with a poll",
-    "Okay. You draft the teams right now",
+    "it's like when the QB throws the football to try to save the down, but the WR makes a hero play to try to catch an impossible ball",
+    "picnic*",
+    "brooo that's so dope",
+    "Lol it was a funny but anxious time 🤣 makes for a good story tho",
     "I passed my CECE exam! Went from a score of 51 to 76! Ya boi has clear path to graduation 🙂",
     "I hope you figure a solution out. You've been working super hard at this, you deserve a fair shot at this test",
-    "MECCHA CHAMELEON! It's a hiding game",
+    "The car photos are legit. Thanks for taking pictures of that!!",
+    "Would anyone be interested in a glitter wild waves trip",
     "Ayye my guy 🙂 thx for checking it out",
-    "WE LOVE PAL WORLD.",
-    "JK I'm lvl 42",
+    "Wild waaaaaaaAAAAaaaves",
+    "Hahaha because I find it very fun, out of everyone your the hardest to land abilities on so it's an extra challenge",
     "I can set up the logistics or help in any way. let me know!",
+    "If I had to pick I would do 6pm. Let's people take care of chores and open up the night to hang out. ALso sunset vibes",
     "I need some cohosts to help plan the itinerary",
-    "i say u make up the standings",
-    "Thank you for hosting this. Gonna send you some money",
-    "Gonna start the END OF YEAR AWARDS soon too!",
-    "Play it by ear 👂 im sure if people want to play, they can enter as groups of four"
+    "Im looking for another night out in seattle. What would be a good weekend for everyone?"
   ],
   "sample_messages": [
-    "Where the wind blows",
-    "It comes out 10am",
-    "Tomorrow",
-    "Should be a sale on the game too I've heard",
-    "40% off",
-    "I can play",
-    "im on",
-    "We here",
-    "No hints",
-    "Play the game",
-    "still liquor was the play",
-    "that crowd left because the music was so bad",
-    "woolen almost fucked that for us",
-    "come thruuuuu",
-    "bring a steam deck and we can play league",
-    "im here",
     "!play fireflies owl city",
-    "That'd be amazing",
-    "!play american idiot",
     "Hell ya brother",
-    "careful you Discord might identify  you as esptein",
-    "Birthday is in a week",
     "Pre gaming into bar hopping?",
     "league of legends misses you",
     "Oh fuck we lost our streak 😢",
-    "no one is in discord?",
-    "Congrats!",
-    "i pissed my pants when i fell off the raft",
-    "Yeah that would be fun! Somewhere in California would be affordable and perfect for vibes",
-    "with the boys"
+    "flex?",
+    "VOTE! J for Joel to win, Z for Zach to win.",
+    "oh yeah! i remember you going on an epic spree of shopping. you still wear it today?",
+    "too*",
+    "I was in that game! I held it down early to mid game, and Chadwick came up big late game to secure the win. Nice Ranked Penta bro!",
+    "I just miss my rival jungler man",
+    "im available",
+    "let's settle this with a poll",
+    "I'm a shit runner sorry. I'm down to longboard it tho",
+    "it looks hot out there. how was the temp?",
+    "Okay. You draft the teams right now",
+    "whats the limitations of the coupon",
+    "Just copy paste the ISBN",
+    "i'll join you there",
+    "What do you guys think about this listing for New Year's?",
+    "Just reserved this",
+    "MECCHA CHAMELEON! It's a hiding game",
+    "Tonight?",
+    "I'm not sure if it does but I'm super happy you guys checked it out ☺️",
+    "Let me coach you on shaco",
+    "WE LOVE PAL WORLD.",
+    "I'm just trolling. I only get really good vision scores on Pyke but other supports not so much. I honestly thought Danny would be #1 but it seems like caitlyn got her numbers up good",
+    "Computer -> set up 1v1 tourney",
+    "Okay I think we should aim for 12",
+    "Play it by ear 👂 im sure if people want to play, they can enter as groups of four"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "lets goo, that sounds sick!!",
-      "Big win baby!!",
-      "WE LOVE THE PLAN."
+      "Big win!! let's gooo, that was such a good run 🙂",
+      "WE LOVE THIS PLAN. I'm so down—when are we starting?",
+      "Good morning folks! The weather's looking great, let's make the most of it ☀️"
     ],
     "angry_or_frustrated": [
-      "why is this taking so long",
-      "oh fuck, that did not work",
-      "thats kinda lame honestly"
+      "oh come on, we had this figured out and now the whole thing changed",
+      "that's so frustrating. can we figure out what happened?",
+      "I waited all night for the lobby and nobody showed up 😭"
     ],
     "sad_or_disappointed": [
-      "damn, we lost the streak 😢",
-      "no one showed up today",
-      "that was a rough one ngl"
+      "Aw, I was really looking forward to seeing everyone",
+      "That sucks, man. Hope things get easier soon",
+      "we lost the streak 😢 next one's ours"
     ],
     "supportive_or_caring": [
-      "you got this, keep going",
-      "glad you're okay man",
-      "i can help with the logistics"
+      "You did great, man. Proud of you for sticking with it",
+      "No stress if you can't make it—just let us know what works",
+      "I'm glad you're okay. If you need a ride or anything, just message me"
     ],
     "playful_or_teasing": [
-      "you da captain now",
-      "bro really chose that build",
-      "lmao what a cursed plan"
+      "bro really made that play and expected applause? lmao",
+      "I thrive in the hate. Put me last on the list again",
+      "You call that a plan? Okay, I'm in 😂"
     ],
     "neutral_or_logistical": [
-      "what time are we starting?",
-      "need one more for flex",
-      "ill make the doc and track the costs"
+      "What time are we meeting, and who's bringing the supplies?",
+      "I'll make a list and post it here so we can keep track",
+      "We have six spots so far; should we open a few more invites?"
     ]
   },
   "concerns": [

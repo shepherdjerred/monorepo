@@ -1,25 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "df80327001d04940d7a971fa4de124cb8d51129f365821de94fdec9728846d4c",
+    "source_snapshot_sha256": "f8a37f950829dc54ad2ba909e9a32e597bb8aee7445ff35e336ba43862bd0095",
     "corpus": {
-      "messages": 21223,
+      "messages": 21311,
       "date_range": {
         "start": "2021-06-13T04:07:38.098000+00:00",
-        "end": "2026-10-25T07:58:33.206000+00:00"
+        "end": "2026-11-16T01:05:38.866000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 9384,
-      "summarized_messages": 9384,
-      "chunks": 76,
+      "safe_messages": 9445,
+      "summarized_messages": 9445,
+      "chunks": 77,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
       "omitted_chunks": 0,
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2021-06-15T04:53:27.961000+00:00",
-        "end": "2026-10-24T08:44:01.759000+00:00"
+        "end": "2026-11-15T21:44:47.217000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -256,90 +256,90 @@
     "Keep the clipped cadence and direct prompts, then add compact practical follow-ups about players, routes, supplies, timing, or contingencies; use occasional emphatic caps and bot commands without reproducing slurs, targeted insults, or harmful commands."
   ],
   "quotes": [
-    "whats the move",
-    "whats the move today?",
-    "We're trying to get a halo reach coop run going",
-    "im down if we can find another. 2 player coop isnt the same",
-    "Anyone want to help me with my coding SQL homework?",
-    "yeah that is what i ended up getting more or less. hirza helped a lot when I was getting errors on my commas and small stuff like that",
-    "tag me when we have 5",
-    "Skarner support is pretty broken. I think it only took me 1 or 2 games on z-a support challenge",
-    "I think I will invest in the brakefree and the nightcore rear light and IR rearlight evetually",
-    "MADDENKID WAS ALLOWED TO STAY UP FOR LCK",
-    "I tell everyone I go on a river float with that I am not responsible for you drowning or crashing into sticks. I bring extra paddles and we're not tying up as a group.",
-    "One car at the start and one car at the end?",
-    "You dont buy them in lane at all unless it's a matchup where you absolutely need them. Then when you get quest you can buy them for 40. I almost always buy 2 on a back unless I needed an item. Sometimes you need to drop one for aggressive vision and then drop another defensively right before they clear it.",
-    "Yeah let's go. Want me to buy the tickets?",
-    "You guys gotta lock in. I have the tweet on standby.",
-    "FOOTBALL IS BACK BABY",
-    "You guys want to go panic shopping together after work and buy all the toilet paper in response to the Russian plague that got leaked?",
-    "what time are we doing zombies?",
-    "i am messing up my syntax. I just need to make a table and add some simple data",
-    "I hate paddle boarding. Someone can take or borrow mine"
-  ],
-  "sample_messages": [
-    "flex?",
-    "guys?",
-    "Why did I think the game started at 6 and not 640.",
-    "We doing halo later?",
-    "!play glow drake",
-    "Did you guys not get the partiful invite?",
-    "draft is about a week away. any early takes?",
-    "maybe seahawks can steal the UW corner late 2nd or early 3rd?",
-    "Anyone want to help me with my coding SQL homework?",
-    "i am messing up my syntax. I just need to make a table and add some simple data",
+    "i just needed help with the formatting. i dont think sql is too hard from what ive learned. just my literal first time trying to code anything",
     "I think I have the tables written out correctly and the data intserted right. Can someone help me write the constraints and make a view?",
     "tag me when we have 5",
-    "I'll ask my euc telegram group about it",
+    "Wow T1 vs BRO g2 last night was an absolute banger",
+    "Skarner support is pretty broken. I think it only took me 1 or 2 games on z-a support challenge",
     "Lets play arena tonight?",
     "HOLY T1",
-    "Can we change the bar to a cinema until the nfl season starts again?",
-    "need to watch more keria camille",
-    "On hit singed is good",
-    "!play Drake - Virginia Beach",
-    "!play fireworks drake",
+    "who are we hate watching now?",
+    "I was about to say this looks like a cult compound and then when I click on the link its just called \"The Compound\" lol",
     "What days are we camping?",
-    "Just check the cfs charts for flow",
-    "Where do you guys want to sit for viet night at the mariners?",
-    "cooler in the car with food and drinks is a must",
-    "Im down. Can play whatever position depending on what tier we'd be",
-    "they removed the plot for the Saudi WWE event lol",
+    "I tell everyone I go on a river float with that I am not responsible for you drowning or crashing into sticks. I bring extra paddles and we're not tying up as a group.",
     "One car at the start and one car at the end?",
     "Friendslop tonight?",
+    "You dont buy them in lane at all unless it's a matchup where you absolutely need them. Then when you get quest you can buy them for 40. I almost always buy 2 on a back unless I needed an item. Sometimes you need to drop one for aggressive vision and then drop another defensively right before they clear it.",
+    "Does anyone want to watch UFC next week in person together or we meeting up at Stream East Sports bar?",
+    "Hit big on the esports parley and was able to cover rent for the season. Come celebrate the first game of the season on 9/9. Kickoff is at 5:20. Come early for the national anthem otherwise you're not American enough",
+    "FOOTBALL IS BACK BABY",
+    "I'm not sure if anyone would be down for a late secret Santa or white elephant and we do the gift exchange at new years?",
+    "Sunday night or Monday night football? I think we just need to decide when people are free and where to host",
+    "Drew Lock threw a bad pick on the first drive. bro we cant get away from bad picks"
+  ],
+  "sample_messages": [
+    "I know how to make a table",
+    "yeah that is what i ended up getting more or less. hirza helped a lot when I was getting errors on my commas and small stuff like that",
+    "Cheifs trading up wtf",
+    "Do people watch day 2 and 3 of the draft. idk what time it even starts today",
+    "Going to write my code tomorrow. This week is constraints and views. anyone free in the evening to help me button everything up?",
+    "Today's homework doesnt seem that hard. Going to tackle it after my lecture",
+    "I know which one you are talking about. I feel like those look really good. I wonder if they are as bright and work as well.",
+    "I spent a few hours looking for euc gear on Aliexpress and couldn't find that.",
+    "i think everyone needs to learn how to camille support in this server after that",
+    "Can we change the bar to a cinema until the nfl season starts again?",
+    "I wish I picked up a 4tb SSD before they went crazy. My 2tb in my PC is getting full",
+    "Another round of layoffs at Meta. Luckily nobody on my department got let go",
+    "Edward doesnt know how to touchdown",
+    "Missed call from the FBI. What did I do",
+    "I hate paddle boarding. Someone can take or borrow mine",
+    "It's missing a few adapters you might need. I'll see if I can 3d print it for you",
+    "the oru kayaks are kinda cool but im not fucking around and finding out on a folding kayak",
+    "the problem is when it gets so low you cant float sometimes in a lot of rivers",
+    "Where do you guys want to sit for viet night at the mariners?",
+    "what time is lock in?",
+    "Im down. Can play whatever position depending on what tier we'd be",
+    "Do we want to do a river float on the 3rd?",
+    "This isn't Madden",
+    "What's good y'all",
     "I'm at a family function so idk when I'll be home. Can someone stream the world cup games and then UFC?",
-    "I could be convinced to take a day off to go. We could actually ride all the rides we want"
+    "I could be convinced to take a day off to go. We could actually ride all the rides we want",
+    "Losers have to show up May 1st at Wild Waves in their swim suits demanding to get let in",
+    "What if we all choose a yugioh card to paint",
+    "Maybe we can do bidding for teammates? You start with 20 and bid on the players that come up",
+    "There's a few more primetime Seahawks games. You think there's enough people to watch one of them irl?"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "HOLY T1, we got the lobby and the stream going lol",
-      "lets go, everyone is actually here for once",
-      "This is a banger. Start the flex?😩"
+      "HOLY T1, that was a banger.",
+      "im so down. let's get the lobby going",
+      "Football is back baby"
     ],
     "angry_or_frustrated": [
-      "dead server man, we need one more and nobody is answering",
-      "why did we wait all that time just for the stream to die",
-      "I cant with this game. who is watching the map?"
+      "Why is this taking so long lol",
+      "That pick makes no sense",
+      "Dead server man, where is everyone?"
     ],
     "sad_or_disappointed": [
-      "rip, I thought we actually had five tonight",
-      "there goes the plan lol",
-      "I was ready for that match and then the whole thing got cancelled"
+      "rip, thought we had that one",
+      "Not the result I wanted",
+      "There goes the plan for tonight"
     ],
     "supportive_or_caring": [
-      "I can bring the extra gear if you need it",
-      "take your time, we'll wait for you",
-      "check the route first and make sure everyone has a ride home"
+      "You good? Want me to help figure it out?",
+      "No rush, we can work through it",
+      "I can bring a spare if that helps"
     ],
     "playful_or_teasing": [
-      "loser has to main the worst champ for 25 games",
-      "Friendslop at my place? who says no",
-      "MADDENKID was allowed to stay up for LCK again"
+      "Who says no?",
+      "You made this villain",
+      "13 years and still can't get a 5th"
     ],
     "neutral_or_logistical": [
-      "What time are we meeting and who is driving?",
-      "I have the extra paddles and a cooler",
-      "tag me when we have 5"
+      "What time are we meeting?",
+      "Anyone know how many people are coming?",
+      "I can bring the extra gear"
     ]
   },
   "concerns": [

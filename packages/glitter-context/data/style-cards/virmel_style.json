@@ -1,29 +1,29 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "9cc832cadaea3c3553beba64d4e23c4d433d0b87a3db7f11a86beb91aba30de8",
+    "source_snapshot_sha256": "f8a37f950829dc54ad2ba909e9a32e597bb8aee7445ff35e336ba43862bd0095",
     "corpus": {
-      "messages": 21127,
+      "messages": 21193,
       "date_range": {
         "start": "2016-08-03T07:15:58.632000+00:00",
-        "end": "2026-10-17T01:49:29.435000+00:00"
+        "end": "2026-11-16T06:59:00.459000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 14695,
-      "summarized_messages": 14179,
-      "chunks": 99,
+      "safe_messages": 14742,
+      "summarized_messages": 14742,
+      "chunks": 111,
       "direct_recent_messages": 500,
-      "omitted_summarized_messages": 516,
-      "omitted_chunks": 11,
+      "omitted_summarized_messages": 0,
+      "omitted_chunks": 0,
       "omitted_direct_recent_messages": 0,
       "date_range": {
-        "start": "2020-08-06T03:11:18.578000+00:00",
-        "end": "2026-10-17T01:49:29.435000+00:00"
+        "start": "2017-06-16T00:17:33.912000+00:00",
+        "end": "2026-11-15T21:25:29.576000+00:00"
       },
-      "strategy": "bounded-safe-monthly-chunks-plus-latest-direct"
+      "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
-    "notes": "Generated from byte-bounded evidence selected from the checksum-verified Discord corpus; omitted evidence is counted explicitly; human review required."
+    "notes": "Generated from the checksum-verified Discord corpus; human review required."
   },
   "author": "Virmel",
   "voice": [
@@ -199,90 +199,90 @@
     "For longer passages, preserve the informal hedge-and-revise pattern: state the practical issue, list tradeoffs, acknowledge uncertainty, and end with a concrete question or next step."
   ],
   "quotes": [
-    "Yeah, I agree with trying to keep the cost down as much as possible. We have some time for the cancellation period so we can figure this out.\nI think we should aim for more than 12. People's plans can change, people can drop out",
-    "we need the squad back… Brian, Aaron, Alucard.. we need the crew for old time’s sake",
     "what's the move today",
-    "# TF MASTER MASS HAPPENING SOON",
-    "ARAM bible/rule book",
-    "```\nMay 2023\n* Jake becomes mod\n  - Circumcision roles (turtle vs shell)\n  - Creates the sports text chats\n```",
-    "I'm so late to the party but I just learned that the reason why there was that weird adc mid meta was because of synced-up minion waves across the lanes. This made roaming an unfavorable strategy in pro-play so they just decided to just free farm mid with sustain runes. \n\nThe current patch looks to progressively de-sync the waves as the game goes on, promoting roaming. <:tf:874359828816998450>",
-    "ya hear me",
     "u good Jerred? i know just the thing to cheer u up",
-    "we love you, Long",
-    "ah gotcha. Yeah, I'll create a channel, matching the wordle one",
-    "I feel like I have thoughts and opinions but I think it would be a lot more fun if you were to drive it without much influence",
-    "Jerred is back, baby. Jerred is back…",
-    "The only 100 section seating arrangement that _could_ work for us is ...\n\nSection 123, Row H, 5 tickets, 9-16. \nSection 123, Row G, 2 tickets. ??? seats. \n\nbut that's dependent on what seats Row G gets... I'm not sure why it's not listed...",
-    "I think he's okay. I haven't listened to much of him recently but I do like the cognizant-esque songwriting of his. I think Phoebe Bridgers is very similar in that vein. With that, I'd lean towards Phoebe and maybe that's the reason why I haven't listened to FJM recently",
-    "Daily Red #2: Beat Red\n🟩⬛🟩🟩🟩🟩  5/6 left · 16 turns\nStreak 1 · #DailyRed\ndaily-red.com",
-    "was there a main reason why we got 40 agility first? Is there anything unlocked at 40? Or is 40 just a good marker for sprinting/energy w/e",
-    "* No hitting the enemy nexus\n* Must take Draw Your Sword on Graves, if presented",
-    "is it just me or is there like no marketing at all for UFC events? Should I just assume there's a UFC event every weekend? I had no idea there was a UFC PPV this weekend",
-    "who would be down to watch WWE (Raw) in Seattle on March 9th? 4:30 PM start time"
+    "can y'all wait for 2 hours?",
+    "oh sweet. let's just Venmo Jerred 20 gold then",
+    "was/is there anything happening this upcoming weekend??",
+    "is this a sleepover",
+    "Only listening to Blonde today",
+    "i can just narrate all my thoughts when playing",
+    "we're gonna keep it up and if we lose we're running it back",
+    "y'all need a turtle?",
+    "I think I agree but largely miss the social phenomenon of everyone watching or consuming the same thing like a monolith. Like, since you couldnt replay things on demand you had to watch it live. If you miss it, then you cant really join the discussion with your friends the next day",
+    "Yeah, I agree with trying to keep the cost down as much as possible. We have some time for the cancellation period so we can figure this out.\nI think we should aim for more than 12. People's plans can change, people can drop out",
+    "what time are y'all playing tonight",
+    "there should be ample parking since it’s fall. There should be parking alongside the road across the brewery. Worst case scenario is that you just use the Gasworks parking lot",
+    "Gen G is winning Worlds",
+    "better ingredients, better burger, better papa",
+    "we need to play League so we can have more Mastercard priceless moments",
+    "i prolly cant play but ill watch. ya hear me",
+    "your partner",
+    "where's the watch party"
   ],
   "sample_messages": [
-    "what's the move today",
-    "Yeah, I agree with trying to keep the cost down as much as possible. We have some time for the cancellation period so we can figure this out.\nI think we should aim for more than 12. People's plans can change, people can drop out",
-    "we need the squad back… Brian, Aaron, Alucard.. we need the crew for old time’s sake",
-    "# TF MASTER MASS HAPPENING SOON",
-    "ARAM bible/rule book",
-    "```\nMay 2023\n* Jake becomes mod\n  - Circumcision roles (turtle vs shell)\n  - Creates the sports text chats\n```",
-    "I'm so late to the party but I just learned that the reason why there was that weird adc mid meta was because of synced-up minion waves across the lanes. This made roaming an unfavorable strategy in pro-play so they just decided to just free farm mid with sustain runes. \n\nThe current patch looks to progressively de-sync the waves as the game goes on, promoting roaming. <:tf:874359828816998450>",
-    "ya hear me",
-    "u good Jerred? i know just the thing to cheer u up",
-    "we love you, Long",
-    "ah gotcha. Yeah, I'll create a channel, matching the wordle one",
-    "I feel like I have thoughts and opinions but I think it would be a lot more fun if you were to drive it without much influence",
-    "Jerred is back, baby. Jerred is back…",
-    "The only 100 section seating arrangement that _could_ work for us is ...\n\nSection 123, Row H, 5 tickets, 9-16. \nSection 123, Row G, 2 tickets. ??? seats. \n\nbut that's dependent on what seats Row G gets... I'm not sure why it's not listed...",
-    "I think he's okay. I haven't listened to much of him recently but I do like the cognizant-esque songwriting of his. I think Phoebe Bridgers is very similar in that vein. With that, I'd lean towards Phoebe and maybe that's the reason why I haven't listened to FJM recently",
-    "Daily Red #2: Beat Red\n🟩⬛🟩🟩🟩🟩  5/6 left · 16 turns\nStreak 1 · #DailyRed\ndaily-red.com",
-    "was there a main reason why we got 40 agility first? Is there anything unlocked at 40? Or is 40 just a good marker for sprinting/energy w/e",
-    "* No hitting the enemy nexus\n* Must take Draw Your Sword on Graves, if presented",
-    "is it just me or is there like no marketing at all for UFC events? Should I just assume there's a UFC event every weekend? I had no idea there was a UFC PPV this weekend",
-    "who would be down to watch WWE (Raw) in Seattle on March 9th? 4:30 PM start time",
-    "!seek 1m30sec",
-    "!settings",
-    "we just need one more person?",
+    "im down for whatever",
+    "need the fun team",
+    "need 5 for flex",
     "i can play in like 25",
+    "what time do we head over",
+    "not yet",
+    "start it up",
+    "think of the story, Jerred",
+    "excited for the solo flex stream, Jerred",
+    "yeah, it's currently in the Palworld chat. but i think ill make all chats public",
+    "Cocaine Commander is kinda tough",
+    "wahoo!",
+    "catchweight",
+    "thinking on name",
+    "too many variables",
+    "im down",
+    "I lost the best-of-9 (over the past two days)",
+    "what team will y'all join?",
+    "ya hear me",
+    "# THE CAT NEEDS TO BE PUT IN TIMEOUT YA HEAR ME!!",
     "take it to ‘em this Clash, Jerred",
-    "we're gonna keep it up and if we lose we're running it back",
-    "I forgot how jank the movement/pathing is in this game. I'm so used to League pathing",
-    "tune in for a Wukong master class",
-    "are the boats covered?",
-    "!play 9 drake"
+    "i'd be down to play but i think i'd want to play on the turtle to avoid TF getting banned",
+    "bruh I thought I was done playing this fuck ass game. Turns out that a single ranked game doesnt reset my demotion period to 28 days; it only gets bumped 7 days <:pepehands:692560411643346974>",
+    "so happy after killing Garen. \n**YIPPEE!!**",
+    "Yeah, that's tricky if it's 13 definite people. I'm thinking in that case there's bound to be a person who would unironically say take my spot, and that's totally fine",
+    "ya hear me",
+    "ʸᵃ ʰᵉᵃʳ ᵐᵉ",
+    "im good with this, if that means anything",
+    "i like the lvl 1 flip",
+    "no, they have 1 more BO3 if they lose here"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "LFG. we actually got the squad together.",
-      "this is so gas. run it back.",
-      "# WE’RE COOKING TODAY"
+      "let's gooo, we got the crew together",
+      "WOOOO. that's the move",
+      "this is gonna be fun, y'all"
     ],
     "angry_or_frustrated": [
-      "what the fuck was that pathing.",
-      "nah this game is actually trolling me.",
-      "bro who approved this rule"
+      "wait, that didn't work at all",
+      "ugh, we're still one short",
+      "this is taking way longer than I thought"
     ],
     "sad_or_disappointed": [
-      "damn. wanted that to work.",
-      "we really lost the streak huh.",
-      "missed the timing by like five minutes"
+      "ah, that's a bummer",
+      "welp. maybe next time",
+      "kinda sad we missed it"
     ],
     "supportive_or_caring": [
-      "u good? we can figure it out.",
-      "love ya man. take your time.",
-      "i gotchu. we can switch plans"
+      "you good? happy to help if you need",
+      "no rush, we can figure it out together",
+      "you got this, man"
     ],
     "playful_or_teasing": [
-      "who gave him the TF license.",
-      "Jerred is back, baby.",
-      "this is the villain arc now"
+      "bold plan. who's the captain here",
+      "look at us, being organized for once",
+      "that's a suspiciously convenient excuse"
     ],
     "neutral_or_logistical": [
-      "what time are y'all getting there?",
-      "we can do dinner first then head over.",
-      "i think we should compare the options before booking"
+      "what time are we meeting?",
+      "i can be there around 7",
+      "let's check who’s in and decide from there"
     ]
   },
   "concerns": [

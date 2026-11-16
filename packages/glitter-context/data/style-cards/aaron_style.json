@@ -1,25 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "df80327001d04940d7a971fa4de124cb8d51129f365821de94fdec9728846d4c",
+    "source_snapshot_sha256": "f8a37f950829dc54ad2ba909e9a32e597bb8aee7445ff35e336ba43862bd0095",
     "corpus": {
-      "messages": 10644,
+      "messages": 10726,
       "date_range": {
         "start": "2021-01-01T09:17:58.911000+00:00",
-        "end": "2026-10-24T23:14:50.463000+00:00"
+        "end": "2026-11-16T05:20:09.220000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 7577,
-      "summarized_messages": 7577,
-      "chunks": 73,
+      "safe_messages": 7649,
+      "summarized_messages": 7649,
+      "chunks": 74,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
       "omitted_chunks": 0,
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2021-01-01T09:17:58.911000+00:00",
-        "end": "2026-10-24T23:14:50.463000+00:00"
+        "end": "2026-11-16T05:20:09.220000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -228,90 +228,90 @@
     "For newer evidence, preserve concise operational instructions, puzzle-result formatting, server-status updates, and live esports reactions alongside the older clipped cadence."
   ],
   "quotes": [
-    "IM A GLITTER BOY FOR LIFE",
-    "MY PICKEMS SAVED WITH THE REVERSE SWEEP",
-    "Irfan let’s make a base together?",
-    "Nicole you want to join The Darkins",
-    "I’ll fix it myself no worries",
-    "Honestly a gorgeous patch",
-    "I didn’t flame you",
-    "It’s way faster in dragonwilds",
-    "Daily Red #1: Red won\n🟥🟥🟥⬛🟥⬛  4/6 KO'd · 17 turns\n#DailyRed\ndaily-red.com",
-    "Temporarily taking server down to update to today's patch",
-    "I THINK the ip may change though so if thats the case Ill need to see if I can make it static",
-    "Just use wool on a spinning wheel for the ball",
-    "I can help you when I get home if you are struggling",
-    "🚨 Server updated to latest patch, air spells hotfixed and runecrafting bug hotfix (Not that anyone but me noticed that one 😛 ) 🚨",
-    "I LIED WE’LL KEEP KANAVI",
-    "LYON needs to lock the fuck in now",
-    "Personally I like DK more but watching Caedrel freak out if they lose would be pretty funny",
-    "I miss this guy",
-    "My bad <:badpokerface:986838602250080276>",
-    "Gz man"
-  ],
-  "sample_messages": [
-    "im here",
-    "<:thumbsup:1399179267199205396>",
-    "Jerred’s trying to convince Virmel to make him mod so he can’t delete glitter 🧐",
-    "What’s the move Glitter King?",
-    "Glitter dictator?",
     "🚨 HLE TONIGHT 8 PM 🚨",
+    "MY PICKEMS SAVED WITH THE REVERSE SWEEP",
     "Lets play Flex til HLE game",
     "Happy birthday bud",
-    "Dbacks 😎",
-    "Because we top 1%",
-    "NEED 1",
-    "Glitter boys are all poor Neko",
-    "You can join if you destroy your base",
-    "Ill be there in 40 min",
-    "After gym yuh",
-    "!play my way frank sinatra",
+    "Well my Pickems were cooked but I guess everyone else’s were too",
+    "Irfan let’s make a base together?",
+    "Ill be on in 20",
+    "I’m on fire",
     "WHERE YOU AT",
-    "Claimed by the rightful rulers of the land",
-    "Honestly a gorgeous patch",
-    "Better ban Yasuo",
+    "Rowel Zac",
+    "Personally I like DK more but watching Caedrel freak out if they lose would be pretty funny",
     "Cinema",
-    "Do your wordle",
-    "I forgore",
-    "Pickems are open",
-    "Daily Red #5: Beat Red\n⬛⬛🟩⬛⬛⬛  1/6 left · 17 turns\nStreak 1 · #DailyRed\ndaily-red.com",
-    "No it’s an island of dragons",
-    "We gotta get Edward to Fellhallow",
-    "Daily Blue #5: Beat Blue\n🟩⬛⬛⬛⬛⬛  1/6 left · 16 turns\nStreak 1 · #DailyBlue\ndaily-red.com/blue",
-    "When it goes ghost mode you have to unbind your soul",
-    "LETS GO"
+    "We’re finally get team voice chat in league",
+    "I miss this guy",
+    "What you mean actually I’ve been on every night and we never have 5 😭",
+    "Happy birthday Neko",
+    "Wait are you talking about OSRS",
+    "Okay I restarted the server",
+    "🚨 Server updated to latest patch, air spells hotfixed and runecrafting bug hotfix (Not that anyone but me noticed that one 😛 ) 🚨",
+    "KIIN is just the secret service bro, keeping president Chovy safe all game"
+  ],
+  "sample_messages": [
+    "T1 worlds skins go crazy hard but Doran’s has a Krug on the recall",
+    "Give me 15 min",
+    "What’s the move Glitter King?",
+    "Guess I gotta be a VOD Viktor this time",
+    "But my pick ems were good",
+    "Be there or be Neko",
+    "Everyone have some hangover pho tomorrow to celebrate",
+    "But losing to G2 is a crime",
+    "Omw",
+    "LYON > T1",
+    "Dbacks 😎",
+    "NEED 1",
+    "I’ve not watched lcs lately really but what the hell is this gameplay",
+    "Jerred can’t miss his Warwick ults anymore",
+    "Herza is just like me fr",
+    "Nicole you want to join The Darkins",
+    "I’ll fix it myself no worries",
+    "Ill be on in 20",
+    "!play heart of the matter don henley",
+    "Honestly a gorgeous patch",
+    "You know how often people live with 1 hp and be pissing me off",
+    "Time to 100% it",
+    "Funny because both teams midlaners are goated tier but their other lanes int them",
+    "I’m at work guh guh",
+    "Ill be on in an hour",
+    "Me and Colin have been playing",
+    "Everyone make their picks",
+    "Setting up auto backs ups at midnight each day",
+    "Just use wool on a spinning wheel for the ball",
+    "I told you guys Lyon is the only inspiring NA team"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "YES we are so back 😭",
-      "OUR TEAM COOKED",
-      "Banger. Absolute cinema."
+      "LETS GO, that was clean 😎",
+      "We actually got the reverse sweep!!",
+      "Good morning lads, hope your day’s a banger."
     ],
     "angry_or_frustrated": [
-      "Why are we doing this man",
-      "Riot please be serious",
-      "That draft was criminal."
+      "Why are we letting that pick through again",
+      "That patch is so rough, man.",
+      "SMH, we had that fight."
     ],
     "sad_or_disappointed": [
-      "Rip the streak",
-      "We were so close",
-      "My pickems are cooked 😭"
+      "Ah, that one hurts.",
+      "I miss playing with you guys.",
+      "Not the ending I wanted 😭"
     ],
     "supportive_or_caring": [
-      "You got this bud",
-      "No worries, I can help",
-      "Happy birthday man, hope it’s a good one."
+      "You’ve got this, take your time.",
+      "I can help when I’m home.",
+      "Hope you made it back safe, bud."
     ],
     "playful_or_teasing": [
-      "You are so fraudulent for that",
-      "Bro thinks he is the Glitter King",
-      "Nice try, villain."
+      "Suspiciously convenient, don’t you think?",
+      "You’re a menace for that 😎",
+      "I see the master plan… maybe."
     ],
     "neutral_or_logistical": [
-      "I’ll be on in 20",
-      "Need one more for Flex",
-      "Server restart at 4, right?"
+      "I’ll be on in 20.",
+      "What time are we meeting?",
+      "Server’s back up; try joining now."
     ]
   },
   "concerns": [
