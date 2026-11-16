@@ -2995,6 +2995,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "storm-brain-decisions-model",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-brain",
+      "purpose": "Select the Storm brain Decisions API model for moderation and classification.",
+      "type": "variant",
+      "default": "gpt-6-luna",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "storm-brain-model",
       "owner": "storm",
       "namespace": "storm",
