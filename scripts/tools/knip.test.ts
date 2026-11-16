@@ -74,6 +74,7 @@ test("cold-checkout Knip orders provider generation even when only the root gate
     (task) => task.taskId === "@homelab/cdktn#generate",
   );
   expect(knip?.dependencies).toContain("@homelab/cdktn#generate");
+  expect(knip?.dependencies).toContain("tasknotes-server#generate");
   expect(producer?.dependents).toContain("//#knip");
   expect(producer?.outputs).toContain("generated/**");
 });
