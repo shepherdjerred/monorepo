@@ -66,6 +66,8 @@ Monorepo workflows:
   discord <SUBCOMMAND>         Use the local Discord session daemon
   mc <SUBCOMMAND>              Drive Minecraft sandboxes (WorldEdit, console, snapshots)
   history <SUBCOMMAND>         Search private local agent history
+  tend <SUBCOMMAND>            Inspect and reap orphaned local dev resources
+  expose <http|tcp> <PORT>     Expose a local port on Tailscale Serve with a lease
 
 Global options:
   --version                    Print toolkit version
@@ -87,6 +89,8 @@ Examples:
   toolkit history recent --since 7d
   toolkit history search "kubernetes" --since 30d
   toolkit history show <ID> --query "kubernetes"
+  toolkit tend status
+  toolkit expose http 3000
 `);
 }
 
@@ -136,6 +140,20 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
   [
     "history",
     () => import("./handlers/history.ts").then((m) => m.handleHistoryCommand),
+  ],
+  [
+    "tend",
+    async () => {
+      const mod = await import("./commands/tend/tend.ts");
+      return mod.handleTendCommand;
+    },
+  ],
+  [
+    "expose",
+    async () => {
+      const mod = await import("./commands/tend/expose.ts");
+      return mod.handleExposeCommand;
+    },
   ],
 ]);
 

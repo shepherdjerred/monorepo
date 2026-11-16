@@ -3,9 +3,11 @@ import {
   branchDeletionFlag,
   formatStatus,
   isSafeWorktree,
+  parseBatchPullRequests,
   parseCleanupArguments,
   parsePullRequest,
   parseWorktrees,
+  parseWorktreesDetailed,
   pullRequestAgeInDays,
   readConfirmationLine,
 } from "../bin/git_cleanup_core.ts";
@@ -148,4 +150,81 @@ test("interactive confirmation resolves on the first newline without EOF", async
   await expect(
     readConfirmationLine(openInput("AP", "PLY\nignored")),
   ).resolves.toBe("APPLY");
+});
+
+test("squash-merged PR worktrees with deleted upstream are safe only when HEAD matches PR", () => {
+  const mergedAt = new Date("2026-07-10T12:00:00.000Z");
+  expect(
+    isSafeWorktree("", Number.POSITIVE_INFINITY, undefined, {
+      pullRequest: {
+        state: "MERGED",
+        updatedAt: mergedAt,
+        headRefOid: "deadbeef1234",
+      },
+      headSha: "deadbeef1234",
+    }),
+  ).toBe(true);
+
+  expect(
+    isSafeWorktree("", Number.POSITIVE_INFINITY, undefined, {
+      pullRequest: {
+        state: "MERGED",
+        updatedAt: mergedAt,
+        headRefOid: "deadbeef1234",
+      },
+      headSha: "cafebabe9999",
+    }),
+  ).toBe(false);
+
+  expect(
+    isSafeWorktree(" M dirty.ts", Number.POSITIVE_INFINITY, undefined, {
+      pullRequest: {
+        state: "MERGED",
+        updatedAt: mergedAt,
+        headRefOid: "deadbeef1234",
+      },
+      headSha: "deadbeef1234",
+    }),
+  ).toBe(false);
+});
+
+test("detailed worktrees and batch pull requests capture detached/locked state and prefer OPEN PRs", () => {
+  expect(
+    parseWorktreesDetailed(
+      "worktree /repo\nHEAD aaa\nbranch refs/heads/main\n\nworktree /repo/.claude/worktrees/agent-1\nHEAD bbb\ndetached\nlocked reason\n",
+    ),
+  ).toEqual([
+    {
+      path: "/repo",
+      headSha: "aaa",
+      branch: "main",
+      detached: false,
+      locked: false,
+    },
+    {
+      path: "/repo/.claude/worktrees/agent-1",
+      headSha: "bbb",
+      detached: true,
+      locked: true,
+    },
+  ]);
+
+  const map = parseBatchPullRequests(
+    JSON.stringify([
+      {
+        headRefName: "reused-branch",
+        state: "MERGED",
+        updatedAt: "2026-07-10T00:00:00.000Z",
+        headRefOid: "oldsha",
+      },
+      {
+        headRefName: "reused-branch",
+        state: "OPEN",
+        updatedAt: "2026-07-05T00:00:00.000Z",
+        headRefOid: "newsha",
+      },
+    ]),
+  );
+  expect(map.get("reused-branch")?.state).toBe("OPEN");
+  expect(map.get("reused-branch")?.headRefOid).toBe("newsha");
 });
