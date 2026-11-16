@@ -131,6 +131,7 @@ final class ManagedGameplayRemoteTest {
                   .join())
           .isFalse();
       assertThat(flags.cachedEnabled(ManagedGameplay.CONTENT_SAFETY, ACTOR)).contains(false);
+      assertThat(flags.enabled(ManagedGameplay.ASYNC_CHAT_MODERATION, ACTOR).join()).isTrue();
     }
   }
 }

@@ -148,4 +148,52 @@ final class ManagedGameplayTest {
     assertThat(gameplay.cachedEnabled(ManagedGameplay.IP, actor)).isEmpty();
     assertThat(gameplay.lastKnownEnabled(ManagedGameplay.IP, actor)).contains(true);
   }
+
+  @Test
+  void nonblockingReadsDeduplicateBackgroundRefreshesAndRetainLastKnownAnswers() {
+    var now = new AtomicReference<>(Instant.EPOCH);
+    var actor = randomUUID();
+    var calls = new java.util.concurrent.atomic.AtomicInteger();
+    var pending = new AtomicReference<CompletableFuture<Boolean>>();
+    var gameplay =
+        new ManagedGameplay(
+            (key, id) -> {
+              calls.incrementAndGet();
+              return pending.get();
+            },
+            () -> {},
+            false,
+            (InstantSource) now::get);
+
+    var initial = new CompletableFuture<Boolean>();
+    pending.set(initial);
+    assertThat(
+            gameplay.nonblockingEnabled(
+                ManagedGameplay.ASYNC_CHAT_MODERATION, actor, true, failure -> {}))
+        .isTrue();
+    assertThat(
+            gameplay.nonblockingEnabled(
+                ManagedGameplay.ASYNC_CHAT_MODERATION, actor, true, failure -> {}))
+        .isTrue();
+    assertThat(calls.get()).isEqualTo(1);
+
+    initial.complete(false);
+    assertThat(
+            gameplay.nonblockingEnabled(
+                ManagedGameplay.ASYNC_CHAT_MODERATION, actor, true, failure -> {}))
+        .isFalse();
+
+    now.set(Instant.EPOCH.plusSeconds(31));
+    var refresh = new CompletableFuture<Boolean>();
+    pending.set(refresh);
+    assertThat(
+            gameplay.nonblockingEnabled(
+                ManagedGameplay.ASYNC_CHAT_MODERATION, actor, true, failure -> {}))
+        .isFalse();
+    refresh.complete(true);
+    assertThat(
+            gameplay.nonblockingEnabled(
+                ManagedGameplay.ASYNC_CHAT_MODERATION, actor, false, failure -> {}))
+        .isTrue();
+  }
 }

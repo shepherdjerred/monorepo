@@ -38,6 +38,7 @@ public final class ManagedGameplay implements AutoCloseable {
   public static final String ANALYTICS = "the-storm-analytics-enabled";
   public static final String BEGINNERS_LUCK = "the-storm-beginners-luck-enabled";
   public static final String CONTENT_SAFETY = "the-storm-content-safety-enabled";
+  public static final String ASYNC_CHAT_MODERATION = "the-storm-async-chat-moderation-enabled";
   public static final String ANTICHEAT_CORRECTIONS = "the-storm-anticheat-corrections-enabled";
   private final BiFunction<String, UUID, CompletableFuture<Boolean>> reader;
   private final Runnable stop;
@@ -45,6 +46,7 @@ public final class ManagedGameplay implements AutoCloseable {
   private final OutageDefaults outageDefaults;
   private final Map<EvaluationKey, CachedEvaluation> evaluations = new ConcurrentHashMap<>();
   private final Map<EvaluationKey, Boolean> lastSuccessful = new ConcurrentHashMap<>();
+  private final Map<EvaluationKey, CompletableFuture<Boolean>> inFlight = new ConcurrentHashMap<>();
 
   public ManagedGameplay(
       BiFunction<String, UUID, CompletableFuture<Boolean>> reader, Runnable stop) {
@@ -123,7 +125,9 @@ public final class ManagedGameplay implements AutoCloseable {
         InstantSource.system(),
         new OutageDefaults(
             "beta".equals(environment),
-            "prod".equals(environment) ? Set.of(STAFF, IDENTITY, LETTERS) : Set.of()));
+            "prod".equals(environment)
+                ? Set.of(STAFF, IDENTITY, LETTERS, ASYNC_CHAT_MODERATION)
+                : Set.of(ASYNC_CHAT_MODERATION)));
   }
 
   private static boolean readEvaluation(HttpResponse<String> response, JsonMapper json) {
@@ -164,7 +168,8 @@ public final class ManagedGameplay implements AutoCloseable {
           evaluations
               .entrySet()
               .removeIf(entry ->
-                  !IP.equals(entry.getKey().key()) && !now.isBefore(entry.getValue().expires()));
+                  !retainsLastKnown(entry.getKey().key())
+                      && !now.isBefore(entry.getValue().expires()));
           evaluations.put(
               new EvaluationKey(key, actor), new CachedEvaluation(enabled, now.plus(CACHE_TTL)));
           return enabled;
@@ -198,16 +203,63 @@ public final class ManagedGameplay implements AutoCloseable {
     var cached = evaluations.get(evaluation);
     if (cached == null) return Optional.empty();
     if (!time.instant().isBefore(cached.expires())) {
-      if (!IP.equals(key)) evaluations.remove(evaluation, cached);
+      if (!retainsLastKnown(key)) evaluations.remove(evaluation, cached);
       return Optional.empty();
     }
     return Optional.of(cached.enabled());
+  }
+
+  private static boolean retainsLastKnown(String key) {
+    return IP.equals(key) || ASYNC_CHAT_MODERATION.equals(key) || CONTENT_SAFETY.equals(key);
   }
 
   /** Last completed result, including an expired IP-enforcement decision while it refreshes. */
   public Optional<Boolean> lastKnownEnabled(String key, UUID actor) {
     var cached = evaluations.get(new EvaluationKey(key, actor));
     return cached == null ? Optional.empty() : Optional.of(cached.enabled());
+  }
+
+  /** Starts a deduplicated background refresh when the cached rollout entry is missing or stale. */
+  public CompletableFuture<Boolean> prime(
+      String key,
+      UUID actor,
+      boolean fallback,
+      java.util.function.Consumer<Throwable> unavailable) {
+    var cached = cachedEnabled(key, actor);
+    if (cached.isPresent()) return CompletableFuture.completedFuture(cached.orElseThrow());
+    return refresh(key, actor, fallback, unavailable);
+  }
+
+  /**
+   * Returns a cached or synchronously available rollout decision without blocking, refreshing
+   * expired entries in the background.
+   */
+  public boolean nonblockingEnabled(
+      String key,
+      UUID actor,
+      boolean fallback,
+      java.util.function.Consumer<Throwable> unavailable) {
+    var cached = cachedEnabled(key, actor);
+    if (cached.isPresent()) return cached.orElseThrow();
+    var previous = lastKnownEnabled(key, actor);
+    var refresh = refresh(key, actor, fallback, unavailable);
+    if (refresh.isDone() && !refresh.isCompletedExceptionally()) {
+      return refresh.getNow(fallback);
+    }
+    return previous.orElse(fallback);
+  }
+
+  private CompletableFuture<Boolean> refresh(
+      String key,
+      UUID actor,
+      boolean fallback,
+      java.util.function.Consumer<Throwable> unavailable) {
+    var evaluation = new EvaluationKey(key, actor);
+    var started =
+        inFlight.computeIfAbsent(
+            evaluation, ignored -> enabledOrDefault(key, actor, fallback, unavailable));
+    var _ = started.whenComplete((done, failure) -> inFlight.remove(evaluation, started));
+    return started;
   }
 
   /** The registered environment default used if the IP-enforcement flag cannot be read. */

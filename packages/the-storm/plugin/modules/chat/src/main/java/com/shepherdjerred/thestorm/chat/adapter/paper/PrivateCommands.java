@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.chat.app.PrivateLine;
 import com.shepherdjerred.thestorm.chat.domain.ChatDenial;
 import com.shepherdjerred.thestorm.core.players.PlayerHandles;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.core.safety.ContentPublication;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import java.util.List;
@@ -70,6 +71,7 @@ public final class PrivateCommands {
                           var name = StringArgumentType.getString(context, PLAYER);
                           var recipient = PlayerHandles.online(server, name).orElse(null);
                           if (recipient == null) {
+                            rejectPublication(sender);
                             sender.sendMessage(Feedback.error(name + " is not online."));
                             return Command.SINGLE_SUCCESS;
                           }
@@ -92,11 +94,13 @@ public final class PrivateCommands {
   private int reply(Player sender, String message) {
     var target = service.replyTarget(sender.getUniqueId());
     if (target.isEmpty()) {
+      rejectPublication(sender);
       sender.sendMessage(Feedback.error("Nobody has messaged you yet."));
       return Command.SINGLE_SUCCESS;
     }
     var recipient = server.getPlayer(target.get().id());
     if (recipient == null) {
+      rejectPublication(sender);
       sender.sendMessage(Feedback.error(target.get().name() + " is not online."));
       return Command.SINGLE_SUCCESS;
     }
@@ -105,19 +109,29 @@ public final class PrivateCommands {
 
   private int send(Player sender, Player recipient, String message) {
     if (!com.shepherdjerred.thestorm.core.players.PlayerVisibility.visibleTo(sender, recipient)) {
+      rejectPublication(sender);
       sender.sendMessage(Feedback.error("That player is not online."));
       return Command.SINGLE_SUCCESS;
     }
     var to = new Correspondent(recipient.getUniqueId(), recipient.getName());
     switch (service.preparePrivate(Speakers.of(sender), to, message)) {
       case Result.Ok<PrivateLine, List<ChatDenial>>(var line) -> {
+        ContentPublication.commandContext(sender.getUniqueId())
+            .ifPresent(ContentPublication.CommandContext::markDelivered);
         output.deliverPrivate(line, sender, recipient);
         Feedback.noticeCalmed(sender, line.message(), service.capsNotice());
       }
-      case Result.Err<PrivateLine, List<ChatDenial>>(var denials) ->
-          sender.sendMessage(Feedback.denials(denials));
+      case Result.Err<PrivateLine, List<ChatDenial>>(var denials) -> {
+        rejectPublication(sender);
+        sender.sendMessage(Feedback.denials(denials));
+      }
     }
     return Command.SINGLE_SUCCESS;
+  }
+
+  private static void rejectPublication(Player sender) {
+    ContentPublication.commandContext(sender.getUniqueId())
+        .ifPresent(ContentPublication.CommandContext::markRejected);
   }
 
   private static Player sender(CommandContext<CommandSourceStack> context) {

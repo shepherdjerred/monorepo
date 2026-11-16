@@ -13,10 +13,16 @@ public record ContentSubmission(
     String text,
     String components,
     String object) {
+  private static final Object ID_LOCK = new Object();
+
   /** RFC version-4 IDs preserve injected randomness across the classifier boundary. */
   public static UUID newId(RandomGenerator random) {
-    var most = (random.nextLong() & 0xffff_ffff_ffff_0fffL) | 0x0000_0000_0000_4000L;
-    var least = (random.nextLong() & 0x3fff_ffff_ffff_ffffL) | 0x8000_0000_0000_0000L;
+    long most;
+    long least;
+    synchronized (ID_LOCK) {
+      most = (random.nextLong() & 0xffff_ffff_ffff_0fffL) | 0x0000_0000_0000_4000L;
+      least = (random.nextLong() & 0x3fff_ffff_ffff_ffffL) | 0x8000_0000_0000_0000L;
+    }
     return new UUID(most, least);
   }
 

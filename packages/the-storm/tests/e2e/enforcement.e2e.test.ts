@@ -114,7 +114,7 @@ describe.skipIf(external)("active enforcement", () => {
     bot.chat("can anyone hear this");
     const denial = await waitForMessage(
       bot,
-      /You are muted or chat state is still loading/,
+      /You are muted (?:for |or chat state is still loading)/,
     );
     expect(denial[0]).toContain("muted");
 
@@ -160,7 +160,7 @@ describe.skipIf(external)("active enforcement", () => {
       expect(matched[0]).not.toContain("shadow");
       const denied = waitForMessage(
         legacyBot,
-        /You are muted or chat state is still loading/,
+        /You are muted (?:for |or chat state is still loading)/,
       );
       legacyBot.chat("the legacy mute is enforced");
       await denied;

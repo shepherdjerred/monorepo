@@ -241,7 +241,22 @@ public final class JooqEvidenceStore implements EvidenceStore {
                             .from(table("safety_event"))
                             .where(
                                 field("outcome", String.class)
-                                    .in("delivered", "command-dispatched", "discord-delivered"))))
+                                    .in(
+                                        "delivered",
+                                        "delivered-optimistic",
+                                        "command-dispatched",
+                                        "discord-delivered")))
+                    .andNotExists(
+                        dsl.selectOne()
+                            .from(table("safety_event").as("retracted"))
+                            .where(
+                                field("retracted.submission_id", String.class)
+                                    .eq(field("safety_submission.id", String.class)))
+                            .and(
+                                field("retracted.outcome", String.class)
+                                    .in(
+                                        "deleted-retroactively",
+                                        "flagged-unsigned-retroactively"))))
             .orderBy(field("created_at").desc())
             .limit(limit)
             .fetch(row ->

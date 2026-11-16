@@ -93,7 +93,7 @@ public final class SafetyModule implements StormModule {
     context.services().provide(ContentSafety.class, service);
     grim = new GrimHooks(context, service);
     var manager = context.plugin().getServer().getPluginManager();
-    manager.registerEvents(new TextGate(context, service), context.plugin());
+    manager.registerEvents(new TextGate(context, service, flags), context.plugin());
     manager.registerEvents(new WrittenContentGate(context, service), context.plugin());
     manager.registerEvents(new NameGate(context, service), context.plugin());
     manager.registerEvents(

@@ -120,6 +120,16 @@ final class DiscordRelayTest {
         }
 
         @Override
+        public void postTracked(UUID submissionId, String text) {
+          posts.add("TRACKED[" + submissionId + "] " + text);
+        }
+
+        @Override
+        public void retract(UUID submissionId) {
+          posts.add("RETRACT[" + submissionId + "]");
+        }
+
+        @Override
         public void ping(String text, List<String> roles) {
           posts.add("PING" + roles + " " + text);
         }
@@ -168,6 +178,104 @@ final class DiscordRelayTest {
 
     assertThat(posts)
         .containsExactly("**cool\\_guy**: @" + ZWSP + "everyone \\*\\*free\\*\\* stuff");
+  }
+
+  @Test
+  void tracksAndRetractsSubmissionIdentifiedChatLines() {
+    var registeredRetraction = new java.util.concurrent.atomic.AtomicReference<Consumer<UUID>>();
+    relay.contentSafety(
+        new com.shepherdjerred.thestorm.core.safety.ContentSafety() {
+          @Override
+          public java.util.concurrent.CompletableFuture<
+                  com.shepherdjerred.thestorm.core.safety.ContentReview>
+              check(com.shepherdjerred.thestorm.core.safety.ContentSubmission submission) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          public java.util.concurrent.CompletableFuture<Void> finish(
+              UUID submission, String outcome) {
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+          }
+
+          @Override
+          public java.util.concurrent.CompletableFuture<Void> observe(
+              com.shepherdjerred.thestorm.core.safety.ContentSubmission submission,
+              String outcome) {
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+          }
+
+          @Override
+          public java.util.concurrent.CompletableFuture<Void> overturn(
+              UUID submission, UUID staff) {
+            return java.util.concurrent.CompletableFuture.completedFuture(null);
+          }
+
+          @Override
+          public void penalties(
+              java.util.function.Function<
+                      com.shepherdjerred.thestorm.core.safety.ContentPenalty,
+                      java.util.concurrent.CompletableFuture<Void>>
+                  handler) {}
+
+          @Override
+          public void reviews(
+              java.util.function.BiFunction<
+                      com.shepherdjerred.thestorm.core.safety.ContentSubmission,
+                      com.shepherdjerred.thestorm.core.safety.ContentReview,
+                      java.util.concurrent.CompletableFuture<Void>>
+                  handler) {}
+
+          @Override
+          public void commandRoutes(java.util.function.BiFunction<UUID, String, String> routes) {}
+
+          @Override
+          public String command(UUID player, String original) {
+            return original;
+          }
+
+          @Override
+          public void audiences(java.util.function.BiFunction<UUID, String, String> provider) {}
+
+          @Override
+          public String audience(UUID player, String text) {
+            return "global";
+          }
+
+          @Override
+          public void mutes(
+              java.util.function.Function<UUID, java.util.concurrent.CompletableFuture<Boolean>>
+                  muted) {}
+
+          @Override
+          public void evidenceContext(
+              String key, java.util.function.Function<UUID, String> provider) {}
+
+          @Override
+          public java.util.Map<String, String> evidenceContext(UUID player) {
+            return java.util.Map.of();
+          }
+
+          @Override
+          public void retractions(Consumer<UUID> handler) {
+            registeredRetraction.set(handler);
+          }
+        });
+
+    var submissionId = UUID.randomUUID();
+    relay.onChatLine(
+        new ChatLine(
+            Instant.EPOCH,
+            new ChatAuthor.InGame(UUID.randomUUID(), "Alice"),
+            "hello world",
+            true,
+            Optional.of(submissionId)));
+    registeredRetraction.get().accept(submissionId);
+
+    assertThat(posts)
+        .containsExactly(
+            "TRACKED[" + submissionId + "] **Alice**: hello world",
+            "RETRACT[" + submissionId + "]");
   }
 
   @Test

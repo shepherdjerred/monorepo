@@ -59,12 +59,18 @@ public final class GlobalChatHub implements GlobalChat {
     if (line.channel() != ChannelKey.GLOBAL || line.emote()) {
       return;
     }
+    var publication =
+        line.publication().or(com.shepherdjerred.thestorm.core.safety.ContentPublication::current);
     notify(
         new ChatLine(
             line.at(),
             new ChatAuthor.InGame(line.speaker().id(), line.speaker().name()),
             line.text(),
-            com.shepherdjerred.thestorm.core.safety.ContentPublication.screened()));
+            publication
+                .map(com.shepherdjerred.thestorm.core.safety.ContentPublication.Context::screened)
+                .orElse(false),
+            publication.flatMap(
+                com.shepherdjerred.thestorm.core.safety.ContentPublication.Context::submissionId)));
   }
 
   private void notify(ChatLine line) {

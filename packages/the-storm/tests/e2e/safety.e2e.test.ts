@@ -1,9 +1,14 @@
 import { expect } from "vitest";
 import { Vec3 } from "vec3";
 import { once } from "node:events";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { z } from "zod";
 import { test } from "./fixtures.ts";
 import { collectMessages, waitForMessage, waitUntil } from "./harness/bot.ts";
 import { waitForDecision } from "./harness/decisions.ts";
+import { copyStormDatabase, querySqlite } from "./harness/storm-data.ts";
 
 // 26.1 creative packets use length-delimited component bytes (UntrustedSlot),
 // unlike the decoded Slot components returned by Mineflayer's inventory API.
@@ -277,27 +282,110 @@ test("friendly invitations and occasional 2000-character command messages reach 
   }
 });
 
-test("plain threats in native chat and private commands are withheld without a model-only mute", async ({
+test("plain threats in native chat and private commands deliver optimistically, retract asynchronously, and avoid a model-only mute", async ({
+  bot,
+  secondBot,
+  rcon,
+  server,
+}) => {
+  const outDir = await mkdtemp(path.join(tmpdir(), "storm-safety-e2e-"));
+  try {
+    await rcon.command(`op ${bot.username}`);
+    const nativeDelivered = waitForMessage(
+      secondBot,
+      /\[fixture-threat\] native text/,
+    );
+    const nativeRemoved = waitForMessage(
+      bot,
+      /Your recent message was removed \(threat\)\..*Reference ([0-9a-f-]+)/,
+    );
+    bot.chat("[fixture-threat] native text");
+    await nativeDelivered;
+    const nativeMatch = await nativeRemoved;
+    const nativeId = nativeMatch[1] ?? "";
+    expect(nativeId).toMatch(/^[0-9a-f-]+$/);
+
+    const directDelivered = waitForMessage(
+      secondBot,
+      /\[fixture-threat\] direct text/,
+    );
+    const directRemoved = waitForMessage(
+      bot,
+      /Your recent message was removed \(threat\)\..*Reference ([0-9a-f-]+)/,
+    );
+    bot.chat(`/msg ${secondBot.username} [fixture-threat] direct text`);
+    await directDelivered;
+    const directMatch = await directRemoved;
+    const directId = directMatch[1] ?? "";
+    expect(directId).toMatch(/^[0-9a-f-]+$/);
+
+    const ordinary = waitForMessage(secondBot, /ordinary speech still works/);
+    bot.chat("ordinary speech still works");
+    await ordinary;
+    await waitForDecision(bot, /harassment escalate .*safety-block evidence/);
+
+    const RowSchema = z.object({
+      submission_id: z.string(),
+      outcome: z.string(),
+    });
+    let pollAttempt = 0;
+    await expect
+      .poll(async () => {
+        pollAttempt += 1;
+        const database = await copyStormDatabase(
+          server,
+          path.join(outDir, pollAttempt.toString()),
+        );
+        const rows = z
+          .array(RowSchema)
+          .parse(
+            await querySqlite(
+              database,
+              `SELECT submission_id, outcome FROM safety_event WHERE submission_id IN ('${nativeId}', '${directId}') AND outcome IN ('deleted-retroactively', 'flagged-unsigned-retroactively')`,
+            ),
+          );
+        return new Set(rows.map((row) => row.submission_id)).size;
+      })
+      .toBe(2);
+  } finally {
+    await rm(outDir, { recursive: true, force: true });
+  }
+});
+
+test("stage-one credential leaks and egregious abuse are cancelled synchronously before delivery", async ({
   bot,
   secondBot,
   rcon,
 }) => {
   await rcon.command(`op ${bot.username}`);
-  const observed = collectMessages(secondBot, 2500);
-  const native = waitForMessage(bot, /not published \(threat\)/);
-  bot.chat("[fixture-threat] native text");
-  await native;
-  const direct = waitForMessage(bot, /not published \(threat\)/);
-  bot.chat(`/msg ${secondBot.username} [fixture-threat] direct text`);
-  await direct;
-  const observations = await observed;
-  expect(observations.some((line) => line.includes("[fixture-threat]"))).toBe(
-    false,
+  const observed = collectMessages(secondBot, 2000);
+  const syntheticCredential = `sk-proj-${"a".repeat(24)}`;
+
+  const credentialBlocked = waitForMessage(bot, /not published \(none\)/);
+  bot.chat(`accidental paste ${syntheticCredential}`);
+  await credentialBlocked;
+
+  const directCredentialBlocked = waitForMessage(bot, /not published \(none\)/);
+  bot.chat(`/msg ${secondBot.username} accidental dm ${syntheticCredential}`);
+  await directCredentialBlocked;
+
+  const mildDelivered = waitForMessage(
+    secondBot,
+    /damn that creeper scared me/,
   );
-  const ordinary = waitForMessage(secondBot, /ordinary speech still works/);
-  bot.chat("ordinary speech still works");
-  await ordinary;
-  await waitForDecision(bot, /harassment escalate .*safety-block evidence/);
+  bot.chat("damn that creeper scared me");
+  await mildDelivered;
+
+  const egregiousBlocked = waitForMessage(bot, /not published \(harassment\)/);
+  bot.chat("go k y s right now");
+  await egregiousBlocked;
+
+  const observations = await observed;
+  expect(
+    observations.some(
+      (line) => line.includes("sk-proj-") || line.includes("go k y s"),
+    ),
+  ).toBe(false);
 });
 
 test("sign edits are checked before publication", async ({ bot, rcon }) => {
@@ -335,12 +423,9 @@ test("sign edits are checked before publication", async ({ bot, rcon }) => {
   await bot.activateBlock(sign);
   await secondEditor;
   bot.updateSign(sign, "Hello from the sign");
-  const barrier = waitForMessage(bot, /sign edit barrier/);
-  bot.chat("sign edit barrier");
-  await barrier;
-  expect(await rcon.command("data get block 605 -60 604 front_text")).toContain(
-    "Hello from the sign",
-  );
+  await expect
+    .poll(() => rcon.command("data get block 605 -60 604 front_text"))
+    .toContain("Hello from the sign");
 });
 
 test("book pages are retained on rejection and applied only after approval", async ({
@@ -374,13 +459,11 @@ test("book pages are retained on rejection and applied only after approval", asy
     pages: ["Allowed book text"],
     title: "My book",
   });
-  // An admitted command following the edit is a FIFO barrier for this author.
-  const barrier = waitForMessage(bot, /book edit barrier/);
-  bot.chat("book edit barrier");
-  await barrier;
-  expect(
-    await rcon.command(
-      `data get entity ${bot.username} SelectedItem.components."minecraft:written_book_content".pages[0].raw`,
-    ),
-  ).toContain("Allowed book text");
+  await expect
+    .poll(() =>
+      rcon.command(
+        `data get entity ${bot.username} SelectedItem.components."minecraft:written_book_content".pages[0].raw`,
+      ),
+    )
+    .toContain("Allowed book text");
 });

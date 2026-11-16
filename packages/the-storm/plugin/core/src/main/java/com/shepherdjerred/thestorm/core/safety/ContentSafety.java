@@ -8,6 +8,10 @@ import java.util.function.BiFunction;
 public interface ContentSafety {
   CompletableFuture<ContentReview> check(ContentSubmission submission);
 
+  default CompletableFuture<ContentReview> checkDelivered(ContentSubmission submission) {
+    return check(submission);
+  }
+
   CompletableFuture<Void> finish(UUID submission, String outcome);
 
   CompletableFuture<Void> observe(ContentSubmission submission, String outcome);
@@ -31,4 +35,8 @@ public interface ContentSafety {
   void evidenceContext(String key, java.util.function.Function<UUID, String> provider);
 
   java.util.Map<String, String> evidenceContext(UUID player);
+
+  default void retractions(java.util.function.Consumer<UUID> handler) {}
+
+  default void retract(UUID submission) {}
 }

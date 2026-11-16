@@ -7,12 +7,18 @@ import com.shepherdjerred.thestorm.safety.domain.ContentRules;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -20,16 +26,25 @@ import tools.jackson.databind.json.JsonMapper;
 public final class SafetyService implements ContentSafety {
   private static final Duration DAY = Duration.ofDays(1);
   private static final Duration WEEK = Duration.ofDays(7);
+  private static final Duration RECENT_WINDOW = Duration.ofSeconds(20);
+  private static final int MAX_RECENT_PER_PLAYER = 64;
+  private static final int MAX_RECENT_PLAYERS = 512;
   private static final JsonMapper JSON = JsonMapper.builder().build();
 
   private static final class Queue {
     private CompletableFuture<Void> tail = CompletableFuture.completedFuture(null);
     private int pending;
+    private final Set<UUID> waiting = ConcurrentHashMap.newKeySet();
   }
 
+  private record WindowEntry(String audience, String text, Instant at) {}
+
   private final ConcurrentHashMap<UUID, Queue> queues = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<UUID, ArrayDeque<WindowEntry>> recentWindows =
+      new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Function<UUID, String>> evidenceContexts =
       new ConcurrentHashMap<>();
+  private final List<Consumer<UUID>> retractionHandlers = new CopyOnWriteArrayList<>();
   private final EvidenceStore store;
   private final ContentClassifier classifier;
   private final InstantSource time;
@@ -99,6 +114,31 @@ public final class SafetyService implements ContentSafety {
   }
 
   @Override
+  public void retractions(Consumer<UUID> handler) {
+    retractionHandlers.add(handler);
+  }
+
+  @Override
+  public void retract(UUID submission) {
+    for (var handler : retractionHandlers) {
+      handler.accept(submission);
+    }
+  }
+
+  /** Completes once all currently queued per-player screening tasks finish. */
+  public CompletableFuture<Void> awaitPending() {
+    var tails =
+        queues.values().stream()
+            .map(queue -> {
+              synchronized (queue) {
+                return queue.tail;
+              }
+            })
+            .toArray(CompletableFuture[]::new);
+    return CompletableFuture.allOf(tails);
+  }
+
+  @Override
   public void evidenceContext(String key, Function<UUID, String> provider) {
     if (evidenceContexts.putIfAbsent(key, provider) != null)
       throw new IllegalStateException("Duplicate evidence context provider: " + key);
@@ -111,12 +151,165 @@ public final class SafetyService implements ContentSafety {
     return java.util.Map.copyOf(result);
   }
 
-  @Override
-  public CompletableFuture<ContentReview> check(ContentSubmission original) {
+  /** Evaluates synchronous Stage-1 rules against the bounded 20-second in-memory chat window. */
+  public Optional<ContentRules.InstantBlock> instantBlock(ContentSubmission submission) {
+    return instantBlock(submission, true);
+  }
+
+  /** Evaluates synchronous Stage-1 rules; credential redaction runs even when screening is off. */
+  public Optional<ContentRules.InstantBlock> instantBlock(
+      ContentSubmission submission, boolean contentSafetyEnabled) {
+    if (!contentSafetyEnabled) {
+      return ContentRules.instantBlock(
+          submission.text(), submission.name(), ContentRules.RecentWindow.EMPTY, true);
+    }
+    var staffEvidence =
+        Set.of("ticket", "command", "command-content").contains(submission.surface());
+    var window = snapshotWindow(submission.player(), submission.audience());
+    return ContentRules.instantBlock(submission.text(), submission.name(), window, staffEvidence);
+  }
+
+  /** Records a delivered live chat or message submission in the 20-second in-memory window. */
+  public void recordRecentWindow(ContentSubmission submission) {
+    if (!Set.of("chat", "message").contains(submission.surface())) return;
+    var now = time.instant();
+    var cutoff = now.minus(RECENT_WINDOW);
+    var entries = recentWindows.computeIfAbsent(submission.player(), ignored -> new ArrayDeque<>());
+    synchronized (entries) {
+      pruneExpired(entries, cutoff);
+      while (entries.size() >= MAX_RECENT_PER_PLAYER) {
+        entries.removeFirst();
+      }
+      entries.addLast(
+          new WindowEntry(submission.audience(), ContentRules.redact(submission.text()), now));
+    }
+    if (recentWindows.size() > MAX_RECENT_PLAYERS) {
+      evictExpiredPlayers(cutoff);
+    }
+  }
+
+  private ContentRules.RecentWindow snapshotWindow(UUID player, String audience) {
+    var entries = recentWindows.get(player);
+    if (entries == null) return ContentRules.RecentWindow.EMPTY;
+    var cutoff = time.instant().minus(RECENT_WINDOW);
+    var matching = new ArrayList<String>();
+    int count;
+    synchronized (entries) {
+      pruneExpired(entries, cutoff);
+      count = entries.size();
+      for (var entry : entries) {
+        if (entry.audience().equals(audience)) {
+          matching.add(entry.text());
+        }
+      }
+    }
+    return new ContentRules.RecentWindow(matching, count);
+  }
+
+  private static void pruneExpired(ArrayDeque<WindowEntry> entries, Instant cutoff) {
+    while (!entries.isEmpty() && entries.peekFirst().at().isBefore(cutoff)) {
+      entries.removeFirst();
+    }
+  }
+
+  private void evictExpiredPlayers(Instant cutoff) {
+    for (var entry : recentWindows.entrySet()) {
+      var deque = entry.getValue();
+      boolean empty;
+      synchronized (deque) {
+        pruneExpired(deque, cutoff);
+        empty = deque.isEmpty();
+      }
+      if (empty) {
+        recentWindows.remove(entry.getKey(), deque);
+      }
+    }
+  }
+
+  /** Persists a synchronous Stage-1 rejection, strike and mute without calling the classifier. */
+  public CompletableFuture<ContentReview> recordInstantBlock(
+      ContentSubmission original, ContentRules.InstantBlock block) {
     var submission = sanitized(original);
     var at = time.instant();
     var deadline = at.plusSeconds(config.publicationTimeoutSeconds());
     var persisted = store.attempt(submission, at);
+    return enqueue(submission, persisted, () -> persistInstantBlock(submission, block, deadline));
+  }
+
+  private CompletableFuture<ContentReview> persistInstantBlock(
+      ContentSubmission submission, ContentRules.InstantBlock block, Instant deadline) {
+    if (!time.instant().isBefore(deadline))
+      return finish(submission.id(), "queue-expired")
+          .thenCompose(done ->
+              CompletableFuture.failedFuture(
+                  new IllegalStateException("Content publication deadline exceeded")));
+    var work =
+        enabled
+            .apply(submission.player())
+            .thenCompose(screen -> {
+              var base = verdict("block", block.category(), block.reason(), 0);
+              return block.applyStrike() && screen
+                  ? withPenalty(submission, base, deadline)
+                  : CompletableFuture.completedFuture(base);
+            })
+            .thenCompose(review ->
+                store
+                    .event(
+                        submission.id(),
+                        "decision",
+                        JSON.writeValueAsString(review),
+                        time.instant())
+                    .thenCompose(done -> reviews.apply(submission, review))
+                    .thenCompose(done -> applyPenalty(submission, review, deadline))
+                    .thenCompose(
+                        applied -> finish(submission.id(), "block").thenApply(d -> applied)));
+    return work.orTimeout(config.publicationTimeoutSeconds(), TimeUnit.SECONDS)
+        .exceptionallyCompose(failure ->
+            store
+                .event(
+                    submission.id(),
+                    "unavailable",
+                    "Stage-1 rejection evidence incomplete; no additional strike.",
+                    time.instant())
+                .thenCompose(done ->
+                    CompletableFuture.failedFuture(
+                        new IllegalStateException(
+                            "Stage-1 rejection persistence failed", failure))));
+  }
+
+  @Override
+  public CompletableFuture<ContentReview> check(ContentSubmission original) {
+    return enqueueCheck(original, true);
+  }
+
+  @Override
+  public CompletableFuture<ContentReview> checkDelivered(ContentSubmission original) {
+    return enqueueCheck(original, false);
+  }
+
+  private record Inspection(
+      boolean sensitive, boolean checkMute, Instant submittedAt, Instant deadline) {}
+
+  private CompletableFuture<ContentReview> enqueueCheck(
+      ContentSubmission original, boolean checkMute) {
+    var submission = sanitized(original);
+    var at = time.instant();
+    var deadline = at.plusSeconds(config.publicationTimeoutSeconds());
+    var persisted = store.attempt(submission, at);
+    var sensitive =
+        !submission.text().equals(original.text())
+            || !submission.name().equals(original.name())
+            || !submission.audience().equals(original.audience())
+            || !submission.components().equals(original.components())
+            || !submission.object().equals(original.object());
+    var inspection = new Inspection(sensitive, checkMute, at, deadline);
+    return enqueue(submission, persisted, () -> inspect(submission, inspection));
+  }
+
+  private CompletableFuture<ContentReview> enqueue(
+      ContentSubmission submission,
+      CompletableFuture<Void> persisted,
+      java.util.function.Supplier<CompletableFuture<ContentReview>> action) {
     var queue = queues.computeIfAbsent(submission.player(), ignored -> new Queue());
     synchronized (queue) {
       if (queue.pending >= config.maxPendingPerPlayer()) {
@@ -127,20 +320,19 @@ public final class SafetyService implements ContentSafety {
             .thenApply(done -> review);
       }
       queue.pending++;
-      var sensitive =
-          !submission.text().equals(original.text())
-              || !submission.name().equals(original.name())
-              || !submission.audience().equals(original.audience())
-              || !submission.components().equals(original.components())
-              || !submission.object().equals(original.object());
+      queue.waiting.add(submission.id());
       var result =
           queue
               .tail
               .handle((done, failure) -> null)
               .thenCompose(done -> persisted)
-              .thenCompose(done -> inspect(submission, sensitive, deadline));
+              .thenCompose(done -> {
+                queue.waiting.remove(submission.id());
+                return action.get();
+              });
       queue.tail =
           result.handle((done, failure) -> {
+            queue.waiting.remove(submission.id());
             synchronized (queue) {
               queue.pending--;
             }
@@ -151,7 +343,8 @@ public final class SafetyService implements ContentSafety {
   }
 
   private CompletableFuture<ContentReview> inspect(
-      ContentSubmission submission, boolean sensitive, Instant deadline) {
+      ContentSubmission submission, Inspection inspection) {
+    var deadline = inspection.deadline();
     if (!time.instant().isBefore(deadline))
       return finish(submission.id(), "queue-expired")
           .thenCompose(done ->
@@ -160,38 +353,7 @@ public final class SafetyService implements ContentSafety {
     var work =
         enabled
             .apply(submission.player())
-            .thenCompose(screen -> {
-              if (sensitive)
-                return CompletableFuture.completedFuture(
-                    verdict(
-                        "block",
-                        "none",
-                        "Remove credential-shaped content before publishing. No misconduct strike was recorded.",
-                        0));
-              return muted
-                  .apply(submission.player())
-                  .thenCompose(isMuted -> {
-                    if (isMuted
-                        && !java.util.Set.of("ticket", "command").contains(submission.surface()))
-                      return CompletableFuture.completedFuture(
-                          verdict(
-                              "block",
-                              "none",
-                              "You are muted or chat state is still loading. Reports to staff remain available.",
-                              0));
-                    if (!screen)
-                      return CompletableFuture.completedFuture(
-                          verdict(
-                                  "allow",
-                                  "none",
-                                  "Screening rollout disabled; attempt retained.",
-                                  0)
-                              .withoutScreening());
-                    return store
-                        .recent(submission.player(), time.instant().minusSeconds(20), 64)
-                        .thenCompose(recent -> classify(submission, recent, deadline));
-                  });
-            })
+            .thenCompose(screen -> evaluateSubmission(submission, inspection, screen))
             .thenCompose(review -> {
               if (!time.instant().isBefore(deadline))
                 return CompletableFuture.failedFuture(
@@ -216,21 +378,62 @@ public final class SafetyService implements ContentSafety {
                             "Content screening temporarily unavailable", failure))));
   }
 
+  private CompletableFuture<ContentReview> evaluateSubmission(
+      ContentSubmission submission, Inspection inspection, boolean screen) {
+    if (inspection.sensitive())
+      return CompletableFuture.completedFuture(
+          verdict(
+              "block",
+              "none",
+              "Remove credential-shaped content before publishing. No misconduct strike was recorded.",
+              0));
+    var muteState =
+        inspection.checkMute()
+            ? muted.apply(submission.player())
+            : CompletableFuture.completedFuture(false);
+    return muteState.thenCompose(isMuted -> {
+      if (isMuted && !Set.of("ticket", "command").contains(submission.surface()))
+        return CompletableFuture.completedFuture(
+            verdict(
+                "block",
+                "none",
+                "You are muted or chat state is still loading. Reports to staff remain available.",
+                0));
+      if (!screen)
+        return CompletableFuture.completedFuture(
+            verdict("allow", "none", "Screening rollout disabled; attempt retained.", 0)
+                .withoutScreening());
+      return store
+          .recent(submission.player(), time.instant().minusSeconds(20), 64)
+          .thenCompose(recent -> classify(submission, recent, inspection));
+    });
+  }
+
+  private boolean isEarlier(
+      ContentSubmission submission, Instant submittedAt, EvidenceStore.Entry entry) {
+    if (entry.submission().id().equals(submission.id())) return false;
+    if (entry.at().isAfter(submittedAt)) return false;
+    var queue = queues.get(submission.player());
+    return queue == null || !queue.waiting.contains(entry.submission().id());
+  }
+
   private CompletableFuture<ContentReview> classify(
-      ContentSubmission submission, List<EvidenceStore.Entry> recent, Instant deadline) {
+      ContentSubmission submission, List<EvidenceStore.Entry> recent, Inspection inspection) {
+    var deadline = inspection.deadline();
     var earlier =
-        recent.stream().filter(entry -> !entry.submission().id().equals(submission.id())).toList();
+        recent.stream()
+            .filter(entry -> isEarlier(submission, inspection.submittedAt(), entry))
+            .toList();
     var obvious =
         ContentRules.obvious(
             submission.text(),
-            java.util.Set.of("chat", "message", "discord").contains(submission.surface())
+            Set.of("chat", "message", "discord").contains(submission.surface())
                 ? earlier.stream()
                     .filter(entry -> entry.submission().audience().equals(submission.audience()))
                     .map(entry -> entry.submission().text())
                     .toList()
                 : List.of(),
-            java.util.Set.of("ticket", "command", "command-content")
-                .contains(submission.surface()));
+            Set.of("ticket", "command", "command-content").contains(submission.surface()));
     if (obvious.isEmpty()) obvious = ContentRules.obvious(submission.name(), List.of(), false);
     if (obvious.isPresent() && submission.surface().equals("companion-reply"))
       return CompletableFuture.completedFuture(
@@ -244,11 +447,10 @@ public final class SafetyService implements ContentSafety {
           submission,
           verdict("block", obvious.orElseThrow(), "Clear repeated-link spam or explicit slur.", 0),
           deadline);
-    if (java.util.Set.of("chat", "message", "discord").contains(submission.surface())
+    if (Set.of("chat", "message", "discord").contains(submission.surface())
         && earlier.stream()
                 .filter(entry ->
-                    java.util.Set.of("chat", "message", "discord")
-                        .contains(entry.submission().surface()))
+                    Set.of("chat", "message", "discord").contains(entry.submission().surface()))
                 .count()
             >= 24)
       return CompletableFuture.completedFuture(

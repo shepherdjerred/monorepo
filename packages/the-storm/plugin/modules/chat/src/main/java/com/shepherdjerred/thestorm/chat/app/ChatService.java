@@ -436,7 +436,8 @@ public final class ChatService {
                           message,
                           resolution.members(),
                           style.emote(),
-                          style.npc())));
+                          style.npc(),
+                          Optional.empty())));
               yield RecentMessage.of(message.text(), now);
             }
           };

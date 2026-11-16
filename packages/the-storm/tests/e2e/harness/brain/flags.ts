@@ -35,6 +35,7 @@ export function expansionEvaluation(
         "the-storm-ip-enforcement-enabled",
         "the-storm-analytics-enabled",
         "the-storm-content-safety-enabled",
+        "the-storm-async-chat-moderation-enabled",
         "the-storm-anticheat-corrections-enabled",
       ]),
       entity_id: z.uuid(),

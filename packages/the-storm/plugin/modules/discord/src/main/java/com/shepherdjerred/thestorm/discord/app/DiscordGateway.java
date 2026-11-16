@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.discord.app;
 
 import java.util.List;
+import java.util.UUID;
 
 /** Posts to the bridged Discord channel. Thread-safe and non-blocking. */
 public interface DiscordGateway {
@@ -10,6 +11,17 @@ public interface DiscordGateway {
    * disabled. Dropped with a log line while the bot is not connected.
    */
   void post(String text);
+
+  /**
+   * Posts {@code text} like {@link #post} and retains the Discord message id briefly so {@link
+   * #retract} can delete it even if retraction arrives before Discord acknowledges the send.
+   */
+  default void postTracked(UUID submissionId, String text) {
+    post(text);
+  }
+
+  /** Deletes a recently posted message tracked under {@code submissionId}, if present. */
+  default void retract(UUID submissionId) {}
 
   /**
    * Posts {@code text} like {@link #post}, but lets it notify the listed roles and nobody else.
