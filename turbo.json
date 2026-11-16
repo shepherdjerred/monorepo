@@ -474,7 +474,8 @@
         "@shepherdjerred/birmel#generate",
         "@discord-plays-mario-kart/backend#generate",
         "@scout-for-lol/backend#generate",
-        "starlight-karma-bot#generate"
+        "starlight-karma-bot#generate",
+        "tasknotes-server#generate"
       ],
       "inputs": [
         "knip.json",
