@@ -185,8 +185,21 @@ describe("sweepPostgres", () => {
           ppid: 1,
           processStart: "Mon Nov 15 08:00:01 2026",
           elapsedSeconds: 7200,
-          command: "postgres",
+          command: "/Users/jerred/.l",
           args: `postgres -D ${deadCluster}`,
+          cwd: deadCluster,
+        },
+      ],
+      [
+        5556,
+        {
+          pid: 5556,
+          ppid: 5555,
+          processStart: "Mon Nov 15 08:00:01 2026",
+          elapsedSeconds: 7200,
+          command: "postgres: checkp",
+          args: "postgres: checkpointer",
+          cwd: deadCluster,
         },
       ],
     ]);

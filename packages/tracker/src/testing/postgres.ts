@@ -1,4 +1,5 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createTemplateTestDatabase,
   ensureTemplateDatabase,
@@ -7,7 +8,7 @@ import {
 } from "@shepherdjerred/test-postgres";
 import { createDatabase } from "#infrastructure/database.ts";
 
-const packageRoot = `${import.meta.dir}/../..`;
+const packageRoot = fileURLToPath(new URL("../..", import.meta.url));
 const migrationsDir = path.join(packageRoot, "prisma/migrations");
 
 async function populateTrackerTemplate(

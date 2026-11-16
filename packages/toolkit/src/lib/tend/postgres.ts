@@ -18,6 +18,7 @@ import { defaultCommandRunner, defaultTcpPortProbe } from "./process-probe.ts";
 import type {
   CommandRunner,
   LivenessSnapshot,
+  OsProcessEntry,
   SurfaceSweepResult,
   TcpPortProbe,
   TendActionOutcome,
@@ -29,9 +30,32 @@ const ORPHAN_POSTMASTER_MIN_AGE_SECONDS = 30 * 60;
 const UNOWNED_CLUSTER_MIN_AGE_MS = 30 * 60 * 1000;
 const SHARED_DEV_PG_PORT = 5471;
 
+function isPostgresServerProcess(
+  proc: OsProcessEntry,
+  postmasterPid: number | undefined,
+): boolean {
+  if (
+    postmasterPid !== undefined &&
+    (proc.pid === postmasterPid || proc.ppid === postmasterPid)
+  ) {
+    return true;
+  }
+  const argv0 = proc.args.trim().split(/\s+/u)[0] ?? proc.command;
+  const lower = argv0.toLowerCase();
+  return (
+    argv0 === "postgres" ||
+    argv0 === "postgres:" ||
+    argv0.endsWith("/postgres") ||
+    lower === "postgres.exe" ||
+    lower.endsWith(String.raw`\postgres.exe`) ||
+    lower.endsWith("/postgres.exe")
+  );
+}
+
 function isClusterHeldExternally(
   canonicalClusterDir: string,
   liveness: LivenessSnapshot,
+  postmasterPid: number | undefined,
 ): boolean {
   if (
     isUnderProtectedPrefix(
@@ -64,12 +88,10 @@ function isClusterHeldExternally(
   }
   const nonPostgresCwds = new Set<string>();
   for (const proc of liveness.processes.values()) {
-    const argv0 = proc.args.trim().split(/\s+/u)[0] ?? proc.command;
     if (
-      argv0 !== "postgres" &&
       proc.cwd !== undefined &&
       proc.cwd.length > 0 &&
-      !argv0.endsWith("/postgres")
+      !isPostgresServerProcess(proc, postmasterPid)
     ) {
       nonPostgresCwds.add(proc.cwd);
     }
@@ -362,7 +384,8 @@ async function sweepSingleTempRootClusters(options: {
       clusterDir,
       options.liveness.platform,
     );
-    if (isClusterHeldExternally(canonical, options.liveness)) {
+    const postmaster = await readPostmasterInfo(clusterDir);
+    if (isClusterHeldExternally(canonical, options.liveness, postmaster?.pid)) {
       continue;
     }
     const reason = await evaluateClusterDirectory({

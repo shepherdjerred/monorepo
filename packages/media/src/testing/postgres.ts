@@ -1,5 +1,6 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createEmptyTestDatabase,
   createTemplateTestDatabase,
@@ -11,7 +12,7 @@ import {
 import { createDatabase } from "#infrastructure/database.ts";
 import { historicalIntentFixtureDatabase } from "./historical-intent-client.ts";
 
-const packageRoot = `${import.meta.dir}/../..`;
+const packageRoot = fileURLToPath(new URL("../..", import.meta.url));
 const migrationsDir = path.join(packageRoot, "prisma/migrations");
 
 export type MediaMigrationCeiling =

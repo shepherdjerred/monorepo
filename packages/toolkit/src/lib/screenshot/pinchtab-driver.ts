@@ -5,6 +5,7 @@
  * readiness, screenshot, and always close opened tabs + remove leases in
  * `finally`.
  */
+import http from "node:http";
 import {
   closeTab,
   countSelector,
@@ -138,6 +139,123 @@ function stripTrailingSlash(path: string): string {
 }
 
 /**
+ * Start a short-lived loopback HTTP server serving an empty HTML document so
+ * PinchTab 0.15.2+ (which rejects `about:blank` and `data:` URLs with HTTP 400)
+ * can open a blank tab and apply viewport / `prefers-color-scheme` emulation
+ * before the target page's first paint.
+ */
+async function withBlankHttpPage<T>(
+  fn: (blankUrl: string) => Promise<T>,
+): Promise<T> {
+  const server = http.createServer((_req, res) => {
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    res.end("<!doctype html><title>blank</title>");
+  });
+  await new Promise<void>((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      resolve();
+    });
+  });
+  try {
+    const addr = server.address();
+    const port = addr !== null && typeof addr === "object" ? addr.port : 0;
+    return await fn(`http://127.0.0.1:${String(port)}/`);
+  } finally {
+    await new Promise<void>((resolve) => {
+      server.close(() => {
+        resolve();
+      });
+    });
+  }
+}
+
+async function openConfiguredTargetTab(
+  sessionToken: string,
+  targetUrl: string,
+  options: CaptureOptions,
+  client: PinchtabDriverClient,
+): Promise<{
+  tabId: string;
+  tabLease: Awaited<ReturnType<typeof createPinchtabLease>>;
+  cleanupTab: (strict: boolean) => Promise<void>;
+}> {
+  const timeoutMs = options.timeoutMs ?? 60_000;
+  const needsPrePaintEmulation =
+    options.viewport !== undefined || options.theme !== undefined;
+
+  const tabId = needsPrePaintEmulation
+    ? await withBlankHttpPage(async (blankUrl) =>
+        unwrap(
+          await client.navigateNewTab(sessionToken, blankUrl),
+          "pinchtab nav",
+        ),
+      )
+    : unwrap(
+        await client.navigateNewTab(sessionToken, targetUrl),
+        "pinchtab nav",
+      );
+
+  const tabLease = await createPinchtabLease(tabId, timeoutMs);
+
+  let tabCleanedUp = false;
+  const cleanupTab = async (strict: boolean): Promise<void> => {
+    if (tabCleanedUp) {
+      return;
+    }
+    tabCleanedUp = true;
+    try {
+      const closed = await client.closeTab(sessionToken, tabId);
+      if (strict) {
+        unwrap(closed, "pinchtab tab close");
+      }
+    } finally {
+      await tabLease.release();
+    }
+  };
+
+  options.registerCleanup?.(async () => {
+    await cleanupTab(false);
+  });
+
+  if (needsPrePaintEmulation) {
+    try {
+      if (options.viewport) {
+        unwrap(
+          await client.setViewport(
+            sessionToken,
+            tabId,
+            options.viewport.width,
+            options.viewport.height,
+          ),
+          "pinchtab set viewport",
+        );
+      }
+      if (options.theme) {
+        unwrap(
+          await client.setMedia(
+            sessionToken,
+            tabId,
+            "prefers-color-scheme",
+            options.theme,
+          ),
+          "pinchtab set media",
+        );
+      }
+      unwrap(
+        await client.navigateTab(sessionToken, tabId, targetUrl),
+        "pinchtab nav",
+      );
+    } catch (error) {
+      await cleanupTab(false);
+      throw error;
+    }
+  }
+
+  return { tabId, tabLease, cleanupTab };
+}
+
+/**
  * Everything between session-create and session-revoke: open a tab, track its
  * lease, configure viewport/media emulation *before* loading the target page,
  * wait for readiness, screenshot, and always close the tab + lease in `finally`.
@@ -153,66 +271,15 @@ async function runCapture(
       ? `${options.baseUrl}${options.route}`
       : `${options.baseUrl}${authUrlFor(options.authFlow.flow, options.route, options.authFlow.discordId)}`;
 
-  // Open a blank tab first so viewport + `prefers-color-scheme` emulation is
-  // applied before the real page's first paint.
-  const tabId = unwrap(
-    await client.navigateNewTab(session.sessionToken, "about:blank"),
-    "pinchtab nav",
+  const { tabId, cleanupTab } = await openConfiguredTargetTab(
+    session.sessionToken,
+    targetUrl,
+    options,
+    client,
   );
-  const tabLease = await createPinchtabLease(tabId, timeoutMs);
-
-  let tabCleanedUp = false;
-  const cleanupTab = async (strict: boolean): Promise<void> => {
-    if (tabCleanedUp) {
-      return;
-    }
-    tabCleanedUp = true;
-    try {
-      const closed = await client.closeTab(session.sessionToken, tabId);
-      if (strict) {
-        unwrap(closed, "pinchtab tab close");
-      }
-    } finally {
-      await tabLease.release();
-    }
-  };
-
-  // Registered AFTER session cleanup so reverse-order signal teardown closes
-  // the tab while `session.sessionToken` is still valid before revoking it.
-  options.registerCleanup?.(async () => {
-    await cleanupTab(false);
-  });
 
   let succeeded = false;
   try {
-    if (options.viewport) {
-      unwrap(
-        await client.setViewport(
-          session.sessionToken,
-          tabId,
-          options.viewport.width,
-          options.viewport.height,
-        ),
-        "pinchtab set viewport",
-      );
-    }
-    if (options.theme) {
-      unwrap(
-        await client.setMedia(
-          session.sessionToken,
-          tabId,
-          "prefers-color-scheme",
-          options.theme,
-        ),
-        "pinchtab set media",
-      );
-    }
-
-    unwrap(
-      await client.navigateTab(session.sessionToken, tabId, targetUrl),
-      "pinchtab nav",
-    );
-
     if (options.waitForSelector === undefined) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } else {

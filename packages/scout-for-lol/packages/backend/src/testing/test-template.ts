@@ -2,6 +2,7 @@
  * Lifecycle of Scout's hash-scoped test template database on the shared local
  * PostgreSQL harness (`@shepherdjerred/test-postgres`).
  */
+import { fileURLToPath } from "node:url";
 import { SEASONS } from "@scout-for-lol/data";
 import {
   computeMigrationHash,
@@ -15,7 +16,7 @@ import {
   sweepStaleTestDatabasesOnce,
 } from "@shepherdjerred/test-postgres";
 
-const BACKEND_ROOT = `${import.meta.dir}/../..`;
+const BACKEND_ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const MIGRATIONS_DIR = `${BACKEND_ROOT}/prisma/migrations`;
 const ENSURE_TEMPLATE_SCRIPT = `${BACKEND_ROOT}/scripts/ensure-test-template.ts`;
 const SCOUT_HASH_INPUTS = [JSON.stringify(SEASONS)];
