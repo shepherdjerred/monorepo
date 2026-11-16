@@ -213,6 +213,7 @@
     "linkify-it": "6.1.0",
     "svgo": "4.1.0",
     "devalue": "6.0.2",
+    "dompurify": "3.4.17",
     "deepmerge-ts": "8.0.2",
     "esbuild": "0.28.2",
     "engine.io": "6.6.11",

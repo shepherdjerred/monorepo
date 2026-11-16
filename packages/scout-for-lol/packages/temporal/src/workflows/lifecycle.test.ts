@@ -74,13 +74,17 @@ test("routes the queue canary through every workload queue", async () => {
       async (queueClass) =>
         await Worker.create({
           connection: environment.nativeConnection,
-          taskQueue: `scout-dev-${queueClass}`,
+          taskQueue: `scout-dev-${queueClass}-probe`,
           activities: {
             probeQueue: (input: {
               stage: "dev";
               canaryId: string;
               queueClass: (typeof queueClasses)[number];
-            }) => ({ ...input, taskQueue: Context.current().info.taskQueue }),
+            }) => ({
+              ...input,
+              taskQueue: `scout-dev-${queueClass}`,
+              probeTaskQueue: Context.current().info.taskQueue,
+            }),
           },
           maxConcurrentActivityTaskExecutions: 1,
         }),
@@ -104,6 +108,7 @@ test("routes the queue canary through every workload queue", async () => {
       canaryId: "canary_123",
       queueClass,
       taskQueue: `scout-dev-${queueClass}`,
+      probeTaskQueue: `scout-dev-${queueClass}-probe`,
     })),
   );
 });
