@@ -179,6 +179,7 @@ async function admissionDecision(
     guildId,
     channelId: message.channel.id,
     userId: message.author.id,
+    messageId: message.id,
   });
   if (!shouldRespond) {
     return null;

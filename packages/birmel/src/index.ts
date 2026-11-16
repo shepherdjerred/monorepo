@@ -59,6 +59,9 @@ async function main(): Promise<void> {
   logger.info("Starting Birmel 3.0", {
     model: config.llm.model,
     classifierModel: config.llm.classifierModel,
+    decisionsEnabled: config.llm.decisionsEnabled,
+    decisionsModel: config.llm.decisionsModel,
+    decisionsThreshold: config.llm.decisionsThreshold,
     memoryModel: config.llm.memoryModel,
     personaEnabled: config.persona.enabled,
     telemetryEnabled: config.telemetry.enabled,

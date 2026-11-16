@@ -233,6 +233,7 @@ export const BIRMEL_BOOLEAN_FLAG_KEYS = [
   "birmel-birthdays-enabled",
   "birmel-daily-posts-enabled",
   "birmel-elections-enabled",
+  "birmel-llm-decisions-enabled",
   "birmel-persona-enabled",
   "birmel-responder-enabled",
 ] as const;
@@ -244,6 +245,8 @@ export const BIRMEL_VARIANT_FLAG_KEYS = [
   "birmel-agent-max-steps",
   "birmel-agent-response-timeout-ms",
   "birmel-llm-classifier-model",
+  "birmel-llm-decisions-model",
+  "birmel-llm-decisions-threshold",
   "birmel-llm-embedding-model",
   "birmel-llm-image-model",
   "birmel-llm-max-output-tokens",
