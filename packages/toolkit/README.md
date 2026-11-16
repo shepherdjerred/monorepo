@@ -1592,6 +1592,48 @@ argument validation run before credentials are resolved. GitHub access uses
 Commands such as `gh`, `temporal`, and `tailscale` retain native authentication;
 S3 workflows retain the AWS credential chain.
 
+## Resource tending and Tailscale exposure
+
+`toolkit tend` inspects and reaps orphaned local workstation and agent-host
+resources across git worktrees, temporary PostgreSQL clusters and dead-owner
+test databases, orphaned processes, high-port Tailscale Serve listeners,
+managed Docker sandboxes, and aged temporary artifacts. Runs are dry-run by
+default; pass `--apply` to mutate.
+
+```bash
+toolkit tend status
+toolkit tend run
+toolkit tend run --apply --only worktrees,tailscale-serve
+toolkit tend worktrees --worktree-min-age 7d
+toolkit tend lease list --json
+toolkit tend lease wrap --kind process --target temporal-dev --ttl 2h -- bun run dev
+toolkit expose http 3000 --ttl 4h
+toolkit tend lease release <LEASE_ID>
+```
+
+State, leases, hysteresis counters, and append-only sweep events live under
+`~/.toolkit/tend/` (overrideable in tests with `TOOLKIT_TEND_DIR`). Liveness
+checks protect active Herdr terminals (`hc ls --json`), open OS process CWDs,
+`~/.local/state/herdr-worktree/active/*.json`, and paths named in open Forum
+notices scoped to `host/<thisHost>`. Any open `host/<thisHost>` Forum notice
+with `databases` or `testing` in its scopes holds `postgres` and `processes`
+sweeps automatically; failed Forum queries fail closed unless `--offline` is
+passed.
+
+Worktree pruning skips the main checkout, dirty or mid-rebase trees, and any
+worktree younger than 7 days (`168h`, configurable via `--worktree-min-age`).
+Tailscale Serve sweeps never touch port `443` or root `/`, and unleased
+high-port listeners require two consecutive unreachable sweeps before teardown
+unless `--immediate-proxies` is passed. Docker sweeps skip cleanly when the
+daemon is stopped and prune only anonymous dangling volumes (`docker volume
+prune -f`), preserving named volumes.
+
+`toolkit expose <http|tcp> <LOCAL_PORT>` selects a free high port in
+`8400-8999` (never `443`), configures `tailscale serve --bg`, records a
+`tailscale-serve` lease tied to the caller shell and terminal, and prints the
+`<HOST>.tailnet-1a49.ts.net:<PORT>` address and `toolkit tend lease release`
+teardown command.
+
 ## Configuration
 
 Toolkit behavior settings resolve `environment -> ~/.toolkit/config.toml ->
