@@ -50,21 +50,48 @@ describe("LlmConfigSchema", () => {
     if (result.success) {
       expect(result.data.model).toBe("gpt-6.1-sol");
       expect(result.data.classifierModel).toBe("gpt-6-luna");
+      expect(result.data.decisionsEnabled).toBe(true);
+      expect(result.data.decisionsModel).toBe("gpt-6-luna");
+      expect(result.data.decisionsThreshold).toBe(0.5);
       expect(result.data.reasoningEffort).toBe("medium");
       expect(result.data.maxTokens).toBe(4096);
     }
   });
 
-  test("allows custom model and classifierModel", () => {
+  test("allows custom model, classifierModel, and Decisions API settings", () => {
     const result = LlmConfigSchema.safeParse({
       model: "gpt-4o",
       classifierModel: "gpt-4o-mini",
+      decisionsEnabled: false,
+      decisionsModel: "gpt-6-luna",
+      decisionsThreshold: 0.75,
     });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.model).toBe("gpt-4o");
       expect(result.data.classifierModel).toBe("gpt-4o-mini");
+      expect(result.data.decisionsEnabled).toBe(false);
+      expect(result.data.decisionsModel).toBe("gpt-6-luna");
+      expect(result.data.decisionsThreshold).toBe(0.75);
     }
+  });
+
+  test("enforces [0, 1] bounds on decisionsThreshold and non-empty decisionsModel", () => {
+    expect(LlmConfigSchema.safeParse({ decisionsThreshold: 0 }).success).toBe(
+      true,
+    );
+    expect(LlmConfigSchema.safeParse({ decisionsThreshold: 1 }).success).toBe(
+      true,
+    );
+    expect(
+      LlmConfigSchema.safeParse({ decisionsThreshold: -0.01 }).success,
+    ).toBe(false);
+    expect(
+      LlmConfigSchema.safeParse({ decisionsThreshold: 1.01 }).success,
+    ).toBe(false);
+    expect(LlmConfigSchema.safeParse({ decisionsModel: "   " }).success).toBe(
+      false,
+    );
   });
 
   test("holds no credential", () => {

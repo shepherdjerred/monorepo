@@ -49,6 +49,9 @@ export const DiscordConfigSchema = z.object({
 export const LlmConfigSchema = z.object({
   model: z.string().trim().min(1).default("gpt-6.1-sol"),
   classifierModel: z.string().trim().min(1).default("gpt-6-luna"),
+  decisionsEnabled: z.boolean().default(true),
+  decisionsModel: z.string().trim().min(1).default("gpt-6-luna"),
+  decisionsThreshold: z.number().min(0).max(1).default(0.5),
   memoryModel: z.string().trim().min(1).default("gpt-6-luna"),
   embeddingModel: z.string().trim().min(1).default("text-embedding-3-small"),
   imageModel: z.string().trim().min(1).default("gemini-3-pro-image-preview"),

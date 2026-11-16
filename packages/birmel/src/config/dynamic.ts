@@ -21,6 +21,7 @@ const PositiveIntegerSchema = z.coerce.number().int().positive();
 const MaxStepsSchema = z.coerce.number().int().min(1).max(24);
 const ReasoningEffortSchema = z.enum(["minimal", "low", "medium", "high"]);
 const StringSchema = z.string().trim().min(1);
+const UnitIntervalSchema = z.number().min(0).max(1);
 
 /**
  * Values that are safe to change while Birmel is serving requests. Scheduler
@@ -78,6 +79,24 @@ const DEFINITION = {
     sources: ["flag", "env", "default"],
     default: "gpt-6-luna",
     names: { flag: "birmel-llm-classifier-model", env: "LLM_CLASSIFIER_MODEL" },
+  },
+  decisionsEnabled: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: true,
+    names: { flag: "birmel-llm-decisions-enabled" },
+  },
+  decisionsModel: {
+    schema: StringSchema,
+    sources: ["flag", "default"],
+    default: "gpt-6-luna",
+    names: { flag: "birmel-llm-decisions-model" },
+  },
+  decisionsThreshold: {
+    schema: UnitIntervalSchema,
+    sources: ["flag", "default"],
+    default: 0.5,
+    names: { flag: "birmel-llm-decisions-threshold" },
   },
   memoryModel: {
     schema: StringSchema,
@@ -192,6 +211,9 @@ function createSnapshot(
           electionsEnabled: "boolean",
           llmModel: "string",
           classifierModel: "string",
+          decisionsEnabled: "boolean",
+          decisionsModel: "string",
+          decisionsThreshold: "number",
           memoryModel: "string",
           embeddingModel: "string",
           imageModel: "string",
@@ -225,6 +247,9 @@ function createSnapshot(
       electionsEnabled: config.elections.enabled,
       llmModel: config.llm.model,
       classifierModel: config.llm.classifierModel,
+      decisionsEnabled: config.llm.decisionsEnabled,
+      decisionsModel: config.llm.decisionsModel,
+      decisionsThreshold: config.llm.decisionsThreshold,
       memoryModel: config.llm.memoryModel,
       embeddingModel: config.llm.embeddingModel,
       imageModel: config.llm.imageModel,
@@ -254,6 +279,9 @@ function applySnapshot(snapshot: Snapshot, config: Config): void {
   config.elections.enabled = snapshot.get("electionsEnabled");
   config.llm.model = snapshot.get("llmModel");
   config.llm.classifierModel = snapshot.get("classifierModel");
+  config.llm.decisionsEnabled = snapshot.get("decisionsEnabled");
+  config.llm.decisionsModel = snapshot.get("decisionsModel");
+  config.llm.decisionsThreshold = snapshot.get("decisionsThreshold");
   config.llm.memoryModel = snapshot.get("memoryModel");
   config.llm.embeddingModel = snapshot.get("embeddingModel");
   config.llm.imageModel = snapshot.get("imageModel");

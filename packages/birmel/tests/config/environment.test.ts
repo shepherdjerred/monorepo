@@ -11,9 +11,24 @@ describe("strict environment configuration", () => {
   test("loads documented defaults", () => {
     const config = loadConfigFromEnvironment(VALID_ENVIRONMENT);
     expect(config.agent.maxSteps).toBe(12);
+    expect(config.llm.decisionsEnabled).toBe(true);
+    expect(config.llm.decisionsModel).toBe("gpt-6-luna");
+    expect(config.llm.decisionsThreshold).toBe(0.5);
     expect(config.authority.trustedUserIds.length).toBeGreaterThan(0);
     expect(config.scheduler.maxConcurrentJobs).toBe(5);
     expect(config.bugsink.tracesSampleRate).toBe(0);
+  });
+
+  test("keeps Decisions API settings out of environment variables", () => {
+    const config = loadConfigFromEnvironment({
+      ...VALID_ENVIRONMENT,
+      LLM_DECISIONS_ENABLED: "false",
+      LLM_DECISIONS_MODEL: "other-model",
+      LLM_DECISIONS_THRESHOLD: "0.9",
+    });
+    expect(config.llm.decisionsEnabled).toBe(true);
+    expect(config.llm.decisionsModel).toBe("gpt-6-luna");
+    expect(config.llm.decisionsThreshold).toBe(0.5);
   });
 
   test.each([

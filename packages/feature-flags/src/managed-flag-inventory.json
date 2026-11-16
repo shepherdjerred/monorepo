@@ -1794,6 +1794,42 @@
       "thresholdRollouts": []
     },
     {
+      "key": "birmel-llm-decisions-enabled",
+      "owner": "birmel",
+      "namespace": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Use OpenAI Decisions API (gpt-6-luna) for channel reply admission classification.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "birmel-llm-decisions-model",
+      "owner": "birmel",
+      "namespace": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Select the Birmel Decisions API classifier model.",
+      "type": "variant",
+      "default": "gpt-6-luna",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "birmel-llm-decisions-threshold",
+      "owner": "birmel",
+      "namespace": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Minimum predicate probability (0..1) required for Birmel to reply to an unmentioned message.",
+      "type": "variant",
+      "default": "0.5",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "birmel-llm-embedding-model",
       "owner": "birmel",
       "namespace": "birmel",

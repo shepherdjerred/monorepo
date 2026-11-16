@@ -18,6 +18,12 @@ export function getLlmRuntime(): ReturnType<typeof createLlmRuntime> {
   return runtime;
 }
 
+export function setLlmRuntime(
+  nextRuntime: ReturnType<typeof createLlmRuntime> | undefined,
+): void {
+  runtime = nextRuntime;
+}
+
 export function resetLlmRuntime(): void {
   runtime = undefined;
 }

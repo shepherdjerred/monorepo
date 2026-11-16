@@ -50,6 +50,9 @@ function loadCoreConfig(environment: Environment) {
     llm: {
       model: environment["LLM_MODEL"] ?? "gpt-6.1-sol",
       classifierModel: environment["LLM_CLASSIFIER_MODEL"] ?? "gpt-6-luna",
+      decisionsEnabled: true,
+      decisionsModel: "gpt-6-luna",
+      decisionsThreshold: 0.5,
       memoryModel: environment["LLM_MEMORY_MODEL"] ?? "gpt-6-luna",
       embeddingModel:
         environment["LLM_EMBEDDING_MODEL"] ?? "text-embedding-3-small",
