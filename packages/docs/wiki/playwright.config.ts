@@ -9,7 +9,7 @@ const wikiResolver = fileURLToPath(
 const repoCheckout = fileURLToPath(new URL("../../..", import.meta.url));
 const wikiPortResult = spawnSync(
   "bun",
-  [wikiResolver, repoCheckout, "WIKI_E2E_PORT"],
+  ["run", wikiResolver, "--", repoCheckout, "WIKI_E2E_PORT"],
   { encoding: "utf8", env: process.env, stdio: ["ignore", "pipe", "pipe"] },
 );
 if (wikiPortResult.status !== 0) {

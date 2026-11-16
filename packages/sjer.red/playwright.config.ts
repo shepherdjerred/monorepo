@@ -13,9 +13,11 @@ const includeBrandedBrowsers =
 const siteProbe = spawnSync(
   "bun",
   [
+    "run",
     fileURLToPath(
       new URL("../../scripts/lib/e2e/e2e-port.ts", import.meta.url),
     ),
+    "--",
     fileURLToPath(new URL("../..", import.meta.url)),
     "SJER_RED_E2E_PORT",
   ],
