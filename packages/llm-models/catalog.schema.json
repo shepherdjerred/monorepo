@@ -100,7 +100,15 @@
           "properties": {
             "native": {
               "type": "object",
-              "required": ["provider", "modelId", "endpoint"],
+              "required": ["provider", "modelId"],
+              "oneOf": [
+                {
+                  "required": ["endpoint"]
+                },
+                {
+                  "required": ["endpoints"]
+                }
+              ],
               "additionalProperties": false,
               "properties": {
                 "provider": {
@@ -111,7 +119,15 @@
                   "minLength": 1
                 },
                 "endpoint": {
-                  "enum": ["language", "embedding", "image"]
+                  "enum": ["language", "embedding", "image", "decisions"]
+                },
+                "endpoints": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": ["language", "embedding", "image", "decisions"]
+                  }
                 }
               }
             },

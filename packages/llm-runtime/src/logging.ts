@@ -10,7 +10,13 @@ import type {
 } from "./types.ts";
 
 const TelemetryErrorSchema = z.object({ error: z.unknown() }).loose();
-const ErrorNameSchema = z.object({ name: z.string() }).loose();
+const ErrorDetailsSchema = z
+  .object({
+    name: z.string(),
+    status: z.number().int().optional(),
+    statusCode: z.number().int().optional(),
+  })
+  .loose();
 
 export const defaultLlmRuntimeLogger: LlmRuntimeLogger = (record) => {
   const line = JSON.stringify({
@@ -98,7 +104,10 @@ export function logLlmCallFailure(input: {
   const error = telemetryError.success
     ? telemetryError.data.error
     : input.error;
-  const parsedError = ErrorNameSchema.safeParse(error);
+  const parsedError = ErrorDetailsSchema.safeParse(error);
+  const responseStatus = parsedError.success
+    ? (parsedError.data.status ?? parsedError.data.statusCode)
+    : undefined;
   const record: LlmRuntimeLogRecord = {
     level: "error",
     event: "llm.provider.call_failed",
@@ -115,6 +124,7 @@ export function logLlmCallFailure(input: {
     totalTokens: 0,
     traceId: input.traceId,
     outcome: "error",
+    ...(responseStatus === undefined ? {} : { responseStatus }),
     durationMs: input.durationMs,
     errorType: parsedError.success ? parsedError.data.name : typeof error,
   };

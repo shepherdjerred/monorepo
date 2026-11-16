@@ -130,6 +130,9 @@ class AcceptedUpstreamPricing(BaseModel):
         return self
 
 
+ModelEndpoint = Literal["language", "embedding", "image", "decisions"]
+
+
 class NativeRoute(BaseModel):
     """How to reach this model on its first-party provider.
 
@@ -141,7 +144,20 @@ class NativeRoute(BaseModel):
     model_config = {"extra": "forbid"}
     provider: Literal["openai", "anthropic", "google"]
     modelId: str = Field(min_length=1)
-    endpoint: Literal["language", "embedding", "image"]
+    endpoint: ModelEndpoint | None = None
+    endpoints: list[ModelEndpoint] | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def _exactly_one_endpoint_shape(self) -> NativeRoute:
+        if (self.endpoint is None) == (self.endpoints is None):
+            msg = "NativeRoute requires exactly one of endpoint or endpoints"
+            raise ValueError(msg)
+        if self.endpoints is not None and len(set(self.endpoints)) != len(
+            self.endpoints
+        ):
+            msg = "NativeRoute endpoints must be unique"
+            raise ValueError(msg)
+        return self
 
 
 class NativeSdkRoute(BaseModel):

@@ -5,6 +5,7 @@ import {
   PricingOnlyModelError,
   allModelIds,
   assertModelId,
+  costForDecisionUsage,
   costForTextUsage,
   costForTextUsageByTurn,
   getModel,
@@ -14,6 +15,7 @@ import {
   isModelId,
   modelIdForNativeRoute,
   modelsByProvider,
+  nativeRouteEndpoints,
   requireNativeRoute,
 } from "#src/index.ts";
 
@@ -568,5 +570,75 @@ describe("Grok 4.7", () => {
     expect(
       costForTextUsage("grok-4.7", { ...usage, inputTokens: 200_000 }),
     ).toBeCloseTo(((100_000 * 2 + 100_000 * 0.5 + 1000 * 6) * 2) / 1e6, 9);
+  });
+});
+
+describe("OpenAI Decisions endpoint and pricing", () => {
+  test("routes gpt-6-luna to both language and decisions on OpenAI", () => {
+    const route = requireNativeRoute("gpt-6-luna", "decisions");
+    expect(route).toEqual({
+      provider: "openai",
+      modelId: "gpt-6-luna",
+      endpoints: ["language", "decisions"],
+    });
+    expect(requireNativeRoute("gpt-6-luna", "language")).toEqual(route);
+    expect(nativeRouteEndpoints(route)).toEqual(["language", "decisions"]);
+    expect(() => requireNativeRoute("gpt-6-luna", "image")).toThrow(
+      "uses openai language/decisions, not image",
+    );
+  });
+
+  test("rejects decisions endpoint on models that only declare language or embedding", () => {
+    expect(() => requireNativeRoute("gpt-6.1-sol", "decisions")).toThrow(
+      "uses openai language, not decisions",
+    );
+    expect(() => requireNativeRoute("claude-sonnet-5", "decisions")).toThrow(
+      "uses anthropic language, not decisions",
+    );
+    expect(() =>
+      requireNativeRoute("text-embedding-3-small", "decisions"),
+    ).toThrow("uses openai embedding, not decisions");
+  });
+
+  test("prices gpt-6-luna decision usage with $0 output tokens unconditionally", () => {
+    // $0.10/1M uncached input, $0.01/1M cached input, $0.125/1M cache write.
+    expect(
+      costForDecisionUsage("gpt-6-luna", { inputTokens: 1_000_000 }),
+    ).toBeCloseTo(0.1, 9);
+    expect(
+      costForDecisionUsage("gpt-6-luna", {
+        inputTokens: 1_000_000,
+        cachedInputTokens: 1_000_000,
+      }),
+    ).toBeCloseTo(0.01, 9);
+    expect(
+      costForDecisionUsage("gpt-6-luna", {
+        inputTokens: 1_000_000,
+        cacheWriteTokens: 1_000_000,
+      }),
+    ).toBeCloseTo(0.125, 9);
+    // Mixed: 300k uncached + 600k cached + 100k cache write out of 1M input.
+    expect(
+      costForDecisionUsage("gpt-6-luna", {
+        inputTokens: 1_000_000,
+        cachedInputTokens: 600_000,
+        cacheWriteTokens: 100_000,
+      }),
+    ).toBeCloseTo((300_000 * 0.1 + 600_000 * 0.01 + 100_000 * 0.125) / 1e6, 9);
+    // Clamps uncached to 0 if cached + cacheWrite exceeds reported inputTokens.
+    expect(
+      costForDecisionUsage("gpt-6-luna", {
+        inputTokens: 500,
+        cachedInputTokens: 400,
+        cacheWriteTokens: 200,
+      }),
+    ).toBeCloseTo((400 * 0.01 + 200 * 0.125) / 1e6, 12);
+    // Unknown or image models return undefined.
+    expect(
+      costForDecisionUsage("unknown-model", { inputTokens: 1000 }),
+    ).toBeUndefined();
+    expect(
+      costForDecisionUsage("gemini-2.5-flash-image", { inputTokens: 1000 }),
+    ).toBeUndefined();
   });
 });

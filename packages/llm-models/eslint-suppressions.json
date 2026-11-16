@@ -1,7 +1,7 @@
 {
   "scripts/sync-from-upstreams.ts": {
     "sonarjs/cognitive-complexity": {
-      "count": 2
+      "count": 1
     }
   }
 }

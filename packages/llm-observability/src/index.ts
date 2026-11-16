@@ -1,3 +1,4 @@
+import { type Span } from "@opentelemetry/api";
 import { type SpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { type z } from "zod";
 import {
@@ -5,6 +6,15 @@ import {
   LlmObservabilityConfigSchema as InnerLlmObservabilityConfigSchema,
   type LlmObservabilityConfig as InnerLlmObservabilityConfig,
 } from "./config.ts";
+import {
+  serializeBodyAttribute as innerSerializeBodyAttribute,
+  setLlmResponseAttributes as innerSetLlmResponseAttributes,
+  withLlmSpan as innerWithLlmSpan,
+  type LlmCallMetadata as InnerLlmCallMetadata,
+  type LlmRequestAttrs as InnerLlmRequestAttrs,
+  type LlmResponseAttrs as InnerLlmResponseAttrs,
+} from "./span-helpers.ts";
+import { activeLlmSubjectAttributes as innerActiveLlmSubjectAttributes } from "./subject.ts";
 import {
   LlmArchiveSpanProcessor as InnerLlmArchiveSpanProcessor,
   type ArchiveLogger as InnerArchiveLogger,
@@ -147,3 +157,32 @@ export function attachCodexTrace(
 }
 export type CodexTrace = Identity<InnerCodexTrace>;
 export type CodexTraceOptions = Identity<InnerCodexTraceOptions>;
+
+export type LlmCallMetadata = Identity<InnerLlmCallMetadata>;
+export type LlmRequestAttrs = Identity<InnerLlmRequestAttrs>;
+export type LlmResponseAttrs = Identity<InnerLlmResponseAttrs>;
+
+export async function withLlmSpan<T>(
+  metadata: LlmCallMetadata,
+  request: LlmRequestAttrs,
+  fn: (span: Span) => Promise<T>,
+  operation?: "chat" | "text_completion",
+): Promise<T> {
+  return innerWithLlmSpan(metadata, request, fn, operation);
+}
+
+export function setLlmResponseAttributes(
+  ...args: Parameters<typeof innerSetLlmResponseAttributes>
+): void {
+  innerSetLlmResponseAttributes(...args);
+}
+
+export function serializeBodyAttribute(
+  ...args: Parameters<typeof innerSerializeBodyAttribute>
+): string {
+  return innerSerializeBodyAttribute(...args);
+}
+
+export function activeLlmSubjectAttributes(): Record<string, string> {
+  return innerActiveLlmSubjectAttributes();
+}

@@ -55,6 +55,43 @@ export function runtimeMetrics(
   return metrics;
 }
 
+export function recordTokenUsageMetrics(input: {
+  readonly metrics: CommonLlmMetrics | undefined;
+  readonly service: string;
+  readonly workload: string;
+  readonly provider: Provider | "unknown";
+  readonly metadata: LlmCallMetadata;
+  readonly durationMs: number;
+}): void {
+  const { metrics, metadata } = input;
+  if (metrics === undefined) return;
+  const labels = {
+    service: input.service,
+    workload: input.workload,
+    provider: input.provider,
+    model: metadata.requestedModel,
+  };
+  metrics.requests.inc({ ...labels, outcome: "success" });
+  metrics.duration.observe(labels, input.durationMs / 1000);
+  metrics.tokens.inc({ ...labels, type: "input" }, metadata.tokens.input);
+  metrics.tokens.inc({ ...labels, type: "output" }, metadata.tokens.output);
+  metrics.tokens.inc(
+    { ...labels, type: "cached_input" },
+    metadata.tokens.cachedInput,
+  );
+  metrics.tokens.inc(
+    { ...labels, type: "cache_write" },
+    metadata.tokens.cacheWrite,
+  );
+  metrics.tokens.inc(
+    { ...labels, type: "reasoning" },
+    metadata.tokens.reasoning,
+  );
+  if (metadata.catalogCostUsd !== undefined) {
+    metrics.cost.inc({ ...labels, type: "catalog" }, metadata.catalogCostUsd);
+  }
+}
+
 /**
  * Records metrics and the correlated success/failure log for one logical call.
  *
@@ -123,33 +160,14 @@ export class LlmMetricsTelemetry implements Telemetry {
       durationMs: event.performance.responseTimeMs,
     });
 
-    const metrics = this.#metrics;
-    if (metrics === undefined) return;
-    const labels = {
+    recordTokenUsageMetrics({
+      metrics: this.#metrics,
       service: this.#service,
       workload: this.#workload,
       provider,
-      model: metadata.requestedModel,
-    };
-    metrics.requests.inc({ ...labels, outcome: "success" });
-    metrics.duration.observe(labels, event.performance.responseTimeMs / 1000);
-    metrics.tokens.inc({ ...labels, type: "input" }, metadata.tokens.input);
-    metrics.tokens.inc({ ...labels, type: "output" }, metadata.tokens.output);
-    metrics.tokens.inc(
-      { ...labels, type: "cached_input" },
-      metadata.tokens.cachedInput,
-    );
-    metrics.tokens.inc(
-      { ...labels, type: "cache_write" },
-      metadata.tokens.cacheWrite,
-    );
-    metrics.tokens.inc(
-      { ...labels, type: "reasoning" },
-      metadata.tokens.reasoning,
-    );
-    if (metadata.catalogCostUsd !== undefined) {
-      metrics.cost.inc({ ...labels, type: "catalog" }, metadata.catalogCostUsd);
-    }
+      metadata,
+      durationMs: event.performance.responseTimeMs,
+    });
   }
 
   onEmbedStart(event: EmbeddingModelCallStartEvent): void {

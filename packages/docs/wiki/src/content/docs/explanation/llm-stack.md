@@ -7,10 +7,11 @@ sidebar:
 
 Ordinary model inference in the monorepo goes through AI SDK 7 and the shared
 `@shepherdjerred/llm-runtime` package, which calls OpenAI, Anthropic, and
-Google directly. Text, structured output, tools, embeddings, images, and
-model-controlled web search all use that path. Each catalog model names exactly
-one first-party provider route, so there is no upstream failover: a provider
-outage fails the call rather than silently serving a different model.
+Google directly. Text, structured output, tools, embeddings, images,
+model-controlled web search, and bounded decisions all use that runtime. Each
+catalog model names one first-party provider route per endpoint, so there is no
+upstream failover: a provider outage fails the call rather than silently serving
+a different model.
 
 No aggregating gateway sits in front of the providers. A gateway buys one key
 and one bill. It also hides which provider served a call, puts a reseller
@@ -32,9 +33,14 @@ and command tools. They run in process through their native SDKs; active
   the provider client, adds application and trace attribution, enables AI SDK
   telemetry, and accounts usage and catalog cost. It is the only place a
   provider SDK is constructed or a provider credential is read.
-- `generateValidatedObject` is the only shared higher-level primitive. It uses
-  a strict Zod-backed object output, retries transport failures separately from
-  bounded semantic repair, and never extracts JSON from prose.
+- `generateValidatedObject` is the shared generative structured-output
+  primitive. It uses a strict Zod-backed object output, retries transport
+  failures separately from bounded semantic repair, and never extracts JSON from
+  prose.
+- [`runtime.decide()`](https://github.com/shepherdjerred/monorepo/blob/main/packages/llm-runtime/src/runtime.ts)
+  calls OpenAI's `POST /v1/decisions` on `gpt-6-luna` for bounded predicate,
+  choice, and score judgments, returning calibrated probabilities at `$0`
+  output-token pricing.
 - Scout and Discord Plays Pokemon keep their existing project-specific eval
   corpora and comparison processes. There is no generic eval framework.
 - A CI architecture check rejects agent frameworks (Mastra, VoltAgent), a
@@ -78,9 +84,11 @@ alerts below are the early warning. Rotation and the manual steps are in
 ## Observability boundary
 
 Local OpenTelemetry is authoritative. Repository-owned `gen_ai.*` spans wrap
-AI SDK and native SDK spans. Spans carry the complete prompt, response, and
-tool bodies. A copy of those bodies also goes to the private SeaweedFS LLM
-archive, and each span carries its archive reference.
+AI SDK, `runtime.decide()`, and native SDK spans. Spans carry the complete
+prompt, question, response, and tool bodies.
+[`LlmArchiveSpanProcessor`](https://github.com/shepherdjerred/monorepo/blob/main/packages/llm-observability/src/archive-span-processor.ts)
+writes a copy of those `gen_ai.*` bodies to the private SeaweedFS LLM archive,
+and each span carries its archive reference.
 
 Content lives on the span because a trace without it cannot answer the
 questions LLM traces exist for. Agent failures are semantic rather than
@@ -226,9 +234,13 @@ quota requirement justifies it.
 
 Structured-output attempts have their own counter. Billed cost, billed OpenAI
 tokens by service tier, and reconciliation freshness are gauges.
-Project IDs, generation IDs, user IDs, prompts, and responses never become
-labels. The `ai_provider_errors_total` and `ai_provider_issue_active` series
-predate the runtime and keep their names, so their history stays continuous.
+[`llm-billing.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/llm-billing.ts)
+paginates `/v1/organization/usage/decisions` alongside
+`/v1/organization/usage/completions`, summing daily token rows when a project
+and model appear in both. Project IDs, generation IDs, user IDs, prompts, and
+responses never become labels. The `ai_provider_errors_total` and
+`ai_provider_issue_active` series predate the runtime and keep their names, so
+their history stays continuous.
 
 ## Production acceptance
 
