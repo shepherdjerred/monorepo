@@ -6,7 +6,12 @@ import {
   type Page,
   type TestInfo,
 } from "@playwright/test";
-import { createIssue, recordCalls, scratchTeam } from "./data-helpers.ts";
+import {
+  createIssue,
+  inFlightTrpc,
+  recordCalls,
+  scratchTeam,
+} from "./data-helpers.ts";
 
 /** Someone else, in another browser, whom this tab has never seen. */
 const peer = {
@@ -129,12 +134,18 @@ test("this tab's own edit is not fetched again when the stream reports it", asyn
   );
   await expect(indicator(page)).toHaveText("Live");
   const calls = recordCalls(page);
+  const pendingTrpc = inFlightTrpc(page);
   const saved = page.waitForResponse(
     (response) =>
       response.url().includes("issues.update") && response.status() === 200,
   );
   await peek.getByLabel("Status", { exact: true }).selectOption("Done");
   await saved;
+  // Wait for this tab's post-save refetches (including first-mutation actor
+  // bootstrap and paginated list refresh) to settle before mutating `marker`
+  // so an in-flight list refetch cannot race the remote edit.
+  await expect.poll(() => detailFetches(calls, mine)).toBe(1);
+  await expect.poll(pendingTrpc).toBe(0);
   // The stream delivers in commit order, so once the later change to the
   // marker has landed, this tab has already received its own change.
   const other = await otherSession(browser, info);

@@ -149,6 +149,22 @@ export function recordCalls(page: Page) {
   return calls;
 }
 
+const isTrpcUrl = (url: string) => new URL(url).pathname.startsWith("/trpc/");
+
+/** Count of currently in-flight `/trpc/` requests initiated by `page`. */
+export function inFlightTrpc(page: Page) {
+  let count = 0;
+  page.on("request", (req) => {
+    if (isTrpcUrl(req.url())) count += 1;
+  });
+  const done = (req: { url: () => string }) => {
+    if (isTrpcUrl(req.url())) count = Math.max(0, count - 1);
+  };
+  page.on("requestfinished", done);
+  page.on("requestfailed", done);
+  return () => count;
+}
+
 /** Open the issue menu as the platform does: right click, or long press. */
 export async function openMenu(
   page: Page,

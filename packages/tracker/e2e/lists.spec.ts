@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import {
   createIssue,
+  inFlightTrpc,
   recordCalls,
   scratchTeam,
   seedLongList,
@@ -190,18 +191,7 @@ test("the app pages its lists and an edit refetches only what it touched", async
   expect(calls.some((call) => call.includes("issues.list"))).toBe(true);
 
   calls.length = 0;
-  let pendingTrpc = 0;
-  const trackStart = (req: { url: () => string }) => {
-    if (new URL(req.url()).pathname.startsWith("/trpc/")) pendingTrpc += 1;
-  };
-  const trackEnd = (req: { url: () => string }) => {
-    if (new URL(req.url()).pathname.startsWith("/trpc/")) {
-      pendingTrpc = Math.max(0, pendingTrpc - 1);
-    }
-  };
-  page.on("request", trackStart);
-  page.on("requestfinished", trackEnd);
-  page.on("requestfailed", trackEnd);
+  const pendingTrpc = inFlightTrpc(page);
 
   // The unclaimed session actor (`webdriver:<tab>`) is recorded on its first
   // mutation, which refetches `meta.bootstrap` once so it becomes assignable.
@@ -213,7 +203,7 @@ test("the app pages its lists and an edit refetches only what it touched", async
   await expect
     .poll(() => calls.some((call) => call.includes("issues.byIdentifier")))
     .toBe(true);
-  await expect.poll(() => pendingTrpc).toBe(0);
+  await expect.poll(pendingTrpc).toBe(0);
 
   // Subsequent edits by a known actor refetch only what they touched.
   calls.length = 0;
@@ -230,7 +220,7 @@ test("the app pages its lists and an edit refetches only what it touched", async
   await expect
     .poll(() => calls.filter((call) => call.includes("issues.byIdentifier")))
     .not.toEqual([]);
-  await expect.poll(() => pendingTrpc).toBe(0);
+  await expect.poll(pendingTrpc).toBe(0);
   expect(calls.filter((call) => call.includes("meta.bootstrap"))).toEqual([]);
   expect(calls.filter((call) => call.includes("issues.update"))).toHaveLength(
     1,
