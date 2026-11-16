@@ -130,3 +130,31 @@ export function Empty({
     </div>
   );
 }
+
+export function TeamSelect({
+  id,
+  teams,
+  value,
+  onChange,
+}: {
+  id?: string;
+  teams: readonly { id: string; key: string; name: string }[];
+  value: string;
+  onChange: (teamKey: string) => void;
+}) {
+  return (
+    <select
+      id={id}
+      value={value}
+      onChange={(event) => {
+        onChange(event.target.value);
+      }}
+    >
+      {teams.map((team) => (
+        <option key={team.id} value={team.key}>
+          {team.name} ({team.key})
+        </option>
+      ))}
+    </select>
+  );
+}

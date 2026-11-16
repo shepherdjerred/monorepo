@@ -1,13 +1,13 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
-import { TrackerError } from "#domain/error.ts";
 import { parseIdentifier, searchTokens } from "#domain/issue.ts";
-import {
-  DueDateSchema,
-  StateTypeSchema,
-  type IssueListInput,
-} from "#shared/schema.ts";
+import { StateTypeSchema, type IssueListInput } from "#shared/schema.ts";
 import type { Database } from "./database.ts";
+import {
+  keysetSqlParts,
+  sliceKeysetRows,
+  type SortKey,
+} from "./keyset-cursor.ts";
 
 /**
  * Issue lists page with a keyset: the cursor carries the sort key values and
@@ -17,40 +17,7 @@ import type { Database } from "./database.ts";
  */
 
 type Sql = Prisma.Sql;
-const { sql, join, raw } = Prisma;
-
-/** How one sort key crosses the wire inside a cursor and returns to SQL. */
-const keyKinds = {
-  // Microseconds since the epoch, as text: exact for any timestamp column.
-  time: {
-    schema: z.string().regex(/^\d{1,16}$/u),
-    select: (column: Sql) =>
-      sql`(extract(epoch from ${column}) * 1000000)::bigint::text`,
-    bind: (value: string | number | boolean) =>
-      sql`(timestamp 'epoch' + ${value}::bigint * interval '1 microsecond')`,
-  },
-  int: {
-    schema: z.number().int().min(0).max(2_147_483_647),
-    select: (column: Sql) => sql`${column}::int`,
-    bind: (value: string | number | boolean) => sql`${value}::int`,
-  },
-  float: {
-    schema: z.number(),
-    select: (column: Sql) => sql`${column}::float8`,
-    bind: (value: string | number | boolean) => sql`${value}::float8`,
-  },
-  bool: {
-    schema: z.boolean(),
-    select: (column: Sql) => sql`${column}::boolean`,
-    bind: (value: string | number | boolean) => sql`${value}::boolean`,
-  },
-  date: {
-    schema: DueDateSchema,
-    select: (column: Sql) => sql`to_char(${column}, 'YYYY-MM-DD')`,
-    bind: (value: string | number | boolean) => sql`${value}::date`,
-  },
-} as const;
-type SortKey = { expr: Sql; desc: boolean; kind: keyof typeof keyKinds };
+const { sql, join } = Prisma;
 
 const issueSorts: Record<IssueListInput["sort"], SortKey[]> = {
   updated: [{ expr: sql`i."updatedAt"`, desc: true, kind: "time" }],
@@ -238,63 +205,6 @@ function listPlan(input: IssueListInput): ListPlan | null {
   };
 }
 
-const CursorSchema = z.strictObject({
-  o: z.string(),
-  k: z.array(z.union([z.string(), z.number(), z.boolean()])).max(8),
-  id: z.string().min(1).max(200),
-});
-type Cursor = z.infer<typeof CursorSchema>;
-
-function encodeCursor(cursor: Cursor): string {
-  return Buffer.from(JSON.stringify(cursor)).toString("base64url");
-}
-
-function invalidCursor(): TrackerError {
-  return new TrackerError(
-    "BAD_REQUEST",
-    "Invalid cursor: restart the list from its first page",
-  );
-}
-
-function decodeCursor(plan: ListPlan, value: string): Cursor {
-  let decoded: unknown;
-  try {
-    decoded = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
-  } catch {
-    throw invalidCursor();
-  }
-  const cursor = CursorSchema.safeParse(decoded);
-  if (
-    !cursor.success ||
-    cursor.data.o !== plan.order ||
-    cursor.data.k.length !== plan.keys.length ||
-    plan.keys.some(
-      (key, index) =>
-        !keyKinds[key.kind].schema.safeParse(cursor.data.k[index]).success,
-    )
-  )
-    throw invalidCursor();
-  return cursor.data;
-}
-
-const alias = (index: number) => raw(`"k${String(index)}"`);
-const column = (index: number) => raw(`q."k${String(index)}"`);
-
-/** Rows that sort strictly after the cursor under the plan's ordering. */
-function after(plan: ListPlan, cursor: Cursor): Sql {
-  let condition = sql`q."id" > ${cursor.id}`;
-  for (const [index, key] of [...plan.keys.entries()].reverse()) {
-    const value = cursor.k[index];
-    if (value === undefined) throw invalidCursor();
-    const bound = keyKinds[key.kind].bind(value);
-    const beyond = key.desc
-      ? sql`${column(index)} < ${bound}`
-      : sql`${column(index)} > ${bound}`;
-    condition = sql`(${beyond} OR (${column(index)} = ${bound} AND ${condition}))`;
-  }
-  return condition;
-}
-
 type IssuePage = { ids: string[]; nextCursor: string | null };
 
 async function page(
@@ -302,46 +212,18 @@ async function page(
   plan: ListPlan,
   input: IssueListInput,
 ): Promise<IssuePage> {
-  const cursor =
-    input.cursor === undefined ? undefined : decodeCursor(plan, input.cursor);
-  const keys = [...plan.keys.entries()];
+  const parts = keysetSqlParts(plan, input.cursor);
   const rows = await db.$queryRaw<Record<string, unknown>[]>`
-    SELECT q."id", ${join(
-      keys.map(
-        ([index, key]) =>
-          sql`${keyKinds[key.kind].select(column(index))} AS ${alias(index)}`,
-      ),
-    )}
+    SELECT q."id", ${parts.outerSelect}
     FROM (
-      SELECT i."id", ${join(keys.map(([index, key]) => sql`${key.expr} AS ${alias(index)}`))}
+      SELECT i."id", ${parts.innerSelect}
       FROM "Issue" i WHERE ${plan.where}
       ${plan.trigram ? sql`OFFSET 0` : Prisma.empty}
     ) q
-    WHERE ${cursor === undefined ? sql`TRUE` : after(plan, cursor)}
-    ORDER BY ${join([
-      ...keys.map(
-        ([index, key]) =>
-          sql`${column(index)} ${key.desc ? sql`DESC` : sql`ASC`}`,
-      ),
-      sql`q."id" ASC`,
-    ])}
+    WHERE ${parts.whereAfter}
+    ORDER BY ${parts.orderBy}
     ${input.limit === "all" ? Prisma.empty : sql`LIMIT ${input.limit + 1}`}`;
-  const more = input.limit !== "all" && rows.length > input.limit;
-  const served = input.limit === "all" ? rows : rows.slice(0, input.limit);
-  const last = served.at(-1);
-  return {
-    ids: served.map((row) => z.string().parse(row["id"])),
-    nextCursor:
-      more && last !== undefined
-        ? encodeCursor({
-            o: plan.order,
-            k: keys.map(([index, key]) =>
-              keyKinds[key.kind].schema.parse(last[`k${String(index)}`]),
-            ),
-            id: z.string().parse(last["id"]),
-          })
-        : null,
-  };
+  return sliceKeysetRows(plan, rows, input.limit);
 }
 
 /**

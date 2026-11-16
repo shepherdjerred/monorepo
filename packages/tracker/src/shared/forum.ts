@@ -256,16 +256,11 @@ export type UpdateForumPostInput = z.infer<typeof UpdateForumPostSchema>;
 export type ReplyForumInput = z.infer<typeof ReplyForumSchema>;
 export type UpdateForumReplyInput = z.infer<typeof UpdateForumReplySchema>;
 export type DeleteForumReplyInput = z.infer<typeof DeleteForumReplySchema>;
-export type ResolveForumInput = z.infer<typeof ResolveForumSchema>;
 export type ReopenForumInput = z.infer<typeof ReopenForumSchema>;
 export type PinForumInput = z.infer<typeof PinForumSchema>;
 export type AcceptForumReplyInput = z.infer<typeof AcceptForumReplySchema>;
-export type ClaimForumNoticeInput = z.infer<typeof ClaimForumNoticeSchema>;
-export type HandoffForumNoticeInput = z.infer<typeof HandoffForumNoticeSchema>;
 export type VoteForumInput = z.infer<typeof VoteForumSchema>;
 export type ReactForumInput = z.infer<typeof ReactForumSchema>;
-export type SubscribeForumInput = z.infer<typeof SubscribeForumSchema>;
-export type MarkForumReadInput = z.infer<typeof MarkForumReadSchema>;
 export type ForumIssueLinkInput = z.infer<typeof ForumIssueLinkSchema>;
 export type PromoteForumToIssueInput = z.infer<
   typeof PromoteForumToIssueSchema

@@ -157,7 +157,7 @@ export function IssueForumThreads({
   });
   const linkedIds = new Set(issue.forumThreads.map((thread) => thread.id));
   return (
-    <section className="relations forum-backlinks">
+    <section className="forum-backlinks">
       <div className="section-heading">
         <h2>Forum threads</h2>
         <div className="forum-backlink-actions">

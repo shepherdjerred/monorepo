@@ -4,7 +4,7 @@ import type { MutationContext } from "#application/unit-of-work.ts";
 import { TrackerError } from "#domain/error.ts";
 import { identifier } from "#domain/issue.ts";
 import { ForumEmojiSchema, type ForumEmoji } from "#shared/forum.ts";
-import { presentActor } from "./issue-repository.ts";
+import { audit, presentActor } from "./issue-repository.ts";
 
 const SubscriptionModeSchema = z.enum(["subscribed", "muted"]).nullable();
 
@@ -409,4 +409,43 @@ export async function recomputePostReplySummary(
     lastReplyAt: latest?.createdAt ?? null,
     lastReplyAuthorId: latest?.authorId ?? null,
   };
+}
+
+export async function lockReplyParentPost(
+  db: Prisma.TransactionClient,
+  replyId: string,
+) {
+  const initial = await db.forumReply.findUnique({
+    where: { id: replyId },
+    select: { id: true, postId: true },
+  });
+  if (initial === null)
+    throw new TrackerError("NOT_FOUND", "Forum reply not found");
+  return lockPost(db, initial.postId);
+}
+
+export async function touchAndPresentAuditedPost(
+  ctx: MutationContext,
+  params: {
+    beforeRecord: PostSummaryRecord;
+    viewerActorKey: string;
+    now: Date;
+    action: string;
+  },
+) {
+  const { beforeRecord, viewerActorKey, now, action } = params;
+  await touchActorReadAt(ctx.db, beforeRecord.id, ctx.actor.id, now);
+  const hydrated = await ctx.db.forumPost.findUniqueOrThrow({
+    where: { id: beforeRecord.id },
+    include: postSummaryInclude(viewerActorKey),
+  });
+  const after = presentPostSummary(hydrated, { now, viewerActorKey });
+  await audit(ctx, {
+    entityType: "forum-post",
+    entityId: beforeRecord.id,
+    action,
+    before: presentPostSummary(beforeRecord, { now }),
+    after,
+  });
+  return after;
 }

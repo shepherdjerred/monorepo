@@ -14,12 +14,14 @@ import {
   commitForumAttachments,
   forumIdentifier,
   lockPost,
+  lockReplyParentPost,
   postSummaryInclude,
   presentPostSummary,
   presentReply,
   recomputePostReplySummary,
   replyInclude,
   touchActorReadAt,
+  touchAndPresentAuditedPost,
 } from "./forum-repository.ts";
 import {
   audit,
@@ -158,13 +160,7 @@ export async function updateForumReply(
   ctx: MutationContext,
   input: UpdateForumReplyInput,
 ) {
-  const initial = await ctx.db.forumReply.findUnique({
-    where: { id: input.replyId },
-    select: { id: true, postId: true },
-  });
-  if (initial === null)
-    throw new TrackerError("NOT_FOUND", "Forum reply not found");
-  const post = await lockPost(ctx.db, initial.postId);
+  const post = await lockReplyParentPost(ctx.db, input.replyId);
   const before = await ctx.db.forumReply.findUnique({
     where: { id: input.replyId },
     include: replyInclude(input.actor.key),
@@ -255,23 +251,12 @@ export async function acceptForumAnswer(
     where: { id: beforeRecord.id },
     data: { acceptedReplyId: input.replyId, lastActivityAt: now },
   });
-  await touchActorReadAt(ctx.db, beforeRecord.id, ctx.actor.id, now);
-  const hydrated = await ctx.db.forumPost.findUniqueOrThrow({
-    where: { id: beforeRecord.id },
-    include: postSummaryInclude(input.actor.key),
-  });
-  const after = presentPostSummary(hydrated, {
-    now,
+  return touchAndPresentAuditedPost(ctx, {
+    beforeRecord,
     viewerActorKey: input.actor.key,
-  });
-  await audit(ctx, {
-    entityType: "forum-post",
-    entityId: beforeRecord.id,
+    now,
     action: input.replyId === null ? "answer-unaccepted" : "answer-accepted",
-    before: presentPostSummary(beforeRecord, { now }),
-    after,
   });
-  return after;
 }
 
 export async function setForumPostState(
@@ -300,21 +285,10 @@ export async function setForumPostState(
       revision: { increment: 1 },
     },
   });
-  await touchActorReadAt(ctx.db, beforeRecord.id, ctx.actor.id, now);
-  const hydrated = await ctx.db.forumPost.findUniqueOrThrow({
-    where: { id: beforeRecord.id },
-    include: postSummaryInclude(input.actor.key),
-  });
-  const after = presentPostSummary(hydrated, {
-    now,
+  return touchAndPresentAuditedPost(ctx, {
+    beforeRecord,
     viewerActorKey: input.actor.key,
-  });
-  await audit(ctx, {
-    entityType: "forum-post",
-    entityId: beforeRecord.id,
+    now,
     action: state === "open" ? "reopened" : "resolved",
-    before: presentPostSummary(beforeRecord, { now }),
-    after,
   });
-  return after;
 }

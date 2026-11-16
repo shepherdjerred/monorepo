@@ -2,12 +2,11 @@ import { mkdtemp, rm } from "node:fs/promises";
 import nodePath from "node:path";
 import { tmpdir } from "node:os";
 import { z } from "zod";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, expect, test } from "vitest";
 import { forumCommand } from "#commands/forum.ts";
 import { parseForumArgs } from "#commands/forum-options.ts";
 import { watchForum } from "#commands/forum-watch.ts";
-import { trackerClient } from "#lib/tracker/client.ts";
-import { trackerRequest } from "#test/lib/tracker/request.ts";
+import { testForumContext, trackerRequest } from "#test/lib/tracker/request.ts";
 
 const postUuid = "00000000-0000-4000-8000-000000000012";
 const otherUuid = "00000000-0000-4000-8000-000000000099";
@@ -68,21 +67,10 @@ function createForumFixture() {
     },
   });
   servers.push(server);
-  const url = server.url.toString();
-  const actor = vi.fn(() =>
-    Promise.resolve({
-      key: "codex:session",
-      kind: "agent" as const,
-      name: "Codex",
-      metadata: {},
-    }),
-  );
   return {
     requests,
     uploads,
-    actor,
-    url,
-    context: { url, actor, client: trackerClient(url) },
+    ...testForumContext(server),
   };
 }
 
@@ -530,23 +518,12 @@ function createSseFixture(options: {
     },
   });
   servers.push(server);
-  const url = server.url.toString();
   return {
     byIdQueries,
     setPostState: (next: "open" | "resolved") => {
       currentState = next;
     },
-    context: {
-      url,
-      client: trackerClient(url),
-      actor: () =>
-        Promise.resolve({
-          key: "codex:session",
-          kind: "agent" as const,
-          name: "Codex",
-          metadata: {},
-        }),
-    },
+    context: testForumContext(server).context,
   };
 }
 

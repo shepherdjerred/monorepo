@@ -1,6 +1,5 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
-import { TrackerError } from "#domain/error.ts";
 import { parseIdentifier, searchTokens } from "#domain/issue.ts";
 import type {
   ForumInboxInput,
@@ -14,44 +13,17 @@ import {
   presentPostSummary,
   type PostSummaryRecord,
 } from "./forum-repository.ts";
+import {
+  keysetSqlParts,
+  sliceKeysetRows,
+  type SortKey,
+} from "./keyset-cursor.ts";
 
 type Sql = Prisma.Sql;
-const { sql, join, raw } = Prisma;
+const { sql, join } = Prisma;
 
-const keyKinds = {
-  time: {
-    schema: z.string().regex(/^-?\d{1,18}$/u),
-    select: (column: Sql) =>
-      sql`(extract(epoch from ${column}) * 1000000)::bigint::text`,
-    bind: (value: string | number | boolean) =>
-      sql`(timestamp 'epoch' + ${value}::bigint * interval '1 microsecond')`,
-  },
-  int: {
-    schema: z.number().int().min(0).max(2_147_483_647),
-    select: (column: Sql) => sql`${column}::int`,
-    bind: (value: string | number | boolean) => sql`${value}::int`,
-  },
-  float: {
-    schema: z.number(),
-    select: (column: Sql) => sql`${column}::float8`,
-    bind: (value: string | number | boolean) => sql`${value}::float8`,
-  },
-  bool: {
-    schema: z.boolean(),
-    select: (column: Sql) => sql`${column}::boolean`,
-    bind: (value: string | number | boolean) => sql`${value}::boolean`,
-  },
-} as const;
-
-type SortKey = { expr: Sql; desc: boolean; kind: keyof typeof keyKinds };
-type ForumPlan = { order: string; keys: SortKey[]; where: Sql };
-
-const CursorSchema = z.strictObject({
-  o: z.string(),
-  k: z.array(z.union([z.string(), z.number(), z.boolean()])).max(8),
-  id: z.string().min(1).max(200),
-});
-type Cursor = z.infer<typeof CursorSchema>;
+type ForumSortKind = "time" | "int" | "float" | "bool";
+type ForumPlan = { order: string; keys: SortKey<ForumSortKind>[]; where: Sql };
 
 const escapeLike = (value: string) =>
   value.replaceAll(/[\\%_]/gu, (match) => `\\${match}`);
@@ -185,7 +157,7 @@ function searchFilter(query: string): Sql {
   return sql`(${join(parts, " OR ")})`;
 }
 
-const explicitSorts: Record<ForumSort, SortKey[]> = {
+const explicitSorts: Record<ForumSort, SortKey<ForumSortKind>[]> = {
   activity: [{ expr: sql`p."lastActivityAt"`, desc: true, kind: "time" }],
   newest: [{ expr: sql`p."createdAt"`, desc: true, kind: "time" }],
   votes: [
@@ -198,7 +170,9 @@ const explicitSorts: Record<ForumSort, SortKey[]> = {
   ],
 };
 
-function defaultFeedKeys(state: ForumListInput["state"]): SortKey[] {
+function defaultFeedKeys(
+  state: ForumListInput["state"],
+): SortKey<ForumSortKind>[] {
   return state === "resolved"
     ? [{ expr: sql`p."lastActivityAt"`, desc: true, kind: "time" }]
     : [
@@ -213,7 +187,7 @@ function defaultFeedKeys(state: ForumListInput["state"]): SortKey[] {
       ];
 }
 
-function searchSortKeys(query: string): SortKey[] {
+function searchSortKeys(query: string): SortKey<ForumSortKind>[] {
   const fmNumber = parseForumNumber(query);
   const tokens = searchTokens(query);
   const exactBoost =
@@ -240,103 +214,33 @@ function searchSortKeys(query: string): SortKey[] {
   ];
 }
 
-const encodeCursor = (cursor: Cursor) =>
-  Buffer.from(JSON.stringify(cursor)).toString("base64url");
-const invalidCursor = () =>
-  new TrackerError(
-    "BAD_REQUEST",
-    "Invalid cursor: restart the list from its first page",
-  );
-const alias = (index: number) => raw(`"k${String(index)}"`);
-const column = (index: number) => raw(`q."k${String(index)}"`);
-
-function decodeCursor(plan: ForumPlan, value: string): Cursor {
-  let decoded: unknown;
-  try {
-    decoded = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
-  } catch {
-    throw invalidCursor();
-  }
-  const cursor = CursorSchema.safeParse(decoded);
-  if (
-    !cursor.success ||
-    cursor.data.o !== plan.order ||
-    cursor.data.k.length !== plan.keys.length ||
-    plan.keys.some(
-      (key, index) =>
-        !keyKinds[key.kind].schema.safeParse(cursor.data.k[index]).success,
-    )
-  )
-    throw invalidCursor();
-  return cursor.data;
-}
-
-function afterCursor(plan: ForumPlan, cursor: Cursor): Sql {
-  let condition = sql`q."id" > ${cursor.id}`;
-  for (const [index, key] of [...plan.keys.entries()].reverse()) {
-    const value = cursor.k[index];
-    if (value === undefined) throw invalidCursor();
-    const bound = keyKinds[key.kind].bind(value);
-    const beyond = key.desc
-      ? sql`${column(index)} < ${bound}`
-      : sql`${column(index)} > ${bound}`;
-    condition = sql`(${beyond} OR (${column(index)} = ${bound} AND ${condition}))`;
-  }
-  return condition;
-}
-
 async function runPlan(
   database: Database,
   plan: ForumPlan,
   limit: number,
   rawCursor: string | undefined,
 ) {
-  const cursor =
-    rawCursor === undefined ? undefined : decodeCursor(plan, rawCursor);
-  const keys = [...plan.keys.entries()];
+  const parts = keysetSqlParts(plan, rawCursor);
   const [rows, counted] = await Promise.all([
     database.$queryRaw<Record<string, unknown>[]>`
-      SELECT q."id", ${join(
-        keys.map(
-          ([index, key]) =>
-            sql`${keyKinds[key.kind].select(column(index))} AS ${alias(index)}`,
-        ),
-      )}
+      SELECT q."id", ${parts.outerSelect}
       FROM (
-        SELECT p."id", ${join(keys.map(([index, key]) => sql`${key.expr} AS ${alias(index)}`))}
+        SELECT p."id", ${parts.innerSelect}
         FROM "ForumPost" p WHERE ${plan.where}
       ) q
-      WHERE ${cursor === undefined ? sql`TRUE` : afterCursor(plan, cursor)}
-      ORDER BY ${join([
-        ...keys.map(
-          ([index, key]) =>
-            sql`${column(index)} ${key.desc ? sql`DESC` : sql`ASC`}`,
-        ),
-        sql`q."id" ASC`,
-      ])}
+      WHERE ${parts.whereAfter}
+      ORDER BY ${parts.orderBy}
       LIMIT ${limit + 1}`,
     database.$queryRaw<{ total: number }[]>`
       SELECT count(*)::int AS "total" FROM "ForumPost" p WHERE ${plan.where}`,
   ]);
-  const more = rows.length > limit;
-  const served = rows.slice(0, limit);
-  const last = served.at(-1);
+  const sliced = sliceKeysetRows(plan, rows, limit);
   return {
-    ids: served.map((row) => z.string().parse(row["id"])),
+    ...sliced,
     total: z
       .number()
       .int()
       .parse(counted[0]?.total ?? 0),
-    nextCursor:
-      more && last !== undefined
-        ? encodeCursor({
-            o: plan.order,
-            k: keys.map(([index, key]) =>
-              keyKinds[key.kind].schema.parse(last[`k${String(index)}`]),
-            ),
-            id: z.string().parse(last["id"]),
-          })
-        : null,
   };
 }
 

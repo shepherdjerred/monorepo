@@ -1,10 +1,9 @@
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, expect, test } from "vitest";
 import { forumCommand } from "#commands/forum.ts";
 import { parseForumArgs } from "#commands/forum-options.ts";
-import { trackerClient } from "#lib/tracker/client.ts";
 import { coordinationSummary, formatCoordination } from "#lib/forum.ts";
 import { requiredCredentialsFor } from "#lib/credential-commands.ts";
-import { trackerRequest } from "./tracker/request.ts";
+import { testForumContext, trackerRequest } from "./tracker/request.ts";
 
 const id = "00000000-0000-4000-8000-000000000001";
 const id2 = "00000000-0000-4000-8000-000000000002";
@@ -69,20 +68,9 @@ function fixture(failure = false) {
     },
   });
   servers.push(server);
-  const url = server.url.toString();
-  const actor = vi.fn(() =>
-    Promise.resolve({
-      key: "codex:session",
-      kind: "agent" as const,
-      name: "Codex",
-      metadata: {},
-    }),
-  );
   return {
     requests,
-    actor,
-    url,
-    context: { url, actor, client: trackerClient(url) },
+    ...testForumContext(server),
   };
 }
 

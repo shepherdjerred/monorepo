@@ -18,7 +18,7 @@ import {
   useCurrentActor,
 } from "#client/data/identity.ts";
 import { ActorIdentityForm } from "#client/shell/navigation.tsx";
-import { ActorChip, Swatch } from "#client/ui/ui.tsx";
+import { ActorChip, Swatch, TeamSelect } from "#client/ui/ui.tsx";
 import { notify } from "#client/ui/toast.tsx";
 import { applyTheme, savedTheme, type Theme } from "#client/ui/theme.ts";
 import { FeedbackSettings } from "#client/feedback/feedback-settings.tsx";
@@ -182,18 +182,11 @@ export function Settings({
         <div className="form-selects">
           <label>
             Team
-            <select
+            <TeamSelect
+              teams={bootstrap.teams}
               value={teamKey}
-              onChange={(e) => {
-                setTeam(e.target.value);
-              }}
-            >
-              {bootstrap.teams.map((team) => (
-                <option key={team.id} value={team.key}>
-                  {team.name} ({team.key})
-                </option>
-              ))}
-            </select>
+              onChange={setTeam}
+            />
           </label>
           <label>
             Color

@@ -437,28 +437,26 @@ function workspaceEntries(context: PaletteContext): PaletteEntry[] {
         context.action("?");
       },
     },
-    ...pages.slice(0, 2).map(([name, path, icon, shortcut]) => ({
-      id: `go:${path}`,
-      label: `Go to ${name.toLowerCase()}`,
-      icon,
-      hint: shortcut === undefined ? undefined : shortcutKeys(shortcut),
-      section: "Navigation",
-      run: () => {
-        context.navigate(path);
-      },
-    })),
+    ...pages.slice(0, 2).map((page) => pageNavEntry(context, page)),
     ...forumNavEntries(context),
-    ...pages.slice(2).map(([name, path, icon, shortcut]) => ({
-      id: `go:${path}`,
-      label: `Go to ${name.toLowerCase()}`,
-      icon,
-      hint: shortcut === undefined ? undefined : shortcutKeys(shortcut),
-      section: "Navigation",
-      run: () => {
-        context.navigate(path);
-      },
-    })),
+    ...pages.slice(2).map((page) => pageNavEntry(context, page)),
   ];
+}
+
+function pageNavEntry(
+  context: PaletteContext,
+  [name, path, icon, shortcut]: (typeof pages)[number],
+): PaletteEntry {
+  return {
+    id: `go:${path}`,
+    label: `Go to ${name.toLowerCase()}`,
+    icon,
+    hint: shortcut === undefined ? undefined : shortcutKeys(shortcut),
+    section: "Navigation",
+    run: () => {
+      context.navigate(path);
+    },
+  };
 }
 
 export function rootEntries(context: PaletteContext): PaletteEntry[] {

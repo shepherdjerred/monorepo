@@ -8,7 +8,7 @@ import { eventsKey, issueKey, listsKey } from "#client/data/cache.ts";
 import { currentActor, useCurrentActor } from "#client/data/identity.ts";
 import { priorities } from "#client/data/issue-changes.ts";
 import { notify } from "#client/ui/toast.tsx";
-import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
+import { ErrorNotice, Modal, TeamSelect } from "#client/ui/ui.tsx";
 import { useRefreshForum, type PostDetail } from "./data.ts";
 
 export function HandoffNoticeModal({
@@ -296,19 +296,12 @@ export function PromoteToIssueModal({
         <div className="form-selects">
           <label htmlFor="promote-team">
             Team
-            <select
+            <TeamSelect
               id="promote-team"
+              teams={bootstrap.teams}
               value={teamKey}
-              onChange={(event) => {
-                setTeamKey(event.target.value);
-              }}
-            >
-              {bootstrap.teams.map((team) => (
-                <option key={team.id} value={team.key}>
-                  {team.name} ({team.key})
-                </option>
-              ))}
-            </select>
+              onChange={setTeamKey}
+            />
           </label>
           <label htmlFor="promote-priority">
             Priority

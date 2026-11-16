@@ -12,6 +12,7 @@ import {
   commitForumAttachments,
   groupReactions,
   lockPost,
+  lockReplyParentPost,
   postSummaryInclude,
   presentPostSummary,
   recomputePostReplySummary,
@@ -120,13 +121,7 @@ export async function deleteForumReply(
   ctx: MutationContext,
   input: DeleteForumReplyInput,
 ) {
-  const initial = await ctx.db.forumReply.findUnique({
-    where: { id: input.replyId },
-    select: { id: true, postId: true },
-  });
-  if (initial === null)
-    throw new TrackerError("NOT_FOUND", "Forum reply not found");
-  const post = await lockPost(ctx.db, initial.postId);
+  const post = await lockReplyParentPost(ctx.db, input.replyId);
   const reply = await ctx.db.forumReply.findUnique({
     where: { id: input.replyId },
   });
