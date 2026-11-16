@@ -97,6 +97,21 @@ export type TestDatabasePrefix = (typeof TEST_DATABASE_PREFIXES)[number];
 
 export const LOCK_TIMEOUT_SQL = "SET lock_timeout = '250ms'";
 
+export function templateCloneSharedLockSql(templateName: string): string {
+  const escaped = templateName.replaceAll("'", "''");
+  return `SELECT pg_advisory_lock_shared(hashtext('monorepo-test-postgres'), hashtext('template-prune:${escaped}'))`;
+}
+
+export function templateCloneSharedUnlockSql(templateName: string): string {
+  const escaped = templateName.replaceAll("'", "''");
+  return `SELECT pg_advisory_unlock_shared(hashtext('monorepo-test-postgres'), hashtext('template-prune:${escaped}'))`;
+}
+
+function templatePruneExclusiveTryLockSql(templateName: string): string {
+  const escaped = templateName.replaceAll("'", "''");
+  return `DO $$ BEGIN IF NOT pg_try_advisory_lock(hashtext('monorepo-test-postgres'), hashtext('template-prune:${escaped}')) THEN RAISE EXCEPTION 'template busy'; END IF; END $$`;
+}
+
 const DatabaseRowSchema = z.array(
   z.strictObject({
     name: z.string(),
@@ -292,13 +307,15 @@ export async function pruneStaleTemplateDatabases(options: {
       continue;
     }
     try {
+      const tryLock = templatePruneExclusiveTryLockSql(row.name);
       const commands = row.isTemplate
         ? [
             LOCK_TIMEOUT_SQL,
+            tryLock,
             `ALTER DATABASE "${row.name}" WITH IS_TEMPLATE FALSE`,
             `DROP DATABASE IF EXISTS "${row.name}"`,
           ]
-        : [LOCK_TIMEOUT_SQL, `DROP DATABASE IF EXISTS "${row.name}"`];
+        : [LOCK_TIMEOUT_SQL, tryLock, `DROP DATABASE IF EXISTS "${row.name}"`];
       await psqlMaintenanceCommandsAsync(commands, {
         adminUrl: options.adminUrl,
       });

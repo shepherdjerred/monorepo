@@ -243,6 +243,7 @@ function ensureSharedRoles(port: number, bootstrapUser: string): void {
   const roleList = SHARED_PG_ROLES.map((role) => `'${role}'`).join(", ");
   const sql =
     `DO $$ DECLARE r text; BEGIN ` +
+    `PERFORM pg_advisory_xact_lock(5471001); ` +
     `FOREACH r IN ARRAY ARRAY[${roleList}] LOOP ` +
     `IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN ` +
     `EXECUTE format('CREATE ROLE %I SUPERUSER LOGIN', r); ` +
@@ -326,7 +327,8 @@ function releaseLock(lockDir: string): void {
 }
 
 function lockIsStale(lockDir: string): boolean {
-  const mtime = Bun.file(path.join(lockDir, "pid")).lastModified;
+  const pidMtime = Bun.file(path.join(lockDir, "pid")).lastModified;
+  const mtime = pidMtime > 0 ? pidMtime : Bun.file(lockDir).lastModified;
   return mtime > 0 && Date.now() - mtime > LOCK_STALE_MS;
 }
 

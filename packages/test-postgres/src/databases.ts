@@ -5,6 +5,8 @@ import {
   psqlMaintenanceCommands,
   psqlMaintenanceCommandsAsync,
   sweepStaleTestDatabasesOnce,
+  templateCloneSharedLockSql,
+  templateCloneSharedUnlockSql,
   type TestDatabasePrefix,
 } from "./sweep.ts";
 import {
@@ -69,6 +71,14 @@ function buildOwnedHandle(
   };
 }
 
+function isMissingTemplateCloneError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    /template database .* does not exist/iu.test(message) ||
+    /database "[^"]*_template_[^"]*" does not exist/iu.test(message)
+  );
+}
+
 export function cloneTemplateDatabaseSync(options: {
   readonly prefix: TestDatabasePrefix;
   readonly templateName: string;
@@ -86,8 +96,10 @@ export function cloneTemplateDatabaseSync(options: {
 
   psqlMaintenanceCommands(
     [
+      templateCloneSharedLockSql(options.templateName),
       `CREATE DATABASE "${dbName}" TEMPLATE "${options.templateName}"`,
       ownerCommentSql(dbName, currentDatabaseOwner()),
+      templateCloneSharedUnlockSql(options.templateName),
     ],
     { adminUrl: maintenanceUrl },
   );
@@ -99,22 +111,34 @@ export async function createTemplateTestDatabase(
 ): Promise<OwnedTestDatabaseHandle & { readonly templateName: string }> {
   const { maintenanceUrl, clientAdminUrl } =
     resolveMaintenanceAndUserUrl(options);
-  const ensured = await ensureTemplateDatabase(options);
   const dbName =
     options.dbName ?? `${options.prefix}_test_${randomDatabaseSuffix()}`;
   assertOwnedEphemeralDatabaseName(dbName);
 
-  await psqlMaintenanceCommandsAsync(
-    [
-      `CREATE DATABASE "${dbName}" TEMPLATE "${ensured.templateName}"`,
-      ownerCommentSql(dbName, currentDatabaseOwner()),
-    ],
-    { adminUrl: maintenanceUrl },
-  );
-  return {
-    ...buildOwnedHandle(dbName, maintenanceUrl, clientAdminUrl),
-    templateName: ensured.templateName,
-  };
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const ensured = await ensureTemplateDatabase(options);
+    try {
+      await psqlMaintenanceCommandsAsync(
+        [
+          templateCloneSharedLockSql(ensured.templateName),
+          `CREATE DATABASE "${dbName}" TEMPLATE "${ensured.templateName}"`,
+          ownerCommentSql(dbName, currentDatabaseOwner()),
+          templateCloneSharedUnlockSql(ensured.templateName),
+        ],
+        { adminUrl: maintenanceUrl },
+      );
+      return {
+        ...buildOwnedHandle(dbName, maintenanceUrl, clientAdminUrl),
+        templateName: ensured.templateName,
+      };
+    } catch (error) {
+      if (attempt === 0 && isMissingTemplateCloneError(error)) {
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error(`Failed to clone template database for ${dbName}`);
 }
 
 export async function createEmptyTestDatabase(options: {

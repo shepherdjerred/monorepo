@@ -13,13 +13,12 @@ function runPowerShellProbe(
   shell: string,
   script: string,
 ): string | undefined {
-  const result = run([
-    shell,
-    "-NoProfile",
-    "-NonInteractive",
-    "-Command",
-    script,
-  ]);
+  let result: ReturnType<CommandRunner>;
+  try {
+    result = run([shell, "-NoProfile", "-NonInteractive", "-Command", script]);
+  } catch {
+    return undefined;
+  }
   if (result.exitCode !== 0) {
     return undefined;
   }
@@ -292,12 +291,14 @@ export type TemplateRebuildDecision =
  */
 export function decideTemplateRebuild(input: {
   exists: boolean;
+  isTemplate?: boolean | undefined;
   record: OwnerRecord;
   wantedHash: string;
   activeConnections: number;
   probe: ProcessProbe;
 }): TemplateRebuildDecision {
-  const { exists, record, wantedHash, activeConnections, probe } = input;
+  const { exists, isTemplate, record, wantedHash, activeConnections, probe } =
+    input;
   if (!exists) {
     return { action: "create" };
   }
@@ -307,7 +308,7 @@ export function decideTemplateRebuild(input: {
       reason: "it has no harness owner record, so it may belong to another run",
     };
   }
-  if (record.owner.templateHash === wantedHash) {
+  if (isTemplate !== false && record.owner.templateHash === wantedHash) {
     return {
       action: "refuse",
       reason:

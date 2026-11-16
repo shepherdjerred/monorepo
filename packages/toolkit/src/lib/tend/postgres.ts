@@ -10,7 +10,10 @@ import {
 import {
   createPsqlSharedAdapter,
   isOwnerDeadOnThisHost,
+  isPostgresServerProcess,
   parseClusterOwnerPidFile,
+  readPostmasterInfo,
+  resolveVerifiedPostmasterPid,
   type SharedPostgresAdapter,
   sweepSharedPostgresDatabases,
 } from "./postgres-databases.ts";
@@ -18,7 +21,6 @@ import { defaultCommandRunner, defaultTcpPortProbe } from "./process-probe.ts";
 import type {
   CommandRunner,
   LivenessSnapshot,
-  OsProcessEntry,
   SurfaceSweepResult,
   TcpPortProbe,
   TendActionOutcome,
@@ -29,28 +31,6 @@ const CLUSTER_NAME_PATTERN = /^(?:(?:delivery|media|tracker)-pg-|.*-pgstage-)/u;
 const ORPHAN_POSTMASTER_MIN_AGE_SECONDS = 30 * 60;
 const UNOWNED_CLUSTER_MIN_AGE_MS = 30 * 60 * 1000;
 const SHARED_DEV_PG_PORT = 5471;
-
-function isPostgresServerProcess(
-  proc: OsProcessEntry,
-  postmasterPid: number | undefined,
-): boolean {
-  if (
-    postmasterPid !== undefined &&
-    (proc.pid === postmasterPid || proc.ppid === postmasterPid)
-  ) {
-    return true;
-  }
-  const argv0 = proc.args.trim().split(/\s+/u)[0] ?? proc.command;
-  const lower = argv0.toLowerCase();
-  return (
-    argv0 === "postgres" ||
-    argv0 === "postgres:" ||
-    argv0.endsWith("/postgres") ||
-    lower === "postgres.exe" ||
-    lower.endsWith(String.raw`\postgres.exe`) ||
-    lower.endsWith("/postgres.exe")
-  );
-}
 
 function isClusterHeldExternally(
   canonicalClusterDir: string,
@@ -101,42 +81,6 @@ function isClusterHeldExternally(
     nonPostgresCwds,
     liveness.platform,
   );
-}
-
-type PostmasterInfo = {
-  readonly dataDir: string;
-  readonly pid: number;
-  readonly port?: number | undefined;
-};
-
-async function readPostmasterInfo(
-  clusterDir: string,
-): Promise<PostmasterInfo | null> {
-  const candidateDataDirs = [path.join(clusterDir, "data"), clusterDir];
-  for (const dataDir of candidateDataDirs) {
-    const pidFile = Bun.file(path.join(dataDir, "postmaster.pid"));
-    if (!(await pidFile.exists())) {
-      continue;
-    }
-    try {
-      const content = await pidFile.text();
-      const lines = content.split(/\r?\n/u);
-      const pid = Number(lines[0]?.trim() ?? "");
-      const portRaw = Number(lines[3]?.trim() ?? "");
-      if (Number.isInteger(pid) && pid > 0) {
-        return {
-          dataDir,
-          pid,
-          ...(Number.isInteger(portRaw) && portRaw > 0 && portRaw <= 65_535
-            ? { port: portRaw }
-            : {}),
-        };
-      }
-    } catch {
-      // Ignore unreadable postmaster.pid.
-    }
-  }
-  return null;
 }
 
 async function resolveDataDirForStop(
@@ -317,8 +261,14 @@ async function removeClusterDirectory(
   runner: CommandRunner,
 ): Promise<TendActionOutcome> {
   const postmaster = await readPostmasterInfo(clusterDir);
+  const verifiedPostmasterPid = resolveVerifiedPostmasterPid(
+    postmaster,
+    liveness,
+  );
   const livePostmaster =
-    postmaster === null ? undefined : liveness.processes.get(postmaster.pid);
+    verifiedPostmasterPid === undefined
+      ? undefined
+      : liveness.processes.get(verifiedPostmasterPid);
   const pgCtlBin = postmasterBinExecutable(livePostmaster?.args, "pg_ctl");
   const dataDir = await resolveDataDirForStop(clusterDir);
   if (dataDir !== null) {
@@ -326,9 +276,9 @@ async function removeClusterDirectory(
       timeoutMs: 8000,
     });
   }
-  if (postmaster !== null && livePostmaster !== undefined) {
+  if (verifiedPostmasterPid !== undefined) {
     try {
-      process.kill(postmaster.pid, "SIGTERM");
+      process.kill(verifiedPostmasterPid, "SIGTERM");
     } catch {
       // Already exited via pg_ctl stop.
     }
@@ -385,7 +335,17 @@ async function sweepSingleTempRootClusters(options: {
       options.liveness.platform,
     );
     const postmaster = await readPostmasterInfo(clusterDir);
-    if (isClusterHeldExternally(canonical, options.liveness, postmaster?.pid)) {
+    const verifiedPostmasterPid = resolveVerifiedPostmasterPid(
+      postmaster,
+      options.liveness,
+    );
+    if (
+      isClusterHeldExternally(
+        canonical,
+        options.liveness,
+        verifiedPostmasterPid,
+      )
+    ) {
       continue;
     }
     const reason = await evaluateClusterDirectory({

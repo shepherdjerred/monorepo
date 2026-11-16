@@ -75,10 +75,17 @@ async function readLineUntilMarker(
   try {
     while (Date.now() < deadline) {
       const remaining = Math.max(1, deadline - Date.now());
+      let timer: ReturnType<typeof setTimeout> | undefined;
       const chunk = await Promise.race([
         reader.read(),
-        Bun.sleep(remaining).then(() => "timeout" as const),
-      ]);
+        new Promise<"timeout">((resolve) => {
+          timer = setTimeout(() => {
+            resolve("timeout");
+          }, remaining);
+        }),
+      ]).finally(() => {
+        clearTimeout(timer);
+      });
       if (chunk === "timeout") {
         throw new Error(
           `Timed out after ${String(timeoutMs)}ms waiting for PostgreSQL advisory lock`,
@@ -279,6 +286,7 @@ async function buildTemplateUnderLock(input: {
 
   const decision = decideTemplateRebuild({
     exists: existing !== undefined,
+    isTemplate: existing?.isTemplate,
     record: existing?.record ?? { kind: "none" },
     wantedHash,
     activeConnections: existing?.connections ?? 0,
@@ -331,8 +339,8 @@ async function buildTemplateUnderLock(input: {
   };
   await psqlMaintenanceCommandsAsync(
     [
-      ownerCommentSql(templateName, completedOwner),
       `ALTER DATABASE "${templateName}" WITH IS_TEMPLATE TRUE ALLOW_CONNECTIONS FALSE`,
+      ownerCommentSql(templateName, completedOwner),
     ],
     { adminUrl: maintenanceUrl },
   );

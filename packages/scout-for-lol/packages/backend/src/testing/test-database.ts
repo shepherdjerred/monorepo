@@ -8,6 +8,7 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   ensureTestTemplateSync,
   getTestTemplateDatabase,
+  invalidateTestTemplateCache,
 } from "#src/testing/test-template.ts";
 
 function extendClient(client: PrismaClient): ExtendedPrismaClient {
@@ -53,20 +54,35 @@ export function createTestDatabase(testName: string): {
   dbUrl: string;
 } {
   const dbName = testDatabaseName(testName);
-  ensureTestTemplateSync();
-  const templateName = getTestTemplateDatabase();
-  const handle = cloneTemplateDatabaseSync({
-    prefix: "scout",
-    user: "scout",
-    templateName,
-    dbName,
-  });
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    ensureTestTemplateSync();
+    const templateName = getTestTemplateDatabase();
+    try {
+      const handle = cloneTemplateDatabaseSync({
+        prefix: "scout",
+        user: "scout",
+        templateName,
+        dbName,
+      });
 
-  return {
-    prisma: connectTestDatabase(handle.url),
-    dbPath: dbName,
-    dbUrl: handle.url,
-  };
+      return {
+        prisma: connectTestDatabase(handle.url),
+        dbPath: dbName,
+        dbUrl: handle.url,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const templatePruned =
+        /template database .* does not exist/iu.test(message) ||
+        /database "[^"]*_template_[^"]*" does not exist/iu.test(message);
+      if (attempt === 0 && templatePruned) {
+        invalidateTestTemplateCache();
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error(`Failed to clone Scout test database ${dbName}`);
 }
 
 export async function dropTestDatabase(

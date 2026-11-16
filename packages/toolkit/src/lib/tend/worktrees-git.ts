@@ -401,3 +401,20 @@ export async function evaluateBranchAndPrEligibility(options: {
     ? evaluateClosedPrEligibility(wt, pr, commitEpochMs)
     : { prune: false, reason: "has unmerged commits" };
 }
+
+export function isGitPathTooLongDeletionError(stderr: string): boolean {
+  return stderr
+    .split(/\r?\n/u)
+    .some((line) => /:\s*Filename too long\s*$/iu.test(line));
+}
+
+export async function isWorktreeCleanForFallbackRemoval(
+  wtPath: string,
+  runner: CommandRunner,
+): Promise<boolean> {
+  const statusRes = await runner(
+    ["git", "-C", wtPath, "status", "--porcelain"],
+    { timeoutMs: 5000 },
+  );
+  return statusRes.exitCode === 0 && statusRes.stdout.trim().length === 0;
+}

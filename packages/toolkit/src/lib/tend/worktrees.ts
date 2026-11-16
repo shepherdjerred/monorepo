@@ -23,7 +23,9 @@ import {
   directoryExists,
   evaluateBranchAndPrEligibility,
   fileOrDirExists,
+  isGitPathTooLongDeletionError,
   isMidGitOperation,
+  isWorktreeCleanForFallbackRemoval,
   parseBatchPullRequests,
   parsePorcelainWorktrees,
   type RepoPrRecord,
@@ -102,7 +104,10 @@ async function removeWorktreeDirectory(
   if (rmRes.exitCode === 0) {
     return { ok: true };
   }
-  if (!rmRes.stderr.includes("Filename too long")) {
+  if (
+    !isGitPathTooLongDeletionError(rmRes.stderr) ||
+    !(await isWorktreeCleanForFallbackRemoval(wtPath, runner))
+  ) {
     return {
       ok: false,
       detail:

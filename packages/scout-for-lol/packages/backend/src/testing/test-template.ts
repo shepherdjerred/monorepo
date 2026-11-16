@@ -89,13 +89,23 @@ export function getTestTemplateDatabase(): string {
   return activeTemplateDatabase;
 }
 
+export function invalidateTestTemplateCache(): void {
+  activeTemplateDatabase = undefined;
+}
+
 export function ensureTestTemplateSync(): void {
-  if (activeTemplateDatabase !== undefined) return;
   ensureSharedPostgres();
   sweepStaleTestDatabasesOnce();
 
   const wanted = computeScoutTemplateHash();
   const databaseName = formatTemplateDatabaseName("scout", wanted);
+  if (
+    activeTemplateDatabase === databaseName &&
+    isTemplateDatabaseReadySync(databaseName, wanted)
+  ) {
+    return;
+  }
+  activeTemplateDatabase = undefined;
   if (!isTemplateDatabaseReadySync(databaseName, wanted)) {
     const result = Bun.spawnSync(
       ["bun", "--no-install", ENSURE_TEMPLATE_SCRIPT],

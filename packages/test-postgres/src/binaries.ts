@@ -169,6 +169,23 @@ function platformCandidateDirs(
   ];
 }
 
+function probeMisePostgresBinDir(
+  run: CommandRunner,
+  platform: NodeJS.Platform,
+): string | undefined {
+  try {
+    const miseSelected = run(["mise", "which", "postgres"]);
+    if (miseSelected.exitCode !== 0) {
+      return undefined;
+    }
+    const resolved = miseSelected.stdout.trim();
+    return resolved === "" ? undefined : dirnameForPlatform(platform, resolved);
+  } catch {
+    // Optional probe: continue with PATH and standard directories when mise is absent.
+    return undefined;
+  }
+}
+
 export function candidatePostgresBinDirs(
   deps: BinaryDiscoveryDeps = {},
 ): string[] {
@@ -185,18 +202,14 @@ export function candidatePostgresBinDirs(
   ];
 
   if (isRoot && platform !== "win32") {
-    const miseSelected = run(["mise", "which", "postgres"]);
-    if (miseSelected.exitCode === 0) {
-      const resolved = miseSelected.stdout.trim();
-      if (resolved !== "") {
-        rawCandidates.push(dirnameForPlatform(platform, resolved));
-      }
-    }
+    rawCandidates.push(probeMisePostgresBinDir(run, platform));
   }
 
-  const fromPath = which(executableFileName("postgres", platform));
-  if (fromPath !== null) {
-    rawCandidates.push(dirnameForPlatform(platform, fromPath));
+  for (const tool of ["postgres", "psql"]) {
+    const fromPath = which(executableFileName(tool, platform));
+    if (fromPath !== null) {
+      rawCandidates.push(dirnameForPlatform(platform, fromPath));
+    }
   }
 
   rawCandidates.push(...platformCandidateDirs(platform, env, readSubdirs));
