@@ -17,6 +17,7 @@ import {
   PLAN,
   STABLE,
   definition,
+  retiringStable,
   temporal,
 } from "#lib/delivery/workers/model-worker-fixture.ts";
 import { workerPlanEvidence } from "#lib/delivery/workers/worker-plan.ts";
@@ -146,34 +147,65 @@ function application(
 /** Read-only boundary: the Application, worker Pods, and routing per namespace. */
 function boundary(
   detail: DeploymentDetail,
-  observed: { application: unknown; hosts: string[]; prod: string },
+  observed: {
+    application: unknown;
+    hosts: string[];
+    prod: string;
+    beta?: string;
+    forbidCandidateReferencesCheck?: boolean;
+    onPollers?: (buildIds: string[]) => void;
+  },
 ): WorkerRecoveryEffects {
   const pool = detail.deployment.workerSnapshot;
   if (pool === null) throw new Error("Fixture has no worker pool");
   return {
-    workflowClosed: async () => "delivery/deployment/1/closed-run",
-    readApplication: async () => observed.application,
-    terminalJobs: async () => [],
-    resources: async (_application, kind) =>
-      kind === "Deployment"
-        ? []
-        : pool.versions
-            .filter((worker) => observed.hosts.includes(worker.buildId))
-            .map((worker) =>
-              retainedWorkerPod({ ...worker, runtimeDigests: [worker.digest] }),
-            ),
-    pollers: async (requested) => {
+    workflowClosed: () => Promise.resolve("delivery/deployment/1/closed-run"),
+    readApplication: () => Promise.resolve(observed.application),
+    terminalJobs: () => Promise.resolve([]),
+    resources: (_application, kind) =>
+      Promise.resolve(
+        kind === "Deployment"
+          ? []
+          : pool.versions
+              .filter((worker) => observed.hosts.includes(worker.buildId))
+              .map((worker) =>
+                retainedWorkerPod({
+                  ...worker,
+                  runtimeDigests: [worker.digest],
+                }),
+              ),
+      ),
+    pollers: (requested) => {
       expect(requested.target).toBe("central");
+      observed.onPollers?.(
+        requested.versions
+          .filter((worker) => worker.replicas === 1)
+          .map((worker) => worker.buildId),
+      );
+      return Promise.resolve();
     },
-    routes: async (requested) =>
-      (requested.versions[0]?.host.routes ?? []).map((route) => ({
-        ...route,
-        currentBuildId: route.namespace === "prod" ? observed.prod : STABLE,
-        rampingBuildId: null,
-        routingConflictToken: `${route.namespace}-token`,
-      })),
-    noCandidateReferences: async (requested) => {
+    routes: (requested) =>
+      Promise.resolve(
+        (requested.versions[0]?.host.routes ?? []).map((route) => ({
+          ...route,
+          currentBuildId:
+            route.namespace === "prod"
+              ? observed.prod
+              : (observed.beta ?? STABLE),
+          rampingBuildId: null,
+          routingConflictToken: `${route.namespace}-token`,
+        })),
+      ),
+    noCandidateReferences: (requested) => {
+      if (observed.forbidCandidateReferencesCheck === true) {
+        return Promise.reject(
+          new Error(
+            "Unapplied candidate has routing or open execution references",
+          ),
+        );
+      }
       expect(requested.candidateBuildId).toBe(CANDIDATE);
+      return Promise.resolve();
     },
   };
 }
@@ -483,5 +515,101 @@ describe("an owned sync that failed before any routing step", () => {
         }),
       ),
     ).rejects.toThrow();
+  });
+});
+
+describe("retire-host worker recovery", () => {
+  test("an unsynced retire-host settles while candidateBuildId owns active routing and retiringWorkerId remains live", async () => {
+    const prior = application(failed([], []), { request: "earlier-request" });
+    const stages: Stages = [
+      {
+        key: "worker-prior-source",
+        status: "succeeded",
+        operationId: workerSourceFingerprint(prior),
+      },
+      { key: "worker-image-provenance", status: "succeeded" },
+      { key: "step-apply-safety", status: "running" },
+    ];
+    const detail = retiringStable(failed(stages, []));
+    const recipe = stepRecipeOf(detail.pipeline.definition, "worker-rollout");
+    if (recipe === null) throw new Error("Fixture lacks its worker recipe");
+    const written = application(detail, {
+      request: "earlier-request",
+      source: renderApplication(detail, recipe).body.spec.source,
+      sync: "OutOfSync",
+    });
+
+    const polledBuilds: string[][] = [];
+    const priorProof = await proveSettledWorkerRecovery(
+      context(detail),
+      boundary(detail, {
+        application: prior,
+        hosts: [STABLE, CANDIDATE],
+        prod: CANDIDATE,
+        beta: CANDIDATE,
+        forbidCandidateReferencesCheck: true,
+        onPollers: (builds) => {
+          polledBuilds.push(builds);
+        },
+      }),
+    );
+    expect(priorProof.routes.map((route) => route.currentBuildId)).toEqual([
+      CANDIDATE,
+      CANDIDATE,
+    ]);
+    expect(polledBuilds).toEqual([[STABLE, CANDIDATE]]);
+
+    const writtenProof = await proveSettledWorkerRecovery(
+      context(detail),
+      boundary(detail, {
+        application: written,
+        hosts: [STABLE, CANDIDATE],
+        prod: CANDIDATE,
+        beta: CANDIDATE,
+        forbidCandidateReferencesCheck: true,
+      }),
+    );
+    expect(
+      writtenProof.evidence.some((entry) =>
+        entry.summary.includes("unsynced candidate body"),
+      ),
+    ).toBe(true);
+
+    // Before sync, the unretired host must still be running.
+    await expect(
+      proveSettledWorkerRecovery(
+        context(detail),
+        boundary(detail, {
+          application: prior,
+          hosts: [CANDIDATE],
+          prod: CANDIDATE,
+          beta: CANDIDATE,
+          forbidCandidateReferencesCheck: true,
+        }),
+      ),
+    ).rejects.toThrow(/no live host/u);
+  });
+
+  test("a failed-sync retire-host settles while candidateBuildId keeps active routing", async () => {
+    const detail = retiringStable(failed(stoppedInSync, []));
+    const polledBuilds: string[][] = [];
+    const proof = await proveSettledWorkerRecovery(
+      context(detail),
+      boundary(detail, {
+        application: failedSync(detail),
+        hosts: [CANDIDATE],
+        prod: CANDIDATE,
+        beta: CANDIDATE,
+        forbidCandidateReferencesCheck: true,
+        onPollers: (builds) => {
+          polledBuilds.push(builds);
+        },
+      }),
+    );
+    expect(proof.routes.map((route) => route.currentBuildId)).toEqual([
+      CANDIDATE,
+      CANDIDATE,
+    ]);
+    expect(polledBuilds).toEqual([[CANDIDATE]]);
   });
 });

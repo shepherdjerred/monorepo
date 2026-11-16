@@ -156,7 +156,36 @@ async function requireUnappliedWorkerHosts(
   await requireOriginalHosts(context, pool, effects, application);
 }
 
-/** No source sync reached the hosts: the original pool still serves, and the candidate nowhere. */
+/** Reconstructs the live pool before this deployment's sync took effect. */
+export function unappliedWorkerPool(
+  pool: WorkerPoolSnapshot,
+  deploymentId: string,
+): WorkerPoolSnapshot {
+  if (pool.workerOperation === "baseline") return pool;
+  if (pool.workerOperation === "retire") {
+    return {
+      ...pool,
+      versions: pool.versions.map((worker) =>
+        worker.id === pool.retiringWorkerId
+          ? {
+              ...worker,
+              replicas: 1,
+              generation: Math.max(0, worker.generation - 1),
+              retiredAt: null,
+            }
+          : worker,
+      ),
+    };
+  }
+  return {
+    ...pool,
+    versions: pool.versions.filter(
+      (worker) => worker.introducedByDeploymentId !== deploymentId,
+    ),
+  };
+}
+
+/** No source sync reached the hosts: the original pool still serves, and an unapplied rollout candidate serves nowhere. */
 async function requireOriginalHosts(
   context: WorkerRecoveryContext,
   pool: WorkerPoolSnapshot,
@@ -164,22 +193,13 @@ async function requireOriginalHosts(
   application: string,
 ) {
   const detail = context.deployment;
+  const observed = unappliedWorkerPool(pool, detail.deployment.id);
   requireLegacyWorkerCoverage(
     await effects.resources(application, "Deployment"),
-    pool,
+    observed,
   );
   const pods = await effects.resources(application, "Pod");
-  const observed =
-    pool.workerOperation === "baseline"
-      ? pool
-      : {
-          ...pool,
-          versions: pool.versions.filter(
-            (worker) =>
-              worker.introducedByDeploymentId !== detail.deployment.id,
-          ),
-        };
-  if (pool.workerOperation !== "baseline") {
+  if (pool.workerOperation === "rollout") {
     await effects.noCandidateReferences(pool);
     const candidate = pool.versions.find(
       (worker) => worker.buildId === pool.candidateBuildId,
@@ -425,15 +445,11 @@ export async function proveSettledWorkerRecovery(
   const { unappliedBootstrap, operated, owned, source } = classified;
   const beforeSync = classified.sync(before);
   const observed =
-    operated || pool.workerOperation === "baseline"
+    operated ||
+    pool.workerOperation === "baseline" ||
+    (source === "failed-sync" && pool.workerOperation === "retire")
       ? pool
-      : {
-          ...pool,
-          versions: pool.versions.filter(
-            (worker) =>
-              worker.introducedByDeploymentId !== detail.deployment.id,
-          ),
-        };
+      : unappliedWorkerPool(pool, detail.deployment.id);
   await effects.pollers(observed);
   const routes = await effects.routes(pool);
   if (JSON.stringify(routes) !== JSON.stringify(await effects.routes(pool)))
