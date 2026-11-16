@@ -25,6 +25,21 @@ test("billing query metadata preserves reviewed query bytes without dispatch", (
   ).toBe(
     "https://api.openai.com/v1/organization/usage/completions?start_time=100&end_time=160&bucket_width=1m&limit=1&models%5B%5D=reviewed-model&group_by%5B%5D=api_key_id&group_by%5B%5D=project_id&group_by%5B%5D=model&group_by%5B%5D=service_tier",
   );
+  expect(
+    openAiBillingUrl(
+      "usage/decisions",
+      {
+        start_time: "100",
+        end_time: "160",
+        bucket_width: "1d",
+        limit: "1",
+        group_by: ["project_id", "model", "service_tier"],
+      },
+      "cursor_2",
+    ).toString(),
+  ).toBe(
+    "https://api.openai.com/v1/organization/usage/decisions?start_time=100&end_time=160&bucket_width=1d&limit=1&group_by=project_id&group_by=model&group_by=service_tier&page=cursor_2",
+  );
 });
 
 function router(routes: Record<string, (url: URL) => unknown>): {
@@ -49,6 +64,26 @@ function router(routes: Record<string, (url: URL) => unknown>): {
     );
   };
   return { fetcher, seen };
+}
+
+const emptyPage = () => ({
+  data: [],
+  has_more: false,
+  next_page: null,
+});
+
+function fetchCostsOnly(costs: (url: URL) => unknown) {
+  const { fetcher } = router({
+    "/v1/organization/projects": () => ({ data: [], has_more: false }),
+    "/v1/organization/costs": costs,
+    "/v1/organization/usage/completions": emptyPage,
+    "/v1/organization/usage/decisions": emptyPage,
+  });
+  return fetchOpenAiBilling({
+    adminKey: "k",
+    now: NOW,
+    fetcher,
+  });
 }
 
 describe("OpenAI billed cost", () => {
@@ -107,6 +142,7 @@ describe("OpenAI billed cost", () => {
         has_more: false,
         next_page: null,
       }),
+      "/v1/organization/usage/decisions": emptyPage,
     });
 
     const result = await fetchOpenAiBilling({
@@ -149,47 +185,33 @@ describe("OpenAI billed cost", () => {
 
   test("follows cost pagination to the end", async () => {
     let calls = 0;
-    const { fetcher } = router({
-      "/v1/organization/projects": () => ({ data: [], has_more: false }),
-      "/v1/organization/costs": (url) => {
-        calls += 1;
-        return url.searchParams.get("page") === null
-          ? {
-              data: [
-                {
-                  start_time: TODAY,
-                  results: [
-                    { amount: { value: 1, currency: "usd" }, project_id: null },
-                  ],
-                },
-              ],
-              has_more: true,
-              next_page: "page_2",
-            }
-          : {
-              data: [
-                {
-                  start_time: TODAY,
-                  results: [
-                    { amount: { value: 2, currency: "usd" }, project_id: null },
-                  ],
-                },
-              ],
-              has_more: false,
-              next_page: null,
-            };
-      },
-      "/v1/organization/usage/completions": () => ({
-        data: [],
-        has_more: false,
-        next_page: null,
-      }),
-    });
-
-    const result = await fetchOpenAiBilling({
-      adminKey: "k",
-      now: NOW,
-      fetcher,
+    const result = await fetchCostsOnly((url) => {
+      calls += 1;
+      return url.searchParams.get("page") === null
+        ? {
+            data: [
+              {
+                start_time: TODAY,
+                results: [
+                  { amount: { value: 1, currency: "usd" }, project_id: null },
+                ],
+              },
+            ],
+            has_more: true,
+            next_page: "page_2",
+          }
+        : {
+            data: [
+              {
+                start_time: TODAY,
+                results: [
+                  { amount: { value: 2, currency: "usd" }, project_id: null },
+                ],
+              },
+            ],
+            has_more: false,
+            next_page: null,
+          };
     });
     expect(calls).toBe(2);
     expect(result.costs).toEqual([
@@ -203,17 +225,173 @@ describe("OpenAI billed cost", () => {
   });
 
   test("labels a project the listing did not return by its id, not someone else's name", async () => {
-    const { fetcher } = router({
-      "/v1/organization/projects": () => ({ data: [], has_more: false }),
+    const result = await fetchCostsOnly(() => ({
+      data: [
+        {
+          start_time: TODAY,
+          results: [
+            { amount: { value: 1, currency: "usd" }, project_id: "proj_new" },
+          ],
+        },
+      ],
+      has_more: false,
+      next_page: null,
+    }));
+    expect(result.costs[0]?.account).toBe("proj_new");
+  });
+
+  test("a failed cost request fails the reconciliation", async () => {
+    const { fetcher } = router({});
+    await expect(
+      fetchOpenAiBilling({ adminKey: "k", now: NOW, fetcher }),
+    ).rejects.toThrow("OpenAI billing request failed: 404");
+  });
+});
+
+describe("OpenAI decisions usage reconciliation", () => {
+  test("paginates usage/decisions and aggregates token series shared with usage/completions", async () => {
+    let decisionCalls = 0;
+    const { fetcher, seen } = router({
+      "/v1/organization/projects": () => ({
+        data: [
+          { id: "proj_birmel", name: "Birmel" },
+          { id: "proj_scout", name: "Scout for LoL" },
+        ],
+        has_more: false,
+      }),
       "/v1/organization/costs": () => ({
+        data: [],
+        has_more: false,
+        next_page: null,
+      }),
+      "/v1/organization/usage/completions": () => ({
         data: [
           {
             start_time: TODAY,
             results: [
-              { amount: { value: 1, currency: "usd" }, project_id: "proj_new" },
+              {
+                project_id: "proj_birmel",
+                model: "gpt-6-luna",
+                service_tier: "default",
+                input_tokens: 400,
+                output_tokens: 60,
+              },
             ],
           },
         ],
+        has_more: false,
+        next_page: null,
+      }),
+      "/v1/organization/usage/decisions": (url) => {
+        decisionCalls += 1;
+        return url.searchParams.get("page") === null
+          ? {
+              data: [
+                {
+                  start_time: TODAY,
+                  results: [
+                    {
+                      project_id: "proj_birmel",
+                      model: "gpt-6-luna",
+                      service_tier: "default",
+                      input_tokens: 900,
+                      output_tokens: 30,
+                    },
+                  ],
+                },
+              ],
+              has_more: true,
+              next_page: "decisions_page_2",
+            }
+          : {
+              data: [
+                {
+                  start_time: TODAY,
+                  results: [
+                    {
+                      project_id: "proj_birmel",
+                      model: "gpt-6-luna",
+                      service_tier: null,
+                      input_tokens: 100,
+                    },
+                    {
+                      project_id: "proj_scout",
+                      model: "gpt-6-luna",
+                      service_tier: "default",
+                      input_tokens: 250,
+                      output_tokens: 0,
+                    },
+                  ],
+                },
+              ],
+              has_more: false,
+              next_page: null,
+            };
+      },
+    });
+
+    const result = await fetchOpenAiBilling({
+      adminKey: "k",
+      now: NOW,
+      fetcher,
+    });
+
+    expect(decisionCalls).toBe(2);
+    const decisionsUrl = seen.find((url) =>
+      url.pathname.endsWith("/usage/decisions"),
+    );
+    expect(decisionsUrl?.searchParams.get("start_time")).toBe(String(TODAY));
+    expect(decisionsUrl?.searchParams.get("bucket_width")).toBe("1d");
+    expect(decisionsUrl?.searchParams.getAll("group_by")).toEqual([
+      "project_id",
+      "model",
+      "service_tier",
+    ]);
+
+    expect(result.tokens).toHaveLength(4);
+    expect(result.tokens).toEqual(
+      expect.arrayContaining([
+        {
+          provider: "openai",
+          account: "Birmel",
+          model: "gpt-6-luna",
+          serviceTier: "default",
+          type: "input",
+          tokens: 1400,
+        },
+        {
+          provider: "openai",
+          account: "Birmel",
+          model: "gpt-6-luna",
+          serviceTier: "default",
+          type: "output",
+          tokens: 90,
+        },
+        {
+          provider: "openai",
+          account: "Scout for LoL",
+          model: "gpt-6-luna",
+          serviceTier: "default",
+          type: "input",
+          tokens: 250,
+        },
+        {
+          provider: "openai",
+          account: "Scout for LoL",
+          model: "gpt-6-luna",
+          serviceTier: "default",
+          type: "output",
+          tokens: 0,
+        },
+      ]),
+    );
+  });
+
+  test("a failed usage/decisions request fails the reconciliation", async () => {
+    const { fetcher } = router({
+      "/v1/organization/projects": () => ({ data: [], has_more: false }),
+      "/v1/organization/costs": () => ({
+        data: [],
         has_more: false,
         next_page: null,
       }),
@@ -223,16 +401,6 @@ describe("OpenAI billed cost", () => {
         next_page: null,
       }),
     });
-    const result = await fetchOpenAiBilling({
-      adminKey: "k",
-      now: NOW,
-      fetcher,
-    });
-    expect(result.costs[0]?.account).toBe("proj_new");
-  });
-
-  test("a failed cost request fails the reconciliation", async () => {
-    const { fetcher } = router({});
     await expect(
       fetchOpenAiBilling({ adminKey: "k", now: NOW, fetcher }),
     ).rejects.toThrow("OpenAI billing request failed: 404");

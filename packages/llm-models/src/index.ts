@@ -129,8 +129,30 @@ export const ModelCapabilitiesSchema = z.strictObject({
 });
 export type ModelCapabilities = z.infer<typeof ModelCapabilitiesSchema>;
 
-export const ModelEndpointSchema = z.enum(["language", "embedding", "image"]);
+export const ModelEndpointSchema = z.enum([
+  "language",
+  "embedding",
+  "image",
+  "decisions",
+]);
 export type ModelEndpoint = z.infer<typeof ModelEndpointSchema>;
+
+const SingleEndpointNativeRouteSchema = z.strictObject({
+  provider: ProviderSchema,
+  modelId: z.string().min(1),
+  endpoint: ModelEndpointSchema,
+});
+
+const MultiEndpointNativeRouteSchema = z.strictObject({
+  provider: ProviderSchema,
+  modelId: z.string().min(1),
+  endpoints: z
+    .array(ModelEndpointSchema)
+    .min(1)
+    .refine((items) => new Set(items).size === items.length, {
+      message: "NativeRoute endpoints must be unique",
+    }),
+});
 
 /**
  * How to reach this model on its first-party provider.
@@ -140,12 +162,17 @@ export type ModelEndpoint = z.infer<typeof ModelEndpointSchema>;
  * still `"anthropic"`. Keeping them separate is what lets cost attribution and
  * credential selection disagree when they legitimately should.
  */
-export const NativeRouteSchema = z.strictObject({
-  provider: ProviderSchema,
-  modelId: z.string().min(1),
-  endpoint: ModelEndpointSchema,
-});
+export const NativeRouteSchema = z.union([
+  SingleEndpointNativeRouteSchema,
+  MultiEndpointNativeRouteSchema,
+]);
 export type NativeRoute = z.infer<typeof NativeRouteSchema>;
+
+export function nativeRouteEndpoints(
+  route: NativeRoute,
+): readonly ModelEndpoint[] {
+  return "endpoints" in route ? route.endpoints : [route.endpoint];
+}
 
 export const NativeSdkRouteSchema = z.strictObject({
   modelId: z.string().min(1),
@@ -363,9 +390,10 @@ export function requireNativeRoute(
   if (route === undefined) {
     throw new Error(`Model ${id} has no native provider route`);
   }
-  if (endpoint !== undefined && route.endpoint !== endpoint) {
+  const supported = nativeRouteEndpoints(route);
+  if (endpoint !== undefined && !supported.includes(endpoint)) {
     throw new Error(
-      `Model ${id} uses ${route.provider} ${route.endpoint}, not ${endpoint}`,
+      `Model ${id} uses ${route.provider} ${supported.join("/")}, not ${endpoint}`,
     );
   }
   return route;
@@ -539,6 +567,44 @@ export function costForTextUsageByTurn(
     total += cost;
   }
   return total;
+}
+
+export type DecisionUsage = {
+  inputTokens: number;
+  cachedInputTokens?: number | undefined;
+  cacheWriteTokens?: number | undefined;
+};
+
+/**
+ * Total USD for an OpenAI `/v1/decisions` request.
+ *
+ * OpenAI's `input_tokens` on `/v1/decisions` includes `cached_tokens` and
+ * `cache_write_tokens` as subsets, and output tokens are $0.00 unconditionally.
+ */
+export function costForDecisionUsage(
+  modelId: string,
+  usage: DecisionUsage,
+): number | undefined {
+  const pricing = MODELS[modelId]?.pricing;
+  if (pricing?.modality !== "text") {
+    return undefined;
+  }
+  const cachedInput = usage.cachedInputTokens ?? 0;
+  const cacheWrite = usage.cacheWriteTokens ?? 0;
+  const uncached = Math.max(0, usage.inputTokens - cachedInput - cacheWrite);
+  const longContext = pricing.longContextSurcharge;
+  const surchargeApplies =
+    longContext !== undefined &&
+    usage.inputTokens > longContext.thresholdInputTokens;
+  const inputMultiplier = surchargeApplies ? longContext.inputMultiplier : 1;
+
+  const tokenCost =
+    (uncached * pricing.input +
+      cachedInput * (pricing.cachedInput ?? pricing.input) +
+      cacheWrite * (pricing.cacheWrite ?? pricing.input)) *
+    inputMultiplier;
+
+  return tokenCost / 1_000_000;
 }
 
 export function allModelIds(): string[] {

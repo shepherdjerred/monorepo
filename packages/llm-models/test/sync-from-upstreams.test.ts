@@ -6,6 +6,7 @@ import {
   missingNativeRoute,
   indexLiteLlm,
   indexModelsDev,
+  patchRawCatalog,
   priceDecision,
   mergeUpstreams,
   providerKey,
@@ -14,7 +15,7 @@ import {
   type MergedUpstream,
   type Upstream,
 } from "#scripts/sync-from-upstreams.ts";
-import { CatalogSchema, type ModelEntry } from "#src/index.ts";
+import { CatalogSchema, MODELS, type ModelEntry } from "#src/index.ts";
 
 /**
  * A models.dev shape reproducing the exact collisions that poisoned the catalog
@@ -755,5 +756,38 @@ describe("pricingOnly entries", () => {
       kimi: { ...pricingOnly(), id: "kimi" },
     });
     expect([...crossCheckedProviders(catalog)]).toEqual(["anthropic"]);
+  });
+});
+
+describe("multi-endpoint native routes", () => {
+  test("preserves gpt-6-luna decisions endpoint when upstream numeric drift is patched", () => {
+    const luna = MODELS["gpt-6-luna"];
+    if (luna === undefined) {
+      throw new Error("gpt-6-luna missing from catalog");
+    }
+    expect(missingNativeRoute("gpt-6-luna", luna)).toBeUndefined();
+    const rawCatalog: Record<string, unknown> = structuredClone({
+      "gpt-6-luna": luna,
+    });
+    const parsedCatalog = CatalogSchema.parse(structuredClone(rawCatalog));
+    const parsedLuna = parsedCatalog["gpt-6-luna"];
+    if (parsedLuna === undefined) {
+      throw new Error("parsed gpt-6-luna missing");
+    }
+    const result = reconcile(
+      "gpt-6-luna",
+      parsedLuna,
+      devRow({ input: 0.12, output: 0.55 }),
+      { now: NOW },
+    );
+    expect(result.applied).toHaveLength(2);
+    const patched = CatalogSchema.parse(
+      patchRawCatalog(rawCatalog, parsedCatalog),
+    );
+    expect(patched["gpt-6-luna"]?.routes.native).toEqual({
+      provider: "openai",
+      modelId: "gpt-6-luna",
+      endpoints: ["language", "decisions"],
+    });
   });
 });

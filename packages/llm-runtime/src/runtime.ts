@@ -17,6 +17,8 @@ import {
   runtimeMetrics,
 } from "./metrics.ts";
 import { defaultLlmRuntimeLogger } from "./logging.ts";
+import { executeDecision } from "./decisions.ts";
+import type { DecisionRequest, DecisionResult } from "./decision-schemas.ts";
 import type {
   CallOptionsInput,
   LlmRuntimeOptions,
@@ -330,6 +332,9 @@ export function createLlmRuntime(options: LlmRuntimeOptions) {
           ],
         },
       };
+    },
+    decide(input: DecisionRequest): Promise<DecisionResult> {
+      return executeDecision({ options, metrics, logger }, input);
     },
     service: options.service,
     metrics,

@@ -64,7 +64,7 @@
       "native": {
         "provider": "openai",
         "modelId": "gpt-6-luna",
-        "endpoint": "language"
+        "endpoints": ["language", "decisions"]
       },
       "codexSdk": {
         "modelId": "gpt-6-luna"

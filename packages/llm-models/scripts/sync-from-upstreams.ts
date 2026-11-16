@@ -613,6 +613,33 @@ export type SyncReport = {
   notChecked: string[];
 };
 
+/**
+ * Patch only the drifted numeric fields into the raw JSON structure so that key
+ * ordering and non-numeric fields (including multi-endpoint native routes such
+ * as `gpt-6-luna`'s `["language", "decisions"]`) are preserved verbatim.
+ */
+export function patchRawCatalog(
+  rawCatalog: Record<string, unknown>,
+  catalog: Catalog,
+): Record<string, unknown> {
+  const next: Record<string, unknown> = { ...rawCatalog };
+  for (const [id, entry] of Object.entries(catalog)) {
+    if (entry.pricing.modality !== "text" || next[id] === undefined) {
+      continue;
+    }
+    const rawEntry = record(next[id]);
+    const rawPricing = record(rawEntry["pricing"]);
+    rawPricing["input"] = entry.pricing.input;
+    rawPricing["output"] = entry.pricing.output;
+    if (entry.contextWindow !== undefined) {
+      rawEntry["contextWindow"] = entry.contextWindow;
+    }
+    rawEntry["pricing"] = rawPricing;
+    next[id] = rawEntry;
+  }
+  return next;
+}
+
 function flagValue(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
   if (index === -1) {
@@ -705,23 +732,8 @@ async function main(): Promise<void> {
   }
 
   if (!check && drifted.length > 0) {
-    // Patch only the drifted numeric fields into the raw JSON structure so that
-    // key ordering and other non-numeric fields are preserved exactly as-is.
-    for (const [id, entry] of Object.entries(catalog)) {
-      if (entry.pricing.modality !== "text" || rawCatalog[id] === undefined) {
-        continue;
-      }
-      const rawEntry = record(rawCatalog[id]);
-      const rawPricing = record(rawEntry["pricing"]);
-      rawPricing["input"] = entry.pricing.input;
-      rawPricing["output"] = entry.pricing.output;
-      if (entry.contextWindow !== undefined) {
-        rawEntry["contextWindow"] = entry.contextWindow;
-      }
-      rawEntry["pricing"] = rawPricing;
-      rawCatalog[id] = rawEntry;
-    }
-    await Bun.write(CATALOG_PATH, `${JSON.stringify(rawCatalog, null, 2)}\n`);
+    const patched = patchRawCatalog(rawCatalog, catalog);
+    await Bun.write(CATALOG_PATH, `${JSON.stringify(patched, null, 2)}\n`);
     emit("\nWrote updated src/catalog.json.");
   }
   if (reportJsonPath !== undefined) {

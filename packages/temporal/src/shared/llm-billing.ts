@@ -117,6 +117,16 @@ const OpenAiCompletionResultSchema = z
   })
   .loose();
 
+const OpenAiDecisionResultSchema = z
+  .object({
+    project_id: z.string().min(1).nullable(),
+    model: z.string().min(1),
+    service_tier: z.string().min(1).nullish(),
+    input_tokens: z.number().int().nonnegative(),
+    output_tokens: z.number().int().nonnegative().nullish(),
+  })
+  .loose();
+
 /** OpenAI projects and Anthropic workspaces list with the same page shape. */
 const AccountListSchema = z
   .object({
@@ -191,9 +201,12 @@ function addCost(
   totals.set(account, current);
 }
 
+export type OpenAiBillingPath =
+  "costs" | "usage/completions" | "usage/decisions";
+
 /** Pure billing endpoint metadata; constructing a reviewed query performs no request. */
 export function openAiBillingUrl(
-  path: "costs" | "usage/completions",
+  path: OpenAiBillingPath,
   params: Record<string, string | readonly string[]>,
   cursor?: string,
 ): URL {
@@ -207,7 +220,7 @@ export function openAiBillingUrl(
 }
 
 async function openAiPages<RESULT extends z.ZodType>(input: {
-  readonly path: "costs" | "usage/completions";
+  readonly path: OpenAiBillingPath;
   readonly params: Record<string, string | readonly string[]>;
   readonly schema: RESULT;
   readonly adminKey: string;
@@ -265,6 +278,36 @@ function accountName(
   return names.get(id) ?? id;
 }
 
+function addUsageRow(
+  bySeries: Map<string, BilledTokenRow>,
+  names: ReadonlyMap<string, string>,
+  result: {
+    readonly project_id: string | null;
+    readonly model: string;
+    readonly service_tier?: string | null | undefined;
+    readonly input_tokens: number;
+    readonly output_tokens?: number | null | undefined;
+  },
+): void {
+  const account = accountName(names, result.project_id);
+  const serviceTier = result.service_tier ?? "default";
+  for (const [type, count] of [
+    ["input", result.input_tokens],
+    ["output", result.output_tokens ?? 0],
+  ] as const) {
+    const key = JSON.stringify([account, result.model, serviceTier, type]);
+    const existing = bySeries.get(key);
+    bySeries.set(key, {
+      provider: "openai",
+      account,
+      model: result.model,
+      serviceTier,
+      type,
+      tokens: (existing?.tokens ?? 0) + count,
+    });
+  }
+}
+
 export async function fetchOpenAiBilling(input: {
   readonly adminKey: string;
   readonly now: Date;
@@ -280,33 +323,41 @@ export async function fetchOpenAiBilling(input: {
     fetcher,
     cancellationSignal: input.cancellationSignal,
   };
-  const [names, costRows, usageRows] = await Promise.all([
-    openAiProjectNames(common),
-    openAiPages({
-      ...common,
-      path: "costs",
-      params: {
-        start_time: String(weekStart),
-        end_time: String(end),
-        bucket_width: "1d",
-        limit: "7",
-        group_by: ["project_id"],
-      },
-      schema: OpenAiCostResultSchema,
-    }),
-    openAiPages({
-      ...common,
-      path: "usage/completions",
-      params: {
-        start_time: String(today),
-        end_time: String(end),
-        bucket_width: "1d",
-        limit: "1",
-        group_by: ["project_id", "model", "service_tier"],
-      },
-      schema: OpenAiCompletionResultSchema,
-    }),
-  ]);
+  const usageParams = {
+    start_time: String(today),
+    end_time: String(end),
+    bucket_width: "1d",
+    limit: "1",
+    group_by: ["project_id", "model", "service_tier"],
+  };
+  const [names, costRows, completionUsageRows, decisionUsageRows] =
+    await Promise.all([
+      openAiProjectNames(common),
+      openAiPages({
+        ...common,
+        path: "costs",
+        params: {
+          start_time: String(weekStart),
+          end_time: String(end),
+          bucket_width: "1d",
+          limit: "7",
+          group_by: ["project_id"],
+        },
+        schema: OpenAiCostResultSchema,
+      }),
+      openAiPages({
+        ...common,
+        path: "usage/completions",
+        params: usageParams,
+        schema: OpenAiCompletionResultSchema,
+      }),
+      openAiPages({
+        ...common,
+        path: "usage/decisions",
+        params: usageParams,
+        schema: OpenAiDecisionResultSchema,
+      }),
+    ]);
 
   const byAccount: AccountTotals = new Map();
   for (const { startTime, result } of costRows) {
@@ -318,22 +369,9 @@ export async function fetchOpenAiBilling(input: {
     );
   }
 
-  const tokens: BilledTokenRow[] = [];
-  for (const { result } of usageRows) {
-    const account = accountName(names, result.project_id);
-    for (const [type, count] of [
-      ["input", result.input_tokens],
-      ["output", result.output_tokens],
-    ] as const) {
-      tokens.push({
-        provider: "openai",
-        account,
-        model: result.model,
-        serviceTier: result.service_tier,
-        type,
-        tokens: count,
-      });
-    }
+  const tokensBySeries = new Map<string, BilledTokenRow>();
+  for (const { result } of [...completionUsageRows, ...decisionUsageRows]) {
+    addUsageRow(tokensBySeries, names, result);
   }
 
   return {
@@ -343,7 +381,7 @@ export async function fetchOpenAiBilling(input: {
       todayUsd: totals.today,
       trailingSevenDaysUsd: totals.week,
     })),
-    tokens,
+    tokens: [...tokensBySeries.values()],
   };
 }
 

@@ -51,15 +51,161 @@ import {
   createCodexConfig as innerCreateCodexConfig,
   type CodexConfig as InnerCodexConfig,
 } from "./codex.ts";
+import {
+  ChoiceAnswerSchema as InnerChoiceAnswerSchema,
+  ChoiceProbabilitySchema as InnerChoiceProbabilitySchema,
+  ChoiceQuestionSchema as InnerChoiceQuestionSchema,
+  DecisionAnswerSchema as InnerDecisionAnswerSchema,
+  DecisionChoiceOptionSchema as InnerDecisionChoiceOptionSchema,
+  DecisionConversationItemSchema as InnerDecisionConversationItemSchema,
+  DecisionImageBlockSchema as InnerDecisionImageBlockSchema,
+  DecisionInputBlockSchema as InnerDecisionInputBlockSchema,
+  DecisionInputSchema as InnerDecisionInputSchema,
+  DecisionJsonBlockSchema as InnerDecisionJsonBlockSchema,
+  DecisionPromptCacheOptionsSchema as InnerDecisionPromptCacheOptionsSchema,
+  DecisionQuestionInputPartSchema as InnerDecisionQuestionInputPartSchema,
+  DecisionQuestionSchema as InnerDecisionQuestionSchema,
+  DecisionRequestSchema as InnerDecisionRequestSchema,
+  DecisionScoreLevelSchema as InnerDecisionScoreLevelSchema,
+  DecisionSystemBlockSchema as InnerDecisionSystemBlockSchema,
+  DecisionTextBlockSchema as InnerDecisionTextBlockSchema,
+  DecisionWireResponseSchema as InnerDecisionWireResponseSchema,
+  DecisionWireUsageSchema as InnerDecisionWireUsageSchema,
+  PredicateAnswerSchema as InnerPredicateAnswerSchema,
+  PredicateQuestionSchema as InnerPredicateQuestionSchema,
+  RefusalAnswerSchema as InnerRefusalAnswerSchema,
+  ScoreAnswerSchema as InnerScoreAnswerSchema,
+  ScoreProbabilitySchema as InnerScoreProbabilitySchema,
+  ScoreQuestionSchema as InnerScoreQuestionSchema,
+  type ChoiceAnswer as InnerChoiceAnswer,
+  type ChoiceProbability as InnerChoiceProbability,
+  type ChoiceQuestion as InnerChoiceQuestion,
+  type DecisionAnswer as InnerDecisionAnswer,
+  type DecisionChoiceOption as InnerDecisionChoiceOption,
+  type DecisionConversationItem as InnerDecisionConversationItem,
+  type DecisionImageBlock as InnerDecisionImageBlock,
+  type DecisionInput as InnerDecisionInput,
+  type DecisionInputBlock as InnerDecisionInputBlock,
+  type DecisionJsonBlock as InnerDecisionJsonBlock,
+  type DecisionPromptCacheOptions as InnerDecisionPromptCacheOptions,
+  type DecisionQuestion as InnerDecisionQuestion,
+  type DecisionQuestionInputPart as InnerDecisionQuestionInputPart,
+  type DecisionRequest as InnerDecisionRequest,
+  type DecisionResult as InnerDecisionResult,
+  type DecisionResultUsage as InnerDecisionResultUsage,
+  type DecisionScoreLevel as InnerDecisionScoreLevel,
+  type DecisionSystemBlock as InnerDecisionSystemBlock,
+  type DecisionTextBlock as InnerDecisionTextBlock,
+  type DecisionWireResponse as InnerDecisionWireResponse,
+  type DecisionWireUsage as InnerDecisionWireUsage,
+  type PredicateAnswer as InnerPredicateAnswer,
+  type PredicateQuestion as InnerPredicateQuestion,
+  type RefusalAnswer as InnerRefusalAnswer,
+  type ScoreAnswer as InnerScoreAnswer,
+  type ScoreProbability as InnerScoreProbability,
+  type ScoreQuestion as InnerScoreQuestion,
+} from "./decision-schemas.ts";
+import {
+  DecisionApiError as InnerDecisionApiError,
+  type DecisionErrorKind as InnerDecisionErrorKind,
+} from "./decisions.ts";
 
 type Identity<T> = { [KEY in keyof T]: T[KEY] };
 /** Identity that distributes, so a union keeps its members. */
 type IdentityUnion<T> = T extends unknown
   ? { [KEY in keyof T]: T[KEY] }
   : never;
+type LocalType<T> = Parameters<(value: T) => void>[0];
 const passthrough = <T>(value: T): T => value;
 
 export const TextModerationError = passthrough(InnerTextModerationError);
+export const DecisionApiError = passthrough(InnerDecisionApiError);
+export type DecisionApiError = Identity<InnerDecisionApiError>;
+
+export const DecisionTextBlockSchema = passthrough(
+  InnerDecisionTextBlockSchema,
+);
+export const DecisionSystemBlockSchema = passthrough(
+  InnerDecisionSystemBlockSchema,
+);
+export const DecisionJsonBlockSchema = passthrough(
+  InnerDecisionJsonBlockSchema,
+);
+export const DecisionImageBlockSchema = passthrough(
+  InnerDecisionImageBlockSchema,
+);
+export const DecisionInputBlockSchema = passthrough(
+  InnerDecisionInputBlockSchema,
+);
+export const DecisionQuestionInputPartSchema = passthrough(
+  InnerDecisionQuestionInputPartSchema,
+);
+export const DecisionConversationItemSchema = passthrough(
+  InnerDecisionConversationItemSchema,
+);
+export const DecisionInputSchema = passthrough(InnerDecisionInputSchema);
+export const PredicateQuestionSchema = passthrough(
+  InnerPredicateQuestionSchema,
+);
+export const DecisionChoiceOptionSchema = passthrough(
+  InnerDecisionChoiceOptionSchema,
+);
+export const ChoiceQuestionSchema = passthrough(InnerChoiceQuestionSchema);
+export const DecisionScoreLevelSchema = passthrough(
+  InnerDecisionScoreLevelSchema,
+);
+export const ScoreQuestionSchema = passthrough(InnerScoreQuestionSchema);
+export const DecisionQuestionSchema = passthrough(InnerDecisionQuestionSchema);
+export const DecisionPromptCacheOptionsSchema = passthrough(
+  InnerDecisionPromptCacheOptionsSchema,
+);
+export const DecisionRequestSchema = passthrough(InnerDecisionRequestSchema);
+export const PredicateAnswerSchema = passthrough(InnerPredicateAnswerSchema);
+export const ChoiceProbabilitySchema = passthrough(
+  InnerChoiceProbabilitySchema,
+);
+export const ChoiceAnswerSchema = passthrough(InnerChoiceAnswerSchema);
+export const ScoreProbabilitySchema = passthrough(InnerScoreProbabilitySchema);
+export const ScoreAnswerSchema = passthrough(InnerScoreAnswerSchema);
+export const RefusalAnswerSchema = passthrough(InnerRefusalAnswerSchema);
+export const DecisionAnswerSchema = passthrough(InnerDecisionAnswerSchema);
+export const DecisionWireUsageSchema = passthrough(
+  InnerDecisionWireUsageSchema,
+);
+export const DecisionWireResponseSchema = passthrough(
+  InnerDecisionWireResponseSchema,
+);
+
+export type DecisionTextBlock = Identity<InnerDecisionTextBlock>;
+export type DecisionSystemBlock = Identity<InnerDecisionSystemBlock>;
+export type DecisionJsonBlock = Identity<InnerDecisionJsonBlock>;
+export type DecisionImageBlock = Identity<InnerDecisionImageBlock>;
+export type DecisionInputBlock = LocalType<InnerDecisionInputBlock>;
+export type DecisionQuestionInputPart =
+  LocalType<InnerDecisionQuestionInputPart>;
+export type DecisionConversationItem = Identity<InnerDecisionConversationItem>;
+export type DecisionInput = LocalType<InnerDecisionInput>;
+export type PredicateQuestion = Identity<InnerPredicateQuestion>;
+export type DecisionChoiceOption = Identity<InnerDecisionChoiceOption>;
+export type ChoiceQuestion = Identity<InnerChoiceQuestion>;
+export type DecisionScoreLevel = Identity<InnerDecisionScoreLevel>;
+export type ScoreQuestion = Identity<InnerScoreQuestion>;
+export type DecisionQuestion = LocalType<InnerDecisionQuestion>;
+export type DecisionPromptCacheOptions =
+  Identity<InnerDecisionPromptCacheOptions>;
+export type DecisionRequest = Identity<InnerDecisionRequest>;
+export type PredicateAnswer = Identity<InnerPredicateAnswer>;
+export type ChoiceProbability = Identity<InnerChoiceProbability>;
+export type ChoiceAnswer = Identity<InnerChoiceAnswer>;
+export type ScoreProbability = Identity<InnerScoreProbability>;
+export type ScoreAnswer = Identity<InnerScoreAnswer>;
+export type RefusalAnswer = Identity<InnerRefusalAnswer>;
+export type DecisionAnswer = LocalType<InnerDecisionAnswer>;
+export type DecisionWireUsage = Identity<InnerDecisionWireUsage>;
+export type DecisionWireResponse = Identity<InnerDecisionWireResponse>;
+export type DecisionResultUsage = Identity<InnerDecisionResultUsage>;
+export type DecisionResult = Identity<InnerDecisionResult>;
+export type DecisionErrorKind = LocalType<InnerDecisionErrorKind>;
 
 export const REQUIRED_MODEL_CAPABILITIES = passthrough(
   INNER_REQUIRED_MODEL_CAPABILITIES,
