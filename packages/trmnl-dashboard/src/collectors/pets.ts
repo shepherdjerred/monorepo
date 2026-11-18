@@ -80,7 +80,12 @@ export async function collectPetCare(
   });
   const fountain = buildFountain(states, petAlerts);
   const feeders = FEEDERS.map((feeder) =>
-    buildFeeder(states, petAlerts, feeder),
+    buildFeeder(
+      states,
+      petAlerts,
+      feeder,
+      config.homeAssistant.batteryThreshold,
+    ),
   );
   const litter = buildLitterRobot(litterRobot, petAlerts, cyclesToday);
   const vacuums = VACUUMS.map((vacuum) =>
@@ -182,16 +187,19 @@ function buildFeeder(
   states: EntityState[] | null,
   alerts: AlertSummaryItem[],
   feeder: (typeof FEEDERS)[number],
+  batteryThreshold: number,
 ): PetCarePayload["feeders"][number] {
   const alertToken = feeder.id === "living-room" ? "LivingRoom" : "GuestRoom";
+  const batteryEntity = `sensor.${FEEDER}_battery_ac${feeder.suffix}`;
   const feederEntities = [
-    `binary_sensor.${FEEDER}_battery_status${feeder.suffix}`,
+    batteryEntity,
     `binary_sensor.${FEEDER}_food_dispenser${feeder.suffix}`,
     `binary_sensor.${FEEDER}_food_status${feeder.suffix}`,
     `binary_sensor.${FEEDER}_wi_fi${feeder.suffix}`,
     `sensor.${FEEDER}_desiccant_remaining_days${feeder.suffix}`,
     `sensor.${FEEDER}_last_feed_time${feeder.suffix}`,
   ];
+  const batteryPercent = numberState(states, batteryEntity);
   return {
     id: feeder.id,
     label: feeder.label,
@@ -209,10 +217,8 @@ function buildFeeder(
       states,
       `binary_sensor.${FEEDER}_food_dispenser${feeder.suffix}`,
     ),
-    battery_problem: booleanState(
-      states,
-      `binary_sensor.${FEEDER}_battery_status${feeder.suffix}`,
-    ),
+    battery_problem:
+      batteryPercent === null ? null : batteryPercent <= batteryThreshold,
     wifi: booleanState(states, `binary_sensor.${FEEDER}_wi_fi${feeder.suffix}`),
     desiccant_days: numberState(
       states,

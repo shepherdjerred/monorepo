@@ -4,6 +4,7 @@ import {
   getHomeAssistantRuleGroups,
   TEMPORAL_AUTOMATION_ENTITY_IDS,
 } from "./homeassistant.ts";
+import { runPromtoolFixture } from "./platform/promtool-fixture.ts";
 
 const HA_WORKFLOW_DIR = new URL(
   "../../../../../../../../temporal/src/workflows/ha/",
@@ -291,7 +292,7 @@ describe("Home Assistant rules — environment and automation dependencies", () 
     expect(rule.annotations?.["summary"]).toContain("$labels.friendly_name");
   });
 
-  test("treats every missing Roborock template dependency as a problem", async () => {
+  test("gates Roborock vacuum problem templates on upstream availability and checks physical fault states", async () => {
     const configuration = await Bun.file(
       new URL(
         "../../../../../config/homeassistant/configuration.yaml",
@@ -300,11 +301,21 @@ describe("Home Assistant rules — environment and automation dependencies", () 
     ).text();
 
     for (const floor of ["1st", "2nd", "3rd"]) {
+      expect(configuration).toContain(`has_value('vacuum.${floor}_floor')`);
       expect(configuration).toContain(
-        `states('vacuum.${floor}_floor') in ['error', 'unknown', 'unavailable']`,
+        `has_value('sensor.${floor}_floor_status')`,
       );
       expect(configuration).toContain(
-        `states('sensor.${floor}_floor_status') in ['error', 'charging_problem', 'unknown', 'unavailable']`,
+        `has_value('sensor.${floor}_floor_vacuum_error')`,
+      );
+      expect(configuration).toContain(
+        `has_value('sensor.${floor}_floor_dock_dock_error')`,
+      );
+      expect(configuration).toContain(
+        `states('vacuum.${floor}_floor') == 'error'`,
+      );
+      expect(configuration).toContain(
+        `states('sensor.${floor}_floor_status') in ['error', 'charging_problem']`,
       );
       expect(configuration).toContain(
         `states('sensor.${floor}_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']`,
@@ -312,10 +323,220 @@ describe("Home Assistant rules — environment and automation dependencies", () 
       expect(configuration).toContain(
         `states('sensor.${floor}_floor_dock_dock_error') != 'ok'`,
       );
+      expect(configuration).not.toContain(
+        `states('vacuum.${floor}_floor') in ['error', 'unknown', 'unavailable']`,
+      );
     }
     expect(configuration).toContain(
       "select.dockstream_2_smart_fountain_water_dispensing_mode') != 'Flowing Water (Constant)'",
     );
+  });
+});
+
+describe("Home Assistant pet-care fan-out and feeder battery rules", () => {
+  test("keeps parent vacuum availability unconditional and gates child floor entities on parent availability", () => {
+    const availabilityRules =
+      getHomeAssistantRuleGroups().find(
+        (group) => group.name === "homeassistant-availability",
+      )?.rules ?? [];
+    const petAvailability = availabilityRules.filter(
+      (rule) => rule.alert === "PetCareEntityUnavailable",
+    );
+
+    for (const floor of ["1st", "2nd", "3rd"]) {
+      const parentEntity = `vacuum.${floor}_floor`;
+      const parentRule = petAvailability.find(
+        (rule) => rule.labels?.["entity"] === parentEntity,
+      );
+      expect(parentRule?.expr.value).toBe(
+        `homeassistant_entity_available{entity="${parentEntity}"} == 0 or absent(homeassistant_entity_available{entity="${parentEntity}"})`,
+      );
+
+      const childRules = petAvailability.filter((rule) => {
+        const entity = rule.labels?.["entity"] ?? "";
+        return (
+          entity.startsWith(`sensor.${floor}_floor_`) ||
+          entity.startsWith(`binary_sensor.${floor}_floor_`)
+        );
+      });
+      expect(childRules).toHaveLength(13);
+      for (const childRule of childRules) {
+        const entity = childRule.labels?.["entity"] ?? "";
+        expect(childRule.expr.value).toBe(
+          `(homeassistant_entity_available{entity="${entity}"} == 0 or absent(homeassistant_entity_available{entity="${entity}"})) and on() (homeassistant_entity_available{entity="${parentEntity}"} == 1)`,
+        );
+      }
+    }
+  });
+
+  test("monitors PetLibro feeder D-cell battery_ac <= 20% for 2h without double-paging HomeAssistantBatteryLow", () => {
+    const groups = getHomeAssistantRuleGroups();
+    const feederRules =
+      groups.find((group) => group.name === "homeassistant-petlibro-feeders")
+        ?.rules ?? [];
+    const availabilityRules =
+      groups.find((group) => group.name === "homeassistant-availability")
+        ?.rules ?? [];
+    const batteryLow = groups
+      .find((group) => group.name === "homeassistant-batteries")
+      ?.rules?.find((rule) => rule.alert === "HomeAssistantBatteryLow");
+
+    const livingRoomBattery = feederRules.find(
+      (rule) => rule.alert === "PetLibroFeederLivingRoomBatteryProblem",
+    );
+    const guestRoomBattery = feederRules.find(
+      (rule) => rule.alert === "PetLibroFeederGuestRoomBatteryProblem",
+    );
+    expect(livingRoomBattery?.expr.value).toBe(
+      'homeassistant_sensor_battery_percent{entity="sensor.granary_smart_camera_feeder_battery_ac"} <= 20',
+    );
+    expect(livingRoomBattery?.for).toBe("2h");
+    expect(livingRoomBattery?.annotations?.["summary"]).toBe(
+      "Living Room PetLibro feeder backup battery low",
+    );
+    expect(guestRoomBattery?.expr.value).toBe(
+      'homeassistant_sensor_battery_percent{entity="sensor.granary_smart_camera_feeder_battery_ac_2"} <= 20',
+    );
+    expect(guestRoomBattery?.for).toBe("2h");
+
+    const petEntities = new Set(
+      availabilityRules
+        .filter((rule) => rule.alert === "PetCareEntityUnavailable")
+        .map((rule) => rule.labels?.["entity"]),
+    );
+    expect(
+      petEntities.has("sensor.granary_smart_camera_feeder_battery_ac"),
+    ).toBe(true);
+    expect(
+      petEntities.has("sensor.granary_smart_camera_feeder_battery_ac_2"),
+    ).toBe(true);
+    expect(
+      petEntities.has(
+        "binary_sensor.granary_smart_camera_feeder_battery_status",
+      ),
+    ).toBe(false);
+    expect(batteryLow?.expr.value).toContain(
+      'entity!~"sensor[.]granary_smart_camera_feeder_battery_ac(_2)?"',
+    );
+  });
+
+  test("evaluates Roborock fan-out suppression and PetLibro battery exclusion in promtool", async () => {
+    const groups = getHomeAssistantRuleGroups();
+    const availabilityRules =
+      groups.find((group) => group.name === "homeassistant-availability")
+        ?.rules ?? [];
+    const parentExpr = availabilityRules.find(
+      (rule) =>
+        rule.alert === "PetCareEntityUnavailable" &&
+        rule.labels?.["entity"] === "vacuum.1st_floor",
+    )?.expr.value;
+    const childExpr = availabilityRules.find(
+      (rule) =>
+        rule.alert === "PetCareEntityUnavailable" &&
+        rule.labels?.["entity"] === "sensor.1st_floor_status",
+    )?.expr.value;
+    const batteryLowExpr = groups
+      .find((group) => group.name === "homeassistant-batteries")
+      ?.rules?.find((rule) => rule.alert === "HomeAssistantBatteryLow")
+      ?.expr.value;
+    const feederBatteryExpr = groups
+      .find((group) => group.name === "homeassistant-petlibro-feeders")
+      ?.rules?.find(
+        (rule) => rule.alert === "PetLibroFeederLivingRoomBatteryProblem",
+      )?.expr.value;
+
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        {
+          interval: "1m",
+          input_series: [
+            {
+              series:
+                'homeassistant_entity_available{entity="vacuum.1st_floor"}',
+              values: "0x20",
+            },
+            {
+              series:
+                'homeassistant_entity_available{entity="sensor.1st_floor_status"}',
+              values: "0x20",
+            },
+          ],
+          promql_expr_test: [
+            {
+              expr: parentExpr,
+              eval_time: "20m",
+              exp_samples: [
+                {
+                  labels:
+                    'homeassistant_entity_available{entity="vacuum.1st_floor"}',
+                  value: 0,
+                },
+              ],
+            },
+            {
+              expr: childExpr,
+              eval_time: "20m",
+              exp_samples: [],
+            },
+          ],
+        },
+        {
+          interval: "1m",
+          input_series: [
+            {
+              series:
+                'homeassistant_entity_available{entity="vacuum.1st_floor"}',
+              values: "1x20",
+            },
+          ],
+          promql_expr_test: [
+            {
+              expr: childExpr,
+              eval_time: "20m",
+              exp_samples: [
+                { labels: '{entity="sensor.1st_floor_status"}', value: 1 },
+              ],
+            },
+          ],
+        },
+        {
+          interval: "1m",
+          input_series: [
+            {
+              series:
+                'homeassistant_sensor_battery_percent{entity="sensor.granary_smart_camera_feeder_battery_ac"}',
+              values: "10x20",
+            },
+            {
+              series:
+                'homeassistant_sensor_battery_percent{entity="sensor.front_door_battery"}',
+              values: "15x20",
+            },
+          ],
+          promql_expr_test: [
+            {
+              expr: feederBatteryExpr,
+              eval_time: "20m",
+              exp_samples: [
+                {
+                  labels:
+                    'homeassistant_sensor_battery_percent{entity="sensor.granary_smart_camera_feeder_battery_ac"}',
+                  value: 10,
+                },
+              ],
+            },
+            {
+              expr: batteryLowExpr,
+              eval_time: "20m",
+              exp_samples: [
+                { labels: '{entity="sensor.front_door_battery"}', value: 15 },
+              ],
+            },
+          ],
+        },
+      ],
+    });
   });
 });
 
