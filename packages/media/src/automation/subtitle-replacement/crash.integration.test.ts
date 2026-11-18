@@ -7,6 +7,7 @@ import { readFile } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 import { z } from "zod";
 import { FileLockError } from "#filesystem/advisory-lock.ts";
+import { mediaTestDatabaseUrl } from "#testing/postgres.ts";
 import { replacementHarness } from "./test-fixture.ts";
 
 const harness = replacementHarness();
@@ -16,9 +17,7 @@ async function killAt(
   phase: string,
   mode: "apply" | "reconcile" | "cleanup" = "apply",
 ) {
-  const rows = await f.db.$queryRaw`SELECT inet_server_port() AS port`;
-  const port = z.array(z.object({ port: z.int() })).parse(rows)[0]?.port;
-  if (port === undefined) throw new Error("Fixture port missing");
+  const databaseUrl = await mediaTestDatabaseUrl(f.db);
   const child = spawn(
     process.execPath,
     [
@@ -29,7 +28,7 @@ async function killAt(
         phase,
         mode,
         roots: f.roots,
-        databaseUrl: `postgres://media@127.0.0.1:${String(port)}/postgres`,
+        databaseUrl,
         now: f.context.now?.().toISOString(),
       }),
     ],

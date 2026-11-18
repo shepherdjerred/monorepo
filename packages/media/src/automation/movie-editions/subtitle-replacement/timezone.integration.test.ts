@@ -8,6 +8,7 @@ import { readMovieReplacementReceiptV2 } from "#infrastructure/movie-editions/su
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { createMovieReplacementFixture } from "#testing/movie-workflow/subtitles/subtitle-replacement-fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
+import { mediaTestDatabaseUrl } from "#testing/postgres.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { replacementPaths } from "#automation/subtitle-replacement/files.ts";
 import { createMovieSubtitleReplacementFileFacet } from "./facet.ts";
@@ -29,25 +30,7 @@ afterEach(async () => {
 
 /** This pool changes only its own PostgreSQL sessions, never stored history or process settings. */
 async function localTimezoneDatabase(source: Database, timezone: string) {
-  const [address] = z
-    .array(
-      z.strictObject({
-        database: z.literal("postgres"),
-        user: z.literal("media"),
-        port: z.int().positive(),
-      }),
-    )
-    .length(1)
-    .parse(
-      await source.$queryRaw`
-      SELECT current_database() AS database,current_user AS "user",inet_server_port() AS port
-    `,
-    );
-  if (address === undefined)
-    throw new Error("Actual disposable database endpoint missing");
-  const url = new URL(
-    `postgresql://media@127.0.0.1:${String(address.port)}/postgres`,
-  );
+  const url = new URL(await mediaTestDatabaseUrl(source));
   url.searchParams.set("options", `-c timezone=${timezone}`);
   const db = createDatabase(url.toString());
   closers.push(() => db.$disconnect());

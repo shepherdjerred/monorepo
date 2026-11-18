@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import {
   createEmptyTestDatabase,
   createTemplateTestDatabase,
@@ -9,8 +10,32 @@ import {
   runCommandAsync,
   runCommandSync,
 } from "@shepherdjerred/test-postgres";
-import { createDatabase } from "#infrastructure/database.ts";
+import { createDatabase, type Database } from "#infrastructure/database.ts";
 import { historicalIntentFixtureDatabase } from "./historical-intent-client.ts";
+
+const MEDIA_TEST_DB_NAME_PATTERN = /^media_(?:test|mig)_[a-z0-9_]+$/u;
+
+const MediaTestDatabaseTargetSchema = z
+  .array(
+    z.strictObject({
+      database: z.string().regex(MEDIA_TEST_DB_NAME_PATTERN),
+      user: z.string().min(1),
+      port: z.int().positive(),
+    }),
+  )
+  .length(1);
+
+export async function mediaTestDatabaseUrl(source: Database): Promise<string> {
+  const [target] = MediaTestDatabaseTargetSchema.parse(
+    await source.$queryRaw`
+      SELECT current_database() AS database, current_user AS "user", inet_server_port() AS port
+    `,
+  );
+  if (target === undefined) {
+    throw new Error("Disposable media test database endpoint missing");
+  }
+  return `postgres://${encodeURIComponent(target.user)}@127.0.0.1:${String(target.port)}/${encodeURIComponent(target.database)}`;
+}
 
 const packageRoot = fileURLToPath(new URL("../..", import.meta.url));
 const migrationsDir = path.join(packageRoot, "prisma/migrations");
@@ -105,6 +130,26 @@ export async function startMediaTestPostgres(
   );
 
   try {
+    if (!MEDIA_TEST_DB_NAME_PATTERN.test(handle.dbName)) {
+      throw new Error(`Unexpected media test database name: ${handle.dbName}`);
+    }
+    const psql = postgresBinaryPath("psql", { allowAnyMajor });
+    const timezoneResult = await runCommandAsync(
+      [
+        psql,
+        handle.adminUrl,
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-c",
+        `ALTER DATABASE "${handle.dbName}" SET timezone TO 'UTC'`,
+      ],
+      { cwd: packageRoot },
+    );
+    if (timezoneResult.exitCode !== 0) {
+      throw new Error(
+        `Failed to set UTC timezone on ${handle.dbName}: ${timezoneResult.stderr}`,
+      );
+    }
     if (ceiling !== undefined) {
       for (const migration of migrations.filter((name) => name <= ceiling)) {
         applyMigration(migration);

@@ -4,8 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
+import { mediaTestDatabaseUrl } from "#testing/postgres.ts";
 import { nativeLocalPath } from "#automation/native-recovery/files.ts";
 import { readyArchiveCleanup } from "./cleanup-test-support.ts";
 
@@ -21,16 +21,13 @@ test.each(["purged", "native-archive-before-commit"])(
   async (phase) => {
     const f = await readyArchiveCleanup(harness.database(), harness.cipher);
     directories.push(f.file.directory);
-    const ports = await f.db.$queryRaw<
-      { port: number }[]
-    >`SELECT inet_server_port() AS port`;
-    const port = z.int().positive().parse(ports[0]?.port);
+    const databaseUrl = await mediaTestDatabaseUrl(f.db);
     const config = path.join(f.file.directory, "archive-crash.json");
     const access = await f.context.files.plexAccess("movie");
     await writeFile(
       config,
       JSON.stringify({
-        databaseUrl: `postgres://media@127.0.0.1:${String(port)}/postgres`,
+        databaseUrl,
         roots: f.context.files.roots,
         workerPodUid: f.context.workerPodUid,
         serverMachineId: access.serverMachineId,
