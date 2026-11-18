@@ -36,12 +36,14 @@ The leading "Hey Streambot" wake phrase has already been stripped from the input
 Choose a closed playback intent ONLY when the utterance is a single, unambiguous parameterless or fixed-enum control with no open arguments:
 - pause, resume, skip, previous, restart, stop, clear, shuffle, subtitles_off
 - loop_off, loop_track, loop_queue
+- radio_start, radio_stop (only when no artist/genre/mood seed or scope is specified)
 - channel_1, channel_2, channel_auto (only when those choices are listed)
 
 Choose non_command ONLY when the utterance is an accidental wake trigger, empty filler, self-cancellation ("never mind", "cancel that", "ignore me"), or background conversation clearly not asking Streambot to act or answer.
 
 Choose delegate_realtime for EVERYTHING else, including:
 - playing or searching any song, video, movie, show, artist, character cover, or sports match
+- seeded or scoped radio requests ("start jazz radio", "play my radio", "radio for Daft Punk")
 - numbered selections or references ("play 2", "first", "second", "that song again")
 - volume changes ("volume 40", "turn it up", "mute")
 - time or chapter seeks ("seek to 10 minutes", "go back 30 seconds", "next chapter", "chapter 3")
@@ -117,6 +119,19 @@ const BASE_INTENT_CHOICES: readonly DecisionChoiceOption[] = [
   },
 ];
 
+const RADIO_INTENT_CHOICES: readonly DecisionChoiceOption[] = [
+  {
+    value: "radio_start",
+    description:
+      "Start unseeded continuous Radio mode (e.g. 'put on radio', 'start radio', 'turn on radio'). Seeded or scoped radio ('start jazz radio', 'my radio') must use delegate_realtime.",
+  },
+  {
+    value: "radio_stop",
+    description:
+      "Stop active Radio station refilling (e.g. 'stop radio', 'turn off radio').",
+  },
+];
+
 const NUMBERED_CHANNEL_CHOICES: readonly DecisionChoiceOption[] = [
   {
     value: "channel_1",
@@ -161,6 +176,8 @@ export type ClosedVoiceCommandIntent =
   | "loop_off"
   | "loop_track"
   | "loop_queue"
+  | "radio_start"
+  | "radio_stop"
   | "channel_1"
   | "channel_2"
   | "channel_auto";
@@ -217,13 +234,12 @@ export function getOrCreateVoiceDecisionsRuntime(
 function buildIntentChoices(
   commands: VoiceCommandPort,
 ): readonly DecisionChoiceOption[] {
-  return commands.selectChannel === undefined
-    ? [...BASE_INTENT_CHOICES, ...FALLBACK_INTENT_CHOICES]
-    : [
-        ...BASE_INTENT_CHOICES,
-        ...NUMBERED_CHANNEL_CHOICES,
-        ...FALLBACK_INTENT_CHOICES,
-      ];
+  return [
+    ...BASE_INTENT_CHOICES,
+    ...(commands.radio === undefined ? [] : RADIO_INTENT_CHOICES),
+    ...(commands.selectChannel === undefined ? [] : NUMBERED_CHANNEL_CHOICES),
+    ...FALLBACK_INTENT_CHOICES,
+  ];
 }
 
 function resolveClosedIntent(
@@ -315,6 +331,12 @@ function resolveClosedIntent(
         execute: () => commands.setLoop("queue"),
       };
     }
+    case "radio_start": {
+      return resolveRadioIntent(commands, "start");
+    }
+    case "radio_stop": {
+      return resolveRadioIntent(commands, "stop");
+    }
     case "channel_1": {
       return resolveNumberedChannelIntent(commands, 1);
     }
@@ -328,6 +350,19 @@ function resolveClosedIntent(
       return null;
     }
   }
+}
+
+function resolveRadioIntent(
+  commands: VoiceCommandPort,
+  action: "start" | "stop",
+): ClosedIntentExecutionSpec | null {
+  const radio = commands.radio;
+  if (radio === undefined) return null;
+  return {
+    toolName: "radio",
+    toolArguments: { action },
+    execute: (signal) => radio.call(commands, { action }, signal),
+  };
 }
 
 function resolveNumberedChannelIntent(

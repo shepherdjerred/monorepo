@@ -3482,6 +3482,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-radio-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-music",
+      "purpose": "Enable continuous personalized and related Radio mode.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-reconnect-max-attempts",
       "owner": "streambot",
       "namespace": "streambot",

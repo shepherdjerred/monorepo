@@ -60,6 +60,7 @@ export async function buildWebSnapshot(
     }));
   const sportsEnabled = await owner.sportsEnabled(session, guildId);
   const historyEnabled = await owner.historyEnabled(session, guildId);
+  const radioEnabled = (await deps.featureGate.radio?.(scope)) === true;
   // Capture the view and its revision together after asynchronous gate checks.
   const resolved = resolveSnapshotSelection(deps, {
     guildId,
@@ -102,8 +103,21 @@ export async function buildWebSnapshot(
     advancedControls,
     sportsEnabled,
     historyEnabled,
+    radioEnabled,
+    station: webStation(handle),
     restrictedLive:
       source?.kind === "url" && sportsEventForSource(source.url) !== null,
+  };
+}
+
+function webStation(handle: SessionHandle | null): WebSnapshot["station"] {
+  const raw = handle?.station?.() ?? null;
+  if (raw === null) return null;
+  return {
+    kind: raw.kind,
+    scope: raw.scope,
+    ...(raw.seed === undefined ? {} : { seed: raw.seed }),
+    ...(raw.tvPreset === undefined ? {} : { tvPreset: raw.tvPreset }),
   };
 }
 
@@ -183,16 +197,16 @@ function slots(
     { length: deps.sessions.numbered.maximum(guildId) },
     (_, index) => {
       const number = PlaybackChannelNumberSchema.parse(index + 1);
-      const view = deps.sessions
-        .getExisting(guildId, channelId, number)
-        ?.view();
+      const handle = deps.sessions.getExisting(guildId, channelId, number);
+      const view = handle?.view();
       return {
         number,
         label: playbackChannelLabel(number),
         revision: deps.sessions.revision(guildId, channelId, number),
         occupied:
-          view !== undefined &&
-          (view.current !== null || view.queue.length > 0),
+          (handle?.station?.() ?? null) !== null ||
+          (view !== undefined &&
+            (view.current !== null || view.queue.length > 0)),
       };
     },
   );

@@ -10,7 +10,10 @@ import {
 import { normalizeVoicePlayQuery } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { VoiceCommandPort } from "@shepherdjerred/streambot/voice/voice-tools.ts";
-import type { VoiceCommandInvocation } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
+import type {
+  RadioArguments,
+  VoiceCommandInvocation,
+} from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
 import { streambotVoiceLifecycleDeps } from "@shepherdjerred/streambot/voice/local-voice.ts";
 
 const SILENCE_DURATION_MS = 2000;
@@ -202,6 +205,13 @@ export class DryRunVoiceCommandPort implements VoiceCommandPort {
   listChapters(): string {
     this.calls.push({ name: "list_chapters", arguments: {} });
     return "Dry run: the chapter list would be read.";
+  }
+
+  radio(input: RadioArguments, _signal: AbortSignal): string {
+    this.calls.push({ name: "radio", arguments: input });
+    return input.action === "stop"
+      ? "Dry run: radio would stop."
+      : "Dry run: radio would start.";
   }
 }
 

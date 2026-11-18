@@ -10,6 +10,7 @@ import {
 } from "./session-types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
+import type { StationFeeder } from "@shepherdjerred/streambot/station/station-feeder.ts";
 import {
   PlaybackChannelNumberSchema,
   type PlaybackChannelNumber,
@@ -19,6 +20,7 @@ import type { ChannelSelection } from "./channel-selection.ts";
 export function numberedCommandDeps(input: {
   common: PlaybackCommandServiceDeps;
   config: Config;
+  stationFeeder?: StationFeeder | undefined;
   scope: DiscoveryScope;
   selection: ChannelSelection;
   maximum: number;
@@ -70,7 +72,7 @@ export function numberedCommandDeps(input: {
       guard();
       return session === undefined
         ? EMPTY_HANDLE
-        : buildSessionHandle(input.config, session);
+        : buildSessionHandle(input.config, session, input.stationFeeder);
     };
     return {
       ...common,
@@ -84,7 +86,7 @@ export function numberedCommandDeps(input: {
         const active =
           session === undefined
             ? input.ensure(number)
-            : buildSessionHandle(input.config, session);
+            : buildSessionHandle(input.config, session, input.stationFeeder);
         if (active === null)
           throw new PlaybackCommandBoundaryError(
             "No stream bots are available for this channel.",

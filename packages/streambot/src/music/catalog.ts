@@ -310,6 +310,33 @@ export class MusicCatalog {
       tracks,
     });
   }
+
+  async artistRecordings(
+    artistName: string,
+    signal: AbortSignal,
+    limit = 10,
+  ): Promise<MusicTrack[]> {
+    const trimmed = artistName.trim();
+    if (trimmed === "") return [];
+    const escaped = trimmed
+      .replaceAll("\\", String.raw`\\`)
+      .replaceAll('"', String.raw`\"`);
+    const boundedLimit = Math.min(25, Math.max(1, Math.trunc(limit)));
+    const path =
+      "recording?" +
+      new URLSearchParams({
+        query: `artist:"${escaped}"`,
+        fmt: "json",
+        limit: String(boundedLimit),
+        dismax: "true",
+      }).toString();
+    const data = z
+      .object({ recordings: z.array(RecordingSchema) })
+      .parse(await this.request(path, signal));
+    return data.recordings
+      .filter((recording) => recording["artist-credit"].length > 0)
+      .map((recording) => recordingTrack(recording));
+  }
 }
 
 function recordingTrack(

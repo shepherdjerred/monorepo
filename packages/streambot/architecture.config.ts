@@ -15,7 +15,14 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * and inventing an ordering for them here would describe an architecture the
  * code does not have.
  */
-const transports = ["commands", "discord", "session", "voice", "web"];
+const transports = [
+  "commands",
+  "discord",
+  "session",
+  "station",
+  "voice",
+  "web",
+];
 
 const everythingElse = [
   "commands",
@@ -29,6 +36,7 @@ const everythingElse = [
   "session",
   "sources",
   "state",
+  "station",
   "streamer",
   "voice",
   "web",
@@ -49,6 +57,7 @@ export default defineArchitecture({
         "pool",
         "session",
         "sources",
+        "station",
         "web/server",
       ],
     },

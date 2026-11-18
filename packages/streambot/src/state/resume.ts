@@ -9,6 +9,7 @@ import {
   type Source,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { PersistedState } from "@shepherdjerred/streambot/state/persistence.ts";
+import type { PersistedStation } from "@shepherdjerred/streambot/state/station-schema.ts";
 import type { ChannelId } from "@shepherdjerred/streambot/types/ids.ts";
 
 /**
@@ -39,6 +40,7 @@ export function buildSnapshot(params: {
   resumeAttempts: number;
   /** Text channel to announce the resume in (the session's status channel), or null if unknown. */
   statusChannelId: ChannelId | null;
+  station?: PersistedStation | undefined;
 }): PersistedState {
   const {
     context,
@@ -47,6 +49,7 @@ export function buildSnapshot(params: {
     resumeKey,
     resumeAttempts,
     statusChannelId,
+    station,
   } = params;
   return {
     version: 2,
@@ -70,6 +73,7 @@ export function buildSnapshot(params: {
     resumeAttempts,
     resumeKey,
     paused: context.pausedPositionSeconds !== null,
+    ...(station === undefined ? {} : { station }),
   };
 }
 
@@ -83,6 +87,8 @@ export type ResumeDecision = {
   /** Resume identity + attempt count to persist on the first post-boot snapshot. */
   resumeKey: string | null;
   resumeAttempts: number;
+  /** Active station restored from snapshot when guild/channel still match. */
+  station?: PersistedStation | undefined;
 };
 
 /**
@@ -131,6 +137,7 @@ export function buildResumeInput(
       droppedForCrashLoop: crashLooping,
       resumeKey: null,
       resumeAttempts: 0,
+      ...(restored.station === undefined ? {} : { station: restored.station }),
     };
   }
 
@@ -150,6 +157,7 @@ export function buildResumeInput(
     droppedForCrashLoop: false,
     resumeKey: key,
     resumeAttempts: attempts,
+    ...(restored.station === undefined ? {} : { station: restored.station }),
   };
 }
 

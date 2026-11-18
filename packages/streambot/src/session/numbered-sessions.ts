@@ -20,6 +20,8 @@ import {
   buildResumeInput,
   type ResumeDecision,
 } from "@shepherdjerred/streambot/state/resume.ts";
+import type { StationFeeder } from "@shepherdjerred/streambot/station/station-feeder.ts";
+import { gateRestoredStation } from "@shepherdjerred/streambot/station/station-session-ops.ts";
 import { withMode } from "@shepherdjerred/streambot/sources/source.ts";
 import {
   NUMBERED_CHANNEL_HINT,
@@ -33,6 +35,8 @@ import {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 import type { ResumeOutcome } from "@shepherdjerred/streambot/session/voice-recovery.ts";
+import { resumedSpawnFields } from "@shepherdjerred/streambot/session/resume-runner.ts";
+import { moveNumberedSessions } from "@shepherdjerred/streambot/session/session-move.ts";
 import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
@@ -55,6 +59,14 @@ export class NumberedSessions {
     private readonly deps: SessionManagerDeps,
     private readonly sessions: Map<string, Session>,
     private readonly spawn: (params: SpawnParams) => Session,
+    private readonly stationOptions?: {
+      readonly feeder?: StationFeeder | undefined;
+      readonly voiceControl?: (
+        guildId: GuildId,
+        voiceChannelId: ChannelId,
+        statusChannelId: ChannelId | null,
+      ) => PlaybackCommandServiceDeps["controlStation"];
+    },
   ) {
     this.leases = new PlaybackLeases(deps.pool);
     this.persistence = new RoomPersistence(deps.config.state.dir);
@@ -120,7 +132,11 @@ export class NumberedSessions {
         );
         return session === undefined
           ? null
-          : buildSessionHandle(this.deps.config, session);
+          : buildSessionHandle(
+              this.deps.config,
+              session,
+              this.stationOptions?.feeder,
+            );
       },
       page,
     );
@@ -143,7 +159,11 @@ export class NumberedSessions {
     );
     const existing = this.sessions.get(key);
     if (existing !== undefined)
-      return buildSessionHandle(this.deps.config, existing);
+      return buildSessionHandle(
+        this.deps.config,
+        existing,
+        this.stationOptions?.feeder,
+      );
     if (this.sessions.has(keyOf(params.guildId, params.voiceChannelId)))
       throw new PlaybackCommandBoundaryError(
         "A legacy queue started while the request was loading. Finish or stop it, then try again.",
@@ -172,7 +192,11 @@ export class NumberedSessions {
         resumeKey: null,
         resumeAttempts: 0,
       });
-      return buildSessionHandle(this.deps.config, session);
+      return buildSessionHandle(
+        this.deps.config,
+        session,
+        this.stationOptions?.feeder,
+      );
     } catch (error) {
       void this.leases.release(entry);
       throw error;
@@ -248,7 +272,16 @@ export class NumberedSessions {
       },
       { maxResumeAttempts: MAX_RESUME_ATTEMPTS },
     );
-    if ((decision.input.initialQueue?.length ?? 0) === 0) {
+    const station = await gateRestoredStation(
+      this.deps.featureGate,
+      guildId,
+      channelId,
+      decision.station,
+    );
+    if (
+      station === undefined &&
+      (decision.input.initialQueue?.length ?? 0) === 0
+    ) {
       await this.persistence.remove(
         guildId,
         channelId,
@@ -262,9 +295,7 @@ export class NumberedSessions {
       guildId,
       slot.number,
     );
-    if (entry === null) {
-      return "no-userbot";
-    }
+    if (entry === null) return "no-userbot";
     try {
       this.spawn({
         guildId,
@@ -277,16 +308,7 @@ export class NumberedSessions {
           ...decision.input,
           initialQueue: numberedResumeQueue(decision, slot.number),
         },
-        resumeKey: decision.resumeKey,
-        resumeAttempts: decision.resumeAttempts,
-        seekSeconds: decision.input.initialSeekSeconds ?? 0,
-        ...(opts.origin === "reconnect"
-          ? {
-              recoveredFromVoiceLoss: true,
-              reconnectAttempts: opts.reconnectAttempts ?? 1,
-              preserveStateOnTeardown: true,
-            }
-          : {}),
+        ...resumedSpawnFields(decision, station, opts),
       });
       return "resumed";
     } catch (error) {
@@ -325,12 +347,22 @@ export class NumberedSessions {
       )
         return;
       desired.voiceAssistant = createSessionVoiceAssistant(this.deps, desired, {
-        commandsForUser: (userId) => this.voiceCommands(desired, userId),
+        stationFeeder: this.stationOptions?.feeder,
+        commandsForUser: (userId) =>
+          this.commandDeps(
+            {
+              guildId: desired.guildId,
+              channelId: desired.voiceChannelId,
+              userId,
+            },
+            desired.statusChannelId,
+          ),
         afterTurn: (userId) => {
           const scope = { guildId, channelId: desired.voiceChannelId, userId };
           for (const session of this.inRoom(guildId, desired.voiceChannelId)) {
             if (
               !session.hasStarted &&
+              session.station === undefined &&
               session.playbackChannel === this.selection.get(scope)
             )
               session.teardownHold.request();
@@ -370,6 +402,11 @@ export class NumberedSessions {
       throw new Error("Missing playback command services");
     const guildId = GuildIdSchema.parse(scope.guildId);
     const channelId = ChannelIdSchema.parse(scope.channelId);
+    const controlStation = this.stationOptions?.voiceControl?.(
+      guildId,
+      channelId,
+      statusChannelId,
+    );
     return numberedCommandDeps({
       common: {
         ...this.deps,
@@ -385,8 +422,10 @@ export class NumberedSessions {
         selectChannel: (_speaker, selected) => this.select(scope, selected),
         resetChannel: () => this.reset(scope),
         listChannels: () => this.list(scope),
+        ...(controlStation === undefined ? {} : { controlStation }),
       },
       config: this.deps.config,
+      stationFeeder: this.stationOptions?.feeder,
       scope,
       selection: this.selection,
       maximum: this.maximum(guildId),
@@ -402,16 +441,6 @@ export class NumberedSessions {
     });
   }
 
-  private voiceCommands(
-    owner: Session,
-    userId: string,
-  ): Promise<PlaybackCommandServiceDeps> {
-    return this.commandDeps(
-      { guildId: owner.guildId, channelId: owner.voiceChannelId, userId },
-      owner.statusChannelId,
-    );
-  }
-
   move(
     params: {
       guildId: GuildId;
@@ -421,70 +450,16 @@ export class NumberedSessions {
     },
     checkpoint: (session: Session) => Promise<void>,
   ): boolean | null {
-    const moved = this.inRoom(params.guildId, params.fromChannelId).filter(
-      (session) =>
-        session.playbackChannel !== undefined &&
-        (params.userId === undefined ||
-          session.entry.userbot.userId() === params.userId),
-    );
-    if (moved.length === 0) return null;
-    const destination = this.inRoom(params.guildId, params.toChannelId);
-    const numbers = new Set(moved.map((session) => session.playbackChannel));
-    if (
-      destination.some(
-        (session) =>
-          session.playbackChannel === undefined ||
-          numbers.has(session.playbackChannel),
-      )
-    ) {
-      for (const session of moved)
-        session.actor.send({
-          type: "STREAMER_VOICE_DETACHED",
-          reason: "streamer moved into occupied playback slots",
-        });
-      return false;
-    }
-    // A physical move changes the reply transport immediately. Abort and close its old
-    // assistant before it enters a room that may already have an assistant owner.
-    for (const session of moved) session.voiceAssistant?.close();
-    for (const session of moved) {
-      this.sessions.delete(session.key);
-      session.voiceChannelId = params.toChannelId;
-      session.key = keyOf(
-        params.guildId,
-        params.toChannelId,
-        session.playbackChannel,
-      );
-      this.sessions.set(session.key, session);
-      this.leases.move(
-        session.entry,
-        keyOf(params.guildId, params.toChannelId),
-        params.toChannelId,
-      );
-      session.actor.send({
-        type: "VOICE_TARGET_MOVED",
-        target: { guildId: params.guildId, channelId: params.toChannelId },
-      });
-      session.card.reown(params.toChannelId);
-      void (async () => {
-        await checkpoint(session);
-        if (
-          session.playbackChannel !== undefined &&
-          session.instanceId !== undefined
-        )
-          await this.persistence.remove(
-            params.guildId,
-            params.fromChannelId,
-            session.playbackChannel,
-            session.instanceId,
-          );
-      })();
-    }
-    void (async () => {
-      await this.refreshAssistant(params.guildId, params.fromChannelId);
-      await this.refreshAssistant(params.guildId, params.toChannelId);
-    })();
-    return true;
+    return moveNumberedSessions({
+      sessions: this.sessions,
+      leases: this.leases,
+      persistence: this.persistence,
+      inRoom: (guildId, channelId) => this.inRoom(guildId, channelId),
+      refreshAssistant: (guildId, channelId) =>
+        this.refreshAssistant(guildId, channelId),
+      checkpoint,
+      params,
+    });
   }
 }
 

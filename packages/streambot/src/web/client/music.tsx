@@ -11,6 +11,7 @@ import { useRouteState, pageOffset } from "./route-state.ts";
 import type { MediaListProps } from "./media-row.tsx";
 import { Artwork } from "./artwork.tsx";
 import { MusicActions } from "./music-actions.tsx";
+import { RadioBanner } from "./station/radio-banner.tsx";
 
 function musicLocation(params: URLSearchParams) {
   const query = params.get("q") ?? "";
@@ -131,8 +132,15 @@ export function Music(props: MediaListProps) {
       <p className="muted">
         Find the artist. Choose the album. Play the recording together.
       </p>
+      <RadioBanner
+        snapshot={props.snapshot}
+        canPlay={props.canPlay}
+        busy={props.busy}
+        send={props.send}
+      />
       <form
         className="filters"
+        aria-label="Search music catalog"
         onSubmit={(event) => {
           event.preventDefault();
           route.update({

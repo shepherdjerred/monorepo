@@ -8,6 +8,7 @@ import type { WebSession } from "./session-store.ts";
 import { Selections, SELECTIONS_PER_OWNER } from "./selections.ts";
 import { WebError } from "./errors.ts";
 import type { WebPlayback } from "./playback.ts";
+import { executeWebStationCommand } from "./station-action.ts";
 
 type TrackSelection = {
   sourceId: string;
@@ -26,6 +27,13 @@ export class WebActions {
   ): Promise<{ message: string }> {
     if (input.action === "select")
       return await this.playback.selectChannel(session, input);
+    if (input.action === "station")
+      return await executeWebStationCommand(
+        this.playback,
+        session,
+        input,
+        signal,
+      );
     if (input.action === "play") return await this.play(session, input, signal);
     const context = await this.playback.commandContext(session, input);
     const { service, userId, handle } = context;

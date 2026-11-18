@@ -26,9 +26,12 @@ import type {
 import type { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { UserbotEntry } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
+import type { PersistedStation } from "@shepherdjerred/streambot/state/station-schema.ts";
+import type { StationCuratorRegistry } from "@shepherdjerred/streambot/station/station-types.ts";
 import type {
   ChannelId,
   GuildId,
+  UserId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import type { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
 import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
@@ -58,6 +61,7 @@ export type SessionHandle = {
   readonly instanceId?: string;
   dispatch: (event: PlaybackEvent) => void;
   view: () => PlaybackView;
+  station?: () => PersistedStation | null;
   setVolume: (percent: number) => Promise<boolean>;
   seek: (seconds: number) => Promise<boolean>;
   /** Discord userbot identity that owns assistant replies for this session. */
@@ -125,6 +129,8 @@ export type Session = {
   pendingSubtitleMenu: boolean;
   /** Prevent duplicate playback-run rows during repeated snapshots of one streaming state. */
   historyRunRecorded: boolean;
+  /** Active continuous Radio / TV station state when enabled for this session. */
+  station: PersistedStation | undefined;
   /** Per-session wake/VAD/Realtime lifecycle, absent when the feature is disabled. */
   voiceAssistant: VoiceAssistantSession | null;
   readonly teardownHold: TeardownHold;
@@ -142,6 +148,7 @@ export type SpawnParams = {
   resumeKey: string | null;
   resumeAttempts: number;
   seekSeconds?: number;
+  station?: PersistedStation | undefined;
   recoveredFromVoiceLoss?: boolean;
   reconnectAttempts?: number;
   preserveStateOnTeardown?: boolean;
@@ -164,6 +171,7 @@ export const EMPTY_HANDLE: SessionHandle = {
     /* no active session: ignore control events */
   },
   view: () => IDLE_VIEW,
+  station: () => null,
   setVolume: () => Promise.resolve(false),
   seek: () => Promise.resolve(false),
   assistantUserId: () => null,
@@ -225,4 +233,9 @@ export type SessionManagerDeps = {
   readonly history?: MediaHistoryStore;
   readonly featureGate?: MediaFeatureGate;
   readonly sports?: SportsCatalog;
+  readonly stationCurators?: StationCuratorRegistry;
+  readonly voiceRoomHumanIds?: (
+    guildId: GuildId,
+    channelId: ChannelId,
+  ) => readonly UserId[];
 };

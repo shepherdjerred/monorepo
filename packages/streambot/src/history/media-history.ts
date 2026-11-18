@@ -1,6 +1,11 @@
 import { Database } from "bun:sqlite";
 import { z } from "zod";
 import { browseRuns, migrateHistoryProviders } from "./runs.ts";
+import {
+  buildMusicTasteProfile,
+  type MusicTasteProfile,
+  type MusicTasteProfileInput,
+} from "./taste-profile.ts";
 import { HistoryProviderSchema } from "./provider.ts";
 import { PlaylistStore } from "@shepherdjerred/streambot/music/playlists.ts";
 import type { HistoryScope, RecordMedia } from "./types.ts";
@@ -49,6 +54,10 @@ export class MediaHistoryStore {
 
   browseRuns(input: Parameters<typeof browseRuns>[1]) {
     return browseRuns(this.database, input);
+  }
+
+  musicTasteProfile(input: MusicTasteProfileInput): MusicTasteProfile {
+    return buildMusicTasteProfile(this.database, input);
   }
 
   queuedAt(requestId: string): number | undefined {

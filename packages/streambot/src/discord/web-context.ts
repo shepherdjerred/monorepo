@@ -2,12 +2,15 @@ import { ChannelType } from "discord.js";
 import { z } from "zod";
 import {
   ChannelIdSchema,
+  UserIdSchema,
   type ChannelId,
   type GuildId,
+  type UserId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 
 export type WebDiscordClient = {
   isReady: () => boolean;
+  user?: { id: string } | null;
   application: { id: string } | null;
   guilds: {
     cache: ReadonlyMap<
@@ -16,7 +19,10 @@ export type WebDiscordClient = {
         id: string;
         name: string;
         members: {
-          cache?: ReadonlyMap<string, { displayName: string }>;
+          cache?: ReadonlyMap<
+            string,
+            { displayName: string; user?: { bot: boolean } }
+          >;
           fetch: (options: {
             user: string;
             force: true;
@@ -24,7 +30,13 @@ export type WebDiscordClient = {
           }) => Promise<unknown>;
         };
         voiceStates: {
-          cache: ReadonlyMap<string, { channelId: string | null }>;
+          cache: ReadonlyMap<
+            string,
+            {
+              channelId: string | null;
+              member?: { user: { bot: boolean } } | null;
+            }
+          >;
         };
         channels: {
           cache: ReadonlyMap<string, { type: ChannelType; name: string }>;
@@ -41,7 +53,10 @@ export class WebDiscordContext {
     { expires: number; name: Promise<string> }
   >();
   private readonly memberships = new Map<string, Promise<boolean>>();
-  constructor(private readonly client: WebDiscordClient) {}
+  constructor(
+    private readonly client: WebDiscordClient,
+    private readonly excludedUserIds?: () => ReadonlySet<string>,
+  ) {}
 
   webApplicationId(): string {
     if (!this.client.isReady() || this.client.application === null)
@@ -136,7 +151,55 @@ export class WebDiscordContext {
       : null;
   }
 
+  voiceRoomHumanIds(guildId: GuildId, channelId: ChannelId): readonly UserId[] {
+    if (!this.client.isReady()) return [];
+    const guild = this.client.guilds.cache.get(guildId);
+    if (guild === undefined || !isVoiceGuildChannel(guild, channelId)) {
+      return [];
+    }
+    const excluded = this.excludedUserIds?.() ?? new Set<string>();
+    const selfId = this.client.user?.id;
+    const humans: UserId[] = [];
+    for (const [userId, state] of guild.voiceStates.cache.entries()) {
+      if (
+        userId === selfId ||
+        state.channelId !== channelId ||
+        excluded.has(userId) ||
+        isGuildBotUser(guild, userId, state)
+      ) {
+        continue;
+      }
+      const parsed = UserIdSchema.safeParse(userId);
+      if (parsed.success) humans.push(parsed.data);
+    }
+    return humans;
+  }
+
   webReady(): boolean {
     return this.client.isReady();
   }
+}
+
+type CachedGuild =
+  WebDiscordClient["guilds"]["cache"] extends ReadonlyMap<string, infer G>
+    ? G
+    : never;
+
+function isVoiceGuildChannel(guild: CachedGuild, channelId: string): boolean {
+  const type = guild.channels.cache.get(channelId)?.type;
+  return (
+    type === ChannelType.GuildVoice || type === ChannelType.GuildStageVoice
+  );
+}
+
+function isGuildBotUser(
+  guild: CachedGuild,
+  userId: string,
+  state: { member?: { user: { bot: boolean } } | null },
+): boolean {
+  return (
+    state.member?.user.bot ??
+    guild.members.cache?.get(userId)?.user?.bot ??
+    false
+  );
 }

@@ -1,14 +1,8 @@
-import { createActor, waitFor } from "xstate";
-import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
-import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
+import { waitFor } from "xstate";
 import type {
   PlaybackEvent,
   ResolvedSource,
 } from "@shepherdjerred/streambot/machine/types.ts";
-import {
-  EMPTY_HANDLE,
-  type SessionHandle,
-} from "@shepherdjerred/streambot/session/session-types.ts";
 import { sessionRevision } from "@shepherdjerred/streambot/session/session-revision.ts";
 import { ChannelSelection } from "@shepherdjerred/streambot/session/channel-selection.ts";
 import {
@@ -25,10 +19,8 @@ import { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { LibraryArtworkProvider } from "@shepherdjerred/streambot/metadata/plex.ts";
-import {
-  sourceIdentity,
-  sourceLabel,
-} from "@shepherdjerred/streambot/sources/source.ts";
+import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
+import { createFixtureSlot } from "./web-fixture-slot.ts";
 import { WebCatalog } from "@shepherdjerred/streambot/web/server/catalog.ts";
 import { WebPlayback } from "@shepherdjerred/streambot/web/server/playback.ts";
 import { createWebHandler } from "@shepherdjerred/streambot/web/server/api.ts";
@@ -114,95 +106,6 @@ function resolved(source: Source): ResolvedSource {
   };
 }
 
-export function createFixtureSlot(options: {
-  resolveSource: (source: Source) => ResolvedSource;
-  join?: (input: {
-    guildId: typeof GUILD;
-    channelId: typeof CHANNEL;
-  }) => Promise<{ guildId: typeof GUILD; channelId: typeof CHANNEL }>;
-  initialPosition?: number;
-  onDispatch?: (event: PlaybackEvent) => void;
-  withSubtitles?: boolean;
-}) {
-  let position = options.initialPosition ?? 0;
-  let subtitleBusy = false;
-  const actor = createActor(
-    createPlaybackMachine({
-      joinVoice:
-        options.join ??
-        ((input) =>
-          Promise.resolve({
-            guildId: input.guildId,
-            channelId: input.channelId,
-          })),
-      leaveVoice: () => Promise.resolve(),
-      resolveSource: (input) =>
-        Promise.resolve(options.resolveSource(input.source)),
-      runStream: (_input, signal) =>
-        new Promise<void>((resolve) => {
-          signal.addEventListener(
-            "abort",
-            () => {
-              resolve();
-            },
-            { once: true },
-          );
-        }),
-    }),
-    { input: { guildId: GUILD, channelId: CHANNEL, idleTimeoutMs: 60_000 } },
-  );
-  actor.start();
-  const handle: SessionHandle = {
-    ...EMPTY_HANDLE,
-    dispatch: (event) => {
-      options.onDispatch?.(event);
-      actor.send(event);
-    },
-    view: () => buildPlaybackView(actor.getSnapshot(), position),
-    seek: (seconds) => {
-      position = seconds;
-      return Promise.resolve(true);
-    },
-    setVolume: (percent) => {
-      actor.send({ type: "SET_VOLUME", volume: percent });
-      return Promise.resolve(true);
-    },
-    currentSourceId: () => {
-      const source = actor.getSnapshot().context.current?.source;
-      return source === undefined ? null : sourceIdentity(source);
-    },
-    ...(options.withSubtitles === true
-      ? {
-          claimSubtitleMenu: () => {
-            if (subtitleBusy) return false;
-            subtitleBusy = true;
-            return true;
-          },
-          releaseSubtitleMenu: () => {
-            subtitleBusy = false;
-          },
-          listSubtitleCandidates: () =>
-            Promise.resolve([
-              {
-                kind: "sidecar" as const,
-                file: "/private/arrival.en.srt",
-                lang: "en",
-                modifier: null,
-              },
-              {
-                kind: "embedded" as const,
-                subtitleIndex: 0,
-                codec: "subrip",
-                lang: "fr",
-                modifier: null,
-              },
-            ]),
-        }
-      : {}),
-  };
-  return { actor, handle };
-}
-
 /** Real actor, command service, catalog and auth; only Discord/media I/O is simulated. */
 export function webFixture(
   origin = "http://127.0.0.1:8080",
@@ -214,6 +117,7 @@ export function webFixture(
     history?: MediaHistoryStore;
     music?: MusicService;
     musicEnabled?: boolean;
+    radioEnabled?: boolean;
     join?: (input: {
       guildId: typeof GUILD;
       channelId: typeof CHANNEL;
@@ -261,6 +165,7 @@ export function webFixture(
   let enabled = true;
   let advanced = true;
   let sportsEnabled = true;
+  let radioEnabled = options.radioEnabled ?? true;
   let plexEnabled = false;
   let allocated = false;
   let numbered = false;
@@ -272,16 +177,17 @@ export function webFixture(
       : undefined;
   let allocations = 0;
   let beforeResolve: (() => void) | undefined;
-  const { actor, handle } = createFixtureSlot({
+  const primarySlot = createFixtureSlot({
+    guildId: GUILD,
+    channelId: CHANNEL,
     resolveSource: resolveFixture,
-    ...(options.join === undefined ? {} : { join: options.join }),
+    ...(options.join === undefined ? {} : { joinVoice: options.join }),
     initialPosition: 120,
-    onDispatch: (event) => {
-      events.push(event);
-    },
-    withSubtitles: true,
+    events,
+    includeSubtitles: true,
   });
-  const owner = { actor };
+  const { actor, handle } = primarySlot;
+  const owner = primarySlot;
   const discovery = new DiscoveryService({
     library: () => library,
     searchYoutube: (query) =>
@@ -306,6 +212,7 @@ export function webFixture(
     musicCatalog: () => Promise.resolve(options.musicEnabled === true),
     spotifyLinks: () => Promise.resolve(options.musicEnabled === true),
     playlists: () => Promise.resolve(options.musicEnabled === true),
+    radio: () => Promise.resolve(radioEnabled),
     assistantV2: () => Promise.resolve(advanced),
     history: () => Promise.resolve(options.history !== undefined),
     automaticChannelRouting: () => Promise.resolve(options.automatic === true),
@@ -341,8 +248,32 @@ export function webFixture(
         allocations += 1;
         return handle;
       },
+      startStation: async (params) => {
+        allocated = true;
+        allocatedChannel = params.playbackChannel;
+        allocations += 1;
+        const added = await primarySlot.startStation(params.station);
+        return { handle, added };
+      },
+      stopStation: () => {
+        if (!allocated) return null;
+        const stopped = primarySlot.stopStation();
+        if (
+          stopped !== null &&
+          actor.getSnapshot().matches("idle") &&
+          actor.getSnapshot().context.current === null &&
+          actor.getSnapshot().context.queue.length === 0
+        ) {
+          allocated = false;
+        }
+        return stopped;
+      },
       releaseUnused: (_guild, _channel, slot) => {
-        if (slot === allocatedChannel && actor.getSnapshot().matches("idle"))
+        if (
+          slot === allocatedChannel &&
+          primarySlot.station === undefined &&
+          actor.getSnapshot().matches("idle")
+        )
           allocated = false;
       },
       revision,
@@ -481,6 +412,9 @@ export function webFixture(
     },
     setSportsEnabled: (value: boolean) => {
       sportsEnabled = value;
+    },
+    setRadioEnabled: (value: boolean) => {
+      radioEnabled = value;
     },
     setPlexEnabled: (value: boolean) => {
       plexEnabled = value;

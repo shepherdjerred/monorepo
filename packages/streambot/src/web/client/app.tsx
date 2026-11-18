@@ -128,6 +128,9 @@ export function App() {
                 play={(selection, placement) => {
                   void remote.send({ action: "play", selection, placement });
                 }}
+                send={(action) => {
+                  void remote.send(action);
+                }}
               />
               {snapshot !== null && (
                 <Queue
