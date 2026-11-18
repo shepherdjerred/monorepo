@@ -5,7 +5,6 @@ import type {
 } from "#shared/promotion/model.ts";
 import type { PromotionTaskJournal } from "./publication/task.ts";
 import type { PromotionTaskResult } from "./publication/task-contract.ts";
-import { cleanupDiscordReply } from "./discord-cleanup.ts";
 import { assertDiscordPayload } from "./publication/approved-copy.ts";
 import { Messages, discordMessageText } from "./discord-messages.ts";
 import {
@@ -187,17 +186,6 @@ export class PromotionDiscordPreview {
         "Assigned Discord channel is not visible to the outreach account",
       );
     const applicationCommand = await this.inspectCommand(channel);
-    if (
-      this.input.target.id === "disboard-native-bump" &&
-      this.input.mode !== "reconcile" &&
-      !channel.canManageMessages
-    )
-      throw new Error(
-        channel.moderationMfaLevel === "ELEVATED" &&
-          channel.accountMfaEnabled !== true
-          ? "DISBOARD cleanup requires 2FA on the outreach account because the server requires 2FA for moderation"
-          : "DISBOARD requires Manage Messages for confirmation cleanup before bumping",
-      );
     const evidence = this.observe(
       `Account: ${expected.username}\nGuild: ${channel.guildId}\nChannel: ${channel.name}\nChannel ID: ${channel.id}\nCan send: ${String(channel.canSend)}${applicationCommand === null ? "" : `\nApplication: ${applicationCommand.application}\nCommand: /${applicationCommand.name}\nCommand ID: ${applicationCommand.id}\nCan use application commands: true\nCommand permission: ${applicationCommand.permission.reason}\nManage Server: ${String(channel.canManageServer)}\nBot invocation: not performed`}`,
     );
@@ -424,15 +412,6 @@ export class PromotionDiscordPreview {
     const page = await this.capture();
     // The model chooses the receipt; the parent supplies exact native text.
     return { ...receipt, url, quote: page.text.trim().slice(0, 500) };
-  }
-
-  async cleanupVerifiedReply(result: PromotionTaskResult) {
-    return await cleanupDiscordReply({
-      target: this.input.target,
-      mode: this.input.mode,
-      result,
-      request: (path, body) => this.request(path, body),
-    });
   }
 
   private observeMessage(

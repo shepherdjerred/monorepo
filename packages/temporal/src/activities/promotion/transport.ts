@@ -144,19 +144,6 @@ export function promotionTransport(input: {
           );
       },
       audit: () => ({ preparedActions: discord.preparedActions }),
-      afterFinish: async (result: PromotionTaskResult) => {
-        const cleanup = await discord.cleanupVerifiedReply(result);
-        if (
-          cleanup !== null &&
-          !(await input.store.put(
-            `cleanup/${encodeURIComponent(input.occurrenceId)}.json`,
-            cleanup,
-            undefined,
-          ))
-        )
-          throw new Error("Cleanup audit already exists");
-        return cleanup;
-      },
       close: () => Promise.resolve(),
     };
   }
@@ -186,7 +173,6 @@ export function promotionTransport(input: {
       return Promise.resolve();
     },
     audit: () => ({}),
-    afterFinish: (_result: PromotionTaskResult) => Promise.resolve(null),
     close: () => browser.close(),
   };
 }

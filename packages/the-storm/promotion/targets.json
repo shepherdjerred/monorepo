@@ -221,17 +221,17 @@
     {
       "id": "disboard-native-bump",
       "name": "DISBOARD native bump in The Storm",
-      "url": "https://discord.com/channels/1043751242649829436/1043751242649829439",
-      "rulesUrl": "https://discord.com/channels/1043751242649829436/1043751242649829439",
+      "url": "https://discord.com/channels/1043751242649829436/1572427947535507577",
+      "rulesUrl": "https://discord.com/channels/1043751242649829436/1572427947535507577",
       "account": "discord",
       "hosts": ["discord.com"],
       "action": "bump",
       "content": "directory",
       "minimumIntervalSeconds": 7200,
-      "notes": "The caller selected the pinned DISBOARD /bump command with no arguments in The Storm's general channel. In run mode invoke it once and verify the bot's actual reply; in preview mode only prepare it without invoking. Report native cooldown or permission obstacles. Never send a substitute promotional message or repeat an ambiguous interaction.",
+      "notes": "The caller selected the pinned DISBOARD /bump command with no arguments in The Storm's disboard channel. In run mode invoke it once and verify the bot's actual reply; in preview mode only prepare it without invoking. Report native cooldown or permission obstacles. Never send a substitute promotional message or repeat an ambiguous interaction.",
       "discord": {
         "guildId": "1043751242649829436",
-        "channelId": "1043751242649829439",
+        "channelId": "1572427947535507577",
         "username": "the.storm.mc",
         "slash": {
           "botId": "302050872383242240",

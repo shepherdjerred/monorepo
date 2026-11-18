@@ -898,10 +898,8 @@ PinchTab credentials or config.
   Login and MFA share the Discord SDK's authentication transport and client context.
   `discord daemon start --user-only` resolves only the registered user token
   and leaves the bot token unloaded. These login modes are mutually exclusive.
-  Channel metadata includes effective `canManageMessages` for confirmation-cleanup
-  preflight, including `moderationMfaLevel` and `accountMfaEnabled` when the server
-  requires moderator 2FA. Exact-message deletion still verifies guild, channel, author, and
-  message identity and reads back absence.
+  Channel metadata includes effective `canManageMessages`, `moderationMfaLevel`,
+  and `accountMfaEnabled` when the server requires moderator 2FA.
   `/edit-own-message` corrects one existing user-authored message with explicit
   guild, channel, message and author pins. It verifies ownership before editing
   and fetches the message again to require exact requested content. It never
@@ -912,10 +910,6 @@ PinchTab credentials or config.
   guild/channel permissions for scoped preview adapters.
   Internal `POST /read` accepts an optional numeric `messageId` for a fresh
   exact-message fetch in the selected channel, independent of recent history.
-  The internal `POST /delete-reply` endpoint removes one explicitly authorized
-  bot reply, requiring exact guild, channel, message and expected author IDs.
-  It checks identity before deleting and confirms remote absence afterward;
-  already absent messages require no write. Permission failures remain explicit.
   Userbot sends and slash invocations return HTTP 429 with
   `code: "DISCORD_COOLDOWN"`, `effect: "not-sent"`, `retryAfterMs` and
   `nextEligibleAt` only when the SDK rejects the matching initial mutation.

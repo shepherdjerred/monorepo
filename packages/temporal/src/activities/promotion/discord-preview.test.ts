@@ -264,8 +264,6 @@ function harness(
         sentContent = z.object({ content: z.string() }).parse(body).content;
         return Response.json({ messageId: "123" });
       }
-      if (url.pathname === "/delete-reply")
-        return Response.json({ deleted: true, alreadyAbsent: false });
       if (url.pathname === "/read")
         return Response.json({
           messages: [
@@ -314,8 +312,8 @@ function harness(
   return { client, requests, journal, target, store };
 }
 
-describe("DISBOARD reply cleanup", () => {
-  it("blocks a bump when server-required moderation 2FA is missing", async () => {
+describe("DISBOARD dedicated channel bump", () => {
+  it("allows DISBOARD bumps without Manage Messages or moderation 2FA", async () => {
     const test = harness({
       run: true,
       slash: true,
@@ -324,7 +322,10 @@ describe("DISBOARD reply cleanup", () => {
       accountMfaEnabled: false,
     });
     test.target.id = "disboard-native-bump";
-    await expect(test.client.inspect()).rejects.toThrow("requires 2FA");
+    await expect(test.client.inspect()).resolves.toMatchObject({
+      channel: { id: test.target.discord.channelId, canManageMessages: false },
+      applicationCommand: { name: "bump" },
+    });
     expect(
       test.requests.some((request) =>
         ["/slash", "/send"].includes(request.path),
@@ -351,71 +352,9 @@ describe("DISBOARD reply cleanup", () => {
     });
     expect(
       test.requests.every(
-        (request) =>
-          !["/send", "/slash", "/delete-reply"].includes(request.path),
+        (request) => !["/send", "/slash"].includes(request.path),
       ),
     ).toBe(true);
-  });
-  it("blocks DISBOARD before publishing when cleanup permission is absent", async () => {
-    const test = harness({ run: true, slash: true, canManageMessages: false });
-    test.target.id = "disboard-native-bump";
-    await expect(test.client.inspect()).rejects.toThrow("Manage Messages");
-    expect(
-      test.requests.some((r) => r.path === "/slash" || r.path === "/send"),
-    ).toBe(false);
-  });
-  it("cleans only the selected verified DISBOARD reply, never an ordinary ad", async () => {
-    const test = harness({ run: true, slash: true });
-    const result: PromotionTaskResult = {
-      status: "verified",
-      summary: "Bump verified",
-      performedAction: true,
-      nextEligibleAt: null,
-      preparedContent: "/bump",
-      evidence: [],
-      receipt: {
-        status: "verified",
-        url: `${test.target.url}/123`,
-        quote: "Bump done!",
-        occurrenceId: "fixture",
-      },
-    };
-    expect(await test.client.cleanupVerifiedReply(result)).toBeNull();
-    test.target.id = "disboard-native-bump";
-    if (test.target.discord.slash === undefined)
-      throw new Error("Fixture slash missing");
-    test.target.discord.slash.botId = z
-      .string()
-      .parse(promotionTarget("disboard-native-bump").discord?.slash?.botId);
-    expect(await test.client.cleanupVerifiedReply(result)).toMatchObject({
-      status: "deleted",
-    });
-    expect(test.requests).toEqual([
-      {
-        path: "/delete-reply",
-        body: {
-          guildId: test.target.discord.guildId,
-          channelId: test.target.discord.channelId,
-          messageId: "123",
-          expectedAuthorId: "302050872383242240",
-        },
-      },
-    ]);
-  });
-  it("never deletes a DISBOARD reply in preview", async () => {
-    const test = harness({ slash: true });
-    test.target.id = "disboard-native-bump";
-    const result: PromotionTaskResult = {
-      status: "preview",
-      summary: "Prepared",
-      performedAction: false,
-      nextEligibleAt: null,
-      preparedContent: "/bump",
-      evidence: [],
-      receipt: null,
-    };
-    expect(await test.client.cleanupVerifiedReply(result)).toBeNull();
-    expect(test.requests).toEqual([]);
   });
 });
 describe("approved copy preflight", () => {
@@ -437,7 +376,7 @@ describe("approved copy preflight", () => {
     expect(test.client.preparedActions).toHaveLength(0);
     expect(
       test.requests.some((request) =>
-        ["/send", "/slash", "/delete-reply"].includes(request.path),
+        ["/send", "/slash"].includes(request.path),
       ),
     ).toBe(false);
 
@@ -454,7 +393,7 @@ describe("approved copy preflight", () => {
     ).rejects.toThrow("One prepared");
     expect(
       test.requests.some((request) =>
-        ["/send", "/slash", "/delete-reply"].includes(request.path),
+        ["/send", "/slash"].includes(request.path),
       ),
     ).toBe(false);
   });
