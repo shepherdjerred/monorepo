@@ -297,11 +297,6 @@ async function preflight(
       ["xcrun", "--find", "security"],
       "ships with the command line tools",
     ],
-    [
-      "cargo",
-      ["cargo", "--version"],
-      "the Rust core's xtask builds the XCFramework",
-    ],
   ];
   const missingTools: string[] = [];
   for (const [name, probe, remedy] of tools) {
@@ -470,14 +465,12 @@ async function collectDsyms(): Promise<readonly string[]> {
     .map((line) => line.trim())
     .filter((line) => line.endsWith(".dSYM"));
 
-  const required = ["TaskNotes.app.dSYM", "TaskNotesCore.framework.dSYM"];
+  const required = ["TaskNotes.app.dSYM"];
   const missing = required.filter((name) => !present.includes(name));
   if (missing.length > 0) {
     fail(
       `the archive is missing required debug symbols: ${missing.join(", ")}\n` +
-        `  Found: ${present.join(", ")}\n` +
-        "  TaskNotesCore.framework.dSYM is the one holding the Rust core's symbols; " +
-        "without it a Rust frame in a crash report is a bare address.",
+        `  Found: ${present.join(", ")}`,
     );
   }
   return present;
@@ -500,22 +493,8 @@ async function main(): Promise<void> {
   announce("preflight");
   await preflight(configuration, dryRun);
 
-  announce("regenerating the Xcode project and checking the Rust XCFramework");
+  announce("regenerating the Xcode project");
   await run(["xcodegen", "generate"]);
-  await run(
-    [
-      "cargo",
-      "run",
-      "--quiet",
-      "--package",
-      "xtask",
-      "--",
-      "check-xcframework",
-    ],
-    {
-      cwd: resolve(packageRoot, "..", "tasknotes-core"),
-    },
-  );
 
   announce("archiving (Release)");
   await run(["rm", "-rf", releaseDirectory]);

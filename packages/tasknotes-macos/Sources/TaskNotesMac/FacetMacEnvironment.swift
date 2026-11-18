@@ -1,4 +1,4 @@
-import AppKit
+public import AppKit
 import Foundation
 import KeyboardShortcuts
 public import Observation
@@ -8,6 +8,8 @@ import TaskNotesKit
 
 @Observable
 public final class FacetMacEnvironment {
+    fileprivate static weak var sharedEnvironment: FacetMacEnvironment?
+
     public let store: FacetStore
     @ObservationIgnored internal let bootstrap: _Concurrency.Task<Void, Never>
     @ObservationIgnored private var panel: QuickAddPanel?
@@ -19,10 +21,9 @@ public final class FacetMacEnvironment {
             store: applicationStore,
             startup: {
                 await applicationStore.start()
-                #if DEBUG
-                    await Self.prepareAcceptanceVault(store: applicationStore)
-                #endif
-            })
+            }
+        )
+        Self.sharedEnvironment = self
         if !store.isIsolatedLaunch {
             KeyboardShortcuts.onKeyDown(for: .quickAdd) { [weak self] in
                 MainActor.assumeIsolated { self?.toggleQuickAdd() }
@@ -37,29 +38,6 @@ public final class FacetMacEnvironment {
         bootstrap = _Concurrency.Task { await startup() }
     }
 
-    #if DEBUG
-        internal static func prepareAcceptanceVault(
-            store: FacetStore, arguments: [String] = CommandLine.arguments
-        ) async {
-            guard arguments.contains("--facet-native-acceptance") else { return }
-            do {
-                guard let root = store.acceptanceDirectory else {
-                    throw FacetAcceptanceError.invalidDescriptor
-                }
-                let directory = try await _Concurrency.Task.detached {
-                    let directory = root.appendingPathComponent("Native acceptance")
-                    try FileManager.default.createDirectory(
-                        at: directory, withIntermediateDirectories: true)
-                    return directory
-                }.value
-                try await store.prepareAcceptanceVault(directory)
-            } catch {
-                store.reportNativeFailure(error)
-                assertionFailure("Native acceptance vault could not be prepared.")
-            }
-        }
-    #endif
-
     public func toggleQuickAdd() {
         if let panel, panel.isVisible {
             panel.orderOut(nil)
@@ -67,7 +45,8 @@ public final class FacetMacEnvironment {
         }
         if panel == nil {
             panel = QuickAddPanel(
-                content: NSHostingView(rootView: FacetMacQuickCapture(environment: self)))
+                content: NSHostingView(rootView: FacetMacQuickCapture(environment: self))
+            )
         }
         guard let panel,
             let screen = QuickAddPanel.preferredScreen(pointerAt: NSEvent.mouseLocation)
@@ -79,21 +58,55 @@ public final class FacetMacEnvironment {
         focusRequest += 1
     }
 
-    fileprivate func dismissQuickAdd() { panel?.orderOut(nil) }
+    fileprivate func dismissQuickAdd() {
+        panel?.orderOut(nil)
+    }
+
     fileprivate func resizeQuickAdd(expanded: Bool) {
         guard let panel else { return }
         let top = panel.frame.maxY
         let maximum = panel.screen?.visibleFrame.height ?? 800
-        panel.setContentSize(CGSize(width: 560, height: min(expanded ? 660 : 420, maximum - 80)))
+        panel.setContentSize(CGSize(width: 560, height: min(expanded ? 360 : 170, maximum - 80)))
         panel.setFrameOrigin(CGPoint(x: panel.frame.minX, y: top - panel.frame.height))
+    }
+}
+
+/// Application termination delegate ensuring pending SQLite writes and outbox sync flush cleanly.
+public final class TaskNotesApplicationDelegate: NSObject, NSApplicationDelegate {
+    private var terminationConfirmed = false
+
+    public override init() {
+        super.init()
+    }
+
+    public func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply
+    {
+        if terminationConfirmed {
+            terminationConfirmed = false
+            return .terminateNow
+        }
+        guard let environment = FacetMacEnvironment.sharedEnvironment else {
+            return .terminateNow
+        }
+        _Concurrency.Task { @MainActor in
+            _ = await environment.store.flushBeforeClose()
+            terminationConfirmed = true
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
     }
 }
 
 public struct FacetMacRootView: View {
     private let environment: FacetMacEnvironment
-    public init(environment: FacetMacEnvironment) { self.environment = environment }
+
+    public init(environment: FacetMacEnvironment) {
+        self.environment = environment
+    }
+
     public var body: some View {
-        FacetRootView(store: environment.store).frame(minWidth: 760, minHeight: 520)
+        FacetRootView(store: environment.store)
+            .frame(minWidth: 820, minHeight: 540)
             .background(FacetWorkspaceWindowIdentity().frame(width: 0, height: 0))
     }
 }
@@ -102,29 +115,38 @@ public struct FacetMacCommands: Commands {
     @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.facetWindowCommands) private var window: FacetWindowCommandActions?
     private let environment: FacetMacEnvironment
-    public init(environment: FacetMacEnvironment) { self.environment = environment }
+
+    public init(environment: FacetMacEnvironment) {
+        self.environment = environment
+    }
+
     public var body: some Commands {
         CommandGroup(replacing: .newItem) {
             Button("New Window") { openWindow(id: "facet.workspace") }
-            Button("New Task") { window?.newTask() }.keyboardShortcut("n")
+            Button("New Task") { window?.newTask() }
+                .keyboardShortcut("n")
                 .disabled(window == nil)
             Button("Quick Add…") { environment.toggleQuickAdd() }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
         }
         CommandGroup(after: .pasteboard) {
             Divider()
-            Button("Delete") { window?.delete() }.keyboardShortcut(.delete, modifiers: .command)
+            Button("Delete") { window?.delete() }
+                .keyboardShortcut(.delete, modifiers: .command)
                 .disabled(window?.hasSelection != true)
         }
         CommandGroup(after: .textEditing) {
             Divider()
-            Button("Find…") { window?.find() }.keyboardShortcut("f").disabled(window == nil)
+            Button("Find…") { window?.find() }
+                .keyboardShortcut("f")
+                .disabled(window == nil)
         }
         CommandGroup(after: .undoRedo) {
-            Button("Undo last task change") {
-                guard let profileID = environment.store.selectedProfileID else { return }
-                _Concurrency.Task { await environment.store.undoLast(profileID: profileID) }
-            }.keyboardShortcut("z", modifiers: [.command, .option]).disabled(window == nil)
+            Button("Undo Last Task Change") {
+                environment.store.undoLast()
+            }
+            .keyboardShortcut("z", modifiers: [.command, .option])
+            .disabled(!environment.store.canUndo)
         }
         SidebarCommands()
         ToolbarCommands()
@@ -132,37 +154,45 @@ public struct FacetMacCommands: Commands {
             Button(window?.inspectorPresented == true ? "Hide Inspector" : "Show Inspector") {
                 window?.toggleInspector()
             }
-            .keyboardShortcut("i", modifiers: [.command, .option]).disabled(window == nil)
+            .keyboardShortcut("i", modifiers: [.command, .option])
+            .disabled(window == nil)
             Divider()
-            Button("Inbox") { window?.navigate("inbox") }.keyboardShortcut("1").disabled(
-                window == nil)
-            Button("Today") { window?.navigate("today") }.keyboardShortcut("2").disabled(
-                window == nil)
-            Button("Upcoming") { window?.navigate("upcoming") }.keyboardShortcut("3").disabled(
-                window == nil)
-            Button("All Tasks") { window?.navigate("all") }.keyboardShortcut("4").disabled(
-                window == nil)
-            Button("Refresh") { window?.refresh() }.keyboardShortcut("r").disabled(window == nil)
+            Button("Inbox") { window?.navigate("inbox") }
+                .keyboardShortcut("1")
+                .disabled(window == nil)
+            Button("Today") { window?.navigate("today") }
+                .keyboardShortcut("2")
+                .disabled(window == nil)
+            Button("Upcoming") { window?.navigate("upcoming") }
+                .keyboardShortcut("3")
+                .disabled(window == nil)
+            Button("Completed") { window?.navigate("completed") }
+                .keyboardShortcut("4")
+                .disabled(window == nil)
+            Button("Board") { window?.navigate("board") }
+                .keyboardShortcut("5")
+                .disabled(window == nil)
+            Button("Sync Now") { window?.refresh() }
+                .keyboardShortcut("r")
+                .disabled(window == nil)
         }
         CommandMenu("Task") {
-            Button("Complete") { window?.complete() }.keyboardShortcut(".", modifiers: .command)
+            Button("Complete") { window?.complete() }
+                .keyboardShortcut(".", modifiers: .command)
                 .disabled(window?.hasSelection != true)
         }
     }
 }
 
-/// Name the actual AppKit window; a SwiftUI content identifier cannot address
-/// two workspace windows independently through native accessibility.
 private struct FacetWorkspaceWindowIdentity: NSViewRepresentable {
     func makeNSView(context: Context) -> WindowIdentityView { WindowIdentityView() }
     func updateNSView(_ view: WindowIdentityView, context: Context) {}
 
     final class WindowIdentityView: NSView {
         private let accessibilityID = "facet.workspace." + UUID().uuidString.lowercased()
+
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
-            // AppKit's window property is unowned(unsafe); read it only from
-            // its MainActor attachment callback and retain it for this call.
             let attachedWindow = unsafe window
             attachedWindow?.setAccessibilityIdentifier(accessibilityID)
         }
@@ -171,42 +201,44 @@ private struct FacetWorkspaceWindowIdentity: NSViewRepresentable {
 
 public struct FacetMacSettingsView: View {
     private let environment: FacetMacEnvironment
-    public init(environment: FacetMacEnvironment) { self.environment = environment }
-    public var body: some View {
-        FacetMacSettingsContent(store: environment.store)
-            .task { await environment.store.start() }
+
+    public init(environment: FacetMacEnvironment) {
+        self.environment = environment
     }
-}
 
-internal struct FacetMacSettingsContent: View {
-    let store: FacetStore
+    public var body: some View {
+        TabView {
+            FacetSettingsAndOnboardingView(store: environment.store, embeddedInTab: true)
+                .tabItem {
+                    Label("General & Sync", systemImage: "icloud")
+                }
 
-    var body: some View {
-        VStack {
             QuickAddSettingsView()
-            GroupBox("Feedback") { FacetFeedbackSettings(store: store).padding(8) }
-            FacetAccountConnectionButton(store: store)
-            Button("Sign out of Obsidian") {
-                _Concurrency.Task { await store.signOut() }
-            }
-        }.padding().frame(width: 480).frame(minHeight: 420)
+                .tabItem {
+                    Label("Shortcuts", systemImage: "command")
+                }
+        }
+        .frame(width: 540, height: 460)
+        .task {
+            await environment.store.start()
+        }
     }
 }
 
 private struct FacetMacQuickCapture: View {
     let environment: FacetMacEnvironment
+
     var body: some View {
         let store = environment.store
         FacetCaptureForm(
-            store: store, focusRequest: environment.focusRequest,
-            retainedPanel: true, close: environment.dismissQuickAdd,
+            store: store,
+            focusRequest: environment.focusRequest,
+            retainedPanel: true,
+            close: environment.dismissQuickAdd,
             expandedChanged: environment.resizeQuickAdd
         )
         .onExitCommand { environment.dismissQuickAdd() }
         .task { await store.start() }
-        .modifier(
-            FacetFeedbackScene(store: store, origin: FacetFeedbackOrigin(surface: .quickAdd))
-        )
         .accessibilityIdentifier(AccessibilityIdentifier.QuickAdd.panel)
     }
 }

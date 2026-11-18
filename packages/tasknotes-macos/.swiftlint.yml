@@ -57,15 +57,6 @@ excluded:
   - .swiftpm
   - TaskNotes.xcodeproj
   # Generated code is exempt; authored code is maximal.
-  #
-  # `Sources/TaskNotesUniFFI` re-exports the machine-generated UniFFI bindings.
-  # The bindings themselves live in `packages/tasknotes-core/bindings`, are
-  # never hand-edited, and are guarded by `cargo xtask check-bindings` — a
-  # committed snapshot plus `git diff --exit-code`, which catches the failure
-  # that actually matters there (silent `Record` reordering) and that no lint
-  # would ever catch. Keep this list in sync with the SwiftPM target that is
-  # exempt in `Package.swift`.
-  - Sources/TaskNotesUniFFI
   - Sources/TaskNotesKit/Generated
   - "**/*.generated.swift"
 

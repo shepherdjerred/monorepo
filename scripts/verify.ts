@@ -53,10 +53,8 @@ const turboTasks = [
   "check:kubeconform",
   "check:1password",
   "check:ios-native-deps",
-  "check:release-bundle",
   "lint:swift",
   "check:caddyfile",
-  "test:contract",
 ] as const;
 
 /**

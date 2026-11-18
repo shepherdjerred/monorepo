@@ -35,9 +35,8 @@ cd "${package_root}"
 # baseline entries. This portable source check prevents baseline debt/growth.
 bun scripts/check-appkit-baseline.ts
 
-# The single target exempt from the authored lint posture, because it re-exports
-# machine-generated bindings. See the long comment in Package.swift.
-exempt_target="TaskNotesUniFFI"
+# Every target in Package.swift is authored Swift and must carry authoredSwiftSettings.
+exempt_target=""
 
 status=0
 

@@ -5,34 +5,30 @@
 // at all under `MemberImportVisibility`. Public because `AttributedString` is in
 // this type's surface.
 public import Foundation
-public import TaskNotesUniFFI
+
+/// Failure produced when Foundation cannot parse a task's Markdown description.
+public enum MarkdownParseError: Error, LocalizedError, Sendable, Equatable {
+    case unreadableMarkdown(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .unreadableMarkdown(let detail):
+            "The note body is not readable as Markdown: \(detail)"
+        }
+    }
+}
 
 /// A task's note body, parsed into blocks a SwiftUI view can lay out.
 ///
-/// ## The parse is Foundation's, and that is the whole point
+/// ## Foundation's GFM parser
 ///
-/// The app **edits markdown source as plain text and renders it read-only**,
-/// matching the React Native app; there is no WYSIWYG here and macOS 15 costs
-/// nothing because of it. Rendering still needs a real parse, and the parse used
-/// is `AttributedString(markdown:options:)` — Foundation's own GitHub-Flavored
-/// Markdown reader, cmark-gfm underneath. Nothing about markdown syntax is
-/// decided in this file: headings, emphasis, lists, block quotes, fenced code,
-/// thematic breaks, links and GFM tables all arrive already identified, and the
-/// code below only reshapes them into something a `VStack` can walk.
-///
-/// A hand-rolled markdown reader was never on the table, and neither was
-/// MarkdownUI, which is formally in maintenance mode.
-///
-/// ⚠️ **Reported deviation.** The brief asked for `swift-markdown` as the
-/// parser. Adding it means a new remote SwiftPM dependency, which means editing
-/// `Package.swift` — explicitly out of scope for this work, and a file a
-/// concurrently running agent could be in. Foundation's parser is the same
-/// cmark-gfm engine with no manifest change and no third-party package, so
-/// nothing is hand-rolled either way. ``MarkdownBlock`` is deliberately
-/// parser-shaped rather than Foundation-shaped: swapping the body of
-/// ``of(source:)`` for a `swift-markdown` walk changes nothing above it, and
-/// would buy a real AST — proper nested-list trees and GFM task-list items,
-/// which are the two things the flattening below genuinely gives up.
+/// The app **edits markdown source as plain text and renders it read-only**.
+/// Rendering uses `AttributedString(markdown:options:)` — Foundation's own
+/// GitHub-Flavored Markdown reader, cmark-gfm underneath. Nothing about
+/// markdown syntax is decided in this file: headings, emphasis, lists, block
+/// quotes, fenced code, thematic breaks, links and GFM tables all arrive
+/// already identified, and the code below only reshapes them into something a
+/// `VStack` can walk.
 ///
 /// ## Why blocks and not one `AttributedString`
 ///
@@ -58,21 +54,22 @@ public struct MarkdownBody: Sendable, Equatable {
     ///   reaching this means something is very wrong with the bytes — and a
     ///   silent fallback to "render it as one paragraph" would hide exactly the
     ///   case worth seeing.
-    public static func of(source: String) throws(CoreError) -> MarkdownBody {
-        guard !source.trimmingWhitespace().isEmpty else { return MarkdownBody(blocks: []) }
-        let attributed = try CoreErrors.validating("the note body is not readable as markdown") {
-            try AttributedString(
+    public static func of(source: String) throws(MarkdownParseError) -> MarkdownBody {
+        guard !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return MarkdownBody(blocks: [])
+        }
+        let attributed: AttributedString
+        do {
+            attributed = try AttributedString(
                 markdown: source,
                 options: AttributedString.MarkdownParsingOptions(
                     allowsExtendedAttributes: true,
-                    // `.full` is what produces `presentationIntent` at all. The
-                    // default, `.inlineOnlyPreservingWhitespace`, reports no
-                    // block structure — so every heading and list item would
-                    // arrive as an ordinary paragraph.
                     interpretedSyntax: .full,
                     failurePolicy: .returnPartiallyParsedIfPossible
                 )
             )
+        } catch {
+            throw .unreadableMarkdown(error.localizedDescription)
         }
         return MarkdownBody(blocks: assemble(atoms: atoms(of: attributed)))
     }

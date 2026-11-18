@@ -8,35 +8,24 @@ import TaskNotesKit
     import UIKit
 #endif
 
+internal struct FacetColorSwatch: Identifiable {
+    let name: String
+    let label: String
+    let color: Color
+
+    var id: String { name }
+}
+
 internal enum FacetNativeStyle {
     static let tokens = FacetPresentationTokens.shared
     static let mobileCaptureDiameter: CGFloat = 56
     static let mobileCapturePadding: CGFloat = 20
     static let mobileCaptureClearance: CGFloat = 20
+
     static var mobileListBottomMargin: CGFloat {
         mobileCaptureDiameter + mobileCapturePadding + mobileCaptureClearance
     }
-    static var formMinimumWidth: CGFloat? {
-        #if os(macOS)
-            340
-        #else
-            nil
-        #endif
-    }
-    static var text: Color {
-        #if os(macOS)
-            Color(nsColor: .labelColor)
-        #else
-            Color(uiColor: .label)
-        #endif
-    }
-    static var secondaryText: Color {
-        #if os(macOS)
-            Color(nsColor: .secondaryLabelColor)
-        #else
-            Color(uiColor: .secondaryLabel)
-        #endif
-    }
+
     static var brand: Color {
         #if os(iOS)
             .indigo
@@ -45,203 +34,369 @@ internal enum FacetNativeStyle {
         #endif
     }
 
-    static func tint(_ choice: FacetConfiguredChoice) -> Color {
-        guard let value = choice.color, let color = FacetConfiguredColor(value) else {
+    static let colorSwatches: [FacetColorSwatch] = [
+        FacetColorSwatch(
+            name: "charcoal",
+            label: "Charcoal",
+            color: Color(.sRGB, red: 0.50, green: 0.50, blue: 0.52, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "berry_red",
+            label: "Berry Red",
+            color: Color(.sRGB, red: 0.72, green: 0.14, blue: 0.37, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "red",
+            label: "Red",
+            color: Color(.sRGB, red: 0.86, green: 0.25, blue: 0.21, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "orange",
+            label: "Orange",
+            color: Color(.sRGB, red: 0.95, green: 0.52, blue: 0.15, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "yellow",
+            label: "Yellow",
+            color: Color(.sRGB, red: 0.92, green: 0.73, blue: 0.08, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "green",
+            label: "Green",
+            color: Color(.sRGB, red: 0.16, green: 0.65, blue: 0.33, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "teal",
+            label: "Teal",
+            color: Color(.sRGB, red: 0.08, green: 0.62, blue: 0.64, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "blue",
+            label: "Blue",
+            color: Color(.sRGB, red: 0.16, green: 0.45, blue: 0.88, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "grape",
+            label: "Grape",
+            color: Color(.sRGB, red: 0.53, green: 0.30, blue: 0.85, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "magenta",
+            label: "Magenta",
+            color: Color(.sRGB, red: 0.88, green: 0.32, blue: 0.60, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "salmon",
+            label: "Salmon",
+            color: Color(.sRGB, red: 0.96, green: 0.51, blue: 0.48, opacity: 1)
+        ),
+        FacetColorSwatch(
+            name: "grey",
+            label: "Grey",
+            color: Color(.sRGB, red: 0.58, green: 0.60, blue: 0.63, opacity: 1)
+        ),
+    ]
+
+    static func swatchColor(_ rawName: String?) -> Color {
+        guard let rawName, !rawName.isEmpty else {
             return .secondary
         }
-        return Color(
-            .sRGB, red: color.red, green: color.green, blue: color.blue, opacity: color.alpha)
+        let lower = rawName.lowercased()
+        if let match = colorSwatches.first(where: { $0.name == lower }) {
+            return match.color
+        }
+        if let parsed = FacetConfiguredColor(rawName) {
+            return Color(
+                .sRGB,
+                red: parsed.red,
+                green: parsed.green,
+                blue: parsed.blue,
+                opacity: parsed.alpha
+            )
+        }
+        return .secondary
     }
 
-    static var rowAnimation: Animation {
-        .snappy(duration: tokens.motion.milliseconds.rowChange / 1000)
+    static func priorityColor(_ priority: Priority) -> Color {
+        switch priority {
+        case .p1: .red
+        case .p2: .orange
+        case .p3: .blue
+        case .p4: .secondary
+        }
+    }
+
+    static func priorityTitle(_ priority: Priority) -> String {
+        switch priority {
+        case .p1: "P1"
+        case .p2: "P2"
+        case .p3: "P3"
+        case .p4: "P4"
+        }
+    }
+
+    static func priorityFullTitle(_ priority: Priority) -> String {
+        switch priority {
+        case .p1: "Priority 1"
+        case .p2: "Priority 2"
+        case .p3: "Priority 3"
+        case .p4: "Priority 4"
+        }
     }
 }
 
-internal struct FacetTaskRow: View {
-    let task: FacetTask
-    let presentation: FacetTaskPresentation
-    let desktop: Bool
-    var stacked = false
-    var completionReceipt: String?
-    let viewerCalendar: ViewerCalendar
-    let complete: () -> Void
-    let open: () -> Void
-    let schedule: () -> Void
-    let delete: () -> Void
+internal struct FacetTaskRowView: View {
+    let task: Task
+    let store: FacetStore
+    let showProjectBadge: Bool
+    let isSelected: Bool
+    let onSelect: () -> Void
+
     @State private var hovering = false
+    @State private var showingSchedulePopover = false
     @State private var completionPulse: String?
     @Environment(\.accessibilityReduceMotion) private var reducedMotion
-    @ScaledMetric(relativeTo: .body) private var checkboxSize = CGFloat(
-        FacetNativeStyle.tokens.mobile.checkboxSize)
 
     var body: some View {
-        HStack(
-            alignment: desktop ? .firstTextBaseline : .center,
-            spacing: CGFloat(FacetNativeStyle.tokens.spacing.sm)
-        ) {
-            Button(action: complete) {
-                if reducedMotion || desktop {
-                    checkbox
-                } else {
-                    checkbox.phaseAnimator(
-                        [1.0, FacetNativeStyle.tokens.motion.checkboxSpring.peakScale, 1.0],
-                        trigger: completionPulse
-                    ) { content, phase in
-                        content.scaleEffect(phase)
-                    } animation: { _ in
-                        .interpolatingSpring(
-                            stiffness: FacetNativeStyle.tokens.motion.checkboxSpring.stiffness,
-                            damping: FacetNativeStyle.tokens.motion.checkboxSpring.damping)
-                    }
-                }
+        let receipt = store.completionReceipts[task.id]
+        HStack(alignment: .top, spacing: 10) {
+            Button {
+                store.toggleTaskCompletion(task)
+            } label: {
+                checkbox(receipt: receipt)
             }
             .buttonStyle(.plain)
-            .frame(
-                minWidth: CGFloat(
-                    desktop
-                        ? FacetNativeStyle.tokens.hitTargets.desktop
-                        : FacetNativeStyle.tokens.hitTargets.mobile),
-                minHeight: CGFloat(
-                    desktop
-                        ? FacetNativeStyle.tokens.hitTargets.desktop
-                        : FacetNativeStyle.tokens.hitTargets.mobile)
-            )
-            .accessibilityLabel(
-                task.completed ? "Uncomplete \(task.title)" : "Complete \(task.title)")
+            .padding(.top, 2)
+            .accessibilityLabel(task.completed ? "Reopen \(task.title)" : "Complete \(task.title)")
+            .accessibilityIdentifier(AccessibilityIdentifier.TaskList.rowToggle(task.id))
 
-            if desktop && !stacked {
-                Text(task.title).lineLimit(1).layoutPriority(2)
-                    .strikethrough(task.completed).foregroundStyle(
-                        task.completed ? .secondary : .primary)
-                if let weight = presentation.priority.weight, weight > 0 {
-                    Image(systemName: "exclamationmark").foregroundStyle(
-                        FacetNativeStyle.tint(presentation.priority)
-                    )
-                    .help(presentation.priority.label).accessibilityHidden(true)
-                }
-                markers
-                if !presentation.metadata.isEmpty {
-                    Text(presentation.metadata).font(.caption).foregroundStyle(
-                        FacetNativeStyle.secondaryText
-                    )
-                    .lineLimit(1).layoutPriority(1)
-                }
-                Spacer(minLength: 8)
-                date.frame(
-                    minWidth: CGFloat(FacetNativeStyle.tokens.desktop.dateColumnMin),
-                    alignment: .leading)
-                HStack(spacing: 4) {
-                    Button(action: schedule) { Image(systemName: "calendar") }
-                    Button(action: delete) { Image(systemName: "trash") }
-                }.buttonStyle(.borderless).opacity(hovering ? 1 : 0)
-            } else {
-                Button(action: open) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(task.title).font(.body).multilineTextAlignment(.leading)
-                            .strikethrough(task.completed).foregroundStyle(
-                                task.completed ? .secondary : .primary)
-                        rowMetadata.font(.caption)
-                    }.frame(maxWidth: .infinity, alignment: .leading)
-                }.buttonStyle(.plain).accessibilityHint("View task details")
-            }
-            #if os(iOS)
-                if !desktop {
-                    Menu {
-                        Button(task.completed ? "Uncomplete" : "Complete", action: complete)
-                        Button("Schedule…", action: schedule)
-                        Button("Edit…", action: open)
-                        Button("Delete task", role: .destructive, action: delete)
-                    } label: {
-                        Image(systemName: "ellipsis").foregroundStyle(
-                            FacetNativeStyle.secondaryText
-                        )
-                        .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
-                    }
-                    .accessibilityLabel("More actions for \(task.title)")
-                    .accessibilityIdentifier("facet.task.actions.\(task.path)")
-                }
-            #endif
+            rowMainButton
+            trailingActions
         }
-        .padding(
-            .vertical,
-            CGFloat(
-                desktop
-                    ? FacetNativeStyle.tokens.desktop.rowVerticalPadding
-                    : FacetNativeStyle.tokens.mobile.rowVerticalPadding)
+        .padding(.vertical, 5)
+        .padding(.horizontal, 6)
+        .background(
+            isSelected ? Color.accentColor.opacity(0.12) : Color.clear,
+            in: .rect(cornerRadius: 8)
         )
-        .onHover { hovering = $0 }
-        .onChange(of: task.completed) {
-            if let completionReceipt { completionPulse = completionReceipt }
-        }
         .contentShape(Rectangle())
-        .contextMenu {
-            Button(task.completed ? "Uncomplete" : "Complete", action: complete)
-            Button("Schedule…", action: schedule)
-            Button("Edit…", action: open)
-            Button("Delete task", role: .destructive, action: delete)
+        .onHover { hovering = $0 }
+        .onChange(of: receipt) {
+            if let receipt { completionPulse = receipt }
         }
+        .contextMenu { rowContextMenu }
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("facet.task.\(task.path)")
+        .accessibilityIdentifier(AccessibilityIdentifier.TaskList.row(task.id))
     }
 
-    @ViewBuilder private var rowMetadata: some View {
-        #if os(iOS)
-            FacetMobileRowMetadata(task: task, presentation: presentation, viewer: viewerCalendar)
-        #else
-            HStack(spacing: 6) {
-                if desktop, let weight = presentation.priority.weight, weight > 0 {
-                    Image(systemName: "exclamationmark").foregroundStyle(
-                        FacetNativeStyle.tint(presentation.priority)
-                    )
-                    .help(presentation.priority.label).accessibilityHidden(true)
+    private var rowMainButton: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(task.title)
+                        .font(.body)
+                        .strikethrough(task.completed)
+                        .foregroundStyle(task.completed ? .secondary : .primary)
+                        .multilineTextAlignment(.leading)
+
+                    if task.priority != .p4 {
+                        Text(FacetNativeStyle.priorityTitle(task.priority))
+                            .font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(
+                                FacetNativeStyle.priorityColor(task.priority).opacity(0.15),
+                                in: .capsule
+                            )
+                            .foregroundStyle(FacetNativeStyle.priorityColor(task.priority))
+                    }
                 }
-                date
-                metadataText
-                markers
+
+                if !task.description.isEmpty {
+                    Text(task.description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                metadataRow
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var trailingActions: some View {
+        #if os(macOS)
+            HStack(spacing: 4) {
+                Button {
+                    showingSchedulePopover = true
+                } label: {
+                    Image(systemName: "calendar")
+                }
+                .help("Schedule")
+                .accessibilityIdentifier(AccessibilityIdentifier.TaskList.rowSchedule(task.id))
+                .popover(isPresented: $showingSchedulePopover) {
+                    FacetSchedulePopoverView(task: task, store: store) {
+                        showingSchedulePopover = false
+                    }
+                }
+
+                Button(role: .destructive) {
+                    store.deleteTask(task)
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .help("Delete task")
+                .accessibilityIdentifier(AccessibilityIdentifier.TaskList.rowDelete(task.id))
+            }
+            .buttonStyle(.borderless)
+            .opacity(hovering || isSelected ? 1 : 0)
+        #else
+            Menu {
+                rowContextMenu
+            } label: {
+                Image(systemName: "ellipsis")
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 36, minHeight: 36)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("Actions for \(task.title)")
         #endif
     }
 
-    @ViewBuilder private var metadataText: some View {
-        if !presentation.metadata.isEmpty {
-            Text(presentation.metadata).foregroundStyle(FacetNativeStyle.secondaryText)
+    @ViewBuilder
+    private var rowContextMenu: some View {
+        Button(task.completed ? "Reopen" : "Complete") {
+            store.toggleTaskCompletion(task)
+        }
+        Button("Edit Details…", action: onSelect)
+        Divider()
+        Menu("Priority") {
+            ForEach(Priority.allCases, id: \.self) { level in
+                Button(FacetNativeStyle.priorityFullTitle(level)) {
+                    store.patchTask(id: task.id, patch: FacetTaskPatch(priority: level))
+                }
+            }
+        }
+        Button("Schedule Today") {
+            store.patchTask(id: task.id, patch: FacetTaskPatch(dueDate: .set(store.calendar.today)))
+        }
+        Button("Schedule Tomorrow") {
+            store.patchTask(
+                id: task.id,
+                patch: FacetTaskPatch(dueDate: .set(store.calendar.addingDays(1)))
+            )
+        }
+        if task.due_date != nil || task.due_datetime != nil {
+            Button("Clear Due Date") {
+                store.patchTask(
+                    id: task.id,
+                    patch: FacetTaskPatch(dueDate: .clear, dueDatetime: .clear)
+                )
+            }
+        }
+        Divider()
+        Button("Delete Task", role: .destructive) {
+            store.deleteTask(task)
         }
     }
 
-    private var checkbox: some View {
-        Image(systemName: task.completed ? "checkmark.circle.fill" : "circle")
-            .font(.system(size: desktop ? checkboxSize * 0.8 : checkboxSize))
+    @ViewBuilder
+    private func checkbox(receipt: String?) -> some View {
+        let icon = Image(systemName: task.completed ? "checkmark.circle.fill" : "circle")
+            .font(.system(size: 18, weight: .medium))
             .foregroundStyle(
-                desktop
-                    ? FacetNativeStyle.secondaryText : FacetNativeStyle.tint(presentation.priority)
+                task.completed ? .green : FacetNativeStyle.priorityColor(task.priority)
             )
-            .animation(
-                reducedMotion || completionReceipt == nil
-                    ? nil
-                    : .linear(
-                        duration: FacetNativeStyle.tokens.motion.milliseconds.checkboxFill / 1000),
-                value: task.completed)
-    }
-
-    private var date: some View {
-        Group {
-            if let dateLabel = presentation.date {
-                Text(dateLabel).font(.caption).foregroundStyle(FacetNativeStyle.secondaryText)
-                    .fixedSize(horizontal: true, vertical: false)
+        if reducedMotion || receipt == nil {
+            icon
+        } else {
+            icon.phaseAnimator(
+                [1.0, FacetNativeStyle.tokens.motion.checkboxSpring.peakScale, 1.0],
+                trigger: completionPulse
+            ) { content, phase in
+                content.scaleEffect(phase)
+            } animation: { _ in
+                .interpolatingSpring(
+                    stiffness: FacetNativeStyle.tokens.motion.checkboxSpring.stiffness,
+                    damping: FacetNativeStyle.tokens.motion.checkboxSpring.damping
+                )
             }
         }
     }
 
-    @ViewBuilder private var markers: some View {
-        if presentation.recurring {
-            Image(systemName: "repeat").foregroundStyle(FacetNativeStyle.secondaryText)
+    @ViewBuilder
+    private var metadataRow: some View {
+        let dueCivil = store.calendar.effectiveCivilDay(
+            dueDate: task.due_date,
+            dueDatetime: task.due_datetime
+        )
+        let subtaskList = store.subtasks(of: task.id)
+        let taskLabels = task.label_ids.compactMap { store.label(for: $0) }
+        let projectObj = showProjectBadge ? store.project(for: task.project_id) : nil
+
+        if dueCivil != nil || task.is_recurring || !subtaskList.isEmpty || !taskLabels.isEmpty
+            || projectObj != nil
+        {
+            HStack(spacing: 8) {
+                dueMetadataItem(dueCivil: dueCivil)
+                subtasksMetadataItem(subtaskList: subtaskList)
+                ForEach(taskLabels) { item in
+                    Text("@\(item.name)")
+                        .font(.caption)
+                        .foregroundStyle(FacetNativeStyle.swatchColor(item.color))
+                }
+                if let projectObj, !projectObj.is_inbox {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(FacetNativeStyle.swatchColor(projectObj.color))
+                            .frame(width: 6, height: 6)
+                        Text(projectObj.name)
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                }
+            }
         }
-        if presentation.pending {
-            Image(systemName: "arrow.up.circle").foregroundStyle(FacetNativeStyle.secondaryText)
+    }
+
+    @ViewBuilder
+    private func dueMetadataItem(dueCivil: String?) -> some View {
+        if let dueCivil {
+            let isOverdue = !task.completed && dueCivil < store.calendar.today
+            let dueColor: Color =
+                isOverdue ? .red : (dueCivil == store.calendar.today ? .green : .secondary)
+            HStack(spacing: 3) {
+                Image(systemName: task.is_recurring ? "repeat" : "calendar")
+                Text(dueBadgeLabel(for: dueCivil))
+            }
+            .font(.caption)
+            .foregroundStyle(dueColor)
+        } else if task.is_recurring {
+            Image(systemName: "repeat")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
-        if presentation.blocked {
-            Image(systemName: "lock").foregroundStyle(FacetNativeStyle.secondaryText)
+    }
+
+    @ViewBuilder
+    private func subtasksMetadataItem(subtaskList: [Task]) -> some View {
+        if !subtaskList.isEmpty {
+            let doneCount = subtaskList.count(where: \.completed)
+            HStack(spacing: 3) {
+                Image(systemName: "checklist")
+                Text("\(doneCount)/\(subtaskList.count)")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
+    }
+
+    private func dueBadgeLabel(for civil: String) -> String {
+        if civil == store.calendar.today { return "Today" }
+        if civil == store.calendar.addingDays(1) { return "Tomorrow" }
+        return civil
     }
 }

@@ -1,385 +1,142 @@
-import SwiftUI
-import TaskNotesKit
+#if os(macOS)
+    import Foundation
+    import SwiftUI
+    import TaskNotesKit
 
-internal struct FacetNativeWorkspace: View {
-    @Bindable var store: FacetStore
-    @Binding var importsFolder: Bool
-    @Binding var capturePresented: Bool
-    let sheets: FacetSheetPresentation
-    @State private var window: FacetWindowState
-    @State private var draft: FacetInspectorDraft?
-    @State private var detail: FacetTask?
-    @State private var route = "inbox"
-    @State private var settings = false
-    @State private var searching = false
-    @State private var deletingSelection = false
-    @State private var selectionAction = FacetBulkDraft()
-    @State private var commitRegistration = UUID()
-    @Environment(\.accessibilityReduceMotion) private var reducedMotion
-    @Environment(\.facetFeedbackOrigin) private var feedbackOrigin
+    internal struct FacetNativeWorkspace: View {
+        @Bindable var store: FacetStore
+        let onPresentModal: (FacetPresentedEntityModal) -> Void
 
-    init(
-        store: FacetStore, importsFolder: Binding<Bool>, capturePresented: Binding<Bool>,
-        sheets: FacetSheetPresentation, window: FacetWindowState? = nil,
-        draft: FacetInspectorDraft? = nil
-    ) {
-        self.store = store
-        _importsFolder = importsFolder
-        _capturePresented = capturePresented
-        self.sheets = sheets
-        let state = window ?? FacetWindowState(store: store)
-        _window = State(initialValue: state)
-        _route = State(
-            initialValue: Self.routes.contains(where: { $0.id == state.scope })
-                ? state.scope : "browse")
-        _draft = State(initialValue: draft)
-    }
+        @State private var searchFieldPresented = false
 
-    var body: some View {
-        #if os(iOS)
-            FacetMobileWorkspace(
-                store: store, importsFolder: $importsFolder,
-                capturePresented: $capturePresented, sheets: sheets, initialWindow: window)
-        #else
-            platformWorkspace
-                .onAppear {
-                    registerDraft()
-                    window.feedbackOrigin = feedbackOrigin
-                    window.reducedMotion = reducedMotion
-                }
-                .onChange(of: reducedMotion) { window.reducedMotion = reducedMotion }
-                .onChange(of: feedbackOrigin) { window.feedbackOrigin = feedbackOrigin }
-                .onChange(of: store.appliedFeedback) {
-                    _Concurrency.Task { await window.reload(store: store) }
-                }
-                .onChange(of: draft?.rowID) { registerDraft() }
-                .onDisappear { FacetDraftCoordinator.shared.unregister(commitRegistration) }
-                .disabled(FacetDraftCoordinator.shared.isTransitioning)
-                #if os(macOS)
-                    .background(FacetWindowCloseGuard(flush: flush).frame(width: 0, height: 0))
-                    .focusedSceneValue(\.facetWindowCommands, commandActions)
-                    .confirmationDialog(
-                        "Delete the selected task notes?", isPresented: $deletingSelection
-                    ) {
-                        Button("Delete", role: .destructive) { mutateSelection(deleting: true) }
-                    }
-                #endif
-                .task(id: store.selectedProfileID) {
-                    if draft?.profileID != store.selectedProfileID { draft = nil }
-                    await window.reload(store: store)
-                }
-                .onChange(of: store.snapshot?.version) {
-                    _Concurrency.Task { await window.reload(store: store) }
-                }
-                .onChange(of: window.search) {
-                    _Concurrency.Task { await window.reload(store: store) }
-                }
-                .onChange(of: window.scope) {
-                    _Concurrency.Task { await window.reload(store: store) }
-                }
-                .sheet(item: $detail) { task in
-                    if let snapshot = window.snapshot {
-                        FacetTaskEditor(
-                            store: store, task: task, profileID: snapshot.profileId,
-                            statuses: pairs(snapshot, "statuses"),
-                            priorities: pairs(snapshot, "priorities")
-                        )
-                        #if os(iOS)
-                            .presentationDetents([.fraction(0.75), .large])
-                            .presentationDragIndicator(
-                                .visible)
-                        #endif
-                    }
-                }
-                .sheet(isPresented: $settings) {
-                    NavigationStack {
-                        FacetNativeSettings(
-                            store: store, importsFolder: $importsFolder, sheets: sheets
-                        )
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button("Done") { settings = false }
-                                    .accessibilityIdentifier("facet.settings.done")
-                            }
-                        }
-                    }
-                }
-        #endif
-    }
-
-    @ViewBuilder private var platformWorkspace: some View {
-        #if os(macOS)
+        var body: some View {
             NavigationSplitView {
-                FacetNativeSidebar(
-                    store: store, window: window, choose: navigate, admitNavigation: flush
-                )
-                .navigationSplitViewColumnWidth(
-                    min: CGFloat(FacetNativeStyle.tokens.desktop.sidebar.min),
-                    ideal: CGFloat(FacetNativeStyle.tokens.desktop.sidebar.ideal),
-                    max: CGFloat(FacetNativeStyle.tokens.desktop.sidebar.max))
+                FacetNativeSidebar(store: store, onPresentModal: onPresentModal)
+                    .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 320)
             } detail: {
-                content.navigationTitle(title)
-                    .searchable(
-                        text: $window.search, isPresented: $searching, prompt: "Search tasks"
-                    )
-                    .toolbar { workspaceToolbar }
-                    .inspector(isPresented: $window.inspectorPresented) {
-                        if let draft, let snapshot = window.snapshot {
-                            FacetNativeInspector(
-                                store: store, window: window, draft: draft,
-                                configuration: snapshot.configuration)
-                        } else {
-                            ContentUnavailableView {
-                                Label {
-                                    Text("Select a task").foregroundStyle(FacetNativeStyle.text)
-                                } icon: {
-                                    Image(systemName: "sidebar.right").foregroundStyle(
-                                        FacetNativeStyle.secondaryText)
-                                }
-                            } description: {
-                                Text("Its details will appear here.").foregroundStyle(
-                                    FacetNativeStyle.secondaryText)
-                            }
-                            .accessibilityIdentifier("facet.inspector.empty")
+                FacetTaskListView(
+                    store: store,
+                    onSelectTask: { task in
+                        store.selectedTaskId = task.id
+                        store.showsInspector = true
+                    },
+                    onPresentModal: onPresentModal
+                )
+                .searchable(
+                    text: $store.searchQuery,
+                    isPresented: $searchFieldPresented,
+                    prompt: "Filter tasks…"
+                )
+                .inspector(isPresented: $store.showsInspector) {
+                    inspectorColumn
+                        .inspectorColumnWidth(min: 290, ideal: 340, max: 440)
+                }
+                .toolbar {
+                    ToolbarItemGroup(placement: .primaryAction) {
+                        Button {
+                            store.showsCapture = true
+                        } label: {
+                            Label("Quick Add", systemImage: "plus")
                         }
-                    }
-            }
-        #else
-            FacetMobileWorkspace(
-                store: store, importsFolder: $importsFolder,
-                capturePresented: $capturePresented, sheets: sheets, initialWindow: window)
-        #endif
-    }
+                        .help("Add Task (⌘N)")
+                        .accessibilityIdentifier(AccessibilityIdentifier.TaskList.newTask)
 
-    private var content: some View {
-        VStack(spacing: 0) {
-            FacetNativeNotices(store: store, sheets: sheets)
-            if let error = window.error {
-                Label(error, systemImage: "exclamationmark.triangle").padding()
+                        Button {
+                            _Concurrency.Task { await store.syncNow() }
+                        } label: {
+                            Label(
+                                "Sync",
+                                systemImage: store.isSyncing
+                                    ? "arrow.triangle.2.circlepath.circle.fill"
+                                    : "arrow.clockwise"
+                            )
+                        }
+                        .disabled(store.isSyncing || !store.hasConfiguredToken)
+                        .help("Sync Now (⌘R)")
+                        .accessibilityIdentifier(AccessibilityIdentifier.TaskList.refresh)
+
+                        Button {
+                            store.showsInspector.toggle()
+                        } label: {
+                            Label("Inspector", systemImage: "sidebar.trailing")
+                        }
+                        .help("Toggle Inspector (⌥⌘I)")
+                        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.toggle)
+                    }
+                }
             }
-            if let snapshot = window.snapshot {
-                FacetNativeTaskList(
-                    store: store, window: window, snapshot: snapshot, selected: draft?.rowID,
-                    admitNavigation: flush, open: open)
+            .onChange(of: store.searchFocusedRequest) {
+                searchFieldPresented = true
+            }
+            .background(
+                FacetWindowCloseGuard {
+                    await store.flushBeforeClose()
+                }
+                .frame(width: 0, height: 0)
+            )
+            .focusedSceneValue(\.facetWindowCommands, windowCommandActions)
+        }
+
+        @ViewBuilder
+        private var inspectorColumn: some View {
+            if let selectedId = store.selectedTaskId, let task = store.task(for: selectedId) {
+                FacetTaskInspectorView(task: task, store: store)
             } else {
-                ProgressView("Opening vault…").frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack(spacing: 10) {
+                    Image(systemName: "sidebar.trailing")
+                        .font(.title)
+                        .foregroundStyle(.tertiary)
+                    Text("No Task Selected")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                    Text(
+                        "Select any task to edit Markdown notes, recurrence, labels, sub-tasks, and reminders."
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityIdentifier(AccessibilityIdentifier.Inspector.empty)
             }
         }
-    }
 
-    @ToolbarContentBuilder private var workspaceToolbar: some ToolbarContent {
-        #if os(iOS)
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                Button("Search", systemImage: "magnifyingglass") { searching = true }
-                Button("Settings", systemImage: "gearshape") { settings = true }
-                    .accessibilityIdentifier("facet.settings.open")
-            }
-        #else
-            ToolbarItemGroup {
-                Menu {
-                    ForEach(store.profiles) { profile in
-                        Button(profile.name) {
-                            _Concurrency.Task {
-                                guard await flush() else { return }
-                                await store.selectProfile(profile.id)
-                            }
-                        }
-                    }
-                    Divider()
-                    Button(folderAction) { importsFolder = true }
-                    Button("Connect Obsidian Sync…") {
-                        sheets.account(store: store).wrappedValue = true
-                    }.disabled(store.accountWindowOwnerID != nil)
-                        .help("Sync is open in another window while this control is unavailable.")
-                        .accessibilityIdentifier("facet.account.open")
-                    Button(store.remindersEnabled ? "Turn off reminders" : "Enable reminders…") {
-                        _Concurrency.Task {
-                            if store.remindersEnabled {
-                                await store.disableReminders()
-                            } else {
-                                await store.enableReminders()
-                            }
-                        }
-                    }
-                    Button("Sign out of Obsidian") { _Concurrency.Task { await store.signOut() } }
-                        .accessibilityIdentifier("facet.account.signout")
-                } label: {
-                    Label("Vaults and settings", systemImage: "gearshape")
-                }.accessibilityIdentifier("facet.settings.open")
-                Button {
-                    window.board.toggle()
-                } label: {
-                    Label(
-                        window.board ? "List" : "Board",
-                        systemImage: window.board ? "list.bullet" : "rectangle.split.3x1")
-                }
-                Button {
-                    capturePresented = true
-                } label: {
-                    Label("Add task", systemImage: "plus")
-                }
-                .accessibilityIdentifier("facet.capture.open")
-                Button {
-                    _Concurrency.Task { await store.refresh() }
-                } label: {
-                    Label("Refresh", systemImage: "arrow.clockwise")
-                }
-                #if os(macOS)
-                    Button {
-                        window.inspectorPresented.toggle()
-                    } label: {
-                        Label("Inspector", systemImage: "sidebar.right")
-                    }
-                    .keyboardShortcut("i", modifiers: [.command, .option])
-                #endif
-            }
-        #endif
-    }
-}
-
-extension FacetNativeWorkspace {
-    private func open(_ task: FacetTask) {
-        #if os(macOS)
-            _Concurrency.Task {
-                guard draft?.rowID != task.rowID, let profileID = window.snapshot?.profileId
-                else { return }
-                let query = window.displayedQuery
-                let engine = store.engine
-                let owns = store.presentationOwner(
-                    profileID: profileID, tracksRequest: false,
-                    ownsEngine: { store.engine === engine })
-                guard await flush(), owns(), store.selectedProfileID == profileID,
-                    window.snapshot?.profileId == profileID,
-                    window.displayedQuery == query,
-                    let currentTask = window.snapshot?.tasks.first(where: { $0.rowID == task.rowID }
-                    ),
-                    !FacetDraftCoordinator.shared.isTransitioning
-                else { return }
-                draft = FacetInspectorDraft(task: currentTask, profileID: profileID)
-                window.selectedTaskIDs = [currentTask.rowID]
-                window.inspectorPresented = true
-            }
-        #else
-            detail = task
-        #endif
-    }
-    private func navigate(_ scope: String) {
-        _Concurrency.Task {
-            guard await flush() else { return }
-            window.savedQuery = [:]
-            window.selectedViewID = nil
-            window.leaveSavedView()
-            window.scope = scope
-            window.board = scope == "board"
-            if scope == "board" { window.scope = "all" }
-            await window.reload(store: store)
-        }
-    }
-    private func flush() async -> Bool {
-        guard let draft else { return true }
-        return await draft.flush(store: store, window: window)
-    }
-    private func registerDraft() {
-        guard let draft else {
-            FacetDraftCoordinator.shared.unregister(commitRegistration)
-            return
-        }
-        FacetDraftCoordinator.shared.register(
-            commitRegistration, owner: store, profileID: draft.profileID,
-            isDirty: { draft.isDirty },
-            flush: {
-                await draft.flush(store: store, window: window)
-            })
-    }
-    #if os(macOS)
-        private var commandActions: FacetWindowCommandActions? {
-            guard window.snapshot != nil, !FacetDraftCoordinator.shared.isTransitioning else {
-                return nil
-            }
+        private var windowCommandActions: FacetWindowCommandActions {
+            let selectedTask = store.selectedTaskId.flatMap { store.task(for: $0) }
             return FacetWindowCommandActions(
-                hasSelection: !window.selectedTaskIDs.isEmpty,
-                inspectorPresented: window.inspectorPresented,
-                newTask: { capturePresented = true }, find: { searching = true },
-                navigate: navigate,
-                complete: { mutateSelection(deleting: false) },
-                delete: { deletingSelection = true },
-                toggleInspector: { window.inspectorPresented.toggle() },
+                hasSelection: selectedTask != nil,
+                inspectorPresented: store.showsInspector,
+                newTask: { store.showsCapture = true },
+                delete: {
+                    if let selectedTask {
+                        store.deleteTask(selectedTask)
+                    }
+                },
+                complete: {
+                    if let selectedTask {
+                        store.toggleTaskCompletion(selectedTask)
+                    }
+                },
+                find: { searchFieldPresented = true },
+                toggleInspector: { store.showsInspector.toggle() },
+                navigate: { target in
+                    if target == "inbox" {
+                        store.destination = .section(.inbox)
+                    } else if target == "today" {
+                        store.destination = .section(.today)
+                    } else if target == "upcoming" {
+                        store.destination = .section(.upcoming)
+                    } else if target == "completed" {
+                        store.destination = .section(.completed)
+                    } else if target == "board" {
+                        store.destination = .board
+                    }
+                },
                 refresh: {
-                    _Concurrency.Task {
-                        await store.refresh()
-                        await window.reload(store: store)
-                    }
-                })
+                    _Concurrency.Task { await store.syncNow() }
+                }
+            )
         }
-        private func mutateSelection(deleting: Bool) {
-            guard !selectionAction.isSubmitting else { return }
-            if selectionAction.hasRetainedSubmission {
-                store.error =
-                    "Resolve the original selection action in Settings before changing it."
-                _Concurrency.Task {
-                    if await selectionAction.releaseResolved() {
-                        store.error =
-                            "The original action is resolved. Review the selection before trying again."
-                    }
-                }
-                return
-            }
-            guard let snapshot = window.snapshot,
-                let selection = FacetReviewedSelection(
-                    store: store, window: window, snapshot: snapshot),
-                let operations = store.bulkOperations(profileID: selection.profileID)
-            else { return }
-            guard
-                selectionAction.begin(
-                    selection.tasks, action: deleting ? .delete : .complete, operations: operations)
-            else {
-                store.error = selectionAction.error
-                return
-            }
-            let submittedDraft = draft
-            _Concurrency.Task {
-                guard await flush() else {
-                    selectionAction.cancelBeforeDispatch()
-                    return
-                }
-                if await selectionAction.submit() {
-                    if deleting,
-                        selection.canRetireDeletedInspector(
-                            submitted: submittedDraft, current: draft, store: store, window: window)
-                    {
-                        draft = nil
-                        registerDraft()
-                    }
-                    selection.clearIfCurrent(store: store, window: window)
-                } else {
-                    store.error = selectionAction.error
-                }
-                await window.reload(store: store)
-            }
-        }
-    #endif
-    private func pairs(_ snapshot: FacetSnapshot, _ key: String) -> [(value: String, label: String)]
-    {
-        do {
-            return try FacetConfiguredChoice.choices(in: snapshot.configuration, key: key).map {
-                ($0.value, $0.label)
-            }
-        } catch { preconditionFailure("Invalid validated workflow configuration: \(error)") }
     }
-    private var title: String {
-        Self.routes.first { $0.id == window.scope }?.title ?? (window.board ? "Board" : "Tasks")
-    }
-    private var folderAction: String {
-        #if os(iOS)
-            "Import vault copy…"
-        #else
-            "Open vault folder…"
-        #endif
-    }
-    static let routes = [
-        (id: "inbox", title: "Inbox", symbol: "tray"),
-        (id: "today", title: "Today", symbol: "sun.max"),
-        (id: "upcoming", title: "Upcoming", symbol: "calendar"),
-        (id: "browse", title: "Browse", symbol: "square.grid.2x2"),
-    ]
-}
+#endif
