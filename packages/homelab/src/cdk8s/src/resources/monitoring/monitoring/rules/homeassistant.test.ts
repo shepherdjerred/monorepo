@@ -95,12 +95,13 @@ describe("Home Assistant rules", () => {
     ).toBe(true);
   });
 
-  test("will not report a hopper state read from a stale source", () => {
-    // The exporter holds the last known hopper status when Whisker stops
-    // answering, so an ungated rule pages critical for a fault the hopper may
-    // already have cleared — observed live as HopperFault firing while
-    // trmnl_petcare_litter_fault was 0 and source_fresh was 0.
-    const litterRules = getHomeAssistantRuleGroups().find(
+  test("will not report hopper or robot fault states read from a stale source", () => {
+    // The exporter holds the last known hopper and robot fault statuses when
+    // Whisker stops answering, so an ungated rule pages for a fault the device
+    // may already have cleared — observed live as HopperFault and
+    // LitterRobotFault firing while source_fresh was 0.
+    const groups = getHomeAssistantRuleGroups();
+    const litterRules = groups.find(
       (group) => group.name === "homeassistant-litter-robot",
     )?.rules;
     if (litterRules === undefined) throw new Error("Missing litter rule group");
@@ -108,11 +109,26 @@ describe("Home Assistant rules", () => {
     for (const alert of [
       "LitterRobotHopperFault",
       "LitterRobotHopperLowOrDisconnected",
+      "LitterRobotFault",
     ]) {
       expect(
         litterRules.find((rule) => rule.alert === alert)?.expr.value,
+        alert,
       ).toContain("and on () trmnl_petcare_litter_source_fresh == 1");
     }
+
+    const litterFault = litterRules.find(
+      (rule) => rule.alert === "LitterRobotFault",
+    );
+    expect(litterFault?.expr.value).toBe(
+      "(trmnl_petcare_litter_fault == 1 or trmnl_petcare_litter_online == 0 or trmnl_petcare_litter_hopper_installed == 0 or trmnl_petcare_litter_hopper_enabled == 0) and on () trmnl_petcare_litter_source_fresh == 1",
+    );
+    expect(litterFault?.for).toBe("15m");
+
+    const cleanWaterEmpty = groups
+      .find((group) => group.name === "homeassistant-roborock")
+      ?.rules?.find((rule) => rule.alert === "RoborockCleanWaterTankEmpty");
+    expect(cleanWaterEmpty?.for).toBe("15m");
 
     // Staleness stays the business of the rule that owns it, so the same
     // condition is not reported twice.

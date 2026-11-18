@@ -5,24 +5,34 @@ import { pvcProjectedFullExpression } from "./resource-monitoring-expressions.ts
 import { runPromtoolFixture } from "./promtool-fixture.ts";
 
 const HOURS = 8 * 24;
-const GROWTH_PER_HOUR = 1_000_000_000;
 const CAPACITY = 1_000_000_000_000;
 
-/**
- * A claim growing 1 GB/h for eight days on a 1 TB volume: at the eval time it
- * has 808 GB left at ~278 kB/s, about 34 days from full — inside the 60-day
- * window and outside the 14-day one.
- */
-function growingClaim(namespace: string, claim: string) {
-  const key = `namespace="${namespace}",persistentvolumeclaim="${claim}"`;
+type ClaimGrowthOptions = {
+  namespace: string;
+  claim: string;
+  initialUsedBytes: number;
+  growthPerHourBytes: number;
+  extraLabels?: string;
+};
+
+function growingClaim({
+  namespace,
+  claim,
+  initialUsedBytes,
+  growthPerHourBytes,
+  extraLabels = "",
+}: ClaimGrowthOptions) {
+  const extra = extraLabels === "" ? "" : `,${extraLabels}`;
+  const key = `namespace="${namespace}",persistentvolumeclaim="${claim}"${extra}`;
+  const initialAvailable = CAPACITY - initialUsedBytes;
   return [
     {
       series: `kubelet_volume_stats_used_bytes{${key}}`,
-      values: `0+${String(GROWTH_PER_HOUR)}x${String(HOURS)}`,
+      values: `${String(initialUsedBytes)}+${String(growthPerHourBytes)}x${String(HOURS)}`,
     },
     {
       series: `kubelet_volume_stats_available_bytes{${key}}`,
-      values: `${String(CAPACITY)}-${String(GROWTH_PER_HOUR)}x${String(HOURS)}`,
+      values: `${String(initialAvailable)}-${String(growthPerHourBytes)}x${String(HOURS)}`,
     },
     {
       series: `kubelet_volume_stats_capacity_bytes{${key}}`,
@@ -31,42 +41,86 @@ function growingClaim(namespace: string, claim: string) {
   ];
 }
 
-function firingClaims(days: number): string {
-  return `count by (namespace, persistentvolumeclaim) (${pvcProjectedFullExpression(days)})`;
-}
-
 describe("PVC fill projection", () => {
-  it("skips periodically pruned caches but still projects ordinary claims", async () => {
+  it("gates 60d warnings on >=50% utilization while keeping 14d critical unconditional and deduplicating scrape series", async () => {
     await runPromtoolFixture({
       evaluation_interval: "1h",
       tests: [
         {
           interval: "1h",
           input_series: [
-            ...growingClaim("media", "library"),
-            ...growingClaim(WOODPECKER_CI_NAMESPACE, WOODPECKER_UV_CACHE_CLAIM),
-            // Another claim in the same namespace is not exempt.
-            ...growingClaim(WOODPECKER_CI_NAMESPACE, "woodpecker-go-cache"),
+            // <50% full (19.2% at 192h) with ~34d remaining: must NOT fire 60d warning or 14d critical.
+            ...growingClaim({
+              namespace: "media",
+              claim: "bursty-under-half",
+              initialUsedBytes: 0,
+              growthPerHourBytes: 1_000_000_000,
+            }),
+            // >=50% full (59.2% at 192h) with ~17d remaining across two kubelet scrape targets:
+            // deduplicates to a single series and fires 60d warning, not 14d critical.
+            ...growingClaim({
+              namespace: "media",
+              claim: "library",
+              initialUsedBytes: 400_000_000_000,
+              growthPerHourBytes: 1_000_000_000,
+              extraLabels: 'instance="kubelet-a"',
+            }),
+            ...growingClaim({
+              namespace: "media",
+              claim: "library",
+              initialUsedBytes: 400_000_000_000,
+              growthPerHourBytes: 1_000_000_000,
+              extraLabels: 'instance="kubelet-b"',
+            }),
+            // <50% full (48.0% at 192h) with steep growth (~8.7d remaining):
+            // suppressed on 60d warning (<50% floor), but DOES fire 14d critical unconditionally!
+            ...growingClaim({
+              namespace: "media",
+              claim: "steep-under-half",
+              initialUsedBytes: 0,
+              growthPerHourBytes: 2_500_000_000,
+            }),
+            // Periodically pruned cache >=50% full: still skipped.
+            ...growingClaim({
+              namespace: WOODPECKER_CI_NAMESPACE,
+              claim: WOODPECKER_UV_CACHE_CLAIM,
+              initialUsedBytes: 400_000_000_000,
+              growthPerHourBytes: 1_000_000_000,
+            }),
+            // Another >=50% claim in the same namespace is not exempt.
+            ...growingClaim({
+              namespace: WOODPECKER_CI_NAMESPACE,
+              claim: "woodpecker-go-cache",
+              initialUsedBytes: 400_000_000_000,
+              growthPerHourBytes: 1_000_000_000,
+            }),
           ],
           promql_expr_test: [
             {
-              expr: firingClaims(60),
+              // Test rounded raw expression (no outer `count by`) so duplicate series would fail this assertion.
+              expr: `round(${pvcProjectedFullExpression(60)})`,
               eval_time: `${String(HOURS)}h`,
               exp_samples: [
                 {
                   labels: '{namespace="media",persistentvolumeclaim="library"}',
-                  value: 1,
+                  value: 1_468_800,
                 },
                 {
                   labels: `{namespace="${WOODPECKER_CI_NAMESPACE}",persistentvolumeclaim="woodpecker-go-cache"}`,
-                  value: 1,
+                  value: 1_468_800,
                 },
               ],
             },
             {
-              expr: firingClaims(14),
+              expr: `round(${pvcProjectedFullExpression(14)})`,
               eval_time: `${String(HOURS)}h`,
-              exp_samples: [],
+              exp_samples: [
+                {
+                  labels:
+                    '{namespace="media",persistentvolumeclaim="steep-under-half"}',
+                  value: 748_800,
+                },
+              ],
             },
           ],
         },

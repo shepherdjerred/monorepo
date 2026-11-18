@@ -306,18 +306,28 @@ describe("LR5 Pro hopper diagnostics", () => {
     expect(robot.hopperHealth).toBe("motor-fault");
   });
 
-  it.each(["CYCLING", "CAT_DETECTED", "LITTER_LOW"])(
-    "does not classify normal %s activity as a robot fault",
-    (type) => {
-      const base = readyRobot();
-      expect(
-        parseRobot({
-          ...base,
-          state: { ...base.state, statusIndicator: { title: type, type } },
-        }).faulted,
-      ).toBe(false);
-    },
-  );
+  it.each([
+    "CYCLING",
+    "CLEAN_CYCLE_COMPLETE",
+    "CAT_DETECTED",
+    "CAT_SENSOR_TIMING",
+    "CAT_SENSOR_INTERRUPTED",
+    "EMPTY_CYCLE",
+    "PAUSED",
+    "POWER_UP",
+    "POWER_DOWN",
+    "LITTER_LOW",
+    "DRAWER_ALMOST_FULL",
+    "clean_cycle_complete",
+  ])("does not classify normal %s activity as a robot fault", (type) => {
+    const base = readyRobot();
+    const parsed = parseRobot({
+      ...base,
+      state: { ...base.state, statusIndicator: { title: type, type } },
+    });
+    expect(parsed.faulted).toBe(false);
+    expect(parsed.ready).toBe(false);
+  });
 
   it.each([
     "globeMotorFaultStatus",
@@ -336,6 +346,33 @@ describe("LR5 Pro hopper diagnostics", () => {
       }).faulted,
     ).toBe(true);
   });
+
+  it.each([
+    "isLaserDirty",
+    "isBonnetRemoved",
+    "isDrawerRemoved",
+    "isDrawerFull",
+    "isUsbFaultDetected",
+    "isGasSensorFaultDetected",
+  ] as const)(
+    "still reports physical boolean fault %s during cycle transitions",
+    (fault) => {
+      const base = readyRobot();
+      expect(
+        parseRobot({
+          ...base,
+          state: {
+            ...base.state,
+            statusIndicator: {
+              title: "Clean cycle complete",
+              type: "CLEAN_CYCLE_COMPLETE",
+            },
+            [fault]: true,
+          },
+        }).faulted,
+      ).toBe(true);
+    },
+  );
 
   it("keeps an unavailable hopper payload explicit", () => {
     const base = readyRobot();

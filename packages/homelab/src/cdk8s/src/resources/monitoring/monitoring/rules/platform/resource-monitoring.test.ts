@@ -222,7 +222,7 @@ describe("memory leak alerts", () => {
 });
 
 describe("predictive PVC capacity alerts", () => {
-  it("uses positive seven-day growth and sustained 60/14-day thresholds", () => {
+  it("deduplicates kubelet series, applies a 50% floor only to 60d warnings, and keeps 14d critical unconditional", () => {
     const rules = getResourceMonitoringRuleGroups().find(
       (group) => group.name === "resource-disk-monitoring",
     )?.rules;
@@ -237,18 +237,25 @@ describe("predictive PVC capacity alerts", () => {
       (rule) => rule.alert === "PVCProjectedFullWithin14Days",
     );
     expect(warning?.expr.value).toContain(
-      "deriv(kubelet_volume_stats_used_bytes[7d]) > 0",
+      "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes)",
     );
     expect(warning?.expr.value).toContain(
-      "kubelet_volume_stats_used_bytes offset 7d",
+      "max by (namespace, persistentvolumeclaim) (deriv(kubelet_volume_stats_used_bytes[7d])) > 0",
+    );
+    expect(warning?.expr.value).toContain(
+      "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes offset 7d)",
+    );
+    expect(warning?.expr.value).toContain(
+      "((max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes) / max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes)) >= 0.5)",
     );
     expect(warning?.expr.value).toContain("< 5184000");
     expect(warning?.for).toBe("6h");
     expect(warning?.labels?.["severity"]).toBe("warning");
     expect(critical?.expr.value).toContain("< 1209600");
     expect(critical?.expr.value).toContain(
-      "kubelet_volume_stats_used_bytes offset 7d",
+      "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes offset 7d)",
     );
+    expect(critical?.expr.value).not.toContain(">= 0.5");
     expect(critical?.for).toBe("6h");
     expect(critical?.labels?.["severity"]).toBe("critical");
     for (const rule of [warning, critical]) {

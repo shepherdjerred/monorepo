@@ -39,16 +39,28 @@ function periodicallyPrunedClaimSelector(): string {
 
 export function pvcProjectedFullExpression(days: number): string {
   const seconds = days * 24 * 60 * 60;
+  const available =
+    "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_available_bytes)";
+  const used =
+    "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes)";
+  const capacity =
+    "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes)";
+  const growth =
+    "max by (namespace, persistentvolumeclaim) (deriv(kubelet_volume_stats_used_bytes[7d]))";
+  const utilizationFloor =
+    days > 14
+      ? `\nand on (namespace, persistentvolumeclaim)\n((${used} / ${capacity}) >= 0.5)`
+      : "";
   return `(
-  kubelet_volume_stats_available_bytes
+  ${available}
   /
-  deriv(kubelet_volume_stats_used_bytes[7d])
+  ${growth}
 ) < ${String(seconds)}
 and on (namespace, persistentvolumeclaim)
-deriv(kubelet_volume_stats_used_bytes[7d]) > 0
-and on (namespace, persistentvolumeclaim) kubelet_volume_stats_used_bytes offset 7d
+${growth} > 0
+and on (namespace, persistentvolumeclaim) max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes offset 7d)${utilizationFloor}
 unless on(namespace,persistentvolumeclaim)
-(homelab:prometheus_pvc_forecast_bytes:${String(days)}d <= on(namespace,persistentvolumeclaim) max by(namespace,persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes))
+(homelab:prometheus_pvc_forecast_bytes:${String(days)}d <= on(namespace,persistentvolumeclaim) ${capacity})
 unless on(namespace,persistentvolumeclaim)
 (${periodicallyPrunedClaimSelector()})`;
 }

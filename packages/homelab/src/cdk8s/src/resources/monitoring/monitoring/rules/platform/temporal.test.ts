@@ -274,6 +274,14 @@ describe("Temporal workflow outcome rules", () => {
   });
 });
 
+describe("TemporalWorkflowTasksFailing", () => {
+  test("excludes benign UnhandledCommand retries", () => {
+    expect(findFailureRule("TemporalWorkflowTasksFailing")).toBe(
+      'increase(failed_workflow_tasks{exported_namespace=~"prod|beta",failure!="UnhandledCommand"}[1h]) > 0',
+    );
+  });
+});
+
 describe("Temporal domain poller scoping", () => {
   test("scopes the scout queue's workflow and activity pollers separately", () => {
     // `scout` takes activity tasks in beta but runs its workflows on
