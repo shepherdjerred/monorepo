@@ -20,27 +20,23 @@ public sealed class StandaloneAcceptanceTests
 
     /// <summary>Only initial registration requires original bytes; a normal restart keeps edited task bytes.</summary>
     [TestMethod]
-    public void BootstrapUsesOneOwnedPrivateProfileAndAllowsPersistedTaskChanges()
+    public void BootstrapUsesOneOwnedReceiptAndAllowsPersistedTaskChanges()
     {
         using Fixture fixture = new();
         var first = fixture.Open();
         first.Prepare();
+        string receiptPath = Path.Combine(
+            first.Descriptor.EngineDirectory,
+            "bootstrap-receipt.json"
+        );
+        Assert.IsTrue(File.Exists(receiptPath));
         string edited = "persisted synthetic edit\n";
         File.WriteAllText(fixture.SeedPath, edited);
         fixture.Open().Prepare();
         Assert.AreEqual(edited, File.ReadAllText(fixture.SeedPath));
-        var catalog = new Host.FacetProfileCatalog(first.Descriptor.EngineDirectory);
-        Assert.HasCount(1, catalog.Profiles);
-        var profile = catalog.Profiles[0];
-        Assert.AreEqual(first.Descriptor.ProfileId, profile.Id);
-        Assert.AreEqual(first.Descriptor.VaultDirectory, profile.RootPath);
-        Assert.IsTrue(profile.PrivateReplica);
-        Assert.IsFalse(profile.ApproveStandard);
-        Assert.IsNull(profile.AccountOwner);
-        Assert.IsNull(profile.Vault);
     }
 
-    /// <summary>Incorrect initial seeds cannot establish a writable profile.</summary>
+    /// <summary>Incorrect initial seeds cannot establish a bootstrap receipt.</summary>
     [TestMethod]
     public void ChangedSeedBytesRejectBeforeProfileRegistration()
     {
@@ -48,9 +44,6 @@ public sealed class StandaloneAcceptanceTests
         File.WriteAllText(fixture.SeedPath, "changed before registration");
         var bootstrap = fixture.Open();
         _ = Assert.ThrowsExactly<InvalidDataException>(bootstrap.Prepare);
-        Assert.IsFalse(
-            File.Exists(Path.Combine(bootstrap.Descriptor.EngineDirectory, "profiles.json"))
-        );
         Assert.IsFalse(
             File.Exists(
                 Path.Combine(bootstrap.Descriptor.EngineDirectory, "bootstrap-receipt.json")
@@ -70,7 +63,9 @@ public sealed class StandaloneAcceptanceTests
         var bootstrap = fixture.Open();
         _ = Assert.ThrowsExactly<InvalidDataException>(bootstrap.Prepare);
         Assert.IsFalse(
-            File.Exists(Path.Combine(bootstrap.Descriptor.EngineDirectory, "profiles.json"))
+            File.Exists(
+                Path.Combine(bootstrap.Descriptor.EngineDirectory, "bootstrap-receipt.json")
+            )
         );
     }
 
@@ -181,21 +176,10 @@ public sealed class StandaloneAcceptanceTests
         var bootstrap = fixture.Open();
         _ = Assert.ThrowsExactly<InvalidDataException>(bootstrap.Prepare);
         Assert.IsFalse(
-            File.Exists(Path.Combine(bootstrap.Descriptor.EngineDirectory, "profiles.json"))
+            File.Exists(
+                Path.Combine(bootstrap.Descriptor.EngineDirectory, "bootstrap-receipt.json")
+            )
         );
-    }
-
-    /// <summary>A committed bootstrap receipt cannot recreate a missing or foreign profile silently.</summary>
-    [TestMethod]
-    public void MissingCatalogOrChangedBootstrapOwnerRejectsRestart()
-    {
-        using Fixture fixture = new();
-        var bootstrap = fixture.Open();
-        bootstrap.Prepare();
-        string catalogPath = Path.Combine(bootstrap.Descriptor.EngineDirectory, "profiles.json");
-        File.Delete(catalogPath);
-        _ = Assert.ThrowsExactly<InvalidDataException>(() => fixture.Open().Prepare());
-        Assert.IsFalse(File.Exists(catalogPath));
     }
 
     /// <summary>A descriptor cannot change between read and registration or after a receipt binds its first bootstrap.</summary>
@@ -206,16 +190,12 @@ public sealed class StandaloneAcceptanceTests
         var prepared = fixture.Open();
         File.AppendAllText(fixture.DescriptorPath, "\n");
         _ = Assert.ThrowsExactly<InvalidDataException>(prepared.Prepare);
-        Assert.IsFalse(
-            File.Exists(Path.Combine(prepared.Descriptor.EngineDirectory, "profiles.json"))
-        );
-        fixture.Open().Prepare();
-        string catalog = Path.Combine(prepared.Descriptor.EngineDirectory, "profiles.json");
-        byte[] before = File.ReadAllBytes(catalog);
         string receiptPath = Path.Combine(
             prepared.Descriptor.EngineDirectory,
             "bootstrap-receipt.json"
         );
+        Assert.IsFalse(File.Exists(receiptPath));
+        fixture.Open().Prepare();
         using var receipt = JsonDocument.Parse(File.ReadAllText(receiptPath));
         var wrong = receipt
             .RootElement.EnumerateObject()
@@ -227,7 +207,6 @@ public sealed class StandaloneAcceptanceTests
         wrong["runId"] = JsonSerializer.SerializeToElement(Guid.NewGuid().ToString("D"));
         File.WriteAllText(receiptPath, JsonSerializer.Serialize(wrong));
         _ = Assert.ThrowsExactly<InvalidDataException>(() => fixture.Open().Prepare());
-        CollectionAssert.AreEqual(before, File.ReadAllBytes(catalog));
     }
 
     private sealed class Fixture : IDisposable

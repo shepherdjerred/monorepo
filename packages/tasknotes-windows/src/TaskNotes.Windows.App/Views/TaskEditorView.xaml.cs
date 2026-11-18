@@ -23,25 +23,10 @@ namespace TaskNotes.Windows.App.Views
         private Func<string, string, Task<bool>>? _confirm;
         private Action<string>? _showValidation;
         private bool _synchronizingControls;
-        private readonly IRecurrenceEditor _recurrenceEditor = CoreRecurrenceEditor.Shared;
+        private readonly IRecurrenceEditor _recurrenceEditor = RecurrenceCodec.Shared;
         private RecurrenceControlDraft? _recurrenceDraft;
         private RecurrenceOwner? _recurrenceOwner;
         private long _recurrenceRequest;
-        internal event Action<bool>? GenerateOccurrencesRequested;
-
-        private void GenerateOccurrence_Click(object sender, RoutedEventArgs args)
-        {
-            _ = sender;
-            _ = args;
-            GenerateOccurrencesRequested?.Invoke(false);
-        }
-
-        private void GenerateWindow_Click(object sender, RoutedEventArgs args)
-        {
-            _ = sender;
-            _ = args;
-            GenerateOccurrencesRequested?.Invoke(true);
-        }
 
         /// <summary>Initializes the compiled editor view.</summary>
         public TaskEditorView()

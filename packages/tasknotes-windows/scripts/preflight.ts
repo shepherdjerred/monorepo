@@ -158,24 +158,6 @@ if (!winuiTemplates.includes("winui")) {
     "The WinUI C# templates are missing. Run: dotnet new install Microsoft.WindowsAppSDK.WinUI.CSharp.Templates",
   );
 }
-const rustVersion = run([mise, "exec", "--", "rustc", "--version"]);
-if (!toolchainVersionMatches("rust", toolchain.rust, rustVersion)) {
-  failures.push(
-    `Expected Rust ${toolchain.rust} from the root mise manifest; found '${rustVersion || "nothing"}'. Run mise install.`,
-  );
-}
-requireValue(
-  run([mise, "exec", "--", "uniffi-bindgen-cs", "--version"]),
-  "The pinned uniffi-bindgen-cs tool is missing. Run mise install at the repository root.",
-);
-requireValue(
-  run([mise, "exec", "--", "cargo", "llvm-cov", "--version"]),
-  "The pinned cargo-llvm-cov tool is missing. Run mise install at the repository root.",
-);
-requireValue(
-  run([mise, "exec", "--", "cargo", "mutants", "--version"]),
-  "The pinned cargo-mutants tool is missing. Run mise install at the repository root.",
-);
 
 if (failures.length > 0) {
   console.error(
@@ -187,5 +169,5 @@ if (failures.length > 0) {
 
 await Bun.write(
   Bun.stdout,
-  "TaskNotes Windows preflight passed: Windows 11 x64, Developer Mode, WinUI/MSBuild/MSVC, .NET, Rust, and UniFFI C# tooling are ready.\n",
+  "TaskNotes Windows preflight passed: Windows 11 x64, Developer Mode, WinUI/MSBuild/MSVC, and .NET tooling are ready.\n",
 );

@@ -28,5 +28,5 @@ dotnet_diagnostic.CA2007.severity = none
 # Test continuations use MSTest and, for UI tests, WinUI synchronization contexts.
 dotnet_diagnostic.CA2007.severity = none
 
-[TaskNotesCore.cs]
+[**/FacetProtocol.cs]
 generated_code = true

@@ -1,8 +1,7 @@
 import path from "node:path";
 
-// Builds every Windows project and the app's MSIX on Linux in the pinned
-// windows-cross-compiler-winui image. The image runs Wine, so the host must
-// execute linux/amd64 containers.
+// Builds every Windows project, the app's MSIX, and the standalone unpackaged
+// win-x64 executable on Linux in the pinned windows-cross-compiler-winui image.
 const packageRoot = path.resolve(import.meta.dir, "..");
 const repositoryRoot = path.resolve(packageRoot, "..", "..");
 const digestFile = path.join(
@@ -39,8 +38,6 @@ const child = Bun.spawn(
     `${repositoryRoot}:/workspace`,
     "--volume",
     "tasknotes-windows-cross-nuget:/root/.nuget/packages",
-    "--volume",
-    "tasknotes-windows-cross-cargo:/opt/rust/cargo/registry",
     "--workdir",
     workdir,
     image,
@@ -64,4 +61,20 @@ const [appPackage] = packages;
 if (appPackage === undefined) {
   throw new Error(`No TaskNotes MSIX was produced in ${outputDirectory}.`);
 }
-await Bun.write(Bun.stdout, `${path.join(outputDirectory, appPackage)}\n`);
+
+const standaloneExe = path.join(
+  packageRoot,
+  "AppPackages",
+  "win-x64-standalone",
+  "TaskNotes.Windows.App.exe",
+);
+if (!(await Bun.file(standaloneExe).exists())) {
+  throw new Error(
+    `Standalone executable was not produced at ${standaloneExe}.`,
+  );
+}
+
+await Bun.write(
+  Bun.stdout,
+  `${path.join(outputDirectory, appPackage)}\n${standaloneExe}\n`,
+);

@@ -1,206 +1,237 @@
+using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
+using TaskNotes.Protocol;
 using TaskNotes.Windows.Host;
+using Task = System.Threading.Tasks.Task;
 
 namespace TaskNotes.Windows.Tests
 {
-    /// <summary>Runs the portable Windows host against the real Bun TaskNotes server and vault.</summary>
+    /// <summary>Runs the portable C# FacetSyncStore + SQLite cache against the real Bun tasknotes-server /api/v1/sync endpoint.</summary>
     [TestClass]
     [DoNotParallelize]
     public sealed class ServerIntegrationTests
     {
         private const string Token = "tasknotes-windows-integration-token";
-        private static readonly string[] AuthenticatedTaskFile = ["Authenticated task.md"];
-        private static readonly string[] OfflineTaskFile = ["Survives offline.md"];
-        private static readonly string[] WindowsTaskFile = ["Ship Windows.md"];
 
-        /// <summary>Creates, completes, and reopens a task against an open server.</summary>
+        /// <summary>Gets or sets the MSTest execution context.</summary>
+        public required TestContext TestContext { get; set; }
+
+        /// <summary>Auto-provisions Inbox, syncs task creation, clears nullable fields via empty strings, and replicates deltas across clients.</summary>
         [TestMethod]
-        public async Task OpenServerTodayFlowReachesMarkdown()
-        {
-            using TaskNotesServerProcess server = await TaskNotesServerProcess.StartAsync();
-            using TemporaryDirectory directory = new();
-            await using TaskNotesStore store = new(directory.Path);
-
-            await store.InitializeAsync(
-                server.BaseUrl.AbsoluteUri,
-                null,
-                TestContext.CancellationToken
-            );
-            Assert.AreEqual(TaskNotesSyncState.Connected, store.State.SyncState);
-
-            await store.AddAsync("Ship Windows today !high", TestContext.CancellationToken);
-            TodayTask optimistic = store.State.TodayTasks.Single();
-            Assert.IsTrue(optimistic.IsPending);
-            await store.RefreshAsync(TestContext.CancellationToken);
-
-            Assert.AreSequenceEqual(WindowsTaskFile, server.MarkdownFiles());
-            string markdown = server.Contents("Ship Windows.md");
-            Assert.Contains("status: open", markdown);
-            Assert.Contains("priority: high", markdown);
-
-            string taskId = store.State.TodayTasks.Single().Id;
-            await store.SetCompletionAsync(taskId, true, TestContext.CancellationToken);
-            await store.RefreshAsync(TestContext.CancellationToken);
-            Assert.Contains("status: done", server.Contents("Ship Windows.md"));
-
-            await store.SetCompletionAsync(taskId, false, TestContext.CancellationToken);
-            await store.RefreshAsync(TestContext.CancellationToken);
-            Assert.Contains("status: open", server.Contents("Ship Windows.md"));
-        }
-
-        /// <summary>Uses a real gated server as the negative and positive credential control.</summary>
-        [TestMethod]
-        public async Task GatedServerRejectsMissingTokenAndAcceptsConfiguredToken()
+        public async Task SyncRoundTripCoversInboxProvisioningFieldClearsAndIncrementalDeltaSync()
         {
             using TaskNotesServerProcess server = await TaskNotesServerProcess.StartAsync(Token);
-            using TemporaryDirectory rejectedDirectory = new();
-            await using (TaskNotesStore rejected = new(rejectedDirectory.Path))
-            {
-                await rejected.InitializeAsync(
-                    server.BaseUrl.AbsoluteUri,
-                    null,
-                    TestContext.CancellationToken
-                );
-                Assert.AreEqual(TaskNotesSyncState.AuthenticationFailure, rejected.State.SyncState);
-                await rejected.AddAsync("Must stay queued", TestContext.CancellationToken);
-                await rejected.RefreshAsync(TestContext.CancellationToken);
-                Assert.AreEqual(TaskNotesSyncState.AuthenticationFailure, rejected.State.SyncState);
-                Assert.AreEqual((uint)1, rejected.State.PendingCount);
-                Assert.IsEmpty(server.MarkdownFiles());
-            }
+            using TemporaryDirectory dirA = new();
+            using TemporaryDirectory dirB = new();
 
-            using TemporaryDirectory acceptedDirectory = new();
-            await using TaskNotesStore accepted = new(acceptedDirectory.Path);
-            await accepted.InitializeAsync(
+            await using FacetSyncStore clientA = new(dirA.Path);
+            await using FacetSyncStore clientB = new(dirB.Path);
+
+            await clientA.InitializeAsync(
                 server.BaseUrl.AbsoluteUri,
                 Token,
                 TestContext.CancellationToken
             );
-            await accepted.AddAsync("Authenticated task", TestContext.CancellationToken);
-            await accepted.RefreshAsync(TestContext.CancellationToken);
+            Assert.AreEqual(TaskNotesSyncState.Connected, clientA.State.SyncState);
 
-            Assert.AreEqual(TaskNotesSyncState.Connected, accepted.State.SyncState);
-            Assert.AreSequenceEqual(AuthenticatedTaskFile, server.MarkdownFiles());
-        }
-
-        /// <summary>Surfaces a non-authentication HTTP failure as a synchronization error.</summary>
-        [TestMethod]
-        public async Task ServerApiFailureBecomesSynchronizationError()
-        {
-            using TaskNotesServerProcess server = await TaskNotesServerProcess.StartAsync();
-            using TemporaryDirectory directory = new();
-            await using TaskNotesStore store = new(directory.Path);
-            Uri missingApi = new(server.BaseUrl, "missing");
-
-            await store.InitializeAsync(
-                missingApi.AbsoluteUri,
-                null,
+            await clientA.AddAsync(
+                "Ship Facet Windows today p1",
+                TaskListQuery.Today,
                 TestContext.CancellationToken
             );
+            Assert.AreEqual((uint)0, clientA.State.PendingCount);
+            TaskItem created = clientA.State.AllTasks.Single();
+            Assert.IsFalse(created.Id.StartsWith("tmp-", StringComparison.Ordinal));
+            Assert.AreEqual("p1", created.Priority);
 
-            Assert.AreEqual(TaskNotesSyncState.SynchronizationError, store.State.SyncState);
-            Assert.IsFalse(string.IsNullOrWhiteSpace(store.State.UserFacingError));
+            await clientB.InitializeAsync(
+                server.BaseUrl.AbsoluteUri,
+                Token,
+                TestContext.CancellationToken
+            );
+            Assert.AreEqual(created.Id, clientB.State.AllTasks.Single().Id);
+
+            TaskItem cleared = await clientA.SaveTaskEditAsync(
+                new TaskEditInput
+                {
+                    Id = created.Id,
+                    Title = "Ship Facet Windows Updated",
+                    Details = "Verified against real server",
+                    Status = "open",
+                    Priority = "p2",
+                    Projects = created.Projects,
+                    BodyChanged = true,
+                },
+                TestContext.CancellationToken
+            );
+            Assert.IsNull(cleared.Due);
+
+            await clientB.SetQueryAsync(
+                new TaskListQuery(TaskListKind.Inbox),
+                TestContext.CancellationToken
+            );
+            await clientB.RefreshAsync(TestContext.CancellationToken);
+            TaskItem syncedOnB = clientB.State.AllTasks.Single();
+            Assert.AreEqual("Ship Facet Windows Updated", syncedOnB.Title);
+            Assert.AreEqual("Verified against real server", syncedOnB.Details);
+            Assert.IsNull(syncedOnB.Due);
+            Assert.AreEqual("p2", syncedOnB.Priority);
+
+            SavedViewDefinition savedView = await clientA.CreateSavedViewAsync(
+                "Urgent Queue",
+                "Filter",
+                "#D1453B",
+                true,
+                new TaskListQuery(TaskListKind.Browse) { Priorities = ["p2"] },
+                TestContext.CancellationToken
+            );
+            Assert.IsFalse(savedView.Id.StartsWith("tmp-", StringComparison.Ordinal));
+
+            await clientB.RefreshAsync(TestContext.CancellationToken);
+            Assert.AreEqual("Urgent Queue", clientB.State.SavedViews.Single().Name);
+
+            await clientA.DeleteTaskAsync(created.Id, TestContext.CancellationToken);
+            await clientB.RefreshAsync(TestContext.CancellationToken);
+            Assert.IsEmpty(clientB.State.AllTasks);
         }
 
-        /// <summary>Restores cached Today data and pending work before recovering against a live server.</summary>
+        /// <summary>Persists offline temp-ID batches in SQLite, remaps IDs on reconnect, and enforces Bearer auth + parked error handling.</summary>
         [TestMethod]
-        public async Task CachedOfflineStartupRecoversAgainstLiveServer()
+        public async Task OfflineTempIdBatchReplayAuthGateAndParkedMutationLifecycle()
         {
             using TemporaryDirectory directory = new();
-            Uri unavailable = ReserveUnreachableUrl();
-            await using (TaskNotesStore offline = new(directory.Path))
+            Uri unreachable = ReserveUnreachableUrl();
+
+            await using (FacetSyncStore offline = new(directory.Path))
             {
                 await offline.InitializeAsync(
-                    unavailable.AbsoluteUri,
-                    null,
+                    unreachable.AbsoluteUri,
+                    Token,
                     TestContext.CancellationToken
                 );
                 Assert.AreEqual(TaskNotesSyncState.CachedOffline, offline.State.SyncState);
-                await offline.AddAsync("Survives offline today", TestContext.CancellationToken);
-                Assert.AreEqual((uint)1, offline.State.PendingCount);
-            }
 
-            await using (TaskNotesStore restoredOffline = new(directory.Path))
-            {
-                await restoredOffline.InitializeAsync(
-                    unavailable.AbsoluteUri,
-                    null,
+                string tempProj = await offline.CreateProjectAsync(
+                    "Architecture",
+                    "#246FE0",
+                    false,
                     TestContext.CancellationToken
                 );
-                Assert.AreEqual(TaskNotesSyncState.CachedOffline, restoredOffline.State.SyncState);
-                Assert.AreEqual(
-                    "Survives offline",
-                    restoredOffline.State.TodayTasks.Single().Title
+                _ = await offline.CreateSectionAsync(
+                    tempProj,
+                    "In Flight",
+                    1,
+                    TestContext.CancellationToken
+                );
+                await offline.AddAsync(
+                    "Design SQLite outbox #Architecture @core today p1",
+                    TaskListQuery.Today,
+                    TestContext.CancellationToken
+                );
+                Assert.IsGreaterThanOrEqualTo(4u, offline.State.PendingCount);
+            }
+
+            using TaskNotesServerProcess server = await TaskNotesServerProcess.StartAsync(Token);
+            await using FacetSyncStore reconnected = new(directory.Path);
+            await reconnected.InitializeAsync(
+                server.BaseUrl.AbsoluteUri,
+                "wrong-token",
+                TestContext.CancellationToken
+            );
+            Assert.AreEqual(TaskNotesSyncState.AuthenticationFailure, reconnected.State.SyncState);
+            Assert.AreEqual("Design SQLite outbox", reconnected.State.TodayTasks.Single().Title);
+
+            await reconnected.ReconfigureAsync(
+                server.BaseUrl.AbsoluteUri,
+                Token,
+                TestContext.CancellationToken
+            );
+            Assert.AreEqual(TaskNotesSyncState.Connected, reconnected.State.SyncState);
+            Assert.AreEqual((uint)0, reconnected.State.PendingCount);
+            TaskItem syncedTask = reconnected.State.AllTasks.Single();
+            Assert.IsFalse(syncedTask.Id.StartsWith("tmp-", StringComparison.Ordinal));
+            Assert.AreSequenceEqual(["Architecture"], syncedTask.Projects);
+            Assert.AreSequenceEqual(["core"], syncedTask.Tags);
+
+            using (FacetSqliteCache directCache = FacetSqliteCache.OpenDirectory(directory.Path))
+            {
+                directCache.EnqueueAndApply(
+                    [
+                        new QueuedCommand(
+                            "bad-update-uuid",
+                            null,
+                            new SyncCommand.TaskUpdate(
+                                new TaskUpdateArgs(Id: "nonexistent-task-id", Title: "Will Park")
+                            )
+                        ),
+                    ],
+                    DateTimeOffset.UtcNow
                 );
             }
 
-            using TaskNotesServerProcess server = await TaskNotesServerProcess.StartAsync();
-            await using TaskNotesStore recovered = new(directory.Path);
-            await recovered.InitializeAsync(
+            await using FacetSyncStore withParked = new(directory.Path);
+            await withParked.InitializeAsync(
                 server.BaseUrl.AbsoluteUri,
-                null,
+                Token,
                 TestContext.CancellationToken
             );
+            Assert.HasCount(1, withParked.State.ParkedChanges);
+            Assert.AreEqual("bad-update-uuid", withParked.State.ParkedChanges[0].Id);
 
-            Assert.AreEqual(TaskNotesSyncState.Connected, recovered.State.SyncState);
-            Assert.AreEqual((uint)0, recovered.State.PendingCount);
-            Assert.AreSequenceEqual(OfflineTaskFile, server.MarkdownFiles());
+            await withParked.DiscardParkedMutationAsync(
+                "bad-update-uuid",
+                TestContext.CancellationToken
+            );
+            Assert.IsEmpty(withParked.State.ParkedChanges);
         }
 
-        /// <summary>Completes a recurring occurrence without closing its series.</summary>
+        /// <summary>Advances recurring tasks on server completion and restores prior due date on Undo.</summary>
         [TestMethod]
-        public async Task RecurringCompletionUsesTheCoreOccurrenceTarget()
+        public async Task RecurringTaskCompletionAndUndoRoundTripAgainstRealServer()
         {
-            string today = DateTimeOffset.Now.ToString(
+            string today = DateTimeOffset.UtcNow.ToString(
                 "yyyy-MM-dd",
-                System.Globalization.CultureInfo.InvariantCulture
+                CultureInfo.InvariantCulture
             );
-            string markdown = $"""
-                ---
-                title: Daily stand-up
-                status: open
-                priority: normal
-                scheduled: {today}
-                recurrence: FREQ=DAILY
-                recurrence_anchor: scheduled
-                complete_instances: []
-                tags:
-                  - task
-                ---
-                """;
-            Dictionary<string, string> seed = new(StringComparer.Ordinal)
-            {
-                ["Daily stand-up.md"] = markdown,
-            };
-            using TaskNotesServerProcess server = await TaskNotesServerProcess.StartAsync(
-                seedFiles: seed
-            );
+            using TaskNotesServerProcess server = await TaskNotesServerProcess.StartAsync(Token);
             using TemporaryDirectory directory = new();
-            await using TaskNotesStore store = new(directory.Path);
+            await using FacetSyncStore store = new(directory.Path);
+
             await store.InitializeAsync(
                 server.BaseUrl.AbsoluteUri,
-                null,
+                Token,
+                TestContext.CancellationToken
+            );
+            await store.AddAsync(
+                $"Daily stand-up {today} daily",
+                TaskListQuery.Today,
                 TestContext.CancellationToken
             );
 
-            TodayTask row = store.State.TodayTasks.Single();
-            Assert.IsTrue(row.IsRecurring);
-            await store.SetCompletionAsync(row.Id, true, TestContext.CancellationToken);
-            Assert.IsTrue(store.State.TodayTasks.Single().IsCompleted);
-            await store.RefreshAsync(TestContext.CancellationToken);
+            TaskItem recurring = store.State.AllTasks.Single();
+            Assert.IsTrue(recurring.IsRecurring);
+            Assert.AreEqual(today, recurring.Due);
 
-            string settled = server.Contents("Daily stand-up.md");
-            Assert.Contains(today, settled);
-            Assert.Contains("status: open", settled);
+            await store.SetCompletionAsync(recurring.Id, true, TestContext.CancellationToken);
+            TaskItem advanced = store.State.AllTasks.Single();
+            Assert.IsFalse(advanced.IsCompleted);
+            Assert.AreNotEqual(today, advanced.Due);
+
+            await store.UndoCompletionAsync(TestContext.CancellationToken);
+            TaskItem restored = store.State.AllTasks.Single();
+            Assert.IsFalse(restored.IsCompleted);
+            Assert.AreEqual(today, restored.Due);
         }
 
         private static Uri ReserveUnreachableUrl()
         {
-            System.Net.Sockets.TcpListener listener = new(System.Net.IPAddress.Loopback, 0);
+            TcpListener listener = new(IPAddress.Loopback, 0);
             listener.Start();
             int port;
             try
             {
-                port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+                port = ((IPEndPoint)listener.LocalEndpoint).Port;
             }
             finally
             {
@@ -209,8 +240,5 @@ namespace TaskNotes.Windows.Tests
 
             return new Uri($"http://127.0.0.1:{port}", UriKind.Absolute);
         }
-
-        /// <summary>Gets or sets the MSTest execution context.</summary>
-        public required TestContext TestContext { get; set; }
     }
 }

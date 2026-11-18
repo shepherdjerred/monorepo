@@ -3,7 +3,7 @@
   "private": true,
   "license": "GPL-3.0-only",
   "type": "module",
-  "description": "Native Windows TaskNotes client over the shared Rust core",
+  "description": "Native Windows Facet client over /api/v1/sync and SQLite",
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
     "@tsconfig/node-lts": "^24.0.0",
@@ -15,7 +15,6 @@
     "eslint": "^10.7.0",
     "fast-xml-parser": "5.11.0",
     "jiti": "^2.7.0",
-    "tasknotes-core": "workspace:*",
     "tasknotes-server": "workspace:*",
     "typescript": "^6.0.3",
     "zod": "^4.4.3",

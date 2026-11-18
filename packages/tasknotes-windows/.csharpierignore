@@ -1,4 +1,6 @@
 **/bin/**
 **/obj/**
 src/TaskNotes.Core.Bindings/**
+../../facet-protocol/**
+**/FacetProtocol.cs
 **/*.xaml

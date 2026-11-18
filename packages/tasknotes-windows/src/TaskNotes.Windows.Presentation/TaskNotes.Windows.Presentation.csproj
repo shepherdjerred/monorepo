@@ -2,18 +2,19 @@
   <PropertyGroup>
     <AssemblyName>TaskNotes.Windows.Presentation</AssemblyName>
     <RootNamespace>TaskNotes.Windows.Presentation</RootNamespace>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource
-      Include="../../../tasknotes-fixtures/presentation/feedback.json"
+      Include="../../../facet-protocol/presentation/feedback.json"
       LogicalName="FeedbackPolicy.json"
     />
     <EmbeddedResource
-      Include="../../../tasknotes-fixtures/presentation/feedback.schema.json"
+      Include="../../../facet-protocol/presentation/feedback.schema.json"
       LogicalName="FeedbackSchema.json"
     />
     <EmbeddedResource
-      Include="../../../tasknotes-fixtures/presentation/audio/palette.json"
+      Include="../../../facet-protocol/presentation/audio/palette.json"
       LogicalName="FeedbackPalette.json"
     />
     <ProjectReference Include="../TaskNotes.Windows.Host/TaskNotes.Windows.Host.csproj" />
@@ -22,15 +23,15 @@
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <EmbeddedResource
-      Include="../../../tasknotes-fixtures/presentation/color-policy.json"
+      Include="../../../facet-protocol/presentation/color-policy.json"
       LogicalName="PresentationColorPolicy.json"
     />
     <EmbeddedResource
-      Include="../../../tasknotes-fixtures/presentation/tokens.json"
+      Include="../../../facet-protocol/presentation/tokens.json"
       LogicalName="PresentationTokens.json"
     />
     <EmbeddedResource
-      Include="../../../tasknotes-fixtures/presentation/presentation.schema.json"
+      Include="../../../facet-protocol/presentation/presentation.schema.json"
       LogicalName="PresentationSchema.json"
     />
   </ItemGroup>

@@ -42,9 +42,7 @@ internal sealed class NativeTaskFeedback : IDisposable
                 );
             };
             _players.Add(cue, player);
-            player.Source = MediaSource.CreateFromUri(
-                new Uri($"ms-appx:///Assets/Feedback/{cue}.wav")
-            );
+            player.Source = MediaSource.CreateFromUri(new Uri(path, UriKind.Absolute));
         }
     }
 

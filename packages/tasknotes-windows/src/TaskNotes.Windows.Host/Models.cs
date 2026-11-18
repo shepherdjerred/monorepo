@@ -25,7 +25,7 @@ namespace TaskNotes.Windows.Host
         SynchronizationError,
     }
 
-    /// <summary>A task row derived by the Rust core for the Today destination.</summary>
+    /// <summary>A task row projected for the Today destination.</summary>
     public sealed record TodayTask
     {
         /// <summary>Initializes a Today task projection.</summary>
@@ -73,7 +73,7 @@ namespace TaskNotes.Windows.Host
         public string PendingLabel => IsPending ? "Pending" : string.Empty;
     }
 
-    /// <summary>A mutation parked by the core for explicit retry or discard.</summary>
+    /// <summary>A mutation parked after server rejection for explicit retry or discard.</summary>
     public sealed record ParkedChange
     {
         /// <summary>Initializes a parked-change projection.</summary>
@@ -108,13 +108,57 @@ namespace TaskNotes.Windows.Host
         public DateTimeOffset FailedAt { get; }
     }
 
-    /// <summary>An immutable UI-facing reading of the serialized synchronization engine.</summary>
+    /// <summary>Nonsecret presentation identity for a retained action envelope.</summary>
+    public sealed record FacetPendingAction(
+        string Id,
+        string ProfileId,
+        string ProfileName,
+        string Kind,
+        bool CanResume = true
+    );
+
+    /// <summary>Native presentation ownership captured before a mutation starts.</summary>
+    public sealed record FacetNoticeOwner(
+        string ProfileId,
+        string MutationId,
+        long RequestGeneration,
+        long EngineGeneration
+    );
+
+    /// <summary>A saved notice remains separate from mutation or maintenance errors.</summary>
+    public sealed record FacetSavedNotice(FacetNoticeOwner Owner, IReadOnlyList<string> Messages)
+    {
+        /// <summary>Gets plain confirmation copy for the applied operation.</summary>
+        public string Title { get; } = "Saved";
+
+        /// <summary>Allows publication only while the exact native owner remains current.</summary>
+        public bool BelongsTo(FacetNoticeOwner current) => Owner == current;
+    }
+
+    /// <summary>A projected Kanban column (either project sections or cross-project priorities).</summary>
+    public sealed record FacetBoardColumnSnapshot(
+        string Value,
+        string Label,
+        IReadOnlyList<TaskItem> Tasks,
+        bool IsSectionColumn = false
+    );
+
+    /// <summary>A scheduled reminder firing computed from synced tasks and reminders.</summary>
+    public sealed record FacetScheduledReminder(
+        string NotificationId,
+        string TaskId,
+        string Title,
+        string ReminderId,
+        DateTimeOffset FireAt,
+        string? Description
+    );
+
+    /// <summary>An immutable UI-facing reading of the serialized synchronization store.</summary>
     public sealed record TaskNotesState
     {
-        // Orders legacy worker observations when asynchronous continuations publish concurrently.
         internal long PublicationSequence { get; init; }
 
-        /// <summary>Initializes an engine reading.</summary>
+        /// <summary>Initializes a store reading.</summary>
         public TaskNotesState(
             IReadOnlyList<TodayTask> todayTasks,
             IReadOnlySet<string> pendingIds,
@@ -134,7 +178,7 @@ namespace TaskNotes.Windows.Host
             LastSyncTime = lastSyncTime;
         }
 
-        /// <summary>Gets the tasks admitted to Today by the core's date and recurrence rules.</summary>
+        /// <summary>Gets the tasks admitted to Today by date and recurrence rules.</summary>
         public IReadOnlyList<TodayTask> TodayTasks { get; init; }
 
         /// <summary>Gets the task identifiers with pending mutations.</summary>
@@ -146,21 +190,8 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets mutations that require user action.</summary>
         public IReadOnlyList<ParkedChange> ParkedChanges { get; init; }
 
-        /// <summary>Gets retained standalone conflicts without loading file payloads.</summary>
-        public IReadOnlyList<FacetConflict> FacetConflicts { get; init; } = [];
-
         /// <summary>Retained immutable actions requiring explicit owner-directed resumption.</summary>
         public IReadOnlyList<FacetPendingAction> FacetPendingActions { get; init; } = [];
-
-        /// <summary>Typed durable generation outcomes discovered independently of retained primary drafts.</summary>
-        public IReadOnlyList<FacetGenerationFailure> FacetGenerationFailures { get; init; } = [];
-
-        /// <summary>Maintenance errors are separate from account and network connection state.</summary>
-        public string? OccurrenceMaintenanceStatus { get; init; }
-
-        /// <summary>Typed core discovery problems, without parsing ordinary file-problem prose.</summary>
-        public IReadOnlyList<FacetOccurrenceProblem> OccurrenceMaintenanceProblems { get; init; } =
-        [];
 
         /// <summary>Gets the current UI synchronization state.</summary>
         public TaskNotesSyncState SyncState { get; init; }
@@ -177,10 +208,10 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets local maintenance information after a successful applied action.</summary>
         public string? SavedMaintenance { get; init; }
 
-        /// <summary>Gets the most recent successful pull time.</summary>
+        /// <summary>Gets the most recent successful synchronization time.</summary>
         public DateTimeOffset? LastSyncTime { get; init; }
 
-        /// <summary>Gets the initial state before an engine is installed.</summary>
+        /// <summary>Gets the initial state before server configuration is installed.</summary>
         public static TaskNotesState Unconfigured { get; } =
             new(
                 [],
@@ -192,7 +223,7 @@ namespace TaskNotes.Windows.Host
                 null
             );
 
-        /// <summary>Gets every non-archived task in the optimistic snapshot.</summary>
+        /// <summary>Gets every non-deleted task in the optimistic snapshot.</summary>
         public IReadOnlyList<TaskItem> AllTasks { get; init; } = [];
 
         /// <summary>Gets the rows selected by the current reusable list query.</summary>
@@ -201,22 +232,28 @@ namespace TaskNotes.Windows.Host
         /// <summary>Gets the current reusable list query.</summary>
         public TaskListQuery Query { get; init; } = TaskListQuery.Today;
 
-        /// <summary>Gets every project in use.</summary>
+        /// <summary>Gets every project name in use.</summary>
         public IReadOnlyList<string> Projects { get; init; } = [];
 
         /// <summary>Gets every context in use.</summary>
         public IReadOnlyList<string> Contexts { get; init; } = [];
 
-        /// <summary>Gets every tag in use.</summary>
+        /// <summary>Gets every tag/label in use.</summary>
         public IReadOnlyList<string> Tags { get; init; } = [];
 
-        /// <summary>Open configured workflow choices, in vault order.</summary>
+        /// <summary>Open workflow choices.</summary>
         public IReadOnlyList<WorkflowChoice> StatusChoices { get; init; } = [];
 
-        /// <summary>Open configured priority choices, in vault order.</summary>
+        /// <summary>Open priority choices.</summary>
         public IReadOnlyList<WorkflowChoice> PriorityChoices { get; init; } = [];
 
-        /// <summary>Gets the device-local saved views.</summary>
+        /// <summary>Gets projected Todoist-style Kanban board columns for the current scope.</summary>
+        public IReadOnlyList<FacetBoardColumnSnapshot> BoardColumns { get; init; } = [];
+
+        /// <summary>Gets upcoming reminder firings derived from active tasks and reminders.</summary>
+        public IReadOnlyList<FacetScheduledReminder> ScheduledReminders { get; init; } = [];
+
+        /// <summary>Gets the synced saved views (`Filter` entities).</summary>
         public IReadOnlyList<SavedViewDefinition> SavedViews { get; init; } = [];
 
         /// <summary>Gets whether another completion can be undone.</summary>

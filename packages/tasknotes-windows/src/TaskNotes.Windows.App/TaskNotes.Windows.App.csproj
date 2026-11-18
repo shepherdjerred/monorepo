@@ -22,13 +22,16 @@
       >false</AppxPackageSigningEnabled>
     <PublishReadyToRun>false</PublishReadyToRun>
     <PublishTrimmed>false</PublishTrimmed>
-    <NeedsTaskNotesNative>true</NeedsTaskNotesNative>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <DefineConstants Condition="'$(Configuration)' == 'E2E'"
       >$(DefineConstants);TASKNOTES_E2E</DefineConstants>
   </PropertyGroup>
-  <Target Name="IncludeFacetBackgroundHost" BeforeTargets="PrepareForBuild">
+  <Target
+    Name="IncludeFacetBackgroundHost"
+    BeforeTargets="PrepareForBuild"
+    Condition="'$(WindowsPackageType)' != 'None'"
+  >
     <ItemGroup>
       <FacetBackgroundHostCandidate Include="@(WindowsAppSdkComponentPackages->'%(Identity)runtimes/win-x64/native/Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll')" />
       <FacetBackgroundHost
@@ -71,7 +74,7 @@
   </Target>
   <ItemGroup>
     <Content
-      Include="../../../tasknotes-fixtures/presentation/audio/*.wav"
+      Include="../../../facet-protocol/presentation/audio/*.wav"
       Link="Assets/Feedback/%(Filename)%(Extension)"
       CopyToOutputDirectory="PreserveNewest"
       CopyToPublishDirectory="PreserveNewest"
@@ -96,7 +99,7 @@
   />
   <Target Name="VerifyPreparedFacetNotices">
     <Error
-      Condition="'$(FacetPreparedNotices)' != 'true' or '$(FacetPreparedNoticeVersion)' != '1' or '@(FacetNoticeInput)' == '' or '@(FacetNoticeOutput->Count())' != '5'"
+      Condition="'$(FacetPreparedNotices)' != 'true' or '$(FacetPreparedNoticeVersion)' != '1' or '@(FacetNoticeInput)' == '' or '@(FacetNoticeOutput->Count())' != '3'"
       Text="Generate current Facet notices and their complete source/output hash manifest before cross packaging."
     />
     <GetFileHash
@@ -123,18 +126,6 @@
     <Compile Remove="Acceptance/**/*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content
-      Include="../../generated/notices/ThirdPartyNotices.txt"
-      Link="Licenses\RustThirdPartyNotices.txt"
-      CopyToOutputDirectory="PreserveNewest"
-      CopyToPublishDirectory="PreserveNewest"
-    />
-    <Content
-      Include="../../generated/notices/native-license-inventory.json"
-      Link="Licenses\native-license-inventory.json"
-      CopyToOutputDirectory="PreserveNewest"
-      CopyToPublishDirectory="PreserveNewest"
-    />
     <Content
       Include="../../generated/notices/NuGetThirdPartyNotices.txt"
       Link="Licenses\NuGetThirdPartyNotices.txt"

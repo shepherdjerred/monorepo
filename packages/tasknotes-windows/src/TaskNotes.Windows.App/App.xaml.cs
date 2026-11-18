@@ -8,11 +8,10 @@ using Microsoft.Windows.AppLifecycle;
 using TaskNotes.Windows.Host;
 using TaskNotes.Windows.Presentation;
 using Windows.ApplicationModel.Activation;
-using Windows.Storage;
 
 namespace TaskNotes.Windows.App
 {
-    /// <summary>Provides dependency composition, diagnostics, and packaged activation.</summary>
+    /// <summary>Provides dependency composition, diagnostics, and packaged or unpackaged activation.</summary>
     public partial class App : Application
     {
         private readonly IHost _host;
@@ -32,13 +31,14 @@ namespace TaskNotes.Windows.App
         {
             InitializeComponent();
             PresentationResources.Install(Resources);
-            string localFolder = ApplicationData.Current.LocalFolder.Path;
+            string localFolder = PackageIdentity.LocalDataRoot;
 #if TASKNOTES_E2E
             if (Program.AcceptanceDescriptorPath is { } descriptor)
             {
                 if (
-                    global::Windows.ApplicationModel.Package.Current.Id.Name
-                    != "red.sjer.TaskNotes.E2E"
+                    !PackageIdentity.IsPackaged
+                    || global::Windows.ApplicationModel.Package.Current.Id.Name
+                        != "red.sjer.TaskNotes.E2E"
                 )
                     throw new InvalidDataException(
                         "Standalone acceptance requires the isolated package identity."
@@ -53,9 +53,12 @@ namespace TaskNotes.Windows.App
                 );
             }
             _storeDirectory =
-                _acceptance?.Descriptor.EngineDirectory ?? Path.Combine(localFolder, "Facet");
+                _acceptance?.Descriptor.EngineDirectory
+                ?? (PackageIdentity.IsPackaged ? Path.Combine(localFolder, "Facet") : localFolder);
 #else
-            _storeDirectory = Path.Combine(localFolder, "Facet");
+            _storeDirectory = PackageIdentity.IsPackaged
+                ? Path.Combine(localFolder, "Facet")
+                : localFolder;
 #endif
             JsonLineLoggerProvider diagnostics = new(Path.Combine(localFolder, "Logs"));
             _host = new HostBuilder()
@@ -85,6 +88,9 @@ namespace TaskNotes.Windows.App
                     services.AddSingleton<IFacetSecretStore>(provider =>
                         provider.GetRequiredService<AppSettingsService>()
                     );
+                    services.AddSingleton<IServerConfigurationStore>(provider =>
+                        provider.GetRequiredService<AppSettingsService>()
+                    );
                     services.AddSingleton<IShellPreferencesStore>(provider =>
                         provider.GetRequiredService<AppSettingsService>()
                     );
@@ -101,35 +107,31 @@ namespace TaskNotes.Windows.App
                             ),
                         provider.GetRequiredService<ILogger<UiOperationQueue>>()
                     ));
-                    services.AddSingleton(provider => new FacetTaskNotesStore(
+                    services.AddSingleton(_ => new FacetSyncStore(
                         _storeDirectory,
-                        provider.GetRequiredService<IFacetSecretStore>(),
 #if TASKNOTES_E2E
-                        synchronize: _acceptance is null
+                        autoSyncOnMutate: _acceptance is null
 #else
-                        synchronize: true
+                        autoSyncOnMutate: true
 #endif
                     ));
                     services.AddSingleton<ITaskNotesStore>(provider =>
-                        provider.GetRequiredService<FacetTaskNotesStore>()
-                    );
-                    services.AddSingleton<IFacetProfileStore>(provider =>
-                        provider.GetRequiredService<FacetTaskNotesStore>()
+                        provider.GetRequiredService<FacetSyncStore>()
                     );
                     services.AddSingleton<ShellViewModel>();
                     services.AddSingleton<TaskEditorViewModel>();
                     services.AddSingleton<QuickAddViewModel>();
-                    services.AddSingleton<FacetSettingsViewModel>();
+                    services.AddSingleton<SettingsViewModel>();
                     services.AddSingleton<GlobalHotkeyViewModel>();
                     services.AddSingleton(provider => new MainWindow(
-                        provider.GetRequiredService<FacetTaskNotesStore>(),
+                        provider.GetRequiredService<FacetSyncStore>(),
                         provider.GetRequiredService<ShellViewModel>(),
                         provider.GetRequiredService<AppSettingsService>(),
                         provider.GetRequiredService<ILogger<MainWindow>>(),
                         provider.GetRequiredService<UiOperationQueue>(),
                         provider.GetRequiredService<QuickAddViewModel>(),
                         provider.GetRequiredService<TaskEditorViewModel>(),
-                        provider.GetRequiredService<FacetSettingsViewModel>(),
+                        provider.GetRequiredService<SettingsViewModel>(),
                         provider.GetRequiredService<GlobalHotkeyViewModel>()
                     ));
                 })
@@ -150,16 +152,20 @@ namespace TaskNotes.Windows.App
         private async Task LaunchAsync(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             _ = args;
-            AppActivationArguments activation = AppInstance.GetCurrent().GetActivatedEventArgs();
-            AppInstance instance = AppInstance.FindOrRegisterForKey("TaskNotes.Main");
-            if (!instance.IsCurrent)
+            AppActivationArguments? activation = null;
+            if (PackageIdentity.IsPackaged)
             {
-                await instance.RedirectActivationToAsync(activation);
-                Exit();
-                return;
+                activation = AppInstance.GetCurrent().GetActivatedEventArgs();
+                AppInstance instance = AppInstance.FindOrRegisterForKey("TaskNotes.Main");
+                if (!instance.IsCurrent)
+                {
+                    await instance.RedirectActivationToAsync(activation);
+                    Exit();
+                    return;
+                }
+                instance.Activated += InstanceActivated;
             }
 
-            instance.Activated += InstanceActivated;
 #if TASKNOTES_E2E
             _acceptance?.Prepare();
 #endif
@@ -167,6 +173,7 @@ namespace TaskNotes.Windows.App
             if (_acceptance is null)
 #endif
                 FacetBackgroundRegistration.Stop();
+
             using CancellationTokenSource takeover = new(TimeSpan.FromSeconds(60));
             _writerLease = await FacetWriterLease.AcquireAsync(_storeDirectory, takeover.Token);
             await _host.StartAsync();
@@ -184,7 +191,7 @@ namespace TaskNotes.Windows.App
                     return;
                 _closing = true;
                 _uiOperations.Run(
-                    "release-vault-writer",
+                    "release-sync-writer",
                     async () =>
                     {
                         if (!await _window.ConfirmCloseAsync())
@@ -198,8 +205,7 @@ namespace TaskNotes.Windows.App
                         if (_acceptance is null)
 #endif
                             await FacetBackgroundRegistration.EnableAsync(
-                                _host.Services.GetRequiredService<AppSettingsService>(),
-                                _host.Services.GetRequiredService<FacetTaskNotesStore>().Profiles
+                                _host.Services.GetRequiredService<AppSettingsService>()
                             );
                         _writerClosed = true;
                         _window.Close();
@@ -207,13 +213,12 @@ namespace TaskNotes.Windows.App
                 );
             };
             _window.Activate();
-            await RouteActivationAsync(activation);
+            if (activation is not null)
+                await RouteActivationAsync(activation);
         }
 
         private async Task CloseWriterAsync()
         {
-            // A successor must not read mutable envelopes or open SQLite until the
-            // foreground session effects, callbacks and engine have all completed.
             ExceptionDispatchInfo? failure = null;
             try
             {
@@ -226,7 +231,7 @@ namespace TaskNotes.Windows.App
             }
             try
             {
-                await _host.Services.GetRequiredService<FacetTaskNotesStore>().DisposeAsync();
+                await _host.Services.GetRequiredService<FacetSyncStore>().DisposeAsync();
             }
             catch (Exception error)
             {

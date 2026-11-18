@@ -54,20 +54,6 @@ public sealed class FacetSchema
             Inspect(definition.Value);
     }
 
-    /// <summary>Load the embedded shared source, with no language-owned copy.</summary>
-    public static FacetSchema Bundled() => Resource("FacetEngineSchema.json");
-
-    internal static FacetSchema Sync() => Resource("FacetSyncSchema.json");
-
-    private static FacetSchema Resource(string name)
-    {
-        using var stream =
-            typeof(FacetSchema).Assembly.GetManifestResourceStream(name)
-            ?? throw new InvalidDataException("The shared Facet schema is missing.");
-        using var reader = new StreamReader(stream);
-        return new FacetSchema(reader.ReadToEnd());
-    }
-
     /// <summary>Check one versioned input or output definition.</summary>
     public void Validate(string json, string definition)
     {

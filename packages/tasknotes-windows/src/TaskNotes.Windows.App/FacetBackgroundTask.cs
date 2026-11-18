@@ -3,12 +3,12 @@ using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Threading;
 using TaskNotes.Windows.Host;
+using TaskNotes.Windows.Presentation;
 using Windows.ApplicationModel.Background;
-using Windows.Storage;
 
 namespace TaskNotes.Windows.App;
 
-/// <summary>Budgeted, packaged activation with no UI and no native domain policy.</summary>
+/// <summary>Budgeted, packaged background sync and reminder reconciliation task.</summary>
 [ComVisible(true)]
 [ClassInterface(ClassInterfaceType.None)]
 [Guid("d5e32ce5-4205-4a47-8972-8aef763ce691")]
@@ -21,10 +21,13 @@ public sealed class FacetBackgroundTask : IBackgroundTask
             "Background operation {Operation} finished with {Outcome}."
         );
 
-    /// <summary>Retains the OS deferral through session shutdown, SQLite close and writer release.</summary>
+    /// <summary>Retains the OS deferral through HTTP sync, reminder reconciliation, SQLite close and writer release.</summary>
     public void Run(IBackgroundTaskInstance taskInstance)
     {
         ArgumentNullException.ThrowIfNull(taskInstance);
+        if (!PackageIdentity.IsPackaged)
+            return;
+
         using CancellationTokenSource cancellation = new(TimeSpan.FromSeconds(45));
         BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
         Program.BeginBackgroundActivation();
@@ -37,15 +40,13 @@ public sealed class FacetBackgroundTask : IBackgroundTask
         taskInstance.Canceled += Cancel;
         try
         {
-            // The COM activation thread has no UI synchronization context. Blocking
-            // this one entrypoint keeps its deferral owned through durable cleanup.
             using JoinableTaskContext context = new();
             context.Factory.Run(() => RunAsync(cancellation.Token));
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
             FacetBackgroundRegistration.Report(
-                "Background synchronization paused; saved actions remain on this device."
+                "Background synchronization paused; cached tasks remain on this device."
             );
         }
         catch (Exception error) when (TaskNotesExceptionPolicy.BackgroundMessage(error) is not null)
@@ -62,7 +63,7 @@ public sealed class FacetBackgroundTask : IBackgroundTask
                         + ". Open Facet to review diagnostics."
                 );
                 using var diagnostics = new JsonLineLoggerProvider(
-                    Path.Combine(ApplicationData.Current.LocalFolder.Path, "Logs")
+                    Path.Combine(PackageIdentity.LocalDataRoot, "Logs")
                 );
                 UnexpectedFailure(
                     diagnostics.CreateLogger("Facet.Background"),
@@ -73,9 +74,6 @@ public sealed class FacetBackgroundTask : IBackgroundTask
             }
             finally
             {
-                // Diagnostics never replace the original fault, even when the disk
-                // or LocalSettings sink also fails. The OS sees an unsuccessful
-                // activation after the outer finally completes its deferral.
                 ExceptionDispatchInfo.Capture(error).Throw();
             }
         }
@@ -101,26 +99,30 @@ public sealed class FacetBackgroundTask : IBackgroundTask
 
     private static async Task RunAsync(CancellationToken cancellationToken)
     {
-        string directory = Path.Combine(ApplicationData.Current.LocalFolder.Path, "Facet");
+        string directory = Path.Combine(PackageIdentity.LocalDataRoot, "Facet");
         await using var lease = await FacetWriterLease
             .AcquireAsync(directory, cancellationToken)
             .ConfigureAwait(false);
         var settings = new AppSettingsService();
         if (!FacetBackgroundRegistration.IsEnabled)
             return;
-        var profiles = new FacetProfileCatalog(directory).Profiles;
-        bool authorized = FacetBackgroundRegistration.HasAuthorizedSync(settings, profiles);
-        bool synchronize = FacetBackgroundRegistration.SyncRequested && authorized;
-        bool reminders =
-            FacetReminderDelivery.Enabled
-            && (authorized || profiles.Any(profile => !profile.PrivateReplica));
+        if (!FacetBackgroundRegistration.HasAuthorizedSync(settings))
+            return;
+
+        bool synchronize = FacetBackgroundRegistration.SyncRequested;
+        bool reminders = FacetReminderDelivery.Enabled;
         if (!synchronize && !reminders)
             return;
-        await using var store = new FacetTaskNotesStore(directory, settings, synchronize);
+
+        ServerConfiguration config = settings.Load();
+        await using var store = new FacetSyncStore(directory);
         await using var delivery = new FacetReminderDelivery(store);
-        await store.InitializeAsync(null, null, cancellationToken).ConfigureAwait(false);
-        // OS triggers are best effort. The bounded execution window lets the Rust
-        // session finish downloads/uploads; cancellation preserves its checkpoints.
-        await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken).ConfigureAwait(false);
+        if (synchronize)
+        {
+            await store
+                .InitializeAsync(config.ServerUrl, config.Token, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        delivery.Request();
     }
 }

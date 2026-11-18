@@ -149,6 +149,18 @@ namespace TaskNotes.Windows.Host
         /// <summary>Exact configured priority color for native decoration.</summary>
         public string? PriorityColor { get; init; }
 
+        /// <summary>Gets the owning protocol project ID, when backed by sync entities.</summary>
+        public string? ProjectId { get; init; }
+
+        /// <summary>Gets the owning protocol section ID, when assigned to a section.</summary>
+        public string? SectionId { get; init; }
+
+        /// <summary>Gets the parent task ID, when nested under another task.</summary>
+        public string? ParentId { get; init; }
+
+        /// <summary>Gets the ordering index within its parent or section.</summary>
+        public double ChildOrder { get; init; }
+
         /// <summary>Initializes a projected task.</summary>
         public TaskItem(
             string id,
@@ -335,6 +347,15 @@ namespace TaskNotes.Windows.Host
 
         /// <summary>Gets the tags.</summary>
         public IReadOnlyList<string> Tags { get; init; } = [];
+
+        /// <summary>Optional section ID update (`""` clears section).</summary>
+        public string? SectionId { get; init; }
+
+        /// <summary>Optional parent task ID update (`""` clears parent).</summary>
+        public string? ParentId { get; init; }
+
+        /// <summary>Optional child order update.</summary>
+        public double? ChildOrder { get; init; }
     }
 
     /// <summary>The core's natural-language preview plus contextual defaults.</summary>

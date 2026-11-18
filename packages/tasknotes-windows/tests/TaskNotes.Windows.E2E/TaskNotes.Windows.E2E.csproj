@@ -5,7 +5,6 @@
     <AssemblyName>TaskNotes.Windows.E2E</AssemblyName>
     <RootNamespace>TaskNotes.Windows.E2E</RootNamespace>
     <IsPackable>false</IsPackable>
-    <NeedsTaskNotesNative>true</NeedsTaskNotesNative>
     <TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>
     <MSTestParallelizeScope>None</MSTestParallelizeScope>
     <UseWPF>true</UseWPF>

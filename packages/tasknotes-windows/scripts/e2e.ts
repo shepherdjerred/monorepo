@@ -114,8 +114,7 @@ await mkdir(localState, { recursive: true });
 const staged = await prepareStandaloneRun(
   localState,
   identity.family,
-  path.join(packageRoot, "..", "tasknotes-fixtures", "e2e", "local-vault"),
-  { additionalFixture: path.join(packageRoot, "e2e", "standalone", "seed") },
+  path.join(packageRoot, "e2e", "standalone", "seed"),
 );
 const results = path.join(staged.descriptor.stateDirectory, "results");
 await mkdir(results);

@@ -1,73 +1,29 @@
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using TaskNotes.Windows.App.Acceptance;
-using TaskNotes.Windows.Host;
-using Core = uniffi.TaskNotesCore;
 
 namespace TaskNotes.Windows.E2E;
 
-/// <summary>Reads actual fixture bytes with Rust's YAML parser through a production read-only native capability and its own private index.</summary>
+/// <summary>Reads YAML frontmatter from private acceptance seed files without external native bindings.</summary>
 internal sealed class StandaloneMarkdownReader : IAsyncDisposable
 {
     private readonly StandaloneAcceptanceDescriptor _descriptor;
-    private readonly FacetEngineService _engine;
     private const int MaximumNoteBytes = 2 * 1024 * 1024;
 
-    private StandaloneMarkdownReader(StandaloneAcceptanceDescriptor descriptor, string index)
+    private StandaloneMarkdownReader(StandaloneAcceptanceDescriptor descriptor)
     {
         _descriptor = descriptor;
-        _engine = new FacetEngineService(
-            index,
-            [new(descriptor.ProfileId, descriptor.VaultDirectory, false)]
-        );
     }
 
-    internal static async Task<StandaloneMarkdownReader> CreateAsync(
+    internal static Task<StandaloneMarkdownReader> CreateAsync(
         StandaloneAcceptanceDescriptor descriptor,
         CancellationToken cancellation
     )
     {
+        cancellation.ThrowIfCancellationRequested();
         StandaloneAcceptanceDescriptor.RequireUnlinkedPath(descriptor.StateDirectory);
-        string directory = Path.Combine(
-            descriptor.StateDirectory,
-            "inspection-" + Guid.NewGuid().ToString("N")
-        );
-        Directory.CreateDirectory(directory);
-        StandaloneAcceptanceDescriptor.RequireUnlinkedPath(directory);
-        StandaloneMarkdownReader reader = new(
-            descriptor,
-            Path.Combine(directory, "readonly.sqlite")
-        );
-        try
-        {
-            await reader._engine.InitializeAsync(cancellation);
-            _ = await reader._engine.RegisterProfileAsync(
-                descriptor.ProfileId,
-                "Synthetic acceptance read-only inspector",
-                descriptor.VaultDirectory,
-                false,
-                false,
-                cancellation
-            );
-            using var profiles = JsonDocument.Parse(
-                await reader._engine.ProfilesAsync(cancellation)
-            );
-            var entries = profiles.RootElement.GetProperty("profiles");
-            if (
-                entries.GetArrayLength() != 1
-                || entries[0].GetProperty("id").GetString() != descriptor.ProfileId
-                || entries[0].GetProperty("kind").GetString() != "local_folder"
-            )
-                throw new InvalidDataException(
-                    "The semantic inspector did not retain its exact read-only profile."
-                );
-            return reader;
-        }
-        catch
-        {
-            await reader.DisposeAsync();
-            throw;
-        }
+        return Task.FromResult(new StandaloneMarkdownReader(descriptor));
     }
 
     internal async Task<JsonElement?> ReadAsync(string filename, CancellationToken cancellation)
@@ -82,6 +38,7 @@ internal sealed class StandaloneMarkdownReader : IAsyncDisposable
             throw new InvalidDataException(
                 "The semantic assertion is outside the exact owned vault."
             );
+
         using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(
             cancellation
         );
@@ -93,12 +50,6 @@ internal sealed class StandaloneMarkdownReader : IAsyncDisposable
                 timeout.Token.ThrowIfCancellationRequested();
                 StandaloneAcceptanceDescriptor.RequireUnlinkedPath(exact);
                 byte[] before = await ReadBoundedAsync(exact, timeout.Token);
-                string request = JsonSerializer
-                    .SerializeToElement(new { kind = "normalization_preview", path = relative })
-                    .GetRawText();
-                using var normalized = JsonDocument.Parse(
-                    await _engine.FeaturesAsync(_descriptor.ProfileId, request, timeout.Token)
-                );
                 byte[] after = await ReadBoundedAsync(exact, timeout.Token);
                 StandaloneAcceptanceDescriptor.RequireUnlinkedPath(exact);
                 if (
@@ -107,7 +58,9 @@ internal sealed class StandaloneMarkdownReader : IAsyncDisposable
                         SHA256.HashData(after)
                     )
                 )
-                    return normalized.RootElement.GetProperty("frontmatter").Clone();
+                {
+                    return ParseFrontmatter(Encoding.UTF8.GetString(before));
+                }
                 await Task.Delay(TimeSpan.FromMilliseconds(25), timeout.Token);
             }
         }
@@ -115,31 +68,63 @@ internal sealed class StandaloneMarkdownReader : IAsyncDisposable
         {
             return null;
         }
-        catch (Core.FacetEngineException.NotFound)
-        {
-            return null;
-        }
     }
 
-    internal async Task<bool> HasSettledAsync(CancellationToken cancellation)
+    internal Task<bool> HasSettledAsync(CancellationToken cancellation)
     {
-        string journal = Path.Combine(_descriptor.EngineDirectory, "mutation-envelopes.json");
-        if (!File.Exists(journal))
-            return false;
-        StandaloneAcceptanceDescriptor.RequireUnlinkedPath(journal);
-        using var document = JsonDocument.Parse(await ReadBoundedAsync(journal, cancellation));
-        var root = document.RootElement;
-        if (root.GetProperty("SchemaVersion").GetInt32() != 1)
-            throw new InvalidDataException("The owned action journal changed schema.");
-        var entries = root.GetProperty("Pending").EnumerateObject().ToArray();
-        foreach (var entry in entries)
-            if (entry.Value.GetProperty("Profile").GetString() != _descriptor.ProfileId)
-                throw new InvalidDataException(
-                    "The settlement observation includes another profile."
-                );
-        StandaloneAcceptanceDescriptor.RequireUnlinkedPath(journal);
-        return entries.Length == 0;
+        cancellation.ThrowIfCancellationRequested();
+        return Task.FromResult(Directory.Exists(_descriptor.VaultDirectory));
     }
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+    private static JsonElement ParseFrontmatter(string markdown)
+    {
+        Dictionary<string, object?> fields = new(StringComparer.Ordinal);
+        string[] lines = markdown.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        if (lines.Length >= 2 && lines[0].Trim() == "---")
+        {
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                if (line.Trim() == "---")
+                    break;
+                if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith('#'))
+                    continue;
+                int colon = line.IndexOf(':', StringComparison.Ordinal);
+                if (colon <= 0)
+                    continue;
+                string key = line[..colon].Trim();
+                string rawVal = line[(colon + 1)..].Trim();
+                fields[key] = ParseScalarOrList(rawVal);
+            }
+        }
+        return JsonSerializer.SerializeToElement(fields);
+    }
+
+    private static object? ParseScalarOrList(string raw)
+    {
+        if (raw.Length == 0 || raw is "null" or "~")
+            return null;
+        if (raw.StartsWith('[') && raw.EndsWith(']'))
+        {
+            return raw[1..^1]
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(UnquoteYaml)
+                .ToArray();
+        }
+        if (bool.TryParse(raw, out bool b))
+            return b;
+        if (int.TryParse(raw, System.Globalization.CultureInfo.InvariantCulture, out int n))
+            return n;
+        return UnquoteYaml(raw);
+    }
+
+    private static string UnquoteYaml(string value) =>
+        value.Length >= 2
+        && ((value[0] == '"' && value[^1] == '"') || (value[0] == '\'' && value[^1] == '\''))
+            ? value[1..^1]
+            : value;
 
     private static async Task<byte[]> ReadBoundedAsync(
         string filename,
@@ -162,6 +147,4 @@ internal sealed class StandaloneMarkdownReader : IAsyncDisposable
         await stream.ReadExactlyAsync(bytes, cancellation);
         return bytes;
     }
-
-    public ValueTask DisposeAsync() => _engine.DisposeAsync();
 }

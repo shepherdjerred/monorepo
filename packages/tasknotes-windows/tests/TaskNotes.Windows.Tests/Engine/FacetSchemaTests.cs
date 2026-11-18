@@ -1,9 +1,8 @@
-using System.Text.Json;
 using TaskNotes.Windows.Host;
 
 namespace TaskNotes.Windows.Tests;
 
-/// <summary>Language-neutral producer and consumer contract evidence.</summary>
+/// <summary>Language-neutral JSON schema validator contract evidence.</summary>
 [TestClass]
 public sealed class FacetSchemaTests
 {
@@ -52,71 +51,83 @@ public sealed class FacetSchemaTests
         _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("\"2\"", "number"));
     }
 
-    /// <summary>Runs every positive and negative shared boundary case.</summary>
+    /// <summary>Validates combinators, references, strings, arrays, objects, enums, and booleans.</summary>
     [TestMethod]
-    public void SharedNeutralCorpusIsFullyValidated() =>
-        ValidateCorpus("FacetContractCases.json", "value", 149);
-
-    /// <summary>Validates every agenda execution, zone-free saved selection and projected task boundary.</summary>
-    [TestMethod]
-    public void SharedAgendaCorpusIsFullyValidated() =>
-        ValidateCorpus("FacetAgendaContractCases.json", "value", 30);
-
-    /// <summary>Runs all neutral occurrence feature, command, concrete/deferred, maintenance and repair boundaries.</summary>
-    [TestMethod]
-    public void SharedOccurrenceCorpusIsFullyValidated() =>
-        ValidateCorpus("FacetOccurrenceContractCases.json", "value", 117);
-
-    /// <summary>Raw shared numeric literals retain exact values across the language boundary.</summary>
-    [TestMethod]
-    public void SharedRawNumericCorpusIsFullyValidated() =>
-        ValidateCorpus("FacetRawContractCases.json", "raw", 7);
-
-    /// <summary>Historical private drafts do not restore removed public commands.</summary>
-    [TestMethod]
-    public void HistoricalPrivateActionCorpusIsFullyValidated()
+    public void CombinatorsStringsObjectsAndReferencesEnforceAllConstraints()
     {
-        ValidateCorpus("FacetRetainedActionCases.json", "value", 14);
-        using var stream = typeof(FacetSchemaTests).Assembly.GetManifestResourceStream(
-            "FacetRetainedActionCases.json"
-        )!;
-        using var document = JsonDocument.Parse(stream);
-        var schema = FacetSchema.Bundled();
-        foreach (var fixture in document.RootElement.GetProperty("cases").EnumerateArray())
-            if (fixture.GetProperty("valid").GetBoolean())
+        var schema = new FacetSchema(
+            """
             {
-                var mutation = fixture.GetProperty("value");
-                Assert.IsFalse(FacetRetainedActions.CanResume(mutation));
-                _ = Assert.ThrowsExactly<InvalidDataException>(() =>
-                    schema.Validate(mutation.GetRawText(), "mutation")
-                );
+              "$defs": {
+                "tag": { "type": "string", "minLength": 2, "maxLength": 5, "pattern": "^[a-z]+$" },
+                "flag": { "type": "boolean" },
+                "nullableText": { "type": ["string", "null"] },
+                "choice": { "enum": ["alpha", "beta", 3] },
+                "union": { "oneOf": [{ "$ref": "#/$defs/tag" }, { "$ref": "#/$defs/flag" }] },
+                "either": { "anyOf": [{ "type": "integer", "minimum": 10 }, { "const": "ok" }] },
+                "list": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "$ref": "#/$defs/tag" } },
+                "record": {
+                  "type": "object",
+                  "required": ["id"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": { "$ref": "#/$defs/tag" },
+                    "opt": { "$ref": "#/$defs/nullableText" }
+                  }
+                },
+                "openMap": {
+                  "type": "object",
+                  "additionalProperties": { "type": "boolean" }
+                }
+              }
             }
-    }
+            """
+        );
 
-    private static void ValidateCorpus(string resource, string property, int minimumCases)
-    {
-        using var stream = typeof(FacetSchemaTests).Assembly.GetManifestResourceStream(resource)!;
-        using var document = JsonDocument.Parse(stream);
-        var schema = FacetSchema.Bundled();
-        int count = 0;
-        foreach (var fixture in document.RootElement.GetProperty("cases").EnumerateArray())
-        {
-            string id = fixture.GetProperty("id").GetString()!;
-            string definition = fixture.GetProperty("definition").GetString()!;
-            string value =
-                property == "raw"
-                    ? fixture.GetProperty(property).GetString()!
-                    : fixture.GetProperty(property).GetRawText();
-            if (fixture.GetProperty("valid").GetBoolean())
-                schema.Validate(value, definition);
-            else
-                _ = Assert.ThrowsExactly<InvalidDataException>(
-                    () => schema.Validate(value, definition),
-                    id
-                );
-            count++;
-        }
-        Assert.IsTrue(count >= minimumCases, "The shared corpus must not silently shrink.");
+        schema.Validate("\"abc\"", "tag");
+        _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("\"a\"", "tag"));
+        _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("\"abcdef\"", "tag"));
+        _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("\"Abc\"", "tag"));
+
+        schema.Validate("true", "flag");
+        _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("1", "flag"));
+
+        schema.Validate("null", "nullableText");
+        schema.Validate("\"text\"", "nullableText");
+        _ = Assert.ThrowsExactly<InvalidDataException>(() =>
+            schema.Validate("false", "nullableText")
+        );
+
+        schema.Validate("\"alpha\"", "choice");
+        schema.Validate("3", "choice");
+        _ = Assert.ThrowsExactly<InvalidDataException>(() =>
+            schema.Validate("\"gamma\"", "choice")
+        );
+
+        schema.Validate("\"abc\"", "union");
+        schema.Validate("false", "union");
+        _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("12", "union"));
+
+        schema.Validate("10", "either");
+        schema.Validate("\"ok\"", "either");
+        _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("9", "either"));
+
+        schema.Validate("[\"ab\",\"cd\"]", "list");
+        _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("[]", "list"));
+        _ = Assert.ThrowsExactly<InvalidDataException>(() =>
+            schema.Validate("[\"ab\",\"cd\",\"ef\"]", "list")
+        );
+
+        schema.Validate("{\"id\":\"abc\",\"opt\":null}", "record");
+        _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("{}", "record"));
+        _ = Assert.ThrowsExactly<InvalidDataException>(() =>
+            schema.Validate("{\"id\":\"abc\",\"extra\":1}", "record")
+        );
+
+        schema.Validate("{\"x\":true,\"y\":false}", "openMap");
+        _ = Assert.ThrowsExactly<InvalidDataException>(() =>
+            schema.Validate("{\"x\":1}", "openMap")
+        );
     }
 
     /// <summary>Exact decimal and exponent math does not round large or fractional JSON literals.</summary>
@@ -143,15 +154,20 @@ public sealed class FacetSchemaTests
         _ = Assert.ThrowsExactly<InvalidDataException>(() => schema.Validate("1e100000", "one"));
     }
 
-    /// <summary>Unsupported schema policy and duplicate JSON fields fail loudly.</summary>
+    /// <summary>Unsupported schema policy, missing definitions, and duplicate JSON fields fail loudly.</summary>
     [TestMethod]
     public void UnknownKeywordsAndDuplicateFieldsAreRejected()
     {
         _ = Assert.ThrowsExactly<InvalidDataException>(() =>
             new FacetSchema("""{"$defs":{"test":{"multipleOf":2}}}""")
         );
-        _ = Assert.ThrowsExactly<InvalidDataException>(() =>
-            FacetSchema.Bundled().Validate("""{"scope":"all","scope":"today"}""", "query")
+        var schema = new FacetSchema(
+            """{"$defs":{"query":{"type":"object","properties":{"scope":{"type":"string"}}}}}"""
         );
+        _ = Assert.ThrowsExactly<InvalidDataException>(() =>
+            schema.Validate("""{"scope":"all","scope":"today"}""", "query")
+        );
+        _ = Assert.ThrowsExactly<KeyNotFoundException>(() => schema.Validate("{}", "missing"));
+        _ = Assert.Throws<System.Text.Json.JsonException>(() => schema.Validate("{bad", "query"));
     }
 }

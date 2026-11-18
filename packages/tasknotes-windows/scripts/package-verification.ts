@@ -48,12 +48,12 @@ export function createPackageVerifier(
     if (
       !entries.some(
         (entry) =>
-          entry.endsWith("/tasknotes_core_ffi.dll") ||
-          entry === "tasknotes_core_ffi.dll",
+          entry.endsWith("/TaskNotes.Windows.App.exe") ||
+          entry === "TaskNotes.Windows.App.exe",
       )
     ) {
       throw new Error(
-        `Packaged application is missing tasknotes_core_ffi.dll: ${archivePath}`,
+        `Packaged application is missing TaskNotes.Windows.App.exe: ${archivePath}`,
       );
     }
 
@@ -96,8 +96,6 @@ export function createPackageVerifier(
       );
     }
     for (const [source, bundled] of [
-      ["ThirdPartyNotices.txt", "RustThirdPartyNotices.txt"],
-      ["native-license-inventory.json", "native-license-inventory.json"],
       ["NuGetThirdPartyNotices.txt", "NuGetThirdPartyNotices.txt"],
       ["nuget-license-inventory.json", "nuget-license-inventory.json"],
     ] as const) {

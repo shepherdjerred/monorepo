@@ -2,7 +2,6 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 const packageRoot = path.resolve(import.meta.dir, "..");
-const repositoryRoot = path.resolve(packageRoot, "..", "..");
 await mkdir(path.join(packageRoot, "artifacts", "mutation"), {
   recursive: true,
 });
@@ -35,19 +34,4 @@ await run(
     "stryker-config.json",
   ],
   packageRoot,
-);
-await run(
-  [
-    "cargo",
-    "mutants",
-    "--workspace",
-    "--all-features",
-    "--minimum-test-timeout",
-    "30",
-    "--timeout-multiplier",
-    "5",
-    "--output",
-    path.join(packageRoot, "artifacts", "mutation", "rust"),
-  ],
-  path.join(repositoryRoot, "packages", "tasknotes-core"),
 );
