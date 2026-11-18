@@ -64,12 +64,15 @@ therefore splits identities:
   establishes identity; live guild membership and voice state authorize each
   media request. Everyone currently in the channel can control playback through
   the web remote. Slash, voice, and card permissions keep their existing policy.
-  The destination selector shares the viewer's personal numbered channel with Discord
-  commands. With `streambot-automatic-channel-routing-enabled`, music defaults to 1;
-  Plex, sports, and other video default to 2 across web, slash, and voice commands.
-  Manual selection wins until the viewer chooses Auto or `/stream select auto:true`.
-  Each slot retains its own queue, and legacy sessions finish in their original mode.
-  The URL's `channel` chooses the slot being viewed without changing that destination.
+  The Streambot channel selector shares the viewer's personal numbered channel with Discord
+  commands and controls both the displayed player/queue and the playback destination. With
+  `streambot-automatic-channel-routing-enabled`, `Auto` routes music to 1 and Plex, sports,
+  and other video to 2 across web, slash, and voice commands, displaying the active slot
+  (following the viewer's last routed slot while occupied, or the lowest-numbered occupied
+  slot). Manual selection switches both the displayed queue/player and command destination
+  until the viewer chooses `Auto` or `/stream select auto:true`; player-card `channel` deep
+  links select that numbered channel on load and clear the query parameter. Each slot retains
+  its own queue, and legacy sessions finish in their original mode.
   `/plex`, `/search`, `/sports`, and `/history` preserve submitted searches, filters,
   series, pagination, and server context in URLs. Deep links survive OAuth sign-in;
   browser Back/Forward restores the page and its scroll position.

@@ -18,10 +18,8 @@ export function MediaList(props: MediaListProps) {
   const { pathname } = useLocation();
   const { params } = useRouteState();
   const context = new URLSearchParams();
-  for (const key of ["guild", "channel"]) {
-    const value = params.get(key);
-    if (value !== null) context.set(key, value);
-  }
+  const guild = params.get("guild");
+  if (guild !== null) context.set("guild", guild);
   const title = PAGE_TITLES[pathname] ?? "Page not found";
   return (
     <section className="discovery panel">

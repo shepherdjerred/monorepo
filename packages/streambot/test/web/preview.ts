@@ -1,17 +1,80 @@
 /** Local visual verification only. Production serves no fixture authentication routes. */
+import { createActor } from "xstate";
 import { webFixture, GUILD, CHANNEL, USER, OTHER } from "./web-fixture.ts";
 import { FIXTURE_EVENTS } from "./web-fixture-media.ts";
+import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
+import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
+import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import {
+  EMPTY_HANDLE,
+  type SessionHandle,
+} from "@shepherdjerred/streambot/session/session-types.ts";
+import { sessionRevision } from "@shepherdjerred/streambot/session/session-revision.ts";
+import {
+  sourceIdentity,
+  type Source,
+} from "@shepherdjerred/streambot/sources/source.ts";
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
 import type { RecordMedia } from "@shepherdjerred/streambot/history/types.ts";
 import { fileURLToPath } from "node:url";
-import { PlaybackChannelNumberSchema } from "@shepherdjerred/streambot/types/playback-channel.ts";
+import {
+  PlaybackChannelNumberSchema,
+  type PlaybackChannelNumber,
+} from "@shepherdjerred/streambot/types/playback-channel.ts";
 import { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
 import { lolSportsEvent } from "@shepherdjerred/streambot/sports/lolesports.ts";
 import { matchSportsEvents } from "@shepherdjerred/streambot/sports/sports-service.ts";
 import { lolMatch } from "#lol-fixture";
 import { fixtureMusic, SONG } from "#music-fixture";
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
+
+function createPreviewSlot(resolveSource: (source: Source) => ResolvedSource) {
+  let position = 0;
+  const actor = createActor(
+    createPlaybackMachine({
+      joinVoice: (input) =>
+        Promise.resolve({
+          guildId: input.guildId,
+          channelId: input.channelId,
+        }),
+      leaveVoice: () => Promise.resolve(),
+      resolveSource: (input) => Promise.resolve(resolveSource(input.source)),
+      runStream: (_input, signal) =>
+        new Promise<void>((resolve) => {
+          signal.addEventListener(
+            "abort",
+            () => {
+              resolve();
+            },
+            { once: true },
+          );
+        }),
+    }),
+    { input: { guildId: GUILD, channelId: CHANNEL, idleTimeoutMs: 60_000 } },
+  );
+  actor.start();
+  const handle: SessionHandle = {
+    ...EMPTY_HANDLE,
+    dispatch: (event) => {
+      actor.send(event);
+    },
+    view: () => buildPlaybackView(actor.getSnapshot(), position),
+    seek: (seconds) => {
+      position = seconds;
+      return Promise.resolve(true);
+    },
+    setVolume: (percent) => {
+      actor.send({ type: "SET_VOLUME", volume: percent });
+      return Promise.resolve(true);
+    },
+    currentSourceId: () => {
+      const source = actor.getSnapshot().context.current?.source;
+      return source === undefined ? null : sourceIdentity(source);
+    },
+  };
+  return { actor, handle };
+}
 
 if (import.meta.main) {
   const port = Number(Bun.argv[2] ?? 5188);
@@ -41,6 +104,15 @@ if (import.meta.main) {
       },
     },
   );
+  const resolvePreview = (source: Source): ResolvedSource => ({
+    title:
+      source.music?.title ??
+      (source.kind === "file" ? source.title : "Live session"),
+    chapters: [],
+    ffmpegInput: "fixture",
+    mediaKind: source.mode === "music" ? "music" : "video",
+    durationSeconds: 10_871,
+  });
   const fixture = webFixture(
     origin,
     fileURLToPath(new URL("../../dist/web", import.meta.url)),
@@ -65,15 +137,7 @@ if (import.meta.main) {
             ),
           ),
       },
-      resolve: (source) => ({
-        title:
-          source.music?.title ??
-          (source.kind === "file" ? source.title : "Live session"),
-        chapters: [],
-        ffmpegInput: "fixture",
-        mediaKind: source.mode === "music" ? "music" : "video",
-        durationSeconds: 10_871,
-      }),
+      resolve: resolvePreview,
     },
   );
   history.playlists.create(
@@ -94,16 +158,46 @@ if (import.meta.main) {
       playlist.guild_id = GUILD;
     },
   );
+  const videoSlot = PlaybackChannelNumberSchema.parse(2);
   fixture.enableNumbered(2);
+  await fixture.seed();
+  const slots = new Map<
+    PlaybackChannelNumber,
+    { actor: typeof fixture.actor; handle: SessionHandle }
+  >([[videoSlot, { actor: fixture.actor, handle: fixture.handle }]]);
+  const baseSessions = fixture.playback.deps.sessions;
+  fixture.playback.deps.sessions = {
+    ...baseSessions,
+    getExisting: (_guild, _channel, slot) =>
+      slot === undefined ? null : (slots.get(slot)?.handle ?? null),
+    ensureForPlay: ({ playbackChannel }) => {
+      if (playbackChannel === undefined) return fixture.handle;
+      let entry = slots.get(playbackChannel);
+      if (entry === undefined) {
+        entry = createPreviewSlot(resolvePreview);
+        slots.set(playbackChannel, entry);
+      }
+      return entry.handle;
+    },
+    releaseUnused: (_guild, _channel, slot) => {
+      if (slot === undefined) return;
+      const entry = slots.get(slot);
+      if (entry?.actor.getSnapshot().matches("idle") === true) {
+        if (entry.actor !== fixture.actor) entry.actor.stop();
+        slots.delete(slot);
+      }
+    },
+    revision: (_guild, _channel, slot) => {
+      if (slot === undefined) return null;
+      const entry = slots.get(slot);
+      return entry === undefined ? null : sessionRevision(entry);
+    },
+  };
   fixture.playback.deps.sessions.numbered.selection.clear({
     guildId: GUILD,
     channelId: CHANNEL,
     userId: USER,
   });
-  fixture.playback.deps.sessions.numbered.selection.follow(
-    { guildId: GUILD, channelId: CHANNEL, userId: USER },
-    PlaybackChannelNumberSchema.parse(2),
-  );
   const event = FIXTURE_EVENTS[0];
   if (event === undefined) throw new Error("Missing sports fixture");
   const recent: RecordMedia[] = [
@@ -155,7 +249,6 @@ if (import.meta.main) {
     });
     history.finishStartedRequest(requestId, "completed");
   }
-  await fixture.seed();
   Bun.serve({
     hostname: "127.0.0.1",
     port,

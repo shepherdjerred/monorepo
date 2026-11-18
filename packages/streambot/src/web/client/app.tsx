@@ -191,10 +191,11 @@ function ContextBar({ remote }: { remote: Remote }) {
   const channel = remote.snapshot?.channel;
   return (
     <section className="context-bar" aria-label="Discord playback destination">
-      <label>
-        Server
+      <div className="context-field">
+        <label htmlFor="streambot-server-select">Server</label>
         <select
-          aria-label="Discord server"
+          id="streambot-server-select"
+          name="guild"
           value={remote.guildId}
           onChange={(event) => {
             remote.setGuildId(event.target.value);
@@ -206,12 +207,13 @@ function ContextBar({ remote }: { remote: Remote }) {
             </option>
           ))}
         </select>
-      </label>
+      </div>
       {remote.snapshot?.playbackChannel != null && (
-        <label>
-          Streambot channel
+        <div className="context-field">
+          <label htmlFor="streambot-channel-select">Streambot channel</label>
           <select
-            aria-label="Streambot channel"
+            id="streambot-channel-select"
+            name="channel"
             value={
               remote.snapshot.selectionMode === "auto"
                 ? "auto"
@@ -230,18 +232,21 @@ function ContextBar({ remote }: { remote: Remote }) {
             }}
           >
             {remote.snapshot.automaticRoutingEnabled && (
-              <option value="auto">Auto · music 1, video 2</option>
+              <option value="auto">
+                {`Auto · viewing ${String(remote.snapshot.playbackChannel)} (music 1, video 2)`}
+              </option>
             )}
             {remote.snapshot.playbackChannels.map((slot) => (
               <option key={slot.number} value={slot.number}>
-                {slot.label}
+                {`${slot.label} · ${slot.occupied ? "Playing" : "Idle"}`}
               </option>
             ))}
           </select>
-        </label>
+        </div>
       )}
       <div className="channel-status">
         <span
+          aria-hidden="true"
           className={
             channel === undefined || channel === null
               ? "status-dot inactive"
@@ -251,39 +256,7 @@ function ContextBar({ remote }: { remote: Remote }) {
         {channel?.name ?? "Join a Discord voice channel to play"}
       </div>
       <span className="context-note">Playback stays in Discord</span>
-      {remote.snapshot !== null &&
-        remote.snapshot.playbackChannels.length > 0 && (
-          <nav className="channel-views" aria-label="View playback channels">
-            {remote.snapshot.playbackChannels.map((slot) => (
-              <ChannelView
-                key={slot.number}
-                number={slot.number}
-                current={remote.snapshot?.playbackChannel === slot.number}
-              />
-            ))}
-          </nav>
-        )}
     </section>
-  );
-}
-
-function ChannelView({
-  number,
-  current,
-}: {
-  number: number;
-  current: boolean;
-}) {
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  params.set("channel", String(number));
-  return (
-    <Link
-      to={location.pathname + "?" + params.toString()}
-      aria-current={current ? "page" : undefined}
-    >
-      View {number}
-    </Link>
   );
 }
 
