@@ -8,6 +8,7 @@
 agentHost:
   casks:
     - 1password-cli
+    - android-commandlinetools
     - anthropics/tap/ant
     # Coding-agent CLIs that Brim and the Herdr worktree dialog start there
     # (Kimi is the kimi-code formula, which agent hosts keep with every formula).
@@ -22,4 +23,6 @@ agentHost:
     - google-chrome@canary
     - grok-build
     - muse-code
+    # Reference client exported into the isolated TaskNotes acceptance guest.
+    - obsidian
     - orbstack
