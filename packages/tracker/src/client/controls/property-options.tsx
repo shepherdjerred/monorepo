@@ -4,15 +4,37 @@ import {
   CalendarPlus,
   CircleDashed,
   Clock,
+  Crosshair,
   Folder,
+  Gauge,
   Rows3,
   SignalHigh,
   ThumbsUp,
   UserRound,
+  Zap,
 } from "lucide-react";
+import {
+  EffortSchema,
+  ImpactSchema,
+  UrgencySchema,
+  type Effort,
+  type Impact,
+  type Urgency,
+} from "#shared/schema.ts";
 import type { BootstrapData } from "#client/data/api.ts";
-import { priorities } from "#client/data/issue-changes.ts";
-import { PriorityGlyph, StateIcon } from "#client/ui/icons.tsx";
+import {
+  effortLabels,
+  impactLabels,
+  priorities,
+  urgencyLabels,
+} from "#client/data/issue-changes.ts";
+import {
+  EffortGlyph,
+  ImpactGlyph,
+  PriorityGlyph,
+  StateIcon,
+  UrgencyGlyph,
+} from "#client/ui/icons.tsx";
 import type { GroupBy, Sort } from "#client/views/display-options.ts";
 import type { EnumOption } from "./enum-picker.tsx";
 
@@ -46,10 +68,87 @@ export const priorityOptions: EnumOption[] = priorityOrder.map((value) => ({
   ),
 }));
 
+export const urgencyOrder: readonly Urgency[] = ["high", "medium", "low"];
+export const impactOrder: readonly Impact[] = ["high", "medium", "low"];
+export const effortOrder: readonly Effort[] = ["xs", "s", "m", "l", "xl"];
+
+export const urgencyOptions: EnumOption[] = [
+  {
+    value: "",
+    label: "No urgency",
+    icon: (
+      <span className="sizing-glyph urgency-none">
+        <UrgencyGlyph value={null} />
+      </span>
+    ),
+  },
+  ...urgencyOrder.map((value) => ({
+    value,
+    label: urgencyLabels[value],
+    icon: (
+      <span className={`sizing-glyph urgency-${value}`}>
+        <UrgencyGlyph value={value} />
+      </span>
+    ),
+  })),
+];
+
+export const impactOptions: EnumOption[] = [
+  {
+    value: "",
+    label: "No impact",
+    icon: (
+      <span className="sizing-glyph impact-none">
+        <ImpactGlyph value={null} />
+      </span>
+    ),
+  },
+  ...impactOrder.map((value) => ({
+    value,
+    label: impactLabels[value],
+    icon: (
+      <span className={`sizing-glyph impact-${value}`}>
+        <ImpactGlyph value={value} />
+      </span>
+    ),
+  })),
+];
+
+export const effortOptions: EnumOption[] = [
+  {
+    value: "",
+    label: "No effort",
+    icon: (
+      <span className="sizing-glyph effort-none">
+        <EffortGlyph value={null} />
+      </span>
+    ),
+  },
+  ...effortOrder.map((value) => ({
+    value,
+    label: effortLabels[value],
+    icon: (
+      <span className={`sizing-glyph effort-${value}`}>
+        <EffortGlyph value={value} />
+      </span>
+    ),
+  })),
+];
+
+export const parseUrgency = (value: string): Urgency | null =>
+  value === "" ? null : UrgencySchema.parse(value);
+export const parseImpact = (value: string): Impact | null =>
+  value === "" ? null : ImpactSchema.parse(value);
+export const parseEffort = (value: string): Effort | null =>
+  value === "" ? null : EffortSchema.parse(value);
+
 export const sortOptions: (EnumOption & { value: Sort })[] = [
   { value: "updated", label: "Last updated", icon: <Clock size={14} /> },
   { value: "created", label: "Last created", icon: <CalendarPlus size={14} /> },
   { value: "priority", label: "Priority", icon: <SignalHigh size={14} /> },
+  { value: "urgency", label: "Urgency", icon: <Zap size={14} /> },
+  { value: "impact", label: "Impact", icon: <Crosshair size={14} /> },
+  { value: "effort", label: "Effort", icon: <Gauge size={14} /> },
   { value: "votes", label: "Most votes", icon: <ThumbsUp size={14} /> },
   { value: "due", label: "Due date", icon: <CalendarClock size={14} /> },
 ];
@@ -61,6 +160,9 @@ export const groupOptions: (EnumOption & { value: GroupBy })[] = [
     label: "Priority",
     icon: <ArrowDownWideNarrow size={14} />,
   },
+  { value: "urgency", label: "Urgency", icon: <Zap size={14} /> },
+  { value: "impact", label: "Impact", icon: <Crosshair size={14} /> },
+  { value: "effort", label: "Effort", icon: <Gauge size={14} /> },
   { value: "project", label: "Project", icon: <Folder size={14} /> },
   { value: "assignee", label: "Assignee", icon: <UserRound size={14} /> },
   { value: "due", label: "Due date", icon: <CalendarClock size={14} /> },

@@ -1,5 +1,19 @@
+import type { z } from "zod";
+import {
+  EffortSchema,
+  FilterEffortSchema,
+  FilterImpactSchema,
+  FilterUrgencySchema,
+  ImpactSchema,
+  UrgencySchema,
+} from "#shared/schema.ts";
 import type { BootstrapData } from "#client/data/api.ts";
-import { priorities } from "#client/data/issue-changes.ts";
+import {
+  effortLabels,
+  impactLabels,
+  priorities,
+  urgencyLabels,
+} from "#client/data/issue-changes.ts";
 import type { IssuePrefill } from "#client/issues/issue-form.tsx";
 import { localToday } from "#client/due/dates.ts";
 import { dueFilterName, isDueFilter } from "#client/due/due-filter.ts";
@@ -11,6 +25,9 @@ import { dueFilterName, isDueFilter } from "#client/due/due-filter.ts";
 export type FilterField =
   | "state"
   | "priority"
+  | "urgency"
+  | "impact"
+  | "effort"
   | "assignee"
   | "creator"
   | "label"
@@ -31,6 +48,9 @@ export type FilterFieldInfo = {
 export const filterFields: readonly FilterFieldInfo[] = [
   { field: "state", name: "Status", multiple: true },
   { field: "priority", name: "Priority", multiple: false },
+  { field: "urgency", name: "Urgency", multiple: true },
+  { field: "impact", name: "Impact", multiple: true },
+  { field: "effort", name: "Effort", multiple: true },
   { field: "assignee", name: "Assignee", multiple: false },
   { field: "creator", name: "Creator", multiple: false },
   { field: "label", name: "Label", multiple: true },
@@ -42,6 +62,20 @@ export const filterFields: readonly FilterFieldInfo[] = [
 /** `assignee=me` is written as the older `mine=true`. */
 export const meValue = "me";
 
+function parsedValues<T>(values: readonly string[], schema: z.ZodType<T>): T[] {
+  return values.flatMap((value) => {
+    const parsed = schema.safeParse(value);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+export const filterUrgencyParams = (params: URLSearchParams) =>
+  parsedValues(params.getAll("urgency"), FilterUrgencySchema);
+export const filterImpactParams = (params: URLSearchParams) =>
+  parsedValues(params.getAll("impact"), FilterImpactSchema);
+export const filterEffortParams = (params: URLSearchParams) =>
+  parsedValues(params.getAll("effort"), FilterEffortSchema);
+
 export function filterValues(
   params: URLSearchParams,
   field: FilterField,
@@ -50,6 +84,15 @@ export function filterValues(
     case "state":
     case "label": {
       return params.getAll(field);
+    }
+    case "urgency": {
+      return filterUrgencyParams(params);
+    }
+    case "impact": {
+      return filterImpactParams(params);
+    }
+    case "effort": {
+      return filterEffortParams(params);
     }
     case "assignee": {
       return params.get("mine") === "true"
@@ -118,11 +161,23 @@ export function toggleFilterValue(
   return setFilter(params, field, multiple ? [...current, value] : [value]);
 }
 
+const sizingFilterNames: Record<
+  "urgency" | "impact" | "effort",
+  Record<string, string>
+> = {
+  urgency: { ...urgencyLabels, none: "No urgency" },
+  impact: { ...impactLabels, none: "No impact" },
+  effort: { ...effortLabels, none: "No effort" },
+};
+
 export function valueName(
   field: FilterField,
   value: string,
   catalog: Catalog,
 ): string {
+  if (field === "urgency" || field === "impact" || field === "effort") {
+    return sizingFilterNames[field][value] ?? value;
+  }
   switch (field) {
     case "priority": {
       return priorities[Number(value)] ?? value;
@@ -161,6 +216,9 @@ export type FilterChip = {
 const verbs: Record<FilterField, (count: number) => string> = {
   state: () => "is",
   priority: () => "is",
+  urgency: () => "is",
+  impact: () => "is",
+  effort: () => "is",
   assignee: () => "is",
   creator: () => "is",
   project: () => "is",
@@ -213,10 +271,19 @@ export function filterChips(
   });
 }
 
+function singleEnum<T>(
+  values: readonly string[],
+  schema: z.ZodType<T>,
+): T | undefined {
+  if (values.length !== 1) return;
+  const parsed = schema.safeParse(values[0]);
+  return parsed.success ? parsed.data : undefined;
+}
+
 /**
  * What an issue created from this view starts with, so it lands in the view:
- * its team and project, a single filtered status or priority, the filtered
- * labels and assignee.
+ * its team and project, a single filtered status, priority or sizing value,
+ * and the filtered labels and assignee.
  */
 export function viewPrefill(
   params: URLSearchParams,
@@ -224,6 +291,9 @@ export function viewPrefill(
 ): IssuePrefill {
   const states = filterValues(params, "state");
   const [priority] = filterValues(params, "priority");
+  const urgency = singleEnum(filterValues(params, "urgency"), UrgencySchema);
+  const impact = singleEnum(filterValues(params, "impact"), ImpactSchema);
+  const effort = singleEnum(filterValues(params, "effort"), EffortSchema);
   const [assignee] = filterValues(params, "assignee");
   const project = scope.projectSlug ?? filterValues(params, "project")[0];
   const labels = filterValues(params, "label");
@@ -233,6 +303,9 @@ export function viewPrefill(
       ? { stateName: states[0] }
       : {}),
     ...(priority === undefined ? {} : { priority: Number(priority) }),
+    ...(urgency === undefined ? {} : { urgency }),
+    ...(impact === undefined ? {} : { impact }),
+    ...(effort === undefined ? {} : { effort }),
     ...(project === undefined ? {} : { projectSlug: project }),
     ...(labels.length === 0 ? {} : { labels }),
     ...(assignee === undefined

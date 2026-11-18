@@ -4,7 +4,12 @@ import { TRPCError } from "@trpc/server";
 import { Attachments } from "#infrastructure/attachments.ts";
 import { Collaboration } from "#infrastructure/collaboration.ts";
 import { appRouter } from "#server/router.ts";
-import { IssueListSchema } from "#shared/schema.ts";
+import {
+  IssueListSchema,
+  type Effort,
+  type Impact,
+  type Urgency,
+} from "#shared/schema.ts";
 import { memoryObjectStore } from "./memory-object-store.ts";
 import { useTrackerSuite } from "./suite.ts";
 
@@ -252,4 +257,137 @@ it("counts every match of the filter regardless of cursor and limit", async () =
     nextCursor: null,
     total: 0,
   });
+});
+
+it("filters multi-value urgencies, impacts and efforts (including none) and paginates urgency, impact and effort sorts", async () => {
+  const slug = "keyset-grooming";
+  await suite.catalog.project(
+    { actor: suite.actor, slug, name: slug },
+    true,
+    slug,
+  );
+  const specs: {
+    urgency: Urgency | null;
+    impact: Impact | null;
+    effort: Effort | null;
+  }[] = [
+    { urgency: "high", impact: "high", effort: "xs" },
+    { urgency: "high", impact: "low", effort: "s" },
+    { urgency: "medium", impact: "high", effort: "m" },
+    { urgency: "medium", impact: null, effort: "l" },
+    { urgency: "low", impact: "medium", effort: "xl" },
+    { urgency: "low", impact: "low", effort: null },
+    { urgency: null, impact: "medium", effort: "xs" },
+    { urgency: null, impact: null, effort: null },
+    { urgency: "high", impact: "medium", effort: "m" },
+  ];
+  const seeded: Awaited<ReturnType<typeof suite.create>>[] = [];
+  for (const [index, spec] of specs.entries()) {
+    seeded.push(
+      await suite.create(`Grooming list ${String(index)}`, {
+        projectSlug: slug,
+        urgency: spec.urgency,
+        impact: spec.impact,
+        effort: spec.effort,
+      }),
+    );
+  }
+
+  for (const sort of ["urgency", "impact", "effort"] as const) {
+    const filter = { projectSlug: slug, sort };
+    const all = await list({ ...filter, limit: "all" });
+    expect(all.items).toHaveLength(specs.length);
+    expect(all.total).toBe(specs.length);
+    for (const limit of [1, 2, 4, 50]) {
+      const paged = await pages(filter, limit);
+      expect(paged.ids).toEqual(all.items.map(({ id }) => id));
+      expect(paged.total).toBe(specs.length);
+    }
+  }
+
+  const byUrgency = await list({
+    projectSlug: slug,
+    sort: "urgency",
+    limit: "all",
+  });
+  expect([...new Set(byUrgency.items.map(({ urgency }) => urgency))]).toEqual([
+    "high",
+    "medium",
+    "low",
+    null,
+  ]);
+
+  const byImpact = await list({
+    projectSlug: slug,
+    sort: "impact",
+    limit: "all",
+  });
+  expect([...new Set(byImpact.items.map(({ impact }) => impact))]).toEqual([
+    "high",
+    "medium",
+    "low",
+    null,
+  ]);
+
+  const byEffort = await list({
+    projectSlug: slug,
+    sort: "effort",
+    limit: "all",
+  });
+  expect([...new Set(byEffort.items.map(({ effort }) => effort))]).toEqual([
+    "xs",
+    "s",
+    "m",
+    "l",
+    "xl",
+    null,
+  ]);
+
+  const matchingIds = (predicate: (spec: (typeof specs)[number]) => boolean) =>
+    seeded
+      .filter((_, index) => {
+        const spec = specs[index];
+        return spec !== undefined && predicate(spec);
+      })
+      .map(({ id }) => id)
+      .sort((a, b) => a.localeCompare(b));
+
+  const queriedIds = async (extra: Record<string, unknown>) => {
+    const page = await list({ projectSlug: slug, limit: "all", ...extra });
+    expect(page.total).toBe(page.items.length);
+    return page.items.map(({ id }) => id).sort((a, b) => a.localeCompare(b));
+  };
+
+  expect(await queriedIds({ efforts: ["xs", "s"] })).toEqual(
+    matchingIds((s) => s.effort === "xs" || s.effort === "s"),
+  );
+  expect(await queriedIds({ efforts: ["none"] })).toEqual(
+    matchingIds((s) => s.effort === null),
+  );
+  expect(await queriedIds({ efforts: ["xs", "none"] })).toEqual(
+    matchingIds((s) => s.effort === "xs" || s.effort === null),
+  );
+  expect(await queriedIds({ urgencies: ["high", "low"] })).toEqual(
+    matchingIds((s) => s.urgency === "high" || s.urgency === "low"),
+  );
+  expect(await queriedIds({ urgencies: ["none"] })).toEqual(
+    matchingIds((s) => s.urgency === null),
+  );
+  expect(await queriedIds({ impacts: ["high", "none"] })).toEqual(
+    matchingIds((s) => s.impact === "high" || s.impact === null),
+  );
+  expect(
+    await queriedIds({
+      urgencies: ["high", "none"],
+      impacts: ["high", "medium"],
+      efforts: ["xs", "m", "none"],
+    }),
+  ).toEqual(
+    matchingIds(
+      (s) =>
+        (s.urgency === "high" || s.urgency === null) &&
+        (s.impact === "high" || s.impact === "medium") &&
+        (s.effort === "xs" || s.effort === "m" || s.effort === null),
+    ),
+  );
 });

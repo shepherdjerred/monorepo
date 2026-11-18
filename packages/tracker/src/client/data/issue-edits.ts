@@ -1,5 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { resolveIssuePriority } from "#domain/issue.ts";
+import type { Effort, Impact, Urgency } from "#shared/schema.ts";
 import type { BootstrapData, Issue, IssueDetailData } from "./api.ts";
 import {
   bootstrapKey,
@@ -30,6 +32,10 @@ export type IssueApi = {
     title?: string;
     description?: string;
     priority?: number;
+    priorityManual?: boolean;
+    urgency?: Urgency | null;
+    impact?: Impact | null;
+    effort?: Effort | null;
     stateName?: string;
     assigneeKey?: string | null;
     projectSlug?: string | null;
@@ -207,7 +213,11 @@ export function createIssueEdits(deps: {
     const expectedRevision = session.base.revision;
     if (change.kind === "vote") {
       const result = await api.vote(identifier, change.voted);
-      session.base = { ...session.base, ...result };
+      session.base = {
+        ...session.base,
+        ...result,
+        ...resolveIssuePriority(session.base, { voteCount: result.voteCount }),
+      };
       return;
     }
     const server =

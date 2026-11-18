@@ -83,6 +83,27 @@ select.picker::picker-icon {
   justify-content: center;
   height: 17px;
 }
+.sizing-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+}
+.sizing-glyph svg {
+  display: block;
+}
+.urgency-high,
+.impact-high {
+  color: var(--danger);
+}
+.urgency-medium,
+.impact-medium {
+  color: var(--warning);
+}
+.effort-l,
+.effort-xl {
+  color: var(--accent);
+}
 /* A field fills its label in forms and the properties panel. */
 .properties .picker-field,
 .form-selects .picker-field {
@@ -112,6 +133,36 @@ select.picker-icon::picker-icon {
 }
 .picker-icon .option-icon {
   width: 16px;
+}
+/* Effort shows on rows and cards as a compact T-shirt chip (XS..XL). */
+[data-picker="effort"].picker-icon,
+.effort-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+  min-width: 0;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--subtle);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+[data-picker="effort"].picker-icon selectedcontent .option-label,
+[data-picker="effort"].picker-icon > .option-label {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+[data-picker="effort"].picker-icon selectedcontent .option-icon,
+[data-picker="effort"].picker-icon > .option-icon {
+  width: 13px;
 }
 /* The bulk bar's buttons: a fixed label, the value never sticks. */
 .picker-action {
@@ -472,6 +523,7 @@ select.picker option[hidden] {
   align-items: center;
   gap: 2px;
   max-width: calc(100vw - 232px - 32px);
+  overflow-x: auto;
   padding: 5px 6px 5px 14px;
   border: 1px solid var(--border);
   border-radius: 11px;
@@ -661,10 +713,42 @@ body:has(.bulk-bar) .toast-viewport {
   flex-direction: column;
   gap: 6px;
 }
+.property-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 18px;
+}
 .property-name {
   color: var(--muted);
   font-size: 11px;
   font-weight: 500;
+}
+.priority-mode,
+.priority-mode-reset {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.priority-mode {
+  border: 1px solid var(--border);
+  background: var(--subtle);
+  color: var(--muted);
+}
+.priority-mode-reset {
+  min-height: 20px;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.priority-mode-reset:hover:not(:disabled) {
+  background: var(--hover);
 }
 .property-value {
   justify-content: flex-start;
@@ -765,6 +849,14 @@ body:has(.bulk-bar) .toast-viewport {
   .picker-icon {
     min-height: 36px;
     min-width: 32px;
+  }
+  [data-picker="effort"].picker-icon {
+    min-height: 28px;
+    padding: 2px 7px;
+  }
+  .priority-mode-reset {
+    min-height: 26px;
+    padding: 2px 8px;
   }
   .row-control {
     min-height: 36px;

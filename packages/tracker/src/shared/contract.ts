@@ -5,6 +5,12 @@ import {
 } from "./actor.ts";
 import {
   StateTypeSchema as StateType,
+  UrgencySchema as UrgencyEnum,
+  ImpactSchema as ImpactEnum,
+  EffortSchema as EffortEnum,
+  FilterUrgencySchema as FilterUrgencyEnum,
+  FilterImpactSchema as FilterImpactEnum,
+  FilterEffortSchema as FilterEffortEnum,
   IdentifierSchema as Identifier,
   TeamKeySchema as TeamKey,
   CreateIssueSchema as CreateIssue,
@@ -81,6 +87,18 @@ export type ActorEnvelope = z.infer<typeof Actor>;
 export const ActorSchema = Actor.clone();
 export const ActorMetadataSchema = Metadata.clone();
 export const StateTypeSchema = StateType.clone();
+export const UrgencySchema = UrgencyEnum.clone();
+export const ImpactSchema = ImpactEnum.clone();
+export const EffortSchema = EffortEnum.clone();
+export const FilterUrgencySchema = FilterUrgencyEnum.clone();
+export const FilterImpactSchema = FilterImpactEnum.clone();
+export const FilterEffortSchema = FilterEffortEnum.clone();
+export type Urgency = z.infer<typeof UrgencyEnum>;
+export type Impact = z.infer<typeof ImpactEnum>;
+export type Effort = z.infer<typeof EffortEnum>;
+export type FilterUrgency = z.infer<typeof FilterUrgencyEnum>;
+export type FilterImpact = z.infer<typeof FilterImpactEnum>;
+export type FilterEffort = z.infer<typeof FilterEffortEnum>;
 export const IdentifierSchema = Identifier.clone();
 export const TeamKeySchema = TeamKey.clone();
 export const CreateIssueSchema = CreateIssue.clone();

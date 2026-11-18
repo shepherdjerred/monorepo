@@ -1,46 +1,39 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  CalendarClock,
-  Folder,
-  GitFork,
-  Tag,
-  UserRound,
-  X,
-} from "lucide-react";
-import { localToday } from "#client/due/dates.ts";
-import { dueLabel } from "#client/due/due-display.ts";
-import {
-  DuePickerHost,
-  duePanel,
-  openDuePicker,
-} from "#client/due/due-picker.tsx";
+import { resolveIssuePriority } from "#domain/issue.ts";
+import type { Effort, Impact, Urgency } from "#shared/schema.ts";
+import { DuePickerHost } from "#client/due/due-picker.tsx";
 import { api, queryClient, type BootstrapData } from "#client/data/api.ts";
 import { drafts } from "#client/data/drafts.ts";
 import { useCurrentActor } from "#client/data/identity.ts";
-import type { ActorEnvelope } from "#shared/actor.ts";
 import { issueWasCreated, type Pending } from "#client/data/pending-drafts.ts";
 import { useDraft } from "#client/data/use-draft.ts";
 import { createIssue } from "#client/data/mutations.ts";
-import { EnumPicker } from "#client/controls/enum-picker.tsx";
-import {
-  priorityOptions,
-  stateOptions,
-  teamStates,
-} from "#client/controls/property-options.tsx";
+import { teamStates } from "#client/controls/property-options.tsx";
 import {
   openSearchPicker,
   SearchPickerHost,
 } from "#client/controls/search-picker.tsx";
 import type { SearchPickerKind } from "#client/controls/picker-items.tsx";
-import { ErrorNotice, Modal, Swatch } from "#client/ui/ui.tsx";
+import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
 import { MarkdownEditor } from "#client/ui/markdown.tsx";
+import {
+  chosenValues,
+  FormChips,
+  FormSelects,
+  withChoice,
+  type Choices,
+  type SizingPatch,
+} from "./issue-form-fields.tsx";
 
 /** Fields a new issue starts with, taken from the view it is created in. */
 export type IssuePrefill = {
   teamKey?: string;
   stateName?: string;
   priority?: number;
+  urgency?: Urgency;
+  impact?: Impact;
+  effort?: Effort;
   projectSlug?: string;
   labels?: readonly string[];
   assigneeKey?: string;
@@ -49,134 +42,25 @@ export type IssuePrefill = {
   dueDate?: string;
 };
 
-type Choices = {
-  stateName: string | undefined;
-  priority: number;
-  projectSlug: string | null;
-  labels: readonly string[];
-  assigneeKey: string | null;
-  parentIdentifier: string | null;
-  dueDate: string | null;
-};
-
-const startingChoices = (prefill: IssuePrefill): Choices => ({
-  stateName: prefill.stateName,
-  priority: prefill.priority ?? 0,
-  projectSlug: prefill.projectSlug ?? null,
-  labels: prefill.labels ?? [],
-  assigneeKey: prefill.assigneeKey ?? null,
-  parentIdentifier: prefill.parentIdentifier ?? null,
-  dueDate: prefill.dueDate ?? null,
-});
-
-/** The values a searchable picker shows as chosen for this form. */
-function chosenValues(kind: SearchPickerKind, choices: Choices) {
-  if (kind === "labels") {
-    return choices.labels;
-  }
-  const value = kind === "assignee" ? choices.assigneeKey : choices.projectSlug;
-  return value === null ? [] : [value];
-}
-
-function withChoice(
-  known: Choices,
-  kind: SearchPickerKind,
-  value: string | null,
-  add: boolean,
-): Choices {
-  if (kind === "assignee") {
-    return { ...known, assigneeKey: value };
-  }
-  if (kind === "project") {
-    return { ...known, projectSlug: value };
-  }
-  const others = known.labels.filter((name) => name !== value);
+function startingChoices(prefill: IssuePrefill): Choices {
+  const urgency = prefill.urgency ?? null;
+  const impact = prefill.impact ?? null;
+  const resolved = resolveIssuePriority(
+    { priority: 0, priorityManual: false, impact, urgency, voteCount: 0 },
+    prefill.priority === undefined ? {} : { priority: prefill.priority },
+  );
   return {
-    ...known,
-    labels: add && value !== null ? [...others, value] : others,
+    stateName: prefill.stateName,
+    ...resolved,
+    urgency,
+    impact,
+    effort: prefill.effort ?? null,
+    projectSlug: prefill.projectSlug ?? null,
+    labels: prefill.labels ?? [],
+    assigneeKey: prefill.assigneeKey ?? null,
+    parentIdentifier: prefill.parentIdentifier ?? null,
+    dueDate: prefill.dueDate ?? null,
   };
-}
-
-function PropertyButton({
-  kind,
-  label,
-  icon,
-  open,
-}: {
-  kind: SearchPickerKind;
-  label: string;
-  icon: ReactNode;
-  open: (kind: SearchPickerKind, anchor: HTMLElement) => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="property-chip"
-      aria-haspopup="dialog"
-      onClick={(event) => {
-        open(kind, event.currentTarget);
-      }}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
-  );
-}
-
-/** The new issue's due date, and its parent when it is a sub-issue. */
-function PlanningChips({
-  dueDate,
-  parentIdentifier,
-  choose,
-}: {
-  dueDate: string | null;
-  parentIdentifier: string | null;
-  choose: (change: Partial<Choices>) => void;
-}) {
-  return (
-    <>
-      <button
-        type="button"
-        className="property-chip"
-        aria-haspopup="dialog"
-        onPointerEnter={duePanel.prefetch}
-        onFocus={duePanel.prefetch}
-        onClick={(event) => {
-          openDuePicker({
-            anchor: event.currentTarget,
-            title: "Due date of the new issue",
-            value: dueDate,
-            pick: (day) => {
-              choose({ dueDate: day });
-            },
-          });
-        }}
-      >
-        <CalendarClock size={14} aria-hidden="true" />
-        <span>
-          {dueDate === null
-            ? "Due date"
-            : `Due ${dueLabel(dueDate, localToday())}`}
-        </span>
-      </button>
-      {parentIdentifier !== null && (
-        <span className="property-chip parent-chip">
-          <GitFork size={14} aria-hidden="true" />
-          <span>Sub-issue of {parentIdentifier}</span>
-          <button
-            type="button"
-            className="icon-button"
-            aria-label={`Do not make it a sub-issue of ${parentIdentifier}`}
-            onClick={() => {
-              choose({ parentIdentifier: null });
-            }}
-          >
-            <X size={12} />
-          </button>
-        </span>
-      )}
-    </>
-  );
 }
 
 const titleKey = "new-issue.title";
@@ -193,10 +77,7 @@ async function attempt(
   }
 }
 
-/** The title and description drafts of the new-issue form. */
 function useNewIssueDrafts(currentTeamKey: string) {
-  // An issue sent just before the page unloaded may or may not exist. The
-  // actor's newest issues say which, so it is neither offered twice nor lost.
   const [unanswered] = useState(
     () =>
       drafts.pending(titleKey) !== undefined ||
@@ -231,7 +112,6 @@ function useNewIssueDrafts(currentTeamKey: string) {
   });
   const description = useDraft(descriptionKey, "", {
     kind: "new-issue-description",
-    // The description belongs to whichever issue carries this title.
     subject: title.text,
     saved: created,
     recheck,
@@ -239,15 +119,38 @@ function useNewIssueDrafts(currentTeamKey: string) {
   return { title, description };
 }
 
-function chosenAssignee(
-  actors: BootstrapData["actors"],
-  assigneeKey: string | null,
-  me: ActorEnvelope,
-) {
-  return (
-    actors.find(({ key }) => key === assigneeKey) ??
-    (assigneeKey === me.key ? me : undefined)
-  );
+function buildCreateInput(params: {
+  teamKey: string;
+  stateName: string | undefined;
+  choices: Choices;
+  sentTitle: { text: string };
+  sentDescription: { text: string; attachments: string[] };
+}): Parameters<typeof createIssue>[0] {
+  const { teamKey, stateName, choices, sentTitle, sentDescription } = params;
+  return {
+    teamKey,
+    title: sentTitle.text,
+    description: sentDescription.text,
+    ...(stateName === undefined ? {} : { stateName }),
+    ...(choices.priorityManual
+      ? { priority: choices.priority, priorityManual: true }
+      : {}),
+    ...(choices.urgency === null ? {} : { urgency: choices.urgency }),
+    ...(choices.impact === null ? {} : { impact: choices.impact }),
+    ...(choices.effort === null ? {} : { effort: choices.effort }),
+    ...(choices.projectSlug === null
+      ? {}
+      : { projectSlug: choices.projectSlug }),
+    ...(choices.assigneeKey === null
+      ? {}
+      : { assigneeKey: choices.assigneeKey }),
+    ...(choices.parentIdentifier === null
+      ? {}
+      : { parentIdentifier: choices.parentIdentifier }),
+    ...(choices.dueDate === null ? {} : { dueDate: choices.dueDate }),
+    labels: [...choices.labels],
+    attachmentIds: sentDescription.attachments,
+  };
 }
 
 export function NewIssue({
@@ -268,16 +171,22 @@ export function NewIssue({
   onCreated: (identifier: string, view: boolean) => void;
 }) {
   const [chosenTeam, setTeam] = useState(prefill.teamKey);
-  // Closing the dialog keeps what was typed; it is there on the next open.
   const { title, description } = useNewIssueDrafts(currentTeamKey);
   const [choices, setChoices] = useState(() => startingChoices(prefill));
   const choose = (change: Partial<Choices>) => {
     setChoices((known) => ({ ...known, ...change }));
   };
+  const onSizing = (patch: SizingPatch) => {
+    setChoices((known) => ({
+      ...known,
+      ...(patch.urgency === undefined ? {} : { urgency: patch.urgency }),
+      ...(patch.impact === undefined ? {} : { impact: patch.impact }),
+      ...resolveIssuePriority({ ...known, voteCount: 0 }, patch),
+    }));
+  };
   const teamKey = chosenTeam ?? currentTeamKey;
   const team = bootstrap.teams.find(({ key }) => key === teamKey);
   const states = team === undefined ? [] : teamStates(bootstrap, team.id);
-  // New work lands in the team's triage state unless the form says otherwise.
   const stateName =
     choices.stateName ??
     (states.find(({ type }) => type === "triage") ?? states[0])?.name;
@@ -285,37 +194,23 @@ export function NewIssue({
   const project = bootstrap.projects.find(
     ({ slug }) => slug === choices.projectSlug,
   );
-  const assignee = chosenAssignee(bootstrap.actors, choices.assigneeKey, me);
+  const assigneeName =
+    bootstrap.actors.find(({ key }) => key === choices.assigneeKey)?.name ??
+    (choices.assigneeKey === me.key ? me.name : undefined);
   const create = useMutation({
-    // What was typed stops being a draft while it is sent, so a reload during
-    // the request cannot offer an issue that already exists a second time.
     mutationFn: async (view: boolean) => {
       const outcome = await title.send(
         (sentTitle) =>
           description.send(
             (sentDescription) =>
               attempt(
-                {
+                buildCreateInput({
                   teamKey,
-                  title: sentTitle.text,
-                  description: sentDescription.text,
-                  ...(stateName === undefined ? {} : { stateName }),
-                  priority: choices.priority,
-                  ...(choices.projectSlug === null
-                    ? {}
-                    : { projectSlug: choices.projectSlug }),
-                  ...(choices.assigneeKey === null
-                    ? {}
-                    : { assigneeKey: choices.assigneeKey }),
-                  labels: [...choices.labels],
-                  attachmentIds: sentDescription.attachments,
-                  ...(choices.parentIdentifier === null
-                    ? {}
-                    : { parentIdentifier: choices.parentIdentifier }),
-                  ...(choices.dueDate === null
-                    ? {}
-                    : { dueDate: choices.dueDate }),
-                },
+                  stateName,
+                  choices,
+                  sentTitle,
+                  sentDescription,
+                }),
                 view
                   ? undefined
                   : (identifier) => {
@@ -326,9 +221,7 @@ export function NewIssue({
           ),
         title.text,
       );
-      if (!outcome.ok) {
-        throw outcome.error;
-      }
+      if (!outcome.ok) throw outcome.error;
       return outcome.issue;
     },
     onSuccess: (issue, view) => {
@@ -341,9 +234,7 @@ export function NewIssue({
     },
   });
   function pick(kind: SearchPickerKind, anchor: HTMLElement) {
-    if (team === undefined) {
-      return;
-    }
+    if (team === undefined) return;
     openSearchPicker({
       kind,
       anchor,
@@ -366,64 +257,36 @@ export function NewIssue({
       <SearchPickerHost bootstrap={bootstrap} scope="new-issue" />
       <DuePickerHost scope="new-issue" />
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={(event) => {
+          event.preventDefault();
           create.mutate(false);
         }}
-        onKeyDown={(e) => {
-          // ⌘ Enter creates; ⌘ Shift Enter creates and opens the issue.
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-            e.preventDefault();
-            if (e.currentTarget.reportValidity()) {
-              create.mutate(e.shiftKey);
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+            event.preventDefault();
+            if (event.currentTarget.reportValidity()) {
+              create.mutate(event.shiftKey);
             }
           }
         }}
       >
-        <div className="form-selects">
-          <label>
-            Team
-            <EnumPicker
-              label="Team"
-              value={teamKey}
-              options={bootstrap.teams.map((item) => ({
-                value: item.key,
-                label: item.key,
-              }))}
-              onChange={(value) => {
-                setTeam(value);
-                // A parent belongs to its own team.
-                choose({
-                  labels: [],
-                  stateName: undefined,
-                  parentIdentifier: null,
-                });
-              }}
-            />
-          </label>
-          <label>
-            Status
-            <EnumPicker
-              label="Status"
-              value={stateName ?? ""}
-              options={stateOptions(states)}
-              onChange={(value) => {
-                choose({ stateName: value });
-              }}
-            />
-          </label>
-          <label>
-            Priority
-            <EnumPicker
-              label="Priority"
-              value={String(choices.priority)}
-              options={priorityOptions}
-              onChange={(value) => {
-                choose({ priority: Number(value) });
-              }}
-            />
-          </label>
-        </div>
+        <FormSelects
+          teams={bootstrap.teams}
+          teamKey={teamKey}
+          states={states}
+          stateName={stateName}
+          choices={choices}
+          onTeam={(value) => {
+            setTeam(value);
+            choose({
+              labels: [],
+              stateName: undefined,
+              parentIdentifier: null,
+            });
+          }}
+          onSizing={onSizing}
+          choose={choose}
+        />
         <input
           className="title-input"
           aria-label="Issue title"
@@ -431,8 +294,8 @@ export function NewIssue({
           value={title.text}
           required
           maxLength={500}
-          onChange={(e) => {
-            title.setText(e.target.value);
+          onChange={(event) => {
+            title.setText(event.target.value);
           }}
         />
         <MarkdownEditor
@@ -442,39 +305,13 @@ export function NewIssue({
           placeholder="Add a description…"
           label="Description"
         />
-        <div className="property-chips">
-          <PropertyButton
-            kind="assignee"
-            label={assignee?.name ?? "Assignee"}
-            icon={<UserRound size={14} aria-hidden="true" />}
-            open={pick}
-          />
-          <PropertyButton
-            kind="project"
-            label={project?.name ?? "Project"}
-            icon={
-              project === undefined ? (
-                <Folder size={14} aria-hidden="true" />
-              ) : (
-                <Swatch color={project.color} />
-              )
-            }
-            open={pick}
-          />
-          <PropertyButton
-            kind="labels"
-            label={
-              choices.labels.length === 0 ? "Labels" : choices.labels.join(", ")
-            }
-            icon={<Tag size={14} aria-hidden="true" />}
-            open={pick}
-          />
-          <PlanningChips
-            dueDate={choices.dueDate}
-            parentIdentifier={choices.parentIdentifier}
-            choose={choose}
-          />
-        </div>
+        <FormChips
+          choices={choices}
+          assigneeName={assigneeName}
+          project={project}
+          pick={pick}
+          choose={choose}
+        />
         {create.error !== null && <ErrorNotice error={create.error} />}
         <div className="modal-footer">
           <span className="muted">

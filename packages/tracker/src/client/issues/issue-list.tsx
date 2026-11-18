@@ -7,6 +7,7 @@ import {
 import { listRestore } from "#client/data/list-restore.ts";
 import { localToday } from "#client/due/dates.ts";
 import {
+  effortOptions,
   priorityOptions,
   stateOptions,
   teamStates,
@@ -243,6 +244,7 @@ export function IssueList() {
   const options: RowOptions = {
     states: statusChoices,
     priorities: priorityOptions,
+    efforts: effortOptions,
     hidden: display.hidden,
     disabled: !bootstrap.writesEnabled,
   };

@@ -5,6 +5,7 @@ import { TrackerError } from "#domain/error.ts";
 import {
   identifier,
   parseIdentifier,
+  resolveIssuePriority,
   transitionTimestamps,
 } from "#domain/issue.ts";
 import type { UpdateIssueInput } from "#shared/schema.ts";
@@ -164,6 +165,12 @@ async function applyUpdate(
     await assertParent(db, before, parentId);
   const projectId = await resolveProject(db, change.projectSlug);
   const assigneeId = await resolveAssignee(db, change.assigneeKey);
+  const resolved = resolveIssuePriority(before, {
+    priority: change.priority,
+    priorityManual: change.priorityManual,
+    impact: change.impact,
+    urgency: change.urgency,
+  });
   await db.issue.update({
     where: { id: before.id },
     data: {
@@ -171,7 +178,11 @@ async function applyUpdate(
       ...(change.description === undefined
         ? {}
         : { description: change.description }),
-      ...(change.priority === undefined ? {} : { priority: change.priority }),
+      priority: resolved.priority,
+      priorityManual: resolved.priorityManual,
+      ...(change.urgency === undefined ? {} : { urgency: change.urgency }),
+      ...(change.impact === undefined ? {} : { impact: change.impact }),
+      ...(change.effort === undefined ? {} : { effort: change.effort }),
       ...(projectId === undefined ? {} : { projectId }),
       ...(assigneeId === undefined ? {} : { assigneeId }),
       ...(parentId === undefined ? {} : { parentId }),

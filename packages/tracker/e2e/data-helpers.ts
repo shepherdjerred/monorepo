@@ -25,6 +25,10 @@ export async function createIssue(
     teamKey: string;
     title: string;
     priority?: number;
+    priorityManual?: boolean;
+    urgency?: "high" | "medium" | "low" | null;
+    impact?: "high" | "medium" | "low" | null;
+    effort?: "xs" | "s" | "m" | "l" | "xl" | null;
     stateName?: string;
     labels?: string[];
     parentIdentifier?: string;

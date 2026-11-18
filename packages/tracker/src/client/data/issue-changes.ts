@@ -1,3 +1,5 @@
+import { resolveIssuePriority } from "#domain/issue.ts";
+import type { Effort, Impact, Urgency } from "#shared/schema.ts";
 import type { BootstrapData, Issue } from "./api.ts";
 import type { CachedIssue, IssuePatch } from "./cache.ts";
 import { localToday } from "#client/due/dates.ts";
@@ -6,7 +8,11 @@ import { dueLabel } from "#client/due/due-display.ts";
 /** One user-level edit to an issue: the unit that is queued, sent and undone. */
 export type IssueChange =
   | { kind: "state"; stateName: string }
-  | { kind: "priority"; priority: number }
+  | { kind: "priority"; priority: number; priorityManual?: boolean }
+  | { kind: "priorityAuto" }
+  | { kind: "urgency"; urgency: Urgency | null }
+  | { kind: "impact"; impact: Impact | null }
+  | { kind: "effort"; effort: Effort | null }
   | { kind: "assignee"; assigneeKey: string | null }
   | { kind: "project"; projectSlug: string | null }
   | { kind: "label"; name: string; add: boolean }
@@ -24,21 +30,46 @@ export type IssueChange =
   | { kind: "parent"; parentIdentifier: string | null }
   | { kind: "due"; dueDate: string | null };
 
+export type SizingChange = Extract<
+  IssueChange,
+  { kind: "priority" | "priorityAuto" | "urgency" | "impact" | "effort" }
+>;
+type BaseChange = Exclude<IssueChange, SizingChange>;
+
+function splitIssueChange(
+  change: IssueChange,
+): { sizing: SizingChange } | { base: BaseChange } {
+  return change.kind === "priority" ||
+    change.kind === "priorityAuto" ||
+    change.kind === "urgency" ||
+    change.kind === "impact" ||
+    change.kind === "effort"
+    ? { sizing: change }
+    : { base: change };
+}
+
 /** The workspace records an edit refers to by name, slug or key. */
 export type Catalog = Pick<
   BootstrapData,
   "states" | "labels" | "projects" | "actors"
 > & {
-  /** Another cached issue, for the title of a new parent. */
   issue?: (identifier: string) => Pick<Issue, "id" | "title"> | undefined;
 };
 
 export const priorities = ["No priority", "Urgent", "High", "Medium", "Low"];
+const levelLabels = { high: "High", medium: "Medium", low: "Low" } as const;
+export const urgencyLabels: Record<Urgency, string> = levelLabels;
+export const impactLabels: Record<Impact, string> = levelLabels;
+export const effortLabels: Record<Effort, string> = {
+  xs: "XS",
+  s: "S",
+  m: "M",
+  l: "L",
+  xl: "XL",
+};
 
 function required<T>(value: T | undefined, what: string): T {
-  if (value === undefined) {
-    throw new Error(`The workspace has no ${what}`);
-  }
+  if (value === undefined) throw new Error(`The workspace has no ${what}`);
   return value;
 }
 
@@ -48,9 +79,7 @@ function labelPatch(
   catalog: Catalog,
 ): IssuePatch {
   const without = issue.labels.filter(({ name }) => name !== change.name);
-  if (!change.add) {
-    return { labels: without };
-  }
+  if (!change.add) return { labels: without };
   const label = required(
     catalog.labels.find(
       ({ teamId, name }) => teamId === issue.teamId && name === change.name,
@@ -62,7 +91,7 @@ function labelPatch(
 
 function referencePatch(
   issue: CachedIssue,
-  change: Extract<IssueChange, { kind: "state" | "assignee" | "project" }>,
+  change: Extract<BaseChange, { kind: "state" | "assignee" | "project" }>,
   catalog: Catalog,
 ): IssuePatch {
   if (change.kind === "state") {
@@ -76,18 +105,15 @@ function referencePatch(
     return { state, stateId: state.id };
   }
   if (change.kind === "assignee") {
-    if (change.assigneeKey === null) {
+    if (change.assigneeKey === null)
       return { assignee: null, assigneeId: null };
-    }
     const assignee = required(
       catalog.actors.find(({ key }) => key === change.assigneeKey),
       `actor ${change.assigneeKey}`,
     );
     return { assignee, assigneeId: assignee.id };
   }
-  if (change.projectSlug === null) {
-    return { project: null, projectId: null };
-  }
+  if (change.projectSlug === null) return { project: null, projectId: null };
   const project = required(
     catalog.projects.find(({ slug }) => slug === change.projectSlug),
     `project ${change.projectSlug}`,
@@ -95,18 +121,12 @@ function referencePatch(
   return { project, projectId: project.id };
 }
 
-/**
- * A parent shows by identifier and title. The title is known when the parent
- * is cached; until the server answers it stands in as the identifier.
- */
 function parentPatch(
   issue: CachedIssue,
   parentIdentifier: string | null,
   catalog: Catalog,
 ): IssuePatch {
-  if (parentIdentifier === null) {
-    return { parent: null, parentId: null };
-  }
+  if (parentIdentifier === null) return { parent: null, parentId: null };
   if (issue.parent?.identifier === parentIdentifier) {
     return { parent: issue.parent, parentId: issue.parentId };
   }
@@ -117,168 +137,187 @@ function parentPatch(
   };
 }
 
+function sizingMeta(
+  issue: CachedIssue,
+  change: SizingChange,
+): { patch: IssuePatch; slice: IssuePatch; inverse: SizingChange } {
+  const priority = {
+    priority: issue.priority,
+    priorityManual: issue.priorityManual,
+  };
+  const pinInverse: SizingChange = { kind: "priority", ...priority };
+  switch (change.kind) {
+    case "priority": {
+      return {
+        patch: resolveIssuePriority(issue, change),
+        slice: priority,
+        inverse: pinInverse,
+      };
+    }
+    case "priorityAuto": {
+      return {
+        patch: resolveIssuePriority(issue, { priorityManual: false }),
+        slice: priority,
+        inverse: pinInverse,
+      };
+    }
+    case "urgency": {
+      return {
+        patch: {
+          urgency: change.urgency,
+          ...resolveIssuePriority(issue, { urgency: change.urgency }),
+        },
+        slice: { urgency: issue.urgency, ...priority },
+        inverse: { kind: "urgency", urgency: issue.urgency },
+      };
+    }
+    case "impact": {
+      return {
+        patch: {
+          impact: change.impact,
+          ...resolveIssuePriority(issue, { impact: change.impact }),
+        },
+        slice: { impact: issue.impact, ...priority },
+        inverse: { kind: "impact", impact: issue.impact },
+      };
+    }
+    case "effort": {
+      return {
+        patch: { effort: change.effort },
+        slice: { effort: issue.effort },
+        inverse: { kind: "effort", effort: issue.effort },
+      };
+    }
+  }
+}
+
 /** The fields an edit rewrites, given the issue as it stands before the edit. */
 export function changePatch(
   issue: CachedIssue,
   change: IssueChange,
   catalog: Catalog,
 ): IssuePatch {
-  switch (change.kind) {
+  const split = splitIssueChange(change);
+  if ("sizing" in split) return sizingMeta(issue, split.sizing).patch;
+  const { base } = split;
+  switch (base.kind) {
     case "state":
     case "assignee":
     case "project": {
-      return referencePatch(issue, change, catalog);
+      return referencePatch(issue, base, catalog);
     }
     case "label": {
-      return labelPatch(issue, change, catalog);
-    }
-    case "priority": {
-      return { priority: change.priority };
+      return labelPatch(issue, base, catalog);
     }
     case "title": {
-      return { title: change.title };
+      return { title: base.title };
     }
     case "description": {
-      return { description: change.description };
+      return { description: base.description };
     }
     case "archive": {
       return {
-        archivedAt: change.archived
+        archivedAt: base.archived
           ? (issue.archivedAt ?? new Date().toISOString())
           : null,
       };
     }
     case "move": {
       const state = required(
-        catalog.states.find(({ id }) => id === change.stateId),
-        `state ${change.stateId}`,
+        catalog.states.find(({ id }) => id === base.stateId),
+        `state ${base.stateId}`,
       );
-      return { state, stateId: state.id, boardOrder: change.boardOrder };
+      return { state, stateId: state.id, boardOrder: base.boardOrder };
     }
     case "parent": {
-      return parentPatch(issue, change.parentIdentifier, catalog);
+      return parentPatch(issue, base.parentIdentifier, catalog);
     }
     case "due": {
-      return { dueDate: change.dueDate };
+      return { dueDate: base.dueDate };
     }
     case "vote": {
-      if (issue.viewerVoted === change.voted) {
-        return {};
-      }
+      if (issue.viewerVoted === base.voted) return {};
+      const voteCount = Math.max(0, issue.voteCount + (base.voted ? 1 : -1));
       return {
-        voteCount: Math.max(0, issue.voteCount + (change.voted ? 1 : -1)),
-        viewerVoted: change.voted,
+        voteCount,
+        viewerVoted: base.voted,
+        ...resolveIssuePriority(issue, { voteCount }),
       };
     }
   }
 }
+
+const baseSlices: Record<
+  BaseChange["kind"],
+  (issue: CachedIssue) => IssuePatch
+> = {
+  state: (i) => ({ state: i.state, stateId: i.stateId }),
+  assignee: (i) => ({ assignee: i.assignee, assigneeId: i.assigneeId }),
+  project: (i) => ({ project: i.project, projectId: i.projectId }),
+  label: (i) => ({ labels: i.labels }),
+  title: (i) => ({ title: i.title }),
+  description: (i) => ({ description: i.description }),
+  archive: (i) => ({ archivedAt: i.archivedAt }),
+  move: (i) => ({
+    state: i.state,
+    stateId: i.stateId,
+    boardOrder: i.boardOrder,
+  }),
+  parent: (i) => ({ parent: i.parent, parentId: i.parentId }),
+  due: (i) => ({ dueDate: i.dueDate }),
+  vote: (i) => ({
+    voteCount: i.voteCount,
+    priority: i.priority,
+    priorityManual: i.priorityManual,
+    ...(i.viewerVoted === undefined ? {} : { viewerVoted: i.viewerVoted }),
+  }),
+};
 
 /** The same fields an edit rewrites, read from an issue instead. */
 export function changeSlice(
   issue: CachedIssue,
   change: IssueChange,
 ): IssuePatch {
-  switch (change.kind) {
-    case "state": {
-      return { state: issue.state, stateId: issue.stateId };
-    }
-    case "assignee": {
-      return { assignee: issue.assignee, assigneeId: issue.assigneeId };
-    }
-    case "project": {
-      return { project: issue.project, projectId: issue.projectId };
-    }
-    case "label": {
-      return { labels: issue.labels };
-    }
-    case "priority": {
-      return { priority: issue.priority };
-    }
-    case "title": {
-      return { title: issue.title };
-    }
-    case "description": {
-      return { description: issue.description };
-    }
-    case "archive": {
-      return { archivedAt: issue.archivedAt };
-    }
-    case "move": {
-      return {
-        state: issue.state,
-        stateId: issue.stateId,
-        boardOrder: issue.boardOrder,
-      };
-    }
-    case "parent": {
-      return { parent: issue.parent, parentId: issue.parentId };
-    }
-    case "due": {
-      return { dueDate: issue.dueDate };
-    }
-    case "vote": {
-      return {
-        voteCount: issue.voteCount,
-        ...(issue.viewerVoted === undefined
-          ? {}
-          : { viewerVoted: issue.viewerVoted }),
-      };
-    }
-  }
+  const split = splitIssueChange(change);
+  return "sizing" in split
+    ? sizingMeta(issue, split.sizing).slice
+    : baseSlices[split.base.kind](issue);
 }
 
-/**
- * The edit that puts an issue back as it was, for the edits that offer Undo.
- * A board move is undone by the board, which knows the neighbouring cards.
- */
+const baseInverses: Partial<
+  Record<BaseChange["kind"], (issue: CachedIssue) => IssueChange>
+> = {
+  state: (i) => ({ kind: "state", stateName: i.state.name }),
+  assignee: (i) => ({ kind: "assignee", assigneeKey: i.assignee?.key ?? null }),
+  project: (i) => ({ kind: "project", projectSlug: i.project?.slug ?? null }),
+  parent: (i) => ({
+    kind: "parent",
+    parentIdentifier: i.parent?.identifier ?? null,
+  }),
+  due: (i) => ({ kind: "due", dueDate: i.dueDate }),
+};
+
+/** The edit that puts an issue back as it was, for the edits that offer Undo. */
 export function inverseChange(
   issue: CachedIssue,
   change: IssueChange,
 ): IssueChange | undefined {
-  switch (change.kind) {
-    case "state": {
-      return { kind: "state", stateName: issue.state.name };
-    }
-    case "priority": {
-      return { kind: "priority", priority: issue.priority };
-    }
-    case "assignee": {
-      return { kind: "assignee", assigneeKey: issue.assignee?.key ?? null };
-    }
-    case "project": {
-      return { kind: "project", projectSlug: issue.project?.slug ?? null };
-    }
-    case "label": {
-      return { kind: "label", name: change.name, add: !change.add };
-    }
-    case "archive": {
-      return { kind: "archive", archived: !change.archived };
-    }
-    case "parent": {
-      return {
-        kind: "parent",
-        parentIdentifier: issue.parent?.identifier ?? null,
-      };
-    }
-    case "due": {
-      return { kind: "due", dueDate: issue.dueDate };
-    }
-    case "title":
-    case "description":
-    case "move":
-    case "vote": {
-      return undefined;
-    }
+  const split = splitIssueChange(change);
+  if ("sizing" in split) return sizingMeta(issue, split.sizing).inverse;
+  const { base } = split;
+  if (base.kind === "label") {
+    return { kind: "label", name: base.name, add: !base.add };
   }
+  return base.kind === "archive"
+    ? { kind: "archive", archived: !base.archived }
+    : baseInverses[base.kind]?.(issue);
 }
 
-/** Blindly resending a long text over someone else's edit would lose theirs. */
-export function retriesConflict(change: IssueChange) {
-  return change.kind !== "description";
-}
+export const retriesConflict = (change: IssueChange) =>
+  change.kind !== "description";
 
 function referenceSummary(
-  change: Extract<IssueChange, { kind: "assignee" | "project" | "move" }>,
+  change: Extract<BaseChange, { kind: "assignee" | "project" | "move" }>,
   catalog: Catalog,
 ) {
   if (change.kind === "assignee") {
@@ -297,22 +336,56 @@ function referenceSummary(
   return `moved to ${state ?? "another column"}`;
 }
 
-/** What an edit did, as the sentence a toast shows after the identifier. */
-export function changeSummary(change: IssueChange, catalog: Catalog) {
+function sizingSummary(change: SizingChange, issue: CachedIssue | undefined) {
   switch (change.kind) {
-    case "state": {
-      return `status set to ${change.stateName}`;
-    }
     case "priority": {
       return `priority set to ${priorities[change.priority] ?? "none"}`;
+    }
+    case "priorityAuto": {
+      if (issue === undefined) return "priority set to auto";
+      const { priority } = resolveIssuePriority(issue, {
+        priorityManual: false,
+      });
+      return `priority set to auto (${priorities[priority] ?? "none"})`;
+    }
+    case "urgency": {
+      return change.urgency === null
+        ? "urgency cleared"
+        : `urgency set to ${urgencyLabels[change.urgency]}`;
+    }
+    case "impact": {
+      return change.impact === null
+        ? "impact cleared"
+        : `impact set to ${impactLabels[change.impact]}`;
+    }
+    case "effort": {
+      return change.effort === null
+        ? "effort cleared"
+        : `effort set to ${effortLabels[change.effort]}`;
+    }
+  }
+}
+
+/** What an edit did, as the sentence a toast shows after the identifier. */
+export function changeSummary(
+  change: IssueChange,
+  catalog: Catalog,
+  issue?: CachedIssue,
+) {
+  const split = splitIssueChange(change);
+  if ("sizing" in split) return sizingSummary(split.sizing, issue);
+  const { base } = split;
+  switch (base.kind) {
+    case "state": {
+      return `status set to ${base.stateName}`;
     }
     case "assignee":
     case "project":
     case "move": {
-      return referenceSummary(change, catalog);
+      return referenceSummary(base, catalog);
     }
     case "label": {
-      return `label ${change.name} ${change.add ? "added" : "removed"}`;
+      return `label ${base.name} ${base.add ? "added" : "removed"}`;
     }
     case "title": {
       return "title updated";
@@ -321,28 +394,25 @@ export function changeSummary(change: IssueChange, catalog: Catalog) {
       return "description saved";
     }
     case "archive": {
-      return change.archived ? "archived" : "unarchived";
+      return base.archived ? "archived" : "unarchived";
     }
     case "vote": {
-      return change.voted ? "vote added" : "vote removed";
+      return base.voted ? "vote added" : "vote removed";
     }
     case "parent": {
-      return change.parentIdentifier === null
+      return base.parentIdentifier === null
         ? "parent removed"
-        : `moved under ${change.parentIdentifier}`;
+        : `moved under ${base.parentIdentifier}`;
     }
     case "due": {
-      return change.dueDate === null
+      return base.dueDate === null
         ? "due date cleared"
-        : `due ${dueLabel(change.dueDate, localToday()).toLowerCase()}`;
+        : `due ${dueLabel(base.dueDate, localToday()).toLowerCase()}`;
     }
   }
 }
 
-/**
- * The cards a card sits between in a column, as `issues.move` wants them:
- * the last card ordered before it and the first ordered after it.
- */
+/** The cards a card sits between in a column, as `issues.move` wants them. */
 export function boardSlot(
   rows: Issue[],
   card: { id: string; stateId: string; boardOrder: number },
@@ -363,47 +433,69 @@ export function boardSlot(
   };
 }
 
+function sizingUpdateInput(change: SizingChange) {
+  switch (change.kind) {
+    case "priority": {
+      return change.priorityManual === undefined
+        ? { priority: change.priority }
+        : { priority: change.priority, priorityManual: change.priorityManual };
+    }
+    case "priorityAuto": {
+      return { priorityManual: false };
+    }
+    case "urgency": {
+      return { urgency: change.urgency };
+    }
+    case "impact": {
+      return { impact: change.impact };
+    }
+    case "effort": {
+      return { effort: change.effort };
+    }
+  }
+}
+
 /** The `issues.update` fields that make an edit. */
 export function updateInput(change: IssueChange) {
-  switch (change.kind) {
+  const split = splitIssueChange(change);
+  if ("sizing" in split) return sizingUpdateInput(split.sizing);
+  const { base } = split;
+  switch (base.kind) {
     case "state": {
-      return { stateName: change.stateName };
-    }
-    case "priority": {
-      return { priority: change.priority };
+      return { stateName: base.stateName };
     }
     case "assignee": {
-      return { assigneeKey: change.assigneeKey };
+      return { assigneeKey: base.assigneeKey };
     }
     case "project": {
-      return { projectSlug: change.projectSlug };
+      return { projectSlug: base.projectSlug };
     }
     case "label": {
-      return change.add
-        ? { addLabels: [change.name] }
-        : { removeLabels: [change.name] };
+      return base.add
+        ? { addLabels: [base.name] }
+        : { removeLabels: [base.name] };
     }
     case "title": {
-      return { title: change.title };
+      return { title: base.title };
     }
     case "archive": {
-      return { archived: change.archived };
+      return { archived: base.archived };
     }
     case "description": {
       return {
-        description: change.description,
-        attachmentIds: change.attachmentIds,
+        description: base.description,
+        attachmentIds: base.attachmentIds,
       };
     }
     case "parent": {
-      return { parentIdentifier: change.parentIdentifier };
+      return { parentIdentifier: base.parentIdentifier };
     }
     case "due": {
-      return { dueDate: change.dueDate };
+      return { dueDate: base.dueDate };
     }
     case "move":
     case "vote": {
-      throw new Error(`A ${change.kind} is not an issue update`);
+      throw new Error(`A ${base.kind} is not an issue update`);
     }
   }
 }

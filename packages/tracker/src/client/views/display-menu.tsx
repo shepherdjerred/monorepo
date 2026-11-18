@@ -19,6 +19,7 @@ import { leavingPopup } from "#client/ui/leaving.tsx";
 
 const propertyNames: Record<RowProperty, string> = {
   labels: "Labels",
+  effort: "Effort",
   project: "Project",
   date: "Updated",
   due: "Due date",

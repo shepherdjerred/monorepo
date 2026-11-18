@@ -36,6 +36,26 @@ enum AttachmentStatus {
   committed
 }
 
+enum Urgency {
+  high
+  medium
+  low
+}
+
+enum Impact {
+  high
+  medium
+  low
+}
+
+enum Effort {
+  xs
+  s
+  m
+  l
+  xl
+}
+
 model Team {
   id String @id @default(uuid())
   key String @unique
@@ -266,6 +286,10 @@ model Issue {
   stateId String
   state WorkflowState @relation(fields: [stateId, teamId], references: [id, teamId])
   priority Int @default(0)
+  priorityManual Boolean @default(false)
+  urgency Urgency?
+  impact Impact?
+  effort Effort?
   projectId String?
   project Project? @relation(fields: [projectId], references: [id])
   assigneeId String?

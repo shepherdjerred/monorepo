@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { StateTypeSchema } from "#shared/schema.ts";
+import type { Impact, StateTypeSchema, Urgency } from "#shared/schema.ts";
 
 export function parseIdentifier(value: string): {
   teamKey: string;
@@ -24,6 +24,81 @@ export const MAX_ISSUE_DEPTH = 5;
 
 export function identifier(teamKey: string, number: number): string {
   return `${teamKey}-${String(number)}`;
+}
+
+/**
+ * Deterministic priority (0=No priority, 1=Urgent, 2=High, 3=Medium, 4=Low)
+ * derived from impact, urgency, and vote count when neither is pinned manually.
+ */
+export function computePriority(input: {
+  impact: Impact | null;
+  urgency: Urgency | null;
+  voteCount: number;
+}): number {
+  if (input.impact === null && input.urgency === null) return 0;
+  const imp = input.impact ?? "medium";
+  const urg = input.urgency ?? "medium";
+  if ((imp === "high" && urg === "high") || input.voteCount >= 25) return 1;
+  if (
+    (imp === "high" && urg === "medium") ||
+    (imp === "medium" && urg === "high") ||
+    input.voteCount >= 8
+  )
+    return 2;
+  return (imp === "medium" && urg === "medium") ||
+    (imp === "high" && urg === "low") ||
+    (imp === "low" && urg === "high")
+    ? 3
+    : 4;
+}
+
+/**
+ * Resolves the next `{ priority, priorityManual }` state from the current row
+ * and an incoming create/update/vote patch.
+ */
+export function resolveIssuePriority(
+  current: {
+    priority: number;
+    priorityManual: boolean;
+    impact: Impact | null;
+    urgency: Urgency | null;
+    voteCount: number;
+  },
+  patch: {
+    priority?: number | undefined;
+    priorityManual?: boolean | undefined;
+    impact?: Impact | null | undefined;
+    urgency?: Urgency | null | undefined;
+    voteCount?: number | undefined;
+  },
+): { priority: number; priorityManual: boolean } {
+  const impact = patch.impact === undefined ? current.impact : patch.impact;
+  const urgency = patch.urgency === undefined ? current.urgency : patch.urgency;
+  const voteCount = patch.voteCount ?? current.voteCount;
+
+  if (patch.priorityManual === false) {
+    return {
+      priority: computePriority({ impact, urgency, voteCount }),
+      priorityManual: false,
+    };
+  }
+  if (patch.priority !== undefined) {
+    const manual =
+      impact === null && urgency === null && patch.priority === 0
+        ? false
+        : (patch.priorityManual ?? true);
+    return {
+      priority: patch.priority,
+      priorityManual: manual,
+    };
+  }
+  if (current.priorityManual) {
+    return { priority: current.priority, priorityManual: true };
+  }
+  return {
+    priority: computePriority({ impact, urgency, voteCount }),
+    priorityManual: false,
+  };
 }
 
 export function transitionTimestamps(

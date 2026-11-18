@@ -170,8 +170,9 @@ export function editIssue(
   identifier: string,
   change: Exclude<IssueChange, { kind: "move" }>,
 ): Promise<Outcome> {
-  const inverse = inverseChange(loadedIssue(identifier), change);
-  const title = `${identifier} ${changeSummary(change, workspace())}`;
+  const current = loadedIssue(identifier);
+  const inverse = inverseChange(current, change);
+  const title = `${identifier} ${changeSummary(change, workspace(), current)}`;
   acknowledge([identifier], change);
   const saving = edits.edit(identifier, change);
   return inverse === undefined

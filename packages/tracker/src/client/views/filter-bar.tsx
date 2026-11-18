@@ -9,22 +9,28 @@ import {
   Archive,
   CalendarClock,
   CircleDashed,
+  Crosshair,
   Folder,
+  Gauge,
   ListFilter,
   PenLine,
   SignalHigh,
   Tag,
   UserRound,
   X,
+  Zap,
 } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { useCurrentActor } from "#client/data/identity.ts";
 import type { ActorEnvelope } from "#shared/actor.ts";
 import { actorNamespace, groupActors } from "#client/controls/actor-order.ts";
 import {
+  effortOptions,
+  impactOptions,
   priorityOptions,
   stateOptions,
   teamStates,
+  urgencyOptions,
 } from "#client/controls/property-options.tsx";
 import { Avatar, Swatch } from "#client/ui/ui.tsx";
 import { CommandList, type CommandItem } from "./command-list.tsx";
@@ -42,6 +48,9 @@ import { leavingPopup } from "#client/ui/leaving.tsx";
 const fieldIcons: Record<FilterField, ReactNode> = {
   state: <CircleDashed size={15} />,
   priority: <SignalHigh size={15} />,
+  urgency: <Zap size={15} />,
+  impact: <Crosshair size={15} />,
+  effort: <Gauge size={15} />,
   assignee: <UserRound size={15} />,
   creator: <PenLine size={15} />,
   label: <Tag size={15} />,
@@ -82,12 +91,20 @@ function actorOptions(
   ];
 }
 
+const sizingFilterOptions = (options: readonly Options[number][]): Options => [
+  ...options.slice(1),
+  ...options.slice(0, 1).map((none) => ({ ...none, value: "none" })),
+];
+
 function fieldOptions(
   field: FilterField,
   bootstrap: BootstrapData,
   teamId: string,
   me: ActorEnvelope,
 ): Options {
+  if (field === "urgency") return sizingFilterOptions(urgencyOptions);
+  if (field === "impact") return sizingFilterOptions(impactOptions);
+  if (field === "effort") return sizingFilterOptions(effortOptions);
   switch (field) {
     case "state": {
       return stateOptions(teamStates(bootstrap, teamId));

@@ -52,6 +52,24 @@ exact target, and change only fields required by the task. Keep issue state
 synchronized with observable work. Do not mark complete merely because code
 exists locally. Use `--expected-revision` when editing an inspected issue.
 
+Size and prioritize issues with native triage fields, never legacy `Urgency:*`,
+`Impact:*`, or `Effort:*` labels:
+
+```bash
+toolkit tracker issue create --team AI --title "<title>" --urgency medium --impact high --effort s --description-file <path>
+toolkit tracker issue update AI-123 --urgency low --impact medium --effort m --priority auto --expected-revision 4
+toolkit tracker issue list --team AI --effort xs --effort s --urgency high --sort effort --json
+```
+
+`--urgency <high|medium|low>`, `--impact <high|medium|low>`, and
+`--effort <xs|s|m|l|xl>` accept `none` on `update` and `bulk-update` to clear a
+value, and repeat on `list` and `search` (including `none` for untriaged
+issues; `--sort` also accepts `urgency`, `impact`, and `effort`). Tracker
+computes `priority` automatically from `urgency` and `impact` when `--priority`
+is omitted; pass `--priority <1..4>` (or `0` for no priority) only for a
+deliberate manual override, and `--priority auto` to return an issue to derived
+priority.
+
 Break a larger issue into sub-issues and give work a deadline with:
 
 ```bash
@@ -99,7 +117,7 @@ model metadata automatically; do not add the legacy `+1 hit again` comments.
 Create one issue per distinct problem only when no match exists:
 
 ```bash
-toolkit tracker issue create --team AI --project developer-experience --label Improvement --title "<surface>: <what breaks>" --description-file <path>
+toolkit tracker issue create --team AI --project developer-experience --label Improvement --urgency <high|medium|low> --impact <high|medium|low> --effort <xs|s|m|l|xl> --title "<surface>: <what breaks>" --description-file <path>
 ```
 
 The body states the symptom, exact command and sanitized output, blocked work,
@@ -118,7 +136,7 @@ Create one issue per distinct problem only when no match exists, without a
 project unless the task names one:
 
 ```bash
-toolkit tracker issue create --team AI --label Improvement --title "<area>: <problem>" --description-file <path>
+toolkit tracker issue create --team AI --label Improvement --urgency <high|medium|low> --impact <high|medium|low> --effort <xs|s|m|l|xl> --title "<area>: <problem>" --description-file <path>
 ```
 
 The body states what was observed, where (paths, commands, services), how often

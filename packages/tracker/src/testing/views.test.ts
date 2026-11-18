@@ -206,6 +206,9 @@ it("validates view fields and parameters structurally and honours the write gate
       projectSlug: "scout",
       states: ["started"],
       labels: ["bug", "feature"],
+      urgencies: ["high", "none"],
+      impacts: ["medium"],
+      efforts: ["xs", "s"],
       assigneeKey: "human:jerred",
       creatorKey: "human:jerred",
       priority: "1",
@@ -221,7 +224,7 @@ it("validates view fields and parameters structurally and honours the write gate
       view: "list",
     },
   });
-  expect(Object.keys(every.params)).toHaveLength(17);
+  expect(Object.keys(every.params)).toHaveLength(20);
   await failure(
     api.views.update({ actor, id: every.id, params: { cursor: "abc" } }),
     "BAD_REQUEST",

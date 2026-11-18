@@ -2,9 +2,12 @@ import { z } from "zod";
 import {
   BulkUpdateIssuesSchema,
   CreateIssueSchema,
+  EffortSchema,
+  ImpactSchema,
   IssueListSchema,
-  UpdateIssueSchema,
   StateTypeSchema,
+  UpdateIssueSchema,
+  UrgencySchema,
   type ActorEnvelope,
 } from "@shepherdjerred/tracker/contract";
 import type { TrackerClient } from "#lib/tracker/client.ts";
@@ -24,12 +27,51 @@ export type TrackerCommandContext = {
   actor: () => Promise<ActorEnvelope>;
 };
 
+function singleOption(
+  values: string[] | undefined,
+  flag: string,
+): string | undefined {
+  if ((values?.length ?? 0) > 1) throw new Error(`${flag} takes one value`);
+  return values?.[0];
+}
+
+function priorityPatch(value: string | undefined) {
+  if (value === undefined) return {};
+  return value.toLowerCase() === "auto"
+    ? { priorityManual: false }
+    : { priority: integer(value) };
+}
+
+function triageFields(options: TrackerOptions) {
+  return {
+    ...priorityPatch(options.priority),
+    urgency: UrgencySchema.nullable()
+      .optional()
+      .parse(
+        clearable(singleOption(options.urgency, "--urgency")?.toLowerCase()),
+      ),
+    impact: ImpactSchema.nullable()
+      .optional()
+      .parse(
+        clearable(singleOption(options.impact, "--impact")?.toLowerCase()),
+      ),
+    effort: EffortSchema.nullable()
+      .optional()
+      .parse(
+        clearable(singleOption(options.effort, "--effort")?.toLowerCase()),
+      ),
+  };
+}
+
 function listInput(options: TrackerOptions, search?: string) {
   return IssueListSchema.parse({
     teamKey: options.team,
     projectSlug: options.project,
     states: options.state,
     labels: options.label,
+    urgencies: options.urgency?.map((value) => value.toLowerCase()),
+    impacts: options.impact?.map((value) => value.toLowerCase()),
+    efforts: options.effort?.map((value) => value.toLowerCase()),
     assigneeKey: options.assignee,
     creatorKey: options.creator,
     priority: integer(options.priority),
@@ -51,6 +93,7 @@ function listInput(options: TrackerOptions, search?: string) {
 async function create(context: TrackerCommandContext, options: TrackerOptions) {
   if ((options.state?.length ?? 0) > 1)
     throw new Error("Create takes one --state");
+  const triage = triageFields(options);
   return context.client.issues.create.mutate(
     CreateIssueSchema.parse({
       actor: await context.actor(),
@@ -60,7 +103,7 @@ async function create(context: TrackerCommandContext, options: TrackerOptions) {
         options.description,
         options["description-file"],
       ),
-      priority: integer(options.priority),
+      ...triage,
       projectSlug: options.project,
       assigneeKey: options.assignee,
       parentIdentifier: clearable(options.parent?.toUpperCase(), "NONE"),
@@ -122,7 +165,7 @@ function patchFields(options: TrackerOptions) {
   if ((options.state?.length ?? 0) > 1)
     throw new Error("Update takes one --state");
   return {
-    priority: integer(options.priority),
+    ...triageFields(options),
     projectSlug: clearable(options.project),
     assigneeKey: clearable(options.assignee),
     parentIdentifier: clearable(options.parent?.toUpperCase(), "NONE"),
@@ -149,12 +192,16 @@ async function bulkUpdate(
   ] as const)
     if (options[flag] !== undefined)
       throw new Error(`bulk-update does not take --${flag}`);
+  const patch = {
+    ...patchFields(options),
+    ...stateReference(options.state?.[0]),
+  };
   return context.client.issues.bulkUpdate.mutate(
     BulkUpdateIssuesSchema.parse({
       actor: await context.actor(),
       identifiers: identifiers.map((value) => value.toUpperCase()),
       // Teams resolve the state themselves, so it is passed through as given.
-      patch: { ...patchFields(options), ...stateReference(options.state?.[0]) },
+      patch,
     }),
   );
 }

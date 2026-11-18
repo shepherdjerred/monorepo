@@ -63,6 +63,7 @@ import {
   labelStep,
   priorityStep,
   projectStep,
+  sizingEntries,
   statusStep,
 } from "./palette-steps.tsx";
 
@@ -175,6 +176,7 @@ function issueEntries(context: PaletteContext): PaletteEntry[] {
           section,
           step: priorityStep(identifiers),
         },
+        ...sizingEntries(identifiers, section),
         {
           id: "assign",
           label: "Assign to…",

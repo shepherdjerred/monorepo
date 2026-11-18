@@ -1,5 +1,15 @@
 import type { BootstrapData, Issue } from "#client/data/api.ts";
-import { priorities } from "#client/data/issue-changes.ts";
+import {
+  effortLabels,
+  impactLabels,
+  priorities,
+  urgencyLabels,
+} from "#client/data/issue-changes.ts";
+import {
+  effortOrder,
+  impactOrder,
+  urgencyOrder,
+} from "#client/controls/property-options.tsx";
 import type { GroupBy } from "./display-options.ts";
 import type { CalendarDay } from "#client/due/dates.ts";
 import {
@@ -15,6 +25,9 @@ type State = BootstrapData["states"][number];
 export type GroupMark =
   | { type: "state"; state: State }
   | { type: "priority"; priority: number }
+  | { type: "urgency"; urgency: Issue["urgency"] }
+  | { type: "impact"; impact: Issue["impact"] }
+  | { type: "effort"; effort: Issue["effort"] }
   | { type: "project"; color: string | undefined }
   | { type: "assignee"; actor: Issue["assignee"] }
   | { type: "due"; bucket: DueBucket };
@@ -53,11 +66,80 @@ function dueBucketOf(issue: Issue, today: CalendarDay): Bucket {
   };
 }
 
+function sizingBucketOf(
+  issue: Issue,
+  groupBy: "priority" | "urgency" | "impact" | "effort",
+): Bucket {
+  switch (groupBy) {
+    case "priority": {
+      return {
+        key: String(issue.priority),
+        label: priorities[issue.priority] ?? "No priority",
+        mark: { type: "priority", priority: issue.priority },
+        sort: String(priorityRank(issue.priority)),
+      };
+    }
+    case "urgency": {
+      return issue.urgency === null
+        ? {
+            key: "none",
+            label: "No urgency",
+            mark: { type: "urgency", urgency: null },
+            sort: String(urgencyOrder.length),
+          }
+        : {
+            key: issue.urgency,
+            label: urgencyLabels[issue.urgency],
+            mark: { type: "urgency", urgency: issue.urgency },
+            sort: String(urgencyOrder.indexOf(issue.urgency)),
+          };
+    }
+    case "impact": {
+      return issue.impact === null
+        ? {
+            key: "none",
+            label: "No impact",
+            mark: { type: "impact", impact: null },
+            sort: String(impactOrder.length),
+          }
+        : {
+            key: issue.impact,
+            label: impactLabels[issue.impact],
+            mark: { type: "impact", impact: issue.impact },
+            sort: String(impactOrder.indexOf(issue.impact)),
+          };
+    }
+    case "effort": {
+      return issue.effort === null
+        ? {
+            key: "none",
+            label: "No effort",
+            mark: { type: "effort", effort: null },
+            sort: String(effortOrder.length),
+          }
+        : {
+            key: issue.effort,
+            label: effortLabels[issue.effort],
+            mark: { type: "effort", effort: issue.effort },
+            sort: String(effortOrder.indexOf(issue.effort)),
+          };
+    }
+  }
+}
+
 function bucketOf(
   issue: Issue,
   groupBy: Exclude<GroupBy, "none">,
   today: CalendarDay,
 ): Bucket {
+  if (
+    groupBy === "priority" ||
+    groupBy === "urgency" ||
+    groupBy === "impact" ||
+    groupBy === "effort"
+  ) {
+    return sizingBucketOf(issue, groupBy);
+  }
   switch (groupBy) {
     case "due": {
       return dueBucketOf(issue, today);
@@ -70,21 +152,13 @@ function bucketOf(
         sort: String(issue.state.position).padStart(6, "0"),
       };
     }
-    case "priority": {
-      return {
-        key: String(issue.priority),
-        label: priorities[issue.priority] ?? "No priority",
-        mark: { type: "priority", priority: issue.priority },
-        sort: String(priorityRank(issue.priority)),
-      };
-    }
     case "project": {
       return issue.project === null
         ? {
             key: "none",
             label: "No project",
             mark: { type: "project", color: undefined },
-            sort: "￿",
+            sort: "\u{FFFD}",
           }
         : {
             key: issue.project.slug,
@@ -99,7 +173,7 @@ function bucketOf(
             key: "none",
             label: "Unassigned",
             mark: { type: "assignee", actor: null },
-            sort: "￿",
+            sort: "\u{FFFD}",
           }
         : {
             key: issue.assignee.key,

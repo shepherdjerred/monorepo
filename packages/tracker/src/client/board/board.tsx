@@ -25,14 +25,17 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { GripVertical, MessageSquare, ThumbsUp } from "lucide-react";
 import type { BootstrapData, Issue } from "#client/data/api.ts";
+import { effortLabels } from "#client/data/issue-changes.ts";
 import { moveIssue } from "#client/data/mutations.ts";
 import type { EnumOption } from "#client/controls/enum-picker.tsx";
 import {
+  effortOptions,
   priorityOptions,
   stateOptions,
 } from "#client/controls/property-options.tsx";
 import {
   RowAssignee,
+  RowEffort,
   RowLabels,
   RowPriority,
   RowStatus,
@@ -190,6 +193,14 @@ function Card({ issue, options }: { issue: Issue; options: CardOptions }) {
           disabled={disabled}
           onFocus={focus}
         />
+        {!hidden.has("effort") && issue.effort !== null && (
+          <RowEffort
+            issue={issue}
+            options={effortOptions}
+            disabled={disabled}
+            onFocus={focus}
+          />
+        )}
         {!hidden.has("project") && issue.project !== null && (
           <span className="muted">{issue.project.name}</span>
         )}
@@ -263,6 +274,9 @@ function LiftedCard({
         <span className={`priority priority-${String(issue.priority)}`}>
           <PriorityGlyph value={issue.priority} />
         </span>
+        {!hidden.has("effort") && issue.effort !== null && (
+          <span className="effort-pill">{effortLabels[issue.effort]}</span>
+        )}
         {!hidden.has("project") && issue.project !== null && (
           <span className="muted">{issue.project.name}</span>
         )}
@@ -451,50 +465,48 @@ export function Board({
     });
   }
   return (
-    <>
-      <DndContext
-        sensors={sensors}
-        accessibility={{
-          announcements: {
-            onDragStart: ({ active }) =>
-              `Picked up ${items.find((item) => item.id === active.id)?.identifier ?? String(active.id)}`,
-            onDragOver: ({ over }) =>
-              over === null
-                ? "Outside board"
-                : `Dragging over ${states.find((state) => state.id === over.data.current?.["stateId"])?.name ?? "board"}`,
-            onDragEnd: () => "Saving board position",
-            onDragCancel: () => "Move canceled",
-          },
-        }}
-        autoScroll={{ threshold: { x: 0.05, y: 0.05 }, acceleration: 5 }}
-        collisionDetection={boardCollision}
-        onDragStart={lifted}
-        onDragEnd={dropped}
-        onDragCancel={() => {
-          setCarried(undefined);
-        }}
-      >
-        <div className="board">
-          {states.map((state) => (
-            <Column
-              key={state.id}
-              state={state}
-              options={options}
-              items={items
-                .filter((item) => item.state.id === state.id)
-                .sort(
-                  (a, b) =>
-                    a.boardOrder - b.boardOrder || a.id.localeCompare(b.id),
-                )}
-            />
-          ))}
-        </div>
-        <DragOverlay dropAnimation={reduced ? null : dropAnimation}>
-          {carriedIssue === undefined ? null : (
-            <LiftedCard issue={carriedIssue} hidden={hidden} />
-          )}
-        </DragOverlay>
-      </DndContext>
-    </>
+    <DndContext
+      sensors={sensors}
+      accessibility={{
+        announcements: {
+          onDragStart: ({ active }) =>
+            `Picked up ${items.find((item) => item.id === active.id)?.identifier ?? String(active.id)}`,
+          onDragOver: ({ over }) =>
+            over === null
+              ? "Outside board"
+              : `Dragging over ${states.find((state) => state.id === over.data.current?.["stateId"])?.name ?? "board"}`,
+          onDragEnd: () => "Saving board position",
+          onDragCancel: () => "Move canceled",
+        },
+      }}
+      autoScroll={{ threshold: { x: 0.05, y: 0.05 }, acceleration: 5 }}
+      collisionDetection={boardCollision}
+      onDragStart={lifted}
+      onDragEnd={dropped}
+      onDragCancel={() => {
+        setCarried(undefined);
+      }}
+    >
+      <div className="board">
+        {states.map((state) => (
+          <Column
+            key={state.id}
+            state={state}
+            options={options}
+            items={items
+              .filter((item) => item.state.id === state.id)
+              .sort(
+                (a, b) =>
+                  a.boardOrder - b.boardOrder || a.id.localeCompare(b.id),
+              )}
+          />
+        ))}
+      </div>
+      <DragOverlay dropAnimation={reduced ? null : dropAnimation}>
+        {carriedIssue === undefined ? null : (
+          <LiftedCard issue={carriedIssue} hidden={hidden} />
+        )}
+      </DragOverlay>
+    </DndContext>
   );
 }

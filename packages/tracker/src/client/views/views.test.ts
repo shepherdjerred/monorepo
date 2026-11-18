@@ -114,6 +114,45 @@ describe("grouping", () => {
       "4 AI-4",
     ]);
   });
+
+  test("urgency, impact and effort groups order from strongest or smallest to missing", () => {
+    const sized = [
+      issueFixture(1, { urgency: "low", impact: null, effort: "xl" }),
+      issueFixture(2, { urgency: null, impact: "high", effort: "xs" }),
+      issueFixture(3, { urgency: "high", impact: "medium", effort: null }),
+      issueFixture(4, { urgency: "medium", impact: "low", effort: "m" }),
+    ];
+    expect(
+      buildRows(sized, {
+        groupBy: "urgency",
+        collapsed: new Set(),
+        states: workspaceFixture.states,
+        today: "2026-11-11",
+      })
+        .rows.filter(({ kind }) => kind === "group")
+        .map((row) => describeRow(row)),
+    ).toEqual(["# High 1", "# Medium 1", "# Low 1", "# No urgency 1"]);
+    expect(
+      buildRows(sized, {
+        groupBy: "impact",
+        collapsed: new Set(),
+        states: workspaceFixture.states,
+        today: "2026-11-11",
+      })
+        .rows.filter(({ kind }) => kind === "group")
+        .map((row) => describeRow(row)),
+    ).toEqual(["# High 1", "# Medium 1", "# Low 1", "# No impact 1"]);
+    expect(
+      buildRows(sized, {
+        groupBy: "effort",
+        collapsed: new Set(),
+        states: workspaceFixture.states,
+        today: "2026-11-11",
+      })
+        .rows.filter(({ kind }) => kind === "group")
+        .map((row) => describeRow(row)),
+    ).toEqual(["# XS 1", "# M 1", "# XL 1", "# No effort 1"]);
+  });
 });
 
 describe("display options", () => {
@@ -152,6 +191,16 @@ describe("display options", () => {
     expect(readDisplay(new URLSearchParams("group=bogus")).groupBy).toBe(
       "status",
     );
+    const effortDisplay = readDisplay(
+      writeDisplay(new URLSearchParams(), {
+        groupBy: "effort",
+        hidden: new Set(["effort"]),
+        sort: "effort",
+      }),
+    );
+    expect(effortDisplay.groupBy).toBe("effort");
+    expect(effortDisplay.sort).toBe("effort");
+    expect([...effortDisplay.hidden]).toEqual(["effort"]);
   });
 });
 
@@ -232,5 +281,18 @@ describe("filters", () => {
         me: "human:jerred",
       }),
     ).toEqual({ teamKey: "AI" });
+    const sizingParams = new URLSearchParams(
+      "urgency=high&impact=none&effort=xs&effort=s",
+    );
+    expect(
+      filterChips(sizingParams, workspaceFixture).map(({ text }) => text),
+    ).toEqual(["Urgency is High", "Impact is No impact", "Effort is XS, S"]);
+    expect(
+      viewPrefill(new URLSearchParams("urgency=high&impact=none&effort=xs"), {
+        teamKey: "AI",
+        projectSlug: undefined,
+        me: "human:jerred",
+      }),
+    ).toEqual({ teamKey: "AI", urgency: "high", effort: "xs" });
   });
 });

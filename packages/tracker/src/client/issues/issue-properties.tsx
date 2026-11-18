@@ -18,9 +18,15 @@ import { DueDate } from "#client/due/due-chip.tsx";
 import { duePanel } from "#client/due/due-picker.tsx";
 import { ParentField } from "#client/hierarchy/parent-field.tsx";
 import {
+  effortOptions,
+  impactOptions,
+  parseEffort,
+  parseImpact,
+  parseUrgency,
   priorityOptions,
   stateOptions,
   teamStates,
+  urgencyOptions,
 } from "#client/controls/property-options.tsx";
 
 type Props = {
@@ -108,6 +114,96 @@ function VoteButton({
   );
 }
 
+function SizingFields({
+  issue,
+  disabled,
+  update,
+}: {
+  issue: IssueDetailData;
+  disabled: boolean;
+  update: (change: Exclude<IssueChange, { kind: "move" }>) => void;
+}) {
+  const sized = issue.impact !== null || issue.urgency !== null;
+  return (
+    <>
+      <div className="property-field">
+        <div className="property-header">
+          <label className="property-name" htmlFor="property-priority">
+            Priority
+          </label>
+          {sized &&
+            (issue.priorityManual ? (
+              <button
+                type="button"
+                id="property-priority-auto"
+                className="priority-mode-reset"
+                disabled={disabled}
+                onClick={() => {
+                  update({ kind: "priorityAuto" });
+                }}
+              >
+                Pinned · Auto
+              </button>
+            ) : (
+              <span className="priority-mode" data-mode="auto">
+                Auto
+              </span>
+            ))}
+        </div>
+        <EnumPicker
+          id="property-priority"
+          label="Priority"
+          disabled={disabled}
+          value={String(issue.priority)}
+          options={priorityOptions}
+          onChange={(priority) => {
+            update({ kind: "priority", priority: Number(priority) });
+          }}
+        />
+      </div>
+      <label>
+        Urgency
+        <EnumPicker
+          id="property-urgency"
+          label="Urgency"
+          disabled={disabled}
+          value={issue.urgency ?? ""}
+          options={urgencyOptions}
+          onChange={(value) => {
+            update({ kind: "urgency", urgency: parseUrgency(value) });
+          }}
+        />
+      </label>
+      <label>
+        Impact
+        <EnumPicker
+          id="property-impact"
+          label="Impact"
+          disabled={disabled}
+          value={issue.impact ?? ""}
+          options={impactOptions}
+          onChange={(value) => {
+            update({ kind: "impact", impact: parseImpact(value) });
+          }}
+        />
+      </label>
+      <label>
+        Effort
+        <EnumPicker
+          id="property-effort"
+          label="Effort"
+          disabled={disabled}
+          value={issue.effort ?? ""}
+          options={effortOptions}
+          onChange={(value) => {
+            update({ kind: "effort", effort: parseEffort(value) });
+          }}
+        />
+      </label>
+    </>
+  );
+}
+
 export function IssueProperties({
   issue,
   bootstrap,
@@ -135,19 +231,7 @@ export function IssueProperties({
           }}
         />
       </label>
-      <label>
-        Priority
-        <EnumPicker
-          id="property-priority"
-          label="Priority"
-          disabled={disabled}
-          value={String(issue.priority)}
-          options={priorityOptions}
-          onChange={(priority) => {
-            update({ kind: "priority", priority: Number(priority) });
-          }}
-        />
-      </label>
+      <SizingFields issue={issue} disabled={disabled} update={update} />
       <PickerField
         id="property-assignee"
         name="Assignee"

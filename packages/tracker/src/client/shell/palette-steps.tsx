@@ -1,14 +1,20 @@
 import type { ReactNode } from "react";
-import { Folder } from "lucide-react";
+import { Crosshair, Folder, Gauge, RotateCcw, Zap } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { bulkLabelChange } from "#client/data/bulk-changes.ts";
 import { loadedIssue } from "#client/data/mutations.ts";
 import { actorNamespace, groupActors } from "#client/controls/actor-order.ts";
 import { applyChange } from "#client/controls/issue-actions.ts";
 import {
+  effortOptions,
+  impactOptions,
+  parseEffort,
+  parseImpact,
+  parseUrgency,
   priorityOptions,
   stateOptions,
   teamStates,
+  urgencyOptions,
 } from "#client/controls/property-options.tsx";
 import { Avatar, Swatch } from "#client/ui/ui.tsx";
 
@@ -86,6 +92,123 @@ export function priorityStep(identifiers: string[]): PaletteStep {
         },
       })),
   };
+}
+
+export function urgencyStep(identifiers: string[]): PaletteStep {
+  return {
+    id: "urgency",
+    title: "Set urgency",
+    placeholder: "Change urgency to…",
+    entries: () =>
+      urgencyOptions.map((option) => ({
+        id: `urgency:${option.value === "" ? "none" : option.value}`,
+        label: option.label,
+        icon: option.icon,
+        section: "Urgency",
+        checked: identifiers.every(
+          (identifier) =>
+            (loadedIssue(identifier).urgency ?? "") === option.value,
+        ),
+        run: () => {
+          applyChange(identifiers, {
+            kind: "urgency",
+            urgency: parseUrgency(option.value),
+          });
+        },
+      })),
+  };
+}
+
+export function impactStep(identifiers: string[]): PaletteStep {
+  return {
+    id: "impact",
+    title: "Set impact",
+    placeholder: "Change impact to…",
+    entries: () =>
+      impactOptions.map((option) => ({
+        id: `impact:${option.value === "" ? "none" : option.value}`,
+        label: option.label,
+        icon: option.icon,
+        section: "Impact",
+        checked: identifiers.every(
+          (identifier) =>
+            (loadedIssue(identifier).impact ?? "") === option.value,
+        ),
+        run: () => {
+          applyChange(identifiers, {
+            kind: "impact",
+            impact: parseImpact(option.value),
+          });
+        },
+      })),
+  };
+}
+
+export function effortStep(identifiers: string[]): PaletteStep {
+  return {
+    id: "effort",
+    title: "Set effort",
+    placeholder: "Change effort to…",
+    entries: () =>
+      effortOptions.map((option) => ({
+        id: `effort:${option.value === "" ? "none" : option.value}`,
+        label: option.label,
+        icon: option.icon,
+        section: "Effort",
+        checked: identifiers.every(
+          (identifier) =>
+            (loadedIssue(identifier).effort ?? "") === option.value,
+        ),
+        run: () => {
+          applyChange(identifiers, {
+            kind: "effort",
+            effort: parseEffort(option.value),
+          });
+        },
+      })),
+  };
+}
+
+export function sizingEntries(
+  identifiers: string[],
+  section: string,
+): PaletteEntry[] {
+  return [
+    {
+      id: "set-urgency",
+      label: "Set urgency…",
+      icon: <Zap size={15} />,
+      section,
+      step: urgencyStep(identifiers),
+    },
+    {
+      id: "set-impact",
+      label: "Set impact…",
+      icon: <Crosshair size={15} />,
+      section,
+      step: impactStep(identifiers),
+    },
+    {
+      id: "set-effort",
+      label: "Set effort…",
+      icon: <Gauge size={15} />,
+      section,
+      step: effortStep(identifiers),
+    },
+    ...(identifiers.some((identifier) => loadedIssue(identifier).priorityManual)
+      ? [
+          {
+            id: "reset-priority-auto",
+            label: "Reset priority to auto",
+            icon: <RotateCcw size={15} />,
+            section,
+            run: () => {
+              applyChange(identifiers, { kind: "priorityAuto" });
+            },
+          },
+        ]
+      : []),
+  ];
 }
 
 export function assigneeStep(
