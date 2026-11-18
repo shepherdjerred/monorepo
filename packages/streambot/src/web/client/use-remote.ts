@@ -14,7 +14,7 @@ import {
   playerCommandRequest,
   type RemoteAction,
 } from "./api.ts";
-import { selectedGuildId } from "./route-state.ts";
+import { resolveChannelDeepLink, selectedGuildId } from "./route-state.ts";
 import { QueueLoadSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 
 export function useRemote() {
@@ -22,9 +22,14 @@ export function useRemote() {
   const [loading, setLoading] = useState(true);
   const [params, setParams] = useSearchParams();
   const guildId = selectedGuildId(me?.guilds ?? [], params.get("guild"));
-  const viewedChannel = params.get("channel");
+  const requestedChannel = params.get("channel");
   const pendingAction = useRef<AbortController | null>(null);
-  const [snapshot, setSnapshot] = useState<WebSnapshot | null>(null);
+  const [snapshotState, setSnapshotState] = useState<{
+    guildId: string;
+    snapshot: WebSnapshot;
+  } | null>(null);
+  const snapshot =
+    snapshotState?.guildId === guildId ? snapshotState.snapshot : null;
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -51,18 +56,30 @@ export function useRemote() {
   };
 
   useEffect(() => {
-    if (me !== null && guildId !== "" && params.get("guild") !== guildId) {
+    if (me === null) return;
+    if (requestedChannel !== null && me.guilds.length === 0) {
       setParams(
         (previous) => {
           const next = new URLSearchParams(previous);
-          next.set("guild", guildId);
           next.delete("channel");
           return next;
         },
         { replace: true },
       );
+      return;
     }
-  }, [me, params, guildId, setParams]);
+    if (guildId !== "" && params.get("guild") !== guildId) {
+      setParams(
+        (previous) => {
+          const next = new URLSearchParams(previous);
+          if (previous.has("guild")) next.delete("channel");
+          next.set("guild", guildId);
+          return next;
+        },
+        { replace: true },
+      );
+    }
+  }, [me, params, guildId, requestedChannel, setParams]);
   useEffect(() => {
     pendingAction.current?.abort();
     pendingAction.current = null;
@@ -70,7 +87,7 @@ export function useRemote() {
     return () => {
       pendingAction.current?.abort();
     };
-  }, [guildId, viewedChannel]);
+  }, [guildId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -106,19 +123,14 @@ export function useRemote() {
     async (signal?: AbortSignal) => {
       if (guildId === "") return;
       const next = await api(
-        "/api/player?" +
-          new URLSearchParams({
-            guildId,
-            ...(viewedChannel === null
-              ? {}
-              : { playbackChannel: viewedChannel }),
-          }).toString(),
+        "/api/player?" + new URLSearchParams({ guildId }).toString(),
         SnapshotSchema,
         signal === undefined ? undefined : { signal },
       );
-      if (signal?.aborted !== true) setSnapshot(next);
+      if (signal?.aborted !== true)
+        setSnapshotState({ guildId, snapshot: next });
     },
-    [guildId, viewedChannel],
+    [guildId],
   );
 
   useEffect(() => {
@@ -168,7 +180,7 @@ export function useRemote() {
   useEffect(() => {
     if (me === null || guildId === "") return;
     const controller = new AbortController();
-    setSnapshot(null);
+    setSnapshotState(null);
     setTracks(null);
     setError("");
     setNotice("");
@@ -183,7 +195,7 @@ export function useRemote() {
           setError(
             error_ instanceof Error ? error_.message : "Connection lost.",
           );
-          setSnapshot(null);
+          setSnapshotState(null);
           if (error_ instanceof ApiError && error_.status === 401) setMe(null);
         }
       } finally {
@@ -215,65 +227,70 @@ export function useRemote() {
     return pendingAction.current === controller && !controller.signal.aborted;
   }
 
-  async function refreshAfterAction(action: RemoteAction, signal: AbortSignal) {
-    if (action.action === "select")
-      setParams((previous) => {
-        const next = new URLSearchParams(previous);
-        if (action.number === null) next.delete("channel");
-        else next.set("channel", String(action.number));
-        return next;
-      });
-    else if (action.action === "play")
-      setParams(
-        (previous) => {
-          const next = new URLSearchParams(previous);
-          next.delete("channel");
-          return next;
-        },
-        { replace: true },
-      );
-    // Changing the URL starts a fresh poll; never publish the previous URL's response.
-    if (action.action !== "select" && action.action !== "play")
-      await refresh(signal);
-  }
+  const send = useCallback(
+    async (action: RemoteAction): Promise<void> => {
+      if (
+        me === null ||
+        pendingAction.current !== null ||
+        snapshot?.channel == null
+      )
+        return;
+      const controller = new AbortController();
+      pendingAction.current = controller;
+      setBusy(true);
+      setError("");
+      setNotice("");
+      try {
+        const result = await api("/api/commands", CommandResultSchema, {
+          ...playerCommandRequest(action, guildId, snapshot, me.csrfToken),
+          signal: controller.signal,
+        });
+        if (!actionIsCurrent(controller)) return;
+        setNotice(result.message);
+        if (result.loadId !== undefined) {
+          setQueueLoad(null);
+          setLoadId(result.loadId);
+        }
+        setTracks(null);
+        await refresh(controller.signal);
+      } catch (error_) {
+        if (!actionIsCurrent(controller)) return;
+        setError(
+          error_ instanceof Error ? error_.message : "The action failed.",
+        );
+        try {
+          await refresh(controller.signal);
+        } catch {
+          if (actionIsCurrent(controller)) setSnapshotState(null);
+        }
+      } finally {
+        finishAction(controller);
+      }
+    },
+    [me, guildId, snapshot, refresh],
+  );
 
-  async function send(action: RemoteAction): Promise<void> {
+  useEffect(() => {
     if (
       me === null ||
-      pendingAction.current !== null ||
-      snapshot?.channel == null
+      guildId === "" ||
+      snapshot === null ||
+      requestedChannel === null ||
+      busy ||
+      params.get("guild") !== guildId
     )
       return;
-    const controller = new AbortController();
-    pendingAction.current = controller;
-    setBusy(true);
-    setError("");
-    setNotice("");
-    try {
-      const result = await api("/api/commands", CommandResultSchema, {
-        ...playerCommandRequest(action, guildId, snapshot, me.csrfToken),
-        signal: controller.signal,
-      });
-      if (!actionIsCurrent(controller)) return;
-      setNotice(result.message);
-      if (result.loadId !== undefined) {
-        setQueueLoad(null);
-        setLoadId(result.loadId);
-      }
-      setTracks(null);
-      await refreshAfterAction(action, controller.signal);
-    } catch (error_) {
-      if (!actionIsCurrent(controller)) return;
-      setError(error_ instanceof Error ? error_.message : "The action failed.");
-      try {
-        await refresh(controller.signal);
-      } catch {
-        if (actionIsCurrent(controller)) setSnapshot(null);
-      }
-    } finally {
-      finishAction(controller);
-    }
-  }
+    const target = resolveChannelDeepLink(requestedChannel, snapshot);
+    if (target !== null) void send({ action: "select", number: target });
+    setParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        next.delete("channel");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [me, guildId, params, snapshot, requestedChannel, busy, send, setParams]);
 
   async function openSubtitles(): Promise<void> {
     if (

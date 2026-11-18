@@ -123,13 +123,7 @@ export function createWebHandler(deps: {
   ): Promise<Response> {
     const guildId = url.searchParams.get("guildId") ?? "";
     if (url.pathname === "/api/player")
-      return Response.json(
-        await deps.playback.snapshot(
-          session,
-          guildId,
-          url.searchParams.get("playbackChannel"),
-        ),
-      );
+      return Response.json(await deps.playback.snapshot(session, guildId));
     await deps.playback.authorize(session, guildId);
     const plexEnabled =
       (url.pathname === "/api/artwork" || url.pathname === "/api/library") &&

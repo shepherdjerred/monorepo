@@ -1,4 +1,5 @@
 import { useLocation, useSearchParams } from "react-router";
+import type { WebSnapshot } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 
 export const PAGE_TITLES: Readonly<Record<string, string>> = {
   "/music": "Music",
@@ -41,4 +42,30 @@ export function selectedGuildId(
   return (
     guilds.find((guild) => guild.id === requested)?.id ?? guilds[0]?.id ?? ""
   );
+}
+
+export function resolveChannelDeepLink(
+  requested: string | null,
+  snapshot: Pick<
+    WebSnapshot,
+    | "channel"
+    | "playbackChannel"
+    | "selectedPlaybackChannel"
+    | "selectionMode"
+    | "playbackChannels"
+  >,
+): number | null {
+  if (
+    requested === null ||
+    snapshot.channel === null ||
+    snapshot.playbackChannel === null ||
+    !/^\d+$/u.test(requested)
+  )
+    return null;
+  const parsed = Number(requested);
+  if (parsed < 1 || parsed > snapshot.playbackChannels.length) return null;
+  return snapshot.selectionMode === "manual" &&
+    snapshot.selectedPlaybackChannel === parsed
+    ? null
+    : parsed;
 }

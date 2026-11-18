@@ -96,12 +96,8 @@ export class WebPlayback {
       );
   }
 
-  async snapshot(
-    session: WebSession,
-    guild: string,
-    viewedSlot?: string | null,
-  ): Promise<WebSnapshot> {
-    return await buildWebSnapshot(this, session, guild, viewedSlot);
+  async snapshot(session: WebSession, guild: string): Promise<WebSnapshot> {
+    return await buildWebSnapshot(this, session, guild);
   }
 
   async sportsEnabled(session: WebSession, guildId: string): Promise<boolean> {
@@ -141,6 +137,10 @@ export class WebPlayback {
     const selectionVersion =
       input.selectionVersion ??
       this.deps.sessions.numbered.selection.version(scope);
+    const auto =
+      selected !== undefined &&
+      !this.deps.sessions.numbered.selection.isManual(scope) &&
+      (await this.deps.featureGate.automaticChannelRouting?.(scope)) === true;
     let revision = input.revision;
     const guard = () => {
       if (this.deps.bot.webVoiceChannel(guildId, userId)?.id !== channelId)
@@ -153,8 +153,10 @@ export class WebPlayback {
         this.deps.sessions.numbered.selection.version(scope) !==
           selectionVersion ||
         (!routed &&
-          input.selectionVersion === null &&
-          ((selected ?? null) !== input.playbackChannel ||
+          (!auto || input.selectionVersion === null) &&
+          (((input.selectionVersion === null ||
+            input.playbackChannel !== null) &&
+            (selected ?? null) !== input.playbackChannel) ||
             (selected !== undefined &&
               this.deps.sessions.numbered.selection.get(scope) !== selected)))
       )
@@ -187,6 +189,7 @@ export class WebPlayback {
       userId,
       scope,
       playbackChannel,
+      auto,
       guard,
       refreshRevision,
     };
@@ -239,29 +242,6 @@ export class WebPlayback {
     };
   }
 
-  private manualDestination(
-    input: WebCommand,
-    scope: { guildId: string; channelId: string; userId: string },
-    viewed: PlaybackChannelNumber | undefined,
-  ): WebCommand | null {
-    if (
-      viewed === undefined ||
-      input.action !== "play" ||
-      !this.deps.sessions.numbered.selection.isManual(scope)
-    )
-      return null;
-    const selected = this.deps.sessions.numbered.selection.get(scope);
-    if (selected === viewed) return null;
-    const revision = input.slotRevisions[String(selected)];
-    if (revision === undefined)
-      throw new WebError(
-        409,
-        "playback_changed",
-        "Refresh playback before choosing a destination.",
-      );
-    return { ...input, playbackChannel: selected, revision };
-  }
-
   async commandContext(
     session: WebSession,
     input: WebCommand,
@@ -271,18 +251,11 @@ export class WebPlayback {
       guildId,
       channelId,
       userId,
-      scope,
       playbackChannel,
+      auto,
       guard,
       refreshRevision,
     } = await this.target(session, input, routed);
-    const manual = routed
-      ? null
-      : this.manualDestination(input, scope, playbackChannel);
-    if (manual !== null) {
-      guard();
-      return await this.commandContext(session, manual, true);
-    }
     if (
       ["pause", "resume"].includes(input.action) ||
       (input.action === "play" && input.placement === "now")
@@ -319,20 +292,7 @@ export class WebPlayback {
       refreshRevision();
       return result;
     };
-    const automatic =
-      !routed &&
-      input.action === "play" &&
-      playbackChannel !== undefined &&
-      !this.deps.sessions.numbered.selection.isManual({
-        guildId,
-        channelId,
-        userId,
-      }) &&
-      (await this.deps.featureGate.automaticChannelRouting?.({
-        guildId,
-        channelId,
-        userId,
-      })) === true;
+    const automatic = !routed && input.action === "play" && auto;
     guard();
     const commandDeps: PlaybackCommandServiceDeps = {
       ...this.deps.commands,

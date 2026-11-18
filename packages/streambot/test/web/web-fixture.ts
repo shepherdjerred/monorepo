@@ -114,6 +114,95 @@ function resolved(source: Source): ResolvedSource {
   };
 }
 
+export function createFixtureSlot(options: {
+  resolveSource: (source: Source) => ResolvedSource;
+  join?: (input: {
+    guildId: typeof GUILD;
+    channelId: typeof CHANNEL;
+  }) => Promise<{ guildId: typeof GUILD; channelId: typeof CHANNEL }>;
+  initialPosition?: number;
+  onDispatch?: (event: PlaybackEvent) => void;
+  withSubtitles?: boolean;
+}) {
+  let position = options.initialPosition ?? 0;
+  let subtitleBusy = false;
+  const actor = createActor(
+    createPlaybackMachine({
+      joinVoice:
+        options.join ??
+        ((input) =>
+          Promise.resolve({
+            guildId: input.guildId,
+            channelId: input.channelId,
+          })),
+      leaveVoice: () => Promise.resolve(),
+      resolveSource: (input) =>
+        Promise.resolve(options.resolveSource(input.source)),
+      runStream: (_input, signal) =>
+        new Promise<void>((resolve) => {
+          signal.addEventListener(
+            "abort",
+            () => {
+              resolve();
+            },
+            { once: true },
+          );
+        }),
+    }),
+    { input: { guildId: GUILD, channelId: CHANNEL, idleTimeoutMs: 60_000 } },
+  );
+  actor.start();
+  const handle: SessionHandle = {
+    ...EMPTY_HANDLE,
+    dispatch: (event) => {
+      options.onDispatch?.(event);
+      actor.send(event);
+    },
+    view: () => buildPlaybackView(actor.getSnapshot(), position),
+    seek: (seconds) => {
+      position = seconds;
+      return Promise.resolve(true);
+    },
+    setVolume: (percent) => {
+      actor.send({ type: "SET_VOLUME", volume: percent });
+      return Promise.resolve(true);
+    },
+    currentSourceId: () => {
+      const source = actor.getSnapshot().context.current?.source;
+      return source === undefined ? null : sourceIdentity(source);
+    },
+    ...(options.withSubtitles === true
+      ? {
+          claimSubtitleMenu: () => {
+            if (subtitleBusy) return false;
+            subtitleBusy = true;
+            return true;
+          },
+          releaseSubtitleMenu: () => {
+            subtitleBusy = false;
+          },
+          listSubtitleCandidates: () =>
+            Promise.resolve([
+              {
+                kind: "sidecar" as const,
+                file: "/private/arrival.en.srt",
+                lang: "en",
+                modifier: null,
+              },
+              {
+                kind: "embedded" as const,
+                subtitleIndex: 0,
+                codec: "subrip",
+                lang: "fr",
+                modifier: null,
+              },
+            ]),
+        }
+      : {}),
+  };
+  return { actor, handle };
+}
+
 /** Real actor, command service, catalog and auth; only Discord/media I/O is simulated. */
 export function webFixture(
   origin = "http://127.0.0.1:8080",
@@ -175,79 +264,17 @@ export function webFixture(
       ? selection.get({ guildId: GUILD, channelId: CHANNEL, userId: USER })
       : undefined;
   let allocations = 0;
-  let position = 120;
-  let subtitleBusy = false;
   let beforeResolve: (() => void) | undefined;
-  const actor = createActor(
-    createPlaybackMachine({
-      joinVoice:
-        options.join ??
-        ((input) =>
-          Promise.resolve({
-            guildId: input.guildId,
-            channelId: input.channelId,
-          })),
-      leaveVoice: () => Promise.resolve(),
-      resolveSource: (input) => Promise.resolve(resolveFixture(input.source)),
-      runStream: (_input, signal) =>
-        new Promise<void>((resolve) => {
-          signal.addEventListener(
-            "abort",
-            () => {
-              resolve();
-            },
-            { once: true },
-          );
-        }),
-    }),
-    { input: { guildId: GUILD, channelId: CHANNEL, idleTimeoutMs: 60_000 } },
-  );
-  actor.start();
-  const owner = { actor };
-  const handle: SessionHandle = {
-    ...EMPTY_HANDLE,
-    dispatch: (event) => {
+  const { actor, handle } = createFixtureSlot({
+    resolveSource: resolveFixture,
+    ...(options.join === undefined ? {} : { join: options.join }),
+    initialPosition: 120,
+    onDispatch: (event) => {
       events.push(event);
-      actor.send(event);
     },
-    view: () => buildPlaybackView(actor.getSnapshot(), position),
-    seek: (seconds) => {
-      position = seconds;
-      return Promise.resolve(true);
-    },
-    setVolume: (percent) => {
-      actor.send({ type: "SET_VOLUME", volume: percent });
-      return Promise.resolve(true);
-    },
-    currentSourceId: () => {
-      const source = actor.getSnapshot().context.current?.source;
-      return source === undefined ? null : sourceIdentity(source);
-    },
-    claimSubtitleMenu: () => {
-      if (subtitleBusy) return false;
-      subtitleBusy = true;
-      return true;
-    },
-    releaseSubtitleMenu: () => {
-      subtitleBusy = false;
-    },
-    listSubtitleCandidates: () =>
-      Promise.resolve([
-        {
-          kind: "sidecar",
-          file: "/private/arrival.en.srt",
-          lang: "en",
-          modifier: null,
-        },
-        {
-          kind: "embedded",
-          subtitleIndex: 0,
-          codec: "subrip",
-          lang: "fr",
-          modifier: null,
-        },
-      ]),
-  };
+    withSubtitles: true,
+  });
+  const owner = { actor };
   const discovery = new DiscoveryService({
     library: () => library,
     searchYoutube: (query) =>

@@ -56,7 +56,7 @@ test("OAuth returns to a deep link and rejects external, escaped and unknown pat
   }
 });
 
-test("automatic web playback follows content and viewing another slot preserves a manual destination", async () => {
+test("automatic web playback follows content and manual selection unifies view and destination", async () => {
   fixture = webFixture("http://127.0.0.1:8080", "/nonexistent", false, {
     automatic: true,
     resolve: (source) => ({
@@ -71,10 +71,10 @@ test("automatic web playback follows content and viewing another slot preserves 
   });
   const room = await harness();
   fixture.playback.deps.sessions = room.manager;
-  async function play(url: string, viewed?: string) {
+  async function play(url: string) {
     if (fixture === undefined) throw new Error("Missing fixture");
     const snapshot = SnapshotSchema.parse(
-      await fixture.playback.snapshot(fixture.session, GUILD, viewed),
+      await fixture.playback.snapshot(fixture.session, GUILD),
     );
     return await fixture.handler(
       fixture.command({
@@ -96,15 +96,30 @@ test("automatic web playback follows content and viewing another slot preserves 
   const music = await play("https://example.com/music");
   expect(music.status).toBe(200);
   expect(room.manager.numbered.selection.get(scope)).toBe(1);
+  const afterMusic = SnapshotSchema.parse(
+    await fixture.playback.snapshot(fixture.session, GUILD),
+  );
+  expect(afterMusic.playbackChannel).toBe(1);
+  expect(afterMusic.selectedPlaybackChannel).toBeNull();
   const video = await play("https://example.com/video");
   expect(video.status).toBe(200);
   expect(room.manager.numbered.selection.get(scope)).toBe(2);
+  const afterVideo = SnapshotSchema.parse(
+    await fixture.playback.snapshot(fixture.session, GUILD),
+  );
+  expect(afterVideo.playbackChannel).toBe(2);
+  expect(afterVideo.selectedPlaybackChannel).toBeNull();
   expect(
     room.manager.getExisting(GUILD, CHANNEL, number(1))?.view().current?.source
       ?.mode,
   ).toBe("music");
   room.manager.numbered.selection.select(scope, 3, 4);
-  const manual = await play("https://example.com/manual", "1");
+  const manualSnapshot = SnapshotSchema.parse(
+    await fixture.playback.snapshot(fixture.session, GUILD),
+  );
+  expect(manualSnapshot.playbackChannel).toBe(3);
+  expect(manualSnapshot.selectedPlaybackChannel).toBe(3);
+  const manual = await play("https://example.com/manual");
   expect(manual.status).toBe(200);
   expect(room.manager.getExisting(GUILD, CHANNEL, number(3))).not.toBeNull();
   expect(room.manager.numbered.selection.get(scope)).toBe(3);

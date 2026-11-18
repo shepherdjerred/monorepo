@@ -27,6 +27,9 @@ export class ChannelSelection {
   isManual(scope: DiscoveryScope): boolean {
     return this.selections.has(this.key(scope));
   }
+  lastTarget(scope: DiscoveryScope): PlaybackChannelNumber | undefined {
+    return this.lastTargets.get(this.key(scope));
+  }
   version(scope: DiscoveryScope): string {
     return this.epoch + ":" + String(this.versions.get(this.key(scope)) ?? 0);
   }
