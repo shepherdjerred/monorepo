@@ -1,20 +1,22 @@
 import { describe, expect, test } from "vitest";
 import {
-  assertUpstreamCoverage,
   contextRejection,
-  crossCheckedProviders,
   missingNativeRoute,
-  indexLiteLlm,
-  indexModelsDev,
   patchRawCatalog,
   priceDecision,
-  mergeUpstreams,
-  providerKey,
   reconcile,
   verdictFor,
+} from "#scripts/sync-from-upstreams.ts";
+import {
+  assertUpstreamCoverage,
+  crossCheckedProviders,
+  indexLiteLlm,
+  indexModelsDev,
+  mergeUpstreams,
+  providerKey,
   type MergedUpstream,
   type Upstream,
-} from "#scripts/sync-from-upstreams.ts";
+} from "#scripts/upstreams.ts";
 import { CatalogSchema, MODELS, type ModelEntry } from "#src/index.ts";
 
 /**
@@ -49,7 +51,69 @@ const MODELS_DEV_FIXTURE = {
       },
     },
   },
-  // Resellers, listed after the first parties exactly as models.dev orders them.
+  google: {
+    models: {
+      "gemini-3.8-flash": {
+        cost: { input: 0.75, output: 3.75 },
+        limit: { context: 1_048_576 },
+      },
+    },
+  },
+  moonshotai: {
+    models: {
+      "kimi-k3.1-pro": {
+        cost: { input: 2, output: 10 },
+        limit: { context: 1_048_576 },
+      },
+      "kimi-k3.1-pro-highspeed": {
+        cost: { input: 4, output: 20 },
+        limit: { context: 1_048_576 },
+      },
+    },
+  },
+  xai: {
+    models: {
+      "grok-4.7": {
+        cost: { input: 2, output: 6 },
+        limit: { context: 500_000 },
+      },
+    },
+  },
+  // Regional CN pricing (CNY-converted decimals), subscription plans ($0), and
+  // third-party gateways/resellers — listed after first parties as models.dev
+  // orders them, and all excluded from the index.
+  "moonshotai-cn": {
+    models: {
+      "kimi-k3.1-pro": {
+        cost: { input: 1.9437, output: 10.1671 },
+        limit: { context: 1_048_576 },
+      },
+      "kimi-k3.1-pro-highspeed": {
+        cost: { input: 3.8874, output: 20.3342 },
+        limit: { context: 1_048_576 },
+      },
+    },
+  },
+  "kimi-code-plan-global": {
+    models: {
+      "k3.1-pro": {
+        cost: { input: 0, output: 0 },
+        limit: { context: 1_048_576 },
+      },
+      "kimi-k3.1-pro": {
+        cost: { input: 0, output: 0 },
+        limit: { context: 1_048_576 },
+      },
+    },
+  },
+  "kimi-code-plan-cn": {
+    models: {
+      "k3.1-pro-highspeed": {
+        cost: { input: 0, output: 0 },
+        limit: { context: 1_048_576 },
+      },
+    },
+  },
   cortecs: {
     models: {
       "claude-opus-5": {
@@ -60,6 +124,10 @@ const MODELS_DEV_FIXTURE = {
         cost: { input: 5.5, output: 32.998 },
         limit: { context: 1_050_000 },
       },
+      "kimi-k3.1-pro": {
+        cost: { input: 2.042, output: 10.209 },
+        limit: { context: 1_048_576 },
+      },
     },
   },
   jiekou: {
@@ -67,6 +135,24 @@ const MODELS_DEV_FIXTURE = {
       "claude-haiku-4-5-20251001": {
         cost: { input: 0.9, output: 4.5 },
         limit: { context: 20_000 },
+      },
+    },
+  },
+  jzstoken: {
+    models: {
+      "grok-4.7": {
+        cost: { input: 0.3892, output: 1.95 },
+        limit: { context: 500_000 },
+      },
+    },
+  },
+  // An unmapped gateway claiming our internal `"moonshot"` name must not bind
+  // over `moonshotai -> moonshot`.
+  moonshot: {
+    models: {
+      "kimi-k3.1-pro": {
+        cost: { input: 99, output: 99 },
+        limit: { context: 8192 },
       },
     },
   },
@@ -104,73 +190,179 @@ function entry(overrides: Record<string, unknown>): ModelEntry {
   return parsed;
 }
 
+const SHARED_FIRST_PARTY_ROWS: readonly [string, string, Upstream][] = [
+  [
+    "anthropic",
+    "claude-opus-5",
+    { input: 5, output: 25, contextWindow: 1_000_000 },
+  ],
+  [
+    "google",
+    "gemini-3.8-flash",
+    { input: 0.75, output: 3.75, contextWindow: 1_048_576 },
+  ],
+  [
+    "moonshot",
+    "kimi-k3.1-pro",
+    { input: 2, output: 10, contextWindow: 1_048_576 },
+  ],
+  [
+    "moonshot",
+    "kimi-k3.1-pro-highspeed",
+    { input: 4, output: 20, contextWindow: 1_048_576 },
+  ],
+  ["xai", "grok-4.7", { input: 2, output: 6, contextWindow: 500_000 }],
+];
+
+// Shapes taken from the live dataset: attribution lives in `litellm_provider`;
+// rows may be bare (`claude-opus-5`) or carry their own `vendor/` prefix
+// (`openai/gpt-5.5`, `moonshot/kimi-k3.1-pro`, `xai/grok-4.7`).
+const LITELLM_FIXTURE = {
+  // Resellers placed BEFORE first-party rows so first-wins would pick them if
+  // vendor filtering ever regressed.
+  "kyma/kimi-k3.1-pro": {
+    litellm_provider: "kyma",
+    input_cost_per_token: 0.0000027,
+    output_cost_per_token: 0.0000135,
+    max_input_tokens: 1_048_576,
+  },
+  "kyma/grok-4.7": {
+    litellm_provider: "kyma",
+    input_cost_per_token: 0.00000216,
+    output_cost_per_token: 0.00000648,
+    max_input_tokens: 500_000,
+  },
+  "openai/gpt-5.5": {
+    litellm_provider: "openai",
+    input_cost_per_token: 0.000005,
+    output_cost_per_token: 0.00003,
+    max_input_tokens: 400_000,
+  },
+  "claude-opus-5": {
+    litellm_provider: "anthropic",
+    input_cost_per_token: 0.000005,
+    output_cost_per_token: 0.000025,
+    max_input_tokens: 1_000_000,
+  },
+  "gpt-5.6-luna": {
+    litellm_provider: "openai",
+    input_cost_per_token: 0.0000002,
+    output_cost_per_token: 0.0000012,
+    max_input_tokens: 1_050_000,
+  },
+  "gemini/gemini-3.8-flash": {
+    litellm_provider: "gemini",
+    input_cost_per_token: 0.00000075,
+    output_cost_per_token: 0.00000375,
+    max_input_tokens: 1_048_576,
+  },
+  "moonshot/kimi-k3.1-pro": {
+    litellm_provider: "moonshot",
+    input_cost_per_token: 0.000002,
+    output_cost_per_token: 0.00001,
+    max_input_tokens: 1_048_576,
+  },
+  "moonshot/kimi-k3.1-pro-highspeed": {
+    litellm_provider: "moonshot",
+    input_cost_per_token: 0.000004,
+    output_cost_per_token: 0.00002,
+    max_input_tokens: 1_048_576,
+  },
+  "xai/grok-4.7": {
+    litellm_provider: "xai",
+    input_cost_per_token: 0.000002,
+    output_cost_per_token: 0.000006,
+    max_input_tokens: 500_000,
+  },
+  "bedrock/anthropic.claude-opus-5": {
+    litellm_provider: "bedrock",
+    input_cost_per_token: 0.000006,
+    output_cost_per_token: 0.00003,
+    max_input_tokens: 200_000,
+  },
+  "together_ai/moonshotai/Kimi-K3.1-Pro": {
+    litellm_provider: "together_ai",
+    input_cost_per_token: 0.000002,
+    output_cost_per_token: 0.00001,
+    max_input_tokens: 1_048_576,
+  },
+  "us.xai.grok-4.7": {
+    litellm_provider: "bedrock_converse",
+    input_cost_per_token: 0.0000022,
+    output_cost_per_token: 0.0000066,
+    max_input_tokens: 524_288,
+  },
+  "moonshotai.kimi-k3.1": {
+    litellm_provider: "bedrock_converse",
+    input_cost_per_token: 0.0000044,
+    output_cost_per_token: 0.000022,
+    max_input_tokens: 868_928,
+  },
+  // Unattributable: no `litellm_provider` at all.
+  "some-random-model": {
+    input_cost_per_token: 0.000001,
+    output_cost_per_token: 0.000002,
+  },
+  // Unknown vendor — must not be attributed to one of our providers.
+  "sagemaker/claude-opus-5": {
+    litellm_provider: "sagemaker",
+    input_cost_per_token: 0.000009,
+    output_cost_per_token: 0.00009,
+  },
+};
+
 describe("indexModelsDev provider scoping", () => {
   const index = indexModelsDev(MODELS_DEV_FIXTURE);
 
-  test("keys every model by provider, so resellers cannot overwrite first parties", () => {
-    expect(index.get(providerKey("anthropic", "claude-opus-5"))).toEqual({
+  test.each(SHARED_FIRST_PARTY_ROWS)(
+    "indexes %s:%s under our catalog creator id (mapping moonshotai -> moonshot)",
+    (provider, id, expected) => {
+      expect(index.get(providerKey(provider, id))).toEqual(expected);
+    },
+  );
+
+  test("indexes openai entries and leaves raw moonshotai unindexed", () => {
+    expect(index.get(providerKey("openai", "gpt-5.6-sol"))).toEqual({
       input: 5,
-      output: 25,
-      contextWindow: 1_000_000,
+      output: 30,
+      contextWindow: 1_050_000,
     });
-    // The reseller's entry still exists — under ITS OWN key, where a lookup
-    // for the anthropic model will never find it.
-    expect(index.get(providerKey("cortecs", "claude-opus-5"))).toEqual({
-      input: 5.5,
-      output: 27.498,
-      contextWindow: 1_000_000,
-    });
+    expect(
+      index.get(providerKey("moonshotai", "kimi-k3.1-pro")),
+    ).toBeUndefined();
+  });
+
+  test("excludes moonshotai-cn, kimi-code-plan-*, and third-party gateways", () => {
+    for (const [vendor, id] of [
+      ["moonshotai-cn", "kimi-k3.1-pro"],
+      ["kimi-code-plan-global", "k3.1-pro"],
+      ["kimi-code-plan-cn", "k3.1-pro-highspeed"],
+      ["cortecs", "claude-opus-5"],
+      ["jiekou", "claude-haiku-4-5-20251001"],
+      ["jzstoken", "grok-4.7"],
+      ["moonshot", "k3.1-pro"],
+    ] as const) {
+      expect(index.get(providerKey(vendor, id))).toBeUndefined();
+    }
+    // Neither `moonshotai-cn`, `kimi-code-plan-global`, `cortecs`, nor an
+    // unmapped `moonshot` provider on models.dev overwrote `moonshotai`.
+    expect(index.get(providerKey("moonshot", "kimi-k3.1-pro"))?.input).toBe(2);
   });
 
   test("a bare model id resolves to nothing", () => {
-    // The old flat index made this the lookup key, and it returned whichever
-    // provider happened to come last.
-    expect(index.get("claude-opus-5")).toBeUndefined();
-    expect(index.get("gpt-5.6-sol")).toBeUndefined();
+    for (const bareId of [
+      "claude-opus-5",
+      "gpt-5.6-sol",
+      "kimi-k3.1-pro",
+      "grok-4.7",
+    ]) {
+      expect(index.get(bareId)).toBeUndefined();
+    }
   });
 });
 
 describe("indexLiteLlm provider scoping", () => {
-  // Shapes taken from the live dataset: attribution lives in
-  // `litellm_provider`, and the DIRECT rows we buy from are keyed bare while
-  // only gateway resales carry a `vendor/` prefix.
-  const index = indexLiteLlm({
-    "openai/gpt-5.5": {
-      litellm_provider: "openai",
-      input_cost_per_token: 0.000005,
-      output_cost_per_token: 0.00003,
-      max_input_tokens: 400_000,
-    },
-    "claude-opus-5": {
-      litellm_provider: "anthropic",
-      input_cost_per_token: 0.000005,
-      output_cost_per_token: 0.000025,
-      max_input_tokens: 1_000_000,
-    },
-    "gpt-5.6-luna": {
-      litellm_provider: "openai",
-      input_cost_per_token: 0.0000002,
-      output_cost_per_token: 0.0000012,
-      max_input_tokens: 1_050_000,
-    },
-    "bedrock/anthropic.claude-opus-5": {
-      litellm_provider: "bedrock",
-      input_cost_per_token: 0.000006,
-      output_cost_per_token: 0.00003,
-      max_input_tokens: 200_000,
-    },
-    // Unattributable: no `litellm_provider` at all.
-    "some-random-model": {
-      input_cost_per_token: 0.000001,
-      output_cost_per_token: 0.000002,
-    },
-    // Unknown vendor — must not be attributed to one of our providers.
-    "sagemaker/claude-opus-5": {
-      litellm_provider: "sagemaker",
-      input_cost_per_token: 0.000009,
-      output_cost_per_token: 0.00009,
-    },
-  });
+  const index = indexLiteLlm(LITELLM_FIXTURE);
 
   test("keeps dots that belong to the model id", () => {
     expect(index.get(providerKey("openai", "gpt-5.5"))?.input).toBeCloseTo(
@@ -179,29 +371,39 @@ describe("indexLiteLlm provider scoping", () => {
     );
   });
 
-  test("indexes the bare direct-provider keys the fallback exists to read", () => {
-    // The canonical anthropic/openai rows have no `vendor/` prefix. Requiring
-    // a slash dropped every one of them, so models.dev going quiet on a model
-    // left it reported as overlay-only instead of falling back to LiteLLM.
-    expect(index.get(providerKey("anthropic", "claude-opus-5"))).toEqual({
-      input: 5,
-      output: 25,
-      contextWindow: 1_000_000,
-    });
+  test.each(SHARED_FIRST_PARTY_ROWS)(
+    "indexes %s:%s across bare and vendor-prefixed first-party rows",
+    (provider, id, expected) => {
+      expect(index.get(providerKey(provider, id))).toEqual(expected);
+    },
+  );
+
+  test("normalizes per-token openai float figures", () => {
     expect(
       index.get(providerKey("openai", "gpt-5.6-luna"))?.output,
     ).toBeCloseTo(1.2, 9);
   });
 
-  test("does not adopt a gateway's price as the direct provider's", () => {
-    // Bedrock resells Anthropic weights at AWS's price ($6/$30 here). Treating
-    // that as "anthropic" is the same mistake as trusting cortecs — we buy
-    // direct, so the anthropic key must hold the direct row's $5/$25.
+  test("does not adopt a gateway or reseller price as the first-party creator's", () => {
+    // Bedrock, Kyma, Together AI, and Bedrock Converse resell weights at their
+    // own prices and context limits. None may bind to our creator keys or
+    // appear under reseller keys.
     expect(index.get(providerKey("anthropic", "claude-opus-5"))?.input).toBe(5);
+    expect(index.get(providerKey("moonshot", "kimi-k3.1-pro"))?.input).toBe(2);
+    expect(index.get(providerKey("xai", "grok-4.7"))?.input).toBe(2);
     expect(
       index.get(providerKey("anthropic", "anthropic.claude-opus-5")),
     ).toBeUndefined();
     expect(index.get(providerKey("openai", "claude-opus-5"))).toBeUndefined();
+    expect(index.get(providerKey("kyma", "kimi-k3.1-pro"))).toBeUndefined();
+    expect(index.get(providerKey("kyma", "grok-4.7"))).toBeUndefined();
+    expect(
+      index.get(providerKey("together_ai", "moonshotai/Kimi-K3.1-Pro")),
+    ).toBeUndefined();
+    expect(
+      index.get(providerKey("bedrock_converse", "us.xai.grok-4.7")),
+    ).toBeUndefined();
+    expect(index.get(providerKey("moonshot", "kimi-k3.1"))).toBeUndefined();
   });
 
   test("skips keys it cannot attribute rather than guessing", () => {
@@ -738,24 +940,95 @@ describe("applicable fields for an embedding model", () => {
   });
 });
 
-function pricingOnly(): ModelEntry {
-  return entry({ provider: "moonshot", pricingOnly: true });
+function pricingOnly(provider: "moonshot" | "xai" = "moonshot"): ModelEntry {
+  return entry({ provider, pricingOnly: true });
 }
 
 describe("pricingOnly entries", () => {
   test("are not reported as missing a native route", () => {
-    expect(missingNativeRoute("subject", pricingOnly())).toBeUndefined();
+    expect(
+      missingNativeRoute("subject", pricingOnly("moonshot")),
+    ).toBeUndefined();
+    expect(missingNativeRoute("subject", pricingOnly("xai"))).toBeUndefined();
     expect(missingNativeRoute("subject", entry({}))).toBe(
       "subject (current) has no native route",
     );
   });
 
-  test("do not require upstream coverage for their creator", () => {
+  test("include their creators in crossCheckedProviders alongside routable text models", () => {
     const catalog = CatalogSchema.parse({
       routed: { ...entry({}), id: "routed" },
-      kimi: { ...pricingOnly(), id: "kimi" },
+      kimi: { ...pricingOnly("moonshot"), id: "kimi" },
+      grok: { ...pricingOnly("xai"), id: "grok" },
+      imageOnly: {
+        ...entry({
+          provider: "google",
+          pricing: {
+            modality: "image",
+            perImage: 0.134,
+            inputPerMillionTokens: 2,
+          },
+          contextWindow: undefined,
+        }),
+        id: "imageOnly",
+      },
     });
-    expect([...crossCheckedProviders(catalog)]).toEqual(["anthropic"]);
+    expect(crossCheckedProviders(catalog)).toEqual(
+      new Set(["anthropic", "moonshot", "xai"]),
+    );
+    expect(crossCheckedProviders(MODELS)).toEqual(
+      new Set(["openai", "anthropic", "google", "moonshot", "xai"]),
+    );
+  });
+
+  test("require upstream coverage for moonshot and xai", () => {
+    const withoutMoonshot = merge(
+      healthy("openai"),
+      healthy("anthropic"),
+      healthy("google"),
+      healthy("xai"),
+    );
+    expect(() => {
+      assertUpstreamCoverage(
+        withoutMoonshot,
+        new Map(),
+        crossCheckedProviders(MODELS),
+      );
+    }).toThrow(/moonshot/);
+  });
+
+  test("cross-check kimi-k3.1-pro, kimi-k3.1-pro-highspeed, and grok-4.7 across both upstreams", () => {
+    const modelsDev = indexModelsDev(MODELS_DEV_FIXTURE);
+    const liteLlm = indexLiteLlm(LITELLM_FIXTURE);
+
+    for (const id of [
+      "kimi-k3.1-pro",
+      "kimi-k3.1-pro-highspeed",
+      "grok-4.7",
+    ] as const) {
+      const catalogEntry = structuredClone(MODELS[id]);
+      if (catalogEntry === undefined) {
+        throw new Error(`${id} missing from catalog`);
+      }
+      const key = providerKey(catalogEntry.provider, id);
+      const fromBoth = mergeUpstreams(modelsDev.get(key), liteLlm.get(key));
+      const fromLiteLlmOnly = mergeUpstreams(undefined, liteLlm.get(key));
+      if (fromBoth === undefined || fromLiteLlmOnly === undefined) {
+        throw new Error(`missing upstream row for ${key}`);
+      }
+      const result = reconcile(id, catalogEntry, fromBoth, { now: NOW });
+      expect(result.applied).toEqual([]);
+      expect(result.rejected).toEqual([]);
+      expect(verdictFor(catalogEntry, fromBoth, result)).toEqual({
+        withheld: {},
+        measured: ["input", "output", "contextWindow"],
+        unmeasured: [],
+        retired: [],
+      });
+      expect(
+        verdictFor(catalogEntry, fromLiteLlmOnly, result).measured,
+      ).toEqual(["input", "output", "contextWindow"]);
+    }
   });
 });
 
