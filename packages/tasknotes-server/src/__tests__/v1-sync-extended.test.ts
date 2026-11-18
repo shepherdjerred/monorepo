@@ -243,7 +243,9 @@ describe("v1 Reminders, Filters & Command Replay", () => {
     const fltId = created.temp_id_mapping["tmp-flt-1"] ?? "";
     expect(created.reminders).toHaveLength(1);
     expect(created.reminders[0]?.due_datetime).toBe("2026-12-01T09:00:00.000Z");
-    expect(created.reminders[0]?.updated_at).toBeTruthy();
+    expect(created.reminders[0]?.updated_at).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/,
+    );
     expect(created.filters).toHaveLength(1);
     expect(created.filters[0]?.query).toBe("priority:P1");
 
