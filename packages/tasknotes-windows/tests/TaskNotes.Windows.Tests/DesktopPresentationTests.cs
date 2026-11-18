@@ -115,28 +115,28 @@ public sealed class DesktopPresentationTests
         {
             (
                 TaskNotesSyncState.Unconfigured,
-                "Connect your vault",
-                "Open Settings to connect Obsidian Sync or select a vault."
+                "Connect to Facet",
+                "Open Settings to configure your Facet server URL and API token."
             ),
             (
                 TaskNotesSyncState.Loading,
                 "Loading your tasks…",
-                "Reading the saved vault on this device."
+                "Reading saved tasks on this device."
             ),
             (
                 TaskNotesSyncState.AuthenticationFailure,
                 "You’re all caught up",
-                "Reconnect your account in Settings. Your saved vault remains on this device."
+                "Update your API token in Settings. Saved tasks remain on this device."
             ),
             (
                 TaskNotesSyncState.CachedOffline,
                 "You’re all caught up",
-                "You’re viewing the saved vault offline. New changes will sync when connected."
+                "You’re viewing saved tasks offline. New changes will sync when connected."
             ),
             (
                 TaskNotesSyncState.SynchronizationError,
                 "You’re all caught up",
-                "Refresh or review recovery actions in Settings."
+                "Refresh or review parked changes in Settings."
             ),
             (
                 TaskNotesSyncState.Connected,

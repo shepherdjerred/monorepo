@@ -31,17 +31,5 @@ const config = [
       "custom-rules/no-parent-imports": "off",
     },
   },
-  {
-    files: ["src/domain/types.ts", "src/domain/schemas.ts"],
-    rules: {
-      "custom-rules/no-re-exports": "off",
-    },
-  },
-  {
-    files: ["src/engine/watcher.ts"],
-    rules: {
-      "no-restricted-imports": "off",
-    },
-  },
 ];
 export default config;

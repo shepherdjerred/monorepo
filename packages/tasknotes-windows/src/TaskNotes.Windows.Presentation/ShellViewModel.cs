@@ -108,7 +108,7 @@ namespace TaskNotes.Windows.Presentation
         public string EmptyTitle =>
             State.SyncState switch
             {
-                TaskNotesSyncState.Unconfigured => "Connect your vault",
+                TaskNotesSyncState.Unconfigured => "Connect to Facet",
                 TaskNotesSyncState.Loading => "Loading your tasks…",
                 _ when State.Query.Search.Length > 0 => "No matching tasks",
                 _ => State.Query.Kind == TaskListKind.Today
@@ -116,19 +116,19 @@ namespace TaskNotes.Windows.Presentation
                     : "No tasks here yet",
             };
 
-        /// <summary>Actionable empty copy without treating an offline vault as empty success.</summary>
+        /// <summary>Actionable empty copy without treating an offline cache as empty success.</summary>
         public string EmptyDescription =>
             State.SyncState switch
             {
                 TaskNotesSyncState.Unconfigured =>
-                    "Open Settings to connect Obsidian Sync or select a vault.",
-                TaskNotesSyncState.Loading => "Reading the saved vault on this device.",
+                    "Open Settings to configure your Facet server URL and API token.",
+                TaskNotesSyncState.Loading => "Reading saved tasks on this device.",
                 TaskNotesSyncState.AuthenticationFailure =>
-                    "Reconnect your account in Settings. Your saved vault remains on this device.",
+                    "Update your API token in Settings. Saved tasks remain on this device.",
                 TaskNotesSyncState.SynchronizationError => State.UserFacingError
-                    ?? "Refresh or review recovery actions in Settings.",
+                    ?? "Refresh or review parked changes in Settings.",
                 TaskNotesSyncState.CachedOffline =>
-                    "You’re viewing the saved vault offline. New changes will sync when connected.",
+                    "You’re viewing saved tasks offline. New changes will sync when connected.",
                 _ when State.Query.Search.Length > 0 =>
                     "Try a different search or clear the filters.",
                 _ => "Add a task below, or use Ctrl+N for Quick Add.",
@@ -253,8 +253,8 @@ namespace TaskNotes.Windows.Presentation
         )
         {
             ArgumentNullException.ThrowIfNull(task);
-            return _store is FacetTaskNotesStore facet
-                ? facet.SetRowStatusAsync(task, status, cancellationToken)
+            return _store is FacetSyncStore sync
+                ? sync.MoveTaskToBoardColumnAsync(task.Id, status, null, cancellationToken)
                 : _store.SetStatusAsync(task.Id, status, cancellationToken);
         }
 
@@ -323,14 +323,19 @@ namespace TaskNotes.Windows.Presentation
             if (_disposed)
                 return;
             State = _store.State;
-            Replace(
-                BoardColumns,
-                State.StatusChoices.Select(choice => new BoardColumn(
-                    choice.Value,
-                    choice.Label,
-                    State.AllTasks.Where(task => task.Status == choice.Value).ToArray()
-                ))
-            );
+            IEnumerable<BoardColumn> projectedColumns =
+                State.BoardColumns.Count > 0
+                    ? State.BoardColumns.Select(col => new BoardColumn(
+                        col.Value,
+                        col.Label,
+                        col.Tasks
+                    ))
+                    : State.StatusChoices.Select(choice => new BoardColumn(
+                        choice.Value,
+                        choice.Label,
+                        State.AllTasks.Where(task => task.Status == choice.Value).ToArray()
+                    ));
+            Replace(BoardColumns, projectedColumns);
             Replace(OpenBoardTasks, State.AllTasks.Where(task => task.Status == "open"));
             Replace(
                 InProgressBoardTasks,

@@ -10,7 +10,6 @@
     <MSTestParallelizeScope>None</MSTestParallelizeScope>
     <PlatformTarget>x64</PlatformTarget>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <NeedsTaskNotesNative>true</NeedsTaskNotesNative>
     <UseWinUI>true</UseWinUI>
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSdkBootstrapInitialize>true</WindowsAppSdkBootstrapInitialize>
@@ -33,6 +32,10 @@
     <Compile
       Include="../../src/TaskNotes.Windows.App/NativeTaskFeedback.cs"
       Link="WindowsAdapters/NativeTaskFeedback.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/PackageIdentity.cs"
+      Link="WindowsAdapters/PackageIdentity.cs"
     />
     <Compile
       Include="../../src/TaskNotes.Windows.App/Views/TaskListWorkspaceView.Feedback.cs"

@@ -1,18 +1,19 @@
 using System.Runtime.InteropServices;
-using TaskNotes.Windows.Host;
+using TaskNotes.Windows.Presentation;
 using Windows.ApplicationModel.Background;
 using Windows.Storage;
 
 namespace TaskNotes.Windows.App;
 
-/// <summary>Owns only Facet OS registrations; runtime permission and account credentials remain explicit prerequisites.</summary>
+/// <summary>Owns packaged OS background task registrations; gracefully no-ops when running unpackaged.</summary>
 internal static class FacetBackgroundRegistration
 {
-    private const string TaskName = "Facet.PrivateReplicaSync.v1";
+    private const string TaskName = "Facet.Sync.v1";
     private const string EnabledKey = "Facet.BackgroundSync.Enabled";
     private const string SyncRequestedKey = "Facet.BackgroundSync.Requested";
     private const string NetworkModeKey = "Facet.BackgroundSync.RequiresNetwork";
-    internal static bool SyncRequested => ReadFlag(SyncRequestedKey);
+
+    internal static bool SyncRequested => PackageIdentity.IsPackaged && ReadFlag(SyncRequestedKey);
 
     private static bool ReadFlag(string key) =>
         ApplicationData.Current.LocalSettings.Values.TryGetValue(key, out var value)
@@ -23,49 +24,49 @@ internal static class FacetBackgroundRegistration
 
     internal static void SetSyncRequested(bool enabled)
     {
+        if (!PackageIdentity.IsPackaged)
+            return;
         ApplicationData.Current.LocalSettings.Values[SyncRequestedKey] = enabled;
         Stop();
         ApplicationData.Current.LocalSettings.Values[EnabledKey] = false;
         Report(
             enabled
-                ? "Background Sync is enabled for authorized vaults after Facet closes; Windows background permission is required."
-                : "Background Sync is disabled; opted-in local reminders can still be maintained."
+                ? "Background sync is enabled after Facet closes; Windows background permission is required."
+                : "Background sync is disabled; opted-in local reminders can still be maintained."
         );
     }
 
-    internal static bool HasAuthorizedSync(
-        AppSettingsService settings,
-        IReadOnlyList<FacetProfileRegistration> profiles
-    )
+    internal static bool HasAuthorizedSync(AppSettingsService settings)
     {
-        string? owner = settings.Read("obsidian/account-owner");
-        return owner is not null
-            && settings.Read("obsidian/account-token") is not null
-            && profiles.Any(profile =>
-                profile.PrivateReplica
-                && profile.Vault is not null
-                && profile.AccountOwner == owner
-                && settings.Read(
-                    ObsidianAccountService.KeyIdentity(owner, profile.Id, profile.Vault.Id)
-                )
-                    is not null
-            );
+        ServerConfiguration config = settings.Load();
+        return !string.IsNullOrWhiteSpace(config.ServerUrl)
+            && !string.IsNullOrWhiteSpace(config.Token);
     }
 
-    internal static string Status =>
-        ApplicationData.Current.LocalSettings.Values.TryGetValue(
-            "Facet.BackgroundSync.Status",
-            out var value
-        )
-            ? value as string
-                ?? throw new InvalidDataException(
-                    "The background synchronization status is corrupt."
-                )
-            : "Background synchronization requires an authorized Sync vault and Windows background permission.";
+    internal static string Status
+    {
+        get
+        {
+            if (!PackageIdentity.IsPackaged)
+                return "Background synchronization requires the packaged MSIX application.";
+            return ApplicationData.Current.LocalSettings.Values.TryGetValue(
+                "Facet.BackgroundSync.Status",
+                out var value
+            )
+                ? value as string
+                    ?? throw new InvalidDataException(
+                        "The background synchronization status is corrupt."
+                    )
+                : "Background synchronization requires a configured server token and Windows background permission.";
+        }
+    }
+
     internal static bool IsEnabled
     {
         get
         {
+            if (!PackageIdentity.IsPackaged)
+                return false;
             if (
                 !ApplicationData.Current.LocalSettings.Values.TryGetValue(EnabledKey, out var value)
             )
@@ -80,6 +81,8 @@ internal static class FacetBackgroundRegistration
 
     internal static void Stop()
     {
+        if (!PackageIdentity.IsPackaged)
+            return;
         foreach (
             var task in BackgroundTaskRegistration.AllTasks.Values.Where(task =>
                 task.Name == TaskName
@@ -88,28 +91,25 @@ internal static class FacetBackgroundRegistration
             task.Unregister(true);
     }
 
-    internal static void Report(string status) =>
-        ApplicationData.Current.LocalSettings.Values["Facet.BackgroundSync.Status"] = status;
-
-    internal static async Task EnableAsync(
-        AppSettingsService settings,
-        IReadOnlyList<FacetProfileRegistration> profiles
-    )
+    internal static void Report(string status)
     {
-        bool synchronize = SyncRequested && HasAuthorizedSync(settings, profiles);
-        bool maintainReminders =
-            FacetReminderDelivery.Enabled
-            && (
-                profiles.Any(profile => !profile.PrivateReplica)
-                || HasAuthorizedSync(settings, profiles)
-            );
+        if (!PackageIdentity.IsPackaged)
+            return;
+        ApplicationData.Current.LocalSettings.Values["Facet.BackgroundSync.Status"] = status;
+    }
+
+    internal static async Task EnableAsync(AppSettingsService settings)
+    {
+        if (!PackageIdentity.IsPackaged)
+            return;
+        bool authorized = HasAuthorizedSync(settings);
+        bool synchronize = SyncRequested && authorized;
+        bool maintainReminders = FacetReminderDelivery.Enabled && authorized;
         if (!synchronize && !maintainReminders)
         {
             Disable();
             return;
         }
-        // Registration never substitutes for account/vault authorization: the worker
-        // reopens Credential Locker and the core checks the owning account for each vault.
         var access = await BackgroundExecutionManager.RequestAccessAsync();
         if (
             access
@@ -154,8 +154,9 @@ internal static class FacetBackgroundRegistration
                 builder.Register();
                 ApplicationData.Current.LocalSettings.Values[NetworkModeKey] = requiresNetwork;
             }
-            catch (COMException)
+            catch (COMException exception)
             {
+                _ = exception;
                 ApplicationData.Current.LocalSettings.Values[EnabledKey] = false;
                 Report(
                     "Windows could not register Facet background synchronization. Open Facet to synchronize and review app permissions."
@@ -166,13 +167,15 @@ internal static class FacetBackgroundRegistration
         ApplicationData.Current.LocalSettings.Values[EnabledKey] = true;
         Report(
             maintainReminders
-                ? "Windows will maintain opted-in reminders, including local vaults while offline; enabled Sync uses only authorized vaults."
-                : "Windows will synchronize authorized vaults when background execution and network access are available."
+                ? "Windows will synchronize tasks and maintain scheduled reminders in the background."
+                : "Windows will synchronize tasks when background execution and network access are available."
         );
     }
 
     internal static void Disable()
     {
+        if (!PackageIdentity.IsPackaged)
+            return;
         ApplicationData.Current.LocalSettings.Values[EnabledKey] = false;
         Stop();
         Report("Background synchronization is disabled.");

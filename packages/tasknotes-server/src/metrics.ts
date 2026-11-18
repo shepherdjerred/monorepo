@@ -41,12 +41,6 @@ export const tasksDeletedTotal = new Counter({
   registers: [registry],
 });
 
-export const syncFilesTotal = new Gauge({
-  name: "tasknotes_sync_files_total",
-  help: "Number of files in the vault",
-  registers: [registry],
-});
-
 export const uptimeSeconds = new Gauge({
   name: "tasknotes_uptime_seconds",
   help: "Server uptime in seconds",

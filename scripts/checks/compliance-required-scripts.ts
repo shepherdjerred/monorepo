@@ -66,11 +66,6 @@ packages/discord-plays-core:build
 packages/trmnl-dashboard:build
 packages/tasks-for-obsidian:build
 packages/starlight-karma-bot:build
-packages/tasknotes-types:build
-packages/tasknotes-fixtures:build
-packages/tasknotes-fixtures:test
-packages/tasknotes-fixtures:lint
-packages/tasknotes-fixtures:typecheck
 packages/facet-protocol:build
 packages/facet-protocol:test
 packages/facet-protocol:lint
@@ -110,7 +105,6 @@ packages/macos-ai-subscription-tracker:lint
 packages/macos-ai-subscription-tracker:typecheck
 packages/homelab:build
 packages/dotfiles:build
-packages/tasknotes-e2e:build
 packages/discord-plays-mario-kart:build
 packages/discord-plays-pokemon:build
 packages/scout-for-lol:build

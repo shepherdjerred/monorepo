@@ -2,13 +2,13 @@
   <PropertyGroup>
     <AssemblyName>TaskNotes.Core.Bindings</AssemblyName>
     <RootNamespace>TaskNotes.Core.Bindings</RootNamespace>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <ImplicitUsings>disable</ImplicitUsings>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../../tasknotes-core/bindings/csharp/TaskNotesCore.cs" Link="Generated/TaskNotesCore.cs" />
+    <Compile Include="../../../facet-protocol/generated/FacetProtocol.cs" Link="Generated/FacetProtocol.cs" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 {
   "path": ["src", "tests"],
   "pattern": "**/*.cs",
-  "ignore": ["**/bin/**", "**/obj/**"],
+  "ignore": ["**/bin/**", "**/obj/**", "../../facet-protocol/**"],
   "minLines": 12,
   "minTokens": 80,
   "threshold": 0,

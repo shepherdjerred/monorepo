@@ -6,10 +6,13 @@ namespace TaskNotes.Windows.Presentation
     /// <summary>Portable server configuration and parked-change presentation.</summary>
     public sealed class SettingsViewModel : ObservableObject, IDisposable
     {
+        /// <summary>Default Tailscale server URL offered when no endpoint has been saved yet.</summary>
+        public const string DefaultServerUrl = "https://tasknotes.tailnet-1a49.ts.net";
+
         private readonly ITaskNotesStore _store;
         private readonly IServerConfigurationStore _configuration;
         private readonly IUiDispatcher _dispatcher;
-        private string _serverUrl = string.Empty;
+        private string _serverUrl = DefaultServerUrl;
         private string _token = string.Empty;
         private string? _validationError;
         private TaskNotesState _state;
@@ -48,7 +51,13 @@ namespace TaskNotes.Windows.Presentation
         public string? ValidationError
         {
             get => _validationError;
-            private set => SetProperty(ref _validationError, value);
+            private set
+            {
+                if (SetProperty(ref _validationError, value))
+                {
+                    OnPropertyChanged(nameof(StatusMessage));
+                }
+            }
         }
 
         /// <summary>Gets the current store state.</summary>
@@ -60,6 +69,7 @@ namespace TaskNotes.Windows.Presentation
                 if (SetProperty(ref _state, value))
                 {
                     OnPropertyChanged(nameof(ParkedChanges));
+                    OnPropertyChanged(nameof(StatusMessage));
                 }
             }
         }
@@ -67,11 +77,23 @@ namespace TaskNotes.Windows.Presentation
         /// <summary>Gets parked changes requiring user action.</summary>
         public IReadOnlyList<ParkedChange> ParkedChanges => State.ParkedChanges;
 
+        /// <summary>Gets the current connection or validation status shown on the Settings page.</summary>
+        public string StatusMessage =>
+            ValidationError
+            ?? State.UserFacingError
+            ?? (
+                State.SyncState == TaskNotesSyncState.Connected
+                    ? "Connected to Facet sync server."
+                    : State.SyncState.ToString()
+            );
+
         /// <summary>Loads the URL and credential into editable memory.</summary>
         public void Load()
         {
             ServerConfiguration current = _configuration.Load();
-            ServerUrl = current.ServerUrl ?? string.Empty;
+            ServerUrl = string.IsNullOrWhiteSpace(current.ServerUrl)
+                ? DefaultServerUrl
+                : current.ServerUrl;
             Token = current.Token ?? string.Empty;
             ValidationError = null;
         }
@@ -94,10 +116,6 @@ namespace TaskNotes.Windows.Presentation
             {
                 ValidationError =
                     _store.State.UserFacingError ?? "TaskNotes could not connect to this server.";
-                // Reconfiguring already retired the working engine and installed the
-                // candidate, so returning here would strand the running app on the
-                // endpoint that just failed even though the old credentials are still
-                // persisted. Put the configuration that was working back in place.
                 if (previous.ServerUrl is string restoredUrl)
                 {
                     await _store.ReconfigureAsync(restoredUrl, previous.Token, cancellationToken);

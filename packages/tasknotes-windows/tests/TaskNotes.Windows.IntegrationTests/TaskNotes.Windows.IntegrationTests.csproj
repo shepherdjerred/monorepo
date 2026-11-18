@@ -3,7 +3,6 @@
     <AssemblyName>TaskNotes.Windows.IntegrationTests</AssemblyName>
     <RootNamespace>TaskNotes.Windows.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
-    <NeedsTaskNotesNative>true</NeedsTaskNotesNative>
     <TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>
     <MSTestParallelizeScope>MethodLevel</MSTestParallelizeScope>
     <MSTestParallelizeWorkers>0</MSTestParallelizeWorkers>

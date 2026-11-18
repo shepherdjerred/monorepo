@@ -174,7 +174,10 @@ test("native lanes separate product changes and share infrastructure changes", (
   expect(hkctlPaths).not.toContain("packages/tasknotes-macos");
   expect(quotaPaths).toContain("packages/macos-ai-subscription-tracker");
   expect(quotaPaths).not.toContain("packages/tasknotes-macos");
+  expect(taskNotesPaths).toContain("packages/facet-protocol");
   expect(taskNotesPaths).toContain("packages/tasknotes-macos");
+  expect(taskNotesPaths).toContain("packages/tasknotes-server");
+  expect(taskNotesPaths).not.toContain("packages/tasknotes-core");
   expect(taskNotesPaths).not.toContain(
     "packages/macos-ai-subscription-tracker",
   );

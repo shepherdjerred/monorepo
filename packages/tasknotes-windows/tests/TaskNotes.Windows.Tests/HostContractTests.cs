@@ -1,75 +1,19 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using TaskNotes.Windows.Host;
-using Core = uniffi.TaskNotesCore;
 
 namespace TaskNotes.Windows.Tests
 {
-    /// <summary>Covers portable configuration, diagnostics classification, IDs, and saved-view persistence.</summary>
+    /// <summary>Covers portable configuration, diagnostics classification, and UIA IDs.</summary>
     [TestClass]
     public sealed class HostContractTests
     {
-        /// <summary>Lets a caller abandon its wait while earlier work occupies the runner.</summary>
-        [TestMethod]
-        public async Task RunnerWaitHonorsTheCallersCancellation()
-        {
-            await using EngineRunner runner = new();
-            using ManualResetEventSlim release = new(false);
-            // Fires after the item is safely enqueued, so this exercises the wait
-            // rather than the enqueue write, which already honored the token.
-            using CancellationTokenSource cancelled = new(TimeSpan.FromMilliseconds(250));
-
-            // Occupy the single reader so the next item cannot start.
-            Task<int> blocking = runner.RunAsync(
-                () =>
-                {
-                    release.Wait(TimeSpan.FromSeconds(30));
-                    return 1;
-                },
-                TestContext.CancellationToken
-            );
-
-            // Without the caller's token this wait would sit here until the blocking
-            // item finished, which is the responsiveness bug being pinned.
-            _ = await Assert.ThrowsExactlyAsync<OperationCanceledException>(() =>
-                runner.RunAsync(() => 2, cancelled.Token)
-            );
-
-            release.Set();
-            Assert.AreEqual(1, await blocking);
-        }
-
-        /// <summary>Keeps a deliberately emptied saved-view catalog empty across restarts.</summary>
-        [TestMethod]
-        public void AnEmptiedSavedViewCatalogSurvivesReload()
-        {
-            using TemporaryDirectory directory = new();
-            FileHostStorage files = new(directory.Path);
-            SavedViewStorage storage = new(files);
-            SavedViewCatalog catalog = new(storage);
-            catalog.LoadOrCreateDefaults();
-            Assert.IsNotEmpty(catalog.Presentation);
-
-            foreach (SavedViewDefinition view in catalog.Presentation.ToArray())
-            {
-                catalog.Delete(view.Id);
-            }
-
-            SavedViewCatalog reopened = new(
-                new SavedViewStorage(new FileHostStorage(directory.Path))
-            );
-            reopened.LoadOrCreateDefaults();
-            Assert.IsEmpty(reopened.Presentation);
-        }
-
         /// <summary>Keeps an unwritable diagnostics sink from failing the code that logs.</summary>
         [TestMethod]
         public void DiagnosticsSurviveAnUnwritableSink()
         {
             using TemporaryDirectory temporary = new();
             using JsonLineLoggerProvider provider = new(temporary.Path);
-            // Occupy the exact path the provider rotates to with a directory, so every
-            // append fails the way a revoked ACL or a full disk would.
             string blocked = Path.Combine(
                 temporary.Path,
                 $"tasknotes-{DateTime.UtcNow:yyyyMMdd}-00.jsonl"
@@ -191,36 +135,32 @@ namespace TaskNotes.Windows.Tests
             Assert.AreEqual(
                 "validation",
                 TaskNotesExceptionPolicy.UserFacingMessage(
-                    new Core.CoreException.Validation("validation")
+                    new FacetValidationException("validation")
                 )
             );
             Assert.AreEqual(
-                "invariant",
+                "auth",
                 TaskNotesExceptionPolicy.UserFacingMessage(
-                    new Core.CoreException.Invariant("invariant")
+                    new FacetAuthenticationException("auth", 401)
                 )
             );
             Assert.AreEqual(
                 "network",
-                TaskNotesExceptionPolicy.UserFacingMessage(
-                    new Core.CoreException.Network("network")
-                )
+                TaskNotesExceptionPolicy.UserFacingMessage(new FacetNetworkException("network"))
             );
             Assert.AreEqual(
                 "api (HTTP 503)",
-                TaskNotesExceptionPolicy.UserFacingMessage(new Core.CoreException.Api("api", 503))
+                TaskNotesExceptionPolicy.UserFacingMessage(new FacetApiException("api", 503))
             );
             Assert.AreEqual(
-                "missing",
+                "Local storage access was denied. Restore access before trying again.",
                 TaskNotesExceptionPolicy.UserFacingMessage(
-                    new Core.CoreException.NotFound("missing")
+                    new UnauthorizedAccessException("denied")
                 )
             );
             Assert.AreEqual(
-                "connection",
-                TaskNotesExceptionPolicy.UserFacingMessage(
-                    new Core.CoreException.Connection("connection")
-                )
+                "Local storage could not be updated. Check available space and access before trying again.",
+                TaskNotesExceptionPolicy.UserFacingMessage(new IOException("disk full"))
             );
             Assert.AreEqual(
                 "argument",
@@ -239,6 +179,26 @@ namespace TaskNotes.Windows.Tests
                     new InvalidOperationException("secret detail")
                 )
             );
+
+            Assert.AreEqual(
+                "Update your Facet server token in Settings to resume background sync.",
+                TaskNotesExceptionPolicy.BackgroundMessage(
+                    new FacetAuthenticationException("auth", 401)
+                )
+            );
+            Assert.AreEqual(
+                "Facet server is offline; cached tasks remain available.",
+                TaskNotesExceptionPolicy.BackgroundMessage(new FacetNetworkException("offline"))
+            );
+            Assert.AreEqual(
+                "api (HTTP 502)",
+                TaskNotesExceptionPolicy.BackgroundMessage(new FacetApiException("api", 502))
+            );
+            Assert.IsNull(
+                TaskNotesExceptionPolicy.BackgroundMessage(
+                    new InvalidOperationException("secret detail")
+                )
+            );
         }
 
         /// <summary>Builds every dynamic UI Automation identifier deterministically.</summary>
@@ -249,46 +209,6 @@ namespace TaskNotes.Windows.Tests
             Assert.AreEqual("TaskNotes.Route.today", AutomationIds.Route("today"));
             Assert.AreEqual("TaskNotes.Board.done", AutomationIds.BoardColumn("done"));
         }
-
-        /// <summary>Sorts saved views and rejects duplicate IDs, blank names, and malformed core documents.</summary>
-        [TestMethod]
-        public async Task SavedViewStorageValidatesEveryPersistentContract()
-        {
-            using TemporaryDirectory directory = new();
-            SavedViewDefinition template;
-            await using (TaskNotesStore store = new(directory.Path))
-            {
-                await store.InitializeAsync(null, null, TestContext.CancellationToken);
-                template = store.State.SavedViews[0];
-            }
-            FileHostStorage files = new(directory.Path);
-            SavedViewStorage storage = new(files);
-            SavedViewDefinition valid = template with { Id = "two", Name = "Two", Order = 2 };
-            SavedViewDefinition first = template with { Id = "one", Name = "One", Order = 1 };
-            storage.Save([valid, first]);
-            IReadOnlyList<SavedViewDefinition> reloaded =
-                storage.Load()
-                ?? throw new InvalidOperationException("The saved catalog went missing.");
-            Assert.AreSequenceEqual(["one", "two"], reloaded.Select(view => view.Id));
-
-            _ = Assert.ThrowsExactly<Core.CoreException.Validation>(() =>
-                storage.Save([first, first])
-            );
-            _ = Assert.ThrowsExactly<Core.CoreException.Validation>(() =>
-                storage.Save([first with { Id = string.Empty }])
-            );
-            _ = Assert.ThrowsExactly<Core.CoreException.Validation>(() =>
-                storage.Save([first with { Name = " " }])
-            );
-            _ = Assert.Throws<Core.CoreException>(() =>
-                storage.Save([first with { FilterJson = "not json" }])
-            );
-            files.WriteSavedViews("{}");
-            _ = Assert.ThrowsExactly<Core.CoreException.Validation>(storage.Load);
-        }
-
-        /// <summary>Gets or sets the MSTest execution context.</summary>
-        public required TestContext TestContext { get; set; }
 
         private sealed class TestUrlSettings : IServerUrlSettings
         {

@@ -213,8 +213,6 @@ describe("prepared-notice production input verification", () => {
     );
     const outputNames = [
       "FirstPartyLicense.txt",
-      "ThirdPartyNotices.txt",
-      "native-license-inventory.json",
       "NuGetThirdPartyNotices.txt",
       "nuget-license-inventory.json",
     ];

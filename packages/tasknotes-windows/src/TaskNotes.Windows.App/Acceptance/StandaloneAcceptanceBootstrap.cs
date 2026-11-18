@@ -4,7 +4,7 @@ using TaskNotes.Windows.Host;
 
 namespace TaskNotes.Windows.App.Acceptance;
 
-/// <summary>Seeds only a descriptor-bound app-private replica in the isolated E2E build.</summary>
+/// <summary>Seeds a descriptor-bound app-private workspace in the isolated E2E build.</summary>
 internal sealed class StandaloneAcceptanceBootstrap
 {
     private readonly string _descriptorPath;
@@ -46,9 +46,6 @@ internal sealed class StandaloneAcceptanceBootstrap
         Directory.CreateDirectory(Descriptor.EngineDirectory);
         StandaloneAcceptanceDescriptor.RequireUnlinkedPath(Descriptor.EngineDirectory);
         string receiptPath = Path.Combine(Descriptor.EngineDirectory, "bootstrap-receipt.json");
-        string catalogPath = Path.Combine(Descriptor.EngineDirectory, "profiles.json");
-        if (File.Exists(catalogPath))
-            StandaloneAcceptanceDescriptor.RequireUnlinkedPath(catalogPath);
         if (File.Exists(receiptPath))
         {
             StandaloneAcceptanceDescriptor.RequireUnlinkedPath(receiptPath);
@@ -71,17 +68,11 @@ internal sealed class StandaloneAcceptanceBootstrap
                 || receipt.RootElement.GetProperty("profileId").GetString() != Descriptor.ProfileId
                 || receipt.RootElement.GetProperty("descriptorSha256").GetString()
                     != _descriptorHash
-                || !File.Exists(catalogPath)
             )
                 throw new InvalidDataException("The acceptance bootstrap receipt lost its owner.");
-            RequireProfile(new FacetProfileCatalog(Descriptor.EngineDirectory));
             return;
         }
         Descriptor.VerifySeedBytes();
-        var catalog = new FacetProfileCatalog(Descriptor.EngineDirectory);
-        if (catalog.Profiles.Count == 0)
-            catalog.Add(ExpectedProfile());
-        RequireProfile(catalog);
         var content = JsonSerializer.SerializeToUtf8Bytes(
             new
             {
@@ -99,28 +90,5 @@ internal sealed class StandaloneAcceptanceBootstrap
         );
         receiptStream.Write(content);
         receiptStream.Flush(true);
-    }
-
-    private FacetProfileRegistration ExpectedProfile() =>
-        new(
-            Descriptor.ProfileId,
-            "Synthetic native acceptance",
-            Descriptor.VaultDirectory,
-            true,
-            false,
-            null,
-            null
-        );
-
-    private void RequireProfile(FacetProfileCatalog catalog)
-    {
-        if (
-            catalog.Profiles.Count != 1
-            || catalog.Profiles[0] != ExpectedProfile()
-            || catalog.SelectedId != Descriptor.ProfileId
-        )
-            throw new InvalidDataException(
-                "The acceptance profile does not match its private run."
-            );
     }
 }

@@ -337,7 +337,7 @@ namespace TaskNotes.Windows.Tests
             TestTaskNotesStore store = new();
             using var editor = new TaskEditorViewModel(store, new TestDispatcher());
             editor.Load(CreateTask("task", "open", raw));
-            var projection = await CoreRecurrenceEditor.Shared.ProjectAsync(
+            var projection = await RecurrenceCodec.Shared.ProjectAsync(
                 raw,
                 null,
                 "2026-10-03T12:00:00Z",
@@ -347,7 +347,7 @@ namespace TaskNotes.Windows.Tests
             var draft = RecurrenceControlDraft.FromProjection(raw, projection);
             _ = await Assert.ThrowsExactlyAsync<ArgumentException>(() =>
                 draft.ApplyAsync(
-                    CoreRecurrenceEditor.Shared,
+                    RecurrenceCodec.Shared,
                     RecurrenceFrequency.Monthly,
                     2,
                     [],
@@ -417,6 +417,7 @@ namespace TaskNotes.Windows.Tests
                 {
                     AllTasks = [task],
                     VisibleTasks = [task],
+                    BoardColumns = [new FacetBoardColumnSnapshot("section:one", "Backlog", [task])],
                     SyncState = TaskNotesSyncState.Connected,
                     CanUndoCompletion = true,
                 }
@@ -424,6 +425,9 @@ namespace TaskNotes.Windows.Tests
             Assert.IsNotNull(dispatcher.Pending);
             dispatcher.RunPending();
             Assert.HasCount(1, viewModel.InProgressBoardTasks);
+            Assert.HasCount(1, viewModel.BoardColumns);
+            Assert.AreEqual("Backlog", viewModel.BoardColumns[0].Label);
+            Assert.AreEqual("TaskNotes.Board.section:one", viewModel.BoardColumns[0].AutomationId);
             Assert.AreEqual(PresentationStatusSeverity.Success, viewModel.StatusSeverity);
 
             await viewModel.RefreshCommand.ExecuteAsync(null);
@@ -507,10 +511,23 @@ namespace TaskNotes.Windows.Tests
         {
             TestTaskNotesStore store = new();
             TestConfigurationStore configuration = new();
-            using SettingsViewModel viewModel = new(store, configuration, new TestDispatcher());
+            using SettingsViewModel viewModel = new(
+                store,
+                configuration,
+                new TestDispatcher { HasThreadAccess = true }
+            );
+            Assert.AreEqual(SettingsViewModel.DefaultServerUrl, viewModel.ServerUrl);
+            viewModel.Load();
+            Assert.AreEqual(SettingsViewModel.DefaultServerUrl, viewModel.ServerUrl);
+            Assert.AreEqual("Unconfigured", viewModel.StatusMessage);
             viewModel.ServerUrl = "not a url";
             Assert.IsFalse(await viewModel.SaveAndSyncAsync(TestContext.CancellationToken));
             Assert.AreEqual(0, configuration.SaveCount);
+            StringAssert.Contains(
+                viewModel.StatusMessage,
+                "HTTP or HTTPS",
+                StringComparison.Ordinal
+            );
 
             store.Reconfigure = (_, _, _) =>
             {
@@ -528,6 +545,31 @@ namespace TaskNotes.Windows.Tests
             Assert.AreEqual(1, configuration.SaveCount);
             Assert.AreEqual("https://tasknotes.example", configuration.ServerUrl);
             Assert.AreEqual("secret", configuration.Token);
+            Assert.AreEqual("Connected to Facet sync server.", viewModel.StatusMessage);
+
+            List<string?> reconfiguredUrls = [];
+            store.Reconfigure = (url, _, _) =>
+            {
+                reconfiguredUrls.Add(url);
+                store.Publish(
+                    TaskNotesState.Unconfigured with
+                    {
+                        SyncState =
+                            url == "https://broken.example"
+                                ? TaskNotesSyncState.CachedOffline
+                                : TaskNotesSyncState.Connected,
+                        UserFacingError = url == "https://broken.example" ? "Offline" : null,
+                    }
+                );
+                return Task.CompletedTask;
+            };
+            viewModel.ServerUrl = "https://broken.example";
+            Assert.IsFalse(await viewModel.SaveAndSyncAsync(TestContext.CancellationToken));
+            Assert.AreSequenceEqual(
+                ["https://broken.example", "https://tasknotes.example"],
+                reconfiguredUrls
+            );
+            Assert.AreEqual("Offline", viewModel.StatusMessage);
         }
 
         /// <summary>Dispatches settings snapshots on and off the presentation thread.</summary>

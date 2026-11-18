@@ -2516,10 +2516,6 @@
       "clones": 1,
       "tokens": 72
     },
-    "packages/starlight-karma-bot/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
     "packages/streambot/e2e/run.ts|packages/streambot/e2e/voice-recovery.ts": {
       "clones": 1,
       "tokens": 129
@@ -2572,25 +2568,9 @@
       "clones": 2,
       "tokens": 154
     },
-    "packages/tasknotes-core/ci/coverage-ratchet.ts|packages/tasknotes-windows/scripts/coverage-ratchet.ts": {
-      "clones": 1,
-      "tokens": 93
-    },
     "packages/tasknotes-server/scripts/smoke.ts|packages/trmnl-dashboard/scripts/smoke.ts": {
       "clones": 3,
-      "tokens": 335
-    },
-    "packages/tasknotes-server/src/__tests__/concurrency.test.ts|packages/tasknotes-server/src/__tests__/v2-routes.test.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
-    "packages/tasknotes-server/src/__tests__/nlp-parser.test.ts|packages/tasknotes-server/src/__tests__/nlp.test.ts": {
-      "clones": 1,
-      "tokens": 87
-    },
-    "packages/tasknotes-server/src/__tests__/nlp.test.ts|packages/tasknotes-server/src/nlp/parser.ts": {
-      "clones": 1,
-      "tokens": 73
+      "tokens": 340
     },
     "packages/temporal/src/activities/agent/agent-task-env.ts|packages/temporal/src/activities/agent/agent-task-env.ts": {
       "clones": 1,

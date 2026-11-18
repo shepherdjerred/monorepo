@@ -39,16 +39,13 @@ hold only scoped invariants that agents must keep in context.
 
 ## TaskNotes
 
-| Package                                   | Description                                                   |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| [tasknotes-core](tasknotes-core/)         | Shared Rust core (domain, sync, recurrence) + UniFFI bindings |
-| [tasknotes-android](tasknotes-android/)   | Facet for Android — native Compose app over the Rust core     |
-| [tasknotes-macos](tasknotes-macos/)       | Facet for macOS — native SwiftUI app over the Rust core       |
-| [tasknotes-server](tasknotes-server/)     | TaskNotes sync server (Bun + Hono)                            |
-| [tasknotes-windows](tasknotes-windows/)   | Facet for Windows — native WinUI app over the Rust core       |
-| [tasknotes-types](tasknotes-types/)       | Shared TypeScript/Zod schemas for TaskNotes                   |
-| [tasknotes-fixtures](tasknotes-fixtures/) | Language-neutral JSON oracles shared by the TS and Rust cores |
-| [tasks-for-obsidian](tasks-for-obsidian/) | Facet for iOS — native SwiftUI app over the Rust core         |
+| Package                                   | Description                                                       |
+| ----------------------------------------- | ----------------------------------------------------------------- |
+| [facet-protocol](facet-protocol/)         | Canonical wire protocol, codegen (Swift/TS/C#), and design tokens |
+| [tasknotes-macos](tasknotes-macos/)       | Facet for macOS — native SwiftUI app with SQLite sync             |
+| [tasknotes-server](tasknotes-server/)     | Facet sync server (Bun + Hono + PostgreSQL/Prisma)                |
+| [tasknotes-windows](tasknotes-windows/)   | Facet for Windows — native WinUI 3 app with SQLite sync           |
+| [tasks-for-obsidian](tasks-for-obsidian/) | Facet for iOS — native SwiftUI app and widget over `TaskNotesKit` |
 
 ## Websites
 

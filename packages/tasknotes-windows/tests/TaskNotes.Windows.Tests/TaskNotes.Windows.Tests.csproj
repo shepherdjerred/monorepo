@@ -3,16 +3,11 @@
     <AssemblyName>TaskNotes.Windows.UnitTests</AssemblyName>
     <RootNamespace>TaskNotes.Windows.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
-    <NeedsTaskNotesNative>true</NeedsTaskNotesNative>
     <TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>
     <MSTestParallelizeScope>MethodLevel</MSTestParallelizeScope>
     <MSTestParallelizeWorkers>0</MSTestParallelizeWorkers>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource
-      Include="Fixtures/AndroidDependencyEditCommand.json"
-      LogicalName="AndroidDependencyEditCommand.json"
-    />
     <Compile
       Include="../TaskNotes.Windows.E2E/OwnedOperationCleanup.cs"
       Link="Adapters/OwnedOperationCleanup.cs"
@@ -32,30 +27,6 @@
     <Compile
       Include="../../src/TaskNotes.Windows.App/ShellPreferencesCodec.cs"
       Link="Adapters/ShellPreferencesCodec.cs"
-    />
-    <EmbeddedResource
-      Include="../../../tasknotes-fixtures/vault/facet-retained-actions.json"
-      LogicalName="FacetRetainedActionCases.json"
-    />
-    <EmbeddedResource
-      Include="../../../tasknotes-core/crates/obsidian-sync/tests/reference/protocol.json"
-      LogicalName="ObsidianProtocolCapture.json"
-    />
-    <EmbeddedResource
-      Include="../../../tasknotes-fixtures/vault/facet-contract.json"
-      LogicalName="FacetContractCases.json"
-    />
-    <EmbeddedResource
-      Include="../../../tasknotes-fixtures/vault/facet-agenda-contract.json"
-      LogicalName="FacetAgendaContractCases.json"
-    />
-    <EmbeddedResource
-      Include="../../../tasknotes-fixtures/vault/facet-occurrence-contract.json"
-      LogicalName="FacetOccurrenceContractCases.json"
-    />
-    <EmbeddedResource
-      Include="../../../tasknotes-fixtures/vault/facet-raw-contract.json"
-      LogicalName="FacetRawContractCases.json"
     />
     <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" />
   </ItemGroup>

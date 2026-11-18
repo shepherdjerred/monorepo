@@ -96,13 +96,13 @@ await requireAbsent(
 );
 await requireAbsent(
   "src/TaskNotes.Windows.Presentation",
-  /\buniffi\./u,
+  /\bTaskNotes\.Protocol\b|\buniffi\./u,
   "Presentation must not reference generated bindings",
 );
 await requireAbsent(
   "src/TaskNotes.Windows.App",
-  /\buniffi\./u,
-  "App must call the core through Host contracts",
+  /\bTaskNotes\.Protocol\b|\buniffi\./u,
+  "App must call the protocol through Host contracts",
 );
 async function requireProjectReferences(
   project: string,
@@ -221,7 +221,7 @@ const bindingProject = await Bun.file(
 for (const contract of [
   "<EnableNETAnalyzers>false</EnableNETAnalyzers>",
   "<EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>",
-  '<Compile Include="../../../tasknotes-core/bindings/csharp/TaskNotesCore.cs"',
+  '<Compile Include="../../../facet-protocol/generated/FacetProtocol.cs"',
 ]) {
   if (!bindingProject.includes(contract)) {
     violations.push(

@@ -116,7 +116,6 @@ const LANES: readonly MacosLane[] = [
       "export TASKNOTES_UITEST_IDENTITY",
       // The UI tests drive a real tasknotes-server.
       "ci/scripts/bun-install.sh --frozen-lockfile --filter tasknotes-server",
-      "(cd packages/tasknotes-core && cargo xtask verify-swift)",
       "bun --no-install run --cwd packages/tasknotes-macos mac:verify",
       "bun --no-install run --cwd packages/tasknotes-macos mac:analyze",
       ...XCRESULT_EVIDENCE,
@@ -126,11 +125,9 @@ const LANES: readonly MacosLane[] = [
       "bunfig.toml",
       "package.json",
       "patches/**",
-      "packages/tasknotes-core/**",
-      "packages/tasknotes-fixtures/**",
+      "packages/facet-protocol/**",
       "packages/tasknotes-macos/**",
       "packages/tasknotes-server/**",
-      "packages/tasknotes-types/**",
     ],
   },
 ];

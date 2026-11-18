@@ -6,7 +6,6 @@ import {
   tasksDeletedTotal,
   tasksUpdatedTotal,
 } from "../metrics.ts";
-import { envelopeMiddleware } from "../middleware/envelope.ts";
 import { InMemoryFacetStore } from "../v1/in-memory-store.ts";
 import { sanitizeSavepointName } from "../v1/prisma-helpers.ts";
 import { v1Routes } from "../v1/routes.ts";
@@ -96,7 +95,6 @@ async function postSync(
 function makeTestHarness(): { store: InMemoryFacetStore; app: Hono } {
   const store = new InMemoryFacetStore();
   const app = new Hono();
-  app.use("*", envelopeMiddleware);
   app.route("/", v1Routes({ store }));
   return { store, app };
 }

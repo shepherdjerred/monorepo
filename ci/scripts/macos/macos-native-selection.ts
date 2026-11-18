@@ -23,10 +23,8 @@ export const nativeLanePaths: Readonly<Record<string, readonly string[]>> = {
     "bunfig.toml",
     "package.json",
     "patches",
-    "packages/tasknotes-core",
-    "packages/tasknotes-fixtures",
+    "packages/facet-protocol",
     "packages/tasknotes-macos",
     "packages/tasknotes-server",
-    "packages/tasknotes-types",
   ],
 };

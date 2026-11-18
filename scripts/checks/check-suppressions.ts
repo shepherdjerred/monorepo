@@ -39,11 +39,6 @@ const EXCLUDED_FILES = [
   "scripts/checks/check-suppressions.ts",
   // The detector's regression fixtures necessarily contain suppression text.
   "scripts/checks/check-suppressions.test.ts",
-  // Same category as this file: a detector that names the pattern it bans.
-  // tasknotes-core enforces a zero-`#[allow]` policy in its Rust workspace, and
-  // the script that enforces it has to spell `#[allow(` in its grep and in its
-  // failure message.
-  "packages/tasknotes-core/ci/no-suppressions.sh",
   "CHANGELOG.md",
   "Cargo.toml",
   "clippy.toml",

@@ -281,11 +281,11 @@ async function packageStoreApp(
     .split(/\r?\n/u)
     .map((entry) => entry.replaceAll("\\", "/"));
   if (
-    !files.some((entry) => entry.endsWith("tasknotes_core_ffi.dll")) ||
+    !files.some((entry) => entry.endsWith("TaskNotes.Windows.App.exe")) ||
     files.includes("AppxSignature.p7x")
   ) {
     throw new Error(
-      "The Store package must include the native engine and await Store signing.",
+      "The Store package must include the application executable and await Store signing.",
     );
   }
   await verifyPackagedLicense(artifact);
@@ -454,14 +454,6 @@ switch (action) {
   case "verify":
     await preflight();
     await requireDevelopmentSigning(true);
-    await spawnDeveloper([
-      "cargo",
-      "run",
-      "--manifest-path",
-      path.join(packageRoot, "..", "tasknotes-core", "xtask", "Cargo.toml"),
-      "--",
-      "check-bindings",
-    ]);
     await restore();
     await spawn(["bun", "run", "lint"]);
     await spawnDeveloper([

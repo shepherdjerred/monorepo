@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
-import { envelopeMiddleware } from "../middleware/envelope.ts";
 import { InMemoryFacetStore } from "../v1/in-memory-store.ts";
 import { computeNextOccurrence } from "../v1/recurrence.ts";
 import { v1Routes } from "../v1/routes.ts";
@@ -131,7 +130,6 @@ describe("RFC 5545 Recurrence Calculator & Completion Advancement", () => {
     beforeEach(() => {
       store = new InMemoryFacetStore();
       app = new Hono();
-      app.use("*", envelopeMiddleware);
       app.route("/", v1Routes({ store }));
     });
 

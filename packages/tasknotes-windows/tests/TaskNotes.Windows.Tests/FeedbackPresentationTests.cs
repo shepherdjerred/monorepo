@@ -21,7 +21,7 @@ public sealed class FeedbackPresentationTests
                 Path.Combine(
                     directory.FullName,
                     "packages",
-                    "tasknotes-fixtures",
+                    "facet-protocol",
                     "presentation",
                     "audio"
                 )
@@ -36,7 +36,7 @@ public sealed class FeedbackPresentationTests
                 Path.Combine(
                     directory.FullName,
                     "packages",
-                    "tasknotes-fixtures",
+                    "facet-protocol",
                     "presentation",
                     "audio",
                     cue + ".wav"

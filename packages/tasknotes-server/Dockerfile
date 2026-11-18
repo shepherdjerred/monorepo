@@ -34,9 +34,9 @@ RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
 # Copying just the closure's package.json files (plus the lockfile, bunfig, and
 # patches) means this filtered install only invalidates when a closure
 # manifest/lockfile/patch changes — not on every source edit. The
-# tasknotes-server filter includes tasknotes-types through its workspace
-# dependency closure. The root .dockerignore keeps node_modules/dist/.git out
-# of context.
+# tasknotes-server filter includes @shepherdjerred/bugsink-config through its
+# workspace dependency closure. The root .dockerignore keeps
+# node_modules/dist/.git out of context.
 FROM base AS prod-deps
 COPY --parents bun.lock bunfig.toml patches/ ./
 COPY --from=manifests /closure/ ./
@@ -53,11 +53,10 @@ FROM base AS runtime
 # BEFORE the source COPY so a source edit doesn't re-push this layer.
 COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 # Scoped source closure: this package, its workspace deps, and the root
-# tsconfig the package tsconfig extends.
+# tsconfig.
 COPY --parents \
   tsconfig.base.json \
   packages/tasknotes-server \
-  packages/tasknotes-types \
   packages/bugsink-config \
   ./
 

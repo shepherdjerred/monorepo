@@ -2,10 +2,9 @@
 /**
  * Smoke test for the tasknotes-server image.
  *
- * The server starts fully with defaults (no external auth), so success is a
- * clean boot — the server reaching its "listening" log line. We run the
- * container detached and poll its logs for that line, then tear the container
- * down.
+ * The server starts in-memory when DATABASE_URL is unset, so success is a clean
+ * boot — the server reaching its "listening" log line. We run the container
+ * detached and poll its logs for that line, then tear the container down.
  *
  * Dependency-free: Bun.spawn only. Exits non-zero on failure and always removes
  * the container (even on failure).
@@ -30,8 +29,6 @@ async function removeContainer(): Promise<void> {
 async function main(): Promise<void> {
   await removeContainer();
 
-  // The server scans VAULT_PATH on startup and crashes if it's missing.
-  // Override the command to create it first, then exec the real entrypoint.
   const run = await sh([
     "docker",
     "run",
@@ -39,16 +36,10 @@ async function main(): Promise<void> {
     "--name",
     CONTAINER,
     "-e",
-    "VAULT_PATH=/tmp/smoke-vault",
-    "-e",
     "AUTH_TOKEN=smoke-test-token",
     "-e",
     "PORT=3000",
-    "--entrypoint",
-    "sh",
     IMAGE,
-    "-c",
-    "mkdir -p /tmp/smoke-vault && exec bun packages/tasknotes-server/src/index.ts",
   ]);
   if (run.code !== 0) {
     throw new Error(
@@ -63,7 +54,6 @@ async function main(): Promise<void> {
       console.log("Smoke test passed: server reached its listening log line.");
       return;
     }
-    // If the container died before becoming ready, fail fast with its logs.
     const state = await sh([
       "docker",
       "inspect",
@@ -87,8 +77,6 @@ async function main(): Promise<void> {
   );
 }
 
-// Async IIFE instead of top-level await: these package tsconfigs
-// (CommonJS/Node16 module) reject TLA (same pattern as ensure-ha-schema.ts).
 void (async () => {
   try {
     await main();

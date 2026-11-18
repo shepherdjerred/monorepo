@@ -49,7 +49,7 @@ namespace TaskNotes.Windows.Tests
             );
         }
 
-        /// <summary>Checks that only Host can cross into generated UniFFI code.</summary>
+        /// <summary>Checks that only Host can reference generated protocol DTOs.</summary>
         [TestMethod]
         public void AppAndPresentationNeverCallGeneratedBindingsDirectly()
         {
@@ -72,6 +72,11 @@ namespace TaskNotes.Windows.Tests
                         "uniffi.",
                         contents,
                         $"{file} bypasses the Host boundary."
+                    );
+                    Assert.DoesNotContain(
+                        "TaskNotes.Protocol",
+                        contents,
+                        $"{file} references generated protocol DTOs directly."
                     );
                 }
             }

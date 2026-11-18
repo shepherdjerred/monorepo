@@ -484,13 +484,13 @@
     },
     {
       "source": "packages/tasknotes-core/ci/check-clippy-config.sh",
-      "disposition": "retain",
-      "reason": "Cargo-specific semantic probe must inspect Clippy configuration warnings in the Rust toolchain lane"
+      "disposition": "delete",
+      "reason": "Retired with packages/tasknotes-core when all clients cut over to facet-protocol and /api/v1/sync."
     },
     {
       "source": "packages/tasknotes-core/ci/no-suppressions.sh",
-      "disposition": "retain",
-      "reason": "Cargo-workspace lint gate that must run from the Rust toolchain lane without a Bun dependency"
+      "disposition": "delete",
+      "reason": "Retired with packages/tasknotes-core when all clients cut over to facet-protocol and /api/v1/sync."
     },
     {
       "source": "packages/tasknotes-macos/ci/no-suppressions.sh",

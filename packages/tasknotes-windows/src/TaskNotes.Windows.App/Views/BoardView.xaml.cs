@@ -74,17 +74,23 @@ namespace TaskNotes.Windows.App.Views
                 return;
             }
 
-            var choices = RequireViewModel().State.StatusChoices;
-            int index = choices
-                .Select(choice => choice.Value)
-                .ToList()
-                .FindIndex(value => value == task.Status);
-            if (index < 0 || choices.Count == 0)
-                throw new InvalidOperationException(
-                    "The task workflow is not in this vault's configuration."
-                );
-            string status = choices[(index + 1) % choices.Count].Value;
-            Run("advance-board-task", () => RequireViewModel().MoveBoardTaskAsync(task, status));
+            var columns = RequireViewModel().BoardColumns;
+            if (columns.Count == 0)
+                throw new InvalidOperationException("No board columns are configured.");
+            int index = -1;
+            for (int i = 0; i < columns.Count; i++)
+            {
+                if (columns[i].Tasks.Any(item => item.Id == task.Id))
+                {
+                    index = i;
+                    break;
+                }
+            }
+            string targetColumn = columns[(index + 1) % columns.Count].Value;
+            Run(
+                "advance-board-task",
+                () => RequireViewModel().MoveBoardTaskAsync(task, targetColumn)
+            );
         }
 
         private void Board_Drop(object sender, DragEventArgs eventArgs)

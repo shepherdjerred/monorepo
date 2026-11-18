@@ -13,10 +13,13 @@ healthRoutes.get("/api/health", (c) => {
   const authenticated = config.authToken === "" || token === config.authToken;
 
   return c.json({
-    status: "ok",
-    version: "0.1.0",
-    uptime: Math.round((Date.now() - startTime) / 1000),
-    authenticated,
+    success: true,
+    data: {
+      status: "ok",
+      version: "0.1.0",
+      uptime: Math.round((Date.now() - startTime) / 1000),
+      authenticated,
+    },
   });
 });
 

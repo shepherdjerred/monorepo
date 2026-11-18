@@ -159,15 +159,7 @@ public sealed partial class FeedbackCaptureTests
                 frozen,
                 cancellationToken
             );
-            return new(
-                profile!,
-                "test",
-                0,
-                preview,
-                System.Text.Json.JsonSerializer.SerializeToElement(new { kind = "create" }),
-                "test",
-                frozen
-            );
+            return new(profile!, "test", 0, preview, "test", frozen);
         }
 
         public Task SubmitPreparedCaptureAsync(

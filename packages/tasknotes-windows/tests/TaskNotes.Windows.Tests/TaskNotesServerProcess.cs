@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
@@ -11,32 +12,15 @@ namespace TaskNotes.Windows.Tests
     {
         private readonly StringBuilder _output = new();
         private readonly Process _process;
+        private readonly string _workRoot;
         private bool _disposed;
         private readonly bool _started;
 
-        private TaskNotesServerProcess(
-            string authToken = "",
-            IReadOnlyDictionary<string, string>? seedFiles = null
-        )
+        private TaskNotesServerProcess(string authToken = "")
         {
             AuthToken = authToken;
-            VaultPath = Path.Combine(Path.GetTempPath(), $"tasknotes-server-{Guid.NewGuid():N}");
-            _ = Directory.CreateDirectory(VaultPath);
-            if (seedFiles is not null)
-            {
-                foreach (KeyValuePair<string, string> seed in seedFiles)
-                {
-                    string path = Path.Combine(VaultPath, seed.Key);
-                    string parent =
-                        Path.GetDirectoryName(path)
-                        ?? throw new InvalidOperationException(
-                            $"Seed path {path} has no parent directory."
-                        );
-
-                    _ = Directory.CreateDirectory(parent);
-                    File.WriteAllText(path, seed.Value, new UTF8Encoding(false, true));
-                }
-            }
+            _workRoot = Path.Combine(Path.GetTempPath(), $"tasknotes-server-{Guid.NewGuid():N}");
+            _ = Directory.CreateDirectory(_workRoot);
 
             int port = ReserveEphemeralPort();
             BaseUrl = new Uri($"http://127.0.0.1:{port}", UriKind.Absolute);
@@ -48,10 +32,9 @@ namespace TaskNotes.Windows.Tests
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             };
-            startInfo.Environment["VAULT_PATH"] = VaultPath;
-            startInfo.Environment["PORT"] = port.ToString(
-                System.Globalization.CultureInfo.InvariantCulture
-            );
+            startInfo.Environment["VAULT_PATH"] = Path.Combine(_workRoot, "absent-vault");
+            startInfo.Environment["DATABASE_URL"] = string.Empty;
+            startInfo.Environment["PORT"] = port.ToString(CultureInfo.InvariantCulture);
             startInfo.Environment["AUTH_TOKEN"] = authToken;
             startInfo.Environment["BUGSINK_DSN"] = string.Empty;
 
@@ -78,12 +61,9 @@ namespace TaskNotes.Windows.Tests
             }
         }
 
-        internal static async Task<TaskNotesServerProcess> StartAsync(
-            string authToken = "",
-            IReadOnlyDictionary<string, string>? seedFiles = null
-        )
+        internal static async Task<TaskNotesServerProcess> StartAsync(string authToken = "")
         {
-            TaskNotesServerProcess server = new(authToken, seedFiles);
+            TaskNotesServerProcess server = new(authToken);
             try
             {
                 await server.WaitUntilHealthyAsync().ConfigureAwait(false);
@@ -109,27 +89,6 @@ namespace TaskNotes.Windows.Tests
 
         internal string AuthToken { get; }
 
-        internal string VaultPath { get; }
-
-        internal string[] MarkdownFiles()
-        {
-            return
-            [
-                .. Directory
-                    .GetFiles(VaultPath, "*.md", SearchOption.AllDirectories)
-                    .Select(path => Path.GetRelativePath(VaultPath, path).Replace('\\', '/'))
-                    .Order(StringComparer.Ordinal),
-            ];
-        }
-
-        internal string Contents(string relativePath)
-        {
-            return File.ReadAllText(
-                Path.Combine(VaultPath, relativePath),
-                new UTF8Encoding(false, true)
-            );
-        }
-
         public void Dispose()
         {
             if (_disposed)
@@ -150,7 +109,10 @@ namespace TaskNotes.Windows.Tests
             }
 
             _process.Dispose();
-            Directory.Delete(VaultPath, true);
+            if (Directory.Exists(_workRoot))
+            {
+                Directory.Delete(_workRoot, true);
+            }
         }
 
         private static string ServerPackage => PackagePaths.SiblingPackage("tasknotes-server");
@@ -208,8 +170,14 @@ namespace TaskNotes.Windows.Tests
                         return;
                     }
                 }
-                catch (HttpRequestException) when (!timeout.IsCancellationRequested) { }
-                catch (TaskCanceledException) when (!timeout.IsCancellationRequested) { }
+                catch (HttpRequestException) when (!timeout.IsCancellationRequested)
+                {
+                    // Server socket is still binding.
+                }
+                catch (TaskCanceledException) when (!timeout.IsCancellationRequested)
+                {
+                    // Per-probe 1s timeout elapsed while server initializes.
+                }
                 catch (OperationCanceledException) when (timeout.IsCancellationRequested)
                 {
                     break;

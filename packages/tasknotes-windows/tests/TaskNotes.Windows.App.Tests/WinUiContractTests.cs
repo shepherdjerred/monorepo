@@ -125,7 +125,7 @@ namespace TaskNotes.Windows.App.Tests
                 Path.GetTempPath(),
                 $"tasknotes-views-{Guid.NewGuid():N}"
             );
-            FacetTaskNotesStore store = new(directory, new EmptySecrets());
+            FacetSyncStore store = new(directory, autoSyncOnMutate: false);
             WinUiDispatcher dispatcher = new(
                 Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()
                     ?? throw new InvalidOperationException("The WinUI dispatcher is unavailable.")
@@ -135,7 +135,7 @@ namespace TaskNotes.Windows.App.Tests
                 dispatcher,
                 NullLogger<ShellViewModel>.Instance
             );
-            using FacetSettingsViewModel settings = new(store, store, dispatcher);
+            using SettingsViewModel settings = new(store, new EmptyConfigStore(), dispatcher);
             using TaskEditorViewModel editor = new(store, dispatcher);
             try
             {
@@ -349,18 +349,14 @@ namespace TaskNotes.Windows.App.Tests
             }
         }
 
-        private sealed class EmptySecrets : IFacetSecretStore
+        private sealed class EmptyConfigStore : IServerConfigurationStore
         {
-            public string? Read(string identity) => null;
+            public ServerConfiguration Load() => new(null, null);
 
-            public void Save(string identity, string value) =>
-                throw new InvalidOperationException(
-                    "This view attachment fixture has no account authorization."
-                );
-
-            public void Remove(string identity)
+            public void Save(string serverUrl, string? token)
             {
-                _ = identity;
+                _ = serverUrl;
+                _ = token;
             }
         }
     }

@@ -1,40 +1,36 @@
 import { defineArchitecture } from "@shepherdjerred/architecture";
 
 /**
- * The sync server layers as: `domain/` (the task model and its rules) ->
- * `engine/` (sync and reconciliation) -> `store/` (persistence) -> the HTTP
- * layer. That transport layer is three directories: `routes/` holds
- * health, `v2/routes.ts` is the primary upstream `/api/*` plugin
- * surface, and `middleware/` wraps both. A rule naming only `routes` would
- * leave the main API unenforced. Dependencies point inward only.
+ * The Facet sync server layers inward: `protocol/` (generated wire contract) ->
+ * `v1/` (sync engine, recurrence, and store implementations) -> outer HTTP and
+ * database adapters (`infrastructure/`, `routes/`, `middleware/`, `index.ts`).
  */
 export default defineArchitecture({
   boundaries: [
     {
-      name: "domain-is-pure",
+      name: "protocol-is-pure",
       comment:
-        "The domain model and its invariants must be exercisable without a database or an HTTP " +
-        "request. Reaching into storage or a route means the rules can only be tested through " +
-        "the server, and it invites request-shaped concepts into the model.",
-      from: "domain",
-      to: ["routes", "v2", "store", "middleware", "engine"],
+        "Generated wire protocol types must remain pure data definitions with zero dependencies " +
+        "on database adapters, sync handlers, routes, or middleware.",
+      from: "protocol",
+      to: ["infrastructure", "v1", "routes", "middleware"],
     },
     {
-      name: "engine-does-not-depend-on-transports",
+      name: "infrastructure-does-not-depend-on-http",
       comment:
-        "Sync and reconciliation are driven by a request, never the other way round. An engine " +
-        "that imports a route or middleware cannot be run from a migration, a test harness, or " +
-        "a background job.",
-      from: "engine",
-      to: ["routes", "v2", "middleware"],
+        "Database bootstrap owns Prisma client construction only and must not import HTTP " +
+        "routes, middleware, or v1 request handlers.",
+      from: "infrastructure",
+      to: ["v1", "routes", "middleware"],
     },
     {
-      name: "store-does-not-depend-on-transports",
+      name: "v1-does-not-depend-on-outer-adapters",
       comment:
-        "Persistence is the inner adapter. Depending on the HTTP layer would make every read " +
-        "and write reachable only from a live request.",
-      from: "store",
-      to: ["routes", "v2", "middleware"],
+        "The `/api/v1` sync engine and stores accept an injected `PrismaClient` or run in " +
+        "memory; reaching into database bootstrap, health routes, or global middleware couples " +
+        "sync tests to process-global adapters.",
+      from: "v1",
+      to: ["infrastructure", "routes", "middleware"],
     },
   ],
 });
