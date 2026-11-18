@@ -7,6 +7,7 @@ import {
   handleIosAction,
   handleStateChanged,
   syncPetCareStates,
+  syncRoborockStates,
 } from "./triggers.ts";
 import { startGithubWebhook, type WebhookHandle } from "./github-webhook.ts";
 import {
@@ -91,34 +92,42 @@ export async function startEventBridge(
   const rest = new HomeAssistantRestClient({ baseUrl, token });
   const health = trackEventBridgeConnection(events, haEventBridgeConnected);
   let subscriptionsStarted = false;
-  let petCareSyncInFlight = false;
-  let petCareSyncAgain = false;
+  let stateSyncInFlight = false;
+  let stateSyncAgain = false;
 
-  const requestPetCareSync = (): void => {
+  const requestStateSync = (): void => {
     if (!subscriptionsStarted) return;
-    if (petCareSyncInFlight) {
-      petCareSyncAgain = true;
+    if (stateSyncInFlight) {
+      stateSyncAgain = true;
       return;
     }
-    petCareSyncInFlight = true;
+    stateSyncInFlight = true;
     void (async () => {
       try {
-        await syncPetCareStates(client, rest);
-      } catch (error: unknown) {
-        const detail = error instanceof Error ? error.message : String(error);
-        console.error(`Failed to reconcile pet-care states: ${detail}`);
+        try {
+          await syncPetCareStates(client, rest);
+        } catch (error: unknown) {
+          const detail = error instanceof Error ? error.message : String(error);
+          console.error(`Failed to reconcile pet-care states: ${detail}`);
+        }
+        try {
+          await syncRoborockStates(client, rest);
+        } catch (error: unknown) {
+          const detail = error instanceof Error ? error.message : String(error);
+          console.error(`Failed to reconcile Roborock states: ${detail}`);
+        }
       } finally {
-        petCareSyncInFlight = false;
-        if (petCareSyncAgain) {
-          petCareSyncAgain = false;
-          requestPetCareSync();
+        stateSyncInFlight = false;
+        if (stateSyncAgain) {
+          stateSyncAgain = false;
+          requestStateSync();
         }
       }
     })();
   };
 
   events.onConnectionChange((state) => {
-    if (state === "ready") requestPetCareSync();
+    if (state === "ready") requestStateSync();
   });
   events.onConnectionChange((state, detail) => {
     if (state === "error" || state === "handler-error") {
@@ -140,6 +149,7 @@ export async function startEventBridge(
     subscriptionsStarted = true;
     health.subscriptionsStarted();
     await syncPetCareStates(client, rest);
+    await syncRoborockStates(client, rest);
   } catch (error: unknown) {
     // A supervisor retry must not leave a partially subscribed client alive.
     await events.close();
