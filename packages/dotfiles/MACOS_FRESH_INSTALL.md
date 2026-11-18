@@ -49,8 +49,8 @@ At the console (or KVM) once:
    `swift scripts/onepassword/enroll-service-account.swift` and choose
    **Always Allow** when Keychain asks, so headless reads never wait on a
    dialog. Do not sign in to the 1Password desktop app on an agent host.
-5. Sign in to `gh` twice: as yourself, and with
-   `GH_CONFIG_DIR=~/.config/gh-agent` for agent sessions.
+5. Sign in to `gh` (`gh auth login --hostname github.com --git-protocol https --web`)
+   and set `git-spice auth login --refresh` to **CLI**.
 
 From then on, `ssh <name>` and Herdr's `hc machine add <name>` reach the host
 without the console.

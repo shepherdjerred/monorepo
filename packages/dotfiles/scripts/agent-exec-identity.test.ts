@@ -133,9 +133,12 @@ async function createHarness(cliName: string) {
   };
 }
 
-test("exports agent identity, fresh lowercase launch UUIDs, and scrubs API keys", async () => {
+test("exports agent identity, fresh lowercase launch UUIDs, and scrubs API keys and stale GH_CONFIG_DIR", async () => {
   const harness = await createHarness("kimi");
-  const first = harness.run({ AGENT_LAUNCH_ID: "stale-parent-uuid" });
+  const first = harness.run({
+    AGENT_LAUNCH_ID: "stale-parent-uuid",
+    GH_CONFIG_DIR: "/stale/gh-agent",
+  });
   const second = harness.run();
 
   expect(first.args).toEqual(["--auto", "hello"]);
@@ -144,9 +147,7 @@ test("exports agent identity, fresh lowercase launch UUIDs, and scrubs API keys"
   expect(first.env["GIT_CONFIG_GLOBAL"]).toBe(
     `${harness.homeDir}/.config/agent/gitconfig`,
   );
-  expect(first.env["GH_CONFIG_DIR"]).toBe(
-    `${harness.homeDir}/.config/gh-agent`,
-  );
+  expect(first.env["GH_CONFIG_DIR"]).toBeNull();
 
   const firstId = LowercaseUuidSchema.parse(first.env["AGENT_LAUNCH_ID"]);
   const secondId = LowercaseUuidSchema.parse(second.env["AGENT_LAUNCH_ID"]);
