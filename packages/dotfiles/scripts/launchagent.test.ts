@@ -25,12 +25,26 @@ case "$1" in
         if [[ "$2" == gui/501 ]]; then
             [[ "$LAUNCHAGENT_TEST_MODE" != no-gui ]]
         else
+            if [[ -f "$LAUNCHAGENT_TEST_DIR/polls" ]]; then
+                remaining="$(cat "$LAUNCHAGENT_TEST_DIR/polls")"
+                if (( remaining <= 1 )); then
+                    rm -f "$LAUNCHAGENT_TEST_DIR/polls" "$LAUNCHAGENT_TEST_DIR/loaded"
+                else
+                    printf '%s\n' "$((remaining - 1))" > "$LAUNCHAGENT_TEST_DIR/polls"
+                fi
+            fi
             [[ -f "$LAUNCHAGENT_TEST_DIR/loaded" ]]
         fi
         ;;
     bootout)
         [[ "$LAUNCHAGENT_TEST_MODE" != bootout-failed ]] || exit 5
-        rm "$LAUNCHAGENT_TEST_DIR/loaded"
+        if [[ "$LAUNCHAGENT_TEST_MODE" == delayed-unload ]]; then
+            printf '3\n' > "$LAUNCHAGENT_TEST_DIR/polls"
+        elif [[ "$LAUNCHAGENT_TEST_MODE" == stuck-unload ]]; then
+            :
+        else
+            rm "$LAUNCHAGENT_TEST_DIR/loaded"
+        fi
         ;;
     bootstrap)
         [[ "$LAUNCHAGENT_TEST_MODE" != bootstrap-failed ]] || exit 5
@@ -82,6 +96,8 @@ printf '%s\n' "$*" >> "$LAUNCHAGENT_TEST_DIR/calls"
       PATH: `${directory}:/usr/bin:/bin`,
       LAUNCHAGENT_TEST_DIR: directory,
       LAUNCHAGENT_TEST_MODE: mode,
+      LAUNCHAGENT_UNLOAD_MAX_ATTEMPTS: "5",
+      LAUNCHAGENT_UNLOAD_POLL_SECONDS: "0",
     },
     stdout: "pipe",
     stderr: "pipe",
@@ -145,4 +161,23 @@ test("fails if bootstrap succeeds without registering the job", async () => {
   expect(result.stderr).toContain(
     "registration readback failed for gui/501/com.test.agent (exit 1)",
   );
+});
+
+test("waits for asynchronous bootout teardown before bootstrapping", async () => {
+  const result = await runHelper("delayed-unload");
+  expect(result.exitCode).toBe(0);
+  expect(result.calls).toContain("bootout gui/501/com.test.agent\n");
+  expect(result.calls).toContain("bootstrap gui/501 ");
+  expect(result.calls.trim().endsWith("print gui/501/com.test.agent")).toBe(
+    true,
+  );
+});
+
+test("fails without bootstrapping when a service never finishes unloading", async () => {
+  const result = await runHelper("stuck-unload");
+  expect(result.exitCode).toBe(1);
+  expect(result.stderr).toContain(
+    "LaunchAgent com.test.agent: gui/501/com.test.agent did not finish unloading after bootout.",
+  );
+  expect(result.calls).not.toContain("bootstrap");
 });

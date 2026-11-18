@@ -1,14 +1,25 @@
 {{- /* The context name admin@torvalds is load-bearing: repository tooling
        selects it by name. Agent hosts hold no client certificate or key;
        kubectl asks toolkit for a credential on every call. They read only the
-       public cluster CA, through the Keychain-backed 1Password service account
-       because agent hosts have no 1Password desktop app for onepasswordRead. */ -}}
+       public cluster CA, through the installed toolkit's Keychain-cached
+       service-account broker (or with-service-account.sh before toolkit is
+       installed) because agent hosts have no 1Password desktop app for
+       onepasswordRead. */ -}}
 {{- $caRef := "op://yx6je6mgj2oiss6z5bm42h3cxy/qbowip7zr7cggo5p5tam7g6rxe/certificate-authority-data" -}}
 apiVersion: v1
 clusters:
 - cluster:
 {{- if eq .profile "agent-host" }}
+{{-   $toolkit := joinPath .chezmoi.homeDir ".local/bin/toolkit" }}
+{{-   $hasBrokeredCa := false }}
+{{-   if stat $toolkit }}
+{{-     $hasBrokeredCa = contains "KUBE_CERTIFICATE_AUTHORITY_DATA" (output $toolkit "credentials" "references" "--json") }}
+{{-   end }}
+{{-   if $hasBrokeredCa }}
+    certificate-authority-data: {{ output $toolkit "run" "--env" "KUBE_CERTIFICATE_AUTHORITY_DATA" "--" "/usr/bin/printenv" "KUBE_CERTIFICATE_AUTHORITY_DATA" | trim }}
+{{-   else }}
     certificate-authority-data: {{ output (joinPath .chezmoi.sourceDir "../../scripts/onepassword/with-service-account.sh") "op" "read" $caRef | trim }}
+{{-   end }}
 {{- else }}
     certificate-authority-data: {{ onepasswordRead $caRef }}
 {{- end }}

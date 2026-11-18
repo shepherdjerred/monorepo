@@ -18,9 +18,10 @@ profile, and applies once. Local file conflicts still prompt for a decision;
 the command does not force-overwrite changes. A failed apply stops maintenance.
 
 The macOS LaunchAgent hook validates each installed plist and checks its exact
-`gui/<uid>/<label>` service before reloading it. The caller's launchd session
-can differ from that GUI domain, especially over SSH. The GUI login must exist
-before the hook can load its agents.
+`gui/<uid>/<label>` service before reloading it, waiting for `bootout` teardown
+to finish before calling `bootstrap`. The caller's launchd session can differ
+from that GUI domain, especially over SSH. The GUI login must exist before the
+hook can load its agents.
 
 ## Agent wrappers
 
