@@ -9,11 +9,22 @@ export function findNativeBootstrapMessages(options: {
   project: string;
   wrapperExecutable: boolean;
   packageJson: string;
+  workspaceData: string;
 }): string[] {
   const messages = findToolchainMessages(options);
   messages.push(
     ...findWrapperMessages(options.wrapper, options.wrapperExecutable),
   );
+  if (
+    !options.workspaceData.includes(
+      'location = "group:TasksForObsidian.xcodeproj"',
+    ) ||
+    options.workspaceData.includes("Pods/Pods.xcodeproj")
+  ) {
+    messages.push(
+      "Tracked TasksForObsidian.xcworkspace must wrap TasksForObsidian.xcodeproj without legacy CocoaPods references.",
+    );
+  }
   if (
     !/"ios:native:generate"\s*:\s*"ios\/ci_scripts\/mise-native\.sh exec -- xcodegen generate --spec ios\/project\.yml --project ios"/u.test(
       options.packageJson,
@@ -172,6 +183,7 @@ async function main(): Promise<void> {
       wrapperStat,
       project,
       packageJson,
+      workspaceData,
     ] = await Promise.all([
       Bun.file(path.join(repoRoot, ".mise.toml")).text(),
       Bun.file(
@@ -181,6 +193,14 @@ async function main(): Promise<void> {
       stat(wrapperPath),
       Bun.file(path.join(rootDir, "ios", "project.yml")).text(),
       Bun.file(path.join(rootDir, "package.json")).text(),
+      Bun.file(
+        path.join(
+          rootDir,
+          "ios",
+          "TasksForObsidian.xcworkspace",
+          "contents.xcworkspacedata",
+        ),
+      ).text(),
     ]);
     issues.push(
       ...findNativeBootstrapMessages({
@@ -190,6 +210,7 @@ async function main(): Promise<void> {
         wrapperExecutable: (wrapperStat.mode & 0o111) !== 0,
         project,
         packageJson,
+        workspaceData,
       }),
     );
   }
