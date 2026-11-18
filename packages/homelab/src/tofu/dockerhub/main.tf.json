@@ -24,7 +24,6 @@
         { "name": "glitter-boys-launcher", "visibility": "private" },
         { "name": "macos-cross-compiler", "visibility": "public" },
         { "name": "media", "visibility": "private" },
-        { "name": "obsidian-headless", "visibility": "private" },
         { "name": "redlib", "visibility": "private" },
         { "name": "scout-for-lol", "visibility": "private" },
         { "name": "starlight-karma-bot", "visibility": "private" },
@@ -55,6 +54,10 @@
     {
       "from": "docker_hub_repository.image[\"discord-plays-mario-kart\"]",
       "to": "docker_hub_repository.retired_discord_plays_mario_kart"
+    },
+    {
+      "from": "docker_hub_repository.image[\"obsidian-headless\"]",
+      "to": "docker_hub_repository.retired_obsidian_headless"
     }
   ],
   "provider": { "docker": [{}] },
@@ -65,6 +68,10 @@
     },
     {
       "from": "docker_hub_repository.retired_discord_plays_mario_kart",
+      "lifecycle": { "destroy": false }
+    },
+    {
+      "from": "docker_hub_repository.retired_obsidian_headless",
       "lifecycle": { "destroy": false }
     }
   ],

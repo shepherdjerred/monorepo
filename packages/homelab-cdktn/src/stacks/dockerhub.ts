@@ -90,5 +90,11 @@ export class DockerhubStack extends HomelabStack {
       from: 'docker_hub_repository.image["discord-plays-mario-kart"]',
       as: "docker_hub_repository.retired_discord_plays_mario_kart",
     });
+
+    // TaskNotes migrated from the Obsidian vault sidecar to PostgreSQL.
+    retire(this, {
+      from: 'docker_hub_repository.image["obsidian-headless"]',
+      as: "docker_hub_repository.retired_obsidian_headless",
+    });
   }
 }

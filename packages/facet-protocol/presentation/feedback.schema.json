@@ -1,0 +1,285 @@
+{
+  "title": "Facet native feedback and procedural palette",
+  "$ref": "#/$defs/feedback",
+  "$defs": {
+    "feedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "defaults",
+        "delivery",
+        "events",
+        "interactions",
+        "undo",
+        "bulk",
+        "audio",
+        "motion",
+        "migration"
+      ],
+      "properties": {
+        "schemaVersion": { "type": "number", "const": 1 },
+        "defaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sounds", "mobileHaptics", "desktopHaptics"],
+          "properties": {
+            "sounds": { "type": "boolean", "const": true },
+            "mobileHaptics": { "type": "boolean", "const": true },
+            "desktopHaptics": { "type": "boolean", "const": false }
+          }
+        },
+        "delivery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "required",
+            "suppressed",
+            "consumeSuppressed",
+            "logicalEvent",
+            "physicalDelivery",
+            "maintenanceFailure"
+          ],
+          "properties": {
+            "identity": {
+              "type": "array",
+              "const": ["engineSessionID", "profileID", "mutationID"]
+            },
+            "required": {
+              "type": "array",
+              "const": [
+                "local-user-intent",
+                "applied-receipt",
+                "changed-paths",
+                "owning-engine-session",
+                "owning-foreground-scene"
+              ]
+            },
+            "suppressed": {
+              "type": "array",
+              "const": [
+                "startup",
+                "remote-sync",
+                "hydration",
+                "no-op",
+                "background",
+                "duplicate",
+                "lost-owner",
+                "historical-recovery"
+              ]
+            },
+            "consumeSuppressed": { "type": "boolean", "const": true },
+            "logicalEvent": { "type": "string", "const": "once-per-receipt" },
+            "physicalDelivery": {
+              "type": "string",
+              "const": "at-most-once-attempt"
+            },
+            "maintenanceFailure": {
+              "type": "string",
+              "const": "keep-applied-success-and-show-maintenance-separately"
+            }
+          }
+        },
+        "events": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "created",
+            "completed",
+            "deleted",
+            "reopened",
+            "undone",
+            "saved"
+          ],
+          "properties": {
+            "created": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sound", "haptic"],
+              "properties": {
+                "sound": { "type": "string", "const": "create" },
+                "haptic": { "type": "string", "const": "success" }
+              }
+            },
+            "completed": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sound", "haptic"],
+              "properties": {
+                "sound": { "type": "string", "const": "complete" },
+                "haptic": { "type": "string", "const": "success" }
+              }
+            },
+            "deleted": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sound", "haptic"],
+              "properties": {
+                "sound": { "type": "string", "const": "delete" },
+                "haptic": { "type": "string", "const": "light" }
+              }
+            },
+            "reopened": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sound", "haptic"],
+              "properties": {
+                "sound": { "type": "string", "const": "reverse" },
+                "haptic": { "type": "string", "const": "light" }
+              }
+            },
+            "undone": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sound", "haptic"],
+              "properties": {
+                "sound": { "type": "string", "const": "reverse" },
+                "haptic": { "type": "string", "const": "light" }
+              }
+            },
+            "saved": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sound", "haptic"],
+              "properties": {
+                "sound": { "type": "null", "const": null },
+                "haptic": { "type": "string", "const": "none" }
+              }
+            }
+          }
+        },
+        "interactions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "custom-press",
+            "selection",
+            "swipe-threshold",
+            "explicit-validation-rejection",
+            "native-control",
+            "autosave-error"
+          ],
+          "properties": {
+            "custom-press": { "type": "string", "const": "visual-only" },
+            "selection": { "type": "string", "const": "selection" },
+            "swipe-threshold": { "type": "string", "const": "selection" },
+            "explicit-validation-rejection": {
+              "type": "string",
+              "const": "error"
+            },
+            "native-control": { "type": "string", "const": "system-only" },
+            "autosave-error": { "type": "string", "const": "visual-only" }
+          }
+        },
+        "undo": {
+          "type": "string",
+          "const": "exact-authoritative-current-receipt-no-presentation-stack"
+        },
+        "bulk": {
+          "type": "string",
+          "const": "one-aggregate-cue-per-applied-batch-no-per-task-replay"
+        },
+        "audio": {
+          "type": "string",
+          "const": "bundled-ambient-no-focus-no-background-replay-respect-system-mute"
+        },
+        "motion": {
+          "type": "string",
+          "const": "system-reduce-motion-suppresses-decorative-motion-retains-outcome"
+        },
+        "migration": {
+          "type": "string",
+          "const": "preserve-explicit-independent-values-combined-value-migrates-to-both-missing-uses-defaults-malformed-requires-recovery"
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "license",
+        "provenance",
+        "sampleRate",
+        "channels",
+        "bitsPerSample",
+        "maximumMilliseconds",
+        "maximumPeakDbFS",
+        "cues"
+      ],
+      "properties": {
+        "schemaVersion": { "type": "number", "const": 1 },
+        "license": { "type": "string", "const": "GPL-3.0-only" },
+        "provenance": {
+          "type": "string",
+          "const": "first-party-procedural-integer-synthesis"
+        },
+        "sampleRate": { "type": "number", "const": 48000 },
+        "channels": { "type": "number", "const": 1 },
+        "bitsPerSample": { "type": "number", "const": 16 },
+        "maximumMilliseconds": { "type": "number", "const": 220 },
+        "maximumPeakDbFS": { "type": "number", "const": -9 },
+        "cues": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["create", "complete", "delete", "reverse"],
+          "properties": {
+            "create": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["file", "milliseconds", "sha256"],
+              "properties": {
+                "file": { "type": "string", "const": "create.wav" },
+                "milliseconds": { "type": "number", "const": 104 },
+                "sha256": {
+                  "type": "string",
+                  "const": "fcb8b31eaff8b5b9e9142a866208600d4f9c7806f51fef0977dfcce0d272316b"
+                }
+              }
+            },
+            "complete": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["file", "milliseconds", "sha256"],
+              "properties": {
+                "file": { "type": "string", "const": "complete.wav" },
+                "milliseconds": { "type": "number", "const": 176 },
+                "sha256": {
+                  "type": "string",
+                  "const": "973a1d35446b3185393a203ae1892358f787e6eab54cf7aa31b930069dc04acb"
+                }
+              }
+            },
+            "delete": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["file", "milliseconds", "sha256"],
+              "properties": {
+                "file": { "type": "string", "const": "delete.wav" },
+                "milliseconds": { "type": "number", "const": 120 },
+                "sha256": {
+                  "type": "string",
+                  "const": "2173d9e6896604a27b1f094b294e2759a66e259731029f8492c74d9367cc6f56"
+                }
+              }
+            },
+            "reverse": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["file", "milliseconds", "sha256"],
+              "properties": {
+                "file": { "type": "string", "const": "reverse.wav" },
+                "milliseconds": { "type": "number", "const": 88 },
+                "sha256": {
+                  "type": "string",
+                  "const": "12d23e31a2a25c0a6bbe63e31a335c267623157b67ac04852c095657dd6e861e"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

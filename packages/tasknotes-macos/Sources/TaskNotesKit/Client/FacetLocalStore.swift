@@ -58,6 +58,7 @@ public final class FacetLocalStore {
             due_string: nil,
             is_recurring: false,
             recurrence_rule: nil,
+            label_ids: [],
             completed: false,
             completed_at: nil,
             is_deleted: false,
@@ -78,7 +79,8 @@ public final class FacetLocalStore {
             due_datetime: nil,
             due_timezone: nil,
             due_string: nil,
-            recurrence_rule: nil
+            recurrence_rule: nil,
+            label_ids: nil
         )
         outbox.append(
             QueuedCommand(uuid: UUID().uuidString, temp_id: tempId, command: .taskAdd(args)))

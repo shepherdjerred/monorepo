@@ -3,243 +3,292 @@
 */
 
 export interface CommandStatus {
-	status: string;
+  status: string;
 }
 
 export interface Filter {
-	id: string;
-	user_id: string;
-	name: string;
-	query: string;
-	color: string;
-	item_order: number;
-	is_favorite: boolean;
-	is_deleted: boolean;
+  id: string;
+  user_id: string;
+  name: string;
+  query: string;
+  color: string;
+  item_order: number;
+  is_favorite: boolean;
+  is_deleted: boolean;
+}
+
+export interface FilterAddArgs {
+  name: string;
+  query: string;
+  color?: string;
+  item_order?: number;
+  is_favorite?: boolean;
+}
+
+export interface FilterDeleteArgs {
+  id: string;
+}
+
+export interface FilterUpdateArgs {
+  id: string;
+  name?: string;
+  query?: string;
+  color?: string;
+  item_order?: number;
+  is_favorite?: boolean;
 }
 
 export interface Label {
-	id: string;
-	user_id: string;
-	name: string;
-	color: string;
-	item_order: number;
-	is_favorite: boolean;
-	is_deleted: boolean;
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  item_order: number;
+  is_favorite: boolean;
+  is_deleted: boolean;
 }
 
 export interface LabelAddArgs {
-	name: string;
-	color?: string;
-	item_order?: number;
-	is_favorite?: boolean;
+  name: string;
+  color?: string;
+  item_order?: number;
+  is_favorite?: boolean;
 }
 
 export interface LabelDeleteArgs {
-	id: string;
+  id: string;
 }
 
 export interface LabelUpdateArgs {
-	id: string;
-	name?: string;
-	color?: string;
-	item_order?: number;
-	is_favorite?: boolean;
+  id: string;
+  name?: string;
+  color?: string;
+  item_order?: number;
+  is_favorite?: boolean;
 }
 
 export interface Project {
-	id: string;
-	user_id: string;
-	name: string;
-	color: string;
-	parent_id?: string;
-	child_order: number;
-	is_inbox: boolean;
-	is_favorite: boolean;
-	is_archived: boolean;
-	is_deleted: boolean;
-	created_at: string;
-	updated_at: string;
+  id: string;
+  user_id: string;
+  name: string;
+  color: string;
+  parent_id?: string;
+  child_order: number;
+  is_inbox: boolean;
+  is_favorite: boolean;
+  is_archived: boolean;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ProjectAddArgs {
-	name: string;
-	color?: string;
-	parent_id?: string;
-	child_order?: number;
-	is_favorite?: boolean;
+  name: string;
+  color?: string;
+  parent_id?: string;
+  child_order?: number;
+  is_favorite?: boolean;
 }
 
 export interface ProjectDeleteArgs {
-	id: string;
+  id: string;
 }
 
 export interface ProjectUpdateArgs {
-	id: string;
-	name?: string;
-	color?: string;
-	parent_id?: string;
-	child_order?: number;
-	is_favorite?: boolean;
-	is_archived?: boolean;
+  id: string;
+  name?: string;
+  color?: string;
+  parent_id?: string;
+  child_order?: number;
+  is_favorite?: boolean;
+  is_archived?: boolean;
 }
 
-export type SyncCommand = 
-	| { type: "TaskAdd", args: TaskAddArgs }
-	| { type: "TaskUpdate", args: TaskUpdateArgs }
-	| { type: "TaskDelete", args: TaskDeleteArgs }
-	| { type: "TaskComplete", args: TaskCompleteArgs }
-	| { type: "TaskUncomplete", args: TaskUncompleteArgs }
-	| { type: "TaskReorder", args: TaskReorderArgs }
-	| { type: "ProjectAdd", args: ProjectAddArgs }
-	| { type: "ProjectUpdate", args: ProjectUpdateArgs }
-	| { type: "ProjectDelete", args: ProjectDeleteArgs }
-	| { type: "SectionAdd", args: SectionAddArgs }
-	| { type: "SectionUpdate", args: SectionUpdateArgs }
-	| { type: "SectionDelete", args: SectionDeleteArgs }
-	| { type: "LabelAdd", args: LabelAddArgs }
-	| { type: "LabelUpdate", args: LabelUpdateArgs }
-	| { type: "LabelDelete", args: LabelDeleteArgs };
+export type SyncCommand =
+  | { type: "TaskAdd"; args: TaskAddArgs }
+  | { type: "TaskUpdate"; args: TaskUpdateArgs }
+  | { type: "TaskDelete"; args: TaskDeleteArgs }
+  | { type: "TaskComplete"; args: TaskCompleteArgs }
+  | { type: "TaskUncomplete"; args: TaskUncompleteArgs }
+  | { type: "TaskReorder"; args: TaskReorderArgs }
+  | { type: "ProjectAdd"; args: ProjectAddArgs }
+  | { type: "ProjectUpdate"; args: ProjectUpdateArgs }
+  | { type: "ProjectDelete"; args: ProjectDeleteArgs }
+  | { type: "SectionAdd"; args: SectionAddArgs }
+  | { type: "SectionUpdate"; args: SectionUpdateArgs }
+  | { type: "SectionDelete"; args: SectionDeleteArgs }
+  | { type: "LabelAdd"; args: LabelAddArgs }
+  | { type: "LabelUpdate"; args: LabelUpdateArgs }
+  | { type: "LabelDelete"; args: LabelDeleteArgs }
+  | { type: "ReminderAdd"; args: ReminderAddArgs }
+  | { type: "ReminderUpdate"; args: ReminderUpdateArgs }
+  | { type: "ReminderDelete"; args: ReminderDeleteArgs }
+  | { type: "FilterAdd"; args: FilterAddArgs }
+  | { type: "FilterUpdate"; args: FilterUpdateArgs }
+  | { type: "FilterDelete"; args: FilterDeleteArgs };
 
 export interface QueuedCommand {
-	uuid: string;
-	temp_id?: string;
-	command: SyncCommand;
+  uuid: string;
+  temp_id?: string;
+  command: SyncCommand;
 }
 
 export interface Reminder {
-	id: string;
-	task_id: string;
-	reminder_type: string;
-	minute_offset?: number;
-	due_datetime?: string;
-	is_notified: boolean;
-	is_deleted: boolean;
+  id: string;
+  task_id: string;
+  reminder_type: string;
+  minute_offset?: number;
+  due_datetime?: string;
+  is_notified: boolean;
+  is_deleted: boolean;
+  updated_at: string;
+}
+
+export interface ReminderAddArgs {
+  task_id: string;
+  reminder_type: string;
+  minute_offset?: number;
+  due_datetime?: string;
+}
+
+export interface ReminderDeleteArgs {
+  id: string;
+}
+
+export interface ReminderUpdateArgs {
+  id: string;
+  reminder_type?: string;
+  minute_offset?: number;
+  due_datetime?: string;
+  is_notified?: boolean;
 }
 
 export interface Section {
-	id: string;
-	project_id: string;
-	user_id: string;
-	name: string;
-	section_order: number;
-	is_archived: boolean;
-	is_deleted: boolean;
-	created_at: string;
-	updated_at: string;
+  id: string;
+  project_id: string;
+  user_id: string;
+  name: string;
+  section_order: number;
+  is_archived: boolean;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SectionAddArgs {
-	project_id: string;
-	name: string;
-	section_order?: number;
+  project_id: string;
+  name: string;
+  section_order?: number;
 }
 
 export interface SectionDeleteArgs {
-	id: string;
+  id: string;
 }
 
 export interface SectionUpdateArgs {
-	id: string;
-	name?: string;
-	section_order?: number;
-	is_archived?: boolean;
+  id: string;
+  name?: string;
+  section_order?: number;
+  is_archived?: boolean;
 }
 
 export interface SyncRequest {
-	sync_token?: string;
-	resource_types?: string[];
-	commands: QueuedCommand[];
+  sync_token?: string;
+  resource_types?: string[];
+  commands: QueuedCommand[];
 }
 
 export enum Priority {
-	P1 = "P1",
-	P2 = "P2",
-	P3 = "P3",
-	P4 = "P4",
+  P1 = "P1",
+  P2 = "P2",
+  P3 = "P3",
+  P4 = "P4",
 }
 
 export interface Task {
-	id: string;
-	user_id: string;
-	project_id: string;
-	section_id?: string;
-	parent_id?: string;
-	title: string;
-	description: string;
-	priority: Priority;
-	child_order: number;
-	due_date?: string;
-	due_datetime?: string;
-	due_timezone?: string;
-	due_string?: string;
-	is_recurring: boolean;
-	recurrence_rule?: string;
-	completed: boolean;
-	completed_at?: string;
-	is_deleted: boolean;
-	created_at: string;
-	updated_at: string;
+  id: string;
+  user_id: string;
+  project_id: string;
+  section_id?: string;
+  parent_id?: string;
+  title: string;
+  description: string;
+  priority: Priority;
+  child_order: number;
+  due_date?: string;
+  due_datetime?: string;
+  due_timezone?: string;
+  due_string?: string;
+  is_recurring: boolean;
+  recurrence_rule?: string;
+  label_ids: string[];
+  completed: boolean;
+  completed_at?: string;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SyncResponse {
-	sync_token: string;
-	full_sync: boolean;
-	temp_id_mapping: Record<string, string>;
-	sync_status: Record<string, string>;
-	tasks: Task[];
-	projects: Project[];
-	sections: Section[];
-	labels: Label[];
-	reminders: Reminder[];
-	filters: Filter[];
+  sync_token: string;
+  full_sync: boolean;
+  temp_id_mapping: Record<string, string>;
+  sync_status: Record<string, string>;
+  tasks: Task[];
+  projects: Project[];
+  sections: Section[];
+  labels: Label[];
+  reminders: Reminder[];
+  filters: Filter[];
 }
 
 export interface TaskAddArgs {
-	title: string;
-	project_id: string;
-	section_id?: string;
-	parent_id?: string;
-	description?: string;
-	priority?: Priority;
-	child_order?: number;
-	due_date?: string;
-	due_datetime?: string;
-	due_timezone?: string;
-	due_string?: string;
-	recurrence_rule?: string;
+  title: string;
+  project_id: string;
+  section_id?: string;
+  parent_id?: string;
+  description?: string;
+  priority?: Priority;
+  child_order?: number;
+  due_date?: string;
+  due_datetime?: string;
+  due_timezone?: string;
+  due_string?: string;
+  recurrence_rule?: string;
+  label_ids?: string[];
 }
 
 export interface TaskCompleteArgs {
-	id: string;
-	completed_at?: string;
+  id: string;
+  completed_at?: string;
 }
 
 export interface TaskDeleteArgs {
-	id: string;
+  id: string;
 }
 
 export interface TaskReorderArgs {
-	id: string;
-	child_order: number;
+  id: string;
+  child_order: number;
 }
 
 export interface TaskUncompleteArgs {
-	id: string;
+  id: string;
 }
 
 export interface TaskUpdateArgs {
-	id: string;
-	title?: string;
-	description?: string;
-	priority?: Priority;
-	project_id?: string;
-	section_id?: string;
-	parent_id?: string;
-	child_order?: number;
-	due_date?: string;
-	due_datetime?: string;
-	due_timezone?: string;
-	due_string?: string;
-	recurrence_rule?: string;
+  id: string;
+  title?: string;
+  description?: string;
+  priority?: Priority;
+  project_id?: string;
+  section_id?: string;
+  parent_id?: string;
+  child_order?: number;
+  due_date?: string;
+  due_datetime?: string;
+  due_timezone?: string;
+  due_string?: string;
+  recurrence_rule?: string;
+  label_ids?: string[];
 }
-

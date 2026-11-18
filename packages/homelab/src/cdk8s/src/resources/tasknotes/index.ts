@@ -1,8 +1,13 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { tailnetService } from "homelab/src/platform-model.ts";
-import { DeploymentStrategy, EnvValue, Secret } from "cdk8s-plus-31";
+import {
+  Cpu,
+  DeploymentStrategy,
+  EnvValue,
+  SeccompProfileType,
+  Secret,
+} from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Cpu } from "cdk8s-plus-31";
 import { Size } from "cdk8s";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -82,6 +87,30 @@ export function createTasknotesDeployment(chart: Chart) {
       };
 
       return {
+        init: [
+          {
+            name: "prisma-migrate",
+            image: firstPartyImageRecipe("tasknotes-server"),
+            workingDir: "/app/packages/tasknotes-server",
+            command: ["bun", "scripts/migrate.ts"],
+            securityContext: {
+              readOnlyRootFilesystem: false,
+              ensureNonRoot: false,
+              seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
+            },
+            resources: {
+              cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
+              memory: {
+                request: Size.mebibytes(64),
+                limit: Size.mebibytes(256),
+              },
+            },
+            envVariables: {
+              ...dbEnv,
+              HOME: EnvValue.fromValue("/tmp"),
+            },
+          },
+        ],
         // Container 1: TaskNotes API Server (Hono on port 3000)
         server: {
           name: "tasknotes-server",

@@ -29,6 +29,7 @@ pub struct Task {
     pub due_string: Option<String>,
     pub is_recurring: bool,
     pub recurrence_rule: Option<String>,
+    pub label_ids: Vec<String>,
     pub completed: bool,
     pub completed_at: Option<String>,
     pub is_deleted: bool,
@@ -89,6 +90,7 @@ pub struct Reminder {
     pub due_datetime: Option<String>,
     pub is_notified: bool,
     pub is_deleted: bool,
+    pub updated_at: String,
 }
 
 #[typeshare]
@@ -121,6 +123,7 @@ pub struct TaskAddArgs {
     pub due_timezone: Option<String>,
     pub due_string: Option<String>,
     pub recurrence_rule: Option<String>,
+    pub label_ids: Option<Vec<String>>,
 }
 
 #[typeshare]
@@ -139,6 +142,7 @@ pub struct TaskUpdateArgs {
     pub due_timezone: Option<String>,
     pub due_string: Option<String>,
     pub recurrence_rule: Option<String>,
+    pub label_ids: Option<Vec<String>>,
 }
 
 #[typeshare]
@@ -243,6 +247,58 @@ pub struct LabelDeleteArgs {
     pub id: String,
 }
 
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ReminderAddArgs {
+    pub task_id: String,
+    pub reminder_type: String,
+    pub minute_offset: Option<i32>,
+    pub due_datetime: Option<String>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ReminderUpdateArgs {
+    pub id: String,
+    pub reminder_type: Option<String>,
+    pub minute_offset: Option<i32>,
+    pub due_datetime: Option<String>,
+    pub is_notified: Option<bool>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ReminderDeleteArgs {
+    pub id: String,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FilterAddArgs {
+    pub name: String,
+    pub query: String,
+    pub color: Option<String>,
+    pub item_order: Option<f64>,
+    pub is_favorite: Option<bool>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FilterUpdateArgs {
+    pub id: String,
+    pub name: Option<String>,
+    pub query: Option<String>,
+    pub color: Option<String>,
+    pub item_order: Option<f64>,
+    pub is_favorite: Option<bool>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FilterDeleteArgs {
+    pub id: String,
+}
+
 // ── Discriminated Sync Command ──────────────────────────────────────────────
 
 #[typeshare]
@@ -264,6 +320,12 @@ pub enum SyncCommand {
     LabelAdd(LabelAddArgs),
     LabelUpdate(LabelUpdateArgs),
     LabelDelete(LabelDeleteArgs),
+    ReminderAdd(ReminderAddArgs),
+    ReminderUpdate(ReminderUpdateArgs),
+    ReminderDelete(ReminderDeleteArgs),
+    FilterAdd(FilterAddArgs),
+    FilterUpdate(FilterUpdateArgs),
+    FilterDelete(FilterDeleteArgs),
 }
 
 #[typeshare]

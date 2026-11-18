@@ -152,12 +152,6 @@
       "package": "homelab"
     },
     {
-      "id": "obsidian-headless",
-      "title": "Obsidian headless",
-      "kind": "workload",
-      "package": "homelab"
-    },
-    {
       "id": "gitops",
       "title": "GitOps & charts",
       "kind": "platform"
@@ -382,10 +376,6 @@
       "components": [
         {
           "name": "image:tasknotes-server",
-          "producer": "first-party"
-        },
-        {
-          "name": "image:obsidian-headless",
           "producer": "first-party"
         },
         {

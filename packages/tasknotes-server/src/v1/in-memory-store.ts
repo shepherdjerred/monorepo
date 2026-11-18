@@ -1,59 +1,162 @@
-import {
-  type Filter,
-  type Label,
-  type Project,
-  type Reminder,
-  type Section,
-  type Task,
+import type {
+  Filter,
+  Label,
+  Project,
+  Reminder,
+  Section,
+  Task,
 } from "../protocol/generated.ts";
 import {
+  applyProjectUpdate,
   applyTaskCreateOptions,
   applyTaskUpdateDates,
-  applyTaskUpdateOptions,
-  type InternalFilter,
-  type InternalLabel,
-  type InternalProject,
-  type InternalReminder,
-  type InternalSection,
-  type InternalTask,
+  applyTaskUpdateFields,
+  assertOwnedEntry,
   MonotonicClock,
-  parsePriority,
-  setOrDelete,
+  queryStoredEntries,
+  restoreMap,
+  type StoredEntry,
+  type StoredUser,
 } from "./in-memory-helpers.ts";
-import type {
-  CreateLabelInput,
-  CreateProjectInput,
-  CreateSectionInput,
-  CreateTaskInput,
-  FacetStore,
-  ListFiltersFilter,
-  ListLabelsFilter,
-  ListProjectsFilter,
-  ListRemindersFilter,
-  ListSectionsFilter,
-  ListTasksFilter,
-  UpdateLabelInput,
-  UpdateProjectInput,
-  UpdateSectionInput,
-  UpdateTaskInput,
+import {
+  createInMemoryFilter,
+  createInMemoryLabel,
+  createInMemoryReminder,
+  createInMemorySection,
+  deleteInMemoryLabel,
+  type InMemorySecondaryCtx,
+  listInMemoryFilters,
+  listInMemoryLabels,
+  listInMemoryReminders,
+  listInMemorySections,
+  updateInMemoryFilter,
+  updateInMemoryLabel,
+  updateInMemoryReminder,
+  updateInMemorySection,
+} from "./in-memory-secondary.ts";
+import { parsePriority, recordTaskMutationMetric } from "./mappers.ts";
+import {
+  type CreateFilterInput,
+  type CreateLabelInput,
+  type CreateProjectInput,
+  type CreateReminderInput,
+  type CreateSectionInput,
+  type CreateTaskInput,
+  EntityNotFoundError,
+  type FacetStore,
+  type ListFiltersFilter,
+  type ListLabelsFilter,
+  type ListProjectsFilter,
+  type ListRemindersFilter,
+  type ListSectionsFilter,
+  type ListTasksFilter,
+  type ProcessedCommandRecord,
+  type UpdateFilterInput,
+  type UpdateLabelInput,
+  type UpdateProjectInput,
+  type UpdateReminderInput,
+  type UpdateSectionInput,
+  type UpdateTaskInput,
 } from "./types.ts";
 
 export class InMemoryFacetStore implements FacetStore {
   private readonly clock = new MonotonicClock();
-  private readonly users = new Map<
-    string,
-    { id: string; email: string; name: string }
-  >();
-  private readonly tasks = new Map<string, InternalTask>();
-  private readonly projects = new Map<string, InternalProject>();
-  private readonly sections = new Map<string, InternalSection>();
-  private readonly labels = new Map<string, InternalLabel>();
-  private readonly reminders = new Map<string, InternalReminder>();
-  private readonly filters = new Map<string, InternalFilter>();
+  private readonly users = new Map<string, StoredUser>();
+  private readonly tasks = new Map<string, StoredEntry<Task>>();
+  private readonly projects = new Map<string, StoredEntry<Project>>();
+  private readonly sections = new Map<string, StoredEntry<Section>>();
+  private readonly labels = new Map<string, StoredEntry<Label>>();
+  private readonly reminders = new Map<string, StoredEntry<Reminder>>();
+  private readonly filters = new Map<string, StoredEntry<Filter>>();
   private readonly processedCommands = new Map<
     string,
-    { uuid: string; userId: string; status: string }
+    { uuid: string; userId: string; status: string; resultId: string | null }
   >();
+
+  private secondaryCtx(): InMemorySecondaryCtx {
+    return {
+      clock: this.clock,
+      tasks: this.tasks,
+      projects: this.projects,
+      sections: this.sections,
+      labels: this.labels,
+      reminders: this.reminders,
+      filters: this.filters,
+      nextSyncSeq: (uid) => this.nextSyncSeq(uid),
+      mutateEntry: (map, id, uid, fn) => this.mutateEntry(map, id, uid, fn),
+    };
+  }
+
+  private ensureUserRecord(userId: string): StoredUser {
+    let user = this.users.get(userId);
+    if (user === undefined) {
+      user = {
+        id: userId,
+        email: `${userId}@tasknotes.local`,
+        name: "Default User",
+        syncSequence: 0n,
+      };
+      this.users.set(userId, user);
+    }
+    return user;
+  }
+
+  private nextSyncSeq(userId: string): bigint {
+    const user = this.ensureUserRecord(userId);
+    user.syncSequence += 1n;
+    return user.syncSequence;
+  }
+
+  private validateLabelIds(userId: string, labelIds: string[]): string[] {
+    const deduped = [...new Set(labelIds)];
+    for (const labelId of deduped) {
+      const label = this.labels.get(labelId);
+      if (label?.userId !== userId || label.value.is_deleted) {
+        throw new EntityNotFoundError("Label", labelId);
+      }
+    }
+    return deduped;
+  }
+
+  private validateTaskRefs(
+    userId: string,
+    projectId: string | undefined,
+    sectionId: string | null | undefined,
+  ): void {
+    if (projectId !== undefined) {
+      assertOwnedEntry(this.projects, projectId, userId, "Project");
+    }
+    if (sectionId !== undefined && sectionId !== null && sectionId !== "") {
+      assertOwnedEntry(this.sections, sectionId, userId, "Section");
+    }
+  }
+
+  private mutateEntry<T>(
+    map: Map<string, StoredEntry<T>>,
+    id: string,
+    userId: string,
+    mutate: (val: T, nowIso: string) => void,
+  ): T | null {
+    const entry = map.get(id);
+    if (entry?.userId !== userId) {
+      return null;
+    }
+    const now = this.clock.now();
+    mutate(entry.value, now.toISOString());
+    entry.updatedAt = now;
+    entry.syncSeq = this.nextSyncSeq(userId);
+    return structuredClone(entry.value);
+  }
+
+  private deleteTimestamped<
+    T extends { is_deleted: boolean; updated_at: string },
+  >(map: Map<string, StoredEntry<T>>, id: string, userId: string): boolean {
+    const updated = this.mutateEntry(map, id, userId, (val, nowIso) => {
+      val.is_deleted = true;
+      val.updated_at = nowIso;
+    });
+    return updated !== null;
+  }
 
   getNow(): Date {
     return this.clock.now();
@@ -63,109 +166,168 @@ export class InMemoryFacetStore implements FacetStore {
     return fn(this);
   }
 
-  getOrCreateUser(
-    userId: string,
-  ): Promise<{ id: string; email: string; name: string }> {
-    let user = this.users.get(userId);
-    if (user === undefined) {
-      user = {
-        id: userId,
-        email: `${userId}@tasknotes.local`,
-        name: "Default User",
-      };
-      this.users.set(userId, user);
+  async runInSavepoint<T>(_name: string, fn: () => Promise<T>): Promise<T> {
+    const clockSnap = this.clock.snapshot();
+    const usersSnap = structuredClone(this.users);
+    const tasksSnap = structuredClone(this.tasks);
+    const projectsSnap = structuredClone(this.projects);
+    const sectionsSnap = structuredClone(this.sections);
+    const labelsSnap = structuredClone(this.labels);
+    const remindersSnap = structuredClone(this.reminders);
+    const filtersSnap = structuredClone(this.filters);
+    const commandsSnap = structuredClone(this.processedCommands);
+    try {
+      return await fn();
+    } catch (error: unknown) {
+      this.clock.restore(clockSnap);
+      restoreMap(this.users, usersSnap);
+      restoreMap(this.tasks, tasksSnap);
+      restoreMap(this.projects, projectsSnap);
+      restoreMap(this.sections, sectionsSnap);
+      restoreMap(this.labels, labelsSnap);
+      restoreMap(this.reminders, remindersSnap);
+      restoreMap(this.filters, filtersSnap);
+      restoreMap(this.processedCommands, commandsSnap);
+      throw error;
     }
-    return Promise.resolve(user);
   }
 
-  isCommandProcessed(uuid: string): Promise<boolean> {
-    return Promise.resolve(this.processedCommands.has(uuid));
+  async getOrCreateUser(
+    userId: string,
+  ): Promise<{ id: string; email: string; name: string }> {
+    const user = this.ensureUserRecord(userId);
+    const hasInbox = [...this.projects.values()].some(
+      (e) => e.userId === userId && e.value.is_inbox && !e.value.is_deleted,
+    );
+    if (!hasInbox) {
+      await this.createProject({ userId, name: "Inbox", isInbox: true });
+    }
+    return { id: user.id, email: user.email, name: user.name };
+  }
+
+  getSyncSequence(userId: string): Promise<bigint> {
+    return Promise.resolve(this.users.get(userId)?.syncSequence ?? 0n);
+  }
+
+  getProcessedCommand(uuid: string): Promise<ProcessedCommandRecord | null> {
+    const found = this.processedCommands.get(uuid);
+    return Promise.resolve(
+      found === undefined
+        ? null
+        : { status: found.status, resultId: found.resultId },
+    );
   }
 
   recordProcessedCommand(
     uuid: string,
     userId: string,
     status: string,
+    resultId: string | null = null,
   ): Promise<void> {
-    this.processedCommands.set(uuid, { uuid, userId, status });
+    this.processedCommands.set(uuid, { uuid, userId, status, resultId });
     return Promise.resolve();
   }
 
+  countActiveTasks(): Promise<number> {
+    let count = 0;
+    for (const entry of this.tasks.values()) {
+      if (!entry.value.is_deleted) {
+        count += 1;
+      }
+    }
+    return Promise.resolve(count);
+  }
+
   createTask(data: CreateTaskInput): Promise<Task> {
+    this.validateTaskRefs(data.userId, data.projectId, data.sectionId);
+    const labelIds =
+      data.labelIds === undefined
+        ? []
+        : this.validateLabelIds(data.userId, data.labelIds);
     const id = data.id ?? crypto.randomUUID();
     const now = this.clock.now();
     const nowIso = now.toISOString();
-
-    const task: InternalTask = {
+    const task: Task = {
       id,
       user_id: data.userId,
       project_id: data.projectId,
       title: data.title,
       description: data.description ?? "",
-      priority: parsePriority(data.priority),
+      priority: parsePriority(
+        typeof data.priority === "string" ? data.priority : undefined,
+      ),
       child_order: data.childOrder ?? 0,
       is_recurring: data.isRecurring ?? false,
+      label_ids: labelIds,
       completed: data.completed ?? false,
       is_deleted: false,
       created_at: nowIso,
       updated_at: nowIso,
-      _updatedAt: now,
     };
-
     applyTaskCreateOptions(task, data);
-    this.tasks.set(id, task);
-    return Promise.resolve(task);
+    this.tasks.set(id, {
+      value: task,
+      userId: data.userId,
+      updatedAt: now,
+      syncSeq: this.nextSyncSeq(data.userId),
+    });
+    recordTaskMutationMetric("created");
+    return Promise.resolve(structuredClone(task));
   }
 
-  updateTask(id: string, data: UpdateTaskInput): Promise<Task | null> {
-    const task = this.tasks.get(id);
-    if (task === undefined) return Promise.resolve(null);
-
-    const now = this.clock.now();
-    applyTaskUpdateOptions(task, data);
-    applyTaskUpdateDates(task, data);
-
-    task.updated_at = now.toISOString();
-    task._updatedAt = now;
-    return Promise.resolve(task);
+  updateTask(
+    id: string,
+    userId: string,
+    data: UpdateTaskInput,
+  ): Promise<Task | null> {
+    const entry = this.tasks.get(id);
+    if (entry?.userId !== userId) {
+      return Promise.resolve(null);
+    }
+    this.validateTaskRefs(userId, data.projectId, data.sectionId);
+    const validated: UpdateTaskInput =
+      data.labelIds === undefined
+        ? data
+        : { ...data, labelIds: this.validateLabelIds(userId, data.labelIds) };
+    const updated = this.mutateEntry(this.tasks, id, userId, (task, nowIso) => {
+      applyTaskUpdateFields(task, validated);
+      applyTaskUpdateDates(task, validated);
+      task.updated_at = nowIso;
+    });
+    if (updated !== null) {
+      recordTaskMutationMetric(
+        validated.isDeleted === true ? "deleted" : "updated",
+      );
+    }
+    return Promise.resolve(updated);
   }
 
-  deleteTask(id: string): Promise<boolean> {
-    const task = this.tasks.get(id);
-    if (task === undefined) return Promise.resolve(false);
-    const now = this.clock.now();
-    task.is_deleted = true;
-    task.updated_at = now.toISOString();
-    task._updatedAt = now;
-    return Promise.resolve(true);
+  deleteTask(id: string, userId: string): Promise<boolean> {
+    const deleted = this.deleteTimestamped(this.tasks, id, userId);
+    if (deleted) {
+      recordTaskMutationMetric("deleted");
+    }
+    return Promise.resolve(deleted);
   }
 
   getTask(id: string, userId?: string): Promise<Task | null> {
-    const task = this.tasks.get(id);
-    if (task === undefined) return Promise.resolve(null);
-    return Promise.resolve(
-      userId !== undefined && userId !== "" && task.user_id !== userId
-        ? null
-        : task,
-    );
+    const entry = this.tasks.get(id);
+    return entry === undefined ||
+      (userId !== undefined && userId !== "" && entry.userId !== userId)
+      ? Promise.resolve(null)
+      : Promise.resolve(structuredClone(entry.value));
   }
 
   listTasks(filter: ListTasksFilter): Promise<Task[]> {
-    let result = [...this.tasks.values()].filter(
-      (t) => t.user_id === filter.userId,
-    );
-    if (filter.projectId !== undefined && filter.projectId !== "") {
-      result = result.filter((t) => t.project_id === filter.projectId);
-    }
-    if (filter.includeDeleted !== true) {
-      result = result.filter((t) => !t.is_deleted);
-    }
-    if (filter.since !== undefined) {
-      const sinceTime = filter.since.getTime();
-      result = result.filter((t) => t._updatedAt.getTime() > sinceTime);
-    }
+    const pid =
+      filter.projectId !== undefined && filter.projectId !== ""
+        ? filter.projectId
+        : undefined;
     return Promise.resolve(
-      result.sort((a, b) => a.child_order - b.child_order),
+      queryStoredEntries(this.tasks, filter, {
+        predicate: pid === undefined ? undefined : (t) => t.project_id === pid,
+        compare: (a, b) => a.child_order - b.child_order,
+      }),
     );
   }
 
@@ -173,8 +335,7 @@ export class InMemoryFacetStore implements FacetStore {
     const id = data.id ?? crypto.randomUUID();
     const now = this.clock.now();
     const nowIso = now.toISOString();
-
-    const project: InternalProject = {
+    const project: Project = {
       id,
       user_id: data.userId,
       name: data.name,
@@ -186,7 +347,6 @@ export class InMemoryFacetStore implements FacetStore {
       is_deleted: false,
       created_at: nowIso,
       updated_at: nowIso,
-      _updatedAt: now,
     };
     if (
       data.parentId !== undefined &&
@@ -195,212 +355,138 @@ export class InMemoryFacetStore implements FacetStore {
     ) {
       project.parent_id = data.parentId;
     }
-
-    this.projects.set(id, project);
-    return Promise.resolve(project);
+    this.projects.set(id, {
+      value: project,
+      userId: data.userId,
+      updatedAt: now,
+      syncSeq: this.nextSyncSeq(data.userId),
+    });
+    return Promise.resolve(structuredClone(project));
   }
 
-  updateProject(id: string, data: UpdateProjectInput): Promise<Project | null> {
-    const project = this.projects.get(id);
-    if (project === undefined) return Promise.resolve(null);
-
-    const now = this.clock.now();
-    if (data.name !== undefined) project.name = data.name;
-    if (data.color !== undefined) project.color = data.color;
-    setOrDelete(project, "parent_id", data.parentId);
-    if (data.childOrder !== undefined) project.child_order = data.childOrder;
-    if (data.isFavorite !== undefined) project.is_favorite = data.isFavorite;
-    if (data.isArchived !== undefined) project.is_archived = data.isArchived;
-    if (data.isDeleted !== undefined) project.is_deleted = data.isDeleted;
-
-    project.updated_at = now.toISOString();
-    project._updatedAt = now;
-    return Promise.resolve(project);
+  updateProject(
+    id: string,
+    userId: string,
+    data: UpdateProjectInput,
+  ): Promise<Project | null> {
+    return Promise.resolve(
+      this.mutateEntry(this.projects, id, userId, (proj, nowIso) => {
+        applyProjectUpdate(proj, data);
+        proj.updated_at = nowIso;
+      }),
+    );
   }
 
-  deleteProject(id: string): Promise<boolean> {
-    const project = this.projects.get(id);
-    if (project === undefined) return Promise.resolve(false);
-    const now = this.clock.now();
-    project.is_deleted = true;
-    project.updated_at = now.toISOString();
-    project._updatedAt = now;
-    return Promise.resolve(true);
+  deleteProject(id: string, userId: string): Promise<boolean> {
+    return Promise.resolve(this.deleteTimestamped(this.projects, id, userId));
   }
 
   getProject(id: string, userId?: string): Promise<Project | null> {
-    const project = this.projects.get(id);
-    if (project === undefined) return Promise.resolve(null);
-    return Promise.resolve(
-      userId !== undefined && userId !== "" && project.user_id !== userId
-        ? null
-        : project,
-    );
+    const entry = this.projects.get(id);
+    return entry === undefined ||
+      (userId !== undefined && userId !== "" && entry.userId !== userId)
+      ? Promise.resolve(null)
+      : Promise.resolve(structuredClone(entry.value));
   }
 
   listProjects(filter: ListProjectsFilter): Promise<Project[]> {
-    let result = [...this.projects.values()].filter(
-      (p) => p.user_id === filter.userId,
-    );
-    if (filter.includeDeleted !== true) {
-      result = result.filter((p) => !p.is_deleted);
-    }
-    if (filter.since !== undefined) {
-      const sinceTime = filter.since.getTime();
-      result = result.filter((p) => p._updatedAt.getTime() > sinceTime);
-    }
     return Promise.resolve(
-      result.sort((a, b) => a.child_order - b.child_order),
+      queryStoredEntries(this.projects, filter, {
+        compare: (a, b) => a.child_order - b.child_order,
+      }),
     );
   }
 
   createSection(data: CreateSectionInput): Promise<Section> {
-    const id = data.id ?? crypto.randomUUID();
-    const now = this.clock.now();
-    const nowIso = now.toISOString();
-
-    const section: InternalSection = {
-      id,
-      project_id: data.projectId,
-      user_id: data.userId,
-      name: data.name,
-      section_order: data.sectionOrder ?? 0,
-      is_archived: false,
-      is_deleted: false,
-      created_at: nowIso,
-      updated_at: nowIso,
-      _updatedAt: now,
-    };
-
-    this.sections.set(id, section);
-    return Promise.resolve(section);
+    return Promise.resolve(createInMemorySection(this.secondaryCtx(), data));
   }
 
-  updateSection(id: string, data: UpdateSectionInput): Promise<Section | null> {
-    const section = this.sections.get(id);
-    if (section === undefined) return Promise.resolve(null);
-
-    const now = this.clock.now();
-    if (data.name !== undefined) section.name = data.name;
-    if (data.sectionOrder !== undefined)
-      section.section_order = data.sectionOrder;
-    if (data.isArchived !== undefined) section.is_archived = data.isArchived;
-    if (data.isDeleted !== undefined) section.is_deleted = data.isDeleted;
-
-    section.updated_at = now.toISOString();
-    section._updatedAt = now;
-    return Promise.resolve(section);
+  updateSection(
+    id: string,
+    userId: string,
+    data: UpdateSectionInput,
+  ): Promise<Section | null> {
+    return Promise.resolve(
+      updateInMemorySection(this.secondaryCtx(), id, userId, data),
+    );
   }
 
-  deleteSection(id: string): Promise<boolean> {
-    const section = this.sections.get(id);
-    if (section === undefined) return Promise.resolve(false);
-    const now = this.clock.now();
-    section.is_deleted = true;
-    section.updated_at = now.toISOString();
-    section._updatedAt = now;
-    return Promise.resolve(true);
+  deleteSection(id: string, userId: string): Promise<boolean> {
+    return Promise.resolve(this.deleteTimestamped(this.sections, id, userId));
   }
 
   listSections(filter: ListSectionsFilter): Promise<Section[]> {
-    let result = [...this.sections.values()].filter(
-      (s) => s.user_id === filter.userId,
-    );
-    if (filter.projectId !== undefined && filter.projectId !== "") {
-      result = result.filter((s) => s.project_id === filter.projectId);
-    }
-    if (filter.includeDeleted !== true) {
-      result = result.filter((s) => !s.is_deleted);
-    }
-    if (filter.since !== undefined) {
-      const sinceTime = filter.since.getTime();
-      result = result.filter((s) => s._updatedAt.getTime() > sinceTime);
-    }
-    return Promise.resolve(
-      result.sort((a, b) => a.section_order - b.section_order),
-    );
+    return Promise.resolve(listInMemorySections(this.secondaryCtx(), filter));
   }
 
   createLabel(data: CreateLabelInput): Promise<Label> {
-    const id = data.id ?? crypto.randomUUID();
-    const now = this.clock.now();
-
-    const label: InternalLabel = {
-      id,
-      user_id: data.userId,
-      name: data.name,
-      color: data.color ?? "grey",
-      item_order: data.itemOrder ?? 0,
-      is_favorite: data.isFavorite ?? false,
-      is_deleted: false,
-      _updatedAt: now,
-    };
-
-    this.labels.set(id, label);
-    return Promise.resolve(label);
+    return Promise.resolve(createInMemoryLabel(this.secondaryCtx(), data));
   }
 
-  updateLabel(id: string, data: UpdateLabelInput): Promise<Label | null> {
-    const label = this.labels.get(id);
-    if (label === undefined) return Promise.resolve(null);
-
-    const now = this.clock.now();
-    if (data.name !== undefined) label.name = data.name;
-    if (data.color !== undefined) label.color = data.color;
-    if (data.itemOrder !== undefined) label.item_order = data.itemOrder;
-    if (data.isFavorite !== undefined) label.is_favorite = data.isFavorite;
-    if (data.isDeleted !== undefined) label.is_deleted = data.isDeleted;
-
-    label._updatedAt = now;
-    return Promise.resolve(label);
+  updateLabel(
+    id: string,
+    userId: string,
+    data: UpdateLabelInput,
+  ): Promise<Label | null> {
+    return Promise.resolve(
+      updateInMemoryLabel(this.secondaryCtx(), id, userId, data),
+    );
   }
 
-  deleteLabel(id: string): Promise<boolean> {
-    const label = this.labels.get(id);
-    if (label === undefined) return Promise.resolve(false);
-    const now = this.clock.now();
-    label.is_deleted = true;
-    label._updatedAt = now;
-    return Promise.resolve(true);
+  deleteLabel(id: string, userId: string): Promise<boolean> {
+    return Promise.resolve(
+      deleteInMemoryLabel(this.secondaryCtx(), id, userId),
+    );
   }
 
   listLabels(filter: ListLabelsFilter): Promise<Label[]> {
-    let result = [...this.labels.values()].filter(
-      (l) => l.user_id === filter.userId,
+    return Promise.resolve(listInMemoryLabels(this.secondaryCtx(), filter));
+  }
+
+  createReminder(data: CreateReminderInput): Promise<Reminder> {
+    return Promise.resolve(createInMemoryReminder(this.secondaryCtx(), data));
+  }
+
+  updateReminder(
+    id: string,
+    userId: string,
+    data: UpdateReminderInput,
+  ): Promise<Reminder | null> {
+    return Promise.resolve(
+      updateInMemoryReminder(this.secondaryCtx(), id, userId, data),
     );
-    if (filter.includeDeleted !== true) {
-      result = result.filter((l) => !l.is_deleted);
-    }
-    if (filter.since !== undefined) {
-      const sinceTime = filter.since.getTime();
-      result = result.filter((l) => l._updatedAt.getTime() > sinceTime);
-    }
-    return Promise.resolve(result.sort((a, b) => a.item_order - b.item_order));
+  }
+
+  deleteReminder(id: string, userId: string): Promise<boolean> {
+    return Promise.resolve(this.deleteTimestamped(this.reminders, id, userId));
   }
 
   listReminders(filter: ListRemindersFilter): Promise<Reminder[]> {
-    let result = [...this.reminders.values()];
-    if (filter.includeDeleted !== true) {
-      result = result.filter((r) => !r.is_deleted);
-    }
-    if (filter.since !== undefined) {
-      const sinceTime = filter.since.getTime();
-      result = result.filter((r) => r._createdAt.getTime() > sinceTime);
-    }
-    return Promise.resolve(result);
+    return Promise.resolve(listInMemoryReminders(this.secondaryCtx(), filter));
+  }
+
+  createFilter(data: CreateFilterInput): Promise<Filter> {
+    return Promise.resolve(createInMemoryFilter(this.secondaryCtx(), data));
+  }
+
+  updateFilter(
+    id: string,
+    userId: string,
+    data: UpdateFilterInput,
+  ): Promise<Filter | null> {
+    return Promise.resolve(
+      updateInMemoryFilter(this.secondaryCtx(), id, userId, data),
+    );
+  }
+
+  deleteFilter(id: string, userId: string): Promise<boolean> {
+    const updated = this.mutateEntry(this.filters, id, userId, (flt) => {
+      flt.is_deleted = true;
+    });
+    return Promise.resolve(updated !== null);
   }
 
   listFilters(filter: ListFiltersFilter): Promise<Filter[]> {
-    let result = [...this.filters.values()].filter(
-      (f) => f.user_id === filter.userId,
-    );
-    if (filter.includeDeleted !== true) {
-      result = result.filter((f) => !f.is_deleted);
-    }
-    if (filter.since !== undefined) {
-      const sinceTime = filter.since.getTime();
-      result = result.filter((f) => f._updatedAt.getTime() > sinceTime);
-    }
-    return Promise.resolve(result.sort((a, b) => a.item_order - b.item_order));
+    return Promise.resolve(listInMemoryFilters(this.secondaryCtx(), filter));
   }
 }

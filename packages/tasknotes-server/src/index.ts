@@ -56,29 +56,44 @@ app.route(
   v2Routes({ repo, config: modelConfig, vaultPath: config.vaultPath }),
 );
 
-const v1Store =
-  Bun.env["DATABASE_URL"] === undefined || Bun.env["DATABASE_URL"] === ""
-    ? new InMemoryFacetStore()
-    : new PrismaFacetStore(getDatabase());
+const hasDatabaseUrl =
+  Bun.env["DATABASE_URL"] !== undefined && Bun.env["DATABASE_URL"] !== "";
+const v1Store = hasDatabaseUrl
+  ? new PrismaFacetStore(getDatabase())
+  : new InMemoryFacetStore();
 
 app.route("/", v1Routes({ store: v1Store }));
 
 // Engine visibility: parse skips and config provenance, next to /api/health.
-app.get("/api/engine-status", (c) =>
-  c.json({
+app.get("/api/engine-status", async (c) => {
+  if (hasDatabaseUrl) {
+    const tasks = await v1Store.countActiveTasks();
+    return c.json({
+      configSource: "postgres",
+      tasks,
+      skippedFiles: [],
+    });
+  }
+  return c.json({
     configSource,
     tasks: repo.list().length,
     skippedFiles: repo.skippedFiles(),
-  }),
-);
+  });
+});
 
 const startTime = Date.now();
 
-function updateGauges(): void {
-  const total = repo.list().length;
-  tasksTotal.set(total);
-  syncFilesTotal.set(total);
-  uptimeSeconds.set(Math.round((Date.now() - startTime) / 1000));
+async function updateGauges(): Promise<void> {
+  try {
+    const total = hasDatabaseUrl
+      ? await v1Store.countActiveTasks()
+      : repo.list().length;
+    tasksTotal.set(total);
+    syncFilesTotal.set(hasDatabaseUrl ? 0 : total);
+    uptimeSeconds.set(Math.round((Date.now() - startTime) / 1000));
+  } catch (error: unknown) {
+    console.error("[metrics] failed to update gauges:", error);
+  }
 }
 
 async function start(): Promise<void> {
@@ -99,7 +114,7 @@ async function start(): Promise<void> {
                 await repo.refreshFile(relPath);
               }
             }
-            updateGauges();
+            await updateGauges();
           } catch (error: unknown) {
             console.error("[watcher] failed to apply vault changes:", error);
           }
@@ -115,8 +130,10 @@ async function start(): Promise<void> {
     );
   }
 
-  updateGauges();
-  setInterval(updateGauges, 15_000);
+  await updateGauges();
+  setInterval(() => {
+    void updateGauges();
+  }, 15_000);
   console.log(
     `TaskNotes server listening on ${config.host}:${String(config.port)}`,
   );

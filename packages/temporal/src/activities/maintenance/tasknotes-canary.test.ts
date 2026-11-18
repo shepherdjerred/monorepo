@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { ReportStateV1Schema } from "#activities/reports/report-delivery.ts";
-import { tasknotesBaselineFromReportState } from "./tasknotes-canary.ts";
+import {
+  parseEngineStatus,
+  tasknotesBaselineFromReportState,
+} from "./tasknotes-canary.ts";
 
 const OBSERVED_AT = "2026-08-10T16:00:00.000Z";
 const ACCEPTED_AT = "2026-08-10T16:01:00.000Z";
@@ -126,5 +129,60 @@ describe("TaskNotes task-count baseline eligibility", () => {
       }),
     );
     expect(baseline).toBeUndefined();
+  });
+});
+
+describe("parseEngineStatus", () => {
+  test("parses legacy enveloped vault engine status", () => {
+    const parsed = parseEngineStatus(
+      JSON.stringify({
+        success: true,
+        data: {
+          configSource: "vault",
+          tasks: 42,
+          skippedFiles: [{ path: "TaskNotes/bad.md", reason: "invalid yaml" }],
+        },
+      }),
+    );
+    expect(parsed).toEqual({
+      configSource: "vault",
+      tasks: 42,
+      skippedFiles: [{ path: "TaskNotes/bad.md", reason: "invalid yaml" }],
+    });
+  });
+
+  test("parses unwrapped PostgreSQL engine status and defaults skippedFiles to empty", () => {
+    const parsed = parseEngineStatus(
+      JSON.stringify({
+        status: "ok",
+        storage: "postgres",
+        tasks: 128,
+      }),
+    );
+    expect(parsed).toEqual({
+      configSource: "postgres",
+      tasks: 128,
+      skippedFiles: [],
+    });
+  });
+
+  test("rejects non-ok or malformed engine status payloads", () => {
+    expect(() =>
+      parseEngineStatus(
+        JSON.stringify({
+          status: "error",
+          storage: "postgres",
+          tasks: 128,
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      parseEngineStatus(
+        JSON.stringify({
+          success: false,
+          error: "unavailable",
+        }),
+      ),
+    ).toThrow();
   });
 });

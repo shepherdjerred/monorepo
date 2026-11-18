@@ -133,6 +133,10 @@ describe("dockerhub", () => {
         from: 'docker_hub_repository.image["discord-plays-mario-kart"]',
         to: "docker_hub_repository.retired_discord_plays_mario_kart",
       },
+      {
+        from: 'docker_hub_repository.image["obsidian-headless"]',
+        to: "docker_hub_repository.retired_obsidian_headless",
+      },
     ]);
     expect(dockerhub.removed).toEqual([
       {
@@ -141,6 +145,10 @@ describe("dockerhub", () => {
       },
       {
         from: "docker_hub_repository.retired_discord_plays_mario_kart",
+        lifecycle: { destroy: false },
+      },
+      {
+        from: "docker_hub_repository.retired_obsidian_headless",
         lifecycle: { destroy: false },
       },
     ]);
