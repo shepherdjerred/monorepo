@@ -12,7 +12,7 @@ using Windows.Graphics;
 namespace TaskNotes.Windows.App
 {
     /// <summary>Hosts every native Facet destination and auxiliary-window command.</summary>
-    public sealed partial class MainWindow : Window, IAsyncDisposable
+    public sealed partial class MainWindow : Window, System.IAsyncDisposable
     {
         private readonly AsyncManualResetEvent _initialized = new();
         private readonly AppSettingsService _settings;

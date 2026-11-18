@@ -23,7 +23,7 @@ namespace TaskNotes.Windows.App.Views
         private Func<string, string, Task<bool>>? _confirm;
         private Action<string>? _showValidation;
         private bool _synchronizingControls;
-        private readonly IRecurrenceEditor _recurrenceEditor = RecurrenceCodec.Shared;
+        private readonly RecurrenceCodec _recurrenceEditor = RecurrenceCodec.Shared;
         private RecurrenceControlDraft? _recurrenceDraft;
         private RecurrenceOwner? _recurrenceOwner;
         private long _recurrenceRequest;

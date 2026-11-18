@@ -87,7 +87,9 @@ internal sealed class AppSettingsService
         }
     }
 
-    public void Save(string identity, string value)
+    void IFacetSecretStore.Save(string identity, string value) => SaveSecret(identity, value);
+
+    private void SaveSecret(string identity, string value)
     {
         ArgumentException.ThrowIfNullOrEmpty(value);
         lock (_gate)
@@ -136,7 +138,7 @@ internal sealed class AppSettingsService
             if (string.IsNullOrWhiteSpace(token))
                 Remove(ServerTokenIdentity);
             else
-                Save(ServerTokenIdentity, token.Trim());
+                SaveSecret(ServerTokenIdentity, token.Trim());
 
             IDictionary<string, object> values = ActiveValues();
             values[ServerUrlKey] = serverUrl.Trim();
