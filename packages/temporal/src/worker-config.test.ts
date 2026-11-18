@@ -75,10 +75,12 @@ describe("Temporal worker role contracts", () => {
       "executeDeliveryControlPlane",
       "executeDeliveryPlatform",
       "inspectDeliveryPlatformRecovery",
+      "reapSettledDeliveryPlatformJobs",
       "runDeliveryModelPlatformStep",
     ]);
     for (const platformOnly of [
       "executeDeliveryPlatform",
+      "reapSettledDeliveryPlatformJobs",
       "runDeliveryModelPlatformStep",
     ])
       expect(activityNamesFor("delivery")).not.toContain(platformOnly);

@@ -1,3 +1,4 @@
+import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import { z } from "zod";
 import {
@@ -14,6 +15,15 @@ import {
   classifyVacuumStartEvidence,
   type VacuumStartEvidence,
 } from "#shared/infra/vacuum-evidence.ts";
+
+const HA_REQUEST_TIMEOUT_MS = 25_000;
+
+function haRequestSignal(): AbortSignal {
+  return AbortSignal.any([
+    AbortSignal.timeout(HA_REQUEST_TIMEOUT_MS),
+    Context.current().cancellationSignal,
+  ]);
+}
 
 // Activity signatures stay monomorphic (Temporal's proxyActivities rejects
 // generic methods), so the runtime client is the loose default. Compile-time
@@ -89,13 +99,14 @@ export const haActivities = {
     }
     const client = getClient();
     const [current, history, logbook] = await Promise.all([
-      client.getState(entityId),
+      client.getState(entityId, { signal: haRequestSignal() }),
       client.getHistory([entityId], {
         start,
         end,
         significantChangesOnly: true,
+        signal: haRequestSignal(),
       }),
-      client.getLogbook(entityId, start, end),
+      client.getLogbook(entityId, start, end, { signal: haRequestSignal() }),
     ]);
     return classifyVacuumStartEvidence(entityId, requestedAt, current, {
       history,
@@ -104,7 +115,9 @@ export const haActivities = {
   },
   async getEntityState(entityId: string): Promise<EntityState> {
     try {
-      return await getClient().getState(entityId);
+      return await getClient().getState(entityId, {
+        signal: haRequestSignal(),
+      });
     } catch (error: unknown) {
       // Retyped, not made terminal. A bare HaNotFoundError crosses the activity
       // boundary as an untyped failure, so a workflow cannot tell a missing
@@ -124,7 +137,7 @@ export const haActivities = {
   },
 
   async getStates(): Promise<EntityState[]> {
-    return getClient().getStates();
+    return getClient().getStates({ signal: haRequestSignal() });
   },
 
   async callService(
@@ -132,7 +145,9 @@ export const haActivities = {
     service: string,
     data: Record<string, unknown>,
   ): Promise<void> {
-    await getClient().callService(domain, service, data);
+    await getClient().callService(domain, service, data, {
+      signal: haRequestSignal(),
+    });
     console.warn(`Called HA service: ${domain}.${service}`);
   },
 
@@ -141,7 +156,9 @@ export const haActivities = {
     data: Record<string, unknown>,
   ): Promise<void> {
     try {
-      await getClient().callService("media_player", service, data);
+      await getClient().callService("media_player", service, data, {
+        signal: haRequestSignal(),
+      });
       console.warn(`Called HA service: media_player.${service}`);
     } catch (error: unknown) {
       // A missing media entity or a Sonos integration/device failure is a
@@ -162,7 +179,12 @@ export const haActivities = {
   },
 
   async sendNotification(title: string, message: string): Promise<void> {
-    await getClient().callService("notify", "notify", { title, message });
+    await getClient().callService(
+      "notify",
+      "notify",
+      { title, message },
+      { signal: haRequestSignal() },
+    );
     console.warn(`Sent notification: ${title}`);
   },
 
@@ -174,29 +196,44 @@ export const haActivities = {
     sendPush: boolean;
   }): Promise<void> {
     if (!input.active) {
-      await getClient().callService("persistent_notification", "dismiss", {
-        notification_id: input.entityId,
-      });
+      await getClient().callService(
+        "persistent_notification",
+        "dismiss",
+        {
+          notification_id: input.entityId,
+        },
+        { signal: haRequestSignal() },
+      );
       return;
     }
 
-    await getClient().callService("persistent_notification", "create", {
-      notification_id: input.entityId,
-      title: input.title,
-      message: input.message,
-    });
-    if (input.sendPush) {
-      await getClient().callService("notify", "mobile_app_jerreds_iphone", {
+    await getClient().callService(
+      "persistent_notification",
+      "create",
+      {
+        notification_id: input.entityId,
         title: input.title,
         message: input.message,
-        data: { tag: input.entityId },
-      });
+      },
+      { signal: haRequestSignal() },
+    );
+    if (input.sendPush) {
+      await getClient().callService(
+        "notify",
+        "mobile_app_jerreds_iphone",
+        {
+          title: input.title,
+          message: input.message,
+          data: { tag: input.entityId },
+        },
+        { signal: haRequestSignal() },
+      );
     }
   },
 
   async getEntitiesInDomain(domain: string): Promise<EntityState[]> {
     const prefix = `${domain}.`;
-    const states = await getClient().getStates();
+    const states = await getClient().getStates({ signal: haRequestSignal() });
     return states.filter((state) => state.entity_id.startsWith(prefix));
   },
 };

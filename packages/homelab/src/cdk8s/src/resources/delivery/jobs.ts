@@ -85,7 +85,11 @@ export function createDeliveryJobs(
   const role = new KubeRole(chart, `${controllerName}-role`, {
     metadata: { name: controllerName, namespace },
     rules: [
-      { apiGroups: ["batch"], resources: ["jobs"], verbs: ["create", "get"] },
+      {
+        apiGroups: ["batch"],
+        resources: ["jobs"],
+        verbs: ["create", "delete", "get", "list"],
+      },
       { apiGroups: [""], resources: ["pods"], verbs: ["get", "list"] },
       { apiGroups: [""], resources: ["pods/log"], verbs: ["get"] },
     ],

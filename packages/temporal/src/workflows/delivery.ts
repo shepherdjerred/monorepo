@@ -16,6 +16,7 @@ import {
   DELIVERY_WAIT_ROLLOVER_PATCH,
   admissionRolloverDue,
 } from "./delivery/admission.ts";
+import { reapSettledJobs } from "./delivery/job-reaper.ts";
 import { proposeDrainedRetirements } from "./delivery/retirement.ts";
 import { inspectWorkerRecovery } from "./delivery/worker-recovery.ts";
 
@@ -53,8 +54,8 @@ const jobs = proxyActivities<DeliveryActivities>({
 });
 const qualification = proxyActivities<DeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY,
-  startToCloseTimeout: "2 minutes",
-  retry: { maximumAttempts: 1 },
+  startToCloseTimeout: "3 minutes",
+  retry: { initialInterval: "5s", maximumInterval: "20s", maximumAttempts: 2 },
 });
 const platform = proxyActivities<PlatformDeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY_PLATFORM,
@@ -522,10 +523,13 @@ export async function deliveryDispatchWorkflow() {
     metadata.dispatchDeliveryForumBaselines(),
     metadata.dispatchDeliveryPlatformRecoveries(),
   ]);
-  const observed = patched(DELIVERY_DISPATCH_MODEL_PATCH)
-    ? await observeAcceptedSelections()
-    : [];
-  const tickFailures = [...observed, ...(await proposeDrainedRetirements())];
+  const tickFailures = [
+    ...(patched(DELIVERY_DISPATCH_MODEL_PATCH)
+      ? await observeAcceptedSelections()
+      : []),
+    ...(await proposeDrainedRetirements()),
+    ...(await reapSettledJobs()),
+  ];
   if (dispatched.status === "rejected") throw dispatched.reason;
   if (qualified.status === "rejected") throw qualified.reason;
   if (recovered.status === "rejected") throw recovered.reason;

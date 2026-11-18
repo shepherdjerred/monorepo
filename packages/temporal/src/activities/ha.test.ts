@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
+import { MockActivityEnvironment } from "@temporalio/testing";
 import { HaApiError } from "@shepherdjerred/home-assistant";
 import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
@@ -75,38 +76,47 @@ describe("haActivities", () => {
     delete Bun.env["HA_URL"];
     delete Bun.env["HA_TOKEN"];
 
-    await expect(haActivities.getEntityState("person.test")).rejects.toThrow(
-      "HA_URL environment variable is required",
-    );
+    await expect(
+      new MockActivityEnvironment().run(() =>
+        haActivities.getEntityState("person.test"),
+      ),
+    ).rejects.toThrow("HA_URL environment variable is required");
   });
 
   it("throws when HA_TOKEN is not set", async () => {
     Bun.env["HA_URL"] = "http://localhost:8123";
     delete Bun.env["HA_TOKEN"];
 
-    await expect(haActivities.getEntityState("person.test")).rejects.toThrow(
-      "HA_TOKEN environment variable is required",
-    );
+    await expect(
+      new MockActivityEnvironment().run(() =>
+        haActivities.getEntityState("person.test"),
+      ),
+    ).rejects.toThrow("HA_TOKEN environment variable is required");
   });
 
   it("creates and dismisses tagged pet-care notifications and pushes to Jerred's iPhone", async () => {
     const requests: { url: string; body: unknown }[] = [];
     configureHaServiceFetch(requests);
+    const environment = new MockActivityEnvironment();
 
-    await haActivities.setPetCareNotification({
-      entityId: "binary_sensor.litter_robot_problem",
-      title: "Litter-Robot needs attention",
-      message: "Litter-Robot reports error 4",
-      active: true,
-      sendPush: true,
-    });
-    await haActivities.setPetCareNotification({
-      entityId: "binary_sensor.litter_robot_problem",
-      title: "Litter-Robot needs attention",
-      message: "Ready again",
-      active: false,
-      sendPush: false,
-    });
+    await environment.run(() =>
+      haActivities.setPetCareNotification({
+        entityId: "binary_sensor.litter_robot_problem",
+        title: "Litter-Robot needs attention",
+        message: "Litter-Robot reports error 4",
+        active: true,
+        sendPush: true,
+      }),
+    );
+    await environment.run(() =>
+      haActivities.setPetCareNotification({
+        entityId: "binary_sensor.litter_robot_problem",
+        title: "Litter-Robot needs attention",
+        message: "Ready again",
+        active: false,
+        sendPush: false,
+      }),
+    );
 
     expect(requests).toEqual([
       {
@@ -132,6 +142,43 @@ describe("haActivities", () => {
     ]);
   });
 
+  it("aborts in-flight Home Assistant fetch calls when the activity is cancelled", async () => {
+    Bun.env["HA_URL"] = "http://localhost:8123";
+    Bun.env["HA_TOKEN"] = "test-token";
+    let observedSignal: AbortSignal | undefined;
+    globalThis.fetch = Object.assign(
+      (...args: Parameters<typeof fetch>): Promise<Response> => {
+        const [, init] = args;
+        observedSignal = init?.signal ?? undefined;
+        return new Promise<Response>((_, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => {
+              reject(
+                init.signal?.reason instanceof Error
+                  ? init.signal.reason
+                  : new DOMException("aborted", "AbortError"),
+              );
+            },
+            { once: true },
+          );
+        });
+      },
+      { preconnect: originalFetch.preconnect.bind(originalFetch) },
+    );
+
+    const environment = new MockActivityEnvironment();
+    const pending = environment.run(() =>
+      haActivities.callService("vacuum", "start", {
+        entity_id: "vacuum.1st_floor",
+      }),
+    );
+    environment.cancel();
+
+    await expect(pending).rejects.toThrow();
+    expect(observedSignal?.aborted).toBe(true);
+  });
+
   // A bare HaNotFoundError would reach the workflow as an untyped failure. It
   // must stay retryable: HA serves this endpoint before every integration has
   // registered its entities, so a startup/reload 404 is routinely transient.
@@ -140,7 +187,9 @@ describe("haActivities", () => {
 
     let failure: unknown;
     try {
-      await haActivities.getEntityState("sensor.master_bathroom_temperature");
+      await new MockActivityEnvironment().run(() =>
+        haActivities.getEntityState("sensor.master_bathroom_temperature"),
+      );
     } catch (error: unknown) {
       failure = error;
     }
@@ -163,10 +212,12 @@ describe("haActivities", () => {
 
     let failure: unknown;
     try {
-      await haActivities.callOptionalMediaPlayerService("join", {
-        entity_id: "media_player.bedroom",
-        group_members: ["media_player.master_bathroom"],
-      });
+      await new MockActivityEnvironment().run(() =>
+        haActivities.callOptionalMediaPlayerService("join", {
+          entity_id: "media_player.bedroom",
+          group_members: ["media_player.master_bathroom"],
+        }),
+      );
     } catch (error: unknown) {
       failure = error;
     }
@@ -193,10 +244,12 @@ describe("haActivities", () => {
     configureHaFetch(response);
 
     await expect(
-      haActivities.callOptionalMediaPlayerService("join", {
-        entity_id: "media_player.bedroom",
-        group_members: ["media_player.master_bathroom"],
-      }),
+      new MockActivityEnvironment().run(() =>
+        haActivities.callOptionalMediaPlayerService("join", {
+          entity_id: "media_player.bedroom",
+          group_members: ["media_player.master_bathroom"],
+        }),
+      ),
     ).rejects.toBeInstanceOf(HaApiError);
   });
 });

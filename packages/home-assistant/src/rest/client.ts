@@ -22,11 +22,15 @@ import {
   ServiceCallResult,
 } from "./schemas.js";
 
-export type CallServiceOptions = {
+export type RequestOptions = {
+  signal?: AbortSignal;
+};
+
+export type CallServiceOptions = RequestOptions & {
   returnResponse?: boolean;
 };
 
-export type HistoryOptions = {
+export type HistoryOptions = RequestOptions & {
   start?: Date;
   end?: Date;
   minimalResponse?: boolean;
@@ -45,24 +49,29 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     this.token = config.token;
   }
 
-  public async getConfig(): Promise<HaConfig> {
-    const body = await this.request("GET", "/api/config");
+  public async getConfig(options?: RequestOptions): Promise<HaConfig> {
+    const body = await this.request("GET", "/api/config", {
+      signal: options?.signal,
+    });
     return HaConfig.parse(body);
   }
 
-  public async getStates(): Promise<EntityState[]> {
-    const body = await this.request("GET", "/api/states");
+  public async getStates(options?: RequestOptions): Promise<EntityState[]> {
+    const body = await this.request("GET", "/api/states", {
+      signal: options?.signal,
+    });
     return z.array(EntityState).parse(body);
   }
 
   public async getState<E extends EntityId<S>>(
     entityId: E,
+    options?: RequestOptions,
   ): Promise<Omit<EntityState, "entity_id"> & { entity_id: E }> {
     const schema = EntityState.extend({ entity_id: z.literal(entityId) });
     const body = await this.request(
       "GET",
       `/api/states/${encodeURIComponent(entityId)}`,
-      { notFoundResource: entityId },
+      { notFoundResource: entityId, signal: options?.signal },
     );
     return schema.parse(body);
   }
@@ -76,6 +85,7 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     const path = this.buildServicePath(domain, service, options);
     const body = await this.request("POST", path, {
       body: data ?? {},
+      signal: options?.signal,
     });
     return ServiceCallResult.parse(body);
   }
@@ -85,19 +95,26 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     data?: EventDataFor<S, E> extends Record<string, unknown>
       ? EventDataFor<S, E>
       : Record<string, unknown>,
+    options?: RequestOptions,
   ): Promise<FireEventResponse> {
     const body = await this.request(
       "POST",
       `/api/events/${encodeURIComponent(eventType)}`,
-      { body: data ?? {} },
+      { body: data ?? {}, signal: options?.signal },
     );
     return FireEventResponse.parse(body);
   }
 
-  public async renderTemplate(template: string): Promise<string> {
-    const response = await this.rawRequest("POST", "/api/template", {
-      template,
-    });
+  public async renderTemplate(
+    template: string,
+    options?: RequestOptions,
+  ): Promise<string> {
+    const response = await this.rawRequest(
+      "POST",
+      "/api/template",
+      { template },
+      options?.signal,
+    );
     await this.assertOk(response, "POST", "/api/template");
     return response.text();
   }
@@ -122,16 +139,19 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
       params.set("significant_changes_only", "true");
     }
     const path = `/api/history/period/${start.toISOString()}?${params.toString()}`;
-    const body = await this.request("GET", path);
+    const body = await this.request("GET", path, { signal: options.signal });
     return HistoryResponse.parse(body);
   }
 
   public async getConfigEntryDiagnostics<T>(
     configEntryId: string,
     dataSchema: z.ZodType<T>,
+    options?: RequestOptions,
   ): Promise<T> {
     const path = `/api/diagnostics/config_entry/${encodeURIComponent(configEntryId)}`;
-    const body = ConfigEntryDiagnostics.parse(await this.request("GET", path));
+    const body = ConfigEntryDiagnostics.parse(
+      await this.request("GET", path, { signal: options?.signal }),
+    );
     return dataSchema.parse(body.data);
   }
 
@@ -139,13 +159,16 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     entityId: string,
     start: Date,
     end: Date,
+    options?: RequestOptions,
   ): Promise<LogbookEntry[]> {
     const params = new URLSearchParams({
       entity: entityId,
       end_time: end.toISOString(),
     });
     const path = `/api/logbook/${start.toISOString()}?${params.toString()}`;
-    return z.array(LogbookEntry).parse(await this.request("GET", path));
+    return z
+      .array(LogbookEntry)
+      .parse(await this.request("GET", path, { signal: options?.signal }));
   }
 
   private buildServicePath(
@@ -160,9 +183,18 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
   private async request(
     method: "GET" | "POST",
     path: string,
-    options: { body?: unknown; notFoundResource?: string } = {},
+    options: {
+      body?: unknown;
+      notFoundResource?: string;
+      signal?: AbortSignal | undefined;
+    } = {},
   ): Promise<unknown> {
-    const response = await this.rawRequest(method, path, options.body);
+    const response = await this.rawRequest(
+      method,
+      path,
+      options.body,
+      options.signal,
+    );
     await this.assertOk(response, method, path, options.notFoundResource);
     const text = await response.text();
     return text === "" ? undefined : RawJson.parse(JSON.parse(text));
@@ -196,12 +228,16 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     method: "GET" | "POST",
     path: string,
     body: unknown,
+    signal?: AbortSignal,
   ): Promise<Response> {
     const url = `${this.baseUrl}${path}`;
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.token}`,
     };
     const init: RequestInit = { method, headers };
+    if (signal !== undefined) {
+      init.signal = signal;
+    }
     if (method === "POST") {
       headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(body ?? {});

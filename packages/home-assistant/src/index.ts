@@ -1,5 +1,9 @@
 export { HomeAssistantRestClient } from "./rest/client.js";
-export type { CallServiceOptions, HistoryOptions } from "./rest/client.js";
+export type {
+  CallServiceOptions,
+  HistoryOptions,
+  RequestOptions,
+} from "./rest/client.js";
 export { HaApiError, HaAuthError, HaNotFoundError } from "./rest/errors.js";
 export type {
   EntityState,

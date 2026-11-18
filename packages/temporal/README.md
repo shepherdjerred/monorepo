@@ -178,7 +178,12 @@ Only fixed platform recovery recipes mount `delivery-recovery-inspector`:
 that account can read Jobs and list/read Pods in `delivery-platform-jobs` only.
 It cannot create resources, execute commands in Pods, read Secrets or use cluster
 permissions. Its projected token lets the independent native verifier repeat
-terminal-executor observations immediately before a recovery mutation.
+terminal-executor observations immediately before a recovery mutation. Once a
+stage Job is terminal and Delivery confirms its owning deployment is settled
+(`succeeded`, `failed`, or `canceled` with `recoveryRequired: false` and no
+pending recovery intent or unrestored barrier), `deliveryDispatchWorkflow`
+reaps the Job with background propagation through the owning worker's
+namespace-scoped controller Role; lookup errors fail closed.
 
 Every stage Job runs in a persistent workspace claim on liskov's ZFS pool,
 one per install profile and Job namespace (`delivery-stage-workspace-full` and,

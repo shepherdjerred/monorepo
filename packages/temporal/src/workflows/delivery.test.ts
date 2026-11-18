@@ -65,6 +65,13 @@ function quietDispatchActivities() {
     observeDeliveryDrift: () => ({ recorded: 0 }),
     removeDeliveryTargets: () => ({ removed: 0 }),
     retireDrainedWorkerHosts: () => ({ requested: [], skipped: [] }),
+    reapSettledDeliveryWorkerJobs: () => ({
+      namespace: "delivery-worker-jobs",
+      scanned: 0,
+      candidates: 0,
+      deleted: [],
+      skippedUnsettled: 0,
+    }),
   };
 }
 
@@ -218,6 +225,13 @@ describe("Delivery Workflow", () => {
       },
       dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
       retireDrainedWorkerHosts: () => ({ requested: [], skipped: [] }),
+      reapSettledDeliveryWorkerJobs: () => ({
+        namespace: "delivery-worker-jobs",
+        scanned: 0,
+        candidates: 0,
+        deleted: [],
+        skippedUnsettled: 0,
+      }),
       dispatchDeliveryMinecraftRecoveries: () => {
         minecraftRecovered = true;
       },
