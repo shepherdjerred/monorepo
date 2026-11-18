@@ -1506,13 +1506,11 @@ until its remote outcome is established. Explicit pauses are independent of the
 failure streak; existing saved pauses are retained. `resume` clears the streak
 after repair without discarding receipts, cooldowns or uncertain attempts.
 
-After a verified DISBOARD bump, the parent saves the receipt evidence and effect
-history, then deletes only that bot confirmation through toolkit's exact-message
-cleanup endpoint. It verifies the guild, channel, message ID and bot author before
-deleting, and confirms remote absence afterward. An already deleted reply needs
-no further write. Permission or transport failures are recorded as cleanup
-blockers; they never trigger another bump or erase its cooldown. Ordinary ads
-are retained. Preview never deletes messages.
+DISBOARD native `/bump` runs in The Storm's dedicated `#disboard` channel
+(`1572427947535507577`) rather than `#general`, retaining DISBOARD's confirmation
+messages in-channel as audit history without generating deleted-message ghost
+notifications in general chat. Historical `cleanup/` records from earlier
+`#general` runs remain readable in status summaries.
 
 View local progress without credentials or a Temporal server:
 
@@ -1718,13 +1716,6 @@ select an enclosing visible element when text-node inspection fails.
 Navigation checkpoints retain each newly visited page's pre-mutation baseline, while an
 existing page's original baseline remains immutable.
 
-DISBOARD checks effective Manage Messages permission before invoking `/bump`.
-This includes the server's moderation 2FA requirement and the outreach account's
-MFA state; a role permission alone is insufficient on servers requiring 2FA.
-To retry only cleanup of a saved verified confirmation, use
-`local.ts cleanup disboard-native-bump --occurrence <original-occurrence-id>`
-with the isolated outreach daemon running. This records a separate cleanup
-result without inference, another bump, or a change to the original cooldown.
 Known Discord receipt messages are fetched directly by ID for fresh readback,
 so later channel activity does not hide an older confirmation.
 Discord status/read operations supply equivalent references. Stored results

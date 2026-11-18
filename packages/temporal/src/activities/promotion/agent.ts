@@ -109,12 +109,8 @@ function assertAgentInput(input: PromotionAgentInput) {
     throw new Error("A browser profile override is allowed only in preview");
   assertAssignment(input.target, input.mode);
 }
-function executionOutcome(
-  result: PromotionTaskResult,
-  cleanup: { status: string } | null,
-) {
-  if (result.status === "verified" && cleanup?.status !== "blocked")
-    return "success";
+function executionOutcome(result: PromotionTaskResult) {
+  if (result.status === "verified") return "success";
   return result.status === "deferred" ? "skip" : "failure";
 }
 async function agentConfiguration(input: PromotionAgentInput) {
@@ -335,18 +331,13 @@ export async function runPromotionAgent(input: PromotionAgentInput) {
       ))
     )
       throw new Error("Concurrent promotion context update");
-    // Receipt evidence and the verified effect are durable before deleting a bot reply.
-    progress.stop();
-    await progress.report("Receipt cleanup");
-    const cleanup = await transport.afterFinish(result);
     await recordPromotionExecutionHealth({
       ...input,
       targetId: input.target.id,
-      outcome: executionOutcome(result, cleanup),
+      outcome: executionOutcome(result),
     });
     return {
       result,
-      ...(cleanup === null ? {} : { cleanup }),
       usage: outcome.usage,
       browserTrace,
       ...(input.mode === "preview"

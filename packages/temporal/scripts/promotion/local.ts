@@ -23,11 +23,9 @@ import { LocalPromotionSettings } from "./local-execution.ts";
 import { runLocalTarget } from "./local-agent.ts";
 import { createLocalJournal } from "./local-journal.ts";
 import { LocalPromotionStop } from "./local-stop.ts";
-import { localCleanup } from "./local-cleanup.ts";
 
-const help = `Local promotion: bun packages/temporal/scripts/promotion/local.ts <status|preview|run|pause|resume|reconcile|cleanup|import-history> [target ...] [--all] [--state-dir PATH] [--json] [--settings FILE] [--history FILE] [--mailmate] [--occurrence ID]
+const help = `Local promotion: bun packages/temporal/scripts/promotion/local.ts <status|preview|run|pause|resume|reconcile|import-history> [target ...] [--all] [--state-dir PATH] [--json] [--settings FILE] [--history FILE] [--mailmate]
 No Temporal server or cluster is used. Preview cannot publish. Run performs real actions.
-Cleanup deletes only an exact saved verified DISBOARD reply; supply its --occurrence ID.
 History is a JSON array of {targetId, attempt}, using the PromotionAttempt schema.
 Real runs require an imported history record for each target. Resume is explicit review of filtered/blocked results and never clears attempts.`;
 const { values, positionals } = parseArgs({
@@ -41,7 +39,6 @@ const { values, positionals } = parseArgs({
     settings: { type: "string" },
     history: { type: "string" },
     mailmate: { type: "boolean" },
-    occurrence: { type: "string" },
   },
 });
 const [operation, ...ids] = positionals;
@@ -58,7 +55,6 @@ if (
     "resume",
     "reconcile",
     "import-history",
-    "cleanup",
   ].includes(operation)
 )
   throw new Error(help);
@@ -88,24 +84,7 @@ const { store } = database;
 const results: unknown[] = [];
 let release: (() => Promise<void>) | undefined;
 try {
-  if (operation === "cleanup") {
-    if (targets.length !== 1 || values.occurrence === undefined)
-      throw new Error(
-        "cleanup requires one target and --occurrence <verified occurrence>",
-      );
-    release = await claimLocalSession(store);
-    const result = await localCleanup({
-      store,
-      directory,
-      targetId: z.string().parse(targets[0]?.id),
-      occurrenceId: values.occurrence,
-      socket:
-        Bun.env["PROMOTION_DISCORD_SOCKET"] ??
-        path.join(homedir(), ".toolkit/discord/storm-promotion/daemon.sock"),
-    });
-    results.push(result);
-    if (result.cleanup.status === "blocked") process.exitCode = 1;
-  } else if (operation === "import-history") {
+  if (operation === "import-history") {
     if (values.history === undefined)
       throw new Error("--history FILE is required");
     const rows = z
@@ -275,10 +254,7 @@ try {
           finishedAt: new Date().toISOString(),
         });
         process.exitCode =
-          outcome.result.status === "blocked" ||
-          outcome.cleanup?.status === "blocked"
-            ? 1
-            : process.exitCode;
+          outcome.result.status === "blocked" ? 1 : process.exitCode;
       } catch (error) {
         const summary = redact(
           error instanceof Error ? error.message : String(error),

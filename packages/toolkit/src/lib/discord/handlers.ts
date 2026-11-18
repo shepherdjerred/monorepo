@@ -16,7 +16,6 @@ import {
 } from "#lib/discord/cooldown.ts";
 import { userChannelInfo } from "#lib/discord/channel.ts";
 import { userApplicationCommands } from "#lib/discord/application-commands.ts";
-import { handleDeleteReply } from "#lib/discord/delete-reply.ts";
 import { handleEditOwnMessage } from "#lib/discord/edit-own-message.ts";
 import { messageMatches } from "#lib/discord/message-match.ts";
 import {
@@ -455,8 +454,6 @@ async function dispatch(
       return handleWait(ctx, await request.json());
     case "/slash":
       return handleSlash(ctx, await request.json());
-    case "/delete-reply":
-      return handleDeleteReply(ctx.user, await request.json());
     case "/edit-own-message":
       return handleEditOwnMessage(ctx.user, await request.json());
     case "/voice/join":
