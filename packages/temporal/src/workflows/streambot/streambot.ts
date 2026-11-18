@@ -3,8 +3,8 @@ import type * as activities from "#activities/streambot.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 const streambot = proxyActivities<typeof activities>({
   taskQueue: TASK_QUEUES.STREAMBOT,
-  startToCloseTimeout: "1 minute",
-  scheduleToCloseTimeout: "90 seconds",
+  startToCloseTimeout: "75 seconds",
+  scheduleToCloseTimeout: "105 seconds",
   // A lost HTTP response is reconciled from durable ownership on the next tick.
   retry: { maximumAttempts: 1 },
 });

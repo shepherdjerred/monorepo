@@ -24,7 +24,10 @@ export async function createTemporalClient(
   }
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
-  const connection = await Connection.connect({ address });
+  const connection = await Connection.connect({
+    address,
+    connectTimeout: "10 seconds",
+  });
   const bootstrapMetadata = parseTemporalBootstrapMetadata(
     Bun.env["ENVIRONMENT"],
     Bun.env["GIT_SHA"],

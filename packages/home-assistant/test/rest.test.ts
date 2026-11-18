@@ -398,3 +398,73 @@ describe("HomeAssistantRestClient service-response mode", () => {
     expect(calls[0]?.args.url).toContain("/api/services/notify/notify");
   });
 });
+
+describe("HomeAssistantRestClient AbortSignal", () => {
+  it("forwards AbortSignal to fetch and rejects when aborted", async () => {
+    const controller = new AbortController();
+    const { fn, calls } = makeFetch(
+      ({ init }) =>
+        new Promise<Response>((_, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => {
+              reject(
+                init.signal?.reason instanceof Error
+                  ? init.signal.reason
+                  : new DOMException("aborted", "AbortError"),
+              );
+            },
+            { once: true },
+          );
+          controller.abort(
+            new DOMException("request timed out", "TimeoutError"),
+          );
+        }),
+    );
+    globalThis.fetch = fn;
+
+    const client = new HomeAssistantRestClient({
+      baseUrl: "http://ha.local:8123",
+      token: "t",
+    });
+
+    await expect(
+      client.getState("light.kitchen", { signal: controller.signal }),
+    ).rejects.toMatchObject({ name: "TimeoutError" });
+    expect(calls).toHaveLength(0);
+  });
+
+  it("passes AbortSignal through callService, getHistory, and getLogbook", async () => {
+    const controller = new AbortController();
+    const { fn, calls } = makeFetch(() => Response.json([]));
+    globalThis.fetch = fn;
+
+    const client = new HomeAssistantRestClient({
+      baseUrl: "http://ha.local:8123",
+      token: "t",
+    });
+
+    await client.callService(
+      "light",
+      "turn_off",
+      { entity_id: "light.kitchen" },
+      { signal: controller.signal },
+    );
+    await client.getHistory(["vacuum.1st_floor"], {
+      start: new Date("2026-10-01T00:00:00Z"),
+      end: new Date("2026-10-01T00:05:00Z"),
+      signal: controller.signal,
+    });
+    await client.getLogbook(
+      "vacuum.1st_floor",
+      new Date("2026-10-01T00:00:00Z"),
+      new Date("2026-10-01T00:05:00Z"),
+      { signal: controller.signal },
+    );
+
+    expect(calls).toHaveLength(3);
+    for (const call of calls) {
+      expect(call.args.init?.signal).toBe(controller.signal);
+    }
+  });
+});

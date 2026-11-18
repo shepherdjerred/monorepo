@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   createDeliveryWorkers,
+  quietDispatchActivities,
   replayFixture,
 } from "#workflows/testing/delivery-workers.ts";
 
@@ -297,15 +298,10 @@ describe("Delivery model step executor (T3)", () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const observed: string[] = [];
     const tick = {
+      ...quietDispatchActivities(),
       listDeliveryReplications: () => ({ artifacts: [] }),
       qualifyDeliveryBuilds: () => Promise.resolve(),
       dispatchPendingDeliveries: () => ({ submitted: 0 }),
-      dispatchDeliveryWorkerRecoveries: () => Promise.resolve(),
-      dispatchDeliveryMinecraftRecoveries: () => Promise.resolve(),
-      qualifyDeliveryForumBundles: () => Promise.resolve(),
-      dispatchDeliveryForumBaselines: () => Promise.resolve(),
-      dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
-      retireDrainedWorkerHosts: () => ({ requested: [], skipped: [] }),
       observeDeliveryMonitors: () => {
         observed.push("monitors");
         return { observed: 1 };

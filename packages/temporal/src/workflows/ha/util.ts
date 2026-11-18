@@ -44,8 +44,13 @@ const readActivities = proxyActivities<HaActivities>({
 
 const activities = proxyActivities<HaActivities>({
   taskQueue: TASK_QUEUES.HOME,
-  startToCloseTimeout: "30 seconds",
-  retry: { maximumAttempts: 3 },
+  startToCloseTimeout: "60 seconds",
+  retry: {
+    initialInterval: "2 seconds",
+    backoffCoefficient: 2,
+    maximumInterval: "15 seconds",
+    maximumAttempts: 4,
+  },
 });
 
 // Cleanup owns the last chance to turn off a device after the sleep timer. Use
@@ -309,16 +314,37 @@ export async function verifyStartedVacuums(
 }
 
 export const VACUUM_HISTORY_PATCH = "vacuum-start-history-v1";
+export const SERIALIZE_VACUUM_HISTORY_PATCH = "serialize-vacuum-start-history";
 
-/** Witness short cleaning transitions that ordinary delayed state polling misses. */
-export async function verifyVacuumStartHistory(
+type VacuumHistoryVerdict = {
+  vacuum: string;
+  verified: boolean;
+  interrupted: boolean;
+};
+
+function classifyVacuumHistoryVerdict(
+  vacuum: string,
+  evidence: Awaited<ReturnType<HaActivities["getVacuumStartEvidence"]>>,
+): VacuumHistoryVerdict | undefined {
+  if (
+    evidence.started &&
+    evidence.commandedReturn &&
+    (VACUUM_START_STATES.has(evidence.currentState) ||
+      VACUUM_ACTIVE_STATES.has(evidence.currentState))
+  ) {
+    return { vacuum, verified: true, interrupted: true };
+  }
+  return evidence.started && VACUUM_ACTIVE_STATES.has(evidence.currentState)
+    ? { vacuum, verified: true, interrupted: false }
+    : undefined;
+}
+
+async function verifyVacuumStartHistoryConcurrent(
   vacuums: readonly string[],
   requestedAt: Record<string, string>,
-  options: { delaySeconds: number; retries: number; retryDelaySeconds: number },
-): Promise<boolean> {
-  if (vacuums.length === 0) return false;
-  await sleep(options.delaySeconds * 1000);
-  const results = await Promise.all(
+  options: { retries: number; retryDelaySeconds: number },
+): Promise<VacuumHistoryVerdict[]> {
+  return Promise.all(
     vacuums.map(async (vacuum) => {
       const requestTime = requestedAt[vacuum];
       if (requestTime === undefined)
@@ -328,26 +354,80 @@ export async function verifyVacuumStartHistory(
           vacuum,
           requestTime,
         );
-        if (
-          evidence.started &&
-          evidence.commandedReturn &&
-          (VACUUM_START_STATES.has(evidence.currentState) ||
-            VACUUM_ACTIVE_STATES.has(evidence.currentState))
-        ) {
-          return { vacuum, verified: true, interrupted: true };
-        }
-        if (
-          evidence.started &&
-          VACUUM_ACTIVE_STATES.has(evidence.currentState)
-        ) {
-          return { vacuum, verified: true, interrupted: false };
-        }
+        const verdict = classifyVacuumHistoryVerdict(vacuum, evidence);
+        if (verdict !== undefined) return verdict;
         if (attempt < options.retries)
           await sleep(options.retryDelaySeconds * 1000);
       }
       return { vacuum, verified: false, interrupted: false };
     }),
   );
+}
+
+async function runVacuumHistoryWave(
+  pending: readonly string[],
+  requestedAt: Record<string, string>,
+  settled: Map<string, VacuumHistoryVerdict>,
+): Promise<string[]> {
+  const stillPending: string[] = [];
+  for (const vacuum of pending) {
+    const requestTime = requestedAt[vacuum];
+    if (requestTime === undefined)
+      throw new Error(`Missing vacuum request time for ${vacuum}`);
+    const evidence = await readActivities.getVacuumStartEvidence(
+      vacuum,
+      requestTime,
+    );
+    const verdict = classifyVacuumHistoryVerdict(vacuum, evidence);
+    if (verdict === undefined) {
+      stillPending.push(vacuum);
+    } else {
+      settled.set(vacuum, verdict);
+    }
+  }
+  return stillPending;
+}
+
+async function verifyVacuumStartHistorySerialized(
+  vacuums: readonly string[],
+  requestedAt: Record<string, string>,
+  options: { retries: number; retryDelaySeconds: number },
+): Promise<VacuumHistoryVerdict[]> {
+  for (const vacuum of vacuums) {
+    if (requestedAt[vacuum] === undefined)
+      throw new Error(`Missing vacuum request time for ${vacuum}`);
+  }
+  const settled = new Map<string, VacuumHistoryVerdict>();
+  let pending: readonly string[] = vacuums;
+  for (let attempt = 0; attempt <= options.retries; attempt += 1) {
+    const stillPending = await runVacuumHistoryWave(
+      pending,
+      requestedAt,
+      settled,
+    );
+    if (stillPending.length === 0) break;
+    pending = stillPending;
+    if (attempt < options.retries)
+      await sleep(options.retryDelaySeconds * 1000);
+  }
+  return vacuums.map(
+    (vacuum) =>
+      settled.get(vacuum) ?? { vacuum, verified: false, interrupted: false },
+  );
+}
+
+/** Witness short cleaning transitions that ordinary delayed state polling misses. */
+export async function verifyVacuumStartHistory(
+  vacuums: readonly string[],
+  requestedAt: Record<string, string>,
+  options: { delaySeconds: number; retries: number; retryDelaySeconds: number },
+): Promise<boolean> {
+  if (vacuums.length === 0) return false;
+  const serializeReads = patched(SERIALIZE_VACUUM_HISTORY_PATCH);
+  await sleep(options.delaySeconds * 1000);
+  const results = serializeReads
+    ? await verifyVacuumStartHistorySerialized(vacuums, requestedAt, options)
+    : await verifyVacuumStartHistoryConcurrent(vacuums, requestedAt, options);
   const failed = results
     .filter((result) => !result.verified)
     .map((result) => result.vacuum);

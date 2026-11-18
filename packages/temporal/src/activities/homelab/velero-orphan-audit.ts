@@ -34,6 +34,7 @@ const VELERO_NAMESPACE = "velero";
 const ZFS_API_GROUP = "zfs.openebs.io";
 const ZFS_API_VERSION = "v1";
 const ZFS_BACKUP_PLURAL = "zfsbackups";
+const ZFS_SNAPSHOT_PLURAL = "zfssnapshots";
 // A ZFSBackup CR counts as orphan only when its parent Velero Backup is gone
 // AND the CR is older than this fence. The 24h fence protects in-flight
 // backups whose Backup CR may lag the per-volume ZFSBackup objects.
@@ -89,11 +90,18 @@ export const veleroOrphanAuditActivities = {
       Context.current().heartbeat({ phase: "list-velero-backups" });
       const liveBackups = await listLiveVeleroBackups();
 
+      Context.current().heartbeat({ phase: "list-zfssnapshots" });
+      const liveZfsSnapshots = await listLiveZfsSnapshots();
+
       Context.current().heartbeat({ phase: "find-zfs-node-pods" });
       const nodePods = await findZfsNodePods();
 
       Context.current().heartbeat({ phase: "list-zfs-orphans" });
-      const datasets = await listZfsOrphanSnapshots(nodePods, liveBackups);
+      const datasets = await listZfsOrphanSnapshots(
+        nodePods,
+        liveBackups,
+        liveZfsSnapshots,
+      );
 
       Context.current().heartbeat({ phase: "list-zfsbackup-crs" });
       const backupCrs = await listZfsBackupCrs();
@@ -127,22 +135,11 @@ export const veleroOrphanAuditActivities = {
       zfsDatasetSnapshotCount.reset();
       veleroManagedSnapshotCount.reset();
       for (const d of datasets) {
-        veleroOrphanLocalSnapshots.set(
-          { node: d.node, pool: d.pool, dataset: d.dataset },
-          d.orphanCount,
-        );
-        veleroOrphanLocalBytes.set(
-          { node: d.node, pool: d.pool, dataset: d.dataset },
-          d.orphanBytes,
-        );
-        zfsDatasetSnapshotCount.set(
-          { node: d.node, pool: d.pool, dataset: d.dataset },
-          d.orphanCount + d.liveCount,
-        );
-        veleroManagedSnapshotCount.set(
-          { node: d.node, pool: d.pool, dataset: d.dataset },
-          d.managedCount,
-        );
+        const labels = { node: d.node, pool: d.pool, dataset: d.dataset };
+        veleroOrphanLocalSnapshots.set(labels, d.orphanCount);
+        veleroOrphanLocalBytes.set(labels, d.orphanBytes);
+        zfsDatasetSnapshotCount.set(labels, d.orphanCount + d.liveCount);
+        veleroManagedSnapshotCount.set(labels, d.managedCount);
       }
       veleroOrphanLocalSnapshotsTotal.set(totalOrphanCount);
       veleroOrphanLocalBytesTotal.set(totalOrphanBytes);
@@ -195,14 +192,7 @@ const BackupListSchema = z.object({
     .optional(),
 });
 
-async function listLiveVeleroBackups(): Promise<string[]> {
-  const api = loadCustomObjectsApi();
-  const response: unknown = await api.listNamespacedCustomObject({
-    group: VELERO_API_GROUP,
-    version: VELERO_API_VERSION,
-    namespace: VELERO_NAMESPACE,
-    plural: "backups",
-  });
+function parseCustomObjectNames(response: unknown): string[] {
   const parsed = BackupListSchema.parse(response);
   const names: string[] = [];
   for (const item of parsed.items ?? []) {
@@ -212,6 +202,28 @@ async function listLiveVeleroBackups(): Promise<string[]> {
     }
   }
   return names.toSorted();
+}
+
+async function listLiveVeleroBackups(): Promise<string[]> {
+  const response: unknown =
+    await loadCustomObjectsApi().listNamespacedCustomObject({
+      group: VELERO_API_GROUP,
+      version: VELERO_API_VERSION,
+      namespace: VELERO_NAMESPACE,
+      plural: "backups",
+    });
+  return parseCustomObjectNames(response);
+}
+
+async function listLiveZfsSnapshots(): Promise<ReadonlySet<string>> {
+  const response: unknown =
+    await loadCustomObjectsApi().listNamespacedCustomObject({
+      group: ZFS_API_GROUP,
+      version: ZFS_API_VERSION,
+      namespace: NAMESPACE_OPENEBS,
+      plural: ZFS_SNAPSHOT_PLURAL,
+    });
+  return new Set(parseCustomObjectNames(response));
 }
 
 const ZfsBackupListSchema = z.object({
@@ -325,6 +337,7 @@ export function selectZfsNodePods(
 async function listZfsOrphanSnapshots(
   nodePods: readonly ZfsNodePod[],
   liveBackups: readonly string[],
+  liveZfsSnapshots: ReadonlySet<string>,
 ): Promise<VeleroOrphanDataset[]> {
   const datasets: VeleroOrphanDataset[] = [];
   for (const nodePod of nodePods) {
@@ -337,7 +350,14 @@ async function listZfsOrphanSnapshots(
       nodePod.pod,
       "PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin zfs list -H -p -t filesystem,volume,snapshot -o name,type,used",
     );
-    datasets.push(...parseZfsInventory(nodePod.node, inventory, liveBackups));
+    datasets.push(
+      ...parseZfsInventory(
+        nodePod.node,
+        inventory,
+        liveBackups,
+        liveZfsSnapshots,
+      ),
+    );
   }
   return datasets.toSorted(
     (left, right) =>
@@ -400,6 +420,7 @@ export function parseZfsInventory(
   node: string,
   inventory: string,
   liveBackups: readonly string[],
+  liveZfsSnapshots: ReadonlySet<string> = new Set(),
 ): VeleroOrphanDataset[] {
   const liveSet = new Set(liveBackups);
   const datasets = new Map<string, MutableDatasetSummary>();
@@ -463,7 +484,10 @@ export function parseZfsInventory(
     ) {
       dataset.managedCount += 1;
     }
-    if (liveSet.has(snapshot.snapshot)) {
+    if (
+      liveSet.has(snapshot.snapshot) ||
+      liveZfsSnapshots.has(snapshot.snapshot)
+    ) {
       dataset.liveCount += 1;
     } else {
       dataset.orphanCount += 1;

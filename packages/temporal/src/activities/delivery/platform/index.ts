@@ -16,6 +16,7 @@ import { TofuStateMarkerSchema } from "#lib/delivery/platform/tofu-input.ts";
 import { inspectDeliveryPlatformRecovery } from "./recovery.ts";
 import { runDeliveryModelPlatformStep } from "./model-tofu.ts";
 import { executorIdentity } from "#activities/delivery/model/stages.ts";
+import { reapSettledDeliveryPlatformJobs } from "#activities/delivery/job-reaper.ts";
 
 /** All platform authority stays on its dedicated Activity queue and ServiceAccount. */
 export async function executePlatformWithJob(
@@ -129,6 +130,7 @@ export async function executeDeliveryPlatform(
   return await executePlatformWithJob(id, runDeliveryJob);
 }
 export const platformDeliveryActivities = {
+  reapSettledDeliveryPlatformJobs,
   runDeliveryModelPlatformStep,
   executeDeliveryPlatform,
   executeDeliveryControlPlane,

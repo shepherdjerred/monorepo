@@ -11,9 +11,12 @@ export const DELIVERY_AUTO_RETIRE_PATCH = "delivery-auto-retire-v1";
 
 const retirement = proxyActivities<DeliveryActivities>({
   taskQueue: TASK_QUEUES.DELIVERY,
-  startToCloseTimeout: "2 minutes",
-  // A proposal is repeated by the next tick, never by a retry.
-  retry: { maximumAttempts: 1 },
+  startToCloseTimeout: "3 minutes",
+  retry: {
+    initialInterval: "5s",
+    maximumInterval: "20s",
+    maximumAttempts: 2,
+  },
 });
 
 /** The tick's proposal failure, reported after dispatch like an observation failure. */

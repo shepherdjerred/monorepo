@@ -56,8 +56,10 @@ import {
   failDeliveryHandoff,
   handOffDelivery,
 } from "./model/handoff.ts";
+import { reapSettledDeliveryWorkerJobs } from "./job-reaper.ts";
 
 export const deliveryActivities = {
+  reapSettledDeliveryWorkerJobs,
   handOffDelivery,
   claimDeliveryHandoff,
   failDeliveryHandoff,

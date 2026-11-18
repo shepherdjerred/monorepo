@@ -1,6 +1,28 @@
 import { Worker, type WorkerOptions } from "@temporalio/worker";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+
+export function quietDispatchActivities() {
+  return {
+    dispatchDeliveryWorkerRecoveries: () => Promise.resolve(),
+    dispatchDeliveryMinecraftRecoveries: () => Promise.resolve(),
+    qualifyDeliveryForumBundles: () => Promise.resolve(),
+    dispatchDeliveryForumBaselines: () => Promise.resolve(),
+    dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
+    observeDeliveryMonitors: () => ({ observed: 0 }),
+    observeDeliveryDrift: () => ({ recorded: 0 }),
+    removeDeliveryTargets: () => ({ removed: 0 }),
+    retireDrainedWorkerHosts: () => ({ requested: [], skipped: [] }),
+    reapSettledDeliveryWorkerJobs: () => ({
+      namespace: "delivery-worker-jobs",
+      scanned: 0,
+      candidates: 0,
+      deleted: [],
+      skippedUnsettled: 0,
+    }),
+  };
+}
+
 export async function createDeliveryWorkers(
   environment: TestWorkflowEnvironment,
   definitions: NonNullable<WorkerOptions["activities"]>,

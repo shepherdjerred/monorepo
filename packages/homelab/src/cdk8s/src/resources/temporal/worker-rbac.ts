@@ -226,10 +226,10 @@ export function createTemporalWorkerMaintenanceRbac(
     })),
   });
 
-  // Lets the Velero orphan audit list per-volume ZFSBackup CRs so it can
-  // detect the CR-orphan pathology (parent Backup gone, CR left behind),
-  // which otherwise bloats etcd with no alert. Read-only: remediation stays
-  // a manual runbook procedure.
+  // Lets the Velero orphan audit list per-volume ZFSBackup CRs and live CSI
+  // ZFSSnapshot CRs so it can detect CR-orphan pathology without false-positive
+  // alerts on CSI-managed golden workspace snapshots. Read-only: remediation
+  // stays a manual runbook procedure.
   new KubeRole(chart, "temporal-worker-openebs-zfsbackups-read", {
     metadata: {
       name: "temporal-worker-openebs-zfsbackups-read",
@@ -238,7 +238,7 @@ export function createTemporalWorkerMaintenanceRbac(
     rules: [
       {
         apiGroups: ["zfs.openebs.io"],
-        resources: ["zfsbackups", "zfsvolumes"],
+        resources: ["zfsbackups", "zfsvolumes", "zfssnapshots"],
         verbs: ["get", "list"],
       },
     ],

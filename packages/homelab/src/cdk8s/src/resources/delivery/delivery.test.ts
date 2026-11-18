@@ -417,58 +417,73 @@ describe("Delivery stage workspace claims", () => {
 
 describe("Delivery execution and service bootstrap", () => {
   it("keeps disposable stage Pods tokenless and controller grants confined to their own namespace", () => {
-    const chart = new Chart(new App(), "job-contract", {
-      namespace: "temporal",
-    });
-    createDeliveryJobs(chart, "worker", "ngzmppq52zm7sii6ato2mv3sbi");
-    const resources = z
-      .array(
-        z.object({
-          kind: z.string(),
-          metadata: z.object({
-            name: z.string(),
-            namespace: z.string().optional(),
+    for (const profile of ["worker", "platform"] as const) {
+      const namespace = `delivery-${profile}-jobs`;
+      const chart = new Chart(new App(), `${profile}-job-contract`, {
+        namespace: "temporal",
+      });
+      createDeliveryJobs(
+        chart,
+        profile,
+        "ngzmppq52zm7sii6ato2mv3sbi",
+        profile === "platform" ? "orpriiyv36sxmybxe3fg4szdxq" : undefined,
+      );
+      const resources = z
+        .array(
+          z.object({
+            kind: z.string(),
+            metadata: z.object({
+              name: z.string(),
+              namespace: z.string().optional(),
+            }),
+            rules: z.unknown().optional(),
+            automountServiceAccountToken: z.boolean().optional(),
           }),
-          rules: z.unknown().optional(),
-          automountServiceAccountToken: z.boolean().optional(),
-        }),
-      )
-      .parse(chart.toJson());
-    expect(
-      resources.find(
+        )
+        .parse(chart.toJson());
+      expect(
+        resources.find(
+          (item) =>
+            item.kind === "ServiceAccount" &&
+            item.metadata.name === "delivery-stage",
+        ),
+      ).toMatchObject({
+        metadata: { namespace },
+        automountServiceAccountToken: false,
+      });
+      const role = resources.find(
         (item) =>
-          item.kind === "ServiceAccount" &&
-          item.metadata.name === "delivery-stage",
-      ),
-    ).toMatchObject({
-      metadata: { namespace: "delivery-worker-jobs" },
-      automountServiceAccountToken: false,
-    });
-    const role = resources.find((item) => item.kind === "Role");
-    expect(role?.metadata.namespace).toBe("delivery-worker-jobs");
-    const rules = z
-      .array(
-        z.object({
-          apiGroups: z.array(z.string()),
-          resources: z.array(z.string()),
-          verbs: z.array(z.string()),
-        }),
-      )
-      .parse(role?.rules);
-    expect(
-      rules.map(
-        (rule) => `${rule.apiGroups.join(",")}:${rule.resources.join(",")}`,
-      ),
-    ).toEqual(["batch:jobs", ":pods", ":pods/log"]);
-    expect(
-      Object.fromEntries(
-        rules.map((rule) => [rule.resources.join(","), [...rule.verbs].sort()]),
-      ),
-    ).toEqual({
-      jobs: ["create", "get"],
-      pods: ["get", "list"],
-      "pods/log": ["get"],
-    });
+          item.kind === "Role" &&
+          item.metadata.name === `delivery-${profile}-job-controller`,
+      );
+      expect(role?.metadata.namespace).toBe(namespace);
+      const rules = z
+        .array(
+          z.object({
+            apiGroups: z.array(z.string()),
+            resources: z.array(z.string()),
+            verbs: z.array(z.string()),
+          }),
+        )
+        .parse(role?.rules);
+      expect(
+        rules.map(
+          (rule) => `${rule.apiGroups.join(",")}:${rule.resources.join(",")}`,
+        ),
+      ).toEqual(["batch:jobs", ":pods", ":pods/log"]);
+      expect(
+        Object.fromEntries(
+          rules.map((rule) => [
+            rule.resources.join(","),
+            [...rule.verbs].sort(),
+          ]),
+        ),
+      ).toEqual({
+        jobs: ["create", "delete", "get", "list"],
+        pods: ["get", "list"],
+        "pods/log": ["get"],
+      });
+    }
   });
   it("requires a PG image while retaining every issued scoped capability registration", () => {
     expect(deliveryActivation()).toMatchObject({

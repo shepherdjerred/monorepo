@@ -93,7 +93,10 @@ const client = new HomeAssistantRestClient<MyHomeSchema>({
 
 ## API reference
 
-- `HomeAssistantRestClient` reads state and calls REST services.
+- `HomeAssistantRestClient` reads state, history, logbook, and diagnostics and
+  calls REST services; every request method accepts an optional `signal` via
+  `RequestOptions` (`CallServiceOptions` / `HistoryOptions`) to abort in-flight
+  `fetch` calls.
 - `HomeAssistantEventClient` connects to the WebSocket API and supports event
   subscriptions, triggers, service calls, and state reads.
   `onConnectionChange` emits `authenticated` after login and `ready` after all

@@ -1,8 +1,11 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
+import { MockActivityEnvironment } from "@temporalio/testing";
+import { reconcileStreambotPlayback } from "./streambot.ts";
 import {
   STREAMBOT_RECONCILE_RETRY_DELAYS_MS,
   isRefusedOrResetConnection,
   postStreambotReconcile,
+  settleOnAbort,
   type StreambotReconcileRequest,
 } from "./streambot-reconcile-request.ts";
 
@@ -161,5 +164,54 @@ describe("isRefusedOrResetConnection", () => {
       false,
     );
     expect(isRefusedOrResetConnection({ code: "ECONNRESET" })).toBe(false);
+  });
+});
+
+describe("reconcileStreambotPlayback body settlement boundary", () => {
+  const originalFetch = globalThis.fetch;
+  const originalUrl = Bun.env["STREAMBOT_INTERNAL_URL"];
+  const originalToken = Bun.env["STREAMBOT_SCHEDULER_TOKEN"];
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    if (originalUrl === undefined) delete Bun.env["STREAMBOT_INTERNAL_URL"];
+    else Bun.env["STREAMBOT_INTERNAL_URL"] = originalUrl;
+    if (originalToken === undefined)
+      delete Bun.env["STREAMBOT_SCHEDULER_TOKEN"];
+    else Bun.env["STREAMBOT_SCHEDULER_TOKEN"] = originalToken;
+  });
+
+  test("aborts a stalled response.json() read inside settleOnAbort", async () => {
+    const response = {
+      json: () =>
+        new Promise<unknown>(() => {
+          // Simulates headers flushed with a body stream that never closes.
+        }),
+    };
+    await expect(
+      settleOnAbort(response.json(), AbortSignal.timeout(20)),
+    ).rejects.toBeInstanceOf(DOMException);
+
+    Bun.env["STREAMBOT_INTERNAL_URL"] = "http://streambot.test";
+    Bun.env["STREAMBOT_SCHEDULER_TOKEN"] = "t".repeat(32);
+    globalThis.fetch = Object.assign(
+      () =>
+        Promise.resolve(
+          new Response(
+            new ReadableStream({
+              start() {
+                // Never closes after HTTP 200 headers arrive.
+              },
+            }),
+            { status: 200 },
+          ),
+        ),
+      { preconnect: originalFetch.preconnect.bind(originalFetch) },
+    );
+
+    const environment = new MockActivityEnvironment();
+    const pending = environment.run(reconcileStreambotPlayback);
+    environment.cancel();
+    await expect(pending).rejects.toThrow();
   });
 });

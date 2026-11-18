@@ -130,6 +130,34 @@ describe("parseZfsInventory", () => {
     ]);
   });
 
+  it("excludes snapshots matching live OpenEBS CSI ZFSSnapshot CRs from orphan counts and bytes", () => {
+    const csiGolden = "snapshot-7a1d3e9f-4c2b-4f88-9012-abcdef012345";
+    const result = parseZfsInventory(
+      "liskov",
+      [
+        "zfspv-pool-nvme\tfilesystem\t2048",
+        "zfspv-pool-nvme/pvc-golden\tfilesystem\t1024",
+        `zfspv-pool-nvme/pvc-golden@${csiGolden}\tsnapshot\t512`,
+        "zfspv-pool-nvme/pvc-golden@snapshot-orphaned\tsnapshot\t256",
+        "zfspv-pool-nvme/pvc-golden@daily-backup-v2-20261115023043\tsnapshot\t128",
+      ].join("\n"),
+      ["daily-backup-v2-20261115023043"],
+      new Set([csiGolden]),
+    );
+
+    expect(result).toEqual([
+      {
+        node: "liskov",
+        pool: "zfspv-pool-nvme",
+        dataset: "zfspv-pool-nvme/pvc-golden",
+        orphanCount: 1,
+        orphanBytes: 256,
+        liveCount: 2,
+        managedCount: 1,
+      },
+    ]);
+  });
+
   it("handles a node with one pool and datasets without snapshots", () => {
     const result = parseZfsInventory(
       "liskov",
