@@ -1,4 +1,7 @@
-import type { PersistedStation } from "@shepherdjerred/streambot/state/station-schema.ts";
+import type {
+  PersistedStation,
+  StationKind,
+} from "@shepherdjerred/streambot/state/station-schema.ts";
 import {
   formatStationDisplayName,
   formatStationStartMessage,
@@ -9,6 +12,7 @@ import type {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   AUDIO_CHANNEL,
+  VIDEO_CHANNEL,
   type PlaybackChannelNumber,
 } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type { WebCommand } from "@shepherdjerred/streambot/web/shared/contracts.ts";
@@ -44,7 +48,31 @@ function stopWebStation(
   return { message: `Stopped ${formatStationDisplayName(stopped)}.` };
 }
 
-function resolveRadioTargetSlot(
+function assertManualStationChannel(
+  kind: StationKind,
+  targetSlot: PlaybackChannelNumber | undefined,
+  auto: boolean,
+): void {
+  if (auto || targetSlot === undefined) {
+    return;
+  }
+  if (kind === "radio" && targetSlot !== AUDIO_CHANNEL) {
+    throw new WebError(
+      400,
+      "invalid_channel",
+      "Radio plays on channel 1 (audio) or in Auto mode.",
+    );
+  }
+  if (kind === "tv" && targetSlot === AUDIO_CHANNEL) {
+    throw new WebError(
+      400,
+      "invalid_channel",
+      "TV mode requires a video channel (2+) or Auto mode.",
+    );
+  }
+}
+
+function resolveStationTargetSlot(
   playback: WebPlayback,
   input: Extract<WebCommand, { action: "station" }>,
   target: {
@@ -53,41 +81,61 @@ function resolveRadioTargetSlot(
     readonly playbackChannel: PlaybackChannelNumber | undefined;
     readonly auto: boolean;
   },
+  kind: StationKind,
 ): PlaybackChannelNumber | undefined {
-  const targetSlot = target.auto ? AUDIO_CHANNEL : target.playbackChannel;
-  if (
-    targetSlot !== undefined &&
-    targetSlot !== AUDIO_CHANNEL &&
-    !target.auto
-  ) {
-    throw new WebError(
-      400,
-      "invalid_channel",
-      "Radio plays on channel 1 (audio) or in Auto mode.",
-    );
-  }
+  const defaultSlot = kind === "tv" ? VIDEO_CHANNEL : AUDIO_CHANNEL;
+  const targetSlot = target.auto ? defaultSlot : target.playbackChannel;
+  assertManualStationChannel(kind, targetSlot, target.auto);
   if (
     target.auto &&
-    target.playbackChannel !== AUDIO_CHANNEL &&
+    target.playbackChannel !== defaultSlot &&
     Object.keys(input.slotRevisions).length > 0
   ) {
-    const slotRevision = input.slotRevisions[String(AUDIO_CHANNEL)];
+    const slotRevision = input.slotRevisions[String(defaultSlot)];
     if (
       slotRevision === undefined ||
       playback.deps.sessions.revision(
         target.guildId,
         target.channelId,
-        AUDIO_CHANNEL,
+        defaultSlot,
       ) !== slotRevision
     ) {
       throw new WebError(
         409,
         "playback_changed",
-        "Refresh playback before starting Radio.",
+        kind === "tv"
+          ? "Refresh playback before starting TV mode."
+          : "Refresh playback before starting Radio.",
       );
     }
   }
   return targetSlot;
+}
+
+async function assertWebStationEnabled(
+  playback: WebPlayback,
+  kind: StationKind,
+  scope: { guildId: string; channelId: string; userId: string },
+): Promise<void> {
+  const gate =
+    kind === "tv"
+      ? playback.deps.featureGate.tv
+      : playback.deps.featureGate.radio;
+  if ((await gate?.(scope)) !== true) {
+    throw new WebError(
+      403,
+      "feature_disabled",
+      kind === "tv"
+        ? "TV mode is not enabled in this server yet."
+        : "Radio mode is not enabled in this server yet.",
+    );
+  }
+}
+
+function emptyWebStationMessage(kind: StationKind): string {
+  return kind === "tv"
+    ? "Could not find any TV episodes, movies, or videos matching that request right now."
+    : "Could not find any radio tracks matching that request right now.";
 }
 
 export async function executeWebStationCommand(
@@ -104,22 +152,10 @@ export async function executeWebStationCommand(
       auto: target.auto,
     });
   }
-  if (input.mode === "tv") {
-    throw new WebError(
-      403,
-      "feature_disabled",
-      "TV mode is not enabled in this server yet.",
-    );
-  }
-  if ((await playback.deps.featureGate.radio?.(target.scope)) !== true) {
-    throw new WebError(
-      403,
-      "feature_disabled",
-      "Radio mode is not enabled in this server yet.",
-    );
-  }
+  const kind: StationKind = input.mode;
+  await assertWebStationEnabled(playback, kind, target.scope);
   target.guard();
-  const targetSlot = resolveRadioTargetSlot(playback, input, target);
+  const targetSlot = resolveStationTargetSlot(playback, input, target, kind);
   if (playback.deps.sessions.startStation === undefined) {
     throw new WebError(
       503,
@@ -128,9 +164,10 @@ export async function executeWebStationCommand(
     );
   }
   const station: PersistedStation = {
-    kind: "radio",
+    kind,
     scope: input.scope ?? "room",
     ownerId: target.userId,
+    ...(kind === "tv" ? { tvPreset: input.tvPreset ?? "my-mix" } : {}),
     ...(input.seed === undefined ? {} : { seed: input.seed }),
     recentIdentities: [],
     skippedIdentities: [],
@@ -156,17 +193,10 @@ export async function executeWebStationCommand(
       voiceChannelId: target.channelId,
       ...(targetSlot === undefined ? {} : { playbackChannel: targetSlot }),
     });
-    throw new WebError(
-      404,
-      "not_found",
-      "Could not find any radio tracks matching that request right now.",
-    );
+    throw new WebError(404, "not_found", emptyWebStationMessage(kind));
   }
-  if (targetSlot === AUDIO_CHANNEL && target.auto) {
-    playback.deps.sessions.numbered.selection.follow(
-      target.scope,
-      AUDIO_CHANNEL,
-    );
+  if (targetSlot !== undefined && target.auto) {
+    playback.deps.sessions.numbered.selection.follow(target.scope, targetSlot);
   }
   return {
     message: formatStationStartMessage(station, started.added).replaceAll(

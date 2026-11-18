@@ -12,6 +12,7 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { VoiceCommandPort } from "@shepherdjerred/streambot/voice/voice-tools.ts";
 import type {
   RadioArguments,
+  TvArguments,
   VoiceCommandInvocation,
 } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
 import { streambotVoiceLifecycleDeps } from "@shepherdjerred/streambot/voice/local-voice.ts";
@@ -212,6 +213,13 @@ export class DryRunVoiceCommandPort implements VoiceCommandPort {
     return input.action === "stop"
       ? "Dry run: radio would stop."
       : "Dry run: radio would start.";
+  }
+
+  tv(input: TvArguments, _signal: AbortSignal): string {
+    this.calls.push({ name: "tv", arguments: input });
+    return input.action === "stop"
+      ? "Dry run: TV mode would stop."
+      : "Dry run: TV mode would start.";
   }
 }
 

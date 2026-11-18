@@ -862,39 +862,58 @@ h3 {
   padding: 6px 12px;
   min-height: 36px;
 }
-.radio-banner {
+.radio-banner,
+.tv-banner {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 18px 20px;
   margin-bottom: 22px;
   background: var(--surface-alt, rgba(255, 255, 255, 0.02));
 }
-.radio-banner-header {
+.tv-banner {
+  display: grid;
+  gap: 14px;
+}
+.radio-banner-header,
+.tv-banner-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: safe center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 14px;
 }
-.radio-banner-header h2 {
+.tv-banner-header {
+  margin-bottom: 0;
+}
+.radio-banner-header h2,
+.tv-banner-header h2 {
   font-size: 18px;
   margin: 2px 0 0;
 }
-.radio-active-status {
+.radio-active-status,
+.tv-banner-status {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: safe center;
   gap: 10px;
+  min-inline-size: 0;
+}
+.tv-banner-status > .station-badge {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
 }
 .radio-form {
   display: grid;
   gap: 14px;
 }
-.radio-seed-group {
+.radio-seed-group,
+.tv-banner-seed {
   display: grid;
   gap: 6px;
 }
-.radio-seed-group label {
+.radio-seed-group label,
+.tv-banner-seed label {
   font-size: 12px;
   font-weight: 600;
 }
@@ -903,19 +922,22 @@ h3 {
   font-size: 12px;
   color: var(--muted);
 }
-.radio-seed-group input {
+.radio-seed-group input,
+.tv-banner-seed input {
   font: inherit;
   font-size: max(1rem, 1em);
   min-height: 44px;
   padding: 10px 12px;
 }
-.radio-scope-fieldset {
+.radio-scope-fieldset,
+.tv-banner-fieldset {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px 12px;
   margin: 0;
 }
-.radio-scope-fieldset legend {
+.radio-scope-fieldset legend,
+.tv-banner-fieldset legend {
   padding: 0 6px;
   font-size: 11px;
   letter-spacing: 0.6px;
@@ -927,7 +949,14 @@ h3 {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
 }
-.radio-scope-option {
+.tv-banner-radios {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: safe center;
+  gap: 8px;
+}
+.radio-scope-option,
+.tv-banner-radio-option {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -935,6 +964,15 @@ h3 {
   min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 6px;
+  cursor: pointer;
+}
+.tv-banner-radio-option {
+  align-items: safe center;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 550;
+}
+.tv-banner-radio-option label {
   cursor: pointer;
 }
 .radio-scope-option input[type="radio"] {
@@ -951,12 +989,14 @@ h3 {
   font-size: 11px;
   color: var(--muted);
 }
-.radio-form-actions {
+.radio-form-actions,
+.tv-banner-actions {
   display: flex;
-  align-items: center;
+  align-items: safe center;
   gap: 12px;
 }
-.radio-form-actions button {
+.radio-form-actions button,
+.tv-banner-actions button {
   min-height: 44px;
 }
 .search-form {

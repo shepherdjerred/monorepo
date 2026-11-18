@@ -340,15 +340,15 @@ export class StationFeeder {
     station: PersistedStation,
     scope: { guildId: string; channelId: string; userId: string },
   ): Promise<boolean> {
-    if (
-      station.kind === "radio" &&
-      this.deps.featureGate?.radio !== undefined
-    ) {
-      const enabled = await this.deps.featureGate.radio(scope);
-      if (!enabled) {
-        if (session.station === station) session.station = undefined;
-        return false;
+    const check =
+      station.kind === "radio"
+        ? this.deps.featureGate?.radio
+        : this.deps.featureGate?.tv;
+    if (check !== undefined && !(await check(scope))) {
+      if (session.station === station) {
+        session.station = undefined;
       }
+      return false;
     }
     return true;
   }

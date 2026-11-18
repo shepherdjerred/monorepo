@@ -23,7 +23,11 @@ import type {
   Source,
   SubtitleTrackRef,
 } from "@shepherdjerred/streambot/sources/source.ts";
-import type { StationScope } from "@shepherdjerred/streambot/state/station-schema.ts";
+import type {
+  StationKind,
+  StationScope,
+  TvPreset,
+} from "@shepherdjerred/streambot/state/station-schema.ts";
 
 /** Permission-checked playback controls shared by slash and voice transports. */
 export class PlaybackControls {
@@ -72,7 +76,7 @@ export class PlaybackControls {
     return this.deps.listChannels(userId);
   }
 
-  async radio(
+  radio(
     userId: UserId,
     input: {
       readonly action: "start" | "stop";
@@ -81,15 +85,46 @@ export class PlaybackControls {
     },
     signal: AbortSignal,
   ): Promise<string> {
+    return this.runStationControl("radio", userId, input, signal);
+  }
+
+  tv(
+    userId: UserId,
+    input: {
+      readonly action: "start" | "stop";
+      readonly preset?: TvPreset | null | undefined;
+      readonly seed?: string | null | undefined;
+      readonly scope?: StationScope | null | undefined;
+    },
+    signal: AbortSignal,
+  ): Promise<string> {
+    return this.runStationControl("tv", userId, input, signal);
+  }
+
+  private async runStationControl(
+    kind: StationKind,
+    userId: UserId,
+    input: {
+      readonly action: "start" | "stop";
+      readonly preset?: TvPreset | null | undefined;
+      readonly seed?: string | null | undefined;
+      readonly scope?: StationScope | null | undefined;
+    },
+    signal: AbortSignal,
+  ): Promise<string> {
     if (this.deps.controlStation === undefined) {
       throw new PlaybackCommandBoundaryError(
-        "Radio mode is not enabled in this server.",
+        kind === "tv"
+          ? "TV mode is not enabled in this server."
+          : "Radio mode is not enabled in this server.",
       );
     }
     const seed = input.seed?.trim();
     return await this.deps.controlStation({
+      kind,
       userId,
       action: input.action,
+      ...(input.preset == null ? {} : { tvPreset: input.preset }),
       ...(seed === undefined || seed === "" ? {} : { seed }),
       ...(input.scope == null ? {} : { scope: input.scope }),
       signal,

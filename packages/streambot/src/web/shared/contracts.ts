@@ -140,6 +140,7 @@ export const SnapshotSchema = z.strictObject({
   sportsEnabled: z.boolean(),
   historyEnabled: z.boolean().default(false),
   radioEnabled: z.boolean().default(false),
+  tvEnabled: z.boolean().default(false),
   station: WebStationSchema.nullable().default(null),
   restrictedLive: z.boolean(),
 });

@@ -61,6 +61,7 @@ export async function buildWebSnapshot(
   const sportsEnabled = await owner.sportsEnabled(session, guildId);
   const historyEnabled = await owner.historyEnabled(session, guildId);
   const radioEnabled = (await deps.featureGate.radio?.(scope)) === true;
+  const tvEnabled = (await deps.featureGate.tv?.(scope)) === true;
   // Capture the view and its revision together after asynchronous gate checks.
   const resolved = resolveSnapshotSelection(deps, {
     guildId,
@@ -104,6 +105,7 @@ export async function buildWebSnapshot(
     sportsEnabled,
     historyEnabled,
     radioEnabled,
+    tvEnabled,
     station: webStation(handle),
     restrictedLive:
       source?.kind === "url" && sportsEventForSource(source.url) !== null,

@@ -176,11 +176,34 @@ only when allowed; otherwise it logs the prerequisite and `/play` remains usable
 Bot/webhook messages and DMs never trigger prefix playback. Message content is
 neither logged nor stored as chat history.
 
-Catalog browsing, Spotify links, and saved playlists have separate default-on
-rollout gates in [the typed media gates](src/config/media-features.ts) and
+Catalog browsing, Spotify links, saved playlists, Radio, and TV Mode have separate
+default-on rollout gates in [the typed media gates](src/config/media-features.ts) and
 [managed inventory](../feature-flags/src/managed-flag-inventory.json).
-Apple Music, Deezer, Tidal, and recommendation autoplay have no integration.
+Apple Music, Deezer, and Tidal have no integration.
 The existing idle disconnect and numbered playback transports still apply.
+
+## Continuous Radio and TV stations
+
+Radio (`/radio start|status|stop`, voice `radio`, and the `/music` Radio banner)
+and TV Mode (`/tv start|status|stop`, voice `tv`, and the `/plex` TV Mode banner)
+keep a small 2-item lookahead buffered in the room's playback queue:
+
+- **Radio** (`streambot-radio-enabled`) blends room, personal, or server music
+  taste with related MusicBrainz, YouTube Mix, and LLM-curated tracks on
+  Channel 1 (microphone audio) in Automatic mode.
+- **TV Mode** (`streambot-tv-enabled`) curates Go Live video on Channel 2 (or
+  the viewer's selected video slot `2+`) across five presets: `my-mix` (~40%
+  continuing/unstarted series, ~30% movies, ~30% watchable YouTube videos),
+  `continue-series` (advances multi-season episodes chronologically across
+  `S01Efinal -> S02E01`), `sitcoms` (Plex Comedy/Animation episodes up to 45
+  minutes, with local filename/folder fallback), `movies`, and `youtube`.
+- Because Channel 1 and Channel 2 share the primary userbot lease, a voice room
+  can run Radio background audio on Channel 1 alongside TV Mode video on
+  Channel 2 simultaneously.
+- Explicit listener queue additions raise the queue above the 2-item low-water
+  mark and pause station refills until human-queued items finish; `SKIP`
+  records skipped identities so stations steer away from skipped media, and
+  `CLEAR`, `STOP`, `LEAVE`, or an empty voice room stops the station cleanly.
 
 ## Web development
 

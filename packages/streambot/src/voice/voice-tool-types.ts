@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { LolLeagueSchema } from "@shepherdjerred/streambot/sports/lolesports.ts";
+import { TvPresetSchema } from "@shepherdjerred/streambot/state/station-schema.ts";
 
 const EmptyInputSchema = z.strictObject({});
 
@@ -64,6 +65,12 @@ export const voiceToolSchemas = {
     seed: z.string().trim().min(1).max(200).optional(),
     scope: z.enum(["room", "mine", "server"]).optional(),
   }),
+  tv: z.strictObject({
+    action: z.enum(["start", "stop"]),
+    preset: TvPresetSchema.optional(),
+    seed: z.string().trim().min(1).max(200).optional(),
+    scope: z.enum(["room", "mine", "server"]).optional(),
+  }),
 } as const;
 
 export type ToolName =
@@ -92,12 +99,14 @@ export type ToolName =
   | "get_queue"
   | "get_now_playing"
   | "list_sports"
-  | "radio";
+  | "radio"
+  | "tv";
 
 export type PlayArguments = z.infer<typeof voiceToolSchemas.play>;
 export type SeekArguments = z.infer<typeof voiceToolSchemas.seek>;
 export type LoopArguments = z.infer<typeof voiceToolSchemas.setLoop>;
 export type RadioArguments = z.infer<typeof voiceToolSchemas.radio>;
+export type TvArguments = z.infer<typeof voiceToolSchemas.tv>;
 
 export type VoiceCommandInvocation =
   | {
@@ -167,4 +176,8 @@ export type VoiceCommandInvocation =
   | {
       readonly name: "radio";
       readonly arguments: RadioArguments;
+    }
+  | {
+      readonly name: "tv";
+      readonly arguments: TvArguments;
     };

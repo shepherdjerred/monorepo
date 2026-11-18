@@ -8,6 +8,7 @@ export const PlaybackChannelNumberSchema = z
   .brand<"PlaybackChannelNumber">();
 export type PlaybackChannelNumber = z.infer<typeof PlaybackChannelNumberSchema>;
 export const AUDIO_CHANNEL = PlaybackChannelNumberSchema.parse(1);
+export const VIDEO_CHANNEL = PlaybackChannelNumberSchema.parse(2);
 export function playbackTransport(
   channel: PlaybackChannelNumber,
 ): "music" | "video" {

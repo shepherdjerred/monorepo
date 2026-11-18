@@ -195,20 +195,7 @@ if (import.meta.main) {
   const slots = new Map<
     PlaybackChannelNumber,
     ReturnType<typeof createFixtureSlot>
-  >([
-    [
-      videoSlot,
-      Object.assign(
-        {
-          actor: fixture.actor,
-          station: undefined,
-          startStation: () => Promise.resolve([]),
-          stopStation: () => null,
-        },
-        { handle: fixture.handle },
-      ),
-    ],
-  ]);
+  >([[videoSlot, fixture.primarySlot]]);
   const ensureSlot = (slot: PlaybackChannelNumber) => {
     let entry = slots.get(slot);
     if (entry === undefined) {
@@ -231,21 +218,26 @@ if (import.meta.main) {
         ? fixture.handle
         : ensureSlot(playbackChannel).handle,
     startStation: async ({ playbackChannel, station }) => {
-      const target = playbackChannel ?? PlaybackChannelNumberSchema.parse(1);
+      const target =
+        playbackChannel ??
+        PlaybackChannelNumberSchema.parse(station.kind === "tv" ? 2 : 1);
       const entry = ensureSlot(target);
       const added = await entry.startStation(station);
       return { handle: entry.handle, added };
     },
-    stopStation: ({ playbackChannel, fallbackInRoom }) => {
+    stopStation: ({ playbackChannel, fallbackInRoom, kind }) => {
+      const matches = (
+        candidate: ReturnType<typeof createFixtureSlot> | undefined,
+      ) =>
+        candidate?.station !== undefined &&
+        (kind === undefined || candidate.station.kind === kind);
       const direct =
         playbackChannel === undefined ? undefined : slots.get(playbackChannel);
       const entry =
-        fallbackInRoom === true && direct?.station === undefined
-          ? [...slots.values()].find(
-              (candidate) => candidate.station !== undefined,
-            )
+        fallbackInRoom === true && !matches(direct)
+          ? [...slots.values()].find((candidate) => matches(candidate))
           : direct;
-      return entry?.stopStation() ?? null;
+      return matches(entry) ? (entry?.stopStation() ?? null) : null;
     },
     releaseUnused: (_guild, _channel, slot) => {
       if (slot === undefined) return;
