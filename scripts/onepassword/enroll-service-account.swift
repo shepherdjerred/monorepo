@@ -62,7 +62,7 @@ private func storeInKeychain(_ token: String) {
 }
 
 private let outsideLoginSessionHint =
-  "Run this from a terminal in the GUI login session. A process started by an SSH login that has since ended, such as an SSH-started herdr holder, sees only the System keychain until it is replaced."
+  "Run this from a terminal in the GUI login session. Direct SSH sessions (such as Tailscale SSH) and processes started by an SSH login see only the System keychain."
 
 /// A process outside the login session resolves only the System keychain,
 /// so the token could never be saved; stop before asking for it.

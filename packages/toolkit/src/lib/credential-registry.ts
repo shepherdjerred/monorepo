@@ -179,6 +179,13 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
       ref: `${HOMELAB_VAULT_REF}/${BUGSINK_ITEM}/BUGSINK_TOKEN`,
     },
   },
+  KUBE_CERTIFICATE_AUTHORITY_DATA: {
+    description: "Kubernetes cluster CA certificate (base64 PEM)",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_ADMIN_VAULT_REF}/${KUBECONFIG_ITEM_ID}/certificate-authority-data`,
+    },
+  },
   KUBE_CLIENT_CERTIFICATE_DATA: {
     description: "Kubernetes admin client certificate (base64 PEM)",
     source: {

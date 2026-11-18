@@ -1,6 +1,20 @@
 #!/bin/bash
 GUI_DOMAIN="gui/$(id -u)"
 
+wait_for_unload() {
+    local service="$1"
+    local attempts=0
+    local max_attempts="${LAUNCHAGENT_UNLOAD_MAX_ATTEMPTS:-200}"
+    local poll_seconds="${LAUNCHAGENT_UNLOAD_POLL_SECONDS:-0.05}"
+    while launchctl print "$service" >/dev/null 2>&1; do
+        if [ "$attempts" -ge "$max_attempts" ]; then
+            return 1
+        fi
+        attempts=$((attempts + 1))
+        sleep "$poll_seconds"
+    done
+}
+
 # Always inspect the domain we will mutate. `launchctl list` instead inspects
 # the caller's domain, which can be an SSH/Background session.
 reload_agent() {
@@ -23,6 +37,13 @@ reload_agent() {
             status=$?
             printf 'LaunchAgent %s: bootout failed in %s (exit %s).\n' "$label" "$GUI_DOMAIN" "$status" >&2
             return "$status"
+        fi
+        # `launchctl bootout` returns once SIGTERM is queued, while launchd is
+        # still tearing down a running KeepAlive agent. Calling bootstrap before
+        # removal finishes fails with EALREADY (reported by launchctl as exit 5).
+        if ! wait_for_unload "$service"; then
+            printf 'LaunchAgent %s: %s did not finish unloading after bootout.\n' "$label" "$service" >&2
+            return 1
         fi
     fi
     if launchctl bootstrap "$GUI_DOMAIN" "$plist"; then

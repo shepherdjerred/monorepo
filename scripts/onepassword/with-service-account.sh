@@ -16,16 +16,31 @@ if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
     -a "$(id -un)" \
     -s monorepo-homelab-1password-service-account \
     -w)"; then
-    # A process outside the login session (for example one left behind by an
-    # SSH login that has ended) resolves only the System keychain, so an
-    # enrolled token looks missing. Say so instead of prompting re-enrollment.
+    # Direct SSH sessions (such as Tailscale SSH) and processes left behind by
+    # ended SSH logins run in launchd's Background session and see only the
+    # System keychain. When this Mac's Herdr core is running in the GUI login
+    # session, read the enrolled token there without auto-starting an SSH core.
     if search_list="$(security list-keychains)" && [[ "$search_list" != *login.keychain* ]]; then
-      echo "This process cannot see the login Keychain (launchd session: $(launchctl managername)), so the enrolled token looks missing; do not re-enroll." >&2
-      echo "Run the command from a process in the GUI login session. A process started by an SSH login that has since ended, such as an SSH-started herdr holder, stays this way until it is replaced." >&2
+      hc="${HERDR_CORE_BIN:-$HOME/.local/bin/herdr-core}"
+      if [[ "${WITH_SERVICE_ACCOUNT_GUI_DELEGATED:-}" != "1" ]] &&
+        [[ -x "$hc" ]] &&
+        "$hc" server status --json >/dev/null; then
+        service_token="$("$hc" exec \
+          --env WITH_SERVICE_ACCOUNT_GUI_DELEGATED=1 \
+          /usr/bin/security find-generic-password \
+          -a "$(id -un)" \
+          -s monorepo-homelab-1password-service-account \
+          -w)" || service_token=""
+      fi
+      if [[ -z "${service_token:-}" ]]; then
+        echo "This process cannot see the login Keychain (launchd session: $(launchctl managername)), so the enrolled token looks missing; do not re-enroll." >&2
+        echo "Run the command from a process in the GUI login session (or ensure com.jerred.herdr-core is running there). Direct SSH sessions (such as Tailscale SSH) and processes started by an SSH login stay outside the GUI session." >&2
+        exit 1
+      fi
+    else
+      echo "No homelab 1Password service account token is available in Keychain." >&2
       exit 1
     fi
-    echo "No homelab 1Password service account token is available in Keychain." >&2
-    exit 1
   fi
   if (( ${#service_token} <= 128 )); then
     echo "The Keychain token is incomplete; run the Swift enrollment helper." >&2

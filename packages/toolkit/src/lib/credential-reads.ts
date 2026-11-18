@@ -82,7 +82,7 @@ async function readInstalledReferences(
     : null;
 }
 
-function referencesOf(
+export function referencesOf(
   installed: string,
   run: Run,
 ): Promise<ReadonlyMap<string, string> | null> {
@@ -97,6 +97,30 @@ function referencesOf(
     byBinary.set(installed, references);
   }
   return references;
+}
+
+export function parseDelegatedResult(
+  name: string,
+  target: string,
+  result: { exit: number; stdout: string; stderr: string },
+): string | null {
+  const lines = result.stderr
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  for (const line of lines.filter((entry) => RESOLVED_LINE.test(entry))) {
+    console.error(line);
+  }
+  const value = result.exit === 0 ? result.stdout.trim() : "";
+  if (value.length > 0) return value;
+  if (/unknown credential|unknown option|Usage: toolkit/.test(result.stderr)) {
+    return null;
+  }
+  const detail = lines.find((line) => !RESOLVED_LINE.test(line));
+  throw new Error(
+    detail ??
+      `toolkit: ${name} could not be resolved through ${target} (exit ${String(result.exit)})`,
+  );
 }
 
 /**
@@ -125,23 +149,7 @@ export async function readDelegated(
         : {}),
     },
   );
-  const lines = result.stderr
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-  for (const line of lines.filter((entry) => RESOLVED_LINE.test(entry))) {
-    console.error(line);
-  }
-  const value = result.exit === 0 ? result.stdout.trim() : "";
-  if (value.length > 0) return value;
-  if (/unknown credential|unknown option|Usage: toolkit/.test(result.stderr)) {
-    return null;
-  }
-  const detail = lines.find((line) => !RESOLVED_LINE.test(line));
-  throw new Error(
-    detail ??
-      `toolkit: ${name} could not be resolved through ${installed} (exit ${String(result.exit)})`,
-  );
+  return parseDelegatedResult(name, installed, result);
 }
 
 /** Run `body` while holding the lock for one `op://` reference. */

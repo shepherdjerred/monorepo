@@ -3,12 +3,15 @@ import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { requiredCredentialsFor } from "#lib/credential-commands.ts";
+import { createCredentialCache } from "#lib/credential-cache.ts";
+import { GUI_DELEGATED_ENVIRONMENT } from "#lib/credential-gui-bridge.ts";
 import {
   resolveCredentialValues,
   resolveCredentials,
 } from "#lib/credentials.ts";
 import type { CredentialRun } from "#lib/credentials.ts";
 import { CREDENTIAL_REGISTRY } from "#lib/credential-registry.ts";
+import { defaultToolkitConfigPath } from "#lib/toolkit-config.ts";
 
 type RunFn = CredentialRun;
 
@@ -351,6 +354,16 @@ describe("credential resolver backends", () => {
       },
     });
   });
+
+  test("registers the Kubernetes cluster CA alongside the admin client cert", () => {
+    expect(CREDENTIAL_REGISTRY["KUBE_CERTIFICATE_AUTHORITY_DATA"]).toEqual({
+      description: "Kubernetes cluster CA certificate (base64 PEM)",
+      source: {
+        kind: "op",
+        ref: "op://yx6je6mgj2oiss6z5bm42h3cxy/qbowip7zr7cggo5p5tam7g6rxe/certificate-authority-data",
+      },
+    });
+  });
 });
 
 /**
@@ -451,6 +464,133 @@ describe("credential resolver keychain visibility", () => {
         "no homelab 1Password service account token is available in Keychain. Enroll it with: swift scripts/onepassword/enroll-service-account.swift",
       );
       expect(calls.map((argv) => argv[0])).not.toContain("launchctl");
+    });
+  });
+});
+
+function backgroundGuiDeps(options: {
+  readonly serverUp: boolean;
+  readonly configPath: string;
+  readonly calls: string[][];
+}) {
+  const refsJson = JSON.stringify(
+    ["KUBE_CERTIFICATE_AUTHORITY_DATA", "ARGOCD_AUTH_TOKEN"].map((name) => {
+      const source = CREDENTIAL_REGISTRY[name]?.source;
+      return { name, ref: source?.kind === "op" ? source.ref : "" };
+    }),
+  );
+  const cache = createCredentialCache({
+    ttlSeconds: 3600,
+    store: {
+      get: () => Promise.resolve(null),
+      set: () =>
+        Promise.reject(new Error("must not write Keychain in Background")),
+      delete: () => Promise.resolve(false),
+    },
+  });
+  const run = stubRun((argv) => {
+    if (argv[0] === "/fake/toolkit" && argv[1] === "credentials") {
+      return { exit: 0, stdout: refsJson, stderr: "" };
+    }
+    if (argv[0] === "/fake/herdr-core" && argv[1] === "server") {
+      return options.serverUp
+        ? { exit: 0, stdout: '{"pid":100}\n', stderr: "" }
+        : { exit: 1, stdout: "", stderr: "not running" };
+    }
+    if (argv[0] === "/fake/herdr-core" && argv[1] === "exec") {
+      const requested = argv.at(-1) ?? "";
+      return { exit: 0, stdout: `gui-${requested}\n`, stderr: "" };
+    }
+    if (argv[0] === "security" && argv[1] === "list-keychains") {
+      return {
+        exit: 0,
+        stdout: '    "/Library/Keychains/System.keychain"\n',
+        stderr: "",
+      };
+    }
+    return argv[0] === "launchctl"
+      ? { exit: 0, stdout: "Background\n", stderr: "" }
+      : { exit: 44, stdout: "", stderr: "could not be found" };
+  }, options.calls);
+  return {
+    run,
+    configPath: options.configPath,
+    cache,
+    installedToolkit: "/fake/toolkit",
+    herdrCore: "/fake/herdr-core",
+  };
+}
+
+describe("credential resolver GUI-session delegation", () => {
+  test("delegates Background-session reads through a running Herdr core once", async () => {
+    await withIsolatedEnv(async () => {
+      const calls: string[][] = [];
+      const resolved = await resolveCredentialValues(
+        [
+          "KUBE_CERTIFICATE_AUTHORITY_DATA",
+          "ARGOCD_AUTH_TOKEN",
+          "DISCORD_BOT_TOKEN",
+        ],
+        backgroundGuiDeps({
+          serverUp: true,
+          configPath: defaultToolkitConfigPath(),
+          calls,
+        }),
+      );
+      expect(resolved).toEqual({
+        KUBE_CERTIFICATE_AUTHORITY_DATA: "gui-KUBE_CERTIFICATE_AUTHORITY_DATA",
+        ARGOCD_AUTH_TOKEN: "gui-ARGOCD_AUTH_TOKEN",
+        DISCORD_BOT_TOKEN: "gui-DISCORD_BOT_TOKEN",
+      });
+      expect(
+        calls.filter(
+          (argv) => argv[0] === "/fake/herdr-core" && argv[1] === "server",
+        ),
+      ).toHaveLength(1);
+      expect(
+        calls.filter(
+          (argv) => argv[0] === "/fake/herdr-core" && argv[1] === "exec",
+        ),
+      ).toHaveLength(3);
+    });
+  });
+
+  test("skips herdr-core exec when the core server is down or already delegated", async () => {
+    await withIsolatedEnv(async () => {
+      const missing = `${await configPath(null)}.absent`;
+      const calls: string[][] = [];
+      await expect(
+        resolveCredentialValues(
+          ["ARGOCD_AUTH_TOKEN"],
+          backgroundGuiDeps({ serverUp: false, configPath: missing, calls }),
+        ),
+      ).rejects.toThrow("cannot see the login Keychain");
+      expect(
+        calls.some(
+          (argv) => argv[0] === "/fake/herdr-core" && argv[1] === "exec",
+        ),
+      ).toBe(false);
+
+      const savedGuiFlag = Bun.env[GUI_DELEGATED_ENVIRONMENT];
+      Bun.env[GUI_DELEGATED_ENVIRONMENT] = "1";
+      try {
+        calls.length = 0;
+        await expect(
+          resolveCredentialValues(
+            ["ARGOCD_AUTH_TOKEN"],
+            backgroundGuiDeps({ serverUp: true, configPath: missing, calls }),
+          ),
+        ).rejects.toThrow("cannot see the login Keychain");
+        expect(calls.some((argv) => argv[0] === "/fake/herdr-core")).toBe(
+          false,
+        );
+      } finally {
+        if (savedGuiFlag === undefined) {
+          Reflect.deleteProperty(Bun.env, GUI_DELEGATED_ENVIRONMENT);
+        } else {
+          Bun.env[GUI_DELEGATED_ENVIRONMENT] = savedGuiFlag;
+        }
+      }
     });
   });
 });

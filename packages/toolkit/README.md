@@ -1585,12 +1585,16 @@ existing setup from its root:
 swift scripts/onepassword/enroll-service-account.swift
 ```
 
-If it instead reports that the process cannot see the login Keychain, the
-enrollment is intact; do not re-enroll. The process is outside the GUI login
-session (`launchctl managername` prints `Background`, and
-`security list-keychains` shows only the System keychain), typically because
-an SSH login that has since ended started it, such as an SSH-started herdr
-holder. Run the command from the GUI login session or replace that process.
+If a process runs in a macOS `Background` launchd session — for example a
+direct SSH session over Tailscale SSH, or a process left behind by an ended SSH
+login — `security list-keychains` shows only the System keychain. When this
+Mac's `com.jerred.herdr-core` LaunchAgent is running in the GUI login session,
+both `toolkit` and `scripts/onepassword/with-service-account.sh` delegate the
+lookup into that GUI session through `~/.local/bin/herdr-core exec` without
+auto-starting an SSH-born core. If no GUI core is reachable and the process
+still reports that it cannot see the login Keychain, the enrollment is intact;
+do not re-enroll. Run the command from the GUI login session (or ensure
+`com.jerred.herdr-core` is running there) or replace an SSH-started holder.
 A `could not be read from 1Password: …` error quotes `op`'s reason instead; a
 rate limit there means the shared budget is exhausted, not that enrollment is
 missing, and the error names the exhausted budget and when it resets from

@@ -7,6 +7,14 @@ import type { CredentialSpec } from "#lib/credential-registry.ts";
 import { liveCredentialCache } from "#lib/credential-cache.ts";
 import type { CredentialCache } from "#lib/credential-cache.ts";
 import {
+  createGuiReader,
+  isUnreachableLoginKeychainError,
+  missingKeychainItemError,
+  resolveGuiBridge,
+  withGuiFallback,
+} from "#lib/credential-gui-bridge.ts";
+import type { GuiReader } from "#lib/credential-gui-bridge.ts";
+import {
   exhaustedBudget,
   liveDelegate,
   liveReadLog,
@@ -74,6 +82,12 @@ export type CredentialDeps = {
    * injected.
    */
   readonly installedToolkit?: string | null;
+  /**
+   * Local Herdr core (`~/.local/bin/herdr-core`) used to cross from a
+   * Background launchd session (such as Tailscale SSH) into the GUI login
+   * session. Defaults to the live pair when `run` is not injected.
+   */
+  readonly herdrCore?: string | null;
   /** Per-reference read lock; defaults to a directory lock with the cache. */
   readonly lock?: ReferenceLock | null;
   /** Attribution log; defaults to `~/.toolkit/logs/credential-reads.jsonl`. */
@@ -152,34 +166,6 @@ async function readKeychainValue(
   return value.length > 0 ? value : null;
 }
 
-/**
- * The error for a Keychain item that could not be read. A process outside the
- * user's login session, such as one left behind by an SSH login that has since
- * ended, resolves only the System keychain, so every lookup fails although the
- * item is enrolled; name that instead of sending the operator to re-enroll.
- * Falls back to `enrollmentError` when the login keychain is on the search
- * list or the search list cannot be read.
- */
-async function missingKeychainItemError(
-  ctx: ResolutionContext,
-  enrollmentError: Error,
-): Promise<Error> {
-  const list = await ctx.run(["security", "list-keychains"]);
-  if (list.exit !== 0 || list.stdout.includes("login.keychain")) {
-    return enrollmentError;
-  }
-  const searchList = list.stdout
-    .split("\n")
-    .map((line) => line.trim().replaceAll('"', ""))
-    .filter((line) => line.length > 0)
-    .join(", ");
-  const session = await ctx.run(["launchctl", "managername"]);
-  const sessionName = session.exit === 0 ? session.stdout.trim() : "unknown";
-  return new Error(
-    `toolkit: this process cannot see the login Keychain (launchd session: ${sessionName}; search list: ${searchList.length > 0 ? searchList : "empty"}), so enrolled credentials look missing; do not re-enroll. Run the command from a process in the GUI login session. A process started by an SSH login that has since ended, such as an SSH-started herdr holder, stays this way until it is replaced.`,
-  );
-}
-
 async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
   const ambient = Bun.env["OP_SERVICE_ACCOUNT_TOKEN"];
   if (ambient !== undefined && ambient.length > 0) {
@@ -198,7 +184,7 @@ async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
     `toolkit: no homelab 1Password service account token is available in Keychain. Enroll it with: ${SERVICE_ACCOUNT_ENROLLMENT}`,
   );
   if (token === null) {
-    throw await missingKeychainItemError(ctx, enrollmentError);
+    throw await missingKeychainItemError(ctx.run, enrollmentError);
   }
   if (token.length <= 128 || !token.startsWith("ops_")) {
     throw enrollmentError;
@@ -263,6 +249,31 @@ async function readFromOnePassword(
   return { value, source: "read" };
 }
 
+async function guiDelegatedSource(
+  name: string,
+  ref: string,
+  ctx: ResolutionContext,
+): Promise<{ value: string; source: ReadSource } | null> {
+  const guiValue = await ctx.readGui(name, ref);
+  return guiValue === null ? null : { value: guiValue, source: "delegated" };
+}
+
+async function readLockedOnePassword(
+  name: string,
+  description: string,
+  ref: string,
+  ctx: ResolutionContext,
+): Promise<{ value: string; source: ReadSource }> {
+  const lock = ctx.lock;
+  if (lock === null) return readFromOnePassword(name, description, ref, ctx);
+  return lock(ref, async () => {
+    const filled = await ctx.cache?.get(ref);
+    return filled !== undefined && filled !== null
+      ? { value: filled, source: "cache" }
+      : readFromOnePassword(name, description, ref, ctx);
+  });
+}
+
 async function readServiceAccountRef(
   name: string,
   description: string,
@@ -274,23 +285,30 @@ async function readServiceAccountRef(
     return { value: cached, source: "cache" };
   }
   if (ctx.cache === null && ctx.delegate !== null) {
-    const value = await readDelegated(name, ref, ctx.delegate, ctx.run);
-    if (value !== null) return { value, source: "delegated" };
+    const delegated = await withGuiFallback(
+      async () => {
+        const value = await readDelegated(
+          name,
+          ref,
+          ctx.delegate ?? "",
+          ctx.run,
+        );
+        return value === null ? null : { value, source: "delegated" as const };
+      },
+      () => guiDelegatedSource(name, ref, ctx),
+    );
+    if (delegated !== null) return delegated;
   }
   if (ctx.cache === null && ctx.liveSubprocesses) {
     console.error(
       `toolkit: ${name} read without the credential cache; this spends the shared 1Password daily budget. Run \`bun run --cwd packages/toolkit install:local\` so source runs borrow the installed cache.`,
     );
   }
-  const lock = ctx.lock;
-  if (lock === null) return readFromOnePassword(name, description, ref, ctx);
-  return lock(ref, async () => {
-    // Another caller may have filled the entry while this one waited.
-    const filled = await ctx.cache?.get(ref);
-    return filled !== undefined && filled !== null
-      ? { value: filled, source: "cache" }
-      : readFromOnePassword(name, description, ref, ctx);
-  });
+  // Fallback runs outside `lock` so the GUI child can acquire the same ref lock.
+  return withGuiFallback(
+    () => readLockedOnePassword(name, description, ref, ctx),
+    () => guiDelegatedSource(name, ref, ctx),
+  );
 }
 
 function backendFor(source: ReadSource, readBackend: string): string {
@@ -309,6 +327,7 @@ type ResolutionContext = {
   readonly overrides: Record<string, string>;
   readonly cache: CredentialCache | null;
   readonly delegate: string | null;
+  readonly readGui: GuiReader;
   readonly lock: ReferenceLock | null;
   readonly readLog: ReadLog | null;
 };
@@ -331,7 +350,7 @@ async function resolveOverrideValue(
     const value = await readKeychainValue(service, ctx);
     if (value === null) {
       throw await missingKeychainItemError(
-        ctx,
+        ctx.run,
         credentialError(
           name,
           description,
@@ -354,14 +373,22 @@ async function resolveRegistryValue(
   if (spec.source.kind === "keychain") {
     const value = await readKeychainValue(spec.source.service, ctx);
     if (value === null) {
-      throw await missingKeychainItemError(
-        ctx,
+      const error = await missingKeychainItemError(
+        ctx.run,
         credentialError(
           name,
           spec.description,
           `swift scripts/onepassword/enroll-workstation-secret.swift --service ${spec.source.service} --ref ${KEYCHAIN_ENROLL_REFS[spec.source.service] ?? "op://<vault>/<item>/<field>"}`,
         ),
       );
+      if (
+        isUnreachableLoginKeychainError(error) &&
+        ctx.configPath === defaultToolkitConfigPath()
+      ) {
+        const guiValue = await ctx.readGui(name, null);
+        if (guiValue !== null) return { value: guiValue, backend: "delegated" };
+      }
+      throw error;
     }
     return { value, backend: "keychain" };
   }
@@ -407,43 +434,65 @@ async function defaultCache(
   return liveCredentialCache(ttl.value);
 }
 
+async function resolveCache(
+  deps: CredentialDeps | undefined,
+  configPath: string,
+  live: boolean,
+): Promise<CredentialCache | null> {
+  return deps?.cache === undefined
+    ? live
+      ? defaultCache(configPath)
+      : null
+    : deps.cache;
+}
+
+async function resolveDelegate(
+  deps: CredentialDeps | undefined,
+  cache: CredentialCache | null,
+  live: boolean,
+): Promise<string | null> {
+  return deps?.installedToolkit === undefined
+    ? live && cache === null
+      ? liveDelegate()
+      : null
+    : deps.installedToolkit;
+}
+
 async function resolutionContext(
   deps: CredentialDeps | undefined,
 ): Promise<ResolutionContext> {
   const configPath = deps?.configPath ?? defaultToolkitConfigPath();
   const liveSubprocesses = deps?.run === undefined;
-  let cache: CredentialCache | null = null;
-  if (deps?.cache !== undefined) {
-    cache = deps.cache;
-  } else if (liveSubprocesses) {
-    cache = await defaultCache(configPath);
-  }
-  const delegate =
-    deps?.installedToolkit === undefined
-      ? liveSubprocesses && cache === null
-        ? await liveDelegate()
-        : null
-      : deps.installedToolkit;
+  const cache = await resolveCache(deps, configPath, liveSubprocesses);
+  const delegate = await resolveDelegate(deps, cache, liveSubprocesses);
+  const guiBridge = await resolveGuiBridge({
+    herdrCore: deps?.herdrCore,
+    installedToolkit: deps?.installedToolkit,
+    liveSubprocesses,
+  });
+  const run = deps?.run ?? defaultRun;
   const lock =
     deps?.lock === undefined
       ? liveSubprocesses && cache !== null
         ? liveReferenceLock()
         : null
       : deps.lock;
+  const readLog =
+    deps?.readLog === undefined
+      ? liveSubprocesses
+        ? liveReadLog()
+        : null
+      : deps.readLog;
   return {
-    run: deps?.run ?? defaultRun,
+    run,
     liveSubprocesses,
     configPath,
     overrides: await loadCredentialOverrides(configPath),
     cache,
     delegate,
+    readGui: createGuiReader(guiBridge, run),
     lock,
-    readLog:
-      deps?.readLog === undefined
-        ? liveSubprocesses
-          ? liveReadLog()
-          : null
-        : deps.readLog,
+    readLog,
   };
 }
 
