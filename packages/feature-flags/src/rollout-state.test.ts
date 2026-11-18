@@ -223,10 +223,27 @@ describe("default-on governance", () => {
       exemptions: [],
     };
     expect(ManagedFlagInventorySchema.safeParse(value).success).toBe(true);
+    const noConsumerException = {
+      environment: "prod",
+      reason: "production-only service",
+      issue: "AI-2",
+      enableWhen: "a consumer is deployed in this environment",
+      noDeployedConsumer: true as const,
+    };
+    expect(
+      ManagedFlagInventorySchema.safeParse({
+        ...value,
+        flags: [{ ...baseline, defaultOffExceptions: [noConsumerException] }],
+      }).success,
+    ).toBe(true);
+    const { reviewBy: _omittedReviewBy, ...missingReviewBy } = exception;
     for (const invalid of [
       { ...exception, environment: "unknown" },
       { ...exception, issue: "SJ-1" },
       { ...exception, reviewBy: "2026-02-30" },
+      missingReviewBy,
+      { ...missingReviewBy, noDeployedConsumer: false },
+      { ...exception, noDeployedConsumer: false },
     ]) {
       expect(
         ManagedFlagInventorySchema.safeParse({

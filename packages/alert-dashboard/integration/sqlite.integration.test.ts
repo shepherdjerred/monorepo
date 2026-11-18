@@ -20,8 +20,10 @@ import {
 import { registerOpsRepositoryCases } from "./ops-repository-cases.ts";
 import { registerWriteEfficiencyCases } from "./write-efficiency-cases.ts";
 import {
+  ignoresZeroDurationResolvedWithoutOpenOccurrence,
   keepsStaleResolutionOnPriorOccurrence,
   matchesRefreshedResolution,
+  resolvesOpenOccurrenceOnZeroDurationHeartbeat,
 } from "./webhook-authority-cases.ts";
 
 async function expectNormalizedIndexes(): Promise<void> {
@@ -645,5 +647,13 @@ describe("SQLite webhook authority", () => {
   it(
     "keeps a stale resolution on the prior same-fingerprint occurrence",
     keepsStaleResolutionOnPriorOccurrence,
+  );
+  it(
+    "ignores zero-duration and orphan resolved heartbeats when no open occurrence exists",
+    ignoresZeroDurationResolvedWithoutOpenOccurrence,
+  );
+  it(
+    "closes an open occurrence on a zero-duration resolved heartbeat without later phantom rows",
+    resolvesOpenOccurrenceOnZeroDurationHeartbeat,
   );
 });

@@ -6,6 +6,7 @@ import {
 import {
   managedFlagInventory,
   materializeManagedNamespaceEnvironment,
+  type DefaultOffException,
   type ManagedFlagInventory,
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import {
@@ -18,6 +19,29 @@ import { register } from "./metrics.ts";
 const pairLabels = ["flipt_environment", "flipt_namespace"] as const;
 const flagLabels = [...pairLabels, "flag"] as const;
 const exceptionLabels = [...flagLabels, "issue"] as const;
+
+function recordScopedException(
+  entry: DefaultOffException,
+  flagIdentity: {
+    flipt_environment: string;
+    flipt_namespace: string;
+    flag: string;
+  },
+  gauges: {
+    exception: Gauge<(typeof exceptionLabels)[number]>;
+    review: Gauge<(typeof exceptionLabels)[number]>;
+  },
+): { flag: string; issue: string } {
+  const identity = { ...flagIdentity, issue: entry.issue };
+  gauges.exception.set(identity, 1);
+  if (entry.reviewBy !== undefined) {
+    gauges.review.set(
+      identity,
+      Date.parse(`${entry.reviewBy}T23:59:59Z`) / 1000,
+    );
+  }
+  return { flag: flagIdentity.flag, issue: entry.issue };
+}
 
 /** A caller updates only successfully parsed snapshots; failures retain the last good timestamp. */
 export function createFlagInventoryMetrics(
@@ -112,13 +136,9 @@ export function createFlagInventoryMetrics(
           (entry) => entry.environment === environment,
         );
         for (const entry of scopedExceptions) {
-          const identity = { ...flagIdentity, issue: entry.issue };
-          exception.set(identity, 1);
-          review.set(
-            identity,
-            Date.parse(`${entry.reviewBy}T23:59:59Z`) / 1000,
+          exceptions.push(
+            recordScopedException(entry, flagIdentity, { exception, review }),
           );
-          exceptions.push({ flag: item.flag.key, issue: entry.issue });
         }
       }
       previous.set(key, exceptions);

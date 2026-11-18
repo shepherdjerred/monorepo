@@ -92,7 +92,9 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
           );
           opened += result.opened;
           resolved += result.resolved;
-          observedOccurrenceIds.add(result.occurrenceId);
+          if (result.occurrenceId !== undefined) {
+            observedOccurrenceIds.add(result.occurrenceId);
+          }
           if (result.notified !== null) newlyNotified.push(result.notified);
         }
 

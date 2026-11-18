@@ -8,6 +8,15 @@ const TEMPORAL_UI_BASE_URL = "https://temporal-ui.tailnet-1a49.ts.net";
 
 const MAX_SUMMARY_MESSAGE_CHARS = 200;
 const MAX_STACK_EXCERPT_CHARS = 800;
+export const SCHEDULED_FAILURE_STABILITY_WINDOW_MS = 2 * 60 * 60 * 1000;
+const SCHEDULE_TIMESTAMP_SUFFIX_PATTERN =
+  /-(?:\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z|\d{10,13})$/u;
+const SCHEDULE_WORKFLOW_INFIX = "-workflow";
+
+export type WorkflowFailureScheduleRecovery = {
+  readonly newestFailureCloseTime: Date;
+  readonly newestCompletedCloseTime?: Date;
+};
 
 export type FailedWorkflowExecution = {
   temporalNamespace: TemporalNamespace;
@@ -15,6 +24,12 @@ export type FailedWorkflowExecution = {
   runId: string;
   workflowType: string;
   taskQueue: string;
+  /** Present when the execution belongs to a recurring Temporal Schedule. */
+  scheduleId?: string;
+  /** True when `scheduleId` came from `TemporalScheduledById` visibility attributes. */
+  scheduledByAttribute?: boolean;
+  /** Stability evidence evaluated before resolving a past scheduled failure early. */
+  scheduleRecovery?: WorkflowFailureScheduleRecovery;
   /** Temporal visibility's stable descending pagination key. */
   startTime: Date;
   closeTime: Date;
@@ -53,6 +68,56 @@ export function temporalUiExecutionUrl(
   runId: string,
 ): string {
   return `${TEMPORAL_UI_BASE_URL}/namespaces/${namespace}/workflows/${encodeURIComponent(workflowId)}/${encodeURIComponent(runId)}/history`;
+}
+
+/**
+ * Extracts a recurring schedule ID from Temporal's schedule-generated workflow ID
+ * conventions (`<schedule>-workflow-<iso|epoch>` or `<schedule>-<iso|epoch>`).
+ */
+export function scheduleIdFromWorkflowId(
+  workflowId: string,
+): string | undefined {
+  const match = SCHEDULE_TIMESTAMP_SUFFIX_PATTERN.exec(workflowId);
+  if (match === null || match.index === 0) {
+    return undefined;
+  }
+  const prefix = workflowId.slice(0, match.index);
+  const candidate = prefix.endsWith(SCHEDULE_WORKFLOW_INFIX)
+    ? prefix.slice(0, -SCHEDULE_WORKFLOW_INFIX.length)
+    : prefix;
+  return candidate === "" ? undefined : candidate;
+}
+
+/**
+ * Conservative stability gate for resolving past scheduled workflow failures
+ * before the 24h TTL expires:
+ *   a) execution belongs to a recurring schedule,
+ *   b) a newer execution of that schedule completed strictly after the newest failure,
+ *   c) at least 2h have elapsed since the newest failure with zero failures in the window.
+ */
+export function shouldResolveScheduledFailureEarly(
+  execution: Pick<
+    FailedWorkflowExecution,
+    "workflowId" | "closeTime" | "scheduleId"
+  >,
+  recovery: WorkflowFailureScheduleRecovery | undefined,
+  now: Date,
+  stabilityWindowMs: number = SCHEDULED_FAILURE_STABILITY_WINDOW_MS,
+): boolean {
+  const scheduleId =
+    execution.scheduleId ?? scheduleIdFromWorkflowId(execution.workflowId);
+  if (scheduleId === undefined || recovery === undefined) {
+    return false;
+  }
+  const newestFailureMs = Math.max(
+    execution.closeTime.getTime(),
+    recovery.newestFailureCloseTime.getTime(),
+  );
+  return (
+    recovery.newestCompletedCloseTime !== undefined &&
+    recovery.newestCompletedCloseTime.getTime() > newestFailureMs &&
+    now.getTime() - newestFailureMs >= stabilityWindowMs
+  );
 }
 
 /**
@@ -119,9 +184,15 @@ export function buildWorkflowFailureAlert(
 
   const startsAt = now.toISOString();
   // Keep the alert lifecycle tied to the execution rather than to the last
-  // poll. Re-observing a failure during the lookback must not extend its
-  // Alerts repeat/resolution window indefinitely.
-  const endsAt = new Date(execution.closeTime.getTime() + ttlMs).toISOString();
+  // poll unless a recurring schedule has completed a newer run and remained
+  // failure-free across the full 2h stability window.
+  const endsAt = shouldResolveScheduledFailureEarly(
+    execution,
+    execution.scheduleRecovery,
+    now,
+  )
+    ? now.toISOString()
+    : new Date(execution.closeTime.getTime() + ttlMs).toISOString();
 
   return {
     labels,

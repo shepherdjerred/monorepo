@@ -4224,7 +4224,7 @@
           "reason": "Promotion uses production outreach identities; no separate beta publishing consumer is authorized.",
           "issue": "AI-365",
           "enableWhen": "A separate beta consumer and its outreach scope are authorized and accepted; otherwise retain publishing off.",
-          "reviewBy": "2026-11-15"
+          "noDeployedConsumer": true
         }
       ]
     },

@@ -23,7 +23,7 @@ import { instantTextToEpochNanoseconds } from "#shared/time";
 
 type WebhookAlert = AlertmanagerWebhook["alerts"][number];
 type IngestedAlert = {
-  occurrenceId: string;
+  occurrenceId?: string;
   opened: number;
   resolved: number;
   notified: AlertOccurrenceRecord | null;
@@ -225,13 +225,23 @@ export async function ingestWebhookAlert(
     startedAtNs,
     alertResolvedAtNs,
   );
-  return existing === null
-    ? createOccurrence({ transaction, alert, id, startedAtNs, receivedAtNs })
-    : updateOccurrence({
-        transaction,
-        alert,
-        existing,
-        startedAtNs,
-        receivedAtNs,
-      });
+  if (existing === null) {
+    if (alertResolvedAtNs !== null && startedAtNs >= alertResolvedAtNs) {
+      return { opened: 0, resolved: 0, notified: null };
+    }
+    return createOccurrence({
+      transaction,
+      alert,
+      id,
+      startedAtNs,
+      receivedAtNs,
+    });
+  }
+  return updateOccurrence({
+    transaction,
+    alert,
+    existing,
+    startedAtNs,
+    receivedAtNs,
+  });
 }

@@ -95,9 +95,14 @@ test("promotion fallback remains off with no audience and beta keeps its excepti
     rules: [],
     thresholdRollouts: [],
   });
-  expect(
-    enabled?.defaultOffExceptions?.map((entry) => entry.environment),
-  ).toEqual(["beta"]);
+  expect(enabled?.defaultOffExceptions).toEqual([
+    expect.objectContaining({
+      environment: "beta",
+      issue: "AI-365",
+      noDeployedConsumer: true,
+    }),
+  ]);
+  expect(enabled?.defaultOffExceptions?.[0]?.reviewBy).toBeUndefined();
   const settings = managedFlagInventory.flags.find(
     (flag) => flag.key === "the-storm-promotion-settings",
   );

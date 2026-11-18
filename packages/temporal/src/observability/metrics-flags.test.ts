@@ -22,13 +22,21 @@ test("publishes bounded one-hot states, missing flags, scoped exceptions and fre
       rules: [],
       thresholdRollouts: [],
       defaultOffExceptions: [
-        {
-          environment: "prod",
-          reason: "owner gate",
-          issue: "AI-1",
-          enableWhen: "owner acceptance",
-          reviewBy: "2026-12-07",
-        },
+        key === "first"
+          ? {
+              environment: "prod",
+              reason: "owner gate",
+              issue: "AI-1",
+              enableWhen: "owner acceptance",
+              reviewBy: "2026-12-07",
+            }
+          : {
+              environment: "prod",
+              reason: "no deployed service in this environment",
+              issue: "AI-2",
+              enableWhen: "a consumer is deployed in this environment",
+              noDeployedConsumer: true as const,
+            },
       ],
     })),
   });
@@ -61,6 +69,13 @@ test("publishes bounded one-hot states, missing flags, scoped exceptions and fre
   expect(text).toContain('flag="first",state="on"} 1');
   expect(text).toContain('flag="missing",state="missing"} 1');
   expect(text).toContain('flag="first",issue="AI-1"} 1');
+  expect(text).toContain(
+    'feature_flag_exception_review_timestamp_seconds{flipt_environment="prod",flipt_namespace="test",flag="first",issue="AI-1"}',
+  );
+  expect(text).toContain('flag="missing",issue="AI-2"} 1');
+  expect(text).not.toContain(
+    'feature_flag_exception_review_timestamp_seconds{flipt_environment="prod",flipt_namespace="test",flag="missing",issue="AI-2"}',
+  );
   expect(text).not.toContain("unmanaged");
   expect(text).toContain(
     `feature_flag_inventory_observed_timestamp_seconds{flipt_environment="prod",flipt_namespace="test"} ${String(at.getTime() / 1000)}`,
