@@ -100,7 +100,7 @@ const cases = [
     expected: [],
     genericExpected: [
       {
-        labels: `{${namespace},${pvc},instance="node:10250"}`,
+        labels: `{${namespace},${pvc}}`,
         value: 396_000,
       },
     ],

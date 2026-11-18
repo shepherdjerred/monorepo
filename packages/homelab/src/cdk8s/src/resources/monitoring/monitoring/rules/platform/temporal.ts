@@ -389,9 +389,10 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           // schedule's own execution timeout hours later. A weekly schedule in
           // the same state produced two failures total and no alert at all.
           //
-          // A healthy deployment fails no Workflow Tasks, so any sustained rate
-          // is worth a look; the metric carries only the namespace, so this
-          // says "something here cannot run" and the Temporal UI says what.
+          // A healthy deployment fails no Workflow Tasks outside benign
+          // `UnhandledCommand` optimistic-concurrency retries when a Signal or
+          // event arrives mid-completion; any other sustained rate means
+          // "something here cannot run" and the Temporal UI says what.
           //
           // `for` must stay well under the lookback window. A burst of
           // failures keeps increase(...[1h]) positive for only about an hour,
@@ -408,7 +409,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(failed_workflow_tasks{exported_namespace=~"prod|beta"}[1h]) > 0',
+            'increase(failed_workflow_tasks{exported_namespace=~"prod|beta",failure!="UnhandledCommand"}[1h]) > 0',
           ),
           for: "10m",
           labels: {

@@ -136,6 +136,7 @@ export type AlloyHelmValuesAlloy = {
     requests?: Record<string, string | number>;
     limits?: Record<string, string | number>;
   };
+  resizePolicy?: unknown[];
   /**
    * Set lifecycle hooks for the Grafana Alloy container.
    *
@@ -225,6 +226,13 @@ export type AlloyHelmValuesImage = {
    */
   repository?: string;
   tag?: unknown;
+  /**
+   * Use a distroless version of Grafana Alloy image (experimental).
+   * Appends "-distroless" to the image tag (or the chart's appVersion when tag is empty). Ignored when image.digest is set.
+   *
+   * @default false
+   */
+  distroless?: boolean;
   digest?: unknown;
   /**
    * Grafana Alloy image pull policy.
@@ -316,6 +324,7 @@ export type AlloyHelmValuesConfigReloader = {
     requests?: Record<string, string | number>;
     limits?: Record<string, string | number>;
   };
+  resizePolicy?: unknown[];
   /**
    * Security context to apply to the Grafana configReloader container.
    *
@@ -340,7 +349,7 @@ export type AlloyHelmValuesConfigReloaderImage = {
   /**
    * Tag of image to use for config reloading.
    *
-   * @default "v0.94.0@sha256:142a1f11df8dd165f00375b0b1826aec..."
+   * @default "v0.94.2@sha256:a1897c67478bc23434534e91ad385528..."
    */
   tag?: string;
   /**
@@ -962,11 +971,11 @@ export type AlloyHelmValues = {
    * chart, this field may also be called "agent". Naming this field "agent" is
    * deprecated and will be removed in a future release.
    *
-   * @default {...} (23 keys)
+   * @default {...} (24 keys)
    */
   alloy?: AlloyHelmValuesAlloy;
   /**
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   image?: AlloyHelmValuesImage;
   /**
@@ -980,7 +989,7 @@ export type AlloyHelmValues = {
   /**
    * Options for the extra controller used for config reloading.
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   configReloader?: AlloyHelmValuesConfigReloader;
   /**
@@ -1043,9 +1052,11 @@ export type AlloyHelmParameters = {
   "alloy.mounts.dockercontainers"?: string;
   "alloy.mounts.extra"?: string;
   "alloy.resources"?: string;
+  "alloy.resizePolicy"?: string;
   "image.registry"?: string;
   "image.repository"?: string;
   "image.tag"?: string;
+  "image.distroless"?: string;
   "image.digest"?: string;
   "image.pullPolicy"?: string;
   "image.pullSecrets"?: string;
@@ -1068,6 +1079,7 @@ export type AlloyHelmParameters = {
   "configReloader.image.pullPolicy"?: string;
   "configReloader.customArgs"?: string;
   "configReloader.resources"?: string;
+  "configReloader.resizePolicy"?: string;
   "configReloader.securityContext.allowPrivilegeEscalation"?: string;
   "configReloader.securityContext.readOnlyRootFilesystem"?: string;
   "configReloader.securityContext.capabilities.drop"?: string;

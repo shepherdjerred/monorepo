@@ -220,10 +220,10 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           duration: "10m",
           severity: "critical",
         }),
-        // Both hopper rules read a status the exporter keeps at its last known
-        // value when Whisker stops answering, so without the freshness gate
-        // they report a snapshot as if it were current — a fault the hopper may
-        // have long since cleared, paged as critical, indefinitely.
+        // Hopper and robot fault rules read statuses the exporter keeps at
+        // their last known values when Whisker stops answering, so without the
+        // freshness gate they report a snapshot as if it were current — a fault
+        // the device may have long since cleared, paged indefinitely.
         // `LitterRobotDiagnosticsStale` below already owns the stale source, so
         // gating here reports the condition once rather than twice.
         expressionAlert({
@@ -246,11 +246,11 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         expressionAlert({
           name: "LitterRobotFault",
           expression:
-            "trmnl_petcare_litter_fault == 1 or trmnl_petcare_litter_online == 0 or trmnl_petcare_litter_hopper_installed == 0 or trmnl_petcare_litter_hopper_enabled == 0",
+            "(trmnl_petcare_litter_fault == 1 or trmnl_petcare_litter_online == 0 or trmnl_petcare_litter_hopper_installed == 0 or trmnl_petcare_litter_hopper_enabled == 0) and on () trmnl_petcare_litter_source_fresh == 1",
           description:
             "LR5 reports a robot fault, dirty laser, removed bonnet/drawer, offline state, or disabled/missing hopper.",
           summary: "Storage LR5 fault",
-          duration: "5m",
+          duration: "15m",
         }),
         expressionAlert({
           name: "LitterRobotDiagnosticsStale",
@@ -414,7 +414,7 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           summary: escapePrometheusTemplate(
             "Roborock {{ $labels.friendly_name }} clean-water tank empty",
           ),
-          duration: "5m",
+          duration: "15m",
         }),
         createSensorAlert({
           name: "RoborockCleaningFluidLow",

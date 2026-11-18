@@ -172,6 +172,21 @@ export class PetCareHomeAssistantClient {
   }
 }
 
+const NON_FAULT_LITTER_ROBOT_STATUSES: ReadonlySet<string> = new Set([
+  "READY",
+  "CYCLING",
+  "CLEAN_CYCLE_COMPLETE",
+  "CAT_DETECTED",
+  "CAT_SENSOR_TIMING",
+  "CAT_SENSOR_INTERRUPTED",
+  "EMPTY_CYCLE",
+  "PAUSED",
+  "POWER_UP",
+  "POWER_DOWN",
+  "LITTER_LOW",
+  "DRAWER_ALMOST_FULL",
+]);
+
 export function parseLitterRobotDiagnostics(
   diagnostics: z.infer<typeof WhiskerDiagnosticsSchema>,
   now = new Date(),
@@ -198,15 +213,10 @@ export function parseLitterRobotDiagnostics(
   );
   const status = state.statusIndicator.type.toUpperCase();
   const ready = status === "READY";
-  // Normal operation and maintenance advisories are not robot faults. Keep
-  // unknown status codes and every explicit physical fault conservative.
-  const nonFaultStatus = [
-    "READY",
-    "CYCLING",
-    "CAT_DETECTED",
-    "LITTER_LOW",
-    "DRAWER_ALMOST_FULL",
-  ].includes(status);
+  // Normal operation, cycle/transition states, and maintenance advisories are
+  // not robot faults (matching HA configuration.yaml). Keep unknown status
+  // codes and every explicit physical fault conservative.
+  const nonFaultStatus = NON_FAULT_LITTER_ROBOT_STATUSES.has(status);
   const faulted =
     !nonFaultStatus ||
     state.isLaserDirty ||

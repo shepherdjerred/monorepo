@@ -742,7 +742,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "1.13.1",
+      "value": "1.16.0",
       "component": true
     },
     {
