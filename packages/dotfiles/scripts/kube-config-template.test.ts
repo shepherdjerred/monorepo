@@ -1,13 +1,142 @@
-import { afterEach, expect, test } from "vitest";
+import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
 import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+
+// Chezmoi templates are Go text/templates, while the Linux CI image pins `go`
+// in .mise.toml rather than `chezmoi`. Compile a minimal Go text/template
+// harness with the exact Chezmoi template functions private_dot_kube/config.tmpl
+// calls so laptop and Linux CI run the identical template evaluation path.
+const goRendererSource = String.raw`package main
+
+import (
+	"encoding/json"
+	"errors"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"text/template"
+)
+
+func main() {
+	if len(os.Args) != 2 {
+		os.Stderr.WriteString("usage: render <json-data>\n")
+		os.Exit(2)
+	}
+	var data map[string]any
+	if err := json.Unmarshal([]byte(os.Args[1]), &data); err != nil {
+		os.Stderr.WriteString(err.Error() + "\n")
+		os.Exit(1)
+	}
+	source, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		os.Stderr.WriteString(err.Error() + "\n")
+		os.Exit(1)
+	}
+	tmpl, err := template.New("config.tmpl").Option("missingkey=error").Funcs(template.FuncMap{
+		"contains": func(substr, s string) bool {
+			return strings.Contains(s, substr)
+		},
+		"joinPath": func(elem ...string) string {
+			return filepath.Join(elem...)
+		},
+		"onepasswordRead": func(ref string) string {
+			return "op-desktop:" + filepath.Base(ref)
+		},
+		"output": func(name string, args ...string) (string, error) {
+			cmd := exec.Command(name, args...)
+			cmd.Stderr = os.Stderr
+			out, err := cmd.Output()
+			if err != nil {
+				return "", err
+			}
+			return string(out), nil
+		},
+		"stat": func(name string) (any, error) {
+			info, err := os.Stat(name)
+			if err != nil {
+				if errors.Is(err, os.ErrNotExist) {
+					return nil, nil
+				}
+				return nil, err
+			}
+			return map[string]any{"name": info.Name()}, nil
+		},
+		"trim": strings.TrimSpace,
+	}).Parse(string(source))
+	if err != nil {
+		os.Stderr.WriteString(err.Error() + "\n")
+		os.Exit(1)
+	}
+	if err := tmpl.Execute(os.Stdout, data); err != nil {
+		os.Stderr.WriteString(err.Error() + "\n")
+		os.Exit(1)
+	}
+}
+`;
 
 const temporaryDirectories: string[] = [];
 const templatePath = path.resolve(
   import.meta.dir,
   "../private_dot_kube/config.tmpl",
 );
+let rendererDirectory = "";
+let rendererBinary = "";
+
+function resolveGoExecutable(): string {
+  const fromPath = Bun.which("go");
+  if (fromPath !== null) {
+    return fromPath;
+  }
+  const fromMise = Bun.spawnSync(["mise", "which", "go"], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  if (fromMise.exitCode === 0) {
+    const candidate = new TextDecoder().decode(fromMise.stdout).trim();
+    if (candidate.length > 0) {
+      return candidate;
+    }
+  }
+  throw new Error("go executable not found in PATH or mise");
+}
+
+beforeAll(async () => {
+  rendererDirectory = await mkdtemp(
+    path.join(tmpdir(), "kube-config-renderer-"),
+  );
+  rendererBinary = path.join(rendererDirectory, "render");
+  await Bun.write(
+    path.join(rendererDirectory, "go.mod"),
+    "module kubeconfigtmpltest\n\ngo 1.24\n",
+  );
+  await Bun.write(path.join(rendererDirectory, "main.go"), goRendererSource);
+  const build = Bun.spawnSync(
+    [resolveGoExecutable(), "build", "-o", rendererBinary, "main.go"],
+    {
+      cwd: rendererDirectory,
+      env: {
+        ...Bun.env,
+        GOCACHE: Bun.env["GOCACHE"] ?? path.join(rendererDirectory, "gocache"),
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  if (build.exitCode !== 0) {
+    throw new Error(
+      `Failed to build Go template harness: ${new TextDecoder().decode(build.stderr)}`,
+    );
+  }
+});
+
+afterAll(async () => {
+  if (rendererDirectory.length > 0) {
+    await rm(rendererDirectory, { recursive: true, force: true });
+  }
+});
 
 afterEach(async () => {
   await Promise.all(
@@ -17,9 +146,10 @@ afterEach(async () => {
   );
 });
 
-async function renderAgentHostKubeconfig(
-  toolkitMode: "absent" | "legacy" | "brokered",
-) {
+async function renderKubeconfig(options: {
+  profile: "agent-host" | "workstation";
+  toolkitMode?: "absent" | "legacy" | "brokered";
+}) {
   const root = await mkdtemp(path.join(tmpdir(), "kube-config-tmpl-"));
   temporaryDirectories.push(root);
   const home = path.join(root, "home");
@@ -41,6 +171,7 @@ async function renderAgentHostKubeconfig(
   );
   await chmod(wrapper, 0o700);
 
+  const toolkitMode = options.toolkitMode ?? "absent";
   if (toolkitMode !== "absent") {
     const references =
       toolkitMode === "brokered"
@@ -57,15 +188,9 @@ async function renderAgentHostKubeconfig(
   const template = await Bun.file(templatePath).text();
   const result = Bun.spawnSync(
     [
-      "chezmoi",
-      "execute-template",
-      "--source",
-      sourceDirectory,
-      "--destination",
-      home,
-      "--override-data",
+      rendererBinary,
       JSON.stringify({
-        profile: "agent-host",
+        profile: options.profile,
         chezmoi: { homeDir: home, sourceDir: sourceDirectory },
       }),
     ],
@@ -86,7 +211,10 @@ async function renderAgentHostKubeconfig(
 }
 
 test("uses the installed toolkit broker when KUBE_CERTIFICATE_AUTHORITY_DATA is registered", async () => {
-  const result = await renderAgentHostKubeconfig("brokered");
+  const result = await renderKubeconfig({
+    profile: "agent-host",
+    toolkitMode: "brokered",
+  });
   expect(result.exitCode).toBe(0);
   expect(result.stdout).toContain(
     "certificate-authority-data: ca-from-toolkit",
@@ -100,8 +228,11 @@ test("uses the installed toolkit broker when KUBE_CERTIFICATE_AUTHORITY_DATA is 
 
 test.each(["legacy", "absent"] as const)(
   "falls back to with-service-account.sh when toolkit is %s",
-  async (mode) => {
-    const result = await renderAgentHostKubeconfig(mode);
+  async (toolkitMode) => {
+    const result = await renderKubeconfig({
+      profile: "agent-host",
+      toolkitMode,
+    });
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain(
       "certificate-authority-data: ca-from-wrapper",
@@ -109,3 +240,19 @@ test.each(["legacy", "absent"] as const)(
     expect(result.calls).toContain("wrapper op read ");
   },
 );
+
+test("renders workstation client certificates via onepasswordRead without exec auth", async () => {
+  const result = await renderKubeconfig({ profile: "workstation" });
+  expect(result.exitCode).toBe(0);
+  expect(result.stdout).toContain(
+    "certificate-authority-data: op-desktop:certificate-authority-data",
+  );
+  expect(result.stdout).toContain(
+    "client-certificate-data: op-desktop:client-certificate-data",
+  );
+  expect(result.stdout).toContain(
+    "client-key-data: op-desktop:client-key-data",
+  );
+  expect(result.stdout).not.toContain("interactiveMode: Never");
+  expect(result.calls).toBe("");
+});
