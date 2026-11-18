@@ -5,6 +5,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { ApplicationFailure } from "@temporalio/common";
 import {
   createDeliveryWorkers,
+  quietDispatchActivities,
   replayFixture,
 } from "#workflows/testing/delivery-workers.ts";
 import { DELIVERY_WAIT_ROLLOVER_ITERATIONS } from "./delivery/admission.ts";
@@ -52,27 +53,6 @@ async function execute(failApply: boolean, waits = 0) {
   } finally {
     await environment.teardown();
   }
-}
-
-function quietDispatchActivities() {
-  return {
-    dispatchDeliveryWorkerRecoveries: () => Promise.resolve(),
-    dispatchDeliveryMinecraftRecoveries: () => Promise.resolve(),
-    qualifyDeliveryForumBundles: () => Promise.resolve(),
-    dispatchDeliveryForumBaselines: () => Promise.resolve(),
-    dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
-    observeDeliveryMonitors: () => ({ observed: 0 }),
-    observeDeliveryDrift: () => ({ recorded: 0 }),
-    removeDeliveryTargets: () => ({ removed: 0 }),
-    retireDrainedWorkerHosts: () => ({ requested: [], skipped: [] }),
-    reapSettledDeliveryWorkerJobs: () => ({
-      namespace: "delivery-worker-jobs",
-      scanned: 0,
-      candidates: 0,
-      deleted: [],
-      skippedUnsettled: 0,
-    }),
-  };
 }
 
 /** The retired backup queue, which only recorded replication histories name. */

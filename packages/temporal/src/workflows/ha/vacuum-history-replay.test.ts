@@ -13,17 +13,52 @@ afterAll(async () => {
   await environment.teardown();
 });
 
+function createVacuumReplayActivities(
+  states: Map<string, string>,
+  onEvidence?: (entityId: string) => Promise<{
+    started: boolean;
+    commandedReturn: boolean;
+    currentState: string;
+  }>,
+) {
+  const entity = (entityId: string): EntityState => ({
+    entity_id: entityId,
+    state: entityId.startsWith("person.")
+      ? "not_home"
+      : (states.get(entityId) ?? "docked"),
+    attributes: {},
+  });
+  return {
+    getEntityState: (entityId: string) => Promise.resolve(entity(entityId)),
+    getEntitiesInDomain: () => Promise.resolve([entity("light.kitchen")]),
+    callService: (
+      domain: string,
+      service: string,
+      data: Record<string, unknown>,
+    ) => {
+      const entityId = data["entity_id"];
+      if (typeof entityId !== "string") {
+        throw new TypeError("Missing fixture entity_id");
+      }
+      if (domain === "vacuum" && service === "start") {
+        states.set(entityId, "cleaning");
+      } else if (domain === "light" && service === "turn_off") {
+        states.set(entityId, "off");
+      } else {
+        throw new Error(`Unexpected fixture service ${domain}.${service}`);
+      }
+      return Promise.resolve();
+    },
+    ...(onEvidence === undefined ? {} : { getVacuumStartEvidence: onEvidence }),
+    sendNotification: () => Promise.resolve(),
+    recordWorkflowOutcome: () => Promise.resolve(),
+  };
+}
+
 test.each(["runVacuumIfNotHome", "leavingHome"])(
   "replays %s's pre-history commands without scheduling new evidence reads",
   async (workflowType) => {
     const states = new Map<string, string>();
-    const entity = (entityId: string): EntityState => ({
-      entity_id: entityId,
-      state: entityId.startsWith("person.")
-        ? "not_home"
-        : (states.get(entityId) ?? "docked"),
-      attributes: {},
-    });
     const worker = await Worker.create({
       connection: environment.nativeConnection,
       taskQueue: TASK_QUEUES.HOME,
@@ -31,27 +66,7 @@ test.each(["runVacuumIfNotHome", "leavingHome"])(
         "../replay-fixtures/vacuum-before-history.ts",
         import.meta.url,
       ).pathname,
-      activities: {
-        getEntityState: async (entityId: string) => entity(entityId),
-        getEntitiesInDomain: async () => [entity("light.kitchen")],
-        callService: async (
-          domain: string,
-          service: string,
-          data: Record<string, unknown>,
-        ) => {
-          const entityId = data["entity_id"];
-          if (typeof entityId !== "string")
-            throw new TypeError("Missing fixture entity_id");
-          if (domain === "vacuum" && service === "start")
-            states.set(entityId, "cleaning");
-          else if (domain === "light" && service === "turn_off")
-            states.set(entityId, "off");
-          else
-            throw new Error(`Unexpected fixture service ${domain}.${service}`);
-        },
-        sendNotification: () => Promise.resolve(),
-        recordWorkflowOutcome: () => Promise.resolve(),
-      },
+      activities: createVacuumReplayActivities(states),
     });
     const workflowId = `vacuum-history-replay-${workflowType}-${randomUUID()}`;
     await worker.runUntil(
@@ -82,33 +97,11 @@ test.each(["runVacuumIfNotHome", "leavingHome"])(
   "replays %s's concurrent vacuum-start-history-v1 commands and serializes new executions",
   async (workflowType) => {
     const states = new Map<string, string>();
-    const entity = (entityId: string): EntityState => ({
-      entity_id: entityId,
-      state: entityId.startsWith("person.")
-        ? "not_home"
-        : (states.get(entityId) ?? "docked"),
-      attributes: {},
-    });
     let inFlight = 0;
     let maxInFlight = 0;
-    const activities = {
-      getEntityState: async (entityId: string) => entity(entityId),
-      getEntitiesInDomain: async () => [entity("light.kitchen")],
-      callService: async (
-        domain: string,
-        service: string,
-        data: Record<string, unknown>,
-      ) => {
-        const entityId = data["entity_id"];
-        if (typeof entityId !== "string")
-          throw new TypeError("Missing fixture entity_id");
-        if (domain === "vacuum" && service === "start")
-          states.set(entityId, "cleaning");
-        else if (domain === "light" && service === "turn_off")
-          states.set(entityId, "off");
-        else throw new Error(`Unexpected fixture service ${domain}.${service}`);
-      },
-      getVacuumStartEvidence: async (entityId: string) => {
+    const activities = createVacuumReplayActivities(
+      states,
+      async (entityId: string) => {
         inFlight += 1;
         maxInFlight = Math.max(maxInFlight, inFlight);
         await new Promise((resolve) => setTimeout(resolve, 15));
@@ -119,9 +112,7 @@ test.each(["runVacuumIfNotHome", "leavingHome"])(
           currentState: states.get(entityId) ?? "cleaning",
         };
       },
-      sendNotification: () => Promise.resolve(),
-      recordWorkflowOutcome: () => Promise.resolve(),
-    };
+    );
     const concurrentWorker = await Worker.create({
       connection: environment.nativeConnection,
       taskQueue: TASK_QUEUES.HOME,

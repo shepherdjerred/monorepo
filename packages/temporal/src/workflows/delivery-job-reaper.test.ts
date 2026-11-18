@@ -4,31 +4,18 @@ import { describe, expect, it } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   createDeliveryWorkers,
+  quietDispatchActivities,
   replayFixture,
 } from "#workflows/testing/delivery-workers.ts";
-
-function baseTickActivities() {
-  return {
-    qualifyDeliveryBuilds: () => Promise.resolve(),
-    dispatchPendingDeliveries: () => ({ submitted: 0 }),
-    dispatchDeliveryWorkerRecoveries: () => Promise.resolve(),
-    dispatchDeliveryMinecraftRecoveries: () => Promise.resolve(),
-    qualifyDeliveryForumBundles: () => Promise.resolve(),
-    dispatchDeliveryForumBaselines: () => Promise.resolve(),
-    dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
-    observeDeliveryMonitors: () => ({ observed: 0 }),
-    observeDeliveryDrift: () => ({ recorded: 0 }),
-    removeDeliveryTargets: () => ({ removed: 0 }),
-    retireDrainedWorkerHosts: () => ({ requested: [], skipped: [] }),
-  };
-}
 
 describe("Delivery settled Job reaper", () => {
   it("reaps worker and platform Job namespaces on their owning queues and replays", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const calls: string[] = [];
     const { workflows, activities } = await createDeliveryWorkers(environment, {
-      ...baseTickActivities(),
+      ...quietDispatchActivities(),
+      qualifyDeliveryBuilds: () => Promise.resolve(),
+      dispatchPendingDeliveries: () => ({ submitted: 0 }),
       reapSettledDeliveryWorkerJobs: () => {
         calls.push("reap:worker");
         return {
@@ -89,7 +76,11 @@ describe("Delivery settled Job reaper", () => {
         ),
         workflowType: "deliveryDispatchWorkflow",
         workflowId: `dispatch-before-job-reaper-${crypto.randomUUID()}`,
-        activities: baseTickActivities(),
+        activities: {
+          ...quietDispatchActivities(),
+          qualifyDeliveryBuilds: () => Promise.resolve(),
+          dispatchPendingDeliveries: () => ({ submitted: 0 }),
+        },
       });
     } finally {
       await environment.teardown();

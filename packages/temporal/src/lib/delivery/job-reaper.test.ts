@@ -475,54 +475,102 @@ describe("reapSettledDeliveryJobs settled deletion and bounds", () => {
       },
     ]);
   });
+});
 
+describe("reapSettledDeliveryJobs sweep bounds", () => {
   it.each<DeliveryJobReaperNamespace>([
     DELIVERY_WORKER_JOBS_NAMESPACE,
     DELIVERY_PLATFORM_JOBS_NAMESPACE,
-  ])("bounds per-sweep candidates oldest-first in %s", async (namespace) => {
-    const deleted: string[] = [];
-    const result = await reapSettledDeliveryJobs({
-      namespace,
-      maxCandidates: 2,
-      jobs: {
-        listNamespacedJob: () =>
-          Promise.resolve({
-            items: [
-              makeJob({
-                name: "job-3",
-                namespace,
-                deploymentId: "dep-1",
-                condition: "Complete",
-                completionTime: "2026-11-03T00:00:00Z",
-              }),
-              makeJob({
-                name: "job-1",
-                namespace,
-                deploymentId: "dep-1",
-                condition: "Complete",
-                completionTime: "2026-11-01T00:00:00Z",
-              }),
-              makeJob({
-                name: "job-2",
-                namespace,
-                deploymentId: "dep-1",
-                condition: "Complete",
-                completionTime: "2026-11-02T00:00:00Z",
-              }),
-            ],
-          }),
-        deleteNamespacedJob: ({ name }) => {
-          deleted.push(name);
-          return Promise.resolve({});
+  ])(
+    "bounds per-sweep candidates oldest-first and advances past retained unsettled prefixes in %s",
+    async (namespace) => {
+      const deleted: string[] = [];
+      const result = await reapSettledDeliveryJobs({
+        namespace,
+        maxCandidates: 2,
+        sweepIndex: 0,
+        jobs: {
+          listNamespacedJob: () =>
+            Promise.resolve({
+              items: [
+                makeJob({
+                  name: "job-3",
+                  namespace,
+                  deploymentId: "dep-1",
+                  condition: "Complete",
+                  completionTime: "2026-11-03T00:00:00Z",
+                }),
+                makeJob({
+                  name: "job-1",
+                  namespace,
+                  deploymentId: "dep-1",
+                  condition: "Complete",
+                  completionTime: "2026-11-01T00:00:00Z",
+                }),
+                makeJob({
+                  name: "job-2",
+                  namespace,
+                  deploymentId: "dep-1",
+                  condition: "Complete",
+                  completionTime: "2026-11-02T00:00:00Z",
+                }),
+              ],
+            }),
+          deleteNamespacedJob: ({ name }) => {
+            deleted.push(name);
+            return Promise.resolve({});
+          },
         },
-      },
-      inspectDeployment: () =>
-        Promise.resolve(
-          makeDeploymentDetail({ id: "dep-1", status: "succeeded" }),
-        ),
-    });
+        inspectDeployment: () =>
+          Promise.resolve(
+            makeDeploymentDetail({ id: "dep-1", status: "succeeded" }),
+          ),
+      });
 
-    expect(result.candidates).toBe(2);
-    expect(deleted).toEqual(["job-1", "job-2"]);
-  });
+      expect(result.candidates).toBe(2);
+      expect(deleted).toEqual(["job-1", "job-2"]);
+
+      const retainedPrefix = Array.from({ length: 100 }, (_, index) =>
+        makeJob({
+          name: `retained-${String(index).padStart(3, "0")}`,
+          namespace,
+          deploymentId: "dep-retained",
+          condition: "Failed",
+          completionTime: `2026-10-01T00:${String(Math.floor(index / 60)).padStart(2, "0")}:${String(index % 60).padStart(2, "0")}Z`,
+        }),
+      );
+      const settledTail = makeJob({
+        name: "settled-100",
+        namespace,
+        deploymentId: "dep-settled",
+        condition: "Complete",
+        completionTime: "2026-11-15T00:00:00Z",
+      });
+      const tailDeleted: string[] = [];
+      for (const sweepIndex of [0, 1]) {
+        await reapSettledDeliveryJobs({
+          namespace,
+          maxCandidates: 100,
+          sweepIndex,
+          jobs: {
+            listNamespacedJob: () =>
+              Promise.resolve({ items: [...retainedPrefix, settledTail] }),
+            deleteNamespacedJob: ({ name }) => {
+              tailDeleted.push(name);
+              return Promise.resolve({});
+            },
+          },
+          inspectDeployment: (deploymentId) =>
+            Promise.resolve(
+              makeDeploymentDetail({
+                id: deploymentId,
+                status: deploymentId === "dep-settled" ? "succeeded" : "failed",
+                recoveryRequired: deploymentId !== "dep-settled",
+              }),
+            ),
+        });
+      }
+      expect(tailDeleted).toEqual(["settled-100"]);
+    },
+  );
 });

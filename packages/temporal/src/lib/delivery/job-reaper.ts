@@ -53,6 +53,7 @@ export type DeliveryJobReaperDependencies = {
   heartbeat?: (detail: unknown) => void;
   signal?: AbortSignal;
   maxCandidates?: number;
+  sweepIndex?: number;
 };
 
 const RecoveryIntentInspectionSchema = z.object({
@@ -214,6 +215,22 @@ function httpStatusCode(error: unknown): number | undefined {
     : z.object({ code: z.number() }).safeParse(error).data?.code;
 }
 
+function selectSweepWindow<T>(
+  sorted: readonly T[],
+  maxCandidates: number,
+  sweepIndex: number,
+): T[] {
+  if (sorted.length <= maxCandidates) {
+    return [...sorted];
+  }
+  const normalizedSweep = Math.abs(Math.trunc(sweepIndex));
+  const offset = (normalizedSweep * maxCandidates) % sorted.length;
+  return [...sorted.slice(offset), ...sorted.slice(0, offset)].slice(
+    0,
+    maxCandidates,
+  );
+}
+
 export async function reapSettledDeliveryJobs(
   options: DeliveryJobReaperDependencies,
 ): Promise<DeliveryJobReapResult> {
@@ -221,7 +238,8 @@ export async function reapSettledDeliveryJobs(
   options.heartbeat?.({ phase: "list-jobs", namespace });
   const listed = await options.jobs.listNamespacedJob({ namespace });
   const maxCandidates = options.maxCandidates ?? MAX_CANDIDATES_PER_SWEEP;
-  const candidates = listed.items
+  const sweepIndex = options.sweepIndex ?? Math.floor(Date.now() / 60_000);
+  const sortedCandidates = listed.items
     .flatMap((job) => {
       const candidate = classifyDeliveryJobCandidate(job, namespace);
       return candidate === undefined ? [] : [candidate];
@@ -230,8 +248,12 @@ export async function reapSettledDeliveryJobs(
       (left, right) =>
         left.sortTimestampMs - right.sortTimestampMs ||
         left.name.localeCompare(right.name),
-    )
-    .slice(0, maxCandidates);
+    );
+  const candidates = selectSweepWindow(
+    sortedCandidates,
+    maxCandidates,
+    sweepIndex,
+  );
 
   const inspectSettled = async (deploymentId: string): Promise<boolean> => {
     try {
