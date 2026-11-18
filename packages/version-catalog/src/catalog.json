@@ -554,9 +554,9 @@
       "management": {
         "managed": true,
         "datasource": "github-releases",
-        "versioning": "semver"
+        "versioning": "semver-coerced"
       },
-      "value": "v1.2.32"
+      "value": "v1.4"
     },
     {
       "name": "AlexxIT/SonoffLAN",

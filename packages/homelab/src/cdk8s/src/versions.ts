@@ -101,7 +101,7 @@ export const MYSA_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/jjjonesjr33/petlibro/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const PETLIBRO_TARBALL_SHA256 =
-  "42203f0fc8ea7a9fa80877633b36ed0cfd4ef4f86f904a994d35b121e44c607f";
+  "ff0f247771826b6226a625923d21e4e472f21c45045c90b9bcecbd4f48eaa8dc";
 
 /**
  * SHA-256 of the GitHub release tarball for `AlexxIT/SonoffLAN`, pinned to

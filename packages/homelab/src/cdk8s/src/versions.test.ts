@@ -5,6 +5,7 @@ import { VersionMapSchema } from "./version-map.generated.ts";
 import versions from "./versions.ts";
 
 const SEMVER_PATTERN = /^v?\d+\.\d+\.\d+(?:-[\w.]+)?$/;
+const COERCED_SEMVER_PATTERN = /^v?\d+\.\d+(?:\.\d+)?(?:-[\w.]+)?$/;
 const DOCKER_REF_PATTERN = /^[^@]+@sha256:[a-f0-9]{64}$/;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const DATASOURCES = new Set([
@@ -66,7 +67,11 @@ describe("version catalog static validation", () => {
       ) {
         continue;
       }
-      expect(SEMVER_PATTERN.test(entry.value)).toBe(true);
+      const pattern =
+        entry.management.versioning === "semver-coerced"
+          ? COERCED_SEMVER_PATTERN
+          : SEMVER_PATTERN;
+      expect(pattern.test(entry.value)).toBe(true);
     }
   });
 
