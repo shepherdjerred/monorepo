@@ -21,6 +21,7 @@ export const PlaylistItemSchema = z.strictObject({
 export const PlaylistPageSchema = PlaylistSummarySchema.extend({
   items: z.array(PlaylistItemSchema),
   offset: z.number().int().nonnegative().optional(),
+  notice: z.string().optional(),
 });
 export const PlaylistListSchema = z.array(PlaylistSummarySchema);
 export type PlaylistSummary = z.infer<typeof PlaylistSummarySchema>;
@@ -28,6 +29,7 @@ export const PlaylistMutationSchema = z.object({
   action: z.enum([
     "create",
     "save",
+    "import",
     "rename",
     "delete",
     "publish",
@@ -42,8 +44,35 @@ export const PlaylistMutationSchema = z.object({
   id: z.string().min(1).max(100).optional(),
   revision: z.number().int().nonnegative().optional(),
   name: z.string().trim().min(1).max(100).optional(),
+  url: z.string().trim().min(1).max(500).optional(),
   itemId: z.uuid().optional(),
   position: z.number().int().positive().optional(),
   selectionId: z.string().optional(),
   playback: z.unknown().optional(),
 });
+
+/** Browser-safe check for public Spotify track/album/playlist URLs and playlist URLs. */
+export function isImportablePlaylistUrl(value: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    return false;
+  }
+  if (
+    url.protocol === "https:" &&
+    url.hostname === "open.spotify.com" &&
+    url.username === "" &&
+    url.password === "" &&
+    url.port === ""
+  ) {
+    const path = url.pathname.replace(/^\/intl-[a-z]+\//u, "/");
+    return /^\/(?:track|album|playlist)\/[A-Za-z0-9]+\/?$/u.test(path);
+  }
+  return (
+    url.searchParams.has("list") || /\/playlist(?:\/|$)/u.test(url.pathname)
+  );
+}

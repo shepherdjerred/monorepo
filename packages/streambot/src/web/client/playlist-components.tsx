@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Link } from "react-router";
 import type { z } from "zod";
 import type {
@@ -10,6 +11,10 @@ import { MediaActions, type MediaListProps } from "./media-row.tsx";
 import { MusicActions } from "./music-actions.tsx";
 import { Artwork } from "./artwork.tsx";
 import { musicArtworkUrl } from "@shepherdjerred/streambot/music/artwork.ts";
+import {
+  PlaylistAppendImportForm,
+  PlaylistImportForm,
+} from "./playlist-import-forms.tsx";
 export type Mutation = Omit<z.infer<typeof PlaylistMutationSchema>, "guildId">;
 
 export function PlaylistItems(
@@ -57,6 +62,7 @@ export function PlaylistItems(
           {page.owned && (
             <div className="row-actions">
               <button
+                type="button"
                 aria-label={"Move " + item.title + " up"}
                 disabled={busy || index + (page.offset ?? 0) === 0}
                 onClick={() => {
@@ -70,6 +76,7 @@ export function PlaylistItems(
                 ↑
               </button>
               <button
+                type="button"
                 aria-label={"Move " + item.title + " down"}
                 disabled={busy || index + (page.offset ?? 0) === page.count - 1}
                 onClick={() => {
@@ -83,6 +90,7 @@ export function PlaylistItems(
                 ↓
               </button>
               <button
+                type="button"
                 disabled={busy}
                 onClick={() => {
                   mutation({ action: "remove", itemId: item.id });
@@ -117,31 +125,54 @@ export function PlaylistEditor({
   setCopyName: (value: string) => void;
   playback: unknown;
 }) {
+  const renameHeadingId = useId();
+  const renameInputId = useId();
+  const shareInputId = useId();
+  const shareHintId = useId();
+  const copyHeadingId = useId();
+  const copyInputId = useId();
   return (
     <>
-      {" "}
       {page.owned && (
         <div className="playlist-editor">
           <form
+            aria-labelledby={renameHeadingId}
+            method="post"
+            action="/api/playlists"
             className="filters"
             onSubmit={(event) => {
               event.preventDefault();
-              mutation({ action: "rename", name });
+              mutation({ action: "rename", name: name.trim() });
             }}
           >
-            <label className="filter-label">
-              Name
+            <h3 id={renameHeadingId} className="playlist-form-heading">
+              Rename playlist
+            </h3>
+            <div className="filter-label">
+              <label htmlFor={renameInputId}>Name</label>
               <input
+                id={renameInputId}
+                name="name"
+                type="text"
+                required
                 value={name}
                 maxLength={100}
                 onChange={(event) => {
                   setName(event.target.value);
                 }}
               />
-            </label>
-            <button disabled={busy || name.trim() === ""}>Rename</button>
+            </div>
+            <button type="submit" disabled={busy}>
+              Rename
+            </button>
           </form>
+          <PlaylistAppendImportForm
+            key={page.revision}
+            busy={busy}
+            mutation={mutation}
+          />
           <button
+            type="button"
             disabled={busy || playback === undefined}
             onClick={() => {
               mutation({ action: "add", playback });
@@ -151,6 +182,7 @@ export function PlaylistEditor({
           </button>
           {page.guildId === null ? (
             <button
+              type="button"
               disabled={busy}
               onClick={() => {
                 mutation({ action: "publish" });
@@ -160,6 +192,7 @@ export function PlaylistEditor({
             </button>
           ) : (
             <button
+              type="button"
               disabled={busy}
               onClick={() => {
                 mutation({ action: "private" });
@@ -175,6 +208,7 @@ export function PlaylistEditor({
               continues.
             </p>
             <button
+              type="button"
               disabled={busy}
               onClick={() => {
                 mutation({ action: "delete" });
@@ -186,10 +220,20 @@ export function PlaylistEditor({
         </div>
       )}
       {page.guildId !== null && (
-        <label className="filter-label">
-          Share link{" "}
+        <div className="filter-label">
+          <label htmlFor={shareInputId}>Share link</label>
+          <small id={shareHintId}>
+            Only signed-in members of this server can open it.
+          </small>
           <input
+            id={shareInputId}
+            name="shareUrl"
+            type="url"
             readOnly
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            aria-describedby={shareHintId}
             value={
               globalThis.location.origin +
               "/playlists?" +
@@ -202,27 +246,38 @@ export function PlaylistEditor({
               event.currentTarget.select();
             }}
           />
-          <small>Only signed-in members of this server can open it.</small>
-        </label>
+        </div>
       )}
       <form
+        aria-labelledby={copyHeadingId}
+        method="post"
+        action="/api/playlists"
         className="filters"
         onSubmit={(event) => {
           event.preventDefault();
-          mutation({ action: "copy", name: copyName });
+          mutation({ action: "copy", name: copyName.trim() });
         }}
       >
-        <label className="filter-label">
-          Name for your private copy
+        <h3 id={copyHeadingId} className="playlist-form-heading">
+          Copy to your playlists
+        </h3>
+        <div className="filter-label">
+          <label htmlFor={copyInputId}>Name for your private copy</label>
           <input
+            id={copyInputId}
+            name="copyName"
+            type="text"
+            required
             value={copyName}
             maxLength={100}
             onChange={(event) => {
               setCopyName(event.target.value);
             }}
           />
-        </label>
-        <button disabled={busy || copyName.trim() === ""}>Make a copy</button>
+        </div>
+        <button type="submit" disabled={busy}>
+          Make a copy
+        </button>
       </form>
     </>
   );
@@ -234,46 +289,82 @@ export function PlaylistList(
     scope: string;
     name: string;
     setName: (value: string) => void;
+    initialImportUrl: string;
     busy: boolean;
     playback: unknown;
     mutation: (change: Mutation) => void;
   },
 ) {
-  const { list, scope, name, setName, busy, playback, mutation } = props;
+  const {
+    list,
+    scope,
+    name,
+    setName,
+    initialImportUrl,
+    busy,
+    playback,
+    mutation,
+  } = props;
   const route = useRouteState();
+  const createHeadingId = useId();
+  const createNameId = useId();
   return (
     <>
-      <form
-        className="playlist-create filters"
-        onSubmit={(event) => {
-          event.preventDefault();
-          mutation({ action: "create", name });
-        }}
-      >
-        <label className="filter-label">
-          Playlist name
-          <input
-            value={name}
-            maxLength={100}
-            placeholder="A good evening"
-            onChange={(event) => {
-              setName(event.target.value);
-            }}
-          />
-        </label>
-        <button type="submit" disabled={busy || name.trim() === ""}>
-          Create private playlist
-        </button>
-        <button
-          type="button"
-          disabled={busy || playback === undefined || name.trim() === ""}
-          onClick={() => {
-            mutation({ action: "save", name, playback });
+      <div className="playlist-forms">
+        <form
+          aria-labelledby={createHeadingId}
+          method="post"
+          action="/api/playlists"
+          className="playlist-create filters"
+          onSubmit={(event) => {
+            event.preventDefault();
+            mutation({ action: "create", name: name.trim() });
           }}
         >
-          Save current queue
-        </button>
-      </form>
+          <h2 id={createHeadingId} className="playlist-form-heading">
+            Create or save a playlist
+          </h2>
+          <div className="filter-label">
+            <label htmlFor={createNameId}>Playlist name</label>
+            <input
+              id={createNameId}
+              name="name"
+              type="text"
+              required
+              value={name}
+              maxLength={100}
+              placeholder="A good evening"
+              onChange={(event) => {
+                setName(event.target.value);
+              }}
+            />
+          </div>
+          <button type="submit" disabled={busy}>
+            Create private playlist
+          </button>
+          <button
+            type="button"
+            disabled={busy || playback === undefined}
+            onClick={(event) => {
+              if (
+                event.currentTarget.form !== null &&
+                !event.currentTarget.form.reportValidity()
+              ) {
+                return;
+              }
+              mutation({ action: "save", name: name.trim(), playback });
+            }}
+          >
+            Save current queue
+          </button>
+        </form>
+        <PlaylistImportForm
+          key={initialImportUrl}
+          initialUrl={initialImportUrl}
+          busy={busy}
+          mutation={mutation}
+        />
+      </div>
       <div className="music-grid">
         {list.map((playlist) => (
           <article className="music-card" key={playlist.id}>
@@ -301,7 +392,7 @@ export function PlaylistList(
       {list.length === 0 && (
         <p>
           {scope === "mine"
-            ? "Your playlists start here. Create one or save the queue explicitly."
+            ? "Your playlists start here. Create one, import a link, or save the queue explicitly."
             : "No playlists have been shared with this server yet."}
         </p>
       )}

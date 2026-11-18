@@ -3349,48 +3349,10 @@
       "source": "streambot-music",
       "purpose": "Enable native artist, album, and song discovery.",
       "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "streambot-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        },
-        {
-          "segmentKey": "streambot-guild-208425771172102144",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "208425771172102144"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "default": true,
+      "rollouts": [],
       "rules": [],
-      "thresholdRollouts": [],
-      "defaultOffExceptions": [
-        {
-          "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
-          "issue": "AI-442",
-          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
-          "reviewBy": "2026-12-07"
-        }
-      ]
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-spotify-links-enabled",
@@ -3399,48 +3361,10 @@
       "source": "streambot-music",
       "purpose": "Enable public Spotify metadata links for queue-only playback.",
       "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "streambot-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        },
-        {
-          "segmentKey": "streambot-guild-208425771172102144",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "208425771172102144"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "default": true,
+      "rollouts": [],
       "rules": [],
-      "thresholdRollouts": [],
-      "defaultOffExceptions": [
-        {
-          "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
-          "issue": "AI-442",
-          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
-          "reviewBy": "2026-12-07"
-        }
-      ]
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-playlists-enabled",
@@ -3449,48 +3373,10 @@
       "source": "streambot-music",
       "purpose": "Enable private and server-shared native playlists independently of history.",
       "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "streambot-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        },
-        {
-          "segmentKey": "streambot-guild-208425771172102144",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "208425771172102144"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "default": true,
+      "rollouts": [],
       "rules": [],
-      "thresholdRollouts": [],
-      "defaultOffExceptions": [
-        {
-          "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
-          "issue": "AI-442",
-          "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
-          "reviewBy": "2026-12-07"
-        }
-      ]
+      "thresholdRollouts": []
     },
     {
       "key": "streambot-player-card-repost-after-messages",

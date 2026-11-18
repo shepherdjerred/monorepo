@@ -2,7 +2,10 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import type {
+  PlaylistItem,
+  PlaylistMetadata,
+} from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
@@ -23,6 +26,10 @@ export type CommandBotDeps = {
     signal: AbortSignal,
     progress?: (count: number) => void,
   ) => Promise<PlaylistItem[]>;
+  readonly expandPlaylistWithMetadata?: (
+    url: string,
+    signal: AbortSignal,
+  ) => Promise<PlaylistMetadata>;
   readonly listSources: (signal: AbortSignal) => Promise<readonly string[]>;
   /** Synchronously pre-resolve a `/stream play` url/search source before acking (feature: fast error surfacing). */
   readonly resolvePlaySource: (

@@ -150,13 +150,19 @@ requester's voice channel, slot, and queue revision. External links create no
 saved import or synchronization state.
 
 The Playlists page creates private playlists, explicitly saves the current
-queue, edits ordered tracks, and shares one playlist with a Discord server.
-Members can view, play, and make private copies; only the owner can edit.
-Sharing requires Discord sign-in and current server membership. Private
-playlists never appear in the server list. Existing saved-queue commands use
-the same SQLite playlist store, including migrated queues, independently of
-history recording. `/music playlist` offers list, show, play, save, share, and
-private commands; `/music web` opens the browser.
+queue, imports public Spotify track/album/playlist links and YouTube playlist
+links as one-time snapshots, edits ordered tracks, and shares one playlist with
+a Discord server. Imported Spotify albums and playlists surface the same public
+metadata limitation (currently up to 100 tracks) in the completion notice, while
+YouTube playlists enumerate without an application track cap; neither creates a
+synchronized external subscription, and importing does not require an active
+voice channel. Members can view, play, and make private copies; only the owner
+can edit or append imported links. Sharing requires Discord sign-in and current
+server membership. Private playlists never appear in the server list. Existing
+saved-queue commands use the same SQLite playlist store, including migrated
+queues, independently of history recording. `/music playlist` offers list,
+show, play, save, import, share, and private commands; `/music web` opens the
+browser.
 
 MusicBrainz album covers and Spotify track/album covers follow the song through
 saved playlists, queue recovery, web player, and Discord player cards. Playlist
@@ -170,7 +176,7 @@ only when allowed; otherwise it logs the prerequisite and `/play` remains usable
 Bot/webhook messages and DMs never trigger prefix playback. Message content is
 neither logged nor stored as chat history.
 
-Catalog browsing, Spotify links, and saved playlists have separate default-off
+Catalog browsing, Spotify links, and saved playlists have separate default-on
 rollout gates in [the typed media gates](src/config/media-features.ts) and
 [managed inventory](../feature-flags/src/managed-flag-inventory.json).
 Apple Music, Deezer, Tidal, and recommendation autoplay have no integration.

@@ -16,6 +16,13 @@ export type WebPlaybackDeps = {
     signal: AbortSignal,
     progress?: (count: number) => void,
   ) => Promise<readonly { title: string; url: string }[]>;
+  expandPlaylistWithMetadata?: (
+    url: string,
+    signal: AbortSignal,
+  ) => Promise<{
+    title: string | undefined;
+    items: readonly { title: string; url: string }[];
+  }>;
   sessions: Pick<
     SessionManager,
     "getExisting" | "ensureForPlay" | "releaseUnused" | "revision"

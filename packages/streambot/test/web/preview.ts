@@ -25,7 +25,61 @@ import { lolSportsEvent } from "@shepherdjerred/streambot/sports/lolesports.ts";
 import { matchSportsEvents } from "@shepherdjerred/streambot/sports/sports-service.ts";
 import { lolMatch } from "#lol-fixture";
 import { fixtureMusic, SONG } from "#music-fixture";
-import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
+import {
+  MusicService,
+  musicSource,
+} from "@shepherdjerred/streambot/music/service.ts";
+import { SpotifyMetadata } from "@shepherdjerred/streambot/music/spotify.ts";
+
+class PreviewSpotify extends SpotifyMetadata {
+  override load(value: string) {
+    const isSingleTrack = value.includes("/track/");
+    return Promise.resolve({
+      title: isSingleTrack ? "Get Lucky" : "Late Night Synth & Funk",
+      tracks: isSingleTrack
+        ? [
+            {
+              ...SONG,
+              provider: "spotify" as const,
+              id: "5nTtCOCds6I0PHMNtqelas",
+              canonicalUrl:
+                "https://open.spotify.com/track/5nTtCOCds6I0PHMNtqelas",
+            },
+          ]
+        : [
+            {
+              ...SONG,
+              provider: "spotify" as const,
+              id: "5nTtCOCds6I0PHMNtqelas",
+              canonicalUrl:
+                "https://open.spotify.com/track/5nTtCOCds6I0PHMNtqelas",
+            },
+            {
+              ...SONG,
+              provider: "spotify" as const,
+              id: "2cGxRwrMyEAp8dEbuZaVv6",
+              title: "Instant Crush",
+              durationSeconds: 337,
+              canonicalUrl:
+                "https://open.spotify.com/track/2cGxRwrMyEAp8dEbuZaVv6",
+            },
+            {
+              ...SONG,
+              provider: "spotify" as const,
+              id: "0dEIca2nhcxDUV8C5QkPYb",
+              title: "Giorgio by Moroder",
+              durationSeconds: 544,
+              canonicalUrl:
+                "https://open.spotify.com/track/0dEIca2nhcxDUV8C5QkPYb",
+            },
+          ],
+      complete: isSingleTrack ? true : null,
+      warning: isSingleTrack
+        ? ""
+        : "Spotify exposes public metadata only; collections may be incomplete (up to 100 tracks).",
+    });
+  }
+}
 
 if (import.meta.main) {
   const port = Number(Bun.argv[2] ?? 5188);
@@ -64,14 +118,48 @@ if (import.meta.main) {
     mediaKind: source.mode === "music" ? "music" : "video",
     durationSeconds: 10_871,
   });
+  const baseMusic = fixtureMusic();
+  const previewMusic = new MusicService(
+    baseMusic.catalog,
+    new PreviewSpotify(),
+    (query) =>
+      Promise.resolve([
+        {
+          title: query.includes("Instant Crush") ? "Instant Crush" : SONG.title,
+          channel: "Daft Punk - Topic",
+          url: "https://www.youtube.com/watch?v=h5EofwRzit0",
+          durationSeconds: query.includes("Instant Crush") ? 337 : 369,
+        },
+      ]),
+  );
+  const youtubeTracks = [
+    {
+      title: "Khruangbin — Tiny Desk Concert",
+      url: "https://www.youtube.com/watch?v=QrR_gm6RqCo",
+    },
+    {
+      title: "Daft Punk — Get Lucky (Official Audio)",
+      url: "https://www.youtube.com/watch?v=h5EofwRzit0",
+    },
+    {
+      title: "Justice — D.A.N.C.E.",
+      url: "https://www.youtube.com/watch?v=sy1dYFGkPUE",
+    },
+  ];
   const fixture = webFixture(
     origin,
     fileURLToPath(new URL("../../dist/web", import.meta.url)),
     false,
     {
       history,
-      music: fixtureMusic(),
+      music: previewMusic,
       musicEnabled: true,
+      expandPlaylist: () => Promise.resolve(youtubeTracks),
+      expandPlaylistWithMetadata: () =>
+        Promise.resolve({
+          title: "Tiny Desk & Live Sessions",
+          items: youtubeTracks,
+        }),
       username: "Morgan",
       automatic: true,
       lol: true,

@@ -319,6 +319,8 @@ function LibraryResults({
   );
 }
 
+import { SearchImportPlaylistLink } from "./playlist-import-forms.tsx";
+
 function Search(props: MediaListProps) {
   const route = useRouteState();
   const submitted = route.params.get("q") ?? "";
@@ -418,12 +420,15 @@ function Search(props: MediaListProps) {
         </p>
       )}
       {link !== null && (
-        <MediaRow
-          {...props}
-          title="Play this link"
-          detail={submitted}
-          selection={link}
-        />
+        <>
+          <MediaRow
+            {...props}
+            title="Play this link"
+            detail={submitted}
+            selection={link}
+          />
+          <SearchImportPlaylistLink guildId={props.guildId} url={submitted} />
+        </>
       )}
       {results?.map((item) => (
         <MediaRow

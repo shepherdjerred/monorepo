@@ -184,6 +184,25 @@ export function buildPlaylistArgs(url: string): string[] {
   ];
 }
 
+export type PlaylistMetadata = {
+  title: string | undefined;
+  items: PlaylistItem[];
+};
+
+/**
+ * Argument list for flat playlist expansion with playlist title metadata.
+ */
+export function buildPlaylistMetadataArgs(url: string): string[] {
+  return [
+    IGNORE_HOST_CONFIG,
+    "--flat-playlist",
+    "--no-warnings",
+    "--print",
+    "%(playlist_title)s\t%(url)s\t%(title)s",
+    url,
+  ];
+}
+
 /**
  * Enumerate a playlist without application truncation. Metadata is drained incrementally;
  * adult items are dropped before they reach the queue.
@@ -218,6 +237,52 @@ export async function expandPlaylist(
   }
 
   return items;
+}
+
+/**
+ * Enumerate a playlist in one pass while capturing its title alongside playable items.
+ */
+export async function expandPlaylistWithMetadata(
+  config: Config,
+  url: string,
+  signal: AbortSignal,
+): Promise<PlaylistMetadata> {
+  let playlistTitle: string | undefined;
+  const items: PlaylistItem[] = [];
+  const { stderr, exitCode } = await runSubprocess(
+    [config.ytDlpPath, ...buildPlaylistMetadataArgs(url)],
+    signal,
+    (line) => {
+      const [rawPlaylistTitle, itemUrl, ...titleParts] = line.split("\t");
+      const parsed = PlaylistLineSchema.safeParse({
+        url: itemUrl,
+        title: titleParts.join("\t"),
+      });
+      if (
+        !parsed.success ||
+        isBlockedUrl(parsed.data.url) ||
+        isBlockedText(parsed.data.title)
+      ) {
+        return;
+      }
+      const candidateTitle = rawPlaylistTitle?.trim() ?? "";
+      if (
+        playlistTitle === undefined &&
+        candidateTitle !== "" &&
+        candidateTitle !== "NA" &&
+        !isBlockedText(candidateTitle)
+      ) {
+        playlistTitle = candidateTitle;
+      }
+      items.push(parsed.data);
+    },
+  );
+  if (exitCode !== 0) {
+    throw new Error(
+      `yt-dlp playlist expansion failed (code ${String(exitCode)}): ${stderr.trim()}`,
+    );
+  }
+  return { title: playlistTitle, items };
 }
 
 /**

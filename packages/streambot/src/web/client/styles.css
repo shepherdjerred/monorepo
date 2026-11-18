@@ -75,6 +75,9 @@ select {
   border-radius: 8px;
   padding: 9px 12px;
 }
+input:user-invalid {
+  border-color: var(--error);
+}
 select {
   max-width: 100%;
 }
@@ -1339,6 +1342,48 @@ h3 {
   align-items: center;
   gap: 0.75rem;
   margin: 1rem 0;
+}
+.playlist-forms {
+  display: grid;
+  gap: 1.25rem;
+  margin: 1rem 0 1.5rem;
+}
+.playlist-forms > form,
+.playlist-editor > form {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--tint);
+}
+.playlist-form-heading {
+  grid-column: 1 / -1;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.playlist-form-hint {
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+.playlist-import-form .primary {
+  justify-content: center;
+  padding: 9px 16px;
+}
+.playlist-notice {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--tint);
+  font-size: 0.85rem;
+}
+.import-playlist-callout {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.9rem;
+}
+.import-playlist-callout a {
+  color: var(--accent-strong);
+  font-weight: 600;
 }
 .playlist-editor form {
   flex-basis: 100%;
