@@ -7,28 +7,40 @@ import { findNativeBootstrapMessages } from "./check-ios-native-deps.ts";
 const repo = path.resolve(import.meta.dirname, "../../..");
 
 async function loadBootstrap() {
-  const [packageJson, miseToml, postCloneScript, wrapper, project] =
-    await Promise.all([
-      Bun.file(
-        path.join(repo, "packages/tasks-for-obsidian/package.json"),
-      ).text(),
-      Bun.file(path.join(repo, ".mise.toml")).text(),
-      Bun.file(
-        path.join(
-          repo,
-          "packages/tasks-for-obsidian/ios/ci_scripts/ci_post_clone.sh",
-        ),
-      ).text(),
-      Bun.file(
-        path.join(
-          repo,
-          "packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh",
-        ),
-      ).text(),
-      Bun.file(
-        path.join(repo, "packages/tasks-for-obsidian/ios/project.yml"),
-      ).text(),
-    ]);
+  const [
+    packageJson,
+    miseToml,
+    postCloneScript,
+    wrapper,
+    project,
+    workspaceData,
+  ] = await Promise.all([
+    Bun.file(
+      path.join(repo, "packages/tasks-for-obsidian/package.json"),
+    ).text(),
+    Bun.file(path.join(repo, ".mise.toml")).text(),
+    Bun.file(
+      path.join(
+        repo,
+        "packages/tasks-for-obsidian/ios/ci_scripts/ci_post_clone.sh",
+      ),
+    ).text(),
+    Bun.file(
+      path.join(
+        repo,
+        "packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh",
+      ),
+    ).text(),
+    Bun.file(
+      path.join(repo, "packages/tasks-for-obsidian/ios/project.yml"),
+    ).text(),
+    Bun.file(
+      path.join(
+        repo,
+        "packages/tasks-for-obsidian/ios/TasksForObsidian.xcworkspace/contents.xcworkspacedata",
+      ),
+    ).text(),
+  ]);
   return {
     packageJson,
     miseToml,
@@ -36,6 +48,7 @@ async function loadBootstrap() {
     wrapper,
     wrapperExecutable: true,
     project,
+    workspaceData,
   };
 }
 
@@ -105,6 +118,10 @@ describe("native archive bootstrap", () => {
           "product: TaskNotesFacetUI",
           "product: LegacyServerClient",
         ),
+      },
+      { workspaceData: "<Workspace></Workspace>" },
+      {
+        workspaceData: `${bootstrap.workspaceData}\n<FileRef location = "group:Pods/Pods.xcodeproj"></FileRef>`,
       },
     ]) {
       expect(
