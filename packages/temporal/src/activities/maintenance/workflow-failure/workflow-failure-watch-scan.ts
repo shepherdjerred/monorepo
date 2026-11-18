@@ -6,6 +6,7 @@ import {
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
 import { MAX_DETAILED_FAILURE_ALERTS } from "./workflow-failure-watch-overflow.ts";
+import { extractScheduleIdentity } from "./workflow-failure-watch-stability.ts";
 import { withWorkflowFailureRpcTimeout } from "./workflow-failure-watch-timeout.ts";
 
 const ALERT_BATCH_SIZE = 25;
@@ -25,6 +26,7 @@ type ScanWorkflowFailureVisibilityOptions = {
   onOverflowBatch: (
     executions: readonly FailedWorkflowExecution[],
   ) => Promise<void>;
+  onObservedFailure?: (execution: FailedWorkflowExecution) => void;
 };
 
 export type WorkflowFailureVisibilityScan = {
@@ -47,6 +49,41 @@ type ScanState = {
 
 function toFailureStatusName(name: string): FailureStatusName | undefined {
   return FAILURE_STATUS_NAMES.find((candidate) => candidate === name);
+}
+
+function toFailedWorkflowExecution(
+  info: {
+    readonly workflowId: string;
+    readonly runId: string;
+    readonly type: string;
+    readonly taskQueue: string;
+    readonly startTime: Date;
+    readonly closeTime?: Date;
+    readonly status: { readonly name: string };
+  },
+  namespace: TemporalNamespace,
+): FailedWorkflowExecution | undefined {
+  const status = toFailureStatusName(info.status.name);
+  if (status === undefined || info.closeTime === undefined) {
+    return undefined;
+  }
+  const scheduleIdentity = extractScheduleIdentity(info);
+  return {
+    temporalNamespace: namespace,
+    workflowId: info.workflowId,
+    runId: info.runId,
+    workflowType: info.type,
+    taskQueue: info.taskQueue,
+    ...(scheduleIdentity === undefined
+      ? {}
+      : {
+          scheduleId: scheduleIdentity.scheduleId,
+          scheduledByAttribute: scheduleIdentity.scheduledByAttribute,
+        }),
+    startTime: info.startTime,
+    closeTime: info.closeTime,
+    status,
+  };
 }
 
 function isAfterVisibilityCursor(
@@ -130,19 +167,14 @@ export async function scanWorkflowFailureVisibility(
         scanComplete = true;
         continue;
       }
-      const info = next.value;
-      const status = toFailureStatusName(info.status.name);
-      if (status === undefined || info.closeTime === undefined) continue;
-      const execution = {
-        temporalNamespace: options.namespace,
-        workflowId: info.workflowId,
-        runId: info.runId,
-        workflowType: info.type,
-        taskQueue: info.taskQueue,
-        startTime: info.startTime,
-        closeTime: info.closeTime,
-        status,
-      } satisfies FailedWorkflowExecution;
+      const execution = toFailedWorkflowExecution(
+        next.value,
+        options.namespace,
+      );
+      if (execution === undefined) {
+        continue;
+      }
+      options.onObservedFailure?.(execution);
       if (
         options.checkpoint !== undefined &&
         !isAfterVisibilityCursor(execution, options.checkpoint)

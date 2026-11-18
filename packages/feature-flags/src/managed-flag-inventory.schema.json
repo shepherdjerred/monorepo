@@ -3,14 +3,19 @@
   "$defs": {
     "defaultOffException": {
       "type": "object",
-      "required": ["environment", "reason", "issue", "enableWhen", "reviewBy"],
+      "required": ["environment", "reason", "issue", "enableWhen"],
       "properties": {
         "environment": { "type": "string", "minLength": 1 },
         "reason": { "type": "string", "minLength": 1 },
         "issue": { "type": "string", "pattern": "^AI-[1-9][0-9]*$" },
         "enableWhen": { "type": "string", "minLength": 1 },
-        "reviewBy": { "type": "string", "format": "date" }
+        "reviewBy": { "type": "string", "format": "date" },
+        "noDeployedConsumer": { "const": true }
       },
+      "anyOf": [
+        { "required": ["reviewBy"] },
+        { "required": ["noDeployedConsumer"] }
+      ],
       "additionalProperties": false
     },
     "constraint": {

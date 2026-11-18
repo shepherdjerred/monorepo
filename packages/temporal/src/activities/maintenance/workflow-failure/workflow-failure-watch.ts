@@ -14,6 +14,7 @@ import {
   type WorkflowFailureOverflowSummary,
 } from "./workflow-failure-watch-overflow.ts";
 import { scanWorkflowFailureVisibility } from "./workflow-failure-watch-scan.ts";
+import { createFailureStabilityTracker } from "./workflow-failure-watch-stability.ts";
 import {
   DEFAULT_WORKFLOW_FAILURE_RPC_TIMEOUT_MS,
   withWorkflowFailureRpcTimeout,
@@ -411,6 +412,10 @@ export async function pollWorkflowFailuresOnce(
   const { since, query } = pollVisibilityBoundary(options);
   const rpcTimeoutMs =
     options.rpcTimeoutMs ?? DEFAULT_WORKFLOW_FAILURE_RPC_TIMEOUT_MS;
+  const stabilityTracker = createFailureStabilityTracker({
+    now: options.now,
+    rpcTimeoutMs,
+  });
   let errored = 0;
   let alerted = 0;
   let checkpointBlocked = false;
@@ -420,11 +425,15 @@ export async function pollWorkflowFailuresOnce(
   const postDetails = async (
     executions: readonly FailedWorkflowExecution[],
   ): Promise<void> => {
+    const resolvedExecutions = await stabilityTracker.attachScheduleRecovery(
+      client,
+      executions,
+    );
     const result = await postFailureBatch(
       postFailureBatchOptions({
         client,
         poster,
-        executions,
+        executions: resolvedExecutions,
         pollOptions: pollOptionsWithCheckpoint(options, recoveryCheckpoint),
         checkpointBlocked,
         lookbackSince: since,
@@ -480,6 +489,7 @@ export async function pollWorkflowFailuresOnce(
     detailedAlertsConsumed: checkpoint?.detailedAlertsConsumed ?? 0,
     onDetailBatch: postDetails,
     onOverflowBatch: postOverflowBatch,
+    onObservedFailure: stabilityTracker.observeFailure,
   });
   if (scan.pendingDetails.length > 0) await postDetails(scan.pendingDetails);
 

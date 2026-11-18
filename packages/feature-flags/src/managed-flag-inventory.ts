@@ -5,13 +5,25 @@ import type { ManagedBooleanFlagKey } from "./managed-flag-keys.generated.ts";
 
 export type ManagedFlagType = "boolean" | "variant";
 
-export const DefaultOffExceptionSchema = z.strictObject({
+const DefaultOffExceptionFields = {
   environment: z.string().min(1),
   reason: z.string().trim().min(1),
   issue: z.string().regex(/^AI-[1-9]\d*$/u),
   enableWhen: z.string().trim().min(1),
-  reviewBy: z.iso.date(),
-});
+};
+
+export const DefaultOffExceptionSchema = z.union([
+  z.strictObject({
+    ...DefaultOffExceptionFields,
+    reviewBy: z.iso.date(),
+    noDeployedConsumer: z.literal(true).optional(),
+  }),
+  z.strictObject({
+    ...DefaultOffExceptionFields,
+    noDeployedConsumer: z.literal(true),
+    reviewBy: z.iso.date().optional(),
+  }),
+]);
 export type DefaultOffException = z.infer<typeof DefaultOffExceptionSchema>;
 
 const ManagedFlagConstraintSchema = z.object({

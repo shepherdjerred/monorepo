@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildWorkflowFailureAlert,
+  scheduleIdFromWorkflowId,
   temporalUiExecutionUrl,
   type FailedWorkflowExecution,
   type WorkflowFailureDetail,
@@ -179,5 +180,130 @@ describe("temporalUiExecutionUrl", () => {
     expect(temporalUiExecutionUrl("beta", "wf id/with spaces", "run/id")).toBe(
       "https://temporal-ui.tailnet-1a49.ts.net/namespaces/beta/workflows/wf%20id%2Fwith%20spaces/run%2Fid/history",
     );
+  });
+});
+
+describe("stability-gated early resolution", () => {
+  it("extracts schedule ids from schedule-generated workflow ids and ignores ad-hoc ids", () => {
+    expect(
+      scheduleIdFromWorkflowId("golink-sync-workflow-2026-07-30T14:00:00.000Z"),
+    ).toBe("golink-sync");
+    expect(scheduleIdFromWorkflowId("golink-sync-2026-07-30T14:00:00Z")).toBe(
+      "golink-sync",
+    );
+    expect(scheduleIdFromWorkflowId("golink-sync-workflow-1753884000000")).toBe(
+      "golink-sync",
+    );
+    expect(scheduleIdFromWorkflowId("golink-sync-2026-07-30")).toBeUndefined();
+    expect(scheduleIdFromWorkflowId("wf-1")).toBeUndefined();
+  });
+
+  it("keeps unscheduled failures open for the full TTL even after 2h and completions", () => {
+    const closeTime = new Date("2026-07-30T14:00:00.000Z");
+    const alert = buildWorkflowFailureAlert(
+      makeExecution({
+        workflowId: "ad-hoc-migration-42",
+        closeTime,
+        scheduleRecovery: {
+          newestFailureCloseTime: closeTime,
+          newestCompletedCloseTime: new Date("2026-07-30T15:00:00.000Z"),
+        },
+      }),
+      makeFailure(),
+      NOW,
+      TTL_MS,
+    );
+
+    expect(alert.endsAt).toBe(
+      new Date(closeTime.getTime() + TTL_MS).toISOString(),
+    );
+  });
+
+  it("keeps intermittent scheduled failures (<2h since latest failure) open even if a newer run completed", () => {
+    const closeTime = new Date("2026-07-30T14:00:00.000Z");
+    const latestFailure = new Date("2026-07-30T16:30:00.000Z");
+    const alert = buildWorkflowFailureAlert(
+      makeExecution({
+        scheduleId: "golink-sync",
+        closeTime,
+        scheduleRecovery: {
+          newestFailureCloseTime: latestFailure,
+          newestCompletedCloseTime: new Date("2026-07-30T17:00:00.000Z"),
+        },
+      }),
+      makeFailure(),
+      NOW,
+      TTL_MS,
+    );
+
+    expect(alert.endsAt).toBe(
+      new Date(closeTime.getTime() + TTL_MS).toISOString(),
+    );
+  });
+
+  it("keeps scheduled failures open when no subsequent completed run exists after the newest failure", () => {
+    const closeTime = new Date("2026-07-30T14:00:00.000Z");
+    const withoutCompletion = buildWorkflowFailureAlert(
+      makeExecution({
+        scheduleId: "golink-sync",
+        closeTime,
+        scheduleRecovery: {
+          newestFailureCloseTime: closeTime,
+        },
+      }),
+      makeFailure(),
+      NOW,
+      TTL_MS,
+    );
+    const staleCompletion = buildWorkflowFailureAlert(
+      makeExecution({
+        scheduleId: "golink-sync",
+        closeTime,
+        scheduleRecovery: {
+          newestFailureCloseTime: closeTime,
+          newestCompletedCloseTime: new Date("2026-07-30T13:30:00.000Z"),
+        },
+      }),
+      makeFailure(),
+      NOW,
+      TTL_MS,
+    );
+
+    const expectedEndsAt = new Date(closeTime.getTime() + TTL_MS).toISOString();
+    expect(withoutCompletion.endsAt).toBe(expectedEndsAt);
+    expect(staleCompletion.endsAt).toBe(expectedEndsAt);
+  });
+
+  it("emits endsAt = now when a scheduled workflow completed after the newest failure and stayed failure-free for >=2h", () => {
+    const closeTime = new Date("2026-07-30T16:00:00.000Z");
+    const byScheduleId = buildWorkflowFailureAlert(
+      makeExecution({
+        scheduleId: "golink-sync",
+        closeTime,
+        scheduleRecovery: {
+          newestFailureCloseTime: closeTime,
+          newestCompletedCloseTime: new Date("2026-07-30T17:00:00.000Z"),
+        },
+      }),
+      makeFailure(),
+      NOW,
+      TTL_MS,
+    );
+    const byWorkflowPrefix = buildWorkflowFailureAlert(
+      makeExecution({
+        workflowId: "golink-sync-workflow-2026-07-30T15:55:00.000Z",
+        closeTime,
+        scheduleRecovery: {
+          newestFailureCloseTime: closeTime,
+          newestCompletedCloseTime: new Date("2026-07-30T17:00:00.000Z"),
+        },
+      }),
+      makeFailure(),
+      NOW,
+      TTL_MS,
+    );
+
+    expect(byScheduleId.endsAt).toBe(NOW.toISOString());
+    expect(byWorkflowPrefix.endsAt).toBe(NOW.toISOString());
   });
 });

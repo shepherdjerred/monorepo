@@ -3,8 +3,10 @@
 The language-neutral [managed inventory](src/managed-flag-inventory.json) owns
 flag names, types, targeting, environment overrides, and default-off exceptions.
 New boolean features default on in production and beta. A non-global rollout
-requires an environment-scoped reason, AI issue, enablement criteria, and review
-date in `defaultOffExceptions`. A deferred owner decision is recorded as such.
+requires an environment-scoped reason, AI issue, enablement criteria, and either
+a `reviewBy` date or `noDeployedConsumer: true` (when an environment has no
+deployed consumer) in `defaultOffExceptions`. A deferred owner decision is
+recorded as such.
 
 ## Dynamic consumers
 

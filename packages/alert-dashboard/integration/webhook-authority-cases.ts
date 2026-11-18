@@ -1,8 +1,17 @@
 import { expect } from "vitest";
 
-import { AlertmanagerSnapshotAlertSchema } from "#shared/schema";
+import {
+  AlertmanagerSnapshotAlertSchema,
+  AlertmanagerWebhookSchema,
+} from "#shared/schema";
 import { InstantTextSchema } from "#shared/time";
-import { input, nanoseconds, repository, webhook } from "./sqlite-fixture.ts";
+import {
+  input,
+  nanoseconds,
+  prisma,
+  repository,
+  webhook,
+} from "./sqlite-fixture.ts";
 
 export async function matchesRefreshedResolution(): Promise<void> {
   const fingerprint = "fingerprint-promoted-resolution";
@@ -115,6 +124,138 @@ export async function keepsStaleResolutionOnPriorOccurrence(): Promise<void> {
   const priorDetail = await repository.getAlert({ id: prior.id, limit: 10 });
   expect(currentDetail?.events.map((event) => event.type)).toEqual(["opened"]);
   expect(priorDetail?.events.map((event) => event.type)).toEqual([
+    "opened",
+    "resolved",
+  ]);
+}
+
+function syntheticResolvedHeartbeat(
+  fingerprint: string,
+  startsAt: string,
+  endsAt: string,
+) {
+  const base = webhook(fingerprint, "resolved", startsAt);
+  return AlertmanagerWebhookSchema.parse({
+    ...base,
+    groupKey: '{}:{alertname="FliptManagedFlagDrift"}',
+    groupLabels: { alertname: "FliptManagedFlagDrift" },
+    commonLabels: {
+      alertname: "FliptManagedFlagDrift",
+      severity: "warning",
+    },
+    alerts: base.alerts.map((alert) => ({
+      ...alert,
+      labels: {
+        alertname: "FliptManagedFlagDrift",
+        severity: "warning",
+        namespace: "temporal",
+      },
+      startsAt,
+      endsAt,
+    })),
+  });
+}
+
+export async function ignoresZeroDurationResolvedWithoutOpenOccurrence(): Promise<void> {
+  const fingerprint = "fingerprint-zero-duration-orphan";
+  const equalBounds = await repository.ingestWebhook(
+    input(
+      syntheticResolvedHeartbeat(
+        fingerprint,
+        "2026-08-08T18:10:00Z",
+        "2026-08-08T18:10:00Z",
+      ),
+      "2026-08-08T18:10:01Z",
+    ),
+  );
+  expect(equalBounds).toMatchObject({
+    opened: 0,
+    resolved: 0,
+    emailQueued: false,
+  });
+
+  const invertedBounds = await repository.ingestWebhook(
+    input(
+      syntheticResolvedHeartbeat(
+        fingerprint,
+        "2026-08-08T18:15:00Z",
+        "2026-08-08T18:14:00Z",
+      ),
+      "2026-08-08T18:15:01Z",
+    ),
+  );
+  expect(invertedBounds).toMatchObject({
+    opened: 0,
+    resolved: 0,
+    emailQueued: false,
+  });
+
+  const alerts = await repository.listAlerts({ limit: 10 });
+  expect(alerts.items).toHaveLength(0);
+  const events = await repository.listEvents({ limit: 10 });
+  expect(events.items).toHaveLength(0);
+  expect(await prisma.webhookDelivery.count()).toBe(2);
+  expect(await prisma.webhookDeliveryOccurrence.count()).toBe(0);
+}
+
+export async function resolvesOpenOccurrenceOnZeroDurationHeartbeat(): Promise<void> {
+  const fingerprint = "fingerprint-zero-duration-closes-open";
+  const opened = await repository.ingestWebhook(
+    input(
+      webhook(fingerprint, "firing", "2026-08-08T18:00:00Z"),
+      "2026-08-08T18:00:01Z",
+    ),
+  );
+  expect(opened).toMatchObject({ opened: 1, resolved: 0, emailQueued: true });
+
+  const resolved = await repository.ingestWebhook(
+    input(
+      syntheticResolvedHeartbeat(
+        fingerprint,
+        "2026-08-08T18:10:00Z",
+        "2026-08-08T18:10:00Z",
+      ),
+      "2026-08-08T18:10:01Z",
+    ),
+  );
+  expect(resolved).toMatchObject({
+    opened: 0,
+    resolved: 1,
+    emailQueued: false,
+  });
+
+  // A subsequent healthy startsAt === endsAt heartbeat after closure must not
+  // insert a brand-new 0.0m resolved occurrence.
+  const followUpHeartbeat = await repository.ingestWebhook(
+    input(
+      syntheticResolvedHeartbeat(
+        fingerprint,
+        "2026-08-08T21:10:00Z",
+        "2026-08-08T21:10:00Z",
+      ),
+      "2026-08-08T21:10:01Z",
+    ),
+  );
+  expect(followUpHeartbeat).toMatchObject({
+    opened: 0,
+    resolved: 0,
+    emailQueued: false,
+  });
+
+  const alerts = await repository.listAlerts({ limit: 10 });
+  expect(alerts.items).toHaveLength(1);
+  const occurrence = alerts.items[0];
+  if (occurrence === undefined) {
+    throw new Error("expected resolved occurrence");
+  }
+  expect(occurrence).toMatchObject({
+    lifecycleState: "resolved",
+    resolutionSource: "webhook",
+    openedAt: InstantTextSchema.parse("2026-08-08T18:00:00Z"),
+    resolvedAt: InstantTextSchema.parse("2026-08-08T18:10:00Z"),
+  });
+  const detail = await repository.getAlert({ id: occurrence.id, limit: 10 });
+  expect(detail?.events.map((event) => event.type)).toEqual([
     "opened",
     "resolved",
   ]);

@@ -5,6 +5,8 @@ import {
   RetryState,
   TimeoutFailure,
   TimeoutType,
+  TypedSearchAttributes,
+  defineSearchAttributeKey,
 } from "@temporalio/common";
 import { historyFromJSON } from "@temporalio/common/lib/proto-utils.js";
 import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
@@ -41,7 +43,19 @@ type ExecutionInfo = {
   startTime?: Date;
   closeTime?: Date;
   status: { name: string };
+  typedSearchAttributes?: TypedSearchAttributes;
 };
+
+const SCHEDULED_BY_ID_KEY = defineSearchAttributeKey(
+  "TemporalScheduledById",
+  "KEYWORD",
+);
+
+function scheduledAttributes(scheduleId: string): TypedSearchAttributes {
+  return new TypedSearchAttributes([
+    { key: SCHEDULED_BY_ID_KEY, value: scheduleId },
+  ]);
+}
 
 function fakeClient(
   executions: ExecutionInfo[],
@@ -284,6 +298,33 @@ describe("buildVisibilityQuery", () => {
   });
 });
 
+function singleFailureClient(input: {
+  workflowId: string;
+  runId: string;
+  type: string;
+  taskQueue: string;
+  status: string;
+  resolver: () => Promise<unknown>;
+  events?: unknown[];
+  history?: unknown;
+}): WorkflowVisibilityClient {
+  const key = `${input.workflowId}/${input.runId}`;
+  return fakeClient(
+    [
+      {
+        workflowId: input.workflowId,
+        runId: input.runId,
+        type: input.type,
+        taskQueue: input.taskQueue,
+        closeTime: new Date("2026-07-30T17:50:00.000Z"),
+        status: { name: input.status },
+      },
+    ],
+    { [key]: input.resolver },
+    { [key]: input.history ?? { events: input.events ?? [] } },
+  );
+}
+
 describe("workflow timeout history classification", () => {
   it("classifies workflow-task timeout history with no activity", () => {
     const classification = classifyWorkflowTimeoutHistory({
@@ -302,24 +343,15 @@ describe("workflow timeout history classification", () => {
   });
 
   it("reports workflow-task timeout history as worker availability failure", async () => {
-    const client = fakeClient(
-      [
-        {
-          workflowId: "wf-timeout",
-          runId: "run-timeout",
-          type: "agentTaskWorkflow",
-          taskQueue: "agent-task",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "TIMED_OUT" },
-        },
-      ],
-      { "wf-timeout/run-timeout": rejectWithApplicationFailure("timed out") },
-      {
-        "wf-timeout/run-timeout": {
-          events: [{ eventType: "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT" }],
-        },
-      },
-    );
+    const client = singleFailureClient({
+      workflowId: "wf-timeout",
+      runId: "run-timeout",
+      type: "agentTaskWorkflow",
+      taskQueue: "agent-task",
+      status: "TIMED_OUT",
+      resolver: rejectWithApplicationFailure("timed out"),
+      events: [{ eventType: "EVENT_TYPE_WORKFLOW_TASK_TIMED_OUT" }],
+    });
     const description = await captureFirstFailureDescription(client);
 
     expect(description).toContain("timeoutClassification workflow-task");
@@ -359,23 +391,16 @@ describe("workflow timeout history classification", () => {
         },
       ],
     });
-    const client = fakeClient(
-      [
-        {
-          workflowId: "sdk-history-timeout",
-          runId: "run-timeout",
-          type: "agentTaskWorkflow",
-          taskQueue: "scout",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "TIMED_OUT" },
-        },
-      ],
-      {
-        "sdk-history-timeout/run-timeout": () =>
-          rejectWithActivityTimeoutFailure(TimeoutType.SCHEDULE_TO_START),
-      },
-      { "sdk-history-timeout/run-timeout": history },
-    );
+    const client = singleFailureClient({
+      workflowId: "sdk-history-timeout",
+      runId: "run-timeout",
+      type: "agentTaskWorkflow",
+      taskQueue: "scout",
+      status: "TIMED_OUT",
+      resolver: () =>
+        rejectWithActivityTimeoutFailure(TimeoutType.SCHEDULE_TO_START),
+      history,
+    });
     const description = await captureFirstFailureDescription(client);
     expect(description).toContain("timeoutClassification activity");
     expect(description).toContain("timeoutDispatchState pre-dispatch");
@@ -529,43 +554,31 @@ describe("workflow timeout history edge cases", () => {
 
 describe("workflow timeout queue diagnostics", () => {
   it("diagnoses an agent-task execution timeout with an undispatched later activity as worker availability failure", async () => {
-    const client = fakeClient(
-      [
+    const client = singleFailureClient({
+      workflowId: "agent-task-timeout-after-progress",
+      runId: "run-timeout",
+      type: "agentTaskWorkflow",
+      taskQueue: "agent-task",
+      status: "TIMED_OUT",
+      resolver: rejectWithApplicationFailure("execution timed out"),
+      events: [
         {
-          workflowId: "agent-task-timeout-after-progress",
-          runId: "run-timeout",
-          type: "agentTaskWorkflow",
-          taskQueue: "agent-task",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "TIMED_OUT" },
+          event_id: protobufLong("5"),
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
         },
+        {
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+          activity_task_started_event_attributes: {
+            scheduled_event_id: protobufLong("5"),
+          },
+        },
+        {
+          event_id: protobufLong("8"),
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+        },
+        { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
       ],
-      {
-        "agent-task-timeout-after-progress/run-timeout":
-          rejectWithApplicationFailure("execution timed out"),
-      },
-      {
-        "agent-task-timeout-after-progress/run-timeout": {
-          events: [
-            {
-              event_id: protobufLong("5"),
-              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
-            },
-            {
-              eventType: "EVENT_TYPE_ACTIVITY_TASK_STARTED",
-              activity_task_started_event_attributes: {
-                scheduled_event_id: protobufLong("5"),
-              },
-            },
-            {
-              event_id: protobufLong("8"),
-              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
-            },
-            { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
-          ],
-        },
-      },
-    );
+    });
     const description = await captureFirstFailureDescription(client);
 
     expect(description).toContain(
@@ -575,43 +588,31 @@ describe("workflow timeout queue diagnostics", () => {
   });
 
   it("diagnoses an execution timeout with an undispatched later workflow task", async () => {
-    const client = fakeClient(
-      [
+    const client = singleFailureClient({
+      workflowId: "agent-task-timeout-after-workflow-progress",
+      runId: "run-timeout",
+      type: "agentTaskWorkflow",
+      taskQueue: "agent-task",
+      status: "TIMED_OUT",
+      resolver: rejectWithApplicationFailure("execution timed out"),
+      events: [
         {
-          workflowId: "agent-task-timeout-after-workflow-progress",
-          runId: "run-timeout",
-          type: "agentTaskWorkflow",
-          taskQueue: "agent-task",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "TIMED_OUT" },
+          event_id: protobufLong("5"),
+          eventType: "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
         },
+        {
+          eventType: "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+          workflow_task_started_event_attributes: {
+            scheduled_event_id: protobufLong("5"),
+          },
+        },
+        {
+          event_id: protobufLong("8"),
+          eventType: "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+        },
+        { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
       ],
-      {
-        "agent-task-timeout-after-workflow-progress/run-timeout":
-          rejectWithApplicationFailure("execution timed out"),
-      },
-      {
-        "agent-task-timeout-after-workflow-progress/run-timeout": {
-          events: [
-            {
-              event_id: protobufLong("5"),
-              eventType: "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
-            },
-            {
-              eventType: "EVENT_TYPE_WORKFLOW_TASK_STARTED",
-              workflow_task_started_event_attributes: {
-                scheduled_event_id: protobufLong("5"),
-              },
-            },
-            {
-              event_id: protobufLong("8"),
-              eventType: "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
-            },
-            { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
-          ],
-        },
-      },
-    );
+    });
     const description = await captureFirstFailureDescription(client);
 
     expect(description).toContain(
@@ -623,31 +624,18 @@ describe("workflow timeout queue diagnostics", () => {
 
 describe("initial workflow timeout diagnosis", () => {
   it("diagnoses an agent-task execution timeout with no activity as worker availability failure", async () => {
-    const client = fakeClient(
-      [
-        {
-          workflowId: "agent-task-timeout",
-          runId: "run-timeout",
-          type: "agentTaskWorkflow",
-          taskQueue: "agent-task",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "TIMED_OUT" },
-        },
+    const client = singleFailureClient({
+      workflowId: "agent-task-timeout",
+      runId: "run-timeout",
+      type: "agentTaskWorkflow",
+      taskQueue: "agent-task",
+      status: "TIMED_OUT",
+      resolver: rejectWithApplicationFailure("execution timed out"),
+      events: [
+        { eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED" },
+        { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
       ],
-      {
-        "agent-task-timeout/run-timeout": rejectWithApplicationFailure(
-          "execution timed out",
-        ),
-      },
-      {
-        "agent-task-timeout/run-timeout": {
-          events: [
-            { eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED" },
-            { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
-          ],
-        },
-      },
-    );
+    });
     const description = await captureFirstFailureDescription(client);
 
     expect(description).toContain("timeoutClassification execution");
@@ -657,28 +645,15 @@ describe("initial workflow timeout diagnosis", () => {
   });
 
   it("diagnoses an initial execution timeout with no task having started", async () => {
-    const client = fakeClient(
-      [
-        {
-          workflowId: "agent-task-initial-timeout",
-          runId: "run-timeout",
-          type: "agentTaskWorkflow",
-          taskQueue: "agent-task",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "TIMED_OUT" },
-        },
-      ],
-      {
-        "agent-task-initial-timeout/run-timeout": rejectWithApplicationFailure(
-          "execution timed out",
-        ),
-      },
-      {
-        "agent-task-initial-timeout/run-timeout": {
-          events: [{ eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" }],
-        },
-      },
-    );
+    const client = singleFailureClient({
+      workflowId: "agent-task-initial-timeout",
+      runId: "run-timeout",
+      type: "agentTaskWorkflow",
+      taskQueue: "agent-task",
+      status: "TIMED_OUT",
+      resolver: rejectWithApplicationFailure("execution timed out"),
+      events: [{ eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" }],
+    });
     const description = await captureFirstFailureDescription(client);
     expect(description).toContain("timeoutClassification execution");
     expect(description).toContain(
@@ -690,94 +665,61 @@ describe("initial workflow timeout diagnosis", () => {
 
 describe("failed execution timeout diagnostics", () => {
   it("omits unrelated historical timeouts from an ordinary failure", async () => {
-    const client = fakeClient(
-      [
-        {
-          workflowId: "wf-ordinary-failure",
-          runId: "run-1",
-          type: "syncGolinks",
-          taskQueue: "default",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "FAILED" },
-        },
-      ],
-      {
-        "wf-ordinary-failure/run-1": rejectWithApplicationFailure("golink 500"),
-      },
-      {
-        "wf-ordinary-failure/run-1": {
-          events: [{ eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" }],
-        },
-      },
-    );
+    const client = singleFailureClient({
+      workflowId: "wf-ordinary-failure",
+      runId: "run-1",
+      type: "syncGolinks",
+      taskQueue: "default",
+      status: "FAILED",
+      resolver: rejectWithApplicationFailure("golink 500"),
+      events: [{ eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" }],
+    });
     const description = await captureFirstFailureDescription(client);
     expect(description).not.toContain("timeoutClassification");
     expect(description).not.toContain("worker/task-queue availability");
   });
 
   it("includes a timeout that caused the failed execution", async () => {
-    const client = fakeClient(
-      [
-        {
-          workflowId: "wf-causal-activity-timeout",
-          runId: "run-1",
-          type: "syncGolinks",
-          taskQueue: "default",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "FAILED" },
-        },
-      ],
-      {
-        "wf-causal-activity-timeout/run-1": rejectWithActivityTimeoutFailure,
-      },
-      {
-        "wf-causal-activity-timeout/run-1": {
-          events: [{ eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" }],
-        },
-      },
-    );
+    const client = singleFailureClient({
+      workflowId: "wf-causal-activity-timeout",
+      runId: "run-1",
+      type: "syncGolinks",
+      taskQueue: "default",
+      status: "FAILED",
+      resolver: rejectWithActivityTimeoutFailure,
+      events: [{ eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT" }],
+    });
     const description = await captureFirstFailureDescription(client);
 
     expect(description).toContain("timeoutClassification activity");
   });
 
   it("diagnoses a causal schedule-to-start activity timeout as worker unavailability", async () => {
-    const client = fakeClient(
-      [
+    const client = singleFailureClient({
+      workflowId: "wf-agent-task-activity-timeout",
+      runId: "run-1",
+      type: "agentTaskWorkflow",
+      taskQueue: "agent-task",
+      status: "FAILED",
+      resolver: () =>
+        rejectWithActivityTimeoutFailure(TimeoutType.SCHEDULE_TO_START),
+      events: [
         {
-          workflowId: "wf-agent-task-activity-timeout",
-          runId: "run-1",
-          type: "agentTaskWorkflow",
-          taskQueue: "agent-task",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "FAILED" },
+          event_id: protobufLong("5"),
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+          activity_task_scheduled_event_attributes: {
+            activity_id: "run-agent-task",
+          },
+        },
+        {
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
+          activity_task_timed_out_event_attributes: {
+            scheduled_event_id: protobufLong("5"),
+            timeout_type: "TIMEOUT_TYPE_SCHEDULE_TO_START",
+          },
         },
       ],
-      {
-        "wf-agent-task-activity-timeout/run-1": () =>
-          rejectWithActivityTimeoutFailure(TimeoutType.SCHEDULE_TO_START),
-      },
-      {
-        "wf-agent-task-activity-timeout/run-1": {
-          events: [
-            {
-              event_id: protobufLong("5"),
-              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
-              activity_task_scheduled_event_attributes: {
-                activity_id: "run-agent-task",
-              },
-            },
-            {
-              eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
-              activity_task_timed_out_event_attributes: {
-                scheduled_event_id: protobufLong("5"),
-                timeout_type: "TIMEOUT_TYPE_SCHEDULE_TO_START",
-              },
-            },
-          ],
-        },
-      },
-    );
+    });
     const description = await captureFirstFailureDescription(client);
     expect(description).toContain("timeoutClassification activity");
     expect(description).toContain(
@@ -788,54 +730,41 @@ describe("failed execution timeout diagnostics", () => {
   });
 
   it("does not diagnose a terminal schedule-to-start timeout as pending work", async () => {
-    const client = fakeClient(
-      [
+    const client = singleFailureClient({
+      workflowId: "wf-caught-activity-timeout",
+      runId: "run-1",
+      type: "agentTaskWorkflow",
+      taskQueue: "agent-task",
+      status: "TIMED_OUT",
+      resolver: rejectWithApplicationFailure("execution timed out"),
+      events: [
         {
-          workflowId: "wf-caught-activity-timeout",
-          runId: "run-1",
-          type: "agentTaskWorkflow",
-          taskQueue: "agent-task",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "TIMED_OUT" },
+          event_id: protobufLong("5"),
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+          activity_task_scheduled_event_attributes: {
+            activity_id: "run-agent-task",
+          },
         },
+        {
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
+          activity_task_timed_out_event_attributes: {
+            scheduled_event_id: protobufLong("5"),
+            timeout_type: "TIMEOUT_TYPE_SCHEDULE_TO_START",
+          },
+        },
+        {
+          event_id: protobufLong("8"),
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+        },
+        {
+          eventType: "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+          activity_task_started_event_attributes: {
+            scheduled_event_id: protobufLong("8"),
+          },
+        },
+        { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
       ],
-      {
-        "wf-caught-activity-timeout/run-1": rejectWithApplicationFailure(
-          "execution timed out",
-        ),
-      },
-      {
-        "wf-caught-activity-timeout/run-1": {
-          events: [
-            {
-              event_id: protobufLong("5"),
-              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
-              activity_task_scheduled_event_attributes: {
-                activity_id: "run-agent-task",
-              },
-            },
-            {
-              eventType: "EVENT_TYPE_ACTIVITY_TASK_TIMED_OUT",
-              activity_task_timed_out_event_attributes: {
-                scheduled_event_id: protobufLong("5"),
-                timeout_type: "TIMEOUT_TYPE_SCHEDULE_TO_START",
-              },
-            },
-            {
-              event_id: protobufLong("8"),
-              eventType: "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
-            },
-            {
-              eventType: "EVENT_TYPE_ACTIVITY_TASK_STARTED",
-              activity_task_started_event_attributes: {
-                scheduled_event_id: protobufLong("8"),
-              },
-            },
-            { eventType: "EVENT_TYPE_WORKFLOW_EXECUTION_TIMED_OUT" },
-          ],
-        },
-      },
-    );
+    });
     const description = await captureFirstFailureDescription(client);
     expect(description).toContain("timeoutClassification execution");
     expect(description).not.toContain(
@@ -1044,24 +973,17 @@ describe("pollWorkflowFailuresOnce", () => {
   });
 
   it("surfaces the innermost cause when an activity failure wraps the real error", async () => {
-    const client = fakeClient(
-      [
-        {
-          workflowId: "wf-1",
-          runId: "run-1",
-          type: "runGlitterContextRefresh",
-          taskQueue: "default",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "FAILED" },
-        },
-      ],
-      {
-        "wf-1/run-1": rejectWithActivityWrappedFailure(
-          "BilledGenerationFinalizationError",
-          "cost ceiling exceeded",
-        ),
-      },
-    );
+    const client = singleFailureClient({
+      workflowId: "wf-1",
+      runId: "run-1",
+      type: "runGlitterContextRefresh",
+      taskQueue: "default",
+      status: "FAILED",
+      resolver: rejectWithActivityWrappedFailure(
+        "BilledGenerationFinalizationError",
+        "cost ceiling exceeded",
+      ),
+    });
     const { poster, calls } = capturingPoster();
 
     const result = await pollWorkflowFailuresOnce(client, poster, {
@@ -1123,30 +1045,10 @@ describe("pollWorkflowFailuresOnce", () => {
 
 describe("pollWorkflowFailuresOnce failure handling", () => {
   it("skips a single execution whose detail extraction fails and still posts the rest", async () => {
-    const client = fakeClient(
-      [
-        {
-          workflowId: "wf-1",
-          runId: "run-1",
-          type: "syncGolinks",
-          taskQueue: "default",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "FAILED" },
-        },
-        {
-          workflowId: "wf-2",
-          runId: "run-2",
-          type: "syncGolinks",
-          taskQueue: "default",
-          closeTime: new Date("2026-07-30T17:52:00.000Z"),
-          status: { name: "FAILED" },
-        },
-      ],
-      {
-        "wf-1/run-1": () => Promise.reject(new Error("gRPC unavailable")),
-        "wf-2/run-2": rejectWithApplicationFailure("golink 500"),
-      },
-    );
+    const client = fakeClient(closedExecutions(2), {
+      "wf-0/run-0": () => Promise.reject(new Error("gRPC unavailable")),
+      "wf-1/run-1": rejectWithApplicationFailure("golink 500"),
+    });
     const scenario = pollingScenario(client);
 
     const result = await scenario.run();
@@ -1158,25 +1060,13 @@ describe("pollWorkflowFailuresOnce failure handling", () => {
       overflowed: false,
     });
     expect(scenario.calls[0]?.alerts.length).toBe(1);
-    expect(scenario.calls[0]?.alerts[0]?.labels["workflowId"]).toBe("wf-2");
+    expect(scenario.calls[0]?.alerts[0]?.labels["workflowId"]).toBe("wf-1");
   });
 
   it("throws when every execution in a non-empty batch fails detail extraction", async () => {
-    const client = fakeClient(
-      [
-        {
-          workflowId: "wf-1",
-          runId: "run-1",
-          type: "syncGolinks",
-          taskQueue: "default",
-          closeTime: new Date("2026-07-30T17:50:00.000Z"),
-          status: { name: "FAILED" },
-        },
-      ],
-      {
-        "wf-1/run-1": () => Promise.reject(new Error("gRPC unavailable")),
-      },
-    );
+    const client = fakeClient(closedExecutions(1), {
+      "wf-0/run-0": () => Promise.reject(new Error("gRPC unavailable")),
+    });
     const scenario = pollingScenario(client);
 
     await expect(scenario.run()).rejects.toThrow(/systematic failure/);
@@ -1487,6 +1377,102 @@ describe("parseAlertTtlMs", () => {
     expect(() => parseAlertTtlMs("87089")).toThrow("must be at least 87090");
     expect(() => parseAlertTtlMs("86400seconds")).toThrow(
       "must be a positive integer",
+    );
+  });
+});
+
+function dayTime(hhmm: string): Date {
+  return new Date(`2026-07-30T${hhmm}:00.000Z`);
+}
+
+function ttlEndsAt(hhmm: string): string {
+  return new Date(dayTime(hhmm).getTime() + TTL_MS).toISOString();
+}
+
+function scheduleRun(
+  workflowId: string,
+  hhmm: string,
+  statusName: "FAILED" | "TIMED_OUT" | "COMPLETED",
+  scheduleId?: string,
+): ExecutionInfo {
+  return {
+    workflowId,
+    runId: `run-${hhmm}`,
+    type: "syncGolinks",
+    taskQueue: "default",
+    closeTime: dayTime(hhmm),
+    status: { name: statusName },
+    ...(scheduleId === undefined
+      ? {}
+      : { typedSearchAttributes: scheduledAttributes(scheduleId) }),
+  };
+}
+
+describe("stability-gated early resolution for scheduled failures", () => {
+  it.each([
+    {
+      name: "unscheduled failure stays 24h",
+      executions: [
+        scheduleRun("manual-2", "15:00", "COMPLETED"),
+        scheduleRun("manual-1", "14:00", "FAILED"),
+      ],
+      expectedEndsAt: [ttlEndsAt("14:00")],
+    },
+    {
+      name: "intermittent failure (<2h since latest failure) stays open despite newer completion",
+      executions: [
+        scheduleRun(
+          "s-workflow-2026-07-30T17:00:00Z",
+          "17:05",
+          "COMPLETED",
+          "s",
+        ),
+        scheduleRun("s-workflow-2026-07-30T16:25:00Z", "16:30", "FAILED", "s"),
+        scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "FAILED", "s"),
+      ],
+      expectedEndsAt: [ttlEndsAt("16:30"), ttlEndsAt("14:00")],
+    },
+    {
+      name: "scheduled failure with no subsequent completion stays open",
+      executions: [
+        scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "FAILED", "s"),
+        scheduleRun(
+          "s-workflow-2026-07-30T12:55:00Z",
+          "13:00",
+          "COMPLETED",
+          "s",
+        ),
+      ],
+      expectedEndsAt: [ttlEndsAt("14:00")],
+    },
+    {
+      name: "recovered schedule with newer Completed run and >=2h zero failures emits endsAt = now",
+      executions: [
+        scheduleRun(
+          "s-workflow-2026-07-30T16:25:00Z",
+          "16:30",
+          "COMPLETED",
+          "s",
+        ),
+        scheduleRun("s-workflow-2026-07-30T15:25:00Z", "15:30", "FAILED", "s"),
+        scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "TIMED_OUT"),
+      ],
+      expectedEndsAt: [NOW.toISOString(), NOW.toISOString()],
+    },
+  ])("$name", async ({ executions, expectedEndsAt }) => {
+    const failures = Object.fromEntries(
+      executions
+        .filter((item) => item.status.name !== "COMPLETED")
+        .map((item) => [
+          `${item.workflowId}/${item.runId}`,
+          rejectWithApplicationFailure("scheduled failure"),
+        ]),
+    );
+    const scenario = pollingScenario(fakeClient(executions, failures));
+    const result = await scenario.run();
+    expect(result.alerted).toBe(expectedEndsAt.length);
+    expect(scenario.calls[0]?.alerts.map((alert) => alert.endsAt)).toEqual(
+      expectedEndsAt,
     );
   });
 });
