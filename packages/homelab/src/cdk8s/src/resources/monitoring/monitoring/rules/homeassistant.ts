@@ -1,11 +1,7 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { tailnetService } from "homelab/src/platform-model.ts";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
-import {
-  createSensorAlert,
-  createBinarySensorAlert,
-  escapePrometheusTemplate,
-} from "./shared.ts";
+import { createSensorAlert, escapePrometheusTemplate } from "./shared.ts";
 
 // Every entity a Temporal home automation reads or actuates. Kept in sync with
 // packages/temporal/src/workflows/ha by homeassistant.test.ts — an entity added
@@ -41,6 +37,8 @@ const masterBathroomTemperatureAvailability =
 // the `absent()` arm is what catches a total integration failure.
 const masterBathroomTemperatureUnavailableExpr = `${masterBathroomTemperatureAvailability} == 0 or absent(${masterBathroomTemperatureAvailability})`;
 
+const ROBOROCK_FLOORS = ["1st", "2nd", "3rd"] as const;
+
 const PET_CARE_ENTITY_IDS = [
   "vacuum.storage_litter_box",
   "sensor.storage_status_code",
@@ -61,14 +59,14 @@ const PET_CARE_ENTITY_IDS = [
   "sensor.dockstream_2_smart_fountain_remaining_water_2",
   "select.dockstream_2_smart_fountain_water_dispensing_mode",
   ...["", "_2"].flatMap((suffix) => [
-    `binary_sensor.granary_smart_camera_feeder_battery_status${suffix}`,
+    `sensor.granary_smart_camera_feeder_battery_ac${suffix}`,
     `binary_sensor.granary_smart_camera_feeder_food_dispenser${suffix}`,
     `binary_sensor.granary_smart_camera_feeder_food_status${suffix}`,
     `binary_sensor.granary_smart_camera_feeder_wi_fi${suffix}`,
     `sensor.granary_smart_camera_feeder_desiccant_remaining_days${suffix}`,
     `sensor.granary_smart_camera_feeder_last_feed_time${suffix}`,
   ]),
-  ...["1st", "2nd", "3rd"].flatMap((floor) => [
+  ...ROBOROCK_FLOORS.flatMap((floor) => [
     `vacuum.${floor}_floor`,
     `sensor.${floor}_floor_battery`,
     `sensor.${floor}_floor_status`,
@@ -85,6 +83,28 @@ const PET_CARE_ENTITY_IDS = [
     `binary_sensor.${floor}_floor_vacuum_problem`,
   ]),
 ] as const;
+
+function roborockChildFloor(
+  entity: string,
+): (typeof ROBOROCK_FLOORS)[number] | undefined {
+  for (const floor of ROBOROCK_FLOORS) {
+    if (
+      entity.startsWith(`sensor.${floor}_floor_`) ||
+      entity.startsWith(`binary_sensor.${floor}_floor_`)
+    ) {
+      return floor;
+    }
+  }
+  return undefined;
+}
+
+function petCareUnavailableExpr(entity: string): string {
+  const baseUnavailableExpr = `homeassistant_entity_available{entity="${entity}"} == 0 or absent(homeassistant_entity_available{entity="${entity}"})`;
+  const floor = roborockChildFloor(entity);
+  return floor === undefined
+    ? baseUnavailableExpr
+    : `(${baseUnavailableExpr}) and on() (homeassistant_entity_available{entity="vacuum.${floor}_floor"} == 1)`;
+}
 
 function expressionAlert(options: {
   name: string;
@@ -113,11 +133,14 @@ function feederRules(
 ) {
   const prefix = "granary_smart_camera_feeder";
   return [
-    createBinarySensorAlert({
+    createSensorAlert({
       name: `PetLibroFeeder${id}BatteryProblem`,
-      entity: `binary_sensor.${prefix}_battery_status${suffix}`,
-      description: `${label} PetLibro feeder reports a battery problem.`,
-      summary: `${label} PetLibro feeder battery problem`,
+      entity: `homeassistant_sensor_battery_percent{entity="sensor.${prefix}_battery_ac${suffix}"}`,
+      condition: "<=",
+      threshold: 20,
+      duration: "2h",
+      summary: `${label} PetLibro feeder backup battery low`,
+      description: `${label} PetLibro feeder D-cell backup battery is low: {{ $value }}%.`,
     }),
     createSensorAlert({
       name: `PetLibroFeeder${id}DesiccantDue`,
@@ -337,7 +360,7 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
             summary: `Pet-care entity unavailable: ${entity}`,
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `homeassistant_entity_available{entity="${entity}"} == 0 or absent(homeassistant_entity_available{entity="${entity}"})`,
+            petCareUnavailableExpr(entity),
           ),
           for: "15m",
           labels: { severity: "warning", entity },
@@ -349,14 +372,14 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-batteries",
       rules: [
-        // General battery alert. The Roborock floor vacuums are excluded here —
-        // they're governed by the charging-aware RoborockBatteryLowNotCharging
-        // rule below (a docked unit routinely sits below 20% while recharging,
-        // which the general rule would otherwise page on for 2h).
+        // General battery alert. The Roborock floor vacuums and PetLibro feeder
+        // D-cell backup batteries are excluded here — they're governed by
+        // RoborockBatteryLowNotCharging and PetLibroFeeder*BatteryProblem
+        // respectively so they do not double-page.
         createSensorAlert({
           name: "HomeAssistantBatteryLow",
           entity:
-            'min by (entity) (homeassistant_sensor_battery_percent{entity!~"sensor[.](1st|2nd|3rd)_floor_battery",entity!~".*blue_pure.*filter.*"})',
+            'min by (entity) (homeassistant_sensor_battery_percent{entity!~"sensor[.](1st|2nd|3rd)_floor_battery",entity!~"sensor[.]granary_smart_camera_feeder_battery_ac(_2)?",entity!~".*blue_pure.*filter.*"})',
           condition: "<",
           threshold: 20, // Lowered from 30 to reduce flapping - 20% is genuinely critical
           description: "Battery low: {{ $value }}% ({{ $labels.entity }}).",

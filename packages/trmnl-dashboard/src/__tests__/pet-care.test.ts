@@ -483,3 +483,93 @@ describe("pet-care metrics", () => {
     expect(metrics).not.toContain("trmnl_petcare_litter_source_fresh ");
   });
 });
+
+describe("PetLibro feeder D-cell battery monitoring", () => {
+  it.each([
+    ["10", true],
+    ["20", true],
+    ["80", false],
+    ["unavailable", null],
+  ] as const)(
+    "computes battery_problem from sensor.granary_smart_camera_feeder_battery_ac=%s",
+    async (stateValue, expected) => {
+      const robot = parseRobot(readyRobot());
+      const collection = await collectPetCare(
+        loadConfig({ TRMNL_API_KEY: "test", HA_TOKEN: "test" }),
+        {
+          homeAssistant: {
+            getStates: async () => [
+              {
+                entity_id: "sensor.granary_smart_camera_feeder_battery_ac",
+                state: stateValue,
+                attributes: {
+                  device_class: "battery",
+                  unit_of_measurement: "%",
+                },
+              },
+              {
+                entity_id: "sensor.storage_scoops_saved",
+                state: "39",
+                attributes: {},
+              },
+            ],
+            getHistory: async () => [],
+            getLitterRobot: async () => robot,
+          },
+          alerts: { listOpen: async () => [] },
+        },
+        NOW,
+      );
+
+      const livingRoom = collection.payload.feeders.find(
+        (feeder) => feeder.id === "living-room",
+      );
+      const guestRoom = collection.payload.feeders.find(
+        (feeder) => feeder.id === "guest-room",
+      );
+      expect(livingRoom?.battery_problem).toBe(expected);
+      expect(guestRoom?.battery_problem).toBeNull();
+    },
+  );
+
+  it("marks feeder status warning when sensor.granary_smart_camera_feeder_battery_ac is unavailable", async () => {
+    const robot = parseRobot(readyRobot());
+    const collection = await collectPetCare(
+      loadConfig({ TRMNL_API_KEY: "test", HA_TOKEN: "test" }),
+      {
+        homeAssistant: {
+          getStates: async () => [
+            {
+              entity_id: "sensor.storage_scoops_saved",
+              state: "39",
+              attributes: {},
+            },
+          ],
+          getHistory: async () => [],
+          getLitterRobot: async () => robot,
+        },
+        alerts: {
+          listOpen: async () => [
+            {
+              alertname: "PetCareEntityUnavailable",
+              severity: "warning",
+              summary:
+                "Pet-care entity unavailable: sensor.granary_smart_camera_feeder_battery_ac",
+              lifecycleState: "open",
+            },
+          ],
+        },
+      },
+      NOW,
+    );
+
+    const livingRoom = collection.payload.feeders.find(
+      (feeder) => feeder.id === "living-room",
+    );
+    const guestRoom = collection.payload.feeders.find(
+      (feeder) => feeder.id === "guest-room",
+    );
+    expect(livingRoom?.status).toBe("warning");
+    expect(guestRoom?.status).toBe("ok");
+  });
+});
