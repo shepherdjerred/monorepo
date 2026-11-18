@@ -21,6 +21,7 @@ export default [
       "bin/herdr_new_worktree_core.ts",
       "bin/executable_herdr_takeover.ts",
       "bin/herdr_takeover_core.ts",
+      "bin/herdr_worker_cli.ts",
     ],
     rules: {
       "unicorn/filename-case": [

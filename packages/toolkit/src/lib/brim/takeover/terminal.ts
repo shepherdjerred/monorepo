@@ -337,19 +337,27 @@ export function parseHcTerminalJson(rawJson: string): InspectedTerminal {
   };
 }
 
-export function resolveHcBinary(home: string = os.homedir()): string {
+export function resolveLocalOrPathBinary(
+  binaryName: string,
+  home: string = os.homedir(),
+  extraHint?: string,
+): string {
   const localBin = path.join(home, ".local", "bin");
-  const resolved = Bun.which("hc", { PATH: localBin }) ?? Bun.which("hc");
+  const resolved =
+    Bun.which(binaryName, { PATH: localBin }) ?? Bun.which(binaryName);
   if (resolved === null) {
+    const suffix = extraHint === undefined ? "" : ` ${extraHint}`;
     throw new TakeoverError(
-      `Could not find \`hc\` in ${localBin} or PATH. Install herdr-core first.`,
+      `Could not find \`${binaryName}\` in ${localBin} or PATH.${suffix}`,
     );
   }
   return resolved;
 }
 
-export const defaultHcRunner: HcCommandRunner = async (args) => {
-  const binary = resolveHcBinary();
+export async function spawnCapturedCommand(
+  binary: string,
+  args: readonly string[],
+): Promise<HcCommandResult> {
   const child = Bun.spawn([binary, ...args], {
     stdout: "pipe",
     stderr: "pipe",
@@ -360,7 +368,14 @@ export const defaultHcRunner: HcCommandRunner = async (args) => {
     child.exited,
   ]);
   return { stdout, stderr, exitCode };
-};
+}
+
+export function resolveHcBinary(home: string = os.homedir()): string {
+  return resolveLocalOrPathBinary("hc", home, "Install herdr-core first.");
+}
+
+export const defaultHcRunner: HcCommandRunner = (args) =>
+  spawnCapturedCommand(resolveHcBinary(), args);
 
 export async function inspectTerminal(
   address: string,

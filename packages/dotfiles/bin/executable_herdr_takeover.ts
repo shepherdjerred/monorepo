@@ -3,7 +3,7 @@
 // `herdr-takeover '<request json>'`. See herdr_takeover_core.ts.
 // `herdr-takeover --status` prints the last runs.
 import { randomUUID } from "node:crypto";
-import { appendFile, chmod, mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { chmod, mkdir, stat, writeFile } from "node:fs/promises";
 import { homedir, hostname } from "node:os";
 import path from "node:path";
 import {
@@ -19,6 +19,12 @@ import {
   type SpaceInfo,
   type Step,
 } from "./herdr_takeover_core.ts";
+import {
+  describeWorkerError,
+  dispatchWorkerCli,
+  printRecentWorkerEvents,
+  recordWorkerEvent,
+} from "./herdr_worker_cli.ts";
 
 const home = homedir();
 const windows = process.platform === "win32";
@@ -37,7 +43,6 @@ const psArgs = (script: string) => ["powershell.exe", "-NoProfile", "-NonInterac
 const firstLine = (text: string, fallback: string) => (text.trim().split("\n")[0] ?? "") || fallback;
 const resultLine = (r: ExecResult, fallback: string) => firstLine(r.stderr === "" ? r.stdout : r.stderr, fallback);
 const decoded = (v: unknown) => (typeof v === "string" ? Buffer.from(v, "base64").toString("utf8") : "");
-const describe = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 async function capture(
   argv: string[],
@@ -315,22 +320,6 @@ async function report(event: Event): Promise<void> {
   }
 }
 
-async function status(): Promise<number> {
-  let contents: string;
-  try {
-    contents = await readFile(eventsPath, "utf8");
-  } catch {
-    console.log(`No runs recorded in ${eventsPath}.`);
-    return 0;
-  }
-  let lastOk = true;
-  for (const line of contents.split("\n").filter(Boolean).slice(-10)) {
-    lastOk = fields(JSON.parse(line), "An event").get("ok") === true;
-    console.log(line);
-  }
-  return lastOk ? 0 : 1;
-}
-
 async function run(json: string): Promise<number> {
   const started = Date.now();
   const event = makeEvent(started);
@@ -360,32 +349,23 @@ async function run(json: string): Promise<number> {
       ok: true,
     });
   } catch (error) {
-    event.error = describe(error);
+    event.error = describeWorkerError(error);
   }
-  event.ms = Date.now() - started;
-  try {
-    await mkdir(path.dirname(eventsPath), { recursive: true, mode: 0o700 });
-    await appendFile(eventsPath, `${JSON.stringify(event)}\n`, { mode: 0o600 });
-  } catch (error) {
-    event.ok = false;
-    event.error = [event.error, `events.jsonl not written: ${describe(error)}`].filter(Boolean).join("; ");
-  }
+  await recordWorkerEvent(eventsPath, event, started);
   await report(event);
   return event.ok ? 0 : 1;
 }
 
-async function main(argv: string[]): Promise<number> {
-  const [first] = argv;
-  if (first === "--status" && argv.length === 1) return status();
-  const fromVariable = first === "--request-env" && argv.length === 1 ? Bun.env[requestVariable] : undefined;
-  if (fromVariable !== undefined) return run(fromVariable);
-  if (first === undefined || first === "--help" || first === "--request-env" || argv.length !== 1) {
-    console.error(
-      `Usage: herdr-takeover '<request json>' | --request-env | --status\nStarted by the Herdr takeover dialog (--request-env reads ${requestVariable}); results go to ${eventsPath}`,
-    );
-    return 2;
-  }
-  return run(first);
-}
-
-process.exitCode = await main(process.argv.slice(2));
+process.exitCode = await dispatchWorkerCli({
+  argv: process.argv.slice(2),
+  binaryName: "herdr-takeover",
+  dialogLabel: "takeover",
+  requestVariable,
+  eventsPath,
+  onStatus: () =>
+    printRecentWorkerEvents(
+      eventsPath,
+      (parsed) => fields(parsed, "An event").get("ok") === true,
+    ),
+  onRun: run,
+});

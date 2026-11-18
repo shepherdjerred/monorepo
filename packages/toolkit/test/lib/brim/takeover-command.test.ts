@@ -42,6 +42,28 @@ const BIN = "/home/agent/.local/share/agent-bin";
 const NOW_MS = Date.UTC(2026, 10, 15, 21, 51, 57);
 const NOW_COCOA = NOW_MS / 1000 - COCOA_EPOCH_OFFSET_SECONDS;
 
+function mockWeeklySnapshot(provider: string, usedPercent: number) {
+  return {
+    provider,
+    accountLabel: null,
+    windows: [
+      {
+        id: "Weekly",
+        label: "Weekly",
+        kind: { weekly: {} },
+        usedPercent,
+        resetAt: NOW_COCOA + 86_400,
+        sourceTimestamp: NOW_COCOA,
+      },
+    ],
+    resets: [],
+    resetErrorMessage: null,
+    notes: [],
+    sourceTimestamp: NOW_COCOA,
+    freshness: { current: {} },
+  };
+}
+
 const tempDirs: string[] = [];
 
 async function makeTempDir(): Promise<string> {
@@ -255,44 +277,8 @@ describe("handleTakeoverCommand target selection & forwarding", () => {
         which: (cmd) => `${BIN}/${cmd}`,
         loadSnapshots: () =>
           Promise.resolve([
-            {
-              provider: "claude-code",
-              accountLabel: null,
-              windows: [
-                {
-                  id: "Weekly",
-                  label: "Weekly",
-                  kind: { weekly: {} },
-                  usedPercent: 1,
-                  resetAt: NOW_COCOA + 86_400,
-                  sourceTimestamp: NOW_COCOA,
-                },
-              ],
-              resets: [],
-              resetErrorMessage: null,
-              notes: [],
-              sourceTimestamp: NOW_COCOA,
-              freshness: { current: {} },
-            },
-            {
-              provider: "codex",
-              accountLabel: null,
-              windows: [
-                {
-                  id: "Weekly",
-                  label: "Weekly",
-                  kind: { weekly: {} },
-                  usedPercent: 25,
-                  resetAt: NOW_COCOA + 86_400,
-                  sourceTimestamp: NOW_COCOA,
-                },
-              ],
-              resets: [],
-              resetErrorMessage: null,
-              notes: [],
-              sourceTimestamp: NOW_COCOA,
-              freshness: { current: {} },
-            },
+            mockWeeklySnapshot("claude-code", 1),
+            mockWeeklySnapshot("codex", 25),
           ]),
         spawn: (argv, cwd) => {
           spawned.push([argv, cwd]);

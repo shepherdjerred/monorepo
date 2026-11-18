@@ -1,10 +1,11 @@
 import os from "node:os";
-import path from "node:path";
 import { z } from "zod";
 import { TakeoverError } from "./errors.ts";
 import {
   defaultHcRunner,
   parseHcTerminalJson,
+  resolveLocalOrPathBinary,
+  spawnCapturedCommand,
   type HcCommandResult,
   type HcCommandRunner,
 } from "./terminal.ts";
@@ -80,30 +81,11 @@ export function parseHerdrAppLs(
 }
 
 export function resolveHerdrAppBinary(home: string = os.homedir()): string {
-  const localBin = path.join(home, ".local", "bin");
-  const resolved =
-    Bun.which("herdr-app", { PATH: localBin }) ?? Bun.which("herdr-app");
-  if (resolved === null) {
-    throw new TakeoverError(
-      `Could not find \`herdr-app\` in ${localBin} or PATH.`,
-    );
-  }
-  return resolved;
+  return resolveLocalOrPathBinary("herdr-app", home);
 }
 
-export const defaultHerdrAppRunner: HerdrExecRunner = async (args) => {
-  const binary = resolveHerdrAppBinary();
-  const child = Bun.spawn([binary, ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  return { stdout, stderr, exitCode };
-};
+export const defaultHerdrAppRunner: HerdrExecRunner = (args) =>
+  spawnCapturedCommand(resolveHerdrAppBinary(), args);
 
 export const defaultDetachedHerdrAppRunner: HerdrDetachedExecRunner = async (
   args,
