@@ -1,60 +1,24 @@
 import "./bugsink.ts";
-import { stat } from "node:fs/promises";
-import path from "node:path";
 import { Hono } from "hono";
 
 import { config } from "./config.ts";
-import { IdempotencyStore } from "./idempotency/store.ts";
-import { idempotencyMiddleware } from "./middleware/idempotency.ts";
-import { syncFilesTotal, tasksTotal, uptimeSeconds } from "./metrics.ts";
+import { getDatabase } from "./infrastructure/database.ts";
+import { tasksTotal, uptimeSeconds } from "./metrics.ts";
 import { authMiddleware } from "./middleware/auth.ts";
-import { envelopeMiddleware } from "./middleware/envelope.ts";
 import { loggerMiddleware } from "./middleware/logger.ts";
 import { metricsMiddleware } from "./middleware/metrics.ts";
 import { healthRoutes } from "./routes/health.ts";
-import { loadModelConfig } from "./engine/model-config.ts";
-import { TaskRepository } from "./engine/task-repository.ts";
-import { watchVault } from "./engine/watcher.ts";
-import { v2Routes } from "./v2/routes.ts";
 import { InMemoryFacetStore } from "./v1/in-memory-store.ts";
 import { PrismaFacetStore } from "./v1/prisma-store.ts";
 import { v1Routes } from "./v1/routes.ts";
-import { getDatabase } from "./infrastructure/database.ts";
-
-/**
- * Server: @tasknotes/model-backed engine serving the upstream plugin
- * task contract on `/api/*`.
- */
 
 const app = new Hono();
-
-// Loaded during start(); routes close over the boxes.
-const hasVault = await stat(config.vaultPath).then(
-  () => true,
-  () => false,
-);
-const { config: modelConfig, source: configSource } = await loadModelConfig(
-  config.vaultPath,
-);
-const repo = new TaskRepository(config.vaultPath, config.tasksDir, modelConfig);
-const idempotencyStorePath = hasVault
-  ? path.join(config.vaultPath, ".tasknotes-server", "idempotency.json")
-  : path.join("/tmp", ".tasknotes-server", "idempotency.json");
-const idempotencyStore = new IdempotencyStore(idempotencyStorePath);
 
 app.use("*", loggerMiddleware);
 app.use("*", metricsMiddleware);
 app.use("*", authMiddleware);
-app.use("*", envelopeMiddleware);
-// After envelope: stored + replayed bodies are pre-envelope, wrapped
-// identically on the way out (see middleware/idempotency.ts).
-app.use("*", idempotencyMiddleware(idempotencyStore));
 
 app.route("/", healthRoutes);
-app.route(
-  "/",
-  v2Routes({ repo, config: modelConfig, vaultPath: config.vaultPath }),
-);
 
 const hasDatabaseUrl =
   Bun.env["DATABASE_URL"] !== undefined && Bun.env["DATABASE_URL"] !== "";
@@ -64,20 +28,14 @@ const v1Store = hasDatabaseUrl
 
 app.route("/", v1Routes({ store: v1Store }));
 
-// Engine visibility: parse skips and config provenance, next to /api/health.
 app.get("/api/engine-status", async (c) => {
-  if (hasDatabaseUrl) {
-    const tasks = await v1Store.countActiveTasks();
-    return c.json({
-      configSource: "postgres",
-      tasks,
-      skippedFiles: [],
-    });
-  }
+  const tasks = await v1Store.countActiveTasks();
   return c.json({
-    configSource,
-    tasks: repo.list().length,
-    skippedFiles: repo.skippedFiles(),
+    status: "ok",
+    storage: "postgres",
+    configSource: "postgres",
+    tasks,
+    skippedFiles: [],
   });
 });
 
@@ -85,11 +43,8 @@ const startTime = Date.now();
 
 async function updateGauges(): Promise<void> {
   try {
-    const total = hasDatabaseUrl
-      ? await v1Store.countActiveTasks()
-      : repo.list().length;
+    const total = await v1Store.countActiveTasks();
     tasksTotal.set(total);
-    syncFilesTotal.set(hasDatabaseUrl ? 0 : total);
     uptimeSeconds.set(Math.round((Date.now() - startTime) / 1000));
   } catch (error: unknown) {
     console.error("[metrics] failed to update gauges:", error);
@@ -97,39 +52,6 @@ async function updateGauges(): Promise<void> {
 }
 
 async function start(): Promise<void> {
-  if (hasVault) {
-    // Startup gate: an unreadable vault throws here and kills the pod loudly
-    // instead of serving an empty task list.
-    await repo.scan();
-    await idempotencyStore.init();
-
-    watchVault(config.vaultPath, {
-      onChanges: (paths) => {
-        void (async () => {
-          try {
-            if (paths.length === 0) {
-              await repo.scan();
-            } else {
-              for (const relPath of paths) {
-                await repo.refreshFile(relPath);
-              }
-            }
-            await updateGauges();
-          } catch (error: unknown) {
-            console.error("[watcher] failed to apply vault changes:", error);
-          }
-        })();
-      },
-      onError: (error) => {
-        console.error("[watcher] error:", error);
-      },
-    });
-  } else {
-    console.log(
-      `[startup] Vault path not found at ${config.vaultPath}; running in database/sync API mode`,
-    );
-  }
-
   await updateGauges();
   setInterval(() => {
     void updateGauges();
@@ -137,14 +59,6 @@ async function start(): Promise<void> {
   console.log(
     `TaskNotes server listening on ${config.host}:${String(config.port)}`,
   );
-  console.log(`Vault path: ${config.vaultPath}`);
-  console.log(`Model config source: ${configSource}`);
-  const skipped = repo.skippedFiles();
-  if (skipped.length > 0) {
-    console.error(
-      `[startup] ${String(skipped.length)} task-like file(s) failed to parse — see /api/engine-status`,
-    );
-  }
 }
 
 void start();

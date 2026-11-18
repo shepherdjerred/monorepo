@@ -1,7 +1,1 @@
-{
-  "src/engine/task-repository.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  }
-}
+{}

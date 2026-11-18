@@ -1,33 +1,40 @@
 ---
 name: tasknotes-development
-description: Develop or verify TaskNotes across the Rust core, fixtures, generated bindings, sync server, macOS, Windows, and React Native clients. Use for any packages/tasknotes-* or packages/tasks-for-obsidian work.
+description: Develop or verify TaskNotes (Facet) across the shared wire protocol, PostgreSQL sync server, macOS, iOS, and Windows native clients. Use for any packages/facet-protocol, packages/tasknotes-*, or packages/tasks-for-obsidian work.
 ---
 
 # TaskNotes development
 
-TaskNotes is a cross-language system. Read the nearest package `AGENTS.md` and
-README, then identify which contract layer owns the change.
+Facet is a native cross-platform task system synchronized through `/api/v1/sync`.
+Read the nearest package `AGENTS.md` and README, then identify which contract
+layer owns the change.
 
-- `tasknotes-core` is pure Rust domain logic with host-provided I/O traits.
-- `tasknotes-core-ffi` contains UniFFI scaffolding only.
-- `@tasknotes/fixtures` is the shared oracle used by Rust and TypeScript. A
-  disagreement is a finding; do not edit the fixture to bless one implementation.
-- Generated bindings are committed. UniFFI record field order is ABI-significant
-  even when checksums and headers do not change. Regenerate through `cargo xtask`
-  and commit every diff.
-- Apps and presentation layers do not import generated FFI directly; use their
-  host/engine boundary.
-- The server preserves Markdown and wire contracts, validates request/response
-  schemas, and keeps idempotent mutation behavior.
+- `packages/facet-protocol` is the single source of truth for wire DTOs, the 21
+  `SyncCommand` variants, and shared design tokens (`presentation/`). Regenerate
+  Swift, TypeScript, and C# protocol files with `bun run --cwd packages/facet-protocol generate`
+  and commit every generated diff; never hand-edit generated bindings.
+- `packages/tasknotes-server` owns PostgreSQL persistence (`PrismaFacetStore`),
+  monotonic `sync_seq` delta watermarks, `SyncCommandLog` UUID idempotency,
+  server-side RRULE recurrence advancement, and `/api/v1/*` REST routes.
+- `packages/tasknotes-macos` (`TaskNotesKit` + `TaskNotesFacetUI`) owns the
+  native Swift SQLite sync engine, Keychain token storage, and shared SwiftUI
+  presentation consumed by both macOS and `packages/tasks-for-obsidian` (iOS +
+  WidgetKit).
+- `packages/tasknotes-windows` owns the WinUI 3 client over `Microsoft.Data.Sqlite`,
+  `FacetProtocol.cs`, and Windows Credential Locker, keeping `Host` and
+  `Presentation` free of `Microsoft.UI`/`Windows.UI` references so portable
+  tests and coverage ratchets run on non-Windows hosts.
 
-Use focused cross-language tests. Native checks are platform-specific:
+Use focused verification per platform:
 
-- Build the XCFramework before macOS E2E when bindings or core behavior changed.
-- Run the macOS accessibility/UI flow for affected native behavior.
-- Use portable Windows verification on non-Windows hosts and
-  `bun run windows:verify` on Windows for full packaging/runtime claims.
-- For the React Native app, distinguish unit, real-server contract, simulator
-  E2E, and Xcode Cloud Archive/TestFlight acceptance.
+- Run `tasknotes-server` unit/sync suites and live-server integration suites in
+  `tasknotes-macos` (`FacetLiveServerSyncTests`) and `tasknotes-windows`
+  (`ServerIntegrationTests`) whenever wire or sync semantics change.
+- Run macOS accessibility/UI flows for affected Apple UI behavior, and XcodeGen +
+  native dependency checks (`check:ios-native-deps`) for iOS archive changes.
+- Use portable Windows verification (`build`, `lint`, `test`,
+  `coverage:portable:check`) on non-Windows hosts and `bun run windows:verify`
+  on Windows for full WinUI runtime and MSIX/standalone packaging claims.
 
-Never soften an accessibility assertion, skip a native gate, edit generated
-code, or claim parity without the package's runtime assertion evidence.
+Never soften an accessibility assertion, skip a coverage or lint gate, edit
+generated protocol code, or claim runtime parity without matching verification.

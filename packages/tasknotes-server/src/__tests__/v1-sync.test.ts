@@ -3,7 +3,6 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { InMemoryFacetStore } from "../v1/in-memory-store.ts";
 import { v1Routes } from "../v1/routes.ts";
-import { envelopeMiddleware } from "../middleware/envelope.ts";
 
 const SyncResponseSchema = z.object({
   sync_token: z.string(),
@@ -53,7 +52,6 @@ describe("v1 Sync Protocol", () => {
   beforeEach(() => {
     store = new InMemoryFacetStore();
     app = new Hono();
-    app.use("*", envelopeMiddleware);
     app.route("/", v1Routes({ store }));
   });
 
@@ -258,7 +256,6 @@ describe("v1 CRUD Endpoints", () => {
   beforeEach(() => {
     store = new InMemoryFacetStore();
     app = new Hono();
-    app.use("*", envelopeMiddleware);
     app.route("/", v1Routes({ store }));
   });
 

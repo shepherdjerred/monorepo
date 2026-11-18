@@ -1,5 +1,0 @@
-title:
-  storage: frontmatter
-task_detection:
-  method: tag
-  tag: task

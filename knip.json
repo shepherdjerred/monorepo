@@ -445,26 +445,16 @@
     "packages/facet-protocol": {
       "ignoreBinaries": ["typeshare"]
     },
-    "packages/tasknotes-core": {
-      "entry": ["ci/*.ts"],
-      "project": ["ci/**/*.ts"]
-    },
-    // The Rust core and the sync server are consumed by path, not by import:
-    // MSBuild compiles the core's generated C# and the tests spawn the server
-    // from its directory. The workspace deps are what order turbo's graph.
+    // The sync server is consumed by path, not by import: the integration tests
+    // spawn the server from its directory, and the workspace dep orders turbo's
+    // graph.
     "packages/tasknotes-windows": {
       "entry": ["scripts/*.ts"],
       "project": ["scripts/**/*.ts"],
-      "ignoreDependencies": ["tasknotes-core", "tasknotes-server"]
-    },
-    "packages/tasknotes-e2e": {
       "ignoreDependencies": ["tasknotes-server"]
     },
     "packages/tasknotes-server": {
       "project": ["src/**/*.ts", "prisma/**/*.prisma"]
-    },
-    "packages/tasknotes-types": {
-      "project": ["src/**/*.ts"]
     },
     "packages/homelab": {
       "entry": ["scripts/**/*.ts"],

@@ -40,14 +40,12 @@
     "react-native-screens": "4.28.0",
     "react-native-sound": "^0.13.0",
     "react-native-worklets": "^0.13.0",
-    "tasknotes-types": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "tasknotes-macos": "workspace:*",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
-    "@tasknotes/e2e": "workspace:*",
     "@babel/core": "^8.0.0",
     "@babel/core-v7": "npm:@babel/core@7.29.7",
     "@babel/plugin-transform-export-namespace-from": "^8.0.0",
@@ -62,7 +60,6 @@
     "@react-native/typescript-config": "0.87.1",
     "@react-navigation/core": "^7.21.5",
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@tasknotes/fixtures": "workspace:*",
     "@types/bun": "1.4.2",
     "@types/react": "19.3.0",
     "@typescript-eslint/utils": "^8.71.1",
