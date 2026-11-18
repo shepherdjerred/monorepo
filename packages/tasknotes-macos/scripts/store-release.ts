@@ -144,10 +144,6 @@ if (options) {
       "Export options must select app-store-connect, local export and the exact developer team.",
     );
 }
-await run(
-  [join(repo, "bin/mise"), "exec", "--", "cargo", "xtask", "check-xcframework"],
-  join(repo, "packages/tasknotes-core"),
-);
 if (platform === "macos") await run(["swift", "package", "resolve"]);
 await run([
   join(repo, "bin/mise"),

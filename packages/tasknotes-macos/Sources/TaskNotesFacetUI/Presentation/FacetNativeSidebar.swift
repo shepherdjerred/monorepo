@@ -1,250 +1,256 @@
-import SwiftUI
-import TaskNotesKit
+#if os(macOS)
+    import Foundation
+    import SwiftUI
+    import TaskNotesKit
 
-internal struct FacetNativeSidebar: View {
-    let store: FacetStore
-    @Bindable var window: FacetWindowState
-    let choose: (String) -> Void
-    let admitNavigation: (@MainActor () async -> Bool)?
-    @State private var browseDetail: FacetTask?
-    @State private var managesViews = false
+    internal struct FacetNativeSidebar: View {
+        let store: FacetStore
+        let onPresentModal: (FacetPresentedEntityModal) -> Void
 
-    init(
-        store: FacetStore, window: FacetWindowState, choose: @escaping (String) -> Void,
-        admitNavigation: (@MainActor () async -> Bool)? = nil
-    ) {
-        self.store = store
-        self.window = window
-        self.choose = choose
-        self.admitNavigation = admitNavigation
-    }
-
-    var body: some View {
-        List {
-            Section {
-                ForEach(FacetNativeWorkspace.routes.filter { $0.id != "browse" }, id: \.id) {
-                    route in
-                    routeRow(route.title, symbol: route.symbol, scope: route.id)
-                }
-                routeRow("All tasks", symbol: "list.bullet", scope: "all")
-                routeRow("Board", symbol: "rectangle.split.3x1", scope: "board")
-                routeRow("Completed", symbol: "checkmark.circle", scope: "completed")
-            }
-            if let snapshot = window.snapshot {
-                if !snapshot.views.isEmpty {
-                    Section("Saved views") {
-                        ForEach(snapshot.views) { view in
-                            savedViewRow(view)
+        var body: some View {
+            List {
+                if !store.favoriteProjects.isEmpty || !store.favoriteFilters.isEmpty
+                    || !store.favoriteLabels.isEmpty
+                {
+                    SwiftUI.Section("Favorites") {
+                        ForEach(store.favoriteProjects) { proj in
+                            projectRow(proj)
+                        }
+                        ForEach(store.favoriteLabels) { item in
+                            labelRow(item)
+                        }
+                        ForEach(store.favoriteFilters) { filterItem in
+                            filterRow(filterItem)
                         }
                     }
+                    .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("favorites"))
                 }
-                Button("Manage saved views", systemImage: "rectangle.stack") { managesViews = true }
-                ForEach(
-                    [
-                        ("Projects", "projects", "folder"), ("Contexts", "contexts", "at"),
-                        ("Tags", "tags", "tag"),
-                    ], id: \.1
-                ) { title, key, symbol in
-                    let values = window.vocabulary[key] ?? []
-                    if !values.isEmpty {
-                        Section(title) {
-                            ForEach(values, id: \.self) { value in
-                                entityRow(value, key: key, symbol: symbol, snapshot: snapshot)
-                            }
+
+                SwiftUI.Section("Views") {
+                    sidebarSectionRow(.inbox, badge: store.inboxCount)
+                    sidebarSectionRow(.today, badge: store.todayCount)
+                    sidebarSectionRow(.upcoming, badge: 0)
+                    sidebarSectionRow(.completed, badge: 0)
+
+                    sidebarDestinationButton(.board) { isSelected in
+                        HStack(spacing: 8) {
+                            Image(systemName: "rectangle.split.3x1")
+                                .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                            Text("Board")
+                                .fontWeight(isSelected ? .semibold : .regular)
+                            Spacer()
                         }
                     }
+                    .accessibilityIdentifier(AccessibilityIdentifier.sidebarDestination(.board))
                 }
-            }
-        }
-        #if os(macOS)
-            .listStyle(.sidebar).foregroundStyle(Color.primary)
-        #else
-            .listStyle(.insetGrouped).foregroundStyle(Color.primary)
-        #endif
-        .sheet(isPresented: $managesViews) {
-            if let profileID = window.snapshot?.profileId {
-                FacetSavedViewsForm(
-                    store: store, profileID: profileID, board: $window.board, window: window,
-                    admitNavigation: admitNavigation)
-            }
-        }
-    }
+                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("views"))
 
-    @ViewBuilder private func savedViewRow(_ view: FacetSavedView) -> some View {
-        #if os(macOS)
-            Button {
-                _Concurrency.Task {
-                    guard await admitNavigation?() ?? true else { return }
-                    await window.apply(view, store: store)
+                SwiftUI.Section {
+                    ForEach(store.userProjects) { proj in
+                        projectRow(proj)
+                    }
+                } header: {
+                    sectionHeader("Projects") {
+                        onPresentModal(.addProject)
+                    }
                 }
-            } label: {
-                Label(
-                    view.view["name"]?.text ?? view.id,
-                    systemImage: "line.3.horizontal.decrease.circle")
-            }.buttonStyle(.plain)
-        #else
-            NavigationLink {
-                FacetMobileBrowseDestination(
-                    store: store,
-                    scope: view.view["query"]?.object?.fields["scope"]?.text ?? "all",
-                    title: view.view["name"]?.text ?? view.id,
-                    query: view.view["query"]?.object?.fields ?? [:], savedView: view)
-            } label: {
-                FacetMobileSavedViewLabel(view: view)
-            }
-        #endif
-    }
+                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("projects"))
 
-    @ViewBuilder private func routeRow(_ title: String, symbol: String, scope: String) -> some View
-    {
-        #if os(macOS)
-            Button {
-                choose(scope)
-            } label: {
-                Label {
-                    Text(title).foregroundStyle(FacetNativeStyle.text)
-                } icon: {
-                    Image(systemName: symbol).foregroundStyle(FacetNativeStyle.secondaryText)
+                SwiftUI.Section {
+                    ForEach(store.activeLabels) { item in
+                        labelRow(item)
+                    }
+                } header: {
+                    sectionHeader("Labels") {
+                        onPresentModal(.addLabel)
+                    }
                 }
+                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("labels"))
+
+                SwiftUI.Section {
+                    ForEach(store.activeFilters) { filterItem in
+                        filterRow(filterItem)
+                    }
+                } header: {
+                    sectionHeader("Filters") {
+                        onPresentModal(.addFilter)
+                    }
+                }
+                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("filters"))
+            }
+            .listStyle(.sidebar)
+            .safeAreaInset(edge: .bottom) {
+                sidebarSyncFooter
+            }
+            .accessibilityIdentifier(AccessibilityIdentifier.sidebar)
+        }
+
+        private func sidebarDestinationButton<Content: View>(
+            _ destination: FacetDestination,
+            @ViewBuilder content: (Bool) -> Content
+        ) -> some View {
+            let isSelected = store.destination == destination
+            return Button {
+                store.destination = destination
+            } label: {
+                content(isSelected)
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        isSelected ? Color.accentColor.opacity(0.16) : Color.clear,
+                        in: .rect(cornerRadius: 7)
+                    )
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .listRowBackground(
-                window.scope == scope ? Color.accentColor.opacity(0.12) : Color.clear)
-        #else
-            NavigationLink {
-                FacetMobileBrowseDestination(store: store, scope: scope, title: title)
-            } label: {
-                Label(title, systemImage: symbol)
-            }
-        #endif
-    }
-    @ViewBuilder private func entityRow(
-        _ value: String, key: String, symbol: String, snapshot: FacetSnapshot
-    ) -> some View {
-        #if os(macOS)
-            Button {
-                _Concurrency.Task {
-                    guard await admitNavigation?() ?? true else { return }
-                    window.leaveSavedView()
-                    window.savedQuery = [key: .array([.string(value)])]
-                    window.scope = "all"
-                    await window.reload(store: store)
-                }
-            } label: {
-                Label(value, systemImage: symbol)
-            }.buttonStyle(.plain)
-        #else
-            NavigationLink {
-                FacetMobileBrowseDestination(
-                    store: store, scope: "all", title: value, query: [key: .array([.string(value)])]
-                )
-            } label: {
-                Label(value, systemImage: symbol)
-            }
-        #endif
-    }
-}
+            .listRowInsets(EdgeInsets(top: 1, leading: 4, bottom: 1, trailing: 4))
+        }
 
-#if os(iOS)
-    internal struct FacetMobileBrowseDestination: View {
-        let store: FacetStore
-        let scope: String
-        let title: String
-        var query: [String: FacetValue] = [:]
-        var savedView: FacetSavedView?
-        @State private var searching = false
-        var body: some View {
-            FacetMobileTaskScreen(
-                store: store, scope: scope, query: query, savedView: savedView
-            )
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Search", systemImage: "magnifyingglass") { searching = true }
-                        .accessibilityIdentifier("facet.search.open")
-                }
-            }
-            .sheet(isPresented: $searching) {
-                NavigationStack {
-                    FacetMobileTaskScreen(
-                        store: store, scope: "all", globalSearch: true
-                    )
-                    .navigationTitle("Search")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { searching = false }
-                                .accessibilityIdentifier("facet.search.done")
-                        }
+        private func sidebarSectionRow(_ section: FacetSection, badge: Int) -> some View {
+            sidebarDestinationButton(.section(section)) { isSelected in
+                HStack(spacing: 8) {
+                    Image(systemName: section.systemImage)
+                        .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                    Text(section.title)
+                        .fontWeight(isSelected ? .semibold : .regular)
+                    Spacer()
+                    if badge > 0 {
+                        Text("\(badge)")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(isSelected ? Color.accentColor : .secondary)
                     }
                 }
             }
+            .accessibilityIdentifier(AccessibilityIdentifier.sidebarSection(section))
+        }
+
+        private func projectRow(_ proj: Project) -> some View {
+            let count = store.openTaskCount(inProject: proj.id)
+            return sidebarDestinationButton(.project(id: proj.id)) { isSelected in
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(FacetNativeStyle.swatchColor(proj.color))
+                        .frame(width: 8, height: 8)
+                    Text(proj.name)
+                        .fontWeight(isSelected ? .semibold : .regular)
+                        .lineLimit(1)
+                    Spacer()
+                    if count > 0 {
+                        Text("\(count)")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                    }
+                }
+            }
+            .contextMenu {
+                Button("Edit Project…") {
+                    onPresentModal(.editProject(proj))
+                }
+                Button(proj.is_favorite ? "Remove from Favorites" : "Add to Favorites") {
+                    store.toggleProjectFavorite(proj)
+                }
+                Divider()
+                Button("Delete Project", role: .destructive) {
+                    store.deleteProject(id: proj.id)
+                }
+            }
+            .accessibilityIdentifier(
+                AccessibilityIdentifier.sidebarDestination(.project(id: proj.id))
+            )
+        }
+
+        private func labelRow(_ item: TaskNotesKit.Label) -> some View {
+            sidebarDestinationButton(.label(id: item.id)) { isSelected in
+                HStack(spacing: 8) {
+                    Image(systemName: "tag.fill")
+                        .font(.caption)
+                        .foregroundStyle(FacetNativeStyle.swatchColor(item.color))
+                    Text("@\(item.name)")
+                        .fontWeight(isSelected ? .semibold : .regular)
+                        .lineLimit(1)
+                    Spacer()
+                }
+            }
+            .contextMenu {
+                Button("Delete Label", role: .destructive) {
+                    store.deleteLabel(id: item.id)
+                }
+            }
+            .accessibilityIdentifier(
+                AccessibilityIdentifier.sidebarDestination(.label(id: item.id))
+            )
+        }
+
+        private func filterRow(_ filterItem: Filter) -> some View {
+            sidebarDestinationButton(.filter(id: filterItem.id)) { isSelected in
+                HStack(spacing: 8) {
+                    Image(systemName: "line.3.horizontal.decrease.circle")
+                        .font(.caption)
+                        .foregroundStyle(FacetNativeStyle.swatchColor(filterItem.color))
+                    Text(filterItem.name)
+                        .fontWeight(isSelected ? .semibold : .regular)
+                        .lineLimit(1)
+                    Spacer()
+                }
+            }
+            .contextMenu {
+                Button("Delete Filter", role: .destructive) {
+                    store.deleteFilter(id: filterItem.id)
+                }
+            }
+            .accessibilityIdentifier(
+                AccessibilityIdentifier.sidebarDestination(.filter(id: filterItem.id))
+            )
+        }
+
+        private func sectionHeader(_ title: String, onAdd: @escaping () -> Void) -> some View {
+            HStack {
+                Text(title)
+                Spacer()
+                Button(action: onAdd) {
+                    Image(systemName: "plus")
+                }
+                .buttonStyle(.borderless)
+                .help("Add to \(title)")
+            }
+        }
+
+        private var sidebarSyncFooter: some View {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(
+                        store.hasConfiguredToken
+                            ? (store.effectiveError == nil ? Color.green : Color.red)
+                            : Color.orange
+                    )
+                    .frame(width: 7, height: 7)
+
+                Text(
+                    store.isSyncing
+                        ? "Syncing…"
+                        : (store.pendingOutboxCount > 0
+                            ? "\(store.pendingOutboxCount) pending"
+                            : (store.hasConfiguredToken ? "Synced" : "Local SQLite"))
+                )
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+                Spacer()
+
+                Button {
+                    store.showsSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .buttonStyle(.borderless)
+                .help("Server & Sync Settings")
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.bar)
         }
     }
 #endif
-
-internal struct FacetNativeNotices: View {
-    let store: FacetStore
-    let sheets: FacetSheetPresentation
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let profileID = store.selectedProfileID {
-                if let state = store.syncStatuses[profileID] {
-                    FacetSyncNotice(state: state)
-                } else if let text = store.syncStates[profileID] {
-                    Label(text, systemImage: "arrow.triangle.2.circlepath").font(.caption)
-                        .foregroundStyle(.secondary).accessibilityIdentifier("facet.sync.status")
-                }
-            }
-            if store.needsStandardConsent {
-                Text(
-                    "This vault has no TaskNotes settings. Use the standard configuration to begin creating tasks?"
-                )
-                Button("Use standard configuration") {
-                    _Concurrency.Task { await store.approveStandardConfiguration() }
-                }
-                .accessibilityIdentifier("facet.configuration.approve")
-            }
-            if let route = store.notificationRoute {
-                let owner =
-                    store.profiles.first { $0.id == route.profileID }?.name ?? route.profileID
-                Button("Open reminder task in \(owner)") {
-                    _Concurrency.Task { await store.openNotificationRoute() }
-                }
-                .disabled(store.isSaving || store.isLoading)
-                .accessibilityIdentifier("facet.reminder.open")
-            }
-            if let snapshot = store.snapshot, snapshot.conflictCount > 0 {
-                Button(
-                    "\(snapshot.conflictCount) conflicts need your attention",
-                    systemImage: "exclamationmark.arrow.triangle.2.circlepath"
-                ) {
-                    _Concurrency.Task { await sheets.openConflicts(store: store) }
-                }.accessibilityIdentifier("facet.conflicts.open")
-                    .disabled(store.conflictWindowOwnerID != nil)
-                    .help("Conflicts are open in another window while this control is unavailable.")
-            }
-            ForEach(store.pendingActions) { action in
-                if action.canResume {
-                    Button("Resume saved action in \(action.profileID)") {
-                        _Concurrency.Task { await store.resumeSavedAction(action) }
-                    }
-                    Button("Check outcome and retire saved action") {
-                        _Concurrency.Task { await store.retireSavedAction(action) }
-                    }.disabled(store.selectedProfileID != action.profileID)
-                } else {
-                    Text("A saved action uses a removed feature. Its original request is retained.")
-                        .font(.caption)
-                    Button("Check outcome and retire saved action") {
-                        _Concurrency.Task { await store.retireSavedAction(action) }
-                    }
-                    .disabled(store.selectedProfileID != action.profileID)
-                }
-            }
-        }.padding(
-            store.needsStandardConsent || !store.pendingActions.isEmpty
-                || store.notificationRoute != nil
-                || (store.snapshot?.conflictCount ?? 0) > 0 ? 12 : 0)
-    }
-}

@@ -2,28 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!--
-	  The app is sandboxed from commit one, on purpose. Retrofitting the sandbox
-	  onto an app that has been reading arbitrary paths is the expensive
-	  direction; starting inside it means Phase 8 reaches for security-scoped
-	  bookmarks the first time it opens a vault, rather than discovering the
-	  requirement after the file access is spread across the codebase.
-	-->
+	<!-- App Sandbox isolates Facet's SQLite database inside its app-private container. -->
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 
-	<!--
-	  The vault is chosen by the user through a system open panel, and the
-	  resulting security-scoped bookmark is what grants access on later
-	  launches. There is deliberately no broad filesystem entitlement.
-	-->
-	<key>com.apple.security.files.user-selected.read-write</key>
-	<true/>
-
-	<!--
-	  Outbound only: the app connects directly to Obsidian Sync over TLS. It never
-	  listens, so there is no `network.server` entitlement.
-	-->
+	<!-- Outbound HTTPS client access to the configured Facet sync server (/api/v1/sync). -->
 	<key>com.apple.security.network.client</key>
 	<true/>
 </dict>

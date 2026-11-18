@@ -2,78 +2,27 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
-    // Every RN native module must be linked in the iOS project (old CI:
-    // tasks-for-obsidian-ios-native-deps). Runs against the workspace install —
-    // the legacy per-package hoisted-install dance is no longer needed.
     "check:ios-native-deps": {
       "inputs": [
         "package.json",
         "ios/**",
-        "!ios/Pods/**",
         "!ios/build/**",
         "scripts/check-ios-native-deps.ts",
-        // The bun-pin drift guard reads the root mise toolchain; a toolchain
-        // bump must re-run this task (same $TURBO_ROOT$ escape as `test`).
         "$TURBO_ROOT$/.mise.toml"
       ]
     },
-    // Runs the exact Release Metro bundle Xcode Cloud runs during Archive (pure
-    // JS — no macOS), then asserts no singleton (react/react-native/scheduler)
-    // was bundled twice. Catches both unresolvable imports and the duplicate-React
-    // launch crash (build #62) before they reach Xcode Cloud. Like test:contract,
-    // the tasknotes-types source coupling is expressed as a task dependency since
-    // turbo `inputs` cannot reach outside the package.
-    "check:release-bundle": {
-      "dependsOn": ["tasknotes-types#typecheck"],
-      "inputs": [
-        "package.json",
-        "index.js",
-        "App.tsx",
-        "app.json",
-        "metro.config.js",
-        "babel.config.js",
-        "src/**",
-        "assets/**",
-        "scripts/check-release-bundle.ts"
-      ]
-    },
-    // swiftlint --strict, same as the old CI swift-lint step. Needs the
-    // swiftlint binary (mise optional tool set / CI toolchain image).
     "lint:swift": {
-      "inputs": ["ios/**/*.swift", ".swiftlint.yml"]
-    },
-    // Wire-contract suite: the app's real TaskNotesClient against a spawned
-    // real tasknotes-server over a temp vault (old CI: tasknotes-contract-test).
-    // Hermetic — no creds, no build artifact (the server runs from source).
-    // turbo `inputs` cannot reach outside the package (`../` is invalid), so the
-    // tasknotes-server coupling is expressed as a task dependency instead: a
-    // server change invalidates this task via that task's hash.
-    "test:contract": {
-      "dependsOn": ["tasknotes-server#typecheck"],
       "inputs": [
-        "$TURBO_ROOT$/vitest.config.ts",
-        "contract-tests/**",
-        "src/data/**",
-        "src/domain/**"
+        "ios/**/*.swift",
+        "$TURBO_ROOT$/packages/tasknotes-macos/.swiftlint.yml",
+        "$TURBO_ROOT$/packages/tasknotes-macos/.swiftlint-appkit-baseline.json"
       ]
     },
-    // The sync suite is driven by the shared JSON scenario corpus in
-    // packages/tasknotes-fixtures, which the Rust core runs too. It is read
-    // off disk rather than imported, so nothing in the module graph tells
-    // turbo about it — $TURBO_ROOT$ reaches out to it explicitly, and
-    // $TURBO_DEFAULT$ keeps the normal package files in the hash.
     "test": {
-      "inputs": [
-        "$TURBO_ROOT$/vitest.config.ts",
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/tasknotes-fixtures/**"
-      ]
+      "inputs": ["$TURBO_ROOT$/vitest.config.ts", "$TURBO_DEFAULT$"]
     },
     "test:ci": {
-      "inputs": [
-        "$TURBO_EXTENDS$",
-        "$TURBO_ROOT$/packages/tasknotes-fixtures/**"
-      ]
+      "inputs": ["$TURBO_EXTENDS$"]
     }
   }
 }

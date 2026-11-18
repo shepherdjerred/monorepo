@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { cueNames, sampleRate, synthesizeCue } from "./feedback-synthesis.ts";
 
 export const presentationDirectory = fileURLToPath(
-  new URL("../../tasknotes-fixtures/presentation/", import.meta.url),
+  new URL("../../facet-protocol/presentation/", import.meta.url),
 );
 
 export function constantSchema(value: unknown): Record<string, unknown> {

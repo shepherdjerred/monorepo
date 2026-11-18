@@ -1,55 +1,54 @@
 # Facet Apple host constraints
 
-This package supplies the native macOS app and the reusable SwiftUI/Foundation
-host used by iOS. Load `tasknotes-development` for the cross-package workflow.
+This package owns the native macOS application (`TaskNotes`) and the shared Swift
+libraries (`TaskNotesKit` and `TaskNotesFacetUI`) consumed by both macOS and iOS.
+Load `tasknotes-development` for cross-package workflows.
 
-## Boundaries
+## Architecture boundaries
 
-- `TaskNotesUniFFI` is generated glue. `TaskNotesKit` has no SwiftUI/AppKit imports;
-  `TaskNotesFacetUI` and `TaskNotesMac` own MainActor presentation.
-- Do not edit generated Swift. Build the XCFramework from `tasknotes-core`
-  before compiling, and commit every regenerated binding diff.
-- `FacetEngine` serializes synchronous runtime calls away from UI. Rust owns
-  domain/Sync policy and SQLite receipts. Native adapters own Keychain, URLSession
-  effects, security-scoped bookmarks, coordinated files and lifecycle.
-- Core HTTP and storage are host traits. App storage uses the sandbox container;
-  vault access needs a user-selected security-scoped bookmark.
-- `URLSessionTransport.swift` carries HTTP method, URL, headers and bytes.
-  Do not grow a Swift-owned wire model that duplicates the Rust core.
-- Validate shared schemas fully. Preserve arbitrary configured values, unknown
-  note properties and Markdown bytes. Never substitute corrupt data.
-- Provider writes require proven confinement and durable displaced-byte capture.
-  Keep backups until the runtime acknowledges its conflict/journal commit.
-- Complete retry identity includes owning profile, timestamp and payload.
-  Credentials never enter vault files, App Groups, diagnostics or artifacts.
+- `TaskNotesKit` is `nonisolated` by default and **must not** import `SwiftUI`,
+  `AppKit`, `Cocoa`, or `UIKit`. It owns generated protocol models
+  (`Sources/TaskNotesKit/Generated/Protocol.swift`), `FacetSQLiteDatabase`
+  (`import SQLite3` actor), `FacetLocalStore`, `FacetAPIClient` (`/api/v1/sync`),
+  `KeychainTokenStore`, `FacetQuickCaptureParser`, `FacetRecurrenceCodec`,
+  `FacetFilterQueryEvaluator`, `MarkdownBody`, and presentation/feedback schema
+  validation.
+- Do not hand-edit `Sources/TaskNotesKit/Generated/Protocol.swift`; regenerate it
+  from `packages/facet-protocol` via `bun run generate`.
+- `TaskNotesFacetUI` and `TaskNotesMac` are `MainActor`-isolated by default and
+  own shared SwiftUI Todoist-style workspaces, boards, inspectors, capture sheets,
+  and sensory feedback.
+- SQLite databases (`Application Support/Facet/facet-sync.sqlite3`) live strictly
+  inside the app-private container — **never** inside the iOS App Group
+  `group.com.tasksforobsidian` (to avoid `0xdead10cc` background lock kills).
+  The App Group holds only bounded widget projection JSON and Siri intent capture
+  files.
+- Server bearer tokens live in Keychain (`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`),
+  never in `UserDefaults`, SQLite, App Groups, logs, or snapshots.
 
-## Swift and UI
+## Swift 6.2 & SwiftLint invariants
 
-- In binding-importing files, use `CoreTask`/`CoreClock` and
-  `_Concurrency.Task` to avoid generated-name collisions.
-- Durable failures must be visible and actionable in the UI, not merely parked
-  on disk.
-- The quick-add window remains a nonactivating `NSPanel` with a stable global
-  hotkey and window-level accessibility identifier. Hotkey UI tests require a
-  stable Apple Development-signed runner and Accessibility trust.
-- Snapshot tests render offscreen at fixed size, scale, time, locale, timezone,
-  and both appearances. Do not capture the user's screen.
+- All targets compile under Swift 6.2 with `.strictMemorySafety()`,
+  `.treatAllWarnings(as: .error)`, `ExistentialAny`, `MemberImportVisibility`,
+  `InternalImportsByDefault`, `NonisolatedNonsendingByDefault`, and
+  `InferIsolatedConformances`.
+- `try?`, `print(`, `default:` in `switch` statements over closed/value types,
+  `Bool?` / `[T]?` declarations, `unsafeBitCast`, `unsafeDowncast`,
+  `@unchecked Sendable`, `assumingMemoryBound`, and `swiftlint:disable` /
+  `swift-format-ignore` directives are banned by `.swiftlint.yml` and
+  `ci/no-suppressions.sh`.
+- Keep `Sources/TaskNotesFacetUI/Presentation/FacetWindowCloseGuard.swift` aligned
+  with `.swiftlint-appkit-baseline.json` (`scripts/check-appkit-baseline.ts`).
 
 ## Verification and release
 
-Automated Mac UI checks use a preprovisioned headless guest, never a host-desktop fallback.
-Run foreground host UI only when the user explicitly requests it.
-
 ```bash
-cd ../tasknotes-core && cargo xtask build-xcframework
-cd ../tasknotes-macos
-bun run mac:verify
-bun run mac:e2e
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
+bun run lint
+bun run mac:format:check
+bun run mac:smoke
 ```
 
-Native UI checks require matching artifacts and real standalone vault assertions;
-legacy server-backed tests are separate. Preserve accessibility assertions;
-a compile-only result is not app verification. The macOS Woodpecker lane is
-currently paused; local native checks are not exact-head CI evidence.
-App Store and Developer ID lanes are distinct products. Keep signing material
-and release artifacts untracked; publication needs explicit owner authorization.
+Snapshot tests render offscreen at fixed size, 2x scale, fixed `ViewerCalendar`,
+and both `.light` and `.dark` appearances without capturing the host screen.
+App Store and Developer ID lanes remain distinct operator-authorized products.

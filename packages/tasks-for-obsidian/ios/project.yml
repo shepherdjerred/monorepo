@@ -31,8 +31,6 @@ targets:
         buildPhase: resources
       - path: ../../tasknotes-macos/Resources/ios/native-license-inventory.json
         buildPhase: resources
-      - path: ../scripts/ios-account/account-input.schema.json
-        buildPhase: resources
     dependencies:
       - package: FacetApple
         product: TaskNotesFacetUI
@@ -55,7 +53,7 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         ITSAppUsesNonExemptEncryption: false
-        LSSupportsOpeningDocumentsInPlace: true
+        LSSupportsOpeningDocumentsInPlace: false
         UISupportsDocumentBrowser: false
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
@@ -111,12 +109,6 @@ targets:
     platform: iOS
     sources:
       - path: FacetUITests
-      - path: ../scripts/ios-account/account-input.schema.json
-        buildPhase: resources
-      - path: ../../tasknotes-macos/UITests/Dependencies/DependencyEditorUITests.swift
-      - path: ../../tasknotes-macos/UITests/LiveSyncVaultUITests.swift
-      - path: ../../tasknotes-macos/UITests/LiveSyncConflictUITests.swift
-      - path: ../../tasknotes-macos/UITests/LiveSyncLifecycleUITests.swift
     dependencies:
       - target: TasksForObsidian
       - package: FacetApple
@@ -130,11 +122,6 @@ targets:
     platform: iOS
     sources:
       - path: FacetPresentationTests
-      - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetSurfaceFixtures.swift
-      - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetNativeGalleryFixtures.swift
-      - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetDelightGalleryFixtures.swift
-      - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/FacetAccountRenderFixture.swift
-      - path: ../../tasknotes-macos/Tests/TaskNotesMacTests/Support/ComponentKeys.swift
     dependencies:
       - target: TasksForObsidian
       - package: FacetApple

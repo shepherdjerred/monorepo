@@ -1,62 +1,7 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { stat } from "node:fs/promises";
 import path from "node:path";
-import { z } from "zod";
 
-const JsonObjectSchema = z.record(z.string(), z.unknown());
-
-function jsonObjectOrUndefined(
-  value: unknown,
-): Record<string, unknown> | undefined {
-  const result = JsonObjectSchema.safeParse(value);
-  return result.success ? result.data : undefined;
-}
-
-function stringRecord(value: unknown): Map<string, string> {
-  const result = new Map<string, string>();
-  const parsed = jsonObjectOrUndefined(value);
-  if (parsed === undefined) return result;
-
-  for (const [key, entry] of Object.entries(parsed)) {
-    if (typeof entry === "string") {
-      result.set(key, entry);
-    }
-  }
-
-  return result;
-}
-
-function dependencyNames(
-  packageJson: Record<string, unknown>,
-  sections: readonly string[],
-): Set<string> {
-  const names = new Set<string>();
-
-  for (const section of sections) {
-    for (const name of stringRecord(packageJson[section]).keys()) {
-      names.add(name);
-    }
-  }
-
-  return names;
-}
-
-function isOptionalPeer(
-  packageJson: Record<string, unknown>,
-  peerName: string,
-): boolean {
-  const peerMeta = packageJson["peerDependenciesMeta"];
-  const parsedPeerMeta = jsonObjectOrUndefined(peerMeta);
-  if (parsedPeerMeta === undefined) return false;
-
-  const entry = jsonObjectOrUndefined(parsedPeerMeta[peerName]);
-  return entry?.["optional"] === true;
-}
-
-function isNativePeerDependency(peerName: string): boolean {
-  return peerName === "react-native" || peerName.startsWith("react-native-");
-}
-
-/** Validate the native archive producer; legacy RN helpers below retain unit coverage. */
+/** Validate the pure-Swift native archive producer for Xcode Cloud and local XcodeGen. */
 export function findNativeBootstrapMessages(options: {
   miseToml: string;
   postCloneScript: string;
@@ -70,7 +15,7 @@ export function findNativeBootstrapMessages(options: {
     ...findWrapperMessages(options.wrapper, options.wrapperExecutable),
   );
   if (
-    !/"ios:native:generate"\s*:\s*"ios\/ci_scripts\/mise-native\.sh exec -- xcodegen generate --spec ios\/project\.yml --project ios"/.test(
+    !/"ios:native:generate"\s*:\s*"ios\/ci_scripts\/mise-native\.sh exec -- xcodegen generate --spec ios\/project\.yml --project ios"/u.test(
       options.packageJson,
     )
   ) {
@@ -84,7 +29,7 @@ export function findNativeBootstrapMessages(options: {
       "Post-clone must bootstrap the tracked native Apple mise wrapper.",
     ],
     [
-      '"$facet_mise" install --yes bun rust aqua:yonaskolb/XcodeGen',
+      '"$facet_mise" install --yes bun aqua:yonaskolb/XcodeGen',
       "Post-clone must install native tools from the root manifest.",
     ],
     [
@@ -100,15 +45,7 @@ export function findNativeBootstrapMessages(options: {
       "Post-clone must install dependencies at the repository root.",
     ],
     [
-      "build-xcframework --platform ios --platform ios-sim",
-      "Post-clone must build device and simulator Rust slices.",
-    ],
-    [
-      "cargo xtask check-xcframework",
-      "Post-clone must verify generated bindings against the XCFramework.",
-    ],
-    [
-      "bun ../tasknotes-macos/scripts/generate-native-notices.ts --ios",
+      'packages/tasknotes-macos/scripts/generate-native-notices.ts" --ios',
       "Post-clone must bundle locked native third-party license texts.",
     ],
     [
@@ -120,17 +57,17 @@ export function findNativeBootstrapMessages(options: {
     if (!options.postCloneScript.includes(required)) messages.push(message);
   }
   if (
-    /BUN_INSTALL_TAG|--linker[ =]hoisted|brew install|pod install|react-native|Metro/.test(
+    /BUN_INSTALL_TAG|--linker[ =]hoisted|brew install|pod install|react-native|Metro|cargo|rustup|build-xcframework/u.test(
       options.postCloneScript,
     )
   ) {
     messages.push(
-      "Post-clone contains a separate tool pin or legacy React Native bootstrap.",
+      "Post-clone contains a separate tool pin, legacy React Native bootstrap, or retired Rust XCFramework step.",
     );
   }
   const appTarget = options.project
     .split("\n  TasksForObsidian:")[1]
-    ?.split(/\n {2}[\w-]+:/i)[0];
+    ?.split(/\n {2}[\w-]+:/iu)[0];
   if (
     appTarget === undefined ||
     !appTarget.includes("product: TaskNotesFacetUI") ||
@@ -143,7 +80,7 @@ export function findNativeBootstrapMessages(options: {
     )
   ) {
     messages.push(
-      "Native release project must preserve the registered app, widget and standalone SwiftUI product.",
+      "Native release project must preserve the registered app, widget and shared SwiftUI product.",
     );
   }
   return messages;
@@ -154,21 +91,16 @@ function findToolchainMessages(options: {
   project: string;
 }): string[] {
   const messages: string[] = [];
-  for (const tool of ["bun", "rust"]) {
-    if (
-      !new RegExp(String.raw`^${tool}\s*=\s*"\d+\.\d+\.\d+"`, "m").test(
-        options.miseToml,
-      )
-    ) {
-      messages.push(`Root .mise.toml must pin ${tool}.`);
-    }
+  if (!/^bun\s*=\s*"\d+\.\d+\.\d+"/mu.test(options.miseToml)) {
+    messages.push("Root .mise.toml must pin bun.");
   }
   const xcodeGen =
-    /^"aqua:yonaskolb\/XcodeGen"\s*=\s*\{\s*version\s*=\s*"([^"]+)",\s*os\s*=\s*\["macos"\]\s*\}/m.exec(
+    /^"aqua:yonaskolb\/XcodeGen"\s*=\s*\{\s*version\s*=\s*"([^"]+)",\s*os\s*=\s*\["macos"\]\s*\}/mu.exec(
       options.miseToml,
     )?.[1];
-  if (xcodeGen === undefined)
+  if (xcodeGen === undefined) {
     messages.push("Root XcodeGen pin must be restricted to macOS.");
+  }
   if (
     xcodeGen !== undefined &&
     !options.project.includes(`minimumXcodeGenVersion: "${xcodeGen}"`)
@@ -182,12 +114,13 @@ function findToolchainMessages(options: {
 
 function findWrapperMessages(wrapper: string, executable: boolean): string[] {
   const messages: string[] = [];
-  if (!executable)
+  if (!executable) {
     messages.push(
       "Shared mise wrapper must be executable in a fresh checkout.",
     );
+  }
   if (
-    !/mise_version="\d+\.\d+\.\d+"/.test(wrapper) ||
+    !/mise_version="\d+\.\d+\.\d+"/u.test(wrapper) ||
     !wrapper.includes('export MISE_DATA_DIR="$localized_dir"') ||
     !wrapper.includes("shasum -a 256 -c")
   ) {
@@ -196,143 +129,67 @@ function findWrapperMessages(wrapper: string, executable: boolean): string[] {
     );
   }
   for (const arch of ["x86_64", "arm64"]) {
-    if (!new RegExp(`checksum_macos_${arch}="[a-f0-9]{64}`).test(wrapper))
+    if (
+      !new RegExp(`checksum_macos_${arch}="[a-f0-9]{64}`, "u").test(wrapper)
+    ) {
       messages.push(
         `Shared mise wrapper lacks a verified macOS ${arch} asset.`,
       );
+    }
   }
   return messages;
 }
 
-export function findMissingNativePeerDependencyMessages(
-  appPackageJson: Record<string, unknown>,
-  installedPackageJsonByName: Map<string, Record<string, unknown>>,
-): string[] {
-  const runtimeDependencyNames = dependencyNames(appPackageJson, [
-    "dependencies",
-  ]);
-  const declaredPackageNames = dependencyNames(appPackageJson, [
-    "dependencies",
-    "devDependencies",
-    "optionalDependencies",
-  ]);
-  const messages: string[] = [];
-
-  for (const dependencyName of runtimeDependencyNames) {
-    const dependencyPackageJson =
-      installedPackageJsonByName.get(dependencyName);
-
-    if (dependencyPackageJson === undefined) {
-      messages.push(
-        `${dependencyName} is declared in dependencies but is missing from node_modules. Run bun install --frozen-lockfile (workspace root).`,
-      );
-      continue;
-    }
-
-    const peers = stringRecord(dependencyPackageJson["peerDependencies"]);
-    for (const peerName of peers.keys()) {
-      if (!isNativePeerDependency(peerName)) continue;
-      if (isOptionalPeer(dependencyPackageJson, peerName)) continue;
-      if (declaredPackageNames.has(peerName)) continue;
-
-      messages.push(
-        `${dependencyName} requires ${peerName}; add ${peerName} to dependencies so React Native autolinking and CocoaPods can see it in Xcode Cloud.`,
-      );
-    }
-  }
-
-  return messages;
-}
-
-export function findMissingIosPodspecMessages(
-  reactNativeConfig: unknown,
-  pathExists: (filePath: string) => boolean,
-): string[] {
-  const parsedConfig = jsonObjectOrUndefined(reactNativeConfig);
-  if (parsedConfig === undefined) {
-    return ["React Native CLI config must be a JSON object."];
-  }
-
-  const dependencies = jsonObjectOrUndefined(parsedConfig["dependencies"]);
-  if (dependencies === undefined) {
-    return ["React Native CLI config is missing a dependencies object."];
-  }
-
-  const messages: string[] = [];
-  for (const [dependencyName, dependencyConfig] of Object.entries(
-    dependencies,
-  )) {
-    const parsedDependencyConfig = jsonObjectOrUndefined(dependencyConfig);
-    if (parsedDependencyConfig === undefined) continue;
-
-    const platforms = jsonObjectOrUndefined(
-      parsedDependencyConfig["platforms"],
-    );
-    if (platforms === undefined) continue;
-
-    const ios = platforms["ios"];
-    if (ios === null || ios === undefined) continue;
-    const parsedIos = jsonObjectOrUndefined(ios);
-    if (parsedIos === undefined) {
-      messages.push(`${dependencyName} has invalid iOS autolink config.`);
-      continue;
-    }
-
-    const podspecPath = parsedIos["podspecPath"];
-    if (typeof podspecPath !== "string" || podspecPath.length === 0) {
-      messages.push(
-        `${dependencyName} is autolinked for iOS but has no podspecPath in React Native config.`,
-      );
-      continue;
-    }
-
-    if (!pathExists(podspecPath)) {
-      messages.push(
-        `${dependencyName} iOS podspec is missing at ${podspecPath}.`,
-      );
-    }
-  }
-
-  return messages;
-}
-
-function findRepoRoot(startDir: string): string | undefined {
+async function findRepoRoot(startDir: string): Promise<string | undefined> {
   let dir: string | undefined = startDir;
   while (dir !== undefined) {
-    if (existsSync(path.join(dir, ".mise.toml"))) return dir;
+    if (await Bun.file(path.join(dir, ".mise.toml")).exists()) return dir;
     const parent = path.dirname(dir);
     dir = parent === dir ? undefined : parent;
   }
   return undefined;
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const rootDir = process.cwd();
   const issues: string[] = [];
-  const repoRoot = findRepoRoot(rootDir);
+  const repoRoot = await findRepoRoot(rootDir);
   if (repoRoot === undefined) {
     issues.push(
       "Could not locate the repository root (.mise.toml) from the current directory.",
     );
   } else {
+    const wrapperPath = path.join(
+      rootDir,
+      "ios",
+      "ci_scripts",
+      "mise-native.sh",
+    );
+    const [
+      miseToml,
+      postCloneScript,
+      wrapper,
+      wrapperStat,
+      project,
+      packageJson,
+    ] = await Promise.all([
+      Bun.file(path.join(repoRoot, ".mise.toml")).text(),
+      Bun.file(
+        path.join(rootDir, "ios", "ci_scripts", "ci_post_clone.sh"),
+      ).text(),
+      Bun.file(wrapperPath).text(),
+      stat(wrapperPath),
+      Bun.file(path.join(rootDir, "ios", "project.yml")).text(),
+      Bun.file(path.join(rootDir, "package.json")).text(),
+    ]);
     issues.push(
       ...findNativeBootstrapMessages({
-        miseToml: readFileSync(path.join(repoRoot, ".mise.toml"), "utf8"),
-        postCloneScript: readFileSync(
-          path.join(rootDir, "ios", "ci_scripts", "ci_post_clone.sh"),
-          "utf8",
-        ),
-        wrapper: readFileSync(
-          path.join(rootDir, "ios", "ci_scripts", "mise-native.sh"),
-          "utf8",
-        ),
-        wrapperExecutable:
-          (statSync(path.join(rootDir, "ios", "ci_scripts", "mise-native.sh"))
-            .mode &
-            0o111) !==
-          0,
-        project: readFileSync(path.join(rootDir, "ios", "project.yml"), "utf8"),
-        packageJson: readFileSync(path.join(rootDir, "package.json"), "utf8"),
+        miseToml,
+        postCloneScript,
+        wrapper,
+        wrapperExecutable: (wrapperStat.mode & 0o111) !== 0,
+        project,
+        packageJson,
       }),
     );
   }
@@ -346,10 +203,10 @@ function main(): void {
   }
 
   console.log(
-    "iOS native archive dependency contract passed (shared mise, frozen workspace, Rust slices, SwiftUI and widget identities).",
+    "iOS native archive dependency contract passed (shared mise, frozen workspace, pure-Swift notices, SwiftUI and widget identities).",
   );
 }
 
 if (import.meta.main) {
-  main();
+  await main();
 }

@@ -1,22 +1,7 @@
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { runAcceptanceUiTests } from "./run-acceptance-ui-tests.ts";
 
-/**
- * The environment the UI suite needs in order to run at all.
- *
- * `InspectorEditingUITests` reads `.build/ui-test-fixture.json` to find the
- * server and vault it should drive. Nothing creates that file except this
- * harness, so a runner that skips the bootstrap does not merely lose the
- * seeded data — that suite fails outright with NSCocoaErrorDomain 260, and
- * takes sibling suites down with it.
- *
- * This exists because the local and CI runners had drifted: the local one did
- * the whole bootstrap and CI shelled straight into xcodebuild, so the suite
- * could never pass there. Both now go through this function, which is what
- * stops them drifting again.
- */
 export type UiTestRun = {
   /** Extra xcodebuild arguments; CI passes the signing identity. */
   extraArguments?: readonly string[];
@@ -35,29 +20,9 @@ function localCivilDate(now: Date): string {
 }
 
 export async function runUiTests(run: UiTestRun): Promise<number> {
-  const standalone = "-only-testing:TaskNotesUITests/StandaloneVaultUITests";
-  const requested = run.testSelectors ?? [];
-  if (
-    requested.length === 0 ||
-    requested.some(
-      (selector) =>
-        selector === "-only-testing:TaskNotesUITests" ||
-        selector.startsWith(standalone),
-    )
-  ) {
-    await runAcceptanceUiTests();
-  }
-  const legacySelectors = requested.filter(
-    (selector) => !selector.startsWith(standalone),
-  );
-  if (requested.length > 0 && legacySelectors.length === 0) {
-    return 0;
-  }
-  const vault = await mkdtemp(path.join(tmpdir(), "tasknotes-ui-tests-"));
+  const scratch = await mkdtemp(path.join(tmpdir(), "facet-ui-tests-"));
   const fixtureFile = path.resolve(packageRoot, ".build/ui-test-fixture.json");
 
-  // Reserve a free port by binding and immediately releasing it, so the
-  // fixture and the server agree on the address before either is used.
   const reservation = Bun.serve({
     port: 0,
     fetch: () => new Response("reserved"),
@@ -68,10 +33,7 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
   const authToken = crypto.randomUUID();
 
   await mkdir(path.dirname(fixtureFile), { recursive: true });
-  await Bun.write(
-    fixtureFile,
-    JSON.stringify({ address: baseURL, authToken, vault }),
-  );
+  await Bun.write(fixtureFile, JSON.stringify({ address: baseURL, authToken }));
 
   const runMarker = Bun.env["TASKNOTES_CI_RUN_ID"];
   const markerArgument =
@@ -82,11 +44,11 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
     env: {
       ...Bun.env,
       AUTH_TOKEN: authToken,
+      DATABASE_URL: "",
       HOST: "127.0.0.1",
       PORT: String(port),
       BUGSINK_DSN: "",
-      TASKS_DIR: "TaskNotes",
-      VAULT_PATH: vault,
+      VAULT_PATH: scratch,
     },
     stdout: "inherit",
     stderr: "inherit",
@@ -118,22 +80,49 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
     );
   }
 
-  async function seedTask(
-    title: string,
-    scheduled: string,
-    details: string,
-  ): Promise<void> {
-    const response = await fetch(`${baseURL}/api/tasks`, {
+  async function seedSyncTasks(today: string): Promise<void> {
+    const response = await fetch(`${baseURL}/api/v1/sync`, {
       method: "POST",
       headers: {
         authorization: `Bearer ${authToken}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({ title, scheduled, details }),
+      body: JSON.stringify({
+        commands: [
+          {
+            uuid: crypto.randomUUID(),
+            temp_id: "tmp-seed-1",
+            command: {
+              type: "TaskAdd",
+              args: {
+                title: "Inspector journey",
+                project_id: "",
+                description: "Original markdown.",
+                due_date: today,
+                priority: "P2",
+              },
+            },
+          },
+          {
+            uuid: crypto.randomUUID(),
+            temp_id: "tmp-seed-2",
+            command: {
+              type: "TaskAdd",
+              args: {
+                title: "Selection target",
+                project_id: "",
+                description: "Second note.",
+                due_date: today,
+                priority: "P4",
+              },
+            },
+          },
+        ],
+      }),
     });
-    if (response.status !== 201) {
+    if (!response.ok) {
       throw new Error(
-        `seeding ${title} failed with HTTP ${String(response.status)}: ${await response.text()}`,
+        `seeding /api/v1/sync failed with HTTP ${String(response.status)}: ${await response.text()}`,
       );
     }
   }
@@ -141,14 +130,12 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
   let testExitCode = 1;
   try {
     await waitUntilHealthy();
-    const today = localCivilDate(new Date());
-    await seedTask("Inspector journey", today, "Original markdown.");
-    await seedTask("Selection target", today, "Second note.");
+    await seedSyncTasks(localCivilDate(new Date()));
 
     const selectors =
-      legacySelectors.length === 0
+      (run.testSelectors ?? []).length === 0
         ? ["-only-testing:TaskNotesUITests"]
-        : legacySelectors;
+        : (run.testSelectors ?? []);
 
     const tests = Bun.spawn(
       [
@@ -179,7 +166,7 @@ export async function runUiTests(run: UiTestRun): Promise<number> {
     server.kill();
     await server.exited;
     await rm(fixtureFile, { force: true });
-    await rm(vault, { recursive: true, force: true });
+    await rm(scratch, { recursive: true, force: true });
   }
 
   return testExitCode;

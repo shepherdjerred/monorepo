@@ -3,41 +3,11 @@ public import Foundation
 internal import Network
 internal import Synchronization
 
-/// A real `packages/tasknotes-server` process over a temporary vault.
-///
-/// The plan puts the wire contract in Rust "against a spawned server", and this
-/// mirrors that *approach* rather than that code: the point of an end-to-end
-/// test here is not to re-check the protocol — Rust already does — but to prove
-/// that the **Swift** host implementations drive a real server correctly. A
-/// fake would only assert that Swift calls Swift in a particular order.
-///
-/// Because the vault is a real directory on the same filesystem as the test,
-/// "drive the client → assert on the vault's markdown bytes" is a plain
-/// synchronous read. That is the tightest possible assertion: it goes past the
-/// HTTP response, past the server's in-memory repository, and lands on the file
-/// a user would open in Obsidian.
-///
-/// ## Why this is its own target rather than a file in a test target
-///
-/// A test target cannot import another test target. This harness is needed by
-/// `TaskNotesKitTests` (the engine against a real server) *and* by
-/// `TaskNotesMacTests` (``AppEnvironment`` at launch against a real server),
-/// and the second of those is the whole point: the launch path is the one that
-/// shipped broken. `TaskNotesTestSupport` is a plain library target so both can
-/// depend on it, and it is deliberately absent from `products:` so nothing
-/// outside this package can link a subprocess-spawning test harness.
-///
-/// ## Sandboxing
-///
-/// This spawns a subprocess, which the app's `app-sandbox` entitlement would
-/// forbid. It works because `swift test` builds a **plain executable**, not the
-/// `.app` — the entitlement is attached to the application bundle and nothing
-/// else. An XCUITest driving the signed app could not do this; a `TaskNotesKit`
-/// unit test can, which is one more reason the no-UI-imports rule earns its
-/// keep.
+/// Spawns an isolated `packages/tasknotes-server` HTTP instance (`DATABASE_URL=""` in-memory store)
+/// on an ephemeral localhost port for end-to-end `/api/v1/sync` tests.
 public final class TaskNotesServerProcess {
-    /// The vault the server is serving.
-    public let vault: URL
+    /// Scratch directory holding server logs and working state.
+    public let scratchDirectory: URL
 
     /// Where the server is listening.
     public let baseURL: URL
@@ -69,10 +39,13 @@ public final class TaskNotesServerProcess {
     ///   asked for.
     public init(authToken: String = UUID().uuidString) throws {
         self.authToken = authToken
-        vault = FileManager.default.temporaryDirectory
-            .appending(path: "tasknotes-e2e-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: vault, withIntermediateDirectories: true)
-        outputURL = vault.appending(path: "server.log")
+        scratchDirectory = FileManager.default.temporaryDirectory
+            .appending(path: "facet-server-e2e-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(
+            at: scratchDirectory,
+            withIntermediateDirectories: true
+        )
+        outputURL = scratchDirectory.appending(path: "server.log")
         guard
             FileManager.default.createFile(
                 atPath: outputURL.path(percentEncoded: false),
@@ -99,15 +72,11 @@ public final class TaskNotesServerProcess {
         process.executableURL = bun
         process.arguments = ["run", "src/index.ts"]
         process.currentDirectoryURL = Self.serverPackage
-        var environment = ProcessInfo.processInfo.environment
-        environment["VAULT_PATH"] = vault.path(percentEncoded: false)
-        environment["PORT"] = String(port)
-        environment["AUTH_TOKEN"] = authToken
-        environment["HOST"] = "127.0.0.1"
-        // The server imports `./bugsink.ts` at module scope; without a DSN it is
-        // inert, but the variable is pinned empty so a developer's own DSN in
-        // the ambient environment cannot make a test emit events.
-        environment["BUGSINK_DSN"] = ""
+        let environment = Self.makeServerEnvironment(
+            scratchPath: scratchDirectory.path(percentEncoded: false),
+            port: port,
+            authToken: authToken
+        )
         process.environment = environment
         if let runID = environment["TASKNOTES_CI_RUN_ID"] {
             process.arguments?.append("--tasknotes-server-ci-run=\(runID)")
@@ -125,6 +94,21 @@ public final class TaskNotesServerProcess {
         try waitUntilHealthy()
     }
 
+    private static func makeServerEnvironment(
+        scratchPath: String,
+        port: Int,
+        authToken: String
+    ) -> [String: String] {
+        var environment = ProcessInfo.processInfo.environment
+        environment["VAULT_PATH"] = scratchPath
+        environment["PORT"] = String(port)
+        environment["AUTH_TOKEN"] = authToken
+        environment["HOST"] = "127.0.0.1"
+        environment["DATABASE_URL"] = ""
+        environment["BUGSINK_DSN"] = ""
+        return environment
+    }
+
     deinit {
         if process.isRunning {
             process.terminate()
@@ -134,25 +118,20 @@ public final class TaskNotesServerProcess {
         // banned repository-wide for hiding the error, and a leftover
         // directory under `/tmp` is not a test failure — `Result` makes the
         // discard visible instead of silent.
-        _ = Result { try FileManager.default.removeItem(at: vault) }
+        _ = Result { try FileManager.default.removeItem(at: scratchDirectory) }
     }
 
-    /// Stop the server and drop its vault.
+    /// Stop the server process cleanly.
     public func stop() {
         do {
             try termination.stop()
         } catch {
-            // A defer cannot throw. A shutdown failure must fail the test
-            // process, rather than report a passing test or wait forever.
             preconditionFailure("tasknotes-server shutdown failed: \(error)")
         }
         _ = Result { try output.close() }
     }
 
     /// Everything the server has written to stdout and stderr so far.
-    ///
-    /// Read on failure, so a timeout reports what the server said rather than
-    /// just that it never answered.
     public func log() -> String {
         _ = Result { try output.synchronize() }
         switch Result(catching: { try Data(contentsOf: outputURL) }) {
@@ -161,35 +140,6 @@ public final class TaskNotesServerProcess {
         case .failure(let error):
             return "<unreadable server output: \(error)>"
         }
-    }
-
-    // ── The vault, as a user would see it ──────────────────────────────────
-
-    /// Every markdown file in the vault, vault-relative, sorted.
-    ///
-    /// Sorted only for assertion stability — the vault has no inherent order,
-    /// unlike the task list, whose order is the user's and is never re-sorted
-    /// anywhere in this package.
-    public func markdownFiles() throws -> [String] {
-        let root = vault.path(percentEncoded: false)
-        guard let walk = FileManager.default.enumerator(atPath: root) else { return [] }
-        var found: [String] = []
-        for case let entry as String in walk where entry.hasSuffix(".md") {
-            found.append(entry)
-        }
-        return found.sorted()
-    }
-
-    /// The bytes of one vault file, decoded as UTF-8.
-    public func contents(of relativePath: String) throws -> String {
-        let url = vault.appending(path: relativePath)
-        let data = try Data(contentsOf: url)
-        // Force-unwrapped deliberately: `Tests/.swiftlint.yml` relaxes
-        // `force_unwrapping` because in a test a trap *is* the assertion. A
-        // vault file the server wrote and that is not UTF-8 is a real failure
-        // and should stop the suite here, not decode to replacement characters
-        // and fail an unrelated `contains` check three lines later.
-        return String(bytes: data, encoding: .utf8)!
     }
 
     // ── Startup ────────────────────────────────────────────────────────────

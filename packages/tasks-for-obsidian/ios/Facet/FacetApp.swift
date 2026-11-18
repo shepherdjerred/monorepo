@@ -6,129 +6,90 @@ import WidgetKit
 
 @main
 struct FacetApp: App {
-    @State private var store = FacetStore()
+    @State private var store: FacetStore
+    @State private var intentFailure: String?
     @Environment(\.scenePhase) private var scenePhase
+
     init() {
         let model = FacetStore()
         _store = State(initialValue: model)
         FacetBackgroundTasks.install(store: model)
     }
+
     var body: some Scene {
         WindowGroup {
-            Group {
-                #if DEBUG
-                    FacetRootView(
-                        store: store,
-                        afterStart: {
-                            if CommandLine.arguments.contains("--facet-native-acceptance") {
-                                do {
-                                    guard store.acceptanceDirectory != nil else {
-                                        throw FacetAcceptanceError.invalidDescriptor
-                                    }
-                                    let directory = try await _Concurrency.Task.detached {
-                                        let directory = try FileManager.default.url(
-                                            for: .documentDirectory, in: .userDomainMask,
-                                            appropriateFor: nil, create: true
-                                        ).appendingPathComponent("Native acceptance")
-                                        try FileManager.default.createDirectory(
-                                            at: directory, withIntermediateDirectories: true)
-                                        return directory
-                                    }.value
-                                    try await store.prepareAcceptanceVault(directory)
-                                } catch { assertionFailure("Native acceptance bootstrap failed.") }
-                            }
-                        }
-                    )
-                    .modifier(AcceptanceTextSize())
-                    .task(
-                        id: WidgetProjectionIdentity(
-                            profileID: store.selectedProfileID, version: store.snapshot?.version)
-                    ) { await publishWidget() }
-                #else
-                    FacetRootView(store: store)
-                        .task(
-                            id: WidgetProjectionIdentity(
-                                profileID: store.selectedProfileID, version: store.snapshot?.version
-                            )
-                        ) { await publishWidget() }
-                #endif
-            }
-            .onOpenURL { url in
-                if url.host == "queued-capture" { _Concurrency.Task { await processIntents() } }
-            }
-            .onChange(of: scenePhase) {
-                if scenePhase == .active { _Concurrency.Task { await processIntents() } }
-                if scenePhase == .background,
-                    !store.isAcceptanceLaunch,
-                    store.profiles.contains(where: { $0.kind == "obsidian_sync" })
-                {
-                    do { try FacetBackgroundTasks.schedule() } catch {
-                        intentFailure =
-                            "Background Sync could not be scheduled. Open Facet to sync this vault."
+            FacetRootView(store: store)
+                .task(id: store.dataRevision) {
+                    await publishWidget()
+                }
+                .onOpenURL { url in
+                    if url.host == "queued-capture" {
+                        _Concurrency.Task { await processIntents() }
                     }
                 }
+                .onChange(of: scenePhase) {
+                    if scenePhase == .active {
+                        _Concurrency.Task { await processIntents() }
+                    } else if scenePhase == .background,
+                        !store.isIsolatedLaunch,
+                        store.hasConfiguredToken
+                    {
+                        do {
+                            try FacetBackgroundTasks.schedule()
+                        } catch {
+                            intentFailure = "Background sync could not be scheduled."
+                        }
+                    }
+                }
+                .alert(
+                    "Facet Notice",
+                    isPresented: Binding(
+                        get: { intentFailure != nil },
+                        set: { if !$0 { intentFailure = nil } }
+                    )
+                ) {
+                    Button("OK") { intentFailure = nil }
+                } message: {
+                    Text(intentFailure ?? "")
+                }
+        }
+    }
+
+    private func intentQueue() throws -> FacetIntentQueue? {
+        guard !store.isIsolatedLaunch else { return nil }
+        guard
+            let group = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: "group.com.tasksforobsidian"
+            )
+        else {
+            return nil
+        }
+        return try FacetIntentQueue(
+            directory: group.appendingPathComponent("FacetIntentActions", isDirectory: true)
+        )
+    }
+
+    private func processIntents() async {
+        await store.start()
+        do {
+            if let queue = try intentQueue() {
+                await store.processIntentCaptures(queue)
             }
-            .alert(
-                "Facet could not continue",
-                isPresented: Binding(
-                    get: { intentFailure != nil },
-                    set: { if !$0 { intentFailure = nil } }
-                )
-            ) {
-                Button("OK") { intentFailure = nil }
-            } message: {
-                Text(intentFailure ?? "")
-            }
+            FacetWidgetPublisher.publish(store: store)
+        } catch {
+            intentFailure = error.localizedDescription
         }
     }
 
     private func publishWidget() async {
         await store.start()
         do {
-            let queue = try intentQueue()
-            try queue.selectProfile(store.selectedProfileID)
-            await store.processIntentCaptures(queue)
-        } catch { intentFailure = FacetFailureDiagnostic(error).action }
-        await FacetWidgetPublisher.publish(store: store)
-    }
-
-    @State private var intentFailure: String?
-
-    private func intentQueue() throws -> FacetIntentQueue {
-        if let acceptance = store.acceptanceDirectory {
-            return try FacetIntentQueue(
-                directory: acceptance.appendingPathComponent("intent-actions"))
-        }
-        guard !store.isAcceptanceLaunch else { throw FacetAcceptanceError.invalidDescriptor }
-        guard
-            let group = FileManager.default.containerURL(
-                forSecurityApplicationGroupIdentifier: "group.com.tasksforobsidian")
-        else { throw FacetIntentError.unavailableGroup }
-        return try FacetIntentQueue(directory: group.appendingPathComponent("FacetIntentActions"))
-    }
-
-    private func processIntents() async {
-        await store.start()
-        do {
-            await store.processIntentCaptures(try intentQueue())
-            await FacetWidgetPublisher.publish(store: store)
-        } catch { intentFailure = FacetFailureDiagnostic(error).action }
-    }
-}
-
-private struct WidgetProjectionIdentity: Hashable {
-    let profileID: String?
-    let version: UInt64?
-}
-
-#if DEBUG
-    private struct AcceptanceTextSize: ViewModifier {
-        func body(content: Content) -> some View {
-            if CommandLine.arguments.contains("--facet-accessibility-size") {
-                content.dynamicTypeSize(.accessibility3)
-            } else {
-                content
+            if let queue = try intentQueue() {
+                await store.processIntentCaptures(queue)
             }
+        } catch {
+            intentFailure = error.localizedDescription
         }
+        FacetWidgetPublisher.publish(store: store)
     }
-#endif
+}

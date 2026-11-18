@@ -1,34 +1,66 @@
 public import Foundation
 import UserNotifications
 
-private struct PreparedFacetReminder {
-    let profileID: String
-    let row: FacetReminderRow
-    let date: Date
-}
-
-public struct FacetReminderDelivery: Sendable {
+public struct FacetReminderDelivery: Sendable, Equatable {
     public let scheduled: Int
-    public let beyondBudget: UInt64
-    public let problemCount: UInt64
+    public let beyondBudget: Int
+
+    public init(scheduled: Int, beyondBudget: Int) {
+        self.scheduled = scheduled
+        self.beyondBudget = beyondBudget
+    }
 }
 
-/// Native opt-in and bounded OS delivery. Every resolved firing comes from Rust.
-public actor FacetReminders {
-    private let defaults: UserDefaults
-    private var center: UNUserNotificationCenter { UNUserNotificationCenter.current() }
-    private var generation: UInt64 = 0
-    private var scheduling = false
-    private var router: FacetNotificationRouter?
-    public init() { defaults = .standard }
-    public init(defaultsSuiteName: String) throws {
-        guard let isolatedDefaults = UserDefaults(suiteName: defaultsSuiteName) else {
-            throw FacetAcceptanceError.invalidDescriptor
+public enum FacetReminderError: Error, LocalizedError, Sendable, Equatable {
+    case permissionDenied
+    case cancelled
+
+    public var errorDescription: String? {
+        switch self {
+        case .permissionDenied:
+            "Allow notifications in System Settings before enabling task reminders."
+        case .cancelled:
+            "Reminder scheduling was superseded by a newer update."
         }
-        defaults = isolatedDefaults
+    }
+}
+
+internal struct ResolvedReminderCandidate: Sendable {
+    let identifier: String
+    let taskID: String
+    let title: String
+    let body: String
+    let fireDate: Date
+}
+
+/// Schedules bounded OS local notifications from `Protocol.Reminder` and `Task.due_datetime`.
+public actor FacetReminders {
+    public static let enabledDefaultsKey = "Facet.reminders.enabled"
+
+    private let suiteName: String?
+    private var generation: UInt64 = 0
+    private var router: FacetNotificationRouter?
+
+    public init(suiteName: String? = nil) {
+        self.suiteName = suiteName
     }
 
-    public func installRouting(opened: @escaping @Sendable (String, String) async -> Void) {
+    private var defaults: UserDefaults {
+        if let suiteName, let suite = UserDefaults(suiteName: suiteName) {
+            return suite
+        }
+        return .standard
+    }
+
+    private var center: UNUserNotificationCenter {
+        UNUserNotificationCenter.current()
+    }
+
+    public func isEnabled() -> Bool {
+        defaults.bool(forKey: Self.enabledDefaultsKey)
+    }
+
+    public func installRouting(opened: @escaping @Sendable (String) async -> Void) {
         let delegate = FacetNotificationRouter(opened: opened)
         router = delegate
         center.delegate = delegate
@@ -38,155 +70,164 @@ public actor FacetReminders {
         generation += 1
         let attempt = generation
         let granted = try await center.requestAuthorization(options: [.alert, .sound, .badge])
-        guard generation == attempt else { throw FacetSyncError.cancelled }
-        defaults.set(granted, forKey: "Facet.reminders.enabled")
+        guard generation == attempt else { throw FacetReminderError.cancelled }
+        defaults.set(granted, forKey: Self.enabledDefaultsKey)
         return granted
     }
 
     public func disable() async {
         generation += 1
         let attempt = generation
-        defaults.set(false, forKey: "Facet.reminders.enabled")
-        let requests = await ownedRequests()
-        guard generation == attempt else { return }
-        let owned = requests.filter {
-            $0.identifier.hasPrefix("facet:")
-        }.map(\.identifier)
-        center.removePendingNotificationRequests(withIdentifiers: owned)
-        center.removeDeliveredNotifications(withIdentifiers: owned)
-    }
-
-    public func cancel(profileIDs: Set<String>) async {
-        generation += 1
-        let attempt = generation
-        let requests = await ownedRequests()
-        guard generation == attempt else { return }
-        let owned = requests.filter {
-            guard $0.identifier.hasPrefix("facet:"),
-                let profile = $0.content.userInfo["profileId"] as? String
-            else { return false }
-            return profileIDs.contains(profile)
-        }.map(\.identifier)
-        center.removePendingNotificationRequests(withIdentifiers: owned)
-        center.removeDeliveredNotifications(withIdentifiers: owned)
-    }
-
-    public func refresh(engine: FacetEngine, profileIDs: Set<String>) async throws
-        -> FacetReminderDelivery
-    {
-        guard !scheduling else { throw FacetSyncError.cancelled }
-        scheduling = true
-        defer { scheduling = false }
-        guard defaults.bool(forKey: "Facet.reminders.enabled") else {
-            return FacetReminderDelivery(scheduled: 0, beyondBudget: 0, problemCount: 0)
-        }
-        generation += 1
-        let attempt = generation
-        guard await authorized() else { throw FacetReminderError.permission }
-        guard generation == attempt else { throw FacetSyncError.cancelled }
-        let previous = await center.pendingNotificationRequests()
-        let foreign = previous.filter { !$0.identifier.hasPrefix("facet:") }
-        // An explicit app budget, rather than an assumption about the OS quota.
-        let capacity = max(0, 64 - foreign.count)
-        let plans = try await readPlans(engine: engine, profileIDs: profileIDs, capacity: capacity)
-        let rows = try plans.flatMap { plan in
-            try plan.rows.map {
-                PreparedFacetReminder(
-                    profileID: plan.profileID, row: $0, date: try instant($0.fireAt))
-            }
-        }.sorted {
-            if $0.date != $1.date { return $0.date < $1.date }
-            return $0.row.notificationId < $1.row.notificationId
-        }.prefix(capacity)
-        guard generation == attempt else { throw FacetSyncError.cancelled }
-        let desired = Set(rows.map { $0.row.notificationId })
-        let obsolete = previous.filter {
-            $0.identifier.hasPrefix("facet:") && !desired.contains($0.identifier)
-        }.map(\.identifier)
-        center.removePendingNotificationRequests(withIdentifiers: obsolete)
-        center.removeDeliveredNotifications(withIdentifiers: obsolete)
-        for reminder in rows {
-            guard generation == attempt else { throw FacetSyncError.cancelled }
-            try await center.add(
-                request(profileID: reminder.profileID, row: reminder.row, date: reminder.date))
-            if generation != attempt {
-                center.removePendingNotificationRequests(withIdentifiers: [
-                    reminder.row.notificationId
-                ])
-                throw FacetSyncError.cancelled
-            }
-        }
-        let observed = Set(await center.pendingNotificationRequests().map(\.identifier))
-        guard desired.isSubset(of: observed) else { throw FacetReminderError.capacity }
-        return FacetReminderDelivery(
-            scheduled: rows.count,
-            beyondBudget: plans.reduce(0) { $0 + $1.totalCount } - UInt64(rows.count),
-            problemCount: plans.reduce(0) { $0 + $1.problemCount })
-    }
-
-    private func readPlans(engine: FacetEngine, profileIDs: Set<String>, capacity: Int) async throws
-        -> [FacetReminderPlan]
-    {
-        let now = Date.now
-        let window = FacetReminderWindow(
-            at: now.ISO8601Format(), timezone: TimeZone.current.identifier,
-            from: now.ISO8601Format(), to: now.addingTimeInterval(30 * 86400).ISO8601Format())
-        var plans: [FacetReminderPlan] = []
-        for profile in profileIDs.sorted() {
-            let plan = try await FacetReminderPlanReader.read(
-                profileID: profile, window: window, maximumRows: capacity,
-                fetch: { try await engine.features(profileID: profile, request: $0) })
-            plans.append(plan)
-        }
-        return plans
-    }
-
-    private func authorized() async -> Bool {
-        let settings = await center.notificationSettings()
-        switch settings.authorizationStatus {
-        case .authorized, .provisional, .ephemeral: return true
-        case .denied, .notDetermined: return false
-        @unknown default: return false
-        }
-    }
-
-    private func ownedRequests() async -> [UNNotificationRequest] {
+        defaults.set(false, forKey: Self.enabledDefaultsKey)
         let pending = await center.pendingNotificationRequests()
         let delivered = await center.deliveredNotifications().map(\.request)
-        return pending + delivered
+        guard generation == attempt else { return }
+        let owned = (pending + delivered)
+            .map(\.identifier)
+            .filter { $0.hasPrefix("facet:") }
+        center.removePendingNotificationRequests(withIdentifiers: owned)
+        center.removeDeliveredNotifications(withIdentifiers: owned)
     }
 
-    private func instant(_ text: String) throws -> Date {
-        do { return try Date(text, strategy: .iso8601) } catch {
-            throw FacetContractError.unsupportedResponse
+    public func refresh(
+        tasks: [Task],
+        reminders: [Reminder],
+        now: Date = .now
+    ) async throws -> FacetReminderDelivery {
+        guard defaults.bool(forKey: Self.enabledDefaultsKey) else {
+            return FacetReminderDelivery(scheduled: 0, beyondBudget: 0)
+        }
+        generation += 1
+        let attempt = generation
+        guard await isAuthorized() else {
+            throw FacetReminderError.permissionDenied
+        }
+        guard generation == attempt else { throw FacetReminderError.cancelled }
+
+        let existing = await center.pendingNotificationRequests()
+        let foreignCount = existing.filter { !$0.identifier.hasPrefix("facet:") }.count
+        let budget = max(0, 64 - foreignCount)
+        let candidates = Self.resolveCandidates(tasks: tasks, reminders: reminders, now: now)
+        let chosen = Array(candidates.prefix(budget))
+        let desiredIDs = Set(chosen.map(\.identifier))
+        let obsolete =
+            existing
+            .map(\.identifier)
+            .filter { $0.hasPrefix("facet:") && !desiredIDs.contains($0) }
+
+        center.removePendingNotificationRequests(withIdentifiers: obsolete)
+        center.removeDeliveredNotifications(withIdentifiers: obsolete)
+
+        for candidate in chosen {
+            guard generation == attempt else { throw FacetReminderError.cancelled }
+            try await center.add(makeRequest(for: candidate))
+        }
+        return FacetReminderDelivery(
+            scheduled: chosen.count,
+            beyondBudget: max(0, candidates.count - chosen.count)
+        )
+    }
+
+    internal static func resolveCandidates(
+        tasks: [Task],
+        reminders: [Reminder],
+        now: Date
+    ) -> [ResolvedReminderCandidate] {
+        let openTasksByID = Dictionary(
+            uniqueKeysWithValues: tasks.filter { !$0.is_deleted && !$0.completed }.map {
+                ($0.id, $0)
+            }
+        )
+        var explicitTaskIDs: Set<String> = []
+        var candidates: [ResolvedReminderCandidate] = []
+
+        for reminder in reminders where !reminder.is_deleted && !reminder.is_notified {
+            guard let task = openTasksByID[reminder.task_id],
+                let fireDate = fireDate(for: reminder, task: task),
+                fireDate > now
+            else { continue }
+            explicitTaskIDs.insert(task.id)
+            candidates.append(
+                ResolvedReminderCandidate(
+                    identifier: "facet:reminder:\(reminder.id)",
+                    taskID: task.id,
+                    title: task.title,
+                    body: task.description.isEmpty ? "Task reminder" : task.description,
+                    fireDate: fireDate
+                )
+            )
+        }
+
+        for task in openTasksByID.values where !explicitTaskIDs.contains(task.id) {
+            guard let rawDue = task.due_datetime,
+                !rawDue.isEmpty,
+                let fireDate = ViewerCalendar.parseISO8601(rawDue),
+                fireDate > now
+            else { continue }
+            candidates.append(
+                ResolvedReminderCandidate(
+                    identifier: "facet:due:\(task.id)",
+                    taskID: task.id,
+                    title: task.title,
+                    body: task.description.isEmpty ? "Due now" : task.description,
+                    fireDate: fireDate
+                )
+            )
+        }
+
+        return candidates.sorted { left, right in
+            if left.fireDate != right.fireDate { return left.fireDate < right.fireDate }
+            return left.identifier < right.identifier
         }
     }
 
-    private func request(profileID: String, row: FacetReminderRow, date: Date)
-        -> UNNotificationRequest
-    {
+    private static func fireDate(for reminder: Reminder, task: Task) -> Date? {
+        if let explicit = reminder.due_datetime,
+            !explicit.isEmpty,
+            let parsed = ViewerCalendar.parseISO8601(explicit)
+        {
+            return parsed
+        }
+        if let offset = reminder.minute_offset,
+            let taskDue = task.due_datetime,
+            !taskDue.isEmpty,
+            let base = ViewerCalendar.parseISO8601(taskDue)
+        {
+            return base.addingTimeInterval(TimeInterval(-Int(offset) * 60))
+        }
+        return nil
+    }
+
+    private func isAuthorized() async -> Bool {
+        let settings = await center.notificationSettings()
+        switch settings.authorizationStatus {
+        case .authorized, .provisional, .ephemeral:
+            return true
+        case .denied, .notDetermined:
+            return false
+        @unknown default:
+            return false
+        }
+    }
+
+    private func makeRequest(for candidate: ResolvedReminderCandidate) -> UNNotificationRequest {
         let content = UNMutableNotificationContent()
-        content.title = row.title
-        content.body = row.description ?? "Task reminder"
+        content.title = candidate.title
+        content.body = candidate.body
         content.sound = .default
-        content.userInfo = ["profileId": profileID, "taskPath": row.taskPath]
+        content.userInfo = ["taskId": candidate.taskID]
+
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .gmt
         let components = calendar.dateComponents(
-            [.year, .month, .day, .hour, .minute, .second, .nanosecond, .timeZone], from: date)
+            [.year, .month, .day, .hour, .minute, .second, .timeZone],
+            from: candidate.fireDate
+        )
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         return UNNotificationRequest(
-            identifier: row.notificationId, content: content,
-            trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false))
-    }
-}
-
-public enum FacetReminderError: Error, LocalizedError {
-    case permission, capacity
-    public var errorDescription: String? {
-        switch self {
-        case .permission: "Allow notifications in system settings before enabling reminders."
-        case .capacity:
-            "The system did not retain every scheduled reminder. Open Facet to refresh reminders."
-        }
+            identifier: candidate.identifier,
+            content: content,
+            trigger: trigger
+        )
     }
 }

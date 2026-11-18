@@ -1,21 +1,8 @@
-/// The two strings a UI test and the app have to agree on exactly.
+/// Shared launch-argument and `UserDefaults` keys agreed upon by the app and XCUITest target.
 ///
-/// They live in `TaskNotesKit` for the same reason `AccessibilityIdentifier`
-/// does: both the app and the XCUITest target import this module, so a rename is
-/// a compile error rather than a launch argument that silently stops matching.
-///
-/// ## Why any of this exists
-///
-/// ⚠️ **A UI test once ran against a real production vault.** The XCUITest
-/// target and the app share the bundle identifier `red.sjer.tasknotes.mac`, so
-/// an app launched by a test reads the *same* `UserDefaults` and the *same*
-/// Keychain as the copy in `/Applications`. Every flow called a bare
-/// `app.launch()`, so with a real server address and token configured, each run
-/// pointed a client at the live server and pulled the whole vault.
-///
-/// Nothing in the suite wrote to it, which was luck rather than design: the
-/// flows happened to click sidebar rows and press `⌘F`, and the next flow on the
-/// roadmap was "create a task and assert the vault's markdown bytes".
+/// Both the app and the XCUITest target share the bundle identifier, so UI tests
+/// override the server address via the `NSUserDefaults` argument domain and pass
+/// ``flagArgument`` to switch token storage from Keychain to an in-memory store.
 public enum UITesting {
     /// Passed by a UI test to make the app disown the user's stored credential.
     ///

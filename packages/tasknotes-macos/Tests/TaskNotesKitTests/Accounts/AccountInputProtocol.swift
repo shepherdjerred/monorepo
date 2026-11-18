@@ -1,1 +1,0 @@
-../../../../tasks-for-obsidian/ios/FacetUITests/Accounts/AccountInputProtocol.swift
