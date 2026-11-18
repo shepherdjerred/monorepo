@@ -3,6 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 import { SourceSchema } from "@shepherdjerred/streambot/sources/source.ts";
 import { LoopModeSchema } from "@shepherdjerred/streambot/machine/types.ts";
+import { PersistedStationSchema } from "@shepherdjerred/streambot/state/station-schema.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -66,6 +67,8 @@ export const PersistedStateSchema = z.strictObject({
   resumeKey: z.string().nullable().default(null),
   /** A deliberate pause survives restart; listen-only idle sessions do not. */
   paused: z.boolean().optional(),
+  /** Continuous Radio / TV station state when active on this session. */
+  station: PersistedStationSchema.optional(),
 });
 export type PersistedState = z.infer<typeof PersistedStateSchema>;
 

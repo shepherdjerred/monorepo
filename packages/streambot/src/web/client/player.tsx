@@ -5,6 +5,7 @@ import { Artwork } from "./artwork.tsx";
 import { SportsArtwork } from "./sports-artwork.tsx";
 import { Attribution } from "./attribution.tsx";
 import { QueueVideo } from "./queue-video.tsx";
+import { formatStationBadge } from "./station/station-label.ts";
 
 type PlayerProps = {
   snapshot: WebSnapshot;
@@ -18,6 +19,23 @@ type PlayerProps = {
 export function Player({ snapshot, busy, send, subtitles }: PlayerProps) {
   return (
     <section className="player panel" aria-label="Playback controls">
+      {snapshot.station !== null && (
+        <div className="station-bar">
+          <span className="station-badge">
+            {formatStationBadge(snapshot.station)}
+          </span>
+          <button
+            type="button"
+            className="station-stop"
+            disabled={busy}
+            onClick={() => {
+              send({ action: "station", mode: "off" });
+            }}
+          >
+            {snapshot.station.kind === "tv" ? "Stop TV" : "Stop Radio"}
+          </button>
+        </div>
+      )}
       <PlayerTitle snapshot={snapshot} />
       <Transport snapshot={snapshot} busy={busy} send={send} />
       <Timeline snapshot={snapshot} busy={busy} send={send} />

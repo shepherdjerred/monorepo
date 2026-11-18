@@ -80,10 +80,23 @@ describe("voice transaction policy", () => {
       "get_queue",
       "get_now_playing",
       "list_sports",
+      "radio",
     ]);
   });
 
   test("validates every strict tool input schema", () => {
+    expect(
+      voiceToolSchemas.radio.safeParse({
+        action: "start",
+        seed: "chill synthwave",
+        scope: "room",
+      }).success,
+    ).toBe(true);
+    expect(
+      voiceToolSchemas.radio.safeParse({
+        action: "stop",
+      }).success,
+    ).toBe(true);
     expect(
       voiceToolSchemas.play.safeParse({
         query: "Local Movie",

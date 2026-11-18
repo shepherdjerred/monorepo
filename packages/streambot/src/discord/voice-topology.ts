@@ -208,6 +208,7 @@ export class VoiceTopologyWatcher {
     const key = `${guildId}:${channelId}`;
     if (humanCount > 0) {
       this.clearAloneTimer(key);
+      this.deps.getSessions().pokeRoomStations(guildId, channelId);
       return;
     }
     if (this.aloneTimers.has(key)) {

@@ -7,6 +7,7 @@ export type MediaFeatureGate = {
   readonly musicCatalog?: (scope: DiscoveryScope) => Promise<boolean>;
   readonly spotifyLinks?: (scope: DiscoveryScope) => Promise<boolean>;
   readonly playlists?: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly radio?: (scope: DiscoveryScope) => Promise<boolean>;
   readonly assistantV2: (scope: DiscoveryScope) => Promise<boolean>;
   readonly history: (scope: DiscoveryScope) => Promise<boolean>;
   /**
@@ -43,6 +44,7 @@ export const mediaFeatureGate: MediaFeatureGate = {
   musicCatalog: (scope) => enabled("streambot-music-catalog-enabled", scope),
   spotifyLinks: (scope) => enabled("streambot-spotify-links-enabled", scope),
   playlists: (scope) => enabled("streambot-playlists-enabled", scope),
+  radio: (scope) => enabled("streambot-radio-enabled", scope),
   lolEsports: (scope) => enabled("streambot-lol-esports-enabled", scope),
   lolAutoplay: (scope) => enabled("streambot-lol-autoplay-enabled", scope),
   automaticChannelRouting: (scope) =>

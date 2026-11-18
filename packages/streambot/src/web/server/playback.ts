@@ -114,6 +114,10 @@ export class WebPlayback {
     );
   }
 
+  resolveTarget(session: WebSession, input: WebCommand, routed = false) {
+    return this.target(session, input, routed);
+  }
+
   private async target(session: WebSession, input: WebCommand, routed = false) {
     await this.authorize(session, input.guildId);
     const guildId = GuildIdSchema.parse(input.guildId);

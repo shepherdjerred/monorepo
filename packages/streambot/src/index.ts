@@ -46,6 +46,7 @@ import { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-
 import { MusicService } from "@shepherdjerred/streambot/music/service.ts";
 import { MusicCatalog } from "@shepherdjerred/streambot/music/catalog.ts";
 import { SpotifyMetadata } from "@shepherdjerred/streambot/music/spotify.ts";
+import { RadioCurator } from "@shepherdjerred/streambot/station/radio-curator.ts";
 import {
   mediaFeatureGate,
   webUiEnabled,
@@ -217,6 +218,19 @@ async function main(): Promise<void> {
     sports,
     history,
     featureGate: mediaFeatureGate,
+    voiceRoomHumanIds: (guildId, channelId) =>
+      commandBot.voiceRoomHumanIds(guildId, channelId),
+    stationCurators: {
+      radio: new RadioCurator({
+        history,
+        historyEnabled: mediaFeatureGate.history,
+        music,
+        searchYoutube: (query, signal, limit) =>
+          searchYoutube(config, query, signal, limit),
+        ytDlpPath: config.ytDlpPath,
+        openAiApiKey: config.voice.openAiApiKey,
+      }),
+    },
   });
   refs.sessions = sessions;
 

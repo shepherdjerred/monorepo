@@ -1,5 +1,7 @@
+import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 import type { SessionManagerDeps } from "@shepherdjerred/streambot/session/session-types.ts";
 import type { Session } from "@shepherdjerred/streambot/session/session-types.ts";
+import type { StationFeeder } from "@shepherdjerred/streambot/station/station-feeder.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
 import type { VoiceAssistantSessionOptions } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
@@ -7,10 +9,15 @@ import type { VoiceAssistantSessionOptions } from "@shepherdjerred/streambot/voi
 export function createSessionVoiceAssistant(
   deps: SessionManagerDeps,
   session: Session,
-  options?: Pick<
-    VoiceAssistantSessionOptions,
-    "commandsForUser" | "afterTurn" | "holdTeardown" | "peerUserbotIds"
-  >,
+  options?: Partial<
+    Pick<
+      VoiceAssistantSessionOptions,
+      "commandsForUser" | "afterTurn" | "holdTeardown" | "peerUserbotIds"
+    >
+  > & {
+    readonly stationFeeder?: StationFeeder | undefined;
+    readonly controlStation?: PlaybackCommandServiceDeps["controlStation"];
+  },
 ): VoiceAssistantSession | null {
   const models = deps.voiceModels ?? null;
   if (models === null) return null;
@@ -20,8 +27,9 @@ export function createSessionVoiceAssistant(
     );
   }
   const userbot = session.entry.userbot;
+  const { stationFeeder, controlStation, ...assistantOptions } = options ?? {};
   return new VoiceAssistantSession({
-    ...options,
+    ...assistantOptions,
     config: deps.config,
     models,
     streamer: userbot,
@@ -30,6 +38,7 @@ export function createSessionVoiceAssistant(
     commands: {
       config: deps.config,
       dispatch: (event) => {
+        stationFeeder?.onBeforeDispatch(session, event);
         session.actor.send(event);
       },
       view: () =>
@@ -41,6 +50,7 @@ export function createSessionVoiceAssistant(
       announce: (message) => deps.announce(session.statusChannelId, message),
       guildId: session.guildId,
       channelId: session.voiceChannelId,
+      ...(controlStation === undefined ? {} : { controlStation }),
       ...(deps.discovery === undefined ? {} : { discovery: deps.discovery }),
       ...(deps.history === undefined ? {} : { history: deps.history }),
       ...(deps.featureGate === undefined

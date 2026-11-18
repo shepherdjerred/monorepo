@@ -1,15 +1,8 @@
 /** Local visual verification only. Production serves no fixture authentication routes. */
-import {
-  createFixtureSlot,
-  webFixture,
-  GUILD,
-  CHANNEL,
-  USER,
-  OTHER,
-} from "./web-fixture.ts";
+import { webFixture, GUILD, CHANNEL, USER, OTHER } from "./web-fixture.ts";
+import { createFixtureSlot } from "./web-fixture-slot.ts";
 import { FIXTURE_EVENTS } from "./web-fixture-media.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
-import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
 import { sessionRevision } from "@shepherdjerred/streambot/session/session-revision.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
@@ -80,7 +73,6 @@ class PreviewSpotify extends SpotifyMetadata {
     });
   }
 }
-
 if (import.meta.main) {
   const port = Number(Bun.argv[2] ?? 5188);
   const origin = "http://127.0.0.1:" + String(port);
@@ -202,26 +194,66 @@ if (import.meta.main) {
   await fixture.seed();
   const slots = new Map<
     PlaybackChannelNumber,
-    { actor: typeof fixture.actor; handle: SessionHandle }
-  >([[videoSlot, { actor: fixture.actor, handle: fixture.handle }]]);
+    ReturnType<typeof createFixtureSlot>
+  >([
+    [
+      videoSlot,
+      Object.assign(
+        {
+          actor: fixture.actor,
+          station: undefined,
+          startStation: () => Promise.resolve([]),
+          stopStation: () => null,
+        },
+        { handle: fixture.handle },
+      ),
+    ],
+  ]);
+  const ensureSlot = (slot: PlaybackChannelNumber) => {
+    let entry = slots.get(slot);
+    if (entry === undefined) {
+      entry = createFixtureSlot({
+        guildId: GUILD,
+        channelId: CHANNEL,
+        resolveSource: resolvePreview,
+      });
+      slots.set(slot, entry);
+    }
+    return entry;
+  };
   const baseSessions = fixture.playback.deps.sessions;
   fixture.playback.deps.sessions = {
     ...baseSessions,
     getExisting: (_guild, _channel, slot) =>
       slot === undefined ? null : (slots.get(slot)?.handle ?? null),
-    ensureForPlay: ({ playbackChannel }) => {
-      if (playbackChannel === undefined) return fixture.handle;
-      let entry = slots.get(playbackChannel);
-      if (entry === undefined) {
-        entry = createFixtureSlot({ resolveSource: resolvePreview });
-        slots.set(playbackChannel, entry);
-      }
-      return entry.handle;
+    ensureForPlay: ({ playbackChannel }) =>
+      playbackChannel === undefined
+        ? fixture.handle
+        : ensureSlot(playbackChannel).handle,
+    startStation: async ({ playbackChannel, station }) => {
+      const target = playbackChannel ?? PlaybackChannelNumberSchema.parse(1);
+      const entry = ensureSlot(target);
+      const added = await entry.startStation(station);
+      return { handle: entry.handle, added };
+    },
+    stopStation: ({ playbackChannel, fallbackInRoom }) => {
+      const direct =
+        playbackChannel === undefined ? undefined : slots.get(playbackChannel);
+      const entry =
+        fallbackInRoom === true && direct?.station === undefined
+          ? [...slots.values()].find(
+              (candidate) => candidate.station !== undefined,
+            )
+          : direct;
+      return entry?.stopStation() ?? null;
     },
     releaseUnused: (_guild, _channel, slot) => {
       if (slot === undefined) return;
       const entry = slots.get(slot);
-      if (entry?.actor.getSnapshot().matches("idle") === true) {
+      if (
+        entry?.station === undefined &&
+        entry?.actor.getSnapshot().matches("idle") === true
+      ) {
         if (entry.actor !== fixture.actor) entry.actor.stop();
         slots.delete(slot);
       }

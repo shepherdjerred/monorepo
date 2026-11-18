@@ -836,6 +836,129 @@ h3 {
 .player-options > button {
   margin-left: auto;
 }
+.station-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.station-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+.station-stop {
+  font-size: 11px;
+  padding: 6px 12px;
+  min-height: 36px;
+}
+.radio-banner {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 22px;
+  background: var(--surface-alt, rgba(255, 255, 255, 0.02));
+}
+.radio-banner-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.radio-banner-header h2 {
+  font-size: 18px;
+  margin: 2px 0 0;
+}
+.radio-active-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.radio-form {
+  display: grid;
+  gap: 14px;
+}
+.radio-seed-group {
+  display: grid;
+  gap: 6px;
+}
+.radio-seed-group label {
+  font-size: 12px;
+  font-weight: 600;
+}
+.radio-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.radio-seed-group input {
+  font: inherit;
+  font-size: max(1rem, 1em);
+  min-height: 44px;
+  padding: 10px 12px;
+}
+.radio-scope-fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px 12px;
+  margin: 0;
+}
+.radio-scope-fieldset legend {
+  padding: 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.radio-scope-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+.radio-scope-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.radio-scope-option input[type="radio"] {
+  margin-top: 3px;
+}
+.radio-scope-option span {
+  display: grid;
+  gap: 2px;
+}
+.radio-scope-option strong {
+  font-size: 13px;
+}
+.radio-scope-option small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.radio-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.radio-form-actions button {
+  min-height: 44px;
+}
 .search-form {
   display: flex;
   gap: 10px;

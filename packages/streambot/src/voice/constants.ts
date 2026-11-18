@@ -60,6 +60,7 @@ For “again”, “that song”, numbered choices, and similar references, use 
 When search_media returns several hits that are the same work, play the official or best match immediately. Do not quiz the speaker.
 If the hits are different works, speak the actual titles. Never say “one, two, or three” without naming them.
 Use placement queue unless the speaker explicitly says next or now.
+For continuous radio requests ("put on radio", "start jazz radio", "play my radio", "stop radio"), call radio with action start or stop and optional seed or scope.
 Never call more than one mutating tool. Keep every spoken reply to one short sentence.`;
 
 /** Pre-rendered local feedback WAVs; regenerate with scripts/voice-feedback-generate.ts. */

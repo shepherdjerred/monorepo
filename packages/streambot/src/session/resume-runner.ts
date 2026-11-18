@@ -18,7 +18,10 @@ import {
 import {
   buildResumeAnnouncement,
   buildResumeInput,
+  type ResumeDecision,
 } from "@shepherdjerred/streambot/state/resume.ts";
+import type { PersistedStation } from "@shepherdjerred/streambot/state/station-schema.ts";
+import { gateRestoredStation } from "@shepherdjerred/streambot/station/station-session-ops.ts";
 import type {
   ChannelId,
   GuildId,
@@ -76,6 +79,40 @@ async function applyRolloutGate(
  * (`SessionManager.resumeAll`) and the voice-loss reconnect path
  * (`VoiceRecoveryCoordinator.attempt`).
  */
+export function resumedSpawnFields(
+  decision: ResumeDecision,
+  station: PersistedStation | undefined,
+  opts: {
+    origin: "boot" | "reconnect";
+    reconnectAttempts?: number | undefined;
+  },
+): Pick<
+  SpawnParams,
+  | "resumeKey"
+  | "resumeAttempts"
+  | "seekSeconds"
+  | "station"
+  | "recoveredFromVoiceLoss"
+  | "reconnectAttempts"
+  | "preserveStateOnTeardown"
+> {
+  return {
+    resumeKey: decision.resumeKey,
+    resumeAttempts: decision.resumeAttempts,
+    seekSeconds: decision.input.initialSeekSeconds ?? 0,
+    ...(station === undefined ? {} : { station }),
+    ...(opts.origin === "reconnect"
+      ? {
+          recoveredFromVoiceLoss: true,
+          reconnectAttempts: opts.reconnectAttempts ?? 1,
+          // Keep the state file until this recovery proves healthy (resumeConfirmed), so a
+          // failed rejoin can retry instead of losing the movie.
+          preserveStateOnTeardown: true,
+        }
+      : {}),
+  };
+}
+
 export async function resumeSession(
   deps: ResumeRunnerDeps,
   guildId: GuildId,
@@ -100,7 +137,14 @@ export async function resumeSession(
   const decision = buildResumeInput(restored, base, {
     maxResumeAttempts: MAX_RESUME_ATTEMPTS,
   });
-  const hasSomething = (decision.input.initialQueue?.length ?? 0) > 0;
+  const station = await gateRestoredStation(
+    deps.featureGate,
+    guildId,
+    channelId,
+    decision.station,
+  );
+  const hasSomething =
+    (decision.input.initialQueue?.length ?? 0) > 0 || station !== undefined;
   if (!hasSomething) {
     await deleteState(filePath);
     return "nothing";
@@ -144,18 +188,7 @@ export async function resumeSession(
       gatedQueue === undefined
         ? decision.input
         : { ...decision.input, initialQueue: gatedQueue },
-    resumeKey: decision.resumeKey,
-    resumeAttempts: decision.resumeAttempts,
-    seekSeconds: decision.input.initialSeekSeconds ?? 0,
-    ...(opts.origin === "reconnect"
-      ? {
-          recoveredFromVoiceLoss: true,
-          reconnectAttempts: opts.reconnectAttempts ?? 1,
-          // Keep the state file until this recovery proves healthy (resumeConfirmed), so a
-          // failed rejoin can retry instead of losing the movie.
-          preserveStateOnTeardown: true,
-        }
-      : {}),
+    ...resumedSpawnFields(decision, station, opts),
   });
   log.info("resumed session", {
     guildId,

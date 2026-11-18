@@ -11,12 +11,14 @@ import type {
   Session,
   SessionHandle,
 } from "@shepherdjerred/streambot/session/session-types.ts";
+import type { StationFeeder } from "@shepherdjerred/streambot/station/station-feeder.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import { queuedDisplay } from "./queued-display.ts";
 
 export function buildSessionHandle(
   config: Config,
   session: Session,
+  feeder?: StationFeeder,
 ): SessionHandle {
   return {
     ...(session.playbackChannel === undefined
@@ -30,6 +32,7 @@ export function buildSessionHandle(
         throw new PlaybackCommandBoundaryError(
           "That playback ended while the command was loading. Try again.",
         );
+      feeder?.onBeforeDispatch(session, event);
       session.actor.send(
         event.type === "ADD" ||
           event.type === "ADD_NEXT" ||
@@ -47,6 +50,7 @@ export function buildSessionHandle(
         session.actor.getSnapshot(),
         session.entry.userbot.getPosition(),
       ),
+    station: () => session.station ?? null,
     setVolume: (percent) => session.entry.userbot.setVolume(percent),
     seek: (seconds) => session.entry.userbot.seek(seconds),
     assistantUserId: () => session.entry.userbot.assistantUserId(),

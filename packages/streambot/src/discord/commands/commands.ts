@@ -5,6 +5,7 @@ import {
   type RESTPostAPIChatInputApplicationCommandsJSONBody,
 } from "discord.js";
 import { musicCommand } from "@shepherdjerred/streambot/discord/commands/music-commands.ts";
+import { radioCommand } from "@shepherdjerred/streambot/discord/commands/station-commands.ts";
 
 /**
  * Options `/stream play` and `/stream playnext` share.
@@ -474,6 +475,7 @@ export const commandDefinitions = [
         ),
     ),
   musicCommand,
+  radioCommand,
   new SlashCommandBuilder()
     .setName("play")
     .setDescription("Play a song, search, or paste a YouTube or Spotify link")

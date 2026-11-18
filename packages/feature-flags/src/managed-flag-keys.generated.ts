@@ -280,6 +280,7 @@ export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "streambot-playlists-enabled",
   "streambot-plex-posters-enabled",
   "streambot-reconnect-enabled",
+  "streambot-radio-enabled",
   "streambot-lol-esports-enabled",
   "streambot-lol-autoplay-enabled",
   "streambot-sports-streaming-enabled",

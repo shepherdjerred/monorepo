@@ -19,7 +19,39 @@ import {
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 const log = logger.child("session-manager");
-export async function writeSessionSnapshot(
+function updateKnownPosition(
+  session: Session,
+  context: ReturnType<Session["actor"]["getSnapshot"]>["context"],
+  positionOverrideSeconds: number | undefined,
+): void {
+  const live = session.entry.userbot.getPosition();
+  if (positionOverrideSeconds !== undefined) {
+    session.lastKnownPositionSeconds = positionOverrideSeconds;
+  } else if (context.pausedPositionSeconds !== null) {
+    session.lastKnownPositionSeconds = context.pausedPositionSeconds;
+  } else if (context.current === null) {
+    session.lastKnownPositionSeconds = 0;
+  } else if (live !== null) {
+    session.lastKnownPositionSeconds = live;
+  }
+}
+
+export function enqueueSessionSnapshot(
+  config: Config,
+  session: Session,
+  rooms: RoomPersistence,
+  positionOverrideSeconds?: number,
+): Promise<void> {
+  const previous = session.snapshotTail;
+  const run = (async (): Promise<void> => {
+    await previous;
+    await writeSessionSnapshot(config, session, rooms, positionOverrideSeconds);
+  })();
+  session.snapshotTail = run;
+  return run;
+}
+
+async function writeSessionSnapshot(
   config: Config,
   session: Session,
   rooms: RoomPersistence,
@@ -30,18 +62,7 @@ export async function writeSessionSnapshot(
     return;
   }
   const { context } = session.actor.getSnapshot();
-  const live = session.entry.userbot.getPosition();
-  if (positionOverrideSeconds !== undefined) {
-    // The upcoming attempt has not started its clock. Neither a stale live
-    // position nor the previous track's cached position belongs to this item.
-    session.lastKnownPositionSeconds = positionOverrideSeconds;
-  } else if (context.pausedPositionSeconds !== null) {
-    session.lastKnownPositionSeconds = context.pausedPositionSeconds;
-  } else if (context.current === null) {
-    session.lastKnownPositionSeconds = 0;
-  } else if (live !== null) {
-    session.lastKnownPositionSeconds = live;
-  }
+  updateKnownPosition(session, context, positionOverrideSeconds);
   playbackPositionSeconds.set(session.lastKnownPositionSeconds);
   if (
     !session.resumeConfirmed &&
@@ -72,6 +93,7 @@ export async function writeSessionSnapshot(
     resumeKey: session.persistResumeKey,
     resumeAttempts: session.persistResumeAttempts,
     statusChannelId: session.statusChannelId,
+    ...(session.station === undefined ? {} : { station: session.station }),
   });
   try {
     if (

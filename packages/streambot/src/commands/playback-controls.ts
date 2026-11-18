@@ -23,6 +23,7 @@ import type {
   Source,
   SubtitleTrackRef,
 } from "@shepherdjerred/streambot/sources/source.ts";
+import type { StationScope } from "@shepherdjerred/streambot/state/station-schema.ts";
 
 /** Permission-checked playback controls shared by slash and voice transports. */
 export class PlaybackControls {
@@ -69,6 +70,30 @@ export class PlaybackControls {
         "Numbered channels are not enabled here.",
       );
     return this.deps.listChannels(userId);
+  }
+
+  async radio(
+    userId: UserId,
+    input: {
+      readonly action: "start" | "stop";
+      readonly seed?: string | null | undefined;
+      readonly scope?: StationScope | null | undefined;
+    },
+    signal: AbortSignal,
+  ): Promise<string> {
+    if (this.deps.controlStation === undefined) {
+      throw new PlaybackCommandBoundaryError(
+        "Radio mode is not enabled in this server.",
+      );
+    }
+    const seed = input.seed?.trim();
+    return await this.deps.controlStation({
+      userId,
+      action: input.action,
+      ...(seed === undefined || seed === "" ? {} : { seed }),
+      ...(input.scope == null ? {} : { scope: input.scope }),
+      signal,
+    });
   }
 
   protected canControl(userId: UserId, requesterId: UserId | null): boolean {

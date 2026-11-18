@@ -99,6 +99,20 @@ export const PlayerItemSchema = z.strictObject({
   mediaKind: z.enum(["music", "video"]).nullable(),
   artworkUrl: ArtworkUrlSchema.optional(),
 });
+export const WebStationScopeSchema = z.enum(["room", "mine", "server"]);
+export const WebTvPresetSchema = z.enum([
+  "my-mix",
+  "continue-series",
+  "sitcoms",
+  "movies",
+  "youtube",
+]);
+export const WebStationSchema = z.strictObject({
+  kind: z.enum(["radio", "tv"]),
+  scope: WebStationScopeSchema,
+  seed: z.string().trim().min(1).max(200).optional(),
+  tvPreset: WebTvPresetSchema.optional(),
+});
 export const SnapshotSchema = z.strictObject({
   channel: GuildSchema.nullable(),
   playbackChannel: z.number().int().positive().nullable(),
@@ -125,6 +139,8 @@ export const SnapshotSchema = z.strictObject({
   advancedControls: z.boolean(),
   sportsEnabled: z.boolean(),
   historyEnabled: z.boolean().default(false),
+  radioEnabled: z.boolean().default(false),
+  station: WebStationSchema.nullable().default(null),
   restrictedLive: z.boolean(),
 });
 export type WebSnapshot = z.infer<typeof SnapshotSchema>;
@@ -184,6 +200,14 @@ export const CommandSchema = z.union([
     ...commandBase,
     action: z.literal("subtitles"),
     token: z.string().min(1),
+  }),
+  z.strictObject({
+    ...commandBase,
+    action: z.literal("station"),
+    mode: z.enum(["radio", "tv", "off"]),
+    scope: WebStationScopeSchema.optional(),
+    seed: z.string().trim().min(1).max(200).optional(),
+    tvPreset: WebTvPresetSchema.optional(),
   }),
 ]);
 export type WebCommand = z.infer<typeof CommandSchema>;

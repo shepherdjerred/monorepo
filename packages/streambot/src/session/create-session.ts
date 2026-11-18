@@ -18,12 +18,24 @@ import { createPlaybackInspector } from "@shepherdjerred/streambot/session/playb
 import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
 import { SessionObserver } from "@shepherdjerred/streambot/session/session-observer.ts";
 import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
+import type { StationFeeder } from "@shepherdjerred/streambot/station/station-feeder.ts";
 import type {
   GuildId,
   ChannelId,
+  UserId,
 } from "@shepherdjerred/streambot/types/ids.ts";
+import type { StationScope } from "@shepherdjerred/streambot/state/station-schema.ts";
 type CreateSessionOptions = {
   deps: SessionManagerDeps;
+  stationFeeder: StationFeeder;
+  controlVoiceRadio?: (input: {
+    session: Session;
+    userId: UserId;
+    action: "start" | "stop";
+    seed?: string | undefined;
+    scope?: StationScope | undefined;
+    signal: AbortSignal;
+  }) => Promise<string>;
   fetchPoster: PosterFetcher | undefined;
   sessions: Map<string, Session>;
   teardown: (session: Session) => void;
@@ -120,13 +132,27 @@ export function createSession(
     voiceRecoveryStarted: false,
     pendingSubtitleMenu: false,
     historyRunRecorded: false,
+    station: params.station,
     voiceAssistant: null,
     teardownHold: new TeardownHold(() => {
       options.teardown(session);
     }),
   };
+  const controlVoiceRadio = options.controlVoiceRadio;
   if (params.playbackChannel === undefined)
-    session.voiceAssistant = createSessionVoiceAssistant(options.deps, session);
+    session.voiceAssistant = createSessionVoiceAssistant(
+      options.deps,
+      session,
+      {
+        stationFeeder: options.stationFeeder,
+        ...(controlVoiceRadio === undefined
+          ? {}
+          : {
+              controlStation: (input) =>
+                controlVoiceRadio({ session, ...input }),
+            }),
+      },
+    );
   // Trigger 1: the fork's voice ws `close` event, including silent-to-EOF cases.
   entry.userbot.setVoiceCloseListener((info) => {
     if (session.playbackChannel !== undefined && info.source === "go-live") {
@@ -165,6 +191,7 @@ export function createSession(
   });
   const subscription = actor.subscribe((snapshot) => {
     observer.handle(snapshot);
+    options.stationFeeder.poke(session);
   });
   session.unsubscribe = () => {
     subscription.unsubscribe();
@@ -172,6 +199,9 @@ export function createSession(
 
   options.sessions.set(session.key, session);
   actor.start();
+  if (session.station !== undefined) {
+    options.stationFeeder.poke(session);
+  }
   session.checkpointTimer = setInterval(() => {
     void options.saveSnapshot(session);
   }, CHECKPOINT_MS);

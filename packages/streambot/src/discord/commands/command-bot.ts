@@ -19,13 +19,12 @@ import {
   PlayerCardRouter,
   safeHandleCardInteraction,
 } from "@shepherdjerred/streambot/discord/player-card/player-card-router.ts";
-import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
 import {
   ChannelIdSchema,
-  GuildIdSchema,
   type ChannelId,
   type GuildId,
+  type UserId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   getErrorMessage,
@@ -41,15 +40,10 @@ import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/comma
 import { runSportsCommand } from "@shepherdjerred/streambot/discord/commands/sports-command.ts";
 import type { ScheduleTarget } from "@shepherdjerred/streambot/sports/schedule-types.ts";
 import { scheduledAuthority } from "@shepherdjerred/streambot/discord/scheduled-authority.ts";
-import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
-import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
-import {
-  resolveCommandTarget,
-  routeNumberedCommand,
-  labelPlaybackInteraction,
-} from "@shepherdjerred/streambot/discord/commands/numbered-command-routing.ts";
 import { WebDiscordContext } from "@shepherdjerred/streambot/discord/web-context.ts";
 import { handleMusicCommand } from "@shepherdjerred/streambot/commands/music-command-handler.ts";
+import { handleStationCommand } from "@shepherdjerred/streambot/discord/commands/station-command-handler.ts";
+import { routeStreamCommand } from "@shepherdjerred/streambot/discord/commands/stream-command-router.ts";
 import { musicErrorMessage } from "@shepherdjerred/streambot/discord/music-access.ts";
 import {
   slashPlay,
@@ -58,51 +52,29 @@ import {
 import { commandIntents } from "@shepherdjerred/streambot/discord/command-intents.ts";
 
 const log = logger.child("command-bot");
-/** Subcommands that start (or join) a session in the issuer's current voice channel. */
-const PLAY_SUBCOMMANDS = new Set([
-  "play",
-  "playnext",
-  "join",
-  "replay",
-  "previous",
-  "load-queue",
-  "usual",
-  "continue",
-]);
-const HISTORY_START_SUBCOMMANDS = new Set([
-  "replay",
-  "previous",
-  "load-queue",
-  "usual",
-  "continue",
-]);
-/** Subcommands answerable without a playback session (library/yt-dlp lookups + static help). */
-const STATELESS_SUBCOMMANDS = new Set([
-  "list",
-  "search",
-  "sources",
-  "help",
-  "web",
-  "favorites",
-  "favorite-remove",
-  "saved-queues",
-  "delete-queue",
-]);
 
 /**
  * The discord.js (bot-token) command bot. Registers global slash commands and routes each
  * interaction to the right per-`(guild, voice channel)` session via the {@link SessionManager}.
  */
 export class CommandBot {
+  private excludedUserIds(): Set<string> {
+    return new Set<string>([
+      ...this.deps.config.discord.peerUserbotIds,
+      ...(this.deps.userbotIds?.() ?? []),
+    ]);
+  }
+
+  voiceRoomHumanIds(guildId: GuildId, channelId: ChannelId): readonly UserId[] {
+    return this.web.voiceRoomHumanIds(guildId, channelId);
+  }
+
   async scheduleAuthority(target: ScheduleTarget) {
     return await scheduledAuthority({
       client: this.client,
       web: this.web,
       target,
-      excluded: new Set([
-        ...this.deps.config.discord.peerUserbotIds,
-        ...(this.deps.userbotIds?.() ?? []),
-      ]),
+      excluded: this.excludedUserIds(),
     });
   }
   private readonly client: Client;
@@ -120,7 +92,7 @@ export class CommandBot {
     this.deps = deps;
     this.client = new Client({ intents: [] });
     this.cards = new PlayerCardMessenger(this.client);
-    this.web = new WebDiscordContext(this.client);
+    this.web = new WebDiscordContext(this.client, () => this.excludedUserIds());
     this.cardRouter = new PlayerCardRouter({
       config: deps.config,
       messenger: this.cards,
@@ -270,153 +242,6 @@ export class CommandBot {
     return this.voiceChannelOf(interaction.guild, interaction.user);
   }
 
-  private async route(interaction: ChatInputCommandInteraction): Promise<void> {
-    const guildId = GuildIdSchema.safeParse(interaction.guildId ?? "");
-    if (!guildId.success) {
-      await interaction.reply({
-        content: "Use this command in a server.",
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    const sub = interaction.options.getSubcommand();
-    const invoked = ChannelIdSchema.safeParse(interaction.channelId);
-    const invokedChannel: ChannelId | null = invoked.success
-      ? invoked.data
-      : null;
-    const sessions = this.deps.getSessions();
-    const voiceChannelId = this.issuerVoiceChannel(interaction);
-    const numbered = await routeNumberedCommand({
-      interaction,
-      sessions,
-      guildId: guildId.data,
-      voiceChannelId,
-      adminIds: this.deps.config.discord.adminIds,
-    });
-    if (numbered.handled) return;
-    const { playbackChannel } = numbered;
-
-    const target = await resolveCommandTarget({
-      sessions,
-      interaction,
-      guildId: guildId.data,
-      voiceChannelId,
-      invokedChannel,
-      playbackChannel,
-      startingPlayback: PLAY_SUBCOMMANDS.has(sub),
-      stateless: STATELESS_SUBCOMMANDS.has(sub),
-      denyStart: () =>
-        this.denyDisabledSessionStart(
-          sub,
-          guildId.data,
-          voiceChannelId ?? invokedChannel ?? "",
-          interaction,
-        ),
-    });
-    if (target === null) return;
-    const { handle, announceChannel } = target;
-
-    await this.runCommand({
-      handle,
-      announceChannel,
-      guildId: guildId.data,
-      channelId: voiceChannelId ?? invokedChannel,
-      interaction,
-      subcommand: sub,
-      automatic: target.automatic,
-      sessions,
-      voiceChannelId,
-      ...(playbackChannel === undefined ? {} : { playbackChannel }),
-    });
-  }
-
-  private async runCommand(input: {
-    readonly handle: SessionHandle;
-    readonly announceChannel: ChannelId | null;
-    readonly guildId: GuildId;
-    readonly channelId: ChannelId | null;
-    readonly interaction: ChatInputCommandInteraction;
-    readonly subcommand: string;
-    readonly automatic: boolean;
-    readonly sessions: SessionManager;
-    readonly voiceChannelId: ChannelId | null;
-    readonly playbackChannel?: PlaybackChannelNumber;
-  }): Promise<void> {
-    try {
-      const scope =
-        input.channelId === null
-          ? null
-          : {
-              guildId: input.guildId,
-              channelId: input.channelId,
-              userId: input.interaction.user.id,
-            };
-      const routed =
-        scope !== null && input.automatic
-          ? await input.sessions.numbered.commandDeps(
-              scope,
-              input.announceChannel,
-            )
-          : undefined;
-      if (input.automatic && routed?.routePlayback === undefined)
-        throw new PlaybackCommandBoundaryError(
-          "Your channel selection changed. Try again.",
-        );
-      await this.buildHandler(input.handle, input.announceChannel, {
-        guildId: input.guildId,
-        channelId: input.channelId,
-        ...(routed === undefined ? {} : { routed }),
-      }).run(
-        labelPlaybackInteraction(
-          input.interaction,
-          routed === undefined ? input.playbackChannel : undefined,
-          PLAY_SUBCOMMANDS.has(input.subcommand),
-        ),
-      );
-    } finally {
-      if (
-        input.voiceChannelId !== null &&
-        PLAY_SUBCOMMANDS.has(input.subcommand)
-      ) {
-        input.sessions.releaseUnused(
-          input.guildId,
-          input.voiceChannelId,
-          input.playbackChannel,
-        );
-      }
-    }
-  }
-
-  private async denyDisabledSessionStart(
-    subcommand: string,
-    guildId: string,
-    channelId: string,
-    interaction: ChatInputCommandInteraction,
-  ): Promise<boolean> {
-    const gate = this.deps.featureGate;
-    if (gate === undefined) {
-      return false;
-    }
-    const scope = {
-      guildId,
-      channelId,
-      userId: interaction.user.id,
-    };
-    const assistantDisabled =
-      subcommand === "join" && !(await gate.assistantV2(scope));
-    const historyDisabled =
-      HISTORY_START_SUBCOMMANDS.has(subcommand) && !(await gate.history(scope));
-    if (!assistantDisabled && !historyDisabled) return false;
-    await interaction.reply({
-      content: assistantDisabled
-        ? "The Streambot assistant beta is not enabled here."
-        : "Playback history is not available.",
-      flags: MessageFlags.Ephemeral,
-    });
-    return true;
-  }
-
   private buildHandler(
     handle: SessionHandle,
     announceChannel: ChannelId | null,
@@ -456,6 +281,12 @@ export class CommandBot {
         return;
       }
       if (
+        await handleStationCommand(interaction, this.deps, () =>
+          this.issuerVoiceChannel(interaction),
+        )
+      )
+        return;
+      if (
         await handleMusicCommand(interaction, this.deps, () =>
           this.issuerVoiceChannel(interaction),
         )
@@ -469,7 +300,13 @@ export class CommandBot {
       ) {
         await runSportsCommand(interaction, this.deps);
       } else {
-        await this.route(interaction);
+        await routeStreamCommand({
+          interaction,
+          deps: this.deps,
+          issuerVoiceChannel: () => this.issuerVoiceChannel(interaction),
+          buildHandler: (handle, announceChannel, options) =>
+            this.buildHandler(handle, announceChannel, options),
+        });
       }
     } catch (error) {
       log.error("command handling failed", {

@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { MediaSelectionSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { WebSnapshot } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import type { RemoteAction } from "./api.ts";
 import { Artwork } from "./artwork.tsx";
 import { SportsArtwork } from "./sports-artwork.tsx";
 import type { SportsArtwork as Matchup } from "@shepherdjerred/streambot/sports/artwork.ts";
@@ -20,6 +21,7 @@ export type MediaListProps = {
     preferredChannel?: number,
   ) => "Play" | "Queue";
   play: (selection: Selection, placement: "queue" | "next" | "now") => void;
+  send?: (action: RemoteAction) => void;
 };
 
 export function MediaRow(
