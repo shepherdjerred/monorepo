@@ -76,6 +76,9 @@ describe("central Temporal execution metadata", () => {
         executionDomainForWorkflow("goodMorningWakeUp", TASK_QUEUES.WORKFLOWS),
       ).toBe("home");
       expect(
+        executionDomainForWorkflow("reconcileRoborock", TASK_QUEUES.WORKFLOWS),
+      ).toBe("home");
+      expect(
         executionDomainForWorkflow(
           "runHomelabAuditWorkflow",
           TASK_QUEUES.WORKFLOWS,

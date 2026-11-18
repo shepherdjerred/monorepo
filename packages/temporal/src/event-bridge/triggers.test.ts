@@ -6,6 +6,7 @@ import {
   handleIosAction,
   handleStateChanged,
   syncPetCareStates,
+  syncRoborockStates,
 } from "./triggers.ts";
 
 type WorkflowStart = (
@@ -18,8 +19,9 @@ type WorkflowSignalWithStart = (
   options: {
     workflowId: string;
     signal: string;
-    signalArgs: [PetCareSensorUpdate];
+    signalArgs: [PetCareSensorUpdate] | [];
     taskQueue?: string;
+    workflowExecutionTimeout?: string;
     workflowIdReusePolicy?: unknown;
   },
 ) => Promise<unknown>;
@@ -117,5 +119,83 @@ describe("Home Assistant event routing", () => {
             "binary_sensor.litter_robot_stalled",
       ),
     ).toBe(true);
+  });
+
+  test("signals reconcileRoborock only on transitions into unavailable", async () => {
+    const signalWithStart = vi.fn<WorkflowSignalWithStart>(() =>
+      Promise.resolve(),
+    );
+    const handler = handleStateChanged(
+      fakeSignalClient(signalWithStart),
+      Object.create(null),
+    );
+
+    await handler({
+      data: {
+        entity_id: "vacuum.2nd_floor",
+        old_state: { state: "docked" },
+        new_state: { state: "cleaning" },
+      },
+    });
+    await handler({
+      data: {
+        entity_id: "vacuum.2nd_floor",
+        old_state: { state: "unavailable" },
+        new_state: { state: "unavailable", attributes: { battery_level: 95 } },
+      },
+    });
+    await handler({
+      data: {
+        entity_id: "vacuum.2nd_floor",
+        old_state: { state: "unavailable" },
+        new_state: { state: "docked" },
+      },
+    });
+    expect(signalWithStart).not.toHaveBeenCalled();
+
+    await handler({
+      data: {
+        entity_id: "vacuum.2nd_floor",
+        old_state: { state: "docked" },
+        new_state: { state: "unavailable" },
+      },
+    });
+
+    expect(signalWithStart).toHaveBeenCalledTimes(1);
+    expect(signalWithStart.mock.calls[0]?.[0]).toBe("reconcileRoborock");
+    expect(signalWithStart.mock.calls[0]?.[1]).toMatchObject({
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      workflowId: "reconcile-roborock",
+      workflowExecutionTimeout: "60 minutes",
+      signal: "roborockUnavailable",
+      signalArgs: [],
+    });
+  });
+
+  test("reconciles unavailable Roborock vacuums once on bridge startup or reconnect", async () => {
+    const signalWithStart = vi.fn<WorkflowSignalWithStart>(() =>
+      Promise.resolve(),
+    );
+    const client = fakeSignalClient(signalWithStart);
+    const rest = Object.create(null);
+
+    rest.getStates = () =>
+      Promise.resolve([
+        { entity_id: "vacuum.1st_floor", state: "docked" },
+        { entity_id: "vacuum.2nd_floor", state: "cleaning" },
+        { entity_id: "vacuum.3rd_floor", state: "returning" },
+      ]);
+    await syncRoborockStates(client, rest);
+    expect(signalWithStart).not.toHaveBeenCalled();
+
+    rest.getStates = () =>
+      Promise.resolve([
+        { entity_id: "vacuum.1st_floor", state: "unavailable" },
+        { entity_id: "vacuum.2nd_floor", state: "unavailable" },
+        { entity_id: "vacuum.3rd_floor", state: "unavailable" },
+      ]);
+    await syncRoborockStates(client, rest);
+    expect(signalWithStart).toHaveBeenCalledTimes(1);
+    expect(signalWithStart.mock.calls[0]?.[0]).toBe("reconcileRoborock");
   });
 });

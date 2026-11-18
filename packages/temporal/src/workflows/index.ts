@@ -41,6 +41,7 @@ import { goodNight as _goodNight } from "./ha/good-night.ts";
 import { welcomeHome as _welcomeHome } from "./ha/welcome-home.ts";
 import { leavingHome as _leavingHome } from "./ha/leaving-home.ts";
 import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
+import { reconcileRoborock as _reconcileRoborock } from "./ha/reconcile-roborock.ts";
 import {
   petCareAlerts as _petCareAlerts,
   type PetCareAlertsState,
@@ -225,35 +226,17 @@ export async function syncGolinks(): Promise<void> {
   return _syncGolinks();
 }
 
-export async function goodMorningPreheat(): Promise<void> {
-  return _goodMorningPreheat();
-}
-
-export async function goodMorningWakeUp(): Promise<void> {
-  return _goodMorningWakeUp();
-}
-
-export async function goodMorningGetUp(): Promise<void> {
-  return _goodMorningGetUp();
-}
-
-export async function goodNight(): Promise<void> {
-  return _goodNight();
-}
-
-export async function welcomeHome(firstArrival = true): Promise<void> {
-  return _welcomeHome(firstArrival);
-}
-
+export const goodMorningPreheat = (): Promise<void> => _goodMorningPreheat();
+export const goodMorningWakeUp = (): Promise<void> => _goodMorningWakeUp();
+export const goodMorningGetUp = (): Promise<void> => _goodMorningGetUp();
+export const goodNight = (): Promise<void> => _goodNight();
+export const welcomeHome = (firstArrival = true): Promise<void> =>
+  _welcomeHome(firstArrival);
 export const leavingHome = (): Promise<void> => _leavingHome();
-
 export const reconcileLock = (): Promise<void> => _reconcileLock();
-
+export const reconcileRoborock = (): Promise<void> => _reconcileRoborock();
 export const petCareAlerts = (s: PetCareAlertsState = {}) => _petCareAlerts(s);
-
-export async function runVacuumIfNotHome(): Promise<void> {
-  return _runVacuumIfNotHome();
-}
+export const runVacuumIfNotHome = (): Promise<void> => _runVacuumIfNotHome();
 
 export async function motionLight(room: MotionLightRoom): Promise<void> {
   return _motionLight(room);

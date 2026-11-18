@@ -22,6 +22,10 @@ import {
   PET_CARE_SENSOR_POLICIES,
   type PetCareSensorUpdate,
 } from "#shared/infra/pet-care.ts";
+import {
+  firstUnavailableRoborock,
+  ROBOROCK_VACUUM_ENTITIES,
+} from "#shared/infra/roborock.ts";
 
 const IOS_ACTION_ID_GOOD_NIGHT = "A91A15AA-479E-416C-8F51-BD983A999266";
 
@@ -46,6 +50,7 @@ const StateChangedEventData = z.object({
 
 const PERSON_ENTITIES = ["person.jerred", "person.shuxin"] as const;
 const PERSON_ENTITY_SET = new Set<string>(PERSON_ENTITIES);
+const ROBOROCK_VACUUM_ENTITY_SET = new Set<string>(ROBOROCK_VACUUM_ENTITIES);
 const MOTION_LIGHT_ROOMS_BY_ENTITY = new Map<
   string,
   {
@@ -75,6 +80,8 @@ const MOTION_LIGHT_ROOMS_BY_ENTITY = new Map<
 // the bolt cycle. See workflows/ha/reconcile-lock.ts.
 const RECONCILE_LOCK_WORKFLOW_ID = "reconcile-lock";
 const PRESENCE_CHANGED_SIGNAL = "presenceChanged";
+const RECONCILE_ROBOROCK_WORKFLOW_ID = "reconcile-roborock";
+const ROBOROCK_UNAVAILABLE_SIGNAL = "roborockUnavailable";
 const PET_CARE_WORKFLOW_ID = "pet-care-alerts";
 const PET_CARE_SENSOR_CHANGED_SIGNAL = "petCareSensorChanged";
 
@@ -84,25 +91,53 @@ function timestampMs(value: string | undefined): number {
   return Number.isFinite(parsed) ? parsed : Date.now();
 }
 
+async function signalSingletonWorkflow(
+  client: Client,
+  workflowType: string,
+  options: {
+    workflowId: string;
+    signal: string;
+    signalArgs: unknown[];
+    workflowExecutionTimeout?: Duration;
+  },
+  failureTarget: string,
+): Promise<void> {
+  try {
+    await client.workflow.signalWithStart(workflowType, {
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      workflowId: options.workflowId,
+      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
+      ...(options.workflowExecutionTimeout !== undefined && {
+        workflowExecutionTimeout: options.workflowExecutionTimeout,
+      }),
+      signal: options.signal,
+      signalArgs: options.signalArgs,
+    });
+  } catch (error: unknown) {
+    // Fail fast: surface the failure instead of silently proceeding with HA
+    // state un-reconciled. The HA event client wraps handlers in
+    // `Promise.resolve(handler()).catch(emitError)`, so this propagates as a
+    // logged subscription error rather than crashing the worker.
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to signal ${failureTarget}: ${detail}`);
+    throw error;
+  }
+}
+
 async function signalPetCareState(
   client: Client,
   update: PetCareSensorUpdate,
 ): Promise<void> {
-  try {
-    await client.workflow.signalWithStart("petCareAlerts", {
-      taskQueue: TASK_QUEUES.WORKFLOWS,
+  await signalSingletonWorkflow(
+    client,
+    "petCareAlerts",
+    {
       workflowId: PET_CARE_WORKFLOW_ID,
-      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
       signal: PET_CARE_SENSOR_CHANGED_SIGNAL,
       signalArgs: [update],
-    });
-  } catch (error: unknown) {
-    const detail = error instanceof Error ? error.message : String(error);
-    console.error(
-      `Failed to signal petCareAlerts for ${update.entityId}: ${detail}`,
-    );
-    throw error;
-  }
+    },
+    `petCareAlerts for ${update.entityId}`,
+  );
 }
 
 function petCareUpdateFromState(
@@ -151,25 +186,43 @@ export async function syncPetCareStates(
   }
 }
 
+async function signalRoborockReconciler(client: Client): Promise<void> {
+  await signalSingletonWorkflow(
+    client,
+    "reconcileRoborock",
+    {
+      workflowId: RECONCILE_ROBOROCK_WORKFLOW_ID,
+      workflowExecutionTimeout: "60 minutes",
+      signal: ROBOROCK_UNAVAILABLE_SIGNAL,
+      signalArgs: [],
+    },
+    "reconcileRoborock",
+  );
+}
+
+/** Reconcile current Roborock availability after startup or WebSocket reconnect. */
+export async function syncRoborockStates(
+  client: Client,
+  rest: HomeAssistantRestClient,
+): Promise<void> {
+  const states = await rest.getStates();
+  if (firstUnavailableRoborock(states) !== undefined) {
+    await signalRoborockReconciler(client);
+  }
+}
+
 async function bumpLockReconciler(client: Client): Promise<void> {
-  try {
-    await client.workflow.signalWithStart("reconcileLock", {
-      taskQueue: TASK_QUEUES.WORKFLOWS,
+  await signalSingletonWorkflow(
+    client,
+    "reconcileLock",
+    {
       workflowId: RECONCILE_LOCK_WORKFLOW_ID,
-      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
       workflowExecutionTimeout: "30 minutes",
       signal: PRESENCE_CHANGED_SIGNAL,
       signalArgs: [],
-    });
-  } catch (error: unknown) {
-    // Fail fast: surface the failure instead of silently proceeding with the
-    // door's desired state un-reconciled. The HA event client wraps handlers in
-    // `Promise.resolve(handler()).catch(emitError)`, so this propagates as a
-    // logged subscription error rather than crashing the worker.
-    const detail = error instanceof Error ? error.message : String(error);
-    console.error(`Failed to signal reconcileLock: ${detail}`);
-    throw error;
-  }
+    },
+    "reconcileLock",
+  );
 }
 
 function dayKey(): string {
@@ -255,6 +308,54 @@ export function handleIosAction(
   };
 }
 
+async function handlePersonTransition(
+  client: Client,
+  rest: HomeAssistantRestClient,
+  transition: { entityId: string; oldState: string; newState: string },
+): Promise<void> {
+  const { entityId, oldState, newState } = transition;
+  // Every presence transition (both directions) re-arms the debounced lock
+  // reconciler; it decides lock/unlock from settled, live state.
+  await bumpLockReconciler(client);
+
+  if (oldState === "not_home" && newState === "home") {
+    // Fire on every arrival so the door is always unlocked and lights come
+    // on, even if someone else is already home. `firstArrival` (the house was
+    // otherwise empty) gates the welcome notification and vacuum docking.
+    const firstArrival = await othersAllAway(rest, entityId);
+    await startWorkflow(
+      client,
+      "welcomeHome",
+      `welcome-home-${cooldownBucket()}-${entityId}`,
+      {
+        args: [firstArrival],
+        workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+        workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
+      },
+    );
+    return;
+  }
+  if (oldState === "home" && newState === "not_home") {
+    if (!(await othersAllAway(rest, entityId))) {
+      console.warn(
+        `leavingHome skipped: ${entityId} left but others are still home`,
+      );
+      return;
+    }
+    await startWorkflow(
+      client,
+      "leavingHome",
+      `leaving-home-${cooldownBucket()}-${entityId}`,
+      {
+        workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+        workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
+        // leavingHome's vacuum-verify path can run ~750s+; the 10-min default killed it every run.
+        workflowExecutionTimeout: "20 minutes",
+      },
+    );
+  }
+}
+
 export function handleStateChanged(
   client: Client,
   rest: HomeAssistantRestClient,
@@ -264,25 +365,31 @@ export function handleStateChanged(
     if (!parsed.success) {
       return;
     }
-    if (PetCareEntityIdSchema.safeParse(parsed.data.entity_id).success) {
+    const { entity_id: entityId } = parsed.data;
+    if (PetCareEntityIdSchema.safeParse(entityId).success) {
       await signalPetCareState(
         client,
-        petCareUpdateFromState(parsed.data.entity_id, parsed.data.new_state),
+        petCareUpdateFromState(entityId, parsed.data.new_state),
       );
       return;
     }
     const oldState = parsed.data.old_state?.state;
     const newState = parsed.data.new_state?.state;
-    if (oldState === undefined || newState === undefined) {
+    if (ROBOROCK_VACUUM_ENTITY_SET.has(entityId)) {
+      if (oldState !== newState && newState === "unavailable") {
+        await signalRoborockReconciler(client);
+      }
       return;
     }
-    // Ignore attribute-only updates (e.g. GPS coordinate churn while the state
-    // stays `home`) — only real presence transitions matter.
-    if (oldState === newState) {
+    if (
+      oldState === undefined ||
+      newState === undefined ||
+      oldState === newState
+    ) {
       return;
     }
 
-    const motionLight = MOTION_LIGHT_ROOMS_BY_ENTITY.get(parsed.data.entity_id);
+    const motionLight = MOTION_LIGHT_ROOMS_BY_ENTITY.get(entityId);
     if (motionLight !== undefined) {
       if (oldState === "off" && newState === "on") {
         await startWorkflow(
@@ -300,49 +407,12 @@ export function handleStateChanged(
       return;
     }
 
-    if (!PERSON_ENTITY_SET.has(parsed.data.entity_id)) {
-      return;
-    }
-
-    // Every presence transition (both directions) re-arms the debounced lock
-    // reconciler; it decides lock/unlock from settled, live state.
-    await bumpLockReconciler(client);
-
-    if (oldState === "not_home" && newState === "home") {
-      // Fire on every arrival so the door is always unlocked and lights come
-      // on, even if someone else is already home. `firstArrival` (the house was
-      // otherwise empty) gates the welcome notification and vacuum docking.
-      const firstArrival = await othersAllAway(rest, parsed.data.entity_id);
-      await startWorkflow(
-        client,
-        "welcomeHome",
-        `welcome-home-${cooldownBucket()}-${parsed.data.entity_id}`,
-        {
-          args: [firstArrival],
-          workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
-          workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
-        },
-      );
-      return;
-    }
-    if (oldState === "home" && newState === "not_home") {
-      if (!(await othersAllAway(rest, parsed.data.entity_id))) {
-        console.warn(
-          `leavingHome skipped: ${parsed.data.entity_id} left but others are still home`,
-        );
-        return;
-      }
-      await startWorkflow(
-        client,
-        "leavingHome",
-        `leaving-home-${cooldownBucket()}-${parsed.data.entity_id}`,
-        {
-          workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
-          workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
-          // leavingHome's vacuum-verify path can run ~750s+; the 10-min default killed it every run.
-          workflowExecutionTimeout: "20 minutes",
-        },
-      );
+    if (PERSON_ENTITY_SET.has(entityId)) {
+      await handlePersonTransition(client, rest, {
+        entityId,
+        oldState,
+        newState,
+      });
     }
   };
 }
