@@ -18,6 +18,7 @@ extension Task {
             due_string: due_string,
             is_recurring: is_recurring,
             recurrence_rule: recurrence_rule,
+            label_ids: label_ids,
             completed: completed,
             completed_at: completedAt,
             is_deleted: is_deleted,
@@ -31,11 +32,13 @@ extension Task {
         let mappedProject = mapping[project_id] ?? project_id
         let mappedSection = section_id.flatMap { mapping[$0] ?? $0 }
         let mappedParent = parent_id.flatMap { mapping[$0] ?? $0 }
+        let mappedLabels = label_ids.map { mapping[$0] ?? $0 }
         guard
             mappedId != id
                 || mappedProject != project_id
                 || mappedSection != section_id
                 || mappedParent != parent_id
+                || mappedLabels != label_ids
         else {
             return self
         }
@@ -55,6 +58,7 @@ extension Task {
             due_string: due_string,
             is_recurring: is_recurring,
             recurrence_rule: recurrence_rule,
+            label_ids: mappedLabels,
             completed: completed,
             completed_at: completed_at,
             is_deleted: is_deleted,

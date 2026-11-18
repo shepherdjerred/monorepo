@@ -583,13 +583,12 @@ function requestUrl(input: string | URL | Request) {
   return input instanceof Request ? input.url : String(input);
 }
 
-test("new TaskNotes API and Obsidian publications share the application release owner", async () => {
+test("new TaskNotes API publication resolves to its application release owner", async () => {
   const publications = await buildPublications(
     {
       ...ci,
       digests: {
         "shepherdjerred/tasknotes-server": indexDigest,
-        "shepherdjerred/obsidian-headless": indexDigest,
       },
       charts: undefined,
     },
@@ -604,7 +603,7 @@ test("new TaskNotes API and Obsidian publications share the application release 
   expect(publications[0]?.serviceId).toBe("tasknotes-server");
   expect(
     publications[0]?.artifacts.map((artifact) => artifact.component),
-  ).toEqual(["image:tasknotes-server", "image:obsidian-headless"]);
+  ).toEqual(["image:tasknotes-server"]);
   expect(
     publications[0]?.artifacts.every((artifact) =>
       artifact.id.startsWith("ci/1/42/image/"),

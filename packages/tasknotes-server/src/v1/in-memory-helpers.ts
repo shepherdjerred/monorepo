@@ -7,36 +7,130 @@ import {
   type Section,
   type Task,
 } from "../protocol/generated.ts";
-import type { CreateTaskInput, UpdateTaskInput } from "./types.ts";
+import { parsePriority } from "./mappers.ts";
+import {
+  type BaseListFilter,
+  type CreateTaskInput,
+  EntityNotFoundError,
+  type UpdateFilterInput,
+  type UpdateLabelInput,
+  type UpdateProjectInput,
+  type UpdateReminderInput,
+  type UpdateSectionInput,
+  type UpdateTaskInput,
+} from "./types.ts";
 
-export type InternalTask = Task & { _updatedAt: Date };
-export type InternalProject = Project & { _updatedAt: Date };
-export type InternalSection = Section & { _updatedAt: Date };
-export type InternalLabel = Label & { _updatedAt: Date };
-export type InternalReminder = Reminder & { _createdAt: Date };
-export type InternalFilter = Filter & { _updatedAt: Date };
+export type StoredEntry<T> = {
+  value: T;
+  userId: string;
+  updatedAt: Date;
+  syncSeq: bigint;
+};
+
+export type StoredUser = {
+  id: string;
+  email: string;
+  name: string;
+  syncSequence: bigint;
+};
 
 export class MonotonicClock {
   private last = 0;
+
   now(): Date {
     const current = Date.now();
     this.last = current > this.last ? current : this.last + 1;
     return new Date(this.last);
   }
+
+  snapshot(): number {
+    return this.last;
+  }
+
+  restore(saved: number): void {
+    this.last = saved;
+  }
 }
 
-export function parsePriority(
-  priority: Priority | string | undefined,
-): Priority {
-  if (priority === Priority.P1) return Priority.P1;
-  if (priority === Priority.P2) return Priority.P2;
-  return priority === Priority.P3 ? Priority.P3 : Priority.P4;
+function matchesEntryFilter<T extends { is_deleted: boolean }>(
+  entry: StoredEntry<T>,
+  filter: BaseListFilter,
+  sinceTime: number | undefined,
+): boolean {
+  if (entry.userId !== filter.userId) {
+    return false;
+  }
+  if (filter.includeDeleted !== true && entry.value.is_deleted) {
+    return false;
+  }
+  return filter.sinceSeq === undefined
+    ? sinceTime === undefined || entry.updatedAt.getTime() > sinceTime
+    : entry.syncSeq > filter.sinceSeq;
 }
 
-export function applyCreateStrings(
-  task: InternalTask,
-  data: CreateTaskInput,
+export function queryStoredEntries<T extends { is_deleted: boolean }>(
+  map: Map<string, StoredEntry<T>>,
+  filter: BaseListFilter,
+  options?: {
+    predicate?: ((item: T) => boolean) | undefined;
+    compare?: ((a: T, b: T) => number) | undefined;
+  },
+): T[] {
+  const sinceTime = filter.since?.getTime();
+  const matched: T[] = [];
+
+  for (const entry of map.values()) {
+    if (!matchesEntryFilter(entry, filter, sinceTime)) {
+      continue;
+    }
+    if (options?.predicate !== undefined && !options.predicate(entry.value)) {
+      continue;
+    }
+    matched.push(structuredClone(entry.value));
+  }
+
+  if (options?.compare !== undefined) {
+    matched.sort(options.compare);
+  }
+  return matched;
+}
+
+export function restoreMap<K, V>(target: Map<K, V>, snapshot: Map<K, V>): void {
+  target.clear();
+  for (const [k, v] of snapshot.entries()) {
+    target.set(k, v);
+  }
+}
+
+export function setOrDelete<T extends object, K extends keyof T>(
+  target: T,
+  key: K,
+  value: T[K] | null | undefined,
 ): void {
+  if (value === null) {
+    Reflect.deleteProperty(target, key);
+  } else if (value !== undefined) {
+    target[key] = value;
+  }
+}
+
+export function formatDueDate(
+  d: Date | null | undefined,
+): string | null | undefined {
+  return d === undefined
+    ? undefined
+    : d === null
+      ? null
+      : (d.toISOString().split("T")[0] ?? null);
+}
+
+export function formatIso(
+  d: Date | null | undefined,
+): string | null | undefined {
+  return d === undefined ? undefined : d === null ? null : d.toISOString();
+}
+
+function applyCreateTaskStrings(task: Task, data: CreateTaskInput): void {
   if (
     data.sectionId !== undefined &&
     data.sectionId !== null &&
@@ -74,108 +168,180 @@ export function applyCreateStrings(
   }
 }
 
-export function applyCreateDates(
-  task: InternalTask,
-  data: CreateTaskInput,
-): void {
-  if (data.dueDate !== undefined && data.dueDate !== null) {
-    const formatted = data.dueDate.toISOString().split("T")[0];
-    if (formatted !== undefined && formatted !== "") task.due_date = formatted;
-  }
-  if (data.dueDatetime !== undefined && data.dueDatetime !== null) {
-    task.due_datetime = data.dueDatetime.toISOString();
-  }
-  if (data.completedAt !== undefined && data.completedAt !== null) {
-    task.completed_at = data.completedAt.toISOString();
-  }
-}
-
 export function applyTaskCreateOptions(
-  task: InternalTask,
+  task: Task,
   data: CreateTaskInput,
 ): void {
-  applyCreateStrings(task, data);
-  applyCreateDates(task, data);
-}
+  applyCreateTaskStrings(task, data);
 
-export function setOrDelete<T extends object, K extends keyof T>(
-  target: T,
-  key: K,
-  value: T[K] | null | undefined,
-): void {
-  if (value === null) {
-    Reflect.deleteProperty(target, key);
-  } else if (value !== undefined) {
-    target[key] = value;
+  const dueDate = formatDueDate(data.dueDate);
+  if (dueDate !== undefined && dueDate !== null && dueDate !== "") {
+    task.due_date = dueDate;
+  }
+  const dueDatetime = formatIso(data.dueDatetime);
+  if (dueDatetime !== undefined && dueDatetime !== null) {
+    task.due_datetime = dueDatetime;
+  }
+  const completedAt = formatIso(data.completedAt);
+  if (completedAt !== undefined && completedAt !== null) {
+    task.completed_at = completedAt;
   }
 }
 
-export function formatDueDate(
-  d: Date | null | undefined,
-): string | null | undefined {
-  if (d === undefined) return undefined;
-  return d === null ? null : d.toISOString().split("T")[0];
-}
-
-export function formatIso(
-  d: Date | null | undefined,
-): string | null | undefined {
-  if (d === undefined) return undefined;
-  return d === null ? null : d.toISOString();
-}
-
-export function applyUpdateStrings(
-  task: InternalTask,
-  data: UpdateTaskInput,
-): void {
-  if (data.title !== undefined) task.title = data.title;
-  if (data.description !== undefined) task.description = data.description;
-  if (data.priority !== undefined) task.priority = parsePriority(data.priority);
-  if (data.projectId !== undefined) task.project_id = data.projectId;
+export function applyTaskUpdateFields(task: Task, data: UpdateTaskInput): void {
+  if (data.title !== undefined) {
+    task.title = data.title;
+  }
+  if (data.description !== undefined) {
+    task.description = data.description;
+  }
+  if (data.priority !== undefined) {
+    task.priority = parsePriority(
+      typeof data.priority === "string" ? data.priority : Priority.P4,
+    );
+  }
+  if (data.projectId !== undefined) {
+    task.project_id = data.projectId;
+  }
   setOrDelete(task, "section_id", data.sectionId);
   setOrDelete(task, "parent_id", data.parentId);
+  if (data.childOrder !== undefined) {
+    task.child_order = data.childOrder;
+  }
+  if (data.isRecurring !== undefined) {
+    task.is_recurring = data.isRecurring;
+  }
+  if (data.completed !== undefined) {
+    task.completed = data.completed;
+  }
+  if (data.isDeleted !== undefined) {
+    task.is_deleted = data.isDeleted;
+  }
+  if (data.labelIds !== undefined) {
+    task.label_ids = [...new Set(data.labelIds)];
+  }
 }
 
-export function applyUpdateFlags(
-  task: InternalTask,
-  data: UpdateTaskInput,
-): void {
-  if (data.childOrder !== undefined) task.child_order = data.childOrder;
-  if (data.isRecurring !== undefined) task.is_recurring = data.isRecurring;
-  if (data.completed !== undefined) task.completed = data.completed;
-  if (data.isDeleted !== undefined) task.is_deleted = data.isDeleted;
-}
-
-export function applyTaskUpdateOptions(
-  task: InternalTask,
-  data: UpdateTaskInput,
-): void {
-  applyUpdateStrings(task, data);
-  applyUpdateFlags(task, data);
-}
-
-export function applyUpdateDates(
-  task: InternalTask,
-  data: UpdateTaskInput,
-): void {
+export function applyTaskUpdateDates(task: Task, data: UpdateTaskInput): void {
   setOrDelete(task, "due_date", formatDueDate(data.dueDate));
   setOrDelete(task, "due_datetime", formatIso(data.dueDatetime));
   setOrDelete(task, "completed_at", formatIso(data.completedAt));
-}
-
-export function applyUpdateOptionals(
-  task: InternalTask,
-  data: UpdateTaskInput,
-): void {
   setOrDelete(task, "due_timezone", data.dueTimezone);
   setOrDelete(task, "due_string", data.dueString);
   setOrDelete(task, "recurrence_rule", data.recurrenceRule);
 }
 
-export function applyTaskUpdateDates(
-  task: InternalTask,
-  data: UpdateTaskInput,
+export function applyProjectUpdate(
+  project: Project,
+  data: UpdateProjectInput,
 ): void {
-  applyUpdateDates(task, data);
-  applyUpdateOptionals(task, data);
+  if (data.name !== undefined) {
+    project.name = data.name;
+  }
+  if (data.color !== undefined) {
+    project.color = data.color;
+  }
+  setOrDelete(project, "parent_id", data.parentId);
+  if (data.childOrder !== undefined) {
+    project.child_order = data.childOrder;
+  }
+  if (data.isFavorite !== undefined) {
+    project.is_favorite = data.isFavorite;
+  }
+  if (data.isArchived !== undefined) {
+    project.is_archived = data.isArchived;
+  }
+  if (data.isDeleted !== undefined) {
+    project.is_deleted = data.isDeleted;
+  }
+}
+
+export function applySectionUpdate(
+  section: Section,
+  data: UpdateSectionInput,
+): void {
+  if (data.name !== undefined) {
+    section.name = data.name;
+  }
+  if (data.sectionOrder !== undefined) {
+    section.section_order = data.sectionOrder;
+  }
+  if (data.isArchived !== undefined) {
+    section.is_archived = data.isArchived;
+  }
+  if (data.isDeleted !== undefined) {
+    section.is_deleted = data.isDeleted;
+  }
+}
+
+export function applyLabelUpdate(label: Label, data: UpdateLabelInput): void {
+  if (data.name !== undefined) {
+    label.name = data.name;
+  }
+  if (data.color !== undefined) {
+    label.color = data.color;
+  }
+  if (data.itemOrder !== undefined) {
+    label.item_order = data.itemOrder;
+  }
+  if (data.isFavorite !== undefined) {
+    label.is_favorite = data.isFavorite;
+  }
+  if (data.isDeleted !== undefined) {
+    label.is_deleted = data.isDeleted;
+  }
+}
+
+export function applyReminderUpdate(
+  reminder: Reminder,
+  data: UpdateReminderInput,
+): void {
+  if (data.reminderType !== undefined) {
+    reminder.reminder_type = data.reminderType;
+  }
+  setOrDelete(reminder, "minute_offset", data.minuteOffset);
+  setOrDelete(reminder, "due_datetime", formatIso(data.dueDatetime));
+  if (data.isNotified !== undefined) {
+    reminder.is_notified = data.isNotified;
+  }
+  if (data.isDeleted !== undefined) {
+    reminder.is_deleted = data.isDeleted;
+  }
+}
+
+export function applyFilterUpdate(
+  filter: Filter,
+  data: UpdateFilterInput,
+): void {
+  if (data.name !== undefined) {
+    filter.name = data.name;
+  }
+  if (data.query !== undefined) {
+    filter.query = data.query;
+  }
+  if (data.color !== undefined) {
+    filter.color = data.color;
+  }
+  if (data.itemOrder !== undefined) {
+    filter.item_order = data.itemOrder;
+  }
+  if (data.isFavorite !== undefined) {
+    filter.is_favorite = data.isFavorite;
+  }
+  if (data.isDeleted !== undefined) {
+    filter.is_deleted = data.isDeleted;
+  }
+}
+
+export function assertOwnedEntry<T>(
+  map: Map<string, StoredEntry<T>>,
+  id: string,
+  userId: string,
+  entityName: string,
+): StoredEntry<T> {
+  const entry = map.get(id);
+  if (entry?.userId !== userId) {
+    throw new EntityNotFoundError(entityName, id);
+  }
+  return entry;
 }

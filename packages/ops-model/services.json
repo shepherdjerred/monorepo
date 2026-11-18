@@ -104,7 +104,7 @@
     },
     {
       "id": "tasknotes-server",
-      "images": ["tasknotes-server", "obsidian-headless"],
+      "images": ["tasknotes-server"],
       "title": "TaskNotes",
       "kind": "product",
       "package": "tasknotes-server",
@@ -446,15 +446,6 @@
           "argoApp": "redlib"
         }
       ]
-    },
-    {
-      "id": "obsidian-headless",
-      "title": "Obsidian headless",
-      "kind": "workload",
-      "package": "homelab",
-      "namespaces": [],
-      "argoApps": [],
-      "deploy": []
     },
     {
       "id": "gitops",

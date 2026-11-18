@@ -7,8 +7,7 @@ import {
 
 /**
  * Standalone selectors retained from the hand-maintained registry, with their
- * version keys. The retired Obsidian standalone mapping is checked separately
- * below because its container is now owned by TaskNotes.
+ * version keys.
  */
 const LEGACY_SELECTORS: Record<string, readonly string[]> = {
   birmel: ["shepherdjerred/birmel"],
@@ -100,6 +99,7 @@ describe("deployed registry derived from the service catalog", () => {
     "mario-kart",
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
+    "obsidian-headless",
   ])("does not advertise retired workload %s", (selector) => {
     expect(resolveServiceSelector(selector)).toBeNull();
   });
@@ -119,8 +119,6 @@ describe("deployed registry derived from the service catalog", () => {
     expect(resolveServiceSelector("alert-dashboard")?.service.alias).toBe(
       "ops-dashboard",
     );
-    // The Obsidian container is a TaskNotes sidecar, not a standalone apps workload.
-    expect(resolveServiceSelector("obsidian-headless")).toBeNull();
   });
 
   test("changed packages map to their services", () => {

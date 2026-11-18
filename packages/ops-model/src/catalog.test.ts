@@ -263,9 +263,9 @@ describe("ServiceIndex", () => {
     );
     expect(index.byAnalyticsSite("resume")?.id).toBe("static-sites");
     expect(index.byId("Scout")?.id).toBe("scout-for-lol");
-    expect(index.byImage("obsidian-headless")?.id).toBe("tasknotes-server");
-    expect(index.byId("obsidian-headless")?.images).toEqual([]);
-    expect(index.byId("obsidian-headless")?.deploy).toEqual([]);
+    expect(index.byImage("tasknotes-server")?.id).toBe("tasknotes-server");
+    expect(index.byImage("obsidian-headless")).toBeUndefined();
+    expect(index.byId("obsidian-headless")).toBeUndefined();
   });
 
   test("delegates the active launcher service Application to Delivery", () => {

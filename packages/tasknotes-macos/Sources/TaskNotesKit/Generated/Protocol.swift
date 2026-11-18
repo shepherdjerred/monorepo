@@ -2,7 +2,7 @@
 
 import Foundation
 
-public struct CommandStatus: Codable {
+public struct CommandStatus: Codable, Sendable, Equatable, Hashable {
     public let status: String
 
     public init(status: String) {
@@ -10,7 +10,7 @@ public struct CommandStatus: Codable {
     }
 }
 
-public struct Filter: Codable {
+public struct Filter: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let id: String
     public let user_id: String
     public let name: String
@@ -35,7 +35,54 @@ public struct Filter: Codable {
     }
 }
 
-public struct Label: Codable {
+public struct FilterAddArgs: Codable, Sendable, Equatable, Hashable {
+    public let name: String
+    public let query: String
+    public let color: String?
+    public let item_order: Double?
+    public let is_favorite: Bool?
+
+    public init(
+        name: String, query: String, color: String?, item_order: Double?, is_favorite: Bool?
+    ) {
+        self.name = name
+        self.query = query
+        self.color = color
+        self.item_order = item_order
+        self.is_favorite = is_favorite
+    }
+}
+
+public struct FilterDeleteArgs: Codable, Sendable, Equatable, Hashable {
+    public let id: String
+
+    public init(id: String) {
+        self.id = id
+    }
+}
+
+public struct FilterUpdateArgs: Codable, Sendable, Equatable, Hashable {
+    public let id: String
+    public let name: String?
+    public let query: String?
+    public let color: String?
+    public let item_order: Double?
+    public let is_favorite: Bool?
+
+    public init(
+        id: String, name: String?, query: String?, color: String?, item_order: Double?,
+        is_favorite: Bool?
+    ) {
+        self.id = id
+        self.name = name
+        self.query = query
+        self.color = color
+        self.item_order = item_order
+        self.is_favorite = is_favorite
+    }
+}
+
+public struct Label: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let id: String
     public let user_id: String
     public let name: String
@@ -58,7 +105,7 @@ public struct Label: Codable {
     }
 }
 
-public struct LabelAddArgs: Codable {
+public struct LabelAddArgs: Codable, Sendable, Equatable, Hashable {
     public let name: String
     public let color: String?
     public let item_order: Double?
@@ -72,7 +119,7 @@ public struct LabelAddArgs: Codable {
     }
 }
 
-public struct LabelDeleteArgs: Codable {
+public struct LabelDeleteArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
 
     public init(id: String) {
@@ -80,7 +127,7 @@ public struct LabelDeleteArgs: Codable {
     }
 }
 
-public struct LabelUpdateArgs: Codable {
+public struct LabelUpdateArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
     public let name: String?
     public let color: String?
@@ -97,7 +144,7 @@ public struct LabelUpdateArgs: Codable {
     }
 }
 
-public struct Project: Codable {
+public struct Project: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let id: String
     public let user_id: String
     public let name: String
@@ -131,7 +178,7 @@ public struct Project: Codable {
     }
 }
 
-public struct ProjectAddArgs: Codable {
+public struct ProjectAddArgs: Codable, Sendable, Equatable, Hashable {
     public let name: String
     public let color: String?
     public let parent_id: String?
@@ -149,7 +196,7 @@ public struct ProjectAddArgs: Codable {
     }
 }
 
-public struct ProjectDeleteArgs: Codable {
+public struct ProjectDeleteArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
 
     public init(id: String) {
@@ -157,7 +204,7 @@ public struct ProjectDeleteArgs: Codable {
     }
 }
 
-public struct ProjectUpdateArgs: Codable {
+public struct ProjectUpdateArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
     public let name: String?
     public let color: String?
@@ -180,7 +227,7 @@ public struct ProjectUpdateArgs: Codable {
     }
 }
 
-public enum SyncCommand: Codable {
+public enum SyncCommand: Codable, Sendable, Equatable, Hashable {
     case taskAdd(TaskAddArgs)
     case taskUpdate(TaskUpdateArgs)
     case taskDelete(TaskDeleteArgs)
@@ -196,6 +243,12 @@ public enum SyncCommand: Codable {
     case labelAdd(LabelAddArgs)
     case labelUpdate(LabelUpdateArgs)
     case labelDelete(LabelDeleteArgs)
+    case reminderAdd(ReminderAddArgs)
+    case reminderUpdate(ReminderUpdateArgs)
+    case reminderDelete(ReminderDeleteArgs)
+    case filterAdd(FilterAddArgs)
+    case filterUpdate(FilterUpdateArgs)
+    case filterDelete(FilterDeleteArgs)
 
     enum CodingKeys: String, CodingKey, Codable {
         case taskAdd = "TaskAdd"
@@ -213,6 +266,12 @@ public enum SyncCommand: Codable {
         case labelAdd = "LabelAdd"
         case labelUpdate = "LabelUpdate"
         case labelDelete = "LabelDelete"
+        case reminderAdd = "ReminderAdd"
+        case reminderUpdate = "ReminderUpdate"
+        case reminderDelete = "ReminderDelete"
+        case filterAdd = "FilterAdd"
+        case filterUpdate = "FilterUpdate"
+        case filterDelete = "FilterDelete"
     }
 
     private enum ContainerCodingKeys: String, CodingKey {
@@ -299,6 +358,36 @@ public enum SyncCommand: Codable {
                     self = .labelDelete(content)
                     return
                 }
+            case .reminderAdd:
+                if let content = try? container.decode(ReminderAddArgs.self, forKey: .args) {
+                    self = .reminderAdd(content)
+                    return
+                }
+            case .reminderUpdate:
+                if let content = try? container.decode(ReminderUpdateArgs.self, forKey: .args) {
+                    self = .reminderUpdate(content)
+                    return
+                }
+            case .reminderDelete:
+                if let content = try? container.decode(ReminderDeleteArgs.self, forKey: .args) {
+                    self = .reminderDelete(content)
+                    return
+                }
+            case .filterAdd:
+                if let content = try? container.decode(FilterAddArgs.self, forKey: .args) {
+                    self = .filterAdd(content)
+                    return
+                }
+            case .filterUpdate:
+                if let content = try? container.decode(FilterUpdateArgs.self, forKey: .args) {
+                    self = .filterUpdate(content)
+                    return
+                }
+            case .filterDelete:
+                if let content = try? container.decode(FilterDeleteArgs.self, forKey: .args) {
+                    self = .filterDelete(content)
+                    return
+                }
             }
         }
         throw DecodingError.typeMismatch(
@@ -355,11 +444,29 @@ public enum SyncCommand: Codable {
         case .labelDelete(let content):
             try container.encode(CodingKeys.labelDelete, forKey: .type)
             try container.encode(content, forKey: .args)
+        case .reminderAdd(let content):
+            try container.encode(CodingKeys.reminderAdd, forKey: .type)
+            try container.encode(content, forKey: .args)
+        case .reminderUpdate(let content):
+            try container.encode(CodingKeys.reminderUpdate, forKey: .type)
+            try container.encode(content, forKey: .args)
+        case .reminderDelete(let content):
+            try container.encode(CodingKeys.reminderDelete, forKey: .type)
+            try container.encode(content, forKey: .args)
+        case .filterAdd(let content):
+            try container.encode(CodingKeys.filterAdd, forKey: .type)
+            try container.encode(content, forKey: .args)
+        case .filterUpdate(let content):
+            try container.encode(CodingKeys.filterUpdate, forKey: .type)
+            try container.encode(content, forKey: .args)
+        case .filterDelete(let content):
+            try container.encode(CodingKeys.filterDelete, forKey: .type)
+            try container.encode(content, forKey: .args)
         }
     }
 }
 
-public struct QueuedCommand: Codable {
+public struct QueuedCommand: Codable, Sendable, Equatable, Hashable {
     public let uuid: String
     public let temp_id: String?
     public let command: SyncCommand
@@ -371,7 +478,7 @@ public struct QueuedCommand: Codable {
     }
 }
 
-public struct Reminder: Codable {
+public struct Reminder: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let id: String
     public let task_id: String
     public let reminder_type: String
@@ -379,10 +486,11 @@ public struct Reminder: Codable {
     public let due_datetime: String?
     public let is_notified: Bool
     public let is_deleted: Bool
+    public let updated_at: String
 
     public init(
         id: String, task_id: String, reminder_type: String, minute_offset: Int32?,
-        due_datetime: String?, is_notified: Bool, is_deleted: Bool
+        due_datetime: String?, is_notified: Bool, is_deleted: Bool, updated_at: String
     ) {
         self.id = id
         self.task_id = task_id
@@ -391,10 +499,54 @@ public struct Reminder: Codable {
         self.due_datetime = due_datetime
         self.is_notified = is_notified
         self.is_deleted = is_deleted
+        self.updated_at = updated_at
     }
 }
 
-public struct Section: Codable {
+public struct ReminderAddArgs: Codable, Sendable, Equatable, Hashable {
+    public let task_id: String
+    public let reminder_type: String
+    public let minute_offset: Int32?
+    public let due_datetime: String?
+
+    public init(
+        task_id: String, reminder_type: String, minute_offset: Int32?, due_datetime: String?
+    ) {
+        self.task_id = task_id
+        self.reminder_type = reminder_type
+        self.minute_offset = minute_offset
+        self.due_datetime = due_datetime
+    }
+}
+
+public struct ReminderDeleteArgs: Codable, Sendable, Equatable, Hashable {
+    public let id: String
+
+    public init(id: String) {
+        self.id = id
+    }
+}
+
+public struct ReminderUpdateArgs: Codable, Sendable, Equatable, Hashable {
+    public let id: String
+    public let reminder_type: String?
+    public let minute_offset: Int32?
+    public let due_datetime: String?
+    public let is_notified: Bool?
+
+    public init(
+        id: String, reminder_type: String?, minute_offset: Int32?, due_datetime: String?,
+        is_notified: Bool?
+    ) {
+        self.id = id
+        self.reminder_type = reminder_type
+        self.minute_offset = minute_offset
+        self.due_datetime = due_datetime
+        self.is_notified = is_notified
+    }
+}
+
+public struct Section: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let id: String
     public let project_id: String
     public let user_id: String
@@ -421,7 +573,7 @@ public struct Section: Codable {
     }
 }
 
-public struct SectionAddArgs: Codable {
+public struct SectionAddArgs: Codable, Sendable, Equatable, Hashable {
     public let project_id: String
     public let name: String
     public let section_order: Double?
@@ -433,7 +585,7 @@ public struct SectionAddArgs: Codable {
     }
 }
 
-public struct SectionDeleteArgs: Codable {
+public struct SectionDeleteArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
 
     public init(id: String) {
@@ -441,7 +593,7 @@ public struct SectionDeleteArgs: Codable {
     }
 }
 
-public struct SectionUpdateArgs: Codable {
+public struct SectionUpdateArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
     public let name: String?
     public let section_order: Double?
@@ -455,7 +607,7 @@ public struct SectionUpdateArgs: Codable {
     }
 }
 
-public struct SyncRequest: Codable {
+public struct SyncRequest: Codable, Sendable, Equatable, Hashable {
     public let sync_token: String?
     public let resource_types: [String]?
     public let commands: [QueuedCommand]
@@ -467,14 +619,14 @@ public struct SyncRequest: Codable {
     }
 }
 
-public enum Priority: String, Codable {
+public enum Priority: String, Codable, Sendable, Equatable, Hashable {
     case p1 = "P1"
     case p2 = "P2"
     case p3 = "P3"
     case p4 = "P4"
 }
 
-public struct Task: Codable {
+public struct Task: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let id: String
     public let user_id: String
     public let project_id: String
@@ -490,6 +642,7 @@ public struct Task: Codable {
     public let due_string: String?
     public let is_recurring: Bool
     public let recurrence_rule: String?
+    public let label_ids: [String]
     public let completed: Bool
     public let completed_at: String?
     public let is_deleted: Bool
@@ -500,8 +653,8 @@ public struct Task: Codable {
         id: String, user_id: String, project_id: String, section_id: String?, parent_id: String?,
         title: String, description: String, priority: Priority, child_order: Double,
         due_date: String?, due_datetime: String?, due_timezone: String?, due_string: String?,
-        is_recurring: Bool, recurrence_rule: String?, completed: Bool, completed_at: String?,
-        is_deleted: Bool, created_at: String, updated_at: String
+        is_recurring: Bool, recurrence_rule: String?, label_ids: [String], completed: Bool,
+        completed_at: String?, is_deleted: Bool, created_at: String, updated_at: String
     ) {
         self.id = id
         self.user_id = user_id
@@ -518,6 +671,7 @@ public struct Task: Codable {
         self.due_string = due_string
         self.is_recurring = is_recurring
         self.recurrence_rule = recurrence_rule
+        self.label_ids = label_ids
         self.completed = completed
         self.completed_at = completed_at
         self.is_deleted = is_deleted
@@ -526,7 +680,7 @@ public struct Task: Codable {
     }
 }
 
-public struct SyncResponse: Codable {
+public struct SyncResponse: Codable, Sendable, Equatable, Hashable {
     public let sync_token: String
     public let full_sync: Bool
     public let temp_id_mapping: [String: String]
@@ -556,7 +710,7 @@ public struct SyncResponse: Codable {
     }
 }
 
-public struct TaskAddArgs: Codable {
+public struct TaskAddArgs: Codable, Sendable, Equatable, Hashable {
     public let title: String
     public let project_id: String
     public let section_id: String?
@@ -569,11 +723,13 @@ public struct TaskAddArgs: Codable {
     public let due_timezone: String?
     public let due_string: String?
     public let recurrence_rule: String?
+    public let label_ids: [String]?
 
     public init(
         title: String, project_id: String, section_id: String?, parent_id: String?,
         description: String?, priority: Priority?, child_order: Double?, due_date: String?,
-        due_datetime: String?, due_timezone: String?, due_string: String?, recurrence_rule: String?
+        due_datetime: String?, due_timezone: String?, due_string: String?, recurrence_rule: String?,
+        label_ids: [String]?
     ) {
         self.title = title
         self.project_id = project_id
@@ -587,10 +743,11 @@ public struct TaskAddArgs: Codable {
         self.due_timezone = due_timezone
         self.due_string = due_string
         self.recurrence_rule = recurrence_rule
+        self.label_ids = label_ids
     }
 }
 
-public struct TaskCompleteArgs: Codable {
+public struct TaskCompleteArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
     public let completed_at: String?
 
@@ -600,7 +757,7 @@ public struct TaskCompleteArgs: Codable {
     }
 }
 
-public struct TaskDeleteArgs: Codable {
+public struct TaskDeleteArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
 
     public init(id: String) {
@@ -608,7 +765,7 @@ public struct TaskDeleteArgs: Codable {
     }
 }
 
-public struct TaskReorderArgs: Codable {
+public struct TaskReorderArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
     public let child_order: Double
 
@@ -618,7 +775,7 @@ public struct TaskReorderArgs: Codable {
     }
 }
 
-public struct TaskUncompleteArgs: Codable {
+public struct TaskUncompleteArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
 
     public init(id: String) {
@@ -626,7 +783,7 @@ public struct TaskUncompleteArgs: Codable {
     }
 }
 
-public struct TaskUpdateArgs: Codable {
+public struct TaskUpdateArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
     public let title: String?
     public let description: String?
@@ -640,11 +797,13 @@ public struct TaskUpdateArgs: Codable {
     public let due_timezone: String?
     public let due_string: String?
     public let recurrence_rule: String?
+    public let label_ids: [String]?
 
     public init(
         id: String, title: String?, description: String?, priority: Priority?, project_id: String?,
         section_id: String?, parent_id: String?, child_order: Double?, due_date: String?,
-        due_datetime: String?, due_timezone: String?, due_string: String?, recurrence_rule: String?
+        due_datetime: String?, due_timezone: String?, due_string: String?, recurrence_rule: String?,
+        label_ids: [String]?
     ) {
         self.id = id
         self.title = title
@@ -659,5 +818,6 @@ public struct TaskUpdateArgs: Codable {
         self.due_timezone = due_timezone
         self.due_string = due_string
         self.recurrence_rule = recurrence_rule
+        self.label_ids = label_ids
     }
 }

@@ -36,10 +36,13 @@ model Project {
   isFavorite  Boolean   @default(false)
   isArchived  Boolean   @default(false)
   isDeleted   Boolean   @default(false)
+  syncSeq     BigInt    @default(0)
   tasks       Task[]
   sections    Section[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([userId, syncSeq])
 }
 
 model Section {
@@ -52,9 +55,12 @@ model Section {
   sectionOrder Float    @default(0)
   isArchived   Boolean  @default(false)
   isDeleted    Boolean  @default(false)
+  syncSeq      BigInt   @default(0)
   tasks        Task[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([userId, syncSeq])
 }
 
 model Task {
@@ -79,10 +85,13 @@ model Task {
   completed      Boolean     @default(false)
   completedAt    DateTime?
   isDeleted      Boolean     @default(false)
+  syncSeq        BigInt      @default(0)
   labels         TaskLabel[]
   reminders      Reminder[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+
+  @@index([userId, syncSeq])
 }
 
 model Label {
@@ -94,9 +103,12 @@ model Label {
   itemOrder  Float       @default(0)
   isFavorite Boolean     @default(false)
   isDeleted  Boolean     @default(false)
+  syncSeq    BigInt      @default(0)
   tasks      TaskLabel[]
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+
+  @@index([userId, syncSeq])
 }
 
 model TaskLabel {
@@ -117,7 +129,11 @@ model Reminder {
   dueDatetime  DateTime? @db.Timestamptz
   isNotified   Boolean   @default(false)
   isDeleted    Boolean   @default(false)
+  syncSeq      BigInt    @default(0)
   createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([taskId, syncSeq])
 }
 
 model Filter {
@@ -130,8 +146,11 @@ model Filter {
   itemOrder  Float    @default(0)
   isFavorite Boolean  @default(false)
   isDeleted  Boolean  @default(false)
+  syncSeq    BigInt   @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([userId, syncSeq])
 }
 
 model ProcessedCommand {
@@ -139,5 +158,6 @@ model ProcessedCommand {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   status    String
+  resultId  String?
   createdAt DateTime @default(now())
 }

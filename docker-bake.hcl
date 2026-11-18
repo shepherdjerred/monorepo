@@ -272,7 +272,7 @@ target "storm-forum" {
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────
 group "infra" {
-  targets = ["caddy-s3proxy", "glitter-boys-launcher", "obsidian-headless", "redlib", "the-storm-server", "velero-plugin", "zfs-driver"]
+  targets = ["caddy-s3proxy", "glitter-boys-launcher", "redlib", "the-storm-server", "velero-plugin", "zfs-driver"]
 }
 
 # The launcher telemetry service: a Rust workspace built from its own package.
@@ -307,14 +307,6 @@ target "caddy-s3proxy" {
   secret     = CADDYFILE_SMOKE_PATH != "" ? ["id=caddyfile,src=${CADDYFILE_SMOKE_PATH}"] : []
   cache-from = cachefrom("caddy-s3proxy")
   cache-to   = cacheto("caddy-s3proxy")
-}
-
-target "obsidian-headless" {
-  context    = "packages/homelab/images/obsidian-headless"
-  target     = "image"
-  tags       = imagetags("obsidian-headless")
-  cache-from = cachefrom("obsidian-headless")
-  cache-to   = cacheto("obsidian-headless")
 }
 
 target "redlib" {

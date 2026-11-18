@@ -1,12 +1,29 @@
-import {
-  type Filter,
-  type Label,
+import type {
+  Filter,
+  Label,
   Priority,
-  type Project,
-  type Reminder,
-  type Section,
-  type Task,
+  Project,
+  Reminder,
+  Section,
+  Task,
 } from "../protocol/generated.ts";
+
+export class EntityNotFoundError extends Error {
+  readonly entity: string;
+  readonly entityId: string;
+
+  constructor(entity: string, entityId: string) {
+    super(`${entity} not found: ${entityId}`);
+    this.name = "EntityNotFoundError";
+    this.entity = entity;
+    this.entityId = entityId;
+  }
+}
+
+export type ProcessedCommandRecord = {
+  status: string;
+  resultId: string | null;
+};
 
 export type TaskScheduleOptions = {
   childOrder?: number | undefined;
@@ -18,6 +35,7 @@ export type TaskScheduleOptions = {
   recurrenceRule?: string | null | undefined;
   completed?: boolean | undefined;
   completedAt?: Date | null | undefined;
+  labelIds?: string[] | undefined;
 };
 
 export type CreateTaskInput = TaskScheduleOptions & {
@@ -95,306 +113,146 @@ export type UpdateLabelInput = {
   isDeleted?: boolean | undefined;
 };
 
-export type ListTasksFilter = {
+export type CreateReminderInput = {
+  id?: string | undefined;
   userId: string;
+  taskId: string;
+  reminderType: string;
+  minuteOffset?: number | null | undefined;
+  dueDatetime?: Date | null | undefined;
+  isNotified?: boolean | undefined;
+};
+
+export type UpdateReminderInput = {
+  reminderType?: string | undefined;
+  minuteOffset?: number | null | undefined;
+  dueDatetime?: Date | null | undefined;
+  isNotified?: boolean | undefined;
+  isDeleted?: boolean | undefined;
+};
+
+export type CreateFilterInput = {
+  id?: string | undefined;
+  userId: string;
+  name: string;
+  query: string;
+  color?: string | undefined;
+  itemOrder?: number | undefined;
+  isFavorite?: boolean | undefined;
+};
+
+export type UpdateFilterInput = {
+  name?: string | undefined;
+  query?: string | undefined;
+  color?: string | undefined;
+  itemOrder?: number | undefined;
+  isFavorite?: boolean | undefined;
+  isDeleted?: boolean | undefined;
+};
+
+export type BaseListFilter = {
+  userId: string;
+  since?: Date | undefined;
+  sinceSeq?: bigint | undefined;
+  includeDeleted?: boolean | undefined;
+};
+
+export type ListTasksFilter = BaseListFilter & {
   projectId?: string | undefined;
-  since?: Date | undefined;
-  includeDeleted?: boolean | undefined;
 };
 
-export type ListProjectsFilter = {
-  userId: string;
-  since?: Date | undefined;
-  includeDeleted?: boolean | undefined;
-};
+export type ListProjectsFilter = BaseListFilter;
 
-export type ListSectionsFilter = {
-  userId: string;
+export type ListSectionsFilter = BaseListFilter & {
   projectId?: string | undefined;
-  since?: Date | undefined;
-  includeDeleted?: boolean | undefined;
 };
 
-export type ListLabelsFilter = {
-  userId: string;
-  since?: Date | undefined;
-  includeDeleted?: boolean | undefined;
+export type ListLabelsFilter = BaseListFilter;
+
+export type ListRemindersFilter = BaseListFilter & {
+  taskId?: string | undefined;
 };
 
-export type ListRemindersFilter = {
-  userId: string;
-  since?: Date | undefined;
-  includeDeleted?: boolean | undefined;
-};
-
-export type ListFiltersFilter = {
-  userId: string;
-  since?: Date | undefined;
-  includeDeleted?: boolean | undefined;
-};
+export type ListFiltersFilter = BaseListFilter;
 
 export type FacetStore = {
   readonly getNow: () => Date;
   readonly transaction: <T>(fn: (tx: FacetStore) => Promise<T>) => Promise<T>;
+  readonly runInSavepoint: <T>(
+    name: string,
+    fn: () => Promise<T>,
+  ) => Promise<T>;
 
   readonly getOrCreateUser: (
     userId: string,
   ) => Promise<{ id: string; email: string; name: string }>;
+  readonly getSyncSequence: (userId: string) => Promise<bigint>;
 
-  readonly isCommandProcessed: (uuid: string) => Promise<boolean>;
+  readonly getProcessedCommand: (
+    uuid: string,
+  ) => Promise<ProcessedCommandRecord | null>;
   readonly recordProcessedCommand: (
     uuid: string,
     userId: string,
     status: string,
+    resultId?: string | null,
   ) => Promise<void>;
 
-  // Tasks
+  readonly countActiveTasks: () => Promise<number>;
+
   readonly createTask: (data: CreateTaskInput) => Promise<Task>;
   readonly updateTask: (
     id: string,
+    userId: string,
     data: UpdateTaskInput,
   ) => Promise<Task | null>;
-  readonly deleteTask: (id: string) => Promise<boolean>;
+  readonly deleteTask: (id: string, userId: string) => Promise<boolean>;
   readonly getTask: (id: string, userId?: string) => Promise<Task | null>;
   readonly listTasks: (filter: ListTasksFilter) => Promise<Task[]>;
 
-  // Projects
   readonly createProject: (data: CreateProjectInput) => Promise<Project>;
   readonly updateProject: (
     id: string,
+    userId: string,
     data: UpdateProjectInput,
   ) => Promise<Project | null>;
-  readonly deleteProject: (id: string) => Promise<boolean>;
+  readonly deleteProject: (id: string, userId: string) => Promise<boolean>;
   readonly getProject: (id: string, userId?: string) => Promise<Project | null>;
   readonly listProjects: (filter: ListProjectsFilter) => Promise<Project[]>;
 
-  // Sections
   readonly createSection: (data: CreateSectionInput) => Promise<Section>;
   readonly updateSection: (
     id: string,
+    userId: string,
     data: UpdateSectionInput,
   ) => Promise<Section | null>;
-  readonly deleteSection: (id: string) => Promise<boolean>;
+  readonly deleteSection: (id: string, userId: string) => Promise<boolean>;
   readonly listSections: (filter: ListSectionsFilter) => Promise<Section[]>;
 
-  // Labels
   readonly createLabel: (data: CreateLabelInput) => Promise<Label>;
   readonly updateLabel: (
     id: string,
+    userId: string,
     data: UpdateLabelInput,
   ) => Promise<Label | null>;
-  readonly deleteLabel: (id: string) => Promise<boolean>;
+  readonly deleteLabel: (id: string, userId: string) => Promise<boolean>;
   readonly listLabels: (filter: ListLabelsFilter) => Promise<Label[]>;
 
-  // Reminders
+  readonly createReminder: (data: CreateReminderInput) => Promise<Reminder>;
+  readonly updateReminder: (
+    id: string,
+    userId: string,
+    data: UpdateReminderInput,
+  ) => Promise<Reminder | null>;
+  readonly deleteReminder: (id: string, userId: string) => Promise<boolean>;
   readonly listReminders: (filter: ListRemindersFilter) => Promise<Reminder[]>;
 
-  // Filters
+  readonly createFilter: (data: CreateFilterInput) => Promise<Filter>;
+  readonly updateFilter: (
+    id: string,
+    userId: string,
+    data: UpdateFilterInput,
+  ) => Promise<Filter | null>;
+  readonly deleteFilter: (id: string, userId: string) => Promise<boolean>;
   readonly listFilters: (filter: ListFiltersFilter) => Promise<Filter[]>;
 };
-
-export function parsePriority(priority: string | undefined): Priority {
-  if (priority === Priority.P1) return Priority.P1;
-  if (priority === Priority.P2) return Priority.P2;
-  return priority === Priority.P3 ? Priority.P3 : Priority.P4;
-}
-
-function applyTaskDates(
-  result: Task,
-  p: {
-    dueDate: Date | null;
-    dueDatetime: Date | null;
-    completedAt: Date | null;
-  },
-): void {
-  if (p.dueDate !== null) {
-    const formatted = p.dueDate.toISOString().split("T")[0];
-    if (formatted !== undefined && formatted !== "")
-      result.due_date = formatted;
-  }
-  if (p.dueDatetime !== null) result.due_datetime = p.dueDatetime.toISOString();
-  if (p.completedAt !== null) result.completed_at = p.completedAt.toISOString();
-}
-
-function applyTaskStrings(
-  result: Task,
-  p: {
-    sectionId: string | null;
-    parentId: string | null;
-    dueTimezone: string | null;
-    dueString: string | null;
-    recurrenceRule: string | null;
-  },
-): void {
-  if (p.sectionId !== null && p.sectionId !== "")
-    result.section_id = p.sectionId;
-  if (p.parentId !== null && p.parentId !== "") result.parent_id = p.parentId;
-  if (p.dueTimezone !== null && p.dueTimezone !== "")
-    result.due_timezone = p.dueTimezone;
-  if (p.dueString !== null && p.dueString !== "")
-    result.due_string = p.dueString;
-  if (p.recurrenceRule !== null && p.recurrenceRule !== "")
-    result.recurrence_rule = p.recurrenceRule;
-}
-
-export function toProtocolTask(p: {
-  id: string;
-  userId: string;
-  projectId: string;
-  sectionId: string | null;
-  parentId: string | null;
-  title: string;
-  description: string;
-  priority: string;
-  childOrder: number;
-  dueDate: Date | null;
-  dueDatetime: Date | null;
-  dueTimezone: string | null;
-  dueString: string | null;
-  isRecurring: boolean;
-  recurrenceRule: string | null;
-  completed: boolean;
-  completedAt: Date | null;
-  isDeleted: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}): Task {
-  const result: Task = {
-    id: p.id,
-    user_id: p.userId,
-    project_id: p.projectId,
-    title: p.title,
-    description: p.description,
-    priority: parsePriority(p.priority),
-    child_order: p.childOrder,
-    is_recurring: p.isRecurring,
-    completed: p.completed,
-    is_deleted: p.isDeleted,
-    created_at: p.createdAt.toISOString(),
-    updated_at: p.updatedAt.toISOString(),
-  };
-
-  applyTaskStrings(result, p);
-  applyTaskDates(result, p);
-  return result;
-}
-
-export function toProtocolProject(p: {
-  id: string;
-  userId: string;
-  name: string;
-  color: string;
-  parentId: string | null;
-  childOrder: number;
-  isInbox: boolean;
-  isFavorite: boolean;
-  isArchived: boolean;
-  isDeleted: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}): Project {
-  const result: Project = {
-    id: p.id,
-    user_id: p.userId,
-    name: p.name,
-    color: p.color,
-    child_order: p.childOrder,
-    is_inbox: p.isInbox,
-    is_favorite: p.isFavorite,
-    is_archived: p.isArchived,
-    is_deleted: p.isDeleted,
-    created_at: p.createdAt.toISOString(),
-    updated_at: p.updatedAt.toISOString(),
-  };
-
-  if (p.parentId !== null && p.parentId !== "") result.parent_id = p.parentId;
-
-  return result;
-}
-
-export function toProtocolSection(p: {
-  id: string;
-  projectId: string;
-  userId: string;
-  name: string;
-  sectionOrder: number;
-  isArchived: boolean;
-  isDeleted: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}): Section {
-  return {
-    id: p.id,
-    project_id: p.projectId,
-    user_id: p.userId,
-    name: p.name,
-    section_order: p.sectionOrder,
-    is_archived: p.isArchived,
-    is_deleted: p.isDeleted,
-    created_at: p.createdAt.toISOString(),
-    updated_at: p.updatedAt.toISOString(),
-  };
-}
-
-export function toProtocolLabel(p: {
-  id: string;
-  userId: string;
-  name: string;
-  color: string;
-  itemOrder: number;
-  isFavorite: boolean;
-  isDeleted: boolean;
-}): Label {
-  return {
-    id: p.id,
-    user_id: p.userId,
-    name: p.name,
-    color: p.color,
-    item_order: p.itemOrder,
-    is_favorite: p.isFavorite,
-    is_deleted: p.isDeleted,
-  };
-}
-
-export function toProtocolReminder(p: {
-  id: string;
-  taskId: string;
-  reminderType: string;
-  minuteOffset: number | null;
-  dueDatetime: Date | null;
-  isNotified: boolean;
-  isDeleted: boolean;
-}): Reminder {
-  const result: Reminder = {
-    id: p.id,
-    task_id: p.taskId,
-    reminder_type: p.reminderType,
-    is_notified: p.isNotified,
-    is_deleted: p.isDeleted,
-  };
-  if (p.minuteOffset !== null) result.minute_offset = p.minuteOffset;
-  if (p.dueDatetime !== null) result.due_datetime = p.dueDatetime.toISOString();
-  return result;
-}
-
-export function toProtocolFilter(p: {
-  id: string;
-  userId: string;
-  name: string;
-  query: string;
-  color: string;
-  itemOrder: number;
-  isFavorite: boolean;
-  isDeleted: boolean;
-}): Filter {
-  return {
-    id: p.id,
-    user_id: p.userId,
-    name: p.name,
-    query: p.query,
-    color: p.color,
-    item_order: p.itemOrder,
-    is_favorite: p.isFavorite,
-    is_deleted: p.isDeleted,
-  };
-}

@@ -9,16 +9,40 @@ import { z } from "zod/v4";
 import { runCommand } from "#activities/data-dragon/data-dragon-shell.ts";
 import { ReportStateV1Schema } from "#activities/reports/report-delivery.ts";
 
-const EngineStatusSchema = z.object({
-  success: z.literal(true),
-  data: z.object({
-    configSource: z.string(),
-    tasks: z.number().int().nonnegative(),
-    skippedFiles: z.array(
-      z.object({ path: z.string().min(1), reason: z.string().min(1) }),
-    ),
-  }),
+const SkippedFileSchema = z.object({
+  path: z.string().min(1),
+  reason: z.string().min(1),
 });
+const LegacyEngineStatusDataSchema = z.object({
+  configSource: z.string(),
+  tasks: z.number().int().nonnegative(),
+  skippedFiles: z.array(SkippedFileSchema),
+});
+const PostgresEngineStatusDataSchema = z
+  .object({
+    status: z.literal("ok"),
+    storage: z.literal("postgres"),
+    tasks: z.number().int().nonnegative(),
+    skippedFiles: z.array(SkippedFileSchema).default([]),
+  })
+  .transform((status) => ({
+    configSource: status.storage,
+    tasks: status.tasks,
+    skippedFiles: status.skippedFiles,
+  }));
+const EngineStatusPayloadSchema = z.union([
+  LegacyEngineStatusDataSchema,
+  PostgresEngineStatusDataSchema,
+]);
+const EngineStatusSchema = z.union([
+  z
+    .object({
+      success: z.literal(true),
+      data: EngineStatusPayloadSchema,
+    })
+    .transform((envelope) => envelope.data),
+  EngineStatusPayloadSchema,
+]);
 const PodListSchema = z.object({
   items: z.array(
     z.object({
@@ -48,9 +72,13 @@ const BaselineEvidenceSchema = z.object({
   tasks: z.number().int().nonnegative(),
 });
 
-type EngineStatus = z.infer<typeof EngineStatusSchema>["data"];
+type EngineStatus = z.output<typeof EngineStatusSchema>;
 type TasknotesBaseline = z.infer<typeof BaselineSchema>;
 type Pod = z.infer<typeof PodListSchema>["items"][number];
+
+export function parseEngineStatus(raw: string): EngineStatus {
+  return EngineStatusSchema.parse(JSON.parse(raw));
+}
 
 export type TasknotesCanaryResult = {
   observedAt: string;
@@ -241,7 +269,7 @@ export async function collectTasknotesCanary(): Promise<TasknotesCanaryResult> {
   ]);
   return {
     observedAt: new Date().toISOString(),
-    engine: EngineStatusSchema.parse(JSON.parse(engineRaw)).data,
+    engine: parseEngineStatus(engineRaw),
     pods: PodListSchema.parse(JSON.parse(podsRaw)).items,
     baseline: baseline.value,
     evidence: {

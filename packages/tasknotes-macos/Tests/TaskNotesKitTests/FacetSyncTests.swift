@@ -94,6 +94,7 @@ private func makeTask(
         due_string: nil,
         is_recurring: false,
         recurrence_rule: nil,
+        label_ids: [],
         completed: completed,
         completed_at: completed ? "2026-11-15T00:00:00Z" : nil,
         is_deleted: isDeleted,
@@ -354,7 +355,8 @@ struct FacetAPIClientDirectTests {
             due_datetime: nil,
             due_timezone: nil,
             due_string: nil,
-            recurrence_rule: nil
+            recurrence_rule: nil,
+            label_ids: nil
         )
         let task = try await client.createTask(args: args)
         #expect(task.id == "server-id")

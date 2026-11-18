@@ -79,9 +79,9 @@ export function createTasknotesDashboard() {
 
   builder.withPanel(
     createStatPanel({
-      title: "Vault Files",
-      query: `tasknotes_sync_files_total{namespace="tasknotes"}`,
-      legend: "files",
+      title: "PostgreSQL Ready Pods",
+      query: `kube_statefulset_status_replicas_ready{namespace="tasknotes", statefulset="tasknotes-postgresql"}`,
+      legend: "ready",
       gridPos: { x: 18, y: 1, w: 6, h: 4 },
     }),
   );
@@ -122,17 +122,12 @@ export function createTasknotesDashboard() {
 
   builder.withPanel(
     new timeseries.PanelBuilder()
-      .title("Inventory")
+      .title("Task Inventory")
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(`tasknotes_tasks_total{namespace="tasknotes"}`)
           .legendFormat("tasks"),
-      )
-      .withTarget(
-        new prometheus.DataqueryBuilder()
-          .expr(`tasknotes_sync_files_total{namespace="tasknotes"}`)
-          .legendFormat("vault files"),
       )
       .unit("short")
       .lineWidth(2)
@@ -189,19 +184,28 @@ export function createTasknotesDashboard() {
       .gridPos({ x: 12, y: 13, w: 12, h: 8 }),
   );
 
-  // Row 4: Sync & Infrastructure
-  builder.withRow(new dashboard.RowBuilder("Sync & Infrastructure"));
+  // Row 4: PostgreSQL & Infrastructure
+  builder.withRow(new dashboard.RowBuilder("PostgreSQL & Infrastructure"));
 
   builder.withPanel(
     new timeseries.PanelBuilder()
-      .title("Vault Files")
+      .title("PostgreSQL Storage Usage")
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`tasknotes_sync_files_total{namespace="tasknotes"}`)
-          .legendFormat("files"),
+          .expr(
+            `kubelet_volume_stats_used_bytes{namespace="tasknotes", persistentvolumeclaim=~"pgdata-tasknotes-postgresql-.*"}`,
+          )
+          .legendFormat("used"),
       )
-      .unit("short")
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `kubelet_volume_stats_capacity_bytes{namespace="tasknotes", persistentvolumeclaim=~"pgdata-tasknotes-postgresql-.*"}`,
+          )
+          .legendFormat("capacity"),
+      )
+      .unit("bytes")
       .lineWidth(2)
       .fillOpacity(10)
       .gridPos({ x: 0, y: 21, w: 12, h: 8 }),

@@ -17,6 +17,27 @@ export interface Filter {
   is_deleted: boolean;
 }
 
+export interface FilterAddArgs {
+  name: string;
+  query: string;
+  color?: string;
+  item_order?: number;
+  is_favorite?: boolean;
+}
+
+export interface FilterDeleteArgs {
+  id: string;
+}
+
+export interface FilterUpdateArgs {
+  id: string;
+  name?: string;
+  query?: string;
+  color?: string;
+  item_order?: number;
+  is_favorite?: boolean;
+}
+
 export interface Label {
   id: string;
   user_id: string;
@@ -98,7 +119,13 @@ export type SyncCommand =
   | { type: "SectionDelete"; args: SectionDeleteArgs }
   | { type: "LabelAdd"; args: LabelAddArgs }
   | { type: "LabelUpdate"; args: LabelUpdateArgs }
-  | { type: "LabelDelete"; args: LabelDeleteArgs };
+  | { type: "LabelDelete"; args: LabelDeleteArgs }
+  | { type: "ReminderAdd"; args: ReminderAddArgs }
+  | { type: "ReminderUpdate"; args: ReminderUpdateArgs }
+  | { type: "ReminderDelete"; args: ReminderDeleteArgs }
+  | { type: "FilterAdd"; args: FilterAddArgs }
+  | { type: "FilterUpdate"; args: FilterUpdateArgs }
+  | { type: "FilterDelete"; args: FilterDeleteArgs };
 
 export interface QueuedCommand {
   uuid: string;
@@ -114,6 +141,26 @@ export interface Reminder {
   due_datetime?: string;
   is_notified: boolean;
   is_deleted: boolean;
+  updated_at: string;
+}
+
+export interface ReminderAddArgs {
+  task_id: string;
+  reminder_type: string;
+  minute_offset?: number;
+  due_datetime?: string;
+}
+
+export interface ReminderDeleteArgs {
+  id: string;
+}
+
+export interface ReminderUpdateArgs {
+  id: string;
+  reminder_type?: string;
+  minute_offset?: number;
+  due_datetime?: string;
+  is_notified?: boolean;
 }
 
 export interface Section {
@@ -174,6 +221,7 @@ export interface Task {
   due_string?: string;
   is_recurring: boolean;
   recurrence_rule?: string;
+  label_ids: string[];
   completed: boolean;
   completed_at?: string;
   is_deleted: boolean;
@@ -207,6 +255,7 @@ export interface TaskAddArgs {
   due_timezone?: string;
   due_string?: string;
   recurrence_rule?: string;
+  label_ids?: string[];
 }
 
 export interface TaskCompleteArgs {
@@ -241,4 +290,5 @@ export interface TaskUpdateArgs {
   due_timezone?: string;
   due_string?: string;
   recurrence_rule?: string;
+  label_ids?: string[];
 }
