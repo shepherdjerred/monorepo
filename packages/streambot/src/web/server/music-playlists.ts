@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { PlaylistMutationSchema } from "@shepherdjerred/streambot/music/playlist-contracts.ts";
+import {
+  disambiguatePlaylistName,
+  importExternalPlaylist,
+  playlistImportNotice,
+} from "@shepherdjerred/streambot/music/playlist-import.ts";
 import type {
   Playlist,
   PlaylistViewer,
@@ -182,6 +187,91 @@ export class WebPlaylists {
       item.source = replacement[0];
     }
   }
+  private async importPlaylist(
+    input: z.infer<typeof PlaylistMutationSchema>,
+    requestSignal: AbortSignal,
+    session: WebSession,
+    viewer: PlaylistViewer,
+  ) {
+    const url = requestInput(z.string().trim().min(1).max(500), input.url);
+    const store = this.store();
+    const existingTarget =
+      input.id === undefined
+        ? undefined
+        : {
+            id: requestInput(z.string().min(1).max(100), input.id),
+            revision: requestInput(
+              z.number().int().nonnegative(),
+              input.revision,
+            ),
+          };
+    if (existingTarget !== undefined) {
+      const existing = store.read(existingTarget.id, viewer);
+      if (existing.user_id !== viewer.userId) {
+        throw new MusicError(
+          403,
+          "playlist_owner",
+          "Only the owner can edit this playlist. Make your own copy to change it.",
+        );
+      }
+      if (existing.revision !== existingTarget.revision) {
+        throw new MusicError(
+          409,
+          "playlist_changed",
+          "This playlist changed. Refresh it before editing.",
+        );
+      }
+    }
+    const signal = AbortSignal.any([
+      requestSignal,
+      AbortSignal.timeout(45_000),
+    ]);
+    const expandPlaylistWithMetadata =
+      this.music.playback.deps.expandPlaylistWithMetadata;
+    const imported = await importExternalPlaylist(
+      url,
+      {
+        spotify: {
+          load: (target, abortSignal) =>
+            this.music.service().spotify.load(target, abortSignal),
+        },
+        ...(expandPlaylistWithMetadata === undefined
+          ? {}
+          : { expandPlaylistWithMetadata }),
+        requireSpotifyAllowed: () =>
+          this.music.require(session, input.guildId, "spotify"),
+      },
+      signal,
+    );
+    const playlist =
+      existingTarget === undefined
+        ? store.create(
+            viewer,
+            input.name?.trim() ??
+              disambiguatePlaylistName(
+                store.list(viewer, "mine").map((item) => item.name),
+                imported.title,
+              ),
+            imported.items,
+          )
+        : store.edit(
+            existingTarget.id,
+            viewer,
+            existingTarget.revision,
+            (value) => {
+              value.items.push(
+                ...imported.items.map((item) => ({
+                  ...item,
+                  id: crypto.randomUUID(),
+                })),
+              );
+            },
+          );
+    return Response.json({
+      ...this.present(playlist, session, input.guildId),
+      notice: playlistImportNotice(imported),
+    });
+  }
   async handle(request: Request, url: URL, session: WebSession) {
     if (request.method === "GET") return await this.browse(url, session);
     if (request.method !== "POST")
@@ -201,6 +291,8 @@ export class WebPlaylists {
         ),
       );
     if (input.action === "save") return await this.save(input, session, viewer);
+    if (input.action === "import")
+      return await this.importPlaylist(input, request.signal, session, viewer);
     const id = requestInput(z.string().min(1).max(100), input.id);
     if (input.action === "copy") {
       const original = this.store().read(id, viewer);
@@ -288,6 +380,7 @@ export class WebPlaylists {
         case "copy":
         case "delete":
         case "save":
+        case "import":
           throw new Error("Unexpected playlist operation");
       }
     });

@@ -54,15 +54,43 @@ test.each(["beta", "prod"])(
   },
 );
 
-const streambotMusicAndEsportsFlags = [
+const streambotMusicFlags = [
   "streambot-music-catalog-enabled",
   "streambot-spotify-links-enabled",
   "streambot-playlists-enabled",
+] as const;
+
+test.each(streambotMusicFlags)(
+  "enables Streambot music and playlists globally in beta and prod for %s",
+  (key) => {
+    for (const environment of ["beta", "prod"]) {
+      const flag = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        "streambot",
+      ).find((candidate) => candidate.key === key);
+      if (flag?.type !== "boolean")
+        throw new Error(`${key} missing in ${environment}`);
+      expect(flag).toMatchObject({
+        type: "boolean",
+        default: true,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+      expect(classifyManagedBoolean(flag)).toBe("on");
+      expect(managedBooleanDefault(key, environment)).toBe(true);
+      expect(flag.defaultOffExceptions ?? []).toEqual([]);
+    }
+  },
+);
+
+const streambotEsportsFlags = [
   "streambot-lol-esports-enabled",
   "streambot-lol-autoplay-enabled",
 ];
 
-test.each(streambotMusicAndEsportsFlags)(
+test.each(streambotEsportsFlags)(
   "keeps both beta Streambot guilds and global prod enablement for %s",
   (key) => {
     const beta = materializeManagedNamespaceEnvironment(

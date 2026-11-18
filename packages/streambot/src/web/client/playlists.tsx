@@ -23,6 +23,7 @@ import {
 export function Playlists(props: MediaListProps) {
   const route = useRouteState();
   const id = route.params.get("playlist") ?? "";
+  const importUrl = route.params.get("import") ?? "";
   const offset = pageOffset(route.params.get("offset"));
   const scope = route.params.get("scope") === "server" ? "server" : "mine";
   const [list, setList] = useState<z.infer<typeof PlaylistListSchema>>([]);
@@ -108,8 +109,9 @@ export function Playlists(props: MediaListProps) {
         const result = await api("/api/playlists", PlaylistPageSchema, init);
         setPage(result);
         setName(result.name);
-        route.update({ playlist: result.id, offset: "" });
-        setNotice("Playlist saved.");
+        setCopyName(result.name + " copy");
+        route.update({ playlist: result.id, offset: "", import: "" });
+        setNotice(result.notice ?? "Playlist saved.");
       }
       setRefresh((value) => value + 1);
     } catch (error_) {
@@ -143,6 +145,7 @@ export function Playlists(props: MediaListProps) {
       </p>
       <nav className="playlist-scopes" aria-label="Playlist visibility">
         <button
+          type="button"
           aria-pressed={scope === "mine"}
           onClick={() => {
             route.update({ scope: "mine", playlist: "", offset: "" });
@@ -151,6 +154,7 @@ export function Playlists(props: MediaListProps) {
           Mine
         </button>
         <button
+          type="button"
           aria-pressed={scope === "server"}
           onClick={() => {
             route.update({ scope: "server", playlist: "", offset: "" });
@@ -167,9 +171,10 @@ export function Playlists(props: MediaListProps) {
         <p>Saved playlists are not available in this server yet.</p>
       )}
       {error !== "" && (
-        <p role="alert">
+        <p role="alert" className="inline-error">
           {error}{" "}
           <button
+            type="button"
             onClick={() => {
               setRefresh((value) => value + 1);
             }}
@@ -178,7 +183,11 @@ export function Playlists(props: MediaListProps) {
           </button>
         </p>
       )}
-      {notice !== "" && <p role="status">{notice}</p>}
+      {notice !== "" && (
+        <p role="status" className="playlist-notice">
+          {notice}
+        </p>
+      )}
       {enabled === true && id === "" && (
         <PlaylistList
           {...props}
@@ -186,6 +195,7 @@ export function Playlists(props: MediaListProps) {
           scope={scope}
           name={name}
           setName={setName}
+          initialImportUrl={importUrl}
           busy={busy}
           playback={playback}
           mutation={mutation}
@@ -194,6 +204,7 @@ export function Playlists(props: MediaListProps) {
       {page !== null && (
         <>
           <button
+            type="button"
             onClick={() => {
               route.update({ playlist: "" });
             }}

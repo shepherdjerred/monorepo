@@ -9,6 +9,7 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import {
   expandPlaylist,
+  expandPlaylistWithMetadata,
   listExtractors,
 } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
@@ -129,6 +130,8 @@ function buildSession(config: Config, input: PlaybackInput): Session {
     },
     library: () => [],
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
+    expandPlaylistWithMetadata: (url, signal) =>
+      expandPlaylistWithMetadata(config, url, signal),
     listSources: (signal) => listExtractors(config, signal),
     resolvePlaySource: (source, signal) =>
       resolveSource(config, source, signal),

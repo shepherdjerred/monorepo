@@ -11,6 +11,7 @@ import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { sweepSubtitleTempDir } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import {
   expandPlaylist,
+  expandPlaylistWithMetadata,
   listExtractors,
   searchYoutube,
 } from "@shepherdjerred/streambot/sources/ytdlp.ts";
@@ -182,6 +183,8 @@ async function main(): Promise<void> {
     library: () => library,
     expandPlaylist: (url, signal, progress) =>
       expandPlaylist(config, url, signal, progress),
+    expandPlaylistWithMetadata: (url, signal) =>
+      expandPlaylistWithMetadata(config, url, signal),
     listSources: (signal) => listExtractors(config, signal),
     resolvePlaySource: (source, signal) =>
       resolveSource(config, source, signal, { sportsResolver, lol }),
@@ -263,6 +266,8 @@ async function main(): Promise<void> {
             music,
             expandPlaylist: (url, signal, progress) =>
               expandPlaylist(config, url, signal, progress),
+            expandPlaylistWithMetadata: (url, signal) =>
+              expandPlaylistWithMetadata(config, url, signal),
             sessions,
             bot: commandBot.web,
             featureGate: mediaFeatureGate,

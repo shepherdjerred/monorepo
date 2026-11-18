@@ -222,6 +222,13 @@ export function webFixture(
       url: string,
       signal: AbortSignal,
     ) => Promise<readonly { title: string; url: string }[]>;
+    expandPlaylistWithMetadata?: (
+      url: string,
+      signal: AbortSignal,
+    ) => Promise<{
+      title: string | undefined;
+      items: readonly { title: string; url: string }[];
+    }>;
     automatic?: boolean;
     resolve?: (source: Source) => ResolvedSource;
     sports?: SportsCatalog;
@@ -317,6 +324,9 @@ export function webFixture(
     ...(options.expandPlaylist === undefined
       ? {}
       : { expandPlaylist: options.expandPlaylist }),
+    ...(options.expandPlaylistWithMetadata === undefined
+      ? {}
+      : { expandPlaylistWithMetadata: options.expandPlaylistWithMetadata }),
     sessions: {
       numbered: {
         selected: () => Promise.resolve(selected()),

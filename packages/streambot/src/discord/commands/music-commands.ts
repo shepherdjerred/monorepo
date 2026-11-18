@@ -95,6 +95,24 @@ export const musicCommand = new SlashCommandBuilder()
           ),
       )
       .addSubcommand((sub) =>
+        sub
+          .setName("import")
+          .setDescription(
+            "Import a public Spotify or YouTube playlist as a private playlist",
+          )
+          .addStringOption((option) =>
+            option
+              .setName("url")
+              .setDescription("Public Spotify or YouTube playlist link")
+              .setRequired(true),
+          )
+          .addStringOption((option) =>
+            option
+              .setName("name")
+              .setDescription("Optional playlist name override"),
+          ),
+      )
+      .addSubcommand((sub) =>
         playlist(sub, "share", "Share your playlist with this server"),
       )
       .addSubcommand((sub) =>
