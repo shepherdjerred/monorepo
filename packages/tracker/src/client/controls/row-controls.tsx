@@ -1,8 +1,10 @@
 import { Tag } from "lucide-react";
 import type { Issue } from "#client/data/api.ts";
+import { effortLabels } from "#client/data/issue-changes.ts";
 import { Avatar, Swatch } from "#client/ui/ui.tsx";
 import { EnumPicker, type EnumOption } from "./enum-picker.tsx";
 import { applyChange, pickProperty } from "./issue-actions.ts";
+import { parseEffort } from "./property-options.tsx";
 
 /**
  * Properties edited in place on a list row or a board card. They stay out of
@@ -60,6 +62,36 @@ export function RowPriority({
         applyChange([issue.identifier], {
           kind: "priority",
           priority: Number(priority),
+        });
+      }}
+    />
+  );
+}
+
+export function RowEffort({
+  issue,
+  options,
+  disabled,
+  onFocus,
+}: RowProps & { options: readonly EnumOption[] }) {
+  if (issue.effort === null) {
+    return null;
+  }
+  return (
+    <EnumPicker
+      variant="icon"
+      label={`Effort of ${issue.identifier}: ${effortLabels[issue.effort]}`}
+      value={issue.effort}
+      options={options}
+      disabled={disabled}
+      tabIndex={-1}
+      picker="effort"
+      issue={issue.identifier}
+      onFocus={onFocus}
+      onChange={(value) => {
+        applyChange([issue.identifier], {
+          kind: "effort",
+          effort: parseEffort(value),
         });
       }}
     />

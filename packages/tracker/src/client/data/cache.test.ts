@@ -8,10 +8,16 @@ import {
   patchIssue,
   type IssueListData,
 } from "./cache.ts";
-import { boardSlot, changePatch, inverseChange } from "./issue-changes.ts";
+import {
+  boardSlot,
+  changePatch,
+  changeSummary,
+  inverseChange,
+} from "./issue-changes.ts";
 import {
   cacheFixture,
   cacheSnapshot,
+  detailFixture,
   issueFixture,
   workspaceFixture,
 } from "./testing.ts";
@@ -99,6 +105,30 @@ describe("issue changes", () => {
     expect(inverseChange(issue, { kind: "priority", priority: 2 })).toEqual({
       kind: "priority",
       priority: 0,
+      priorityManual: false,
+    });
+    const pinned = issueFixture(2, {
+      priority: 4,
+      priorityManual: true,
+      impact: "high",
+      urgency: "high",
+    });
+    expect(inverseChange(pinned, { kind: "priorityAuto" })).toEqual({
+      kind: "priority",
+      priority: 4,
+      priorityManual: true,
+    });
+    expect(inverseChange(pinned, { kind: "urgency", urgency: null })).toEqual({
+      kind: "urgency",
+      urgency: "high",
+    });
+    expect(inverseChange(pinned, { kind: "impact", impact: "low" })).toEqual({
+      kind: "impact",
+      impact: "high",
+    });
+    expect(inverseChange(issue, { kind: "effort", effort: "m" })).toEqual({
+      kind: "effort",
+      effort: null,
     });
     expect(
       inverseChange(issue, { kind: "assignee", assigneeKey: "agent:helper" }),
@@ -114,6 +144,75 @@ describe("issue changes", () => {
       archived: false,
     });
     expect(inverseChange(issue, { kind: "title", title: "x" })).toBeUndefined();
+  });
+
+  test("urgency, impact, votes and manual overrides resolve priority optimistically", () => {
+    const withImpact = {
+      ...issue,
+      ...changePatch(
+        issue,
+        { kind: "impact", impact: "high" },
+        workspaceFixture,
+      ),
+    };
+    expect(withImpact).toMatchObject({
+      impact: "high",
+      priority: 2,
+      priorityManual: false,
+    });
+    const withUrgency = {
+      ...withImpact,
+      ...changePatch(
+        withImpact,
+        { kind: "urgency", urgency: "high" },
+        workspaceFixture,
+      ),
+    };
+    expect(withUrgency).toMatchObject({
+      urgency: "high",
+      priority: 1,
+      priorityManual: false,
+    });
+    const overridden = {
+      ...withUrgency,
+      ...changePatch(
+        withUrgency,
+        { kind: "priority", priority: 4 },
+        workspaceFixture,
+      ),
+    };
+    expect(overridden).toMatchObject({ priority: 4, priorityManual: true });
+    // While pinned manually, changing urgency does not move priority.
+    expect(
+      changePatch(
+        overridden,
+        { kind: "urgency", urgency: "low" },
+        workspaceFixture,
+      ),
+    ).toEqual({ urgency: "low", priority: 4, priorityManual: true });
+    expect(
+      changeSummary({ kind: "priorityAuto" }, workspaceFixture, overridden),
+    ).toBe("priority set to auto (Urgent)");
+    expect(
+      changePatch(overridden, { kind: "priorityAuto" }, workspaceFixture),
+    ).toEqual({ priority: 1, priorityManual: false });
+    // Votes promote an auto-sized issue once they cross the threshold.
+    const lowSized = detailFixture(
+      issueFixture(3, {
+        impact: "low",
+        urgency: "low",
+        priority: 4,
+        voteCount: 7,
+      }),
+    );
+    expect(
+      changePatch(lowSized, { kind: "vote", voted: true }, workspaceFixture),
+    ).toEqual({
+      voteCount: 8,
+      viewerVoted: true,
+      priority: 2,
+      priorityManual: false,
+    });
   });
 
   test("a change resolves the records it names from the workspace", () => {

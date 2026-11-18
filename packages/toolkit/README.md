@@ -263,12 +263,13 @@ session; resumed sessions retain their key and votes remain idempotent.
 toolkit tracker whoami --json
 toolkit tracker issue search "browser bootstrap" --team AI --all-states --include-archived --json
 toolkit tracker issue list --team AI --project developer-experience --label Improvement --limit all --json
-toolkit tracker issue create --team AI --title "Tool: failure" --description-file /tmp/issue.md
+toolkit tracker issue list --team AI --effort xs --effort s --urgency high --sort effort --json
+toolkit tracker issue create --team AI --title "Tool: failure" --urgency medium --impact high --effort s --description-file /tmp/issue.md
 toolkit tracker issue vote AI-26 --note "Blocked tracker UI verification"
-toolkit tracker issue update AI-26 --state started --expected-revision 3
+toolkit tracker issue update AI-26 --state started --priority auto --expected-revision 3
 toolkit tracker issue create --team AI --title "Sub-task" --parent AI-26 --due 2026-12-01
-toolkit tracker issue update AI-27 --parent none --due none
-toolkit tracker issue bulk-update AI-27 AI-28 SJ-4 --state started --add-label agent
+toolkit tracker issue update AI-27 --parent none --due none --effort none
+toolkit tracker issue bulk-update AI-27 AI-28 SJ-4 --state started --effort m --add-label agent
 toolkit tracker issue list --team AI --parent AI-26 --sort due
 toolkit tracker issue list --team AI --overdue --due-after 2026-01-01
 toolkit tracker view create --name "My work" --icon inbox --input-json '{"states":["started"],"sort":"due"}'
@@ -304,6 +305,14 @@ Claude model detection reads only the transcript explicitly provided by that
 session's hook. Missing session identity fails with an actionable error.
 Install the compiled toolkit before activating these hooks; existing sessions
 need a restart or their explicit native session environment.
+
+`--urgency <high|medium|low>`, `--impact <high|medium|low>`, and
+`--effort <xs|s|m|l|xl>` are native issue fields (case-insensitive). Pass
+`none` on `update` or `bulk-update` to clear a dimension, or repeat the flags
+on `list` and `search` (including `none` for unset issues) and sort with
+`--sort urgency|impact|effort`. Tracker derives `priority` automatically from
+`urgency` and `impact` unless a manual override `--priority <0..4>` is set;
+`--priority auto` clears a manual override and restores derived priority.
 
 `--parent` makes an issue a sub-issue of another issue in the same team, up to
 five levels deep; `issue view` shows the parent and the sub-issues. Due dates

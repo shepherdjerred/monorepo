@@ -18,23 +18,34 @@ view list                            Saved issue views (--team adds a team's)
 view create --name --icon            --input-json '<list params>', --team optional
 view delete <VIEW-ID>                Remove a saved view
 issue list                          Filter by --team, --state, --label, --project,
-                                    --priority, --assignee, --creator, --parent,
-                                    --due-before, --due-after (YYYY-MM-DD),
-                                    --overdue (before --today, default this
-                                    machine's date), --include-archived,
-                                    --sort updated|created|priority|votes|
-                                    board|due, --limit N|all, --cursor
+                                    --priority, --urgency <high|medium|low|none>,
+                                    --impact <high|medium|low|none>,
+                                    --effort <xs|s|m|l|xl|none>, --assignee,
+                                    --creator, --parent, --due-before,
+                                    --due-after (YYYY-MM-DD), --overdue (before
+                                    --today, default this machine's date),
+                                    --include-archived, --sort updated|created|
+                                    priority|urgency|impact|effort|votes|board|
+                                    due, --limit N|all, --cursor
 issue search <text>                 Search open issues (--all-states optional)
 issue view <ID>                      Show parent, sub-issues, due date, comments,
                                     relations, files and votes
 issue create --team --title          --description or --description-file,
-                                    --priority, --state, --project, --label,
-                                    --parent <ID>, --due <YYYY-MM-DD>
-issue update <ID>                    Patch fields, --add-label, --remove-label,
-                                    --parent <ID|none>, --due <YYYY-MM-DD|none>,
+                                    --priority <0..4|auto>,
+                                    --urgency <high|medium|low>,
+                                    --impact <high|medium|low>,
+                                    --effort <xs|s|m|l|xl>, --state, --project,
+                                    --label, --parent <ID>, --due <YYYY-MM-DD>
+issue update <ID>                    Patch fields, --priority <0..4|auto>,
+                                    --urgency <high|medium|low|none>,
+                                    --impact <high|medium|low|none>,
+                                    --effort <xs|s|m|l|xl|none>, --add-label,
+                                    --remove-label, --parent <ID|none>,
+                                    --due <YYYY-MM-DD|none>,
                                     --archive|--unarchive, --expected-revision
 issue bulk-update <ID...>            One all-or-nothing patch: --state,
-                                    --priority, --project, --assignee,
+                                    --priority <0..4|auto>, --urgency, --impact,
+                                    --effort, --project, --assignee,
                                     --add-label, --remove-label, --parent,
                                     --due, --archive|--unarchive
 issue delete <ID>                    Requires --expected-revision

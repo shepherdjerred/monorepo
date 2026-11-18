@@ -1,6 +1,8 @@
 import { afterEach, expect, test, vi } from "vitest";
+import { z } from "zod";
 import { trackerClient, trackerUrl } from "#lib/tracker/client.ts";
 import { issueCommand } from "#commands/tracker/issues.ts";
+import { handleTrackerCommand } from "#handlers/tracker.ts";
 import {
   localToday,
   parseTrackerArgs,
@@ -358,4 +360,291 @@ test("view commands list without an actor and validate before writing", async ()
     viewCommand(context, ["rename"], parseTrackerArgs([]).values),
   ).rejects.toThrow("Unknown view action");
   expect(requests).toHaveLength(3);
+});
+test("urgency, impact, effort and auto-priority flags normalize and validate on mutations", async () => {
+  const { context, requests, actor } = fixture();
+
+  await issueCommand(
+    context,
+    ["create"],
+    parseTrackerArgs([
+      "--team",
+      "AI",
+      "--title",
+      "Triaged create",
+      "--effort",
+      "XS",
+      "--impact",
+      "High",
+      "--urgency",
+      "medium",
+    ]).values,
+  );
+  expect(requests[0]).toMatchObject({
+    procedure: "issues.create",
+    method: "POST",
+    input: {
+      teamKey: "AI",
+      title: "Triaged create",
+      effort: "xs",
+      impact: "high",
+      urgency: "medium",
+    },
+  });
+  expect(requests[0]?.input).not.toHaveProperty("priority");
+  expect(requests[0]?.input).not.toHaveProperty("priorityManual");
+
+  await issueCommand(
+    context,
+    ["create"],
+    parseTrackerArgs([
+      "--team",
+      "AI",
+      "--title",
+      "Manual priority",
+      "--priority",
+      "2",
+      "--effort",
+      "NONE",
+    ]).values,
+  );
+  expect(requests[1]?.input).toMatchObject({
+    title: "Manual priority",
+    priority: 2,
+    effort: null,
+  });
+  expect(requests[1]?.input).not.toHaveProperty("priorityManual");
+
+  await issueCommand(
+    context,
+    ["create"],
+    parseTrackerArgs([
+      "--team",
+      "AI",
+      "--title",
+      "Auto priority",
+      "--priority",
+      "AUTO",
+    ]).values,
+  );
+  expect(requests[2]?.input).toMatchObject({
+    title: "Auto priority",
+    priorityManual: false,
+  });
+  expect(requests[2]?.input).not.toHaveProperty("priority");
+
+  await issueCommand(
+    context,
+    ["update", "AI-42"],
+    parseTrackerArgs([
+      "--effort",
+      "xs",
+      "--impact",
+      "high",
+      "--urgency",
+      "medium",
+      "--priority",
+      "2",
+    ]).values,
+  );
+  expect(requests[3]).toMatchObject({
+    procedure: "issues.update",
+    input: {
+      identifier: "AI-42",
+      effort: "xs",
+      impact: "high",
+      urgency: "medium",
+      priority: 2,
+    },
+  });
+  expect(requests[3]?.input).not.toHaveProperty("priorityManual");
+
+  await issueCommand(
+    context,
+    ["update", "AI-42"],
+    parseTrackerArgs([
+      "--effort",
+      "none",
+      "--impact",
+      "NONE",
+      "--urgency",
+      "none",
+      "--priority",
+      "auto",
+    ]).values,
+  );
+  expect(requests[4]).toMatchObject({
+    procedure: "issues.update",
+    input: {
+      identifier: "AI-42",
+      effort: null,
+      impact: null,
+      urgency: null,
+      priorityManual: false,
+    },
+  });
+  expect(requests[4]?.input).not.toHaveProperty("priority");
+
+  await issueCommand(
+    context,
+    ["bulk-update", "ai-1", "ai-2"],
+    parseTrackerArgs([
+      "--effort",
+      "M",
+      "--impact",
+      "low",
+      "--urgency",
+      "HIGH",
+      "--priority",
+      "auto",
+    ]).values,
+  );
+  expect(requests[5]).toMatchObject({
+    procedure: "issues.bulkUpdate",
+    input: {
+      identifiers: ["AI-1", "AI-2"],
+      patch: {
+        effort: "m",
+        impact: "low",
+        urgency: "high",
+        priorityManual: false,
+      },
+    },
+  });
+  const bulkInput = z
+    .object({ patch: z.record(z.string(), z.unknown()) })
+    .parse(requests[5]?.input);
+  expect(bulkInput.patch).not.toHaveProperty("priority");
+
+  actor.mockClear();
+  await expect(
+    issueCommand(
+      context,
+      ["update", "AI-42"],
+      parseTrackerArgs([
+        "--state",
+        "started",
+        "--effort",
+        "xs",
+        "--effort",
+        "s",
+      ]).values,
+    ),
+  ).rejects.toThrow("--effort takes one value");
+  await expect(
+    issueCommand(
+      context,
+      ["create"],
+      parseTrackerArgs([
+        "--team",
+        "AI",
+        "--title",
+        "Dup",
+        "--impact",
+        "high",
+        "--impact",
+        "low",
+      ]).values,
+    ),
+  ).rejects.toThrow("--impact takes one value");
+  await expect(
+    issueCommand(
+      context,
+      ["bulk-update", "AI-42"],
+      parseTrackerArgs(["--urgency", "high", "--urgency", "low"]).values,
+    ),
+  ).rejects.toThrow("--urgency takes one value");
+  await expect(
+    issueCommand(
+      context,
+      ["update", "AI-42"],
+      parseTrackerArgs(["--effort", "xxl"]).values,
+    ),
+  ).rejects.toThrow();
+  expect(actor).not.toHaveBeenCalled();
+  expect(requests).toHaveLength(6);
+});
+test("urgency, impact, effort filters and sorts reach list, search and help", async () => {
+  const { context, requests, actor } = fixture();
+
+  await issueCommand(
+    context,
+    ["list"],
+    parseTrackerArgs([
+      "--effort",
+      "XS",
+      "--effort",
+      "s",
+      "--urgency",
+      "none",
+      "--impact",
+      "High",
+      "--impact",
+      "low",
+      "--sort",
+      "effort",
+    ]).values,
+  );
+  expect(requests[0]).toMatchObject({
+    procedure: "issues.list",
+    method: "GET",
+    input: {
+      efforts: ["xs", "s"],
+      urgencies: ["none"],
+      impacts: ["high", "low"],
+      sort: "effort",
+    },
+  });
+
+  await issueCommand(
+    context,
+    ["search", "grooming"],
+    parseTrackerArgs([
+      "--effort",
+      "l",
+      "--urgency",
+      "HIGH",
+      "--sort",
+      "urgency",
+    ]).values,
+  );
+  expect(requests[1]).toMatchObject({
+    procedure: "issues.list",
+    method: "GET",
+    input: {
+      search: "grooming",
+      states: ["triage", "backlog", "unstarted", "started"],
+      efforts: ["l"],
+      urgencies: ["high"],
+      impacts: [],
+      sort: "urgency",
+    },
+  });
+  await expect(
+    issueCommand(
+      context,
+      ["list"],
+      parseTrackerArgs(["--priority", "auto"]).values,
+    ),
+  ).rejects.toThrow();
+  expect(actor).not.toHaveBeenCalled();
+  expect(requests).toHaveLength(2);
+
+  const lines: string[] = [];
+  const logSpy = vi
+    .spyOn(console, "log")
+    .mockImplementation((line: unknown) => {
+      lines.push(String(line));
+    });
+  try {
+    await handleTrackerCommand("--help", []);
+  } finally {
+    logSpy.mockRestore();
+  }
+  const help = lines.join("\n");
+  expect(help).toContain("--urgency <high|medium|low|none>");
+  expect(help).toContain("--impact <high|medium|low|none>");
+  expect(help).toContain("--effort <xs|s|m|l|xl|none>");
+  expect(help).toContain("--priority <0..4|auto>");
+  expect(help).toContain("priority|urgency|impact|effort|votes|board|");
 });

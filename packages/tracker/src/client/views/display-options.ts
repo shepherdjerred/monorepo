@@ -8,6 +8,9 @@ import { z } from "zod";
 export const GroupBySchema = z.enum([
   "status",
   "priority",
+  "urgency",
+  "impact",
+  "effort",
   "project",
   "assignee",
   "due",
@@ -18,12 +21,16 @@ export const SortSchema = z.enum([
   "updated",
   "created",
   "priority",
+  "urgency",
+  "impact",
+  "effort",
   "votes",
   "due",
 ]);
 export type Sort = z.infer<typeof SortSchema>;
 export const RowPropertySchema = z.enum([
   "labels",
+  "effort",
   "project",
   "date",
   "due",

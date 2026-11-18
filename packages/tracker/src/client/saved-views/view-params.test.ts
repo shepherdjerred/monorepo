@@ -63,6 +63,28 @@ describe("view parameters", () => {
     });
     // The server's allow-list accepts every key built here.
     expect(ViewParamsSchema.safeParse(params).success).toBe(true);
+    const sizing = viewParamsFrom(
+      new URLSearchParams(
+        "urgency=high&impact=medium&effort=s&effort=xs&sort=effort&group=effort",
+      ),
+      { board: false, teamKey: "AI", me },
+    );
+    expect(sizing).toEqual({
+      teamKey: "AI",
+      urgencies: ["high"],
+      impacts: ["medium"],
+      efforts: ["s", "xs"],
+      sort: "effort",
+      group: "effort",
+    });
+    expect(ViewParamsSchema.safeParse(sizing).success).toBe(true);
+    const roundTripped = new URL(
+      viewUrl({ id: "vs", params: sizing }, { teamKey: "AI", me }),
+      "https://tracker.test",
+    );
+    expect(roundTripped.searchParams.getAll("effort")).toEqual(["s", "xs"]);
+    expect(roundTripped.searchParams.get("urgency")).toBe("high");
+    expect(roundTripped.searchParams.get("impact")).toBe("medium");
   });
 
   test("relative due filters are stored as words, and come back", () => {

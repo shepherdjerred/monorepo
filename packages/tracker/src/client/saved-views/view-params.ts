@@ -26,6 +26,9 @@ const singles = [
 const lists = [
   ["state", "states"],
   ["label", "labels"],
+  ["urgency", "urgencies"],
+  ["impact", "impacts"],
+  ["effort", "efforts"],
 ] as const;
 
 /** A relative due filter is stored as words the browser resolves. */

@@ -307,3 +307,113 @@ it("runs alongside single updates of the same issues without deadlocking", async
     );
   }
 });
+
+it("updates effort, impact, urgency, and resets priorityManual across multiple issues", async () => {
+  const untriaged = await suite.create("Bulk grooming untriaged");
+  const urgent = await suite.create("Bulk grooming urgent", {
+    urgency: "high",
+  });
+  const pinned = await suite.create("Bulk grooming pinned", {
+    priority: 4,
+    urgency: "high",
+  });
+
+  const triaged = await bulk(
+    [untriaged.identifier, urgent.identifier, pinned.identifier],
+    { impact: "high", effort: "s" },
+  );
+  expect(triaged.items).toEqual([
+    expect.objectContaining({
+      identifier: untriaged.identifier,
+      impact: "high",
+      urgency: null,
+      effort: "s",
+      priority: 2,
+      priorityManual: false,
+    }),
+    expect.objectContaining({
+      identifier: urgent.identifier,
+      impact: "high",
+      urgency: "high",
+      effort: "s",
+      priority: 1,
+      priorityManual: false,
+    }),
+    expect.objectContaining({
+      identifier: pinned.identifier,
+      impact: "high",
+      urgency: "high",
+      effort: "s",
+      priority: 4,
+      priorityManual: true,
+    }),
+  ]);
+
+  // Resetting priorityManual: false unpins every issue and recomputes from its own fields + votes.
+  for (let voter = 0; voter < 8; voter += 1) {
+    await suite.issues.vote(
+      {
+        actor: { ...suite.actor, key: `codex:bulk-voter-${String(voter)}` },
+        identifier: untriaged.identifier,
+      },
+      false,
+      "bulk-vote",
+    );
+  }
+  await suite.update(untriaged.identifier, {
+    priority: 4,
+    impact: "low",
+    urgency: "low",
+  });
+  expect(await suite.issues.byIdentifier(untriaged.identifier)).toMatchObject({
+    priority: 4,
+  });
+
+  const requestId = crypto.randomUUID();
+  const unpinned = await bulk(
+    [untriaged.identifier, pinned.identifier],
+    { priorityManual: false, effort: "xl" },
+    {},
+    requestId,
+  );
+  expect(unpinned.items).toEqual([
+    expect.objectContaining({
+      identifier: untriaged.identifier,
+      priority: 2,
+      priorityManual: false,
+      effort: "xl",
+    }),
+    expect.objectContaining({
+      identifier: pinned.identifier,
+      priority: 1,
+      priorityManual: false,
+      effort: "xl",
+    }),
+  ]);
+
+  const events = await suite.database.event.findMany({ where: { requestId } });
+  expect(events).toHaveLength(2);
+  expect(events.map(({ changes }) => changes)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        priority: { from: 4, to: 1 },
+        priorityManual: { from: true, to: false },
+        effort: { from: "s", to: "xl" },
+      }),
+    ]),
+  );
+
+  const cleared = await bulk(
+    [untriaged.identifier, urgent.identifier, pinned.identifier],
+    { impact: null, urgency: null, effort: null },
+  );
+  for (const item of cleared.items) {
+    expect(item).toMatchObject({
+      impact: null,
+      urgency: null,
+      effort: null,
+      priority: 0,
+      priorityManual: false,
+    });
+  }
+});

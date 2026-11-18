@@ -62,13 +62,16 @@ function ActionContent({
 
 export function NativeEnumPicker(props: EnumPickerProps) {
   const { variant = "field", action } = props;
+  const actionValue = props.options.some((option) => option.value === "")
+    ? "__none__"
+    : "";
   return (
     <select
       className={`picker picker-${variant}`}
       id={props.id}
       aria-label={props.label}
       title={variant === "field" ? undefined : props.label}
-      value={action === undefined ? props.value : ""}
+      value={action === undefined ? props.value : actionValue}
       disabled={props.disabled}
       tabIndex={props.tabIndex}
       data-picker={props.picker}
@@ -87,7 +90,7 @@ export function NativeEnumPicker(props: EnumPickerProps) {
         )}
       </button>
       {action !== undefined && (
-        <option value="" disabled hidden>
+        <option value={actionValue} disabled hidden>
           {action.text}
         </option>
       )}

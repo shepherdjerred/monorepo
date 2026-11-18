@@ -7,11 +7,14 @@ import {
   Check,
   ChevronRight,
   CircleDashed,
+  Crosshair,
   Folder,
+  Gauge,
   SignalHigh,
   Tag,
   UserRound,
   UserRoundCheck,
+  Zap,
 } from "lucide-react";
 import type { BootstrapData, Issue } from "#client/data/api.ts";
 import { bulkLabelChange } from "#client/data/bulk-changes.ts";
@@ -28,9 +31,15 @@ import {
 import { localToday, quickChoices } from "#client/due/dates.ts";
 import { dueLabel } from "#client/due/due-display.ts";
 import {
+  effortOptions,
+  impactOptions,
+  parseEffort,
+  parseImpact,
+  parseUrgency,
   priorityOptions,
   stateOptions,
   teamStates,
+  urgencyOptions,
 } from "./property-options.tsx";
 import { leavingPopup } from "#client/ui/leaving.tsx";
 
@@ -116,6 +125,65 @@ function Submenu({
 const shared = <T,>(values: readonly T[]) =>
   values.every((value) => value === values[0]) ? values[0] : undefined;
 
+function SizingSubmenus({ issues }: { issues: readonly Issue[] }) {
+  const identifiers = issues.map(({ identifier }) => identifier);
+  const urgency = shared(issues.map((issue) => issue.urgency ?? ""));
+  const impact = shared(issues.map((issue) => issue.impact ?? ""));
+  const effort = shared(issues.map((issue) => issue.effort ?? ""));
+  return (
+    <>
+      <Submenu icon={<Zap size={15} />} label="Urgency">
+        {urgencyOptions.map((option) => (
+          <Item
+            key={option.value}
+            icon={option.icon}
+            label={option.label}
+            checked={urgency === option.value}
+            onClick={() => {
+              applyChange(identifiers, {
+                kind: "urgency",
+                urgency: parseUrgency(option.value),
+              });
+            }}
+          />
+        ))}
+      </Submenu>
+      <Submenu icon={<Crosshair size={15} />} label="Impact">
+        {impactOptions.map((option) => (
+          <Item
+            key={option.value}
+            icon={option.icon}
+            label={option.label}
+            checked={impact === option.value}
+            onClick={() => {
+              applyChange(identifiers, {
+                kind: "impact",
+                impact: parseImpact(option.value),
+              });
+            }}
+          />
+        ))}
+      </Submenu>
+      <Submenu icon={<Gauge size={15} />} label="Effort">
+        {effortOptions.map((option) => (
+          <Item
+            key={option.value}
+            icon={option.icon}
+            label={option.label}
+            checked={effort === option.value}
+            onClick={() => {
+              applyChange(identifiers, {
+                kind: "effort",
+                effort: parseEffort(option.value),
+              });
+            }}
+          />
+        ))}
+      </Submenu>
+    </>
+  );
+}
+
 export function PropertyMenus({
   issues,
   bootstrap,
@@ -176,6 +244,7 @@ export function PropertyMenus({
           />
         ))}
       </Submenu>
+      <SizingSubmenus issues={issues} />
       <Submenu icon={<UserRound size={15} />} label="Assignee">
         <Item
           icon={<UserRoundCheck size={15} />}

@@ -14,6 +14,11 @@ import { useCurrentActor } from "#client/data/identity.ts";
 import type { RouteInfo } from "#client/shell/route.ts";
 import { localToday } from "#client/due/dates.ts";
 import { dueFilterInput, isDueFilter } from "#client/due/due-filter.ts";
+import {
+  filterEffortParams,
+  filterImpactParams,
+  filterUrgencyParams,
+} from "#client/views/filters.ts";
 
 export const listPageSize = 100;
 const boardPageSize = 250;
@@ -133,6 +138,9 @@ export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
           states: params.getAll("state"),
           ...planningFilters(params),
           labels: params.getAll("label"),
+          urgencies: filterUrgencyParams(params),
+          impacts: filterImpactParams(params),
+          efforts: filterEffortParams(params),
           assigneeKey:
             params.get("mine") === "true"
               ? actor.key

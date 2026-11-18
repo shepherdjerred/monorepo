@@ -1,3 +1,4 @@
+import type { Effort, Impact, Urgency } from "#shared/schema.ts";
 import type { BootstrapData } from "#client/data/api.ts";
 
 type StateType = BootstrapData["states"][number]["type"];
@@ -139,6 +140,118 @@ export function PriorityGlyph({
           rx={0.75}
           fill="currentColor"
           opacity={bar < lit ? 1 : 0.3}
+        />
+      ))}
+    </svg>
+  );
+}
+
+function EmptyDashes({ size }: { size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
+      {[2, 6, 10].map((x) => (
+        <rect
+          key={x}
+          x={x}
+          y={6.25}
+          width={2.5}
+          height={1.5}
+          rx={0.5}
+          fill="currentColor"
+        />
+      ))}
+    </svg>
+  );
+}
+
+/** Stacked chevrons for urgency: one for low, two for medium, three for high. */
+export function UrgencyGlyph({
+  value,
+  size = 14,
+}: {
+  value: Urgency | null;
+  size?: number;
+}) {
+  if (value === null) return <EmptyDashes size={size} />;
+  const paths =
+    value === "high"
+      ? "M4 10.8 7 7.8l3 3M4 7.7 7 4.7l3 3M4 4.6 7 1.6l3 3"
+      : value === "medium"
+        ? "M4 9.8 7 6.8l3 3M4 6.2 7 3.2l3 3"
+        : "M4 8.5 7 5.5l3 3";
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
+      <path
+        d={paths}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Concentric rings for impact: center dot up to a full bullseye. */
+export function ImpactGlyph({
+  value,
+  size = 14,
+}: {
+  value: Impact | null;
+  size?: number;
+}) {
+  if (value === null) return <EmptyDashes size={size} />;
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
+      <circle
+        cx={7}
+        cy={7}
+        r={5.3}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.4}
+        opacity={value === "high" ? 1 : 0.28}
+      />
+      {value !== "low" && (
+        <circle
+          cx={7}
+          cy={7}
+          r={3.2}
+          fill={value === "high" ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth={1.3}
+        />
+      )}
+      {value !== "high" && <circle cx={7} cy={7} r={1.5} fill="currentColor" />}
+    </svg>
+  );
+}
+
+const effortRanks: Record<Effort, number> = { xs: 1, s: 2, m: 3, l: 4, xl: 5 };
+
+/** Five ascending bars for T-shirt effort sizing (XS through XL). */
+export function EffortGlyph({
+  value,
+  size = 14,
+}: {
+  value: Effort | null;
+  size?: number;
+}) {
+  if (value === null) return <EmptyDashes size={size} />;
+  const lit = effortRanks[value];
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
+      {[0, 1, 2, 3, 4].map((step) => (
+        <rect
+          key={step}
+          x={1.2 + step * 2.5}
+          y={9.8 - step * 1.6}
+          width={1.8}
+          height={2.8 + step * 1.6}
+          rx={0.5}
+          fill="currentColor"
+          opacity={step < lit ? 1 : 0.25}
         />
       ))}
     </svg>

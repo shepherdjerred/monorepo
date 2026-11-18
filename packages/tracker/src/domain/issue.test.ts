@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  computePriority,
   midpoint,
   parseIdentifier,
+  resolveIssuePriority,
   searchTokens,
   transitionTimestamps,
 } from "./issue.ts";
@@ -68,5 +70,87 @@ describe("issue invariants", () => {
     expect(avatarSvg("human:jerred")).toBe(avatarSvg("human:jerred"));
     expect(avatarSvg("human:jerred")).not.toBe(avatarSvg("codex:one"));
     expect(avatarSvg("<script>alert(1)</script>")).not.toContain("script");
+  });
+  it("computes priority from impact, urgency, and votes with manual override", () => {
+    expect(
+      computePriority({ impact: null, urgency: null, voteCount: 50 }),
+    ).toBe(0);
+    expect(
+      computePriority({ impact: "high", urgency: "high", voteCount: 0 }),
+    ).toBe(1);
+    expect(
+      computePriority({ impact: "low", urgency: "low", voteCount: 25 }),
+    ).toBe(1);
+    expect(
+      computePriority({ impact: "high", urgency: "medium", voteCount: 0 }),
+    ).toBe(2);
+    expect(
+      computePriority({ impact: "medium", urgency: "high", voteCount: 0 }),
+    ).toBe(2);
+    expect(
+      computePriority({ impact: "low", urgency: "low", voteCount: 8 }),
+    ).toBe(2);
+    expect(
+      computePriority({ impact: "medium", urgency: "medium", voteCount: 0 }),
+    ).toBe(3);
+    expect(
+      computePriority({ impact: "high", urgency: "low", voteCount: 0 }),
+    ).toBe(3);
+    expect(
+      computePriority({ impact: "low", urgency: "high", voteCount: 0 }),
+    ).toBe(3);
+    expect(
+      computePriority({ impact: "medium", urgency: "low", voteCount: 0 }),
+    ).toBe(4);
+    expect(
+      computePriority({ impact: "low", urgency: "low", voteCount: 0 }),
+    ).toBe(4);
+    expect(
+      computePriority({ impact: "high", urgency: null, voteCount: 0 }),
+    ).toBe(2);
+
+    const base: {
+      priority: number;
+      priorityManual: boolean;
+      impact: "high" | "medium" | "low" | null;
+      urgency: "high" | "medium" | "low" | null;
+      voteCount: number;
+    } = {
+      priority: 0,
+      priorityManual: false,
+      impact: null,
+      urgency: null,
+      voteCount: 0,
+    };
+    // Auto calculation when impact/urgency are set without explicit priority
+    const auto = resolveIssuePriority(base, { impact: "high", urgency: "low" });
+    expect(auto).toEqual({ priority: 3, priorityManual: false });
+
+    // Explicit priority pins priorityManual = true
+    const pinned = resolveIssuePriority(
+      { ...base, ...auto, impact: "high", urgency: "low" },
+      { priority: 1 },
+    );
+    expect(pinned).toEqual({ priority: 1, priorityManual: true });
+
+    // Changing urgency while pinned preserves manual priority
+    const stillPinned = resolveIssuePriority(
+      { ...base, ...pinned, impact: "high", urgency: "low" },
+      { urgency: "medium", voteCount: 10 },
+    );
+    expect(stillPinned).toEqual({ priority: 1, priorityManual: true });
+
+    // Resetting priorityManual: false snaps back to computed value
+    const unpinned = resolveIssuePriority(
+      {
+        ...base,
+        ...stillPinned,
+        impact: "high",
+        urgency: "medium",
+        voteCount: 10,
+      },
+      { priorityManual: false },
+    );
+    expect(unpinned).toEqual({ priority: 2, priorityManual: false });
   });
 });

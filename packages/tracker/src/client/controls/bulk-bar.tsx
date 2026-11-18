@@ -3,12 +3,15 @@ import {
   Archive,
   CalendarClock,
   CircleDashed,
+  Crosshair,
   Folder,
+  Gauge,
   SignalHigh,
   Tag,
   Trash2,
   UserRound,
   X,
+  Zap,
 } from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { deleteIssues } from "#client/data/mutations.ts";
@@ -26,9 +29,15 @@ import {
   useDeleteRequest,
 } from "./issue-actions.ts";
 import {
+  effortOptions,
+  impactOptions,
+  parseEffort,
+  parseImpact,
+  parseUrgency,
   priorityOptions,
   stateOptions,
   teamStates,
+  urgencyOptions,
 } from "./property-options.tsx";
 import {
   emptySelection,
@@ -69,6 +78,65 @@ function SearchButton({
       {icon}
       <span>{text}</span>
     </button>
+  );
+}
+
+function BulkSizing({
+  identifiers,
+  disabled,
+}: {
+  identifiers: readonly string[];
+  disabled: boolean;
+}) {
+  const count = String(identifiers.length);
+  return (
+    <>
+      <EnumPicker
+        id="bulk-urgency"
+        label={`Set urgency of ${count} issues`}
+        variant="action"
+        action={{ text: "Urgency", icon: <Zap size={14} /> }}
+        value=""
+        disabled={disabled}
+        options={urgencyOptions}
+        onChange={(value) => {
+          applyChange(identifiers, {
+            kind: "urgency",
+            urgency: parseUrgency(value),
+          });
+        }}
+      />
+      <EnumPicker
+        id="bulk-impact"
+        label={`Set impact of ${count} issues`}
+        variant="action"
+        action={{ text: "Impact", icon: <Crosshair size={14} /> }}
+        value=""
+        disabled={disabled}
+        options={impactOptions}
+        onChange={(value) => {
+          applyChange(identifiers, {
+            kind: "impact",
+            impact: parseImpact(value),
+          });
+        }}
+      />
+      <EnumPicker
+        id="bulk-effort"
+        label={`Set effort of ${count} issues`}
+        variant="action"
+        action={{ text: "Effort", icon: <Gauge size={14} /> }}
+        value=""
+        disabled={disabled}
+        options={effortOptions}
+        onChange={(value) => {
+          applyChange(identifiers, {
+            kind: "effort",
+            effort: parseEffort(value),
+          });
+        }}
+      />
+    </>
   );
 }
 
@@ -132,6 +200,7 @@ export function BulkBar({
           });
         }}
       />
+      <BulkSizing identifiers={identifiers} disabled={disabled} />
       <SearchButton
         id="bulk-assignee"
         icon={<UserRound size={14} aria-hidden="true" />}

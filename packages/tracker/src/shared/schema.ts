@@ -10,6 +10,16 @@ export const StateTypeSchema = z.enum([
   "canceled",
   "duplicate",
 ]);
+export const UrgencySchema = z.enum(["high", "medium", "low"]);
+export const ImpactSchema = z.enum(["high", "medium", "low"]);
+export const EffortSchema = z.enum(["xs", "s", "m", "l", "xl"]);
+export const FilterUrgencySchema = z.enum(["high", "medium", "low", "none"]);
+export const FilterImpactSchema = z.enum(["high", "medium", "low", "none"]);
+export const FilterEffortSchema = z.enum(["xs", "s", "m", "l", "xl", "none"]);
+export type Urgency = z.infer<typeof UrgencySchema>;
+export type Impact = z.infer<typeof ImpactSchema>;
+export type Effort = z.infer<typeof EffortSchema>;
+
 export const IdentifierSchema = z
   .string()
   .regex(/^[A-Z][A-Z0-9]*-[1-9]\d*$/u)
@@ -37,6 +47,10 @@ export const IssueFieldsSchema = z.object({
   title: z.string().trim().min(1).max(500),
   description: z.string().max(1_000_000),
   priority: z.number().int().min(0).max(4),
+  priorityManual: z.boolean().optional(),
+  urgency: UrgencySchema.nullable().optional(),
+  impact: ImpactSchema.nullable().optional(),
+  effort: EffortSchema.nullable().optional(),
   stateName: z.string().min(1).max(200).optional(),
   stateType: StateTypeSchema.optional(),
   projectSlug: SlugSchema.nullable().optional(),
@@ -48,7 +62,7 @@ export const CreateIssueSchema = MutationSchema.extend({
   teamKey: TeamKeySchema,
   ...IssueFieldsSchema.shape,
   description: IssueFieldsSchema.shape.description.default(""),
-  priority: IssueFieldsSchema.shape.priority.default(0),
+  priority: IssueFieldsSchema.shape.priority.optional(),
   labels: z.array(z.string().min(1).max(200)).max(100).default([]),
   attachmentIds: z.array(z.string()).max(100).default([]),
 });
@@ -66,6 +80,10 @@ const BulkIssuePatchSchema = UpdateIssueSchema.pick({
   stateName: true,
   stateType: true,
   priority: true,
+  priorityManual: true,
+  urgency: true,
+  impact: true,
+  effort: true,
   assigneeKey: true,
   projectSlug: true,
   addLabels: true,
@@ -113,6 +131,9 @@ const issueListShape = {
   projectSlug: SlugSchema.optional(),
   states: z.array(z.string()).default([]),
   labels: z.array(z.string()).default([]),
+  urgencies: z.array(FilterUrgencySchema).default([]),
+  impacts: z.array(FilterImpactSchema).default([]),
+  efforts: z.array(FilterEffortSchema).default([]),
   assigneeKey: z.string().optional(),
   creatorKey: z.string().optional(),
   priority: z.number().int().min(0).max(4).optional(),
@@ -129,7 +150,17 @@ const issueListShape = {
   overdue: z.boolean().optional(),
   today: DueDateSchema.optional(),
   sort: z
-    .enum(["updated", "created", "priority", "votes", "board", "due"])
+    .enum([
+      "updated",
+      "created",
+      "priority",
+      "urgency",
+      "impact",
+      "effort",
+      "votes",
+      "board",
+      "due",
+    ])
     .default("updated"),
   limit: z
     .union([z.number().int().min(1).max(500), z.literal("all")])

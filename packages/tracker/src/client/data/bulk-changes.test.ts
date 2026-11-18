@@ -19,8 +19,8 @@ describe("bulk edits", () => {
   test("one change becomes per-issue edits whose inverses restore each issue", () => {
     const issues = [
       issueFixture(1, { priority: 0 }),
-      issueFixture(2, { priority: 3 }),
-      issueFixture(3, { priority: 1 }),
+      issueFixture(2, { priority: 3, priorityManual: true }),
+      issueFixture(3, { priority: 1, priorityManual: true }),
     ];
     const { changes, inverses } = planBulk(issues, {
       kind: "priority",
@@ -28,8 +28,8 @@ describe("bulk edits", () => {
     });
     expect(changes.map(([identifier]) => identifier)).toEqual(["AI-1", "AI-2"]);
     expect(inverses).toEqual([
-      ["AI-1", { kind: "priority", priority: 0 }],
-      ["AI-2", { kind: "priority", priority: 3 }],
+      ["AI-1", { kind: "priority", priority: 0, priorityManual: false }],
+      ["AI-2", { kind: "priority", priority: 3, priorityManual: true }],
     ]);
   });
 
@@ -88,23 +88,32 @@ describe("bulk edits", () => {
     expect(
       bulkSummary({ kind: "archive", archived: true }, 1, workspaceFixture),
     ).toBe("Archived 1 issue");
+    expect(
+      bulkSummary({ kind: "effort", effort: "xs" }, 2, workspaceFixture),
+    ).toBe("Set effort of 2 issues to XS");
+    expect(
+      bulkSummary({ kind: "urgency", urgency: null }, 2, workspaceFixture),
+    ).toBe("Cleared urgency of 2 issues");
   });
 
   test("an undo sends one request per distinct previous value", () => {
     const { inverses } = planBulk(
       [
         issueFixture(1, { priority: 0 }),
-        issueFixture(2, { priority: 3 }),
+        issueFixture(2, { priority: 3, priorityManual: true }),
         issueFixture(3, { priority: 0 }),
       ],
       { kind: "priority", priority: 1 },
     );
     expect(groupEdits(inverses)).toEqual([
       {
-        change: { kind: "priority", priority: 0 },
+        change: { kind: "priority", priority: 0, priorityManual: false },
         identifiers: ["AI-1", "AI-3"],
       },
-      { change: { kind: "priority", priority: 3 }, identifiers: ["AI-2"] },
+      {
+        change: { kind: "priority", priority: 3, priorityManual: true },
+        identifiers: ["AI-2"],
+      },
     ]);
   });
 });

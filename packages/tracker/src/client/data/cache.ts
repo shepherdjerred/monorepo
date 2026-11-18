@@ -16,6 +16,10 @@ export type IssuePatch = Partial<
     | "title"
     | "description"
     | "priority"
+    | "priorityManual"
+    | "urgency"
+    | "impact"
+    | "effort"
     | "state"
     | "stateId"
     | "assignee"
@@ -104,6 +108,10 @@ const childOf = (issue: CachedIssue): Child => ({
   title: issue.title,
   state: issue.state,
   priority: issue.priority,
+  priorityManual: issue.priorityManual,
+  urgency: issue.urgency,
+  impact: issue.impact,
+  effort: issue.effort,
   assignee: issue.assignee,
 });
 

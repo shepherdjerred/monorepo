@@ -35,13 +35,15 @@
   margin-bottom: 12px;
 }
 .form-selects {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
   align-items: start;
   margin-bottom: 15px;
 }
 .form-selects label {
-  flex: 1;
+  margin-bottom: 0;
+  min-width: 0;
 }
 .form-selects select {
   width: 100%;
@@ -223,11 +225,8 @@
     margin-right: -8px;
   }
   .form-selects {
-    flex-wrap: wrap;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
-  }
-  .form-selects label {
-    flex: 1 1 28%;
   }
   .form-selects select {
     font-size: 12px;

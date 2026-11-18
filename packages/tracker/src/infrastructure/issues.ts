@@ -1,7 +1,12 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import type { UnitOfWork } from "#application/unit-of-work.ts";
 import { TrackerError } from "#domain/error.ts";
-import { identifier, midpoint, transitionTimestamps } from "#domain/issue.ts";
+import {
+  identifier,
+  midpoint,
+  resolveIssuePriority,
+  transitionTimestamps,
+} from "#domain/issue.ts";
 import type {
   BulkUpdateIssuesInput,
   CreateIssueInput,
@@ -63,6 +68,21 @@ export class Issues extends IssueQueries {
         where: { stateId: state.id },
         _max: { boardOrder: true },
       });
+      const resolved = resolveIssuePriority(
+        {
+          priority: 0,
+          priorityManual: false,
+          impact: null,
+          urgency: null,
+          voteCount: 0,
+        },
+        {
+          priority: input.priority,
+          priorityManual: input.priorityManual,
+          impact: input.impact ?? null,
+          urgency: input.urgency ?? null,
+        },
+      );
       const issue = await db.issue.create({
         data: {
           teamId: team.id,
@@ -70,7 +90,11 @@ export class Issues extends IssueQueries {
           creatorId: actor.id,
           title: input.title,
           description: input.description,
-          priority: input.priority,
+          priority: resolved.priority,
+          priorityManual: resolved.priorityManual,
+          urgency: input.urgency ?? null,
+          impact: input.impact ?? null,
+          effort: input.effort ?? null,
           stateId: state.id,
           projectId: (await resolveProject(db, input.projectSlug)) ?? null,
           assigneeId: (await resolveAssignee(db, input.assigneeKey)) ?? null,
@@ -298,8 +322,9 @@ export class Issues extends IssueQueries {
   ) {
     return this.unit.run(input.actor, requestId, async (context) => {
       const { db, actor } = context;
+      const initial = await findIssue(db, input.identifier);
+      await lockIssue(db, initial.id);
       const issue = await findIssue(db, input.identifier);
-      await lockIssue(db, issue.id);
       const where = {
         issueId_actorId: { issueId: issue.id, actorId: actor.id },
       };
@@ -325,9 +350,10 @@ export class Issues extends IssueQueries {
           (before === null ||
             (input.note !== undefined && input.note !== before.note)))
       ) {
+        const resolved = resolveIssuePriority(issue, { voteCount: count });
         await db.issue.update({
           where: { id: issue.id },
-          data: { voteCount: count },
+          data: { voteCount: count, priority: resolved.priority },
         });
         await audit(context, {
           entityType: "vote",

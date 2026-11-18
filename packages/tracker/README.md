@@ -91,16 +91,21 @@ where its top edge sat in the viewport.
 
 ## Browser controls
 
-Status, priority, grouping and ordering use Chromium's customizable
-`<select>` (`appearance: base-select`) where the browser supports it and the
-same component renders a Base UI Select elsewhere. Assignee, labels and
-project use one Base UI Combobox, opened from the issue panel, list rows,
+Status, priority, urgency, impact, effort, grouping and ordering use Chromium's
+customizable `<select>` (`appearance: base-select`) where the browser supports
+it and the same component renders a Base UI Select elsewhere. Assignee, labels
+and project use one Base UI Combobox, opened from the issue panel, list rows,
 board cards, the bulk bar or the New issue dialog; relation targets search
-`search.query`. A list's layout lives in its URL with the filter parameters
-it always had: `group` (`status` by default, or `priority`, `project`,
-`assignee`, `none`), repeated `collapsed` group keys, repeated `hide` row
-properties (`labels`, `project`, `date`, `assignee`) and `sort`. A grouped
-list loads up to ten pages at once so its groups fill in before you scroll.
+`search.query`. A list's layout lives in its URL with the filter parameters it
+always had: `group` (`status` by default, or `priority`, `urgency`, `impact`,
+`effort`, `project`, `assignee`, `due`, `none`), repeated `collapsed` group
+keys, repeated `hide` row properties (`labels`, `effort`, `project`, `date`,
+`due`, `assignee`), repeated `urgency`, `impact` and `effort` filters
+(including `none` for unsized work), and `sort` (`updated`, `created`,
+`priority`, `urgency`, `impact`, `effort`, `votes`, `due`). Rows and board
+cards show a compact `XS`–`XL` effort picker when `effort` is set unless
+`hide=effort` hides it. A grouped list loads up to ten pages at once so its
+groups fill in before you scroll.
 
 A selection belongs to one list address (its peek aside) and is not
 stored. A bulk action is one `issues.bulkUpdate` carrying each issue's
@@ -130,12 +135,14 @@ Sub-issues, due dates and saved views add to the same address and keys:
   usual choices and a month grid (arrow keys, Page Up/Down, Home/End). A
   bulk due date or parent is one `issues.bulkUpdate`.
 - `saved=<view id>` marks a list opened from a saved view. A view stores
-  only `issues.list` names plus `group` and `view`: `state` becomes
-  `states`, My issues becomes the viewer's `assigneeKey`, `subissues=hide`
-  becomes `hasParent: "false"`, and `due` becomes `overdue: "true"`,
-  `hasDueDate: "false"`, a `dueBefore` day, or the words `today`/`week` in
-  `dueBefore` (with `dueAfter: "today"`) that the browser resolves when it
-  opens the view. Collapsed groups and hidden properties are not stored.
+  only `issues.list` names plus `group` and `view`: `state`, `label`,
+  `urgency`, `impact` and `effort` become `states`, `labels`, `urgencies`,
+  `impacts` and `efforts`, My issues becomes the viewer's `assigneeKey`,
+  `subissues=hide` becomes `hasParent: "false"`, and `due` becomes
+  `overdue: "true"`, `hasDueDate: "false"`, a `dueBefore` day, or the words
+  `today`/`week` in `dueBefore` (with `dueAfter: "today"`) that the browser
+  resolves when it opens the view. Collapsed groups and hidden properties are
+  not stored.
 - Shortcuts: `⇧ O` adds a sub-issue (on an open issue it focuses the inline
   field; Enter adds and stays, `⌘ Enter` adds and opens), `⇧ D` sets the
   due date, `G 1`–`G 9` open the sidebar's saved views, and `⌥ ↑`/`⌥ ↓` on a
@@ -244,18 +251,33 @@ team counters allocate issue numbers atomically. State and label references
 cannot cross team boundaries. Votes have one row per issue and actor and their
 displayed count is recomputed while holding the issue lock.
 
-`issues.bulkUpdate` applies one `patch` (state, priority, assignee, project,
-labels, archive, parent, due date; never title, description or attachments) to
-1-250 unique `identifiers` in one transaction, all or nothing. It takes the
-same locks as a single update in the same order: team rows (only to re-parent),
-then workflow states, then issue rows by ascending ID. Each issue is updated by
-the single-issue path, so it gets its own revision increment and `updated`
-event, all sharing the request ID, and the sub-issue rules apply to each in
-input order. Unknown identifiers are a `NOT_FOUND` naming them; an entry in
-`expectedRevisions` that no longer matches is a `CONFLICT` naming the stale
-issues; a state or label missing from one issue's team is a `BAD_REQUEST`
-naming that issue. It returns `{ items }` in input order, shaped like
-`issues.list` items.
+`issues.bulkUpdate` applies one `patch` (state, priority, `priorityManual`,
+urgency, impact, effort, assignee, project, labels, archive, parent, due date;
+never title, description or attachments) to 1-250 unique `identifiers` in one
+transaction, all or nothing. It takes the same locks as a single update in the
+same order: team rows (only to re-parent), then workflow states, then issue
+rows by ascending ID. Each issue is updated by the single-issue path, so it
+gets its own revision increment and `updated` event, all sharing the request
+ID, and the sub-issue rules apply to each in input order. Unknown identifiers
+are a `NOT_FOUND` naming them; an entry in `expectedRevisions` that no longer
+matches is a `CONFLICT` naming the stale issues; a state or label missing from
+one issue's team is a `BAD_REQUEST` naming that issue. It returns `{ items }`
+in input order, shaped like `issues.list` items.
+
+Issues carry native `urgency` (`high`, `medium`, `low` or `null`), `impact`
+(`high`, `medium`, `low` or `null`), `effort` (`xs`, `s`, `m`, `l`, `xl` or
+`null`) and `priorityManual` (`boolean`). When `priorityManual` is `false`,
+`priority` is derived deterministically from `impact`, `urgency` and
+`voteCount` (`0` = No priority when both `impact` and `urgency` are `null`;
+otherwise missing `impact` or `urgency` stands in as `medium`: `high` + `high`
+or `voteCount >= 25` is `1` Urgent; `high` + `medium`, `medium` + `high` or
+`voteCount >= 8` is `2` High; `medium` + `medium`, `high` + `low` or `low` +
+`high` is `3` Medium; otherwise `4` Low) and recomputes automatically on
+create, sizing updates and vote casts/removals. Setting `priority` explicitly
+pins `priorityManual: true` (except setting `0` while `impact` and `urgency`
+are both `null`); passing `priorityManual: false` (or clicking `Pinned · Auto`
+in the issue panel or running `Reset priority to auto` in the command palette)
+clears the manual override and snaps `priority` back to its computed value.
 
 Identifiers, state names/types, label names and project slugs are the public
 references. The API includes issue search/list/detail/history, comments,

@@ -54,6 +54,24 @@ describe("enum picker", () => {
     expect(html).not.toContain("<selectedcontent>");
   });
 
+  test("an action picker with an empty-string clear option uses a distinct placeholder", () => {
+    const html = renderToStaticMarkup(
+      <NativeEnumPicker
+        {...props}
+        options={[
+          { value: "", label: "No effort" },
+          { value: "xs", label: "XS" },
+        ]}
+        variant="action"
+        action={{ text: "Effort", icon: <svg /> }}
+      />,
+    );
+    expect(html).toContain(
+      '<option value="__none__" disabled="" hidden="" selected="">Effort</option>',
+    );
+    expect(html).toContain('<option value="">');
+  });
+
   test("elsewhere the same props render a Base UI select trigger", () => {
     const html = renderToStaticMarkup(<FallbackEnumPicker {...props} />);
     expect(html).toContain('role="combobox"');

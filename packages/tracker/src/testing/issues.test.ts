@@ -35,6 +35,10 @@ const create = (title: string, extra: Record<string, unknown> = {}) =>
     CreateIssueSchema.parse({ actor, teamKey: "AI", title, ...extra }),
     crypto.randomUUID(),
   );
+const thresholdVoter = (index: number) => ({
+  ...actor,
+  key: `codex:threshold-voter-${String(index)}`,
+});
 
 beforeAll(async () => {
   suite = await cloneTestDatabase(
@@ -484,4 +488,250 @@ it("caches hashed assets forever and revalidates the page that names them", asyn
   } finally {
     await rm(clientRoot, { recursive: true, force: true });
   }
+});
+
+it("auto-calculates priority from impact and urgency, respects manual pins, and exposes grooming fields on children", async () => {
+  const untriaged = await create("Grooming untriaged");
+  expect(untriaged).toMatchObject({
+    priority: 0,
+    priorityManual: false,
+    urgency: null,
+    impact: null,
+    effort: null,
+  });
+
+  const autoUrgent = await create("Grooming auto urgent", {
+    impact: "high",
+    urgency: "high",
+    effort: "m",
+  });
+  expect(autoUrgent).toMatchObject({
+    priority: 1,
+    priorityManual: false,
+    impact: "high",
+    urgency: "high",
+    effort: "m",
+  });
+
+  const pinned = await create("Grooming explicit pin", {
+    priority: 4,
+    impact: "high",
+    urgency: "high",
+    effort: "l",
+  });
+  expect(pinned).toMatchObject({
+    priority: 4,
+    priorityManual: true,
+    impact: "high",
+    urgency: "high",
+    effort: "l",
+  });
+
+  const child = await create("Grooming child", {
+    parentIdentifier: autoUrgent.identifier,
+    impact: "medium",
+    urgency: "high",
+    effort: "xs",
+  });
+  const detail = await issues.byIdentifier(autoUrgent.identifier);
+  expect(detail.children).toEqual([
+    expect.objectContaining({
+      identifier: child.identifier,
+      priority: 2,
+      priorityManual: false,
+      urgency: "high",
+      impact: "medium",
+      effort: "xs",
+    }),
+  ]);
+
+  // Updating urgency on an unpinned issue recomputes priority automatically.
+  const lowered = await issues.update(
+    UpdateIssueSchema.parse({
+      actor,
+      identifier: autoUrgent.identifier,
+      urgency: "low",
+      effort: "xl",
+    }),
+    "grooming-lower",
+  );
+  expect(lowered).toMatchObject({
+    priority: 3,
+    priorityManual: false,
+    impact: "high",
+    urgency: "low",
+    effort: "xl",
+  });
+
+  // Pinning priority preserves it across subsequent impact/urgency edits.
+  const manuallyPinned = await issues.update(
+    UpdateIssueSchema.parse({
+      actor,
+      identifier: autoUrgent.identifier,
+      priority: 1,
+    }),
+    "grooming-pin",
+  );
+  expect(manuallyPinned).toMatchObject({
+    priority: 1,
+    priorityManual: true,
+  });
+
+  const editedWhilePinned = await issues.update(
+    UpdateIssueSchema.parse({
+      actor,
+      identifier: autoUrgent.identifier,
+      impact: "low",
+      urgency: "low",
+    }),
+    "grooming-pinned-edit",
+  );
+  expect(editedWhilePinned).toMatchObject({
+    priority: 1,
+    priorityManual: true,
+    impact: "low",
+    urgency: "low",
+  });
+
+  // Resetting priorityManual: false recomputes from current impact + urgency.
+  const unpinned = await issues.update(
+    UpdateIssueSchema.parse({
+      actor,
+      identifier: autoUrgent.identifier,
+      priorityManual: false,
+    }),
+    "grooming-unpin",
+  );
+  expect(unpinned).toMatchObject({
+    priority: 4,
+    priorityManual: false,
+    impact: "low",
+    urgency: "low",
+  });
+
+  // Clearing both impact and urgency resets unpinned priority to 0.
+  const cleared = await issues.update(
+    UpdateIssueSchema.parse({
+      actor,
+      identifier: autoUrgent.identifier,
+      impact: null,
+      urgency: null,
+      effort: null,
+    }),
+    "grooming-clear",
+  );
+  expect(cleared).toMatchObject({
+    priority: 0,
+    priorityManual: false,
+    impact: null,
+    urgency: null,
+    effort: null,
+  });
+});
+
+it("promotes and demotes unpinned issues across the 8-vote and 25-vote thresholds while leaving pinned and untriaged issues unchanged", async () => {
+  const caller = appRouter.createCaller({
+    issues,
+    attachments: new Attachments(suite.database, unit, memoryObjectStore()),
+    collaboration: new Collaboration(suite.database, unit),
+    catalog: new Catalog(unit),
+    requestId: "vote-thresholds",
+    writesEnabled: async () => true,
+    forum: new Forum(suite.database, unit),
+    forumEnabled: async () => true,
+    liveUpdatesEnabled: async () => false,
+  });
+  const unpinned = await create("Vote threshold unpinned", {
+    impact: "low",
+    urgency: "low",
+  });
+  const pinned = await create("Vote threshold pinned", {
+    priority: 4,
+    impact: "low",
+    urgency: "low",
+  });
+  const untriaged = await create("Vote threshold untriaged");
+  expect(unpinned.priority).toBe(4);
+  expect(pinned).toMatchObject({ priority: 4, priorityManual: true });
+  expect(untriaged.priority).toBe(0);
+
+  for (let index = 0; index < 7; index += 1) {
+    await caller.votes.cast({
+      actor: thresholdVoter(index),
+      identifier: unpinned.identifier,
+    });
+    await caller.votes.cast({
+      actor: thresholdVoter(index),
+      identifier: pinned.identifier,
+    });
+    await caller.votes.cast({
+      actor: thresholdVoter(index),
+      identifier: untriaged.identifier,
+    });
+  }
+  expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
+    priority: 4,
+  });
+
+  // 8th vote crosses the High (2) threshold for unpinned triaged issues only.
+  await caller.votes.cast({
+    actor: thresholdVoter(7),
+    identifier: unpinned.identifier,
+  });
+  await caller.votes.cast({
+    actor: thresholdVoter(7),
+    identifier: pinned.identifier,
+  });
+  await caller.votes.cast({
+    actor: thresholdVoter(7),
+    identifier: untriaged.identifier,
+  });
+  expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
+    voteCount: 8,
+    priority: 2,
+    priorityManual: false,
+  });
+  expect(await issues.byIdentifier(pinned.identifier)).toMatchObject({
+    voteCount: 8,
+    priority: 4,
+    priorityManual: true,
+  });
+  expect(await issues.byIdentifier(untriaged.identifier)).toMatchObject({
+    voteCount: 8,
+    priority: 0,
+    priorityManual: false,
+  });
+
+  // Removing the 8th vote drops unpinned priority back to 4.
+  await caller.votes.remove({
+    actor: thresholdVoter(7),
+    identifier: unpinned.identifier,
+  });
+  expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
+    voteCount: 7,
+    priority: 4,
+    priorityManual: false,
+  });
+
+  // Reaching 25 votes promotes unpinned priority to Urgent (1), and removing 25th returns to High (2).
+  for (let index = 7; index < 25; index += 1) {
+    await caller.votes.cast({
+      actor: thresholdVoter(index),
+      identifier: unpinned.identifier,
+    });
+  }
+  expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
+    voteCount: 25,
+    priority: 1,
+    priorityManual: false,
+  });
+  await caller.votes.remove({
+    actor: thresholdVoter(24),
+    identifier: unpinned.identifier,
+  });
+  expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
+    voteCount: 24,
+    priority: 2,
+    priorityManual: false,
+  });
 });

@@ -190,6 +190,10 @@ export async function createSubIssue(
     title,
     state,
     priority: 0,
+    priorityManual: false,
+    urgency: null,
+    impact: null,
+    effort: null,
     assignee: null,
   };
   setChildren(parent.identifier, (children) => [...children, placeholder]);
@@ -209,6 +213,10 @@ export async function createSubIssue(
               title: issue.title,
               state: issue.state,
               priority: issue.priority,
+              priorityManual: issue.priorityManual,
+              urgency: issue.urgency,
+              impact: issue.impact,
+              effort: issue.effort,
               assignee: issue.assignee,
             }
           : child,

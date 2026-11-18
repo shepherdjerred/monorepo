@@ -241,6 +241,9 @@ export class IssueQueries {
       includeArchived,
       states: [],
       labels: [],
+      urgencies: [],
+      impacts: [],
+      efforts: [],
       sort: "updated",
       limit: 30,
     });
@@ -312,6 +315,10 @@ export class IssueQueries {
         title: child.title,
         state: child.state,
         priority: child.priority,
+        priorityManual: child.priorityManual,
+        urgency: child.urgency,
+        impact: child.impact,
+        effort: child.effort,
         assignee: child.assignee === null ? null : presentActor(child.assignee),
       })),
       comments: comments.map((comment) => ({

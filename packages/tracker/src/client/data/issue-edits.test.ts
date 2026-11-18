@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import type { QueryClient } from "@tanstack/react-query";
+import { resolveIssuePriority } from "#domain/issue.ts";
 import type { Issue, IssueDetailData } from "./api.ts";
 import { cachedIssue, issueKey, type IssueListData } from "./cache.ts";
 import { inverseChange } from "./issue-changes.ts";
@@ -47,11 +48,20 @@ function fakeServer(initial: Issue = issueFixture(1)) {
       const state =
         workspaceFixture.states.find(({ name }) => name === input.stateName) ??
         stored.state;
+      const nextPriority = resolveIssuePriority(stored, {
+        priority: input.priority,
+        priorityManual: input.priorityManual,
+        impact: input.impact,
+        urgency: input.urgency,
+      });
       stored = {
         ...stored,
         state,
         stateId: state.id,
-        priority: input.priority ?? stored.priority,
+        ...nextPriority,
+        urgency: input.urgency === undefined ? stored.urgency : input.urgency,
+        impact: input.impact === undefined ? stored.impact : input.impact,
+        effort: input.effort === undefined ? stored.effort : input.effort,
         title: input.title ?? stored.title,
         description: input.description ?? stored.description,
         revision: stored.revision + 1,
@@ -62,7 +72,12 @@ function fakeServer(initial: Issue = issueFixture(1)) {
     bulkUpdate: () => Promise.reject(new Error("Not part of these tests")),
     vote: async (_identifier, voted) => {
       await turn();
-      stored = { ...stored, voteCount: voted ? 1 : 0 };
+      const voteCount = voted ? 1 : 0;
+      stored = {
+        ...stored,
+        voteCount,
+        ...resolveIssuePriority(stored, { voteCount }),
+      };
       return { voteCount: stored.voteCount, viewerVoted: voted };
     },
     detail: async () => detailFixture(stored),
@@ -306,6 +321,46 @@ describe("optimistic issue edits", () => {
   });
 });
 
+describe("sizing issue edits", () => {
+  test("sizing edits update priority optimistically, roll back cleanly, and undo losslessly", async () => {
+    const { client, edits, server } = setup();
+    await edits.edit("AI-1", { kind: "impact", impact: "high" });
+    await edits.edit("AI-1", { kind: "urgency", urgency: "high" });
+    expect(detail(client)).toMatchObject({
+      impact: "high",
+      urgency: "high",
+      priority: 1,
+      priorityManual: false,
+    });
+    const beforePin = cachedIssue(client, "AI-1");
+    if (beforePin === undefined) throw new Error("AI-1 missing");
+    const pinChange = { kind: "priority", priority: 4 } as const;
+    const unpinInverse = inverseChange(beforePin, pinChange);
+    await edits.edit("AI-1", pinChange);
+    expect(detail(client)).toMatchObject({ priority: 4, priorityManual: true });
+    // Resetting to auto restores computed priority, and its inverse restores the pin.
+    const beforeAuto = cachedIssue(client, "AI-1");
+    if (beforeAuto === undefined) throw new Error("AI-1 missing");
+    const repinInverse = inverseChange(beforeAuto, { kind: "priorityAuto" });
+    await edits.edit("AI-1", { kind: "priorityAuto" });
+    expect(detail(client)).toMatchObject({
+      priority: 1,
+      priorityManual: false,
+    });
+    if (repinInverse === undefined || unpinInverse === undefined) {
+      throw new Error("Expected priority inverses");
+    }
+    await edits.edit("AI-1", repinInverse);
+    expect(detail(client)).toMatchObject({ priority: 4, priorityManual: true });
+    await edits.edit("AI-1", unpinInverse);
+    expect(detail(client)).toMatchObject({
+      priority: 1,
+      priorityManual: false,
+    });
+    expect(server.stored).toMatchObject({ priority: 1, priorityManual: false });
+  });
+});
+
 describe("deferred issue delete", () => {
   test("a requested delete only hides the issue; cancelling shows it again", () => {
     const { edits, server } = setup();
@@ -412,9 +467,27 @@ function bulkServer() {
       const items = input.identifiers.map((identifier) => {
         const issue = stored.get(identifier);
         if (issue === undefined) throw new Error(`No ${identifier}`);
+        const nextPriority = resolveIssuePriority(issue, {
+          priority: input.patch.priority,
+          priorityManual: input.patch.priorityManual,
+          impact: input.patch.impact,
+          urgency: input.patch.urgency,
+        });
         const next = {
           ...issue,
-          priority: input.patch.priority ?? issue.priority,
+          ...nextPriority,
+          urgency:
+            input.patch.urgency === undefined
+              ? issue.urgency
+              : input.patch.urgency,
+          impact:
+            input.patch.impact === undefined
+              ? issue.impact
+              : input.patch.impact,
+          effort:
+            input.patch.effort === undefined
+              ? issue.effort
+              : input.patch.effort,
           revision: issue.revision + 1,
         };
         stored.set(identifier, next);

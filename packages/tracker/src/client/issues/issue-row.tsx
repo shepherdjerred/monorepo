@@ -5,12 +5,18 @@ import type { Issue } from "#client/data/api.ts";
 import type { EnumOption } from "#client/controls/enum-picker.tsx";
 import {
   RowAssignee,
+  RowEffort,
   RowLabels,
   RowPriority,
   RowStatus,
 } from "#client/controls/row-controls.tsx";
 import { Avatar, Priority, Swatch } from "#client/ui/ui.tsx";
-import { StateIcon } from "#client/ui/icons.tsx";
+import {
+  EffortGlyph,
+  ImpactGlyph,
+  StateIcon,
+  UrgencyGlyph,
+} from "#client/ui/icons.tsx";
 import { RelativeTime } from "#client/ui/time.tsx";
 import { isPlainClick } from "#client/shell/route.ts";
 import { pickDue } from "#client/controls/issue-actions.ts";
@@ -22,6 +28,7 @@ import type { GroupHeader } from "#client/views/grouping.ts";
 export type RowOptions = {
   states: readonly EnumOption[];
   priorities: readonly EnumOption[];
+  efforts: readonly EnumOption[];
   hidden: ReadonlySet<RowProperty>;
   disabled: boolean;
 };
@@ -168,6 +175,14 @@ export function IssueRowItem({
           limit={2}
         />
       )}
+      {!hidden.has("effort") && issue.effort !== null && (
+        <RowEffort
+          issue={issue}
+          options={options.efforts}
+          disabled={options.disabled}
+          onFocus={actions.focus}
+        />
+      )}
       {!hidden.has("project") && issue.project !== null && (
         <Link
           className="row-project"
@@ -221,6 +236,27 @@ export function GroupMarkIcon({ header }: { header: GroupHeader }) {
     }
     case "priority": {
       return <Priority value={mark.priority} />;
+    }
+    case "urgency": {
+      return (
+        <span className={`sizing-glyph urgency-${mark.urgency ?? "none"}`}>
+          <UrgencyGlyph value={mark.urgency} />
+        </span>
+      );
+    }
+    case "impact": {
+      return (
+        <span className={`sizing-glyph impact-${mark.impact ?? "none"}`}>
+          <ImpactGlyph value={mark.impact} />
+        </span>
+      );
+    }
+    case "effort": {
+      return (
+        <span className={`sizing-glyph effort-${mark.effort ?? "none"}`}>
+          <EffortGlyph value={mark.effort} />
+        </span>
+      );
     }
     case "project": {
       return mark.color === undefined ? null : <Swatch color={mark.color} />;

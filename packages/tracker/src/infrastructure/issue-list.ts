@@ -30,6 +30,27 @@ const issueSorts: Record<IssueListInput["sort"], SortKey[]> = {
       kind: "int",
     },
   ],
+  urgency: [
+    {
+      expr: sql`CASE i."urgency"::text WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END`,
+      desc: false,
+      kind: "int",
+    },
+  ],
+  impact: [
+    {
+      expr: sql`CASE i."impact"::text WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END`,
+      desc: false,
+      kind: "int",
+    },
+  ],
+  effort: [
+    {
+      expr: sql`CASE i."effort"::text WHEN 'xs' THEN 1 WHEN 's' THEN 2 WHEN 'm' THEN 3 WHEN 'l' THEN 4 WHEN 'xl' THEN 5 ELSE 6 END`,
+      desc: false,
+      kind: "int",
+    },
+  ],
   votes: [{ expr: sql`i."voteCount"`, desc: true, kind: "int" }],
   board: [{ expr: sql`i."boardOrder"`, desc: false, kind: "float" }],
   // Soonest first; issues without a due date come last.
@@ -108,6 +129,16 @@ function dueFilters(input: IssueListInput): Sql[] {
   ];
 }
 
+function nullableEnumFilter(column: Sql, values: readonly string[]): Sql[] {
+  if (values.length === 0) return [];
+  const named = values.filter((value) => value !== "none");
+  const matches = [
+    ...(values.includes("none") ? [sql`${column} IS NULL`] : []),
+    ...(named.length === 0 ? [] : [sql`${column}::text IN (${join(named)})`]),
+  ];
+  return matches.length === 1 ? matches : [sql`(${join(matches, " OR ")})`];
+}
+
 function filters(input: IssueListInput): Sql[] {
   const types = input.states.filter(
     (state) => StateTypeSchema.safeParse(state).success,
@@ -144,6 +175,9 @@ function filters(input: IssueListInput): Sql[] {
     ...(input.includeArchived ? [] : [sql`i."archivedAt" IS NULL`]),
     ...hierarchyFilters(input),
     ...dueFilters(input),
+    ...nullableEnumFilter(sql`i."urgency"`, input.urgencies),
+    ...nullableEnumFilter(sql`i."impact"`, input.impacts),
+    ...nullableEnumFilter(sql`i."effort"`, input.efforts),
     ...input.labels.map(
       (name) =>
         sql`EXISTS (SELECT 1 FROM "IssueLabel" il JOIN "Label" l ON l."id" = il."labelId" WHERE il."issueId" = i."id" AND l."name" = ${name})`,
