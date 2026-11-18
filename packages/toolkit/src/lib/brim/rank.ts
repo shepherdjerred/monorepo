@@ -7,6 +7,7 @@ import {
   windowUsedPercent,
   type PaceStatus,
 } from "#lib/brim/pace.ts";
+import { resolveBrimProvider } from "#lib/brim/takeover/providers.ts";
 
 const StaleDetailSchema = z.object({ reason: z.string().min(1) });
 
@@ -440,6 +441,54 @@ function compareRanked(a: RankedEntry, b: RankedEntry): number {
 
 function byProviderOrder(a: RankedEntry, b: RankedEntry): number {
   return providerOrderIndex(a.provider) - providerOrderIndex(b.provider);
+}
+
+/**
+ * Moves matching providers from `ranked`/`other` into `unavailable` with
+ * `reason` (default `"excluded"`). Accepts canonical Brim provider IDs as well
+ * as CLI/Herdr aliases.
+ */
+export function excludeProviders(
+  result: RankResult,
+  excluded: readonly string[],
+  reason = "excluded",
+): RankResult {
+  const excludedSet = new Set(
+    excluded
+      .map((item) => resolveBrimProvider(item) ?? item.trim().toLowerCase())
+      .filter((item) => item.length > 0),
+  );
+  if (excludedSet.size === 0) {
+    return result;
+  }
+  const moved: RankedEntry[] = [];
+  const keepOrExclude = (entries: readonly RankedEntry[]): RankedEntry[] => {
+    const kept: RankedEntry[] = [];
+    for (const entry of entries) {
+      if (excludedSet.has(entry.provider.toLowerCase())) {
+        moved.push({
+          ...entry,
+          available: false,
+          reason,
+          budgetUsed: null,
+          budgetKind: null,
+          pace: null,
+          budgetResetsIn: null,
+          fallbackWindow: null,
+        });
+      } else {
+        kept.push(entry);
+      }
+    }
+    return kept;
+  };
+  const ranked = keepOrExclude(result.ranked);
+  const other = keepOrExclude(result.other);
+  if (moved.length === 0) {
+    return result;
+  }
+  const unavailable = [...result.unavailable, ...moved].sort(byProviderOrder);
+  return { ranked, other, unavailable };
 }
 
 export function rankSnapshots(

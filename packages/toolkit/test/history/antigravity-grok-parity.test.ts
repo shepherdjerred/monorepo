@@ -180,6 +180,45 @@ describe("antigravity transcripts", () => {
     );
     expect(result.error).toContain("Malformed Antigravity transcript line 1");
   });
+
+  test("unwraps <USER_REQUEST> user inputs and inherits workspace from subagent summary rows", async () => {
+    const antigravityRoot = path.join(root, "ag-cli-parent");
+    await writeAntigravityFixture(antigravityRoot);
+    await writeTranscript(antigravityRoot, [
+      transcriptLine({
+        step_index: 0,
+        type: "USER_INPUT",
+        created_at: "2026-08-10T12:00:00Z",
+        content:
+          "<USER_REQUEST>\nAdd cross-provider takeover\n</USER_REQUEST>\n<ADDITIONAL_METADATA>\nlocal time\n</ADDITIONAL_METADATA>",
+      }),
+    ]);
+    writeDatabase(
+      path.join(antigravityRoot, "conversation_summaries.db"),
+      "CREATE TABLE conversation_summaries (conversation_id text PRIMARY KEY, title text NOT NULL DEFAULT '', workspace_uris text NOT NULL, parent_conversation_id text NOT NULL DEFAULT '', nesting_depth integer NOT NULL DEFAULT 0);",
+      (database) => {
+        const stmt = database.prepare(
+          "INSERT INTO conversation_summaries VALUES (?, ?, ?, ?, ?)",
+        );
+        stmt.run(CONVERSATION, "Root CLI session", "", "", 0);
+        stmt.run(
+          "subagent-1",
+          "Subagent session",
+          JSON.stringify(["file:///work/cli-worktree"]),
+          CONVERSATION,
+          1,
+        );
+      },
+    );
+    const paths = pathsFor({ antigravityRoots: [antigravityRoot] });
+    const [document] = await scanDocuments("antigravity", paths);
+    expect(document?.workspace).toBe("/work/cli-worktree");
+    expect(document?.dialogueText).toBe("Add cross-provider takeover");
+    const read = await source("antigravity").read(paths, recordOf(document));
+    expect(read.messages.get(document?.sourceId ?? "")?.[0]?.text).toBe(
+      "Add cross-provider takeover",
+    );
+  });
 });
 
 async function writeGrokSession(

@@ -1,7 +1,13 @@
 import type { Database } from "bun:sqlite";
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
+import {
+  decodeFields,
+  fieldBytesAll,
+  fieldText,
+} from "./antigravity-protobuf.ts";
 import {
   trajectoryTimestampMs,
   usageEventsFromGenMetadata,
@@ -149,6 +155,46 @@ function scanStepEvents(
   return timedEvents;
 }
 
+function workspaceUriFromExecutorBlob(blob: Uint8Array): string | null {
+  try {
+    const topFields = decodeFields(blob);
+    for (const outerNumber of [10, 17]) {
+      for (const outer of fieldBytesAll(topFields, outerNumber)) {
+        const raw = fieldText(decodeFields(outer), 12);
+        if (
+          raw !== undefined &&
+          (raw.startsWith("file://") || raw.startsWith("/"))
+        ) {
+          return raw.startsWith("file://") ? fileURLToPath(raw) : raw;
+        }
+      }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function scanExecutorWorkspace(
+  database: Database,
+  tables: ReadonlySet<string>,
+): string | null {
+  if (!tables.has("executor_metadata")) {
+    return null;
+  }
+  for (const row of rows(
+    database,
+    "SELECT data FROM executor_metadata WHERE data IS NOT NULL ORDER BY idx DESC",
+    BlobRowSchema,
+  )) {
+    const workspace = workspaceUriFromExecutorBlob(row.data);
+    if (workspace !== null) {
+      return workspace;
+    }
+  }
+  return null;
+}
+
 async function buildAntigravityDocument(
   database: Database,
   filePath: string,
@@ -201,13 +247,16 @@ async function buildAntigravityDocument(
     );
   });
 
+  const workspace =
+    summary?.workspace ?? scanExecutorWorkspace(database, tables);
+
   return makeHistoryDocument(
     {
       source: "antigravity",
       sourceId: filePath,
       title: summary?.title ?? documentTitle(usageEvents, runtimeId),
       path: filePath,
-      workspace: summary?.workspace ?? null,
+      workspace,
       agent: "Antigravity",
       createdAt: new Date(earliestMs).toISOString(),
       updatedAt: new Date(latestMs).toISOString(),

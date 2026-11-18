@@ -55,8 +55,7 @@
     "GIT_EDITOR": "true",
     "PAGER": "cat",
     "GIT_PAGER": "cat",
-    "GIT_CONFIG_GLOBAL": "/Users/jerred/.config/agent/gitconfig",
-    "GH_CONFIG_DIR": "/Users/jerred/.config/gh-agent"
+    "GIT_CONFIG_GLOBAL": "/Users/jerred/.config/agent/gitconfig"
   },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,

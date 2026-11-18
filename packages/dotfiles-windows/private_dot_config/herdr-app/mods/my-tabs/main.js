@@ -14,6 +14,7 @@ import {
   layout,
   settings,
   nextCommand,
+  checking,
 } from "herdr";
 
 const HISTORY_MAX = 100;
@@ -37,6 +38,7 @@ export default class Tabs extends View {
     this.history = [];
     this.at = -1;
     this.going = null; // { place, until } while a Back/Forward jump lands
+    if (checking()) return;
     cx.spawn(async (cx) => {
       for (;;) {
         const command = await nextCommand();
@@ -190,9 +192,10 @@ export default class Tabs extends View {
         .on_mouse_down("right", (_e, cx) => {
           cx.stop_propagation();
           openOverlay({
-            mod: "menu",
+            mod: "my-menu",
             kind: "popup",
-            width: 200,
+            width: 220,
+            height: 290,
             props: { tab: "tab", target: { id: c.id, space: space.id } },
           });
         })

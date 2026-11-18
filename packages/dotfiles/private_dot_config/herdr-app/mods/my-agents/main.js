@@ -36,6 +36,7 @@ const PROVIDER = {
   "claude-code": "claude-code",
   claude: "claude-code",
   codex: "codex",
+  antigravity: "antigravity",
   agy: "antigravity",
   gemini: "antigravity",
   cursor: "cursor",
@@ -57,23 +58,43 @@ const PROVIDER_LABELS = {
 const atLimit = (a) =>
   Boolean(limits()[a.provider ?? PROVIDER[a.app] ?? PROVIDER[a.program?.key]]);
 // The agent a terminal was started with, when the program table doesn't say (a Windows
-// codex runs as powershell). Only a program token counts: the command itself, or the
-// first word of an argument that is a path ("& 'C:\...\codex.exe' resume"), never
-// words inside a script.
+// codex runs as powershell, and a macOS login-shell command wraps `brim --provider` or
+// the agent binary). Never matches arbitrary words inside a script.
 function fromArgv(argv) {
-  const word = (a) => a.replace(/^[&\s'"]+/, "").split(/['"\s]/)[0];
-  const programs = argv.map(word).filter((w, i) => i === 0 || /[\\/]/.test(w));
-  return programs
-    .map(
-      (w) =>
-        PROVIDER[
-          w
-            .split(/[\\/]/)
-            .pop()
-            .replace(/\.exe$/i, "")
-            .toLowerCase()
-        ],
-    )
+  const list = argv ?? [];
+  const word = (a) => (a ?? "").replace(/^[&\s'"]+/, "").split(/['"\s]/)[0];
+  const leaf = (w) =>
+    w
+      .split(/[\\/]/)
+      .pop()
+      .replace(/\.exe$/i, "")
+      .toLowerCase();
+  const head = list.includes("--") ? list.slice(0, list.indexOf("--")) : list;
+  const brimAt = head.findIndex(
+    (a, i) =>
+      leaf(word(a)) === "brim" ||
+      (leaf(word(a)) === "toolkit" && head[i + 1] === "brim"),
+  );
+  if (brimAt >= 0) {
+    for (let i = brimAt + 1; i < head.length; i++) {
+      if (head[i] === "--provider")
+        return PROVIDER[(head[i + 1] ?? "").toLowerCase()];
+      if (head[i]?.startsWith("--provider="))
+        return PROVIDER[head[i].slice("--provider=".length).toLowerCase()];
+    }
+  }
+  if (
+    /^-[a-z]*c$/i.test(head[1] ?? "") &&
+    head[4] &&
+    leaf(word(head[3])) === leaf(word(head[0]))
+  ) {
+    const wrapped = PROVIDER[leaf(word(head[4]))];
+    if (wrapped) return wrapped;
+  }
+  return list
+    .map(word)
+    .filter((w, i) => i === 0 || /[\\/]/.test(w))
+    .map((w) => PROVIDER[leaf(w)])
     .find(Boolean);
 }
 
@@ -383,8 +404,33 @@ export default class Agents extends View {
     aliases(cx);
     cx.spawn(async (cx) => {
       for (;;) {
-        if ((await nextCommand()) === "toggle-exhausted")
+        const cmd = await nextCommand();
+        if (cmd === "toggle-exhausted")
           setShared("hide.exhausted", !hidingExhausted());
+        else if (cmd === "menu" || cmd === "migrate") {
+          const f = focused();
+          const a =
+            agents().find((x) => x.address === f?.agent) ??
+            agents().find((x) => x.focused) ??
+            agents()[0];
+          if (a) {
+            if (cmd === "menu") this.agentMenu(a);
+            else
+              openOverlay({
+                mod: "my-takeover",
+                kind: "dialog",
+                width: 560,
+                height: 500,
+                props: {
+                  terminal: a.address,
+                  pane: a.pane,
+                  tab: a.tab,
+                  space: a.space,
+                  pickMachine: true,
+                },
+              });
+          }
+        }
         cx.notify();
       }
     });
@@ -665,11 +711,12 @@ export default class Agents extends View {
   }
 
   agentMenu(a) {
+    this.hovered = null;
     openOverlay({
       mod: "my-menu",
       kind: "popup",
-      width: 205,
-      height: 320,
+      width: 220,
+      height: 390,
       props: {
         tab: "agent",
         target: {
@@ -686,8 +733,8 @@ export default class Agents extends View {
     openOverlay({
       mod: "my-menu",
       kind: "popup",
-      width: 200,
-      height: 180,
+      width: 220,
+      height: 250,
       props: {
         tab: "subagent",
         target: {
@@ -1037,6 +1084,42 @@ export default class Agents extends View {
       const pri = PRIORITIES.find((p) => p.id === priorityOf(a.address));
       const pinnedRow = this.isPinned(a);
       const hovered = this.hovered === a.address;
+      const limited = atLimit(a);
+      const takeover = div()
+        .id(`takeover-${a.address}`)
+        .size(20)
+        .flex_none()
+        .rounded(4)
+        .text_color(limited ? t.working : t.dim)
+        .cursor_pointer()
+        .flex()
+        .items_center()
+        .justify_center()
+        .hover((s) =>
+          s.bg(t.hover).text_color(limited ? t.blocked : t.foreground),
+        )
+        .tooltip(
+          limited
+            ? "Provider at limit — take over with another agent"
+            : "Take over with another agent",
+        )
+        .on_click((_e, cx) => {
+          cx.stop_propagation();
+          this.hovered = null;
+          openOverlay({
+            mod: "my-takeover",
+            kind: "dialog",
+            width: 560,
+            height: 500,
+            props: {
+              terminal: a.address,
+              pane: a.pane,
+              tab: a.tab,
+              space: a.space,
+            },
+          });
+        })
+        .child(svg("mods/my-takeover/takeover.svg").size(13));
       const pin = div()
         .id(`pin-${a.address}`)
         .size(20)
@@ -1156,6 +1239,7 @@ export default class Agents extends View {
             .flex_none()
             .items_center()
             .gap(4)
+            .when(limited || hovered, (el) => el.child(takeover))
             .child(
               div()
                 .w(28)
