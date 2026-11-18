@@ -19,9 +19,6 @@ export const FilterEffortSchema = z.enum(["xs", "s", "m", "l", "xl", "none"]);
 export type Urgency = z.infer<typeof UrgencySchema>;
 export type Impact = z.infer<typeof ImpactSchema>;
 export type Effort = z.infer<typeof EffortSchema>;
-export type FilterUrgency = z.infer<typeof FilterUrgencySchema>;
-export type FilterImpact = z.infer<typeof FilterImpactSchema>;
-export type FilterEffort = z.infer<typeof FilterEffortSchema>;
 
 export const IdentifierSchema = z
   .string()
