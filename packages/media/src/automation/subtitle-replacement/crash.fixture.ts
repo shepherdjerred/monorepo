@@ -18,7 +18,11 @@ const input = z
     now: z.iso.datetime(),
   })
   .parse(JSON.parse(process.argv[2] ?? "null"));
-if (!input.databaseUrl.startsWith("postgres://media@127.0.0.1:"))
+const databaseUrl = new URL(input.databaseUrl);
+if (
+  databaseUrl.hostname !== "127.0.0.1" ||
+  !/^\/media_(?:test|mig)_[a-z0-9_]+$/u.test(databaseUrl.pathname)
+)
   throw new Error("Disposable fixture database required");
 const db = createDatabase(input.databaseUrl);
 const activities = createSubtitleReplacementActivities({

@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, expect, test } from "vitest";
 import { z } from "zod";
 import { movieVideoFixture } from "#testing/movie-video.ts";
+import { mediaTestDatabaseUrl } from "#testing/postgres.ts";
 import { createMovieHistoryFixture } from "#testing/movie-workflow/history/history-review-fixture.ts";
 import { createDatabase, type Database } from "#infrastructure/database.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
@@ -22,25 +23,7 @@ afterEach(async () => {
 
 /** A separate real pool supplies a startup TimeZone; no process/global setting or stored timestamp changes. */
 async function localTimezoneDatabase(db: Database, timezone: string) {
-  const [address] = z
-    .array(
-      z.strictObject({
-        database: z.literal("postgres"),
-        user: z.literal("media"),
-        port: z.int().positive(),
-      }),
-    )
-    .length(1)
-    .parse(
-      await db.$queryRaw`
-    SELECT current_database() AS database,current_user AS "user",inet_server_port() AS port
-  `,
-    );
-  if (address === undefined)
-    throw new Error("Actual disposable database endpoint missing");
-  const url = new URL(
-    `postgresql://media@127.0.0.1:${String(address.port)}/postgres`,
-  );
+  const url = new URL(await mediaTestDatabaseUrl(db));
   url.searchParams.set("options", `-c timezone=${timezone}`);
   const database = createDatabase(url.toString());
   closers.push(() => database.$disconnect());

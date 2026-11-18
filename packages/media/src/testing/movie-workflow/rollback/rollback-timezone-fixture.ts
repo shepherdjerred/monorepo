@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createDatabase, type Database } from "#infrastructure/database.ts";
+import { mediaTestDatabaseUrl } from "#testing/postgres.ts";
 import { createRequestedMovieRollbackFileFacetV1 } from "#automation/files/movie-editions/rollback/manual-facet.ts";
 import { createRequestedMovieRollbackNetworkFacetV1 } from "#automation/movie-editions/rollback/manual-facet.ts";
 import { createManualMovieRollbackFixture } from "./manual-rollback-fixture.ts";
@@ -69,23 +70,7 @@ export async function createMovieRollbackTimezoneFixture(
 }
 
 async function localTimezoneDatabase(original: Database, timezone: string) {
-  const [address] = z
-    .array(
-      z.strictObject({
-        database: z.literal("postgres"),
-        user: z.literal("media"),
-        port: z.int().positive(),
-      }),
-    )
-    .length(1)
-    .parse(
-      await original.$queryRaw`SELECT current_database() AS database,current_user AS "user",inet_server_port() AS port`,
-    );
-  if (address === undefined)
-    throw new Error("Actual private PostgreSQL endpoint missing");
-  const url = new URL(
-    `postgresql://media@127.0.0.1:${String(address.port)}/postgres`,
-  );
+  const url = new URL(await mediaTestDatabaseUrl(original));
   url.searchParams.set("options", `-c timezone=${timezone}`);
   const db = createDatabase(url.toString());
   try {

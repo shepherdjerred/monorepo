@@ -3,9 +3,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import type { FileContext } from "#automation/files/types.ts";
+import { mediaTestDatabaseUrl } from "#testing/postgres.ts";
 
 export async function killPublicationChild(
   db: Database,
@@ -13,10 +13,7 @@ export async function killPublicationChild(
   input: { attemptId: string; operationId: string },
   phase: string,
 ) {
-  const ports = await db.$queryRaw<
-    { port: number }[]
-  >`SELECT inet_server_port() AS port`;
-  const port = z.int().positive().parse(ports[0]?.port);
+  const databaseUrl = await mediaTestDatabaseUrl(db);
   const mount = await db.mediaStorageAuthority.findUniqueOrThrow({
     where: { rootPath: "/data/movies" },
   });
@@ -24,7 +21,7 @@ export async function killPublicationChild(
   await writeFile(
     config,
     JSON.stringify({
-      databaseUrl: `postgres://media@127.0.0.1:${String(port)}/postgres`,
+      databaseUrl,
       roots: fixture.context.roots,
       serverMachineId: fixture.context.serverMachineId,
       movieSectionId: await fixture.context.permittedMovieSection?.(),

@@ -20,7 +20,10 @@ export async function nativeSeriesPackTimezonePoolsV1(privateUrl: string) {
   };
   const connect = async (timezone: string) => {
     const url = new URL(privateUrl);
-    if (url.hostname !== "127.0.0.1" || url.pathname !== "/postgres")
+    if (
+      url.hostname !== "127.0.0.1" ||
+      !/^\/(?:postgres|media_(?:test|mig)_[a-z0-9_]+)$/u.test(url.pathname)
+    )
       throw new Error(
         "Native timezone fixture requires its private PostgreSQL",
       );

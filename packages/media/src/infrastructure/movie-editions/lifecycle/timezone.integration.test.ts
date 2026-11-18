@@ -4,6 +4,7 @@ import { createDatabase, type Database } from "#infrastructure/database.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { createPublicOwnerRestoreFixture } from "#testing/movie-workflow/public-owner-restore-fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
+import { mediaTestDatabaseUrl } from "#testing/postgres.ts";
 import {
   createOutboxActivities,
   type WorkflowStart,
@@ -20,25 +21,7 @@ afterEach(async () => {
 });
 
 async function tokyoDatabase(source: Database) {
-  const address = z
-    .array(
-      z.strictObject({
-        database: z.literal("postgres"),
-        user: z.literal("media"),
-        port: z.int().positive(),
-      }),
-    )
-    .length(1)
-    .parse(
-      await source.$queryRaw`
-      SELECT current_database() AS database,current_user AS "user",inet_server_port() AS port
-    `,
-    )[0];
-  if (address === undefined)
-    throw new Error("Actual disposable database endpoint missing");
-  const url = new URL(
-    `postgresql://media@127.0.0.1:${String(address.port)}/postgres`,
-  );
+  const url = new URL(await mediaTestDatabaseUrl(source));
   url.searchParams.set("options", "-c timezone=Asia/Tokyo");
   const db = createDatabase(url.toString());
   closers.push(() => db.$disconnect());

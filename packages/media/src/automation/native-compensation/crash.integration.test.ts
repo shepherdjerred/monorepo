@@ -4,8 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
+import { mediaTestDatabaseUrl } from "#testing/postgres.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import type { NativeCompensationActivityInput } from "#shared/native-recovery/compensation-runtime.ts";
 import { nativeCompensationFixture } from "./test-fixture.ts";
@@ -38,15 +38,12 @@ test.each([
     if (f === undefined || input === undefined)
       throw new Error("Prepared crash fixture missing");
     const db = harness.database();
-    const ports = await db.$queryRaw<
-      { port: number }[]
-    >`SELECT inet_server_port() AS port`;
-    const port = z.int().positive().parse(ports[0]?.port);
+    const databaseUrl = await mediaTestDatabaseUrl(db);
     const config = path.join(f.file.directory, "compensation-crash.json");
     await writeFile(
       config,
       JSON.stringify({
-        databaseUrl: `postgres://media@127.0.0.1:${String(port)}/postgres`,
+        databaseUrl,
         roots: f.context.files.roots,
         workerPodUid: f.context.workerPodUid,
         input,

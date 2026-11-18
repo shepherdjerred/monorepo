@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { automationTestHarness } from "#testing/automation.ts";
+import { mediaTestDatabaseUrl } from "#testing/postgres.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { nativeQuarantineFixture } from "./test-fixture.ts";
 import { prepareNativeQuarantineFiles } from "./files.ts";
@@ -32,15 +33,12 @@ test.each(["move-unlinked", "native-quarantine-restored-before-commit"])(
     const f = await fixture();
     const continuation = await f.apply();
     const input = await f.positiveRestore();
-    const ports = await f.db.$queryRaw<
-      { port: number }[]
-    >`SELECT inet_server_port() AS port`;
-    const port = z.int().positive().parse(ports[0]?.port);
+    const databaseUrl = await mediaTestDatabaseUrl(f.db);
     const config = path.join(f.file.directory, "crash-input.json");
     await writeFile(
       config,
       JSON.stringify({
-        databaseUrl: `postgres://media@127.0.0.1:${String(port)}/postgres`,
+        databaseUrl,
         roots: f.context.files.roots,
         workerPodUid: f.context.workerPodUid,
         serverMachineId: z
