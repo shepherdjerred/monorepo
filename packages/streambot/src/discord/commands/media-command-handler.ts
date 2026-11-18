@@ -1,4 +1,8 @@
 import { withMode } from "@shepherdjerred/streambot/sources/source.ts";
+import {
+  identifyLibrarySeriesKey,
+  nextEpisodeInSeries,
+} from "@shepherdjerred/streambot/metadata/series-progression.ts";
 import type {
   CommandHandlerDeps,
   CommandInteraction,
@@ -217,13 +221,24 @@ export class MediaCommandHandler {
     scope: DiscoveryScope,
   ): Promise<void> {
     const recent = this.deps.history?.list(scope, "mine", 10) ?? [];
+    const library = this.deps.library();
+    const seenSeries = new Set<string>();
     for (const item of recent) {
-      const query = nextEpisodeQuery(item.title);
-      if (query === null) continue;
-      const match = this.deps
-        .library()
-        .find((entry) => entry.title.includes(query));
-      if (match === undefined) continue;
+      const played = {
+        title: item.title,
+        ...(item.source.kind === "file" ? { path: item.source.path } : {}),
+      };
+      const seriesKey = identifyLibrarySeriesKey(library, played);
+      if (seriesKey !== null) {
+        if (seenSeries.has(seriesKey)) {
+          continue;
+        }
+        seenSeries.add(seriesKey);
+      }
+      const match = nextEpisodeInSeries(library, played);
+      if (match === null) {
+        continue;
+      }
       await this.dispatchCandidate(
         {
           token: crypto.randomUUID(),
@@ -368,20 +383,4 @@ function candidateList(
 
 function candidateMedia(candidate: MediaCandidate): RecordMedia {
   return toRecordMedia(candidate.source, undefined, candidate);
-}
-
-function nextEpisodeQuery(title: string): string | null {
-  const marker = /\bS(?<season>\d{1,2})E(?<episode>\d{1,3})\b/iu.exec(title);
-  const season = marker?.groups?.["season"];
-  const episode = marker?.groups?.["episode"];
-  if (marker === null || season === undefined || episode === undefined) {
-    return null;
-  }
-  const series = title
-    .slice(0, marker.index)
-    .replace(/[\s-]+$/u, "")
-    .trim();
-  if (series.length === 0) return null;
-  const next = Number(episode) + 1;
-  return `${series} S${season.padStart(2, "0")}E${String(next).padStart(2, "0")}`;
 }

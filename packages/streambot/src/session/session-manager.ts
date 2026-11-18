@@ -11,10 +11,13 @@ import {
   deleteState,
   stateFilePath,
 } from "@shepherdjerred/streambot/state/persistence.ts";
-import type { PersistedStation } from "@shepherdjerred/streambot/state/station-schema.ts";
+import type {
+  PersistedStation,
+  StationKind,
+} from "@shepherdjerred/streambot/state/station-schema.ts";
 import { StationFeeder } from "@shepherdjerred/streambot/station/station-feeder.ts";
 import {
-  executeVoiceRadioControl,
+  executeVoiceStationControl,
   startSessionStation,
   stopSessionStation,
 } from "@shepherdjerred/streambot/station/station-session-ops.ts";
@@ -50,6 +53,7 @@ import { enqueueSessionSnapshot } from "@shepherdjerred/streambot/session/sessio
 import { createSession } from "@shepherdjerred/streambot/session/create-session.ts";
 import {
   AUDIO_CHANNEL,
+  VIDEO_CHANNEL,
   type PlaybackChannelNumber,
 } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
@@ -90,20 +94,21 @@ export class SessionManager {
       {
         feeder: this.stationFeeder,
         voiceControl: (guildId, voiceChannelId, statusChannelId) => (input) =>
-          executeVoiceRadioControl({
+          executeVoiceStationControl({
             guildId,
             voiceChannelId,
             statusChannelId,
             ...input,
             featureGate: this.deps.featureGate,
-            resolveTargetSlot: async (scope) =>
+            resolveTargetSlot: async (scope, _action, kind) =>
               (await this.numbered.automatic(scope))
-                ? AUDIO_CHANNEL
+                ? kind === "tv"
+                  ? VIDEO_CHANNEL
+                  : AUDIO_CHANNEL
                 : await this.numbered.selected(scope),
-            onFollowAutoSlot: (scope, slot) => {
-              if (!this.numbered.selection.isManual(scope)) {
+            onFollowAutoSlot: async (scope, slot) => {
+              if (await this.numbered.automatic(scope))
                 this.numbered.selection.follow(scope, slot);
-              }
             },
             startStation: (params) => this.startStation(params),
             stopStation: (params) => this.stopStation(params),
@@ -141,7 +146,7 @@ export class SessionManager {
     guildId: GuildId;
     voiceChannelId: ChannelId;
     statusChannelId: ChannelId;
-    playbackChannel?: PlaybackChannelNumber;
+    playbackChannel?: PlaybackChannelNumber | undefined;
   }): SessionHandle | null {
     if (params.playbackChannel !== undefined)
       return this.numbered.ensure({
@@ -196,21 +201,9 @@ export class SessionManager {
       config: this.deps.config,
       sessions: this.sessions,
       feeder: this.stationFeeder,
-      ensureSession: () =>
-        this.ensureForPlay({
-          guildId: params.guildId,
-          voiceChannelId: params.voiceChannelId,
-          statusChannelId: params.statusChannelId,
-          ...(params.playbackChannel === undefined
-            ? {}
-            : { playbackChannel: params.playbackChannel }),
-        }),
+      ensureSession: () => this.ensureForPlay(params),
       saveSnapshot: (session) => this.saveSnapshot(session),
-      guildId: params.guildId,
-      voiceChannelId: params.voiceChannelId,
-      playbackChannel: params.playbackChannel,
-      station: params.station,
-      signal: params.signal,
+      ...params,
     });
   }
 
@@ -219,6 +212,7 @@ export class SessionManager {
     voiceChannelId: ChannelId;
     playbackChannel?: PlaybackChannelNumber;
     fallbackInRoom?: boolean;
+    kind?: StationKind;
   }): PersistedStation | null {
     return stopSessionStation({
       sessions: this.sessions,
@@ -429,8 +423,8 @@ export class SessionManager {
     return createSession(params, {
       deps: this.deps,
       stationFeeder: this.stationFeeder,
-      controlVoiceRadio: ({ session, ...input }) =>
-        executeVoiceRadioControl({
+      controlVoiceStation: ({ session, ...input }) =>
+        executeVoiceStationControl({
           guildId: session.guildId,
           voiceChannelId: session.voiceChannelId,
           statusChannelId: session.statusChannelId,

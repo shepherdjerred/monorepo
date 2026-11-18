@@ -11,7 +11,9 @@ import {
 } from "@shepherdjerred/streambot/session/session-types.ts";
 import type {
   PersistedStation,
+  StationKind,
   StationScope,
+  TvPreset,
 } from "@shepherdjerred/streambot/state/station-schema.ts";
 import type {
   ChannelId,
@@ -25,29 +27,43 @@ import {
 import type { StationFeeder } from "./station-feeder.ts";
 import type { CuratedStationItem } from "./station-types.ts";
 
+const TV_PRESET_LABELS: Readonly<Record<TvPreset, string>> = {
+  "my-mix": "My Mix",
+  "continue-series": "Continue Series",
+  sitcoms: "Sitcoms",
+  movies: "Movies",
+  youtube: "YouTube",
+};
+
 export async function gateRestoredStation(
   gate: MediaFeatureGate | undefined,
   guildId: GuildId,
   channelId: ChannelId,
   station: PersistedStation | undefined,
 ): Promise<PersistedStation | undefined> {
-  if (station === undefined) return undefined;
-  if (station.kind === "radio" && gate?.radio !== undefined) {
-    const enabled = await gate.radio({
+  if (station === undefined) {
+    return undefined;
+  }
+  const check = station.kind === "radio" ? gate?.radio : gate?.tv;
+  if (check !== undefined) {
+    const enabled = await check({
       guildId,
       channelId,
       userId: station.ownerId,
     });
-    if (!enabled) return undefined;
+    if (!enabled) {
+      return undefined;
+    }
   }
   return station;
 }
 
 export function formatStationDisplayName(station: PersistedStation): string {
   if (station.kind === "tv") {
-    return station.tvPreset === undefined
-      ? "TV mode"
-      : `TV (${station.tvPreset})`;
+    const label = TV_PRESET_LABELS[station.tvPreset ?? "my-mix"];
+    return station.seed === undefined
+      ? `TV (${label})`
+      : `TV (${label} · ${station.seed})`;
   }
   if (station.seed !== undefined) {
     return `Radio (${station.seed})`;
@@ -121,24 +137,30 @@ export function stopSessionStation(input: {
   readonly voiceChannelId: ChannelId;
   readonly playbackChannel?: PlaybackChannelNumber | undefined;
   readonly fallbackInRoom?: boolean | undefined;
+  readonly kind?: StationKind | undefined;
 }): PersistedStation | null {
+  const matchesKind = (candidate: Session | undefined) =>
+    candidate?.station !== undefined &&
+    (input.kind === undefined || candidate.station.kind === input.kind);
   let session = input.sessions.get(
     keyOf(input.guildId, input.voiceChannelId, input.playbackChannel),
   );
-  if (input.fallbackInRoom === true && session?.station === undefined) {
+  if (input.fallbackInRoom === true && !matchesKind(session)) {
     session = [...input.sessions.values()]
       .filter(
         (candidate) =>
           candidate.guildId === input.guildId &&
           candidate.voiceChannelId === input.voiceChannelId &&
-          candidate.station !== undefined,
+          matchesKind(candidate),
       )
       .toSorted(
         (left, right) =>
           (left.playbackChannel ?? 0) - (right.playbackChannel ?? 0),
       )[0];
   }
-  if (session?.station === undefined) return null;
+  if (session === undefined || !matchesKind(session)) {
+    return null;
+  }
 
   const stopped = input.feeder.stop(session);
   const snapshot = session.actor.getSnapshot();
@@ -161,12 +183,14 @@ export function stopSessionStation(input: {
   return stopped;
 }
 
-export type VoiceRadioControlInput = {
+export type VoiceStationControlInput = {
+  readonly kind?: StationKind | undefined;
   readonly guildId: GuildId;
   readonly voiceChannelId: ChannelId;
   readonly statusChannelId: ChannelId | null;
   readonly userId: UserId;
   readonly action: "start" | "stop";
+  readonly tvPreset?: TvPreset | undefined;
   readonly seed?: string | undefined;
   readonly scope?: StationScope | undefined;
   readonly signal: AbortSignal;
@@ -174,11 +198,12 @@ export type VoiceRadioControlInput = {
   readonly resolveTargetSlot: (
     scope: DiscoveryScope,
     action: "start" | "stop",
+    kind: StationKind,
   ) => Promise<PlaybackChannelNumber | undefined>;
   readonly onFollowAutoSlot?: (
     scope: DiscoveryScope,
     slot: PlaybackChannelNumber,
-  ) => void;
+  ) => void | Promise<void>;
   readonly startStation: (params: {
     guildId: GuildId;
     voiceChannelId: ChannelId;
@@ -195,57 +220,92 @@ export type VoiceRadioControlInput = {
     voiceChannelId: ChannelId;
     playbackChannel?: PlaybackChannelNumber;
     fallbackInRoom?: boolean;
+    kind?: StationKind;
   }) => PersistedStation | null;
 };
 
-async function executeVoiceRadioStop(
-  input: VoiceRadioControlInput,
+async function executeVoiceStationStop(
+  input: VoiceStationControlInput,
   discoveryScope: DiscoveryScope,
+  kind: StationKind,
 ): Promise<string> {
-  const targetSlot = await input.resolveTargetSlot(discoveryScope, "stop");
+  const targetSlot = await input.resolveTargetSlot(
+    discoveryScope,
+    "stop",
+    kind,
+  );
   const stopped = input.stopStation({
     guildId: input.guildId,
     voiceChannelId: input.voiceChannelId,
     ...(targetSlot === undefined ? {} : { playbackChannel: targetSlot }),
     fallbackInRoom: true,
+    kind,
   });
   if (stopped === null) {
-    throw new PlaybackCommandBoundaryError("Radio is not playing right now.");
+    throw new PlaybackCommandBoundaryError(
+      kind === "tv"
+        ? "TV mode is not playing right now."
+        : "Radio is not playing right now.",
+    );
   }
   return `Stopped ${formatStationDisplayName(stopped)}.`;
 }
 
-export async function executeVoiceRadioControl(
-  input: VoiceRadioControlInput,
+async function assertVoiceStationAllowed(
+  input: VoiceStationControlInput,
+  discoveryScope: DiscoveryScope,
+  kind: StationKind,
+  targetSlot: PlaybackChannelNumber | undefined,
+): Promise<void> {
+  const gate = kind === "tv" ? input.featureGate?.tv : input.featureGate?.radio;
+  if (gate !== undefined && !(await gate(discoveryScope))) {
+    throw new PlaybackCommandBoundaryError(
+      kind === "tv"
+        ? "TV mode is not enabled in this server."
+        : "Radio mode is not enabled in this server.",
+    );
+  }
+  if (
+    kind === "radio" &&
+    targetSlot !== undefined &&
+    targetSlot !== AUDIO_CHANNEL
+  ) {
+    throw new PlaybackCommandBoundaryError(
+      "Radio plays on channel 1 or in automatic mode.",
+    );
+  }
+  if (kind === "tv" && targetSlot === AUDIO_CHANNEL) {
+    throw new PlaybackCommandBoundaryError(
+      "TV mode requires a video channel (2 or higher) or automatic mode.",
+    );
+  }
+}
+
+export async function executeVoiceStationControl(
+  input: VoiceStationControlInput,
 ): Promise<string> {
+  const kind: StationKind = input.kind ?? "radio";
   const discoveryScope: DiscoveryScope = {
     guildId: input.guildId,
     channelId: input.voiceChannelId,
     userId: input.userId,
   };
   if (input.action === "stop") {
-    return await executeVoiceRadioStop(input, discoveryScope);
+    return await executeVoiceStationStop(input, discoveryScope, kind);
   }
-  if (
-    input.featureGate?.radio !== undefined &&
-    !(await input.featureGate.radio(discoveryScope))
-  ) {
-    throw new PlaybackCommandBoundaryError(
-      "Radio mode is not enabled in this server.",
-    );
-  }
+  const targetSlot = await input.resolveTargetSlot(
+    discoveryScope,
+    "start",
+    kind,
+  );
+  await assertVoiceStationAllowed(input, discoveryScope, kind, targetSlot);
 
-  const targetSlot = await input.resolveTargetSlot(discoveryScope, "start");
-  if (targetSlot !== undefined && targetSlot !== AUDIO_CHANNEL) {
-    throw new PlaybackCommandBoundaryError(
-      "Radio plays on channel 1 or in automatic mode.",
-    );
-  }
   const trimmedSeed = input.seed?.trim();
   const station: PersistedStation = {
-    kind: "radio",
+    kind,
     scope: input.scope ?? "room",
     ownerId: input.userId,
+    ...(kind === "tv" ? { tvPreset: input.tvPreset ?? "my-mix" } : {}),
     ...(trimmedSeed === undefined || trimmedSeed === ""
       ? {}
       : { seed: trimmedSeed }),
@@ -271,13 +331,16 @@ export async function executeVoiceRadioControl(
       guildId: input.guildId,
       voiceChannelId: input.voiceChannelId,
       ...(targetSlot === undefined ? {} : { playbackChannel: targetSlot }),
+      kind,
     });
     throw new PlaybackCommandBoundaryError(
-      "I could not find any radio tracks right now.",
+      kind === "tv"
+        ? "I could not find any TV episodes, movies, or videos right now."
+        : "I could not find any radio tracks right now.",
     );
   }
-  if (targetSlot === AUDIO_CHANNEL) {
-    input.onFollowAutoSlot?.(discoveryScope, AUDIO_CHANNEL);
+  if (targetSlot !== undefined) {
+    await input.onFollowAutoSlot?.(discoveryScope, targetSlot);
   }
   return formatStationStartMessage(station, started.added).replaceAll("**", "");
 }

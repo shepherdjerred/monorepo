@@ -81,10 +81,24 @@ describe("voice transaction policy", () => {
       "get_now_playing",
       "list_sports",
       "radio",
+      "tv",
     ]);
   });
 
   test("validates every strict tool input schema", () => {
+    expect(
+      voiceToolSchemas.tv.safeParse({
+        action: "start",
+        preset: "sitcoms",
+        seed: "The Bear",
+        scope: "room",
+      }).success,
+    ).toBe(true);
+    expect(
+      voiceToolSchemas.tv.safeParse({
+        action: "stop",
+      }).success,
+    ).toBe(true);
     expect(
       voiceToolSchemas.radio.safeParse({
         action: "start",

@@ -47,6 +47,7 @@ import { MusicService } from "@shepherdjerred/streambot/music/service.ts";
 import { MusicCatalog } from "@shepherdjerred/streambot/music/catalog.ts";
 import { SpotifyMetadata } from "@shepherdjerred/streambot/music/spotify.ts";
 import { RadioCurator } from "@shepherdjerred/streambot/station/radio-curator.ts";
+import { createTvCurator } from "@shepherdjerred/streambot/station/tv-curator.ts";
 import {
   mediaFeatureGate,
   webUiEnabled,
@@ -162,6 +163,8 @@ async function main(): Promise<void> {
   const sports = new SportsService(sportsBrowser, lol);
   let schedules: LolPlaybackSchedules | undefined;
   const sportsResolver = createSportsResolver(sportsBrowser, config);
+  const plexArtwork =
+    config.plex === undefined ? undefined : new PlexArtwork(config.plex);
 
   // Log every userbot in and snapshot guild membership before anything tries to acquire one.
   const pool = new UserbotPool(config.discord.userTokens, config);
@@ -230,6 +233,16 @@ async function main(): Promise<void> {
         ytDlpPath: config.ytDlpPath,
         openAiApiKey: config.voice.openAiApiKey,
       }),
+      tv: createTvCurator({
+        history,
+        historyEnabled: mediaFeatureGate.history,
+        libraryEntries: () => library,
+        plexMetadata: plexArtwork,
+        searchYoutube: (query, signal, limit) =>
+          searchYoutube(config, query, signal, limit),
+        ytDlpPath: config.ytDlpPath,
+        openAiApiKey: config.voice.openAiApiKey,
+      }),
     },
   });
   refs.sessions = sessions;
@@ -291,9 +304,7 @@ async function main(): Promise<void> {
                 ? {}
                 : { fetchPoster: createPosterFetcher(config.tmdb.apiKey) }),
               sports,
-              ...(config.plex === undefined
-                ? {}
-                : { plexArtwork: new PlexArtwork(config.plex) }),
+              ...(plexArtwork === undefined ? {} : { plexArtwork }),
             }),
             announce: (channelId, message) =>
               commandBot.announce(channelId, message),

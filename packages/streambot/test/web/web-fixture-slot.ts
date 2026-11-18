@@ -76,11 +76,147 @@ const FIXTURE_RADIO_CATALOG: readonly {
   },
 ];
 
+const FIXTURE_TV_CATALOG: readonly {
+  readonly presets: readonly string[];
+  readonly title: string;
+  readonly source: Source;
+  readonly durationSeconds: number;
+  readonly thumbnailUrl?: string;
+}[] = [
+  {
+    presets: ["my-mix", "continue-series"],
+    title: "Severance — Good News About Hell",
+    source: {
+      kind: "file",
+      path: "/media/tv/severance/1-1.mkv",
+      title: "Severance — Good News About Hell",
+      mode: "video",
+    },
+    durationSeconds: 3420,
+  },
+  {
+    presets: ["my-mix", "sitcoms", "continue-series"],
+    title: "The Bear — System",
+    source: {
+      kind: "file",
+      path: "/media/tv/the-bear/1-1.mkv",
+      title: "The Bear — System",
+      mode: "video",
+    },
+    durationSeconds: 1740,
+  },
+  {
+    presets: ["my-mix", "movies"],
+    title: "Spirited Away",
+    source: {
+      kind: "file",
+      path: "/media/movies/spirited-away.mkv",
+      title: "Spirited Away",
+      mode: "video",
+    },
+    durationSeconds: 7500,
+  },
+  {
+    presets: ["my-mix", "continue-series"],
+    title: "Severance — Half Loop",
+    source: {
+      kind: "file",
+      path: "/media/tv/severance/1-2.mkv",
+      title: "Severance — Half Loop",
+      mode: "video",
+    },
+    durationSeconds: 3180,
+  },
+  {
+    presets: ["sitcoms"],
+    title: "Abbott Elementary — Pilot",
+    source: {
+      kind: "file",
+      path: "/media/tv/abbott-elementary/1-1.mkv",
+      title: "Abbott Elementary — Pilot",
+      mode: "video",
+    },
+    durationSeconds: 1320,
+  },
+  {
+    presets: ["movies"],
+    title: "Whiplash",
+    source: {
+      kind: "file",
+      path: "/media/movies/whiplash.mkv",
+      title: "Whiplash",
+      mode: "video",
+    },
+    durationSeconds: 6360,
+  },
+  {
+    presets: ["my-mix", "youtube"],
+    title: "Defunctland — Disney's FastPass: A Complicated History",
+    source: {
+      kind: "url",
+      url: "https://www.youtube.com/watch?v=9yjZpBq1XBE",
+      title: "Defunctland — Disney's FastPass: A Complicated History",
+      mode: "video",
+    },
+    durationSeconds: 6180,
+    thumbnailUrl: "https://i.ytimg.com/vi/9yjZpBq1XBE/hqdefault.jpg",
+  },
+  {
+    presets: ["youtube"],
+    title: "Summoning Salt — Mario Kart 64 World Record History",
+    source: {
+      kind: "url",
+      url: "https://www.youtube.com/watch?v=t36a3i2B2vE",
+      title: "Summoning Salt — Mario Kart 64 World Record History",
+      mode: "video",
+    },
+    durationSeconds: 3240,
+    thumbnailUrl: "https://i.ytimg.com/vi/t36a3i2B2vE/hqdefault.jpg",
+  },
+];
+
+function curateFixtureTvItems(
+  station: PersistedStation,
+  exclude: ReadonlySet<string>,
+  count: number,
+): readonly CuratedStationItem[] {
+  const preset = station.tvPreset ?? "my-mix";
+  const seed = station.seed?.trim().toLowerCase() ?? "";
+  const matchingPreset = FIXTURE_TV_CATALOG.filter((entry) =>
+    entry.presets.includes(preset),
+  );
+  const ordered =
+    seed === ""
+      ? matchingPreset
+      : matchingPreset.toSorted(
+          (left, right) =>
+            Number(!left.title.toLowerCase().includes(seed)) -
+            Number(!right.title.toLowerCase().includes(seed)),
+        );
+  const results: CuratedStationItem[] = [];
+  for (const entry of ordered) {
+    if (results.length >= count) break;
+    if (exclude.has(sourceIdentity(entry.source))) continue;
+    results.push({
+      title: entry.title,
+      source: entry.source,
+      durationSeconds: entry.durationSeconds,
+      ...(entry.thumbnailUrl === undefined
+        ? {}
+        : { thumbnailUrl: entry.thumbnailUrl }),
+    });
+  }
+  return results;
+}
+
 function curateFixtureTracks(
   station: PersistedStation,
   exclude: ReadonlySet<string>,
   count: number,
 ): readonly CuratedStationItem[] {
+  if (station.kind === "tv") {
+    return curateFixtureTvItems(station, exclude, count);
+  }
   const results: CuratedStationItem[] = [];
   for (const [index, entry] of FIXTURE_RADIO_CATALOG.entries()) {
     if (results.length >= count) break;

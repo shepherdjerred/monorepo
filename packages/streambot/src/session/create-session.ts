@@ -24,14 +24,20 @@ import type {
   ChannelId,
   UserId,
 } from "@shepherdjerred/streambot/types/ids.ts";
-import type { StationScope } from "@shepherdjerred/streambot/state/station-schema.ts";
+import type {
+  StationKind,
+  StationScope,
+  TvPreset,
+} from "@shepherdjerred/streambot/state/station-schema.ts";
 type CreateSessionOptions = {
   deps: SessionManagerDeps;
   stationFeeder: StationFeeder;
-  controlVoiceRadio?: (input: {
+  controlVoiceStation?: (input: {
     session: Session;
+    kind?: StationKind | undefined;
     userId: UserId;
     action: "start" | "stop";
+    tvPreset?: TvPreset | undefined;
     seed?: string | undefined;
     scope?: StationScope | undefined;
     signal: AbortSignal;
@@ -138,18 +144,18 @@ export function createSession(
       options.teardown(session);
     }),
   };
-  const controlVoiceRadio = options.controlVoiceRadio;
+  const controlVoiceStation = options.controlVoiceStation;
   if (params.playbackChannel === undefined)
     session.voiceAssistant = createSessionVoiceAssistant(
       options.deps,
       session,
       {
         stationFeeder: options.stationFeeder,
-        ...(controlVoiceRadio === undefined
+        ...(controlVoiceStation === undefined
           ? {}
           : {
               controlStation: (input) =>
-                controlVoiceRadio({ session, ...input }),
+                controlVoiceStation({ session, ...input }),
             }),
       },
     );

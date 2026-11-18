@@ -24,7 +24,10 @@ Client-supplied user identities cannot authorize an action.
 
 The web remote gives everyone currently in that voice channel shared control.
 Its authorization adapter retains the real requester when adding media.
-In numbered rooms, the selector shares the viewer's personal channel with Discord commands.
+Splitting viewed slot and target slot let play actions land in a different queue than the viewer inspected.
+One [snapshot selector](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/snapshot.ts)
+combines `Auto` with numbered channels so the displayed queue and manual actions always match.
+`Auto` follows an occupied slot first, while numbered choices share personal focus with Discord commands.
 Channel 1 plays mic audio; channel 2 and higher play Go Live video.
 Each slot keeps its own player and queue. Selecting one does not acquire a userbot.
 Legacy mixed queues keep their existing behavior until they finish.
@@ -77,34 +80,54 @@ See [scheduled playback activation](/how-to/enable-streambot-lol-scheduling/) fo
 ## Music separates catalog identity from playback
 
 MusicBrainz identifies artists, album editions, and recordings without requiring a listener's streaming-service account.
-The [catalog](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/catalog.ts)
+The [catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/catalog.ts)
 provides those entities; the [Streambot service](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/index.ts)
-searches YouTube for playback sources. The [matcher](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/matching.ts)
+searches YouTube for playback sources. The [matcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/matching.ts)
 uses artist, title, version, and duration to rank recordings.
-The [web recording picker](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/web/server/music.ts)
+The [web recording picker](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/music.ts)
 lets listeners correct a queued or saved song.
-Saved sources retain catalog identity alongside the selected video, so [voice recovery](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/session/voice-recovery.ts)
-can resolve a fresh audio URL. The [artwork resolver](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/artwork.ts)
+Saved sources retain catalog identity alongside the selected video, so [voice recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/voice-recovery.ts)
+can resolve a fresh audio URL. The [artwork resolver](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/artwork.ts)
 keeps album artwork with saved playlists, queues, recovery, and player cards.
-MusicBrainz covers come from the Cover Art Archive, and [Spotify links](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/spotify.ts)
+MusicBrainz covers come from the Cover Art Archive, and [Spotify links](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/spotify.ts)
 retain their public album cover. Saved playlist covers represent their first track.
 
 `/play` and `!play` accept a title or supported link and share playback routing and playlist loading.
-The [message shortcut](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/discord/quick-play.ts)
-uses Discord's Message Content Intent, and [intent setup](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/discord/command-intents.ts)
+The [message shortcut](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/discord/quick-play.ts)
+uses Discord's Message Content Intent, and [intent setup](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/discord/command-intents.ts)
 checks the application's granted capability before requesting it at login.
 The slash command remains available when message content is unavailable.
 
-External playlist links express a request to play now.
-Their metadata loading is temporary; queue entries become ordinary playback requests.
-Explicitly saved playlists have a separate lifetime in the
-[playlist store](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/playlists.ts)
+Playing an external playlist link expands temporary metadata directly into an active room queue.
+Importing a YouTube or public Spotify link through
+[playlist import](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/playlist-import.ts)
+snapshots tracks into a saved collection without starting a voice session.
+Saved playlists keep a separate lifetime in the
+[playlist store](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/playlists.ts)
 and [history database](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/history/media-history.ts).
 Private ownership and server sharing keep personal collections separate from a room's active queue.
 Sharing grants playback and copying while keeping edits with the owner.
-The [web playlist API](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/web/server/music-playlists.ts)
+The [web playlist API](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/music-playlists.ts)
 rechecks server membership and playlist access when a saved selection is used.
 Making a playlist private revokes its previously issued selection tokens.
+
+## Continuous stations stay outside the state machine
+
+Radio and TV stations belong to the
+[session manager](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/session-manager.ts)
+rather than the
+[playback machine](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/machine/playback-machine.ts).
+The state machine stays deterministic so tests and voice harnesses can drive transitions without gateways, network calls, or SQLite reads.
+Station curation needs external I/O across
+[media history](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/history/media-history.ts),
+[saved playlists](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/playlists.ts),
+[Plex metadata](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/metadata/plex.ts),
+and YouTube search.
+
+The session layer therefore feeds a small bounded lookahead into the ordinary playback queue.
+Keeping only a couple of items ahead preserves gapless transitions without locking in stale picks when listeners change or skip.
+Explicit listener queue additions naturally raise the queue above that low-water mark and pause station refill.
+Human requests play uninterrupted first, and continuous curation resumes only after the queue drains back down.
 
 ## The edge serves the remote
 

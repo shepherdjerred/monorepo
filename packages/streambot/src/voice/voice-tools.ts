@@ -13,6 +13,7 @@ import {
   type RadioArguments,
   type SeekArguments,
   type ToolName,
+  type TvArguments,
 } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
 import { invokeStreambotVoiceTool as runVoiceTool } from "./voice-tool-invocation.ts";
 
@@ -68,6 +69,10 @@ export type VoiceCommandPort = {
   ) => string | Promise<string>;
   readonly radio?: (
     input: RadioArguments,
+    signal: AbortSignal,
+  ) => string | Promise<string>;
+  readonly tv?: (
+    input: TvArguments,
     signal: AbortSignal,
   ) => string | Promise<string>;
   /** Optional rollout gate for newly added assistant-v2 controls. */
@@ -151,6 +156,7 @@ export function bindPlaybackVoiceCommandPort(
     listSports: (signal, options) =>
       service.listSports(userId, signal, options),
     radio: (input, signal) => service.radio(userId, input, signal),
+    tv: (input, signal) => service.tv(userId, input, signal),
     isAssistantV2Enabled: () => service.isAssistantV2Enabled(userId),
     clarificationVersion: () => service.clarificationVersion(),
   };
@@ -413,6 +419,25 @@ export function createStreambotVoiceTools(
                 () =>
                   commands.radio?.(input, transactionSignal) ??
                   "Radio mode is not available.",
+              ),
+          }),
+        ]),
+    ...(commands.tv === undefined
+      ? []
+      : [
+          tool({
+            name: "tv",
+            description:
+              "Start or stop continuous tunable TV mode on Go Live video, with an optional channel preset (my-mix, continue-series, sitcoms, movies, youtube), seed, or scope.",
+            parameters: voiceToolSchemas.tv,
+            execute: (input) =>
+              invoke(
+                "tv",
+                true,
+                input,
+                () =>
+                  commands.tv?.(input, transactionSignal) ??
+                  "TV mode is not available.",
               ),
           }),
         ]),

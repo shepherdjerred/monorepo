@@ -118,6 +118,7 @@ export function webFixture(
     music?: MusicService;
     musicEnabled?: boolean;
     radioEnabled?: boolean;
+    tvEnabled?: boolean;
     join?: (input: {
       guildId: typeof GUILD;
       channelId: typeof CHANNEL;
@@ -166,6 +167,7 @@ export function webFixture(
   let advanced = true;
   let sportsEnabled = true;
   let radioEnabled = options.radioEnabled ?? true;
+  let tvEnabled = options.tvEnabled ?? true;
   let plexEnabled = false;
   let allocated = false;
   let numbered = false;
@@ -213,6 +215,7 @@ export function webFixture(
     spotifyLinks: () => Promise.resolve(options.musicEnabled === true),
     playlists: () => Promise.resolve(options.musicEnabled === true),
     radio: () => Promise.resolve(radioEnabled),
+    tv: () => Promise.resolve(tvEnabled),
     assistantV2: () => Promise.resolve(advanced),
     history: () => Promise.resolve(options.history !== undefined),
     automaticChannelRouting: () => Promise.resolve(options.automatic === true),
@@ -255,8 +258,14 @@ export function webFixture(
         const added = await primarySlot.startStation(params.station);
         return { handle, added };
       },
-      stopStation: () => {
+      stopStation: (params) => {
         if (!allocated) return null;
+        if (
+          params.kind !== undefined &&
+          primarySlot.station?.kind !== params.kind
+        ) {
+          return null;
+        }
         const stopped = primarySlot.stopStation();
         if (
           stopped !== null &&
@@ -343,6 +352,7 @@ export function webFixture(
     store,
     actor,
     handle,
+    primarySlot,
     playback,
     catalog,
     handler,
@@ -415,6 +425,9 @@ export function webFixture(
     },
     setRadioEnabled: (value: boolean) => {
       radioEnabled = value;
+    },
+    setTvEnabled: (value: boolean) => {
+      tvEnabled = value;
     },
     setPlexEnabled: (value: boolean) => {
       plexEnabled = value;

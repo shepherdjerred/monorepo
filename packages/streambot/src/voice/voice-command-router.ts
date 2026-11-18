@@ -20,6 +20,7 @@ import {
   VOICE_DECISIONS_PROMPT_CACHE_KEY,
   VOICE_DECISIONS_WORKLOAD,
 } from "@shepherdjerred/streambot/voice/constants.ts";
+import type { TvPreset } from "@shepherdjerred/streambot/state/station-schema.ts";
 import type { ToolName } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
 import {
   invokeStreambotVoiceTool,
@@ -37,13 +38,14 @@ Choose a closed playback intent ONLY when the utterance is a single, unambiguous
 - pause, resume, skip, previous, restart, stop, clear, shuffle, subtitles_off
 - loop_off, loop_track, loop_queue
 - radio_start, radio_stop (only when no artist/genre/mood seed or scope is specified)
+- tv_start, tv_continue_series, tv_sitcoms, tv_movies, tv_youtube, tv_stop (only when no show/topic/genre seed or scope is specified)
 - channel_1, channel_2, channel_auto (only when those choices are listed)
 
 Choose non_command ONLY when the utterance is an accidental wake trigger, empty filler, self-cancellation ("never mind", "cancel that", "ignore me"), or background conversation clearly not asking Streambot to act or answer.
 
 Choose delegate_realtime for EVERYTHING else, including:
 - playing or searching any song, video, movie, show, artist, character cover, or sports match
-- seeded or scoped radio requests ("start jazz radio", "play my radio", "radio for Daft Punk")
+- seeded or scoped radio or TV requests ("start jazz radio", "play my radio", "start sci-fi tv", "my tv")
 - numbered selections or references ("play 2", "first", "second", "that song again")
 - volume changes ("volume 40", "turn it up", "mute")
 - time or chapter seeks ("seek to 10 minutes", "go back 30 seconds", "next chapter", "chapter 3")
@@ -56,111 +58,124 @@ Choose delegate_realtime for EVERYTHING else, including:
 const VOICE_ROUTER_QUESTION_INSTRUCTIONS =
   "Classify this wake-stripped Streambot voice utterance into one closed command intent, non_command, or delegate_realtime.";
 
+const opt = (value: string, description: string): DecisionChoiceOption => ({
+  value,
+  description,
+});
+
 const BASE_INTENT_CHOICES: readonly DecisionChoiceOption[] = [
-  {
-    value: "pause",
-    description:
-      "Pause current playback immediately (e.g. 'pause', 'pause the video', 'hold on').",
-  },
-  {
-    value: "resume",
-    description:
-      "Resume or unpause paused playback (e.g. 'resume', 'unpause', 'continue playing').",
-  },
-  {
-    value: "skip",
-    description:
-      "Skip the current item to play the next queued item (e.g. 'skip', 'next', 'next track', 'skip this').",
-  },
-  {
-    value: "previous",
-    description:
-      "Play the previous item from server history again (e.g. 'previous', 'previous track', 'play the previous song'). Relative time seeks like 'go back 30 seconds' must use delegate_realtime.",
-  },
-  {
-    value: "restart",
-    description:
-      "Restart the currently playing item from the beginning (e.g. 'restart', 'start over', 'from the beginning').",
-  },
-  {
-    value: "stop",
-    description:
-      "Stop playback completely and clear the queue (e.g. 'stop', 'stop playback', 'stop playing').",
-  },
-  {
-    value: "clear",
-    description:
-      "Clear all queued items without stopping the current item (e.g. 'clear queue', 'clear the queue', 'empty queue').",
-  },
-  {
-    value: "shuffle",
-    description:
-      "Shuffle the queued items (e.g. 'shuffle', 'shuffle the queue').",
-  },
-  {
-    value: "subtitles_off",
-    description:
-      "Turn subtitles or captions off for the current video (e.g. 'turn off subtitles', 'subtitles off', 'disable captions'). Enabling subtitles or selecting a language must use delegate_realtime.",
-  },
-  {
-    value: "loop_off",
-    description:
-      "Turn looping off (e.g. 'loop off', 'turn looping off', 'stop looping').",
-  },
-  {
-    value: "loop_track",
-    description:
-      "Loop the current single track or video (e.g. 'loop this track', 'loop song', 'repeat one').",
-  },
-  {
-    value: "loop_queue",
-    description:
-      "Loop the full playback queue (e.g. 'loop the queue', 'loop all', 'repeat queue').",
-  },
+  opt(
+    "pause",
+    "Pause current playback immediately (e.g. 'pause', 'pause the video', 'hold on').",
+  ),
+  opt(
+    "resume",
+    "Resume or unpause paused playback (e.g. 'resume', 'unpause', 'continue playing').",
+  ),
+  opt(
+    "skip",
+    "Skip the current item to play the next queued item (e.g. 'skip', 'next', 'next track', 'skip this').",
+  ),
+  opt(
+    "previous",
+    "Play the previous item from server history again (e.g. 'previous', 'previous track', 'play the previous song'). Relative time seeks like 'go back 30 seconds' must use delegate_realtime.",
+  ),
+  opt(
+    "restart",
+    "Restart the currently playing item from the beginning (e.g. 'restart', 'start over', 'from the beginning').",
+  ),
+  opt(
+    "stop",
+    "Stop playback completely and clear the queue (e.g. 'stop', 'stop playback', 'stop playing').",
+  ),
+  opt(
+    "clear",
+    "Clear all queued items without stopping the current item (e.g. 'clear queue', 'clear the queue', 'empty queue').",
+  ),
+  opt(
+    "shuffle",
+    "Shuffle the queued items (e.g. 'shuffle', 'shuffle the queue').",
+  ),
+  opt(
+    "subtitles_off",
+    "Turn subtitles or captions off for the current video (e.g. 'turn off subtitles', 'subtitles off', 'disable captions'). Enabling subtitles or selecting a language must use delegate_realtime.",
+  ),
+  opt(
+    "loop_off",
+    "Turn looping off (e.g. 'loop off', 'turn looping off', 'stop looping').",
+  ),
+  opt(
+    "loop_track",
+    "Loop the current single track or video (e.g. 'loop this track', 'loop song', 'repeat one').",
+  ),
+  opt(
+    "loop_queue",
+    "Loop the full playback queue (e.g. 'loop the queue', 'loop all', 'repeat queue').",
+  ),
 ];
 
 const RADIO_INTENT_CHOICES: readonly DecisionChoiceOption[] = [
-  {
-    value: "radio_start",
-    description:
-      "Start unseeded continuous Radio mode (e.g. 'put on radio', 'start radio', 'turn on radio'). Seeded or scoped radio ('start jazz radio', 'my radio') must use delegate_realtime.",
-  },
-  {
-    value: "radio_stop",
-    description:
-      "Stop active Radio station refilling (e.g. 'stop radio', 'turn off radio').",
-  },
+  opt(
+    "radio_start",
+    "Start unseeded continuous Radio mode (e.g. 'put on radio', 'start radio', 'turn on radio'). Seeded or scoped radio ('start jazz radio', 'my radio') must use delegate_realtime.",
+  ),
+  opt(
+    "radio_stop",
+    "Stop active Radio station refilling (e.g. 'stop radio', 'turn off radio').",
+  ),
+];
+
+const TV_INTENT_CHOICES: readonly DecisionChoiceOption[] = [
+  opt(
+    "tv_start",
+    "Start unseeded continuous TV mode with the default My Mix preset (e.g. 'start tv', 'turn on tv', 'put on tv'). Seeded or scoped TV ('start sci-fi tv', 'my tv') must use delegate_realtime.",
+  ),
+  opt(
+    "tv_continue_series",
+    "Start unseeded continuous TV mode on the Continue Series preset (e.g. 'start continue series tv', 'continue series tv').",
+  ),
+  opt(
+    "tv_sitcoms",
+    "Start unseeded continuous TV mode on the Sitcoms preset (e.g. 'put on sitcoms tv', 'start sitcoms tv').",
+  ),
+  opt(
+    "tv_movies",
+    "Start unseeded continuous TV mode on the Movies preset (e.g. 'put on movies tv', 'start movies tv').",
+  ),
+  opt(
+    "tv_youtube",
+    "Start unseeded continuous TV mode on the YouTube preset (e.g. 'put on youtube tv', 'start youtube tv').",
+  ),
+  opt(
+    "tv_stop",
+    "Stop active TV station refilling (e.g. 'stop tv', 'turn off tv').",
+  ),
 ];
 
 const NUMBERED_CHANNEL_CHOICES: readonly DecisionChoiceOption[] = [
-  {
-    value: "channel_1",
-    description:
-      "Select Streambot playback channel 1 (mic audio) without starting media (e.g. 'channel 1', 'switch to channel one').",
-  },
-  {
-    value: "channel_2",
-    description:
-      "Select Streambot playback channel 2 (Go Live video) without starting media (e.g. 'channel 2', 'switch to channel two').",
-  },
-  {
-    value: "channel_auto",
-    description:
-      "Restore automatic Streambot channel routing (e.g. 'automatic channel', 'channel auto').",
-  },
+  opt(
+    "channel_1",
+    "Select Streambot playback channel 1 (mic audio) without starting media (e.g. 'channel 1', 'switch to channel one').",
+  ),
+  opt(
+    "channel_2",
+    "Select Streambot playback channel 2 (Go Live video) without starting media (e.g. 'channel 2', 'switch to channel two').",
+  ),
+  opt(
+    "channel_auto",
+    "Restore automatic Streambot channel routing (e.g. 'automatic channel', 'channel auto').",
+  ),
 ];
 
 const FALLBACK_INTENT_CHOICES: readonly DecisionChoiceOption[] = [
-  {
-    value: "non_command",
-    description:
-      "Accidental wake trigger, self-cancellation ('actually never mind', 'cancel'), or background conversation not asking Streambot to do or answer anything.",
-  },
-  {
-    value: "delegate_realtime",
-    description:
-      "Any request needing open arguments, media search, numbers, volume, seeking, subtitle language/auto, sports listings, spoken status answers, channel 3+, or compound actions.",
-  },
+  opt(
+    "non_command",
+    "Accidental wake trigger, self-cancellation ('actually never mind', 'cancel'), or background conversation not asking Streambot to do or answer anything.",
+  ),
+  opt(
+    "delegate_realtime",
+    "Any request needing open arguments, media search, numbers, volume, seeking, subtitle language/auto, sports listings, spoken status answers, channel 3+, or compound actions.",
+  ),
 ];
 
 export type ClosedVoiceCommandIntent =
@@ -178,6 +193,12 @@ export type ClosedVoiceCommandIntent =
   | "loop_queue"
   | "radio_start"
   | "radio_stop"
+  | "tv_start"
+  | "tv_continue_series"
+  | "tv_sitcoms"
+  | "tv_movies"
+  | "tv_youtube"
+  | "tv_stop"
   | "channel_1"
   | "channel_2"
   | "channel_auto";
@@ -237,119 +258,91 @@ function buildIntentChoices(
   return [
     ...BASE_INTENT_CHOICES,
     ...(commands.radio === undefined ? [] : RADIO_INTENT_CHOICES),
+    ...(commands.tv === undefined ? [] : TV_INTENT_CHOICES),
     ...(commands.selectChannel === undefined ? [] : NUMBERED_CHANNEL_CHOICES),
     ...FALLBACK_INTENT_CHOICES,
   ];
+}
+
+const TV_PRESET_BY_INTENT: Readonly<
+  Record<string, { action: "start" | "stop"; preset?: TvPreset }>
+> = {
+  tv_start: { action: "start" },
+  tv_continue_series: { action: "start", preset: "continue-series" },
+  tv_sitcoms: { action: "start", preset: "sitcoms" },
+  tv_movies: { action: "start", preset: "movies" },
+  tv_youtube: { action: "start", preset: "youtube" },
+  tv_stop: { action: "stop" },
+};
+
+const bareSpec = (
+  toolName: ToolName,
+  execute: ClosedIntentExecutionSpec["execute"],
+): ClosedIntentExecutionSpec => ({ toolName, toolArguments: {}, execute });
+const loopSpec = (
+  commands: VoiceCommandPort,
+  mode: "off" | "track" | "queue",
+): ClosedIntentExecutionSpec => ({
+  toolName: "set_loop",
+  toolArguments: { mode },
+  execute: () => commands.setLoop(mode),
+});
+
+function resolveBaseIntent(
+  intent: string,
+  commands: VoiceCommandPort,
+): ClosedIntentExecutionSpec | null {
+  const simple: Record<string, ClosedIntentExecutionSpec | undefined> = {
+    pause: bareSpec("pause", () => commands.pause()),
+    resume: bareSpec("resume", () => commands.resume()),
+    skip: bareSpec("skip", () => commands.skip()),
+    previous: bareSpec("previous", (signal) => commands.previous(signal)),
+    restart: bareSpec("restart", () => commands.restart()),
+    stop: bareSpec("stop", () => commands.stop()),
+    clear: bareSpec("clear", () => commands.clear()),
+    shuffle: bareSpec("shuffle", () => commands.shuffle()),
+    subtitles_off: bareSpec("subtitles_off", () => commands.subtitlesOff()),
+    loop_off: loopSpec(commands, "off"),
+    loop_track: loopSpec(commands, "track"),
+    loop_queue: loopSpec(commands, "queue"),
+  };
+  return Object.hasOwn(simple, intent) ? (simple[intent] ?? null) : null;
 }
 
 function resolveClosedIntent(
   intent: string,
   commands: VoiceCommandPort,
 ): ClosedIntentExecutionSpec | null {
-  switch (intent) {
-    case "pause": {
-      return {
-        toolName: "pause",
-        toolArguments: {},
-        execute: () => commands.pause(),
-      };
-    }
-    case "resume": {
-      return {
-        toolName: "resume",
-        toolArguments: {},
-        execute: () => commands.resume(),
-      };
-    }
-    case "skip": {
-      return {
-        toolName: "skip",
-        toolArguments: {},
-        execute: () => commands.skip(),
-      };
-    }
-    case "previous": {
-      return {
-        toolName: "previous",
-        toolArguments: {},
-        execute: (signal) => commands.previous(signal),
-      };
-    }
-    case "restart": {
-      return {
-        toolName: "restart",
-        toolArguments: {},
-        execute: () => commands.restart(),
-      };
-    }
-    case "stop": {
-      return {
-        toolName: "stop",
-        toolArguments: {},
-        execute: () => commands.stop(),
-      };
-    }
-    case "clear": {
-      return {
-        toolName: "clear",
-        toolArguments: {},
-        execute: () => commands.clear(),
-      };
-    }
-    case "shuffle": {
-      return {
-        toolName: "shuffle",
-        toolArguments: {},
-        execute: () => commands.shuffle(),
-      };
-    }
-    case "subtitles_off": {
-      return {
-        toolName: "subtitles_off",
-        toolArguments: {},
-        execute: () => commands.subtitlesOff(),
-      };
-    }
-    case "loop_off": {
-      return {
-        toolName: "set_loop",
-        toolArguments: { mode: "off" },
-        execute: () => commands.setLoop("off"),
-      };
-    }
-    case "loop_track": {
-      return {
-        toolName: "set_loop",
-        toolArguments: { mode: "track" },
-        execute: () => commands.setLoop("track"),
-      };
-    }
-    case "loop_queue": {
-      return {
-        toolName: "set_loop",
-        toolArguments: { mode: "queue" },
-        execute: () => commands.setLoop("queue"),
-      };
-    }
-    case "radio_start": {
-      return resolveRadioIntent(commands, "start");
-    }
-    case "radio_stop": {
-      return resolveRadioIntent(commands, "stop");
-    }
-    case "channel_1": {
-      return resolveNumberedChannelIntent(commands, 1);
-    }
-    case "channel_2": {
-      return resolveNumberedChannelIntent(commands, 2);
-    }
-    case "channel_auto": {
-      return resolveNumberedChannelIntent(commands, "auto");
-    }
-    default: {
-      return null;
-    }
+  const base = resolveBaseIntent(intent, commands);
+  if (base !== null) return base;
+  if (intent === "radio_start") return resolveRadioIntent(commands, "start");
+  if (intent === "radio_stop") return resolveRadioIntent(commands, "stop");
+  if (Object.hasOwn(TV_PRESET_BY_INTENT, intent)) {
+    const tvSpec = TV_PRESET_BY_INTENT[intent];
+    return tvSpec === undefined ? null : resolveTvIntent(commands, tvSpec);
   }
+  if (intent === "channel_1") return resolveNumberedChannelIntent(commands, 1);
+  if (intent === "channel_2") return resolveNumberedChannelIntent(commands, 2);
+  return intent === "channel_auto"
+    ? resolveNumberedChannelIntent(commands, "auto")
+    : null;
+}
+
+function resolveTvIntent(
+  commands: VoiceCommandPort,
+  args: { readonly action: "start" | "stop"; readonly preset?: TvPreset },
+): ClosedIntentExecutionSpec | null {
+  const tv = commands.tv;
+  if (tv === undefined) return null;
+  const payload =
+    args.preset === undefined
+      ? { action: args.action }
+      : { action: args.action, preset: args.preset };
+  return {
+    toolName: "tv",
+    toolArguments: payload,
+    execute: (signal) => tv.call(commands, payload, signal),
+  };
 }
 
 function resolveRadioIntent(

@@ -76,7 +76,8 @@ export function helpText(
     "Search defaults to history + local files + YouTube. Direct links and playlists use yt-dlp; DRM and login-only sites are unsupported.",
     "",
     "• `/music web` · `/stream playback web` — open Streambot",
-    "• `/music playlist list|show|play|save|share|private` — saved playlists",
+    "• `/music playlist list|show|play|save|import|share|private` — saved playlists",
+    "• `/radio start|status|stop` · `/tv start|status|stop` — continuous stations",
     "• `/stream help` — show this message",
   ].join("\n");
 }

@@ -13,6 +13,7 @@ import { Sports } from "./sports.tsx";
 import { PosterCard } from "./poster-card.tsx";
 import { Music } from "./music.tsx";
 import { Playlists } from "./playlists.tsx";
+import { PlexTvBanner } from "./station/tv-banner.tsx";
 
 export function MediaList(props: MediaListProps) {
   const { pathname } = useLocation();
@@ -118,6 +119,7 @@ function Library(props: MediaListProps) {
 
   return (
     <>
+      <PlexTvBanner {...props} />
       <form
         className="filters"
         onSubmit={(event) => {

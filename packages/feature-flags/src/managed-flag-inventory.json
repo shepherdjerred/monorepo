@@ -3494,6 +3494,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-tv-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-media-assistant",
+      "purpose": "Enable continuous tunable TV mode across Plex and YouTube.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-reconnect-max-attempts",
       "owner": "streambot",
       "namespace": "streambot",

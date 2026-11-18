@@ -19,6 +19,10 @@ audio, channel 2 carries Go Live on the same account, and higher numbers lease a
 Several films can therefore coexist in one voice channel, while only one media queue writes to
 the mic. Every film keeps its own soundtrack.
 
+Continuous stations follow the same transport split by default. Radio targets channel 1 on the
+voice microphone, while TV Mode targets channel 2 on Go Live video. One room can therefore keep
+background music running alongside a continuous TV stream on a single primary userbot.
+
 Selection belongs to the speaker and their current voice channel. Changing focus consumes no
 account and never starts playback. Explicit selection makes an ordinary YouTube request predictable:
 channel 1 extracts audio; a video channel requires a picture. Transport follows the selected slot,
