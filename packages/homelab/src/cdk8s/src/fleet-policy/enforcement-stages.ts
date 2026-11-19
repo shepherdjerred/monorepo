@@ -39,6 +39,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "minecraft-shuxin": "open",
   "minecraft-sjerred": "open",
   "minecraft-tsmc": "open",
+  "node-tuning": "open",
   phoenix: "open",
   pinchtab: "open",
   postal: "open",
@@ -92,13 +93,6 @@ export const STAGED_WITHOUT_RENDERED_POLICY: Readonly<
     charts: ["apps", "argocd-companion"],
     reason:
       "The argo-cd chart renders a NetworkPolicy per component (networkPolicy.create).",
-  },
-  prometheus: {
-    source: "upstream-chart",
-    application: "prometheus",
-    charts: ["apps", "prometheus-companion"],
-    reason:
-      "The Grafana subchart of kube-prometheus-stack renders the image renderer's ingress policy.",
   },
   "delivery-tsmc-controller": {
     source: "live-only",

@@ -17,6 +17,11 @@ import { COMPANION_CHARTS } from "./resources/companions/names.ts";
 const SHARED_NAMESPACE_OWNERS: Readonly<Record<string, string>> = {
   // temporal-data and delivery-control-plane also render policies here.
   temporal: "temporal",
+  // The root renders the cluster baseline's exporter and power-cap policies,
+  // and the baseline charts mirror them; the root keeps the staging policy
+  // it has always rendered for these namespaces.
+  prometheus: "apps",
+  "node-tuning": "apps",
 };
 
 function policyNamespacesOf(chart: Chart): Set<string> {

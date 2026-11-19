@@ -1,4 +1,10 @@
 import type { Chart } from "cdk8s";
+import type { DaemonSet } from "cdk8s-plus-31";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { createPrometheusMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/prometheus.ts";
 import { createSmartctlMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/smartctl.ts";
 import { createNvmeMetricsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/nvme-metrics.ts";
@@ -16,11 +22,40 @@ import { createKueueMetricsServiceMonitor } from "@shepherdjerred/homelab/cdk8s/
  */
 export async function createPrometheusExporters(chart: Chart): Promise<void> {
   createPrometheusMonitoring(chart);
-  await createSmartctlMonitoring(chart);
-  await createNvmeMetricsMonitoring(chart);
-  await createZfsSnapshotsMonitoring(chart);
-  await createZfsZpoolMonitoring(chart);
+  const { smartctlDaemonSet } = await createSmartctlMonitoring(chart);
+  const { nvmeMetricsDaemonSet } = await createNvmeMetricsMonitoring(chart);
+  const { zfsSnapshotsDaemonSet } = await createZfsSnapshotsMonitoring(chart);
+  const { zfsZpoolDaemonSet } = await createZfsZpoolMonitoring(chart);
   createKubernetesEventExporter(chart);
+  createTextfileCollectorPolicies(chart, [
+    smartctlDaemonSet,
+    nvmeMetricsDaemonSet,
+    zfsSnapshotsDaemonSet,
+    zfsZpoolDaemonSet,
+  ]);
+}
+
+/**
+ * The textfile collectors write `.prom` files to a host directory that
+ * node-exporter reads, so nothing connects to them. Each installs its tools
+ * at start (`apk add`, `pip install`) from the Alpine and PyPI mirrors over
+ * HTTPS.
+ */
+function createTextfileCollectorPolicies(
+  chart: Chart,
+  collectors: readonly DaemonSet[],
+): void {
+  for (const collector of collectors) {
+    const name = `${collector.name}-netpol`;
+    new KubeNetworkPolicy(chart, name, {
+      metadata: { name, namespace: "prometheus" },
+      spec: {
+        podSelector: { matchLabels: collector.matchLabels },
+        policyTypes: ["Egress"],
+        egress: [dnsEgressRule(), externalHttpsEgressRule()],
+      },
+    });
+  }
 }
 
 /**

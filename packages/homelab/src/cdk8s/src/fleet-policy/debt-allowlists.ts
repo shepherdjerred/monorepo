@@ -16,7 +16,6 @@
  * every pod in the cluster can connect to them.
  */
 export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
-  "node-tuning/cpu-power-cap",
   "prometheus/kubernetes-event-exporter",
   "prometheus/nvme-metrics-collector",
   "prometheus/smartctl-collector",
@@ -50,12 +49,7 @@ export const WORKLOADS_WITHOUT_EGRESS_POLICY: ReadonlySet<string> = new Set([
   "media/media-streambot",
   "media/media-tautulli",
   "media/media-whisperbridge",
-  "node-tuning/cpu-power-cap",
   "prometheus/kubernetes-event-exporter",
-  "prometheus/nvme-metrics-collector",
-  "prometheus/smartctl-collector",
-  "prometheus/zfs-snapshots-collector",
-  "prometheus/zfs-zpool-collector",
   "seaweedfs/seaweedfs-backup",
   "woodpecker-ci/temporal-maintenance-worker",
   "woodpecker/woodpecker-woodpecker-agent-completion",

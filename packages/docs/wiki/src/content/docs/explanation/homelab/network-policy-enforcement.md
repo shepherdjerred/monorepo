@@ -93,9 +93,11 @@ Two kinds of namespace do not fit the simple case, and the same file declares
 both.
 
 `STAGED_WITHOUT_RENDERED_POLICY` lists namespaces whose policies synthesis
-cannot see. `argocd` and `prometheus` get theirs from an upstream Helm chart.
-One namespace holds a policy that exists only in the cluster. Each still needs
-a staging policy, so the map names the chart that carries it.
+cannot see. `argocd` gets its own from an upstream Helm chart. One namespace
+holds a policy that exists only in the cluster. Each still needs a staging
+policy, so the map names the chart that carries it. A namespace where both an
+upstream chart and a chart here render policies, such as `prometheus`, is
+staged from the rendered ones like any other.
 
 `ENFORCED_WITHOUT_STAGING` lists namespaces that are deliberately not staged.
 They hold the isolation policy of a finished restore rehearsal or recovery and
