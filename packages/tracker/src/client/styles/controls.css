@@ -679,9 +679,38 @@ body:has(.bulk-bar) .toast-viewport {
   gap: 12px;
   margin-bottom: 8px;
   color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
 }
 .display-row .picker {
   width: 160px;
+}
+.display-order-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.display-order-controls .picker {
+  width: 132px;
+}
+.sort-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sort-dir-button {
+  width: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  justify-content: center;
+}
+@media (max-width: 767px) {
+  .sort-dir-button {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 .display-properties legend {
   margin: 6px 0 8px;

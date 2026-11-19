@@ -1,21 +1,36 @@
 import type { ReactNode } from "react";
-import { Crosshair, Folder, Gauge, RotateCcw, Zap } from "lucide-react";
+import {
+  ArrowUpDown,
+  Crosshair,
+  Folder,
+  Gauge,
+  RotateCcw,
+  Zap,
+} from "lucide-react";
 import type { BootstrapData } from "#client/data/api.ts";
 import { bulkLabelChange } from "#client/data/bulk-changes.ts";
 import { loadedIssue } from "#client/data/mutations.ts";
 import { actorNamespace, groupActors } from "#client/controls/actor-order.ts";
 import { applyChange } from "#client/controls/issue-actions.ts";
 import {
+  boardSortOptions,
   effortOptions,
   impactOptions,
   parseEffort,
   parseImpact,
   parseUrgency,
   priorityOptions,
+  sortDirectionSummary,
+  sortOptions,
   stateOptions,
   teamStates,
   urgencyOptions,
 } from "#client/controls/property-options.tsx";
+import {
+  oppositeSortDirection,
+  readDisplay,
+  writeDisplay,
+} from "#client/views/display-options.ts";
 import { Avatar, Swatch } from "#client/ui/ui.tsx";
 
 /** One row of the palette: a command, or a step into a nested list. */
@@ -331,6 +346,70 @@ export function projectStep(
               });
             },
           })),
+      ];
+    },
+  };
+}
+
+export function sortStep(
+  teamKey: string,
+  navigate: (to: string) => void,
+): PaletteStep {
+  return {
+    id: "sort",
+    title: "Sort issues",
+    placeholder: "Sort issues by…",
+    entries: () => {
+      const { pathname, search } = globalThis.location;
+      const onBoard = pathname === "/board";
+      const onListSurface =
+        pathname === "/issues" || onBoard || pathname.startsWith("/projects/");
+      const params = onListSurface
+        ? new URLSearchParams(search)
+        : new URLSearchParams({ team: teamKey });
+      const display = readDisplay(params);
+      const activeSort = onBoard ? display.boardSort : display.sort;
+      const activeDir = onBoard ? display.boardSortDir : display.sortDir;
+      const options = onBoard ? boardSortOptions : sortOptions;
+      const applyParams = (next: URLSearchParams) => {
+        const targetPath = onListSurface ? pathname : "/issues";
+        const query = next.toString();
+        navigate(query === "" ? targetPath : `${targetPath}?${query}`);
+      };
+      return [
+        ...options.map((option) => ({
+          id: `sort:${option.value}`,
+          label: option.label,
+          icon: option.icon,
+          section: "Order by",
+          checked: onListSurface && activeSort === option.value,
+          run: () => {
+            applyParams(
+              onBoard
+                ? writeDisplay(params, { boardSort: option.value })
+                : writeDisplay(params, {
+                    sort: option.value === "board" ? "updated" : option.value,
+                  }),
+            );
+          },
+        })),
+        ...(onListSurface && activeSort !== "board"
+          ? [
+              {
+                id: "sort:reverse",
+                label: `Reverse direction (${sortDirectionSummary(activeSort, oppositeSortDirection(activeDir))})`,
+                icon: <ArrowUpDown size={15} />,
+                section: "Direction",
+                run: () => {
+                  applyParams(
+                    writeDisplay(params, {
+                      sortDir: oppositeSortDirection(activeDir),
+                    }),
+                  );
+                },
+              },
+            ]
+          : []),
       ];
     },
   };

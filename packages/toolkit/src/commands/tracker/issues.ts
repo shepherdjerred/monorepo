@@ -86,6 +86,7 @@ function listInput(options: TrackerOptions, search?: string) {
     limit: options.limit === "all" ? "all" : integer(options.limit),
     cursor: options.cursor,
     sort: options.sort,
+    dir: options["sort-dir"]?.toLowerCase(),
     search,
   });
 }

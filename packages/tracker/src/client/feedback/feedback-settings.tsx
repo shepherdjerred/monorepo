@@ -1,22 +1,20 @@
 import { Switch } from "@base-ui/react/switch";
 import { Volume2 } from "lucide-react";
 import { canVibrate } from "./haptics.ts";
-import {
-  feedbackPreferences,
-  playSample,
-  useFeedbackPreference,
-} from "./index.ts";
+import { playSample, useFeedbackPreference } from "./index.ts";
 import { useReducedMotion } from "./motion.ts";
-import type { Channel } from "./policy.ts";
+import { feedbackPreferences, type PreferenceKey } from "./preferences.ts";
 
 function FeedbackSwitch({
   channel,
   title,
   detail,
+  disabled = false,
 }: {
-  channel: Channel;
+  channel: PreferenceKey;
   title: string;
   detail: string;
+  disabled?: boolean;
 }) {
   const on = useFeedbackPreference(channel);
   const id = `feedback-${channel}`;
@@ -26,6 +24,7 @@ function FeedbackSwitch({
         id={id}
         className="switch"
         checked={on}
+        disabled={disabled}
         aria-labelledby={`${id}-title`}
         aria-describedby={`${id}-detail`}
         onCheckedChange={(checked) => {
@@ -46,7 +45,7 @@ function FeedbackSwitch({
   );
 }
 
-/** Settings → Feedback: the per-device Sounds and Haptics switches. */
+/** Settings → Feedback: the per-device Sounds, Haptics and Motion switches. */
 export function FeedbackSettings() {
   const sound = useFeedbackPreference("sound");
   const reduced = useReducedMotion();
@@ -54,8 +53,8 @@ export function FeedbackSettings() {
     <section aria-labelledby="feedback-heading">
       <h2 id="feedback-heading">Feedback</h2>
       <p className="muted">
-        Short sounds and vibrations confirm what you just did. They are set for
-        this device.
+        Short sounds, vibrations and subtle transitions confirm what you just
+        did. They are set for this device.
       </p>
       <div className="feedback-options">
         <div className="feedback-row">
@@ -87,10 +86,17 @@ export function FeedbackSettings() {
             }
           />
         </div>
+        <div className="feedback-row">
+          <FeedbackSwitch
+            channel="motion"
+            title="Motion"
+            detail="Subtle fades, page view transitions and theme reveals. Rows and buttons never shift under the pointer."
+          />
+        </div>
       </div>
       <p className="muted feedback-note">
         {reduced
-          ? "Your system asks for reduced motion, so sounds and haptics are silent."
+          ? "Your system asks for reduced motion, so sounds and haptics are silent and transitions stay off."
           : "Both stay silent whenever your system asks for reduced motion."}
       </p>
     </section>

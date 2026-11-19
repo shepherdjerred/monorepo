@@ -1,18 +1,26 @@
 import { useSearchParams } from "react-router";
 import { Popover } from "@base-ui/react/popover";
-import { SlidersHorizontal } from "lucide-react";
+import {
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  SlidersHorizontal,
+} from "lucide-react";
 import { EnumPicker } from "#client/controls/enum-picker.tsx";
 import {
+  boardSortOptions,
   groupOptions,
+  sortDirectionSummary,
   sortOptions,
 } from "#client/controls/property-options.tsx";
 import {
+  BoardSortSchema,
   GroupBySchema,
+  oppositeSortDirection,
   readDisplay,
   rowProperties,
   SortSchema,
   writeDisplay,
-  type DisplayOptions,
+  type DisplayChanges,
   type RowProperty,
 } from "./display-options.ts";
 import { leavingPopup } from "#client/ui/leaving.tsx";
@@ -27,13 +35,15 @@ const propertyNames: Record<RowProperty, string> = {
 };
 
 /**
- * Grouping, ordering and which properties rows show. Every choice is in the
- * address, so the view can be shared; the board orders by its columns.
+ * Grouping, ordering and which properties rows or cards show. Every choice is
+ * in the address, so the view can be shared.
  */
 export function DisplayMenu({ board }: { board: boolean }) {
   const [params, setParams] = useSearchParams();
   const display = readDisplay(params);
-  const write = (change: Partial<DisplayOptions>) => {
+  const activeSort = board ? display.boardSort : display.sort;
+  const activeDir = board ? display.boardSortDir : display.sortDir;
+  const write = (change: DisplayChanges) => {
     setParams(writeDisplay(params, change), { preventScrollReset: true });
   };
   return (
@@ -56,33 +66,54 @@ export function DisplayMenu({ board }: { board: boolean }) {
           >
             <Popover.Title className="popover-title">Display</Popover.Title>
             {!board && (
-              <>
-                <label className="display-row">
-                  <span>Grouping</span>
-                  <EnumPicker
-                    id="display-group"
-                    label="Grouping"
-                    value={display.groupBy}
-                    options={groupOptions}
-                    onChange={(value) => {
-                      write({ groupBy: GroupBySchema.parse(value) });
-                    }}
-                  />
-                </label>
-                <label className="display-row">
-                  <span>Ordering</span>
-                  <EnumPicker
-                    id="display-sort"
-                    label="Ordering"
-                    value={display.sort}
-                    options={sortOptions}
-                    onChange={(value) => {
-                      write({ sort: SortSchema.parse(value) });
-                    }}
-                  />
-                </label>
-              </>
+              <label className="display-row">
+                <span>Grouping</span>
+                <EnumPicker
+                  id="display-group"
+                  label="Grouping"
+                  value={display.groupBy}
+                  options={groupOptions}
+                  onChange={(value) => {
+                    write({ groupBy: GroupBySchema.parse(value) });
+                  }}
+                />
+              </label>
             )}
+            <div className="display-row">
+              <span>Ordering</span>
+              <div className="display-order-controls">
+                <EnumPicker
+                  id="display-sort"
+                  label="Ordering"
+                  value={activeSort}
+                  options={board ? boardSortOptions : sortOptions}
+                  onChange={(value) => {
+                    if (board) {
+                      write({ boardSort: BoardSortSchema.parse(value) });
+                    } else {
+                      write({ sort: SortSchema.parse(value) });
+                    }
+                  }}
+                />
+                {activeSort !== "board" && (
+                  <button
+                    type="button"
+                    id="display-sort-direction"
+                    className="toolbar-button sort-dir-button"
+                    aria-label={`Ordering direction: ${sortDirectionSummary(activeSort, activeDir)}`}
+                    onClick={() => {
+                      write({ sortDir: oppositeSortDirection(activeDir) });
+                    }}
+                  >
+                    {activeDir === "desc" ? (
+                      <ArrowDownWideNarrow size={14} aria-hidden="true" />
+                    ) : (
+                      <ArrowUpNarrowWide size={14} aria-hidden="true" />
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
             <label className="display-row display-switch">
               <span>Show sub-issues</span>
               <input

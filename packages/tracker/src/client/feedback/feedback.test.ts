@@ -202,12 +202,16 @@ describe("feedback preferences", () => {
     const preferences = createPreferences(() => storage);
     expect(preferences.read("sound")).toBe(true);
     expect(preferences.read("haptics")).toBe(true);
+    expect(preferences.read("motion")).toBe(true);
     preferences.write("sound", false);
+    preferences.write("motion", false);
     expect(storage.values.get(preferenceKeys.sound)).toBe("off");
+    expect(storage.values.get(preferenceKeys.motion)).toBe("off");
     // A reload reads the same storage.
     const reloaded = createPreferences(() => storage);
     expect(reloaded.read("sound")).toBe(false);
     expect(reloaded.read("haptics")).toBe(true);
+    expect(reloaded.read("motion")).toBe(false);
   });
 
   test("storage that refuses access defaults on and still switches for the visit", () => {

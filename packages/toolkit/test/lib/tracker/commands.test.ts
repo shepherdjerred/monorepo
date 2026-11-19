@@ -583,6 +583,8 @@ test("urgency, impact, effort filters and sorts reach list, search and help", as
       "low",
       "--sort",
       "effort",
+      "--sort-dir",
+      "DESC",
     ]).values,
   );
   expect(requests[0]).toMatchObject({
@@ -593,6 +595,7 @@ test("urgency, impact, effort filters and sorts reach list, search and help", as
       urgencies: ["none"],
       impacts: ["high", "low"],
       sort: "effort",
+      dir: "desc",
     },
   });
 
@@ -605,7 +608,9 @@ test("urgency, impact, effort filters and sorts reach list, search and help", as
       "--urgency",
       "HIGH",
       "--sort",
-      "urgency",
+      "title",
+      "--sort-dir",
+      "asc",
     ]).values,
   );
   expect(requests[1]).toMatchObject({
@@ -617,7 +622,8 @@ test("urgency, impact, effort filters and sorts reach list, search and help", as
       efforts: ["l"],
       urgencies: ["high"],
       impacts: [],
-      sort: "urgency",
+      sort: "title",
+      dir: "asc",
     },
   });
   await expect(
@@ -646,5 +652,6 @@ test("urgency, impact, effort filters and sorts reach list, search and help", as
   expect(help).toContain("--impact <high|medium|low|none>");
   expect(help).toContain("--effort <xs|s|m|l|xl|none>");
   expect(help).toContain("--priority <0..4|auto>");
-  expect(help).toContain("priority|urgency|impact|effort|votes|board|");
+  expect(help).toContain("due|number|title");
+  expect(help).toContain("--sort-dir asc|desc");
 });

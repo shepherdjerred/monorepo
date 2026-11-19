@@ -105,7 +105,7 @@ export function ListSkeleton({ grouped }: { grouped: boolean }) {
   );
 }
 
-/** The view toolbar: search, Filter, team and Display, at their heights. */
+/** The view toolbar: search, Filter, Sort, team and Display, at their heights. */
 export function ToolbarSkeleton() {
   return (
     <div className="filters skeleton-toolbar" aria-hidden="true">
@@ -116,6 +116,9 @@ export function ToolbarSkeleton() {
         <Bone width={46} />
       </span>
       <span className="spacer" />
+      <span className="picker skeleton-control">
+        <Bone width={84} />
+      </span>
       <span className="picker skeleton-control">
         <Bone width={70} />
       </span>

@@ -85,6 +85,23 @@ describe("view parameters", () => {
     expect(roundTripped.searchParams.getAll("effort")).toEqual(["s", "xs"]);
     expect(roundTripped.searchParams.get("urgency")).toBe("high");
     expect(roundTripped.searchParams.get("impact")).toBe("medium");
+
+    const sortedDesc = viewParamsFrom(
+      new URLSearchParams("sort=title&dir=desc"),
+      { board: false, teamKey: "AI", me },
+    );
+    expect(sortedDesc).toEqual({
+      teamKey: "AI",
+      sort: "title",
+      dir: "desc",
+    });
+    expect(ViewParamsSchema.safeParse(sortedDesc).success).toBe(true);
+    const sortedUrl = new URL(
+      viewUrl({ id: "vd", params: sortedDesc }, { teamKey: "AI", me }),
+      "https://tracker.test",
+    );
+    expect(sortedUrl.searchParams.get("sort")).toBe("title");
+    expect(sortedUrl.searchParams.get("dir")).toBe("desc");
   });
 
   test("relative due filters are stored as words, and come back", () => {

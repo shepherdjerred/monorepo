@@ -15,6 +15,10 @@ import type { RouteInfo } from "#client/shell/route.ts";
 import { localToday } from "#client/due/dates.ts";
 import { dueFilterInput, isDueFilter } from "#client/due/due-filter.ts";
 import {
+  defaultSortDirection,
+  readDisplay,
+} from "#client/views/display-options.ts";
+import {
   filterEffortParams,
   filterImpactParams,
   filterUrgencyParams,
@@ -49,8 +53,10 @@ const firstCursor = (): string | undefined => undefined;
  * to be undone are left out, as is an issue archived a moment ago in a list
  * that excludes archived ones.
  */
-export function useIssuePages(input: IssueListInput | undefined) {
-  const whole = input?.sort === "board";
+export function useIssuePages(
+  input: IssueListInput | undefined,
+  whole = input?.sort === "board",
+) {
   const query = useInfiniteQuery({
     queryKey: ["issues", input],
     queryFn:
@@ -121,6 +127,44 @@ function planningFilters(params: URLSearchParams) {
   };
 }
 
+function buildUrlListInput(
+  route: RouteInfo,
+  teamKey: string,
+  params: URLSearchParams,
+  actorKey: string,
+): IssueListInput {
+  const display = readDisplay(params);
+  const onBoard = route.view === "board";
+  const activeSort = onBoard ? display.boardSort : display.sort;
+  const activeDir = onBoard ? display.boardSortDir : display.sortDir;
+  return IssueListSchema.parse({
+    teamKey,
+    projectSlug: route.projectSlug ?? params.get("project") ?? undefined,
+    search: params.get("q") ?? undefined,
+    states: params.getAll("state"),
+    ...planningFilters(params),
+    labels: params.getAll("label"),
+    urgencies: filterUrgencyParams(params),
+    impacts: filterImpactParams(params),
+    efforts: filterEffortParams(params),
+    assigneeKey:
+      params.get("mine") === "true"
+        ? actorKey
+        : (params.get("assignee") ?? undefined),
+    creatorKey: params.get("creator") ?? undefined,
+    priority: params.has("priority")
+      ? Number(params.get("priority"))
+      : undefined,
+    includeArchived: params.get("archived") === "true",
+    sort: activeSort,
+    dir:
+      activeSort === "board" || activeDir === defaultSortDirection(activeSort)
+        ? undefined
+        : activeDir,
+    limit: onBoard ? boardPageSize : listPageSize,
+  });
+}
+
 /**
  * The issues behind the list, board and project views. An issue page keeps
  * the list it was reached from, so previous/next follow that list.
@@ -131,31 +175,7 @@ export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
   const [remembered, setRemembered] = useState<IssueListInput>();
   const fromUrl =
     teamKey !== undefined && route.isList
-      ? IssueListSchema.parse({
-          teamKey,
-          projectSlug: route.projectSlug ?? params.get("project") ?? undefined,
-          search: params.get("q") ?? undefined,
-          states: params.getAll("state"),
-          ...planningFilters(params),
-          labels: params.getAll("label"),
-          urgencies: filterUrgencyParams(params),
-          impacts: filterImpactParams(params),
-          efforts: filterEffortParams(params),
-          assigneeKey:
-            params.get("mine") === "true"
-              ? actor.key
-              : (params.get("assignee") ?? undefined),
-          creatorKey: params.get("creator") ?? undefined,
-          priority: params.has("priority")
-            ? Number(params.get("priority"))
-            : undefined,
-          includeArchived: params.get("archived") === "true",
-          sort:
-            route.view === "board"
-              ? "board"
-              : (params.get("sort") ?? "updated"),
-          limit: route.view === "board" ? boardPageSize : listPageSize,
-        })
+      ? buildUrlListInput(route, teamKey, params, actor.key)
       : undefined;
   if (
     fromUrl !== undefined &&
@@ -167,7 +187,11 @@ export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
     teamKey !== undefined && route.view === "issue"
       ? (remembered ?? IssueListSchema.parse({ teamKey, limit: listPageSize }))
       : undefined;
-  return useIssuePages(fromUrl ?? fallback);
+  const effective = fromUrl ?? fallback;
+  return useIssuePages(
+    effective,
+    route.view === "board" || effective?.sort === "board",
+  );
 }
 
 const PeekStateSchema = z.object({ peek: z.literal("pushed") });

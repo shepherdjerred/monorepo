@@ -2,11 +2,14 @@ import {
   ArrowDownWideNarrow,
   CalendarClock,
   CalendarPlus,
+  CaseSensitive,
   CircleDashed,
   Clock,
   Crosshair,
   Folder,
   Gauge,
+  GripVertical,
+  Hash,
   Rows3,
   SignalHigh,
   ThumbsUp,
@@ -35,7 +38,12 @@ import {
   StateIcon,
   UrgencyGlyph,
 } from "#client/ui/icons.tsx";
-import type { GroupBy, Sort } from "#client/views/display-options.ts";
+import type {
+  BoardSort,
+  GroupBy,
+  Sort,
+  SortDir,
+} from "#client/views/display-options.ts";
 import type { EnumOption } from "./enum-picker.tsx";
 
 type State = BootstrapData["states"][number];
@@ -151,7 +159,36 @@ export const sortOptions: (EnumOption & { value: Sort })[] = [
   { value: "effort", label: "Effort", icon: <Gauge size={14} /> },
   { value: "votes", label: "Most votes", icon: <ThumbsUp size={14} /> },
   { value: "due", label: "Due date", icon: <CalendarClock size={14} /> },
+  { value: "number", label: "Identifier", icon: <Hash size={14} /> },
+  { value: "title", label: "Title", icon: <CaseSensitive size={14} /> },
 ];
+
+export const boardSortOptions: (EnumOption & { value: BoardSort })[] = [
+  { value: "board", label: "Manual", icon: <GripVertical size={14} /> },
+  ...sortOptions,
+];
+
+const sortDirectionLabels: Record<
+  BoardSort,
+  readonly [asc: string, desc: string]
+> = {
+  board: ["manual order", "manual order"],
+  updated: ["oldest to newest", "newest to oldest"],
+  created: ["oldest to newest", "newest to oldest"],
+  priority: ["urgent to low", "low to urgent"],
+  urgency: ["high to low", "low to high"],
+  impact: ["high to low", "low to high"],
+  effort: ["XS to XL", "XL to XS"],
+  votes: ["fewest to most", "most to fewest"],
+  due: ["soonest to latest", "latest to soonest"],
+  number: ["oldest to newest", "newest to oldest"],
+  title: ["A to Z", "Z to A"],
+};
+
+export function sortDirectionSummary(sort: BoardSort, dir: SortDir): string {
+  const [asc, desc] = sortDirectionLabels[sort];
+  return dir === "asc" ? asc : desc;
+}
 
 export const groupOptions: (EnumOption & { value: GroupBy })[] = [
   { value: "status", label: "Status", icon: <CircleDashed size={14} /> },

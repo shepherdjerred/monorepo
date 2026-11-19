@@ -391,3 +391,144 @@ it("filters multi-value urgencies, impacts and efforts (including none) and pagi
     ),
   );
 });
+
+it("paginates number, title and bidirectional sorts while keeping unset values last", async () => {
+  const slug = "keyset-directions";
+  await suite.catalog.project(
+    { actor: suite.actor, slug, name: slug },
+    true,
+    slug,
+  );
+  const rows: {
+    title: string;
+    priority: number;
+    effort: Effort | null;
+    dueDate: string | null;
+  }[] = [
+    { title: "delta task", priority: 0, effort: null, dueDate: null },
+    { title: "Alpha task", priority: 3, effort: "xl", dueDate: "2026-12-20" },
+    { title: "charlie task", priority: 1, effort: "xs", dueDate: "2026-12-01" },
+    { title: "Bravo task", priority: 2, effort: "m", dueDate: "2026-12-10" },
+    { title: "echo task", priority: 0, effort: "s", dueDate: null },
+  ];
+  for (const row of rows) {
+    await suite.create(row.title, {
+      projectSlug: slug,
+      priority: row.priority,
+      effort: row.effort,
+      ...(row.dueDate === null ? {} : { dueDate: row.dueDate }),
+    });
+  }
+
+  for (const sort of [
+    "updated",
+    "created",
+    "priority",
+    "effort",
+    "due",
+    "number",
+    "title",
+  ] as const) {
+    for (const dir of ["asc", "desc"] as const) {
+      const filter = { projectSlug: slug, sort, dir };
+      const all = await list({ ...filter, limit: "all" });
+      expect(all.items).toHaveLength(rows.length);
+      for (const limit of [1, 2, 5]) {
+        const paged = await pages(filter, limit);
+        expect(paged.ids).toEqual(all.items.map(({ id }) => id));
+      }
+    }
+  }
+
+  const titleAsc = await list({
+    projectSlug: slug,
+    sort: "title",
+    dir: "asc",
+    limit: "all",
+  });
+  expect(titleAsc.items.map(({ title }) => title)).toEqual([
+    "Alpha task",
+    "Bravo task",
+    "charlie task",
+    "delta task",
+    "echo task",
+  ]);
+  const titleDesc = await list({
+    projectSlug: slug,
+    sort: "title",
+    dir: "desc",
+    limit: "all",
+  });
+  expect(titleDesc.items.map(({ title }) => title)).toEqual([
+    "echo task",
+    "delta task",
+    "charlie task",
+    "Bravo task",
+    "Alpha task",
+  ]);
+
+  const numberAsc = await list({
+    projectSlug: slug,
+    sort: "number",
+    dir: "asc",
+    limit: "all",
+  });
+  const numbers = numberAsc.items.map(({ number }) => number);
+  expect(numbers).toEqual(numbers.toSorted((a, b) => a - b));
+
+  // Unset priority (0), effort (null) and dueDate (null) stay last in both directions.
+  const priorityDesc = await list({
+    projectSlug: slug,
+    sort: "priority",
+    dir: "desc",
+    limit: "all",
+  });
+  expect(priorityDesc.items.map(({ priority }) => priority)).toEqual([
+    3, 2, 1, 0, 0,
+  ]);
+
+  const effortDesc = await list({
+    projectSlug: slug,
+    sort: "effort",
+    dir: "desc",
+    limit: "all",
+  });
+  expect(effortDesc.items.map(({ effort }) => effort)).toEqual([
+    "xl",
+    "m",
+    "s",
+    "xs",
+    null,
+  ]);
+
+  const dueDesc = await list({
+    projectSlug: slug,
+    sort: "due",
+    dir: "desc",
+    limit: "all",
+  });
+  expect(dueDesc.items.map(({ dueDate }) => dueDate)).toEqual([
+    "2026-12-20",
+    "2026-12-10",
+    "2026-12-01",
+    null,
+    null,
+  ]);
+
+  // Reversing direction produces a distinct cursor order rejected by the opposite direction.
+  const ascPage = await list({
+    projectSlug: slug,
+    sort: "priority",
+    dir: "asc",
+    limit: 2,
+  });
+  expect(ascPage.nextCursor).not.toBeNull();
+  await expect(
+    list({
+      projectSlug: slug,
+      sort: "priority",
+      dir: "desc",
+      cursor: ascPage.nextCursor ?? undefined,
+    }),
+  ).rejects.toThrow();
+});

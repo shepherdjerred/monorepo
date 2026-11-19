@@ -307,8 +307,21 @@ summary {
     font-size: 16px;
   }
 }
-/* Reduced motion: every surface appears and leaves at once, nothing slides,
-   pulses or shimmers. Script-driven motion checks the same query. */
+/* Reduced motion or the in-app Motion switch off: every surface appears and
+   leaves at once, nothing slides, pulses or shimmers. Script-driven motion
+   checks the same preferences. */
+:root[data-motion="off"] *,
+:root[data-motion="off"] *::before,
+:root[data-motion="off"] *::after {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
+}
+:root[data-motion="off"]::view-transition-group(*),
+:root[data-motion="off"]::view-transition-old(*),
+:root[data-motion="off"]::view-transition-new(*) {
+  animation: none !important;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -324,6 +337,9 @@ summary {
   }
 }
 @supports (appearance: base-select) {
+  :root[data-motion="off"] ::picker(select) {
+    transition: none !important;
+  }
   @media (prefers-reduced-motion: reduce) {
     ::picker(select) {
       transition: none !important;

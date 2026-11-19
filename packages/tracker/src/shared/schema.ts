@@ -16,9 +16,11 @@ export const EffortSchema = z.enum(["xs", "s", "m", "l", "xl"]);
 export const FilterUrgencySchema = z.enum(["high", "medium", "low", "none"]);
 export const FilterImpactSchema = z.enum(["high", "medium", "low", "none"]);
 export const FilterEffortSchema = z.enum(["xs", "s", "m", "l", "xl", "none"]);
+export const SortDirectionSchema = z.enum(["asc", "desc"]);
 export type Urgency = z.infer<typeof UrgencySchema>;
 export type Impact = z.infer<typeof ImpactSchema>;
 export type Effort = z.infer<typeof EffortSchema>;
+export type SortDirection = z.infer<typeof SortDirectionSchema>;
 
 export const IdentifierSchema = z
   .string()
@@ -160,8 +162,11 @@ const issueListShape = {
       "votes",
       "board",
       "due",
+      "number",
+      "title",
     ])
     .default("updated"),
+  dir: SortDirectionSchema.optional(),
   limit: z
     .union([z.number().int().min(1).max(500), z.literal("all")])
     .default(100),

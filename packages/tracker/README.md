@@ -101,8 +101,14 @@ always had: `group` (`status` by default, or `priority`, `urgency`, `impact`,
 `effort`, `project`, `assignee`, `due`, `none`), repeated `collapsed` group
 keys, repeated `hide` row properties (`labels`, `effort`, `project`, `date`,
 `due`, `assignee`), repeated `urgency`, `impact` and `effort` filters
-(including `none` for unsized work), and `sort` (`updated`, `created`,
-`priority`, `urgency`, `impact`, `effort`, `votes`, `due`). Rows and board
+(including `none` for unsized work), `sort` (`updated`, `created`, `priority`,
+`urgency`, `impact`, `effort`, `votes`, `due`, `number`, `title`; plus `board`
+manual ordering on `/board`), and `dir` (`asc` or `desc`, omitted when it
+matches the sort's natural direction; unset priority, sizing and due values
+stay last in both directions). List, project and board toolbars expose a
+dedicated `SortControl` alongside `Display` and the command palette's `Sort
+issues…` step; Projects, Actors, Activity and issue sub-issues expose local
+sort controls as well. Rows and board
 cards show a compact `XS`–`XL` effort picker when `effort` is set unless
 `hide=effort` hides it. A grouped list loads up to ten pages at once so its
 groups fill in before you scroll.
@@ -137,7 +143,8 @@ Sub-issues, due dates and saved views add to the same address and keys:
 - `saved=<view id>` marks a list opened from a saved view. A view stores
   only `issues.list` names plus `group` and `view`: `state`, `label`,
   `urgency`, `impact` and `effort` become `states`, `labels`, `urgencies`,
-  `impacts` and `efforts`, My issues becomes the viewer's `assigneeKey`,
+  `impacts` and `efforts`, `sort` and `dir` keep their names, My issues becomes
+  the viewer's `assigneeKey`,
   `subissues=hide` becomes `hasParent: "false"`, and `due` becomes
   `overdue: "true"`, `hasDueDate: "false"`, a `dueBefore` day, or the words
   `today`/`week` in `dueBefore` (with `dueAfter: "today"`) that the browser
@@ -157,18 +164,21 @@ Sub-issues, due dates and saved views add to the same address and keys:
 
 ## Motion, sound and haptics
 
-Motion is decorative: an edit, a navigation or a focus move happens first
-and is never delayed by its animation. Surfaces enter and leave through Base
-UI's `data-starting-style`/`data-ending-style` with CSS transitions, so a
-quick close reverses from wherever it is; while one leaves it is hidden from
-assistive technology and takes no clicks. Tokens live in `styles/tokens.css`
-and only `transform`, `opacity` and cheap paints animate. Loading states are
+Motion is decorative and non-shifting: an edit, a navigation or a focus move
+happens first and is never delayed by its animation, and interactive rows,
+checkboxes, menus and dialogs fade without scaling or sliding so click targets
+never move under the pointer. Surfaces enter and leave through Base
+UI's `data-starting-style`/`data-ending-style` with short opacity transitions,
+so a quick close reverses from wherever it is; while one leaves it is hidden from
+assistive technology and takes no clicks. Tokens live in `styles/tokens.css`.
+Loading states are
 skeletons built from the real layout's classes, so nothing moves when data
 lands. Opening an issue page from a peek or the palette is a same-document
-view transition (the identifier and title move); a peek has its own motion
-and never uses one. `prefers-reduced-motion: reduce` turns all of it off,
-including script-driven motion in `src/client/feedback/motion.ts`, without
-removing information: a row another session created keeps its static
+view transition (the identifier and title move); a peek has its own fade
+and never uses one. `prefers-reduced-motion: reduce` and the per-device
+`Motion` switch (`tracker.feedback.motion`, reflected as `:root[data-motion="off"]`)
+turn all transitions and script-driven motion in `src/client/feedback/motion.ts`
+off without removing information: a row another session created keeps its static
 highlight, and every change still shows its end state. Browser APIs newer
 than Baseline Widely Available (view transitions, `@starting-style`,
 `@property` for the progress ring) are feature-detected or degrade to an
@@ -185,8 +195,9 @@ date like a status. Failures this person did not cause, such as a broken
 live-update frame, pass `notifyError(..., { quiet: true })` and stay silent.
 Nothing plays before the page's first user gesture, while the tab
 is hidden, or under reduced motion, and cues are kept 40 ms apart. Settings
-→ Feedback holds two per-device switches, both on by default, stored in
-`localStorage` as `tracker.feedback.sound` and `tracker.feedback.haptics`.
+→ Feedback holds three per-device switches, all on by default, stored in
+`localStorage` as `tracker.feedback.motion`, `tracker.feedback.sound` and
+`tracker.feedback.haptics`.
 iOS Safari has no Vibration API, so haptics only work in Android browsers.
 
 ## Contract and invariants
@@ -296,8 +307,9 @@ issued it; a malformed cursor, or one replayed under another sort or a
 different search mode, is a `BAD_REQUEST`. Every sort and ranked search is
 ordered and paged in PostgreSQL with the issue ID as the final tie-breaker.
 `sort: "priority"` runs Urgent (1) to Low (4) and puts priority 0, "No
-priority", last. A text search ignores `sort` and orders by rank, then open
-before closed, then most recently updated.
+priority", last in both directions. By default, a text search orders by rank,
+then open before closed, then most recently updated; choosing another `sort` or
+an explicit `dir` orders matching search results by that key instead.
 
 An issue may have one parent in its own team (`parentIdentifier` on create and
 update; `null` detaches). A hierarchy is at most five levels deep, counting the

@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { issueFixture, workspaceFixture } from "#client/data/testing.ts";
 import {
+  compareIssuesBySort,
+  defaultSortDirection,
+  oppositeSortDirection,
   readDisplay,
   toggleCollapsed,
   writeDisplay,
@@ -12,7 +15,7 @@ import {
   toggleFilterValue,
   viewPrefill,
 } from "./filters.ts";
-import { buildRows, groupPlaces, type ListRow } from "./grouping.ts";
+import { buildRows, type ListRow } from "./grouping.ts";
 
 const [todo, started, done] = workspaceFixture.states;
 if (todo === undefined || started === undefined || done === undefined) {
@@ -53,22 +56,6 @@ describe("grouping", () => {
       "AI-4",
       "AI-1",
       "AI-3",
-    ]);
-  });
-
-  test("each row knows its place in its group, so an opened group can stagger", () => {
-    const { rows } = buildRows(items, {
-      groupBy: "status",
-      collapsed: new Set(),
-      states: [done, started, todo],
-      today: "2026-11-11",
-    });
-    const places = groupPlaces(rows);
-    expect([...places.entries()]).toEqual([
-      [1, { group: rows[0]?.kind === "group" ? rows[0].key : "", place: 1 }],
-      [2, { group: rows[0]?.kind === "group" ? rows[0].key : "", place: 2 }],
-      [4, { group: rows[3]?.kind === "group" ? rows[3].key : "", place: 1 }],
-      [5, { group: rows[3]?.kind === "group" ? rows[3].key : "", place: 2 }],
     ]);
   });
 
@@ -201,6 +188,85 @@ describe("display options", () => {
     expect(effortDisplay.groupBy).toBe("effort");
     expect(effortDisplay.sort).toBe("effort");
     expect([...effortDisplay.hidden]).toEqual(["effort"]);
+  });
+
+  test("sort direction omits defaults, reverses cleanly and keeps missing values last", () => {
+    expect(defaultSortDirection("updated")).toBe("desc");
+    expect(defaultSortDirection("priority")).toBe("asc");
+    expect(defaultSortDirection("title")).toBe("asc");
+    expect(defaultSortDirection("number")).toBe("desc");
+    expect(oppositeSortDirection("asc")).toBe("desc");
+
+    const reversedUpdated = writeDisplay(new URLSearchParams("team=AI"), {
+      sortDir: "asc",
+    });
+    expect(reversedUpdated.toString()).toBe("team=AI&dir=asc");
+    expect(readDisplay(reversedUpdated)).toMatchObject({
+      sort: "updated",
+      sortDir: "asc",
+    });
+
+    // Switching sort resets dir unless explicitly supplied.
+    const toEffort = writeDisplay(reversedUpdated, { sort: "effort" });
+    expect(toEffort.toString()).toBe("team=AI&sort=effort");
+    const reversedEffort = writeDisplay(toEffort, { sortDir: "desc" });
+    expect(reversedEffort.toString()).toBe("team=AI&sort=effort&dir=desc");
+    expect(readDisplay(reversedEffort)).toMatchObject({
+      sort: "effort",
+      sortDir: "desc",
+      boardSort: "effort",
+      boardSortDir: "desc",
+    });
+
+    // Board manual sort omits both sort and dir.
+    expect(
+      writeDisplay(reversedEffort, { boardSort: "board" }).toString(),
+    ).toBe("team=AI");
+
+    const sample = [
+      issueFixture(1, {
+        title: "charlie",
+        priority: 0,
+        effort: null,
+        dueDate: null,
+        voteCount: 2,
+      }),
+      issueFixture(2, {
+        title: "Alpha",
+        priority: 3,
+        effort: "xl",
+        dueDate: "2026-12-10",
+        voteCount: 5,
+      }),
+      issueFixture(3, {
+        title: "bravo",
+        priority: 1,
+        effort: "xs",
+        dueDate: "2026-12-01",
+        voteCount: 1,
+      }),
+    ];
+    const orderBy = (
+      sort: Parameters<typeof compareIssuesBySort>[2],
+      dir: "asc" | "desc",
+    ) =>
+      sample
+        .toSorted((a, b) => compareIssuesBySort(a, b, sort, dir))
+        .map(({ identifier }) => identifier);
+
+    // Missing priority, effort and due date stay last in both directions.
+    expect(orderBy("priority", "asc")).toEqual(["AI-3", "AI-2", "AI-1"]);
+    expect(orderBy("priority", "desc")).toEqual(["AI-2", "AI-3", "AI-1"]);
+    expect(orderBy("effort", "asc")).toEqual(["AI-3", "AI-2", "AI-1"]);
+    expect(orderBy("effort", "desc")).toEqual(["AI-2", "AI-3", "AI-1"]);
+    expect(orderBy("due", "asc")).toEqual(["AI-3", "AI-2", "AI-1"]);
+    expect(orderBy("due", "desc")).toEqual(["AI-2", "AI-3", "AI-1"]);
+    expect(orderBy("title", "asc")).toEqual(["AI-2", "AI-3", "AI-1"]);
+    expect(orderBy("title", "desc")).toEqual(["AI-1", "AI-3", "AI-2"]);
+    expect(orderBy("number", "asc")).toEqual(["AI-1", "AI-2", "AI-3"]);
+    expect(orderBy("number", "desc")).toEqual(["AI-3", "AI-2", "AI-1"]);
+    expect(orderBy("votes", "desc")).toEqual(["AI-2", "AI-1", "AI-3"]);
+    expect(orderBy("votes", "asc")).toEqual(["AI-3", "AI-1", "AI-2"]);
   });
 });
 

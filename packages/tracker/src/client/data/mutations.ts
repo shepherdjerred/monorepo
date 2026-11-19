@@ -36,7 +36,6 @@ import {
 } from "#client/ui/toast.tsx";
 import { feedback } from "#client/feedback/index.ts";
 import { editOutcome } from "#client/feedback/policy.ts";
-import { glideRows, leave, settleStatus } from "#client/feedback/motion.ts";
 
 const edits = createIssueEdits({
   client: queryClient,
@@ -120,15 +119,6 @@ function acknowledge(
   const outcome = editOutcome(change.kind, stateType);
   if (outcome !== undefined) {
     feedback(outcome);
-  }
-  // An edit can move the row: to the top of a list ordered by update, or
-  // into another group. It glides there rather than jumping.
-  glideRows();
-  if (change.kind === "state") {
-    settleStatus(identifiers);
-  }
-  if (change.kind === "archive" && change.archived) {
-    leave(identifiers);
   }
 }
 
@@ -330,7 +320,6 @@ const countOf = (identifiers: readonly string[]) =>
  */
 export function deleteIssues(identifiers: readonly string[]) {
   feedback("destructive");
-  leave(identifiers);
   for (const identifier of identifiers) {
     edits.requestDelete(identifier);
   }
