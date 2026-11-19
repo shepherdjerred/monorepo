@@ -16,6 +16,8 @@ import {
 } from "cdk8s-plus-31";
 import { ConfigMap } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { prometheusIngressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
@@ -449,5 +451,20 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
     namespace: NAMESPACE,
     port: "app-metrics",
     matchLabels: { component: "maintenance-worker-app-metrics" },
+  });
+
+  // Only Prometheus connects, to the two metrics ports. Egress stays
+  // unpoliced: the link-rot scan's lychee follows every web link in the
+  // repository, on whatever scheme and port the link names.
+  new KubeNetworkPolicy(chart, "temporal-maintenance-worker-netpol", {
+    metadata: {
+      name: "temporal-maintenance-worker-netpol",
+      namespace: NAMESPACE,
+    },
+    spec: {
+      podSelector: { matchLabels: { component: "maintenance-worker" } },
+      policyTypes: ["Ingress"],
+      ingress: [prometheusIngressRule([9464, 9465])],
+    },
   });
 }

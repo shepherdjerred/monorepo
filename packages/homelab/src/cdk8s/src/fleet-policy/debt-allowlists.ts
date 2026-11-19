@@ -22,11 +22,6 @@ export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
   "prometheus/zfs-snapshots-collector",
   "prometheus/zfs-zpool-collector",
   "seaweedfs/seaweedfs-backup",
-  "woodpecker-ci/temporal-maintenance-worker",
-  "woodpecker/woodpecker-woodpecker-agent-completion",
-  "woodpecker/woodpecker-woodpecker-agent-main",
-  "woodpecker/woodpecker-woodpecker-agent-pr",
-  "woodpecker/woodpecker-woodpecker-agent-review",
 ]);
 
 /**
@@ -51,10 +46,6 @@ export const WORKLOADS_WITHOUT_EGRESS_POLICY: ReadonlySet<string> = new Set([
   "media/media-whisperbridge",
   "prometheus/kubernetes-event-exporter",
   "woodpecker-ci/temporal-maintenance-worker",
-  "woodpecker/woodpecker-woodpecker-agent-completion",
-  "woodpecker/woodpecker-woodpecker-agent-main",
-  "woodpecker/woodpecker-woodpecker-agent-pr",
-  "woodpecker/woodpecker-woodpecker-agent-review",
 ]);
 
 /**
