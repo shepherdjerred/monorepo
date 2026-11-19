@@ -16,6 +16,7 @@ import { localToday } from "#client/due/dates.ts";
 import { dueFilterInput, isDueFilter } from "#client/due/due-filter.ts";
 import {
   defaultSortDirection,
+  hasSearchQuery,
   readDisplay,
 } from "#client/views/display-options.ts";
 import {
@@ -58,7 +59,7 @@ export function useIssuePages(
   whole = input?.sort === "board",
 ) {
   const query = useInfiniteQuery({
-    queryKey: ["issues", input],
+    queryKey: whole ? ["issues", input, "whole"] : ["issues", input],
     queryFn:
       input === undefined
         ? skipToken
@@ -137,6 +138,10 @@ function buildUrlListInput(
   const onBoard = route.view === "board";
   const activeSort = onBoard ? display.boardSort : display.sort;
   const activeDir = onBoard ? display.boardSortDir : display.sortDir;
+  const explicitUpdatedInSearch =
+    hasSearchQuery(params) &&
+    activeSort === "updated" &&
+    display.hasExplicitSort;
   return IssueListSchema.parse({
     teamKey,
     projectSlug: route.projectSlug ?? params.get("project") ?? undefined,
@@ -158,9 +163,12 @@ function buildUrlListInput(
     includeArchived: params.get("archived") === "true",
     sort: activeSort,
     dir:
-      activeSort === "board" || activeDir === defaultSortDirection(activeSort)
+      activeSort === "board"
         ? undefined
-        : activeDir,
+        : explicitUpdatedInSearch ||
+            activeDir !== defaultSortDirection(activeSort)
+          ? activeDir
+          : undefined,
     limit: onBoard ? boardPageSize : listPageSize,
   });
 }
@@ -172,26 +180,35 @@ function buildUrlListInput(
 export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
   const [params] = useSearchParams();
   const actor = useCurrentActor();
-  const [remembered, setRemembered] = useState<IssueListInput>();
+  const [remembered, setRemembered] = useState<{
+    input: IssueListInput;
+    whole: boolean;
+  }>();
   const fromUrl =
     teamKey !== undefined && route.isList
       ? buildUrlListInput(route, teamKey, params, actor.key)
       : undefined;
+  const fromUrlWhole = route.view === "board" || fromUrl?.sort === "board";
   if (
     fromUrl !== undefined &&
-    JSON.stringify(fromUrl) !== JSON.stringify(remembered)
+    (remembered?.whole !== fromUrlWhole ||
+      JSON.stringify(fromUrl) !== JSON.stringify(remembered.input))
   ) {
-    setRemembered(fromUrl);
+    setRemembered({ input: fromUrl, whole: fromUrlWhole });
   }
   const fallback =
     teamKey !== undefined && route.view === "issue"
-      ? (remembered ?? IssueListSchema.parse({ teamKey, limit: listPageSize }))
+      ? (remembered ?? {
+          input: IssueListSchema.parse({ teamKey, limit: listPageSize }),
+          whole: false,
+        })
       : undefined;
-  const effective = fromUrl ?? fallback;
-  return useIssuePages(
-    effective,
-    route.view === "board" || effective?.sort === "board",
-  );
+  const effective = fromUrl ?? fallback?.input;
+  const whole =
+    fromUrl === undefined
+      ? (fallback?.whole ?? effective?.sort === "board")
+      : fromUrlWhole;
+  return useIssuePages(effective, whole);
 }
 
 const PeekStateSchema = z.object({ peek: z.literal("pushed") });

@@ -61,6 +61,7 @@ type CardOptions = {
   states: readonly EnumOption[];
   hidden: ReadonlySet<RowProperty>;
   disabled: boolean;
+  manualOrder: boolean;
 };
 
 function Card({ issue, options }: { issue: Issue; options: CardOptions }) {
@@ -282,7 +283,9 @@ function Column({
       </h2>
       <SortableContext
         items={items.map(({ id }) => id)}
-        strategy={verticalListSortingStrategy}
+        strategy={
+          options.manualOrder ? verticalListSortingStrategy : () => null
+        }
       >
         {items.map((issue) => (
           <Card issue={issue} key={issue.id} options={options} />
@@ -322,6 +325,7 @@ export function Board({
     states: statusChoices,
     hidden,
     disabled: !bootstrap.writesEnabled,
+    manualOrder: display.boardSort === "board",
   };
   const motionOff = useMotionDisabled();
   const [carried, setCarried] = useState<string>();
@@ -356,6 +360,17 @@ export function Board({
     const column = items
       .filter((item) => item.state.id === state.id && item.id !== issue.id)
       .sort((a, b) => a.boardOrder - b.boardOrder || a.id.localeCompare(b.id));
+    if (display.boardSort !== "board") {
+      if (issue.state.id === state.id) return;
+      const tail = column.at(-1);
+      feedback("drop");
+      void moveIssue(issue.identifier, {
+        stateId: state.id,
+        boardOrder: (tail?.boardOrder ?? 1024) + 1024,
+        ...(tail === undefined ? {} : { beforeId: tail.id }),
+      });
+      return;
+    }
     const index =
       target === undefined
         ? column.length

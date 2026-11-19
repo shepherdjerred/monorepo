@@ -95,6 +95,7 @@ export type DisplayOptions = {
   boardSort: BoardSort;
   sortDir: SortDir;
   boardSortDir: SortDir;
+  hasExplicitSort: boolean;
   showSubIssues: boolean;
 };
 
@@ -105,8 +106,13 @@ export type DisplayChanges = Partial<{
   sort: Sort;
   boardSort: BoardSort;
   sortDir: SortDir;
+  clearSort: boolean;
   showSubIssues: boolean;
 }>;
+
+export function hasSearchQuery(params: URLSearchParams): boolean {
+  return (params.get("q")?.trim() ?? "") !== "";
+}
 
 /** Unknown values in a hand-edited link fall back to the defaults. */
 export function readDisplay(params: URLSearchParams): DisplayOptions {
@@ -131,6 +137,7 @@ export function readDisplay(params: URLSearchParams): DisplayOptions {
     boardSort,
     sortDir: dir.success ? dir.data : defaultSortDirection(sort),
     boardSortDir: dir.success ? dir.data : defaultSortDirection(boardSort),
+    hasExplicitSort: sortParsed.success || dir.success,
     showSubIssues: params.get(displayParams.subissues) !== "hide",
   };
 }
@@ -159,28 +166,59 @@ function setOrDelete(
   }
 }
 
+function applySortDirection(
+  next: URLSearchParams,
+  change: DisplayChanges,
+  sortDir: SortDir,
+  hasSearch: boolean,
+) {
+  const parsedListSort = SortSchema.safeParse(next.get(displayParams.sort));
+  if (
+    change.boardSort === undefined &&
+    change.sort === undefined &&
+    !parsedListSort.success
+  ) {
+    next.delete(displayParams.sort);
+  }
+  const activeSort: BoardSort =
+    change.boardSort ??
+    change.sort ??
+    (parsedListSort.success ? parsedListSort.data : defaultSort);
+  if (
+    hasSearch &&
+    activeSort === defaultSort &&
+    change.boardSort === undefined
+  ) {
+    next.set(displayParams.sort, defaultSort);
+  }
+  if (activeSort === "board" || sortDir === defaultSortDirection(activeSort)) {
+    next.delete(displayParams.dir);
+  } else {
+    next.set(displayParams.dir, sortDir);
+  }
+}
+
 function applySortChanges(next: URLSearchParams, change: DisplayChanges) {
+  if (change.clearSort === true) {
+    next.delete(displayParams.sort);
+    next.delete(displayParams.dir);
+    return;
+  }
+  const hasSearch = hasSearchQuery(next);
   if (change.sort !== undefined) {
-    setOrDelete(next, displayParams.sort, change.sort, defaultSort);
+    if (hasSearch && change.sort === defaultSort) {
+      next.set(displayParams.sort, change.sort);
+    } else {
+      setOrDelete(next, displayParams.sort, change.sort, defaultSort);
+    }
     if (change.sortDir === undefined) next.delete(displayParams.dir);
   }
   if (change.boardSort !== undefined) {
     setOrDelete(next, displayParams.sort, change.boardSort, "board");
     if (change.sortDir === undefined) next.delete(displayParams.dir);
   }
-  if (change.sortDir === undefined) return;
-  const parsedCurrent = BoardSortSchema.safeParse(next.get(displayParams.sort));
-  const activeSort: BoardSort =
-    change.boardSort ??
-    change.sort ??
-    (parsedCurrent.success ? parsedCurrent.data : defaultSort);
-  if (
-    activeSort === "board" ||
-    change.sortDir === defaultSortDirection(activeSort)
-  ) {
-    next.delete(displayParams.dir);
-  } else {
-    next.set(displayParams.dir, change.sortDir);
+  if (change.sortDir !== undefined) {
+    applySortDirection(next, change, change.sortDir, hasSearch);
   }
 }
 

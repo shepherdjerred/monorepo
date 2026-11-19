@@ -20,6 +20,7 @@ import {
   parseImpact,
   parseUrgency,
   priorityOptions,
+  searchSortOptions,
   sortDirectionSummary,
   sortOptions,
   stateOptions,
@@ -27,6 +28,7 @@ import {
   urgencyOptions,
 } from "#client/controls/property-options.tsx";
 import {
+  hasSearchQuery,
   oppositeSortDirection,
   readDisplay,
   writeDisplay,
@@ -368,9 +370,16 @@ export function sortStep(
         ? new URLSearchParams(search)
         : new URLSearchParams({ team: teamKey });
       const display = readDisplay(params);
+      const searching = onListSurface && !onBoard && hasSearchQuery(params);
       const activeSort = onBoard ? display.boardSort : display.sort;
       const activeDir = onBoard ? display.boardSortDir : display.sortDir;
-      const options = onBoard ? boardSortOptions : sortOptions;
+      const selectedSort =
+        searching && !display.hasExplicitSort ? "relevance" : activeSort;
+      const options = onBoard
+        ? boardSortOptions
+        : searching
+          ? searchSortOptions
+          : sortOptions;
       const applyParams = (next: URLSearchParams) => {
         const targetPath = onListSurface ? pathname : "/issues";
         const query = next.toString();
@@ -382,18 +391,25 @@ export function sortStep(
           label: option.label,
           icon: option.icon,
           section: "Order by",
-          checked: onListSurface && activeSort === option.value,
+          checked: onListSurface && selectedSort === option.value,
           run: () => {
             applyParams(
               onBoard
-                ? writeDisplay(params, { boardSort: option.value })
-                : writeDisplay(params, {
-                    sort: option.value === "board" ? "updated" : option.value,
-                  }),
+                ? writeDisplay(params, {
+                    boardSort:
+                      option.value === "relevance" ? "board" : option.value,
+                  })
+                : option.value === "relevance"
+                  ? writeDisplay(params, { clearSort: true })
+                  : writeDisplay(params, {
+                      sort: option.value === "board" ? "updated" : option.value,
+                    }),
             );
           },
         })),
-        ...(onListSurface && activeSort !== "board"
+        ...(onListSurface &&
+        selectedSort !== "board" &&
+        selectedSort !== "relevance"
           ? [
               {
                 id: "sort:reverse",
@@ -401,10 +417,14 @@ export function sortStep(
                 icon: <ArrowUpDown size={15} />,
                 section: "Direction",
                 run: () => {
+                  const nextDir = oppositeSortDirection(activeDir);
                   applyParams(
-                    writeDisplay(params, {
-                      sortDir: oppositeSortDirection(activeDir),
-                    }),
+                    writeDisplay(
+                      params,
+                      onBoard
+                        ? { boardSort: activeSort, sortDir: nextDir }
+                        : { sort: display.sort, sortDir: nextDir },
+                    ),
                   );
                 },
               },

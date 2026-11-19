@@ -223,6 +223,42 @@ describe("display options", () => {
       writeDisplay(reversedEffort, { boardSort: "board" }).toString(),
     ).toBe("team=AI");
 
+    // Direction-only changes on a list URL with a raw board sort fall back to updated.
+    expect(
+      writeDisplay(new URLSearchParams("sort=board"), {
+        sortDir: "asc",
+      }).toString(),
+    ).toBe("dir=asc");
+
+    // Active text searches preserve explicit Updated ordering instead of falling back to relevance.
+    const searched = new URLSearchParams("team=AI&q=login");
+    expect(readDisplay(searched).hasExplicitSort).toBe(false);
+    const searchExplicitUpdated = writeDisplay(searched, { sort: "updated" });
+    expect(searchExplicitUpdated.toString()).toBe(
+      "team=AI&q=login&sort=updated",
+    );
+    expect(readDisplay(searchExplicitUpdated)).toMatchObject({
+      sort: "updated",
+      sortDir: "desc",
+      hasExplicitSort: true,
+    });
+    const searchUpdatedAsc = writeDisplay(searchExplicitUpdated, {
+      sortDir: "asc",
+    });
+    expect(searchUpdatedAsc.toString()).toBe(
+      "team=AI&q=login&sort=updated&dir=asc",
+    );
+    const searchUpdatedBackToDesc = writeDisplay(searchUpdatedAsc, {
+      sortDir: "desc",
+    });
+    expect(searchUpdatedBackToDesc.toString()).toBe(
+      "team=AI&q=login&sort=updated",
+    );
+    expect(readDisplay(searchUpdatedBackToDesc).hasExplicitSort).toBe(true);
+    expect(
+      writeDisplay(searchUpdatedBackToDesc, { clearSort: true }).toString(),
+    ).toBe("team=AI&q=login");
+
     const sample = [
       issueFixture(1, {
         title: "charlie",

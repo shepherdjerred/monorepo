@@ -4,12 +4,14 @@ import { ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
 import { EnumPicker } from "#client/controls/enum-picker.tsx";
 import {
   boardSortOptions,
+  searchSortOptions,
   sortDirectionSummary,
   sortOptions,
 } from "#client/controls/property-options.tsx";
 import {
   BoardSortSchema,
   defaultSortDirection,
+  hasSearchQuery,
   oppositeSortDirection,
   readDisplay,
   SortSchema,
@@ -25,9 +27,16 @@ export function SortControl({ board }: { board: boolean }) {
   const [params, setParams] = useSearchParams();
   const [announcement, setAnnouncement] = useState("");
   const display = readDisplay(params);
+  const searching = !board && hasSearchQuery(params);
   const activeSort: BoardSort = board ? display.boardSort : display.sort;
   const activeDir = board ? display.boardSortDir : display.sortDir;
-  const options = board ? boardSortOptions : sortOptions;
+  const selectedValue =
+    searching && !display.hasExplicitSort ? "relevance" : activeSort;
+  const options = board
+    ? boardSortOptions
+    : searching
+      ? searchSortOptions
+      : sortOptions;
   const currentOption = options.find(({ value }) => value === activeSort);
   const dirSummary = sortDirectionSummary(activeSort, activeDir);
 
@@ -36,7 +45,7 @@ export function SortControl({ board }: { board: boolean }) {
       <EnumPicker
         id="sort-picker"
         label="Sort issues"
-        value={activeSort}
+        value={selectedValue}
         options={options}
         onChange={(value) => {
           if (board) {
@@ -51,6 +60,11 @@ export function SortControl({ board }: { board: boolean }) {
             setAnnouncement(
               `Sorted by ${label}, ${sortDirectionSummary(nextSort, nextDir)}`,
             );
+          } else if (value === "relevance") {
+            setParams(writeDisplay(params, { clearSort: true }), {
+              preventScrollReset: true,
+            });
+            setAnnouncement("Sorted by Relevance");
           } else {
             const nextSort = SortSchema.parse(value);
             const nextDir = defaultSortDirection(nextSort);
@@ -66,7 +80,7 @@ export function SortControl({ board }: { board: boolean }) {
           }
         }}
       />
-      {activeSort !== "board" && (
+      {selectedValue !== "board" && selectedValue !== "relevance" && (
         <button
           type="button"
           id="sort-direction"
@@ -74,9 +88,15 @@ export function SortControl({ board }: { board: boolean }) {
           aria-label={`Sort direction: ${dirSummary}`}
           onClick={() => {
             const nextDir = oppositeSortDirection(activeDir);
-            setParams(writeDisplay(params, { sortDir: nextDir }), {
-              preventScrollReset: true,
-            });
+            setParams(
+              writeDisplay(
+                params,
+                board
+                  ? { boardSort: activeSort, sortDir: nextDir }
+                  : { sort: display.sort, sortDir: nextDir },
+              ),
+              { preventScrollReset: true },
+            );
             setAnnouncement(
               `Sorted by ${currentOption?.label ?? activeSort}, ${sortDirectionSummary(activeSort, nextDir)}`,
             );
@@ -89,7 +109,7 @@ export function SortControl({ board }: { board: boolean }) {
           )}
         </button>
       )}
-      <span role="status" className="sr-only">
+      <span className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}
       </span>
     </div>

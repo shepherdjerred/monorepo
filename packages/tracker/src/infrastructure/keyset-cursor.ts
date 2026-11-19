@@ -37,7 +37,7 @@ const keyKinds = {
     bind: (value: string | number | boolean) => sql`${value}::date`,
   },
   text: {
-    schema: z.string().max(1000),
+    schema: z.string().max(2000),
     select: (column: Sql) => sql`${column}::text`,
     bind: (value: string | number | boolean) => sql`${value}::text`,
   },

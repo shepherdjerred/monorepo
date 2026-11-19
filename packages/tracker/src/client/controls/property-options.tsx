@@ -11,6 +11,7 @@ import {
   GripVertical,
   Hash,
   Rows3,
+  Search,
   SignalHigh,
   ThumbsUp,
   UserRound,
@@ -161,6 +162,13 @@ export const sortOptions: (EnumOption & { value: Sort })[] = [
   { value: "due", label: "Due date", icon: <CalendarClock size={14} /> },
   { value: "number", label: "Identifier", icon: <Hash size={14} /> },
   { value: "title", label: "Title", icon: <CaseSensitive size={14} /> },
+];
+
+export const searchSortOptions: (EnumOption & {
+  value: Sort | "relevance";
+})[] = [
+  { value: "relevance", label: "Relevance", icon: <Search size={14} /> },
+  ...sortOptions,
 ];
 
 export const boardSortOptions: (EnumOption & { value: BoardSort })[] = [

@@ -9,12 +9,14 @@ import { EnumPicker } from "#client/controls/enum-picker.tsx";
 import {
   boardSortOptions,
   groupOptions,
+  searchSortOptions,
   sortDirectionSummary,
   sortOptions,
 } from "#client/controls/property-options.tsx";
 import {
   BoardSortSchema,
   GroupBySchema,
+  hasSearchQuery,
   oppositeSortDirection,
   readDisplay,
   rowProperties,
@@ -41,8 +43,11 @@ const propertyNames: Record<RowProperty, string> = {
 export function DisplayMenu({ board }: { board: boolean }) {
   const [params, setParams] = useSearchParams();
   const display = readDisplay(params);
+  const searching = !board && hasSearchQuery(params);
   const activeSort = board ? display.boardSort : display.sort;
   const activeDir = board ? display.boardSortDir : display.sortDir;
+  const selectedSort =
+    searching && !display.hasExplicitSort ? "relevance" : activeSort;
   const write = (change: DisplayChanges) => {
     setParams(writeDisplay(params, change), { preventScrollReset: true });
   };
@@ -85,24 +90,37 @@ export function DisplayMenu({ board }: { board: boolean }) {
                 <EnumPicker
                   id="display-sort"
                   label="Ordering"
-                  value={activeSort}
-                  options={board ? boardSortOptions : sortOptions}
+                  value={selectedSort}
+                  options={
+                    board
+                      ? boardSortOptions
+                      : searching
+                        ? searchSortOptions
+                        : sortOptions
+                  }
                   onChange={(value) => {
                     if (board) {
                       write({ boardSort: BoardSortSchema.parse(value) });
+                    } else if (value === "relevance") {
+                      write({ clearSort: true });
                     } else {
                       write({ sort: SortSchema.parse(value) });
                     }
                   }}
                 />
-                {activeSort !== "board" && (
+                {selectedSort !== "board" && selectedSort !== "relevance" && (
                   <button
                     type="button"
                     id="display-sort-direction"
                     className="toolbar-button sort-dir-button"
                     aria-label={`Ordering direction: ${sortDirectionSummary(activeSort, activeDir)}`}
                     onClick={() => {
-                      write({ sortDir: oppositeSortDirection(activeDir) });
+                      const nextDir = oppositeSortDirection(activeDir);
+                      write(
+                        board
+                          ? { boardSort: activeSort, sortDir: nextDir }
+                          : { sort: display.sort, sortDir: nextDir },
+                      );
                     }}
                   >
                     {activeDir === "desc" ? (

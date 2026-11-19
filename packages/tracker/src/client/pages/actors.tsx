@@ -8,12 +8,12 @@ import {
   ArrowUpNarrowWide,
   CalendarPlus,
   Clock,
-  Search,
   Users,
 } from "lucide-react";
 import { z } from "zod";
 import { api } from "#client/data/api.ts";
 import { EnumPicker, type EnumOption } from "#client/controls/enum-picker.tsx";
+import { CollectionToolbar, withSearchParam } from "./collection-toolbar.tsx";
 import {
   sortDirectionSummary,
   sortOptions,
@@ -157,51 +157,30 @@ export function Actors() {
         <ActorsSkeleton />
       ) : actor === undefined ? (
         <>
-          <search
-            className="collection-toolbar"
-            aria-label="Filter and sort actors"
-          >
-            <div className="filter-search">
-              <Search size={14} aria-hidden="true" />
-              <input
-                id="actors-search"
-                type="search"
-                aria-label="Search actors"
-                placeholder="Search actors…"
-                value={query}
-                autoCorrect="off"
-                autoCapitalize="none"
-                spellCheck={false}
-                onChange={(event) => {
-                  const next = new URLSearchParams(params);
-                  const value = event.target.value;
-                  if (value === "") {
-                    next.delete("q");
-                  } else {
-                    next.set("q", value);
-                  }
-                  setParams(next, { replace: true, preventScrollReset: true });
-                }}
-              />
-            </div>
-            <span className="spacer" />
-            <EnumPicker
-              id="actors-sort"
-              label="Sort actors"
-              value={directorySort}
-              options={actorSortOptions}
-              onChange={(value) => {
-                const nextSort = ActorDirectorySortSchema.parse(value);
-                const next = new URLSearchParams(params);
-                if (nextSort === "last-seen") {
-                  next.delete("actorSort");
-                } else {
-                  next.set("actorSort", nextSort);
-                }
-                setParams(next, { preventScrollReset: true });
-              }}
-            />
-          </search>
+          <CollectionToolbar
+            ariaLabel="Filter and sort actors"
+            searchId="actors-search"
+            searchLabel="Search actors"
+            searchPlaceholder="Search actors…"
+            query={query}
+            onQueryChange={(value) => {
+              setParams(withSearchParam(params, "q", value), {
+                replace: true,
+                preventScrollReset: true,
+              });
+            }}
+            sortId="actors-sort"
+            sortLabel="Sort actors"
+            sortValue={directorySort}
+            sortOptions={actorSortOptions}
+            onSortChange={(value) => {
+              const nextSort = ActorDirectorySortSchema.parse(value);
+              setParams(
+                withSearchParam(params, "actorSort", nextSort, "last-seen"),
+                { preventScrollReset: true },
+              );
+            }}
+          />
           <div className="actor-grid">
             {sortedActors.map((a) => (
               <Link

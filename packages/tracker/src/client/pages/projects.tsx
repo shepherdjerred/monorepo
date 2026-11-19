@@ -6,11 +6,11 @@ import {
   ArrowUpRight,
   Folder,
   Hash,
-  Search,
 } from "lucide-react";
 import { z } from "zod";
-import { EnumPicker, type EnumOption } from "#client/controls/enum-picker.tsx";
+import type { EnumOption } from "#client/controls/enum-picker.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
+import { CollectionToolbar, withSearchParam } from "./collection-toolbar.tsx";
 
 const ProjectSortSchema = z.enum(["name-asc", "name-desc", "slug"]);
 type ProjectSort = z.infer<typeof ProjectSortSchema>;
@@ -56,51 +56,30 @@ export function Projects() {
 
   return (
     <div>
-      <search
-        className="collection-toolbar collection-toolbar-padded"
-        aria-label="Filter and sort projects"
-      >
-        <div className="filter-search">
-          <Search size={14} aria-hidden="true" />
-          <input
-            id="projects-search"
-            type="search"
-            aria-label="Search projects"
-            placeholder="Search projects…"
-            value={query}
-            autoCorrect="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            onChange={(event) => {
-              const next = new URLSearchParams(params);
-              const value = event.target.value;
-              if (value === "") {
-                next.delete("q");
-              } else {
-                next.set("q", value);
-              }
-              setParams(next, { replace: true, preventScrollReset: true });
-            }}
-          />
-        </div>
-        <span className="spacer" />
-        <EnumPicker
-          id="projects-sort"
-          label="Sort projects"
-          value={sort}
-          options={projectSortOptions}
-          onChange={(value) => {
-            const nextSort = ProjectSortSchema.parse(value);
-            const next = new URLSearchParams(params);
-            if (nextSort === "name-asc") {
-              next.delete("sort");
-            } else {
-              next.set("sort", nextSort);
-            }
-            setParams(next, { preventScrollReset: true });
-          }}
-        />
-      </search>
+      <CollectionToolbar
+        ariaLabel="Filter and sort projects"
+        padded
+        searchId="projects-search"
+        searchLabel="Search projects"
+        searchPlaceholder="Search projects…"
+        query={query}
+        onQueryChange={(value) => {
+          setParams(withSearchParam(params, "q", value), {
+            replace: true,
+            preventScrollReset: true,
+          });
+        }}
+        sortId="projects-sort"
+        sortLabel="Sort projects"
+        sortValue={sort}
+        sortOptions={projectSortOptions}
+        onSortChange={(value) => {
+          const nextSort = ProjectSortSchema.parse(value);
+          setParams(withSearchParam(params, "sort", nextSort, "name-asc"), {
+            preventScrollReset: true,
+          });
+        }}
+      />
       <div className="project-grid">
         {projects.map((project) => (
           <Link
