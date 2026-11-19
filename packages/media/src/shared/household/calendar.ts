@@ -136,4 +136,3 @@ export const RemovalHistoryPageSchema = z.object({
   items: z.array(RemovalHistoryItemSchema).max(100),
   nextCursor: z.string().nullable(),
 });
-export type RemovalHistoryItem = z.infer<typeof RemovalHistoryItemSchema>;

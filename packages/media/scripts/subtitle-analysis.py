@@ -11,11 +11,24 @@ import subprocess
 import sys
 
 import numpy as np
-from ffsubsync.speech_transformers import _make_webrtcvad_detector
+import webrtcvad
+
+
+def speech_frames(detector: webrtcvad.Vad, chunk: bytes) -> np.ndarray:
+    samples = len(chunk) // 2
+    measured = []
+    for start in range(0, samples, 480):
+        stop = min(start + 480, samples)
+        frame = chunk[start * 2:stop * 2]
+        if len(frame) < 960:
+            measured.append(0.0)
+        else:
+            measured.append(1.0 if detector.is_speech(frame, 48_000) else 0.0)
+    return np.array(measured)
 
 
 def audio(video: str, output: str, runtime_ms: int) -> None:
-    detector = _make_webrtcvad_detector(100, 48_000, 0.0)
+    detector = webrtcvad.Vad(3)
     command = ["ffmpeg", "-v", "error", "-nostdin", "-protocol_whitelist", "file,pipe",
                "-i", video, "-map", "0:a:0", "-t", str(runtime_ms / 1000),
                "-f", "s16le", "-ac", "1", "-acodec", "pcm_s16le", "-ar", "48000", "pipe:1"]
@@ -29,7 +42,7 @@ def audio(video: str, output: str, runtime_ms: int) -> None:
             chunk = process.stdout.read(960 * 1000)
             if not chunk:
                 break
-            measured = detector(chunk)
+            measured = speech_frames(detector, chunk)
             frame_count += len(measured)
             if frame_count > (runtime_ms + 999) // 10:
                 raise ValueError("Audio exceeded its measured duration")

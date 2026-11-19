@@ -453,4 +453,6 @@ webrtcvad-wheels==2.0.14.post1 \
     --hash=sha256:f9b2d8656bb814d0f9947d8b7bbfcac2b39e77164d36fe72b34d2a992bb6526c \
     --hash=sha256:fb89f7e625724ea0cd313d7438e48bf37cf319fb6f73f2e51f692f4e4c73edf9 \
     --hash=sha256:ffbe00c93e2b03ee511c7fad29c4d92ec17cd33bc181c55636334079252b633f
-    # via ffsubsync
+    # via
+    #   -r packages/media/scripts/subtitle-requirements.in
+    #   ffsubsync

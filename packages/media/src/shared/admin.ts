@@ -27,14 +27,6 @@ export const ProviderSelectionSchema = z.strictObject({
   delaySeconds: z.int().min(0).max(86_400),
   bypassAtHighestQuality: z.boolean(),
 });
-export function personalProviderSelection(privateTracker: boolean) {
-  return ProviderSelectionSchema.parse({
-    priority: privateTracker ? 1 : 25,
-    minimumSeeders: 1,
-    delaySeconds: 900,
-    bypassAtHighestQuality: true,
-  });
-}
 export const ProviderConfigurationSchema = z
   .object({
     minimumIntervalSeconds: z.number().int().min(1).max(3600),
