@@ -37,24 +37,7 @@ type Placement = {
   index: number;
   measure: Ref<HTMLLIElement>;
   style: CSSProperties;
-  /** Its place among the rows of a group that is opening, if it is one. */
-  entering?: number | undefined;
 };
-
-/** Rows of an opening group arrive in turn; `--enter-index` staggers them. */
-function enteringStyle(
-  style: CSSProperties,
-  entering: number | undefined,
-): CSSProperties {
-  if (entering === undefined) {
-    return style;
-  }
-  const staggered: CSSProperties & { "--enter-index": number } = {
-    ...style,
-    "--enter-index": Math.min(entering, 12),
-  };
-  return staggered;
-}
 
 export function IssueRowItem({
   issue,
@@ -87,7 +70,6 @@ export function IssueRowItem({
   const { hidden } = options;
   // The row's identifier and title morph into the issue page and back.
   const morph = useViewTransitionState(`/issues/${issue.identifier}`);
-  const { entering } = placement;
   return (
     <li
       className="issue-row"
@@ -97,10 +79,9 @@ export function IssueRowItem({
       data-selected={state.selected}
       data-fresh={state.fresh ? "" : undefined}
       data-vt-subject={morph ? "" : undefined}
-      data-entering={entering === undefined ? undefined : ""}
       aria-posinset={position}
       aria-setsize={setSize}
-      style={enteringStyle(placement.style, entering)}
+      style={placement.style}
     >
       <input
         type="checkbox"

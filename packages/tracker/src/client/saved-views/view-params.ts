@@ -21,6 +21,7 @@ const singles = [
   ["priority", "priority"],
   ["q", "search"],
   ["sort", "sort"],
+  ["dir", "dir"],
   ["group", "group"],
 ] as const;
 const lists = [

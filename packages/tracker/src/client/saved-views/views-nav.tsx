@@ -20,7 +20,6 @@ import {
   type SavedView,
 } from "./view-params.ts";
 import { leavingPopup } from "#client/ui/leaving.tsx";
-import { flipItems } from "#client/feedback/motion.ts";
 
 const dragType = "application/x-tracker-view";
 
@@ -151,8 +150,6 @@ export function ViewsNav({
     if (ids === undefined || !settled) {
       return;
     }
-    // The views glide to their new places instead of jumping.
-    flipItems(".view-nav", "a[data-view]", "view");
     void reorderViews(ids);
     if (focus !== undefined) {
       // Moving the link in the document takes focus from it.

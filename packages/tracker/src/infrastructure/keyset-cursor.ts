@@ -36,6 +36,11 @@ const keyKinds = {
     select: (column: Sql) => sql`to_char(${column}, 'YYYY-MM-DD')`,
     bind: (value: string | number | boolean) => sql`${value}::date`,
   },
+  text: {
+    schema: z.string().max(2000),
+    select: (column: Sql) => sql`${column}::text`,
+    bind: (value: string | number | boolean) => sql`${value}::text`,
+  },
 } as const;
 
 type SortKeyKind = keyof typeof keyKinds;

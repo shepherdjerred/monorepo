@@ -64,7 +64,8 @@ toolkit tracker issue list --team AI --effort xs --effort s --urgency high --sor
 `--urgency <high|medium|low>`, `--impact <high|medium|low>`, and
 `--effort <xs|s|m|l|xl>` accept `none` on `update` and `bulk-update` to clear a
 value, and repeat on `list` and `search` (including `none` for untriaged
-issues; `--sort` also accepts `urgency`, `impact`, and `effort`). Tracker
+issues; `--sort` accepts `updated|created|priority|urgency|impact|effort|votes|board|due|number|title`
+and `--sort-dir <asc|desc>` reverses direction while keeping unset values last). Tracker
 computes `priority` automatically from `urgency` and `impact` when `--priority`
 is omitted; pass `--priority <1..4>` (or `0` for no priority) only for a
 deliberate manual override, and `--priority auto` to return an issue to derived

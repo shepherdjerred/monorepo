@@ -264,6 +264,7 @@ toolkit tracker whoami --json
 toolkit tracker issue search "browser bootstrap" --team AI --all-states --include-archived --json
 toolkit tracker issue list --team AI --project developer-experience --label Improvement --limit all --json
 toolkit tracker issue list --team AI --effort xs --effort s --urgency high --sort effort --json
+toolkit tracker issue list --team AI --sort effort --sort-dir desc --json
 toolkit tracker issue create --team AI --title "Tool: failure" --urgency medium --impact high --effort s --description-file /tmp/issue.md
 toolkit tracker issue vote AI-26 --note "Blocked tracker UI verification"
 toolkit tracker issue update AI-26 --state started --priority auto --expected-revision 3

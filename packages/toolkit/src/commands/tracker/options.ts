@@ -29,6 +29,7 @@ export function parseTrackerArgs(args: string[]) {
       limit: string,
       cursor: string,
       sort: string,
+      "sort-dir": string,
       title: string,
       description: string,
       "description-file": string,

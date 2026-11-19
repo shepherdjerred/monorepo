@@ -3,22 +3,16 @@ import {
   DragOverlay,
   MouseSensor,
   TouchSensor,
-  closestCorners,
-  pointerWithin,
   useDroppable,
   useSensor,
   useSensors,
   useDndContext,
   type DragEndEvent,
   type DragStartEvent,
-  type DropAnimationFunction,
-  type CollisionDetection,
-  type KeyboardCoordinateGetter,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useMemo, useState } from "react";
@@ -47,56 +41,27 @@ import { SubIssueBadge } from "#client/hierarchy/progress.tsx";
 import { PriorityGlyph, StateIcon } from "#client/ui/icons.tsx";
 import { Avatar, Swatch } from "#client/ui/ui.tsx";
 import { feedback } from "#client/feedback/index.ts";
-import { easeOut, spring, useReducedMotion } from "#client/feedback/motion.ts";
+import { useMotionDisabled } from "#client/feedback/motion.ts";
 import { useShell } from "#client/shell/shell-context.ts";
 import { isPlainClick } from "#client/shell/route.ts";
 import { useFreshRows } from "#client/live/remote-activity.ts";
-import { BoardKeyboardSensor } from "#client/board/keyboard-sensor.ts";
 import {
+  BoardKeyboardSensor,
+  boardCollision,
+  boardKeyboardCoordinates,
+  settleInto,
+} from "#client/board/keyboard-sensor.ts";
+import {
+  compareIssuesBySort,
   readDisplay,
   type RowProperty,
 } from "#client/views/display-options.ts";
-
-const boardCollision: CollisionDetection = (args) => {
-  const hits = pointerWithin({
-    ...args,
-    pointerCoordinates: args.pointerCoordinates ?? {
-      x: args.collisionRect.left + args.collisionRect.width / 2,
-      y: args.collisionRect.top + 20,
-    },
-  });
-  if (hits.length > 0) {
-    const cards = hits.filter(
-      ({ id }) =>
-        args.droppableContainers.find((container) => container.id === id)?.data
-          .current?.["column"] !== true,
-    );
-    return cards.length > 0 ? cards : hits;
-  }
-  return closestCorners(args);
-};
-const boardKeyboardCoordinates: KeyboardCoordinateGetter = (event, args) => {
-  if (!["ArrowLeft", "ArrowRight"].includes(event.code))
-    return sortableKeyboardCoordinates(event, args);
-  event.preventDefault();
-  const { active, over, droppableContainers, droppableRects } = args.context;
-  const currentState: unknown =
-    over?.data.current?.["stateId"] ?? active?.data.current?.["stateId"];
-  const columns = droppableContainers
-    .getEnabled()
-    .filter((container) => container.data.current?.["column"] === true);
-  const index = columns.findIndex((container) => container.id === currentState);
-  const target = columns[index + (event.code === "ArrowLeft" ? -1 : 1)];
-  const rect = target === undefined ? undefined : droppableRects.get(target.id);
-  return rect === undefined
-    ? undefined
-    : { x: rect.left + 10, y: rect.top + 50 };
-};
 
 type CardOptions = {
   states: readonly EnumOption[];
   hidden: ReadonlySet<RowProperty>;
   disabled: boolean;
+  manualOrder: boolean;
 };
 
 function Card({ issue, options }: { issue: Issue; options: CardOptions }) {
@@ -292,60 +257,6 @@ function LiftedCard({
   );
 }
 
-const frame = () =>
-  new Promise((resolve) => {
-    requestAnimationFrame(resolve);
-  });
-
-/**
- * The carried card settles into the slot the card now has. The drop has
- * already moved it in the cache, so this waits for that render and flies to
- * wherever the card landed, in its own column or another.
- */
-function settleInto(
-  identifierOf: (id: string) => string | undefined,
-): DropAnimationFunction {
-  return async ({ active, dragOverlay }) => {
-    await frame();
-    await frame();
-    const identifier = identifierOf(String(active.id));
-    const target =
-      identifier === undefined
-        ? null
-        : document.querySelector<HTMLElement>(
-            `.board-card[data-row-issue="${CSS.escape(identifier)}"]`,
-          );
-    if (target === null) {
-      return;
-    }
-    const from = dragOverlay.node.getBoundingClientRect();
-    const to = target.getBoundingClientRect();
-    const timing = { duration: 260, easing: spring, fill: "forwards" } as const;
-    target.style.visibility = "hidden";
-    const flight = dragOverlay.node.animate(
-      [
-        { translate: "0 0" },
-        {
-          translate: `${String(to.left - from.left)}px ${String(to.top - from.top)}px`,
-        },
-      ],
-      timing,
-    );
-    dragOverlay.node.firstElementChild?.animate(
-      [
-        { rotate: "2deg", scale: "1.02" },
-        { rotate: "0deg", scale: "1" },
-      ],
-      { ...timing, easing: easeOut },
-    );
-    try {
-      await flight.finished;
-    } finally {
-      target.style.visibility = "";
-    }
-  };
-}
-
 function Column({
   state,
   items,
@@ -372,7 +283,9 @@ function Column({
       </h2>
       <SortableContext
         items={items.map(({ id }) => id)}
-        strategy={verticalListSortingStrategy}
+        strategy={
+          options.manualOrder ? verticalListSortingStrategy : () => null
+        }
       >
         {items.map((issue) => (
           <Card issue={issue} key={issue.id} options={options} />
@@ -397,7 +310,8 @@ export function Board({
 }) {
   const { bootstrap } = useShell();
   const [params] = useSearchParams();
-  const hidden = readDisplay(params).hidden;
+  const display = readDisplay(params);
+  const { hidden } = display;
   const statusChoices = useMemo(
     () =>
       stateOptions(
@@ -411,8 +325,9 @@ export function Board({
     states: statusChoices,
     hidden,
     disabled: !bootstrap.writesEnabled,
+    manualOrder: display.boardSort === "board",
   };
-  const reduced = useReducedMotion();
+  const motionOff = useMotionDisabled();
   const [carried, setCarried] = useState<string>();
   const carriedIssue = items.find(({ id }) => id === carried);
   const dropAnimation = useMemo(
@@ -445,6 +360,17 @@ export function Board({
     const column = items
       .filter((item) => item.state.id === state.id && item.id !== issue.id)
       .sort((a, b) => a.boardOrder - b.boardOrder || a.id.localeCompare(b.id));
+    if (display.boardSort !== "board") {
+      if (issue.state.id === state.id) return;
+      const tail = column.at(-1);
+      feedback("drop");
+      void moveIssue(issue.identifier, {
+        stateId: state.id,
+        boardOrder: (tail?.boardOrder ?? 1024) + 1024,
+        ...(tail === undefined ? {} : { beforeId: tail.id }),
+      });
+      return;
+    }
     const index =
       target === undefined
         ? column.length
@@ -495,14 +421,18 @@ export function Board({
             options={options}
             items={items
               .filter((item) => item.state.id === state.id)
-              .sort(
-                (a, b) =>
-                  a.boardOrder - b.boardOrder || a.id.localeCompare(b.id),
+              .sort((a, b) =>
+                compareIssuesBySort(
+                  a,
+                  b,
+                  display.boardSort,
+                  display.boardSortDir,
+                ),
               )}
           />
         ))}
       </div>
-      <DragOverlay dropAnimation={reduced ? null : dropAnimation}>
+      <DragOverlay dropAnimation={motionOff ? null : dropAnimation}>
         {carriedIssue === undefined ? null : (
           <LiftedCard issue={carriedIssue} hidden={hidden} />
         )}

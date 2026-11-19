@@ -13,6 +13,7 @@ import { EnumPicker } from "#client/controls/enum-picker.tsx";
 import { IssueContextMenu } from "#client/controls/issue-menu.tsx";
 import { DisplayMenu } from "#client/views/display-menu.tsx";
 import { FilterBar } from "#client/views/filter-bar.tsx";
+import { SortControl } from "#client/views/sort-control.tsx";
 import { IssueList } from "./issue-list.tsx";
 import { useShell } from "#client/shell/shell-context.ts";
 import { rememberTeam } from "#client/shell/team.ts";
@@ -264,6 +265,7 @@ function Toolbar({
         board={board}
         projectSlug={projectSlug}
       />
+      <SortControl board={board} />
       <EnumPicker
         id="team-picker"
         label="Team"

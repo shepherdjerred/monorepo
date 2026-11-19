@@ -1,7 +1,11 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import { parseIdentifier, searchTokens } from "#domain/issue.ts";
-import { StateTypeSchema, type IssueListInput } from "#shared/schema.ts";
+import {
+  StateTypeSchema,
+  type IssueListInput,
+  type SortDirection,
+} from "#shared/schema.ts";
 import type { Database } from "./database.ts";
 import {
   keysetSqlParts,
@@ -19,50 +23,100 @@ import {
 type Sql = Prisma.Sql;
 const { sql, join } = Prisma;
 
-const issueSorts: Record<IssueListInput["sort"], SortKey[]> = {
-  updated: [{ expr: sql`i."updatedAt"`, desc: true, kind: "time" }],
-  created: [{ expr: sql`i."createdAt"`, desc: true, kind: "time" }],
-  // Priority 0 means "No priority": it sorts after Low (4), never first.
-  priority: [
-    {
-      expr: sql`CASE i."priority" WHEN 0 THEN 5 ELSE i."priority" END`,
-      desc: false,
-      kind: "int",
-    },
-  ],
-  urgency: [
-    {
-      expr: sql`CASE i."urgency"::text WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END`,
-      desc: false,
-      kind: "int",
-    },
-  ],
-  impact: [
-    {
-      expr: sql`CASE i."impact"::text WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END`,
-      desc: false,
-      kind: "int",
-    },
-  ],
-  effort: [
-    {
-      expr: sql`CASE i."effort"::text WHEN 'xs' THEN 1 WHEN 's' THEN 2 WHEN 'm' THEN 3 WHEN 'l' THEN 4 WHEN 'xl' THEN 5 ELSE 6 END`,
-      desc: false,
-      kind: "int",
-    },
-  ],
-  votes: [{ expr: sql`i."voteCount"`, desc: true, kind: "int" }],
-  board: [{ expr: sql`i."boardOrder"`, desc: false, kind: "float" }],
-  // Soonest first; issues without a due date come last.
-  due: [
-    { expr: sql`(i."dueDate" IS NULL)`, desc: false, kind: "bool" },
-    {
-      expr: sql`COALESCE(i."dueDate", DATE '0001-01-01')`,
-      desc: false,
-      kind: "date",
-    },
-  ],
-};
+function defaultSortDirection(sort: IssueListInput["sort"]): SortDirection {
+  switch (sort) {
+    case "updated":
+    case "created":
+    case "votes":
+    case "number": {
+      return "desc";
+    }
+    case "priority":
+    case "urgency":
+    case "impact":
+    case "effort":
+    case "board":
+    case "due":
+    case "title": {
+      return "asc";
+    }
+  }
+}
+
+function issueSortKeys(
+  sort: IssueListInput["sort"],
+  dir: SortDirection,
+): SortKey[] {
+  const desc = dir === "desc";
+  switch (sort) {
+    case "updated": {
+      return [{ expr: sql`i."updatedAt"`, desc, kind: "time" }];
+    }
+    case "created": {
+      return [{ expr: sql`i."createdAt"`, desc, kind: "time" }];
+    }
+    // Priority 0 means "No priority": it sorts after rated issues in both directions.
+    case "priority": {
+      return [
+        { expr: sql`(i."priority" = 0)`, desc: false, kind: "bool" },
+        { expr: sql`i."priority"`, desc, kind: "int" },
+      ];
+    }
+    case "urgency": {
+      return [
+        { expr: sql`(i."urgency" IS NULL)`, desc: false, kind: "bool" },
+        {
+          expr: sql`CASE i."urgency"::text WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END`,
+          desc,
+          kind: "int",
+        },
+      ];
+    }
+    case "impact": {
+      return [
+        { expr: sql`(i."impact" IS NULL)`, desc: false, kind: "bool" },
+        {
+          expr: sql`CASE i."impact"::text WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END`,
+          desc,
+          kind: "int",
+        },
+      ];
+    }
+    case "effort": {
+      return [
+        { expr: sql`(i."effort" IS NULL)`, desc: false, kind: "bool" },
+        {
+          expr: sql`CASE i."effort"::text WHEN 'xs' THEN 1 WHEN 's' THEN 2 WHEN 'm' THEN 3 WHEN 'l' THEN 4 WHEN 'xl' THEN 5 ELSE 6 END`,
+          desc,
+          kind: "int",
+        },
+      ];
+    }
+    case "votes": {
+      return [{ expr: sql`i."voteCount"`, desc, kind: "int" }];
+    }
+    case "board": {
+      return [{ expr: sql`i."boardOrder"`, desc, kind: "float" }];
+    }
+    // Issues without a due date sort last in both directions.
+    case "due": {
+      return [
+        { expr: sql`(i."dueDate" IS NULL)`, desc: false, kind: "bool" },
+        {
+          expr: sql`COALESCE(i."dueDate", DATE '0001-01-01')`,
+          desc,
+          kind: "date",
+        },
+      ];
+    }
+    case "number": {
+      return [{ expr: sql`i."number"`, desc, kind: "int" }];
+    }
+    case "title": {
+      return [{ expr: sql`lower(i."title")`, desc, kind: "text" }];
+    }
+  }
+}
 
 /** Best match first, then open issues, then the most recently updated. */
 function rankedSort(tokens: string, text: string): SortKey[] {
@@ -207,19 +261,23 @@ function listPlan(input: IssueListInput): ListPlan | null {
   const conditions = filters(input);
   const where = (extra: Sql[]) =>
     join([sql`TRUE`, ...conditions, ...extra], " AND ");
+  const defaultDir = defaultSortDirection(input.sort);
+  const dir = input.dir ?? defaultDir;
+  const order = dir === defaultDir ? input.sort : `${input.sort}:${dir}`;
+  const keys = issueSortKeys(input.sort, dir);
   const text = input.search?.trim() ?? "";
   if (text === "")
     return {
-      order: input.sort,
-      keys: issueSorts[input.sort],
+      order,
+      keys,
       where: where([]),
       trigram: false,
     };
   if (/^[a-z][a-z0-9]*[- ][1-9]\d*$/iu.test(text)) {
     const reference = parseIdentifier(text);
     return {
-      order: input.sort,
-      keys: issueSorts[input.sort],
+      order,
+      keys,
       where: where([
         sql`i."teamId" = (SELECT "id" FROM "Team" WHERE "key" = ${reference.teamKey})`,
         sql`i."number" = ${reference.number}`,
@@ -229,9 +287,10 @@ function listPlan(input: IssueListInput): ListPlan | null {
   }
   const tokens = searchTokens(text);
   if (tokens === "") return null;
+  const explicitSort = input.sort !== "updated" || input.dir !== undefined;
   return {
-    order: "search",
-    keys: rankedSort(tokens, text),
+    order: explicitSort ? `search:${order}` : "search",
+    keys: explicitSort ? keys : rankedSort(tokens, text),
     where: where([
       sql`(i."searchVector" @@ to_tsquery('english', ${tokens}) OR i."title" % ${text})`,
     ]),

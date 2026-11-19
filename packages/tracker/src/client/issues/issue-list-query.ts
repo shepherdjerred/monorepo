@@ -15,6 +15,11 @@ import type { RouteInfo } from "#client/shell/route.ts";
 import { localToday } from "#client/due/dates.ts";
 import { dueFilterInput, isDueFilter } from "#client/due/due-filter.ts";
 import {
+  defaultSortDirection,
+  hasSearchQuery,
+  readDisplay,
+} from "#client/views/display-options.ts";
+import {
   filterEffortParams,
   filterImpactParams,
   filterUrgencyParams,
@@ -49,10 +54,12 @@ const firstCursor = (): string | undefined => undefined;
  * to be undone are left out, as is an issue archived a moment ago in a list
  * that excludes archived ones.
  */
-export function useIssuePages(input: IssueListInput | undefined) {
-  const whole = input?.sort === "board";
+export function useIssuePages(
+  input: IssueListInput | undefined,
+  whole = input?.sort === "board",
+) {
   const query = useInfiniteQuery({
-    queryKey: ["issues", input],
+    queryKey: whole ? ["issues", input, "whole"] : ["issues", input],
     queryFn:
       input === undefined
         ? skipToken
@@ -121,6 +128,51 @@ function planningFilters(params: URLSearchParams) {
   };
 }
 
+function buildUrlListInput(
+  route: RouteInfo,
+  teamKey: string,
+  params: URLSearchParams,
+  actorKey: string,
+): IssueListInput {
+  const display = readDisplay(params);
+  const onBoard = route.view === "board";
+  const activeSort = onBoard ? display.boardSort : display.sort;
+  const activeDir = onBoard ? display.boardSortDir : display.sortDir;
+  const explicitUpdatedInSearch =
+    hasSearchQuery(params) &&
+    activeSort === "updated" &&
+    display.hasExplicitSort;
+  return IssueListSchema.parse({
+    teamKey,
+    projectSlug: route.projectSlug ?? params.get("project") ?? undefined,
+    search: params.get("q") ?? undefined,
+    states: params.getAll("state"),
+    ...planningFilters(params),
+    labels: params.getAll("label"),
+    urgencies: filterUrgencyParams(params),
+    impacts: filterImpactParams(params),
+    efforts: filterEffortParams(params),
+    assigneeKey:
+      params.get("mine") === "true"
+        ? actorKey
+        : (params.get("assignee") ?? undefined),
+    creatorKey: params.get("creator") ?? undefined,
+    priority: params.has("priority")
+      ? Number(params.get("priority"))
+      : undefined,
+    includeArchived: params.get("archived") === "true",
+    sort: activeSort,
+    dir:
+      activeSort === "board"
+        ? undefined
+        : explicitUpdatedInSearch ||
+            activeDir !== defaultSortDirection(activeSort)
+          ? activeDir
+          : undefined,
+    limit: onBoard ? boardPageSize : listPageSize,
+  });
+}
+
 /**
  * The issues behind the list, board and project views. An issue page keeps
  * the list it was reached from, so previous/next follow that list.
@@ -128,46 +180,35 @@ function planningFilters(params: URLSearchParams) {
 export function useIssueList(route: RouteInfo, teamKey: string | undefined) {
   const [params] = useSearchParams();
   const actor = useCurrentActor();
-  const [remembered, setRemembered] = useState<IssueListInput>();
+  const [remembered, setRemembered] = useState<{
+    input: IssueListInput;
+    whole: boolean;
+  }>();
   const fromUrl =
     teamKey !== undefined && route.isList
-      ? IssueListSchema.parse({
-          teamKey,
-          projectSlug: route.projectSlug ?? params.get("project") ?? undefined,
-          search: params.get("q") ?? undefined,
-          states: params.getAll("state"),
-          ...planningFilters(params),
-          labels: params.getAll("label"),
-          urgencies: filterUrgencyParams(params),
-          impacts: filterImpactParams(params),
-          efforts: filterEffortParams(params),
-          assigneeKey:
-            params.get("mine") === "true"
-              ? actor.key
-              : (params.get("assignee") ?? undefined),
-          creatorKey: params.get("creator") ?? undefined,
-          priority: params.has("priority")
-            ? Number(params.get("priority"))
-            : undefined,
-          includeArchived: params.get("archived") === "true",
-          sort:
-            route.view === "board"
-              ? "board"
-              : (params.get("sort") ?? "updated"),
-          limit: route.view === "board" ? boardPageSize : listPageSize,
-        })
+      ? buildUrlListInput(route, teamKey, params, actor.key)
       : undefined;
+  const fromUrlWhole = route.view === "board" || fromUrl?.sort === "board";
   if (
     fromUrl !== undefined &&
-    JSON.stringify(fromUrl) !== JSON.stringify(remembered)
+    (remembered?.whole !== fromUrlWhole ||
+      JSON.stringify(fromUrl) !== JSON.stringify(remembered.input))
   ) {
-    setRemembered(fromUrl);
+    setRemembered({ input: fromUrl, whole: fromUrlWhole });
   }
   const fallback =
     teamKey !== undefined && route.view === "issue"
-      ? (remembered ?? IssueListSchema.parse({ teamKey, limit: listPageSize }))
+      ? (remembered ?? {
+          input: IssueListSchema.parse({ teamKey, limit: listPageSize }),
+          whole: false,
+        })
       : undefined;
-  return useIssuePages(fromUrl ?? fallback);
+  const effective = fromUrl ?? fallback?.input;
+  const whole =
+    fromUrl === undefined
+      ? (fallback?.whole ?? effective?.sort === "board")
+      : fromUrlWhole;
+  return useIssuePages(effective, whole);
 }
 
 const PeekStateSchema = z.object({ peek: z.literal("pushed") });

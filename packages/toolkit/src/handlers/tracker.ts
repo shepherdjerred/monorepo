@@ -26,7 +26,8 @@ issue list                          Filter by --team, --state, --label, --projec
                                     --today, default this machine's date),
                                     --include-archived, --sort updated|created|
                                     priority|urgency|impact|effort|votes|board|
-                                    due, --limit N|all, --cursor
+                                    due|number|title, --sort-dir asc|desc,
+                                    --limit N|all, --cursor
 issue search <text>                 Search open issues (--all-states optional)
 issue view <ID>                      Show parent, sub-issues, due date, comments,
                                     relations, files and votes

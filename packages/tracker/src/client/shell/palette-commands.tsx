@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   Activity,
   Archive,
+  ArrowDownWideNarrow,
   CalendarClock,
   CircleDashed,
   Copy,
@@ -64,6 +65,7 @@ import {
   priorityStep,
   projectStep,
   sizingEntries,
+  sortStep,
   statusStep,
 } from "./palette-steps.tsx";
 
@@ -367,6 +369,13 @@ function workspaceEntries(context: PaletteContext): PaletteEntry[] {
       run: () => {
         context.action("f");
       },
+    },
+    {
+      id: "sort",
+      label: "Sort issues…",
+      icon: <ArrowDownWideNarrow size={15} />,
+      section: "Commands",
+      step: sortStep(context.teamKey, context.navigate),
     },
     {
       id: "mine",

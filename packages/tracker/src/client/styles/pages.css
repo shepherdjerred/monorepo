@@ -1,3 +1,17 @@
+.collection-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.collection-toolbar-padded {
+  padding: 24px 30px 0;
+  margin-bottom: 0;
+}
+.actor-section {
+  margin-bottom: 28px;
+}
 .project-grid,
 .actor-grid {
   display: grid;
@@ -274,7 +288,7 @@
   border-radius: 50%;
   background: var(--muted);
   transition:
-    translate var(--dur-2) var(--ease-spring),
+    translate var(--dur-1) var(--ease-out),
     background-color var(--dur-1) var(--ease-out);
 }
 .switch[data-checked] .switch-thumb {

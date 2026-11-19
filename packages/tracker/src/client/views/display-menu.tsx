@@ -1,18 +1,28 @@
 import { useSearchParams } from "react-router";
 import { Popover } from "@base-ui/react/popover";
-import { SlidersHorizontal } from "lucide-react";
+import {
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  SlidersHorizontal,
+} from "lucide-react";
 import { EnumPicker } from "#client/controls/enum-picker.tsx";
 import {
+  boardSortOptions,
   groupOptions,
+  searchSortOptions,
+  sortDirectionSummary,
   sortOptions,
 } from "#client/controls/property-options.tsx";
 import {
+  BoardSortSchema,
   GroupBySchema,
+  hasSearchQuery,
+  oppositeSortDirection,
   readDisplay,
   rowProperties,
   SortSchema,
   writeDisplay,
-  type DisplayOptions,
+  type DisplayChanges,
   type RowProperty,
 } from "./display-options.ts";
 import { leavingPopup } from "#client/ui/leaving.tsx";
@@ -27,13 +37,18 @@ const propertyNames: Record<RowProperty, string> = {
 };
 
 /**
- * Grouping, ordering and which properties rows show. Every choice is in the
- * address, so the view can be shared; the board orders by its columns.
+ * Grouping, ordering and which properties rows or cards show. Every choice is
+ * in the address, so the view can be shared.
  */
 export function DisplayMenu({ board }: { board: boolean }) {
   const [params, setParams] = useSearchParams();
   const display = readDisplay(params);
-  const write = (change: Partial<DisplayOptions>) => {
+  const searching = !board && hasSearchQuery(params);
+  const activeSort = board ? display.boardSort : display.sort;
+  const activeDir = board ? display.boardSortDir : display.sortDir;
+  const selectedSort =
+    searching && !display.hasExplicitSort ? "relevance" : activeSort;
+  const write = (change: DisplayChanges) => {
     setParams(writeDisplay(params, change), { preventScrollReset: true });
   };
   return (
@@ -56,33 +71,67 @@ export function DisplayMenu({ board }: { board: boolean }) {
           >
             <Popover.Title className="popover-title">Display</Popover.Title>
             {!board && (
-              <>
-                <label className="display-row">
-                  <span>Grouping</span>
-                  <EnumPicker
-                    id="display-group"
-                    label="Grouping"
-                    value={display.groupBy}
-                    options={groupOptions}
-                    onChange={(value) => {
-                      write({ groupBy: GroupBySchema.parse(value) });
-                    }}
-                  />
-                </label>
-                <label className="display-row">
-                  <span>Ordering</span>
-                  <EnumPicker
-                    id="display-sort"
-                    label="Ordering"
-                    value={display.sort}
-                    options={sortOptions}
-                    onChange={(value) => {
-                      write({ sort: SortSchema.parse(value) });
-                    }}
-                  />
-                </label>
-              </>
+              <label className="display-row">
+                <span>Grouping</span>
+                <EnumPicker
+                  id="display-group"
+                  label="Grouping"
+                  value={display.groupBy}
+                  options={groupOptions}
+                  onChange={(value) => {
+                    write({ groupBy: GroupBySchema.parse(value) });
+                  }}
+                />
+              </label>
             )}
+            <div className="display-row">
+              <span>Ordering</span>
+              <div className="display-order-controls">
+                <EnumPicker
+                  id="display-sort"
+                  label="Ordering"
+                  value={selectedSort}
+                  options={
+                    board
+                      ? boardSortOptions
+                      : searching
+                        ? searchSortOptions
+                        : sortOptions
+                  }
+                  onChange={(value) => {
+                    if (board) {
+                      write({ boardSort: BoardSortSchema.parse(value) });
+                    } else if (value === "relevance") {
+                      write({ clearSort: true });
+                    } else {
+                      write({ sort: SortSchema.parse(value) });
+                    }
+                  }}
+                />
+                {selectedSort !== "board" && selectedSort !== "relevance" && (
+                  <button
+                    type="button"
+                    id="display-sort-direction"
+                    className="toolbar-button sort-dir-button"
+                    aria-label={`Ordering direction: ${sortDirectionSummary(activeSort, activeDir)}`}
+                    onClick={() => {
+                      const nextDir = oppositeSortDirection(activeDir);
+                      write(
+                        board
+                          ? { boardSort: activeSort, sortDir: nextDir }
+                          : { sort: display.sort, sortDir: nextDir },
+                      );
+                    }}
+                  >
+                    {activeDir === "desc" ? (
+                      <ArrowDownWideNarrow size={14} aria-hidden="true" />
+                    ) : (
+                      <ArrowUpNarrowWide size={14} aria-hidden="true" />
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
             <label className="display-row display-switch">
               <span>Show sub-issues</span>
               <input

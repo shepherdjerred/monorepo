@@ -178,11 +178,12 @@ export async function promoteForumToIssue(
   const post = await lockPost(ctx.db, input.id, undefined, input.actor.key);
   const reply = await resolvePromotionReply(ctx, post.id, input.replyId);
   const postIdent = forumIdentifier(post.number);
-  const title =
+  const rawTitle =
     input.title ??
     (reply === null
       ? post.title
       : `Follow up from ${postIdent}: ${post.title}`);
+  const title = rawTitle.length > 500 ? `${rawTitle.slice(0, 499)}…` : rawTitle;
   const description = promotedDescription(
     postIdent,
     reply === null ? post.body : reply.body,

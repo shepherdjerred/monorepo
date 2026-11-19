@@ -29,7 +29,7 @@
   border-radius: 6px;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .bone::after {
+  :root:not([data-motion="off"]) .bone::after {
     content: "";
     position: absolute;
     inset: 0;

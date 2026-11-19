@@ -1,31 +1,24 @@
-/* Motion. Everything here is decorative: the change it accompanies has
-   already happened and focus has already moved. Only transform, opacity and
-   cheap paints animate, through the individual `translate`, `scale` and
-   `rotate` properties so they compose with layout transforms (centred
-   dialogs, windowed rows, dnd-kit). Opening surfaces use transitions, not
-   keyframes, so a quick close reverses from wherever they are. Reduced
-   motion turns all of it off in base.css. */
+/* Calm motion: interactive targets (rows, controls, menus, dialogs, toasts)
+   never scale, slide or bounce while opening or on press, so every hit box
+   sits at its final coordinates from the first frame. Only fast opacity,
+   color and background transitions run when motion is enabled; reduced motion
+   and the in-app Motion switch turn all transitions and animations off in
+   base.css. */
 
-/* Dialogs and sheets. A popup that mounts already open (the New issue
-   dialog and the palette start fresh each time) never gets Base UI's
-   starting style, so each entrance is also declared with @starting-style. */
+/* Dialogs, palette, peek and mobile sheet: crisp opacity fade, zero movement. */
 .modal-backdrop {
-  transition: opacity var(--dur-2) var(--ease-out);
+  transition: opacity var(--dur-1) var(--ease-out);
 }
 .modal-backdrop[data-starting-style],
 .modal-backdrop[data-ending-style] {
   opacity: 0;
 }
 .modal {
-  transition:
-    opacity var(--dur-2) var(--ease-out),
-    scale var(--dur-2) var(--ease-out),
-    translate var(--dur-2) var(--ease-out);
+  transition: opacity var(--dur-1) var(--ease-out);
 }
 .modal[data-starting-style],
 .modal[data-ending-style] {
   opacity: 0;
-  scale: 0.97;
 }
 @starting-style {
   .modal-backdrop {
@@ -33,138 +26,55 @@
   }
   .modal {
     opacity: 0;
-    scale: 0.97;
-  }
-  .palette {
-    scale: 0.98;
-    translate: 0 -12px;
-  }
-  .peek {
-    scale: 1;
-    translate: 32px 0;
-  }
-}
-/* Leaving is quicker than arriving. */
-.modal[data-ending-style],
-.modal-backdrop[data-ending-style] {
-  transition-duration: var(--dur-1);
-}
-/* The palette drops in from above. */
-.palette[data-starting-style],
-.palette[data-ending-style] {
-  scale: 0.98;
-  translate: 0 -12px;
-}
-/* The peek slides in from the right. */
-.peek {
-  transition-duration: var(--dur-3);
-}
-.peek[data-starting-style],
-.peek[data-ending-style] {
-  scale: 1;
-  translate: 32px 0;
-}
-.peek[data-ending-style] {
-  transition-duration: var(--dur-2);
-}
-@media (max-width: 767px) {
-  /* On a phone the peek and the More sheet rise from the bottom edge. */
-  .peek[data-starting-style],
-  .peek[data-ending-style],
-  .sheet[data-starting-style],
-  .sheet[data-ending-style] {
-    opacity: 1;
-    scale: 1;
-    translate: 0 100%;
-  }
-  .sheet {
-    transition-duration: var(--dur-3);
-  }
-  .palette[data-starting-style],
-  .palette[data-ending-style] {
-    scale: 1;
-    translate: 0 -24px;
-  }
-  @starting-style {
-    .peek,
-    .sheet {
-      opacity: 1;
-      scale: 1;
-      translate: 0 100%;
-    }
-    .palette {
-      scale: 1;
-      translate: 0 -24px;
-    }
   }
 }
 
-/* Popovers, menus and pickers grow from their trigger. */
+/* Popovers, menus and pickers: instant geometry, subtle opacity fade only. */
 .picker-popup,
 .menu-popup {
-  transform-origin: var(--transform-origin);
-  transition:
-    opacity var(--dur-1) var(--ease-out),
-    scale var(--dur-1) var(--ease-out);
+  transition: opacity var(--dur-1) var(--ease-out);
 }
 .picker-popup[data-starting-style],
 .picker-popup[data-ending-style],
 .menu-popup[data-starting-style],
 .menu-popup[data-ending-style] {
   opacity: 0;
-  scale: 0.97;
 }
 @starting-style {
   .picker-popup,
   .menu-popup {
     opacity: 0;
-    scale: 0.97;
   }
 }
 @supports (appearance: base-select) {
   select.picker::picker(select) {
-    transform-origin: top left;
     transition:
       opacity var(--dur-1) var(--ease-out),
-      scale var(--dur-1) var(--ease-out),
       overlay var(--dur-1) allow-discrete,
       display var(--dur-1) allow-discrete;
   }
   select.picker:not(:open)::picker(select) {
     opacity: 0;
-    scale: 0.97;
   }
   @starting-style {
     select.picker:open::picker(select) {
       opacity: 0;
-      scale: 0.97;
     }
   }
 }
 
-/* Toasts rise into the stack and fade out of it. */
+/* Toasts: fade in and out in place so the Undo button never bounces away. */
 .toast {
-  transition:
-    opacity var(--dur-2) var(--ease-out),
-    translate var(--dur-3) var(--ease-spring),
-    scale var(--dur-2) var(--ease-out);
+  transition: opacity var(--dur-1) var(--ease-out);
 }
-.toast[data-starting-style] {
+.toast[data-starting-style],
+.toast[data-ending-style] {
   opacity: 0;
-  translate: 0 14px;
-  scale: 0.97;
 }
 @starting-style {
   .toast {
     opacity: 0;
-    translate: 0 14px;
-    scale: 0.97;
   }
-}
-.toast[data-ending-style] {
-  opacity: 0;
-  scale: 0.97;
-  transition-duration: var(--dur-1);
 }
 .toast[data-ending-style][data-swipe-direction="right"] {
   translate: 40px 0;
@@ -173,127 +83,24 @@
   translate: 0 24px;
 }
 
-/* List rows. */
+/* List rows and controls: paint-only hover feedback, never spatial scaling or
+   virtualizer transform transitions. */
 .issue-row {
   isolation: isolate;
-  transition:
-    background-color var(--dur-1) var(--ease-out),
-    scale var(--dur-1) var(--ease-out);
-}
-.issue-row:active {
-  scale: 0.995;
-}
-/* While a row above leaves or a group opens, rows glide to their places. */
-:root[data-list-motion] .issue-row,
-:root[data-list-motion] .group-row {
-  transition:
-    transform var(--dur-2) var(--ease-out),
-    background-color var(--dur-1) var(--ease-out),
-    scale var(--dur-1) var(--ease-out);
-}
-/* The rows of a group that just opened arrive one after another. */
-.issue-row[data-entering] {
-  animation: row-enter var(--dur-3) var(--ease-out) both;
-  animation-delay: calc(var(--enter-index, 0) * 16ms);
-}
-@keyframes row-enter {
-  from {
-    opacity: 0;
-    translate: 0 -6px;
-  }
+  transition: background-color var(--dur-1) var(--ease-out);
 }
 .group-chevron {
-  transition: transform var(--dur-2) var(--ease-out);
+  transition: transform var(--dur-1) var(--ease-out);
 }
 .row-check {
-  transition:
-    opacity var(--dur-1) var(--ease-out),
-    scale var(--dur-2) var(--ease-spring);
-}
-.row-check:active {
-  scale: 0.82;
-}
-.row-check:checked {
-  animation: check-pop var(--dur-2) var(--ease-out);
-}
-@keyframes check-pop {
-  40% {
-    scale: 1.2;
-  }
-}
-/* Rows and cards another session just created slide in. Their highlight is
-   live.css's background, which reduced motion keeps: only the movement goes.
-   It fades out, as rows' backgrounds do, when the mark expires. */
-.issue-row[data-fresh],
-.board-card[data-fresh] {
-  animation: fresh-in var(--dur-3) var(--ease-out) both;
+  transition: opacity var(--dur-1) var(--ease-out);
 }
 .board-card {
   position: relative;
   isolation: isolate;
-}
-@keyframes fresh-in {
-  from {
-    opacity: 0;
-    translate: 0 -4px;
-  }
-}
-/* The "Updated by" notice on an issue another session changed. */
-.remote-edit {
-  transition: translate var(--dur-2) var(--ease-out);
-}
-@starting-style {
-  .remote-edit {
-    translate: 0 -4px;
-  }
-}
-/* A copy of a deleted or archived row, fading where the row was. */
-.leaving {
-  z-index: 4;
-  pointer-events: none;
-  background: var(--bg);
-}
-.board-card.leaving {
-  background: var(--panel);
-}
-
-/* The vote count ticks the way it moved; the thumb pops when it is yours. */
-.vote-count {
-  display: inline-flex;
-  overflow: hidden;
-}
-.vote-count > span {
-  display: inline-block;
-}
-.vote-count[data-tick="up"] > span {
-  animation: tick-up var(--dur-2) var(--ease-out);
-}
-.vote-count[data-tick="down"] > span {
-  animation: tick-down var(--dur-2) var(--ease-out);
-}
-@keyframes tick-up {
-  from {
-    opacity: 0;
-    translate: 0 70%;
-  }
-}
-@keyframes tick-down {
-  from {
-    opacity: 0;
-    translate: 0 -70%;
-  }
-}
-.vote-button[data-tick="up"] > svg {
-  animation: thumb-pop var(--dur-3) var(--ease-spring);
-}
-@keyframes thumb-pop {
-  0% {
-    scale: 1;
-  }
-  45% {
-    scale: 1.3;
-    rotate: -14deg;
-  }
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out);
 }
 
 /* The board: the lifted card, the slot it left, the column it is over. */
@@ -314,36 +121,23 @@
 .board-card.dragging > * {
   opacity: 0;
 }
-.board-card {
-  transition:
-    border-color var(--dur-1) var(--ease-out),
-    background-color var(--dur-1) var(--ease-out);
-}
 .lifted-card {
   margin: 0;
   cursor: grabbing;
   box-shadow: var(--shadow-lift);
   rotate: 2deg;
-  scale: 1.02;
-  animation: lift var(--dur-2) var(--ease-spring);
-}
-@keyframes lift {
-  from {
-    rotate: 0deg;
-    scale: 1;
-  }
 }
 
 /* View transitions: list and issue page cross-fade quickly while the
    issue's identifier and title move between them. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: var(--dur-2);
+  animation-duration: var(--dur-1);
   animation-timing-function: var(--ease-out);
 }
 ::view-transition-group(issue-title),
 ::view-transition-group(issue-id) {
-  animation-duration: var(--dur-3);
+  animation-duration: var(--dur-2);
   animation-timing-function: var(--ease-out);
 }
 ::view-transition-old(issue-title),
@@ -380,6 +174,7 @@
 :root[data-theme-reveal] * {
   view-transition-name: none !important;
 }
+
 /* A surface on its way out takes no clicks; they reach what is beneath. */
 .modal[data-ending-style],
 .modal-backdrop[data-ending-style],
@@ -392,33 +187,9 @@
   pointer-events: none;
 }
 
-/* Due dates: the month grid slides the way the month moved, and a day's
-   selection fades rather than snaps. */
-.calendar-grid tbody[data-shift="next"] {
-  animation: month-next var(--dur-2) var(--ease-out);
-}
-.calendar-grid tbody[data-shift="previous"] {
-  animation: month-previous var(--dur-2) var(--ease-out);
-}
-@keyframes month-next {
-  from {
-    opacity: 0;
-    translate: 12px 0;
-  }
-}
-@keyframes month-previous {
-  from {
-    opacity: 0;
-    translate: -12px 0;
-  }
-}
+/* Calendar hover paint and progress ring fill. */
 .calendar-grid td {
   transition: background-color var(--dur-1) var(--ease-out);
-}
-
-/* Sub-issues: one being added arrives as its row; progress rings fill. */
-.sub-issue[data-pending] {
-  animation: row-enter var(--dur-3) var(--ease-out) both;
 }
 @property --value {
   syntax: "<number>";
@@ -427,5 +198,5 @@
 }
 progress.progress-ring,
 .ring-mark {
-  transition: --value var(--dur-3) var(--ease-out);
+  transition: --value var(--dur-2) var(--ease-out);
 }

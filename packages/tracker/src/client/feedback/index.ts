@@ -7,10 +7,8 @@ import {
   type Channel,
   type FeedbackEvent,
 } from "./policy.ts";
-import { createPreferences } from "./preferences.ts";
+import { feedbackPreferences, type PreferenceKey } from "./preferences.ts";
 import { playCue, prepareAudio } from "./sound.ts";
-
-export const feedbackPreferences = createPreferences(() => localStorage);
 
 /**
  * Browsers only let a page make sound or vibrate after the person has
@@ -68,7 +66,7 @@ export function playSample() {
   }
 }
 
-export function useFeedbackPreference(channel: Channel) {
+export function useFeedbackPreference(channel: PreferenceKey) {
   return useSyncExternalStore(feedbackPreferences.subscribe, () =>
     feedbackPreferences.read(channel),
   );
