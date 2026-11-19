@@ -16,9 +16,6 @@
  * every pod in the cluster can connect to them.
  */
 export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
-  "ddns/ddns",
-  "gickup/gickup",
-  "golink/golink",
   "node-tuning/cpu-power-cap",
   "prometheus/kubernetes-event-exporter",
   "prometheus/nvme-metrics-collector",
@@ -40,9 +37,6 @@ export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
 export const WORKLOADS_WITHOUT_EGRESS_POLICY: ReadonlySet<string> = new Set([
   "arcade/arcade",
   "buildkitd/buildkitd",
-  "ddns/ddns",
-  "gickup/gickup",
-  "golink/golink",
   "home/home-zwave-js-ui",
   "media/media-bazarr",
   "media/media-maintainerr",
