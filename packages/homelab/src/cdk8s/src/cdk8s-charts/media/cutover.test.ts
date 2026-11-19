@@ -17,6 +17,9 @@ const Resource = z.looseObject({
   }),
   spec: z.unknown().optional(),
 });
+const DeploymentTemplate = z.object({
+  template: z.object({ spec: z.unknown() }),
+});
 beforeEach(resetProbeRegistry);
 async function fixture() {
   const app = new App();
@@ -117,33 +120,29 @@ test.each([
   "only the Files role reads retained %s with a read-only container bind and matching CSI flags",
   async (claim, path) => {
     const resources = await fixture();
-    const DeploymentPod = z.object({
-      template: z.object({
-        spec: z.object({
-          volumes: z.array(
+    const PodStorage = z.object({
+      volumes: z.array(
+        z.object({
+          name: z.string(),
+          persistentVolumeClaim: z
+            .object({
+              claimName: z.string(),
+              readOnly: z.boolean().optional(),
+            })
+            .optional(),
+        }),
+      ),
+      containers: z.array(
+        z.object({
+          volumeMounts: z.array(
             z.object({
               name: z.string(),
-              persistentVolumeClaim: z
-                .object({
-                  claimName: z.string(),
-                  readOnly: z.boolean().optional(),
-                })
-                .optional(),
-            }),
-          ),
-          containers: z.array(
-            z.object({
-              volumeMounts: z.array(
-                z.object({
-                  name: z.string(),
-                  mountPath: z.string(),
-                  readOnly: z.boolean().optional(),
-                }),
-              ),
+              mountPath: z.string(),
+              readOnly: z.boolean().optional(),
             }),
           ),
         }),
-      }),
+      ),
     });
     for (const name of [
       "media-media-api",
@@ -153,7 +152,9 @@ test.each([
       const resource = resources.find(
         (candidate) => candidate.metadata.name === name,
       );
-      const pod = DeploymentPod.parse(resource?.spec).template.spec;
+      const pod = PodStorage.parse(
+        DeploymentTemplate.parse(resource?.spec).template.spec,
+      );
       const history = pod.volumes.filter(
         (volume) => volume.persistentVolumeClaim?.claimName === claim,
       );
@@ -242,22 +243,18 @@ test("API and network worker share canonical callbacks and narrowly admit the ac
     const resource = resources.find(
       (candidate) => candidate.metadata.name === name,
     );
-    const pod = z
+    const { containers } = z
       .object({
-        template: z.object({
-          spec: z.object({
-            containers: z.array(
-              z.object({
-                env: z.array(
-                  z.object({ name: z.string(), value: z.string().optional() }),
-                ),
-              }),
+        containers: z.array(
+          z.object({
+            env: z.array(
+              z.object({ name: z.string(), value: z.string().optional() }),
             ),
           }),
-        }),
+        ),
       })
-      .parse(resource?.spec);
-    expect(pod.template.spec.containers[0]?.env).toContainEqual({
+      .parse(DeploymentTemplate.parse(resource?.spec).template.spec);
+    expect(containers[0]?.env).toContainEqual({
       name: "PUBLIC_ORIGIN",
       value: "https://seerr.sjer.red",
     });
