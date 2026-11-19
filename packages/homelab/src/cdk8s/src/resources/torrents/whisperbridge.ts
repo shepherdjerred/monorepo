@@ -8,6 +8,11 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
@@ -77,5 +82,16 @@ export function createWhisperbridgeDeployment(chart: Chart) {
   new Service(chart, "whisperbridge-service", {
     selector: deployment,
     ports: [{ port: 9000 }],
+  });
+
+  // Bazarr sends it audio in-namespace; its one outbound call is Groq's
+  // OpenAI-compatible API (`OPENAI_BASE_URL`).
+  new KubeNetworkPolicy(chart, "whisperbridge-egress-policy", {
+    metadata: { name: "whisperbridge-egress-policy" },
+    spec: {
+      podSelector: { matchLabels: deployment.matchLabels },
+      policyTypes: ["Egress"],
+      egress: [dnsEgressRule(), externalHttpsEgressRule()],
+    },
   });
 }

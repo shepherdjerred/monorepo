@@ -16,6 +16,10 @@
  * every pod in the cluster can connect to them.
  */
 export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
+  // These share an upstream chart's namespace, and other namespaces' Egress
+  // rules into it (Prometheus, Alertmanager and Grafana; the SeaweedFS S3
+  // gateway) name only the namespace. Policing these pods' Ingress first
+  // needs those rules narrowed to the upstream pods they mean.
   "prometheus/kubernetes-event-exporter",
   "prometheus/nvme-metrics-collector",
   "prometheus/smartctl-collector",
@@ -29,22 +33,33 @@ export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
  * they can connect anywhere.
  */
 export const WORKLOADS_WITHOUT_EGRESS_POLICY: ReadonlySet<string> = new Set([
+  // Discord Go Live streaming sends voice media over UDP to whichever voice
+  // server Discord assigns.
   "arcade/arcade",
+  // Dockerfile RUN steps reach whatever their package managers and fetches
+  // name, so destinations follow the build inputs, not this source.
   "buildkitd/buildkitd",
-  "home/home-zwave-js-ui",
+  // Indexers, download clients, subtitle providers and notification agents
+  // are configured in each app's own database, not in this source.
   "media/media-bazarr",
   "media/media-maintainerr",
-  "media/media-plex",
   "media/media-prowlarr",
-  "media/media-qbittorrent",
   "media/media-radarr",
-  "media/media-recyclarr",
   "media/media-seerr",
   "media/media-sonarr",
-  "media/media-streambot",
   "media/media-tautulli",
-  "media/media-whisperbridge",
+  // Plex talks to LAN players and discovery as well as plex.tv and its relays.
+  "media/media-plex",
+  // gluetun picks an AirVPN server, and its WireGuard endpoint, from its own
+  // server list at runtime.
+  "media/media-qbittorrent",
+  // Discord voice streaming, as for arcade.
+  "media/media-streambot",
+  // Its Loki URL names port 3100 on loki-gateway, whose Service exposes only
+  // 80; fix the sink before writing a rule for it.
   "prometheus/kubernetes-event-exporter",
+  // The link-rot scan's lychee follows every web link in the repository, on
+  // whatever scheme and port the link names.
   "woodpecker-ci/temporal-maintenance-worker",
 ]);
 
