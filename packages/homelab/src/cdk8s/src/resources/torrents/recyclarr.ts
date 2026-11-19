@@ -16,6 +16,12 @@ import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zf
 import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+  tcp,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import path from "node:path";
 
@@ -157,4 +163,19 @@ export async function createRecyclarrDeployment(chart: Chart) {
   );
 
   setRevisionHistoryLimit(deployment);
+
+  // `recyclarr.yaml` points it at Sonarr (8989) and Radarr (7878) in this
+  // namespace; it clones the TRaSH guides from GitHub over HTTPS.
+  new KubeNetworkPolicy(chart, "recyclarr-egress-policy", {
+    metadata: { name: "recyclarr-egress-policy" },
+    spec: {
+      podSelector: { matchLabels: deployment.matchLabels },
+      policyTypes: ["Egress"],
+      egress: [
+        dnsEgressRule(),
+        { to: [{ podSelector: {} }], ports: [tcp(8989), tcp(7878)] },
+        externalHttpsEgressRule(),
+      ],
+    },
+  });
 }

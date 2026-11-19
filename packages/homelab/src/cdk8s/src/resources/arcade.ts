@@ -58,7 +58,8 @@ export function createArcadeDeployment(
       portName: "ui",
       monitorName: "arcade",
     },
-    // arcade-edge is the namespace's only ingress; it has no policies yet.
+    // The namespace's policies are rendered by the chart, which owns both
+    // workloads they name.
     policies: [],
   });
   ApiObject.of(worker.deployment).addJsonPatch(
@@ -68,6 +69,7 @@ export function createArcadeDeployment(
       1,
     ),
   );
+  return worker.deployment;
 }
 
 /**

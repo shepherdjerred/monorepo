@@ -9,6 +9,7 @@ import {
   tcp,
   tailscaleIngressRule,
   blackboxProbeIngressRule,
+  prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createPostalChart(app: App) {
@@ -142,6 +143,18 @@ export function createPostalChart(app: App) {
           ports: [tcp(587)],
         },
       ],
+    },
+  });
+
+  // Only Prometheus reaches the worker, to scrape its health server (`postal`
+  // ServiceMonitor). The postfix relay sidecar is reached over localhost,
+  // which no policy governs.
+  new KubeNetworkPolicy(chart, "postal-worker-ingress-netpol", {
+    metadata: { name: "postal-worker-ingress-netpol" },
+    spec: {
+      podSelector: { matchLabels: { app: "postal-worker" } },
+      policyTypes: ["Ingress"],
+      ingress: [prometheusIngressRule([9090])],
     },
   });
 

@@ -11,10 +11,16 @@ import {
   ServiceAccount,
 } from "cdk8s-plus-31";
 import {
+  KubeNetworkPolicy,
   KubeRole,
   KubeRoleBinding,
   KubeServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  dnsEgressRule,
+  kubernetesApiEgressRule,
+  tcp,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
@@ -108,6 +114,25 @@ export function createWoodpeckerAgent(chart: Chart) {
   const poolDeployments = pools.map((pool) =>
     createAgentDeployment(chart, serviceAccount, serverSecretRef, pool),
   );
+
+  // Agents serve nothing. Each holds a gRPC stream to the server and drives
+  // its step pods through the Kubernetes API, never the pod network.
+  new KubeNetworkPolicy(chart, "woodpecker-agent-netpol", {
+    metadata: { name: "woodpecker-agent-netpol" },
+    spec: {
+      podSelector: { matchLabels: { app: "woodpecker-agent" } },
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [],
+      egress: [
+        dnsEgressRule(),
+        {
+          to: [{ podSelector: { matchLabels: { app: "woodpecker-server" } } }],
+          ports: [tcp(WOODPECKER_GRPC_PORT)],
+        },
+        kubernetesApiEgressRule(),
+      ],
+    },
+  });
   return { deployment, serviceAccount, poolDeployments };
 }
 

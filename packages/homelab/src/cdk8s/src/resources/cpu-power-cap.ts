@@ -13,6 +13,8 @@ import {
 import { z } from "zod";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { PROD_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 const CpuPowerCapOptionsSchema = z
   .object({
@@ -212,6 +214,18 @@ done
   );
   daemonSet.addVolume(hostSysVolume);
   container.mount("/host/sys", hostSysVolume, { readOnly: false });
+
+  // It writes sysfs and nothing else: no connection in either direction.
+  // Egress keeps DNS only, which every policed pod is given.
+  new KubeNetworkPolicy(chart, "cpu-power-cap-netpol", {
+    metadata: { name: "cpu-power-cap-netpol", namespace: NAMESPACE },
+    spec: {
+      podSelector: { matchLabels: daemonSet.matchLabels },
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [],
+      egress: [dnsEgressRule()],
+    },
+  });
 
   return { namespace, serviceAccount, daemonSet };
 }

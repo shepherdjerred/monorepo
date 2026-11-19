@@ -10,6 +10,11 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
@@ -172,5 +177,32 @@ export function createSeaweedfsBackup(chart: Chart): Deployment {
   const tmp = Volume.fromEmptyDir(chart, "seaweedfs-backup-tmp", "tmp");
   deployment.addVolume(tmp);
   container.mount("/tmp", tmp);
+
+  // It follows the filer's metadata stream over gRPC, reads chunks from the
+  // volume servers the filer names, and writes to Backblaze B2 over HTTPS.
+  // The SeaweedFS components are the upstream chart's pods in this
+  // namespace. It serves nothing, but has no Ingress policy yet: other
+  // namespaces reach the S3 gateway through rules that name only this
+  // namespace, which would then answer for this pod too.
+  new KubeNetworkPolicy(chart, "seaweedfs-backup-netpol", {
+    metadata: { name: "seaweedfs-backup-netpol", namespace: "seaweedfs" },
+    spec: {
+      podSelector: { matchLabels: deployment.matchLabels },
+      policyTypes: ["Egress"],
+      egress: [
+        dnsEgressRule(),
+        {
+          to: [
+            {
+              podSelector: {
+                matchLabels: { "app.kubernetes.io/name": "seaweedfs" },
+              },
+            },
+          ],
+        },
+        externalHttpsEgressRule(),
+      ],
+    },
+  });
   return deployment;
 }

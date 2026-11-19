@@ -11,6 +11,12 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 import { FirstPartyWorker } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/worker.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+  fliptEgress,
+  prometheusIngressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export type Stage = "prod" | "beta";
 
@@ -141,7 +147,20 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
       targetPort: 8000,
       monitorName: "starlight-karma-bot-metrics",
     },
-    // The namespaces have no NetworkPolicies yet; fleet-policy lists them.
-    policies: [],
+    policies: [
+      {
+        name: "starlight-karma-bot-netpol",
+        selects: "namespace",
+        // Only Prometheus reaches in, to scrape the health port.
+        ingress: [prometheusIngressRule([8000])],
+        egress: [
+          dnsEgressRule(),
+          // Flipt evaluation (`FLIPT_URL`)
+          fliptEgress(),
+          // Discord, and Bugsink through its public DSN host
+          externalHttpsEgressRule(),
+        ],
+      },
+    ],
   });
 }

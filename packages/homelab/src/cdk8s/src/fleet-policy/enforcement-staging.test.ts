@@ -2,14 +2,16 @@ import { App, Chart, Testing } from "cdk8s";
 import { beforeAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { applyEnforcementStaging } from "@shepherdjerred/homelab/cdk8s/src/enforcement-staging.ts";
+import {
+  applyEnforcementStaging,
+  MIRROR_CHARTS,
+} from "@shepherdjerred/homelab/cdk8s/src/enforcement-staging.ts";
 import {
   ENFORCEMENT_STAGING_NEVER_LABEL,
   enforcementStagingPolicy,
   enforcementStagingPolicyName,
   type EnforcementStage,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
-import { COMPANION_CHARTS } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 import {
   SynthesizedObjectSchema,
   synthesizedCharts,
@@ -78,14 +80,15 @@ function rendered(chart: Chart): SynthesizedObject[] {
 
 describe("the fleet's enforcement staging", () => {
   /**
-   * Every chart's objects but the companions', which re-render root objects:
-   * `companions.test.ts` holds them byte-identical to the root's.
+   * Every chart's objects but the mirror charts', which re-render root
+   * objects: `companions.test.ts` and `cluster-baseline.test.ts` hold them
+   * byte-identical to the root's.
    */
   let objects: SynthesizedObject[];
   beforeAll(async () => {
     const charts = await synthesizedCharts();
     objects = [...charts]
-      .filter(([id]) => !COMPANION_CHARTS.has(id))
+      .filter(([id]) => !MIRROR_CHARTS.has(id))
       .flatMap(([, chartObjects]) => chartObjects);
   });
 

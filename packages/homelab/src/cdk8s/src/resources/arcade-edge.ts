@@ -113,4 +113,5 @@ export function createArcadeEdge(chart: Chart) {
     probePath: "/healthz",
     publicProbePath: "/health",
   });
+  return deployment;
 }

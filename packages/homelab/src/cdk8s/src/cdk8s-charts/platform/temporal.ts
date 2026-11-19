@@ -368,5 +368,24 @@ export function createTemporalChart(app: App) {
     },
   });
 
+  // The schema migration and namespace init are run-to-completion Jobs that
+  // serve nothing: no ingress at all.
+  new KubeNetworkPolicy(chart, "temporal-jobs-ingress-netpol", {
+    metadata: { name: "temporal-jobs-ingress-netpol" },
+    spec: {
+      podSelector: {
+        matchExpressions: [
+          {
+            key: "app",
+            operator: "In",
+            values: ["temporal-schema-migration", "temporal-namespace-init"],
+          },
+        ],
+      },
+      policyTypes: ["Ingress"],
+      ingress: [],
+    },
+  });
+
   createTemporalWorkerNetworkPolicies(chart);
 }

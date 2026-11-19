@@ -112,4 +112,16 @@ export async function createHomeChart(app: App) {
       ],
     },
   });
+
+  // zwave-js-ui reaches the Z-Wave stick through a host device, not the
+  // network, and has no MQTT broker configured. It only calls out over HTTPS:
+  // firmware and device-configuration updates, and Z-Wave JS usage statistics.
+  new KubeNetworkPolicy(chart, "zwave-js-ui-egress-policy", {
+    metadata: { name: "zwave-js-ui-egress-policy" },
+    spec: {
+      podSelector: { matchLabels: { app: "zwave-js-ui" } },
+      policyTypes: ["Egress"],
+      egress: [dnsEgressRule(), externalHttpsEgressRule()],
+    },
+  });
 }
