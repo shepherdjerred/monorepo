@@ -338,7 +338,9 @@ export function createTemporalChart(app: App) {
       podSelector: {
         matchLabels: { app: "temporal-schema-migration" },
       },
-      policyTypes: ["Egress"],
+      // A run-to-completion Job that serves nothing: no ingress at all.
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [],
       egress: [dnsEgressRule(), postgresEgress("temporal-postgresql")],
     },
   });
@@ -350,7 +352,9 @@ export function createTemporalChart(app: App) {
       podSelector: {
         matchLabels: { app: "temporal-namespace-init" },
       },
-      policyTypes: ["Egress"],
+      // A run-to-completion Job that serves nothing: no ingress at all.
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [],
       egress: [
         dnsEgressRule(),
         // Temporal Server gRPC

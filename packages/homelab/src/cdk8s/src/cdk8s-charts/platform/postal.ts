@@ -9,6 +9,7 @@ import {
   tcp,
   tailscaleIngressRule,
   blackboxProbeIngressRule,
+  prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createPostalChart(app: App) {
@@ -131,7 +132,11 @@ export function createPostalChart(app: App) {
     metadata: { name: "postal-worker-netpol" },
     spec: {
       podSelector: { matchLabels: { app: "postal-worker" } },
-      policyTypes: ["Egress"],
+      policyTypes: ["Ingress", "Egress"],
+      // Prometheus scrapes the worker's health server (`postal` ServiceMonitor).
+      // The postfix relay sidecar is reached over localhost, which no policy
+      // governs.
+      ingress: [prometheusIngressRule([9090])],
       egress: [
         // Allow DNS
         dnsEgressRule(),
