@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { QuiescenceEvidenceSchema } from "#shared/legacy-observer.ts";
 
 export const PlaybackDecisionSchema = z.enum([
   "direct_play",
@@ -143,6 +144,12 @@ export type PlaybackHandoffEvidence = {
   expiresAt: Date;
   inventoryDigest: string;
 };
+export const PlaybackLegacyWriterObservationSchema =
+  QuiescenceEvidenceSchema.pick({
+    capturedAt: true,
+    expiresAt: true,
+    inventoryDigest: true,
+  });
 export const PlaybackHandoffStatusSchema = z.object({
   version: z.number().int().nonnegative(),
   sourceInstanceId: z.string().nullable(),
@@ -150,6 +157,7 @@ export const PlaybackHandoffStatusSchema = z.object({
   collectionStartedAt: z.iso.datetime().nullable(),
   sessions: z.number().int().nonnegative(),
   snapshotDigest: z.string().nullable(),
+  legacyWriterObservation: PlaybackLegacyWriterObservationSchema.nullable(),
 });
 
 export type PlaybackActivities = {

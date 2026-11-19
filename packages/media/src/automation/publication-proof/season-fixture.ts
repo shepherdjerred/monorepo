@@ -64,12 +64,38 @@ export async function seasonPublicationFixture(db: Database, count = 26) {
     !mapping.permittedMediaKinds.includes("series")
   )
     throw new Error("Season fixture requester lacks exact TV access");
-  async function acquisition(content = "Actual season fixture bytes") {
+  async function acquisition(
+    content = "Actual season fixture bytes",
+    selection: readonly string[] = mediaIds,
+  ) {
+    const selected = media.filter((item) => selection.includes(item.id));
+    if (
+      selection.length === 0 ||
+      new Set(selection).size !== selection.length ||
+      selected.length !== selection.length
+    )
+      throw new Error("Invalid season acquisition coverage");
+    const primary = selected[0];
+    if (primary === undefined)
+      throw new Error("Season acquisition has no primary episode");
+    const sponsor =
+      primary.id === f.media.id
+        ? f.request
+        : await db.mediaRequest.findUniqueOrThrow({
+            where: {
+              userId_mediaId_edition: {
+                userId: f.user.id,
+                mediaId: primary.id,
+                edition: "default",
+              },
+            },
+          });
+    const selectedIds = selected.map((item) => item.id);
     const intents = await db.mediaIntent.findMany({
-      where: { mediaId: { in: mediaIds }, edition: "default" },
+      where: { mediaId: { in: selectedIds }, edition: "default" },
     });
     const releaseKey = crypto.randomUUID();
-    const files = media.map((item, index) => {
+    const files = selected.map((item, index) => {
       const episode = String(item.episodeNumber).padStart(2, "0");
       const episodeContent = `${content}: episode ${episode}`;
       return {
@@ -90,9 +116,9 @@ export async function seasonPublicationFixture(db: Database, count = 26) {
         providerId: "fixture",
         providerReleaseId: crypto.randomUUID(),
         title: "Coastlines.2026.S01.1080p.WEB-DL.H264.ENG",
-        mediaIds,
+        mediaIds: selectedIds,
         attributes: {
-          mediaIds,
+          mediaIds: selectedIds,
           identityConfidence: "exact",
           quality: "WEB-1080p",
           codec: "H264",
@@ -124,16 +150,16 @@ export async function seasonPublicationFixture(db: Database, count = 26) {
       data: {
         idempotencyKey: crypto.randomUUID(),
         kind: "reconcile_media",
-        targetId: f.media.id,
+        targetId: primary.id,
         userId: f.user.id,
-        payload: { requestId: f.request.id, requestVersion: f.request.version },
+        payload: { requestId: sponsor.id, requestVersion: sponsor.version },
       },
     });
     const attempt = await db.acquisitionAttempt.create({
       data: {
         releaseId: release.id,
-        sponsorRequestId: f.request.id,
-        mediaIds,
+        sponsorRequestId: sponsor.id,
+        mediaIds: selectedIds,
         generations: Object.fromEntries(
           intents.map((intent) => [intent.mediaId, intent.generation]),
         ),
@@ -156,8 +182,8 @@ export async function seasonPublicationFixture(db: Database, count = 26) {
       input: { attemptId: attempt.id, operationId: attempt.operationId },
     };
   }
-  async function published() {
-    const acquired = await acquisition();
+  async function published(selection: readonly string[] = mediaIds) {
+    const acquired = await acquisition(undefined, selection);
     const activities = createMediaFileActivities(f.context);
     const staged = await activities.inspectAndStageMedia(acquired.input);
     if (staged.status !== "staged")
@@ -172,9 +198,12 @@ export async function seasonPublicationFixture(db: Database, count = 26) {
       where: { id: acquired.attempt.id },
     });
     const plan = FilePlanSchema.parse(current.filePlan);
+    const coverage = plan.flatMap((entry) => entry.mediaIds);
+    const expected = acquired.attempt.mediaIds;
     if (
-      plan.length !== count ||
-      new Set(plan.flatMap((entry) => entry.mediaIds)).size !== count
+      plan.length !== expected.length ||
+      new Set(coverage).size !== expected.length ||
+      expected.some((id) => !coverage.includes(id))
     )
       throw new Error("Season publication lost full episode coverage");
     const entry = plan[0];

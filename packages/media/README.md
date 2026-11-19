@@ -2032,13 +2032,22 @@ is empty/settled. Stdin is bounded and deserialized read-only in memory; no
 credential-bearing database file is written. The flag acknowledges observed
 source evidence and does not itself prove the writer stopped.
 
+After the Network worker observes the stopped writers, run the frozen reader.
 It opens SQLite read-only, requires zero active sessions, preserves every
-ungrouped history ID, validates source rows, and returns normalized rows,
-the actual observation boundary, row count and canonical snapshot digest.
-Import those rows in bounded chunks through the playback import API, compare
-the resulting handoff count/digest, then seal against the exact trusted
-quiescence observation. Existing session rows are never deduplicated by time
-or title, and this import never changes Plex watched truth.
+ungrouped history ID, and returns validated rows, the observation boundary
+(`through`), row count, and canonical snapshot digest. Import those rows in
+bounded chunks. The owner-only `GET /api/v1/admin/playback/handoff` returns the
+import version, count, digest, and latest stored `legacyWriterObservation`.
+Compare the imported manifest to the frozen capture, then submit that
+observation's `capturedAt` as `quiescenceCapturedAt` and its `inventoryDigest`
+with the seal request. Sealing rechecks the current observation and active Plex
+sessions. If the stored observation is absent or expired, obtain a fresh
+Network observation. If the current observation is newer than the frozen
+reader's `through`, read the same stopped source again, import its rows with
+the new `through`, then verify the manifest and read the updated version
+before retrying seal.
+Existing session rows are never deduplicated by time or title, and this import
+never changes Plex watched truth.
 
 ### Legacy subtitle adoption and policy
 

@@ -20,6 +20,7 @@ import {
   type SealPlaybackHandoff,
   type PlaybackHandoffEvidence,
 } from "#shared/household/playback.ts";
+import { readPlaybackLegacyWriterObservation } from "./handoff-status.ts";
 
 function scope(
   actor: MediaActor,
@@ -484,6 +485,9 @@ export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
       collectionStartedAt:
         checkpoint?.collectionStartedAt?.toISOString() ?? null,
       ...manifest,
+      legacyWriterObservation: await readPlaybackLegacyWriterObservation(
+        this.database,
+      ),
     };
   }
 }
