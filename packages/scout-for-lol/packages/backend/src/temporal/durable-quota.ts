@@ -1,5 +1,6 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { ExploreQuotaSnapshotSchema } from "@scout-for-lol/data";
+import { IN_GAME_SECTIONS } from "#src/coach/execution-profile.ts";
 import { exploreQuotaLimits } from "#src/config/dynamic.ts";
 import {
   EXPLORE_MAX_ACTIVE_RUNS,
@@ -9,7 +10,7 @@ import {
   REPORT_AI_MAX_ACTIVE_RUNS,
   REPORT_AI_QUOTA_RULES,
 } from "#src/configuration/report-ai-quota.ts";
-import { QUOTA_WINDOW_MS } from "#src/utils/quota-buckets.ts";
+import { QUOTA_WINDOW_MS, type QuotaWindow } from "#src/utils/quota-buckets.ts";
 import {
   prisma,
   type Db,
@@ -22,7 +23,33 @@ export type DurableQuotaRejection = {
 };
 
 const ACTIVE_STATUSES = ["PENDING", "RUNNING"];
-type QuotaClient = Pick<ExtendedPrismaClient, "scoutInteractiveRun">;
+type QuotaClient = Pick<
+  ExtendedPrismaClient,
+  "scoutInteractiveRun" | "scoutCoachTurn"
+>;
+
+/**
+ * Which allowance admits an Explore turn. `in_game` is a turn the shared
+ * in-game profile runs (`coach/execution-profile.ts`): its projected context
+ * put the player in champion select or a game.
+ */
+export type ExploreQuotaAllowance = "explore" | "in_game";
+
+/**
+ * The in-game coach's own allowance, per player.
+ *
+ * Sized for abuse protection, not cost: a player asking every thirty seconds
+ * through a long game stays inside it, while a looping client or a leaked
+ * credential does not. Cost is bounded where it always is, by the spend
+ * ledger and the provider account budgets. In-game turns are reserved
+ * `quotaExempt`, so they never count against Explore's question windows and
+ * Explore's windows never refuse them; the active-run limits apply to both.
+ */
+export const IN_GAME_COACH_QUOTA_RULES = [
+  { window: "minute", limit: 10 },
+  { window: "hour", limit: 120 },
+  { window: "day", limit: 400 },
+] as const satisfies readonly { window: QuotaWindow; limit: number }[];
 
 async function countSince(input: {
   database: QuotaClient;
@@ -50,10 +77,44 @@ function startOfWindow(now: number, durationMs: number): Date {
   return new Date(now - (now % durationMs));
 }
 
+/**
+ * The in-game allowance's refusal, or null while the player has some left.
+ * Counted from the coach audit rows whose champion-select or live section
+ * reached the agent, which commit in the transaction that reserves each run.
+ */
+export async function inGameCoachQuotaRejection(
+  userId: DiscordAccountId,
+  now: number,
+  database: QuotaClient,
+): Promise<DurableQuotaRejection | null> {
+  for (const rule of IN_GAME_COACH_QUOTA_RULES) {
+    const durationMs = QUOTA_WINDOW_MS[rule.window];
+    const start = startOfWindow(now, durationMs);
+    const used = await database.scoutCoachTurn.count({
+      where: {
+        ownerId: userId,
+        createdAt: { gte: start },
+        sectionsAccepted: { hasSome: [...IN_GAME_SECTIONS] },
+      },
+    });
+    if (used >= rule.limit) {
+      return {
+        reason: `You have used ${used.toString()} of ${rule.limit.toString()} in-game questions for this ${rule.window}.`,
+        retryAfterSeconds: Math.max(
+          1,
+          Math.ceil((start.getTime() + durationMs - now) / 1000),
+        ),
+      };
+    }
+  }
+  return null;
+}
+
 export async function durableExploreQuotaRejection(
   userId: DiscordAccountId,
   now = Date.now(),
   database: QuotaClient = prisma,
+  allowance: ExploreQuotaAllowance = "explore",
 ): Promise<DurableQuotaRejection | null> {
   const active = await database.scoutInteractiveRun.count({
     where: { kind: "explore", state: { in: ACTIVE_STATUSES } },
@@ -77,6 +138,9 @@ export async function durableExploreQuotaRejection(
       reason: "You already have an Explore answer running.",
       retryAfterSeconds: 30,
     };
+  }
+  if (allowance === "in_game") {
+    return await inGameCoachQuotaRejection(userId, now, database);
   }
   // Every user window is checked before any global one, so a person at their
   // own ceiling is told so rather than that Explore is busy.
@@ -209,6 +273,7 @@ export async function durableExploreReservationRejection(input: {
   ownerId: DiscordAccountId;
   conversationId: string;
   now?: number;
+  allowance?: ExploreQuotaAllowance;
 }): Promise<DurableQuotaRejection | null> {
   await lockQuotaScope(input.database, "explore:global");
   await lockQuotaScope(input.database, `explore:user:${input.ownerId}`);
@@ -232,6 +297,7 @@ export async function durableExploreReservationRejection(input: {
     input.ownerId,
     input.now,
     input.database,
+    input.allowance,
   );
 }
 
@@ -241,6 +307,7 @@ export async function createDurableExploreRunReservation(input: {
   ownerId: DiscordAccountId;
   conversationId: string;
   payload: string;
+  allowance?: ExploreQuotaAllowance;
 }): Promise<void> {
   await input.database.scoutInteractiveRun.create({
     data: {
@@ -249,6 +316,9 @@ export async function createDurableExploreRunReservation(input: {
       ownerId: input.ownerId,
       conversationId: input.conversationId,
       payload: input.payload,
+      // An in-game turn spends its own allowance, counted from its audit row,
+      // so it stays out of Explore's question windows.
+      quotaExempt: input.allowance === "in_game",
     },
   });
 }

@@ -43,7 +43,6 @@ import { createLogger } from "#src/logger.ts";
 import { scoutExploreTokensUsedTotal } from "#src/metrics/explore.ts";
 import {
   EXPLORE_MAX_HISTORY_TURNS,
-  EXPLORE_MAX_OUTPUT_TOKENS,
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
   type ExploreAnswer,
@@ -96,7 +95,11 @@ export async function streamExploreAgent(
 async function streamExploreAgentInternal(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
-  const model = params.model ?? exploreModel();
+  // Chosen from what the projected context carries, never from the client:
+  // an in-game turn pins the shared in-game profile's model, effort and
+  // limits (`coach/execution-profile.ts`).
+  const settings = coachRunSettings(params.coach);
+  const model = settings.model ?? params.model ?? exploreModel();
   const runtime = getLlmRuntime();
   if (runtime === undefined) {
     throw new Error("OpenAI credentials are required for explore");
@@ -148,9 +151,6 @@ async function streamExploreAgentInternal(
     liveGame: hasGameContext(params.coach),
     surface: params.surface,
   };
-
-  // Chosen from what the projected context carries, never from the client.
-  const settings = coachRunSettings(params.coach);
 
   const asker = await loadExploreAsker({
     requesterId: params.requesterId,
@@ -263,7 +263,8 @@ async function streamExploreAgentInternal(
     eligibleMatchIds,
     eligibleLoadoutPairs,
     stepsUsed: steps.length,
-    outputTokensUsed: usage.outputTokens ?? EXPLORE_MAX_OUTPUT_TOKENS,
+    outputTokensUsed: usage.outputTokens ?? settings.maxOutputTokens,
+    limits: settings,
     abortSignal: params.abortSignal,
     correct: async ({ selection, failure, maxOutputTokens, abortSignal }) => {
       assertWithinBudget();
@@ -278,6 +279,7 @@ async function streamExploreAgentInternal(
           ownerId: params.requesterId,
           runId: params.runId,
           model,
+          reasoningEffort: settings.reasoningEffort,
         }),
         output: Output.object({ schema: ExploreCardSelectionSchema }),
         maxOutputTokens,

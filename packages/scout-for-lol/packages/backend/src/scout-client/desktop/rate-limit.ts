@@ -91,11 +91,15 @@ export function resetDesktopRenderRateLimitForTests(now = Date.now()): void {
  *   version of a turn is on screen.
  * - `attachment`: image uploads and discards, which write to object storage.
  *   The owner's unsent and hourly upload caps still bound them in the store.
+ * - `voice`: spoken turns. Each one is transcribed before anything else can
+ *   refuse it, so this is what bounds transcription spend on utterances that
+ *   never become a turn (a wake phrase the server did not hear).
  */
 export const DESKTOP_WRITE_LIMITS_PER_MINUTE = {
   share: 10,
   edit: 30,
   attachment: 20,
+  voice: 10,
 } as const;
 export type DesktopWriteKind = keyof typeof DESKTOP_WRITE_LIMITS_PER_MINUTE;
 
@@ -103,6 +107,7 @@ const writeLimiters: Record<DesktopWriteKind, DeviceWindowLimiter> = {
   share: deviceWindowLimiter(DESKTOP_WRITE_LIMITS_PER_MINUTE.share),
   edit: deviceWindowLimiter(DESKTOP_WRITE_LIMITS_PER_MINUTE.edit),
   attachment: deviceWindowLimiter(DESKTOP_WRITE_LIMITS_PER_MINUTE.attachment),
+  voice: deviceWindowLimiter(DESKTOP_WRITE_LIMITS_PER_MINUTE.voice),
 };
 
 export function desktopWriteAllowed(

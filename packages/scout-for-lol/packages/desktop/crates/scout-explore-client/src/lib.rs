@@ -20,6 +20,8 @@
 //!   plan itself, and never with live state.
 //! - [`PlayerAuthored`]: text the player typed, the only kind of question a
 //!   game context may ride on.
+//! - [`voice`]: spoken coach turns, one finished utterance up and the
+//!   answer's transcript, text and speech back.
 //!
 //! The crate has no UI dependency; the window renders the parts it publishes.
 
@@ -38,6 +40,7 @@ pub mod relay;
 pub mod session;
 pub mod stream;
 pub mod visuals;
+pub mod voice;
 
 pub use authored::PlayerAuthored;
 pub use client::{ExploreClient, MAX_CHART_BYTES, PNG_SIGNATURE, STREAM_IDLE_TIMEOUT};

@@ -1,4 +1,9 @@
-import type { DiscordAccountId, ExploreActiveRun } from "@scout-for-lol/data";
+import type {
+  DiscordAccountId,
+  ExploreActiveRun,
+  ScoutDesktopVoiceTrigger,
+  ScoutDesktopVoiceWakeVerification,
+} from "@scout-for-lol/data";
 import type { Db } from "#src/database/index.ts";
 import type {
   CoachContextProjection,
@@ -7,9 +12,21 @@ import type {
 } from "./context-policy.ts";
 
 /**
+ * How a spoken turn proved the player asked: what started the recording, and
+ * how the server judged the wake phrase in its own transcript.
+ */
+export type CoachVoiceProof = {
+  readonly trigger: ScoutDesktopVoiceTrigger;
+  readonly wake: ScoutDesktopVoiceWakeVerification;
+};
+
+/**
  * What a coach turn's audit row says beyond its run: which device sent the
  * context, how the turn began, what the coach policy made of it, and the
  * flags it was judged under. The run manager writes it with the run.
+ *
+ * `voice` is present exactly on a `player_voice` turn; the table refuses
+ * either without the other.
  */
 export type CoachTurnRecord = {
   readonly deviceId: string;
@@ -21,13 +38,15 @@ export type CoachTurnRecord = {
   readonly gameKey: string | null;
   readonly projection: CoachContextProjection;
   readonly flags: CoachPolicyFlags;
+  readonly voice?: CoachVoiceProof | undefined;
 };
 
 /**
- * Record one turn that carried a game context: who sent it from which device,
- * how the turn began, what it carried, what the coach policy let through, and
- * both flags as evaluated. Identifiers and section names only; the context
- * itself never reaches this table.
+ * Record one turn that carried a game context or was spoken: who sent it from
+ * which device, how the turn began (and, spoken, its trigger and wake
+ * verification), what it carried, what the coach policy let through, and both
+ * flags as evaluated. Identifiers and section names only; neither the context
+ * nor the transcript reaches this table.
  *
  * Pass the transaction that reserves the run, so a turn is never started
  * without its row.
@@ -54,6 +73,8 @@ export async function recordCoachTurn(
       sectionsAccepted: [...record.projection.accepted],
       coachEnabled: record.flags.coachEnabled,
       liveAnswersEnabled: record.flags.liveAnswersEnabled,
+      voiceTrigger: record.voice?.trigger ?? null,
+      wakeVerification: record.voice?.wake ?? null,
     },
   });
 }

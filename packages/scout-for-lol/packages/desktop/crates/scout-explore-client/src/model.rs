@@ -526,8 +526,10 @@ pub struct InlineEntity {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ReasoningEffort {
-    /// High.
+    /// High: an ordinary Explore turn.
     High,
+    /// Low: the in-game coach profile.
+    Low,
 }
 
 /// Which model wrote an answer.

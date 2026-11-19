@@ -56,14 +56,23 @@ import {
  *   itself (a pick or ban changed, or the game began): it takes no question,
  *   only an initiation and the section that initiation may carry, never live
  *   state. The server deploys first.
+ * - 8: `coach/voice/turns`, a spoken question: one finished WAV utterance in,
+ *   an event stream of the transcript, the answer and its speech out. It is
+ *   the second event-stream route, with its own event and refusal vocabulary
+ *   (`voiceTurn` in the contract), so no `runs/stream` reader sees a new
+ *   event. A message's `generation.reasoningEffort` gains `low`, the in-game
+ *   coach's; an older client is sent no provenance for such an answer. The
+ *   server deploys first.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 7;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 8;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
 /** The first contract version whose messages may carry `coachOptions`. */
 export const SCOUT_DESKTOP_COACH_OPTIONS_CONTRACT_VERSION = 7;
 /** The first contract version that knows the `desktop` conversation origin. */
 export const SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION = 2;
+/** The first contract version that knows `low` reasoning effort. */
+export const SCOUT_DESKTOP_LOW_EFFORT_CONTRACT_VERSION = 8;
 
 /**
  * What a device credential may do. `ingest` is every capture route the
@@ -208,6 +217,12 @@ export const SCOUT_DESKTOP_API_ROUTES = {
     scope: "explore",
     response: "json",
   },
+  coach_voice_turns: {
+    method: "POST",
+    path: "/api/scout-client/v1/coach/voice/turns",
+    scope: "explore",
+    response: "event-stream",
+  },
 } as const satisfies Record<
   string,
   {
@@ -238,6 +253,7 @@ export const ScoutDesktopApiRouteSchema = z.enum([
   "explore_conversations_revoke_share",
   "explore_attachments_upload",
   "explore_attachments_discard",
+  "coach_voice_turns",
 ]);
 
 /** Every typed refusal a desktop route answers with, and its HTTP status. */

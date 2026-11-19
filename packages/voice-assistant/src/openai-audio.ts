@@ -1,6 +1,12 @@
 import { z } from "zod";
 import { encodePcm16MonoWave } from "./audio/wave-io.ts";
 
+/** The models the direct audio calls name; spend accounting prices them. */
+export const VOICE_TRANSCRIPTION_MODEL = "gpt-4o-transcribe";
+export const VOICE_SPEECH_MODEL = "gpt-4o-mini-tts";
+/** `synthesizeVoiceAnswer` answers raw 24 kHz mono 16-bit PCM. */
+export const VOICE_SPEECH_SAMPLE_RATE = 24_000;
+
 const TranscriptionResponseSchema = z.looseObject({ text: z.string() });
 const OpenAiErrorResponseSchema = z.looseObject({
   error: z
@@ -55,7 +61,7 @@ export async function transcribeVoiceQuestion(input: {
   fetcher?: VoiceAudioFetcher;
 }): Promise<string> {
   const body = new FormData();
-  body.set("model", "gpt-4o-transcribe");
+  body.set("model", VOICE_TRANSCRIPTION_MODEL);
   body.set("language", "en");
   body.set(
     "file",
@@ -93,7 +99,7 @@ export async function synthesizeVoiceAnswer(input: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini-tts",
+        model: VOICE_SPEECH_MODEL,
         voice: "marin",
         input: input.text,
         response_format: "pcm",

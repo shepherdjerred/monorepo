@@ -8,6 +8,7 @@ import {
 } from "@scout-for-lol/data";
 import { recordCoachTurn, type CoachTurnRecord } from "#src/coach/audit.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { coachRunSettings } from "#src/coach/execution-profile.ts";
 import { ExploreDurablePayloadSchema } from "#src/explore/runs/durable-payload.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
@@ -254,11 +255,17 @@ async function prepareDurableExploreRun(input: {
   assertAcceptingRuns: () => void;
   createRateLimitedError: (rejection: ExploreRateLimitRejection) => Error;
 }): Promise<PreparedExploreRun> {
+  // A turn the in-game profile runs (champion select or a live game) spends
+  // the in-game allowance instead of Explore's question windows.
+  const { quota: allowance } = coachRunSettings(
+    input.coach?.projection.context,
+  );
   const reservation = await input.client.$transaction(async (tx) => {
     const rejection = await durableExploreReservationRejection({
       database: tx,
       ownerId: input.identity.userId,
       conversationId: input.conversationId,
+      allowance,
     });
     if (rejection !== null) {
       return { status: "rejected", rejection } as const;
@@ -270,6 +277,7 @@ async function prepareDurableExploreRun(input: {
       ownerId: input.identity.userId,
       conversationId: prepared.summary.conversationId,
       payload: durableExplorePayload({ ...input, ...prepared }),
+      allowance,
     });
     // The audit row commits with the reservation or not at all, so no coach
     // turn is ever started without its record.

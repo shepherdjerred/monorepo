@@ -53,6 +53,7 @@ import {
   ExploreShareTokenSchema,
   ExploreTurnRequestSchema,
   exploreOriginForPreDesktopReader,
+  withoutUnknownEffort,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { TRPCError } from "@trpc/server";
@@ -318,7 +319,9 @@ export const exploreRouter = router({
   get: exploreProcedure
     .input(
       conversationInput.extend({
-        version: z.union([z.literal(3), z.literal(4), z.literal(5)]).optional(),
+        version: z
+          .union([z.literal(3), z.literal(4), z.literal(5), z.literal(6)])
+          .optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -334,14 +337,24 @@ export const exploreRouter = router({
           message: "Conversation not found.",
         });
       }
+      // v6 adds `low` reasoning effort, which the in-game coach answers at.
+      // Older bundles parse the effort strictly, so such an answer reaches
+      // them without its provenance.
+      if (input.version === 6) return loaded;
+      const highOnly = {
+        ...loaded,
+        messages: loaded.messages.map((message) =>
+          withoutUnknownEffort(message),
+        ),
+      };
       // v5 adds the `desktop` origin. Older bundles parse the origin enum
       // strictly, so they are told `web`, which a desktop conversation is in
       // every way they can render.
-      if (input.version === 5) return loaded;
+      if (input.version === 5) return highOnly;
       const transcript = {
-        ...loaded,
+        ...highOnly,
         conversation: {
-          ...loaded.conversation,
+          ...highOnly.conversation,
           origin: exploreOriginForPreDesktopReader(loaded.conversation.origin),
         },
       };

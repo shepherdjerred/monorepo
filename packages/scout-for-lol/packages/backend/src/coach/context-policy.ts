@@ -39,6 +39,11 @@ import { z } from "zod";
  *
  * - `player_typed`: free text the player typed in the composer, sent as the
  *   turn's question (`runs/start` with a non-null `question`).
+ * - `player_voice`: a question the player spoke (`coach/voice/turns`). The
+ *   route takes audio only and the server transcribes it itself, so the
+ *   question is what the player said, not text a client chose; a wake-word
+ *   turn must also open with the wake phrase in that transcript
+ *   (`verifyWakeTranscript`). It is treated exactly as `player_typed`.
  * - `app_champ_select`: Scout asked for advice because a pick or ban changed
  *   (`COACH_APP_INITIATIONS`). Carries only `champSelect`.
  * - `app_pregame`: Scout asked for the plan at the start of a game. Carries
@@ -49,12 +54,13 @@ import { z } from "zod";
  */
 export const CoachTurnInitiationSchema = z.enum([
   "player_typed",
+  "player_voice",
   ...COACH_APP_INITIATIONS,
 ]);
 export type CoachTurnInitiation = z.infer<typeof CoachTurnInitiationSchema>;
 
 export const PLAYER_INITIATIONS: ReadonlySet<CoachTurnInitiation> =
-  new Set<CoachTurnInitiation>(["player_typed"]);
+  new Set<CoachTurnInitiation>(["player_typed", "player_voice"]);
 
 export type CoachPolicyFlags = {
   /** `scout_desktop_coach`, the master switch. */
@@ -94,8 +100,10 @@ function withheldReason(
 ): CoachWithheldReason | null {
   if (!flags.coachEnabled) return "coach_disabled";
   if (section === "live") return liveWithheldReason(initiation, flags);
-  // An app-started turn carries the one section it exists for and no other.
+  // An app-started turn carries the one section it exists for and no other;
+  // a typed or spoken question carries any.
   return initiation !== "player_typed" &&
+    initiation !== "player_voice" &&
     COACH_APP_INITIATION_SECTION[initiation] !== section
     ? "section_outside_initiation"
     : null;

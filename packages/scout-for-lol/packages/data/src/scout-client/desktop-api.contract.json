@@ -1,5 +1,5 @@
 {
-  "contractVersion": 7,
+  "contractVersion": 8,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],
@@ -118,6 +118,12 @@
       "path": "/api/scout-client/v1/explore/attachments/discard",
       "scope": "explore",
       "response": "json"
+    },
+    "coach_voice_turns": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/coach/voice/turns",
+      "scope": "explore",
+      "response": "event-stream"
     }
   },
   "streamEvents": [
@@ -133,6 +139,37 @@
     "error",
     "done"
   ],
+  "voiceTurn": {
+    "triggers": ["wake_word", "push_to_talk"],
+    "audio": {
+      "mediaType": "audio/wav",
+      "sampleRateHz": 16000,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "minDurationMs": 200,
+      "maxDurationMs": 15000
+    },
+    "speech": {
+      "encoding": "pcm_s16le",
+      "sampleRateHz": 24000,
+      "channels": 1,
+      "maxChunkBytes": 48000
+    },
+    "events": ["transcript", "run", "answer", "audio", "error", "done"],
+    "errors": [
+      "wake_not_verified",
+      "empty_question",
+      "transcription_failed",
+      "budget_exhausted",
+      "quota_exceeded",
+      "conversation_busy",
+      "invalid_turn",
+      "not_found",
+      "unavailable",
+      "answer_failed",
+      "synthesis_failed"
+    ]
+  },
   "nativeVisualizationKinds": ["TABLE", "LIST", "LEADERBOARD", "KPI_CARD"],
   "errors": {
     "invalid_request": 400,

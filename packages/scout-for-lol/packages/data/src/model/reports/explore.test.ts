@@ -5,11 +5,47 @@ import {
 } from "#src/model/reports/explore-answer.ts";
 import { ExploreLoadoutCardRequestsSchema } from "#src/model/reports/explore-loadout-card.ts";
 import {
+  ExploreGenerationSchema,
+  withoutUnknownEffort,
+  type ExploreGeneration,
+} from "#src/model/reports/explore-model.ts";
+import {
   ExploreMessageSchema,
   ExploreStreamMessageSchema,
   ExploreTraceEntrySchema,
   parseExploreStreamEvent,
 } from "#src/model/reports/explore.ts";
+
+describe("answer provenance", () => {
+  test("records either effort and refuses any other", () => {
+    for (const reasoningEffort of ["high", "low"]) {
+      expect(
+        ExploreGenerationSchema.parse({ model: "gpt-6-luna", reasoningEffort }),
+      ).toEqual({ model: "gpt-6-luna", reasoningEffort });
+    }
+    expect(
+      ExploreGenerationSchema.safeParse({
+        model: "gpt-6-luna",
+        reasoningEffort: "medium",
+      }).success,
+    ).toBe(false);
+  });
+
+  test("a reader that knows only high is sent a low answer without provenance", () => {
+    const low = {
+      id: "a1",
+      generation: { model: "gpt-6-luna", reasoningEffort: "low" as const },
+    };
+    const high = {
+      id: "a2",
+      generation: { model: "gpt-6.1-sol", reasoningEffort: "high" as const },
+    };
+    expect(withoutUnknownEffort(low)).toEqual({ id: "a1", generation: null });
+    expect(withoutUnknownEffort(high)).toBe(high);
+    const none: { id: string; generation?: ExploreGeneration } = { id: "a3" };
+    expect(withoutUnknownEffort(none)).toEqual({ id: "a3" });
+  });
+});
 
 describe("ExploreAnswerSchema", () => {
   test("defaults cards and includeVisualization when older callers omit them", () => {

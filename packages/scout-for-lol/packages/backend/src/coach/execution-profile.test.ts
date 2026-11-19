@@ -27,8 +27,9 @@ describe("coachExecutionProfile", () => {
     },
   );
 
-  test("the in-game profile is low effort, six steps and 1,200 output tokens", () => {
+  test("the in-game profile is gpt-6-luna at low effort, six steps and 1,200 output tokens", () => {
     expect(IN_GAME_PROFILE).toMatchObject({
+      model: "gpt-6-luna",
       reasoningEffort: "low",
       maxSteps: 6,
       maxOutputTokens: 1200,

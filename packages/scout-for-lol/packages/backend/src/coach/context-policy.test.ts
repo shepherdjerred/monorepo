@@ -136,9 +136,13 @@ describe("projectGameContext", () => {
     });
   });
 
-  test("only player_typed is player-initiated", () => {
-    expect([...PLAYER_INITIATIONS]).toEqual(["player_typed"]);
-    expect(INITIATIONS).toEqual(["player_typed", ...COACH_APP_INITIATIONS]);
+  test("only a typed or a spoken question is player-initiated", () => {
+    expect([...PLAYER_INITIATIONS]).toEqual(["player_typed", "player_voice"]);
+    expect(INITIATIONS).toEqual([
+      "player_typed",
+      "player_voice",
+      ...COACH_APP_INITIATIONS,
+    ]);
   });
 
   test.each(COACH_APP_INITIATIONS)(
@@ -191,6 +195,14 @@ describe("projectGameContext", () => {
     },
   );
 
+  test("a spoken question earns exactly what a typed one does, under every flag state", () => {
+    everyCase(0x70_1c_e5, ({ raw, flags, label }) => {
+      const typed = projected(raw, "player_typed", flags, label);
+      const spoken = projected(raw, "player_voice", flags, label);
+      expect(spoken, label).toEqual(typed);
+    });
+  });
+
   test("every other section passes exactly when the coach is on and the turn is one it belongs to", () => {
     everyCase(0xc_0a_c4, ({ raw, initiation, flags, label }) => {
       const { present, accepted, withheld, context } = projected(
@@ -205,6 +217,7 @@ describe("projectGameContext", () => {
       for (const section of present.filter((name) => name !== "live")) {
         const belongs =
           initiation === "player_typed" ||
+          initiation === "player_voice" ||
           COACH_APP_INITIATION_SECTION[initiation] === section;
         expect(accepted.includes(section), label).toBe(
           flags.coachEnabled && belongs,
@@ -274,6 +287,17 @@ describe("projectGameContext", () => {
     ],
     [
       "player_typed",
+      { coachEnabled: false, liveAnswersEnabled: true },
+      "coach_disabled",
+    ],
+    ["player_voice", { coachEnabled: true, liveAnswersEnabled: true }, null],
+    [
+      "player_voice",
+      { coachEnabled: true, liveAnswersEnabled: false },
+      "live_answers_disabled",
+    ],
+    [
+      "player_voice",
       { coachEnabled: false, liveAnswersEnabled: true },
       "coach_disabled",
     ],

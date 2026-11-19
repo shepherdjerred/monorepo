@@ -1476,7 +1476,7 @@ describe("coachOptions across contract versions", () => {
 
   test.each([
     [SCOUT_DESKTOP_CONTRACT_VERSION, true],
-    [SCOUT_DESKTOP_CONTRACT_VERSION - 1, false],
+    [6, false], // the contract before `coachOptions`
     [1, false],
   ])("a client on contract %i receives the key: %s", async (version, kept) => {
     mocks.loadTranscript.mockResolvedValue(coachTranscriptFixture.response);

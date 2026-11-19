@@ -3,6 +3,7 @@ import {
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_INTERRUPTED_CAVEAT,
   EXPLORE_STOPPED_CAVEAT,
+  type ExploreGeneration,
   type ExploreMessage,
   type ExploreTraceEntry,
 } from "@scout-for-lol/data";
@@ -20,7 +21,8 @@ export async function persistPartialAnswer(
   client: ExtendedPrismaClient,
   input: {
     stopped: boolean;
-    model?: string | undefined;
+    /** Which model wrote the prefix, and at what effort. */
+    generation?: ExploreGeneration | undefined;
     conversationId: string;
     parentMessageId: string;
     expectedCurrentLeafId: string | null;
@@ -69,11 +71,7 @@ export async function persistPartialAnswer(
     conversationId: input.conversationId,
     parentMessageId: input.parentMessageId,
     answer,
-    ...(input.model === undefined
-      ? {}
-      : {
-          generation: { model: input.model, reasoningEffort: "high" as const },
-        }),
+    ...(input.generation === undefined ? {} : { generation: input.generation }),
     preview: null,
     visualization: null,
     trace: finalizeExploreTrace(input.trace),

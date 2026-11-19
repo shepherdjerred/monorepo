@@ -12,7 +12,10 @@ import { CoachOptionsSchema } from "#src/model/reports/explore-answer.ts";
 import { ExploreMatchCardSchema } from "#src/model/reports/explore-match-card.ts";
 import { ExploreLoadoutCardSchema } from "#src/model/reports/explore-loadout-card.ts";
 import { ExploreConversationOriginSchema } from "#src/model/reports/explore-origin.ts";
-import { ExploreModelSchema } from "#src/model/reports/explore-model.ts";
+import {
+  ExploreGenerationSchema,
+  ExploreModelSchema,
+} from "#src/model/reports/explore-model.ts";
 
 /**
  * Contracts for the explore surface — a conversation over the whole report
@@ -285,6 +288,7 @@ export const ExploreTraceEntrySchema = z
 export type ExploreTraceEntry = z.infer<typeof ExploreTraceEntrySchema>;
 
 export const ExploreMessageRoleSchema = z.enum(["user", "assistant"]);
+
 /**
  * One persisted turn. Assistant messages keep the rendered result inline, so
  * a frozen share needs no re-execution and never drifts from what the asker
@@ -322,11 +326,7 @@ export const ExploreMessageSchema = z
       )
       .max(100)
       .optional(),
-    generation: z
-      .object({ model: z.string().min(1), reasoningEffort: z.literal("high") })
-      .strict()
-      .nullable()
-      .optional(),
+    generation: ExploreGenerationSchema.nullable().optional(),
     queryText: ReportQueryTextSchema.nullable().default(null),
     caveats: z.array(z.string()).default([]),
     followUps: z.array(z.string()).default([]),

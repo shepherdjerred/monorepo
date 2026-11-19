@@ -2,6 +2,7 @@ import {
   SCOUT_DESKTOP_RUN_START_MAX_BYTES,
   SCOUT_DESKTOP_API_ROUTES,
   SCOUT_DESKTOP_COACH_OPTIONS_CONTRACT_VERSION,
+  SCOUT_DESKTOP_LOW_EFFORT_CONTRACT_VERSION,
   SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION,
   SCOUT_DESKTOP_PNG_CONTENT_TYPE,
   ScoutDesktopEmptyRequestSchema,
@@ -14,6 +15,7 @@ import {
   ScoutDesktopConversationListResponseSchema,
   ScoutDesktopExploreStatusRequestSchema,
   exploreOriginForPreDesktopReader,
+  withoutUnknownEffort,
   type ExploreConversationOrigin,
   type ScoutDesktopExploreStatusResponse,
 } from "@scout-for-lol/data";
@@ -34,6 +36,7 @@ import {
   desktopHeaders,
   desktopJsonResponse,
 } from "./contract.ts";
+import { DESKTOP_VOICE_ROUTES } from "./coach-voice-routes.ts";
 import { DESKTOP_ACTION_ROUTES } from "./explore-action-routes.ts";
 import {
   DESKTOP_RUN_ROUTES,
@@ -139,6 +142,12 @@ const getConversation: DesktopRouteHandler = async ({
   }
   const response = ScoutDesktopConversationGetResponseSchema.parse({
     ...transcript,
+    // A client before `low` reasoning effort reads such an answer without
+    // its provenance, which its strict type would refuse.
+    messages:
+      contractVersion >= SCOUT_DESKTOP_LOW_EFFORT_CONTRACT_VERSION
+        ? transcript.messages
+        : transcript.messages.map((message) => withoutUnknownEffort(message)),
     conversation: {
       ...transcript.conversation,
       origin: originFor(contractVersion, transcript.conversation.origin),
@@ -210,6 +219,7 @@ const ROUTES = new Map<string, DesktopRoute>([
     { handler: visualization, maxBodyBytes: MAX_READ_BODY_BYTES },
   ],
   ...DESKTOP_ACTION_ROUTES,
+  ...DESKTOP_VOICE_ROUTES,
   ...DESKTOP_RUN_ROUTES.map(
     ({ path, handler, turn }) =>
       [

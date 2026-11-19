@@ -166,6 +166,7 @@ export type FlagName =
   | "scout_desktop_explore_enabled"
   | "scout_desktop_coach"
   | "scout_coach_live_answers"
+  | "scout_desktop_voice"
   | "scout_operations_console_enabled"
   | "scout_durable_orchestration_enabled"
   | "scout_support_conversations_enabled"
@@ -385,6 +386,18 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * value: the live section has no field for anything the player cannot see.
    */
   scout_coach_live_answers: { default: true, overrides: [] },
+  /**
+   * Spoken coach turns (`coach/voice/turns`,
+   * `scout-client/desktop/coach-voice-routes.ts`): the server transcribes one
+   * finished utterance and answers it aloud. Read beside `scout_desktop_coach`;
+   * either off refuses the route before any audio is read.
+   *
+   * On everywhere, like the coach it rides on: the player opts in on the
+   * desktop before the microphone opens, and nothing is recorded until they
+   * speak the wake phrase or hold the push-to-talk key. The flag is the kill
+   * switch for the server's audio spend.
+   */
+  scout_desktop_voice: { default: true, overrides: [] },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
    *

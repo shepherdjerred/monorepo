@@ -365,6 +365,8 @@ describe("desktop Explore runs against a real database", () => {
         sectionsAccepted: ["live"],
         coachEnabled: true,
         liveAnswersEnabled: true,
+        voiceTrigger: null,
+        wakeVerification: null,
         createdAt: expect.any(Date),
       },
     ]);

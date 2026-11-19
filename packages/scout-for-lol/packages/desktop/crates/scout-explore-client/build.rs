@@ -28,8 +28,39 @@ struct DesktopContract {
     pairing_scopes: Vec<String>,
     routes: BTreeMap<String, ContractRoute>,
     stream_events: Vec<String>,
+    voice_turn: VoiceTurnContract,
     native_visualization_kinds: Vec<String>,
     errors: BTreeMap<String, u16>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct VoiceTurnContract {
+    triggers: Vec<String>,
+    audio: VoiceAudio,
+    speech: VoiceSpeech,
+    events: Vec<String>,
+    errors: Vec<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct VoiceAudio {
+    media_type: String,
+    sample_rate_hz: u32,
+    channels: u16,
+    bits_per_sample: u16,
+    min_duration_ms: u32,
+    max_duration_ms: u32,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct VoiceSpeech {
+    encoding: String,
+    sample_rate_hz: u32,
+    channels: u16,
+    max_chunk_bytes: u32,
 }
 
 #[derive(Deserialize)]
@@ -132,11 +163,10 @@ fn validate(contract: &DesktopContract) -> Result<(), io::Error> {
             }
         }
     }
-    if streaming != 1 {
-        return Err(invalid_contract(
-            "exactly one route must be an event stream",
-        ));
+    if streaming == 0 {
+        return Err(invalid_contract("some route must be an event stream"));
     }
+    validate_voice_turn(&contract.voice_turn)?;
     if contract.stream_events.is_empty()
         || contract.stream_events.iter().collect::<BTreeSet<_>>().len()
             != contract.stream_events.len()
@@ -156,6 +186,49 @@ fn validate(contract: &DesktopContract) -> Result<(), io::Error> {
                 "refusal {code} must have a 4xx or 5xx status"
             )));
         }
+    }
+    Ok(())
+}
+
+/// Names that are unique, non-empty and lowercase snake case.
+fn validate_names(what: &str, names: &[String]) -> Result<(), io::Error> {
+    if names.is_empty() || names.iter().collect::<BTreeSet<_>>().len() != names.len() {
+        return Err(invalid_contract(format!(
+            "{what} must be unique and non-empty"
+        )));
+    }
+    for name in names {
+        pascal_case(name)?;
+    }
+    Ok(())
+}
+
+fn validate_voice_turn(voice: &VoiceTurnContract) -> Result<(), io::Error> {
+    validate_names("voiceTurn.triggers", &voice.triggers)?;
+    validate_names("voiceTurn.events", &voice.events)?;
+    validate_names("voiceTurn.errors", &voice.errors)?;
+    let audio = &voice.audio;
+    if audio.media_type != "audio/wav"
+        || audio.channels != 1
+        || audio.bits_per_sample != 16
+        || audio.sample_rate_hz == 0
+        || audio.min_duration_ms == 0
+        || audio.min_duration_ms >= audio.max_duration_ms
+    {
+        return Err(invalid_contract(
+            "voiceTurn.audio must be mono 16-bit WAV with a positive duration range",
+        ));
+    }
+    let speech = &voice.speech;
+    if speech.encoding != "pcm_s16le"
+        || speech.channels != 1
+        || speech.sample_rate_hz == 0
+        || speech.max_chunk_bytes == 0
+        || !speech.max_chunk_bytes.is_multiple_of(2)
+    {
+        return Err(invalid_contract(
+            "voiceTurn.speech must be mono pcm_s16le in whole-sample chunks",
+        ));
     }
     Ok(())
 }
@@ -223,6 +296,43 @@ fn grouped_arms(indent: &str, pairs: Vec<(String, String)>) -> String {
         .map(|(value, patterns)| format!("{indent}{} => {value},", patterns.join(" | ")))
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+/// `coach/voice/turns`' constants: its vocabulary, upload and speech.
+fn render_voice(voice: &VoiceTurnContract) -> String {
+    format!(
+        r"/// Every `coach/voice/turns` event type, in contract order.
+pub const VOICE_TURN_EVENT_TYPES: &[&str] = &[{events}];
+/// Every `coach/voice/turns` in-stream refusal code, in contract order.
+pub const VOICE_TURN_ERROR_CODES: &[&str] = &[{errors}];
+/// What may start a voice turn's recording.
+pub const VOICE_TURN_TRIGGERS: &[&str] = &[{triggers}];
+/// A voice turn's upload: its media type.
+pub const VOICE_MEDIA_TYPE: &str = {media_type:?};
+/// A voice turn's upload: samples per second.
+pub const VOICE_SAMPLE_RATE_HZ: u32 = {rate};
+/// The shortest utterance the server reads as speech.
+pub const VOICE_MIN_DURATION_MS: u32 = {min};
+/// The longest utterance the desktop records.
+pub const VOICE_MAX_DURATION_MS: u32 = {max};
+/// The spoken answer's sample encoding.
+pub const SPEECH_ENCODING: &str = {encoding:?};
+/// The spoken answer's samples per second.
+pub const SPEECH_SAMPLE_RATE_HZ: u32 = {speech_rate};
+/// The largest PCM chunk one `audio` event carries.
+pub const SPEECH_MAX_CHUNK_BYTES: u32 = {chunk};
+",
+        events = literals(&voice.events),
+        errors = literals(&voice.errors),
+        triggers = literals(&voice.triggers),
+        media_type = voice.audio.media_type,
+        rate = voice.audio.sample_rate_hz,
+        min = voice.audio.min_duration_ms,
+        max = voice.audio.max_duration_ms,
+        encoding = voice.speech.encoding,
+        speech_rate = voice.speech.sample_rate_hz,
+        chunk = voice.speech.max_chunk_bytes,
+    )
 }
 
 fn render(contract: &DesktopContract) -> Result<String, io::Error> {
@@ -324,6 +434,7 @@ impl Route {{
 /// Every `runs/stream` event type, in contract order.
 pub const STREAM_EVENT_TYPES: &[&str] = &[{events}];
 
+{voice}
 /// Chart kinds drawn as native rows, not as the server's PNG.
 pub const NATIVE_VISUALIZATION_KINDS: &[&str] = &[{native_kinds}];
 
@@ -342,6 +453,7 @@ pub const fn refusal_status(code: DesktopApiErrorCode) -> u16 {{
         count = contract.routes.len(),
         names = names.join("\n"),
         paths = paths.join("\n"),
+        voice = render_voice(&contract.voice_turn),
     ))
 }
 

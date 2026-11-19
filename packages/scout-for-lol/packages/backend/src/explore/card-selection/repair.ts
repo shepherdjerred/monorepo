@@ -43,6 +43,8 @@ export async function repairExploreCardSelection(
     selection: ExploreCardSelection;
     stepsUsed: number;
     outputTokensUsed: number;
+    /** The turn's step and output limits; Explore's own when omitted. */
+    limits?: { readonly maxSteps: number; readonly maxOutputTokens: number };
     abortSignal: AbortSignal | undefined;
     correct: (request: {
       selection: ExploreCardSelection;
@@ -57,9 +59,12 @@ export async function repairExploreCardSelection(
     return input.selection;
   } catch (error: unknown) {
     if (!(error instanceof ExploreCardSelectionError)) throw error;
-    const remainingTokens = EXPLORE_MAX_OUTPUT_TOKENS - input.outputTokensUsed;
-    if (input.stepsUsed >= EXPLORE_MAX_STEPS || remainingTokens <= 0)
-      throw error;
+    const limits = input.limits ?? {
+      maxSteps: EXPLORE_MAX_STEPS,
+      maxOutputTokens: EXPLORE_MAX_OUTPUT_TOKENS,
+    };
+    const remainingTokens = limits.maxOutputTokens - input.outputTokensUsed;
+    if (input.stepsUsed >= limits.maxSteps || remainingTokens <= 0) throw error;
     input.abortSignal?.throwIfAborted();
     const corrected = ExploreCardSelectionSchema.parse(
       await input.correct({

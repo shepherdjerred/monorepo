@@ -7,16 +7,19 @@ include!(concat!(env!("OUT_DIR"), "/desktop_contract.rs"));
 #[cfg(test)]
 mod tests {
     use scout_client_core::desktop_api::{
-        DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH,
-        DesktopApiContract, DeviceScope, EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH,
-        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
-        EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH,
-        EXPLORE_STATUS_PATH, EXPLORE_VISUALIZATION_PATH, PAIRINGS_V2_PATH, RouteResponseKind,
+        COACH_VOICE_TURNS_PATH, DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION,
+        DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DeviceScope, EXPLORE_ASSETS_PATH,
+        EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH,
+        EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH,
+        EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EXPLORE_VISUALIZATION_PATH,
+        PAIRINGS_V2_PATH, RouteResponseKind,
     };
 
     use super::{
         CONTRACT_HEADER, CONTRACT_VERSION, MINIMUM_CONTRACT_VERSION, NATIVE_VISUALIZATION_KINDS,
-        Route, STREAM_EVENT_TYPES, refusal_status,
+        Route, SPEECH_ENCODING, SPEECH_MAX_CHUNK_BYTES, SPEECH_SAMPLE_RATE_HZ, STREAM_EVENT_TYPES,
+        VOICE_MAX_DURATION_MS, VOICE_MEDIA_TYPE, VOICE_MIN_DURATION_MS, VOICE_SAMPLE_RATE_HZ,
+        VOICE_TURN_ERROR_CODES, VOICE_TURN_EVENT_TYPES, VOICE_TURN_TRIGGERS, refusal_status,
     };
 
     type TestResult = Result<(), Box<dyn std::error::Error>>;
@@ -52,6 +55,17 @@ mod tests {
         for (code, status) in &contract.errors {
             assert_eq!(refusal_status(*code), *status, "{code:?}");
         }
+        let voice = &contract.voice_turn;
+        assert_eq!(VOICE_TURN_EVENT_TYPES, voice.events.as_slice());
+        assert_eq!(VOICE_TURN_ERROR_CODES, voice.errors.as_slice());
+        assert_eq!(VOICE_TURN_TRIGGERS, voice.triggers.as_slice());
+        assert_eq!(VOICE_MEDIA_TYPE, voice.audio.media_type);
+        assert_eq!(VOICE_SAMPLE_RATE_HZ, voice.audio.sample_rate_hz);
+        assert_eq!(VOICE_MIN_DURATION_MS, voice.audio.min_duration_ms);
+        assert_eq!(VOICE_MAX_DURATION_MS, voice.audio.max_duration_ms);
+        assert_eq!(SPEECH_ENCODING, voice.speech.encoding);
+        assert_eq!(SPEECH_SAMPLE_RATE_HZ, voice.speech.sample_rate_hz);
+        assert_eq!(SPEECH_MAX_CHUNK_BYTES, voice.speech.max_chunk_bytes);
         Ok(())
     }
 
@@ -79,6 +93,7 @@ mod tests {
             (Route::ExploreRunsStream, EXPLORE_RUNS_STREAM_PATH),
             (Route::ExploreAssets, EXPLORE_ASSETS_PATH),
             (Route::ExploreVisualization, EXPLORE_VISUALIZATION_PATH),
+            (Route::CoachVoiceTurns, COACH_VOICE_TURNS_PATH),
         ] {
             assert_eq!(route.path(), path);
         }
