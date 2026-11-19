@@ -1,5 +1,5 @@
 {
-  "sourceVersions": ["16.19", "16.22"],
+  "sourceVersions": ["16.19", "16.23"],
   "augments": {
     "1": {
       "apiName": "AcceleratingSorcery",
@@ -2316,6 +2316,22 @@
     "3173": {
       "apiName": "GoH_PentakillAug_R",
       "name": "DOOM"
+    },
+    "3262": {
+      "apiName": "ARAM_SlimeTime",
+      "name": "Slime Time"
+    },
+    "3263": {
+      "apiName": "SteadfastPresence",
+      "name": "Steadfaster Presence"
+    },
+    "3264": {
+      "apiName": "MysticGuard",
+      "name": "Mystic Guard"
+    },
+    "3265": {
+      "apiName": "Fortified",
+      "name": "Fortified"
     },
     "7001": {
       "apiName": "Upgrade_ZzRotPortal",

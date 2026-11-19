@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.22.1",
+  "version": "16.23.1",
   "data": {
     "KSante": {
       "id": "KSante",
@@ -309,18 +309,17 @@
           "description": "K'Sante charges up, taking reduced damage, then dashes, knocking back and stunning enemies.<br><br>When All Out, deals increased damage and no longer knocks back or stuns.",
           "tooltip": "K'Sante raises his weapons defensively for {{ mindurationtooltip }}-{{ maxduration.1 }}s, becoming Unstoppable and reducing incoming damage by {{ damagereduction*100 }}%. Then, he rams forward, dealing <physicalDamage>{{ basedamage }} + {{ totalmaxhealthdamage }} max Health physical damage</physicalDamage>. Enemies hit are <status>Knocked Back</status> and <status>Stunned</status> for {{ minknockbackduration }}-{{ maxknockbackduration }}s (based on charge time).<br /><br /><keywordMajor>All Out:</keywordMajor> Cooldown is refreshed. Deals an additional {{ rdamageincreasemin*100 }}-{{ rdamageincreasemax*100 }}% damage as <trueDamage>true damage</trueDamage> (based on charge time), damage reduction is increased to {{ rdamagereduction*100 }}% and dash speed is increased, but no longer <status>Knocks Back</status> or <status>Stuns</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": ["Damage", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ cost }} -> {{ costNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 5,
           "cooldown": [14, 13, 12, 11, 10],
           "cooldownBurn": "14/13/12/11/10",
-          "cost": [45, 50, 55, 60, 65],
-          "costBurn": "45/50/55/60/65",
+          "cost": [45, 45, 45, 45, 45],
+          "costBurn": "45",
           "datavalues": {},
           "effect": [
             null,

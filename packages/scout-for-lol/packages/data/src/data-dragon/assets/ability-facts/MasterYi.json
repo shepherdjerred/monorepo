@@ -27,13 +27,13 @@
         "SubsequentHitMultiplier": [0.25, 0.25, 0.25, 0.25, 0.25],
         "BaseDamage": [20, 40, 60, 80, 100],
         "BonusMonsterDamage": [60, 85, 110, 135, 160],
-        "AttackDamageRatio": [0.7, 0.7, 0.7, 0.7, 0.7],
+        "AttackDamageRatio": [0.6, 0.6, 0.6, 0.6, 0.6],
         "BonusCritDamageRatio": [1, 1, 1, 1, 1],
         "BasicAttackCDR": [1, 1, 1, 1, 1],
         "AlphaStrikeBounces": [4, 4, 4, 4, 4],
         "BaseOnHitMultiplier": [0.75, 0.75, 0.75, 0.75, 0.75]
       },
-      "resolvedDescription": "Master Yi becomes Untargetable and teleports to rapidly strike enemies near his target, dealing 20/40/60/80/100 (+70% AD) physical damage to all enemies hit after 4 hits. This Ability can strike the same enemy repeatedly if there are no other targets, dealing 25% damage for subsequent hits (5/10/15/20/25 (+17.5% AD)), for a maximum single target total of {{ singletotaldamage }} physical damage.",
+      "resolvedDescription": "Master Yi becomes Untargetable and teleports to rapidly strike enemies near his target, dealing 20/40/60/80/100 (+60% AD) physical damage to all enemies hit after 4 hits. This Ability can strike the same enemy repeatedly if there are no other targets, dealing 25% damage for subsequent hits (5/10/15/20/25 (+15% AD)), for a maximum single target total of {{ singletotaldamage }} physical damage.",
       "unresolved": ["singletotaldamage"]
     },
     "W": {

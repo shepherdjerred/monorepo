@@ -59,8 +59,8 @@
     "E": {
       "name": "Scatter the Weak",
       "maxRank": 5,
-      "cooldownByRank": [15, 15, 15, 15, 15],
-      "costByRank": [50, 50, 50, 50, 50],
+      "cooldownByRank": [17, 16.5, 16, 15.5, 15],
+      "costByRank": [60, 60, 60, 60, 60],
       "costType": "Mana",
       "rangeByRank": [650, 650, 650, 650, 650],
       "dataValues": {
