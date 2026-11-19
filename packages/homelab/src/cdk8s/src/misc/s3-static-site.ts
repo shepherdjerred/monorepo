@@ -171,7 +171,7 @@ export type CaddyfileGeneratorProps = {
   s3Region?: string;
 };
 
-const STATIC_SITE_HTTP_PORT = 8080;
+export const STATIC_SITE_HTTP_PORT = 8080;
 
 /** The tunnel route of a host this origin serves: the model's static-site origin. */
 function originRoute(hostname: string): PublicHostname {
