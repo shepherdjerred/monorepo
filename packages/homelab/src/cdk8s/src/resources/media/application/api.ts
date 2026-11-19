@@ -18,6 +18,7 @@ export function createMediaApi(
     image: string;
     database: ISecret;
     bootstrap: ISecret;
+    discord: ISecret;
     plexServiceName: string;
   },
 ) {
@@ -78,6 +79,14 @@ export function createMediaApi(
               EnvValue.fromSecretValue({ secret: props.bootstrap, key }),
             ]),
           ),
+          DISCORD_CLIENT_ID: EnvValue.fromSecretValue({
+            secret: props.discord,
+            key: "DISCORD_CLIENT_ID",
+          }),
+          DISCORD_CLIENT_SECRET: EnvValue.fromSecretValue({
+            secret: props.discord,
+            key: "DISCORD_CLIENT_SECRET",
+          }),
           HOST: EnvValue.fromValue("0.0.0.0"),
           PORT: EnvValue.fromValue("7352"),
           ENVIRONMENT: EnvValue.fromValue("production"),

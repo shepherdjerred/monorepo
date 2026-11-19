@@ -12,6 +12,13 @@ import { readPlexEditProofsV1 } from "./plex-edit-proofs.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import {
+  ExternalLibraryRegistrationEventSchema,
+  EXTERNAL_LIBRARY_REGISTERED_EVENT,
+} from "#shared/external-library/contract.ts";
+import { initialLibraryAssetVersion } from "./passive-registration.ts";
+import { StableHandoffNetworkV3Schema } from "#shared/handoff/library-v3.ts";
+import { canonicalJson } from "#migration/profile-import.ts";
 
 const hash = (value: unknown) => identityHash(nativeJson(value));
 type Receipt = Prisma.MediaHandoffReceiptGetPayload<{
@@ -43,6 +50,41 @@ export async function readLibraryHandoffReceipt(
   );
   assertApproval(receipt, finished, selection);
   assertEvidenceHeaders(receipt, selection);
+  if (selection.scope.request.schemaVersion === 3) {
+    for (const approval of selection.scope.request.registeredAssets ?? []) {
+      const files = selection.scope.files.filter(
+        (file) => file.provenanceKey === approval.provenanceKey,
+      );
+      const file = files[0];
+      if (file === undefined || files.length !== 1)
+        throw new Error("Initial passive registration selection changed");
+      initialLibraryAssetVersion(selection.scope.request, file);
+      budget.consume(1);
+      const event = await tx.applicationEvent.findUniqueOrThrow({
+        where: { id: approval.registrationEventId },
+      });
+      const evidence = ExternalLibraryRegistrationEventSchema.parse(
+        event.payload,
+      );
+      if (
+        event.kind !== EXTERNAL_LIBRARY_REGISTERED_EVENT ||
+        evidence.registration.registrationEventId !== event.id ||
+        evidence.registrationHash !== approval.registrationHash ||
+        evidence.registration.serverMachineId !==
+          StableHandoffNetworkV3Schema.parse(selection.networkEvidence)
+            .registeredPlexServerMachineId ||
+        hash(evidence.registration) !== approval.registrationHash ||
+        canonicalJson(nativeJson(evidence.registration)) !==
+          approval.registrationRaw ||
+        evidence.registration.canonicalPath !== file.canonicalPath ||
+        evidence.registration.sizeBytes !== file.sizeBytes ||
+        hash(
+          evidence.registration.members.map((member) => member.mediaId).sort(),
+        ) !== hash([...file.mediaIds].sort())
+      )
+        throw new Error("Initial passive registration lineage changed");
+    }
+  }
   if (finished.schemaVersion === 3) {
     if (selection.schemaVersion !== 3)
       throw new Error("Initial library protocol changed");

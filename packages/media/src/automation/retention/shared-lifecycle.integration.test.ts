@@ -8,8 +8,13 @@ import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
 import { observeRequesterWatch } from "#automation/watch.ts";
 import { readCurrentPlexBindings } from "#infrastructure/plex-binding/read.ts";
-import { prepareBoundRetention } from "./lifecycle.test-fixture.ts";
+import {
+  prepareBoundRetention,
+  defaultRetentionInterestSnapshot,
+} from "./lifecycle.test-fixture.ts";
+import { continueQuarantinedInterest } from "#infrastructure/request-interest/quarantine-release.test-fixture.ts";
 import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 
 const harness = automationTestHarness();
 let fixture: Awaited<ReturnType<typeof prepareBoundRetention>> | undefined;
@@ -20,6 +25,7 @@ beforeEach(async () => {
     mappedPublicationFixture,
   );
   directory = files.directory;
+  await seedFixtureReleasedEpisodes(harness.database(), files.user.id);
   fixture = await prepareBoundRetention(
     files,
     await preparePhysicalPublication(files),
@@ -33,7 +39,7 @@ afterEach(async () => {
   fixture = undefined;
 });
 
-test("one actual shared-TV file requires both warning projections and restores the whole group once after one leaf becomes unwatched", async () => {
+test("a shared-TV unwatch preserves released interests and quarantine until explicit Keep watching restores the whole group", async () => {
   if (fixture === undefined)
     throw new Error("Shared retention fixture missing");
   const f = fixture;
@@ -66,42 +72,49 @@ test("one actual shared-TV file requires both warning projections and restores t
     }),
   ).toEqual([{ availability: "quarantined" }, { availability: "quarantined" }]);
   const leaf = z.uuid().parse(ids[0]);
+  const interests = await defaultRetentionInterestSnapshot(db, ids);
+  expect(interests.requests).toHaveLength(2);
+  expect(
+    interests.requests.every(
+      (request) =>
+        request.keepingPolicy === "temporary" &&
+        request.interestState === "finished" &&
+        request.interestReleaseReason === "watched",
+    ),
+  ).toBe(true);
   f.state.watched = null;
   expect(await observeRequesterWatch(f.context, leaf)).toEqual({
     complete: false,
     reason: "requester_watch_unknown",
   });
   f.state.watched = false;
-  expect(await observeRequesterWatch(f.context, leaf)).toEqual({
-    complete: true,
-    reason: null,
-  });
+  for (let observation = 0; observation < 2; observation++)
+    expect(await observeRequesterWatch(f.context, leaf)).toEqual({
+      complete: true,
+      reason: null,
+    });
+  expect(
+    await db.operation.findMany({
+      where: { kind: "restore_media", targetId: { in: ids } },
+    }),
+  ).toEqual([]);
+  expect(await defaultRetentionInterestSnapshot(db, ids)).toEqual(interests);
+  expect(
+    await db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
+  ).toMatchObject({ state: "quarantined" });
+  const renewed = await continueQuarantinedInterest(
+    f.context,
+    f.files.user,
+    leaf,
+  );
+  expect(await renewed.replay()).toEqual(renewed.result);
   const operations = await db.operation.findMany({
     where: { kind: "restore_media", targetId: { in: ids } },
   });
   expect(operations).toHaveLength(1);
   const operation = operations[0];
   if (operation === undefined)
-    throw new Error("Shared false observation omitted routed restore");
-  const generations = await db.mediaIntent.findMany({
-    where: { mediaId: { in: ids }, edition: "default" },
-    orderBy: { mediaId: "asc" },
-  });
-  expect(await observeRequesterWatch(f.context, leaf)).toEqual({
-    complete: true,
-    reason: null,
-  });
-  expect(
-    await db.operation.findMany({
-      where: { kind: "restore_media", targetId: { in: ids } },
-    }),
-  ).toEqual(operations);
-  expect(
-    await db.mediaIntent.findMany({
-      where: { mediaId: { in: ids }, edition: "default" },
-      orderBy: { mediaId: "asc" },
-    }),
-  ).toEqual(generations);
+    throw new Error("Explicit shared-file renewal omitted routed restore");
   const input = z
     .object({ operationId: z.uuid(), mediaId: z.uuid(), generation: z.int() })
     .parse(operation.payload);

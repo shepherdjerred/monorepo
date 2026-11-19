@@ -114,8 +114,15 @@ export async function retentionPlexContext(
     watched: boolean | null;
     sessions: PlexItem[];
     watchOverrides: Map<string, boolean | null>;
+    /** Opt-in measured wire counters; ordinary boolean fixtures are unchanged. */
+    viewCountOverrides: Map<string, number>;
     beforeMetadata?: () => Promise<void>;
-  } = { watched: true, sessions: [], watchOverrides: new Map() };
+  } = {
+    watched: true,
+    sessions: [],
+    watchOverrides: new Map(),
+    viewCountOverrides: new Map(),
+  };
   const calls: string[] = [];
   const metadataResponse = async (url: URL) => {
     await state.beforeMetadata?.();
@@ -134,7 +141,14 @@ export async function retentionPlexContext(
     return Response.json({
       MediaContainer: {
         size: 1,
-        Metadata: [{ ...item, viewCount: watched === true ? 1 : 0 }],
+        Metadata: [
+          {
+            ...item,
+            viewCount:
+              state.viewCountOverrides.get(item.ratingKey) ??
+              (watched === true ? 1 : 0),
+          },
+        ],
       },
     });
   };

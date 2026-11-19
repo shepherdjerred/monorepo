@@ -206,6 +206,7 @@ export async function createMovieContinuationFixture(
     ...base,
     context,
     files,
+    fileContext: files,
     movie,
     fileMovie,
     control,

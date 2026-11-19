@@ -44,6 +44,7 @@ export const CreateRequestSchema = z
   .object({
     mediaId: IdentifierSchema,
     requesterUserId: z.uuid().optional(),
+    keepingPolicy: z.enum(["keep", "temporary"]).optional(),
     subtitleLanguages: z.array(LanguageSchema).max(20).default([]),
     includeFutureEpisodes: z.boolean().optional(),
     includeSpecials: z.boolean().default(false),
@@ -145,6 +146,7 @@ export type ReleaseAttributes = {
   quality: string;
   codec: string;
   audioLanguages: readonly string[];
+  videoCompatibility?: "compatible" | "incompatible" | "unknown" | undefined;
   sizeBytes: number;
   scoreTags: readonly string[];
   resolvedEvidence?: ResolvedEvidence | undefined;

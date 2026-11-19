@@ -1,6 +1,6 @@
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
-import { HandoffScopeSchema } from "#shared/handoff.ts";
+import { HandoffScopeProtocolSchema } from "#shared/handoff/protocol.ts";
 import { BundleReportSchema } from "#shared/migration-handoff.ts";
 
 /** Only unresolved household claims for this physical scope block reconciliation. */
@@ -30,7 +30,7 @@ export async function unresolvedRecoveryClaims(
     .flatMap((item) => [item, item.parent, item.parent?.parent])
     .filter((item) => item !== null && item !== undefined);
   for (const plan of plans) {
-    const scope = HandoffScopeSchema.parse(plan.scope);
+    const scope = HandoffScopeProtocolSchema.parse(plan.scope);
     const report = BundleReportSchema.parse(plan.bundleReview.report);
     for (const entry of report.entries) {
       const record = entry.sourceRecord;

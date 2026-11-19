@@ -46,8 +46,11 @@ async function reservedInput(
   };
 }
 
-async function submitted(bytes?: Uint8Array) {
-  const f = await movieRequesterAccessFixture(bytes);
+async function submitted(
+  bytes?: Uint8Array,
+  options: { releaseGroup?: string } = {},
+) {
+  const f = await movieRequesterAccessFixture(bytes, options);
   try {
     const input = await reservedInput(f);
     expect(
@@ -63,8 +66,11 @@ async function submitted(bytes?: Uint8Array) {
   }
 }
 
-async function imported(bytes: Uint8Array) {
-  const f = await submitted(bytes);
+async function imported(
+  bytes: Uint8Array,
+  options: { releaseGroup?: string } = {},
+) {
+  const f = await submitted(bytes, options);
   try {
     const input = f.attemptInput;
     expect(
@@ -722,7 +728,9 @@ test.each(["revoked", "credentials"] as const)(
 );
 
 test("caption acquisition continues for its permitted requester when another scope requester loses credentials", async () => {
-  const f = await imported(await movieVideoFixture(1920, []));
+  const f = await imported(await movieVideoFixture(1920, []), {
+    releaseGroup: "GROUP",
+  });
   try {
     await secondRequester(f);
     await denyRequester(f, "credentials");

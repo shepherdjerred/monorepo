@@ -1,9 +1,9 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
-import { readFile, rm } from "node:fs/promises";
+import { expect, test } from "vitest";
+import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { movieFilesV4Fixture } from "#testing/movie-files-v4.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
+import { retentionMovieFixtures } from "#testing/retention/movie-fixtures.ts";
 import { inspectAndStageMovieV4 } from "#automation/files/movie-editions/inspection.ts";
 import { promoteMovieV4 } from "#automation/files/movie-editions/publication.ts";
 import { createSubtitleActivities } from "#automation/subtitles.ts";
@@ -20,22 +20,15 @@ import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { installSubtitle } from "#automation/files/subtitles.ts";
 
 const h = automationTestHarness();
-const directories: string[] = [];
-let bytes: Uint8Array;
-beforeAll(async () => {
-  bytes = await movieVideoFixture();
-});
-afterEach(async () => {
-  for (const directory of directories.splice(0))
-    await rm(directory, { recursive: true, force: true });
-});
+const movies = retentionMovieFixtures();
+const directories = movies.directories;
 
 async function fixture() {
   const f = await movieFilesV4Fixture(
     h.database(),
     h.context(),
     await h.fixture(),
-    { bytes, edition: "default" },
+    { bytes: movies.bytes(), edition: "default" },
   );
   directories.push(f.files.directory);
   await inspectAndStageMovieV4(f.files.context, f.input);

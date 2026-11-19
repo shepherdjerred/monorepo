@@ -21,6 +21,7 @@ import {
 import { projectLegacyCoordinates } from "#infrastructure/recovery/legacy-claims/coordinates.ts";
 import { claimIdentityHash } from "#infrastructure/recovery/legacy-claims/accounting.ts";
 import { accountedMovieClaimsV3 } from "./accounting.ts";
+import { personalSourceAccounting } from "#infrastructure/recovery/legacy-claims/personal-accounting.ts";
 
 const hash = (value: unknown) => identityHash(nativeJson(value));
 type Stored = Prisma.MigrationRecordGetPayload<{ include: { capture: true } }>;
@@ -38,6 +39,7 @@ export async function buildMovieRecoveryClaimsV3(
     scope: MovieEditionScope;
     epoch: number;
     report?: z.infer<typeof BundleReportSchema>;
+    reports?: z.infer<typeof BundleReportSchema>[];
   },
   budget: PublicationAuthorityReadBudget,
 ) {
@@ -61,6 +63,13 @@ export async function buildMovieRecoveryClaimsV3(
   const relevantClaims: { userId: string; mediaIds: string[] }[] = [];
   const blockers = new Set<string>();
   for (const stored of records) {
+    if (
+      await personalSourceAccounting(tx, stored, {
+        edition: input.scope.edition,
+        budget,
+      })
+    )
+      continue;
     const projected = await projectMovieClaim(tx, { stored, media }, budget);
     if (projected.kind === "irrelevant") continue;
     if (projected.kind === "protected") {
@@ -71,10 +80,22 @@ export async function buildMovieRecoveryClaimsV3(
       userId: projected.claim.userId,
       mediaIds: [media.id],
     });
-    if (!accounted.identities.has(claimIdentityHash(projected.claim)))
+    if (
+      !accounted.identities.has(claimIdentityHash(projected.claim)) &&
+      !(await personalSourceAccounting(tx, stored, {
+        edition: input.scope.edition,
+        claim: projected.claim,
+        budget,
+      }))
+    )
       claims.push(projected.claim);
   }
-  if (hasMissingSourceClaim(input.report, records, media))
+  if (
+    hasMissingSourceClaim(input.report, records, media) ||
+    input.reports?.some((report) =>
+      hasMissingSourceClaim(report, records, media),
+    ) === true
+  )
     blockers.add("unresolved_migration_household_claim");
   return {
     claims,

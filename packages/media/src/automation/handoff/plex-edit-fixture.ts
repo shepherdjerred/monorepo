@@ -3,7 +3,7 @@ import {
   MOVIE_EDITION_REGISTRY,
   type MovieEditionKey,
 } from "#shared/movie-editions/registry.ts";
-import type { PlexEditionItem } from "#integrations/plex.ts";
+import type { PlexClient, PlexEditionItem } from "#integrations/plex.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { handoffFixture } from "./test-fixture.ts";
 
@@ -50,7 +50,7 @@ export async function libraryPlexFixture(
     },
   });
   const original = await f.network.context.plex.metadata("fixture");
-  let item: PlexEditionItem = {
+  const item: PlexEditionItem = {
     ...original,
     ratingKey: "123",
     type: "movie",
@@ -59,12 +59,27 @@ export async function libraryPlexFixture(
     lastViewedAt: 1_234_567,
     viewOffset: 456_000,
   };
-  f.network.context.plex.libraryPage = () =>
-    Promise.resolve({ total: 1, items: [item] });
-  f.network.context.plex.metadata = () => Promise.resolve(item);
-  f.network.context.plex.metadataForEditionEdit = () => Promise.resolve(item);
+  const library = singleLibraryPlexMovie(f.network.context.plex, item);
+  const context = Object.assign(f.network.context, { plex: library.client });
+  return { ...f, network: { ...f.network, context }, ...library };
+}
+
+/** One mutable synthetic Plex item is observed consistently by all three actual APIs. */
+export function singleLibraryPlexMovie<
+  T extends Pick<PlexClient, "libraryPage" | "metadata">,
+>(plex: T, initial: PlexEditionItem) {
+  let item = initial;
+  const reads: Pick<
+    PlexClient,
+    "libraryPage" | "metadata" | "metadataForEditionEdit"
+  > = {
+    libraryPage: () => Promise.resolve({ total: 1, items: [item] }),
+    metadata: () => Promise.resolve(item),
+    metadataForEditionEdit: () => Promise.resolve(item),
+  };
+  const client = Object.assign(plex, reads);
   return {
-    ...f,
+    client,
     setItem(value: PlexEditionItem) {
       item = value;
     },

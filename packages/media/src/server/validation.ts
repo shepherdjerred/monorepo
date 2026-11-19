@@ -1,5 +1,10 @@
-import type { z } from "zod";
+import { z } from "zod";
 import { MediaError } from "#application/errors.ts";
+
+export const CancelSchema = z.strictObject({
+  expectedVersion: z.number().int().nonnegative(),
+});
+export const RestrictSchema = CancelSchema.extend({ restricted: z.boolean() });
 
 export function parseInput<T>(schema: z.ZodType<T>, value: unknown): T {
   const result = schema.safeParse(value);

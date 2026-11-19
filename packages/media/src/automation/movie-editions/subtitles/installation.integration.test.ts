@@ -9,7 +9,10 @@ import {
   MovieEditionKeySchema,
   type MovieEditionKey,
 } from "#shared/movie-editions/registry.ts";
-import { MovieSubtitleOperationV4Schema } from "#shared/movie-editions/subtitles-v4.ts";
+import {
+  MovieSubtitleOperationV4Schema,
+  type MovieSubtitleOperationV4,
+} from "#shared/movie-editions/subtitles-v4.ts";
 import { inspectAndStageMovieV4 } from "#automation/files/movie-editions/inspection.ts";
 import { promoteMovieV4 } from "#automation/files/movie-editions/publication.ts";
 import { installMovieSubtitlesV4 } from "#automation/files/movie-editions/subtitles.ts";
@@ -24,6 +27,12 @@ import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/
 import { findMoviePublicationReferenceV2 } from "#infrastructure/movie-editions/publication/store.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
 import { grantTestLease } from "#testing/authority.ts";
+import { captionProviderFixture } from "#automation/movie-editions/notifications/caption-provider.test-fixture.ts";
+import { prepareSubtitleSpeechV1 } from "#automation/files/subtitle-lifecycle/speech.ts";
+import {
+  SubtitleMatchScoreV1Schema,
+  subtitleScorePercent,
+} from "#shared/subtitle-maintenance/score.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -38,11 +47,16 @@ afterEach(async () => {
     await rm(directory, { recursive: true, force: true });
 });
 
-async function fixture(edition: MovieEditionKey = "extended_cut") {
+async function fixture(
+  edition: MovieEditionKey = "extended_cut",
+  videoBytes = bytes,
+  releaseGroup?: string,
+) {
   const db = h.database();
   const f = await movieFilesV4Fixture(db, h.context(), await h.fixture(), {
-    bytes,
+    bytes: videoBytes,
     edition,
+    ...(releaseGroup === undefined ? {} : { releaseGroup }),
   });
   directories.push(f.files.directory);
   await inspectAndStageMovieV4(f.files.context, f.input);
@@ -97,6 +111,209 @@ async function selected(f: Awaited<ReturnType<typeof fixture>>) {
     },
   };
 }
+
+function forgedPreparedEvidence(
+  raw: unknown,
+  target: MovieSubtitleOperationV4,
+  change: string,
+) {
+  const evidence = z.record(z.string(), z.json()).parse(raw);
+  if (change === "missing") delete evidence["timingAlignedV1"];
+  if (change === "video") evidence["assetChecksum"] = "f".repeat(64);
+  if (change === "caption") evidence["regularDialogueV1"] = {};
+  if (change === "scope")
+    evidence["movieScope"] = { ...target.scope, edition: "theatrical_cut" };
+  if (change === "operation") evidence["operationId"] = crypto.randomUUID();
+  return evidence;
+}
+
+test("actual measured candidate installs one to two with its original native physical parent", async () => {
+  const f = await fixture(
+    "extended_cut",
+    await movieVideoFixture(1920, [], { speech: true }),
+    "GROUP",
+  );
+  await f.queue();
+  const targets = await f.inputs();
+  const target = targets.find((row) => row.language === "en");
+  if (target === undefined) throw new Error("Actual English target missing");
+  const sources = await captionProviderFixture(f.context);
+  await f.db.providerLease.deleteMany({
+    where: { providerId: "opensubtitles" },
+  });
+  const found = await findMovieSubtitlesV4(f.context, target, sources);
+  expect(found).toMatchObject({ status: "found", reason: null });
+  const input = {
+    schemaVersion: 4 as const,
+    operationId: target.operationId,
+    scope: target.scope,
+    assetId: f.assetId,
+    subtitleId: z.uuid().parse(found.subtitleId),
+  };
+  const candidate = await f.db.subtitleAsset.findUniqueOrThrow({
+    where: { id: input.subtitleId },
+  });
+  const score = z
+    .object({ matchScoreV1: SubtitleMatchScoreV1Schema })
+    .parse(candidate.matchingEvidence).matchScoreV1;
+  expect(score.matches).toContain("release_group");
+  expect(subtitleScorePercent(score)).toBeGreaterThanOrEqual(80);
+  expect(subtitleScorePercent(score)).toBeLessThan(86);
+  await prepareSubtitleSpeechV1(f.files.context, input);
+  const prepared = await f.db.subtitleAsset.findUniqueOrThrow({
+    where: { id: input.subtitleId },
+  });
+  expect(prepared).toMatchObject({
+    state: "validated",
+    version: 1,
+    path: null,
+  });
+  const asset = await f.db.libraryAsset.findUniqueOrThrow({
+    where: { id: input.assetId },
+  });
+  const destination = workerFilePath(
+    f.files.context,
+    subtitleDestination({
+      videoPath: asset.path,
+      language: prepared.language,
+      forced: prepared.forced,
+      hearingImpaired: prepared.hearingImpaired,
+      format: "srt",
+    }),
+  );
+  for (const change of [
+    "missing",
+    "video",
+    "caption",
+    "scope",
+    "operation",
+  ] as const) {
+    const evidence = forgedPreparedEvidence(
+      prepared.matchingEvidence,
+      target,
+      change,
+    );
+    const forged = await f.db.subtitleAsset.update({
+      where: { id: prepared.id },
+      data: { matchingEvidence: evidence },
+    });
+    await expect(
+      installMovieSubtitlesV4(f.files.context, input),
+    ).rejects.toThrow("preparation changed");
+    expect(
+      await f.db.subtitleAsset.findUniqueOrThrow({
+        where: { id: prepared.id },
+      }),
+    ).toEqual(forged);
+    await expect(readFile(destination)).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+  }
+  await f.db.subtitleAsset.update({
+    where: { id: prepared.id },
+    data: {
+      matchingEvidence: z
+        .record(z.string(), z.json())
+        .parse(prepared.matchingEvidence),
+    },
+  });
+  await installMovieSubtitlesV4(f.files.context, input);
+  const receipt = await readMovieSubtitleReceiptV4(
+    f.db,
+    input,
+    new PublicationAuthorityReadBudget(),
+  );
+  if (receipt === null)
+    throw new Error("Actual measured installation receipt missing");
+  expect(receipt).toMatchObject({
+    before: { version: 1 },
+    after: { version: 2, state: "installed" },
+  });
+  expect(
+    await readFile(
+      workerFilePath(f.files.context, z.string().parse(receipt.after.path)),
+    ),
+  ).toEqual(Buffer.from(prepared.content ?? []));
+  await installMovieSubtitlesV4(f.files.context, input);
+  const valid = async (value: unknown) => {
+    const rows = await f.db.$queryRawUnsafe<{ valid: boolean }[]>(
+      "SELECT media_movie_subtitle_installation_version_v1($1::jsonb) AS valid",
+      JSON.stringify(value),
+    );
+    return rows[0]?.valid;
+  };
+  expect(await valid(receipt)).toBe(true);
+  for (const change of [
+    "missing",
+    "video",
+    "caption",
+    "scope",
+    "operation",
+    "physical",
+  ] as const) {
+    const forged = structuredClone(receipt);
+    const evidence = forgedPreparedEvidence(
+      forged.before.matchingEvidence,
+      target,
+      change,
+    );
+    if (change === "physical") forged.before.videoChecksum = "f".repeat(64);
+    forged.before.matchingEvidence = evidence;
+    const installed = z
+      .record(z.string(), z.json())
+      .parse(receipt.after.matchingEvidence);
+    forged.after.matchingEvidence = {
+      ...evidence,
+      target: z.json().parse(installed["target"]),
+      movieInstallationV4: z.json().parse(installed["movieInstallationV4"]),
+    };
+    expect(await valid(forged), change).toBe(false);
+  }
+});
+
+test.each(["missing", "stale", "scope", "operation"] as const)(
+  "forged prepared %s candidate fails before any physical destination exists",
+  async (change) => {
+    const f = await fixture();
+    const { input, target } = await selected(f);
+    const original = await f.db.subtitleAsset.findUniqueOrThrow({
+      where: { id: input.subtitleId },
+    });
+    const evidence = z
+      .record(z.string(), z.json())
+      .parse(original.matchingEvidence);
+    if (change === "stale") evidence["assetChecksum"] = "f".repeat(64);
+    if (change === "scope")
+      evidence["movieScope"] = { ...target.scope, edition: "theatrical_cut" };
+    if (change === "operation") evidence["operationId"] = crypto.randomUUID();
+    const forged = await f.db.subtitleAsset.update({
+      where: { id: original.id },
+      data: { version: 1, matchingEvidence: evidence },
+    });
+    const asset = await f.db.libraryAsset.findUniqueOrThrow({
+      where: { id: input.assetId },
+    });
+    const destination = workerFilePath(
+      f.files.context,
+      subtitleDestination({
+        videoPath: asset.path,
+        language: forged.language,
+        forced: forged.forced,
+        hearingImpaired: forged.hearingImpaired,
+        format: "srt",
+      }),
+    );
+    await expect(
+      installMovieSubtitlesV4(f.files.context, input),
+    ).rejects.toThrow("preparation changed");
+    expect(
+      await f.db.subtitleAsset.findUniqueOrThrow({ where: { id: forged.id } }),
+    ).toEqual(forged);
+    await expect(readFile(destination)).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+  },
+);
 
 test("caption installation preserves the caller's original exhausted provenance allowance", async () => {
   const f = await fixture();

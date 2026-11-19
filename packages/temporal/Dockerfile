@@ -417,6 +417,19 @@ RUN set -e; \
 # --- uv (pinned PyPI release) ---
 RUN pip3 install --no-cache-dir --break-system-packages "uv==${UV_VERSION}" && uv --version
 
+# Subtitle timing and independent, non-neural speech coverage run in an isolated
+# environment. Every transitive package is version- and hash-locked.
+COPY packages/media/scripts/subtitle-requirements.txt /opt/media-subtitles/requirements.txt
+COPY packages/media/scripts/subtitle-build-requirements.txt /opt/media-subtitles/build-requirements.txt
+COPY packages/media/scripts/subtitle-analysis.py /opt/media-subtitles/analysis.py
+RUN python3 -m venv /opt/media-subtitles/venv && \
+    uv pip install --python /opt/media-subtitles/venv/bin/python --require-hashes --only-binary :all: -r /opt/media-subtitles/build-requirements.txt && \
+    uv pip install --python /opt/media-subtitles/venv/bin/python --require-hashes --no-build-isolation -r /opt/media-subtitles/requirements.txt && \
+    /opt/media-subtitles/venv/bin/python -c 'from importlib.metadata import version; assert version("ffsubsync") == "0.5.1"' && \
+    ln -s /opt/media-subtitles/venv/bin/ffsubsync /usr/local/bin/ffsubsync && \
+    printf '%s\n' '#!/bin/sh' 'exec /opt/media-subtitles/venv/bin/python /opt/media-subtitles/analysis.py "$@"' > /usr/local/bin/media-subtitle-analysis && \
+    chmod +x /usr/local/bin/media-subtitle-analysis
+
 # --- Trivy (per-arch release tarball, SHA256-verified) ---
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \
@@ -582,6 +595,7 @@ COPY --from=build /app/packages/temporal/dist/delivery-argocd.js packages/tempor
 COPY --from=build /app/packages/media/generated packages/media/generated
 COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 COPY --from=media-regex-build /out/media-regex /opt/media-regex
+RUN ln -s /opt/media-regex/RegexOracle /usr/local/bin/RegexOracle
 
 # Verify the copied toolkit binary boots, then ensure the HA schema: the worker
 # imports `#generated/ha-schema.ts` (type-only, but keep the file present so
@@ -595,7 +609,7 @@ RUN toolkit --version \
     && 7zz i >/dev/null \
     && python3 -c 'import fcntl' \
     && test -f packages/media/src/filesystem/lock-helper.py
-RUN bun -e 'const request = {protocolVersion: 1, requests: [{pattern: "(?<=Movie[ .])2160p", value: "Movie.2160P.WEB"}, {pattern: "(?<!HD)TV", value: "HDTV"}, {pattern: "(", value: "invalid"}]}; const result = Bun.spawnSync(["/opt/media-regex/RegexOracle"], {stdin: Buffer.from(JSON.stringify(request)), stdout: "pipe", stderr: "pipe"}); if (result.exitCode !== 0) throw new Error("Media regex runtime failed"); const output = JSON.parse(result.stdout.toString()); if (output.protocolVersion !== 1 || output.engine !== "dotnet-ignorecase" || output.culture !== "en-US" || JSON.stringify(output.observations.map(item => item.result)) !== JSON.stringify(["match", "no_match", "unknown"])) throw new Error("Media regex protocol mismatch");'
+RUN bun -e 'const request = {protocolVersion: 1, requests: [{pattern: "(?<=Movie[ .])2160p", value: "Movie.2160P.WEB"}, {pattern: "(?<!HD)TV", value: "HDTV"}, {pattern: "(", value: "invalid"}]}; const result = Bun.spawnSync(["RegexOracle"], {stdin: Buffer.from(JSON.stringify(request)), stdout: "pipe", stderr: "pipe"}); if (result.exitCode !== 0) throw new Error("Media regex runtime failed"); const output = JSON.parse(result.stdout.toString()); if (output.protocolVersion !== 1 || output.engine !== "dotnet-ignorecase" || output.culture !== "en-US" || JSON.stringify(output.observations.map(item => item.result)) !== JSON.stringify(["match", "no_match", "unknown"])) throw new Error("Media regex protocol mismatch");'
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

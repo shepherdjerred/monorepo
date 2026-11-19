@@ -73,6 +73,18 @@ const Request = Base.extend({
   scope: z.enum(["movie", "series", "season", "episode"]),
   seasons: z.array(z.number().int().nonnegative()).max(1000),
   active: z.boolean(),
+  // Optional preserves the canonical representation of historical captures.
+  // These are request statuses, not playback completion or MediaStatus values.
+  sourceStatus: z.number().int().min(1).max(5).optional(),
+  seasonStatuses: z
+    .array(
+      z.strictObject({
+        season: z.number().int().nonnegative(),
+        status: z.number().int().min(1).max(5),
+      }),
+    )
+    .max(1000)
+    .optional(),
 });
 const Preference = Base.extend({
   kind: z.literal("subtitle_preference"),

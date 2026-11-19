@@ -10,12 +10,23 @@ import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automat
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { createFixtureLifecycle } from "#testing/fixture-lifecycle.ts";
 import { createManagedMovieFixture } from "./managed-fixture.ts";
+import {
+  completeFixtureRetentionInterests,
+  fixtureNotificationReceipts,
+} from "#testing/retention-interest.ts";
+import {
+  prepareInitialReleasedInterest,
+  type InitialInterestScenario,
+} from "#infrastructure/request-interest/quarantine-release.test-fixture.ts";
+import { pendingInAppWarningHistory } from "#automation/retention/fixtures/elapsed.ts";
+import { refreshRetentionReceipts } from "#automation/notifications/retention-receipts.ts";
 
 /** Only retention policy time advances; publication, warning, receipt and authority clocks stay real. */
 export async function createMovieRetentionFixture(
   edition: MovieEditionKey,
   bytes: Uint8Array,
   elapsed = true,
+  interestScenario?: InitialInterestScenario,
 ) {
   const f = await createPublishedMovieFixture(edition, bytes);
   const { db, user, context: base } = f.source;
@@ -23,8 +34,12 @@ export async function createMovieRetentionFixture(
     hostname: "127.0.0.1",
     port: 0,
     fetch: (request) =>
-      new URL(request.url).pathname === `/media/${f.scope.mediaId}`
-        ? new Response("Synthetic Media detail route", { status: 200 })
+      ["/library", "/requests", `/media/${f.scope.mediaId}`].includes(
+        new URL(request.url).pathname,
+      )
+        ? new Response("Synthetic observational Media route", {
+            status: 200,
+          })
         : new Response(null, { status: 404 }),
   });
   try {
@@ -41,24 +56,23 @@ export async function createMovieRetentionFixture(
       update: { emailEnabled: true },
     });
     const sent: Parameters<MediaAutomationContext["notify"]>[0][] = [];
-    const receipts = new Map<string, string>();
     const context: MediaAutomationContext = {
       ...base,
       now: () => new Date(Date.now() + (elapsed ? 8 * 86_400_000 : 0)),
       publicOrigin: page.url.origin,
-      notify: (message, mutation) => {
-        mutation?.beforeMutation();
-        sent.push(message);
-        const receipt = `synthetic-warning:${message.idempotencyKey}`;
-        receipts.set(receipt, message.recipient);
-        return Promise.resolve({ receipt });
-      },
-      reconcileNotification: (input) =>
-        Promise.resolve({
-          status: receipts.has(input.receipt) ? "delivered" : "unknown",
-          recipient: receipts.get(input.receipt) ?? null,
-        }),
+      ...fixtureNotificationReceipts("synthetic-warning", (message) =>
+        sent.push(message),
+      ),
     };
+    if (interestScenario === undefined)
+      await completeFixtureRetentionInterests(base, [f.scope.mediaId], edition);
+    else {
+      f.source.wire.setWatched(false);
+      await prepareInitialReleasedInterest(context, [f.scope.mediaId], {
+        edition,
+        scenario: interestScenario,
+      });
+    }
     const target = await db.mediaIntent.findUniqueOrThrow({
       where: { mediaId_edition: { mediaId: f.scope.mediaId, edition } },
     });
@@ -114,6 +128,10 @@ export async function createMovieRetentionFixture(
             notificationId: delivery.id,
           }),
         ).toEqual({ status: "accepted", reason: null });
+        expect(
+          await refreshRetentionReceipts(context, [f.scope.mediaId], edition),
+        ).toBe(true);
+        await pendingInAppWarningHistory(db, [delivery.eventId]);
         return delivery;
       },
       close: async () => {

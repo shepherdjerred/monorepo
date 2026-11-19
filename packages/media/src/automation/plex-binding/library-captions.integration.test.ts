@@ -1,9 +1,9 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { createHash } from "node:crypto";
-import { readFile, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
+import { retentionMovieFixtures } from "#testing/retention/movie-fixtures.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { authenticateMovieFixtureOwner } from "#testing/movie-workflow/owner-pin.ts";
 import { LibraryPlexBindingInputV1Schema } from "#shared/plex-binding/activities.ts";
@@ -18,30 +18,15 @@ import { subtitleTargetsReady } from "#automation/subtitles/authority.ts";
 import { findMovieSubtitlesV4 } from "#automation/movie-editions/subtitles/network.ts";
 import { installMovieSubtitlesV4 } from "#automation/files/movie-editions/subtitles.ts";
 import { captionProviderFixture } from "#automation/movie-editions/notifications/caption-provider.test-fixture.ts";
-import { libraryBindingFixture } from "./library.test-fixture.ts";
+import {
+  libraryBindingFixture,
+  libraryCaptionFilename,
+} from "./library.test-fixture.ts";
 import { verifyLibraryPlexBinding } from "./library.ts";
 
 const h = automationTestHarness();
-const directories: string[] = [];
-const downloadOperations: string[] = [];
-let bytes: Uint8Array;
-beforeAll(async () => {
-  bytes = await movieVideoFixture();
-});
-afterEach(async () => {
-  for (const directory of directories.splice(0))
-    await rm(directory, { recursive: true, force: true });
-  const operations = downloadOperations.splice(0);
-  if (operations.length > 0)
-    await h.database().applicationEvent.deleteMany({
-      where: {
-        kind: "subtitle_download_requested",
-        OR: operations.map((operationId) => ({
-          payload: { path: ["operationId"], equals: operationId },
-        })),
-      },
-    });
-});
+const movies = retentionMovieFixtures();
+const directories = movies.directories;
 
 type Fixture = Awaited<ReturnType<typeof libraryBindingFixture>>;
 function scope(f: Fixture) {
@@ -120,7 +105,11 @@ test.each(
       h.database(),
       edition,
       (directory) => directories.push(directory),
-      { bytes, householdCaptions: true },
+      {
+        bytes: movies.bytes(),
+        householdCaptions: true,
+        fileName: libraryCaptionFilename(edition),
+      },
     );
     const baseline = await immutableAdoption(f);
     await assertNoAcquisitionOrPersonalDemand(f);
@@ -154,9 +143,12 @@ test.each(
         payload: row.payload,
       });
     }
-    const sources = await captionProviderFixture(f.context);
+    // Preserve actual download journals across every edition case.
+    const sources = await captionProviderFixture(
+      f.context,
+      MovieEditionKeySchema.options.length * 2,
+    );
     for (const target of targets) {
-      downloadOperations.push(target.operationId);
       await h
         .database()
         .providerLease.deleteMany({ where: { providerId: "opensubtitles" } });
@@ -245,7 +237,7 @@ test.each(["unmonitored", "revoked_owner"] as const)(
       "directors_cut",
       (directory) => directories.push(directory),
       {
-        bytes,
+        bytes: movies.bytes(),
         householdCaptions: true,
         ...(protection === "unmonitored" ? { monitored: false } : {}),
       },

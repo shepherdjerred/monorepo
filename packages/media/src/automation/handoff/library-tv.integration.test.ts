@@ -1,8 +1,7 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
-import { readFile, rm } from "node:fs/promises";
+import { expect, test } from "vitest";
+import { readFile } from "node:fs/promises";
 import { z } from "zod";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
+import { libraryAdoptionHarness } from "./library-fixture.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
 import { PrepareLibraryHandoffV2Schema } from "#shared/handoff-v2.ts";
 import { handoffFixture } from "./test-fixture.ts";
@@ -10,18 +9,8 @@ import { applyPreparedHandoff } from "./apply.ts";
 import { loadLibraryAssetParentV1 } from "#infrastructure/handoff/library-asset.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
-let bytes: Uint8Array;
-const directories: string[] = [];
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-  bytes = await movieVideoFixture();
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-  for (const directory of directories)
-    await rm(directory, { recursive: true, force: true });
-});
+const cluster = libraryAdoptionHarness();
+const directories = cluster.directories;
 
 async function fixture(wrongEpisode = false) {
   const seriesId = crypto.randomUUID();
@@ -31,7 +20,7 @@ async function fixture(wrongEpisode = false) {
   const f = await handoffFixture(cluster.database, {
     sourceKind: "sonarr",
     fileName: "Synthetic Anime.S01E01-E02.1080p.mkv",
-    bytes,
+    bytes: cluster.bytes,
     async extendReport({ report, target }) {
       directories.push(target.slice(0, target.lastIndexOf("/tv/")));
       await cluster.database.mediaItem.create({
@@ -112,7 +101,11 @@ async function fixture(wrongEpisode = false) {
     parentIndex: 1,
     index: wrongEpisode && index === 1 ? 4 : index + 1,
     Media: [
-      { Part: [{ id: index + 11, file: f.target, size: bytes.byteLength }] },
+      {
+        Part: [
+          { id: index + 11, file: f.target, size: cluster.bytes.byteLength },
+        ],
+      },
     ],
   }));
   f.network.context.plex.sections = () =>
@@ -152,7 +145,7 @@ test("initial TV/anime adoption preserves one physical pack, both exact episode 
   expect(asset.coverage.map((row) => row.mediaId).sort()).toEqual(
     [...f.episodeIds].sort(),
   );
-  expect(await readFile(f.target)).toEqual(Buffer.from(bytes));
+  expect(await readFile(f.target)).toEqual(Buffer.from(cluster.bytes));
   const receipt = await cluster.database.mediaHandoffReceipt.findUniqueOrThrow({
     where: { planId: f.planId },
   });
@@ -213,5 +206,5 @@ test("a Plex episode coordinate conflict prevents adoption of the whole shared f
       where: { path: f.target },
     }),
   ).toBeNull();
-  expect(await readFile(f.target)).toEqual(Buffer.from(bytes));
+  expect(await readFile(f.target)).toEqual(Buffer.from(cluster.bytes));
 });

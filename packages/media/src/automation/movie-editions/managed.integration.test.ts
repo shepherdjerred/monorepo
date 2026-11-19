@@ -7,6 +7,10 @@ import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import { createHash } from "node:crypto";
+import {
+  transferMovieFixture,
+  finishMovieFixturePublication,
+} from "#testing/movie-workflow/upgrade-fixture.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -68,15 +72,7 @@ test.each(MovieEditionKeySchema.options)(
       },
       identityEvidence: { schemaVersion: 3 },
     });
-    expect(
-      await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
-    ).toEqual({ status: "submitted", reason: null });
-    expect(
-      await f.movie.observeMovieAcquisitionV4(
-        input,
-        testPlexBindingExecution(),
-      ),
-    ).toEqual({ status: "ready", reason: null });
+    await transferMovieFixture(f, input);
     expect(
       await f.fileMovie.inspectAndStageMovieV4(
         input,
@@ -86,10 +82,7 @@ test.each(MovieEditionKeySchema.options)(
     expect(
       await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
     ).toEqual({ status: "published" });
-    expect(
-      await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
-    ).toEqual({ status: "available", reason: null });
-    await f.movie.finalizeMovieAcquisitionV4(input, testPlexBindingExecution());
+    await finishMovieFixturePublication(f, input);
     expect(await db.mediaRequest.count({ where: selected })).toBe(0);
     expect(
       await db.movieEditionChoice.count({

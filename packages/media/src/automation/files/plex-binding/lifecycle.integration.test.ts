@@ -7,6 +7,7 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { boundRetentionFixture } from "#automation/retention/lifecycle.test-fixture.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { elapsedQuarantineClient } from "./elapsed-quarantine.test-support.ts";
+import { z } from "zod";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -168,8 +169,17 @@ test("the same retention operation quarantines then purges only after seven days
     reason: "watch_unconfirmed",
   });
   await bound.observe(true);
-  await db.notificationDelivery.updateMany({
-    where: { event: { mediaId: f.media.id }, userId: f.user.id },
+  const privateWarning = await db.notificationDelivery.findFirstOrThrow({
+    where: {
+      eventId: z
+        .object({ warningEventId: z.string() })
+        .parse(bound.retention.decision.evidence).warningEventId,
+      userId: f.user.id,
+      channel: "email",
+    },
+  });
+  await db.notificationDelivery.update({
+    where: { id: privateWarning.id },
     data: { reconciledAt: new Date(Date.now() - 61_000) },
   });
   expect(await activities.purgeMediaFiles(input)).toMatchObject({

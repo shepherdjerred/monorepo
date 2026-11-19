@@ -214,6 +214,7 @@ export async function removeFiles(
             mediaIds: entry.mediaIds,
             generations: entry.generations,
             purge,
+            budget,
             movieAccess,
             plex,
           },

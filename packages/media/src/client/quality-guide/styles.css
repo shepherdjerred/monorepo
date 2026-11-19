@@ -1,0 +1,8 @@
+#quality-guide .stack-form input[type="radio"] {
+  width: auto;
+  margin: 0;
+}
+
+#quality-guide .check-label {
+  justify-content: flex-start;
+}

@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { WorkflowStarter } from "#automation/store.ts";
+import { expect } from "vitest";
+import {
+  createOutboxActivities,
+  type WorkflowStarter,
+} from "#automation/store.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import {
   MovieEditionContextV3Schema,
@@ -21,6 +25,11 @@ import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automat
 import { createSystemHttpServer } from "#testing/system/http.ts";
 import { SystemHttpBrowser } from "#testing/system/browser.ts";
 import { createMovieHistoryFixture } from "./history-review-fixture.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
+import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
+import { movieWorkflowWire } from "#testing/movie-workflow/wire.ts";
+import { queueMovieRetentionCheck } from "#automation/movie-editions/retention/queue.ts";
+import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
 import {
   movieHistoryHttpIdentity,
   authenticateMovieHistoryHttp,
@@ -35,6 +44,7 @@ export async function createMovieHistoryHttpFixture(
     actualMovieExclusion?: boolean;
     canonicalStorage?: boolean;
     startWorkflow?: WorkflowStarter;
+    retentionEligible?: boolean;
   } = {},
 ) {
   const f = await createMovieHistoryFixture(edition, bytes, options);
@@ -218,9 +228,32 @@ export async function createMovieHistoryHttpFixture(
     const operation = await f.db.operation.findUniqueOrThrow({
       where: { id: z.uuid().parse(released.operationId) },
     });
-    const input = MovieOperationV4Schema.parse(
+    const releasedInput = MovieOperationV4Schema.parse(
       z.object(MovieOperationV4Schema.shape).parse(operation.payload),
     );
+    const eligible =
+      options.retentionEligible === true
+        ? await prepareHistoryRetention(f, bytes, releasedInput, request.id)
+        : { input: releasedInput, request };
+    expect(
+      await f.db.operation.findUniqueOrThrow({ where: { id: operation.id } }),
+    ).toEqual(operation);
+    if (
+      options.retentionEligible === true &&
+      options.startWorkflow !== undefined
+    ) {
+      const start = options.startWorkflow;
+      const dispatched = await createOutboxActivities(f.db, (command) => {
+        return command.input["operationId"] === eligible.input.operationId
+          ? start(command)
+          : Promise.reject(
+              new Error(
+                "Only the genuine fresh scoped retention may start here",
+              ),
+            );
+      }).dispatchMediaOutbox();
+      expect(dispatched.dispatched).toBe(1);
+    }
     return {
       ...f,
       baseline,
@@ -229,13 +262,16 @@ export async function createMovieHistoryHttpFixture(
       memberBrowser: personal,
       member,
       chosen,
-      request,
+      request: eligible.request,
+      releasedRequest: request,
       choice,
       detail,
       visible,
       pending,
       released,
-      input,
+      input: eligible.input,
+      releasedInput,
+      releasedOperation: operation,
       releaseInput,
       key,
       close,
@@ -244,6 +280,90 @@ export async function createMovieHistoryHttpFixture(
     await close();
     throw error;
   }
+}
+
+/** Explicit positive-retention setup. Generic adopted-library fixtures retain Keep. */
+async function prepareHistoryRetention(
+  f: Awaited<ReturnType<typeof createMovieHistoryFixture>>,
+  bytes: Uint8Array,
+  released: z.infer<typeof MovieOperationV4Schema>,
+  requestId: string,
+) {
+  const media = await f.db.mediaItem.findUniqueOrThrow({
+    where: { id: f.scope.mediaId },
+  });
+  const target = await f.db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: media.id, edition: f.scope.edition } },
+  });
+  expect(target).toMatchObject({
+    libraryKeep: true,
+    libraryPolicyExplicit: false,
+  });
+  await new RequestInterestCommands(f.db, { keepDays: 30 }).libraryPolicy(
+    f.owner,
+    crypto.randomUUID(),
+    {
+      schemaVersion: 1,
+      mediaId: media.id,
+      edition: f.scope.edition,
+      expectedMediaVersion: media.version,
+      expectedTargetVersion: target.version,
+      keepingPolicy: "temporary",
+    },
+  );
+  const item = f.original.item();
+  const part = item.Media?.[0]?.Part[0];
+  if (part === undefined)
+    throw new Error("Actual adopted video omitted its bound Plex part");
+  const wire = movieWorkflowWire(f.db, {
+    mediaId: media.id,
+    edition: f.scope.edition,
+    bytes,
+    downloads: f.original.files.roots.movies.downloads,
+    ratingKey: item.ratingKey,
+    partId: part.id,
+    playback: {
+      viewCount: item.viewCount,
+      lastViewedAt: item.lastViewedAt,
+      viewOffset: item.viewOffset,
+    },
+  });
+  const context = {
+    ...f.original.context,
+    plex: wire.plex,
+    userPlex: wire.userPlex,
+  };
+  await completeFixtureRetentionInterests(context, [media.id], f.scope.edition);
+  const current = await f.db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: media.id, edition: f.scope.edition } },
+  });
+  expect(current).toMatchObject({
+    libraryKeep: false,
+    libraryPolicyExplicit: true,
+    libraryPolicyActorId: f.owner.id,
+  });
+  const bucket = `history-retention-eligible:${crypto.randomUUID()}`;
+  await queueMovieRetentionCheck(
+    movieManagementContext(context),
+    f.scope,
+    bucket,
+  );
+  const command = await f.db.operation.findUniqueOrThrow({
+    where: {
+      idempotencyKey: `movie-retention-v4:${media.id}:${f.scope.edition}:${String(current.generation)}:${bucket}`,
+    },
+  });
+  const input = MovieOperationV4Schema.parse(
+    z.object(MovieOperationV4Schema.shape).parse(command.payload),
+  );
+  expect(input.operationId).not.toBe(released.operationId);
+  expect(input.generation).toBeGreaterThan(released.generation);
+  return {
+    input,
+    request: await f.db.mediaRequest.findUniqueOrThrow({
+      where: { id: requestId },
+    }),
+  };
 }
 
 /** The real HTTP contract is sufficient here; importing browser API modules would pull DOM into workers. */

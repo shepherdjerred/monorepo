@@ -28,6 +28,7 @@ export async function movieFilesV4Fixture(
     bytes: Uint8Array;
     edition?: MovieEditionKey;
     memberName?: string;
+    releaseGroup?: string;
     tmdbId?: number;
   },
 ) {
@@ -60,6 +61,9 @@ export async function movieFilesV4Fixture(
       ...base,
       media,
       edition,
+      ...(input.releaseGroup === undefined
+        ? {}
+        : { releaseGroup: input.releaseGroup }),
       source: { ...base.source, sizeBytes: input.bytes.byteLength },
     });
     const name = input.memberName ?? `${candidate.source.title}.mkv`;

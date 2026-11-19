@@ -12,6 +12,10 @@ import { useTargetCommand } from "./target-controls/mutation.ts";
 import { CommandError, commandNeedsReview } from "./target-controls/errors.tsx";
 import { MovieRequestForm } from "./movie-editions/request.tsx";
 import { SeriesRequestOptions } from "#client/series/request-options.tsx";
+import {
+  KeepingPolicyChoice,
+  type KeepingChoice,
+} from "./household/keeping-policy.tsx";
 
 export function RequestTitle({
   user,
@@ -42,6 +46,9 @@ function TelevisionRequestTitle({
   kind: string;
 }) {
   const [languages, setLanguages] = useState("en");
+  const [keepingPolicy, setKeepingPolicy] = useState<KeepingChoice>(
+    user.role === "owner" ? "" : "temporary",
+  );
   const [future, setFuture] = useState(kind === "series");
   const [specials, setSpecials] = useState(false);
   const [requesterUserId, setRequesterUserId] = useState(user.id);
@@ -59,6 +66,8 @@ function TelevisionRequestTitle({
   function submit() {
     setValidationError(null);
     try {
+      if (keepingPolicy === "")
+        throw new Error("Choose how long to keep this title.");
       const subtitleLanguages = z
         .array(LanguageSchema)
         .max(20)
@@ -72,6 +81,7 @@ function TelevisionRequestTitle({
         context,
         command: {
           action: "request",
+          keepingPolicy,
           subtitleLanguages,
           includeFutureEpisodes: future,
           includeSpecials: specials,
@@ -112,6 +122,12 @@ function TelevisionRequestTitle({
         </label>
       )}
       {profiles.error !== null && <ErrorNotice error={profiles.error} />}
+      <KeepingPolicyChoice
+        owner={user.role === "owner"}
+        value={keepingPolicy}
+        disabled={request.isPending || request.isSuccess}
+        onChange={setKeepingPolicy}
+      />
       <label htmlFor="request-subtitles">Subtitle languages</label>
       <input
         id="request-subtitles"
@@ -139,6 +155,7 @@ function TelevisionRequestTitle({
           request.isPending ||
           request.isSuccess ||
           user.restricted ||
+          keepingPolicy === "" ||
           context.access !== "detail" ||
           commandNeedsReview(request.error)
         }

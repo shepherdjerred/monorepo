@@ -73,7 +73,7 @@ export async function movieAttemptEffectAuthorityV4(
     version: current.profile.version,
     ...current.rules,
   };
-  if (!evaluateRelease(candidate, profile, [scope.mediaId]).accepted)
+  if (!evaluateRelease(candidate, profile, [scope.mediaId], "listing").accepted)
     return null;
   authorized.freshness.assertActive();
   return {

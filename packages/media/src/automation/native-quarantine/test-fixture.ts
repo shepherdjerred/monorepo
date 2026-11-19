@@ -15,11 +15,12 @@ import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import { nativeReviewPlexFixture } from "#automation/native-recovery/fixtures/plex.ts";
 import { PrismaNativeQuarantine } from "#infrastructure/native-quarantine/service.ts";
 import { NativeQuarantineContinuationSchema } from "#shared/native-recovery/quarantine.ts";
-import { queueOperation } from "#automation/store.ts";
 import { requireStorageAuthority } from "#infrastructure/handoff/storage.ts";
 import type { fileFixture } from "#automation/files/test-support.ts";
 import { createNativeQuarantineFileActivities } from "./activities.ts";
 import { storedWorkerPath } from "#automation/files/paths/locations.ts";
+import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
+import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 
 type QuarantineFixtureSource = {
   file: Awaited<ReturnType<typeof fileFixture>>;
@@ -49,6 +50,8 @@ export async function nativeQuarantineFixture(
         throw new Error(
           "Bound quarantine requires canonical mapping and its trusted server before first publication",
         );
+      if (options.quarantine === undefined && file.media.kind === "episode")
+        await seedFixtureReleasedEpisodes(db, file.user.id);
       return file;
     },
     publication: preparePhysicalPublication,
@@ -260,31 +263,52 @@ export async function nativeQuarantineFixture(
     const descriptor = NativeQuarantineContinuationSchema.parse(
       continuation.descriptor,
     );
-    const operationId = await db.$transaction(async (tx) => {
-      await tx.mediaIntent.updateMany({
-        where: { mediaId: { in: descriptor.group.mediaIds } },
-        data: {
-          desiredPresence: true,
-          monitoring: true,
-          intentionallyRemovedAt: null,
-          automationEpoch: continuation.recoveryEpoch,
-          generation: { increment: 1 },
+    // Current callers own one default-movie request. Renewal must originate in
+    // real requester consent, rather than merely making its intent positive.
+    if (
+      setup.file.media.kind !== "movie" ||
+      descriptor.group.mediaIds.length !== 1 ||
+      descriptor.group.mediaIds[0] !== setup.file.media.id
+    )
+      throw new Error(
+        "Positive native fixture requires its exact default movie requester",
+      );
+    const request = await db.mediaRequest.findUniqueOrThrow({
+      where: {
+        userId_mediaId_edition: {
+          userId: setup.file.user.id,
+          mediaId: setup.file.media.id,
+          edition: "default",
         },
-      });
-      const intent = await tx.mediaIntent.findUniqueOrThrow({
-        where: targetWhere(defaultScope(setup.file.media.id)),
-      });
-      return await queueOperation(tx, {
-        key: `native-fixture-positive:${crypto.randomUUID()}`,
-        kind: "restore_media",
-        targetId: intent.mediaId,
-        payload: { mediaId: intent.mediaId, generation: intent.generation },
-      });
+      },
     });
+    const intent = await db.mediaIntent.findUniqueOrThrow({
+      where: targetWhere(defaultScope(setup.file.media.id)),
+    });
+    const commands = new PrismaMediaCommands(db, {
+      keepDays: 30,
+      serverMachineId: observerContext.expectedServerMachineId,
+    });
+    const requested = await commands.createRequest(
+      setup.file.user,
+      crypto.randomUUID(),
+      {
+        mediaId: setup.file.media.id,
+        keepingPolicy: request.keepingPolicy,
+        subtitleLanguages: request.subtitleLanguages,
+        includeSpecials: request.includeSpecials,
+        includeFutureEpisodes: request.includeFutureEpisodes,
+      },
+    );
+    const operationId = z.uuid().parse(requested.operationId);
     const operation = await db.operation.findUniqueOrThrow({
       where: { id: operationId },
     });
-    return z
+    if (operation.kind !== "restore_native_quarantine")
+      throw new Error(
+        "Positive native fixture omitted its actual restore coordinator",
+      );
+    const input = z
       .object({
         operationId: z.uuid(),
         continuationId: z.uuid(),
@@ -292,6 +316,11 @@ export async function nativeQuarantineFixture(
         generation: z.int(),
       })
       .parse(operation.payload);
+    if (input.generation <= intent.generation)
+      throw new Error(
+        "Positive native fixture did not advance its requester generation",
+      );
+    return input;
   };
   const bytes = async () => {
     const decision = await db.retentionDecision.findFirstOrThrow({

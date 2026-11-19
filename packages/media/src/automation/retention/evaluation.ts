@@ -5,10 +5,6 @@ import { defaultIntent } from "#shared/editions/scope.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import { evaluateRetention, RETENTION_DEFAULTS } from "#domain/retention.ts";
-import {
-  requestFulfillment,
-  currentFulfillmentAsset,
-} from "#automation/editions/fulfillment.ts";
 import { createWarning } from "#automation/notifications/retention-warning.ts";
 import { boundRequesterWatch, type assertBoundMediaCohort } from "./binding.ts";
 import { lineageResolved, type Media } from "./scope.ts";
@@ -17,6 +13,8 @@ import type {
   MovieEditionScope,
 } from "#shared/movie-editions/registry.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { householdRetentionState } from "#infrastructure/request-interest/protection.ts";
+import { removalNoticeAcceptance } from "#infrastructure/request-interest/notice-proof.ts";
 
 export type RetentionResult = Awaited<
   ReturnType<MediaNetworkActivities["evaluateMediaRetention"]>
@@ -86,7 +84,7 @@ export async function evaluateRetentionItem(
   authority: RetentionEvaluationAuthority,
 ): Promise<Result> {
   const { epoch, timestamp } = authority;
-  const edition = authority.scope?.edition ?? "default";
+  const edition = authorityEdition(authority);
   const generation = (
     edition === "default"
       ? defaultIntent(item.intents)
@@ -94,6 +92,8 @@ export async function evaluateRetentionItem(
   )?.generation;
   if (generation === undefined) return protect("intent_missing");
   if (!lineageResolved(item, edition)) return protect("lineage_unresolved");
+  const household = await householdRetentionState(tx, item.id, edition);
+  if (household.reason !== null) return protect(household.reason);
   let decision = await tx.retentionDecision.findFirst({
     where: {
       mediaId: item.id,
@@ -113,27 +113,18 @@ export async function evaluateRetentionItem(
       : await tx.notificationDelivery.findMany({
           where: {
             eventId: warning,
-            state: "accepted",
-            channel: { in: ["email", "discord"] },
-            OR: [
-              { providerStatus: null },
-              { providerStatus: { not: "bounced" } },
-            ],
-            acceptedAt: { not: null },
-            reconciledAt: {
-              gte: new Date(timestamp.getTime() - 60_000),
-              lte: timestamp,
-            },
+            ...removalNoticeAcceptance(timestamp),
           },
           orderBy: { acceptedAt: "asc" },
         });
   const reserved = await tx.acquisitionReservation.findUnique({
     where: { mediaId_edition: { mediaId: item.id, edition } },
   });
-  const { fulfillment, watches } = await retentionDemandFacts(
+  const watches = await retentionDemandFacts(
     tx,
     item,
     authority,
+    household.recipients.map((recipient) => recipient.userId),
   );
   const evaluation = evaluateRetention({
     now: timestamp.getTime(),
@@ -148,34 +139,31 @@ export async function evaluateRetentionItem(
       until: hold.until?.getTime() ?? null,
       isPin: hold.isPin,
     })),
-    requesters: item.requests
-      .filter((claim) => item.kind === "movie" || claim.edition === "default")
-      .map((claim) => {
-        const fulfilled = fulfillment.get(claim.id);
-        if (fulfilled === undefined)
-          throw new Error("Retention request fulfillment missing");
-        const watch = watches.get(claim.userId);
-        const accepted = deliveries.find(
-          (delivery) => delivery.userId === claim.userId,
-        );
-        return {
-          userId: claim.userId,
-          owner: claim.user.role === "owner",
-          watched: watch?.watched ?? null,
-          observedAt:
-            watch === null || watch === undefined
-              ? null
-              : Date.parse(watch.observedAt),
-          warningAcceptedAt: accepted?.acceptedAt?.getTime() ?? null,
-          warningFailed: accepted === undefined,
-          fulfillment: fulfilled,
-        };
-      }),
+    requesters: household.recipients.map((claim) => {
+      const fulfilled = { status: "not_applicable" as const, reason: null };
+      const watch = watches.get(claim.userId);
+      const accepted = deliveries.find(
+        (delivery) => delivery.userId === claim.userId,
+      );
+      return {
+        userId: claim.userId,
+        owner: claim.user.role === "owner",
+        released: true,
+        watched: watch?.watched ?? null,
+        observedAt:
+          watch === null || watch === undefined
+            ? null
+            : Date.parse(watch.observedAt),
+        warningAcceptedAt: accepted?.acceptedAt?.getTime() ?? null,
+        warningFailed: accepted === undefined,
+        fulfillment: fulfilled,
+      };
+    }),
   });
   if (evaluation.state === "protected") return protect(evaluation.reason);
   decision ??= await createWarning(
     tx,
-    item,
+    { ...item, recipients: household.recipients },
     warningAuthority(authority, generation),
   );
   if (evaluation.state === "warning_pending")
@@ -191,6 +179,7 @@ export async function evaluateRetentionItem(
     authorizedAt: timestamp.toISOString(),
     activePlayback: false,
     recoveryEpoch: epoch,
+    removalReason: "temporary_interest_released",
   };
   const graceUntil = new Date(evaluation.graceUntil);
   const warningAcceptedAt = new Date(
@@ -231,47 +220,32 @@ export async function evaluateRetentionItem(
   };
 }
 
+function authorityEdition(
+  authority: RetentionEvaluationAuthority,
+): MovieEditionKey {
+  return authority.scope?.edition ?? "default";
+}
+
 /** Every demand and watch row belongs to the selected edition's complete cohort. */
 async function retentionDemandFacts(
   tx: Prisma.TransactionClient,
   item: Media,
   authority: RetentionEvaluationAuthority,
+  recipientIds: readonly string[],
 ) {
-  const currentAsset = await currentFulfillmentAsset(
-    tx,
-    item.id,
-    authority.scope?.edition,
-  );
   const binding = authority.binding.members.find(
     (value) => value.authority.binding.scope.mediaId === item.id,
   );
   if (binding === undefined)
     throw new Error("Retention omitted a bound cohort member");
-  const fulfillment = new Map<
-    string,
-    Awaited<ReturnType<typeof requestFulfillment>>
-  >();
   const watches = new Map<
     string,
     Awaited<ReturnType<typeof boundRequesterWatch>>
   >();
-  for (const request of item.requests) {
-    fulfillment.set(
-      request.id,
-      await requestFulfillment(tx, {
-        kind: item.kind,
-        requestId: request.id,
-        currentAsset,
-        access: authority.movieAccess,
-        captureFreshness: authority.captureFreshness,
-        ...(authority.scope === undefined ? {} : { scope: authority.scope }),
-        ...(authority.budget === undefined ? {} : { budget: authority.budget }),
-      }),
-    );
+  for (const userId of recipientIds)
     watches.set(
-      request.userId,
-      await boundRequesterWatch(tx, binding, request.userId, authority.budget),
+      userId,
+      await boundRequesterWatch(tx, binding, userId, authority.budget),
     );
-  }
-  return { fulfillment, watches };
+  return watches;
 }

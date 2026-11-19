@@ -22,6 +22,8 @@ import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { createNotificationActivities } from "#automation/notifications.ts";
 import { observeRequesterWatch } from "#automation/watch.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
+import { queueOperation } from "#automation/store.ts";
 import {
   currentCuts,
   cutCanonical,
@@ -64,8 +66,25 @@ test.each(MovieEditionKeySchema.options)(
     const link = f.sent[0]?.text.split("\n").at(-1);
     if (link === undefined)
       throw new Error("Actual warning omitted its detail link");
+    expect(new URL(link).pathname).toBe(
+      f.source.user.role === "owner" ? "/library" : "/requests",
+    );
+    const beforeOpen = await f.db.mediaRequest.findUniqueOrThrow({
+      where: {
+        userId_mediaId_edition: {
+          userId: f.source.user.id,
+          mediaId: f.scope.mediaId,
+          edition,
+        },
+      },
+    });
     const page = await fetch(link);
     expect(page.status).toBe(200);
+    expect(
+      await f.db.mediaRequest.findUniqueOrThrow({
+        where: { id: beforeOpen.id },
+      }),
+    ).toEqual(beforeOpen);
     const history = await warningHistory(f.db, warning.decisionId);
     const publishedAt = f.asset.plexPublishedAt;
     if (publishedAt === null)
@@ -252,7 +271,57 @@ test.each(["unwatched", "pin", "session"] as const)(
   async (change) => {
     const f = await createMovieRetentionFixture("uncut_version", bytes);
     closers.push(f.close);
-    if (change === "unwatched") f.source.wire.setWatched(false);
+    let warningInput = f.input;
+    if (change === "unwatched") {
+      const request = await f.db.mediaRequest.findUniqueOrThrow({
+        where: {
+          userId_mediaId_edition: {
+            userId: f.source.user.id,
+            mediaId: f.scope.mediaId,
+            edition: f.scope.edition,
+          },
+        },
+      });
+      await new RequestInterestCommands(f.db, { keepDays: 30 }).execute(
+        f.source.user,
+        crypto.randomUUID(),
+        {
+          schemaVersion: 1,
+          requestId: request.id,
+          expectedVersion: request.version,
+          expectedInterestRevision: request.interestRevision,
+          action: "continue",
+        },
+      );
+      f.source.wire.setWatched(false);
+      expect(
+        await observeRequesterWatch(f.context, f.scope.mediaId, {
+          edition: f.scope.edition,
+        }),
+      ).toEqual({ complete: true, reason: null });
+      const target = await f.db.mediaIntent.findUniqueOrThrow({
+        where: {
+          mediaId_edition: {
+            mediaId: f.scope.mediaId,
+            edition: f.scope.edition,
+          },
+        },
+      });
+      const operationId = await f.db.$transaction((tx) =>
+        queueOperation(tx, {
+          key: `unwatched-warning:${crypto.randomUUID()}`,
+          kind: "retain_movie_edition_v4",
+          targetId: f.scope.mediaId,
+          payload: {
+            schemaVersion: 4,
+            scope: f.scope,
+            mediaId: f.scope.mediaId,
+            generation: target.generation,
+          },
+        }),
+      );
+      warningInput = { ...f.input, operationId, generation: target.generation };
+    }
     if (change === "pin")
       await f.db.retentionHold.create({
         data: {
@@ -268,7 +337,13 @@ test.each(["unwatched", "pin", "session"] as const)(
         type: "movie",
         title: "Synthetic active movie",
       });
-    expect(await f.warning()).toMatchObject({ status: "protected" });
+    expect(
+      await evaluateMovieRetentionV4(
+        f.context,
+        warningInput,
+        testPlexBindingExecution(),
+      ),
+    ).toMatchObject({ status: "protected" });
     expect(
       await f.db.retentionDecision.count({
         where: { mediaId: f.scope.mediaId },

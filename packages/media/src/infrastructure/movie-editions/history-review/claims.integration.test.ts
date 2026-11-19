@@ -58,7 +58,7 @@ test.each(["default", "directors_cut"] as const)(
         definitionDigest: selected.definitionDigest,
         registryVersion: context.registryVersion,
       },
-      options: { subtitleLanguages: ["en"] },
+      options: { subtitleLanguages: ["en"], keepingPolicy: "temporary" },
     });
     const request: MigrationRecord = {
       kind: "request",
@@ -298,7 +298,7 @@ async function assertDefaultRetentionAcceptance(
     ),
   ).toMatchObject({
     status: "protected",
-    reason: "owner_only_or_unclaimed",
+    reason: "library_kept_indefinitely",
   });
   expect(() => budget.consume(0)).not.toThrow();
   expect(

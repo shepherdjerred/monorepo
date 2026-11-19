@@ -72,6 +72,8 @@ test("real authenticated household release dispatches named retention through se
       starts.set(operationId, start.workflowId);
     });
     const f = scenario;
+    expect(f.input.operationId).not.toBe(f.releasedInput.operationId);
+    expect(f.input.generation).toBeGreaterThan(f.releasedInput.generation);
     const initial = await f.evidence();
     expect(initial.review.state).toBe("released");
     expect(initial.hold.releasedAt).toBeInstanceOf(Date);
@@ -103,6 +105,7 @@ test("real authenticated household release dispatches named retention through se
     });
     workers.push(files);
     running.push(files.run());
+    const obsolete = await assertObsoleteRelease(f);
     await waitFor(f, (evidence) => evidence.warnings.length === 1);
     const warningIds = await f.warningOperationIds();
     expect(warningIds).toHaveLength(1);
@@ -124,6 +127,13 @@ test("real authenticated household release dispatches named retention through se
     const accepted = await waitFor(f, (evidence) =>
       evidence.warnings.every((row) => row.state === "accepted"),
     );
+    expect(accepted.inAppWarnings).toHaveLength(1);
+    expect(accepted.inAppWarnings[0]).toMatchObject({
+      state: "pending",
+      acceptedAt: null,
+      providerReceipt: null,
+      attempts: 0,
+    });
     expect(accepted.messages).toHaveLength(1);
     expect(accepted.warnings[0]?.acceptedAt?.getTime()).toBeLessThanOrEqual(
       Date.now(),
@@ -158,10 +168,18 @@ test("real authenticated household release dispatches named retention through se
     expect(final.request).toEqual(f.request);
     expect(final.additions).toBe(0);
     expect(final.httpErrors).toEqual([]);
-    expect(starts.size).toBe(2);
+    expect(final.inAppWarnings).toEqual(accepted.inAppWarnings);
+    expect(final.releasedOperation.payload).toEqual(
+      obsolete.releasedOperation.payload,
+    );
+    expect(starts.size).toBe(3);
     for (const [operationId, workflowId] of starts) {
       const handle = environment.client.workflow.getHandle(workflowId);
-      expect(await handle.result()).toEqual({ status: "completed" });
+      expect(await handle.result()).toEqual(
+        operationId === f.releasedInput.operationId
+          ? { status: "obsolete", reason: "intent_obsolete" }
+          : { status: "completed" },
+      );
       const native = await handle.describe();
       expect(native.workflowId).toBe(`media-operation-${operationId}`);
       expect(native.runId).toMatch(
@@ -171,7 +189,11 @@ test("real authenticated household release dispatches named retention through se
       const history = await handle.fetchHistory();
       assertScopedMovieRetentionActivityBudgets(
         history,
-        operationId === f.input.operationId ? "retention" : "warning",
+        operationId === f.input.operationId
+          ? "retention"
+          : operationId === f.releasedInput.operationId
+            ? "obsolete"
+            : "warning",
       );
       await replay(historyToJSON(history), {
         node,
@@ -202,6 +224,22 @@ test("real authenticated household release dispatches named retention through se
     }
   }
 }, 60_000);
+
+async function assertObsoleteRelease(f: Scenario) {
+  // Network workers start only after the fixture's real new-generation setup;
+  // the old queued Activity therefore observes that exact obsolete generation.
+  const observed = await waitFor(
+    f,
+    (evidence) => evidence.releasedOperation.status === "completed",
+  );
+  expect(observed.releasedOperation.payload).toMatchObject({
+    generation: f.releasedInput.generation,
+  });
+  expect(observed.releasedOperation.result).toMatchObject({
+    reason: "intent_obsolete",
+  });
+  return observed;
+}
 
 async function waitFor(
   scenario: Scenario,

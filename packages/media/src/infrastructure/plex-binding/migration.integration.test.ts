@@ -1,9 +1,7 @@
-import { rm } from "node:fs/promises";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import type { Database } from "#infrastructure/database.ts";
-import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
 import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
 import { NativeRecoveryScopeSchema } from "#shared/native-recovery.ts";
 import {
@@ -18,19 +16,18 @@ import {
   readLegacyDefaultPlexDisplay,
 } from "./read.ts";
 import { readCompletedAcquisitionPlexPublication } from "./publication-receipt.ts";
+import { historicalPublicationFixture } from "#testing/historical/publication.ts";
 
 test("populated022 preserves literal history, movie birth and full watch fence while023 protects legacy display", async () => {
   const cluster = await startMediaTestPostgres({
     migrationCeiling: "20261017002200_movie_edition_choice",
   });
   const db = cluster.database;
-  let directory: string | undefined;
   try {
-    // Real explicit choice and physical FilePlan producer on the actual022 schema.
-    // Its injected media probe is synthetic; no live Plex verification is claimed.
-    const f = await mappedPublicationFixture(db);
-    directory = f.directory;
-    const published = await f.published();
+    // Literal old stored rows on the actual022 schema, with genuine native
+    // choice/attempt birth triggers. They confer no current physical/Plex grant.
+    const f = await historicalPublicationFixture(db);
+    const published = f.published;
     const asset = await db.libraryAsset.findUniqueOrThrow({
       where: { id: published.entry.assetId },
     });
@@ -40,6 +37,10 @@ test("populated022 preserves literal history, movie birth and full watch fence w
     expect(attempt.movieEditionChoiceId).not.toBeNull();
     expect(attempt.movieEditionAuthority).not.toBeNull();
     expect(attempt.filePlan).not.toBeNull();
+    expect(
+      await db.$queryRaw`SELECT to_jsonb(r) ? 'interestState' AS present
+      FROM "MediaRequest" r WHERE id=${attempt.sponsorRequestId}`,
+    ).toEqual([{ present: false }]);
     // Explicit pre023 display metadata, written once before the migration. It is
     // deliberately insufficient to authorize a serving binding after migration.
     await db.$transaction(async (tx) => {
@@ -127,8 +128,6 @@ test("populated022 preserves literal history, movie birth and full watch fence w
     expect(await rawHistory(db)).toEqual(before);
   } finally {
     await cluster.close();
-    if (directory !== undefined)
-      await rm(directory, { recursive: true, force: true });
   }
 }, 60_000);
 

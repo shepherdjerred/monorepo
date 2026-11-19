@@ -1,14 +1,21 @@
 import type { MediaActor } from "#application/auth.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { PlexClient } from "#integrations/plex.ts";
+import { z } from "zod";
 
 /** Synthetic requester transport only. Credentials and current access mappings
  * remain genuine database inputs to the production watch reader. The server
- * client supplies physical metadata, while this token owns its watch state. */
-export async function nativeSeriesPackRequesterWatchV1(
-  context: MediaAutomationContext,
-  requester: MediaActor,
-) {
+ * client supplies physical metadata, while each distinct token owns only its
+ * declared actor's watch state. */
+export async function nativeSeriesPackRequesterWatchV1(input: {
+  context: MediaAutomationContext;
+  user: MediaActor;
+  network: { actor: MediaActor };
+}) {
+  const { context } = input;
+  const requesters = [input.user, input.network.actor];
+  if (new Set(requesters.map((requester) => requester.id)).size !== 2)
+    throw new Error("Native watch requires both distinct household actors");
   const page = await context.plex.libraryPage({
     sectionId: "2",
     kind: "episode",
@@ -27,34 +34,41 @@ export async function nativeSeriesPackRequesterWatchV1(
         : [item.grandparentRatingKey]),
     ]),
   );
-  const token = `synthetic-native-requester-${crypto.randomUUID()}`;
-  await context.db.credential.upsert({
-    where: { userId_kind: { userId: requester.id, kind: "plex" } },
-    create: {
-      userId: requester.id,
-      kind: "plex",
-      ciphertext: context.cipher.encrypt(
-        JSON.stringify({ serverToken: token }),
-        `plex:${requester.plexAccountId}`,
-      ),
-    },
-    update: {
-      ciphertext: context.cipher.encrypt(
-        JSON.stringify({ serverToken: token }),
-        `plex:${requester.plexAccountId}`,
-      ),
-    },
-  });
-  return (requestedToken: string) => {
-    if (requestedToken !== token)
-      throw new Error(
-        "Native watch did not use its actual requester credential",
-      );
-    return new PlexClient(
+  const clients = new Map<string, PlexClient>();
+  for (const requester of requesters) {
+    const token = `synthetic-native-requester-${crypto.randomUUID()}`;
+    const prior = await context.db.credential.findUnique({
+      where: { userId_kind: { userId: requester.id, kind: "plex" } },
+    });
+    // The owner's earlier handoff claim reader still uses its account token.
+    // Add current server access without rewriting that payload or any receipt.
+    const existing =
+      prior === null
+        ? {}
+        : z
+            .record(z.string(), z.json())
+            .parse(
+              JSON.parse(
+                context.cipher.decrypt(
+                  prior.ciphertext,
+                  `plex:${requester.plexAccountId}`,
+                ),
+              ),
+            );
+    const ciphertext = context.cipher.encrypt(
+      JSON.stringify({ ...existing, serverToken: token }),
+      `plex:${requester.plexAccountId}`,
+    );
+    await context.db.credential.upsert({
+      where: { userId_kind: { userId: requester.id, kind: "plex" } },
+      create: { userId: requester.id, kind: "plex", ciphertext },
+      update: { ciphertext },
+    });
+    const client = new PlexClient(
       {
         baseUrl: "http://plex.fixture",
-        token: requestedToken,
-        clientIdentifier: "synthetic-native-requester-watch",
+        token,
+        clientIdentifier: `synthetic-native-requester-watch-${requester.id}`,
       },
       async (url, init) => {
         if (new Headers(init.headers).get("X-Plex-Token") !== token)
@@ -83,5 +97,14 @@ export async function nativeSeriesPackRequesterWatchV1(
         });
       },
     );
+    clients.set(token, client);
+  }
+  return (requestedToken: string) => {
+    const client = clients.get(requestedToken);
+    if (client === undefined)
+      throw new Error(
+        "Native watch did not use a declared actor's actual credential",
+      );
+    return client;
   };
 }

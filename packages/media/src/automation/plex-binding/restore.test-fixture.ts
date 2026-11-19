@@ -5,6 +5,7 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { PlexClient } from "#integrations/plex.ts";
 import { boundRetentionFixture } from "#automation/retention/lifecycle.test-fixture.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 
 let nextItem = 30_000;
 
@@ -23,17 +24,30 @@ export async function restoredPublicationFixture(
       throw new Error(
         `Actual fixture quarantine failed: ${JSON.stringify(removed)}`,
       );
-    const unknown = await f.observe(null);
-    if (unknown.some((value) => value.complete))
-      throw new Error("Missing quarantine metadata became a known watch value");
-    const unwatched = await f.observe(false);
-    if (unwatched.some((value) => !value.complete))
-      throw new Error("Exact quarantined false did not settle");
+    const prior = await db.operation.findMany({
+      where: { targetId: f.files.media.id },
+      select: { id: true },
+    });
+    const request = await db.mediaRequest.findUniqueOrThrow({
+      where: { id: f.files.request.id },
+    });
+    await new RequestInterestCommands(db, { keepDays: 30 }).execute(
+      f.files.user,
+      crypto.randomUUID(),
+      {
+        schemaVersion: 1,
+        requestId: request.id,
+        expectedVersion: request.version,
+        expectedInterestRevision: request.interestRevision,
+        action: "continue",
+      },
+    );
     const restoreOperation = await db.operation.findFirstOrThrow({
       where: {
         kind: "restore_media",
         targetId: f.files.media.id,
-        idempotencyKey: { startsWith: "plex-unwatched-restore:" },
+        id: { notIn: prior.map((row) => row.id) },
+        payload: { path: ["requestId"], equals: request.id },
       },
     });
     const input = z

@@ -1,11 +1,13 @@
 import { Worker } from "@temporalio/worker";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
 import type { MediaNetworkActivities } from "@shepherdjerred/media/automation";
+import { createMediaFileActivities } from "@shepherdjerred/media/automation/files";
 import {
   createMovieNetworkWorkerActivitiesV4,
   createMovieFileWorkerActivitiesV4,
 } from "#activities/media/movie-editions.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { compensationCall } from "#activities/media/compensation-execution.ts";
 
 type NetworkMovie = Awaited<
   ReturnType<Parameters<typeof createMovieNetworkWorkerActivitiesV4>[0]>
@@ -20,6 +22,7 @@ export async function startMovieRoleActivitiesV4(
   scenario: {
     movie: NetworkMovie;
     fileMovie: FileMovie;
+    fileContext: Parameters<typeof createMediaFileActivities>[0];
     finishMediaOperation: MediaNetworkActivities["finishMediaOperation"];
   },
   roles: { workers: Worker[]; running: Promise<void>[] },
@@ -45,9 +48,30 @@ export async function startMovieRoleActivitiesV4(
     connection: environment.nativeConnection,
     namespace: "dev",
     taskQueue: TASK_QUEUES.MEDIA_FILES,
-    activities: createMovieFileWorkerActivitiesV4(() =>
-      Promise.resolve({ movie: scenario.fileMovie }),
-    ),
+    activities: {
+      ...createMovieFileWorkerActivitiesV4(() =>
+        Promise.resolve({ movie: scenario.fileMovie }),
+      ),
+      prepareSubtitleSpeechV1: (
+        input: Parameters<
+          ReturnType<
+            typeof createMediaFileActivities
+          >["prepareSubtitleSpeechV1"]
+        >[0],
+      ) => {
+        const observed = { wall: Date.now(), monotonic: performance.now() };
+        return compensationCall((execution) =>
+          createMediaFileActivities({
+            ...scenario.fileContext,
+            publicationExecution: () => ({
+              ...execution,
+              observed,
+              checkpoint: () => execution.checkpoint("subtitle-speech"),
+            }),
+          }).prepareSubtitleSpeechV1(input),
+        );
+      },
+    },
   });
   roles.workers.push(files);
   roles.running.push(files.run());

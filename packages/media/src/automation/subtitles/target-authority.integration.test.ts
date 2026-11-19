@@ -2,10 +2,14 @@ import { expect, test } from "vitest";
 import { createSubtitleActivities } from "#automation/subtitles.ts";
 import { fromOpenSubtitles, fromAssrt } from "#automation/subtitle-sources.ts";
 import { z } from "zod";
-import type { FetchTransport } from "#integrations/http.ts";
+import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { regularDialogueCovered } from "#domain/subtitle-speech.ts";
+import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { MediaRequestCommands } from "#infrastructure/request-commands.ts";
 import { createSweepActivities } from "#automation/sweeps.ts";
+import type { SubtitlePolicyTargetSchema } from "#shared/subtitle-policy.ts";
 import { targetHarness, subtitleTransport } from "./target-fixture.ts";
 import {
   currentSubtitleWork,
@@ -15,36 +19,30 @@ import {
 
 const harness = targetHarness();
 
-test("an ordinary language-only request queues ASSRT and installs proven Simplified Chinese without inventing forced or HI flags", async () => {
-  const f = await harness.setup();
-  await f.db.mediaSubtitlePolicyVersion.create({
+function recordPolicyTargets(
+  f: Awaited<ReturnType<typeof harness.setup>>,
+  targets: z.infer<typeof SubtitlePolicyTargetSchema>[],
+) {
+  return f.db.mediaSubtitlePolicyVersion.create({
     data: {
       mediaId: f.media.id,
       actorId: f.user.id,
       version: 1,
       recoveryEpoch: 0,
       source: { fixture: true },
-      rules: { schemaVersion: 1, protectedReasons: [], targets: [] },
+      rules: { schemaVersion: 1, protectedReasons: [], targets },
     },
   });
+}
+
+test("an ordinary language-only request queues ASSRT and installs proven Simplified Chinese without inventing forced or HI flags", async () => {
+  const f = await harness.setup();
+  await recordPolicyTargets(f, []);
   await f.db.mediaRequest.update({
     where: { id: f.request.id },
     data: { subtitleLanguages: ["zh-Hans"] },
   });
-  const credential = await f.db.credential.create({
-    data: {
-      kind: "provider",
-      ciphertext: harness.cipher.encrypt(
-        JSON.stringify({ token: "fixture" }),
-        "provider:assrt",
-      ),
-    },
-  });
-  await f.db.mediaProvider.upsert({
-    where: { id: "assrt" },
-    create: { id: "assrt", enabled: true, credentialId: credential.id },
-    update: { enabled: true, credentialId: credential.id },
-  });
+  const { transport, calls } = await harness.assrt(f.db);
   expect(await f.queue()).toBe(1);
   const operation = await f.db.operation.findFirstOrThrow({
     where: { kind: "acquire_subtitles", targetId: f.asset.id },
@@ -63,34 +61,6 @@ test("an ordinary language-only request queues ASSRT and installs proven Simplif
       ? {}
       : { targetAuthority: parsed.targetAuthority }),
   };
-  const calls: string[] = [];
-  const transport: FetchTransport = (url) => {
-    calls.push(url.pathname);
-    return Promise.resolve(
-      url.hostname === "api.assrt.net"
-        ? Response.json({
-            status: 0,
-            sub: {
-              subs: [
-                {
-                  id: 42,
-                  videoname: "人工翻译",
-                  producer: { source: "人工翻译" },
-                  filelist: [
-                    {
-                      f: "Film.2026.1080p.WEB-GROUP.zh-Hans.srt",
-                      url: "https://file0.assrt.net/fixture",
-                    },
-                  ],
-                },
-              ],
-            },
-          })
-        : new Response(
-            "1\n00:00:01,000 --> 00:00:02,000\n这是我们的国家，欢迎来到这里\n",
-          ),
-    );
-  };
   const found = await createSubtitleActivities(f.network, {
     assrt: (context, search) => fromAssrt(context, search, transport),
   }).findMediaSubtitles(input);
@@ -101,16 +71,20 @@ test("an ordinary language-only request queues ASSRT and installs proven Simplif
       subtitleId: found.subtitleId ?? "missing",
     }),
   ).toEqual({ status: "installed" });
-  expect(
-    await f.db.subtitleAsset.findUniqueOrThrow({
-      where: { id: found.subtitleId ?? "missing" },
-    }),
-  ).toMatchObject({
+  const installed = await f.db.subtitleAsset.findUniqueOrThrow({
+    where: { id: found.subtitleId ?? "missing" },
+  });
+  expect(installed).toMatchObject({
     state: "installed",
     qualityStatus: "accepted",
     forced: null,
     hearingImpaired: null,
   });
+  const installedPath = workerFilePath(
+    f.context,
+    z.string().parse(installed.path),
+  );
+  const installedBytes = await readFile(installedPath);
   expect(
     subtitleTargetsReady(await currentSubtitleWork(f.db, f.asset.id, 0), 0),
   ).toBe(true);
@@ -154,20 +128,177 @@ test("an ordinary language-only request queues ASSRT and installs proven Simplif
     data: { nextAllowedAt: new Date(0) },
   });
   const count = calls.length;
+  const regular = await createSubtitleActivities(f.network, {
+    assrt: (context, search) => fromAssrt(context, search, transport),
+  }).findMediaSubtitles({
+    operationId: exact.id,
+    assetId: f.asset.id,
+    language: "zh-Hans",
+    forced: false,
+    hearingImpaired: "any",
+    targetAuthority: work.authority,
+  });
+  expect(regular.status).toBe("found");
+  expect(regular.subtitleId).not.toBe(installed.id);
+  expect(calls.length).toBeGreaterThan(count);
+  expect(calls.slice(count)).toContain("/fixture");
   expect(
-    await createSubtitleActivities(f.network, {
-      assrt: (context, search) => fromAssrt(context, search, transport),
-    }).findMediaSubtitles({
-      operationId: exact.id,
-      assetId: f.asset.id,
+    await f.db.subtitleAsset.findUniqueOrThrow({
+      where: { id: regular.subtitleId ?? "missing" },
+    }),
+  ).toMatchObject({
+    state: "validated",
+    forced: null,
+    hearingImpaired: null,
+    matchingEvidence: {
+      targetAuthority: work.authority,
+      regularDialogueRequiredV1: true,
+    },
+  });
+  expect(
+    subtitleTargetsReady(await currentSubtitleWork(f.db, f.asset.id, 0), 0),
+  ).toBe(false);
+  expect(
+    await f.db.subtitleAsset.findUniqueOrThrow({ where: { id: installed.id } }),
+  ).toEqual(installed);
+  expect(await readFile(installedPath)).toEqual(installedBytes);
+});
+
+test("regular Simplified Chinese becomes ready only after real speech proof and Files installation", async () => {
+  const f = await harness.setup({ speechVideo: true });
+  const videoBytes = await readFile(workerFilePath(f.context, f.asset.path));
+  expect(videoBytes).toEqual(
+    Buffer.from(z.instanceof(Uint8Array).parse(f.videoBytes)),
+  );
+  expect(createHash("sha256").update(videoBytes).digest("hex")).toBe(
+    f.asset.checksum,
+  );
+  await recordPolicyTargets(f, [
+    {
+      sourceItemId: 1,
       language: "zh-Hans",
+      audioLanguage: "zh",
       forced: false,
       hearingImpaired: "any",
+      audio: "any",
+    },
+  ]);
+  const provider = await harness.assrt(f.db);
+  expect(await f.queue()).toBe(1);
+  const [input] = await f.inputs();
+  if (input === undefined) throw new Error("No regular Chinese target");
+  const work = await currentSubtitleWork(f.db, f.asset.id, 0);
+  const found = await createSubtitleActivities(f.network, {
+    assrt: (context, search) => fromAssrt(context, search, provider.transport),
+  }).findMediaSubtitles(input);
+  expect(found.status).toBe("found");
+  const subtitleId = z.uuid().parse(found.subtitleId);
+  const before = await f.db.subtitleAsset.findUniqueOrThrow({
+    where: { id: subtitleId },
+  });
+  expect(before).toMatchObject({
+    state: "validated",
+    forced: null,
+    hearingImpaired: null,
+    matchingEvidence: {
       targetAuthority: work.authority,
+      regularDialogueRequiredV1: true,
+    },
+  });
+  expect(
+    subtitleTargetsReady(await currentSubtitleWork(f.db, f.asset.id, 0), 0),
+  ).toBe(false);
+  const files = createMediaFileActivities(f.context);
+  await files.prepareSubtitleSpeechV1({
+    subtitleId,
+    operationId: input.operationId,
+  });
+  const measured = await f.db.subtitleAsset.findUniqueOrThrow({
+    where: { id: subtitleId },
+  });
+  const evidence = z
+    .record(z.string(), z.json())
+    .parse(measured.matchingEvidence);
+  expect(
+    regularDialogueCovered(
+      evidence["regularDialogueV1"],
+      f.asset.checksum,
+      measured.checksum,
+    ),
+  ).toBe(true);
+  expect(evidence["timingAlignedV1"]).toMatchObject({
+    videoChecksum: f.asset.checksum,
+    subtitleChecksum: measured.checksum,
+    engine: "ffsubsync-0.5.1",
+    goldenSectionRequested: true,
+    fixFrameRate: false,
+  });
+  expect(measured).toMatchObject({
+    state: "validated",
+    qualityStatus: "accepted",
+    forced: null,
+    hearingImpaired: null,
+  });
+  expect(
+    subtitleTargetsReady(await currentSubtitleWork(f.db, f.asset.id, 0), 0),
+  ).toBe(false);
+  expect(
+    await files.installMediaSubtitles({
+      subtitleId,
+      operationId: input.operationId,
     }),
-  ).toMatchObject({ status: "waiting", reason: "unsupported-target" });
-  expect(calls).toHaveLength(count);
+  ).toEqual({ status: "installed" });
+  const installed = await f.db.subtitleAsset.findUniqueOrThrow({
+    where: { id: subtitleId },
+  });
+  expect(installed).toMatchObject({
+    state: "installed",
+    forced: null,
+    hearingImpaired: null,
+    checksum: measured.checksum,
+    matchingEvidence: evidence,
+  });
+  expect(
+    await readFile(workerFilePath(f.context, z.string().parse(installed.path))),
+  ).toEqual(Buffer.from(z.instanceof(Uint8Array).parse(measured.content)));
+  expect(
+    subtitleTargetsReady(await currentSubtitleWork(f.db, f.asset.id, 0), 0),
+  ).toBe(true);
+  expect(provider.calls).toContain("/fixture");
 });
+
+test.each([
+  { forced: true, hearingImpaired: "any" as const },
+  { forced: false, hearingImpaired: "required" as const },
+])(
+  "ASSRT preserves unsupported exact constraints $forced/$hearingImpaired before provider calls",
+  async (target) => {
+    const f = await harness.setup();
+    const provider = await harness.assrt(f.db);
+    await recordPolicyTargets(f, [
+      {
+        sourceItemId: 1,
+        language: "zh-Hans",
+        audioLanguage: "zh",
+        audio: "any",
+        ...target,
+      },
+    ]);
+    expect(await f.queue()).toBe(1);
+    const [input] = await f.inputs();
+    if (input === undefined) throw new Error("No exact Chinese target");
+    expect(
+      await createSubtitleActivities(f.network, {
+        assrt: (context, search) =>
+          fromAssrt(context, search, provider.transport),
+      }).findMediaSubtitles(input),
+    ).toMatchObject({ status: "waiting", reason: "unsupported-target" });
+    expect(provider.calls).toEqual([]);
+    expect(
+      subtitleTargetsReady(await currentSubtitleWork(f.db, f.asset.id, 0), 0),
+    ).toBe(false);
+  },
+);
 
 test("audio exemptions omit targets while unknown required audio remains visible protection", async () => {
   const f = await harness.setup();
@@ -221,29 +352,16 @@ test("audio exemptions omit targets while unknown required audio remains visible
 
 test("hearing-impaired required metadata cannot be replaced by ordinary captions", async () => {
   const f = await harness.setup();
-  await f.db.mediaSubtitlePolicyVersion.create({
-    data: {
-      mediaId: f.media.id,
-      actorId: f.user.id,
-      version: 1,
-      recoveryEpoch: 0,
-      source: { fixture: true },
-      rules: {
-        schemaVersion: 1,
-        protectedReasons: [],
-        targets: [
-          {
-            sourceItemId: 1,
-            language: "en",
-            audioLanguage: "en",
-            forced: false,
-            hearingImpaired: "required",
-            audio: "any",
-          },
-        ],
-      },
+  await recordPolicyTargets(f, [
+    {
+      sourceItemId: 1,
+      language: "en",
+      audioLanguage: "en",
+      forced: false,
+      hearingImpaired: "required",
+      audio: "any",
     },
-  });
+  ]);
   await f.queue();
   const [input] = await f.inputs();
   if (input === undefined) throw new Error("No target");

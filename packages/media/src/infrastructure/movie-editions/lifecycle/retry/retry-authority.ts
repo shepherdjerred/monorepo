@@ -95,6 +95,7 @@ export async function movieRetryAuthorityV4(
         ...current.rules,
       },
       [scope.mediaId],
+      "listing",
     ).accepted
   )
     throw new MediaError(

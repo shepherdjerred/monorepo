@@ -6,6 +6,10 @@ import type {
   ResolvedRelease,
   SourceQuality,
 } from "./resolved-contract.ts";
+import {
+  canonicalLanguage,
+  originalAudioPresence,
+} from "./quality-guide/language.ts";
 
 const SOURCES = {
   radarr: [
@@ -38,6 +42,7 @@ export const SUPPORTED_SPECIFICATIONS = new Set([
   "SourceSpecification",
   "QualityModifierSpecification",
   "ResolutionSpecification",
+  "LanguageSpecification",
 ]);
 
 function or(matches: Match[]): Match {
@@ -56,11 +61,31 @@ function numericMatch(expected: unknown, actual: number | undefined): Match {
     return "unknown";
   return actual === expected ? "match" : "no_match";
 }
+function originalLanguageMatch(
+  release: ResolvedRelease,
+  provisional: boolean,
+): Match {
+  if (
+    release.originalLanguage === null ||
+    canonicalLanguage(release.originalLanguage) === null
+  )
+    return "unknown";
+  const presence = originalAudioPresence(
+    release.originalLanguage,
+    release.audioLanguages,
+  );
+  if (presence === "unknown") return provisional ? "match" : "unknown";
+  return presence === "present" ? "match" : "no_match";
+}
 function matchValue(
   spec: FormatSpecification,
   release: ResolvedRelease,
   quality: SourceQuality,
-  context: { profile: ResolvedProfile; matcher: RegexMatcher },
+  context: {
+    profile: ResolvedProfile;
+    matcher: RegexMatcher;
+    phase: "listing" | "measured";
+  },
 ): Match {
   const { profile, matcher } = context;
   const field = spec.fields[0];
@@ -89,6 +114,17 @@ function matchValue(
         : "unknown";
     case "ResolutionSpecification":
       return numericMatch(value, quality.resolution);
+    case "LanguageSpecification": {
+      // The selected guide uses only Original (-2). Other Arr language IDs
+      // require an explicit catalog and are never guessed from their names.
+      return value === -2
+        ? originalLanguageMatch(
+            release,
+            context.phase === "listing" &&
+              profile.householdPolicy?.provisionalUnknownListingAudio === true,
+          )
+        : "unknown";
+    }
     default:
       return "unknown";
   }
@@ -97,7 +133,11 @@ function specificationMatch(
   spec: FormatSpecification,
   release: ResolvedRelease,
   quality: SourceQuality,
-  context: { profile: ResolvedProfile; matcher: RegexMatcher },
+  context: {
+    profile: ResolvedProfile;
+    matcher: RegexMatcher;
+    phase: "listing" | "measured";
+  },
 ): Match {
   const result = matchValue(spec, release, quality, context);
   if (result === "unknown" || !spec.negate) return result;
@@ -117,8 +157,13 @@ export function calculateResolvedScore(
   profile: ResolvedProfile,
   release: ResolvedRelease,
   quality: SourceQuality,
-  matcher: RegexMatcher,
+  matching:
+    RegexMatcher | { matcher: RegexMatcher; phase: "listing" | "measured" },
 ): { score: number; matched: number[]; unknown: number[] } {
+  const { matcher, phase } =
+    typeof matching === "function"
+      ? { matcher: matching, phase: "measured" as const }
+      : matching;
   let score = 0;
   const matched: number[] = [];
   const unknown: number[] = [];
@@ -142,6 +187,7 @@ export function calculateResolvedScore(
             result: specificationMatch(spec, release, quality, {
               profile,
               matcher,
+              phase,
             }),
           })),
         ),

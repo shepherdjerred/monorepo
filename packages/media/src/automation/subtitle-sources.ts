@@ -11,29 +11,16 @@ import { extractSubtitleArchive } from "#filesystem/subtitle-archive.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import type { FetchTransport } from "#integrations/http.ts";
 import type { SubtitleTarget } from "#domain/subtitle-quality.ts";
+import {
+  subtitleProviderCandidateAllowedV1,
+  type SubtitleSource,
+  type SubtitleSearch,
+} from "#domain/subtitle-maintenance/provider.ts";
+import {
+  openSubtitlesCatalogEvidenceV1,
+  openSubtitlesSearchInputV1,
+} from "#automation/subtitle-maintenance/provider-evidence.ts";
 
-export type SubtitleSource = {
-  filename: string;
-  description: string;
-  bytes: Uint8Array<ArrayBuffer>;
-  actualLanguage: string;
-  forced: boolean | null;
-  hearingImpaired: boolean | null;
-  declaredEncoding?: "utf8" | "utf-16le" | "utf-16be" | "gb18030";
-};
-export type SubtitleSearch = SubtitleTarget & {
-  operationId: string;
-  sourceFilename: string;
-  query: string;
-  language: string;
-  season?: number;
-  episode?: number;
-  /** Invocation-local capability; never a Workflow payload or persisted browser state. */
-  downloadAuthority?: {
-    authorize: () => Promise<void>;
-    assertActive: () => void;
-  };
-};
 const normalize = (name: string) =>
   nodePath
     .basename(name)
@@ -124,18 +111,27 @@ export async function claimSubtitleDownload(
       .parse(operation.result ?? {});
     if (existing.subtitleDownload !== undefined)
       throw new IntegrationError(providerId, "outcome-unknown");
+    const eventId = crypto.randomUUID();
+    const requestedAt = new Date().toISOString();
     const claim = {
       subtitleDownload: {
+        eventId,
         providerId,
         candidateId,
-        requestedAt: new Date().toISOString(),
+        requestedAt,
       },
     };
     await tx.$executeRaw`UPDATE "Operation" SET result = COALESCE(result, '{}'::jsonb) || ${JSON.stringify(claim)}::jsonb, "updatedAt" = NOW() WHERE id = ${operation.id}`;
     await tx.applicationEvent.create({
       data: {
+        id: eventId,
         kind: "subtitle_download_requested",
-        payload: { operationId: operation.id, providerId, candidateId },
+        payload: {
+          operationId: operation.id,
+          providerId,
+          candidateId,
+          requestedAt,
+        },
       },
     });
   });
@@ -157,19 +153,9 @@ export async function fromOpenSubtitles(
     .parse(await subtitleCredential(context, "opensubtitles"));
   const provider = new OpenSubtitlesProvider(credential, transport);
   await provider.login(credential.username, credential.password);
-  const language = ["zh-Hans", "zh-CN"].includes(input.language)
-    ? "zh-cn"
-    : input.language;
-  const result = await provider.search({
-    query: input.query,
-    language,
-    ...(input.forced === undefined ? {} : { forced: input.forced }),
-    ...(input.hearingImpaired === undefined
-      ? {}
-      : { hearingImpaired: input.hearingImpaired }),
-    ...(input.season === undefined ? {} : { season: input.season }),
-    ...(input.episode === undefined ? {} : { episode: input.episode }),
-  });
+  const search = openSubtitlesSearchInputV1(input);
+  const { language } = search;
+  const result = await provider.search(search);
   for (const candidate of result.candidates.slice(0, 10)) {
     if (candidate.attributes.language !== language) continue;
     if (
@@ -183,6 +169,14 @@ export async function fromOpenSubtitles(
       subtitleVersionMatches(file.file_name, input.sourceFilename),
     );
     if (files.length !== 1 || files[0] === undefined) continue;
+    if (
+      !subtitleProviderCandidateAllowedV1(
+        input,
+        "opensubtitles",
+        String(files[0].file_id),
+      )
+    )
+      continue;
     await claimSubtitleDownload(
       context,
       input,
@@ -198,6 +192,10 @@ export async function fromOpenSubtitles(
       actualLanguage: input.language,
       forced: candidate.attributes.foreign_parts_only ?? null,
       hearingImpaired: candidate.attributes.hearing_impaired ?? null,
+      ...openSubtitlesCatalogEvidenceV1(
+        input,
+        candidate.attributes.feature_details,
+      ),
     };
   }
   return null;
@@ -223,6 +221,14 @@ export async function fromAssrt(
         subtitleVersionMatches(file.f, input.sourceFilename),
       ) ?? [];
     if (members.length !== 1 || members[0] === undefined) continue;
+    if (
+      !subtitleProviderCandidateAllowedV1(
+        input,
+        "assrt",
+        `${String(candidate.id)}:${members[0].f}`,
+      )
+    )
+      continue;
     await claimSubtitleDownload(
       context,
       input,
@@ -245,13 +251,28 @@ export async function fromAssrt(
 export function subtitleMetadataMatches(
   target: SubtitleTarget,
   source: { forced: boolean | null; hearingImpaired: boolean | null },
+  allowMeasuredRegular = false,
 ): boolean {
   return (
-    (target.forced === undefined || source.forced === target.forced) &&
+    (target.forced === undefined ||
+      source.forced === target.forced ||
+      (allowMeasuredRegular &&
+        !target.forced &&
+        source.forced === null &&
+        ["en", "zh-CN", "zh-Hans"].includes(target.language))) &&
     (target.hearingImpaired !== "required" ||
       source.hearingImpaired === true) &&
     (target.hearingImpaired !== "excluded" || source.hearingImpaired === false)
   );
+}
+
+export function regularDialogueRequirement(
+  target: SubtitleTarget,
+  source: { forced: boolean | null },
+) {
+  return target.forced === false && source.forced === null
+    ? { regularDialogueRequiredV1: true }
+    : {};
 }
 
 export function requireUntargetedProvider(
@@ -259,7 +280,7 @@ export function requireUntargetedProvider(
   providerId: string,
 ): void {
   if (
-    target.forced !== undefined ||
+    target.forced === true ||
     (target.hearingImpaired !== undefined && target.hearingImpaired !== "any")
   )
     throw new IntegrationError(providerId, "unsupported-target");

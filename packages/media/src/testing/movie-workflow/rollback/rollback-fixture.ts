@@ -1,16 +1,16 @@
 import { z } from "zod";
-import { expect } from "vitest";
 import { readFile } from "node:fs/promises";
-import { createAcquiredMovieUpgradeFixture } from "#testing/movie-workflow/upgrade-fixture.ts";
+import {
+  createAcquiredMovieUpgradeFixture,
+  acquireMovieFixture,
+  publishMovieFixtureFiles,
+} from "#testing/movie-workflow/upgrade-fixture.ts";
 import {
   MovieEditionKeySchema,
   type MovieEditionKey,
 } from "#shared/movie-editions/registry.ts";
 import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import { MoviePublicationIntentV2Schema } from "#shared/movie-editions/publication-v2.ts";
-import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
-import { testPublicationExecution } from "#testing/publication-execution.ts";
-import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { createMovieNetworkFacetV4 } from "#automation/movie-editions/activities.ts";
 import { PlexClient } from "#integrations/plex.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
@@ -33,42 +33,8 @@ export async function createMovieRollbackFixture(
   const f = await createAcquiredMovieUpgradeFixture(edition, bytes);
   try {
     const db = f.context.db;
-    const acquired = await f.movie.reconcileMovieIntentV4(
-      f.input,
-      testPlexBindingExecution(),
-    );
-    expect(acquired.status).toBe("acquire");
-    const input = {
-      schemaVersion: 4 as const,
-      operationId: f.input.operationId,
-      attemptId: z.uuid().parse(acquired.attemptId),
-      scope: f.scope,
-    };
-    expect(
-      await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
-    ).toEqual({ status: "submitted", reason: null });
-    expect(
-      await f.movie.observeMovieAcquisitionV4(
-        input,
-        testPlexBindingExecution(),
-      ),
-    ).toEqual({ status: "ready", reason: null });
-    expect(
-      await f.fileMovie.inspectAndStageMovieV4(
-        input,
-        testPublicationExecution(),
-      ),
-    ).toEqual({ status: "staged" });
-    expect(
-      await f.fileMovie.prepareMoviePublicationV4(
-        input,
-        testPublicationExecution(),
-        new PublicationAuthorityReadBudget(),
-      ),
-    ).toEqual({ status: "prepared" });
-    expect(
-      await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
-    ).toEqual({ status: "published" });
+    const input = await acquireMovieFixture(f);
+    await publishMovieFixtureFiles(f, input);
     const source = await db.acquisitionAttempt.findUniqueOrThrow({
       where: { id: input.attemptId },
     });

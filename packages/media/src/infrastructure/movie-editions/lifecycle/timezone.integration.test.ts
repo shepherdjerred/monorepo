@@ -80,7 +80,7 @@ test("public v4 request and explicit owner restore dispatch immediately in Tokyo
       definitionDigest: option.definitionDigest,
       registryVersion: context.registryVersion,
     },
-    options: { subtitleLanguages: ["en"] },
+    options: { subtitleLanguages: ["en"], keepingPolicy: "temporary" as const },
   };
   const requestKey = crypto.randomUUID();
   const requested = await commands.requestMovieEditionV4(

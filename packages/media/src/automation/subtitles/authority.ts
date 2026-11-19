@@ -2,6 +2,7 @@ import { z } from "zod";
 import { defaultIntent, assertDefaultEdition } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { currentSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
+import { householdCaptionRequirements } from "#infrastructure/quality-guide/captions.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
@@ -116,7 +117,15 @@ export async function currentSubtitleWork(
       coverage: {
         where: { current: true },
         include: {
-          media: { include: { intents: { where: { edition: "default" } } } },
+          media: {
+            include: {
+              intents: {
+                where: { edition: "default" },
+                include: { profile: true },
+              },
+              parent: { include: { parent: true } },
+            },
+          },
         },
       },
     },
@@ -146,6 +155,20 @@ export async function currentSubtitleWork(
   );
   const requirements = policyRequirements(policies, audio ?? null, epoch);
   const { reasons } = requirements;
+  const household = await Promise.all(
+    asset.coverage.map(async ({ media }) => {
+      const series =
+        media.parent?.kind === "series" ? media.parent : media.parent?.parent;
+      const requirement = await householdCaptionRequirements(
+        tx,
+        defaultIntent(media.intents)?.profile ?? null,
+        media.originalLanguage ?? series?.originalLanguage ?? null,
+      );
+      targets.push(...requirement.targets);
+      reasons.push(...requirement.reasons);
+      return { mediaId: media.id, ...requirement.binding };
+    }),
+  );
   if (
     await hasPendingSeriesPackPublicationV1(tx, {
       mediaIds: ids,
@@ -177,6 +200,7 @@ export async function currentSubtitleWork(
     checksum: asset.checksum,
     epoch,
     audio,
+    household: household.sort((a, b) => a.mediaId.localeCompare(b.mediaId)),
     coverage: asset.coverage
       .map((item) => ({
         mediaId: item.mediaId,

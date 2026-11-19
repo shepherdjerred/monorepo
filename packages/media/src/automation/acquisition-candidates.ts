@@ -11,10 +11,15 @@ import {
 import type { QualityProfile, ReleaseAttributes } from "#shared/contract.ts";
 import { matchRelease } from "#domain/release-parser.ts";
 import { chooseUpgrade } from "#domain/quality.ts";
+import { compareProviderCandidates } from "#domain/provider-selection.ts";
+import { selectProviderCandidate } from "./provider-selection.ts";
 import { ProviderIdSchema } from "./providers.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
-import { currentMeasuredQuality } from "./acquisition-management/current-quality.ts";
+import {
+  currentMeasuredQuality,
+  currentDefaultCoverageQuery,
+} from "./acquisition-management/current-quality.ts";
 import { EpisodeNumberingSchema } from "#shared/numbering.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { canonicalReferences } from "#infrastructure/acquisition-identity/references.ts";
@@ -57,21 +62,9 @@ export async function currentRelease(
   mediaId: string,
   budget?: PublicationAuthorityReadBudget,
 ): Promise<ReleaseAttributes | null> {
-  const coverage = await context.db.assetCoverage.findFirst({
-    where: { mediaId, edition: "default", current: true },
-    include: {
-      asset: {
-        include: {
-          coverage: {
-            where: { current: true },
-            include: {
-              media: { include: { parent: { include: { parent: true } } } },
-            },
-          },
-        },
-      },
-    },
-  });
+  const coverage = await context.db.assetCoverage.findFirst(
+    currentDefaultCoverageQuery(mediaId),
+  );
   if (coverage === null) return null;
   const measured = PublicReleaseAttributesSchema.extend({
     id: z.string(),
@@ -242,6 +235,7 @@ async function storeCandidate(
     );
   }
   const evaluation = chooseUpgrade({
+    phase: "listing",
     candidate: attributes,
     ...policy,
     mediaIds: [target.identity.id],
@@ -260,17 +254,19 @@ async function storeCandidate(
   });
   if (!edition.accepted) return null;
   const authoritative = chooseUpgrade({
+    phase: "listing",
     candidate: stored,
     ...policy,
     mediaIds: [target.identity.id],
   });
-  return authoritative.upgrade
-    ? {
-        id: stored.id,
-        rank: authoritative.evaluation.qualityRank,
-        score: authoritative.evaluation.score,
-      }
-    : null;
+  return selectProviderCandidate(context, {
+    releaseId: stored.id,
+    mediaId: target.identity.id,
+    profile: policy.profile,
+    rank: authoritative.evaluation.qualityRank,
+    upgrade: authoritative.upgrade,
+    score: authoritative.evaluation.score,
+  });
 }
 function packRuntime(
   runtimes: ReadonlyMap<string, number | null>,
@@ -318,7 +314,12 @@ export async function searchCandidates(
     where: { enabled: true, id: { in: ProviderIdSchema.options } },
     orderBy: { id: "asc" },
   });
-  const accepted: { id: string; rank: number; score: number }[] = [];
+  const accepted: {
+    id: string;
+    rank: number;
+    score: number;
+    priority: number;
+  }[] = [];
   const current = await currentRelease(context, mediaId);
   for (const provider of providers) {
     try {
@@ -350,10 +351,7 @@ export async function searchCandidates(
     }
   }
   return accepted
-    .sort(
-      (a, b) =>
-        b.rank - a.rank || b.score - a.score || a.id.localeCompare(b.id),
-    )
+    .sort(compareProviderCandidates)
     .map((candidate) => candidate.id);
 }
 function applyCatalogIdentity(

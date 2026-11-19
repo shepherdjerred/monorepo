@@ -6,7 +6,7 @@ import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { assertAcquisition } from "#automation/files/guards.ts";
 import { assertPlanEdition } from "./acquisition.ts";
-import { assertProfile } from "#automation/files/quality-guard.ts";
+import { assertProfile } from "#automation/files/quality-guide/guard.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { ORDINARY_STAGING_BATCH_SIZE } from "#shared/acquisition/ordinary-staging.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";

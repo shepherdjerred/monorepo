@@ -1,6 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import { defaultIntent, assertDefaultEdition } from "#shared/editions/scope.ts";
-import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
+import { retentionRequestWhere } from "#infrastructure/request-claims.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { PlexIdentitySchema } from "#automation/watch.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
@@ -10,7 +10,7 @@ export const mediaInclude = {
   requests: {
     where: {
       OR: [
-        effectiveRequestWhere,
+        retentionRequestWhere,
         {
           edition: { not: "default" },
           media: { kind: "movie" },

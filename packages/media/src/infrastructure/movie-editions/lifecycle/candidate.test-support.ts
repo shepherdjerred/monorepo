@@ -16,6 +16,7 @@ export async function retainedMovieCandidate(
   context: MediaAutomationContext,
   input: {
     edition?: MovieEditionKey;
+    releaseGroup?: string;
     media: { id: string; title: string; year: number | null };
     profile: { id: string; version: number; rules: unknown };
     source: {
@@ -36,7 +37,7 @@ export async function retainedMovieCandidate(
         hits: [
           {
             id: providerReleaseId,
-            title: `${input.media.title}.${String(input.media.year)}${cut.length === 0 ? "" : `.${cut}`}.1080p.WEB-DL.H264.ENG`,
+            title: `${input.media.title}.${String(input.media.year)}${cut.length === 0 ? "" : `.${cut}`}.1080p.WEB-DL.H264${input.releaseGroup === undefined ? "" : `-${input.releaseGroup}`}.ENG`,
             bytes: input.source.sizeBytes,
             hash: input.source.infoHash,
             seeders: 5,

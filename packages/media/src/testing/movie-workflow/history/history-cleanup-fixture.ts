@@ -54,9 +54,19 @@ export async function createMovieHistoryCleanupFixture(bytes: {
       plex: originalWire.plex,
       userPlex: originalWire.userPlex,
     }).evaluateMovieRetentionV4(retentionInput, testPlexBindingExecution());
+    expect(
+      await f.db.mediaIntent.findUniqueOrThrow({
+        where: {
+          mediaId_edition: {
+            mediaId: f.scope.mediaId,
+            edition: f.scope.edition,
+          },
+        },
+      }),
+    ).toMatchObject({ libraryKeep: true, libraryPolicyExplicit: false });
     expect(evaluated).toMatchObject({
       status: "protected",
-      reason: "owner_only_or_unclaimed",
+      reason: "library_kept_indefinitely",
     });
     await createOutboxActivities(f.db, () =>
       Promise.reject(new Error("No synthetic workflow terminal state")),

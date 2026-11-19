@@ -10,7 +10,7 @@ import {
   nativeJson,
 } from "#infrastructure/native-recovery/snapshots.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { chooseTestMovieEdition } from "./test-support.ts";
+import { chooseHistoricalTestMovieEdition } from "#testing/historical/movie-choice.ts";
 import { captureMovieAttemptChoice } from "./authority.ts";
 
 test("populated021 request/attempt projections remain literal; historical NULL birth can never be attached", async () => {
@@ -129,7 +129,7 @@ test("populated021 request/attempt projections remain literal; historical NULL b
       version: 4,
     });
     const access = { serverMachineId: "migration-server", movieSectionId: "1" };
-    const chosen = await chooseTestMovieEdition(db, {
+    const chosen = await chooseHistoricalTestMovieEdition(db, {
       actor,
       mediaId: media.id,
       access,
@@ -159,6 +159,10 @@ test("populated021 request/attempt projections remain literal; historical NULL b
       }),
     ).toEqual(migrated);
     expect(chosen.result.requestId).toBe(request.id);
+    expect(
+      await db.$queryRaw`SELECT to_jsonb(r) ? 'interestState' AS present
+      FROM "MediaRequest" r WHERE id=${request.id}`,
+    ).toEqual([{ present: false }]);
     const fresh = await db.acquisitionAttempt.create({
       data: {
         ...fields,

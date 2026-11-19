@@ -7,6 +7,9 @@ import { fileFixture } from "#automation/files/test-support.ts";
 import { queueCurrentSubtitleTargets } from "./queue.ts";
 import { SubtitleWorkSchema } from "./authority.ts";
 import type { FetchTransport } from "#integrations/http.ts";
+import type { Database } from "#infrastructure/database.ts";
+import { movieVideoFixture } from "#testing/movie-video.ts";
+import { inspectMedia } from "#filesystem/media-tools.ts";
 
 export const SubtitleInputSchema = SubtitleWorkSchema.extend({
   operationId: z.string(),
@@ -22,16 +25,23 @@ export function targetHarness() {
     for (const directory of directories)
       await rm(directory, { recursive: true, force: true });
   });
-  async function setup() {
+  async function setup(options: { speechVideo?: boolean } = {}) {
     const db = harness.database();
-    const f = await fileFixture(db);
+    const content =
+      options.speechVideo === true
+        ? await movieVideoFixture(1920, [], { speech: true })
+        : undefined;
+    const f = await fileFixture(db, undefined, {
+      sourceFilename: "Test.Film.2026.1080p.WEB-DL.H264-GROUP.mkv",
+      ...(content === undefined ? {} : { sourceContent: content }),
+    });
     directories.push(f.directory);
+    if (options.speechVideo === true) f.context.inspect = inspectMedia;
     const video = await f.published();
     const asset = await db.libraryAsset.update({
       where: { id: video.entry.assetId },
       data: {
         plexPublishedAt: new Date(),
-        sourcePath: "/downloads/Film.2026.1080p.WEB-GROUP.mkv",
       },
     });
     await db.mediaItem.update({
@@ -110,12 +120,61 @@ export function targetHarness() {
       video,
       asset,
       policy,
+      videoBytes: content,
       queue,
       inputs,
       network: harness.context(),
     };
   }
-  return { ...harness, setup };
+  async function assrt(db: Database) {
+    const credential = await db.credential.create({
+      data: {
+        kind: "provider",
+        ciphertext: harness.cipher.encrypt(
+          JSON.stringify({ token: "fixture" }),
+          "provider:assrt",
+        ),
+      },
+    });
+    await db.mediaProvider.upsert({
+      where: { id: "assrt" },
+      create: { id: "assrt", enabled: true, credentialId: credential.id },
+      update: { enabled: true, credentialId: credential.id },
+    });
+    await db.providerLease.deleteMany({
+      where: { providerId: "assrt" },
+    });
+    const calls: string[] = [];
+    const text =
+      "1\n00:00:00,000 --> 00:00:01,000\n这是我们的国家，欢迎来到这里\n";
+    const transport: FetchTransport = (url) => {
+      calls.push(url.pathname);
+      return Promise.resolve(
+        url.hostname === "api.assrt.net"
+          ? Response.json({
+              status: 0,
+              sub: {
+                subs: [
+                  {
+                    id: 42,
+                    videoname: "人工翻译",
+                    producer: { source: "人工翻译" },
+                    filelist: [
+                      {
+                        f: "Test.Film.2026.1080p.WEB-DL.H264-GROUP.zh-Hans.srt",
+                        url: "https://file0.assrt.net/fixture",
+                      },
+                    ],
+                  },
+                ],
+              },
+            })
+          : new Response(text),
+      );
+    };
+    return { transport, calls };
+  }
+  return { ...harness, setup, assrt };
 }
 
 export function subtitleTransport(
@@ -136,7 +195,7 @@ export function subtitleTransport(
       const input = z.object({ file_id: z.number() }).parse(body);
       return Response.json({
         link: `https://dl.opensubtitles.com/${String(input.file_id)}.srt`,
-        file_name: `Film.2026.1080p.WEB-GROUP.en${input.file_id === 2 ? ".forced" : ""}.srt`,
+        file_name: `Test.Film.2026.1080p.WEB-DL.H264-GROUP.en${input.file_id === 2 ? ".forced" : ""}.srt`,
       });
     }
     if (url.hostname === "dl.opensubtitles.com")
@@ -173,7 +232,7 @@ function searchResponse(
           files: [
             {
               file_id: forced ? 2 : 1,
-              file_name: `Film.2026.1080p.WEB-GROUP.en${forced ? ".forced" : ""}.srt`,
+              file_name: `Test.Film.2026.1080p.WEB-DL.H264-GROUP.en${forced ? ".forced" : ""}.srt`,
             },
           ],
         },

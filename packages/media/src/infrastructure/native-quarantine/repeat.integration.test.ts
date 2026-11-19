@@ -207,7 +207,9 @@ test.each([
   async (mode) => {
     const f = await fixture();
     const restore = await f.positiveRestore();
-    await f.activities.restoreNativeQuarantineFiles(restore);
+    expect(await f.activities.restoreNativeQuarantineFiles(restore)).toEqual({
+      status: "restored",
+    });
     const media = await f.db.mediaItem.findUniqueOrThrow({
       where: { id: f.file.media.id },
     });

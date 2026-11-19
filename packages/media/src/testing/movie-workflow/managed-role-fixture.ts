@@ -31,6 +31,7 @@ export async function createManagedMovieWorkflowFixture(
       input: fixture.input,
       movie: fixture.movie,
       fileMovie: fixture.fileMovie,
+      fileContext: fixture.files,
       originalAssetId: fixture.asset.id,
       receiptId: fixture.receiptId,
       finishMediaOperation: completion.finishMediaOperation,

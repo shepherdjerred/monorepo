@@ -2,14 +2,13 @@ import { z } from "zod";
 import { hasPendingSeriesPackPublicationV1 } from "#infrastructure/acquisition-identity/series-pack/publication/fence.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import {
-  allRequestersWatched,
+  allHouseholdInterestsReleased,
   type RequesterWatchContext,
 } from "./requester-watch.ts";
 import { eligibleRequester, isReadiness } from "./readiness.ts";
 import { defaultIntent } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { CredentialCipher } from "#application/security.ts";
-import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import {
   OwnerHealthSchema,
@@ -20,6 +19,7 @@ import {
   currentSubtitleWork,
   subtitleTargetsReady,
 } from "#automation/subtitles/authority.ts";
+import { messageBindingCurrent } from "./binding-current.ts";
 import { assertBoundMediaCohort } from "#automation/retention/binding.ts";
 import { assertRetentionPlexProjection } from "#infrastructure/plex-binding/retention.ts";
 import { readMovieNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
@@ -38,6 +38,8 @@ import { readMovieInterventionNoticeV4 } from "#shared/movie-editions/interventi
 import { composeMovieInterventionV4 } from "#automation/movie-editions/notifications/intervention/message.ts";
 import type { PreparedMovieInterventionV4 } from "#automation/movie-editions/notifications/intervention/authority.ts";
 import { personalTarget } from "./recipient.ts";
+import { composeInterestCheck } from "./interest-check.ts";
+import { householdRetentionState } from "#infrastructure/request-interest/protection.ts";
 
 export const ItemSchema = z.object({
   mediaId: z.string(),
@@ -108,31 +110,18 @@ export async function composeMessage(
       },
       delivery,
     );
-  if (
-    isReadiness(delivery.event.kind) ||
-    delivery.event.kind === "retention_warning"
-  ) {
-    if (context.binding === undefined) return null;
-    await assertBoundMediaCohort(
-      tx,
-      context.binding.cohort,
-      context.binding.freshness,
-    );
-    if (
-      context.binding.cohort.original.some(
-        (value) => value.authority.purpose !== "current_serving",
-      )
-    )
-      return null;
-    context.captureFreshness?.(context.binding.freshness);
-  }
+  if (!(await messageBindingCurrent(tx, context, delivery))) return null;
   if (delivery.channel === "discord_shared")
-    return sharedMessage(tx, context, delivery);
+    return delivery.event.kind === "interest_check"
+      ? null
+      : sharedMessage(tx, context, delivery);
   if (
     delivery.channel === "discord" &&
     (await context.personalDiscordAvailable?.()) !== true
   )
     return null;
+  if (delivery.event.kind === "interest_check")
+    return composeInterestCheck(tx, context.publicOrigin, delivery);
   if (delivery.event.kind === "email_verification")
     return verification(tx, context, delivery);
   const target = personalTarget(delivery);
@@ -438,18 +427,17 @@ async function warning(
     context.binding.freshness,
     context.binding.budget,
   );
-  const claim = await tx.mediaRequest.findFirst({
-    where: {
-      userId: delivery.userId,
-      mediaId: decision.mediaId,
-      ...effectiveRequestWhere,
-      edition,
-    },
-  });
+  const household = await householdRetentionState(
+    tx,
+    decision.mediaId,
+    edition,
+  );
   if (
-    claim === null ||
-    delivery.user.role === "owner" ||
-    !(await allRequestersWatched(tx, context))
+    household.reason !== null ||
+    !household.recipients.some(
+      (recipient) => recipient.userId === delivery.userId,
+    ) ||
+    !(await allHouseholdInterestsReleased(tx, context))
   )
     return null;
   const title =
@@ -459,7 +447,7 @@ async function warning(
   return {
     ...target,
     subject: `Media: ${title.slice(0, 160)}`,
-    text: `${title} is eligible for removal after at least seven days. Open Media to confirm Keep or pin it.\n${new URL(`/media/${encodeURIComponent(decision.mediaId)}`, context.publicOrigin).toString()}`,
+    text: `${title} has no permanent Keep or remaining interested requester. It can leave the library after at least seven days, then stays recoverable for another seven days. Choose Keep watching in My requests to renew your interest${delivery.user.role === "owner" ? ", or Keep indefinitely in Library to keep it permanently" : ""}. Opening this link changes nothing.\n${new URL(delivery.user.role === "owner" ? "/library" : "/requests", context.publicOrigin).toString()}`,
   };
 }
 

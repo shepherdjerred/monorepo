@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, expect, test } from "vitest";
+import { z } from "zod";
 import { createMovieRetentionFixture } from "#testing/movie-workflow/retention-fixture.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
@@ -9,7 +10,11 @@ import { queueOperation } from "#automation/store.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { NativeArchiveScopeProtection } from "#infrastructure/native-archive/errors.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { evaluateMovieRetentionV4 } from "./evaluate.ts";
+import { observeRequesterWatch } from "#automation/watch.ts";
+import { reconcileRequestInterests } from "#infrastructure/request-interest/reconcile.ts";
+import { nativeInterestFacts } from "#infrastructure/request-interest/facts.ts";
 
 const closers: (() => Promise<void>)[] = [];
 let bytes: Uint8Array;
@@ -39,12 +44,67 @@ async function addRequester(f: Fixture) {
       ),
     },
   });
-  await requestTestMovieV4(
+  const created = await requestTestMovieV4(
     f.db,
     { ...user, role: "member" },
     f.scope.mediaId,
     f.scope.edition,
   );
+  return z.uuid().parse(created.result.requestId);
+}
+
+/** Release only this newly added request through actual native watch and reconciliation. */
+async function completeNewRequester(f: Fixture, requestId: string) {
+  const request = await f.db.mediaRequest.findUniqueOrThrow({
+    where: { id: requestId },
+  });
+  expect(request).toMatchObject({
+    interestState: "following",
+    interestReleasedAt: null,
+  });
+  const now = new Date();
+  const facts = await f.db.$transaction((tx) =>
+    nativeInterestFacts(tx, request, now),
+  );
+  expect(facts).toMatchObject({
+    watchedComplete: true,
+    completionComplete: true,
+    requestedCoverageComplete: true,
+    usableUnwatched: false,
+  });
+  // A newly observed native progress record can require the producer's progress
+  // checkpoint before its separate completion checkpoint, as in the shared fixture.
+  const newProgress =
+    facts.progressAt !== null &&
+    facts.progressAt > (request.lastMeaningfulProgressAt?.getTime() ?? 0);
+  const cycles = newProgress ? 2 : 1;
+  for (let cycle = 0; cycle < cycles; cycle++) {
+    const predecessor = await f.db.mediaRequest.findFirst({
+      where: { id: { lt: requestId } },
+      orderBy: { id: "desc" },
+      select: { id: true },
+    });
+    expect(
+      await reconcileRequestInterests(f.db, {
+        cursor: predecessor?.id ?? null,
+        now,
+      }),
+    ).toEqual({ processed: 1, nextCursor: requestId });
+    if (newProgress && cycle === 0)
+      expect(
+        await f.db.mediaRequest.findUniqueOrThrow({ where: { id: requestId } }),
+      ).toMatchObject({
+        interestState: "following",
+        interestRevision: request.interestRevision + 1,
+        lastMeaningfulProgressAt: new Date(z.number().parse(facts.progressAt)),
+      });
+  }
+  expect(
+    await f.db.mediaRequest.findUniqueOrThrow({ where: { id: requestId } }),
+  ).toMatchObject({
+    interestState: "finished",
+    interestReleaseReason: "watched",
+  });
 }
 
 async function warning(f: Fixture) {
@@ -159,50 +219,90 @@ test("an explicit authority-budget failure before the warning attempt rolls back
   expect(await originalHistory(f, decisionId)).toEqual(history);
 }, 60_000);
 
-test("the original warning allowance spans a real household claim and rejects exhaustion before the second composition can send", async () => {
+test("the original warning allowance accounts cumulatively for both real household compositions and the accepted send", async () => {
   const f = await createMovieRetentionFixture("extended_cut", bytes, false);
   closers.push(f.close);
-  for (let index = 0; index < 4; index++) await addRequester(f);
+  const requestIds: string[] = [];
+  for (let index = 0; index < 4; index++)
+    requestIds.push(await addRequester(f));
+  expect(
+    await observeRequesterWatch(f.context, f.scope.mediaId, {
+      edition: f.scope.edition,
+    }),
+  ).toEqual({ complete: true, reason: null });
+  for (const requestId of requestIds) await completeNewRequester(f, requestId);
   const { delivery, command, decisionId } = await warning(f);
   const history = await originalHistory(f, decisionId);
+  const execution = testPlexBindingExecution();
+  const budget = new PublicationAuthorityReadBudget();
+  expect(budget.take).toBe(101);
+  // Each composition rechecks binding twice (4), projection (1), and five
+  // requester associations (15): 2 preparation + 20 + 20 = 42 records.
   let claimed = false;
-  expect(
-    await createNotificationActivities({
-      ...f.context,
-      checkpoint: () => {
-        claimed = true;
-        return Promise.resolve();
-      },
-    }).deliverMediaNotification({
-      operationId: command.id,
-      notificationId: delivery.id,
-    }),
-  ).toEqual({ status: "failed", reason: "authority_changed_before_send" });
+  const claimTakes: number[] = [];
+  const sendTakes: number[] = [];
+  const sendAfterClaim: boolean[] = [];
+  let receipt: string | undefined;
+  const outcome = await createNotificationActivities({
+    ...f.context,
+    plexBindingExecution: () => execution,
+    movieManagement: { execution, budget },
+    checkpoint: () => {
+      claimTakes.push(budget.take);
+      claimed = true;
+      return Promise.resolve();
+    },
+    notify: async (message, options) => {
+      sendAfterClaim.push(claimed);
+      sendTakes.push(budget.take);
+      const sent = await f.context.notify(message, options);
+      receipt = sent.receipt;
+      return sent;
+    },
+  }).deliverMediaNotification({
+    operationId: command.id,
+    notificationId: delivery.id,
+  });
+  // Assertions stay outside the application's delivery error boundary so a
+  // mismatched charge exposes every captured boundary instead of becoming unknown.
+  expect({
+    outcome,
+    claimTakes,
+    sendTakes,
+    sendAfterClaim,
+    finalTake: budget.take,
+  }).toEqual({
+    outcome: { status: "accepted", reason: null },
+    claimTakes: [79],
+    sendTakes: [59],
+    sendAfterClaim: [true],
+    finalTake: 59,
+  });
   expect(claimed).toBe(true);
-  expect(f.sent).toHaveLength(0);
-  expect(
-    await f.db.notificationDelivery.findUniqueOrThrow({
-      where: { id: delivery.id },
-    }),
-  ).toMatchObject({
-    state: "failed",
+  expect(f.sent).toHaveLength(1);
+  const actualReceipt = z.string().min(1).parse(receipt);
+  const accepted = await f.db.notificationDelivery.findUniqueOrThrow({
+    where: { id: delivery.id },
+  });
+  expect(accepted).toMatchObject({
+    state: "accepted",
     attempts: 1,
-    failureReason: "authority_changed_before_send",
-    providerReceipt: null,
-    acceptedAt: null,
+    failureReason: null,
+    providerReceipt: actualReceipt,
+    acceptedAt: expect.any(Date),
   });
   const attempts = await f.db.notificationDeliveryAttempt.findMany({
     where: { deliveryId: delivery.id },
   });
   expect(attempts).toHaveLength(1);
   expect(attempts[0]).toMatchObject({
-    state: "rejected",
-    rejectionReason: "authority_changed_before_send",
-    providerReceipt: null,
+    state: "accepted",
+    rejectionReason: null,
+    providerReceipt: actualReceipt,
   });
   const attempt = attempts[0];
   if (attempt?.finishedAt == null)
-    throw new Error("Rejected warning attempt omitted its finish time");
+    throw new Error("Accepted warning attempt omitted its finish time");
   expect(attempt.finishedAt.getTime()).toBeGreaterThanOrEqual(
     attempt.startedAt.getTime(),
   );

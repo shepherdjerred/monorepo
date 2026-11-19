@@ -52,8 +52,8 @@ import {
   registerNumberingRoutes,
   type NumberingAdministration,
 } from "./numbering-routes.ts";
-import { z } from "zod";
 import type { MediaActor } from "#application/auth.ts";
+import { z } from "zod";
 import type { MediaAuth } from "#application/media-auth.ts";
 import { MediaError } from "#application/errors.ts";
 import { registerCapacityRoutes } from "./capacity-routes.ts";
@@ -67,8 +67,28 @@ import type {
   MediaApplication,
 } from "#application/ports.ts";
 import { CreateRequestSchema } from "#shared/contract.ts";
+import type { PlaybackHistoryApplication } from "#application/playback-ports.ts";
+import { registerPlaybackRoutes } from "./household/playback.ts";
+import { registerCalendarRoutes } from "./household/calendar.ts";
+import { registerRemovalHistoryRoutes } from "./household/removals.ts";
+import type { PrismaCalendarApplication } from "#infrastructure/library/views/calendar.ts";
+import type { PrismaRemovalHistoryApplication } from "#infrastructure/library/views/removals.ts";
+import { registerLibraryRoutes } from "./household/library.ts";
+import { registerCatalogRoutes } from "./catalog/routes.ts";
+import type { PrismaLibraryApplication } from "#infrastructure/library/views/library.ts";
+import {
+  registerRequestInterestRoutes,
+  type RequestInterestApplication,
+} from "./household/interests.ts";
+import { registerQualityGuideRoutes } from "./quality-guide/routes.ts";
 import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
-import { parseInput, readJson, readCookie } from "./validation.ts";
+import {
+  parseInput,
+  readJson,
+  readCookie,
+  CancelSchema,
+  RestrictSchema,
+} from "./validation.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
 import {
   SaveQualityProfileSchema,
@@ -81,6 +101,12 @@ export type MediaAppDependencies = {
     "start" | "poll" | "authenticate" | "verifyCsrf" | "logout"
   >;
   media: MediaApplication;
+  playback?: PlaybackHistoryApplication;
+  calendar?: Pick<PrismaCalendarApplication, "list">;
+  removalHistory?: Pick<PrismaRemovalHistoryApplication, "list">;
+  library?: Pick<PrismaLibraryApplication, "list">;
+  requestInterests?: RequestInterestApplication;
+  qualityGuide?: Parameters<typeof registerQualityGuideRoutes>[1];
   movieLifecycle?: MovieLifecycleApplicationV4;
   externalLibrary?: ExternalLibraryAdministration;
   movieHistory?: MovieHistoryAdministration;
@@ -105,17 +131,6 @@ export type MediaAppDependencies = {
   onError: (error: Error, requestId: string) => void;
   afterWrite?: () => Promise<void>;
 };
-
-const CancelSchema = z
-  .object({ expectedVersion: z.number().int().nonnegative() })
-  .strict();
-const RestrictSchema = CancelSchema.extend({ restricted: z.boolean() });
-const AdoptSchema = z
-  .object({
-    kind: z.enum(["movie", "series"]),
-    externalId: z.number().int().positive(),
-  })
-  .strict();
 
 export function createMediaApp(dependencies: MediaAppDependencies) {
   const app = new Hono<{
@@ -233,6 +248,18 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     await next();
   });
   app.get("/api/v1/me", (c) => c.json(c.get("actor")));
+  if (dependencies.playback !== undefined)
+    registerPlaybackRoutes(app, dependencies.playback);
+  if (dependencies.calendar !== undefined)
+    registerCalendarRoutes(app, dependencies.calendar);
+  if (dependencies.removalHistory !== undefined)
+    registerRemovalHistoryRoutes(app, dependencies.removalHistory);
+  if (dependencies.library !== undefined)
+    registerLibraryRoutes(app, dependencies.library);
+  if (dependencies.requestInterests !== undefined)
+    registerRequestInterestRoutes(app, dependencies.requestInterests);
+  if (dependencies.qualityGuide !== undefined)
+    registerQualityGuideRoutes(app, dependencies.qualityGuide);
   registerRecoveryRoutes(app, dependencies.recoveryAdmin);
   registerCapacityRoutes(app, dependencies.capacityAdmin);
   registerLegacyRequesterBindingRoutes(
@@ -253,35 +280,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
         503,
       );
   };
-  app.get("/api/v1/catalog/search", async (c) =>
-    c.json(
-      await dependencies.catalog.search(
-        parseInput(z.string().min(1).max(200), c.req.query("q")),
-      ),
-    ),
-  );
-  app.get("/api/v1/catalog/:kind/:id", async (c) =>
-    c.json(
-      await dependencies.catalog.details(
-        parseInput(z.enum(["movie", "series"]), c.req.param("kind")),
-        parseInput(z.coerce.number().int().positive(), c.req.param("id")),
-      ),
-    ),
-  );
-  app.post("/api/v1/catalog/adopt", async (c) => {
-    await requireRequestsEnabled();
-    const input = parseInput(AdoptSchema, await readJson(c.req.raw));
-    if (c.get("actor").restricted)
-      throw new MediaError(
-        "requests_restricted",
-        "This account cannot add catalog items",
-        403,
-      );
-    return c.json(
-      await dependencies.catalog.adopt(input.kind, input.externalId),
-      201,
-    );
-  });
+  registerCatalogRoutes(app, dependencies.catalog, requireRequestsEnabled);
   app.get("/api/v1/requests", async (c) =>
     c.json(await dependencies.media.listRequests(c.get("actor"))),
   );

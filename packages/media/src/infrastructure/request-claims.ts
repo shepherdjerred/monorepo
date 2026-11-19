@@ -1,4 +1,34 @@
-import { Prisma } from "#generated/prisma/client.ts";
+import { Prisma, type MediaRequest } from "#generated/prisma/client.ts";
+
+type FollowingInterest = Pick<
+  MediaRequest,
+  "active" | "excluded" | "direct" | "interestState"
+>;
+
+/** Caller supplies its already locked, exact edition/media/source scope.
+ * Personal direct release does not withdraw another current container interest. */
+export function hasFollowingRequestInterest(
+  request: FollowingInterest & {
+    coverageSources: readonly {
+      active: boolean;
+      rootRequest: FollowingInterest;
+    }[];
+  },
+): boolean {
+  return (
+    request.active &&
+    !request.excluded &&
+    ((request.direct && request.interestState === "following") ||
+      request.coverageSources.some(
+        (source) =>
+          source.active &&
+          source.rootRequest.active &&
+          !source.rootRequest.excluded &&
+          source.rootRequest.direct &&
+          source.rootRequest.interestState === "following",
+      ))
+  );
+}
 
 /** Root cancellation removes authority immediately, before paginated cleanup. */
 export const effectiveRequestWhere = {
@@ -6,12 +36,36 @@ export const effectiveRequestWhere = {
   active: true,
   excluded: false,
   OR: [
-    { direct: true },
+    { direct: true, interestState: "following" },
     {
       coverageSources: {
         some: {
           edition: "default",
           active: true,
+          rootRequest: {
+            edition: "default",
+            active: true,
+            excluded: false,
+            direct: true,
+            interestState: "following",
+          },
+        },
+      },
+    },
+  ],
+} satisfies Prisma.MediaRequestWhereInput;
+
+/** Playback/removal explanations retain released interests and their expanded
+ * coverage. This is observation authority only, never acquisition authority. */
+export const retentionRequestWhere = {
+  edition: "default",
+  excluded: false,
+  OR: [
+    { direct: true, active: true },
+    {
+      coverageSources: {
+        some: {
+          edition: "default",
           rootRequest: {
             edition: "default",
             active: true,

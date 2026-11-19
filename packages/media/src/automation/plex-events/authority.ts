@@ -9,7 +9,7 @@ import {
 import { MediaError } from "#application/errors.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import {
-  effectiveRequestWhere,
+  retentionRequestWhere,
   lockEffectiveRequests,
 } from "#infrastructure/request-claims.ts";
 import {
@@ -19,6 +19,7 @@ import {
 } from "#shared/plex-events/contract.ts";
 import { watchAwait, type WatchExecution } from "./execution.ts";
 import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
+import { householdRetentionState } from "#infrastructure/request-interest/protection.ts";
 import {
   captureWatchBindingScope,
   readWatchBinding,
@@ -202,10 +203,16 @@ export async function lockWatchAuthority(
         mediaId: { in: mediaIds },
         ...requestWhere,
       },
-      select: { userId: true },
+      include: { coverageSources: { include: { rootRequest: true } } },
     }),
   );
-  const ids = [...new Set(cohortClaims.map((claim) => claim.userId))].sort();
+  const household = await householdRetentionState(tx, media.id, edition);
+  const ids = [
+    ...new Set([
+      ...cohortClaims.map((claim) => claim.userId),
+      ...household.recipients.map((recipient) => recipient.userId),
+    ]),
+  ].sort();
   if (ids.length > 0) {
     await watchAwait(
       execution,
@@ -236,10 +243,11 @@ export async function lockWatchAuthority(
   );
   if (users.length !== ids.length)
     throw new Error("Watch requester disappeared");
-  const selectedUsers = new Set(claims.map((claim) => claim.userId));
-  const participants = users.filter(
-    (user) => user.role !== "owner" && selectedUsers.has(user.id),
-  );
+  const selectedUsers = new Set([
+    ...claims.map((claim) => claim.userId),
+    ...household.recipients.map((recipient) => recipient.userId),
+  ]);
+  const participants = users.filter((user) => selectedUsers.has(user.id));
   const assets = scope.bindingScope.assetIds;
   await watchAwait(
     execution,
@@ -336,6 +344,9 @@ export async function lockWatchAuthority(
     binding,
     scope,
     hintCurrent,
+    household,
+    claims,
+    cohortClaims,
     ...nativeCompensationMetadata(compensation),
   };
 }
@@ -373,7 +384,7 @@ async function lockWatchRequests(
 
 function watchRequests(edition: MovieEditionKey) {
   return edition === "default"
-    ? effectiveRequestWhere
+    ? retentionRequestWhere
     : { edition, active: true, excluded: false, direct: true };
 }
 

@@ -3,6 +3,7 @@ import { captureSeerr } from "./seerr-capture.ts";
 import { captureBazarr } from "./bazarr-capture.ts";
 import { validateCapture } from "./capture-validation.ts";
 import { normalizeCapture } from "#migration/normalize.ts";
+import { captureGetFixture as fetcher } from "./capture.test-fixture.ts";
 import compatibility from "#migration/fixtures/capture-compatibility.json" with { type: "json" };
 
 const source = {
@@ -10,24 +11,6 @@ const source = {
   baseUrl: "http://127.0.0.1:1234",
   apiKey: "synthetic-private-key",
 };
-function fetcher(reply: (url: URL) => unknown): typeof fetch {
-  return Object.assign(
-    async (
-      input: Parameters<typeof fetch>[0],
-      init?: Parameters<typeof fetch>[1],
-    ) => {
-      expect(init?.method).toBe("GET");
-      return Response.json(
-        reply(new URL(input instanceof Request ? input.url : input)),
-      );
-    },
-    {
-      preconnect() {
-        /* Fixture has no network. */
-      },
-    },
-  );
-}
 function seerrReply(url: URL) {
   if (url.pathname.endsWith("status"))
     return { version: compatibility.seerr.version };
@@ -96,6 +79,41 @@ test("restricted Seerr inventory and changing page totals cannot claim completen
   );
   expect(validateCapture(incomplete).complete).toBe(false);
 });
+test.each([1, 2, 3, 4, 5])(
+  "Seerr capture retains request and season status %i without confusing fulfillment with viewing",
+  async (status) => {
+    const capture = await captureSeerr(
+      { ...source, source: "seerr" },
+      fetcher((url) => {
+        const reply = seerrReply(url);
+        if (!url.pathname.endsWith("request")) return reply;
+        return {
+          pageInfo: { results: 1, page: 1 },
+          results: [
+            {
+              id: 4,
+              type: "tv",
+              status,
+              media: { tmdbId: 45, tvdbId: 46 },
+              requestedBy: { id: 17 },
+              seasons: [{ seasonNumber: 1, status }],
+            },
+          ],
+        };
+      }),
+    );
+    expect(validateCapture(capture)).toMatchObject({
+      complete: true,
+      stable: true,
+    });
+    expect(capture.records[0]).toMatchObject({
+      sourceStatus: status,
+      seasonStatuses: [{ season: 1, status }],
+      active: status === 2 || status === 5,
+      seasons: status === 2 || status === 5 ? [1] : [],
+    });
+  },
+);
 function bazarrReply(url: URL) {
   if (url.pathname.endsWith("status"))
     return {

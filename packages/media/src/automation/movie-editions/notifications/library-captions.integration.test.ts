@@ -5,7 +5,10 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
-import { libraryBindingFixture } from "#automation/plex-binding/library.test-fixture.ts";
+import {
+  libraryBindingFixture,
+  libraryCaptionFilename,
+} from "#automation/plex-binding/library.test-fixture.ts";
 import { verifyLibraryPlexBinding } from "#automation/plex-binding/library.ts";
 import { LibraryPlexBindingInputV1Schema } from "#shared/plex-binding/activities.ts";
 import {
@@ -25,7 +28,6 @@ import { captionProviderFixture } from "./caption-provider.test-fixture.ts";
 const h = automationTestHarness();
 const directories: string[] = [];
 const closers: (() => Promise<void>)[] = [];
-const downloadOperations: string[] = [];
 let bytes: Uint8Array;
 beforeAll(async () => {
   bytes = await movieVideoFixture();
@@ -34,16 +36,6 @@ afterEach(async () => {
   for (const close of closers.splice(0)) await close();
   for (const directory of directories.splice(0))
     await rm(directory, { recursive: true, force: true });
-  const operations = downloadOperations.splice(0);
-  if (operations.length > 0)
-    await h.database().applicationEvent.deleteMany({
-      where: {
-        kind: "subtitle_download_requested",
-        OR: operations.map((operationId) => ({
-          payload: { path: ["operationId"], equals: operationId },
-        })),
-      },
-    });
 });
 
 test.each(MovieEditionKeySchema.options)(
@@ -56,7 +48,7 @@ test.each(MovieEditionKeySchema.options)(
       (directory) => {
         directories.push(directory);
       },
-      { bytes },
+      { bytes, fileName: libraryCaptionFilename(edition) },
     );
     const scope = {
       mediaId: f.network.media.id,
@@ -110,8 +102,11 @@ test.each(MovieEditionKeySchema.options)(
       orderBy: { id: "asc" },
     });
     expect(rows).toHaveLength(2);
-    downloadOperations.push(...rows.map((row) => row.id));
-    const sources = await captionProviderFixture(f.context);
+    // Preserve actual download journals across every edition case.
+    const sources = await captionProviderFixture(
+      f.context,
+      MovieEditionKeySchema.options.length * 2,
+    );
     for (const row of rows) {
       const target = MovieSubtitleOperationV4Schema.parse(
         z.object(MovieSubtitleOperationV4Schema.shape).parse(row.payload),

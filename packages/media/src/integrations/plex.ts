@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PlexViewCountSchema } from "#shared/plex-binding/completion.ts";
 import {
   MovieEditionKeySchema,
   MOVIE_EDITION_REGISTRY,
@@ -29,7 +30,7 @@ const ItemSchema = z.object({
   index: z.number().int().optional(),
   parentIndex: z.number().int().optional(),
   year: z.number().int().optional(),
-  viewCount: z.number().int().nonnegative().optional(),
+  viewCount: PlexViewCountSchema.optional(),
   lastViewedAt: z.number().int().optional(),
   Guid: z.array(z.object({ id: z.string() })).optional(),
   Media: z

@@ -16,8 +16,25 @@ export async function assertNativeSeriesPackWatchV1(
   scenario: Fixture,
   charges: { method: string; paid: number }[],
 ) {
+  let fixtureFailure: { cause: unknown } | undefined;
   const watch = createPlexWatchActivities(() =>
-    Promise.resolve({ plexWatch: scenario.plexWatch }),
+    Promise.resolve({
+      plexWatch: {
+        ...scenario.plexWatch,
+        // Capture only this synthetic fixture's original failure, inside the
+        // runtime boundary. Production mediaCall keeps its privacy sanitizer.
+        sweepMediaWork: async (
+          ...args: Parameters<Fixture["plexWatch"]["sweepMediaWork"]>
+        ) => {
+          try {
+            return await scenario.plexWatch.sweepMediaWork(...args);
+          } catch (error) {
+            fixtureFailure = { cause: error };
+            throw error;
+          }
+        },
+      },
+    }),
   );
   let cursor = "series-pack-native-tv-watch-v1:start";
   const completed = new Set<string>();
@@ -26,15 +43,21 @@ export async function assertNativeSeriesPackWatchV1(
     const result = await nativeSeriesPackPaidV1(
       `watch_cursor_${String(page)}`,
       charges,
-      () =>
-        nativeRecoverySdk(
-          crypto.randomUUID(),
-          `native-watch-${String(page)}`,
-        ).run(watch.sweepMediaWork, {
-          kind: "watch",
-          cursor,
-          sweepId: crypto.randomUUID(),
-        }),
+      async () => {
+        try {
+          return await nativeRecoverySdk(
+            crypto.randomUUID(),
+            `native-watch-${String(page)}`,
+          ).run(watch.sweepMediaWork, {
+            kind: "watch",
+            cursor,
+            sweepId: crypto.randomUUID(),
+          });
+        } catch (error) {
+          if (fixtureFailure !== undefined) throw fixtureFailure.cause;
+          throw error;
+        }
+      },
     );
     expect(result.processed).toBe(1);
     if (result.nextCursor === null)
@@ -54,6 +77,17 @@ export async function assertNativeSeriesPackWatchV1(
       },
     });
     expect(new Set(observed.map((row) => row.mediaId)).size).toBe(page + 1);
+    const requesterIds = [
+      scenario.household.owner.id,
+      scenario.household.requester.id,
+    ].toSorted();
+    for (const mediaId of new Set(observed.map((row) => row.mediaId)))
+      expect(
+        observed
+          .filter((row) => row.mediaId === mediaId)
+          .map((row) => row.userId)
+          .toSorted(),
+      ).toEqual(requesterIds);
     for (const row of observed) completed.add(row.mediaId);
   }
   expect(completed.size).toBe(2);

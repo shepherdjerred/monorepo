@@ -9,6 +9,7 @@ import {
 } from "#infrastructure/handoff/library-receipt.ts";
 import {
   MovieLibraryReferenceV2Schema,
+  MoviePassiveLibraryReferenceV1Schema,
   MoviePublicationAssetV2Schema,
 } from "#shared/movie-editions/publication-v2.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -16,6 +17,10 @@ import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { movieDefinitionRef } from "./definition.ts";
 import { MOVIE_EDITION_REGISTRY } from "#shared/movie-editions/registry.ts";
+import {
+  initialLibraryAssetVersion,
+  passiveRegistrationApproval,
+} from "#infrastructure/handoff/passive-registration.ts";
 
 const hash = (value: unknown) => identityHash(nativeJson(value));
 type Selection = z.infer<typeof LibraryHandoffSelectionProtocolSchema>;
@@ -55,9 +60,19 @@ export function movieLibraryParentV2FromReceipt(
   const asset = MoviePublicationAssetV2Schema.parse(snapshots[0]);
   if (file === undefined || measured === undefined)
     throw new Error("Initial movie parent file disappeared");
-  assertOwner(receipt.recoveryEpoch, file, measured, asset);
+  assertOwner({
+    epoch: receipt.recoveryEpoch,
+    file,
+    measured,
+    asset,
+    request: scope.request,
+  });
   const association = plexAssociation(selection.networkEvidence, asset);
-  const reference = MovieLibraryReferenceV2Schema.parse({
+  const ReferenceSchema =
+    passiveRegistrationApproval(scope.request, file) === undefined
+      ? MovieLibraryReferenceV2Schema
+      : MoviePassiveLibraryReferenceV1Schema;
+  const reference = ReferenceSchema.parse({
     kind: "movie_library_adoption_v2",
     scope: asset.scope,
     receiptId: receipt.id,
@@ -71,16 +86,17 @@ export function movieLibraryParentV2FromReceipt(
   return { reference, asset };
 }
 
-function assertOwner(
-  epoch: number,
-  file: Selection["scope"]["files"][number],
-  measured: Selection["fileEvidence"]["files"][number],
-  asset: Asset,
-) {
+function assertOwner(input: {
+  epoch: number;
+  file: Selection["scope"]["files"][number];
+  measured: Selection["fileEvidence"]["files"][number];
+  asset: Asset;
+  request: Selection["scope"]["request"];
+}) {
+  const { epoch, file, measured, asset, request } = input;
   if (
     file.libraryKind !== "movies" ||
     file.classification === null ||
-    file.existingAssetId !== null ||
     hash(file.mediaIds) !== hash([asset.scope.mediaId]) ||
     file.edition !== asset.scope.edition ||
     asset.path !== file.canonicalPath ||
@@ -89,7 +105,7 @@ function assertOwner(
     asset.sizeBytes !== measured.sizeBytes ||
     measured.canonicalPath !== asset.path ||
     asset.ownershipEpoch !== epoch ||
-    asset.version !== 0 ||
+    asset.version !== initialLibraryAssetVersion(request, file) ||
     asset.state !== "published" ||
     !asset.coverage[0].current ||
     file.classification.definition.definitionDigest !==

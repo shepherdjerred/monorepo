@@ -13,6 +13,72 @@ import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { MovieSubtitleOperationV4Schema } from "#shared/movie-editions/subtitles-v4.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { MovieAttemptOperationV4 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
+
+type PublishingFixture = Pick<
+  Awaited<ReturnType<typeof createMovieWorkflowFixture>>,
+  "movie" | "fileMovie" | "input"
+>;
+
+/** Actual reservation and remote transfer; no attempt or consent rows are fabricated. */
+export async function acquireMovieFixture(f: PublishingFixture) {
+  const reserved = await f.movie.reconcileMovieIntentV4(
+    f.input,
+    testPlexBindingExecution(),
+  );
+  expect(reserved.status).toBe("acquire");
+  const input = {
+    schemaVersion: 4 as const,
+    operationId: f.input.operationId,
+    scope: f.input.scope,
+    attemptId: z.uuid().parse(reserved.attemptId),
+  };
+  await transferMovieFixture(f, input);
+  return input;
+}
+
+/** A reserved attempt can be inspected before these actual transfer effects. */
+export async function transferMovieFixture(
+  f: PublishingFixture,
+  input: MovieAttemptOperationV4,
+) {
+  expect(
+    await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
+  ).toEqual({ status: "submitted", reason: null });
+  expect(
+    await f.movie.observeMovieAcquisitionV4(input, testPlexBindingExecution()),
+  ).toEqual({ status: "ready", reason: null });
+}
+
+/** Actual Files effects retain their original per-invocation publication budget. */
+export async function publishMovieFixtureFiles(
+  f: PublishingFixture,
+  input: MovieAttemptOperationV4,
+) {
+  expect(
+    await f.fileMovie.inspectAndStageMovieV4(input, testPublicationExecution()),
+  ).toEqual({ status: "staged" });
+  expect(
+    await f.fileMovie.prepareMoviePublicationV4(
+      input,
+      testPublicationExecution(),
+      new PublicationAuthorityReadBudget(),
+    ),
+  ).toEqual({ status: "prepared" });
+  expect(
+    await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
+  ).toEqual({ status: "published" });
+}
+
+export async function finishMovieFixturePublication(
+  f: PublishingFixture,
+  input: MovieAttemptOperationV4,
+) {
+  expect(
+    await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
+  ).toEqual({ status: "available", reason: null });
+  await f.movie.finalizeMovieAcquisitionV4(input, testPlexBindingExecution());
+}
 
 /** Actual personal request, transfer, physical publication, Plex receipt and installed captions. */
 export async function createPublishedMovieFixture(
@@ -24,46 +90,9 @@ export async function createPublishedMovieFixture(
   });
   try {
     const { db } = f.source;
-    const reserved = await f.movie.reconcileMovieIntentV4(
-      f.input,
-      testPlexBindingExecution(),
-    );
-    expect(reserved.status).toBe("acquire");
-    const input = {
-      schemaVersion: 4 as const,
-      operationId: f.input.operationId,
-      scope: f.input.scope,
-      attemptId: z.uuid().parse(reserved.attemptId),
-    };
-    expect(
-      await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
-    ).toEqual({ status: "submitted", reason: null });
-    expect(
-      await f.movie.observeMovieAcquisitionV4(
-        input,
-        testPlexBindingExecution(),
-      ),
-    ).toEqual({ status: "ready", reason: null });
-    expect(
-      await f.fileMovie.inspectAndStageMovieV4(
-        input,
-        testPublicationExecution(),
-      ),
-    ).toEqual({ status: "staged" });
-    expect(
-      await f.fileMovie.prepareMoviePublicationV4(
-        input,
-        testPublicationExecution(),
-        new PublicationAuthorityReadBudget(),
-      ),
-    ).toEqual({ status: "prepared" });
-    expect(
-      await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
-    ).toEqual({ status: "published" });
-    expect(
-      await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
-    ).toEqual({ status: "available", reason: null });
-    await f.movie.finalizeMovieAcquisitionV4(input, testPlexBindingExecution());
+    const input = await acquireMovieFixture(f);
+    await publishMovieFixtureFiles(f, input);
+    await finishMovieFixturePublication(f, input);
     const initial = await db.acquisitionAttempt.findUniqueOrThrow({
       where: { id: input.attemptId },
     });

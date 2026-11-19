@@ -40,6 +40,12 @@ import { uploadLibraryFixtureSidecarsV1 } from "./library-fixture/tv-sidecars.ts
 type SourceMedia = Extract<MigrationRecord, { kind: "media" }>;
 type Base = Awaited<ReturnType<typeof handoffFixture>>;
 
+/** Authored before capture, matching the fixture's actual H264/1080 WEB-DL source. */
+export function libraryCaptionFilename(edition: MovieEditionKey) {
+  const label = MOVIE_EDITION_REGISTRY[edition].plexLabel;
+  return `Synthetic.Film${edition === "default" ? "" : ` {edition-${label}}`}.1080p.WEB-DL.H264-GROUP.mkv`;
+}
+
 /** Actual capture/report/approval and Files adoption; external Plex, probes and mount attestations are synthetic. */
 export async function libraryBindingFixture(
   db: Database,
@@ -47,6 +53,7 @@ export async function libraryBindingFixture(
   directoryCreated: (directory: string) => void,
   options: {
     bytes?: Uint8Array;
+    fileName?: string;
     initialSidecars?: { language: string; bytes: Uint8Array }[];
     memberAccountId?: string;
     actualMovieExclusion?: boolean;
@@ -64,7 +71,9 @@ export async function libraryBindingFixture(
   const f = await handoffFixture(db, {
     ...options,
     initialEdition: edition,
-    fileName: `Synthetic Film${edition === "default" ? "" : ` {edition-${label}}`}.mkv`,
+    fileName:
+      options.fileName ??
+      `Synthetic Film${edition === "default" ? "" : ` {edition-${label}}`}.mkv`,
   });
   directoryCreated(f.directory);
   if (options.bytes !== undefined) f.context.files.inspect = inspectMedia;

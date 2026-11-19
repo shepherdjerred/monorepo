@@ -31,6 +31,7 @@ import { readMediaDetail } from "./visibility/media-detail.ts";
 import { projectExternalRequests } from "./external-library/availability.ts";
 import { effectiveRequestWhere } from "./request-claims.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
+import { InterestCheckNoticeSchema } from "#shared/household/interests.ts";
 import { readDefaultCommandContext } from "./editions/command-context.ts";
 import { repeatableRead } from "./locks.ts";
 import {
@@ -345,6 +346,10 @@ export class PrismaMediaApplication
     });
     return NotificationListSchema.parse(
       deliveries.map(({ event, ...delivery }) => {
+        const interest =
+          event.kind === "interest_check"
+            ? InterestCheckNoticeSchema.parse(event.payload)
+            : null;
         const proof =
           event.kind === "owner_health"
             ? OwnerHealthSchema.safeParse(event.payload)
@@ -354,6 +359,12 @@ export class PrismaMediaApplication
           event: {
             mediaId: event.mediaId,
             kind: event.kind,
+            ...(interest?.userId === actor.id
+              ? {
+                  interestRequestId: interest.requestId,
+                  interestRevision: interest.interestRevision,
+                }
+              : {}),
             ...(proof === null
               ? {}
               : proof.success

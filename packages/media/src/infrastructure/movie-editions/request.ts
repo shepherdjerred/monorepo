@@ -17,6 +17,11 @@ import { matchesMovieDefinition, movieDefinitionRef } from "./definition.ts";
 import { personalRequestGenerationChange } from "#infrastructure/library-monitoring/intent.ts";
 import { invalidateMovieRetentionV4 } from "./lifecycle/invalidate.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import {
+  requestKeepingPolicy,
+  renewedInterest,
+  renewedCompletionFence,
+} from "#infrastructure/request-interest/policy.ts";
 
 export async function chooseMovieEdition(
   tx: Prisma.TransactionClient,
@@ -62,6 +67,11 @@ export async function chooseMovieEdition(
     purpose: "choose",
     mediaSectionId: movieSourceSection(media.externalIds),
   });
+  const keepingPolicy = requestKeepingPolicy(
+    subject.actor,
+    input.options.keepingPolicy,
+    prior,
+  );
   if (stored === null)
     await tx.mediaEditionDefinition.create({
       data: {
@@ -125,6 +135,7 @@ export async function chooseMovieEdition(
       authority: movieChoiceAudit(subject, access),
     },
   });
+  const interest = renewedInterest(new Date());
   const request = await tx.mediaRequest.update({
     where: { id: base.id },
     data: {
@@ -133,6 +144,10 @@ export async function chooseMovieEdition(
       excluded: false,
       coverageCompletedAt: null,
       subtitleLanguages: input.options.subtitleLanguages,
+      ...interest,
+      ...renewedCompletionFence(prior, interest.interestRenewedAt),
+      keepingPolicy,
+      interestRevision: { increment: 1 },
       movieEditionChoiceId: choice.id,
       movieEditionChoiceRevision: choice.choiceRevision,
       version: { increment: 1 },

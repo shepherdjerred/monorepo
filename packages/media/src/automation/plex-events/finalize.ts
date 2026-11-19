@@ -1,4 +1,8 @@
-import { Prisma } from "#generated/prisma/client.ts";
+import {
+  Prisma,
+  type WatchState,
+  type PlexWatchProjection,
+} from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import { RETENTION_DEFAULTS } from "#domain/retention.ts";
@@ -13,7 +17,11 @@ import { queueMovieRetentionFromWatch } from "#automation/movie-editions/retenti
 import {
   commitBoundWatch,
   queueQuarantinedUnwatchedRestore,
+  parseWatchProjectionAuthority,
 } from "#infrastructure/plex-binding/watch.ts";
+import { releasedWatchMayKeepWarning } from "./released-interest.ts";
+import { quarantinedReleaseObservationOnly } from "#infrastructure/request-interest/quarantine-release.ts";
+import type { BoundWatchAuthority } from "#shared/plex-binding/watch.ts";
 import {
   watchAwait,
   assertWatchActive,
@@ -26,6 +34,8 @@ export type WatchOutcome = {
     | {
         kind: "observed";
         watched: boolean;
+        /** Boolean-only historical callers supply no fresh counter evidence. */
+        viewCount?: number | null;
         scopedAccess: boolean;
         freshness: PlexBindingFreshness;
       }
@@ -154,6 +164,7 @@ export async function finalizeWatchBatch(
           result: same
             ? result
             : { userId: result.userId, outcome: { kind: "unknown" } },
+          settledRevision: fence.settledRevision,
         },
         active,
       );
@@ -192,6 +203,7 @@ async function applyOutcome(
     prepared: PreparedWatchBatch;
     authority: WatchAuthority;
     result: WatchOutcome;
+    settledRevision: bigint;
   },
   execution: WatchExecution,
 ) {
@@ -200,7 +212,6 @@ async function applyOutcome(
   const original = prepared.authority.binding;
   if (original === null)
     throw new Error("Prepared watch omitted its immutable association");
-  const key = { userId: result.userId, mediaId: prepared.mediaId, edition };
   if (result.outcome.kind === "unknown") {
     await watchAwait(
       execution,
@@ -219,11 +230,7 @@ async function applyOutcome(
     );
     return;
   }
-  const prior = await watchAwait(
-    execution,
-    tx.watchState.findUnique({ where: { userId_mediaId_edition: key } }),
-  );
-  await watchAwait(
+  const committed = await watchAwait(
     execution,
     commitBoundWatch(
       tx,
@@ -233,14 +240,35 @@ async function applyOutcome(
         watchBatchRevision: prepared.revision,
         observedAt: prepared.startedAt,
         watched: result.outcome.watched,
+        viewCount: result.outcome.viewCount ?? null,
       },
       result.outcome.freshness,
       prepared.authority.scope.budget,
     ),
   );
+  const prior = committed.previousWatchState;
+  const stableReleasedUnwatched =
+    original.authority.purpose === "current_serving" &&
+    !result.outcome.watched &&
+    prior?.watched === false &&
+    releasedWatchMayKeepWarning(input.authority, result.userId, new Date()) &&
+    priorCurrentUnwatched({
+      prior,
+      projection: committed.previousProjection,
+      authority: original.authority,
+      settledRevision: input.settledRevision,
+    });
   if (result.outcome.watched) return;
   if (original.authority.purpose === "quarantined") {
-    await watchAwait(
+    if (
+      quarantinedReleaseObservationOnly(
+        input.authority,
+        result.userId,
+        new Date(),
+      )
+    )
+      return;
+    const restored = await watchAwait(
       execution,
       queueQuarantinedUnwatchedRestore(
         tx,
@@ -252,6 +280,11 @@ async function applyOutcome(
         result.outcome.freshness,
         prepared.authority.scope.budget,
       ),
+    );
+    assertExpectedQuarantineObservation(
+      restored,
+      input.authority,
+      result.userId,
     );
     return;
   }
@@ -268,6 +301,7 @@ async function applyOutcome(
     }),
   );
   if (outstanding === 0 && prior?.watched !== true) return;
+  if (stableReleasedUnwatched) return;
   await watchAwait(
     execution,
     tx.mediaItem.updateMany({
@@ -312,5 +346,47 @@ async function applyOutcome(
         },
       },
     }),
+  );
+}
+
+function assertExpectedQuarantineObservation(
+  restored: { operationId: string; created: boolean } | null,
+  authority: WatchAuthority,
+  userId: string,
+) {
+  if (
+    restored === null &&
+    !quarantinedReleaseObservationOnly(authority, userId, new Date())
+  )
+    throw new Error(
+      "Quarantine restore omitted demand without a current final release",
+    );
+}
+
+/** The current physical binding was already revalidated under this scope lock.
+ * Verify the prior settled native projection against that exact binding without
+ * traversing physical ancestry a second time for every participant. */
+function priorCurrentUnwatched(input: {
+  prior: WatchState;
+  projection: PlexWatchProjection | null;
+  authority: BoundWatchAuthority;
+  settledRevision: bigint;
+}) {
+  if (
+    input.prior.source !== "plex_current" ||
+    input.prior.watched ||
+    input.prior.observedAt.getTime() > Date.now() ||
+    Date.now() - input.prior.observedAt.getTime() >
+      RETENTION_DEFAULTS.maximumWatchAgeMs
+  )
+    return false;
+  const projection = input.projection;
+  if (projection === null) return false;
+  const stored = parseWatchProjectionAuthority(projection);
+  return (
+    !projection.watched &&
+    projection.observedAt.getTime() === input.prior.observedAt.getTime() &&
+    projection.watchBatchRevision === input.settledRevision &&
+    identityHash(stored) === identityHash(input.authority)
   );
 }

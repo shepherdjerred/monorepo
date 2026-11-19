@@ -30,6 +30,7 @@ test("series adoption queues bounded refresh with exact runtime and language evi
         first_air_date: "2020-01-01",
         poster_path: null,
         original_language: "ja",
+        status: "Ended",
         seasons: [
           { id: 100, season_number: 1, episode_count: 61, name: "Season 1" },
         ],
@@ -98,6 +99,13 @@ test("series adoption queues bounded refresh with exact runtime and language evi
     processed: 25,
     nextCursor: "0:25",
   });
+  expect(
+    await db.mediaItem.findUniqueOrThrow({ where: { id: adopted.mediaId } }),
+  ).toMatchObject({
+    seriesStatus: "ended",
+    seriesStatusObservedAt: expect.any(Date),
+    catalogCompletedAt: null,
+  });
   expect(await db.mediaItem.count({ where: { kind: "episode" } })).toBe(25);
   // Completion lost after commit: the database cursor resumes without refetch.
   expect(await worker.refreshMediaCatalog(input)).toEqual({
@@ -113,6 +121,14 @@ test("series adoption queues bounded refresh with exact runtime and language evi
     nextCursor: null,
   });
   expect(seasonCalls).toBe(1);
+  expect(
+    await db.mediaItem.findUniqueOrThrow({ where: { id: adopted.mediaId } }),
+  ).toMatchObject({ catalogCompletedAt: expect.any(Date) });
+  expect(
+    await db.mediaReleaseDate.count({
+      where: { media: { parentId: existingSeason.id } },
+    }),
+  ).toBe(61);
   expect(
     await db.mediaItem.findUniqueOrThrow({
       where: { kind_tmdbId: { kind: "episode", tmdbId: 501 } },

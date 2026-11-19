@@ -8,6 +8,8 @@ import {
   LibraryHandoffSelectionV2Schema,
 } from "#shared/handoff-v2.ts";
 import { MovieEditionHashSchema } from "#shared/movie-editions/registry.ts";
+import { PassiveRegistrationApprovalSchema } from "./passive-registration.ts";
+import { LibraryMonitoringMaskSchema } from "./monitoring-mask.ts";
 import {
   PlexEditionChangeV1Schema,
   PlexEditionSnapshotV1Schema,
@@ -23,6 +25,7 @@ export const LibrarySeriesMonitoringV1Schema = z.strictObject({
   provenanceKey: MovieEditionHashSchema,
   includeFutureEpisodes: z.literal(true),
   includeSpecials: z.boolean(),
+  monitoringMask: LibraryMonitoringMaskSchema.optional(),
 });
 
 /** New owner-approved metadata effects; earlier handoffs remain strictly read-only. */
@@ -36,6 +39,11 @@ export const PrepareLibraryHandoffV3Schema =
       .array(LibrarySeriesMonitoringV1Schema)
       .max(25)
       .optional(),
+    // No default: old approved requests retain their literal canonical hashes.
+    registeredAssets: z
+      .array(PassiveRegistrationApprovalSchema)
+      .max(25)
+      .optional(),
   });
 export const ApplyLibraryHandoffV3Schema = ApplyLibraryHandoffV2Schema.extend({
   schemaVersion: z.literal(3),
@@ -46,6 +54,7 @@ export const LibraryHandoffScopeV3Schema = LibraryHandoffScopeV2Schema.extend({
 });
 export const HandoffNetworkV3Schema = HandoffNetworkV2Schema.extend({
   schemaVersion: z.literal(3),
+  registeredPlexServerMachineId: z.string().min(1).max(512).optional(),
   plex: z
     .array(
       HandoffNetworkV2Schema.shape.plex.element.extend({
@@ -56,6 +65,7 @@ export const HandoffNetworkV3Schema = HandoffNetworkV2Schema.extend({
 });
 export const StableHandoffNetworkV3Schema = z.strictObject({
   schemaVersion: z.literal(3),
+  registeredPlexServerMachineId: z.string().min(1).max(512).optional(),
   planId: z.uuid(),
   recoveryEpoch: z.int().nonnegative(),
   controllers: HandoffNetworkV2Schema.shape.quiescence.shape.controllers,

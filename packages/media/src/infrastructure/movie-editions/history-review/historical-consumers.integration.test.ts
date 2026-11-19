@@ -133,7 +133,9 @@ test("an old default command captured before genuine scoped release becomes obso
 
 test("old default Files quarantine rejects an actual scoped warning before creating a manifest or changing the released hold", async () => {
   const bytes = await movieVideoFixture();
-  const f = await createMovieHistoryHttpFixture("default", bytes);
+  const f = await createMovieHistoryHttpFixture("default", bytes, {
+    retentionEligible: true,
+  });
   closers.push(f.close);
   const part = f.original.item().Media?.[0]?.Part[0];
   if (part === undefined) throw new Error("Actual adopted Part missing");

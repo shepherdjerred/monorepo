@@ -33,10 +33,10 @@ function timestamp(value: string, format: "srt" | "vtt" | "ass"): number {
 }
 
 /** Validates cue structure and extracts visible dialogue only, excluding style/header evidence. */
-export function subtitleDialogue(
+export function subtitleCues(
   text: string,
   format: "srt" | "vtt" | "ass" | "ssa",
-): string {
+): Cue[] {
   const cues =
     format === "ass" || format === "ssa"
       ? assCues(text)
@@ -53,7 +53,16 @@ export function subtitleDialogue(
       throw new Error("Subtitle contains invalid ordered dialogue");
     previousStart = cue.start;
   }
-  return cues.map((cue) => cue.text).join("\n");
+  return cues;
+}
+
+export function subtitleDialogue(
+  text: string,
+  format: "srt" | "vtt" | "ass" | "ssa",
+): string {
+  return subtitleCues(text, format)
+    .map((cue) => cue.text)
+    .join("\n");
 }
 
 function blockCues(text: string, format: "srt" | "vtt"): Cue[] {

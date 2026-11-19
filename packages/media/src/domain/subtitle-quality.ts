@@ -1,3 +1,5 @@
+import { regularDialogueCovered } from "./subtitle-speech.ts";
+import { z } from "zod";
 export type SubtitleQuality = {
   assetId: string;
   language: string;
@@ -12,6 +14,7 @@ export type SubtitleQuality = {
   hearingImpaired: boolean | null;
   streamIndex: number | null;
   codec: string | null;
+  matchingEvidence?: unknown;
 };
 export type SubtitleVideo = {
   id: string;
@@ -70,10 +73,26 @@ function targetMatches(
 ): boolean {
   return (
     subtitle.language === target.language &&
-    (target.forced === undefined || subtitle.forced === target.forced) &&
+    (target.forced === undefined ||
+      subtitle.forced === target.forced ||
+      (!target.forced &&
+        subtitle.forced === null &&
+        ["en", "zh-CN", "zh-Hans"].includes(target.language) &&
+        regularDialogueCovered(
+          regularProof(subtitle.matchingEvidence),
+          subtitle.videoChecksum,
+          subtitle.checksum,
+        ))) &&
     (target.hearingImpaired !== "required" ||
       subtitle.hearingImpaired === true) &&
     (target.hearingImpaired !== "excluded" ||
       subtitle.hearingImpaired === false)
   );
+}
+
+function regularProof(evidence: unknown): unknown {
+  const parsed = z
+    .object({ regularDialogueV1: z.unknown() })
+    .safeParse(evidence);
+  return parsed.success ? parsed.data.regularDialogueV1 : undefined;
 }

@@ -7,7 +7,7 @@ import {
   assertMeasuredUpgrade,
   assertProfile,
   storedMeasuredRelease,
-} from "#automation/files/quality-guard.ts";
+} from "#automation/files/quality-guide/guard.ts";
 import {
   assertPublicationActive,
   type PublicationContext,

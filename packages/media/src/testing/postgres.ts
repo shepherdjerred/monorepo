@@ -48,7 +48,8 @@ export type MediaMigrationCeiling =
   | "20261017002000_native_archive_cleanup"
   | "20261017002100_publication_compensation"
   | "20261017002200_movie_edition_choice"
-  | "20261017002300_plex_association_binding";
+  | "20261017002300_plex_association_binding"
+  | "20261017005900_movie_inventory_parent";
 
 function optionalAdminUrl(): string | undefined {
   const raw = Bun.env["MEDIA_TEST_ADMIN_DATABASE_URL"]?.trim();

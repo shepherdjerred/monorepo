@@ -43,12 +43,10 @@ export async function buildHandoffScope(
 }
 
 async function reviewedBundle(tx: Prisma.TransactionClient, input: Input) {
-  const review = await tx.migrationBundleReview.findUniqueOrThrow({
-    where: { id: input.bundleReviewId },
-    include: { bundle: true },
-  });
-  const manifest = MigrationBundleProtocolSchema.parse(review.bundle.manifest);
-  const report = BundleReportSchema.parse(review.report);
+  const { review, manifest, report } = await readHandoffBundleReview(
+    tx,
+    input.bundleReviewId,
+  );
   if (
     review.status !== "approved" ||
     review.version !== input.bundleReviewVersion ||
@@ -62,6 +60,20 @@ async function reviewedBundle(tx: Prisma.TransactionClient, input: Input) {
     !report.stable
   )
     throw conflict("handoff_review_changed");
+  return { review, manifest, report };
+}
+
+/** Preview and preparation parse the same literal reviewed source bundle. */
+export async function readHandoffBundleReview(
+  tx: Prisma.TransactionClient,
+  bundleReviewId: string,
+) {
+  const review = await tx.migrationBundleReview.findUniqueOrThrow({
+    where: { id: bundleReviewId },
+    include: { bundle: true },
+  });
+  const manifest = MigrationBundleProtocolSchema.parse(review.bundle.manifest);
+  const report = BundleReportSchema.parse(review.report);
   return { review, manifest, report };
 }
 
@@ -96,16 +108,27 @@ async function projectScope(
   const profiles = await resolveProfiles(tx, input, manifest);
   const projections = media.map((item) => {
     const ancestry = [item.id, item.parent?.id, item.parent?.parent?.id];
-    const source = report.entries.find(
-      (entry) =>
-        entry.kind === "media" &&
-        entry.confidence === "exact" &&
-        ancestry.some(
-          (id) => id !== undefined && entry.mediaIds.includes(id),
-        ) &&
-        entry.sourceRecord.kind === "media" &&
-        entry.sourceRecord.profileSourceId !== null,
-    );
+    const source = report.entries
+      .filter(
+        (entry) =>
+          entry.kind === "media" &&
+          entry.confidence === "exact" &&
+          ancestry.some(
+            (id) => id !== undefined && entry.mediaIds.includes(id),
+          ) &&
+          entry.sourceRecord.kind === "media" &&
+          entry.sourceRecord.profileSourceId !== null,
+      )
+      .sort((a, b) => {
+        return (
+          ancestry.findIndex(
+            (id) => id !== undefined && a.mediaIds.includes(id),
+          ) -
+          ancestry.findIndex(
+            (id) => id !== undefined && b.mediaIds.includes(id),
+          )
+        );
+      })[0];
     const record = source?.sourceRecord;
     const capture = manifest.captures.find(
       (binding) => binding.captureHash === source?.captureHash,
@@ -130,7 +153,7 @@ async function projectScope(
   const protectedRecords = [];
   for (const entry of selected) {
     if (entry.sourceRecord.kind === "file")
-      files.push(await projectFile(tx, entry, manifest, media));
+      files.push(await projectHandoffFile(tx, entry, manifest, media));
     else if (entry.sourceRecord.kind === "request") {
       const claim = await projectClaim(tx, entry);
       if (claim === null)
@@ -236,7 +259,7 @@ async function resolveProfiles(
   return result;
 }
 
-async function projectFile(
+export async function projectHandoffFile(
   tx: Prisma.TransactionClient,
   entry: Entry,
   manifest: z.infer<typeof MigrationBundleProtocolSchema>,

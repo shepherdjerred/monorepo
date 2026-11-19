@@ -140,6 +140,7 @@ test("a signed-in movie request reaches real PostgreSQL and the outbox through H
   const context = MovieEditionContextV3Schema.parse(await choices.json());
   expect(context.subjectUserId).toBe(owner.id);
   const input = movieRequest(context, "default", "en");
+  input.options.keepingPolicy = "temporary";
   const key = crypto.randomUUID();
   const path = `/api/v3/media/${mediaId}/movie-requests`;
   const response = await browser.request(path, { key, body: input });

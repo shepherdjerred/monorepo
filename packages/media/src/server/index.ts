@@ -39,6 +39,16 @@ import { createOutboxActivities } from "#automation/store.ts";
 import { renderMediaMetrics } from "#infrastructure/metrics.ts";
 import { PrismaCapacityAdministration } from "#infrastructure/capacity/service.ts";
 import { PrismaPlexEventIngress } from "#infrastructure/plex-events/ingress.ts";
+import { PrismaPlaybackHistory } from "#infrastructure/playback/service.ts";
+import { playbackHandoffReady } from "#infrastructure/playback/handoff.ts";
+import { PrismaCalendarApplication } from "#infrastructure/library/views/calendar.ts";
+import { PrismaRemovalHistoryApplication } from "#infrastructure/library/views/removals.ts";
+import { PrismaLibraryApplication } from "#infrastructure/library/views/library.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
+import { listRequestInterests } from "#infrastructure/request-interest/read.ts";
+import { getRequestInterestProgress } from "#infrastructure/request-interest/progress.ts";
+import { PrismaQualityGuideAdministration } from "#infrastructure/quality-guide/service.ts";
+import { TrashGuideClient } from "#integrations/trash-guide/client.ts";
 
 const bootstrap = BootstrapSchema.parse(Bun.env);
 await initFeatureFlags();
@@ -158,9 +168,60 @@ const media = new PrismaMediaApplication(database, {
     series: permittedTvSectionId.value,
   },
 });
+const requestInterestCommands = new RequestInterestCommands(database, {
+  keepDays: keepDays.value,
+  serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+  movieAccess,
+  sections: {
+    movie: permittedMovieSectionId.value,
+    series: permittedTvSectionId.value,
+  },
+});
 const app = createMediaApp({
   auth,
   media,
+  requestInterests: {
+    list: (actor, cursor) => listRequestInterests(database, actor, cursor),
+    progress: (actor, requestId) =>
+      getRequestInterestProgress(database, actor, requestId),
+    execute: (actor, key, input) =>
+      requestInterestCommands.execute(actor, key, input),
+    libraryPolicy: (actor, key, input) =>
+      requestInterestCommands.libraryPolicy(actor, key, input),
+  },
+  playback: new PrismaPlaybackHistory(
+    database,
+    bootstrap.PLEX_SERVER_MACHINE_ID,
+    () => new Date(),
+    playbackHandoffReady(database, (actor) =>
+      plexAdministration.libraryClient(actor),
+    ),
+  ),
+  library: new PrismaLibraryApplication(database, {
+    serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+    sections: {
+      movie: permittedMovieSectionId.value,
+      series: permittedTvSectionId.value,
+    },
+  }),
+  calendar: new PrismaCalendarApplication(database, {
+    serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+    sections: {
+      movie: permittedMovieSectionId.value,
+      series: permittedTvSectionId.value,
+    },
+  }),
+  removalHistory: new PrismaRemovalHistoryApplication(database, {
+    serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+    sections: {
+      movie: permittedMovieSectionId.value,
+      series: permittedTvSectionId.value,
+    },
+  }),
+  qualityGuide: new PrismaQualityGuideAdministration(
+    database,
+    new TrashGuideClient(),
+  ),
   movieLifecycle: media,
   notifications: new PrismaNotificationApplication(database, cipher, discord, {
     publicOrigin: bootstrap.PUBLIC_ORIGIN,
@@ -248,6 +309,11 @@ const app = createMediaApp({
   migrationAdmin: new PrismaMigrationAdministration(
     database,
     new MigrationCatalogDiscovery(database, tmdbClient, catalogApplication),
+    {
+      keepDays: keepDays.value,
+      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+      movieAccess,
+    },
   ),
   plexExclusionAdmin: new PrismaPlexExclusionAdministration(
     database,

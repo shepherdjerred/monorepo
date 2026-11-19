@@ -1,7 +1,6 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
-import { rm } from "node:fs/promises";
+import { expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
+import { retentionMovieFixtures } from "#testing/retention/movie-fixtures.ts";
 import { libraryBindingFixture } from "#automation/plex-binding/library.test-fixture.ts";
 import { verifyLibraryPlexBinding } from "#automation/plex-binding/library.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
@@ -12,15 +11,8 @@ import { createSweepActivities } from "#automation/sweeps.ts";
 import { PlexClient } from "#integrations/plex.ts";
 
 const h = automationTestHarness();
-const directories: string[] = [];
-let bytes: Uint8Array;
-beforeAll(async () => {
-  bytes = await movieVideoFixture();
-});
-afterEach(async () => {
-  for (const directory of directories.splice(0))
-    await rm(directory, { recursive: true, force: true });
-});
+const movies = retentionMovieFixtures();
+const directories = movies.directories;
 
 test.each(MovieEditionKeySchema.options)(
   "an adopted %s movie observes its real requester's exact watch without constructing acquisition history",
@@ -32,7 +24,7 @@ test.each(MovieEditionKeySchema.options)(
       (directory) => {
         directories.push(directory);
       },
-      { bytes },
+      { bytes: movies.bytes() },
     );
     const requester = await h.fixture();
     const mediaId = f.network.media.id;

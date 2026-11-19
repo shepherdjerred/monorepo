@@ -1,5 +1,6 @@
 import { rm } from "node:fs/promises";
 import { z } from "zod";
+import { expect } from "vitest";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { fileFixture } from "#automation/files/test-support.ts";
@@ -18,6 +19,15 @@ import {
 } from "#automation/plex-binding/test-fixture.ts";
 import { retentionPlexContext } from "./fixtures/plex.ts";
 import {
+  completeFixtureRetentionInterests,
+  fixtureNotificationReceipts,
+} from "#testing/retention-interest.ts";
+import {
+  prepareInitialReleasedInterest,
+  type InitialInterestScenario,
+} from "#infrastructure/request-interest/quarantine-release.test-fixture.ts";
+import { refreshRetentionReceipts } from "#automation/notifications/retention-receipts.ts";
+import {
   elapsedWarningClient,
   warningHistory,
   assertWarningHistory,
@@ -25,13 +35,43 @@ import {
 
 type Files = Awaited<ReturnType<typeof fileFixture>>;
 type Published = Awaited<ReturnType<Files["published"]>>;
+type RetentionFixtureOptions = {
+  interestScenario?: InitialInterestScenario;
+  afterPublicationBeforeInterestCompletion?: () => Promise<void>;
+};
+
+/** Complete ordered consent and target state for observational watch checks. */
+export async function defaultRetentionInterestSnapshot(
+  db: Database,
+  mediaIds: readonly string[],
+) {
+  return {
+    requests: await db.mediaRequest.findMany({
+      where: { mediaId: { in: [...mediaIds] } },
+      orderBy: { id: "asc" },
+    }),
+    targets: await db.mediaIntent.findMany({
+      where: { mediaId: { in: [...mediaIds] }, edition: "default" },
+      orderBy: { mediaId: "asc" },
+    }),
+  };
+}
+
+function retentionFixtureOptions(
+  value?: InitialInterestScenario | RetentionFixtureOptions,
+): RetentionFixtureOptions | undefined {
+  return typeof value === "string" ? { interestScenario: value } : value;
+}
 
 /** The caller owns its already-produced mapped files, including any real caption work. */
 export async function prepareBoundRetention(
   files: Files,
   published: Published,
   base: MediaAutomationContext,
+  scenarioOrOptions?: InitialInterestScenario | RetentionFixtureOptions,
 ) {
+  const options = retentionFixtureOptions(scenarioOrOptions);
+  const interestScenario = options?.interestScenario;
   if (files.context.pathMapping === undefined)
     throw new Error(
       "Bound retention requires canonical mapping before the first publication",
@@ -41,30 +81,26 @@ export async function prepareBoundRetention(
     where: { id: published.attempt.id },
   });
   const transport = await retentionPlexContext(db, base, attempt.mediaIds);
-  const receipts = new Map<string, string>();
   const context: MediaAutomationContext = {
     ...transport.context,
     plexBindingExecution: bindingTestExecution,
-    notify: (message, mutation) => {
-      mutation?.beforeMutation();
-      const receipt = `synthetic-warning:${message.idempotencyKey}`;
-      receipts.set(receipt, message.recipient);
-      return Promise.resolve({ receipt });
-    },
-    reconcileNotification: (input) =>
-      Promise.resolve({
-        status: receipts.has(input.receipt) ? "delivered" : "unknown",
-        recipient: receipts.get(input.receipt) ?? null,
-      }),
+    ...fixtureNotificationReceipts("synthetic-warning"),
   };
   await prepareRequesters(db, context, attempt.mediaIds);
   const publication = createPublicationActivities(context);
+  await initialUnwatchedScenario(
+    context,
+    transport.state,
+    attempt.mediaIds,
+    interestScenario,
+  );
   const available = await publication.publishMediaToPlex(published.input);
   if (available.status !== "available")
     throw new Error(
       `Actual retention publication failed: ${JSON.stringify(available)}`,
     );
   await publication.finalizeMediaAcquisition(published.input);
+  await options?.afterPublicationBeforeInterestCompletion?.();
   for (const mediaId of attempt.mediaIds) {
     const watch = await observeRequesterWatch(context, mediaId);
     if (!watch.complete)
@@ -72,6 +108,7 @@ export async function prepareBoundRetention(
         `Actual retention watch failed: ${JSON.stringify(watch)}`,
       );
   }
+  await initialInterestScenario(context, attempt.mediaIds, interestScenario);
   const target = await db.mediaIntent.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId: files.media.id, edition: "default" } },
   });
@@ -108,7 +145,7 @@ export async function prepareBoundRetention(
       .object({ warningEventId: z.string() })
       .parse(decision.evidence).warningEventId;
     const deliveries = await db.notificationDelivery.findMany({
-      where: { eventId },
+      where: { eventId, channel: { in: ["email", "discord"] } },
     });
     if (deliveries.length === 0)
       throw new Error("Actual warning producer omitted recipient delivery");
@@ -128,6 +165,7 @@ export async function prepareBoundRetention(
         );
     }
   }
+  expect(await refreshRetentionReceipts(context, attempt.mediaIds)).toBe(true);
   const history = await Promise.all(
     decisions.map(async (decision) => ({
       decisionId: decision.id,
@@ -201,6 +239,30 @@ export async function prepareBoundRetention(
         retention.input,
       ),
   };
+}
+
+async function initialUnwatchedScenario(
+  context: MediaAutomationContext,
+  state: { watched: boolean | null },
+  mediaIds: string[],
+  scenario: InitialInterestScenario | undefined,
+) {
+  if (scenario === undefined) return;
+  await context.db.mediaItem.updateMany({
+    where: { id: { in: mediaIds } },
+    data: { originalLanguage: "en" },
+  });
+  state.watched = false;
+}
+
+async function initialInterestScenario(
+  context: MediaAutomationContext,
+  mediaIds: string[],
+  scenario: InitialInterestScenario | undefined,
+) {
+  if (scenario === undefined)
+    await completeFixtureRetentionInterests(context, mediaIds);
+  else await prepareInitialReleasedInterest(context, mediaIds, { scenario });
 }
 
 /** Real producers plus injected HTTP; eight-day grace is an explicitly simulated fixture precondition. */

@@ -411,21 +411,23 @@ export const scheduledAgentChatTurnWorkflow =
 export const discordAgentChatWorkflow = agentChat.discordAgentChatWorkflow;
 export const httpAgentChatWorkflow = agentChat.httpAgentChatWorkflow;
 import * as delivery from "./delivery.ts";
-export const deliveryDeploymentWorkflow = delivery.deliveryDeploymentWorkflow;
-export const deliveryDispatchWorkflow = delivery.deliveryDispatchWorkflow;
-export const deliveryWorkerRecoveryWorkflow =
-  delivery.deliveryWorkerRecoveryWorkflow;
-export const deliveryMinecraftRecoveryWorkflow =
-  delivery.deliveryMinecraftRecoveryWorkflow;
-export const deliveryForumBaselineWorkflow =
-  delivery.deliveryForumBaselineWorkflow;
-export const deliveryPlatformRecoveryWorkflow =
-  delivery.deliveryPlatformRecoveryWorkflow;
-export const deliveryHandoffWorkflow = delivery.deliveryHandoffWorkflow;
+export const {
+  deliveryDeploymentWorkflow,
+  deliveryDispatchWorkflow,
+  deliveryWorkerRecoveryWorkflow,
+  deliveryMinecraftRecoveryWorkflow,
+  deliveryForumBaselineWorkflow,
+  deliveryPlatformRecoveryWorkflow,
+  deliveryHandoffWorkflow,
+} = { ...delivery };
 import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./streambot/streambot.ts";
 export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
 import * as mediaWorkflows from "./media/exports.ts";
 export const {
+  reconcileMediaPlaybackWorkflow,
+  refreshMediaQualityGuidesWorkflow,
+  maintainMediaSubtitlesV1Workflow,
+  maintainMediaSubtitleJobV1Workflow,
   rollbackMovieEditionV1Workflow,
   restoreMovieEditionV4Workflow,
   retainMovieEditionV4Workflow,

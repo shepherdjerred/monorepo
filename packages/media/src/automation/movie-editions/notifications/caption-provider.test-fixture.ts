@@ -1,12 +1,40 @@
 import path from "node:path";
-import {
-  fromOpenSubtitles,
-  type SubtitleSearch,
-} from "#automation/subtitle-sources.ts";
+import { fromOpenSubtitles } from "#automation/subtitle-sources.ts";
+import type { SubtitleSearch } from "#domain/subtitle-maintenance/provider.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 
+/** Exact provider search envelope; each caller retains its actual language/release fixture. */
+export function captionSearchResponse(
+  query: SubtitleSearch,
+  input: { language: string; release: string; filename: string },
+) {
+  return Response.json({
+    total_pages: 1,
+    data: [
+      {
+        id: "1",
+        attributes: {
+          language: input.language,
+          release: input.release,
+          ai_translated: false,
+          machine_translated: false,
+          foreign_parts_only: false,
+          hearing_impaired: false,
+          feature_details: {
+            tmdb_id: query.scoreReferenceV1?.tmdbId ?? undefined,
+          },
+          files: [{ file_id: 1, file_name: input.filename }],
+        },
+      },
+    ],
+  });
+}
+
 /** Actual provider adapter and durable download producer; remote responses and bytes are synthetic. */
-export async function captionProviderFixture(context: MediaAutomationContext) {
+export async function captionProviderFixture(
+  context: MediaAutomationContext,
+  dailyDownloadLimit = 10,
+) {
   const credential = await context.db.credential.create({
     data: {
       kind: "provider",
@@ -23,8 +51,17 @@ export async function captionProviderFixture(context: MediaAutomationContext) {
   });
   await context.db.mediaProvider.upsert({
     where: { id: "opensubtitles" },
-    create: { id: "opensubtitles", enabled: true, credentialId: credential.id },
-    update: { enabled: true, credentialId: credential.id },
+    create: {
+      id: "opensubtitles",
+      enabled: true,
+      credentialId: credential.id,
+      configuration: { dailyDownloadLimit },
+    },
+    update: {
+      enabled: true,
+      credentialId: credential.id,
+      configuration: { dailyDownloadLimit },
+    },
   });
   return {
     opensubtitles: async (
@@ -37,23 +74,10 @@ export async function captionProviderFixture(context: MediaAutomationContext) {
           return Promise.resolve(Response.json({ token: "synthetic" }));
         if (url.pathname.endsWith("/subtitles"))
           return Promise.resolve(
-            Response.json({
-              total_pages: 1,
-              data: [
-                {
-                  id: "1",
-                  attributes: {
-                    language:
-                      query.language === "zh-Hans" ? "zh-cn" : query.language,
-                    release: "Synthetic human caption",
-                    ai_translated: false,
-                    machine_translated: false,
-                    foreign_parts_only: false,
-                    hearing_impaired: false,
-                    files: [{ file_id: 1, file_name: filename }],
-                  },
-                },
-              ],
+            captionSearchResponse(query, {
+              language: query.language === "zh-Hans" ? "zh-cn" : query.language,
+              release: "Synthetic human caption",
+              filename,
             }),
           );
         if (url.pathname.endsWith("/download"))

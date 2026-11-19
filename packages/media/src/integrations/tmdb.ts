@@ -20,7 +20,7 @@ const MovieSchema = z.object({
   title: z.string(),
   original_title: z.string(),
   overview: z.string(),
-  release_date: z.string(),
+  release_date: z.union([z.literal(""), z.iso.date()]),
   poster_path: z.string().nullable(),
   original_language: z.string(),
 });
@@ -29,7 +29,7 @@ const SeriesSchema = z.object({
   name: z.string(),
   original_name: z.string(),
   overview: z.string(),
-  first_air_date: z.string(),
+  first_air_date: z.union([z.literal(""), z.iso.date()]),
   poster_path: z.string().nullable(),
   original_language: z.string(),
 });
@@ -54,7 +54,7 @@ const EpisodeSchema = z.object({
   overview: z.string(),
   season_number: z.number().int().nonnegative(),
   episode_number: z.number().int().nonnegative(),
-  air_date: z.string().nullable(),
+  air_date: z.union([z.literal(""), z.iso.date()]).nullable(),
   runtime: z.number().int().positive().nullable().optional(),
 });
 
@@ -89,12 +89,38 @@ export class TmdbClient {
     return MovieSchema.extend({
       imdb_id: z.string().nullable(),
       runtime: z.number().nullable(),
-    }).parse(await this.get(`movie/${String(id)}`, {}, signal));
+      release_dates: z
+        .object({
+          results: z
+            .array(
+              z.object({
+                iso_3166_1: z.string().length(2),
+                release_dates: z
+                  .array(
+                    z.object({
+                      type: z.int().min(1).max(6),
+                      release_date: z.string(),
+                    }),
+                  )
+                  .max(500),
+              }),
+            )
+            .max(300),
+        })
+        .optional(),
+    }).parse(
+      await this.get(
+        `movie/${String(id)}`,
+        { append_to_response: "release_dates" },
+        signal,
+      ),
+    );
   }
 
   async series(id: number, signal?: AbortSignal) {
     z.number().int().positive().parse(id);
     return SeriesSchema.extend({
+      status: z.string().max(100).optional(),
       seasons: z.array(
         z.object({
           id: z.number().int(),

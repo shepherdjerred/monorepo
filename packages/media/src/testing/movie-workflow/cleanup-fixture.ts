@@ -1,17 +1,17 @@
-import { z } from "zod";
 import { expect } from "vitest";
 import { createManagedMovieFixture } from "./managed-fixture.ts";
 import type { automationTestHarness } from "#testing/automation.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
-import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { grantTestExclusionProofs } from "#testing/exclusion.ts";
-import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   createAcquiredMovieUpgradeFixture,
   installMovieFixtureCaptions,
+  acquireMovieFixture,
+  publishMovieFixtureFiles,
+  finishMovieFixturePublication,
 } from "./upgrade-fixture.ts";
 
 /** Real import and new acquisition/publication; only elapsed rollback policy time and remote wires are simulated. */
@@ -40,50 +40,13 @@ export async function createMovieCleanupFixture(
         };
   try {
     const db = f.context.db;
-    const result = await f.movie.reconcileMovieIntentV4(
-      f.input,
-      testPlexBindingExecution(),
-    );
-    expect(result.status).toBe("acquire");
-    const input = {
-      schemaVersion: 4 as const,
-      operationId: f.input.operationId,
-      scope: f.scope,
-      attemptId: z.uuid().parse(result.attemptId),
-    };
-    expect(
-      await f.movie.submitMovieTorrentV4(input, testPlexBindingExecution()),
-    ).toEqual({ status: "submitted", reason: null });
-    expect(
-      await f.movie.observeMovieAcquisitionV4(
-        input,
-        testPlexBindingExecution(),
-      ),
-    ).toEqual({ status: "ready", reason: null });
-    expect(
-      await f.fileMovie.inspectAndStageMovieV4(
-        input,
-        testPublicationExecution(),
-      ),
-    ).toEqual({ status: "staged" });
-    expect(
-      await f.fileMovie.prepareMoviePublicationV4(
-        input,
-        testPublicationExecution(),
-        new PublicationAuthorityReadBudget(),
-      ),
-    ).toEqual({ status: "prepared" });
-    expect(
-      await f.fileMovie.promoteMovieFilesV4(input, testPublicationExecution()),
-    ).toEqual({ status: "published" });
+    const input = await acquireMovieFixture(f);
+    await publishMovieFixtureFiles(f, input);
     // No cleanup may start its rollback clock before the actual Plex completion.
     expect(
       await db.upgradeCleanup.count({ where: { assetId: f.asset.id } }),
     ).toBe(0);
-    expect(
-      await f.movie.publishMovieToPlexV4(input, testPlexBindingExecution()),
-    ).toEqual({ status: "available", reason: null });
-    await f.movie.finalizeMovieAcquisitionV4(input, testPlexBindingExecution());
+    await finishMovieFixturePublication(f, input);
     if (adoption !== undefined)
       await grantTestExclusionProofs(db, f.network.actor.id, "fixture-server");
     const attempt = await db.acquisitionAttempt.findUniqueOrThrow({

@@ -31,6 +31,7 @@ export function createMediaActivityWorkers(
   props: {
     database: ISecret;
     bootstrap: ISecret;
+    discord: ISecret;
     postal: ISecret;
     plex: { serviceName: string; tokenSecret: ISecret };
     qbittorrent: ISecret;
@@ -64,6 +65,10 @@ export function createMediaActivityWorkers(
       MEDIA_CREDENTIAL_KEY: EnvValue.fromSecretValue({
         secret: props.bootstrap,
         key: "MEDIA_CREDENTIAL_KEY",
+      }),
+      DISCORD_BOT_TOKEN: EnvValue.fromSecretValue({
+        secret: props.discord,
+        key: "BOT_TOKEN",
       }),
       TMDB_API_KEY: EnvValue.fromSecretValue({
         secret: props.bootstrap,

@@ -2,12 +2,13 @@ import { mkdtemp, writeFile, readFile, rm, realpath } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { runMediaTool } from "#filesystem/media-tools.ts";
+import { movieSpeechWav } from "./movie-speech.ts";
 
 /** Disposable real MKV with known video/audio and independently labelled English/Simplified Chinese text tracks. */
 export async function movieVideoFixture(
   width = 1920,
   englishTracks = [{ forced: false, hearingImpaired: false }],
-  options: { bitrateKbps?: number } = {},
+  options: { bitrateKbps?: number; speech?: boolean } = {},
 ) {
   const directory = await realpath(
     await mkdtemp(path.join(tmpdir(), "media-movie-video-")),
@@ -24,6 +25,8 @@ export async function movieVideoFixture(
       "1\n00:00:00,000 --> 00:00:01,500\n这是一个简体中文字幕测试，汉语龙马风云国书车头发现。\n",
     );
     const output = path.join(directory, "fixture.mkv");
+    const speech = path.join(directory, "speech.wav");
+    if (options.speech === true) await writeFile(speech, movieSpeechWav());
     await runMediaTool(
       "ffmpeg",
       [
@@ -36,10 +39,9 @@ export async function movieVideoFixture(
         "lavfi",
         "-i",
         `color=c=black:s=${String(width)}x${String(Math.floor((width * 9) / 16))}:r=1:d=2`,
-        "-f",
-        "lavfi",
-        "-i",
-        "anullsrc=r=8000:cl=mono",
+        ...(options.speech === true
+          ? ["-i", speech]
+          : ["-f", "lavfi", "-i", "anullsrc=r=8000:cl=mono"]),
         "-i",
         english,
         "-i",

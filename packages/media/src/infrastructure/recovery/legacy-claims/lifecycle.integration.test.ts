@@ -13,6 +13,7 @@ import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { buildRecoveryClaims } from "./projection.ts";
 import { legacyLifecycleHarness } from "./lifecycle-fixture.ts";
 import { LEGACY_CLAIM_PROTECTION } from "./protection.ts";
+import { continueFixtureRequest } from "#testing/retention-interest.ts";
 const harness = legacyLifecycleHarness();
 
 test("explicit owner removal cannot bypass a newly arrived unresolved household claim", async () => {
@@ -93,6 +94,7 @@ test("explicit owner removal cannot bypass a newly arrived unresolved household 
 
 test("a late claim during upgrade archive hashing prevents cleanup of the recoverable previous video", async () => {
   const f = await harness.fixture();
+  await continueFixtureRequest(f.db, f.user, f.request.id);
   await f.db.acquisitionAttempt.update({
     where: { id: f.published.attempt.id },
     data: { state: "completed" },

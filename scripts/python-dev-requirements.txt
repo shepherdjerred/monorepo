@@ -8,6 +8,7 @@ beautifulsoup4
 babelfish
 boto3>=1.35
 fonttools>=4.50.0
+webrtcvad-wheels==2.0.14.post1
 guessit
 html2text
 httpx

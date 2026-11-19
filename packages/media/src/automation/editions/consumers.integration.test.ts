@@ -15,6 +15,8 @@ import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { readMovieRequestFulfillment } from "#infrastructure/movie-editions/fulfillment.ts";
 import { StoredTorrentObservationSchema } from "#integrations/qbittorrent.ts";
 import { createNotificationTransport } from "#integrations/notification-transport.ts";
+import { createPublicationActivities } from "#automation/publication.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
 
 const h = automationTestHarness();
 const access = { serverMachineId: "fixture-server", movieSectionId: "1" };
@@ -25,16 +27,33 @@ afterEach(async () => {
     await rm(directory, { recursive: true, force: true });
 });
 
-async function fixture(verified = true) {
+async function fixture(
+  verified = true,
+  phase: "retention" | "readiness" = "retention",
+) {
   const db = h.database();
   const f = await mappedPublicationFixture(db);
   directories.push(f.directory);
   const published = verified
     ? await preparePhysicalPublication(f)
     : await f.published();
-  const bound = verified
-    ? await prepareBoundRetention(f, published, h.context())
-    : null;
+  const bound =
+    verified && phase === "retention"
+      ? await prepareBoundRetention(f, published, h.context())
+      : null;
+  if (verified && phase === "readiness") {
+    const transport = await retentionPlexContext(
+      db,
+      h.context(),
+      published.attempt.mediaIds,
+    );
+    const publication = createPublicationActivities(transport.context);
+    expect(await publication.publishMediaToPlex(published.input)).toEqual({
+      status: "available",
+      reason: null,
+    });
+    await publication.finalizeMediaAcquisition(published.input);
+  }
   const retention = bound?.retention ?? null;
   await db.mediaUser.update({
     where: { id: f.user.id },
@@ -92,7 +111,7 @@ async function queueReady(f: Awaited<ReturnType<typeof fixture>>) {
 }
 
 test("final Discord channel response expires movie mapping before message POST and records known rejection", async () => {
-  const f = await fixture();
+  const f = await fixture(true, "readiness");
   const db = h.database();
   await db.mediaUser.update({
     where: { id: f.user.id },
@@ -177,7 +196,7 @@ test("physical promotion without verified Plex readback neither fulfills nor sen
 });
 
 test("a queued readiness message is rejected when its actual choice is revoked after claim", async () => {
-  const f = await fixture();
+  const f = await fixture(true, "readiness");
   expect(
     await readMovieRequestFulfillment(h.database(), {
       requestId: f.request.id,
@@ -250,6 +269,7 @@ test.each(["owner_missing", "member_named"])(
     if (kind === "owner_missing")
       await f.app.createRequest(actor, crypto.randomUUID(), {
         mediaId: f.media.id,
+        keepingPolicy: "temporary",
         subtitleLanguages: [],
         includeSpecials: false,
       });
@@ -321,6 +341,7 @@ test("shared playable bytes do not turn another subject's pending choice into fu
   const actor = { ...owner, role: "owner" as const };
   const requested = await f.app.createRequest(actor, crypto.randomUUID(), {
     mediaId: f.media.id,
+    keepingPolicy: "temporary",
     subtitleLanguages: [],
     includeSpecials: false,
   });

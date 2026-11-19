@@ -14,6 +14,12 @@ import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import {
+  completeFixtureRetentionInterests,
+  fixtureNotificationReceipts,
+} from "#testing/retention-interest.ts";
+import { pendingInAppWarningHistory } from "#automation/retention/fixtures/elapsed.ts";
+import { refreshRetentionReceipts } from "#automation/notifications/retention-receipts.ts";
 
 /** Actual A→B upgrade, accepted warning, B quarantine/restore/rebind; only policy time and remote transports are synthetic. */
 export async function createRestoredMovieCleanupFixture(
@@ -43,24 +49,18 @@ export async function createRestoredMovieCleanupFixture(
       create: { userId: user.id, emailEnabled: true },
       update: { emailEnabled: true },
     });
-    const receipts = new Map<string, string>();
     const policyNow = () => new Date(Date.now() + 8 * 86_400_000);
     const context: MediaAutomationContext = {
       ...f.context,
       now: policyNow,
       publicOrigin: page.url.origin,
-      notify: (message, mutation) => {
-        mutation?.beforeMutation();
-        const receipt = `synthetic-restored-cleanup:${message.idempotencyKey}`;
-        receipts.set(receipt, message.recipient);
-        return Promise.resolve({ receipt });
-      },
-      reconcileNotification: (input) =>
-        Promise.resolve({
-          status: receipts.has(input.receipt) ? "delivered" : "unknown",
-          recipient: receipts.get(input.receipt) ?? null,
-        }),
+      ...fixtureNotificationReceipts("synthetic-restored-cleanup"),
     };
+    await completeFixtureRetentionInterests(
+      context,
+      [f.scope.mediaId],
+      edition,
+    );
     const target = await f.db.mediaIntent.findUniqueOrThrow({
       where: { mediaId_edition: { mediaId: f.scope.mediaId, edition } },
     });
@@ -110,6 +110,10 @@ export async function createRestoredMovieCleanupFixture(
         notificationId: delivery.id,
       }),
     ).toEqual({ status: "accepted", reason: null });
+    expect(
+      await refreshRetentionReceipts(context, [f.scope.mediaId], edition),
+    ).toBe(true);
+    await pendingInAppWarningHistory(f.db, [delivery.eventId]);
     const evaluated = await evaluateMovieRetentionV4(
       context,
       retentionInput,

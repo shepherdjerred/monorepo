@@ -1,6 +1,9 @@
 import { z } from "zod";
-import type { Prisma } from "#generated/prisma/client.ts";
-import type { MovieSubtitleInstallV4 } from "#shared/movie-editions/subtitles-v4.ts";
+import type { Prisma, SubtitleAsset } from "#generated/prisma/client.ts";
+import type {
+  MovieSubtitleInstallV4,
+  MovieSubtitleOperationV4,
+} from "#shared/movie-editions/subtitles-v4.ts";
 import {
   movieSubtitleTargetV4,
   MovieSubtitleOperationV4Schema,
@@ -19,6 +22,10 @@ import { subtitleDestination } from "#domain/subtitle-path.ts";
 import type { MoviePublicationOutcomeV2 } from "#shared/movie-editions/publication-v2.ts";
 import { loadMovieRestorePublicationParentV1 } from "./publication/restore-records.ts";
 import { loadMovieRollbackPublicationParentV1 } from "./rollback/parent.ts";
+import {
+  regularDialogueCovered,
+  SubtitleSpeechProofSchema,
+} from "#domain/subtitle-speech.ts";
 
 /** Completed ACKs read original immutable parents before dynamic configuration or current target state. */
 export async function readMovieSubtitleReceiptV4(
@@ -186,7 +193,7 @@ function assertReceiptPublication(
 }
 
 export function assertMovieSubtitleReceiptV4(receipt: MovieSubtitleReceiptV4) {
-  const { input, target, before, after } = receipt;
+  const { input, target, after } = receipt;
   if (
     target.operationId !== input.operationId ||
     target.assetId !== input.assetId ||
@@ -197,7 +204,7 @@ export function assertMovieSubtitleReceiptV4(receipt: MovieSubtitleReceiptV4) {
     receipt.command.targetId !== input.assetId ||
     after.ownershipEpoch !== target.recoveryEpoch ||
     after.language !== target.language ||
-    (target.forced !== undefined && after.forced !== target.forced) ||
+    !matchesReceiptForcedTarget(receipt) ||
     (target.hearingImpaired === "required" && after.hearingImpaired !== true) ||
     (target.hearingImpaired === "excluded" &&
       after.hearingImpaired !== false) ||
@@ -208,10 +215,41 @@ export function assertMovieSubtitleReceiptV4(receipt: MovieSubtitleReceiptV4) {
     throw new Error(
       "Movie subtitle completion lost its exact target, extraction or journal",
     );
-  assertCaptionTransition(before, after);
+  assertCaptionTransition(receipt);
   assertInstallationEvidence(receipt);
   assertInstallationJournal(receipt);
   assertInstallationDeadline(receipt);
+}
+
+function matchesReceiptForcedTarget({ target, after }: MovieSubtitleReceiptV4) {
+  if (target.forced === undefined || after.forced === target.forced)
+    return true;
+  const evidence = z
+    .object({ regularDialogueV1: z.unknown() })
+    .safeParse(after.matchingEvidence);
+  return (
+    !target.forced &&
+    after.forced === null &&
+    ["en", "zh-CN", "zh-Hans"].includes(target.language) &&
+    evidence.success &&
+    regularDialogueCovered(
+      evidence.data.regularDialogueV1,
+      after.videoChecksum,
+      after.checksum,
+    )
+  );
+}
+
+/** Reject a forged prepared stage before an installer can publish a sidecar. */
+export function assertMovieSubtitleCandidateVersionV4(
+  caption: SpeechCandidate,
+  target: MovieSubtitleOperationV4,
+) {
+  if (
+    caption.version !== 0 &&
+    !(caption.version === 1 && preparedCaptionProof(caption, target))
+  )
+    throw new Error("Movie subtitle candidate preparation changed");
 }
 
 function assertInstallationEvidence(receipt: MovieSubtitleReceiptV4) {
@@ -230,10 +268,11 @@ function assertInstallationEvidence(receipt: MovieSubtitleReceiptV4) {
     throw new Error("Movie subtitle completion target authority changed");
 }
 
-function assertCaptionTransition(
-  before: MovieSubtitleReceiptV4["before"],
-  after: MovieSubtitleReceiptV4["after"],
-) {
+function assertCaptionTransition({
+  before,
+  after,
+  target,
+}: MovieSubtitleReceiptV4) {
   const {
     version,
     state,
@@ -251,14 +290,18 @@ function assertCaptionTransition(
     ...installed
   } = after;
   if (
-    version !== 0 ||
-    installedVersion !== 1 ||
     state !== "validated" ||
     path !== null ||
     before.storageKind !== "sidecar" ||
     before.qualityStatus !== "accepted" ||
     after.checksum === null ||
     after.checksum !== after.contentChecksum ||
+    !(
+      (version === 0 && installedVersion === 1) ||
+      (version === 1 &&
+        installedVersion === 2 &&
+        preparedCaptionProof(before, target))
+    ) ||
     identityHash(nativeJson(original)) !==
       identityHash(nativeJson(installed)) ||
     identityHash(nativeJson(after.provenance)) !==
@@ -272,6 +315,68 @@ function assertCaptionTransition(
     throw new Error(
       "Movie subtitle installation changed its captured bytes or caption facts",
     );
+}
+
+/** Only the one measured candidate transition may precede installation. */
+type SpeechCandidate = Pick<
+  SubtitleAsset,
+  | "version"
+  | "matchingEvidence"
+  | "videoChecksum"
+  | "videoVersion"
+  | "checksum"
+  | "ownershipEpoch"
+  | "forced"
+  | "language"
+>;
+
+function preparedCaptionProof(
+  caption: SpeechCandidate,
+  target: MovieSubtitleOperationV4,
+) {
+  const parsed = z
+    .object({
+      schemaVersion: z.literal(4),
+      operationId: z.literal(target.operationId),
+      targetAuthority: z.literal(target.targetAuthority),
+      movieScope: z.object({
+        rootMediaId: z.literal(target.scope.rootMediaId),
+        mediaId: z.literal(target.scope.mediaId),
+        edition: z.literal(target.scope.edition),
+      }),
+      assetVersion: z.literal(caption.videoVersion),
+      assetChecksum: z.literal(caption.videoChecksum),
+      recoveryEpoch: z.literal(caption.ownershipEpoch),
+      regularDialogueRequiredV1: z.boolean().optional(),
+      regularDialogueV1: SubtitleSpeechProofSchema,
+      timingAlignedV1: z.strictObject({
+        schemaVersion: z.literal(1),
+        videoChecksum: z.literal(caption.videoChecksum),
+        subtitleChecksum: z.literal(caption.checksum),
+        engine: z.literal("ffsubsync-0.5.1"),
+        maxOffsetSeconds: z.literal(60),
+        goldenSectionRequested: z.literal(true),
+        fixFrameRate: z.literal(false),
+      }),
+    })
+    .safeParse(caption.matchingEvidence);
+  if (!parsed.success) return false;
+  const proof = parsed.data.regularDialogueV1;
+  return (
+    proof.videoChecksum === caption.videoChecksum &&
+    proof.subtitleChecksum === caption.checksum &&
+    proof.speechMs <= proof.runtimeMs &&
+    proof.coveredSpeechMs <= proof.speechMs &&
+    proof.windows.every((w) => w.coveredSpeechMs <= w.speechMs) &&
+    proof.windows.reduce((n, w) => n + w.speechMs, 0) === proof.speechMs &&
+    proof.windows.reduce((n, w) => n + w.coveredSpeechMs, 0) ===
+      proof.coveredSpeechMs &&
+    (!(
+      parsed.data.regularDialogueRequiredV1 === true ||
+      (target.forced === false && caption.forced === null)
+    ) ||
+      regularDialogueCovered(proof, caption.videoChecksum, caption.checksum))
+  );
 }
 
 function assertInstallationJournal(receipt: MovieSubtitleReceiptV4) {

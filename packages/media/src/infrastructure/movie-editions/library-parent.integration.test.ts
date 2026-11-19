@@ -1,10 +1,10 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
-import { readFile, rm } from "node:fs/promises";
+import { expect, test } from "vitest";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { libraryAdoptionHarness } from "#automation/handoff/library-fixture.ts";
 import { adoptedMovieFixture } from "#testing/library-movie.ts";
-import { movieVideoFixture } from "#testing/movie-video.ts";
+import { libraryCaptionFilename } from "#automation/plex-binding/library.test-fixture.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { snapshotMoviePublicationAssetV2 } from "./publication/snapshot.ts";
@@ -20,26 +20,17 @@ import { fromOpenSubtitles } from "#automation/subtitle-sources.ts";
 import { MovieSubtitleOperationV4Schema } from "#shared/movie-editions/subtitles-v4.ts";
 import { readMovieSubtitleReceiptV4 } from "./subtitle-receipt.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
+import { captionSearchResponse } from "#automation/movie-editions/notifications/caption-provider.test-fixture.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
-let bytes: Uint8Array;
-const directories: string[] = [];
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-  bytes = await movieVideoFixture();
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-  for (const directory of directories)
-    await rm(directory, { recursive: true, force: true });
-});
+const cluster = libraryAdoptionHarness();
+const directories = cluster.directories;
 
 test.each(MovieEditionKeySchema.options)(
   "an actually adopted %s file supplies its immutable parent without an acquisition history",
   async (edition) => {
     const f = await adoptedMovieFixture(
       cluster.database,
-      { bytes, edition },
+      { bytes: cluster.bytes, edition },
       (directory) => directories.push(directory),
     );
     const budget = new PublicationAuthorityReadBudget();
@@ -128,7 +119,7 @@ test.each(MovieEditionKeySchema.options)(
 test("initial library parent reads preserve the caller's single allowance", async () => {
   const f = await adoptedMovieFixture(
     cluster.database,
-    { bytes, edition: "final_cut" },
+    { bytes: cluster.bytes, edition: "final_cut" },
     (directory) => directories.push(directory),
   );
   const budget = new PublicationAuthorityReadBudget();
@@ -176,22 +167,10 @@ async function provider(f: Awaited<ReturnType<typeof adoptedMovieFixture>>) {
           return Promise.resolve(Response.json({ token: "fixture" }));
         if (url.pathname.endsWith("/subtitles"))
           return Promise.resolve(
-            Response.json({
-              total_pages: 1,
-              data: [
-                {
-                  id: "1",
-                  attributes: {
-                    language: "en",
-                    release: "human",
-                    ai_translated: false,
-                    machine_translated: false,
-                    foreign_parts_only: false,
-                    hearing_impaired: false,
-                    files: [{ file_id: 1, file_name: filename }],
-                  },
-                },
-              ],
+            captionSearchResponse(query, {
+              language: "en",
+              release: "human",
+              filename,
             }),
           );
         if (url.pathname.endsWith("/download"))
@@ -217,7 +196,11 @@ test.each(MovieEditionKeySchema.options)(
   async (edition) => {
     const f = await adoptedMovieFixture(
       cluster.database,
-      { bytes, edition },
+      {
+        bytes: cluster.bytes,
+        edition,
+        fileName: libraryCaptionFilename(edition),
+      },
       (directory) => directories.push(directory),
     );
     expect(

@@ -3,6 +3,7 @@ import { captureManager } from "./manager-capture.ts";
 import { normalizeCapture } from "#migration/normalize.ts";
 import { compareCaptures } from "#migration/delta.ts";
 import { recordDigest, validateCapture } from "./capture-validation.ts";
+import { captureGetFixture } from "./capture.test-fixture.ts";
 
 function source() {
   return {
@@ -14,43 +15,31 @@ function source() {
 }
 function fetcher(change = false): typeof fetch {
   let movies = 0;
-  return Object.assign(
-    async (
-      input: Parameters<typeof fetch>[0],
-      init?: Parameters<typeof fetch>[1],
-    ) => {
-      expect(init?.method).toBe("GET");
-      const url = new URL(input instanceof Request ? input.url : input);
-      if (url.pathname.endsWith("system/status"))
-        return Response.json({ version: "6.4.4", apiKey: "must-not-persist" });
-      if (url.pathname.endsWith("movie"))
-        return Response.json([
-          {
-            id: 1,
-            tmdbId: change && ++movies === 2 ? 999 : 10,
-            qualityProfileId: 1,
-            monitored: true,
-            title: "unneeded",
-            email: "private@example.invalid",
-          },
-        ]);
-      return Response.json([
+  return captureGetFixture((url) => {
+    if (url.pathname.endsWith("system/status"))
+      return { version: "6.4.4", apiKey: "must-not-persist" };
+    if (url.pathname.endsWith("movie"))
+      return [
         {
-          id: 4,
-          movieId: 1,
-          path: "/movies/Example.mkv",
-          size: 1000,
-          quality: { quality: { id: 7 } },
-          downloadUrl: "https://private.invalid/secret",
+          id: 1,
+          tmdbId: change && ++movies === 2 ? 999 : 10,
+          qualityProfileId: 1,
+          monitored: true,
+          title: "unneeded",
+          email: "private@example.invalid",
         },
-      ]);
-    },
-    {
-      preconnect() {
-        /* No network in the fixture. */
+      ];
+    return [
+      {
+        id: 4,
+        movieId: 1,
+        path: "/movies/Example.mkv",
+        size: 1000,
+        quality: { quality: { id: 7 } },
+        downloadUrl: "https://private.invalid/secret",
       },
-    },
-  );
+    ];
+  });
 }
 test("GET capture strips unknown secrets and preserves exact identities with unverified files protected", async () => {
   const snapshot = await captureManager(source(), fetcher());
@@ -151,4 +140,55 @@ test("forged counts, unknown payload keys and duplicate records are rejected", a
     }),
   ).toThrow();
   expect(() => validateCapture({ ...snapshot, apiKey: "secret" })).toThrow();
+});
+test("Sonarr capture retains disabled seasons and explicit per-episode monitoring separately", async () => {
+  const reply = captureGetFixture((url) => {
+    if (url.pathname.endsWith("system/status")) return { version: "4.0.0" };
+    if (url.pathname.endsWith("series"))
+      return [
+        {
+          id: 3,
+          tvdbId: 42,
+          qualityProfileId: 1,
+          monitored: true,
+          seasons: [
+            { seasonNumber: 0, monitored: false },
+            { seasonNumber: 1, monitored: false },
+            { seasonNumber: 2, monitored: true },
+          ],
+        },
+      ];
+    if (url.pathname.endsWith("episode"))
+      return [
+        {
+          id: 4,
+          seriesId: 3,
+          seasonNumber: 1,
+          episodeNumber: 1,
+          episodeFileId: 0,
+          monitored: true,
+        },
+      ];
+    return [];
+  });
+  const capture = await captureManager(
+    { ...source(), source: "sonarr" },
+    reply,
+  );
+  expect(validateCapture(capture)).toMatchObject({
+    complete: true,
+    stable: true,
+  });
+  expect(
+    capture.records.filter(
+      (record) => record.kind === "media" && record.mediaKind === "season",
+    ),
+  ).toMatchObject([
+    { season: 0, monitored: false },
+    { season: 1, monitored: false },
+    { season: 2, monitored: true },
+  ]);
+  expect(
+    capture.records.find((record) => record.sourceId === "episode:4"),
+  ).toMatchObject({ season: 1, episode: 1, monitored: true });
 });

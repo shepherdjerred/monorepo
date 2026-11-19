@@ -8,6 +8,71 @@ Implementation and rollout acceptance are tracked in
 [AI-300](https://tracker.tailnet-1a49.ts.net/issues/AI-300). This package does not
 automatically take ownership of existing library files or torrents.
 
+## Household keeping and viewing APIs
+
+Requests distinguish permanent keeping policy from temporary interest. New owner
+requests require an explicit `keep` or `temporary` choice; member requests are
+temporary. Only the owner can grant permanent keeping. Migration keeps existing
+library scopes protected, while existing request interests remain temporary.
+An explicit owner library
+policy overrides inherited migration defaults without waiting for episode pages
+to expand. Independent personal Keeps still protect shared files.
+
+Temporary interest is `following`, `finished`, `dropped`, or `expired`. A watched
+movie can finish automatically. A TV request completes automatically only with
+fresh ended/cancelled metadata and complete requested, released coverage;
+catching up on an ongoing series keeps the subscription. Whole-show protection
+is checked through the ancestor chain before file effects. Finished and Drop
+retain request history while stopping future acquisition authority.
+
+Restarting a request that finished automatically after a watched movie or completed
+series starts a fresh viewing cycle. Existing Plex watched flags, early progress
+and history cannot finish that new cycle: each required movie or episode needs a
+new native completion bound to the current person and media identities. Unknown
+or rebound identities protect the request. Ordinary Keep watching resumes an
+unfinished cycle and retains completed-episode credit. Re-requesting after manual
+Finished, Drop, expiry or cancellation also preserves that cycle. Normal 30/60-day
+inactivity clocks and private-notice rules still apply from the renewed interest.
+Marking automatically finished content unwatched in Plex does not renew interest
+or restore quarantined files. Keep watching or Request again is required.
+
+Inactivity clocks advance only when proven usable, unwatched content is
+available: 30 days before starting, or 60 days without further meaningful
+progress. A private interest reminder provides seven days to reply. Its exact
+request revision must have an accepted private delivery or an acknowledged
+in-app view; failed or unknown delivery cannot expire interest. Watching or
+Keep watching renews interest and invalidates an older reminder. When no Keep
+or interested requester remains, removal still requires the existing identity,
+playback, ownership and file-cohort checks, a seven-day Leaving Soon period,
+and seven days of recoverable quarantine before purge.
+
+The authenticated read APIs are bounded and do not create acquisition or
+removal authority:
+
+| Route                              | Purpose                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------- |
+| `GET /api/v1/library`              | Current visible library, keeping policy and personal interest.         |
+| `GET /api/v1/calendar`             | TV air dates and US theatrical, digital and physical movie dates.      |
+| `GET /api/v1/removal-history`      | Committed quarantine/removal history, retained after purge.            |
+| `GET /api/v1/playback/now-playing` | Separate whole-library playback observations, with explicit freshness. |
+| `GET /api/v1/playback/history`     | Searchable session history, separate from current Plex watched truth.  |
+| `GET /api/v1/playback/statistics`  | Plays, watch time, rankings and playback decisions.                    |
+| `GET /api/v1/request-interests`    | Personal interest state, notice and revision context.                  |
+
+`POST /api/v1/request-interests/:id/commands` applies revision-checked,
+idempotent interest actions. `POST /api/v1/library/:id/keeping-policy` changes
+owner library policy against the current media and target versions. Opening a
+notification link never changes these states.
+
+Calendar dates retain their source date-only precision, including TBA, rather
+than treating UTC midnight as an airing instant. Viewing history uses separate
+playback tables and a dedicated Plex parser; immutable file-serving evidence is
+unchanged. Statistics retain the two-minute minimum play and 85% reporting
+completion threshold. Neither historical import nor statistical completion
+writes current Plex watched state or authorizes retention. Household playback
+is owner-visible; members see their own sessions, and unmapped history stays
+owner-only.
+
 ## Edition scope
 
 Canonical media identity and lifecycle intent are separate. Current-state
@@ -207,7 +272,8 @@ movie associations, including the unmarked choice, queue scoped v4 watch and
 retention work; version-1 associations retain their original payloads and hashes.
 Each hint checks its stored operation, generation, epoch and binding before reading
 the requester's current metadata. A scrobble event alone never proves watched
-state. An authenticated unwatched observation of quarantined v4 bytes queues
+state. An authenticated unwatched observation of quarantined v4 bytes remains
+observational after released interest; explicit renewed interest queues
 restoration for that exact edition.
 
 The internal movie Files contract is a version-2 object, separate from the
@@ -329,6 +395,14 @@ An explicit empty override is honored; malformed rules and unconfirmed epochs
 remain protected. Personal subtitle targets require current edition consent.
 Caption progress does not change the digest for a sibling target.
 
+Tracker configuration can capture source priority, minimum seeders, a first-seen
+delay and highest-allowed-quality bypass. Admission and final reservation use the
+same policy, and delayed sources receive a durable outbox recheck. Mutable native
+availability observations live separately from immutable assessed release bytes;
+observations older than 30 minutes cannot establish a positive seeder floor.
+Pirate Bay feeds consume its actual bounded recent snapshot without fabricating
+pagination. Existing transfer ownership and seeding obligations are unchanged.
+
 New inspections record version-2 embedded-stream observations alongside their
 literal file plans. Each normalized extraction binds the actual probe hash,
 stream index, video checksum and observed forced/hearing-impaired flags.
@@ -339,6 +413,16 @@ adapters, ordering, global quotas and uncertain-download claims as TV, while
 retaining the imported release filename's exact version and cut.
 Quota-consuming download claims recheck the current target while retaining the
 lookup's original requester observation.
+
+Providers without a forced flag retain `forced: null`. A regular English or
+Simplified Chinese target can use that candidate only after the Files worker
+measures speech independently from the owned video's first audio stream and
+proves caption coverage throughout the video. The proof binds both content
+digests; sparse forced captions do not satisfy the regular target. A dedicated
+patched Activity performs this work without changing retained installation
+deadlines. Its private speech reference also supplies ffsubsync timing with the
+configured 60-second maximum offset and frame-rate correction disabled. Original
+caption bytes remain recoverable when a synchronized candidate is accepted.
 
 Movie caption installation stages validated bytes outside PostgreSQL and checks
 current scope, policy, consent, runtime, storage and physical publication before
@@ -407,6 +491,41 @@ catches hangs. Keep both copies of the flags in sync.
 Media inspection tests also require `ffmpeg` and `ffprobe` on `PATH`; the CI and
 Temporal images install them. The repository's mise configuration supplies the
 upstream `7zz` command used for bounded subtitle archive extraction.
+
+### Native subtitle tools
+
+Native caption and Workflow checks require real `media-subtitle-analysis` and
+`ffsubsync` commands. `runMediaTool` uses the credential-free fixed search path
+`/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin`; activating a shell virtualenv
+does not expose its tools to the worker. Missing tools fail these checks rather
+than skipping speech measurement or timing alignment.
+
+From the repository root, reproduce the Temporal Dockerfile's isolated,
+hash-locked environment with the matching analysis script:
+
+```sh
+subtitle_tools="$HOME/.cache/media-subtitle-tools-0.5.1"
+uv venv --python 3.13 "$subtitle_tools"
+uv pip install --python "$subtitle_tools/bin/python" --require-hashes --only-binary :all: -r packages/media/scripts/subtitle-build-requirements.txt
+uv pip install --python "$subtitle_tools/bin/python" --require-hashes --no-build-isolation -r packages/media/scripts/subtitle-requirements.txt
+cp packages/media/scripts/subtitle-analysis.py "$subtitle_tools/analysis.py"
+"$subtitle_tools/bin/python" -c 'from importlib.metadata import version; assert version("ffsubsync") == "0.5.1"'
+printf '%s\n' '#!/bin/sh' "exec \"$subtitle_tools/bin/python\" \"$subtitle_tools/analysis.py\" \"\$@\"" > "$subtitle_tools/media-subtitle-analysis"
+chmod +x "$subtitle_tools/media-subtitle-analysis"
+```
+
+Inspect existing command entries before installation. In a writable directory
+already in the fixed search path, expose the two entrypoints without replacing
+unrelated tools; for example, on a Homebrew Apple Silicon host:
+
+```sh
+ln -s "$subtitle_tools/bin/ffsubsync" /opt/homebrew/bin/ffsubsync
+ln -s "$subtitle_tools/media-subtitle-analysis" /opt/homebrew/bin/media-subtitle-analysis
+```
+
+Keep both lock files and `subtitle-analysis.py` from the same checkout used for
+verification. The wrapper retains absolute interpreter/script paths; no worker
+search-path change or system Python package installation is needed.
 
 ### Local system acceptance
 
@@ -498,6 +617,95 @@ This is boundary and planning evidence. It does not perform filesystem imports,
 prove file ownership, grant request or edition consent, contact providers or
 establish live compatibility. Those behaviors require the separate integration
 and runtime checks.
+
+## Selected living-room quality profiles
+
+Owner administration provides a preview and explicit apply action for the
+selected movie or TV TRaSH profile. The preset targets a Samsung QN90B, Apple TV
+4K with Infuse, and Sonos Arc: HDR10/HDR10+ preference, a mild DD+ Atmos score
+of 300 and DD+ score of 50, and neutral lossless audio. The movie ladder ends at
+2160p remux; TV ends at the equal-rank 2160p WEB group. Both use the intended
+10,000-score upgrade cutoff, duration-based guide sizes, and explicit 4K size
+overrides. Equal WEB sources stay equal rather than becoming accidental upgrade
+steps. Duplicate format assignments are normalized to one selected ID and one
+explicit household score; the unused TV remux size override is omitted.
+
+The compiler in `src/domain/quality-guide/` reuses the resolved source evaluator
+and its packaged .NET regex evidence. It retains original audio: English for
+English originals, otherwise the canonical original language. An unknown listing
+audio language permits a provisional download only. Measured inspection requires
+the original audio and compatible video signaling before publication. Dolby
+Vision without a standard compatible base layer is rejected; unknown Dolby
+signaling remains protected. Foreign originals also require regular English
+captions, derived from the actual title's assigned immutable profile, independently
+of requester language choices.
+
+The `media-quality-guide` Temporal schedule runs daily. Its Network activity
+fetches only the selected fixed source paths at one immutable TRaSH Git revision,
+validates every definition, and appends a new `QualityProfileVersion` only when
+the selected content changes. Explicit score overrides survive refresh. An
+invalid response preserves the last good version and records a sanitized failure
+visible in owner administration. Active reservations defer pointer changes until
+their captured profile drains; updates do not rewrite files or increment target
+generations. Existing playable files with unproven measured evidence remain
+protected from automatic replacement. Applying a new default changes future
+requests; assigning an existing title still uses its explicit profile control.
+
+The owner API is `GET /api/v1/admin/quality-guide`, `POST
+/api/v1/admin/quality-guide/preview`, and `POST
+/api/v1/admin/quality-guide/apply`. Apply requires the reviewed source revision,
+content hash, expected profile version, and idempotency key. Managed profiles
+use these controls instead of the raw profile editor so source provenance and
+overrides cannot be silently removed. The bundled public guide test snapshot is
+MIT licensed; its revision is evidence for tests, never a production fallback.
+
+## Recurring personal subtitle maintenance
+
+The declarative `media-subtitle-wanted-v1` and `media-subtitle-upgrade-v1`
+Temporal schedules inspect bounded pages of owned, published video versions.
+Each planner hands targets to independent, 24-hour-bounded job Workflows and
+awaits only their durable start. A pending target cannot block later assets;
+jobs survive planner completion, page continuation and cancellation. Repeated
+plans retain the same operation identity and do not restart existing, failed
+or cancelled jobs. Native replacement coordinators still own swap and recovery.
+Wanted searches run every six hours; after three weeks from the first failed
+search, that target retries weekly. Upgrades run every twelve hours for captions
+created in the past seven days, including manual origins with genuine accepted
+matching evidence. The typed `subtitleMaintenanceEnabled` behavior defaults on.
+Current request, imported-policy, assigned household-profile, ownership, epoch,
+and exact movie-edition authority are rechecked before any Files effect.
+
+Source scores retain the audited Bazarr 1.6.2 match weights and actual observed
+matches, bound to a canonical catalog and measured-video reference hash. TV
+requires 70 percent and movies 80 percent; improvements must exceed the current
+accepted score under the same reference. Provider canonical IDs can establish
+foreign-title identity. Missing metadata earns no points, conflicting IDs reject,
+and unknown historical scores protect the installed caption. Rejected digests
+and actual download candidate IDs exclude only definitive failures under that
+same reference. Unknown download outcomes keep their existing journal and never
+authorize a blind retry or another provider download within that operation.
+
+The observed English Subf2m fallback uses a bounded native fixed-origin adapter
+alongside OpenSubtitles, ASSRT, SubHD and Zimuku. Unknown forced/HI flags remain
+unknown. Files independently measures regular dialogue and applies the audited
+TV 96/movie 86 synchronization thresholds before installation or before an
+immutable replacement snapshot. Provider identity and source authorship remain
+separate from this timing proof.
+
+Movie speech preparation checks the stored V4 operation and its exact edition,
+current consent and access before and after measurement, retaining the original
+Activity capability and 100-record read budget. A measured candidate advances
+from version zero to one before installation. Installation receipts accept only
+the existing unmeasured zero-to-one transition or a prepared one-to-two
+transition with current video/caption checksums, speech and timing proof.
+
+Automatic improvements use the existing replacement preparation, physical
+review, swap, compensation and receipt coordinators. Distinct immutable
+automatic-candidate and policy-authorization events bind the real download,
+numeric improvement, owner, target and physical observation. Human `approvedBy`
+and `approvedAt` fields remain unset. PostgreSQL validates automatic ancestry
+and same-transaction caption transitions; uncertain physical outcomes remain
+reconciling under the existing coordinator.
 
 ## qBittorrent integration contract
 
@@ -1208,17 +1416,20 @@ ordinary authority guards remain protected. A queued command is not delivery
 acceptance; verify its attempt and provider receipt. The owner recovery page
 reviews protections and does not itself restore writer or storage authority.
 
-The deployment currently omits Discord credentials. Before configuring Discord,
-provision `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, and `DISCORD_BOT_TOKEN`
-in the Media bootstrap item through the repository's password-manager workflow.
-Then add required secret-key references for the OAuth ID and secret to
-[`api.ts`](../homelab/src/cdk8s/src/resources/media/application/api.ts), and the
-bot token only to the network worker in
+Media reuses the existing Streambot Discord application and its
+`media-streambot-config` Secret. The owning `streambot-config` password-manager
+item supplies `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` only to
+[`api.ts`](../homelab/src/cdk8s/src/resources/media/application/api.ts); its
+existing `BOT_TOKEN` supplies `DISCORD_BOT_TOKEN` only to the network worker in
 [`workers.ts`](../homelab/src/cdk8s/src/resources/media/application/workers.ts).
-The files worker and workflow executor receive none. Both OAuth fields must be
-configured together; partial configuration fails API startup. Keep Discord flags
-disabled until provisioning, deployment, and authenticated delivery verification
-are complete; optional secret references are prohibited by homelab policy.
+The files worker and workflow executor receive none. Provision the app's actual
+client ID in that same item, preserve its existing credentials, and refresh the
+committed vault snapshot before deploying these required references. Preserve
+Streambot's existing OAuth redirect when adding Media's canonical origin followed
+by `/notifications/discord` to the same application's redirects. Both OAuth
+fields must be configured together; partial configuration fails API startup.
+Keep Discord flags disabled until provisioning, deployment, and authenticated
+delivery verification are complete; optional secret references are prohibited.
 
 ## Restore preparation command
 
@@ -1516,6 +1727,22 @@ Media digest. The chart constructor leaves the parallel application absent
 unless given an explicit image selection. Its synthesis recipe must be bound
 to an immutable artifact by Delivery before rendering a deployment.
 
+Before rolling out a qualified Media API image, set `FLIPT_URL` to the intended
+management endpoint and run this create-only bootstrap from the same qualified
+source. Verify the created-key list and fresh scoped readback before the consumer
+starts; preserve existing targeting and the acquisition hold through handoff.
+An older repo Activity image and Flipt's seed initializer do not backfill newly
+declared keys. Do not trigger the global inventory Workflow or use
+`--apply-declared` for this step.
+
+```sh
+FLIPT_OPERATOR_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/flipt-auth/operator-token' \
+  scripts/onepassword/with-service-account.sh \
+  op run -- env -u OP_SERVICE_ACCOUNT_TOKEN \
+  bun run check-flipt-flag-inventory -- \
+  --apply-missing --environment prod --namespace media
+```
+
 The [API](src/server/index.ts) commits intent and an outbox row together. The
 [outbox dispatcher](src/automation/store.ts) starts workflows using stable IDs;
 a failed Temporal connection leaves the command available for later delivery.
@@ -1559,14 +1786,35 @@ fields remain the compatibility envelope; they do not override the resolved
 rules. Profile versions preserve the captured snapshot. Unknown rules,
 original-language evidence, or required release metadata protect the candidate.
 
-The production matcher invokes the self-contained
-`/opt/media-regex/RegexOracle` executable on Node or Bun. It uses .NET 10.0.11,
+The production matcher invokes the self-contained `RegexOracle` executable from
+`PATH` on Node or Bun. The image links `/usr/local/bin/RegexOracle` to the packaged
+`/opt/media-regex/RegexOracle` binary. It uses .NET 10.0.11,
 explicit `en-US` culture, a 25 ms regex deadline and a 60 second process deadline.
 The production image excludes the .NET SDK. Input and output are bounded and
 validated through a Node child-process protocol. Matching happens before database
 locks; final guards use only exact pattern/input observations. New predicates
 without observations protect until evidence is refreshed. Acquisition-referenced
 candidate evidence stays immutable.
+
+Native verification requires that same self-contained matcher on `PATH`; a
+missing executable fails the check. From the repository root, publish with the
+pinned SDK and runtime, retaining the entire output directory beside its binary:
+
+```sh
+MEDIA_REGEX_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/media-regex"
+mise exec -- dotnet publish packages/media/scripts/regex-oracle/RegexOracle.csproj \
+  --configuration Release --runtime osx-arm64 --self-contained true \
+  --artifacts-path "$MEDIA_REGEX_CACHE/build" --output "$MEDIA_REGEX_CACHE/publish"
+mkdir -p "$HOME/.local/bin"
+ln -s "$MEDIA_REGEX_CACHE/publish/RegexOracle" "$HOME/.local/bin/RegexOracle"
+```
+
+Use the native runtime identifier (`osx-arm64`, `osx-x64`, `linux-arm64`, or
+`linux-x64`) and an existing writable executable directory on your `PATH`.
+The example assumes `$HOME/.local/bin` is on it; the link command refuses an
+existing entry. The repository SDK pin and
+[`RegexOracle.csproj`](scripts/regex-oracle/RegexOracle.csproj) runtime pin match
+the image; no regex implementation is substituted for local checks.
 
 The source parser supports a verified scene-name subset and captured Sonarr
 anime forms with bracketed groups, absolute numbering, checksums, explicit
@@ -1685,6 +1933,7 @@ contact details, provider configuration, private URLs, and credentials.
 bun scripts/migration-inventory.ts --capture sonarr --base-url "$MEDIA_SOURCE_URL" --api-key-reference "$MEDIA_SOURCE_KEY_REFERENCE" --instance-id "$MEDIA_SOURCE_INSTANCE_HASH"
 bun scripts/migration-inventory.ts --capture qbittorrent --base-url "$MEDIA_SOURCE_URL" --username-reference "$MEDIA_USERNAME_REFERENCE" --password-reference "$MEDIA_PASSWORD_REFERENCE" --instance-id "$MEDIA_SOURCE_INSTANCE_HASH"
 bun scripts/migration-inventory.ts --snapshot capture.json --targets targets.json --baseline previous-capture.json
+bun scripts/migration-inventory.ts --capture sonarr --drain --base-url "$MEDIA_SOURCE_URL" --api-key-reference "$MEDIA_SOURCE_KEY_REFERENCE" --instance-id "$MEDIA_SOURCE_INSTANCE_HASH"
 ```
 
 The output contains `snapshot`, a protected normalization report, and an optional
@@ -1711,6 +1960,94 @@ recorded as owner supplied, not discovered authority. Association requires the
 same manager kind, instance, numeric media ID, and captured video path in a
 complete, stable combined bundle. Fresh handoff evidence additionally checks the
 actual worker/PVC roots and video bytes; matching path suffixes never suffice.
+
+### Personal state import contract
+
+The [personal migration service](src/migration/personal-state/service.ts) uses
+persisted complete, stable captures and the existing owner-reviewed requester
+bindings. `POST /api/v1/admin/migration/personal/preview` takes `captureIds`,
+explicit `movieEditions: [{ mediaId, edition }]`, and `historyOnly` provenance
+keys for obsolete source requests. Preview is read-only and repeatable. It
+includes source monitoring masks, subtitle policies, exact claim dispositions,
+and a hash of the captures, bindings, catalog, requests and library state.
+
+`POST /api/v1/admin/migration/personal/apply` takes the same selection,
+`previewHash`, `acknowledgeExistingLibraryKeep: true`, and
+`acknowledgeTemporaryFollowingClaims: true`, with an `Idempotency-Key` header.
+Changed evidence requires another preview. Existing native requests, including
+cancellations and explicit Keep choices, are preserved. Imported claims are
+Temporary/following. Seerr Approved and Completed are eligible; Completed means
+source fulfillment, never that a viewer finished watching. Pending, declined,
+failed and explicitly obsolete requests remain source history. Older captures
+without raw statuses must be recaptured before activation.
+
+Imported independent Plex accounts retain genuine source consent. Import does
+not impersonate those accounts or create a native movie edition-choice audit.
+`GET /api/v1/requests/imported` exposes the source/status and any pending movie
+choice to the owner or the claim's own user. The requester makes that choice
+through the existing movie detail flow. TV imports preserve selected season
+requests, including explicitly selected specials.
+
+The immutable `personal_state_imported` receipt accounts only its exact captured
+record digest, reviewed requester binding, and real native request identities.
+Once all relevant approved claims reconcile and library Keep defaults are
+established, import releases only the generated
+`migration_household_intent_review_required` hold. Unmapped or incomplete
+claims retain protection; manual and other recovery holds remain intact. This
+does not manufacture a household recovery release receipt.
+Apply returns the immutable `eventId` and a `next` hold cursor. If non-null,
+call `POST /api/v1/admin/migration/personal/reconcile` with `{eventId, after: next}`
+and a fresh idempotency key, continuing until `next` is null. Each page inspects
+at most 25 holds without extending ordinary transaction deadlines. Protected
+rows remain held and can be reconsidered from `after: null` once evidence is
+resolved. File adoption also reconciles its selected targets against existing
+genuine personal-import receipts.
+
+Initial-library v3 approvals may explicitly include `registeredAssets` with the
+exact provenance key, passive asset ID/version zero, registration event ID,
+registration hash, and `registrationRaw` containing its canonical JSON. This permits promotion only of that unchanged passive
+registration. The existing Files checksum/probe, current Plex item/Part,
+storage and stopped-writer proofs remain required. Already-corrected Plex
+labels and reviewed named editions are preserved in place. No torrent or
+acquisition is adopted. New imports begin with library Keep while preserving
+any later explicit owner library policy. Optional `seriesMonitoring` masks
+retain captured disabled seasons and per-episode overrides for future catalog
+expansion; historical approvals retain their literal representations.
+
+The `--drain` inventory above reads each manager's entire queue and active
+commands twice. An empty stable result proves drainage, not stopped writers.
+Use the existing `--baseline` comparison for the final manager/request/subtitle
+delta, then the trusted legacy-writer observer for actual quiescence.
+
+The [frozen playback reader](src/migration/personal-state/frozen-playback.ts)
+normalizes a stopped Tautulli writer's consistent SQLite snapshot:
+
+```sh
+bun scripts/migration-playback.ts --sqlite /path/to/frozen-tautulli.db
+```
+
+For a stopped source read through existing storage tooling, pipe the complete
+SQLite image to `--sqlite - --wal-settled` after independently proving its WAL
+is empty/settled. Stdin is bounded and deserialized read-only in memory; no
+credential-bearing database file is written. The flag acknowledges observed
+source evidence and does not itself prove the writer stopped.
+
+After the Network worker observes the stopped writers, run the frozen reader.
+It opens SQLite read-only, requires zero active sessions, preserves every
+ungrouped history ID, and returns validated rows, the observation boundary
+(`through`), row count, and canonical snapshot digest. Import those rows in
+bounded chunks. The owner-only `GET /api/v1/admin/playback/handoff` returns the
+import version, count, digest, and latest stored `legacyWriterObservation`.
+Compare the imported manifest to the frozen capture, then submit that
+observation's `capturedAt` as `quiescenceCapturedAt` and its `inventoryDigest`
+with the seal request. Sealing rechecks the current observation and active Plex
+sessions. If the stored observation is absent or expired, obtain a fresh
+Network observation. If the current observation is newer than the frozen
+reader's `through`, read the same stopped source again, import its rows with
+the new `through`, then verify the manifest and read the updated version
+before retrying seal.
+Existing session rows are never deduplicated by time or title, and this import
+never changes Plex watched truth.
 
 ### Legacy subtitle adoption and policy
 
@@ -1772,9 +2109,12 @@ OpenSubtitles uses `foreign_parts_only` and `hearing_impaired` filters
 Returned boolean metadata must prove each explicit target before a download
 quota claim; missing metadata is unknown. Plain requested languages and legacy
 language-only workflow inputs leave forced/HI unspecified. ASSRT, SubHD and
-Zimuku remain usable for those requests, but cannot prove explicit forced/HI
-requirements and report an unsupported target. They do not infer those flags
-from a filename. Exact release matching, human
+Zimuku retain unknown flags rather than inferring them from a filename. An
+admitted regular English or Simplified Chinese candidate with an unknown forced
+flag requires independent dialogue-coverage proof before satisfying an explicit
+regular target. Forced-only and constrained HI targets still require known
+metadata; unsupported adapters reject them before claiming quota. Exact release
+matching, human
 provenance, timing and Simplified Chinese checks still apply. Unresolved imported
 policy semantics remain protected even when a provider supports the individual
 flags.

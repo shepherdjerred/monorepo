@@ -38,7 +38,12 @@ async function chooseFixtureMovie(
 export async function fileFixture(
   db: Database,
   episode?: { seriesId: string; title?: string },
-  options: { plexAccountId?: string; initialHandoffStorage?: boolean } = {},
+  options: {
+    plexAccountId?: string;
+    initialHandoffStorage?: boolean;
+    sourceFilename?: string;
+    sourceContent?: Uint8Array;
+  } = {},
 ) {
   await grantTestLease(db);
   const directory = await realpath(
@@ -201,8 +206,11 @@ export async function fileFixture(
       userId: user.id,
       epoch: runtime.recoveryEpoch,
     });
-    const filename = `${media.kind === "episode" ? "Coastlines.S01E01." : ""}fixture-${crypto.randomUUID()}.mkv`;
-    await writeFile(nodePath.join(roots.downloads, filename), content);
+    const filename =
+      options.sourceFilename ??
+      `${media.kind === "episode" ? "Coastlines.S01E01." : ""}fixture-${crypto.randomUUID()}.mkv`;
+    const sourceContent = options.sourceContent ?? content;
+    await writeFile(nodePath.join(roots.downloads, filename), sourceContent);
     const release = await db.releaseCandidate.create({
       data: {
         providerId: "fixture",
@@ -215,7 +223,7 @@ export async function fileFixture(
           quality: "WEB-1080p",
           codec: "H264",
           audioLanguages: ["en"],
-          sizeBytes: Buffer.byteLength(content),
+          sizeBytes: Buffer.byteLength(sourceContent),
           scoreTags: [],
         },
         evaluation: {},
@@ -243,7 +251,7 @@ export async function fileFixture(
             {
               index: 0,
               name: filename,
-              size: Buffer.byteLength(content),
+              size: Buffer.byteLength(sourceContent),
               progress: 1,
             },
           ],

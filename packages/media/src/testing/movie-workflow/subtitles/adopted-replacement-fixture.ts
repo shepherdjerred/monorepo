@@ -1,7 +1,10 @@
 import { rm } from "node:fs/promises";
 import { z } from "zod";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { libraryBindingFixture } from "#automation/plex-binding/library.test-fixture.ts";
+import {
+  libraryBindingFixture,
+  libraryCaptionFilename,
+} from "#automation/plex-binding/library.test-fixture.ts";
 import { verifyLibraryPlexBinding } from "#automation/plex-binding/library.ts";
 import { LibraryPlexBindingInputV1Schema } from "#shared/plex-binding/activities.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
@@ -35,6 +38,7 @@ export async function createAdoptedMovieReplacementFixture(bytes: Uint8Array) {
       (directory) => directories.push(directory),
       {
         bytes,
+        fileName: libraryCaptionFilename("directors_cut"),
         initialSidecars: [{ language: "en", bytes: Buffer.from(oldText) }],
       },
     );
@@ -95,7 +99,7 @@ export async function createAdoptedMovieReplacementFixture(bytes: Uint8Array) {
           definitionDigest: option.definitionDigest,
           registryVersion: choice.registryVersion,
         },
-        options: { subtitleLanguages: ["en"] },
+        options: { subtitleLanguages: ["en"], keepingPolicy: "temporary" },
       },
     );
     const asset = await db.libraryAsset.findUniqueOrThrow({

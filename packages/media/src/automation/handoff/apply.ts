@@ -8,6 +8,7 @@ import { Prisma } from "#generated/prisma/client.ts";
 import {
   HandoffNetworkProtocolSchema,
   handoffProtocolVersion,
+  type HandoffProtocolScope,
 } from "#shared/handoff/protocol.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { lockHandoffScopes } from "#infrastructure/handoff/scoped-snapshot.ts";
@@ -31,6 +32,7 @@ import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proo
 import { assertNoPendingPlexEdits } from "#infrastructure/handoff/plex-edit-records.ts";
 import { readPlexEditProofsV1 } from "#infrastructure/handoff/plex-edit-proofs.ts";
 import { queueLibraryPlexBinding } from "#infrastructure/plex-binding/library/queue.ts";
+import { assertPassiveRegistrationAssociations } from "#infrastructure/handoff/passive-registration.ts";
 import {
   handoffPlexIdentityV3,
   assertHandoffPlexLabelsV3,
@@ -103,6 +105,7 @@ export async function applyPreparedHandoff(
         z.string().parse(plan.planHash),
       );
       await assertLatestLease(tx, network);
+      await assertPassiveNetwork(tx, prepared.scope, network);
       const plexEdits = await libraryEditProofs(
         tx,
         {
@@ -223,6 +226,24 @@ export async function applyPreparedHandoff(
     },
     { timeout: 30_000, maxWait: 30_000 },
   );
+}
+
+async function assertPassiveNetwork(
+  tx: Prisma.TransactionClient,
+  scope: HandoffProtocolScope,
+  network: z.infer<typeof HandoffNetworkProtocolSchema>,
+) {
+  if (
+    "schemaVersion" in scope &&
+    scope.schemaVersion === 3 &&
+    network.schemaVersion === 3
+  )
+    await assertPassiveRegistrationAssociations(
+      tx,
+      scope,
+      network.plex,
+      network.registeredPlexServerMachineId,
+    );
 }
 
 async function libraryEditProofs(

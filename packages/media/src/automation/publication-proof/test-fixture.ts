@@ -12,8 +12,9 @@ import type { MediaFileRoots } from "#filesystem/operations-types.ts";
 export async function mappedPublicationFixture(
   db: Database,
   episode?: { seriesId: string; title?: string },
+  options: { plexAccountId?: string; sourceFilename?: string } = {},
 ) {
-  const f = await fileFixture(db, episode);
+  const f = await fileFixture(db, episode, options);
   try {
     const canonicalRoots = {
       movies: {

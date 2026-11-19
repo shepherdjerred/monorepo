@@ -7,10 +7,11 @@ import { sharedTvFileFixture } from "./native-archive/fixtures/shared-tv.ts";
 import { preparePhysicalPublication } from "./plex-binding/test-fixture.ts";
 import { retentionPlexContext } from "./retention/fixtures/plex.ts";
 import { prepareBoundRetention } from "./retention/lifecycle.test-fixture.ts";
+import { seedFixtureReleasedEpisodes } from "#testing/retention-interest.ts";
 import { createMediaFileActivities } from "./files/activities.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
-import { PrismaMediaCommands } from "#infrastructure/commands.ts";
+import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { grantTestManagedStorage } from "#testing/managed-storage.ts";
 
@@ -27,6 +28,8 @@ test.each(["acquisition", "restore", "parallel acquisition"])(
     const db = database();
     const files = await sharedTvFileFixture(db, mappedPublicationFixture);
     directories.push(files.directory);
+    if (mode === "restore")
+      await seedFixtureReleasedEpisodes(db, files.user.id);
     if (mode === "parallel acquisition")
       onTestFinished(await grantTestManagedStorage(db));
     const published = await preparePhysicalPublication(files);
@@ -49,24 +52,46 @@ test.each(["acquisition", "restore", "parallel acquisition"])(
         await activities.quarantineMediaFiles(bound.retention.input),
       ).toEqual({ status: "quarantined" });
       await grantTestRequesterAccess(db, files.user.id, "fixture-server");
-      const media = await db.mediaItem.findUniqueOrThrow({
-        where: { id: files.media.id },
+      const prior = await db.operation.findMany({
+        where: { targetId: files.media.id },
+        select: { id: true },
       });
-      const command = await new PrismaMediaCommands(db, {
-        keepDays: 30,
-        serverMachineId: "fixture-server",
-      }).act(files.user, crypto.randomUUID(), media.id, {
-        action: "keep",
-        expectedVersion: media.version,
+      const claims = await db.mediaRequest.findMany({
+        where: {
+          mediaId: { in: mediaIds },
+          userId: files.user.id,
+          edition: "default",
+          active: true,
+          direct: true,
+        },
+        orderBy: { mediaId: "asc" },
       });
-      if (command.operationId === undefined)
-        throw new Error("Keep omitted restoration operation");
+      expect(claims).toHaveLength(mediaIds.length);
+      for (const claim of claims)
+        await new RequestInterestCommands(db, { keepDays: 30 }).execute(
+          files.user,
+          crypto.randomUUID(),
+          {
+            schemaVersion: 1,
+            requestId: claim.id,
+            expectedVersion: claim.version,
+            expectedInterestRevision: claim.interestRevision,
+            action: "continue",
+          },
+        );
+      const command = await db.operation.findFirstOrThrow({
+        where: {
+          kind: "restore_media",
+          targetId: files.media.id,
+          id: { notIn: prior.map((row) => row.id) },
+        },
+      });
       const intent = await db.mediaIntent.findUniqueOrThrow({
-        where: targetWhere(defaultScope(media.id)),
+        where: targetWhere(defaultScope(files.media.id)),
       });
       input = {
-        mediaId: media.id,
-        operationId: command.operationId,
+        mediaId: files.media.id,
+        operationId: command.id,
         generation: intent.generation,
       };
       expect(await activities.restoreMediaFiles(input)).toEqual({

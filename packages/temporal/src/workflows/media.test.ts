@@ -95,6 +95,7 @@ test.each([
       ...target,
     };
     let searches = 0;
+    let speechPrepared = false;
     const result = await runScenario({
       workflow: "acquireMediaSubtitlesWorkflow",
       args,
@@ -115,7 +116,16 @@ test.each([
         },
       },
       files: {
+        prepareSubtitleSpeechV1: async (input) => {
+          expect(input).toEqual({
+            operationId: args.operationId,
+            subtitleId: "subtitle",
+          });
+          speechPrepared = true;
+          return { status: "prepared" };
+        },
         installMediaSubtitles: async (input) => {
+          expect(speechPrepared).toBe(true);
           expect(input).toEqual({
             operationId: args.operationId,
             subtitleId: "subtitle",

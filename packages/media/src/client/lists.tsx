@@ -37,8 +37,12 @@ import { ProfileEditor } from "./profile-controls.tsx";
 import { PlexProfileAdministration } from "./plex-admin.tsx";
 import { NumberingAdministration } from "./numbering-admin.tsx";
 import { MovieRequests } from "./movie-editions/requests.tsx";
+import { RequestInterests } from "./household/interests.tsx";
+import { QualityGuideAdministration } from "./quality-guide/administration.tsx";
+import { useImportedRequests } from "./personal-migration/source.tsx";
 
 export function RequestsPage({ user }: { user: MediaUser }) {
+  const imported = useImportedRequests(user.id);
   const requests = useQuery({
     queryKey: ["requests"],
     queryFn: async () => readApi("/requests", RequestListSchema),
@@ -53,6 +57,8 @@ export function RequestsPage({ user }: { user: MediaUser }) {
       </PageTitle>
       {requests.isPending && <Loading />}
       {requests.error !== null && <ErrorNotice error={requests.error} />}
+      {imported.error !== null && <ErrorNotice error={imported.error} />}
+      <RequestInterests user={user} importedClaims={imported.data ?? []} />
       <MovieRequests user={user} />
       <div className="item-list">
         {requests.data
@@ -145,13 +151,15 @@ export function RemovalsPage({ user }: { user: MediaUser }) {
     <>
       <PageTitle eyebrow="Room for something new" title="Leaving soon">
         <p>
-          Watched by everyone who requested it? We’ll give you a heads-up before
-          making room.
+          Titles leave when no one is following and no permanent Keep remains.
+          You’ll have time to change your mind before Media removes the files.
         </p>
       </PageTitle>
       <Notice>
-        Keep adds 30 days of protection. Removed titles stay recoverable for
-        seven days.
+        Use My requests to keep watching, or Library to change permanent
+        keeping. Titles have seven days in Leaving Soon and another seven days
+        in recoverable quarantine. A 30-day protection hold remains available
+        here.
       </Notice>
       {removals.isPending && <Loading />}
       {removals.error !== null && <ErrorNotice error={removals.error} />}
@@ -340,6 +348,7 @@ export function AdminPage({ user }: { user: MediaUser }) {
           </div>
         ))}
       </section>
+      <QualityGuideAdministration user={user} />
       <section className="panel">
         <h2>Quality profiles</h2>
         {profiles.isPending && <Loading />}

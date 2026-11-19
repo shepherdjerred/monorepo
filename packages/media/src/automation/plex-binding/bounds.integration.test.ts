@@ -32,13 +32,35 @@ async function prepare() {
   const db = harness.database();
   const file = await seasonPublicationFixture(db, 100);
   directory = file.directory;
-  const published = await file.published();
-  const attempt = await db.acquisitionAttempt.findUniqueOrThrow({
-    where: { id: published.attempt.id },
+  // Independent real acquisitions keep producer work scoped; the one cold
+  // consumer below must still discover and bind the complete 100-asset union.
+  const attemptIds: string[] = [];
+  for (let offset = 0; offset < file.mediaIds.length; offset += 25) {
+    const published = await file.published(
+      file.mediaIds.slice(offset, offset + 25),
+    );
+    attemptIds.push(published.attempt.id);
+  }
+  const attempts = await db.acquisitionAttempt.findMany({
+    where: { id: { in: attemptIds } },
+    orderBy: { id: "asc" },
   });
-  const plan = FilePlanSchema.parse(attempt.filePlan);
+  expect(attempts).toHaveLength(4);
+  const plan = attempts.flatMap((attempt) =>
+    FilePlanSchema.parse(attempt.filePlan),
+  );
   expect(plan).toHaveLength(100);
   expect(new Set(plan.flatMap((entry) => entry.mediaIds)).size).toBe(100);
+  expect(new Set(plan.map((entry) => entry.assetId)).size).toBe(100);
+  expect(
+    await db.libraryAsset.count({
+      where: {
+        id: { in: plan.map((entry) => entry.assetId) },
+        state: "published",
+        owned: true,
+      },
+    }),
+  ).toBe(100);
   const tv = await tvBindingContext(db, harness.context(), file.mediaIds);
   const execution = bindingTestExecution();
   const freshness = plexBindingFreshness({
@@ -66,7 +88,7 @@ async function prepare() {
   });
   return {
     file,
-    attempt,
+    attempts,
     plan,
     tv,
     input: ReverifyPlexBindingInputSchema.parse(operation.payload),
@@ -75,7 +97,7 @@ async function prepare() {
 
 test("one actual cold consumer binds all100 independently produced TV files with no native25 truncation", async () => {
   const db = harness.database();
-  const { file, attempt, plan, tv, input } = prepared;
+  const { file, attempts, plan, tv, input } = prepared;
   expect(input.assetIds).toHaveLength(100);
   expect(
     await createPlexBindingActivities(tv.context).reverify(
@@ -99,10 +121,11 @@ test("one actual cold consumer binds all100 independently produced TV files with
   expect(current).toHaveLength(100);
   expect(current.every((row) => row.status === "current")).toBe(true);
   expect(
-    await db.acquisitionAttempt.findUniqueOrThrow({
-      where: { id: attempt.id },
+    await db.acquisitionAttempt.findMany({
+      where: { id: { in: attempts.map((attempt) => attempt.id) } },
+      orderBy: { id: "asc" },
     }),
-  ).toEqual(attempt);
+  ).toEqual(attempts);
   expect(
     await db.plexBindingCurrent.count({
       where: { mediaId: { in: file.mediaIds }, evidenceId: { not: null } },

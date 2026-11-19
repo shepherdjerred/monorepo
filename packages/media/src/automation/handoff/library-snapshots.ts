@@ -3,6 +3,7 @@ import type { HandoffProtocolScope } from "#shared/handoff/protocol.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { snapshotPublicationAsset } from "#infrastructure/publication-proof/snapshots.ts";
 import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/publication/snapshot.ts";
+import { initialLibraryAssetVersion } from "#infrastructure/handoff/passive-registration.ts";
 
 /** Retain the actual initial owners, including caption rows, before later lifecycle changes. */
 export async function initialLibrarySnapshots(
@@ -28,7 +29,7 @@ export async function initialLibrarySnapshots(
         : await snapshotPublicationAsset(tx, file.assetId, budget);
     if (
       asset.ownershipEpoch !== scope.request.recoveryEpoch ||
-      asset.version !== 0 ||
+      asset.version !== initialLibraryAssetVersion(scope.request, file) ||
       asset.state !== "published" ||
       asset.path !== file.canonicalPath
     )

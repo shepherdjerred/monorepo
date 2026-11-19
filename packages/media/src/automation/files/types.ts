@@ -34,6 +34,7 @@ export type FileContext = {
   now?: () => Date;
   enabled: {
     acquisition: () => Promise<boolean>;
+    subtitleMaintenance?: () => Promise<boolean>;
     quarantine: () => Promise<boolean>;
     purge: () => Promise<boolean>;
   };
