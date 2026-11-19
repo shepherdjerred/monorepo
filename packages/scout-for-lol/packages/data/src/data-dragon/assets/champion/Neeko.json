@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.22.1",
+  "version": "16.23.1",
   "data": {
     "Neeko": {
       "id": "Neeko",
@@ -357,6 +357,68 @@
           "num": 49,
           "name": "Beeko",
           "chromas": false
+        },
+        {
+          "id": "518050",
+          "num": 50,
+          "name": "Cafe Cuties Neeko",
+          "chromas": true
+        },
+        {
+          "id": "518051",
+          "num": 51,
+          "name": "Cafe Cuties Neeko (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "518052",
+          "num": 52,
+          "name": "Cafe Cuties Neeko (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "518053",
+          "num": 53,
+          "name": "Cafe Cuties Neeko (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "518054",
+          "num": 54,
+          "name": "Cafe Cuties Neeko (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "518055",
+          "num": 55,
+          "name": "Cafe Cuties Neeko (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "518056",
+          "num": 56,
+          "name": "Cafe Cuties Neeko (Catseye)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "518057",
+          "num": 57,
+          "name": "Cafe Cuties Neeko (Jasper)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "518058",
+          "num": 58,
+          "name": "Cafe Cuties Neeko (Peridot)",
+          "chromas": false,
+          "parentSkin": 50
         }
       ],
       "lore": "Hailing from a long lost tribe of vastaya, Neeko can blend into any crowd by borrowing the appearances of others, even absorbing something of their emotional state to tell friend from foe in an instant. No one is ever sure where—or who—Neeko might be, but those who intend to do her harm will soon witness her true colors revealed, and feel the full power of her primordial spirit magic unleashed upon them.",

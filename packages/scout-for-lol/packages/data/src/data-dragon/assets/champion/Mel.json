@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.22.1",
+  "version": "16.23.1",
   "data": {
     "Mel": {
       "id": "Mel",
@@ -274,7 +274,7 @@
           "id": "MelW",
           "name": "Rebuttal",
           "description": "Mel unleashes a refraction nova that destroys enemy projectiles it collides with, retaliating with magic missiles.<br><br>The nova also shields and grants move speed to Mel and her allies.",
-          "tooltip": "Mel unleashes a refraction nova that destroys enemy projectiles it collides with, retaliating for <magicDamage>{{ initialdamage }} magic damage</magicDamage>. Subsequent retaliations against the same enemy deal <magicDamage>{{ subsequentdamage }} magic damage</magicDamage> instead.<br /><br />The nova also grants <shield>{{ totalshield }} Shield</shield> and <speed>{{ totalms }} Move Speed</speed> for {{ buffduration }}s to Mel and her allies.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Mel unleashes a refraction nova that destroys enemy projectiles it collides with, retaliating for <magicDamage>{{ initialdamage }} magic damage</magicDamage>. Subsequent retaliations against the same enemy deal <magicDamage>{{ subsequentdamage }} magic damage</magicDamage> instead.<br /><br />The nova also grants <shield>{{ totalshield }} Shield</shield> and <speed>{{ totalms }} Move Speed</speed> for {{ buffduration }} seconds to Mel and her allies.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",

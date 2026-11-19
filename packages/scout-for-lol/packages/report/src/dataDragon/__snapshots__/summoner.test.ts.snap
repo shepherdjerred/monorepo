@@ -2236,7 +2236,7 @@ exports[`should be able to get champion data 1`] = `
       "rangeBurn": "200",
       "resource": "No Cost",
       "summonerLevel": 1,
-      "tooltip": "Instantly revives your champion at your team's Summoner Platform and grants <speed>+{{ spell.summonerrevive_jade:bonusmovespeed*100 }}%</speed> Movement Speed that decays over 12 seconds.<br /><br />",
+      "tooltip": "Press [{{ hotkey }}] to spend 4 Tokens %i:arcadeCoin% and Instantly revive at your team's Fountain. Grants <speed>+{{ bonusmovespeed*100 }}%</speed> Move Speed that decays over {{ movespeedbuffduration }} seconds.",
       "vars": [],
     },
     "SummonerSmite": {
@@ -3021,6 +3021,6 @@ exports[`should be able to get champion data 1`] = `
     },
   },
   "type": "summoner",
-  "version": "16.22.1",
+  "version": "16.23.1",
 }
 `;

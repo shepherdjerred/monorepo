@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.22.1",
+  "version": "16.23.1",
   "data": {
     "Zoe": {
       "id": "Zoe",
@@ -322,6 +322,68 @@
           "name": "Prestige Eternal Aspect Zoe (Vivid)",
           "chromas": false,
           "parentSkin": 43
+        },
+        {
+          "id": "142045",
+          "num": 45,
+          "name": "Cafe Cuties Zoe",
+          "chromas": true
+        },
+        {
+          "id": "142046",
+          "num": 46,
+          "name": "Cafe Cuties Zoe (Ruby)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "142047",
+          "num": 47,
+          "name": "Cafe Cuties Zoe (Catseye)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "142048",
+          "num": 48,
+          "name": "Cafe Cuties Zoe (Emerald)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "142049",
+          "num": 49,
+          "name": "Cafe Cuties Zoe (Amethyst)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "142050",
+          "num": 50,
+          "name": "Cafe Cuties Zoe (Sapphire)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "142051",
+          "num": 51,
+          "name": "Cafe Cuties Zoe (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "142052",
+          "num": 52,
+          "name": "Cafe Cuties Zoe (Pearl)",
+          "chromas": false,
+          "parentSkin": 45
+        },
+        {
+          "id": "142053",
+          "num": 53,
+          "name": "Cafe Cuties Zoe (Obsidian)",
+          "chromas": false,
+          "parentSkin": 45
         }
       ],
       "lore": "As the embodiment of mischief, imagination, and change, Zoe acts as the cosmic messenger of Targon, heralding major events that reshape worlds. Her mere presence warps the arcane mathematics governing realities, sometimes causing cataclysms without conscious effort or malice. This perhaps explains the breezy nonchalance with which Zoe approaches her duties, giving her plenty of time to focus on playing games, tricking mortals, or otherwise amusing herself. An encounter with Zoe can be joyous and life affirming, but it is always more than it appears and often extremely dangerous.",

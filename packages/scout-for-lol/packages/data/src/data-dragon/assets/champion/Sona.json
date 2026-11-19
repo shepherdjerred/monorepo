@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.22.1",
+  "version": "16.23.1",
   "data": {
     "Sona": {
       "id": "Sona",
@@ -539,6 +539,12 @@
           "name": "Prestige Requiem Sona (Vivid)",
           "chromas": false,
           "parentSkin": 75
+        },
+        {
+          "id": "37077",
+          "num": 77,
+          "name": "DJ Sona Ultimate Remix",
+          "chromas": false
         }
       ],
       "lore": "Sona is Demacia's foremost virtuoso of the stringed etwahl, speaking only through her graceful chords and vibrant arias. This genteel manner has endeared her to the highborn, though others suspect her spellbinding melodies to actually emanate magic—a Demacian taboo. Silent to outsiders but somehow understood by close companions, Sona plucks her harmonies not only to soothe injured allies, but also to strike down unsuspecting enemies.",

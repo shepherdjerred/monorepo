@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.22.1",
+  "version": "16.23.1",
   "data": {
     "Velkoz": {
       "id": "Velkoz",
@@ -519,7 +519,7 @@
           "datavalues": {},
           "effect": [
             null,
-            [450, 700, 925],
+            [450, 700, 950],
             [7, 7, 7],
             [20, 20, 20],
             [40, 40, 40],
@@ -532,7 +532,7 @@
           ],
           "effectBurn": [
             null,
-            "450/700/925",
+            "450/700/950",
             "7",
             "20",
             "40",

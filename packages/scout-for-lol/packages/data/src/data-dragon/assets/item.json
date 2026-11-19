@@ -7375,7 +7375,7 @@
     },
     "4015": {
       "name": "Perplexity",
-      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>5%</attention> Move Speed<br><attention>22%</attention> Armor Penetration<br><attention>30%</attention> Magic Penetration</stats><br><br><passive>Giant Slayer</passive><br>Deal up to 15% bonus damage against champions with greater max Health than you.<br><br><rules>Max damage increase reached when Health difference is greater than 3000.</rules></mainText>",
+      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>5%</attention> Move Speed<br><attention>22%</attention> Armor Penetration<br><attention>30%</attention> Magic Penetration<br><attention>500%</attention> Base Mana Regen</stats><br><br><passive>Giant Slayer</passive><br>Deal up to 15% bonus damage against champions with greater max Health than you.<br><br><rules>Max damage increase reached when Health difference is greater than 3000.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 60,
@@ -15679,7 +15679,7 @@
     },
     "443079": {
       "name": "Turbo Chemtank",
-      "description": "<mainText><stats><attention>600</attention> Health<br><attention>80</attention> Adaptive Force</stats><br><br>Ignore the next time you are <status>Immobilized</status>, instead dropping a chemical cannister nearby (s Cooldown). Picking up the cannister reduces the Cooldown by 15 seconds and restores <scaleHealth>20% max Health</scaleHealth>. Enemies stepping on the cannister destroy it.</mainText>",
+      "description": "<mainText><stats><attention>600</attention> Health<br><attention>80</attention> Adaptive Force</stats><br><br>Ignore the next time you are <status>Immobilized</status>, instead dropping a chemical cannister nearby (s Cooldown). Picking up the cannister reduces the Cooldown by 15 seconds and restores <scaleHealth>16% max Health</scaleHealth>. Enemies stepping on the cannister destroy it.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 600

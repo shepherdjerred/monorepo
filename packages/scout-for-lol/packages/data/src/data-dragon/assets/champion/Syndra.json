@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.22.1",
+  "version": "16.23.1",
   "data": {
     "Syndra": {
       "id": "Syndra",
@@ -693,14 +693,17 @@
           "description": "Syndra knocks enemies and Dark Spheres back dealing magic damage. Enemies hit by Dark Spheres become stunned.",
           "tooltip": "Syndra projects a wave of force, <status>Knocking Back</status> enemies and <keywordMajor>Dark Spheres</keywordMajor> and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br /><keywordMajor>Dark Spheres</keywordMajor> that are pushed <status>Stun</status> enemies for {{ stunduration }} seconds and deal <magicDamage>{{ totaldamage }} magic damage</magicDamage>.<br /><br /><evolve>{{ spell.syndrapassive:eupgradethreshold }} Splinters of Wrath</evolve>: This Ability's width is increased and <status>Slows</status> enemies by <status>{{ upgradedslowamount*100 }}%</status> for {{ upgradedslowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]
+            "label": ["Damage", "Cooldown"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
-          "cooldown": [15, 15, 15, 15, 15],
-          "cooldownBurn": "15",
-          "cost": [50, 50, 50, 50, 50],
-          "costBurn": "50",
+          "cooldown": [17, 16.5, 16, 15.5, 15],
+          "cooldownBurn": "17/16.5/16/15.5/15",
+          "cost": [60, 60, 60, 60, 60],
+          "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,

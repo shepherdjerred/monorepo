@@ -1368,6 +1368,30 @@
       "key": "60083",
       "name": "Yorick",
       "modernKey": "83"
+    },
+    "Jade_Talon": {
+      "id": "Jade_Talon",
+      "key": "60091",
+      "name": "Talon",
+      "modernKey": "91"
+    },
+    "Jade_Udyr": {
+      "id": "Jade_Udyr",
+      "key": "60077",
+      "name": "Udyr",
+      "modernKey": "77"
+    },
+    "Jade_Urgot": {
+      "id": "Jade_Urgot",
+      "key": "60006",
+      "name": "Urgot",
+      "modernKey": "6"
+    },
+    "Jade_Xerath": {
+      "id": "Jade_Xerath",
+      "key": "60101",
+      "name": "Xerath",
+      "modernKey": "101"
     }
   }
 }

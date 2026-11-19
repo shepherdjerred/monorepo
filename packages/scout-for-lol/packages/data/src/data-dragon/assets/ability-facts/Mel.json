@@ -28,9 +28,9 @@
       "dataValues": {
         "Count": [6, 7, 8, 9, 10],
         "BaseDamageInitial": [60, 60, 60, 60, 60],
-        "BaseDamageSubsequent": [5, 10, 15, 20, 25],
+        "BaseDamageSubsequent": [6, 11, 16, 21, 26],
         "APRatioInitial": [0.25, 0.25, 0.25, 0.25, 0.25],
-        "APRatioSubsuquent": [0.08, 0.08, 0.08, 0.08, 0.08],
+        "APRatioSubsuquent": [0.09, 0.09, 0.09, 0.09, 0.09],
         "Radius": [200, 200, 200, 200, 200],
         "PostCastTime": [0.5, 0.5, 0.5, 0.5, 0.5]
       },
@@ -48,12 +48,12 @@
         "Duration": [0.75, 0.75, 0.75, 0.75, 0.75],
         "BuffDuration": [2, 2, 2, 2, 2],
         "Radius": [400, 400, 400, 400, 400],
-        "BaseShield": [50, 80, 110, 140, 170],
-        "BaseDamageInitial": [35, 40, 45, 50, 55],
+        "BaseShield": [50, 90, 130, 170, 210],
+        "BaseDamageInitial": [35, 45, 55, 65, 75],
         "BaseDamageSubsequent": [5, 10, 15, 20, 25],
         "MaxRetaliation": [7, 7, 7, 7, 7]
       },
-      "resolvedDescription": "Mel unleashes a refraction nova that destroys enemy projectiles it collides with, retaliating for 35/40/45/50/55 (+10% AP) magic damage. Subsequent retaliations against the same enemy deal {{ subsequentdamage }} magic damage instead. The nova also grants 50/80/110/140/170 (+50% AP) Shield and {{ totalms }} Move Speed for 2s to Mel and her allies.",
+      "resolvedDescription": "Mel unleashes a refraction nova that destroys enemy projectiles it collides with, retaliating for 35/45/55/65/75 (+10% AP) magic damage. Subsequent retaliations against the same enemy deal {{ subsequentdamage }} magic damage instead. The nova also grants 50/90/130/170/210 (+50% AP) Shield and {{ totalms }} Move Speed for 2 seconds to Mel and her allies.",
       "unresolved": ["subsequentdamage", "totalms"]
     },
     "E": {

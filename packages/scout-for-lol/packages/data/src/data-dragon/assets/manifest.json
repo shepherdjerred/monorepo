@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "sourceVersion": "16.22.1",
+  "sourceVersion": "16.23.1",
   "assets": [
     {
       "kind": "ability",
@@ -7821,7 +7821,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/adapt_small.png",
-      "sha256": "3bb9b2067281f2676253ba22cb8c2d909e894ef4d4c2d49dc051a6a5d3b063de"
+      "sha256": "474f21c07defded5689c239daff35314b17f26671abb3b54f4d04e960874b0aa"
     },
     {
       "kind": "augment",
@@ -7839,7 +7839,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/aim_for_the_head_small.png",
-      "sha256": "e4b777adbe6de109ad31148c3126bf7503ad52a5e33a35094a1db1469ce9028f"
+      "sha256": "a643693e67f9d00622707aac393ceebacffdd5482b0eb2d116167e753c1e5d0d"
     },
     {
       "kind": "augment",
@@ -7893,7 +7893,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/apexinventor_small.png",
-      "sha256": "9e277a696af17155c2ee8ee1032d34d1610fa779108a5a087aaa970676f9ccc9"
+      "sha256": "7c5fcf1ea899dba7b63245e097f416d519f448c6b6be81a441c339201742bdcc"
     },
     {
       "kind": "augment",
@@ -7947,7 +7947,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/augmented_power_small.png",
-      "sha256": "dafcff4943ccc534d82b098126f66bdb0e09a09fdff26d902a378fe7a3794d23"
+      "sha256": "01f4bdc7dee5c397e895eb31415115bad17d887a44724fce756fb70d4cfe3593"
     },
     {
       "kind": "augment",
@@ -7965,7 +7965,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/backtobasics_small.png",
-      "sha256": "02e336b235ab093fb479ede9e16179a14ff53f1cfbb91f4c0271a982f17259c8"
+      "sha256": "744b8dda78667be4229dc53b7f6cadf9d4932a0d89ef19258315b2eb494d2c9d"
     },
     {
       "kind": "augment",
@@ -8001,7 +8001,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/bigbrain_small.png",
-      "sha256": "44464f9936a3bf7cb2e175902dc88285436b74e2230987711484b9516ae2d463"
+      "sha256": "846783498de4327c19f12ce6c8fbf6285f49ecd732bc6924700b5ef8d0102f7b"
     },
     {
       "kind": "augment",
@@ -8019,7 +8019,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/bladewaltz_small.png",
-      "sha256": "9968302ae3840b13df8c60e8e378dec840118824c07337ef16699718522962cc"
+      "sha256": "bbf6d7da1e0cada2f3d914ac7eaa09be2e07a1af0b68e05e5568c541e860ae51"
     },
     {
       "kind": "augment",
@@ -8154,7 +8154,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/breadandbutter_large.png",
-      "sha256": "cfedcdc1a2b939273295640d07248801da63b620bc5b0c6f913f70d9e3a91074"
+      "sha256": "53ee57aa1aaafce4c355861fc158330255fdca6720e9f4ac187357f06143f1ae"
     },
     {
       "kind": "augment",
@@ -8163,7 +8163,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/breadandbutter_small.png",
-      "sha256": "e1a7be33db711b755766830c75948db385b4d9b2ee8e7cca69aa9a83ce7a01e9"
+      "sha256": "a1a3055ea27b882add6ecaad61ae870db1f25f101d9d9eb2bab1d7a8cab8b0a7"
     },
     {
       "kind": "augment",
@@ -8172,7 +8172,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/breadandcheese_large.png",
-      "sha256": "cfedcdc1a2b939273295640d07248801da63b620bc5b0c6f913f70d9e3a91074"
+      "sha256": "53ee57aa1aaafce4c355861fc158330255fdca6720e9f4ac187357f06143f1ae"
     },
     {
       "kind": "augment",
@@ -8190,7 +8190,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/breadandjam_large.png",
-      "sha256": "cfedcdc1a2b939273295640d07248801da63b620bc5b0c6f913f70d9e3a91074"
+      "sha256": "53ee57aa1aaafce4c355861fc158330255fdca6720e9f4ac187357f06143f1ae"
     },
     {
       "kind": "augment",
@@ -8271,7 +8271,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/canttouchthis_small.png",
-      "sha256": "bec49a23f8e673db0fe7110612d7d1005ba9003a8cf1ed65cfbbef95c2c3eb48"
+      "sha256": "e433f24dc0813054d16cbc5278a4473a50a1b5982e7f80639517d4ddfde4a358"
     },
     {
       "kind": "augment",
@@ -8307,7 +8307,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/celestialbody_small.png",
-      "sha256": "d0e59a5589a04921e7329bad19a27436e19a93a4d166a8e2ae008c6e1f2db035"
+      "sha256": "d793c077cc2b79559dd199a3e7b176de66c8aff3cd774baa000772dfa7895ce2"
     },
     {
       "kind": "augment",
@@ -8343,7 +8343,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/cerberus_small.png",
-      "sha256": "e5a1069f32fef7e51bd470f566481e9020521b41f644547972993d8b704242e7"
+      "sha256": "99ca9109cc861d5a5fc307d19ec88a5d62fd5c548e687602aa791ce25aacf37f"
     },
     {
       "kind": "augment",
@@ -8424,7 +8424,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/circleofdeath_large.png",
-      "sha256": "7e74c334b3552b43e94c4af3cfe2b8f45c23893b7c1257ac01761bbcc876e260"
+      "sha256": "840dfc5970f4c6c04e4d7706221f2d96ee75bca6b0b7bf19dac834a8f9f4e5e6"
     },
     {
       "kind": "augment",
@@ -8433,7 +8433,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/circleofdeath_small.png",
-      "sha256": "5dedffc952d8775ba6ae480de5a8a5030312e5d990c7247a8247ad63f8ed4b1f"
+      "sha256": "848f644bb35de12f465c2bd8b89dac7b3468f0cc624d43626096b47562d9ca20"
     },
     {
       "kind": "augment",
@@ -8460,7 +8460,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/clowncollege_large.png",
-      "sha256": "afdc8a654eb4ac907899eb8e0b62d7e42457ed03f4d2566ca59b6705b5a9ae13"
+      "sha256": "cad838e46212caa703f5ae0ccf52c1bf5b02b13aae5e5dd27f9302940e40a0a9"
     },
     {
       "kind": "augment",
@@ -8469,7 +8469,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/clowncollege_small.png",
-      "sha256": "c26a6b539eb11e0e4c9ae168e79812a4ee356fbf8e720934cbe1d7157570f7ec"
+      "sha256": "db8fb79061e31aa153c55208b5ab6e96b4e60bdb5bd98770c6f49905eb87d4c9"
     },
     {
       "kind": "augment",
@@ -8487,7 +8487,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/combomaster_small.png",
-      "sha256": "7a05e63305de2f8e0f811f3229583162c60d60f66b09017ed2535e33cb5eb25b"
+      "sha256": "da36535aebf7fa8651000cc699efafb9b893775e167924afe8d4c3a72b4a5348"
     },
     {
       "kind": "augment",
@@ -8505,7 +8505,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/contractkiller_small.png",
-      "sha256": "15acbeda56a598dfeda8d87cd8346f0169adee56cb3d13b9cd6bee9e331a854a"
+      "sha256": "e330a4a6d54e38dacfae3b73e9122564d1555a3a7c1db6c9a597a597ace55535"
     },
     {
       "kind": "augment",
@@ -8523,7 +8523,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/courageofthecolossus_small.png",
-      "sha256": "cabd75059baf47c749444216ed29edd1bda02939de4ad74cd12e5ef4d652d957"
+      "sha256": "30f4ceb562d454f7b2b597ddb9e9726377f7d710c4234ab341a03fe7817d8337"
     },
     {
       "kind": "augment",
@@ -8667,7 +8667,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/dashing_small.png",
-      "sha256": "3ac0fb9e464c38d4e867df820ed79626c49e6b4d2f1c02a040989efa59ad36da"
+      "sha256": "420b770613c1a9757ccf5edf51a24a25ad759378bb44570c2bcfca7a898cb336"
     },
     {
       "kind": "augment",
@@ -8685,7 +8685,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/dawnbringersresolve_small.png",
-      "sha256": "239c74a209e8e48003dda4b5d0ca9055ff3375ba787291c9e570201ffec75003"
+      "sha256": "7a2fd94531a9b03bdf8e44e5f81e620783a4ee6bed3dfa02f558554ff8ce9124"
     },
     {
       "kind": "augment",
@@ -8739,7 +8739,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/deft_small.png",
-      "sha256": "44eefc9ece6e249dae48f2a955abb7cbd48ea213eb8ecd2023aef41027ac8a18"
+      "sha256": "5af131b93419922039b3325334bcc7807f9681c9b495776d4307590a0bf9fee3"
     },
     {
       "kind": "augment",
@@ -8856,7 +8856,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/divebomber_large.png",
-      "sha256": "748387ad110ebff00a68776d827c88c05986afb83dc21f291a41d19bad6f5206"
+      "sha256": "1bbe705e8718c47e5fc4504bb9b520452eba40130b3246c331b23d58499f7466"
     },
     {
       "kind": "augment",
@@ -8865,7 +8865,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/divebomber_small.png",
-      "sha256": "c8f427b69dc82add40e7287bc871a20efc1050989d4544f93d9b432ec82867fd"
+      "sha256": "63742e309b7b375b4a7c6896caf5b8447ab92ec0867495a14d4fe80902594308"
     },
     {
       "kind": "augment",
@@ -8919,7 +8919,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/doomsayer_small.png",
-      "sha256": "4a80a21be53c856b76f92c651eda2dfc41aa0aaea132359c98b3d087901fca0b"
+      "sha256": "55641844f73f4d9bef60290f41a8dee143b16008434450ea53293976dfcd5ac9"
     },
     {
       "kind": "augment",
@@ -8937,7 +8937,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/drawyoursword_small.png",
-      "sha256": "f181280a1029e65f3c25e8f0601dfa9f2ab72492c7455a935b2bf25b24a5f593"
+      "sha256": "44fcaf6145f1ae0110059f3b4234e3e4fcc055f28cb5f299fefa6a22f329e138"
     },
     {
       "kind": "augment",
@@ -8955,7 +8955,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/dualwield_small.png",
-      "sha256": "58fb85ed018fa2f17d4808a57c242c3636ac95c21352622b1014d2e0da90470d"
+      "sha256": "bcc6e798f4e8f4fec39ea914829f97aa13a3b0cdcd59db5185c9ebb0d5e2e56a"
     },
     {
       "kind": "augment",
@@ -8964,7 +8964,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/earthwake_large.png",
-      "sha256": "844d3487bc87f27771f333ed7f244534ffd65a1e2ac4814a84bd34dc04acf220"
+      "sha256": "45541fa67806c58e93c6da9850748b296b6fd233e1cc31fee40e7eadc19ef3c4"
     },
     {
       "kind": "augment",
@@ -8973,7 +8973,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/earthwake_small.png",
-      "sha256": "757e34427be5607bb052855e43b453418e7687d726fe51003cd5bc45ca3bfa4d"
+      "sha256": "f18823a6dddc02523f74383aa97f3459d78221efe9ce4d46023d71e8504a6c7e"
     },
     {
       "kind": "augment",
@@ -9027,7 +9027,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/escapade_small.png",
-      "sha256": "3bb9b2067281f2676253ba22cb8c2d909e894ef4d4c2d49dc051a6a5d3b063de"
+      "sha256": "474f21c07defded5689c239daff35314b17f26671abb3b54f4d04e960874b0aa"
     },
     {
       "kind": "augment",
@@ -9045,7 +9045,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/etherealweapon_small.png",
-      "sha256": "d417320e88f82d6f7a26c4d5d4deeb8b1bc8c7dd20a1b82c294a6403fc4f9770"
+      "sha256": "6a0cfaed9bac214912e8407155f6e5bee860298ef6a5d0c719b9068e61ce7222"
     },
     {
       "kind": "augment",
@@ -9063,7 +9063,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/eureka_small.png",
-      "sha256": "51ea2fe84c3ba780d0c514c82fed692936f6f7cbdbf119d19f42e05ec74ff2cf"
+      "sha256": "5d700ea303c558201e616057e9d60595a2f0b42cf9f2625234d12a64c1040fff"
     },
     {
       "kind": "augment",
@@ -9081,7 +9081,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/executioner_small.png",
-      "sha256": "c2ee6f4635be2b4db61c6c6bba1405f038b47768a83f8aefc976e2a44c46d68e"
+      "sha256": "3090e98b4686d723e9322930a8d885657918dcf16e24683e5964abb083766bb2"
     },
     {
       "kind": "augment",
@@ -9126,7 +9126,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/fanthehammer_large.png",
-      "sha256": "f18f4628f9eaa6ff91c7766e26583879eae5e66fe94480d940f49a855ae22f3b"
+      "sha256": "73a5a9e21d819c84135059bc7da2261f5dda1be36c438b96a824e0d5df5ac1c4"
     },
     {
       "kind": "augment",
@@ -9171,7 +9171,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/feymagic_small.png",
-      "sha256": "7d9dc16df747d0c968d466e4972004ab66c8cfd371c0328e6aa3e9ce54acda78"
+      "sha256": "0af95f97b892d9c0806d43a7647486558da381cc784036bb919ec7d971c4abc6"
     },
     {
       "kind": "augment",
@@ -9180,7 +9180,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/firebrand_large.png",
-      "sha256": "9a2814c320d28b652de5b8a5f26fa19f0e81deeabf19cbf6da54fcb87fc1062f"
+      "sha256": "4b0fd9423f2a862473ef292034e10b6e5198274bb0c9db6fa9df670f348ff73d"
     },
     {
       "kind": "augment",
@@ -9189,7 +9189,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/firebrand_small.png",
-      "sha256": "2f4f19069f603c6df34769810114fa15b0052bed4852e4990eb48aa99532b6cf"
+      "sha256": "937568883bb424aea56a3c5ee0c7aee2e59eb0365b6542010d1712261c9c7c5d"
     },
     {
       "kind": "augment",
@@ -9216,7 +9216,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/firfox_large.png",
-      "sha256": "46fa9bdfe3c279d7faf2e279d9685f8355e5d4ced751d74d478566df759a661e"
+      "sha256": "8320af6316bac861481060213adb1ce95f02da945b398786704900edde9220bb"
     },
     {
       "kind": "augment",
@@ -9225,7 +9225,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/firfox_small.png",
-      "sha256": "cf4932a55471d2d9b1f543c476c7fa90462d70faa5b98e9e2972df20ec9f7b05"
+      "sha256": "c9cb72c9cec971974d9788771129c8ff92571581e41186802c16cf587ebdc251"
     },
     {
       "kind": "augment",
@@ -9234,7 +9234,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/firstaidkit_large.png",
-      "sha256": "e3e4c49adf4b1ab0d5c8f10200af3da50742170d6ad979f915a43f6f458b8b00"
+      "sha256": "b350fc94a32aa1048b72744a982e34df7ed0bfff4583f968b5e382155d366bf6"
     },
     {
       "kind": "augment",
@@ -9279,7 +9279,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/flashy_small.png",
-      "sha256": "3ac0fb9e464c38d4e867df820ed79626c49e6b4d2f1c02a040989efa59ad36da"
+      "sha256": "420b770613c1a9757ccf5edf51a24a25ad759378bb44570c2bcfca7a898cb336"
     },
     {
       "kind": "augment",
@@ -9477,7 +9477,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/goliath_small.png",
-      "sha256": "64d019aa7ae8f9d168d7ec1d187baeb86d0474b48037e1ed3e1302c701a70600"
+      "sha256": "f2d29314bcd4182050bf5acfbd249bafa12c8c75041d8da8f2636d8f6d9f7453"
     },
     {
       "kind": "augment",
@@ -9495,7 +9495,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/goredrink_small.png",
-      "sha256": "5f68faa232a8114d2c3fa514d1012161c3d33ef74f4625b80c46041a9b3b8517"
+      "sha256": "bca608d875c2df57c5c1ec7c3af5f52033ade13d4f35b2211947bac3422f05f0"
     },
     {
       "kind": "augment",
@@ -9567,7 +9567,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/heavyhitter_small.png",
-      "sha256": "7b4ea3f2de972543869f0b31f6eb6c0a1c2f8a1c2aae53f9f5eb8c20644bdbb1"
+      "sha256": "fd75d9b70d3e686493ecb5cba01f4f848fe1c2e441311c66eb3b72deac35eea3"
     },
     {
       "kind": "augment",
@@ -9639,7 +9639,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/homeguard_small.png",
-      "sha256": "ab106259d369672b21575fdbf242870849832d2b31db47baca22e01bb1b4b8d3"
+      "sha256": "ac84747dd8b3b5b01737c4c05d336a57e15d44188735a54c08758474bc262a31"
     },
     {
       "kind": "augment",
@@ -9693,7 +9693,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/impassable_small.png",
-      "sha256": "cabd75059baf47c749444216ed29edd1bda02939de4ad74cd12e5ef4d652d957"
+      "sha256": "30f4ceb562d454f7b2b597ddb9e9726377f7d710c4234ab341a03fe7817d8337"
     },
     {
       "kind": "augment",
@@ -9747,7 +9747,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/itscritical_small.png",
-      "sha256": "861b5a0a0bb460b0a0298ac96c28ead892987b3943e7493079a5bdac2d6b3c6d"
+      "sha256": "3954907dc5f4b8fb7ad146322c492bc3354a172aaea17b9716ce751ae537fb11"
     },
     {
       "kind": "augment",
@@ -9756,7 +9756,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/itskillingtime_large.png",
-      "sha256": "6cb7fba613ba19632eb2456147943bfc0f6f2e776dcf52950f92148f759da31c"
+      "sha256": "a831dfbacc9c282469f588cfe06589c438fc035c376315b7b2dc2a79e53179eb"
     },
     {
       "kind": "augment",
@@ -9765,7 +9765,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/itskillingtime_small.png",
-      "sha256": "5598c00a61262d459b8f2a78faf8a4db430a018ec54b359b4359ec2ab65f16dd"
+      "sha256": "2b5d8f6931128acdb95a82c81db838825b5d0fae2152c32ca7036d5c3ff8edc3"
     },
     {
       "kind": "augment",
@@ -9783,7 +9783,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/jeweledgauntlet_small.png",
-      "sha256": "c4753b8f04bb7f5cd8e6ba4cbc9fc78d61a978355fc50f6e3f129def7e25e5e1"
+      "sha256": "4c6f8c87f5a759e77e031b0c782e29fe83645310c13475634f76079a37a96705"
     },
     {
       "kind": "augment",
@@ -9909,7 +9909,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/legday_small.png",
-      "sha256": "436bf96cdc22fe2f121aca0e0fc69ad03d3d589ec449d71adf1bbe7736662f6b"
+      "sha256": "359e19cae63819f4acb31c15d86eebec771d7c83bd987a375fae01deee2e2924"
     },
     {
       "kind": "augment",
@@ -9945,7 +9945,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/lightningstrikes_small.png",
-      "sha256": "44eefc9ece6e249dae48f2a955abb7cbd48ea213eb8ecd2023aef41027ac8a18"
+      "sha256": "5af131b93419922039b3325334bcc7807f9681c9b495776d4307590a0bf9fee3"
     },
     {
       "kind": "augment",
@@ -10053,7 +10053,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/marksmage_small.png",
-      "sha256": "7b4ea3f2de972543869f0b31f6eb6c0a1c2f8a1c2aae53f9f5eb8c20644bdbb1"
+      "sha256": "fd75d9b70d3e686493ecb5cba01f4f848fe1c2e441311c66eb3b72deac35eea3"
     },
     {
       "kind": "augment",
@@ -10089,7 +10089,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/mindtomatter_small.png",
-      "sha256": "44464f9936a3bf7cb2e175902dc88285436b74e2230987711484b9516ae2d463"
+      "sha256": "846783498de4327c19f12ce6c8fbf6285f49ecd732bc6924700b5ef8d0102f7b"
     },
     {
       "kind": "augment",
@@ -10098,7 +10098,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/minionmancer_large.png",
-      "sha256": "9d4c60dae62fdbfe17b5dc2b5899384e587ace7065ec2db40a98fadc47382f29"
+      "sha256": "3cbd9d87f0f1be77c2b1f25c92cd0da07ce6fbdf459007f42f4e0f5421de2fed"
     },
     {
       "kind": "augment",
@@ -10134,7 +10134,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/mountainsoul_large.png",
-      "sha256": "04ec8afc62027699b897b553ac8ebdb087ff40aa0f06e5b752efb030f5d4564e"
+      "sha256": "de04ab22f4dc7b4d75fe87cffff53b91bc982612693a4df775c12fe2aacc798a"
     },
     {
       "kind": "augment",
@@ -10143,7 +10143,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/mountainsoul_small.png",
-      "sha256": "44464f9936a3bf7cb2e175902dc88285436b74e2230987711484b9516ae2d463"
+      "sha256": "846783498de4327c19f12ce6c8fbf6285f49ecd732bc6924700b5ef8d0102f7b"
     },
     {
       "kind": "augment",
@@ -10179,7 +10179,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/mysticpunch_small.png",
-      "sha256": "26256c688ac079b21ce9fbcb49dc8b4e53b01b1d0a9060ff609698195bd94b82"
+      "sha256": "8ba07b2a00c1c35fea875bbbe0ddca8ce3709fc9f06080b33c8bc987fa01aee5"
     },
     {
       "kind": "augment",
@@ -10233,7 +10233,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/nowyouseeme_small.png",
-      "sha256": "b3d0a39039ebe8d3e57d8efb80f4b688f8796f64744e18759563c9b46ff8337e"
+      "sha256": "a4163b51a6f211f10cd893b236d90f6997240cf16a8f1d1678e15b4d3c9c09ce"
     },
     {
       "kind": "augment",
@@ -10251,7 +10251,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/numbtopain_small.png",
-      "sha256": "44464f9936a3bf7cb2e175902dc88285436b74e2230987711484b9516ae2d463"
+      "sha256": "846783498de4327c19f12ce6c8fbf6285f49ecd732bc6924700b5ef8d0102f7b"
     },
     {
       "kind": "augment",
@@ -10287,7 +10287,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/oceansoul_small.png",
-      "sha256": "a65cd44d3a023b4aaba8870c034114d3fde1f0680808d5e030a9b0ff2f5040c3"
+      "sha256": "d6ddd9fbc5761bccb3cd1fe9f56a3eb41c81f50750f50e5e88221b671cc57cf7"
     },
     {
       "kind": "augment",
@@ -10296,7 +10296,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/okboomerang_large.png",
-      "sha256": "91f21c86211bf16bdcaf2dc691cc59c9bc476b8f3cfb0803ab29463f55af9aed"
+      "sha256": "4da7f4b5cc1bd9af393361e8ceec95a10d19a1735f8dbbc5fecb78a19673ea2d"
     },
     {
       "kind": "augment",
@@ -10305,7 +10305,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/okboomerang_small.png",
-      "sha256": "6ad9e485e29469383f5db84c1ca6305b998a5688222deee70bcc6ef6a9500e77"
+      "sha256": "04113d59655131193f8f5395e9737fed8ab44d210a95de864355d56d09f68f10"
     },
     {
       "kind": "augment",
@@ -10314,7 +10314,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/omnisoul_large.png",
-      "sha256": "1491d2ef4a7caf461fbc61a4898320f5b471c5754295ff2c10a94b2a8af5da14"
+      "sha256": "2ec7b64e6ab4d8f317ffcd902d3ff7f8744142e6209a88f49a0d2b2135215c4d"
     },
     {
       "kind": "augment",
@@ -10377,7 +10377,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/overflow_small.png",
-      "sha256": "d417320e88f82d6f7a26c4d5d4deeb8b1bc8c7dd20a1b82c294a6403fc4f9770"
+      "sha256": "6a0cfaed9bac214912e8407155f6e5bee860298ef6a5d0c719b9068e61ce7222"
     },
     {
       "kind": "augment",
@@ -10395,7 +10395,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/pandoras_box_small.png",
-      "sha256": "212de6bc5dbdb6f554c99a0facb34e7e8426fdfc8ea79772e063f1f291d90dba"
+      "sha256": "c25ce12edf56084c4a330b37e7bcc0df697b66d59568ddf34da3429cc58acaf4"
     },
     {
       "kind": "augment",
@@ -10611,7 +10611,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/quest_rite_of_the_forge_god_small.png",
-      "sha256": "1c080c1dcb85a5deab09074a4bb355d18bc193a7217406ab3799373c55dc1b07"
+      "sha256": "0e302b9caf0d2bdad8b897659febe8e6ce63884757209dc45f917ad1a71d4060"
     },
     {
       "kind": "augment",
@@ -10629,7 +10629,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/quest_steelyourheart_small.png",
-      "sha256": "221937779d238da69a46ea7ad3c8e9adcc6aae06ff74849f5ff736df5f30e70a"
+      "sha256": "80449bcc44ea53abc3d785ecf2eb2f049c688e90a68f4a0af1f1a20056f238c0"
     },
     {
       "kind": "augment",
@@ -10647,7 +10647,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/quest_urfschampion_small.png",
-      "sha256": "9a643b11b4e82c4d769c5075909a6f35c4ea4a9fd1109d16ff4a4d1b8966ed43"
+      "sha256": "b30122b2daffaca76937d52b1a5a977f2564c1297d31f3447b90703158434c0d"
     },
     {
       "kind": "augment",
@@ -10665,7 +10665,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/quest_woogletswitchcap_small.png",
-      "sha256": "221937779d238da69a46ea7ad3c8e9adcc6aae06ff74849f5ff736df5f30e70a"
+      "sha256": "80449bcc44ea53abc3d785ecf2eb2f049c688e90a68f4a0af1f1a20056f238c0"
     },
     {
       "kind": "augment",
@@ -10674,7 +10674,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/rabblerousing_large.png",
-      "sha256": "2bbe8fe9c3497762d65beef6276c9b6f4370e05e3573f8c4b5ab0ba84f2c3a90"
+      "sha256": "d0b18634178950fd7f1baf7bdd2e30584e1fa3287db83f4322a4ab1c1676c805"
     },
     {
       "kind": "augment",
@@ -10683,7 +10683,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/rabblerousing_small.png",
-      "sha256": "fdd4f0e0c936bef3082e5018ae1c75ec53004e8d67c9e286d393896daf600afa"
+      "sha256": "194bef60a9b8d387391828bcc19efa41909aa6b0c8285ec6a14a90c458c93946"
     },
     {
       "kind": "augment",
@@ -10719,7 +10719,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/recursion_small.png",
-      "sha256": "e1a7be33db711b755766830c75948db385b4d9b2ee8e7cca69aa9a83ce7a01e9"
+      "sha256": "a1a3055ea27b882add6ecaad61ae870db1f25f101d9d9eb2bab1d7a8cab8b0a7"
     },
     {
       "kind": "augment",
@@ -10791,7 +10791,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/repulsor_small.png",
-      "sha256": "410993fd0d74e38592d8045938a59ff919ac9db6a0c8300e8dec5173386db837"
+      "sha256": "f1ae26432a2c988dea1047bb10a25a3f4075474506e3290d194f9c79aa2ef434"
     },
     {
       "kind": "augment",
@@ -10917,7 +10917,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/scopierweapons_small.png",
-      "sha256": "fc75c385d8f1d57ab8dec086f468a30e7330f12caeda9c77c49950d04e838719"
+      "sha256": "61b6ed01d862b271fb3c2fb57b20c9b84c4f1892dfd4637cd228a19efead59f4"
     },
     {
       "kind": "augment",
@@ -10935,7 +10935,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/scopiestweapons_small.png",
-      "sha256": "fc75c385d8f1d57ab8dec086f468a30e7330f12caeda9c77c49950d04e838719"
+      "sha256": "61b6ed01d862b271fb3c2fb57b20c9b84c4f1892dfd4637cd228a19efead59f4"
     },
     {
       "kind": "augment",
@@ -10944,7 +10944,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/searingdawn_large.png",
-      "sha256": "013347d379fd01d1cff1f5a992e9cf8ae816a8e3606970976304da55262b5c49"
+      "sha256": "c42452d74be846e0234e1a6704d79a12b8c1f98a242b9d549a97875aef9c9bae"
     },
     {
       "kind": "augment",
@@ -10989,7 +10989,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/servebeyonddeath_small.png",
-      "sha256": "f017d7b9e6c5be73ca367f4dd1bddcad3a2a40b2a1db76398bf3f42bbf5c21e1"
+      "sha256": "16e82c9c2ba68fe2dff9d46a2c619895522e568ce101cf983ad1268c40cfddad"
     },
     {
       "kind": "augment",
@@ -10998,7 +10998,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/shadowrunner_large.png",
-      "sha256": "342a7019d35fefbcf6969ee7768cc98f4bcfd1584fb0396fa355494d09e6f300"
+      "sha256": "a6c8117b42379b88eec04c79b469d4f6ffc0a3e60df7732b743707d7d9b2324e"
     },
     {
       "kind": "augment",
@@ -11025,7 +11025,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/shrinkray_small.png",
-      "sha256": "8b0d469f3bfcd1ef1c9de50491720b9de4702b437f6095cbd41327cf0decaac2"
+      "sha256": "7d0a86c3e312e7d18f826cebfcbe5940f01388f0fc313b613206241188a7bbae"
     },
     {
       "kind": "augment",
@@ -11052,7 +11052,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/skilledsniper_large.png",
-      "sha256": "666520dbf768d4d0402978165ec14998ff16e1448fabd21fb64c21a85574420f"
+      "sha256": "d86f40ea14c65d51100bb278637045087ccd1fd354b7190e8c344bda7810bdfc"
     },
     {
       "kind": "augment",
@@ -11061,7 +11061,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/skilledsniper_small.png",
-      "sha256": "df33840a9db3fab0db1755ff20f5eb4eae0aebf54a874a8df0135b276248c534"
+      "sha256": "b86d7a34b1341e5dec1c678da20fdac0eb5881b9263bc3366a8a349de5f63985"
     },
     {
       "kind": "augment",
@@ -11088,7 +11088,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/slimetime_large.png",
-      "sha256": "8cc99aa373f363793d8c3380c4dc87a8e20c8b3fcb33cbf84daf0f0a303ce28f"
+      "sha256": "1d0b05efc99ae8facbbf153f1a94a25153b05801d4114cbfc43ad8104cdadb7a"
     },
     {
       "kind": "augment",
@@ -11115,7 +11115,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/slowactingpainkillers_small.png",
-      "sha256": "b28a8f6f549e661fad888c2ed6872c589c9dd87dc6c70f8ba49c59bc9bc015ee"
+      "sha256": "6a6125f0821ad59e822e1601cdc19373e36a24bc843a6163eb109e3399500183"
     },
     {
       "kind": "augment",
@@ -11232,7 +11232,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/spintowin_large.png",
-      "sha256": "dbf23de42be7e7a61c481ce170e8c7b31a2516339088e8fbce9a72faf8757b54"
+      "sha256": "02aa647e29608bc8415bd24d7ee3661c2790809e6ba0d59c270906066a22b69d"
     },
     {
       "kind": "augment",
@@ -11304,7 +11304,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/stats_large.png",
-      "sha256": "914c7957158a1be80b4ca3277783295f943171e78a05b399e0e98695118e0f33"
+      "sha256": "607dc8bb1e1a7752e1af3582246485ab365e59cd5d4b15e9c47f49b3e44b49da"
     },
     {
       "kind": "augment",
@@ -11313,7 +11313,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/stats_small.png",
-      "sha256": "ec663c2388a3e5caaabf4235389a8926767d1b71ab69382ddb6b5a4bbaf134c2"
+      "sha256": "cd00cd2948ace170c39babf4c8bed2497d86141b70e23c6cc236bbd374c192c1"
     },
     {
       "kind": "augment",
@@ -11349,7 +11349,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/statsonstatsonstats_small.png",
-      "sha256": "ec663c2388a3e5caaabf4235389a8926767d1b71ab69382ddb6b5a4bbaf134c2"
+      "sha256": "cd00cd2948ace170c39babf4c8bed2497d86141b70e23c6cc236bbd374c192c1"
     },
     {
       "kind": "augment",
@@ -11367,7 +11367,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/summonerrevolution_small.png",
-      "sha256": "d41f4cd805c79e5f402fd27d4d7418df4745d6ceb5bec2fb78f8fb288e7e60de"
+      "sha256": "a31ec14095a9d239a219ccd08a6369fb5f4e87c875c707c7f3a7cf462f71388f"
     },
     {
       "kind": "augment",
@@ -11430,7 +11430,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/symphonyofwar_large.png",
-      "sha256": "914a6794b6144e2c7cbd2d2ce0f5d2614a1cdd0348154ab0e7c05382d8c67bf8"
+      "sha256": "298377755b9729973be1dc2a5010f9553f2b94b2583b0bab0fc18323c4bb92c0"
     },
     {
       "kind": "augment",
@@ -11457,7 +11457,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/tank_engine_small.png",
-      "sha256": "82382319a2c4104f7d00b16517dc4a6d039e62c7f68b6049cc011284ff27d694"
+      "sha256": "581ff2672d8304be15ef6508ca1186deddbaa5d9d0740702f59832469820cb12"
     },
     {
       "kind": "augment",
@@ -11466,7 +11466,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/tankitorleaveit_large.png",
-      "sha256": "38833043aee1bce48b49b8063c0dd90ea25dd4b5a93eab8a68859a0a4bc7f142"
+      "sha256": "285b39252e28f9d307fcfe597d632d1120ece9fc79835962ecff31dd909999ea"
     },
     {
       "kind": "augment",
@@ -11475,7 +11475,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/tankitorleaveit_small.png",
-      "sha256": "c0ee5d20a02e096c88a0f4b445763462d31e7a4114aeac71ec3fef3ab8422d9d"
+      "sha256": "c60efd3a63fdb8c1b8f214789c4fe29e7a54c3ead2ee25a61e03028a965794c7"
     },
     {
       "kind": "augment",
@@ -11511,7 +11511,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/thebrutalizer_small.png",
-      "sha256": "44eefc9ece6e249dae48f2a955abb7cbd48ea213eb8ecd2023aef41027ac8a18"
+      "sha256": "5af131b93419922039b3325334bcc7807f9681c9b495776d4307590a0bf9fee3"
     },
     {
       "kind": "augment",
@@ -11529,7 +11529,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/thiefsgloves_small.png",
-      "sha256": "258fd32c14498afeab99d95640d7aeb1cd716f5d128284772be18fec367f4cfe"
+      "sha256": "2cc5c01b59185e25a14d03ccb4da9a7901ea74121dbe812404cbfe50db33c5ae"
     },
     {
       "kind": "augment",
@@ -11538,7 +11538,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/threadtheneedle_large.png",
-      "sha256": "ce3c15a9c3e8dea9478a79ae73cc4249e8504dbbeb1f98b08574e12ffaf26f44"
+      "sha256": "aed3057f15e3b982d09d27c0f7c3825fcb90b8cbaf26d578752af3e2d9c9738d"
     },
     {
       "kind": "augment",
@@ -11547,7 +11547,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/threadtheneedle_small.png",
-      "sha256": "44eefc9ece6e249dae48f2a955abb7cbd48ea213eb8ecd2023aef41027ac8a18"
+      "sha256": "5af131b93419922039b3325334bcc7807f9681c9b495776d4307590a0bf9fee3"
     },
     {
       "kind": "augment",
@@ -11610,7 +11610,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/transmutechaos_large.png",
-      "sha256": "fe6732f8624fecb3fbad8eef0b0758fad9bbe7429dea53377aba9b542b86e7e7"
+      "sha256": "4c531a52ae6352f60f0febaf4d6959d340e773dacf0136a2f1d7a670dc04ad26"
     },
     {
       "kind": "augment",
@@ -11619,7 +11619,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/transmutechaos_small.png",
-      "sha256": "6a255f4908f04fde9e94c6a9b7cde743c8499bb7aa4e61ec695af54b41839fed"
+      "sha256": "5131f5628118e8907137c98b501a025686734a1e0c8ad509c93534e8f40a1760"
     },
     {
       "kind": "augment",
@@ -11637,7 +11637,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/transmutegold_small.png",
-      "sha256": "6a255f4908f04fde9e94c6a9b7cde743c8499bb7aa4e61ec695af54b41839fed"
+      "sha256": "5131f5628118e8907137c98b501a025686734a1e0c8ad509c93534e8f40a1760"
     },
     {
       "kind": "augment",
@@ -11655,7 +11655,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/transmuteprismatic_small.png",
-      "sha256": "6a255f4908f04fde9e94c6a9b7cde743c8499bb7aa4e61ec695af54b41839fed"
+      "sha256": "5131f5628118e8907137c98b501a025686734a1e0c8ad509c93534e8f40a1760"
     },
     {
       "kind": "augment",
@@ -11727,7 +11727,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/typhoon_small.png",
-      "sha256": "091dd92f8e2dcbc3e8b1a19547bf86af168d632792a3ce14bb4b254563f4a03d"
+      "sha256": "998a6517f229525318eb29dc6a0eddc402072b0c3e2891813e1738b773bff651"
     },
     {
       "kind": "augment",
@@ -11745,7 +11745,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/ultimaterevolution_small.png",
-      "sha256": "fbda1cabfd6b970e744eea60fefd49f34ab5e9699a4052e561ed1425a6c37abd"
+      "sha256": "1e962007ad3c7291fcc35d5afe90a3898edb508da6107af6e184df17704e935a"
     },
     {
       "kind": "augment",
@@ -11763,7 +11763,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/ultimateunstoppable_small.png",
-      "sha256": "b77b246770525110bc43b384e64899c3e52753d23c7d83bd76437f26d5f56d57"
+      "sha256": "f12a65b4931066041bf9ca13d619bd42958bbb21d2183ba0ca86e88b0d0b78c2"
     },
     {
       "kind": "augment",
@@ -11799,7 +11799,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/vanish_small.png",
-      "sha256": "7df7f8760478ad2749031e640bc6aca6fe4c9c33bbeb40e38d83df07351d49c3"
+      "sha256": "5cc2d0048a388cf32ea2c9c9b2ccab594cdd7a716fb315ae4294ef6900c33fed"
     },
     {
       "kind": "augment",
@@ -11826,7 +11826,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/vulnerability_large.png",
-      "sha256": "620a47aaf5c9e17b89fa481913ac9bb427a72a983cfb9326b003d705e8ae290c"
+      "sha256": "ff7a120ff0be4a9ca3ea6cd569505485b4c42403597fece0677fa73ec9f42107"
     },
     {
       "kind": "augment",
@@ -11835,7 +11835,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/vulnerability_small.png",
-      "sha256": "94b6d563d2fe0401ce071b3157b8ddfe9028d23cc586e7e7a82451fd9c0aa214"
+      "sha256": "b47faa19d07bf0d855eb0d8eb0e3755287e09c9a4688819505e5c7703f81751d"
     },
     {
       "kind": "augment",
@@ -11943,7 +11943,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/wisdomofages_small.png",
-      "sha256": "0b99d439e12eb54a9096ea94d3bfdfbabe81b8ff8a2c323bdaa9d1f6fb45a1ed"
+      "sha256": "3c844d8a493e729a5912e19ee2115254bef48df8694efc14cb788fd1b8af5db1"
     },
     {
       "kind": "augment",
@@ -11961,7 +11961,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/witchfulthinking_small.png",
-      "sha256": "fd05288c98ed6db843e1f900844b8fccf61a7610df11f4298bc7e4d2223ae3ea"
+      "sha256": "98e1200ee4cc9c720736f97a833e4af5469fe66116baa2f2124bc8468562b279"
     },
     {
       "kind": "augment",
@@ -11970,7 +11970,7 @@
       "width": 256,
       "height": 256,
       "relativePath": "img/augment/withhaste_large.png",
-      "sha256": "11afade38f9112ee675674cd64b7cc459a2f7328cccd5a6348801a61277981f8"
+      "sha256": "6470287ce23248c70c5cc7c6c32a6c5269774c974eba847e2ce1b8c11ce4f3f9"
     },
     {
       "kind": "augment",
@@ -11979,7 +11979,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/augment/withhaste_small.png",
-      "sha256": "df7c6a6868123e667e6a3209ff3621d8e1f8dd876f71dea6f5c6f9ce605be3cc"
+      "sha256": "5274dda6d8f896c0bf6db14c4a66efff7e280cc9216615fbce89b73809f84a6d"
     },
     {
       "kind": "augment",
@@ -13171,6 +13171,15 @@
     },
     {
       "kind": "champion-loading",
+      "canonicalId": "Jade_Talon_0",
+      "mimeType": "image/jpeg",
+      "height": 560,
+      "width": 308,
+      "relativePath": "img/champion-loading/Jade_Talon_0.jpg",
+      "sha256": "34312d4dec6dfe9313caaf7abf7fc009a3aec5bb2680f9e154158b2acf03facb"
+    },
+    {
+      "kind": "champion-loading",
       "canonicalId": "Jade_Taric_0",
       "mimeType": "image/jpeg",
       "height": 560,
@@ -13225,6 +13234,24 @@
     },
     {
       "kind": "champion-loading",
+      "canonicalId": "Jade_Udyr_0",
+      "mimeType": "image/jpeg",
+      "height": 560,
+      "width": 308,
+      "relativePath": "img/champion-loading/Jade_Udyr_0.jpg",
+      "sha256": "95790636093bef433fe8a128d28df9b30f5a13b41f292259443e689909388a44"
+    },
+    {
+      "kind": "champion-loading",
+      "canonicalId": "Jade_Urgot_0",
+      "mimeType": "image/jpeg",
+      "height": 560,
+      "width": 308,
+      "relativePath": "img/champion-loading/Jade_Urgot_0.jpg",
+      "sha256": "b081d53527e0bff45bc04636b3a8144a72f0798f8dc8ae9def26afd1eab4596c"
+    },
+    {
+      "kind": "champion-loading",
       "canonicalId": "Jade_Vayne_0",
       "mimeType": "image/jpeg",
       "height": 560,
@@ -13267,6 +13294,15 @@
       "width": 308,
       "relativePath": "img/champion-loading/Jade_Wukong_0.jpg",
       "sha256": "acb190db22a3e5902630d0e895665478dd645acb78f4ce250c37790092d7c491"
+    },
+    {
+      "kind": "champion-loading",
+      "canonicalId": "Jade_Xerath_0",
+      "mimeType": "image/jpeg",
+      "height": 560,
+      "width": 308,
+      "relativePath": "img/champion-loading/Jade_Xerath_0.jpg",
+      "sha256": "60fde29b60acd9534af76d81960f327fa51d269290331504530eba7ac658c133"
     },
     {
       "kind": "champion-loading",
@@ -14445,7 +14481,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Akshan_0.jpg",
-      "sha256": "b50bf84682ef9fb089b6e55a32ad3fb9e0b9b8ad60ede3001b9b2748432d1d27"
+      "sha256": "fa4a49b94c40b4de9b3bb82da1780e8850515a7df63383f629bf321996b8374a"
     },
     {
       "kind": "champion-splash",
@@ -14454,7 +14490,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Alistar_0.jpg",
-      "sha256": "0bb70350bc716046ece51d67440a9dfe8398258f69d39a0b9fcd46bc8770ba8f"
+      "sha256": "786bb59dbe147ebec576ae40d8477b08efaccac504fe2761f76c5eae0d5e62b1"
     },
     {
       "kind": "champion-splash",
@@ -14463,7 +14499,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Ambessa_0.jpg",
-      "sha256": "b7a7103a1932885d7383fe6aead7f34df14a89d3c1223f631900c0f53dedda76"
+      "sha256": "cda116e8aefadacf4be3c22f4e9c5390343757ef9fcfd0e3bd0d073790757ce9"
     },
     {
       "kind": "champion-splash",
@@ -14481,7 +14517,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Anivia_0.jpg",
-      "sha256": "6b7d13da5cd1fc64095da05f9819339a92a691d399bbd4186e8272cd5c2648d0"
+      "sha256": "5dc0d3a7159ccf00926af6dc0c1df3800392555b1269e3355533c1834a855e8c"
     },
     {
       "kind": "champion-splash",
@@ -14526,7 +14562,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Aurora_0.jpg",
-      "sha256": "cbe3050197f9cdcb4104487183bae8211de4539c3cdf0c193eeb7276c28d42c0"
+      "sha256": "32cc6e69e8809e43b8a3f39285f1ab76a005d6e4369fd31c51946f0999b09648"
     },
     {
       "kind": "champion-splash",
@@ -14571,7 +14607,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Brand_0.jpg",
-      "sha256": "93ff8610c5d0a74924538c935a18f321f5154171033ce37f002d04c150c755c7"
+      "sha256": "dde77137bdd7d9adcd54dc82305ecb4cb2f1f1a6556d4dd2bb7987b253f94a65"
     },
     {
       "kind": "champion-splash",
@@ -14580,7 +14616,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Braum_0.jpg",
-      "sha256": "c48543a5f457abe8c2d302bb958e17d52c724019950272b4c03e1270e028821e"
+      "sha256": "31407a0a9c15b4a8bed0cd65a61d43643ca27577cf517254f7ac9afc67ed81d9"
     },
     {
       "kind": "champion-splash",
@@ -14589,7 +14625,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Briar_0.jpg",
-      "sha256": "531d17470bc8a442aa1d8e59898d231edc1a6c7792db30dbface4edc63d229df"
+      "sha256": "afb985938447746b67045ee79f020c571c6d4c4b575a3a99bab4e681178a3f52"
     },
     {
       "kind": "champion-splash",
@@ -14625,7 +14661,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Chogath_0.jpg",
-      "sha256": "b05b28d8ffa31bda27e7dfa9f4e7bc0c43cb8fc31a985d4b6b304bc00ee2b5de"
+      "sha256": "535f1bf3118403824af370da51573974c3328a2a996a36a7577718c24133d573"
     },
     {
       "kind": "champion-splash",
@@ -14652,7 +14688,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Diana_0.jpg",
-      "sha256": "37da4a103e4c533676d1a8cd9ed03767d3d5abb831b457ae643d30dc128bf19e"
+      "sha256": "bf2e6992373e79d5c57a3800aed37180caf6de1c44c55414c872902dd0cdb831"
     },
     {
       "kind": "champion-splash",
@@ -14670,7 +14706,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Draven_0.jpg",
-      "sha256": "d01484939c6f62d980628a5669ec0e1df891148d8473c630f25e774fcad0570b"
+      "sha256": "4f8c2145106520f617f1ad59ad6f51871749bb359c4410adb1a247fdfe122fdb"
     },
     {
       "kind": "champion-splash",
@@ -14679,7 +14715,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Ekko_0.jpg",
-      "sha256": "7c99c7eaf0d41c11ea253dc429064d4aa683ddd749f039281ba5dfc85967c6fe"
+      "sha256": "d7a4848e9e85a3b2f181942de478d4e0f22c0082ca81ffa23b4795c399197c2b"
     },
     {
       "kind": "champion-splash",
@@ -14697,7 +14733,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Evelynn_0.jpg",
-      "sha256": "80598ac1ed5ec1cf6e4d8f47b839b8a73f8b89177d00e5e5a6f9e2d73fbd3e51"
+      "sha256": "4d08dc4a84ea238cfd6d8e792fcab71a3514fa098d104faa564c66add56ae5eb"
     },
     {
       "kind": "champion-splash",
@@ -14724,7 +14760,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Fiora_0.jpg",
-      "sha256": "809e4cfe1fb0ca2a738a608f4276dc964a5b48b18611c0d492cb90fb3976429d"
+      "sha256": "c2f0810257f2be5e6e81d5d449103ecaf3efb23c2d0877d4ea00a9177f3fe3d7"
     },
     {
       "kind": "champion-splash",
@@ -14751,7 +14787,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Gangplank_0.jpg",
-      "sha256": "03955066105fd74761715bf34c466fcb51d2ebe8035d7f50a0d56d329064a88c"
+      "sha256": "baee1f6484fcf9465ead9d1c65bbc8e9645e21965742ef2c7ddecc15211adfd4"
     },
     {
       "kind": "champion-splash",
@@ -14796,7 +14832,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Gwen_0.jpg",
-      "sha256": "f4e24f1adbe105ca86f5814d40f3673346b18e4732af5ef4ae3d072f2f853c80"
+      "sha256": "f94a9ab3c3a742d025048703b0ffbfa7b7df9ba5aa134d703da33b414cb8cd6c"
     },
     {
       "kind": "champion-splash",
@@ -14805,7 +14841,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Hecarim_0.jpg",
-      "sha256": "cb1349c692c79ce892beb0991bd329f9f2b120ed49a73799d19fc847e72a9bb4"
+      "sha256": "b133cdce4aeb1426d5d17778e004dc36400fde390e336777cfbe74e53492bb0e"
     },
     {
       "kind": "champion-splash",
@@ -14814,7 +14850,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Heimerdinger_0.jpg",
-      "sha256": "30ed1514aa7289b77ca89a4e066dcfc79db51129f8063d67672a76ebc3e9da94"
+      "sha256": "432c03232fc7309528b1bc2179ac1fd27b3bdfcd9fd6a1b4aba0eac949978820"
     },
     {
       "kind": "champion-splash",
@@ -14823,7 +14859,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Hwei_0.jpg",
-      "sha256": "4d9e161693e01c1e4b6e65a123631d88f46d593bbb6f2e9c06b27d4603e7fbfa"
+      "sha256": "b5517fc004938b6d6e7418b1228a0ba7a8fccd14c9f5ab4f0d37045b8f149273"
     },
     {
       "kind": "champion-splash",
@@ -14850,7 +14886,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Ivern_0.jpg",
-      "sha256": "b6c941716abd4ddadd4637a70366a9cb8d69ba34f64a49037a281dd239a228ca"
+      "sha256": "e98650876977961b0af658061a6fad7c969452c8528bbf9df08bcd9839716d05"
     },
     {
       "kind": "champion-splash",
@@ -14859,7 +14895,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Aatrox_0.jpg",
-      "sha256": "4a51eb093c8b2b0fa55c81e9a70dfce9d2f106f5bb02e4e78997e2bc19a238d2"
+      "sha256": "6ecbdbdef41926627972685b16862147867f49ab5666a3c2fa662451f6b20f43"
     },
     {
       "kind": "champion-splash",
@@ -14868,7 +14904,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Ahri_0.jpg",
-      "sha256": "d945d22eb73def929754393aebf55f52ac2aebbbc219c300816ddca68bbae187"
+      "sha256": "5afbef28257c8118c54f4e9aa56706a4843b2f9bb8071154afac9a13309fc204"
     },
     {
       "kind": "champion-splash",
@@ -14877,7 +14913,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Akali_0.jpg",
-      "sha256": "7ca5aa834b2dfb043413717eaed70d72d92bd3f863402ee1ea54116e21b17ded"
+      "sha256": "4355b383afc3564fd5bea48fac3805d700037552104d04b3b6006f1317dea4b3"
     },
     {
       "kind": "champion-splash",
@@ -14886,7 +14922,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Alistar_0.jpg",
-      "sha256": "0bb70350bc716046ece51d67440a9dfe8398258f69d39a0b9fcd46bc8770ba8f"
+      "sha256": "786bb59dbe147ebec576ae40d8477b08efaccac504fe2761f76c5eae0d5e62b1"
     },
     {
       "kind": "champion-splash",
@@ -14895,7 +14931,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Amumu_0.jpg",
-      "sha256": "f5a6cc412570a35140f0281d968719abbf7188a4d94912f16f1e52251947c5e1"
+      "sha256": "c434b8cf9ea5f473d14badf2a7e2ad2ac3c01ac979700966eb7d23ada596c8a7"
     },
     {
       "kind": "champion-splash",
@@ -14904,7 +14940,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Anivia_0.jpg",
-      "sha256": "9db00d00e59b68c7ec6afee3890dae59f20a1712468b440f7a311cd337f1f38a"
+      "sha256": "63ab4a86ff9091a084dac342702e1245a5090d0efb7b4a3aff338400be8e3427"
     },
     {
       "kind": "champion-splash",
@@ -14913,7 +14949,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Annie_0.jpg",
-      "sha256": "af0c11c71a7f9bce81460297c16aae96389f21f99952f6dcad6221b36c4b30c3"
+      "sha256": "edb0ba3ce8688cf8419e56bbb31fbd4c5650fd2b1b0257c291efc327c66cf59b"
     },
     {
       "kind": "champion-splash",
@@ -14922,7 +14958,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Ashe_0.jpg",
-      "sha256": "0769c901f100a1de9d73782e64a39d7330290d685d3b5a0452ee8841b9a472db"
+      "sha256": "b30a824e3fecbb1f7c8a865c6a654d1bd7ccccf6c9168bf30899a4290df21dac"
     },
     {
       "kind": "champion-splash",
@@ -14931,7 +14967,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Blitzcrank_0.jpg",
-      "sha256": "1a1a1dcc864381c6461d5cbd285e2ffd0da34c294d1220672c6ad80564828fa8"
+      "sha256": "bcfda688d1b2ea3b6ddda8d9dd2c359da8279115976bf76be149cdff70674f1f"
     },
     {
       "kind": "champion-splash",
@@ -14940,7 +14976,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Brand_0.jpg",
-      "sha256": "daab7f56a243162394bcdd1c2b6a2749e9ec4c0cfeb9f14b33bc194ffd1668cd"
+      "sha256": "f7f85075b4e23aea2bba2a7fd71541aa4771c6bd6ef8b6bf5f31b847da33fdff"
     },
     {
       "kind": "champion-splash",
@@ -14949,7 +14985,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Caitlyn_0.jpg",
-      "sha256": "40a7ffc70645cd3085bed3b9fc3b6995314669b8a04bb725c622ace015eb388a"
+      "sha256": "62398363e3a1a459268d4a9e02f7984592ca1a48f80e2d5da06640da834c8ac3"
     },
     {
       "kind": "champion-splash",
@@ -14958,7 +14994,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Chogath_0.jpg",
-      "sha256": "1a7cce8b546215c9f91d5cef450c0e32906b5c069dd5fe896eb916bff59e0e0c"
+      "sha256": "368eecfca3789a571e79c35f988371b0c5c2c9c61e30d143737e4a2fb8d12619"
     },
     {
       "kind": "champion-splash",
@@ -14967,7 +15003,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Corki_0.jpg",
-      "sha256": "ba5d7694561f7909a4a5a109670c208709484c0fa6d7494c6112a767ef728e7b"
+      "sha256": "b525d0806fc6bc2c86365d5f9eb1fe2608a6e82f9c3a39561464c958410e1525"
     },
     {
       "kind": "champion-splash",
@@ -14976,7 +15012,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_DrMundo_0.jpg",
-      "sha256": "9fe341d0179bf9a3fa87e9eb023791d8ae601e70cdb061c931e9a377829b82c6"
+      "sha256": "bad3aa1ffbce577bcf90fc56b74de9c3e6d6a4d75367b0141d4ea3573a839140"
     },
     {
       "kind": "champion-splash",
@@ -14985,7 +15021,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Elise_0.jpg",
-      "sha256": "34203cbb37febb38907581c44e8cf1244d5ac69668dd2075428f5da2d7621a06"
+      "sha256": "7c5bc1ba44c479dc22febff1ee6d1fea4210185342c1f432dfcfe562a2fda4fa"
     },
     {
       "kind": "champion-splash",
@@ -14994,7 +15030,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Evelynn_0.jpg",
-      "sha256": "80598ac1ed5ec1cf6e4d8f47b839b8a73f8b89177d00e5e5a6f9e2d73fbd3e51"
+      "sha256": "4d08dc4a84ea238cfd6d8e792fcab71a3514fa098d104faa564c66add56ae5eb"
     },
     {
       "kind": "champion-splash",
@@ -15003,7 +15039,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Ezreal_0.jpg",
-      "sha256": "14d65725fb87147fa752bd7f10fbdfa7d98c89048538a2d24e72048a6c14cbf0"
+      "sha256": "06279545481e63a6c558b0fde6a9015432f98f981642012b2d3ea3d0d840f9b8"
     },
     {
       "kind": "champion-splash",
@@ -15012,7 +15048,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Fiddlesticks_0.jpg",
-      "sha256": "aea5386de9362cbaa0e5bbc4d4df4bfbf0842ffa023ab8b3a7cb4a9d1ee1e279"
+      "sha256": "69cae697721d7463eac788c924f0db7a454167885bf5fb932a39b6df927d37f6"
     },
     {
       "kind": "champion-splash",
@@ -15021,7 +15057,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Fiora_0.jpg",
-      "sha256": "809e4cfe1fb0ca2a738a608f4276dc964a5b48b18611c0d492cb90fb3976429d"
+      "sha256": "c2f0810257f2be5e6e81d5d449103ecaf3efb23c2d0877d4ea00a9177f3fe3d7"
     },
     {
       "kind": "champion-splash",
@@ -15030,7 +15066,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Fizz_0.jpg",
-      "sha256": "60200779d878dec48191dae615689c2e35fa9117f7d46502c2cd5f4675e92801"
+      "sha256": "f9276bb229a5169252879ea8d832b53ea4a4db2c0ef8d0c600a1f0c97c9e218f"
     },
     {
       "kind": "champion-splash",
@@ -15039,7 +15075,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Galio_0.jpg",
-      "sha256": "ddf6d12e3e50696f194a369ab0479a229a8a3dc83484a88ddffe868732203b93"
+      "sha256": "de2c69326c2953a166d5dd1e64d6a5b709671ac0bc5c3c0e2c6c623067481bd7"
     },
     {
       "kind": "champion-splash",
@@ -15048,7 +15084,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Gangplank_0.jpg",
-      "sha256": "03955066105fd74761715bf34c466fcb51d2ebe8035d7f50a0d56d329064a88c"
+      "sha256": "baee1f6484fcf9465ead9d1c65bbc8e9645e21965742ef2c7ddecc15211adfd4"
     },
     {
       "kind": "champion-splash",
@@ -15057,7 +15093,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Garen_0.jpg",
-      "sha256": "067251a4f632b62d8fdfda3efe83845ba57a6f7c8f79f130a5e202414193c868"
+      "sha256": "a7c363af03f7c828599a5cec9391df8d583840067152825e06d72afdebc13ded"
     },
     {
       "kind": "champion-splash",
@@ -15066,7 +15102,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Gragas_0.jpg",
-      "sha256": "49118755993623fbc28df69903df63f1626e678a70ab5af13c6e25d27df0c867"
+      "sha256": "eaa09f949655f034dcfd47978144f45b5a6eabebdda2de4a7196e601e49f88c5"
     },
     {
       "kind": "champion-splash",
@@ -15075,7 +15111,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Graves_0.jpg",
-      "sha256": "761727f128a3fed84d609fd57b87c073ca8687a91ad078885a7b1436e944b63f"
+      "sha256": "19d1af0d172a0f400a327ec1dce0b58cacc88e2c01233dd187dc77b051301f2d"
     },
     {
       "kind": "champion-splash",
@@ -15084,7 +15120,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Hecarim_0.jpg",
-      "sha256": "63a29458d4b817c034a5c253eaa52c82ec20e982cc464870457dfac71cc800cd"
+      "sha256": "f6a76553bb0b82bb792e542f5a9c0a773874de676b2261198c0151274def647c"
     },
     {
       "kind": "champion-splash",
@@ -15093,7 +15129,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Heimerdinger_0.jpg",
-      "sha256": "30ed1514aa7289b77ca89a4e066dcfc79db51129f8063d67672a76ebc3e9da94"
+      "sha256": "432c03232fc7309528b1bc2179ac1fd27b3bdfcd9fd6a1b4aba0eac949978820"
     },
     {
       "kind": "champion-splash",
@@ -15102,7 +15138,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Irelia_0.jpg",
-      "sha256": "af195709df0f538edc3a0ae327da9fb52a5e4c77bdf1697170666034e4be0a36"
+      "sha256": "debfa4d1d68431ebd205c96e40e5a87bec4826a581b6e7ec2ecd7d351d11a1c3"
     },
     {
       "kind": "champion-splash",
@@ -15111,7 +15147,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Janna_0.jpg",
-      "sha256": "047bf5398b31bf510775fcfc3e0234090589b606bd139187b9cc442f1255b605"
+      "sha256": "66b3737369da893e6e9f63dd5aeeb3bcc9eab1d3e5d2ef0a87cbaaf02d19ac3b"
     },
     {
       "kind": "champion-splash",
@@ -15120,7 +15156,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_JarvanIV_0.jpg",
-      "sha256": "b3ef01eb8397762f3af866546e9eb5b59213b0deb4e683fb6b54ec0e13fb8614"
+      "sha256": "2b759d0c46187bca79e8a0c0ff7e4c690b55c1fcd5793fe81a4faba7698ba830"
     },
     {
       "kind": "champion-splash",
@@ -15129,7 +15165,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Jax_0.jpg",
-      "sha256": "5d1ad9d6c45fe6c2f97758cb58df9668b64e1dfc3a8b9f18e261116dafee7c57"
+      "sha256": "013bdc0f0e31261bbe1444f083ae18f6aa4ad9890f265cd76e4016c5e7ae853d"
     },
     {
       "kind": "champion-splash",
@@ -15138,7 +15174,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Karma_0.jpg",
-      "sha256": "3aedd54e9f352b2bc5180f9bdcd7ef32f50cb3541a35b3b294fbb09e6173f366"
+      "sha256": "4669d6567fd85857324b84e1b57a90c5009e7da25284c805cf5ba78edfa3e249"
     },
     {
       "kind": "champion-splash",
@@ -15147,7 +15183,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Karthus_0.jpg",
-      "sha256": "e71f4b75645444641adfce1c6f35618b32c96e1612451a3145c554ddbacd7d78"
+      "sha256": "56a35484312d09c2da2305333142d2d1858f9762a2f72a1a9cfa83727c66b3cb"
     },
     {
       "kind": "champion-splash",
@@ -15156,7 +15192,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Kassadin_0.jpg",
-      "sha256": "f56436bd018e0c146da23225d1376046159e3cd1f5c6988896b5a5f585c1e6cf"
+      "sha256": "39163ad5f4d4e711fd6900434f77e7ac847b7b052d3752e5e1ad9ceac0e084e7"
     },
     {
       "kind": "champion-splash",
@@ -15165,7 +15201,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Katarina_0.jpg",
-      "sha256": "51501fb517226563de89d3df679be4279e67fa4d9ed35820929cc1f5adab09bc"
+      "sha256": "bb8b7824a5425fd227c0f43e9661f0a291f3a8de1abc827837e1a8aaf35d3752"
     },
     {
       "kind": "champion-splash",
@@ -15174,7 +15210,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Kayle_0.jpg",
-      "sha256": "a8436bcf06b65319c573d9539303a2fa5249ff46bbfd71113ae1835428a9e0ea"
+      "sha256": "9323b976886acc474f2493043a15f1d7fc459ec76b5af1e45edd71b6899750d8"
     },
     {
       "kind": "champion-splash",
@@ -15183,7 +15219,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Kennen_0.jpg",
-      "sha256": "7264f545d4d906fe59b994216afbce9c676aab5ac1c5dd1ba8eb68d2383421b9"
+      "sha256": "67fad3942d674865548d96391bbabd58fe57ca50c7dfeb789b6016a68bac6fec"
     },
     {
       "kind": "champion-splash",
@@ -15192,7 +15228,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_KogMaw_0.jpg",
-      "sha256": "6fa74d3b28e7d6b5e86f373b85e96b1935b8ff0ba235a3ef1d9e92c689966059"
+      "sha256": "ccf0337b92296f1bc40b0948ac746edfbefb7f017cc3ce50a87679cbe75332c8"
     },
     {
       "kind": "champion-splash",
@@ -15201,7 +15237,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_LeeSin_0.jpg",
-      "sha256": "e8ca768fd8a09c4040645bcc473521272de7c2985c4e9323da8cfebc977ba047"
+      "sha256": "c403bd419dcfda77278cfe756bd0281f941045afd5e2e905d19952160e7c9f24"
     },
     {
       "kind": "champion-splash",
@@ -15210,7 +15246,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Leona_0.jpg",
-      "sha256": "53fc589942b60213434cac05e3b7551f5f2b752ada2f1c5b8d5f16b6fbc9ba7a"
+      "sha256": "c6ab0267acfc20e690d69a2df2aa614bc8b9a45867b8992ba95fd3b5164c6294"
     },
     {
       "kind": "champion-splash",
@@ -15219,7 +15255,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Lucian_0.jpg",
-      "sha256": "14ceb3caec6e8c6b789ff201921886b697488ef23775b65a17364c40c83b19aa"
+      "sha256": "66e9b07454a99c77607a20aa6fa80f983eb5ddd551ca1feb307a9fb3ac49ba03"
     },
     {
       "kind": "champion-splash",
@@ -15228,7 +15264,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Lulu_0.jpg",
-      "sha256": "94b55e96564497d3a5f9de51fd2c7caaaae208605673e2ddcae0351884321ce9"
+      "sha256": "41d678ee3fefb4da17cf58ad6f6069f35348c00676dd2b61e28306130bf341f5"
     },
     {
       "kind": "champion-splash",
@@ -15237,7 +15273,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Lux_0.jpg",
-      "sha256": "6ce4529993f5178f42f9192e93625548c68fc7352fa3ee6a512c783afc67e8a3"
+      "sha256": "3ecda74d360e5ebccb79c341c39a5c41c1b179abe55135032148fc66f5a2a77a"
     },
     {
       "kind": "champion-splash",
@@ -15246,7 +15282,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Malphite_0.jpg",
-      "sha256": "ed95ba155bcfc67947295e97f083754e11f178ad1f12a9441758005a86e6cab7"
+      "sha256": "3a76c0e74a0d2c5f1180c0a7a59669400f14f5d2ef4e81f436b93100ee6a59e0"
     },
     {
       "kind": "champion-splash",
@@ -15255,7 +15291,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Malzahar_0.jpg",
-      "sha256": "cfb2e9664eb13604e1406491bf5626c0b43f5fd1c841d196a3fd24db1ee6a1fc"
+      "sha256": "b0a8247452dafdd74050f1489f39bf44fe7beb8219902bf42fdb01f919e96f35"
     },
     {
       "kind": "champion-splash",
@@ -15264,7 +15300,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_MasterYi_0.jpg",
-      "sha256": "4e4a54ebb2f8d99bdcde6122b090331b26957dbac5cc95e32d4e2baeff6d2659"
+      "sha256": "78ed07e69a0e002baa6a77b6d54f743d3b729356be2dcff9505f58af2c586ec2"
     },
     {
       "kind": "champion-splash",
@@ -15273,7 +15309,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_MissFortune_0.jpg",
-      "sha256": "def3c8d0b83f0f991b9782117a2fa30d10a3eee2c6b26d172ea6e0c8d7124609"
+      "sha256": "b3501f90cb584da4ed243530bf9b6ee95bdf4a639d999d63f1faed2999dbec36"
     },
     {
       "kind": "champion-splash",
@@ -15282,7 +15318,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Mordekaiser_0.jpg",
-      "sha256": "e073466cb4fa822606bd268e8d7246030823d8945a362a304844a2f48cb466f9"
+      "sha256": "228c00a08a25462fc8186bb7124c0979a507465a1c3445232553185ad401ce92"
     },
     {
       "kind": "champion-splash",
@@ -15291,7 +15327,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Morgana_0.jpg",
-      "sha256": "381d15f5705a9c8ff6b20d51ba44019b2737b6c68577799693891f83233be45b"
+      "sha256": "98bbb4a3c3ef51d2ef28a08478da5d23378c1df6325224120b1d0f4413179929"
     },
     {
       "kind": "champion-splash",
@@ -15300,7 +15336,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Nami_0.jpg",
-      "sha256": "4986be0a2e264d43fdc60d5efb717370fcfa23f940e673790518334168be134d"
+      "sha256": "9325aec3457b4c763be780d32ba7ff0ad1224a42d4fa9595b6d8a9928e7abdd9"
     },
     {
       "kind": "champion-splash",
@@ -15309,7 +15345,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Nasus_0.jpg",
-      "sha256": "42b7133f9232f23945b301ad41f2f6133ff1f3ba3f32cde1689f15d523314d8d"
+      "sha256": "c858644ee0ac6b2c4f5c424b75e8fcc8ec96f4e0a56b0a729d2b61f7bdbbac3b"
     },
     {
       "kind": "champion-splash",
@@ -15318,7 +15354,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Nautilus_0.jpg",
-      "sha256": "ab131333c372401380ffb84cf3a512e40b2f35602cddfd4a544f622de463c2fa"
+      "sha256": "c1374f1802c2291af213e9ab67a0e3b0cd0a3ed725a9c5e98e69a9ab903dfab0"
     },
     {
       "kind": "champion-splash",
@@ -15327,7 +15363,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Nidalee_0.jpg",
-      "sha256": "632595c82a0e6cf2b77ee8c379bf0c5b3e698a3fafe07f0d712a562e50152531"
+      "sha256": "2530ef327960fb603a4a2c3eee86b618466fde5e2c2d57ee08dccdbd41c1d3d4"
     },
     {
       "kind": "champion-splash",
@@ -15336,7 +15372,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Nunu_0.jpg",
-      "sha256": "f22cdb483884190276e9ae05d91c92d6d255889c7b665c82ff4d12c68ec502f2"
+      "sha256": "89c98bdba5e8365e6f65ea8a02e09b91cf996eab4d516e393eb8d073995b31ef"
     },
     {
       "kind": "champion-splash",
@@ -15345,7 +15381,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Olaf_0.jpg",
-      "sha256": "6bea999cbf345ee7ef1d55dd09704b18f6b7d6618272ea01f4a43db57bda026c"
+      "sha256": "08fbca831640bca52ae4a0723cf03c7691425bc9f43d9e29548b302af5225cf9"
     },
     {
       "kind": "champion-splash",
@@ -15354,7 +15390,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Pantheon_0.jpg",
-      "sha256": "2239c7abfd581d4216144e48327fd5639130a2eb74cefae227b0f8e4e4ad7488"
+      "sha256": "1a532ebd0f49352ac64953e879dbf594884e426152087a6649e13e23d0304662"
     },
     {
       "kind": "champion-splash",
@@ -15363,7 +15399,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Poppy_0.jpg",
-      "sha256": "6da81bab33fed69419ca123282a7bc4d430b1c907220bebaa682bb2f60ab14a3"
+      "sha256": "76f221aca4979212a5e573ac6b538c1a027387e4ee39557f591c9713ae6e13bb"
     },
     {
       "kind": "champion-splash",
@@ -15381,7 +15417,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Rammus_0.jpg",
-      "sha256": "a1f38762ee6eb231212910bbf043f70c95a78036de7043ef4466b2b8b9f97716"
+      "sha256": "59959ce49deb7e0133db98f6759bb424fa35cad828d4c9d5fa81b1215d7d0dc1"
     },
     {
       "kind": "champion-splash",
@@ -15390,7 +15426,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Ryze_0.jpg",
-      "sha256": "ca47373269b4a6a053a424a4d0ef085a24bfbdc4659876735c91ff6019399337"
+      "sha256": "69fdc9ac8d90f6027b46145da44c64b251bec1377792de5318b243c6fe0c0b30"
     },
     {
       "kind": "champion-splash",
@@ -15399,7 +15435,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Shaco_0.jpg",
-      "sha256": "244743b15aa9db719357768d04449a1c2e5ada37cf164e24151654055b103a57"
+      "sha256": "fb283acdddd4a967e50a395d61a676e94ed8315451da47831be303306ce876bd"
     },
     {
       "kind": "champion-splash",
@@ -15408,7 +15444,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Shen_0.jpg",
-      "sha256": "46e609ca34e2f3029cb4af3fd60ea9689d0fa9a62d0912dcfa8e575023175ce2"
+      "sha256": "4a86a70141d112ea10f5bb5a7ae0f27a117d75fc2c47f3d3ef76a3da86c3869e"
     },
     {
       "kind": "champion-splash",
@@ -15417,7 +15453,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Shyvana_0.jpg",
-      "sha256": "8c9acd4d72a7fc7d728c9e60f2986c76e57f92b22e1febf30ee4121e9ed36f4c"
+      "sha256": "35274aee8d84f86d08d9ab4ae8b436438bc71331339c07701e06d3a6ef399de8"
     },
     {
       "kind": "champion-splash",
@@ -15426,7 +15462,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Singed_0.jpg",
-      "sha256": "0730b46b3a5af4364456ca5de4d3cd75b42d8b6598ce43be93359847b7044749"
+      "sha256": "c641486e0e41bc8b32653fe89e317e456eb5f6e01b0003bb2ddc8433227379ce"
     },
     {
       "kind": "champion-splash",
@@ -15435,7 +15471,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Sion_0.jpg",
-      "sha256": "67f2e77fb77b612e3fd29a8e0a5ec94e423587763f6f40246299f169f3a60fec"
+      "sha256": "c408dc0ff0f5a691bbe6d28dba72ac20c749a716ccd7f4186c4e247d08531552"
     },
     {
       "kind": "champion-splash",
@@ -15444,7 +15480,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Sivir_0.jpg",
-      "sha256": "4a1cf067fee52ab729a4b6d75b8e2b72d4e75b241efa71b803d43658bd67d77f"
+      "sha256": "0df16680b3fd1d901d54fbd334828fe50244bc8827444d550715e877b6c7a039"
     },
     {
       "kind": "champion-splash",
@@ -15453,7 +15489,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Skarner_0.jpg",
-      "sha256": "8a0e8a032723993491e81163c7febb71ca6b403c5d48c1e77d0c4c2339826256"
+      "sha256": "6a7ab614951016afa56eb82594458b60bc683e3fd109c0029afbe7d279ca35fc"
     },
     {
       "kind": "champion-splash",
@@ -15462,7 +15498,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Sona_0.jpg",
-      "sha256": "3b3add09214649ed2a42b7eb08d52eca75ec41ee810e813bdff09bf4d693965e"
+      "sha256": "999cf65ba72ecd543706e846bb9be0ee22278efb9606de93ac1f112289e014de"
     },
     {
       "kind": "champion-splash",
@@ -15471,7 +15507,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Soraka_0.jpg",
-      "sha256": "591b00d7513d4deadb4d815711e33641c1b3f7ce1f0c883b8b05bc2569abf163"
+      "sha256": "ef3ce8f8a28b48ded519e909501fea682adb75bb2b6e49e8e4e42ed3f634de68"
     },
     {
       "kind": "champion-splash",
@@ -15484,12 +15520,21 @@
     },
     {
       "kind": "champion-splash",
+      "canonicalId": "Jade_Talon_0",
+      "mimeType": "image/jpeg",
+      "height": 720,
+      "width": 1280,
+      "relativePath": "img/champion-splash/Jade_Talon_0.jpg",
+      "sha256": "4b4ba097ceebd3af87c9cda677a660256db50b930d2a651c80e515f54b695d1f"
+    },
+    {
+      "kind": "champion-splash",
       "canonicalId": "Jade_Taric_0",
       "mimeType": "image/jpeg",
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Taric_0.jpg",
-      "sha256": "a45c2aa2624966d09e53c3c804d9a3eb7aeabb0199804eda0f1826a4eed74887"
+      "sha256": "3afbf3d09c1e49b812ee4c4c05f26180af2de9080c1a6344a2e314668d395d85"
     },
     {
       "kind": "champion-splash",
@@ -15498,7 +15543,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Teemo_0.jpg",
-      "sha256": "09299535bc04cc1bfecc2aa867004b1ac0b62f22fa84326efb3f18eced1d43fc"
+      "sha256": "42edf8d771ff530e2b26606ed072cbf6899371a17ebac50a43a679a7abcef168"
     },
     {
       "kind": "champion-splash",
@@ -15507,7 +15552,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Tristana_0.jpg",
-      "sha256": "0e4361b93871fb4a349f9fb75bf5ce182e8dba58c863dbee0805f67652300fbe"
+      "sha256": "32a00a7edefbc0f0316ebb3651f79d403a0cc5aeb0f6b4517e6d096642c52e69"
     },
     {
       "kind": "champion-splash",
@@ -15516,7 +15561,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Tryndamere_0.jpg",
-      "sha256": "e43a838982595020b75da295385c97e2f1e9328ab5d07e2a7f46af0c8236f9d1"
+      "sha256": "c7ecc32aae4c41f4208b3610642903cdb4cc38bebbba762824747ba13fca00dc"
     },
     {
       "kind": "champion-splash",
@@ -15525,7 +15570,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_TwistedFate_0.jpg",
-      "sha256": "38159603405cae4642d8b28692eff10f76bf2d674f6bc1b8147f67933a58c5e4"
+      "sha256": "0da4fed4ac524635b42d234a6a9a7828fee4f1da8c827bfdf659f6feb864db6a"
     },
     {
       "kind": "champion-splash",
@@ -15534,7 +15579,25 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Twitch_0.jpg",
-      "sha256": "fc76bc066df7efc43a47e19916fa7fd5537663f6e48ef1c678ef5438bc1c5e68"
+      "sha256": "81c51222a1a57b53ace28742f9ddd3278f97b4be7d92a33971f638572c62527c"
+    },
+    {
+      "kind": "champion-splash",
+      "canonicalId": "Jade_Udyr_0",
+      "mimeType": "image/jpeg",
+      "height": 720,
+      "width": 1280,
+      "relativePath": "img/champion-splash/Jade_Udyr_0.jpg",
+      "sha256": "201e65565824211abfe7aaef3e5e5bd6aa997abeeae6a637d1a9ff51db1c71c3"
+    },
+    {
+      "kind": "champion-splash",
+      "canonicalId": "Jade_Urgot_0",
+      "mimeType": "image/jpeg",
+      "height": 720,
+      "width": 1280,
+      "relativePath": "img/champion-splash/Jade_Urgot_0.jpg",
+      "sha256": "0ee76aeeda940d18b40a58cd6a5f2a076f433d10b71060f49aff5f47c394e0a2"
     },
     {
       "kind": "champion-splash",
@@ -15543,7 +15606,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Vayne_0.jpg",
-      "sha256": "5e9f6919bcea816c771c2a8cb766418d840073dcf882fd3f81f3c7ab37374b36"
+      "sha256": "ea1d9ad651864a9ce901ba418ed56b42a0302509a0ea352494d49b7419896e90"
     },
     {
       "kind": "champion-splash",
@@ -15552,7 +15615,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Veigar_0.jpg",
-      "sha256": "21e40a90db64562491a94808d00d45e9cf25146cc1d019ee618b0ebd85256acc"
+      "sha256": "e311fc6c06f6292a9279dbe5eb4c7e958613910bdfc93e9dfd567049ccc7cf80"
     },
     {
       "kind": "champion-splash",
@@ -15561,7 +15624,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Volibear_0.jpg",
-      "sha256": "b280d8b21bad20d5aa098420b591c9193730dae2ffaa9581cd535dc9efdc8338"
+      "sha256": "35f3fd0739394ec16ce98580979b547efee94df3b45baa0ceaaeb00d89f10347"
     },
     {
       "kind": "champion-splash",
@@ -15570,7 +15633,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Warwick_0.jpg",
-      "sha256": "8231b5579f758a578d9d2005073efaa5119c7072ef86a7607d7ecffd523a1b84"
+      "sha256": "39832de8891d8e94e833a7faf40c09e7ad78c70cdba1bde22f0ffef4ab440c5f"
     },
     {
       "kind": "champion-splash",
@@ -15579,7 +15642,16 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Wukong_0.jpg",
-      "sha256": "d415866ad3c5e74559c3068a42221c29b85cdae1d160f3c14cd0d44519e9b54c"
+      "sha256": "9b3cc223b14d5dbc828b361dd5d270c227934be0ce5641fd116d1f34ac8cafa7"
+    },
+    {
+      "kind": "champion-splash",
+      "canonicalId": "Jade_Xerath_0",
+      "mimeType": "image/jpeg",
+      "height": 720,
+      "width": 1280,
+      "relativePath": "img/champion-splash/Jade_Xerath_0.jpg",
+      "sha256": "392073daf331cbfdfce91c3d60f299b90555ff929c81aae413472b6f3020804c"
     },
     {
       "kind": "champion-splash",
@@ -15588,7 +15660,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_XinZhao_0.jpg",
-      "sha256": "2a757e0076fd546ab978914e601495cce754a1053b93b3fdc612cb4b682d3ca4"
+      "sha256": "9e91203e2562d077e660d11da3964f0a9801822b16161a956528bf2979c46525"
     },
     {
       "kind": "champion-splash",
@@ -15597,7 +15669,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Yorick_0.jpg",
-      "sha256": "d8ed8c590a26dafb055cd967b58c96663562c72a6187a5e8865c73f0a6c3bf8f"
+      "sha256": "848776ebdb9abcd92568bba0efc6f81cdf962c6662e3cb1cb92e0d083fffcefa"
     },
     {
       "kind": "champion-splash",
@@ -15606,7 +15678,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Jade_Zilean_0.jpg",
-      "sha256": "41349c244004565a7241a6f072d2bfbe90d0373e3da79cebbe6c6a8b9f1b4a91"
+      "sha256": "ec3614422664df950a42c06596ec95d31e6ce5db46d54242ef3c29fd35e8723a"
     },
     {
       "kind": "champion-splash",
@@ -15687,7 +15759,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Kalista_0.jpg",
-      "sha256": "9e50cda482e87e3f606faae32d01590b5db9bda2ed26d38f8e5d8617bf3c20e8"
+      "sha256": "941f585a1b6e9e863a34a4601aa2a88e9a6688170a4a3e88bc2e5faa708d21dd"
     },
     {
       "kind": "champion-splash",
@@ -15696,7 +15768,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Karma_0.jpg",
-      "sha256": "d695a7ee704e2a43a42509b1bb2b77b7ee84ddbe7b7c55814c377c369916e700"
+      "sha256": "443e1f53eeba9ee5630f4843aa01bd04ef3aa8fb460cbdea3da49310df138e56"
     },
     {
       "kind": "champion-splash",
@@ -15705,7 +15777,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Karthus_0.jpg",
-      "sha256": "e71f4b75645444641adfce1c6f35618b32c96e1612451a3145c554ddbacd7d78"
+      "sha256": "56a35484312d09c2da2305333142d2d1858f9762a2f72a1a9cfa83727c66b3cb"
     },
     {
       "kind": "champion-splash",
@@ -15714,7 +15786,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Kassadin_0.jpg",
-      "sha256": "f56436bd018e0c146da23225d1376046159e3cd1f5c6988896b5a5f585c1e6cf"
+      "sha256": "39163ad5f4d4e711fd6900434f77e7ac847b7b052d3752e5e1ad9ceac0e084e7"
     },
     {
       "kind": "champion-splash",
@@ -15732,7 +15804,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Kayle_0.jpg",
-      "sha256": "89b09b1c2d8f499189dfc1894eac39979b51988be50b0dcb86e84db40a3315ad"
+      "sha256": "424859295252b952b5265260a4294b61ff1fffc9f12248272a139307149f5b9a"
     },
     {
       "kind": "champion-splash",
@@ -15759,7 +15831,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Khazix_0.jpg",
-      "sha256": "dab2d1f78ed9d4feab00e33a0fbee7fa9950240a3b0986d37d670a2d2567d498"
+      "sha256": "81e42f45d779e9fa85574caf4f36c115ed7986a517ca17ad4c2e331806321ced"
     },
     {
       "kind": "champion-splash",
@@ -15777,7 +15849,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Kled_0.jpg",
-      "sha256": "913f29f61c74515f24ac0c33db083e01163b46265fe1321cbaee419c6042175e"
+      "sha256": "a22099c60821fa8e7ae87193224e4aaa45d0bd8d7bb253b2cf11c178ff4cd4f5"
     },
     {
       "kind": "champion-splash",
@@ -15786,7 +15858,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/KogMaw_0.jpg",
-      "sha256": "67f4fecf2d2a0df8a5e5c42f28bd3eeca0c3dedf002f122c07382486f38b4089"
+      "sha256": "259caefd27c1481c70d2955fa3b47888774e14d94d8466132512ccdfdded7315"
     },
     {
       "kind": "champion-splash",
@@ -15903,7 +15975,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/MasterYi_0.jpg",
-      "sha256": "4e4a54ebb2f8d99bdcde6122b090331b26957dbac5cc95e32d4e2baeff6d2659"
+      "sha256": "78ed07e69a0e002baa6a77b6d54f743d3b729356be2dcff9505f58af2c586ec2"
     },
     {
       "kind": "champion-splash",
@@ -16020,7 +16092,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Nilah_0.jpg",
-      "sha256": "d51526175170f954710112e761b8b1801d226a583f56458d9ac2663190db53c0"
+      "sha256": "ed128968140e7269493d36b880bc50ca76cc87d354139e1d64a62ab00acfd393"
     },
     {
       "kind": "champion-splash",
@@ -16110,7 +16182,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Quinn_0.jpg",
-      "sha256": "b94662257bfcb84a18461d3f8d50e71d3f2f8391084a50e2f56c02448a7c0073"
+      "sha256": "71a98c123ddc13ce7875daae231c957190be0c916e745b1f1e2a2cf2aeeb30d4"
     },
     {
       "kind": "champion-splash",
@@ -16137,7 +16209,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/RekSai_0.jpg",
-      "sha256": "c4285fc6587538b44e985ac243c0fde2842bf3315e7616bbded2536907e13536"
+      "sha256": "8700aaa934ca21bfcda31ea20faad47f3ae35489b5fbfd40f47fc55d875ece38"
     },
     {
       "kind": "champion-splash",
@@ -16155,7 +16227,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Renata_0.jpg",
-      "sha256": "9c5ac54f16b6a1c3fc67c00ca94041827aab3e9b1b8556fc00a54298a443b935"
+      "sha256": "7864cac15b4aa7389f15d087d4c4e22f3aa96326f76af192c77565b28e481966"
     },
     {
       "kind": "champion-splash",
@@ -16164,7 +16236,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Renekton_0.jpg",
-      "sha256": "6cb994224c8a06d7a2ea324bb5bd41a04f511c9935f468ee16fccabb42c2e316"
+      "sha256": "878c7cc1bc2be00dc3117295a5f982ffd625a437299b758126c930f07ea4ea60"
     },
     {
       "kind": "champion-splash",
@@ -16173,7 +16245,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Rengar_0.jpg",
-      "sha256": "9615ccc838dfc5e0e0d9e287bcdb53011a02eb98365feea6fa29adf2b6cdb07d"
+      "sha256": "ddb318b14be6fb20058e0df341854dc79bea16ea6fad7cdfcee700a78ab5dec9"
     },
     {
       "kind": "champion-splash",
@@ -16281,7 +16353,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Singed_0.jpg",
-      "sha256": "f7d4992fd4a0586c8097204b9c2ab8f69fbf4cdd7591296bb8548955862749b6"
+      "sha256": "da47d294744cb5cb302e123cb9d077b7f40fabd15bdf6e650528adbc3fe27708"
     },
     {
       "kind": "champion-splash",
@@ -16344,7 +16416,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Swain_0.jpg",
-      "sha256": "b4294bf68344862c011ec1f363591afdeeb0c518410801054c3cf5a8a3f610a0"
+      "sha256": "0428387592ae5bc6a7819ddcf438583c0787d8abd4ade25c471983168526cba3"
     },
     {
       "kind": "champion-splash",
@@ -16443,7 +16515,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Tryndamere_0.jpg",
-      "sha256": "7b15fd6d028a9654293550170d98207f4e19e89386f8f24cd1a579a034b8c37f"
+      "sha256": "0924a1a1a4d95d69d786256b75a6bee523b230dd9b5d4894d367040e68d932af"
     },
     {
       "kind": "champion-splash",
@@ -16461,7 +16533,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Twitch_0.jpg",
-      "sha256": "fc76bc066df7efc43a47e19916fa7fd5537663f6e48ef1c678ef5438bc1c5e68"
+      "sha256": "81c51222a1a57b53ace28742f9ddd3278f97b4be7d92a33971f638572c62527c"
     },
     {
       "kind": "champion-splash",
@@ -16470,7 +16542,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Udyr_0.jpg",
-      "sha256": "1008097a50fa04d637037f2f4c67b8d2fa4295c42dbca568eb2d3a8ff8d07975"
+      "sha256": "dfae8bcfb12dd22b8a80df7ad287c4f21631a65a6c4188f1a6647277025c4014"
     },
     {
       "kind": "champion-splash",
@@ -16497,7 +16569,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Vayne_0.jpg",
-      "sha256": "a9267aaa4e27067e6869c993581b47866b9bc4b51cc73588ccccc9932d38fb6c"
+      "sha256": "7d8a79464182e57b8e98694892cd8b9a60eb21976dd2ee5ab55e005ad7a0aaff"
     },
     {
       "kind": "champion-splash",
@@ -16506,7 +16578,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Veigar_0.jpg",
-      "sha256": "f5dc8c44f33f40ed37991a4e50cf176fb87399972780105bec26daef2a92b233"
+      "sha256": "a261e528901bd2b413eb43623328835c88bcdbfcb60bd906f5a56e1641268e7c"
     },
     {
       "kind": "champion-splash",
@@ -16515,7 +16587,7 @@
       "height": 720,
       "width": 1280,
       "relativePath": "img/champion-splash/Velkoz_0.jpg",
-      "sha256": "6841f9dfe2678e8d3fe59863e99af147ff16078ccea88f7b2ec66bc213864395"
+      "sha256": "564845dd3373b5d358f9bbcfda358429cf19e8a206dca624c4bd528a7aa80a09"
     },
     {
       "kind": "champion-splash",
@@ -17181,7 +17253,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Ahri.png",
-      "sha256": "cdc5edaf117d3414a5764e8dc93faa10e857904c1a07990dbe31b1db409e629f"
+      "sha256": "4598504ef4e7d5fb9ebca3687436fd466a4c0f1c89c7b81ff7a8817ba47c63c6"
     },
     {
       "kind": "champion",
@@ -17208,7 +17280,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Amumu.png",
-      "sha256": "e38356d55106d550fd23aa0b95dc8cfa8353a699b83d2097f791acc02747fabc"
+      "sha256": "8083a2ebd3efd14d3f3d5a2c83bfa5ff5e0443750f09e9017c661ce2dd24cf50"
     },
     {
       "kind": "champion",
@@ -17217,7 +17289,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Anivia.png",
-      "sha256": "ad7f8c182eb5c1c19e19ab6e0df96f218c65ce5b61ad550fac1d38de8bc38b00"
+      "sha256": "7800d0ee6dfbf02eb4f9f3aa053f761369a411535d20aa59e00eaec5c05a8639"
     },
     {
       "kind": "champion",
@@ -17244,7 +17316,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Blitzcrank.png",
-      "sha256": "7a96c74c1ea4471093ffd7f93cf104b178b879e7005043987499b0b8b7971b34"
+      "sha256": "c91f92f74f6b38f372bca6b77425b09159dc97253a46bff8ab5725d29c1e7a3b"
     },
     {
       "kind": "champion",
@@ -17253,7 +17325,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Brand.png",
-      "sha256": "40cf3fd534ee920dc6c24e0b097b64a978b3126cae752c94459a405f2caf55d9"
+      "sha256": "282f73579e26edc9d4796bbe791265378a7636e71af5a87dce934a9f0935ab4c"
     },
     {
       "kind": "champion",
@@ -17289,7 +17361,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_DrMundo.png",
-      "sha256": "36dedd251315b48c382ce73144aa7a7cfbaca8905f9e08c96ed1098e66507bef"
+      "sha256": "6c8ee8fccf754ecbdc3aafb9b73669911d8926462993a26981fac4265740535e"
     },
     {
       "kind": "champion",
@@ -17325,7 +17397,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Fiddlesticks.png",
-      "sha256": "05bb838fe229e175c7ae41f36e92fe796b4eb8840f2f8d11eb2f3f530690a232"
+      "sha256": "205e59e9f278588c41b70ed6066c11dcb3e444d3f83d887c9e3357f24db2156e"
     },
     {
       "kind": "champion",
@@ -17352,7 +17424,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Galio.png",
-      "sha256": "d2dc1d3e0af5c5d0fa9662f8becdc0ba4cae8aa10653bdb0d9d371d58dafbeae"
+      "sha256": "e70c9d89b3cd2f52dabb9d28b6b99d65b68fae556edeaadea811c49f20fb6564"
     },
     {
       "kind": "champion",
@@ -17379,7 +17451,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Gragas.png",
-      "sha256": "410d69e0ba4873123a607d10bdae531bc41943b64bf28ebb3d1f2d6540f99ff9"
+      "sha256": "2a548cb7ae4e3de2c813eff336fac4770c7b570226d967a3b1931b3bdacbb7c5"
     },
     {
       "kind": "champion",
@@ -17424,7 +17496,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Janna.png",
-      "sha256": "6eb45974d95b06cc26e1a0038febfcf8ba549dc6a248646aee6d130dad1a2413"
+      "sha256": "63f1acec9670872f33d6e84d956aa2330dbed4faa1cbb970f107940a4a72de3d"
     },
     {
       "kind": "champion",
@@ -17460,7 +17532,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Karthus.png",
-      "sha256": "1770e1557bddcf9506977b90e325c0233c5159904d25b83c5e5126a19695dc20"
+      "sha256": "8c60068876daa8ae7781a8b48434171ecae070cfa9b262995a5698bb470955d5"
     },
     {
       "kind": "champion",
@@ -17469,7 +17541,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Kassadin.png",
-      "sha256": "400772383881c4ddf9a5f8746afd185579ddfb1440a4d8a3aefaaf90f668692a"
+      "sha256": "8dd66ac2991f558ca2be8b5a304774f12ab39bb84cd23bab4ae97e25e0177123"
     },
     {
       "kind": "champion",
@@ -17496,7 +17568,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Kennen.png",
-      "sha256": "69b1dccf41f9ad06f68ddb63a44312358d3f2645b4b14e4d30daba229bf3d6a5"
+      "sha256": "7692c5684baee8e1d3a7c7ba4b7e33f16cb3ad2d9ee03ed155ac2a62da4167bb"
     },
     {
       "kind": "champion",
@@ -17523,7 +17595,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Leona.png",
-      "sha256": "0441a32cdd545023ffe31b6ea8eebb65d7310c04df71379da3a921976e4c45c4"
+      "sha256": "b2d45447a7b26a9238f36faea781fc8af01853c984c23dc2911b32acfcf9e38d"
     },
     {
       "kind": "champion",
@@ -17559,7 +17631,7 @@
       "width": 128,
       "height": 128,
       "relativePath": "img/champion/Jade_Malphite.png",
-      "sha256": "5c450fbf55703aa6f80b0735fd961480e62cf3330f3a89709a13eb48bf814cce"
+      "sha256": "191719597a3ec896bf180f6b6f85708700a47016e066b96993aa79425e751aec"
     },
     {
       "kind": "champion",
@@ -17797,6 +17869,15 @@
     },
     {
       "kind": "champion",
+      "canonicalId": "Jade_Talon",
+      "mimeType": "image/png",
+      "width": 128,
+      "height": 128,
+      "relativePath": "img/champion/Jade_Talon.png",
+      "sha256": "ffad6cde9c0dd890ccbb82c802f8e621bf1aa5d75d73037d048fe78ddebfab69"
+    },
+    {
+      "kind": "champion",
       "canonicalId": "Jade_Taric",
       "mimeType": "image/png",
       "width": 128,
@@ -17851,6 +17932,24 @@
     },
     {
       "kind": "champion",
+      "canonicalId": "Jade_Udyr",
+      "mimeType": "image/png",
+      "width": 128,
+      "height": 128,
+      "relativePath": "img/champion/Jade_Udyr.png",
+      "sha256": "30c7883e87bf266e83e7a73a2a0b967546f057f180b53de3e1a26f900145f063"
+    },
+    {
+      "kind": "champion",
+      "canonicalId": "Jade_Urgot",
+      "mimeType": "image/png",
+      "width": 128,
+      "height": 128,
+      "relativePath": "img/champion/Jade_Urgot.png",
+      "sha256": "7ec2a63c10ca58951537897e890b3fafc436f610a4e59952f1bfcebf5c05b972"
+    },
+    {
+      "kind": "champion",
       "canonicalId": "Jade_Vayne",
       "mimeType": "image/png",
       "width": 128,
@@ -17893,6 +17992,15 @@
       "height": 128,
       "relativePath": "img/champion/Jade_Wukong.png",
       "sha256": "82dd69bb2055a3fcd423f1a01de71eeb7764bdb316a1b45640c88cc2f5528bc9"
+    },
+    {
+      "kind": "champion",
+      "canonicalId": "Jade_Xerath",
+      "mimeType": "image/png",
+      "width": 128,
+      "height": 128,
+      "relativePath": "img/champion/Jade_Xerath.png",
+      "sha256": "0f1d51404d7105f11e566ca8652d20f8abbf0afd9f956312b078381e12d61b0a"
     },
     {
       "kind": "champion",
@@ -19890,7 +19998,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/item/2003.png",
-      "sha256": "4ef383b62d2631f0e224cc1a4020faf785e56c5ce5cbf01ae63a79840b96deaf"
+      "sha256": "125742761e832e6c5a9a86bb789c63e9833157e701aaaaaaf3224028773bae15"
     },
     {
       "kind": "item",
@@ -19917,7 +20025,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/item/2010.png",
-      "sha256": "3c45ef9b9f8dc574a7689fd9594af1a37eb9cfc21a0837de947fa31f2fff6ff7"
+      "sha256": "96c924159165c188e0b0ae32a50f5f878d0a4224eaab26ebdbacb2329ebd1940"
     },
     {
       "kind": "item",
@@ -19971,7 +20079,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/item/2031.png",
-      "sha256": "d2dd681f99a145700d59cae2417fa4a2486f8e2b35da69e4694ea4ce767ed592"
+      "sha256": "6a940991a4792eed34fe82dd3ca723bacb23696f1b5b88ec776a712f397e3201"
     },
     {
       "kind": "item",
@@ -20052,7 +20160,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/item/2138.png",
-      "sha256": "342f386ac56842ade24e8a3b44ca89c1d69bd6479121b6ff4c73346346ef1ff4"
+      "sha256": "a860bafbd592536981ec91f85b785ad688b1c16f02cc54f19f85c85383857731"
     },
     {
       "kind": "item",
@@ -20061,7 +20169,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/item/2139.png",
-      "sha256": "612f3bcf76bba7ebf86a1ec08a118d095fb42fe533b6b6f1dd440a5ac99237bc"
+      "sha256": "2093235643d691a7b65dc6a5fc8d0c5729e522eeef44e3e65e6230103b93e8a7"
     },
     {
       "kind": "item",
@@ -20070,7 +20178,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/item/2140.png",
-      "sha256": "e58952c339cec2243484faf8b1435ca35f3d566b63a1fdec0521076b906a9137"
+      "sha256": "c9aa4773dc247d93b23db155f46150b26be2065e86c14c8ba5898ff33bcf34c2"
     },
     {
       "kind": "item",
@@ -25353,7 +25461,7 @@
       "width": 64,
       "height": 64,
       "relativePath": "img/item/772140.png",
-      "sha256": "e58952c339cec2243484faf8b1435ca35f3d566b63a1fdec0521076b906a9137"
+      "sha256": "c9aa4773dc247d93b23db155f46150b26be2065e86c14c8ba5898ff33bcf34c2"
     },
     {
       "kind": "item",
