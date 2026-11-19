@@ -8,7 +8,7 @@ use scout_client_core::telemetry::{UsageEvent, WindowCrashCause, WindowCrashOutc
 use scout_client_runtime::instance::{InstanceLock, InstanceLockError};
 use scout_client_runtime::runtime::{GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver};
 use scout_desktop_ipc::{ChatCommand, ChatTurn, PROTOCOL_VERSION, SupervisorMessage};
-use scout_explore_client::relay::ChatRelay;
+use scout_explore_client::relay::{ChatRelay, RelayCommand};
 use tokio::sync::{mpsc, watch};
 
 use crate::updater::policy::UpdateConfig;
@@ -832,12 +832,18 @@ async fn the_install_waits_for_the_game_to_end() -> TestResult {
     Ok(())
 }
 
-async fn next_command(
-    commands: &mut mpsc::UnboundedReceiver<ChatCommand>,
-) -> Result<ChatCommand, Box<dyn std::error::Error>> {
+async fn next_relayed(
+    commands: &mut mpsc::UnboundedReceiver<RelayCommand>,
+) -> Result<RelayCommand, Box<dyn std::error::Error>> {
     tokio::time::timeout(PATIENCE, commands.recv())
         .await?
         .ok_or_else(|| "the chat relay's command channel closed".into())
+}
+
+async fn next_command(
+    commands: &mut mpsc::UnboundedReceiver<RelayCommand>,
+) -> Result<ChatCommand, Box<dyn std::error::Error>> {
+    Ok(next_relayed(commands).await?.command)
 }
 
 #[cfg(unix)]
@@ -849,7 +855,7 @@ async fn chat_commands_reach_the_relay_and_only_changed_parts_reach_the_window()
     // once the streamed answer arrives.
     let script = format!(
         r#"printf '{{"type":"hello","protocol":{PROTOCOL_VERSION}}}\n'
-printf '{{"type":"chat","command":{{"action":"send","question":"Who wins?"}}}}\n'
+printf '{{"type":"chat","command":{{"action":"send","question":"Who wins?","live_game":true}}}}\n'
 while IFS= read -r line; do
   printf '%s\n' "$line" >> "$1"
   case "$line" in
@@ -868,12 +874,17 @@ exit 0"#
         GameflowPhase::default(),
         |supervisor| supervisor.with_chat(relay),
     )?;
-    // Opening the window reloads the list; the window's question follows.
+    // Opening the window reloads the list; the window's question follows,
+    // with no game attached while none is live.
     assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
     assert_eq!(
-        next_command(&mut commands).await?,
-        ChatCommand::Send {
-            question: "Who wins?".to_owned()
+        next_relayed(&mut commands).await?,
+        RelayCommand {
+            command: ChatCommand::Send {
+                question: "Who wins?".to_owned(),
+                live_game: true,
+            },
+            live_game: None,
         }
     );
     parts.send_modify(|parts| {
@@ -938,8 +949,8 @@ async fn a_finished_pairing_asks_chat_to_check_again() -> TestResult {
     Ok(())
 }
 
-#[test]
-fn the_window_gets_only_the_local_players_line() {
+/// A game in progress: Ahri, the local player, against Zed.
+fn live_snapshot() -> scout_client_core::live::snapshot::LiveSnapshot {
     use scout_client_core::live::snapshot::{
         LiveGameInfo, LiveParticipant, LiveSnapshot, OwnStats, Team,
     };
@@ -957,9 +968,7 @@ fn the_window_gets_only_the_local_players_line() {
         summoner_spells: ["Flash".to_owned(), "Heal".to_owned()],
         keystone: None,
     };
-    let mut state = RuntimeState::default();
-    assert_eq!(super::live_game_snapshot(&state), None);
-    state.live_game = Some(LiveSnapshot {
+    LiveSnapshot {
         game: LiveGameInfo {
             mode: "CLASSIC".to_owned(),
             map: "Map11".to_owned(),
@@ -983,7 +992,65 @@ fn the_window_gets_only_the_local_players_line() {
         participants: vec![participant("Zed", false, 9), participant("Ahri", true, 3)],
         event_count: 0,
         latest_event: None,
-    });
+    }
+}
+
+#[test]
+fn the_window_gets_only_the_local_players_line() {
+    let mut state = RuntimeState::default();
+    assert_eq!(super::live_game_snapshot(&state), None);
+    state.live_game = Some(live_snapshot());
     let line = super::live_game_snapshot(&state).map(|live| live.summary());
     assert_eq!(line.as_deref(), Some("Ahri, level 9, 3/1/2, 70 CS, 10:00"));
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn a_question_using_the_live_game_carries_the_supervisors_snapshot() -> TestResult {
+    // Once the window hears of a live game, it asks twice: with the chip on,
+    // then with it off.
+    let script = window_script(
+        r#"while IFS= read -r line; do
+  case "$line" in *'"type":"live_game","live":{'*) break ;; esac
+done
+printf '{"type":"chat","command":{"action":"send","question":"What next?","live_game":true}}\n'
+printf '{"type":"chat","command":{"action":"send","question":"And now?","live_game":false}}\n'"#,
+    );
+    let (relay, mut commands, _parts) = ChatRelay::detached();
+    let harness = start_configured(
+        sh(&script, &[]),
+        true,
+        true,
+        GameflowPhase::default(),
+        |supervisor| supervisor.with_chat(relay),
+    )?;
+    assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    harness
+        .runtime_state
+        .send_modify(|state| state.live_game = Some(live_snapshot()));
+    assert_eq!(
+        next_relayed(&mut commands).await?,
+        RelayCommand {
+            command: ChatCommand::Send {
+                question: "What next?".to_owned(),
+                live_game: true,
+            },
+            live_game: Some(live_snapshot()),
+        }
+    );
+    assert_eq!(
+        next_relayed(&mut commands).await?,
+        RelayCommand {
+            command: ChatCommand::Send {
+                question: "And now?".to_owned(),
+                live_game: false,
+            },
+            live_game: None,
+        }
+    );
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
 }

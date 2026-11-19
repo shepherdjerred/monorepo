@@ -261,10 +261,16 @@ pub enum ChatCommand {
     },
     /// Start a blank conversation.
     New,
-    /// Ask a question in the open conversation, or start one.
+    /// Ask a question in the open conversation, or start one. Only the
+    /// composer sends this, with the text the player typed.
     Send {
         /// The question as typed.
         question: String,
+        /// Whether to send the game in progress with it: the composer's
+        /// "Using your live game" chip, which the player can turn off. The
+        /// supervisor attaches its own latest snapshot, never one from the
+        /// window, and none when no game is live.
+        live_game: bool,
     },
     /// Stop the running answer; Scout keeps what it has written.
     Stop,

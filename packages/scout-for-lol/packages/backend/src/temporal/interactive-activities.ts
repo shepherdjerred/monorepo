@@ -244,6 +244,7 @@ export async function executeRecoveredExplore(
       started: payload.started,
       surface: payload.surface,
       originChannelId: payload.originChannelId,
+      coach: payload.coach?.context ?? null,
     });
   } catch (error) {
     if (error instanceof ExploreNotFoundError) {

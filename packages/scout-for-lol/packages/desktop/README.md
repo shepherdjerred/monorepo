@@ -841,7 +841,7 @@ stays in memory on the device to time the game start.
 
 | Data                                                         | Leaves the device?         | When                                                                       | Controlled by          |
 | ------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------------- | ---------------------- |
-| Live game snapshot (`allgamedata` projection)                | No                         | Shown in the window only                                                   | Never sent             |
+| Live game snapshot (`allgamedata` projection)                | Only with a chat question  | When you send a question during a game with **Using your live game** on    | The composer chip      |
 | Live game recordings (`recordings.sqlite3`)                  | Yes, to the Scout API      | Once, after the game ends, while paired; kept locally 20 games or 30 days  | Disconnect the device  |
 | Live game in-progress marker (`live_game_frame` observation) | Yes, to the Scout API      | Once per game, while paired; carries no game data (`{"inProgress": true}`) | Disconnect the device  |
 | Match, lobby, profile and Clash observations                 | Yes, to the Scout API      | While paired, from the outbox                                              | Disconnect the device  |
@@ -851,6 +851,14 @@ stays in memory on the device to time the game start.
 | Usage events                                                 | Yes, through the Scout API | On a product event                                                         | **Send usage data**    |
 | Champion select (`live::champ_select` projection)            | No                         | Not collected yet                                                          | Never sent             |
 | Microphone audio (`scout-voice`)                             | No                         | Not captured yet: the crate is not wired into the app                      | Never sent             |
+
+The live game snapshot reaches Scout only as a chat question's game context.
+While a game is live the composer shows **Using your live game**, on until you
+turn it off. The window sends only whether to use it; the supervisor attaches
+its own latest allowlisted snapshot, projected to
+`data/src/scout-client/coach-context.schema.json`, and only to text you typed
+(`PlayerAuthored` in `scout-explore-client`). An edit or a regenerate never
+carries it, and the server's coach policy decides what of it Explore may read.
 
 ## Diagnostics
 

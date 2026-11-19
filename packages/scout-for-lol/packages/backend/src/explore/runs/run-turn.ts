@@ -4,6 +4,7 @@ import { loadQuestionImages } from "#src/explore/attachments/storage.ts";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TIMEOUT_MS,
+  type CoachGameContext,
   type DiscordChannelId,
   type ExploreMessage,
   ExploreStreamMessageSchema,
@@ -223,6 +224,8 @@ export async function runPersistedExploreTurn(
     surface: ExploreSurface;
     abortSignal?: AbortSignal;
     originChannelId?: DiscordChannelId | undefined;
+    /** The projected game context a Scout Desktop turn carried. */
+    coach?: CoachGameContext | null;
     abortOutcome?: () => Extract<ExploreTurnOutcome, "stopped" | "interrupted">;
     emit: (event: ExploreStreamEvent) => void | Promise<void>;
   },
@@ -315,6 +318,7 @@ export async function runPersistedExploreTurn(
       requesterId: input.identity.userId,
       originChannelId: input.originChannelId ?? null,
       surface: input.surface,
+      coach: input.coach ?? null,
       abortSignal: abortController.signal,
       emit: record,
     });

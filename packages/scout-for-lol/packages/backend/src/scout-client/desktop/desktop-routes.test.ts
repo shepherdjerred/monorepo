@@ -42,7 +42,6 @@ const mocks = vi.hoisted(() => ({
   listConversations: vi.fn(),
   loadTranscript: vi.fn(),
   startRun: vi.fn(),
-  createCoachTurn: vi.fn(),
   stopRun: vi.fn(),
   listRuns: vi.fn(),
   runOutcome: vi.fn(),
@@ -59,7 +58,6 @@ vi.mock("#src/database/index.ts", () => ({
       create: mocks.createPairing,
       deleteMany: mocks.deletePairings,
     },
-    scoutCoachTurn: { create: mocks.createCoachTurn },
   },
 }));
 vi.mock("#src/lib/discord-rest.ts", async (importOriginal) => ({
@@ -824,7 +822,15 @@ describe("a game context on runs/start", () => {
     gameContext: { live: complete["live"], postgame: complete["postgame"] },
   };
 
-  test("a typed question carries it, without it reaching the turn request, and is audited", async () => {
+  /** The coach record the route handed the run manager, if any. */
+  function handedCoach(): unknown {
+    const context = z
+      .tuple([z.unknown(), z.unknown(), z.unknown(), z.looseObject({})])
+      .parse(mocks.startRun.mock.calls[0]);
+    return context[3]["coach"];
+  }
+
+  test("a typed question carries it to the run manager, beside the unchanged turn", async () => {
     mocks.startRun.mockResolvedValue(startFixture.response);
 
     const response = await send(desktopRequest(START_PATH, { body: liveTurn }));
@@ -834,29 +840,28 @@ describe("a game context on runs/start", () => {
       { userId: OWNER_ID },
       startFixture.request,
       [SHARED_GUILD],
-      { surface: "desktop" },
-    );
-    expect(mocks.createCoachTurn).toHaveBeenCalledExactlyOnceWith({
-      data: {
-        ownerId: OWNER_ID,
-        deviceId: DEVICE_ID,
-        conversationId: startFixture.response.conversationId,
-        runId: startFixture.response.runId,
-        questionMessageId: startFixture.response.questionMessageId,
-        initiation: "player_typed",
-        sectionsPresent: ["live", "postgame"],
-        sectionsAccepted: ["live", "postgame"],
-        coachEnabled: true,
-        liveAnswersEnabled: true,
+      {
+        surface: "desktop",
+        coach: {
+          deviceId: DEVICE_ID,
+          initiation: "player_typed",
+          flags: { coachEnabled: true, liveAnswersEnabled: true },
+          projection: {
+            context: liveTurn.gameContext,
+            present: ["live", "postgame"],
+            accepted: ["live", "postgame"],
+            withheld: [],
+          },
+        },
       },
-    });
+    );
   });
 
   test.each([
     [{ coach: true, live: false }, ["postgame"]],
     [{ coach: false, live: true }, []],
   ] as const)(
-    "with the flags %o the turn still runs and records %o accepted",
+    "with the flags %o the turn still runs and keeps %o",
     async (values, accepted) => {
       coachFlags(values);
       mocks.startRun.mockResolvedValue(startFixture.response);
@@ -866,13 +871,12 @@ describe("a game context on runs/start", () => {
       );
 
       expect(response.status).toBe(200);
-      expect(mocks.createCoachTurn).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          sectionsPresent: ["live", "postgame"],
-          sectionsAccepted: accepted,
+      expect(handedCoach()).toMatchObject({
+        flags: {
           coachEnabled: values.coach,
           liveAnswersEnabled: values.live,
-        }),
+        },
+        projection: { present: ["live", "postgame"], accepted },
       });
     },
   );
@@ -909,7 +913,6 @@ describe("a game context on runs/start", () => {
     expect(response.status).toBe(400);
     expect(await errorCode(response)).toBe("invalid_turn");
     expect(mocks.startRun).not.toHaveBeenCalled();
-    expect(mocks.createCoachTurn).not.toHaveBeenCalled();
   });
 
   test.each(coachFixtures.invalid)(
@@ -924,7 +927,6 @@ describe("a game context on runs/start", () => {
       expect(response.status).toBe(400);
       expect(await errorCode(response)).toBe("invalid_game_context");
       expect(mocks.startRun).not.toHaveBeenCalled();
-      expect(mocks.createCoachTurn).not.toHaveBeenCalled();
     },
   );
 
@@ -954,10 +956,10 @@ describe("a game context on runs/start", () => {
     const response = await send(desktopRequest(START_PATH, { body }));
 
     expect(response.status).toBe(200);
-    expect(mocks.createCoachTurn).toHaveBeenCalledOnce();
+    expect(handedCoach()).toMatchObject({ projection: { accepted: ["live"] } });
   });
 
-  test("a turn without one reads no coach flag and writes no audit row", async () => {
+  test("a turn without one reads no coach flag and hands on no coach record", async () => {
     mocks.startRun.mockResolvedValue(startFixture.response);
 
     await send(desktopRequest(START_PATH, { body: startFixture.request }));
@@ -965,20 +967,11 @@ describe("a game context on runs/start", () => {
     expect(
       mocks.isPolicyEnabled.mock.calls.map(([name]) => name),
     ).not.toContain("scout_desktop_coach");
-    expect(mocks.createCoachTurn).not.toHaveBeenCalled();
-  });
-
-  test("a turn whose audit row cannot be written is stopped", async () => {
-    mocks.startRun.mockResolvedValue(startFixture.response);
-    mocks.createCoachTurn.mockRejectedValueOnce(new Error("database down"));
-    mocks.stopRun.mockResolvedValue(true);
-
-    await expect(
-      send(desktopRequest(START_PATH, { body: liveTurn })),
-    ).rejects.toThrow("database down");
-    expect(mocks.stopRun).toHaveBeenCalledWith(
-      startFixture.response.runId,
-      OWNER_ID,
+    expect(mocks.startRun).toHaveBeenCalledWith(
+      { userId: OWNER_ID },
+      startFixture.request,
+      [SHARED_GUILD],
+      { surface: "desktop" },
     );
   });
 });

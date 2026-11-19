@@ -379,6 +379,21 @@ impl<C: Collector> Supervisor<C> {
         }
     }
 
+    /// A command from the window. A question whose composer chip asks for
+    /// the live game carries the collector's latest allowlisted snapshot, the
+    /// one the window's `live_game` line is drawn from; the window itself
+    /// never supplies game data.
+    fn window_chat_command(&self, command: ChatCommand) {
+        let Some(chat) = &self.chat else { return };
+        let live_game = match &command {
+            ChatCommand::Send {
+                live_game: true, ..
+            } => self.collector.state().borrow().live_game.clone(),
+            _ => None,
+        };
+        chat.send_with_live_game(command, live_game);
+    }
+
     /// Bring the window's chat up to date, sending only the parts that
     /// changed since it last heard.
     async fn send_chat(&self, window: &mut Window) {
@@ -514,7 +529,7 @@ impl<C: Collector> Supervisor<C> {
                 self.deliver(window, &SupervisorMessage::DiagnosticsBundle { text })
                     .await;
             }
-            WindowMessage::Chat { command } => self.chat_command(command),
+            WindowMessage::Chat { command } => self.window_chat_command(command),
             WindowMessage::Quit => return Handled::Quit,
         }
         Handled::Continue

@@ -17,9 +17,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
+use scout_client_core::coach_context::GameContext;
 use scout_client_core::desktop_api::{
     ActiveRun, ConversationListResponse, ModelsResponse, RunStartRequest,
 };
+use scout_client_core::live::snapshot::LiveSnapshot;
 use scout_desktop_ipc::{ChatAvailability, ChatCommand, ChatImage, ChatParts};
 use tokio::sync::{Semaphore, mpsc, watch};
 use tokio::task::JoinHandle;
@@ -27,6 +29,7 @@ use url::Url;
 use uuid::Uuid;
 
 use crate::asset_cache::{AssetCache, DEFAULT_CAPACITY_BYTES};
+use crate::authored::PlayerAuthored;
 use crate::client::ExploreClient;
 use crate::contract::Route;
 use crate::data_dragon::{DATA_DRAGON_HOST, DataDragon, champion_list_url, rune_list_url};
@@ -172,10 +175,21 @@ impl Pictures {
     }
 }
 
+/// One window command, with the game in progress when it arrived.
+#[derive(Debug, Clone, PartialEq)]
+pub struct RelayCommand {
+    /// What the window asked.
+    pub command: ChatCommand,
+    /// The supervisor's latest allowlisted snapshot, for a `send` whose
+    /// composer chip asked to use the live game while one was live; none
+    /// otherwise.
+    pub live_game: Option<LiveSnapshot>,
+}
+
 /// The supervisor's handle on the chat relay.
 #[derive(Debug, Clone)]
 pub struct ChatRelay {
-    commands: mpsc::UnboundedSender<ChatCommand>,
+    commands: mpsc::UnboundedSender<RelayCommand>,
     parts: watch::Receiver<ChatParts>,
 }
 
@@ -196,7 +210,7 @@ impl ChatRelay {
     #[must_use]
     pub fn detached() -> (
         Self,
-        mpsc::UnboundedReceiver<ChatCommand>,
+        mpsc::UnboundedReceiver<RelayCommand>,
         watch::Sender<ChatParts>,
     ) {
         let (commands, receiver) = mpsc::unbounded_channel();
@@ -214,9 +228,15 @@ impl ChatRelay {
     /// Pass one window command on. A relay that has stopped drops it: the
     /// supervisor is shutting down.
     pub fn send(&self, command: ChatCommand) {
+        self.send_with_live_game(command, None);
+    }
+
+    /// Pass one window command on with the game in progress. The relay
+    /// attaches `live_game` only to a `send` whose chip asked for it.
+    pub fn send_with_live_game(&self, command: ChatCommand, live_game: Option<LiveSnapshot>) {
         // A send fails only once the relay's task has ended, which happens
         // when the supervisor drops its runtime on the way out.
-        let _stopped = self.commands.send(command);
+        let _stopped = self.commands.send(RelayCommand { command, live_game });
     }
 
     /// Follow what the window should render.
@@ -229,6 +249,21 @@ impl ChatRelay {
     #[must_use]
     pub fn upgrade_required(&self) -> bool {
         self.parts.borrow().status.availability == ChatAvailability::UpgradeRequired
+    }
+}
+
+/// The live game as the coach contract carries it, or none when this frame
+/// breaks a bound Scout would refuse. Riot's frame is outside Scout's
+/// control, so an out-of-bounds one sends the question without it rather than
+/// losing the question.
+fn live_context(snapshot: &LiveSnapshot) -> Option<GameContext> {
+    let game = GameContext::live(snapshot);
+    match game.validate() {
+        Ok(()) => Some(game),
+        Err(error) => {
+            tracing::warn!(%error, "sending the question without the live game");
+            None
+        }
     }
 }
 
@@ -276,7 +311,7 @@ struct Relay {
 async fn run(
     origin: String,
     cache_directory: PathBuf,
-    mut commands: mpsc::UnboundedReceiver<ChatCommand>,
+    mut commands: mpsc::UnboundedReceiver<RelayCommand>,
     parts: watch::Sender<ChatParts>,
 ) {
     let (answers, mut answered) = mpsc::unbounded_channel();
@@ -315,7 +350,8 @@ async fn run(
 }
 
 impl Relay {
-    fn command(&mut self, command: ChatCommand) {
+    fn command(&mut self, input: RelayCommand) {
+        let RelayCommand { command, live_game } = input;
         match command {
             ChatCommand::Refresh => self.refresh(),
             ChatCommand::Open { conversation_id } => {
@@ -328,8 +364,19 @@ impl Relay {
                 }
             }
             ChatCommand::New => self.session.start_new(),
-            ChatCommand::Send { question } => {
-                let request = self.session.submit(&question);
+            ChatCommand::Send {
+                question,
+                live_game: use_live_game,
+            } => {
+                // The composer's `send` is the only text the player typed.
+                let question = PlayerAuthored::from_composer(question);
+                let game = live_game
+                    .filter(|_| use_live_game)
+                    .and_then(|snapshot| live_context(&snapshot));
+                let request = match game {
+                    Some(game) => self.session.submit_with_game(&question, game),
+                    None => self.session.submit(question.get()),
+                };
                 self.start(request);
             }
             ChatCommand::Edit {
@@ -651,5 +698,73 @@ impl Relay {
                 .await;
             let _ = answers.send(Answer::Ended(end));
         }));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use scout_client_core::live::snapshot::{
+        LiveGameInfo, LiveItem, LiveParticipant, LiveSnapshot, OwnStats, Team,
+    };
+
+    use super::live_context;
+
+    fn snapshot(item_name: &str) -> LiveSnapshot {
+        LiveSnapshot {
+            game: LiveGameInfo {
+                mode: "CLASSIC".to_owned(),
+                map: "Map11".to_owned(),
+                game_time_secs: 421,
+            },
+            own: OwnStats {
+                gold: 845,
+                max_health: 1180.5,
+                health: 902.25,
+                resource: "MANA".to_owned(),
+                max_resource: 840.0,
+                current_resource: 512.5,
+                armor: 38.4,
+                magic_resist: 30.0,
+                attack_damage: 64.0,
+                ability_power: 132.5,
+                attack_speed: 0.703,
+                move_speed: 345.0,
+                crit_chance: 0.0,
+            },
+            participants: vec![LiveParticipant {
+                team: Team::Order,
+                is_self: true,
+                champion: "Ahri".to_owned(),
+                level: 10,
+                kills: 4,
+                deaths: 2,
+                assists: 7,
+                creep_score: 87,
+                items: vec![LiveItem {
+                    item_id: 6655,
+                    name: item_name.to_owned(),
+                    count: 1,
+                }],
+                summoner_spells: ["Flash".to_owned(), "Ignite".to_owned()],
+                keystone: Some("Electrocute".to_owned()),
+            }],
+            event_count: 0,
+            latest_event: None,
+        }
+    }
+
+    #[test]
+    fn the_live_game_goes_as_the_coach_contract_spells_it() {
+        let game = live_context(&snapshot("Luden's Companion"));
+        let live = game.and_then(|game| game.live);
+        assert_eq!(
+            live.map(|live| (live.game.game_time_secs, live.participants.len())),
+            Some((421, 1))
+        );
+    }
+
+    #[test]
+    fn a_frame_past_the_contract_sends_the_question_without_it() {
+        assert_eq!(live_context(&snapshot(&"x".repeat(97))), None);
     }
 }

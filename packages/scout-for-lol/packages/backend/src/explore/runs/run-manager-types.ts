@@ -1,5 +1,6 @@
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import type {
+  CoachGameContext,
   DiscordAccountId,
   DiscordChannelId,
   ExploreActiveRun,
@@ -56,6 +57,8 @@ export type ActiveRun = {
   guildIds: DiscordGuildId[];
   surface: ExploreSurface;
   originChannelId: DiscordChannelId | null;
+  /** The projected game context this turn may answer from, if any. */
+  coach: CoachGameContext | null;
   ticket: ExploreRateLimitTicket;
   started: StartedTurn;
   history: ExploreMessage[];

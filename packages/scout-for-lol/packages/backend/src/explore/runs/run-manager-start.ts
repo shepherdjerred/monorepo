@@ -6,7 +6,9 @@ import {
   type ExploreTurnRequest,
   type DiscordChannelId,
 } from "@scout-for-lol/data";
+import { recordCoachTurn, type CoachTurnRecord } from "#src/coach/audit.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { ExploreDurablePayloadSchema } from "#src/explore/runs/durable-payload.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   type ExploreRateLimitIdentity,
@@ -120,6 +122,31 @@ async function prepareExploreRun(
   return { started, history: transcript.messages, summary };
 }
 
+/**
+ * The `ScoutInteractiveRun.payload` a durable turn is reserved with. A coach
+ * turn carries only what its projection let through.
+ */
+export function durableExplorePayload(input: {
+  summary: ExploreActiveRun;
+  started: StartedTurn;
+  guildIds: DiscordGuildId[];
+  surface: ExploreSurface;
+  originChannelId: DiscordChannelId | null;
+  coach: CoachTurnRecord | null;
+}): string {
+  const context = input.coach?.projection.context ?? null;
+  return JSON.stringify(
+    ExploreDurablePayloadSchema.parse({
+      summary: input.summary,
+      started: input.started,
+      guildIds: input.guildIds,
+      surface: input.surface,
+      originChannelId: input.originChannelId,
+      coach: context === null ? null : { context },
+    }),
+  );
+}
+
 export async function startExploreRun(input: {
   client: ExtendedPrismaClient;
   identity: ExploreRateLimitIdentity;
@@ -130,6 +157,7 @@ export async function startExploreRun(input: {
   inlineExecutionForTests: boolean;
   surface: ExploreSurface;
   originChannelId: DiscordChannelId | null;
+  coach: CoachTurnRecord | null;
   assertAcceptingRuns: () => void;
   registerRun: (run: ActiveRun) => void;
   removeRun: (summary: ExploreActiveRun) => void;
@@ -139,10 +167,10 @@ export async function startExploreRun(input: {
   isDurableUnavailable: (error: unknown) => boolean;
   createUnavailableError: (error: unknown) => Error;
 }): Promise<ExploreActiveRun> {
-  const { client, identity, guildIds, ticket } = input;
+  const { identity, guildIds, ticket } = input;
   try {
     const prepared = input.inlineExecutionForTests
-      ? await prepareExploreRun(input, client)
+      ? await prepareInlineExploreRun(input)
       : await prepareDurableExploreRun(input);
     const { started, history, summary } = prepared;
     const run = createActiveExploreRun({
@@ -154,6 +182,7 @@ export async function startExploreRun(input: {
       history,
       surface: input.surface,
       originChannelId: input.originChannelId,
+      coach: input.coach?.projection.context ?? null,
     });
     input.registerRun(run);
     if (input.inlineExecutionForTests) {
@@ -194,6 +223,24 @@ async function startDurableRun(
   }
 }
 
+/** Tests run inline, with no reservation row; the audit row still lands. */
+async function prepareInlineExploreRun(
+  input: Parameters<typeof prepareExploreRun>[0] & {
+    client: ExtendedPrismaClient;
+    coach: CoachTurnRecord | null;
+  },
+): Promise<PreparedExploreRun> {
+  const prepared = await prepareExploreRun(input, input.client);
+  if (input.coach !== null) {
+    await recordCoachTurn(input.client, {
+      ownerId: input.identity.userId,
+      run: prepared.summary,
+      record: input.coach,
+    });
+  }
+  return prepared;
+}
+
 async function prepareDurableExploreRun(input: {
   client: ExtendedPrismaClient;
   identity: ExploreRateLimitIdentity;
@@ -203,6 +250,7 @@ async function prepareDurableExploreRun(input: {
   guildIds: DiscordGuildId[];
   surface: ExploreSurface;
   originChannelId: DiscordChannelId | null;
+  coach: CoachTurnRecord | null;
   assertAcceptingRuns: () => void;
   createRateLimitedError: (rejection: ExploreRateLimitRejection) => Error;
 }): Promise<PreparedExploreRun> {
@@ -221,14 +269,17 @@ async function prepareDurableExploreRun(input: {
       id: prepared.summary.runId,
       ownerId: input.identity.userId,
       conversationId: prepared.summary.conversationId,
-      payload: JSON.stringify({
-        summary: prepared.summary,
-        started: prepared.started,
-        guildIds: input.guildIds,
-        surface: input.surface,
-        originChannelId: input.originChannelId,
-      }),
+      payload: durableExplorePayload({ ...input, ...prepared }),
     });
+    // The audit row commits with the reservation or not at all, so no coach
+    // turn is ever started without its record.
+    if (input.coach !== null) {
+      await recordCoachTurn(tx, {
+        ownerId: input.identity.userId,
+        run: prepared.summary,
+        record: input.coach,
+      });
+    }
     return { status: "prepared", prepared } as const;
   });
   if (reservation.status === "rejected") {

@@ -35,7 +35,7 @@ pub use chat_visuals::{
 };
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 7;
+pub const PROTOCOL_VERSION: u32 = 8;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -644,7 +644,10 @@ mod tests {
             creep_score: 87,
         };
         assert_eq!(live.summary(), "Ahri, level 10, 4/2/7, 87 CS, 7:01");
-        assert_eq!(PROTOCOL_VERSION, 7, "a new message bumps the protocol");
+        assert_eq!(
+            PROTOCOL_VERSION, 8,
+            "a new message or field bumps the protocol"
+        );
     }
 
     #[test]
@@ -702,6 +705,7 @@ mod tests {
             WindowMessage::Chat {
                 command: ChatCommand::Send {
                     question: "Line one\nline two".to_owned(),
+                    live_game: true,
                 },
             },
             WindowMessage::Chat {
@@ -803,10 +807,11 @@ mod tests {
         assert_eq!(
             encode_line(&WindowMessage::Chat {
                 command: ChatCommand::Send {
-                    question: "Hi".to_owned()
+                    question: "Hi".to_owned(),
+                    live_game: false,
                 }
             })?,
-            "{\"type\":\"chat\",\"command\":{\"action\":\"send\",\"question\":\"Hi\"}}\n"
+            "{\"type\":\"chat\",\"command\":{\"action\":\"send\",\"question\":\"Hi\",\"live_game\":false}}\n"
         );
         assert_eq!(
             encode_line(&SupervisorMessage::ChatStatus {
@@ -832,7 +837,10 @@ mod tests {
         // field all break the link.
         for line in [
             r#"{"type":"chat","command":{"action":"export"}}"#,
-            r#"{"type":"chat","command":{"action":"send","question":"x","model":"sol"}}"#,
+            r#"{"type":"chat","command":{"action":"send","question":"x","live_game":false,"model":"sol"}}"#,
+            // The window never sends a game, only whether to attach one.
+            r#"{"type":"chat","command":{"action":"send","question":"x","live_game":{"champion":"Ahri"}}}"#,
+            r#"{"type":"chat","command":{"action":"send","question":"x"}}"#,
             r#"{"type":"chat","command":{"action":"open","conversation_id":"not-a-uuid"}}"#,
             r#"{"type":"chat","command":{"action":"send"}}"#,
         ] {

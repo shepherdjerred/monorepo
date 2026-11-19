@@ -16,10 +16,13 @@
 //! - [`asset_cache`]: the bounded disk cache charts and card art land in.
 //! - [`relay`]: the supervisor's task that runs the client against a session
 //!   and publishes those parts, so the credential never leaves the supervisor.
+//! - [`PlayerAuthored`]: text the player typed, the only kind of question a
+//!   game context may ride on.
 //!
 //! The crate has no UI dependency; the window renders the parts it publishes.
 
 pub mod asset_cache;
+mod authored;
 mod client;
 pub mod contract;
 pub mod data_dragon;
@@ -33,5 +36,6 @@ pub mod session;
 pub mod stream;
 pub mod visuals;
 
+pub use authored::PlayerAuthored;
 pub use client::{ExploreClient, MAX_CHART_BYTES, PNG_SIGNATURE, STREAM_IDLE_TIMEOUT};
 pub use error::{ExploreClientError, Recovery, Refusal};

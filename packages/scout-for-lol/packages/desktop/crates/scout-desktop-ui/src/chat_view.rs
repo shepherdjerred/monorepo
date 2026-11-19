@@ -29,6 +29,8 @@ pub const TAB_STOP: isize = 3;
 pub const TAB_ATTACH: isize = 4;
 /// The model picker, after Attach image.
 pub const TAB_PICKER: isize = 5;
+/// The live game chip, after the model picker.
+pub const TAB_LIVE_GAME: isize = 6;
 /// The first sidebar entry; the rest follow in order.
 pub const TAB_SIDEBAR: isize = 10;
 
@@ -190,6 +192,22 @@ fn composer_area(
                     }))
             }))
     });
+    // The chip reads as on in the page's main colour and as off in the
+    // secondary one, and says which in words either way.
+    let live_game = model.live_game.as_ref().map(|chip| {
+        row().child(
+            control_button(
+                &chip.toggle,
+                if chip.on {
+                    ButtonStyle::Primary
+                } else {
+                    ButtonStyle::Secondary
+                },
+                handler,
+            )
+            .tab_index(TAB_LIVE_GAME),
+        )
+    });
     column()
         .px_6()
         .pt_3()
@@ -203,6 +221,7 @@ fn composer_area(
         }))
         .children((!model.drafts.is_empty()).then(|| draft_strip(&model.drafts, handler)))
         .children(picker)
+        .children(live_game)
         .child(
             row()
                 .gap_2()

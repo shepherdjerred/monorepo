@@ -11,6 +11,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
+use scout_client_core::coach_context::GameContext;
 use scout_client_core::desktop_api::{
     ActiveRun, AttachPoint, ConversationListResponse, ConversationSummary, ExploreModel,
     ModelsResponse, RunStartRequest,
@@ -22,6 +23,7 @@ use scout_desktop_ipc::{
 };
 use uuid::Uuid;
 
+use crate::authored::PlayerAuthored;
 use crate::data_dragon::DataDragon;
 use crate::error::{ExploreClientError, Recovery};
 use crate::model::{
@@ -533,6 +535,7 @@ impl ChatSession {
         attach: AttachPoint,
         keep: Option<usize>,
         drafts: Vec<Draft>,
+        game: Option<GameContext>,
     ) -> RunStartRequest {
         self.notice = None;
         let leaf = self
@@ -575,9 +578,9 @@ impl ChatSession {
                 .filter(|models| models.picker_enabled)
                 .map(|models| self.chosen_model.unwrap_or(models.default_model)),
             attachment_ids: (!attachment_ids.is_empty()).then_some(attachment_ids),
-            // Chat attaches no game yet; a context rides only on a question
-            // the player typed, which the composer has to prove.
-            game_context: None,
+            // Set only through `submit_with_game`, on a question the player
+            // typed.
+            game_context: game,
         }
     }
 
@@ -600,12 +603,30 @@ impl ChatSession {
     /// or none when chat does not work, a turn is already running, or the
     /// question is blank or too long (the composer says why).
     pub fn submit(&mut self, question: &str) -> Option<RunStartRequest> {
+        self.submit_turn(question, None)
+    }
+
+    /// [`Self::submit`], with the game the player is in. Only a question the
+    /// player typed carries one, so it takes [`PlayerAuthored`] text.
+    pub fn submit_with_game(
+        &mut self,
+        question: &PlayerAuthored<String>,
+        game: GameContext,
+    ) -> Option<RunStartRequest> {
+        self.submit_turn(question.get(), Some(game))
+    }
+
+    fn submit_turn(
+        &mut self,
+        question: &str,
+        game: Option<GameContext>,
+    ) -> Option<RunStartRequest> {
         if !self.can_start() {
             return None;
         }
         let question = self.checked_question(question)?;
         let drafts = self.take_drafts()?;
-        Some(self.begin_turn(Some(question), AttachPoint::Leaf, None, drafts))
+        Some(self.begin_turn(Some(question), AttachPoint::Leaf, None, drafts, game))
     }
 
     /// Edit the question `message_id` into a new version of its turn.
@@ -627,7 +648,7 @@ impl ChatSession {
             });
         let question = self.checked_question(question)?;
         let drafts = self.take_drafts()?;
-        Some(self.begin_turn(Some(question), attach, Some(index), drafts))
+        Some(self.begin_turn(Some(question), attach, Some(index), drafts, None))
     }
 
     /// Answer the question behind `message_id` again, as a new version of the
@@ -650,6 +671,7 @@ impl ChatSession {
             },
             Some(at + 1),
             Vec::new(),
+            None,
         ))
     }
 

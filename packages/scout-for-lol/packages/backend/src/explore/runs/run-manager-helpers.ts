@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/bun";
 import {
   ExploreRunPreviewEventSchema,
   ExploreRunSnapshotEventSchema,
+  type CoachGameContext,
   type ExploreActiveRun,
   type ExploreConversationOrigin,
   type ExploreMessage,
@@ -151,6 +152,7 @@ export function createActiveExploreRun(input: {
   history: ExploreMessage[];
   surface: ExploreSurface;
   originChannelId: DiscordChannelId | null;
+  coach: CoachGameContext | null;
 }): ActiveRun {
   const deferred = createDeferred();
   return {
@@ -162,6 +164,7 @@ export function createActiveExploreRun(input: {
     history: input.history,
     surface: input.surface,
     originChannelId: input.originChannelId,
+    coach: input.coach,
     abortController: new AbortController(),
     subscribers: new Set(),
     answer: "",
@@ -224,6 +227,7 @@ export async function executeActiveExploreRun(input: {
         ...(input.run.originChannelId === null
           ? {}
           : { originChannelId: input.run.originChannelId }),
+        coach: input.run.coach,
         abortSignal: input.run.abortController.signal,
         abortOutcome: () =>
           input.run.termination === "stop" || input.run.termination === "delete"
