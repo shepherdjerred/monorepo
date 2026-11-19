@@ -29,6 +29,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   flipt: "open",
   freshrss: "open",
   "glitter-boys-launcher": "open",
+  "gradle-build-cache": "open",
   home: "open",
   media: "open",
   "minecraft-shuxin": "open",
@@ -51,6 +52,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   temporal: "open",
   tracker: "open",
   "trmnl-dashboard": "open",
+  "turbo-cache": "open",
   woodpecker: "open",
   "woodpecker-ci": "open",
 };
