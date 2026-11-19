@@ -94,6 +94,13 @@ export const STAGED_WITHOUT_RENDERED_POLICY: Readonly<
     reason:
       "The argo-cd chart renders a NetworkPolicy per component (networkPolicy.create).",
   },
+  prometheus: {
+    source: "upstream-chart",
+    application: "prometheus",
+    charts: ["apps", "prometheus-companion"],
+    reason:
+      "The Grafana subchart of kube-prometheus-stack renders the image renderer's ingress policy.",
+  },
   "delivery-tsmc-controller": {
     source: "live-only",
     charts: ["delivery-control-plane"],

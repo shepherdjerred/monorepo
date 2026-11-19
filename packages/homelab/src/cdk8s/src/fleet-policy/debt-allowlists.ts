@@ -58,6 +58,14 @@ export const WORKLOADS_WITHOUT_EGRESS_POLICY: ReadonlySet<string> = new Set([
   // Its Loki URL names port 3100 on loki-gateway, whose Service exposes only
   // 80; fix the sink before writing a rule for it.
   "prometheus/kubernetes-event-exporter",
+  // A first-party policy in `prometheus` would have synthesis stage the
+  // namespace itself, moving its staging policy off the prometheus companion
+  // (`STAGED_WITHOUT_RENDERED_POLICY`). Their needs are DNS and HTTPS for
+  // `apk add` and `pip install`.
+  "prometheus/nvme-metrics-collector",
+  "prometheus/smartctl-collector",
+  "prometheus/zfs-snapshots-collector",
+  "prometheus/zfs-zpool-collector",
   // The link-rot scan's lychee follows every web link in the repository, on
   // whatever scheme and port the link names.
   "woodpecker-ci/temporal-maintenance-worker",

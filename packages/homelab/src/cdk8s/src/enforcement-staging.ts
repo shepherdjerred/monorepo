@@ -8,6 +8,18 @@ import {
   enforcementStagingPolicyName,
 } from "./misc/network-policies.ts";
 import { COMPANION_CHARTS } from "./resources/companions/names.ts";
+import { BASELINE_CHART_APPLICATIONS } from "./resources/cluster-baseline/charts.ts";
+
+/**
+ * Charts that re-render root objects for another Application to own: the
+ * companion charts, and the cluster baseline charts that take over the root's
+ * baseline objects at the ownership flip. They mirror the root's staging
+ * policy rather than owning one.
+ */
+export const MIRROR_CHARTS: ReadonlySet<string> = new Set([
+  ...COMPANION_CHARTS,
+  ...BASELINE_CHART_APPLICATIONS,
+]);
 
 /**
  * Namespaces more than one Application renders policies into, and the chart
@@ -17,11 +29,6 @@ import { COMPANION_CHARTS } from "./resources/companions/names.ts";
 const SHARED_NAMESPACE_OWNERS: Readonly<Record<string, string>> = {
   // temporal-data and delivery-control-plane also render policies here.
   temporal: "temporal",
-  // The root renders the cluster baseline's exporter and power-cap policies,
-  // and the baseline charts mirror them; the root keeps the staging policy
-  // it has always rendered for these namespaces.
-  prometheus: "apps",
-  "node-tuning": "apps",
 };
 
 function policyNamespacesOf(chart: Chart): Set<string> {
@@ -47,15 +54,16 @@ function policyNamespacesOf(chart: Chart): Set<string> {
 
 /**
  * The chart that owns a namespace's staging policy among the charts that
- * render policies into it. A companion chart is not an owner: it re-renders
- * root objects, so it mirrors the root's staging policy instead.
+ * render policies into it. A mirror chart (`MIRROR_CHARTS`) is not an owner:
+ * it re-renders root objects, so it mirrors the root's staging policy
+ * instead.
  */
 function stagingOwner(namespace: string, charts: readonly Chart[]): Chart {
   const declared = SHARED_NAMESPACE_OWNERS[namespace];
   const [only, ...others] = charts;
   if (only === undefined)
     throw new Error(
-      `Only companion charts render policies into ${namespace}; a companion mirrors the root`,
+      `Only mirror charts render policies into ${namespace}; a mirror re-renders the root`,
     );
   if (others.length === 0) {
     if (declared !== undefined)
@@ -122,12 +130,10 @@ export function applyEnforcementStaging(
     const stage = enforcementStageOf(namespace);
     const owner = stagingOwner(
       namespace,
-      charts.filter((chart) => !COMPANION_CHARTS.has(chart.node.id)),
+      charts.filter((chart) => !MIRROR_CHARTS.has(chart.node.id)),
     );
-    const companions = charts.filter((chart) =>
-      COMPANION_CHARTS.has(chart.node.id),
-    );
-    for (const chart of [owner, ...companions])
+    const mirrors = charts.filter((chart) => MIRROR_CHARTS.has(chart.node.id));
+    for (const chart of [owner, ...mirrors])
       enforcementStagingPolicy(chart, namespace, stage);
   }
 
