@@ -50,7 +50,6 @@ export const WORKLOADS_WITHOUT_EGRESS_POLICY: ReadonlySet<string> = new Set([
   "media/media-tautulli",
   "media/media-whisperbridge",
   "prometheus/kubernetes-event-exporter",
-  "seaweedfs/seaweedfs-backup",
   "woodpecker-ci/temporal-maintenance-worker",
   "woodpecker/woodpecker-woodpecker-agent-completion",
   "woodpecker/woodpecker-woodpecker-agent-main",
