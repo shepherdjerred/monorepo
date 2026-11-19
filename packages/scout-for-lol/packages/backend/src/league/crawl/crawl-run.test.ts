@@ -19,14 +19,15 @@ import {
   type CrawlDeps,
 } from "./crawl-run.ts";
 import { decodeSegment, type EncodedSegment } from "./crawl-segment.ts";
-import type {
-  CommitInput,
-  CrawlObjectStore,
-  CrawlStore,
-  FrontierPlayer,
-  NewFrontierPlayer,
-  SeedCursor,
-  TrackedObservation,
+import {
+  CrawlErasureFenceError,
+  type CommitInput,
+  type CrawlObjectStore,
+  type CrawlStore,
+  type FrontierPlayer,
+  type NewFrontierPlayer,
+  type SeedCursor,
+  type TrackedObservation,
 } from "./crawl-store.ts";
 
 const NOW = new Date("2026-11-14T12:00:00Z");
@@ -103,7 +104,22 @@ class MemoryStore implements CrawlStore {
       [...this.matches.values()].filter((m) => m.crawledAt >= since).length,
     );
   }
+  deletions: string[] = [];
+  /** Called between the tick's checks and its commit, as a concurrent erasure would land. */
+  beforeCommit: (() => void) | undefined;
+
+  erasureMark() {
+    return Promise.resolve(this.erased.size);
+  }
+  queueObjectDeletions(keys: readonly string[]) {
+    this.deletions.push(...keys);
+    return Promise.resolve();
+  }
   async commit(input: CommitInput) {
+    this.beforeCommit?.();
+    if (this.erased.size !== input.erasureMark) {
+      throw new CrawlErasureFenceError();
+    }
     this.commits.push(input);
     for (const { segment, matches } of input.segments) {
       this.segments.push(segment);
@@ -477,5 +493,31 @@ describe("bracketFromLeagueEntries", () => {
     });
     expect(bracketFromLeagueEntries([])).toBeNull();
     expect(bracketFromLeagueEntries([{ queueType: "CHERRY" }])).toBeNull();
+  });
+});
+
+describe("the erasure fence", () => {
+  test("discards the tick when an erasure lands before its commit", async () => {
+    seedPlayer("p1");
+    const riot = fakeRiot({
+      ids: { "p1:420": ["NA1_100"] },
+      matches: {
+        NA1_100: rawMatch("NA1_100", { participants: ["p1", "late"] }),
+      },
+    });
+    store.beforeCommit = () => {
+      store.erased.add(puuidHash(P("late")));
+    };
+    await expect(runCrawlTick(deps(riot))).rejects.toBeInstanceOf(
+      CrawlErasureFenceError,
+    );
+    expect(store.commits).toEqual([]);
+    expect(store.matches.has("NA1_100")).toBe(false);
+    // The segment reached S3 before the commit refused, so it is queued for deletion.
+    expect(store.deletions).toEqual(
+      store2objects.put.map((segment) => segment.objectKey),
+    );
+    expect(store.deletions).toHaveLength(1);
+    expect(inboxed).toEqual([]);
   });
 });

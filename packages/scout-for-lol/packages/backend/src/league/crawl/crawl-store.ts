@@ -40,6 +40,12 @@ export type StoredMatchRow = {
 
 export type CommitInput = {
   now: Date;
+  /**
+   * The erasure count read when the tick started (`erasureMark`). The commit
+   * refuses with `CrawlErasureFenceError` when an erasure landed since, so a
+   * match checked against the older list is never committed after it.
+   */
+  erasureMark: number;
   segments: { segment: EncodedSegment; matches: StoredMatchRow[] }[];
   /** Players whose visit completed, with the bracket from this visit. */
   visits: {
@@ -70,8 +76,12 @@ export type CrawlStore = {
   /** The subset of `matchIds` the crawl has not stored. */
   unknownMatchIds: (matchIds: readonly RiotMatchId[]) => Promise<RiotMatchId[]>;
   matchesCrawledSince: (since: Date) => Promise<number>;
+  /** How many players are erased; read before the tick checks any of them. */
+  erasureMark: () => Promise<number>;
   /** Segments, their matches, completed visits and child admissions, atomically. */
   commit: (input: CommitInput) => Promise<void>;
+  /** Queue written-but-uncommitted crawl objects for the erasure sweep to delete. */
+  queueObjectDeletions: (objectKeys: readonly string[]) => Promise<void>;
   frontierSizeByDepth: () => Promise<Record<number, number>>;
 };
 
@@ -80,3 +90,17 @@ export type CrawlObjectStore = {
   readText: (key: string) => Promise<string>;
   putSegment: (segment: EncodedSegment) => Promise<void>;
 };
+
+/**
+ * An erasure was recorded while the tick ran. The tick's matches were checked
+ * against the erased list before it, so committing them could store a match
+ * that names the newly erased player after the erasure sweep has passed it.
+ */
+export class CrawlErasureFenceError extends Error {
+  constructor() {
+    super(
+      "A player was erased while this crawl tick ran; its segments are discarded and the next tick re-checks every match",
+    );
+    this.name = "CrawlErasureFenceError";
+  }
+}

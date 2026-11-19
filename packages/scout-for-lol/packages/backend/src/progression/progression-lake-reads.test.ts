@@ -12,11 +12,6 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { TimelineCoverageLakeRow } from "@scout-for-lol/data";
-import { timelineStagingFilePath } from "#src/report-lake/staging.ts";
-import {
-  resetTestLake,
-  writeTestLake,
-} from "#src/testing/report-lake/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 
 const lakeDir = await mkdtemp(path.join(tmpdir(), "scout-progression-lake-"));
@@ -25,6 +20,11 @@ const matchWithCoverage = "NA1_9400000000";
 const matchWithoutCoverage = "NA1_9400000010";
 const { prisma } = createTestDatabase("progression-admitted-matches");
 vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
+// Imported after `prisma` exists: the lake helpers reach the mocked database
+// module through the crawl tombstone read, and the mock factory needs `prisma`.
+const { timelineStagingFilePath } = await import("#src/report-lake/staging.ts");
+const { resetTestLake, writeTestLake } =
+  await import("#src/testing/report-lake/test-report-lake.ts");
 const { fetchProgressionMatches } =
   await import("#src/progression/progression-lake-reads.ts");
 

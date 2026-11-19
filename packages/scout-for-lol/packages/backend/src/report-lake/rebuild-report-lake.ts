@@ -51,6 +51,11 @@ import {
   createCrawlSegmentSource,
   loadErasedPuuidHashes,
 } from "#src/report-lake/crawl/crawl-sources.ts";
+import {
+  REBUILD_RAW_ERASURE_SEGMENT_BUDGET,
+  runCrawlErasureStep,
+} from "#src/report-lake/crawl/crawl-erasure-step.ts";
+import { createS3RawErasureObjects } from "#src/report-lake/crawl/crawl-raw-erasure-store.ts";
 
 const logger = createLogger("report-lake-rebuild");
 const GC_KEEP_BUILDS = 2;
@@ -273,6 +278,16 @@ export async function rebuildReportLake(
       loadErased: () => Promise.resolve(erased),
       abortSignal: deadline,
     });
+    onProgress?.({ phase: "erasing-crawl" });
+    const crawlErasure = await runCrawlErasureStep({
+      prisma,
+      buildDir,
+      buildId,
+      segmentBudget: REBUILD_RAW_ERASURE_SEGMENT_BUDGET,
+      objects: () =>
+        createS3RawErasureObjects({ client, bucket, abortSignal: deadline }),
+      abortSignal: deadline,
+    });
     if (crawlMaintenance.rebuiltDays.length > 0) {
       logger.info(
         `Rebuild re-derived crawl days ${crawlMaintenance.rebuiltDays.join(", ")}; compacted ${crawlMaintenance.compactedDays.length.toString()}, expired ${crawlMaintenance.expiredDays.length.toString()}`,
@@ -307,6 +322,7 @@ export async function rebuildReportLake(
     await publishBuild(lakeDir, buildId, deadline);
     published = true;
     publishCompactionMetrics(summary);
+    await crawlErasure.markPublished();
     await removeCrawlInboxSegments(crawlFold.consumed);
     await removeFoldedStagingFiles(lakeDir, "matches", foldedMatchIds);
     await removeFoldedStagingFiles(lakeDir, "match_teams", foldedMatchIds);

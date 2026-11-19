@@ -14,6 +14,7 @@ import {
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import { resolveLakeFiles, type LakeFiles } from "#src/reports/duckdb/lake.ts";
+import { replaceCrawlTombstoneSourceForTests } from "#src/reports/duckdb/lake/crawl-tombstones.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   crawlFixturePuuids,
@@ -94,7 +95,13 @@ async function trackedAnswers(files: LakeFiles): Promise<string> {
   );
 }
 
+// No database here: no player is erased.
+let restoreTombstones: () => void;
+
 beforeAll(async () => {
+  restoreTombstones = replaceCrawlTombstoneSourceForTests(() =>
+    Promise.resolve([]),
+  );
   lakeDir = await mkdtemp(path.join(tmpdir(), "crawl-isolation-"));
   const [, sharedPuuid] = await crawlFixturePuuids();
   if (sharedPuuid === undefined) throw new Error("fixture has no players");
@@ -134,6 +141,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  restoreTombstones();
   await rm(lakeDir, { recursive: true, force: true });
 });
 

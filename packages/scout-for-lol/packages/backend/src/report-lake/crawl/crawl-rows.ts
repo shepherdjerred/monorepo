@@ -1,5 +1,10 @@
 import { createHash } from "node:crypto";
-import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
+import {
+  RawMatchSchema,
+  RiotMatchIdSchema,
+  type RawMatch,
+  type RiotMatchId,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 import { puuidHash } from "#src/league/crawl/crawl-config.ts";
 import { ReducedTimelineSchema } from "#src/league/crawl/crawl-records.ts";
@@ -78,6 +83,54 @@ function namesErasedPlayer(
       []),
   ];
   return puuids.some((puuid) => erased.has(puuidHash(puuid)));
+}
+
+/** The Match-V5 places a PUUID can appear, read without requiring a valid document. */
+const MatchPuuidsSchema = z.looseObject({
+  metadata: z
+    .looseObject({ participants: z.array(z.string()).optional() })
+    .optional(),
+  info: z
+    .looseObject({
+      participants: z
+        .array(z.looseObject({ puuid: z.string().nullable().optional() }))
+        .optional(),
+    })
+    .optional(),
+});
+
+/**
+ * Every PUUID one raw segment line names: the visited player, the match
+ * document's metadata and participants, and the reduced timeline's players.
+ *
+ * The erasure sweep uses this on lines the lake would skip as invalid Match-V5
+ * documents too, so a document Riot shaped differently is still checked. A
+ * line that is not a crawl record at all is the crawl writer's broken
+ * contract and fails.
+ */
+export function crawlLinePuuids(raw: unknown): {
+  matchId: RiotMatchId;
+  puuids: string[];
+} {
+  const line = CrawlRecordLineSchema.parse(raw);
+  const match = MatchPuuidsSchema.safeParse(line.match);
+  const documentPuuids = match.success
+    ? [
+        ...(match.data.metadata?.participants ?? []),
+        ...(match.data.info?.participants ?? []).flatMap((participant) =>
+          typeof participant.puuid === "string" ? [participant.puuid] : [],
+        ),
+      ]
+    : [];
+  return {
+    matchId: RiotMatchIdSchema.parse(line.matchId),
+    puuids: [
+      line.visited.puuid,
+      ...documentPuuids,
+      ...(line.timeline?.participants.map((participant) => participant.puuid) ??
+        []),
+    ],
+  };
 }
 
 /**

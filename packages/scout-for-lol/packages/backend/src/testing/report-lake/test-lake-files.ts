@@ -37,6 +37,7 @@ export const TEST_LAKE_FILES: LakeFiles = {
   timelineCoverageParquet: [],
   timelineCoverageStaging: [],
   crawl: NO_CRAWL_LAKE_FILES,
+  crawlTombstones: [],
 };
 
 /** Flatten bound parameters to the scalar values they carry. */

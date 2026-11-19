@@ -23,4 +23,12 @@ export type LakeFiles = {
   timelineCoverageStaging: string[];
   /** The crawl tables of the same build; read only by the `all` population. */
   crawl: CrawlLakeFiles;
+  /**
+   * SHA-256 hashes of erased players whose lake erasure has not published yet
+   * (`ErasedPuuid.lakeErasedAt` null), read before the build. Every crawl
+   * branch drops each match naming one of them at query time
+   * (`crawl-union.ts`), so an erased player disappears from global reads the
+   * moment the erasure is recorded, before any file is rewritten.
+   */
+  crawlTombstones: readonly string[];
 };

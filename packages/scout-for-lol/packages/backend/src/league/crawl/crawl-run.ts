@@ -42,13 +42,14 @@ import {
 } from "./crawl-records.ts";
 import { encodeSegment, type EncodedSegment } from "./crawl-segment.ts";
 import { platformOfMatchId, seedFromTrackedMatches } from "./crawl-seed.ts";
-import type {
-  CommitInput,
-  CrawlObjectStore,
-  CrawlStore,
-  FrontierPlayer,
-  NewFrontierPlayer,
-  StoredMatchRow,
+import {
+  CrawlErasureFenceError,
+  type CommitInput,
+  type CrawlObjectStore,
+  type CrawlStore,
+  type FrontierPlayer,
+  type NewFrontierPlayer,
+  type StoredMatchRow,
 } from "./crawl-store.ts";
 
 const logger = createLogger("participant-crawl");
@@ -187,6 +188,9 @@ export async function runCrawlTick(deps: CrawlDeps): Promise<CrawlTickResult> {
     return idleTickResult("budget-exhausted");
   }
 
+  // Read before any erased-player check, so the commit can tell whether an
+  // erasure landed after the checks this tick makes.
+  const erasureMark = await deps.store.erasureMark();
   const seed = await seedFromTrackedMatches(deps, start);
   const state: TickState = {
     rateLimited: false,
@@ -197,7 +201,7 @@ export async function runCrawlTick(deps: CrawlDeps): Promise<CrawlTickResult> {
     now: start,
     matchCap: Math.min(remaining, crawlMatchesPerTick(dailyBudget)),
   });
-  const segments = await writeAndCommit(deps, start, collected);
+  const segments = await writeAndCommit(deps, start, erasureMark, collected);
   await recordTickMetrics(deps, collected.stored);
 
   const status: CrawlTickStatus = state.rateLimited
@@ -248,6 +252,7 @@ async function collectFromPlayers(
 async function writeAndCommit(
   deps: CrawlDeps,
   now: Date,
+  erasureMark: number,
   collected: TickCollection,
 ): Promise<number> {
   const byRoute = Map.groupBy(
@@ -264,14 +269,26 @@ async function writeAndCommit(
     await deps.objects.putSegment(segment);
     segments.push({ segment, matches: entries.map((entry) => entry.row) });
   }
-  await deps.store.commit({
-    now,
-    segments,
-    visits: collected.visits,
-    children: collected.children.filter(
-      (child) => child.depth <= CRAWL_MAX_DEPTH,
-    ),
-  });
+  try {
+    await deps.store.commit({
+      now,
+      erasureMark,
+      segments,
+      visits: collected.visits,
+      children: collected.children.filter(
+        (child) => child.depth <= CRAWL_MAX_DEPTH,
+      ),
+    });
+  } catch (error) {
+    if (error instanceof CrawlErasureFenceError) {
+      // The objects are already in S3 but no row names them; the erasure
+      // sweep deletes them, since they may hold the newly erased player.
+      await deps.store.queueObjectDeletions(
+        segments.map(({ segment }) => segment.objectKey),
+      );
+    }
+    throw error;
+  }
   for (const { segment } of segments) {
     try {
       await deps.lakeInbox(segment);

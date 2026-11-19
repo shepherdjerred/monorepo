@@ -24,7 +24,10 @@ const FIXTURE = path.resolve(
 );
 
 const FixtureSchema = z.looseObject({
-  metadata: z.looseObject({ matchId: z.string() }),
+  metadata: z.looseObject({
+    matchId: z.string(),
+    participants: z.array(z.string()),
+  }),
   info: z.looseObject({
     participants: z.array(
       z.looseObject({ puuid: z.string(), participantId: z.number() }),
@@ -45,19 +48,48 @@ export async function crawlFixturePuuids(): Promise<string[]> {
   return loaded.info.participants.map((participant) => participant.puuid);
 }
 
+export type CrawlRecordOptions = {
+  crawledAt?: string;
+  withTimeline?: boolean;
+  /**
+   * Swap the last participant for this PUUID everywhere the record names
+   * them, so a test can erase one match's player without touching the rest.
+   */
+  player?: string;
+};
+
+/** A fixed 78-character PUUID no fixture participant has. */
+export function distinctCrawlPuuid(name: string): string {
+  return `erasure-test-${name}`.padEnd(78, "0");
+}
+
 export async function crawlRecord(
   matchId: string,
-  options: { crawledAt?: string; withTimeline?: boolean } = {},
+  options: CrawlRecordOptions = {},
 ): Promise<CrawlRecord> {
   const loaded = await loadFixture();
+  const last = loaded.info.participants.at(-1)?.puuid;
+  const swap = (puuid: string) =>
+    puuid === last && options.player !== undefined ? options.player : puuid;
   const match = structuredClone({
     ...loaded,
-    metadata: { ...loaded.metadata, matchId },
-    info: { ...loaded.info, queueId: 420 },
+    metadata: {
+      ...loaded.metadata,
+      matchId,
+      participants: loaded.metadata.participants.map((puuid) => swap(puuid)),
+    },
+    info: {
+      ...loaded.info,
+      queueId: 420,
+      participants: loaded.info.participants.map((participant) => ({
+        ...participant,
+        puuid: swap(participant.puuid),
+      })),
+    },
   });
   const participants = loaded.info.participants.map((participant) => ({
     participantId: participant.participantId,
-    puuid: LeaguePuuidSchema.parse(participant.puuid),
+    puuid: LeaguePuuidSchema.parse(swap(participant.puuid)),
   }));
   const [first] = participants;
   if (first === undefined) throw new Error("fixture has no participants");
@@ -100,6 +132,23 @@ export async function crawlSegment(
 ): Promise<EncodedSegment> {
   const records = await Promise.all(
     matchIds.map(async (matchId) => await crawlRecord(matchId, options)),
+  );
+  return encodeSegment({ route: "na1", dt, records });
+}
+
+/** A segment of matches, each optionally naming its own extra player. */
+export async function crawlSegmentOf(
+  dt: string,
+  matches: readonly {
+    matchId: z.input<typeof RiotMatchIdSchema>;
+    player?: string;
+  }[],
+): Promise<EncodedSegment> {
+  const records = await Promise.all(
+    matches.map(
+      async ({ matchId, player }) =>
+        await crawlRecord(matchId, player === undefined ? {} : { player }),
+    ),
   );
   return encodeSegment({ route: "na1", dt, records });
 }

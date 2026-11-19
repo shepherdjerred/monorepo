@@ -125,6 +125,7 @@ describe("PostgreSQL crawl store", () => {
     });
     await store.commit({
       now: NOW,
+      erasureMark: await store.erasureMark(),
       segments: [
         {
           segment,

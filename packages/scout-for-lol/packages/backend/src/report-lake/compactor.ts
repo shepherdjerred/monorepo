@@ -45,6 +45,11 @@ import { withUnpublishedBuildCleanup } from "#src/report-lake/fold/unpublished-b
 import { foldCrawlInbox } from "#src/report-lake/crawl/crawl-fold.ts";
 import { removeCrawlInboxSegments } from "#src/report-lake/crawl/crawl-inbox.ts";
 import { loadErasedPuuidHashes } from "#src/report-lake/crawl/crawl-sources.ts";
+import {
+  FOLD_RAW_ERASURE_SEGMENT_BUDGET,
+  runCrawlErasureStep,
+} from "#src/report-lake/crawl/crawl-erasure-step.ts";
+import { createConfiguredRawErasureObjects } from "#src/report-lake/crawl/crawl-raw-erasure-store.ts";
 
 const logger = createLogger("report-lake-compactor");
 
@@ -246,6 +251,15 @@ export async function runReportLakeFold(
           loadErased: async () => await loadErasedPuuidHashes(prisma),
           abortSignal: options.abortSignal,
         });
+        options.onProgress?.({ phase: "erasing-crawl" });
+        const crawlErasure = await runCrawlErasureStep({
+          prisma,
+          buildDir,
+          buildId,
+          segmentBudget: FOLD_RAW_ERASURE_SEGMENT_BUDGET,
+          objects: () => createConfiguredRawErasureObjects(options.abortSignal),
+          abortSignal: options.abortSignal,
+        });
         const accountRows = await writeAccountsParquet(
           prisma,
           buildDir,
@@ -284,6 +298,7 @@ export async function runReportLakeFold(
         await publishBuild(lakeDir, buildId, options.abortSignal);
         markPublished();
         publishCompactionMetrics(summary);
+        await crawlErasure.markPublished();
         await removeCrawlInboxSegments(crawlFold.consumed);
         await removeFoldedStagingFiles(
           lakeDir,
