@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, test } from "vitest";
+import { platformModel } from "homelab/src/platform-model.ts";
 import {
   againstDebt,
   loadFleet,
@@ -160,9 +161,11 @@ describe("fleet policy", () => {
     expect(fleet.serviceSelectors.length).toBeGreaterThan(50);
     expect(fleet.backendProbes.length).toBeGreaterThan(40);
     expect(configuredConnections(fleet).length).toBeGreaterThan(100);
-    expect(
-      fleet.objects.filter(({ kind }) => kind === "Ingress").length,
-    ).toBeGreaterThan(40);
+    expect(fleet.objects.filter(({ kind }) => kind === "Ingress").length).toBe(
+      platformModel.tailnetServices.filter(
+        (service) => service.exposure === "ingress",
+      ).length,
+    );
     expect(
       fleet.networkPolicies.filter(({ policyTypes }) =>
         policyTypes.includes("Egress"),

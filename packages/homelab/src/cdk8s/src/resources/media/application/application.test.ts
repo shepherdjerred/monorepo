@@ -15,7 +15,7 @@ import {
 beforeEach(resetProbeRegistry);
 const image = `docker.io/shepherdjerred/media@sha256:${"1".repeat(64)}`;
 
-test("installing Media preserves every existing stack resource", async () => {
+test("the default cutover uses the same complete resource inventory as its explicit Delivery recipe", async () => {
   const legacy = new App();
   await createMediaChart(legacy);
   const before = z
@@ -48,7 +48,7 @@ test("installing Media preserves every existing stack resource", async () => {
           candidate.metadata.name === resource.metadata.name,
       ),
     ).toEqual(resource);
-  expect(after.length).toBeGreaterThan(before.length);
+  expect(after).toEqual(before);
 });
 
 function resources(selection = image, bindSelection = false) {

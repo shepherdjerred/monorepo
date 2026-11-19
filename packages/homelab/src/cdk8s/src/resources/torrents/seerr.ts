@@ -1,5 +1,4 @@
 import type { Chart } from "cdk8s";
-import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import {
   Cpu,
@@ -13,8 +12,6 @@ import {
 } from "cdk8s-plus-31";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import {
   setRevisionHistoryLimit,
   restrictedContainer,
@@ -82,18 +79,8 @@ export function createSeerrDeployment(chart: Chart) {
 
   setRevisionHistoryLimit(deployment);
 
-  const service = new Service(chart, "seerr-service", {
+  new Service(chart, "seerr-service", {
     selector: deployment,
     ports: [{ port: SEERR_PORT }],
-  });
-
-  new TailscaleIngress(chart, "seerr-tailscale-ingress", {
-    service,
-    host: tailnetService("seerr"),
-  });
-
-  createCloudflareTunnelBinding(chart, "seerr-cf-tunnel", {
-    serviceName: service.name,
-    port: SEERR_PORT,
   });
 }

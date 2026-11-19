@@ -7,7 +7,7 @@ import {
   EnvValue,
   EnvFieldPaths,
   type ISecret,
-  type PersistentVolumeClaim,
+  PersistentVolumeClaim,
   Volume,
 } from "cdk8s-plus-31";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
@@ -133,6 +133,36 @@ export function createMediaActivityWorkers(
       MEDIA_TV_CONTROL_ROOT: EnvValue.fromValue("/data/tv/.media-control"),
     },
     volumeMounts: [
+      {
+        path: "/migration/seerr",
+        // The retired writer releases this retained claim before the sole
+        // Files reader uses it. Keep CSI rw; enforce container read-only.
+        volume: Volume.fromPersistentVolumeClaim(
+          chart,
+          "media-files-seerr-requests",
+          PersistentVolumeClaim.fromClaimName(
+            chart,
+            "media-files-seerr-claim",
+            "seerr-pvc",
+          ),
+        ),
+        readOnly: true,
+      },
+      {
+        path: "/migration/tautulli",
+        // Match the retained writer's rw CSI mount; enforce the migration
+        // reader's read-only access at the container bind mount instead.
+        volume: Volume.fromPersistentVolumeClaim(
+          chart,
+          "media-files-tautulli-history",
+          PersistentVolumeClaim.fromClaimName(
+            chart,
+            "media-files-tautulli-claim",
+            "tautulli-pvc",
+          ),
+        ),
+        readOnly: true,
+      },
       {
         path: "/downloads",
         volume: Volume.fromPersistentVolumeClaim(

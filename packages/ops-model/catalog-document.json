@@ -1614,7 +1614,7 @@
       "id": "tofu-arr",
       "title": "OpenTofu arr stack",
       "package": "homelab",
-      "lifecycle": "active",
+      "lifecycle": "retired",
       "selfHosted": false,
       "group": "gitops",
       "components": [
@@ -3263,8 +3263,9 @@
     {
       "id": "tofu-arr/prod",
       "role": "durable",
+      "lifecycle": "retired",
       "approvalPolicy": "none",
-      "automatic": true,
+      "automatic": false,
       "recipeRevisionId": "tofu-arr/prod/1",
       "configurationRevisionId": "tofu-arr/prod/1"
     },

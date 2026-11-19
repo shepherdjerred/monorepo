@@ -14,6 +14,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import { MEDIA_APPLICATION_LABEL } from "./environment.ts";
+import { platformModel } from "homelab/src/platform-model.ts";
 
 export function createMediaApplicationNetworkPolicies(chart: Chart): void {
   const database = postgresEgress("media-postgresql");
@@ -24,6 +25,22 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
       podSelector: { matchLabels: { app: "media-api" } },
       policyTypes: ["Ingress", "Egress"],
       ingress: [
+        {
+          // Actual upstream cloudflared identity, separate from its controller.
+          from: [
+            {
+              ...nsPeer("cloudflare-operator-system"),
+              podSelector: {
+                matchLabels: {
+                  "cfargotunnel.com/app": "cloudflared",
+                  "cfargotunnel.com/tunnel":
+                    platformModel.cloudflareTunnel.name,
+                },
+              },
+            },
+          ],
+          ports: [tcp(7352)],
+        },
         {
           from: [nsPeer("tailscale"), nsPeer("prometheus")],
           ports: [tcp(7352)],
