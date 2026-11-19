@@ -2491,6 +2491,41 @@ stored per UTC day.
   - Crawl files are listed in `LakeFiles.crawl` (with ingest day and size)
     only when the build's crawl schema is current. Every tracked read is
     byte-identical with or without them (`crawl-lake-isolation.test.ts`).
+- **Champion meta.** Builds, matchups and tier lists are computed from the
+  crawl, never from a live query.
+  - **Daily partials.** `compactCrawlDay` also writes
+    `meta_partials_crawl/ingest_day=…/partials-v<N>-<build>.parquet`
+    (`report-lake/crawl/meta-partials.ts`): additive `games`/`wins` counts per
+    patch, queue, rank tier and role for champion, ban, core item, starting
+    items, build path, rune, spell, skill order, matchup and item-versus-enemy
+    damage-profile. It is a sibling of the crawl tables, not one of them, so
+    retention, hardlink carry-over and erasure treat it as part of its day and
+    it is outside the crawl schema fingerprint; the version in the file name
+    makes a day at an older definition count as missing. Only Summoner's Rift
+    ranked solo, flex and normal draft count: Arena, Brawl, League Classic,
+    ARAM Mayhem and any augment game are excluded by the queue allowlist and
+    again by the augment columns. The rank is the visited player's.
+  - **Erasure.** A day whose files are rewritten re-derives its partials in
+    the same build (`runCrawlErasureStep`, `compactCrawlDay`), so a count never
+    outlives its match.
+  - **Roll-up.** `meta/meta-rollup.ts` sums the partials of a build's retained
+    days into `<build>/meta/v1/` — `manifest.json`, `tiers/<patch>/<queue>/<bracket>.json`,
+    `champions/<id>.json`, `matchups/<id>.json` (schema in `meta/meta-serving.ts`).
+    It runs inside the nightly rebuild after the erasure step, and again in a
+    fold build whose erasure rewrote a day, so the JSON is published by the
+    same `CURRENT` flip as the partials it was summed from. It replaces
+    `meta/v1` wholesale: a second run over the same partials writes identical
+    files. It adds no schedule; it rides the existing lake Workflows.
+    Rates are Wilson 95% intervals; a (champion, role) slice needs 100 games,
+    a build or rune entry 20, a matchup 30. Tier grades use the win-rate
+    interval's lower bound, and every slice states its patch, queue, bracket
+    and sample.
+  - **Serving.** `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:a/:b}`
+    (`http/meta-routes.ts`) and the Explore tools `lookup_champion_meta` and
+    `list_champion_tiers` read the serving JSON of `CURRENT` through
+    `meta/meta-reader.ts`, never the lake. The API is public and read-only,
+    answers with `ETag` and `Cache-Control: public, max-age=300`, returns
+    typed 404s, and allows 120 requests a minute per IP.
 - **Populations.** Lake source builders take `population: "tracked" | "all"`,
   default `tracked`. `all` unions the crawl branch by name: no dedupe window
   (the crawl stores a match once), anti-joined on every tracked match id so a

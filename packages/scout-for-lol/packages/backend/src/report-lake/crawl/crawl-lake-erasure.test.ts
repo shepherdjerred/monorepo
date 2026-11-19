@@ -190,6 +190,7 @@ describe("eraseCrawlMatchesInBuild", () => {
       matchesRemoved: 0,
       filesRewritten: 0,
       filesRemoved: 0,
+      daysTouched: [],
     });
     expect(await snapshot(build)).toEqual(settled);
     expect(await inodes(build)).toEqual(settledInodes);
@@ -225,7 +226,12 @@ describe("eraseCrawlMatchesInBuild", () => {
         buildId: "2",
         erased: new Set<string>(),
       }),
-    ).toEqual({ matchesRemoved: 0, filesRewritten: 0, filesRemoved: 0 });
+    ).toEqual({
+      matchesRemoved: 0,
+      filesRewritten: 0,
+      filesRemoved: 0,
+      daysTouched: [],
+    });
     expect(await inodes(build)).toEqual(linked);
   });
 });

@@ -47,6 +47,8 @@ export type CrawlLakeErasureSummary = {
   matchesRemoved: number;
   filesRewritten: number;
   filesRemoved: number;
+  /** Ingest days a file was rewritten or removed in; their partials are stale. */
+  daysTouched: string[];
 };
 
 export async function eraseCrawlMatchesInBuild(input: {
@@ -59,7 +61,9 @@ export async function eraseCrawlMatchesInBuild(input: {
     matchesRemoved: 0,
     filesRewritten: 0,
     filesRemoved: 0,
+    daysTouched: [],
   };
+  const touched = new Set<string>();
   const matchFiles = tableFiles(input.buildDir, "matches_crawl");
   if (input.erased.size === 0 || matchFiles.length === 0) return summary;
   return await withMaintenanceDuckDBConnection(
@@ -84,6 +88,8 @@ export async function eraseCrawlMatchesInBuild(input: {
         for (const row of holding) {
           input.abortSignal?.throwIfAborted();
           const file = FileRowSchema.parse(row).filename;
+          const day = /ingest_day=(\d{4}-\d{2}-\d{2})\//u.exec(file)?.[1];
+          if (day !== undefined) touched.add(day);
           const staged = path.join(
             input.buildDir,
             `.erase-${input.buildId}-${path.basename(file)}`,
@@ -102,6 +108,7 @@ export async function eraseCrawlMatchesInBuild(input: {
           }
         }
       }
+      summary.daysTouched = [...touched].toSorted();
       return summary;
     },
     {

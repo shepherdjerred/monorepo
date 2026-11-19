@@ -12,7 +12,13 @@ import {
   classifyRoute,
   statusClass,
 } from "#src/http/route-label.ts";
+import {
+  createMetaRateLimiter,
+  handleMetaRoute,
+} from "#src/http/meta-routes.ts";
 import { handleVersion } from "#src/http/version.ts";
+import { publishedMetaReader } from "#src/meta/published-meta-reader.ts";
+
 import { createLogger } from "#src/logger.ts";
 import { getMetrics } from "#src/metrics/index.ts";
 import { handleOperationsMachineRoute } from "#src/operations/machine-http.ts";
@@ -34,6 +40,11 @@ import * as Sentry from "@sentry/bun";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 const logger = createLogger("http-server");
+
+const metaRoutes = {
+  reader: publishedMetaReader,
+  limiter: createMetaRateLimiter(),
+};
 
 logger.info("🌐 Initializing HTTP server");
 
@@ -180,17 +191,30 @@ const server = Bun.serve({
 });
 
 /**
+ * The routes whose handlers own their whole path prefix and their own CORS:
+ * the desktop client, the bearer-authenticated operations console for agents
+ * (no CORS: it is not a browser surface, and the SPA keeps using tRPC with its
+ * session cookie) and the public read-only champion meta served from the
+ * published lake build.
+ */
+async function handleApiRoutes(
+  request: Request,
+  url: URL,
+): Promise<Response | null> {
+  return (
+    (await handleScoutClientRoute(request, url)) ??
+    (await handleOperationsMachineRoute(request, url)) ??
+    (await handleMetaRoute(request, url, metaRoutes))
+  );
+}
+
+/**
  * Route dispatch. Extracted from `fetch` so every response flows through
  * {@link withHttpMetrics}, including the 404 fallback and error paths.
  */
 async function dispatch(request: Request, url: URL): Promise<Response> {
-  const scoutClientResponse = await handleScoutClientRoute(request, url);
-  if (scoutClientResponse !== null) return scoutClientResponse;
-
-  // Bearer-authenticated operations console for agents. No CORS: it is not a
-  // browser surface, and the SPA keeps using tRPC with its session cookie.
-  const operationsResponse = await handleOperationsMachineRoute(request, url);
-  if (operationsResponse !== null) return operationsResponse;
+  const apiResponse = await handleApiRoutes(request, url);
+  if (apiResponse !== null) return apiResponse;
 
   // Handle CORS preflight requests
   if (request.method === "OPTIONS") {

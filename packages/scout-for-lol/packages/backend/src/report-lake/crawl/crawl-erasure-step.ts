@@ -6,6 +6,11 @@ import {
   type CrawlLakeErasureSummary,
 } from "#src/report-lake/crawl/crawl-lake-erasure.ts";
 import {
+  hasAnyPartials,
+  writeDayPartials,
+} from "#src/report-lake/crawl/meta-partials.ts";
+import { rollUpMeta } from "#src/meta/meta-rollup.ts";
+import {
   crawlManifestIsCurrent,
   readCrawlManifest,
 } from "#src/report-lake/crawl/crawl-manifest.ts";
@@ -25,7 +30,9 @@ import { createPrismaRawErasureStore } from "#src/report-lake/crawl/crawl-raw-er
  *    segment budget per run, resuming from each erasure's saved cursor;
  * 2. rewrite this build's crawl-table files without every match that names a
  *    player whose lake erasure is unfinished;
- * 3. point the build's ledger at the rewritten segments.
+ * 3. point the build's ledger at the rewritten segments;
+ * 4. re-derive the daily meta partials of every day step 2 rewrote, and roll
+ *    the serving JSON up again, so no count outlives the match it came from.
  *
  * After the caller publishes, `markPublished` records `lakeErasedAt` for the
  * hashes step 2 removed, which ends their query-time tombstone. The hashes are
@@ -46,6 +53,8 @@ export type CrawlErasureStepSummary = {
   raw: RawErasureSummary | undefined;
   lake: CrawlLakeErasureSummary | undefined;
   ledgerReplacements: number;
+  /** Days whose meta partials were re-derived after the lake rewrite. */
+  partialDays: string[];
   /** Hashes whose lake erasure `markPublished` will record. */
   lakeErased: string[];
 };
@@ -57,6 +66,11 @@ export async function runCrawlErasureStep(input: {
   segmentBudget: number;
   /** Built only when raw work is pending, so a lake without erasures needs no S3. */
   objects: () => RawErasureObjects;
+  /**
+   * Whether to roll the serving JSON up after re-deriving partials. The
+   * nightly rebuild rolls up itself, once, after this step.
+   */
+  rollUp?: boolean;
   abortSignal?: AbortSignal | undefined;
 }): Promise<{
   summary: CrawlErasureStepSummary;
@@ -89,6 +103,7 @@ export async function runCrawlErasureStep(input: {
   const stale = manifest !== undefined && !crawlManifestIsCurrent(manifest);
   let lake: CrawlLakeErasureSummary | undefined;
   let ledgerReplacements = 0;
+  const partialDays: string[] = [];
   if (!stale) {
     lake = await eraseCrawlMatchesInBuild({
       buildDir: input.buildDir,
@@ -100,11 +115,32 @@ export async function runCrawlErasureStep(input: {
       input.buildDir,
       raw?.replacements ?? [],
     );
+    // Today's day has no partials yet: compaction derives them once it is
+    // complete, from the already-erased files.
+    for (const day of lake.daysTouched) {
+      if (!(await hasAnyPartials(input.buildDir, day))) continue;
+      await writeDayPartials({
+        buildDir: input.buildDir,
+        buildId: input.buildId,
+        day,
+        abortSignal: input.abortSignal,
+      });
+      partialDays.push(day);
+    }
+    if (partialDays.length > 0 && input.rollUp !== false) {
+      await rollUpMeta({
+        buildDir: input.buildDir,
+        buildId: input.buildId,
+        now: new Date(),
+        abortSignal: input.abortSignal,
+      });
+    }
   }
   const summary: CrawlErasureStepSummary = {
     raw,
     lake,
     ledgerReplacements,
+    partialDays,
     lakeErased: stale ? [] : lakePending,
   };
   if (raw !== undefined || lakePending.length > 0) {

@@ -326,7 +326,11 @@ describe("compactCrawlDay erasure", () => {
       erased: new Set([puuidHash(erasedPuuid)]),
     });
 
-    expect(result).toEqual({ compacted: true, erasedMatches: 1 });
+    expect(result).toEqual({
+      compacted: true,
+      erasedMatches: 1,
+      partialsWritten: true,
+    });
     expect(files(build, "matches_crawl")).toEqual([]);
     expect(files(build, "timeline_events_crawl")).toEqual([]);
   });
@@ -351,7 +355,11 @@ describe("compactCrawlDay erasure", () => {
       day: YESTERDAY,
       erased: NO_ERASURES,
     });
-    expect(result).toEqual({ compacted: false, erasedMatches: 0 });
+    expect(result).toEqual({
+      compacted: false,
+      erasedMatches: 0,
+      partialsWritten: true,
+    });
     expect(files(build, "matches_crawl")).toEqual(settled);
   });
 });

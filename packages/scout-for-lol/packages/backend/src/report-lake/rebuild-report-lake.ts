@@ -45,6 +45,7 @@ import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts"
 import type { CompactionOptions } from "#src/report-lake/compaction-types.ts";
 import { foldCrawlInbox } from "#src/report-lake/crawl/crawl-fold.ts";
 import { removeCrawlInboxSegments } from "#src/report-lake/crawl/crawl-inbox.ts";
+import { rollUpMeta } from "#src/meta/meta-rollup.ts";
 import { maintainCrawlTables } from "#src/report-lake/crawl/crawl-maintenance.ts";
 import { sumCrawlRowCounts } from "#src/report-lake/crawl/crawl-parquet-writer.ts";
 import {
@@ -286,6 +287,14 @@ export async function rebuildReportLake(
       segmentBudget: REBUILD_RAW_ERASURE_SEGMENT_BUDGET,
       objects: () =>
         createS3RawErasureObjects({ client, bucket, abortSignal: deadline }),
+      rollUp: false,
+      abortSignal: deadline,
+    });
+    onProgress?.({ phase: "rolling-up-meta" });
+    const metaRollup = await rollUpMeta({
+      buildDir,
+      buildId,
+      now: new Date(),
       abortSignal: deadline,
     });
     if (crawlMaintenance.rebuiltDays.length > 0) {
@@ -293,6 +302,9 @@ export async function rebuildReportLake(
         `Rebuild re-derived crawl days ${crawlMaintenance.rebuiltDays.join(", ")}; compacted ${crawlMaintenance.compactedDays.length.toString()}, expired ${crawlMaintenance.expiredDays.length.toString()}`,
       );
     }
+    logger.info(
+      `Meta roll-up ${metaRollup.written ? `wrote ${metaRollup.slices.toString()} slices for ${metaRollup.champions.toString()} champions from ${metaRollup.days.toString()} days` : "found no partials"}`,
+    );
     deadline.throwIfAborted();
 
     const summary = {

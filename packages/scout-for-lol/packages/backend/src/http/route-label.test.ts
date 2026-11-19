@@ -20,6 +20,8 @@ describe("classifyRoute", () => {
     "/healthz",
     "/metrics",
     "/api/version",
+    "/api/meta/v1/manifest",
+    "/api/meta/v1/tiers",
     "/api/auth/discord/start",
     "/api/auth/discord/callback",
     "/api/auth/logout",
