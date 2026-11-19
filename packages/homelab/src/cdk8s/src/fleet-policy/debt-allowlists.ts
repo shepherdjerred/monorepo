@@ -16,8 +16,6 @@
  * every pod in the cluster can connect to them.
  */
 export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
-  "arcade/arcade",
-  "arcade/arcade-edge",
   "ddns/ddns",
   "gickup/gickup",
   "golink/golink",
@@ -41,7 +39,6 @@ export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
  */
 export const WORKLOADS_WITHOUT_EGRESS_POLICY: ReadonlySet<string> = new Set([
   "arcade/arcade",
-  "arcade/arcade-edge",
   "buildkitd/buildkitd",
   "ddns/ddns",
   "gickup/gickup",
