@@ -66,6 +66,11 @@ export const DEBT: Readonly<Record<RuleId, ReadonlySet<string>>> = {
 
   /** Tailnet names mentioned on one side that no workload publishes. */
   tailnetNamesWithoutDefinition: new Set([
+    // Archived Arr provider configuration/state is retained for recovery. Its
+    // retired environment admits no deployments; these are not live ingress claims.
+    "opentofu arr: prowlarr.tailnet-1a49.ts.net",
+    "opentofu arr: radarr.tailnet-1a49.ts.net",
+    "opentofu arr: sonarr.tailnet-1a49.ts.net",
     // A Turnstile widget domain for the beta forum, which has no release and
     // so renders no ingress.
     "opentofu cloudflare: storm-forum-beta.tailnet-1a49.ts.net",

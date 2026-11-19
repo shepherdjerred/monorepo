@@ -19,6 +19,51 @@ test("external library owner API retains session, origin and CSRF gates", async 
   await verifyExternalLibraryHttp(fixture().dependencies, headers);
 });
 
+test("public Media keeps canonical Origin and CSRF authority while the old owner HTML bookmark redirects", async () => {
+  const f = fixture();
+  const app = createMediaApp({
+    ...f.dependencies,
+    publicOrigin: "https://seerr.sjer.red",
+  });
+  const alias = await app.request(
+    "https://media.tailnet-1a49.ts.net/requests?view=mine",
+    { headers: { Accept: "text/html" } },
+  );
+  expect(alias.status).toBe(308);
+  expect(alias.headers.get("Location")).toBe(
+    "https://seerr.sjer.red/requests?view=mine",
+  );
+  for (const origin of [
+    "https://media.tailnet-1a49.ts.net",
+    "https://evil.example",
+  ]) {
+    const denied = await app.request("https://seerr.sjer.red/api/v1/requests", {
+      method: "POST",
+      headers: { ...headers, Origin: origin },
+      body: JSON.stringify({ mediaId: "media" }),
+    });
+    expect(denied.status).toBe(403);
+  }
+  const noCsrf = await app.request("https://seerr.sjer.red/api/v1/requests", {
+    method: "POST",
+    headers: {
+      ...headers,
+      Origin: "https://seerr.sjer.red",
+      "X-CSRF-Token": "wrong",
+    },
+    body: JSON.stringify({ mediaId: "media" }),
+  });
+  expect(noCsrf.status).toBe(403);
+  expect(f.createRequest).not.toHaveBeenCalled();
+  const allowed = await app.request("https://seerr.sjer.red/api/v1/requests", {
+    method: "POST",
+    headers: { ...headers, Origin: "https://seerr.sjer.red" },
+    body: JSON.stringify({ mediaId: "media" }),
+  });
+  expect(allowed.status).toBe(202);
+  expect(f.createRequest).toHaveBeenCalledOnce();
+});
+
 test("capacity route is registered behind normal session authentication", async () => {
   const { dependencies } = fixture();
   const app = createMediaApp(dependencies);

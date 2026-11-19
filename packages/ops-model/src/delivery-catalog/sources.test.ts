@@ -148,9 +148,42 @@ describe("agreement with the v1 definition sources", () => {
           : ["plan", "apply"],
       );
       expect(environments.get(environmentId)?.automatic).toBe(
-        mode !== "operator-only",
+        environments.get(environmentId)?.lifecycle === "active" &&
+          mode !== "operator-only",
       );
     }
+  });
+
+  test("Arr retirement preserves its recipe and configuration while admitting no automatic work or dependent apply", () => {
+    expect(
+      document.services.find((service) => service.id === "tofu-arr"),
+    ).toMatchObject({
+      lifecycle: "retired",
+      components: [{ name: "archive:tofu-arr", producer: "first-party" }],
+    });
+    expect(environments.get("tofu-arr/prod")).toMatchObject({
+      lifecycle: "retired",
+      automatic: false,
+      recipeRevisionId: "tofu-arr/prod/1",
+      configurationRevisionId: "tofu-arr/prod/1",
+    });
+    expect(recipeOf("tofu-arr/prod")).toMatchObject({
+      kind: "tofu",
+      stack: "arr",
+      steps: [{ kind: "plan" }, { kind: "apply" }],
+    });
+    expect(
+      document.configurations.some(
+        (configuration) => configuration.id === "tofu-arr/prod/1",
+      ),
+    ).toBe(true);
+    expect(
+      document.edges.filter((edge) => edge.prerequisite === "tofu-arr/prod"),
+    ).toEqual([]);
+    for (const environment of document.environments.filter(
+      (candidate) => candidate.lifecycle !== "active",
+    ))
+      expect(environment.automatic, environment.id).toBe(false);
   });
 
   test("platform policy prerequisites are prerequisite edges", () => {

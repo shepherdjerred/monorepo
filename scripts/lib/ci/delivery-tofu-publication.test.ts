@@ -52,7 +52,7 @@ afterEach(async () => {
 });
 
 describe("OpenTofu archive registration", () => {
-  test("registers one pending build per stack service, each owning exactly its archive", () => {
+  test("registers one pending build per active stack service, each owning exactly its archive", () => {
     const existing = PublishBuildSchema.parse({
       requestId: "ci/1/42/arcade",
       serviceId: "arcade",
@@ -68,7 +68,9 @@ describe("OpenTofu archive registration", () => {
       metadata,
     );
     expect(builds[0]).toBe(existing);
-    expect(builds).toHaveLength(1 + TofuStackSchema.options.length);
+    expect(builds).toHaveLength(
+      1 + TofuStackSchema.options.filter((stack) => stack !== "arr").length,
+    );
     const cloudflare = builds.find(
       (build) => build.serviceId === "tofu-cloudflare",
     );
@@ -94,7 +96,9 @@ describe("OpenTofu archive registration", () => {
     });
     expect(cloudflare?.platformChanges).toBeUndefined();
     expect(builds.slice(1).map((build) => build.serviceId)).toEqual(
-      TofuStackSchema.options.map((stack) => tofuArchiveServiceId(stack)),
+      TofuStackSchema.options
+        .filter((stack) => stack !== "arr")
+        .map((stack) => tofuArchiveServiceId(stack)),
     );
   });
 
@@ -215,4 +219,40 @@ describe("OpenTofu archive registration", () => {
       "Unknown OpenTofu stack: unknown",
     );
   });
+});
+
+test("retired Arr is still a required validated archive but never registers a new build", () => {
+  expect(
+    parseTofuArchivePublications(complete(), execution).some(
+      (entry) => entry.serviceId === "tofu-arr",
+    ),
+  ).toBe(true);
+  const builds = attachTofuArchivePublications([], complete(), metadata);
+  expect(builds.some((build) => build.serviceId === "tofu-arr")).toBe(false);
+  expect(() =>
+    attachTofuArchivePublications(
+      [],
+      complete().filter((entry) => entry.serviceId !== "tofu-arr"),
+      metadata,
+    ),
+  ).toThrow("missing stacks: arr");
+  const invalid = complete().map((entry) =>
+    entry.serviceId === "tofu-arr"
+      ? receipt("arr", {
+          uri: tofuArchiveUri("arr", `sha256:${"d".repeat(64)}`),
+        })
+      : entry,
+  );
+  expect(() => attachTofuArchivePublications([], invalid, metadata)).toThrow();
+  expect(() =>
+    attachTofuArchivePublications([], complete(), {
+      ...metadata,
+      catalog: {
+        ...CATALOG_CORE,
+        services: CATALOG_CORE.services.filter(
+          (service) => service.id !== "tofu-arr",
+        ),
+      },
+    }),
+  ).toThrow("requires a service catalog owner tofu-arr");
 });

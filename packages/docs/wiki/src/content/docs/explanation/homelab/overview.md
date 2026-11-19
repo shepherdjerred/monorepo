@@ -157,6 +157,42 @@ authorization boundary.
 Funnel, which would publish a tailnet service to the public internet, is
 deliberately never configured.
 
+### Media keeps the household address
+
+The existing public Seerr address opens authenticated Media, keeping household
+bookmarks stable when the application behind them changes.
+The [Media chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/media/media.ts)
+retains the old applications at zero replicas, including their configuration
+volumes and backup policy. Their obsolete private ingresses and probes are
+removed, while the existing public tunnel binding points to Media.
+
+This preserves recovery data without running two writers over the same library.
+Starting a retired writer again requires quiescing Media's corresponding writes
+first; retaining a volume does not make concurrent writers safe.
+
+The existing Files role mounts the retained Tautulli configuration volume at
+`/migration/tautulli`, read-only inside its container. This keeps the stopped
+writer's history available to the filtered playback migration reader without
+exposing that volume to the API or network role. The Files reader becomes the
+sole consumer after the old writer terminates and its mount is released.
+Its actual mount must be ready on the volume's node, read-only to the container,
+with settled SQLite WAL. The pod-level claim keeps the writer's mount flags.
+The [shared ZFS volume contract](/how-to/share-a-zfs-volume-between-pods/)
+requires sharing only for overlapping mounts; this handoff needs no sharing
+change.
+
+The former Arr configuration service is retired in the
+[service catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/ops-model/catalog-document.json).
+Its accepted selections, configuration recipe and OpenTofu state remain
+recoverable. CI still freezes its source archive, but registers no new build
+for the retired service and schedules no configuration apply.
+
+The [Media origin wiring](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/media/application/environment.ts)
+gives authentication callbacks and notification links the same public origin.
+The previous Media tailnet bookmark redirects HTML navigation there. Writes
+still require the canonical origin, a session and CSRF proof. Sessions remain
+host-scoped, so a browser signed into the previous address signs in again.
+
 ## Where state lives
 
 Persistent volumes are ZFS on OpenEBS, across an NVMe pool and an HDD pool. They

@@ -7,7 +7,7 @@ import type { PublishBuild } from "@shepherdjerred/delivery/contract";
 import {
   CATALOG_CORE,
   type CatalogCore,
-  catalogOwnsService,
+  catalogService,
 } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
@@ -95,7 +95,7 @@ export function parseTofuArchivePublications(
   });
 }
 
-/** One pending Delivery build per `tofu-<stack>` service, each owning its stack's exact archive. */
+/** Every archive is validated; only active catalog owners admit new builds. */
 export function attachTofuArchivePublications(
   publications: readonly PublishBuild[],
   artifacts: unknown,
@@ -113,8 +113,9 @@ export function attachTofuArchivePublications(
     repositoryId: input.repositoryId,
     pipelineNumber: input.pipelineNumber,
   });
-  const builds = entries.map((entry) => {
-    if (!catalogOwnsService(entry.serviceId, catalog))
+  const builds = entries.flatMap((entry) => {
+    const owner = catalogService(entry.serviceId, catalog);
+    if (owner === undefined)
       throw new Error(
         `OpenTofu archive ${entry.artifact.component} requires a service catalog owner ${entry.serviceId}`,
       );
@@ -122,15 +123,18 @@ export function attachTofuArchivePublications(
       throw new Error(
         `One CI pipeline cannot publish ${entry.serviceId} twice`,
       );
-    return PublishBuildSchema.parse({
-      requestId: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/${entry.serviceId}`,
-      serviceId: entry.serviceId,
-      sourceRevision: input.sourceRevision,
-      ciUrl: input.ciUrl,
-      verifiedAt: input.capturedAt,
-      artifacts: [entry.artifact],
-      retainedArtifactIds: [],
-    });
+    if (owner.lifecycle !== "active") return [];
+    return [
+      PublishBuildSchema.parse({
+        requestId: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/${entry.serviceId}`,
+        serviceId: entry.serviceId,
+        sourceRevision: input.sourceRevision,
+        ciUrl: input.ciUrl,
+        verifiedAt: input.capturedAt,
+        artifacts: [entry.artifact],
+        retainedArtifactIds: [],
+      }),
+    ];
   });
   return [...publications, ...builds];
 }

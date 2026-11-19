@@ -59,12 +59,7 @@ const TARGETS: readonly SnapshotTarget[] = [
     name: "sonarr",
     chart: "media",
     application: "media",
-    objects: [
-      "media-sonarr",
-      "sonarr-pvc",
-      "media-sonarr-service",
-      "media-sonarr-tailscale-ingress-ingress",
-    ],
+    objects: ["media-sonarr", "sonarr-pvc", "media-sonarr-service"],
   },
 ];
 

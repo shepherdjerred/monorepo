@@ -1,5 +1,6 @@
 import type { App } from "cdk8s";
-import { Chart, Size } from "cdk8s";
+import { ApiObject, Chart, JsonPatch, Size } from "cdk8s";
+import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-sata-volume.ts";
 import { createBazarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bazarr.ts";
 import { createTautulliDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/tautulli.ts";
@@ -27,8 +28,26 @@ import {
   intraNamespaceRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
-export async function createMediaChart(app: App, applicationImage?: string) {
+// Reversible cutover: keep the actual Deployments and all persistent state.
+export const RETIRED_MEDIA_DEPLOYMENTS = [
+  "media-bazarr",
+  "media-maintainerr",
+  "media-prowlarr",
+  "media-radarr",
+  "media-recyclarr",
+  "media-seerr",
+  "media-sonarr",
+  "media-tautulli",
+  "media-whisperbridge",
+];
+
+export async function createMediaChart(
+  app: App,
+  applicationImage = firstPartyImageRecipe("media"),
+) {
   const mediaImage = mediaImageReference(applicationImage);
+  if (mediaImage === undefined)
+    throw new Error("Media cutover requires its Delivery image recipe");
   const chart = new Chart(app, "media", {
     namespace: "media",
     disableResourceNameHashes: true,
@@ -91,16 +110,36 @@ export async function createMediaChart(app: App, applicationImage?: string) {
     publicProbePath: "/readyz",
   });
 
-  if (mediaImage !== undefined)
-    createUnifiedMediaApplication(chart, {
-      image: mediaImage,
-      claims: {
-        movies: moviesVolume.claim,
-        tv: tvVolume.claim,
-        downloads: downloadsVolume.claim,
-      },
-      plex: { serviceName: plex.service.name, tokenSecret: plex.tokenSecret },
-    });
+  createUnifiedMediaApplication(chart, {
+    image: mediaImage,
+    claims: {
+      movies: moviesVolume.claim,
+      tv: tvVolume.claim,
+      downloads: downloadsVolume.claim,
+    },
+    plex: { serviceName: plex.service.name, tokenSecret: plex.tokenSecret },
+  });
+  // Preserve this TunnelBinding's existing resource identity and finalizer.
+  createCloudflareTunnelBinding(chart, "seerr-cf-tunnel", {
+    serviceName: "media-api",
+    port: 7352,
+    probePath: "/readyz",
+    publicProbePath: "/readyz",
+  });
+
+  const remainingWriters = new Set(RETIRED_MEDIA_DEPLOYMENTS);
+  for (const construct of chart.node.findAll()) {
+    if (
+      ApiObject.isApiObject(construct) &&
+      construct.kind === "Deployment" &&
+      remainingWriters.delete(construct.name)
+    )
+      construct.addJsonPatch(JsonPatch.replace("/spec/replicas", 0));
+  }
+  if (remainingWriters.size > 0)
+    throw new Error(
+      `Missing legacy media writers: ${[...remainingWriters].join(", ")}`,
+    );
 
   // NetworkPolicy: Default deny ingress from outside namespace
   // Allows Tailscale, Cloudflare tunnel, intra-namespace, and Prometheus

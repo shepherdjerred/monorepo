@@ -10,7 +10,7 @@ import {
 } from "./workers.ts";
 import { createMediaApplicationNetworkPolicies } from "./network-policy.ts";
 
-/** Parallel installation. Existing media services and hostnames remain owned by their current resources. */
+/** Media owns the household API; the chart retains retired applications' persistent state. */
 export function createUnifiedMediaApplication(
   chart: Chart,
   props: {
