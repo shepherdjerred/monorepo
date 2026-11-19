@@ -132,11 +132,7 @@ export function createPostalChart(app: App) {
     metadata: { name: "postal-worker-netpol" },
     spec: {
       podSelector: { matchLabels: { app: "postal-worker" } },
-      policyTypes: ["Ingress", "Egress"],
-      // Prometheus scrapes the worker's health server (`postal` ServiceMonitor).
-      // The postfix relay sidecar is reached over localhost, which no policy
-      // governs.
-      ingress: [prometheusIngressRule([9090])],
+      policyTypes: ["Egress"],
       egress: [
         // Allow DNS
         dnsEgressRule(),
@@ -147,6 +143,18 @@ export function createPostalChart(app: App) {
           ports: [tcp(587)],
         },
       ],
+    },
+  });
+
+  // Only Prometheus reaches the worker, to scrape its health server (`postal`
+  // ServiceMonitor). The postfix relay sidecar is reached over localhost,
+  // which no policy governs.
+  new KubeNetworkPolicy(chart, "postal-worker-ingress-netpol", {
+    metadata: { name: "postal-worker-ingress-netpol" },
+    spec: {
+      podSelector: { matchLabels: { app: "postal-worker" } },
+      policyTypes: ["Ingress"],
+      ingress: [prometheusIngressRule([9090])],
     },
   });
 

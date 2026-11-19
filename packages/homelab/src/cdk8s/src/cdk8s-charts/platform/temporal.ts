@@ -338,9 +338,7 @@ export function createTemporalChart(app: App) {
       podSelector: {
         matchLabels: { app: "temporal-schema-migration" },
       },
-      // A run-to-completion Job that serves nothing: no ingress at all.
-      policyTypes: ["Ingress", "Egress"],
-      ingress: [],
+      policyTypes: ["Egress"],
       egress: [dnsEgressRule(), postgresEgress("temporal-postgresql")],
     },
   });
@@ -352,9 +350,7 @@ export function createTemporalChart(app: App) {
       podSelector: {
         matchLabels: { app: "temporal-namespace-init" },
       },
-      // A run-to-completion Job that serves nothing: no ingress at all.
-      policyTypes: ["Ingress", "Egress"],
-      ingress: [],
+      policyTypes: ["Egress"],
       egress: [
         dnsEgressRule(),
         // Temporal Server gRPC
@@ -369,6 +365,25 @@ export function createTemporalChart(app: App) {
           ports: [tcp(7233)],
         },
       ],
+    },
+  });
+
+  // The schema migration and namespace init are run-to-completion Jobs that
+  // serve nothing: no ingress at all.
+  new KubeNetworkPolicy(chart, "temporal-jobs-ingress-netpol", {
+    metadata: { name: "temporal-jobs-ingress-netpol" },
+    spec: {
+      podSelector: {
+        matchExpressions: [
+          {
+            key: "app",
+            operator: "In",
+            values: ["temporal-schema-migration", "temporal-namespace-init"],
+          },
+        ],
+      },
+      policyTypes: ["Ingress"],
+      ingress: [],
     },
   });
 
