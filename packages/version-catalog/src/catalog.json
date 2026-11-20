@@ -899,7 +899,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v3.19.0@sha256:6ca167a3c58b50c5a3c903dd8db92b39cfc30c560a47052cff7dd0235123a9cb"
+      "value": "v3.20.1@sha256:0f31560e29d67ec4a06d6eeee4bac38d2a2697a6a741b8a0db3998180f3a3517"
     },
     {
       "name": "woodpeckerci/woodpecker-agent",
@@ -911,7 +911,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v3.19.0@sha256:f85f163e09494ace3377a3f3a6043f131fb47e3e627f7438de42417ee06ca56d"
+      "value": "v3.20.1@sha256:a7d7299a13add0b3936fa0ac9ed23507fe283a7fc7d9596c4289d7e8206541eb"
     },
     {
       "name": "woodpecker-ci/plugin-git",
