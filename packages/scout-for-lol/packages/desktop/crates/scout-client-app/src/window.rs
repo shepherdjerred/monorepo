@@ -218,7 +218,8 @@ fn receive(inbox: &Mutex<Inbox>, error_gate: &SendGate, line: &str) -> Result<()
         | SupervisorMessage::ChatTranscript { .. }
         | SupervisorMessage::ChatTurn { .. }
         | SupervisorMessage::ChatImages { .. }
-        | SupervisorMessage::ChatComposer { .. } => {}
+        | SupervisorMessage::ChatComposer { .. }
+        | SupervisorMessage::ChatCoach { .. } => {}
     }
     Ok(())
 }

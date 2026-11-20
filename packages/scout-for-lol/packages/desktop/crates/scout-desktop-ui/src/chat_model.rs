@@ -5,9 +5,9 @@
 use std::collections::BTreeMap;
 
 use scout_desktop_ipc::{
-    ChatAttachment, ChatAvailability, ChatCommand, ChatDraftState, ChatImage, ChatMessage,
-    ChatParts, ChatRole, ChatToolStatus, ChatToolStep, ChatTranscript, ChatVersion, ChatVisuals,
-    StateSnapshot, UpdateSnapshot, WindowMessage,
+    ChatAttachment, ChatAvailability, ChatCoachKind, ChatCommand, ChatDraftState, ChatImage,
+    ChatMessage, ChatParts, ChatRole, ChatToolStatus, ChatToolStep, ChatTranscript, ChatVersion,
+    ChatVisuals, StateSnapshot, UpdateSnapshot, WindowMessage,
 };
 use uuid::Uuid;
 
@@ -372,6 +372,53 @@ pub struct ComposerModel {
     pub live_game: Option<LiveGameChip>,
 }
 
+/// What the coach panel says over a champion select.
+pub const COACH_CHAMP_SELECT_HEADING: &str = "Champion select";
+/// What the coach panel says over a game's start.
+pub const COACH_PREGAME_HEADING: &str = "Your game plan";
+
+/// The coach panel above the transcript: Scout's answer for champion select
+/// or the start of a game, with its options as chips. Picking a chip sends the
+/// same follow-up turn the chip on a transcript answer sends.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CoachPanelModel {
+    /// Which moment it is.
+    pub heading: &'static str,
+    /// The answer's Markdown text.
+    pub text: String,
+    /// The answer's options, as chips with the reason for each.
+    pub options: Vec<OptionChip>,
+}
+
+/// The panel for `parts`: the coach's answer in the open transcript. None
+/// while the coach has no answer to show, so Scout Coach being off shows
+/// nothing at all.
+fn coach_panel(parts: &ChatParts) -> Option<CoachPanelModel> {
+    let coach = parts.coach?;
+    let transcript = parts
+        .transcript
+        .as_ref()
+        .filter(|transcript| Some(transcript.conversation_id) == parts.status.open_conversation)?;
+    let message = transcript
+        .messages
+        .iter()
+        .find(|message| message.id == coach.message_id && message.role == ChatRole::Assistant)?;
+    let turn_running = parts.turn.is_some() || parts.composer.switching;
+    let mut options = option_chips(message, !turn_running);
+    for option in &mut options {
+        // The same answer's chips are not drawn twice on the page.
+        option.control.id = format!("coach-{}", option.control.id);
+    }
+    Some(CoachPanelModel {
+        heading: match coach.kind {
+            ChatCoachKind::ChampSelect => COACH_CHAMP_SELECT_HEADING,
+            ChatCoachKind::Pregame => COACH_PREGAME_HEADING,
+        },
+        text: message.content.clone(),
+        options,
+    })
+}
+
 /// An open or blank conversation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConversationModel {
@@ -381,6 +428,8 @@ pub struct ConversationModel {
     pub rows: Vec<TranscriptRow>,
     /// Whether the open conversation's transcript is still loading.
     pub loading: bool,
+    /// The coach panel, while Scout has coach advice for this moment.
+    pub coach: Option<CoachPanelModel>,
     /// The composer.
     pub composer: ComposerModel,
     /// Whether the run stream is reconnecting.
@@ -621,6 +670,9 @@ fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
     // Versions, Edit and Regenerate wait for a running turn, and for a
     // version switch that has not been read back yet.
     let turn_running = parts.turn.is_some() || parts.composer.switching;
+    // The coach panel holds its answer's chips; the transcript row does not
+    // repeat them.
+    let panelled = coach_panel(parts).and(parts.coach.map(|coach| coach.message_id));
     let mut rows: Vec<TranscriptRow> = parts
         .transcript
         .iter()
@@ -633,7 +685,11 @@ fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
             tools: tools(&message.tools),
             activity: None,
             caveats: message.caveats.clone(),
-            options: option_chips(message, !turn_running),
+            options: if panelled == Some(message.id) {
+                Vec::new()
+            } else {
+                option_chips(message, !turn_running)
+            },
             error: None,
             pictures: message
                 .visuals
@@ -877,6 +933,7 @@ impl ChatScreen {
         Self::Conversation(Box::new(ConversationModel {
             title,
             rows: rows(parts),
+            coach: coach_panel(parts),
             loading,
             composer: composer(parts, ui, open_transcript.is_some()),
             reconnecting: status.reconnecting,
@@ -1220,6 +1277,45 @@ mod tests {
 
     fn command(command: ChatCommand) -> UiAction {
         UiAction::Send(WindowMessage::Chat { command })
+    }
+
+    #[test]
+    fn the_coach_panel_holds_the_answer_and_its_chips_once() -> TestResult {
+        use scout_desktop_ipc::{ChatCoach, ChatCoachKind};
+
+        let mut parts = golden::coach_options()?.parts();
+        let plain = conversation(&parts)?;
+        assert_eq!(plain.coach, None, "no panel until the supervisor sends one");
+        assert!(plain.rows.iter().any(|row| !row.options.is_empty()));
+
+        parts.coach = Some(ChatCoach {
+            kind: ChatCoachKind::ChampSelect,
+            message_id: golden::COACH_ANSWER,
+        });
+        let model = conversation(&parts)?;
+        let panel = model.coach.ok_or("panel")?;
+        assert_eq!(panel.heading, super::COACH_CHAMP_SELECT_HEADING);
+        assert_eq!(panel.options.len(), 3);
+        assert_eq!(
+            panel.options[0].control.action,
+            command(ChatCommand::ChooseOption {
+                message_id: golden::COACH_ANSWER,
+                index: 0,
+            }),
+            "the chip sends the existing follow-up, never text"
+        );
+        assert!(
+            model.rows.iter().all(|row| row.options.is_empty()),
+            "the transcript does not draw the chips again"
+        );
+
+        // A panel for an answer that is not on screen shows nothing.
+        parts.coach = Some(ChatCoach {
+            kind: ChatCoachKind::Pregame,
+            message_id: Uuid::from_u128(0xdead),
+        });
+        assert_eq!(conversation(&parts)?.coach, None);
+        Ok(())
     }
 
     #[test]

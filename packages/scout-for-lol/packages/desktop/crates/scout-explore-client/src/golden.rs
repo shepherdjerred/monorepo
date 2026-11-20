@@ -245,6 +245,15 @@ pub fn visuals() -> Result<ChatSession, GoldenError> {
     Ok(session)
 }
 
+/// The golden champion-select answer's conversation, as `conversations/get`
+/// answers it.
+///
+/// # Errors
+/// The golden transcript does not parse.
+pub fn coach_transcript() -> Result<Transcript, GoldenError> {
+    Ok(serde_json::from_value(response(CONVERSATIONS_GET_COACH)?)?)
+}
+
 /// A session showing a champion-select answer that offers three options.
 ///
 /// # Errors

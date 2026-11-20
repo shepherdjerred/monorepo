@@ -78,9 +78,9 @@ The two talk over the child's stdio, one JSON object per line, tagged by
 `type` (`scout-desktop-ipc`). The supervisor sends a `hello` with the protocol
 version and whether a tray exists, then `state` snapshots (the runtime state
 plus diagnostics counters and recent events), `phase` changes, `update` (the
-self-update state), the six chat parts (`chat_status`,
+self-update state), the seven chat parts (`chat_status`,
 `chat_conversations`, `chat_transcript`, `chat_turn`, `chat_images`,
-`chat_composer`; see
+`chat_composer`, `chat_coach`; see
 "Explore chat"), `voice` and `voice_turn` (see "Voice"), the
 diagnostics bundle on request, `show`, and `close`. The window sends its own
 `hello`, then `pair`, `disconnect`, `open_url` (http and https only),
@@ -329,7 +329,7 @@ already holds the device credential for uploads, and the window renders on
 the GPU and can be lost with it, so the bearer never enters the window
 process. Only when the `gpui-kit` window is selected does the supervisor
 start a `ChatRelay`; it asks Scout nothing until a window opens. The window
-sends `chat` commands and renders six parts, each sent only when it changes,
+sends `chat` commands and renders seven parts, each sent only when it changes,
 so a streamed answer re-sends only the in-flight turn, a picture landing
 re-sends only `chat_images`, and a draft or model change only `chat_composer`
 (`ChatParts::changes_since`). The parts carry no bearer, query text or raw
@@ -1053,7 +1053,7 @@ stays in memory on the device to time the game start.
 | Explore chat questions                                       | Yes, to the Scout API      | When you send one                                                                                                                                                                     | Not sending                      |
 | Error reports                                                | Yes, to Bugsink, scrubbed  | On an error or crash                                                                                                                                                                  | **Send error reports**           |
 | Usage events                                                 | Yes, through the Scout API | On a product event                                                                                                                                                                    | **Send usage data**              |
-| Champion select (`live::champ_select` projection)            | No                         | Not collected yet                                                                                                                                                                     | Never sent                       |
+| Champion select (`live::champ_select` projection)            | Yes, to the Scout API      | While you are in champion select: champion IDs and bans only, never a summoner or Riot ID, when a pick or ban settles, or with a question you type                                    | Scout Coach off for your account |
 | Microphone audio while listening (`scout-voice`)             | No                         | Never: listening for "hey scout" runs on this computer, and audio that is not a question is dropped as it arrives                                                                     | Never sent                       |
 | A spoken question                                            | Yes, to the Scout API      | Only as a finished utterance: one WAV per question, after "hey scout" or while push-to-talk is held, sent to `coach/voice/turns` once you stop speaking; the microphone never streams | Voice consent, mute              |
 | Spoken answers                                               | No, they arrive            | Played on this computer as they stream in; nothing is kept                                                                                                                            | Voice consent                    |
@@ -1066,14 +1066,23 @@ its own latest allowlisted snapshot, projected to
 (`PlayerAuthored` in `scout-explore-client`). An edit or a regenerate never
 carries it, and the server's coach policy decides what of it Explore may read.
 
-Scout can also ask for coaching itself, from `scout-explore-client`'s
-`app_turns` planner: champion-select advice when a pick or ban changes (at most
-4 per champion select) and the plan when a game first reaches `InProgress`.
+Scout can also ask for coaching itself. While gameflow is `ChampSelect` the
+collector reads the select through `LcuSource` and publishes the allowlisted
+projection on the runtime snapshot. The supervisor's coach (`supervisor/coach.rs`)
+holds each change still for three seconds, then hands `scout-explore-client`'s
+`app_turns` planner the screen: at most 4 turns per champion select, and one plan
+when the first live frame of a game arrives within two minutes of it starting.
 These turns go to `runs/start-app` with only the champion-select or loading
 screen section, never the live snapshot and never text; the server enforces the
-same limits. The supervisor does not collect the champion-select screen yet, so
-nothing starts these turns from the client today. Options an answer offers appear as chips, and picking one asks
-Scout about that option from the saved answer without the game.
+same limits and words the question itself. A question you type during champion
+select carries the same projection; it never carries the live snapshot.
+
+The answer lands in its own conversation (one per select and one per game) and
+the chat page shows it in a coach panel above the transcript, with its options
+as chips; picking one sends the same follow-up turn as a transcript chip. The
+panel comes down when the game ends. When Scout answers `feature_disabled`
+(`scout_desktop_coach` is off for your account), the relay stops starting turns,
+shows nothing and asks again after the next refresh.
 
 ## Diagnostics
 

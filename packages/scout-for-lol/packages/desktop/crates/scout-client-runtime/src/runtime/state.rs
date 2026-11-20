@@ -1,6 +1,7 @@
 //! The published runtime snapshot and its typed gameflow phase.
 
 use scout_client_core::backend::BackendError;
+use scout_client_core::live::champ_select::ChampSelectSnapshot;
 use scout_client_core::live::snapshot::LiveSnapshot;
 use scout_client_core::settings::PrivacySettings;
 use tokio::sync::watch;
@@ -76,6 +77,9 @@ pub struct RuntimeState {
     /// The allowlisted live game state while a game is in progress and
     /// serving data.
     pub live_game: Option<LiveSnapshot>,
+    /// What the champion-select screen shows, while gameflow is in champion
+    /// select. It has no summoner or Riot identity.
+    pub champ_select: Option<ChampSelectSnapshot>,
     last_runtime_error: Option<String>,
     last_replay_error: Option<String>,
 }

@@ -142,6 +142,28 @@ pub struct ChatCoachOption {
     pub rationale: String,
 }
 
+/// Which coach moment the panel above the chat shows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ChatCoachKind {
+    /// Advice for the pick or ban in champion select.
+    ChampSelect,
+    /// The plan for the game that just began.
+    Pregame,
+}
+
+/// The coach panel: the answer Scout gave for champion select or the start of
+/// a game. The window finds the answer, and its option chips, in the open
+/// transcript by `message_id`; no text crosses twice.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChatCoach {
+    /// Which moment it is.
+    pub kind: ChatCoachKind,
+    /// The answer, a message of the open transcript.
+    pub message_id: Uuid,
+}
+
 /// One persisted message on the open branch.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -335,7 +357,7 @@ pub enum ChatCommand {
     },
 }
 
-/// Everything chat renders: the six parts the supervisor sends.
+/// Everything chat renders: the seven parts the supervisor sends.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ChatParts {
     /// Availability, connection and notice.
@@ -350,6 +372,9 @@ pub struct ChatParts {
     pub images: BTreeMap<String, ChatImage>,
     /// The composer's images and model choice.
     pub composer: ChatComposer,
+    /// The coach panel; none outside champion select and a game's start, and
+    /// while Scout Coach is turned off.
+    pub coach: Option<ChatCoach>,
 }
 
 impl ChatParts {
@@ -389,6 +414,9 @@ impl ChatParts {
                 composer: self.composer.clone(),
             });
         }
+        if changed(|now, then| now.coach != then.coach) {
+            messages.push(SupervisorMessage::ChatCoach { coach: self.coach });
+        }
         messages
     }
 
@@ -403,6 +431,7 @@ impl ChatParts {
             SupervisorMessage::ChatTurn { turn } => self.turn = turn,
             SupervisorMessage::ChatImages { images } => self.images = images,
             SupervisorMessage::ChatComposer { composer } => self.composer = composer,
+            SupervisorMessage::ChatCoach { coach } => self.coach = coach,
             _ => return false,
         }
         true
@@ -417,7 +446,7 @@ mod tests {
     #[test]
     fn a_new_window_gets_every_part_and_a_delta_only_what_changed() {
         let before = ChatParts::default();
-        assert_eq!(before.changes_since(None).len(), 6);
+        assert_eq!(before.changes_since(None).len(), 7);
         assert_eq!(before.changes_since(Some(&before)), []);
 
         let streaming = ChatParts {

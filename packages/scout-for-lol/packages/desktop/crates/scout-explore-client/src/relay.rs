@@ -15,12 +15,14 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use scout_client_core::coach_context::GameContext;
 use scout_client_core::desktop_api::{
-    ActiveRun, ConversationListResponse, ModelsResponse, RunStartRequest,
+    ActiveRun, AppTurnRequest, ConversationListResponse, ModelsResponse, RunStartRequest,
 };
+use scout_client_core::live::champ_select::ChampSelectSnapshot;
 use scout_client_core::live::snapshot::LiveSnapshot;
 use scout_desktop_ipc::{ChatAvailability, ChatCommand, ChatImage, ChatParts};
 use tokio::sync::{Semaphore, mpsc, watch};
@@ -28,12 +30,13 @@ use tokio::task::JoinHandle;
 use url::Url;
 use uuid::Uuid;
 
+use crate::app_turns::CoachInput;
 use crate::asset_cache::{AssetCache, DEFAULT_CAPACITY_BYTES};
 use crate::authored::PlayerAuthored;
 use crate::client::ExploreClient;
 use crate::contract::Route;
 use crate::data_dragon::{DATA_DRAGON_HOST, DataDragon, champion_list_url, rune_list_url};
-use crate::error::ExploreClientError;
+use crate::error::{ExploreClientError, Recovery};
 use crate::model::{Attachment, Transcript};
 use crate::session::{AttachJob, ChatSession, UploadFailure, load_image};
 use crate::stream::{StreamEnd, StreamOptions, StreamSignal};
@@ -184,13 +187,34 @@ pub struct RelayCommand {
     /// composer chip asked to use the live game while one was live; none
     /// otherwise.
     pub live_game: Option<LiveSnapshot>,
+    /// What the champion-select screen shows while it is open, for a `send`:
+    /// the player asked while choosing, so the question may carry it.
+    pub champ_select: Option<ChampSelectSnapshot>,
 }
 
 /// The supervisor's handle on the chat relay.
 #[derive(Debug, Clone)]
 pub struct ChatRelay {
     commands: mpsc::UnboundedSender<RelayCommand>,
+    coach: mpsc::UnboundedSender<CoachInput>,
+    /// Cleared when Scout says the coach is off for this player; set again
+    /// by the next refresh.
+    coach_enabled: Arc<AtomicBool>,
     parts: watch::Receiver<ChatParts>,
+}
+
+/// What a relay with nothing behind it hands the test that drives it.
+pub struct DetachedRelay {
+    /// The relay the supervisor holds.
+    pub relay: ChatRelay,
+    /// The window commands it was given.
+    pub commands: mpsc::UnboundedReceiver<RelayCommand>,
+    /// The coach's turns, and the end of one.
+    pub coach: mpsc::UnboundedReceiver<CoachInput>,
+    /// Publishes the parts the supervisor reads.
+    pub parts: watch::Sender<ChatParts>,
+    /// What the relay would set when Scout says the coach is off.
+    pub coach_enabled: Arc<AtomicBool>,
 }
 
 impl ChatRelay {
@@ -200,8 +224,22 @@ impl ChatRelay {
     /// opens.
     #[must_use]
     pub fn spawn(origin: String, cache_directory: PathBuf) -> Self {
-        let (relay, commands, parts) = Self::detached();
-        tokio::spawn(run(origin, cache_directory, commands, parts));
+        let DetachedRelay {
+            relay,
+            commands,
+            coach,
+            parts,
+            ..
+        } = Self::detached_coach();
+        let enabled = Arc::clone(&relay.coach_enabled);
+        tokio::spawn(run(
+            origin,
+            cache_directory,
+            commands,
+            coach,
+            enabled,
+            parts,
+        ));
         relay
     }
 
@@ -213,16 +251,34 @@ impl ChatRelay {
         mpsc::UnboundedReceiver<RelayCommand>,
         watch::Sender<ChatParts>,
     ) {
+        let DetachedRelay {
+            relay,
+            commands,
+            parts,
+            ..
+        } = Self::detached_coach();
+        (relay, commands, parts)
+    }
+
+    /// [`Self::detached`], with the coach's turns to read as well.
+    #[must_use]
+    pub fn detached_coach() -> DetachedRelay {
         let (commands, receiver) = mpsc::unbounded_channel();
+        let (coach, coach_receiver) = mpsc::unbounded_channel();
         let (parts, watcher) = watch::channel(ChatParts::default());
-        (
-            Self {
+        let coach_enabled = Arc::new(AtomicBool::new(true));
+        DetachedRelay {
+            relay: Self {
                 commands,
+                coach,
+                coach_enabled: Arc::clone(&coach_enabled),
                 parts: watcher,
             },
-            receiver,
+            commands: receiver,
+            coach: coach_receiver,
             parts,
-        )
+            coach_enabled,
+        }
     }
 
     /// Pass one window command on. A relay that has stopped drops it: the
@@ -234,9 +290,36 @@ impl ChatRelay {
     /// Pass one window command on with the game in progress. The relay
     /// attaches `live_game` only to a `send` whose chip asked for it.
     pub fn send_with_live_game(&self, command: ChatCommand, live_game: Option<LiveSnapshot>) {
+        self.send_with_game(command, live_game, None);
+    }
+
+    /// Pass one window command on with the game around it: the live game, or
+    /// the champion-select screen. Only a `send` carries either.
+    pub fn send_with_game(
+        &self,
+        command: ChatCommand,
+        live_game: Option<LiveSnapshot>,
+        champ_select: Option<ChampSelectSnapshot>,
+    ) {
         // A send fails only once the relay's task has ended, which happens
         // when the supervisor drops its runtime on the way out.
-        let _stopped = self.commands.send(RelayCommand { command, live_game });
+        let _stopped = self.commands.send(RelayCommand {
+            command,
+            live_game,
+            champ_select,
+        });
+    }
+
+    /// Hand the relay a coach turn, or the end of one.
+    pub fn coach(&self, input: CoachInput) {
+        let _stopped = self.coach.send(input);
+    }
+
+    /// Whether Scout Coach may start turns for this player: true until Scout
+    /// says it is turned off, and again after the next refresh.
+    #[must_use]
+    pub fn coach_enabled(&self) -> bool {
+        self.coach_enabled.load(Ordering::Relaxed)
     }
 
     /// Follow what the window should render.
@@ -249,6 +332,18 @@ impl ChatRelay {
     #[must_use]
     pub fn upgrade_required(&self) -> bool {
         self.parts.borrow().status.availability == ChatAvailability::UpgradeRequired
+    }
+}
+
+/// The champion-select screen as the coach contract carries it, or none when
+/// this screen breaks a bound Scout would refuse.
+fn champ_select_context(snapshot: &ChampSelectSnapshot) -> Option<GameContext> {
+    match GameContext::champ_select(snapshot) {
+        Ok(game) => Some(game),
+        Err(error) => {
+            tracing::warn!(%error, "sending the question without the champion select");
+            None
+        }
     }
 }
 
@@ -277,6 +372,8 @@ enum Answer {
     /// The transcript read back after a version switch.
     Switched(Result<Transcript, ExploreClientError>),
     Started(Result<ActiveRun, ExploreClientError>),
+    /// `runs/start-app` answered for a turn Scout asked for.
+    AppStarted(Result<ActiveRun, ExploreClientError>),
     Models(Result<ModelsResponse, ExploreClientError>),
     Uploaded(Uuid, Result<Attachment, UploadFailure>),
     /// A version switch, share or revoke finished; the conversation's
@@ -303,6 +400,7 @@ struct Relay {
     client: Option<ExploreClient>,
     answers: mpsc::UnboundedSender<Answer>,
     follow: Option<JoinHandle<()>>,
+    coach_enabled: Arc<AtomicBool>,
     pictures: Arc<Pictures>,
     /// Picture keys already asked for, so each is fetched once.
     requested: HashSet<String>,
@@ -312,6 +410,8 @@ async fn run(
     origin: String,
     cache_directory: PathBuf,
     mut commands: mpsc::UnboundedReceiver<RelayCommand>,
+    mut coach: mpsc::UnboundedReceiver<CoachInput>,
+    coach_enabled: Arc<AtomicBool>,
     parts: watch::Sender<ChatParts>,
 ) {
     let (answers, mut answered) = mpsc::unbounded_channel();
@@ -322,6 +422,7 @@ async fn run(
         client: None,
         answers,
         follow: None,
+        coach_enabled,
         pictures: Arc::new(Pictures::open(cache_directory)),
         requested: HashSet::new(),
     };
@@ -331,6 +432,7 @@ async fn run(
                 Some(command) => relay.command(command),
                 None => break,
             },
+            Some(input) = coach.recv() => relay.coach_input(input),
             Some(answer) = answered.recv() => relay.answer(answer),
         }
         relay.fetch_pictures();
@@ -351,9 +453,18 @@ async fn run(
 
 impl Relay {
     fn command(&mut self, input: RelayCommand) {
-        let RelayCommand { command, live_game } = input;
+        let RelayCommand {
+            command,
+            live_game,
+            champ_select,
+        } = input;
         match command {
-            ChatCommand::Refresh => self.refresh(),
+            ChatCommand::Refresh => {
+                // Pairing, a new window or a retry: ask whether the coach is
+                // on again.
+                self.coach_enabled.store(true, Ordering::Relaxed);
+                self.refresh();
+            }
             ChatCommand::Open { conversation_id } => {
                 // Looking again retries what failed to load last time.
                 for key in self.session.forget_failed_images() {
@@ -367,18 +478,7 @@ impl Relay {
             ChatCommand::Send {
                 question,
                 live_game: use_live_game,
-            } => {
-                // The composer's `send` is the only text the player typed.
-                let question = PlayerAuthored::from_composer(question);
-                let game = live_game
-                    .filter(|_| use_live_game)
-                    .and_then(|snapshot| live_context(&snapshot));
-                let request = match game {
-                    Some(game) => self.session.submit_with_game(&question, game),
-                    None => self.session.submit(question.get()),
-                };
-                self.start(request);
-            }
+            } => self.send(question, live_game.filter(|_| use_live_game), champ_select),
             ChatCommand::Edit {
                 message_id,
                 question,
@@ -453,6 +553,58 @@ impl Relay {
                 }
             }
         }
+    }
+
+    /// The composer's question, with the game around it when the player is in
+    /// one: the live game if the chip asked for it, else the champion-select
+    /// screen while the coach is on.
+    fn send(
+        &mut self,
+        question: String,
+        live_game: Option<LiveSnapshot>,
+        champ_select: Option<ChampSelectSnapshot>,
+    ) {
+        // The composer's `send` is the only text the player typed.
+        let question = PlayerAuthored::from_composer(question);
+        let game = live_game
+            .and_then(|snapshot| live_context(&snapshot))
+            .or_else(|| {
+                champ_select
+                    .filter(|_| self.coach_enabled.load(Ordering::Relaxed))
+                    .and_then(|select| champ_select_context(&select))
+            });
+        let request = match game {
+            Some(game) => self.session.submit_with_game(&question, game),
+            None => self.session.submit(question.get()),
+        };
+        self.start(request);
+    }
+
+    /// A turn Scout asks for itself, or the end of one. Nothing starts while
+    /// Scout says the coach is off, or before a credential is read.
+    fn coach_input(&mut self, input: CoachInput) {
+        match input {
+            CoachInput::Clear => self.session.clear_coach(),
+            CoachInput::Turn(turn) => {
+                if !self.coach_enabled.load(Ordering::Relaxed) {
+                    return;
+                }
+                let Some(client) = self.client.clone() else {
+                    return;
+                };
+                let Some(request) = self.session.begin_app_turn(&turn) else {
+                    return;
+                };
+                self.start_app(client, request);
+            }
+        }
+    }
+
+    fn start_app(&self, client: ExploreClient, request: AppTurnRequest) {
+        let answers = self.answers.clone();
+        tokio::spawn(async move {
+            let _ = answers.send(Answer::AppStarted(client.start_app_run(&request).await));
+        });
     }
 
     /// Start the turn a command asked for, if the session allowed it.
@@ -586,12 +738,21 @@ impl Relay {
             Answer::Opened(_, Err(error)) | Answer::Failed(error) => {
                 self.session.request_failed(&error);
             }
-            Answer::Started(Ok(run)) => {
+            Answer::Started(Ok(run)) | Answer::AppStarted(Ok(run)) => {
                 let run_id = run.run_id;
                 self.session.started(run);
                 self.follow_run(run_id);
             }
             Answer::Started(Err(error)) => self.session.start_failed(&error),
+            Answer::AppStarted(Err(error)) => {
+                if error.recovery() == Some(Recovery::FeatureDisabled) {
+                    // Scout Coach is off for this player: show nothing and
+                    // stop asking until the next refresh.
+                    self.coach_enabled.store(false, Ordering::Relaxed);
+                    self.session.clear_coach();
+                }
+                self.session.app_turn_failed(&error);
+            }
             Answer::Models(Ok(models)) => self.session.models_loaded(models),
             Answer::Models(Err(error)) => self.session.request_failed(&error),
             Answer::Uploaded(key, result) => {

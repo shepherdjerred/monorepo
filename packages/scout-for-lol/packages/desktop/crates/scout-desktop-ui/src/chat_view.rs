@@ -9,7 +9,8 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::chat_model::{
-    ChatScreen, ComposerModel, ConversationModel, EMPTY_HINT, GateModel, RECONNECTING_LABEL,
+    ChatScreen, CoachPanelModel, ComposerModel, ConversationModel, EMPTY_HINT, GateModel,
+    RECONNECTING_LABEL,
 };
 use crate::kit::prelude::{IntoElement, ParentElement as _, Styled as _};
 use crate::kit::{
@@ -146,6 +147,7 @@ fn conversation(model: ConversationModel, controls: ChatControls<'_>) -> impl In
             )))
         }))
         .children(voice_turn.map(voice_strip))
+        .children(model.coach.map(|panel| coach_panel(panel, &handler)))
         .child(column().flex_1().min_h_0().child(body))
         .children(
             model
@@ -160,6 +162,34 @@ fn conversation(model: ConversationModel, controls: ChatControls<'_>) -> impl In
             &handler,
             on_images,
         ))
+}
+
+/// Scout's coaching for champion select or the start of a game: its answer,
+/// and the options as chips to pick from, each with its reason.
+fn coach_panel(panel: CoachPanelModel, handler: &ControlHandler) -> impl IntoElement {
+    column()
+        .px_6()
+        .pb_3()
+        .gap_2()
+        .child(section_heading(panel.heading))
+        .child(body_text(panel.text))
+        .child(
+            row()
+                .gap_3()
+                .flex_wrap()
+                .items_start()
+                .children(panel.options.into_iter().map(|option| {
+                    column()
+                        .max_w(gpui::px(220.))
+                        .gap_1()
+                        .child(control_button(
+                            &option.control,
+                            ButtonStyle::Secondary,
+                            handler,
+                        ))
+                        .child(note_text(option.rationale))
+                })),
+        )
 }
 
 /// The latest spoken turn: what Scout heard, its answer, or why it stopped.

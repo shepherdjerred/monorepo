@@ -22,6 +22,7 @@ use tokio::runtime::Runtime;
 use tokio::sync::{mpsc, watch};
 use tracing::info;
 
+mod champ_select;
 mod clash;
 mod collection;
 mod collector;

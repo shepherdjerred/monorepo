@@ -28,6 +28,15 @@ pub struct AppTurn {
     pub context: GameContext,
 }
 
+/// What the supervisor's coach asks of the chat relay.
+#[derive(Debug, Clone, PartialEq)]
+pub enum CoachInput {
+    /// Start this turn.
+    Turn(Box<AppTurn>),
+    /// The select or game is over: take the coach panel down.
+    Clear,
+}
+
 /// What a champion select's pick and ban state looks like: a change in any of
 /// these is a reason to offer advice again; a timer tick or a hover is not.
 #[derive(Debug, Clone, PartialEq, Eq)]
