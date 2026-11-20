@@ -115,6 +115,7 @@ const app = createApp({
     origin: bootstrap.WOODPECKER_URL,
     repositoryId: bootstrap.WOODPECKER_REPO_ID,
     token: bootstrap.WOODPECKER_TOKEN,
+    recordSourceCommit: (report) => delivery.recordSourceCommit(report),
   }),
   inspectRecovery: createRecoveryInspector({
     readApplication,

@@ -509,6 +509,18 @@ model Audit {
   @@index([occurredAt(sort: Desc), id(sort: Desc)])
 }
 
+/// A main commit's title and author as Woodpecker reported them when a build of it was qualified. Display only: nothing decides on it.
+model SourceCommit {
+  sourceRevision String   @id
+  /// First line of the commit message; null when Woodpecker reported an empty message.
+  title          String?
+  /// Woodpecker's pipeline author, the forge account behind the push; null when it reported none.
+  author         String?
+  /// The exact main push pipeline the values were read from.
+  pipelineNumber Int
+  recordedAt     DateTime @default(now())
+}
+
 model IntegrationSnapshot {
   source    String
   key       String

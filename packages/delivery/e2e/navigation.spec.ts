@@ -5,6 +5,7 @@ import {
 } from "#shared/hub/hub-contract.ts";
 import { DeploymentSchema } from "#shared/contract.ts";
 import { api, expectNoHorizontalOverflow } from "./helpers.ts";
+import { FAILED_COMMIT_TITLE, LONG_COMMIT_TITLE } from "./commits.ts";
 
 const ROUTES = [
   ["/commits", "Commits"],
@@ -54,6 +55,13 @@ test("the commit list is home and answers per environment", async ({
   await page.getByRole("link", { name: /^aaaaaaa/u }).click();
   await expect(page).toHaveURL(/\/commits\/a{40}$/u);
   await expect(page.locator("#main-heading")).toBeFocused();
+  const main = page.getByRole("main");
+  await expect(
+    main.getByText("feat(arcade): publish the arcade fixture", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    main.getByText("by shepherdjerred", { exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { level: 2, name: "By environment" }),
   ).toBeVisible();
@@ -67,6 +75,54 @@ test("the commit list is home and answers per environment", async ({
   await expect(page).toHaveURL(/\/commits\/aaaaaaa$/u);
   await expect(
     page.getByRole("heading", { level: 1, name: "Commit aaaaaaa" }),
+  ).toBeVisible();
+});
+
+test("commits show their title and author, and page to older ones", async ({
+  page,
+}) => {
+  await page.goto("/commits");
+  const recent = page.getByRole("region", { name: "Recent commits" });
+  const rows = recent.getByRole("listitem");
+  const arcade = rows.filter({
+    has: page.getByRole("link", { name: /^aaaaaaa/u }),
+  });
+  await expect(arcade.getByRole("link", { name: /^aaaaaaa/u })).toHaveText(
+    "aaaaaaa feat(arcade): publish the arcade fixture",
+  );
+  await expect(arcade).toContainText("shepherdjerred");
+  // A commit whose CI failed still has its title, and a title with one long
+  // unbreakable token wraps inside its row.
+  await expect(rows.filter({ hasText: FAILED_COMMIT_TITLE })).toContainText(
+    "CI failed",
+  );
+  await expect(recent.getByText(LONG_COMMIT_TITLE)).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  const pages = recent.getByRole("navigation", { name: "Pages" });
+  await expect(pages.getByRole("link", { name: "Newest" })).toHaveCount(0);
+  await pages.getByRole("link", { name: "Older" }).click();
+  await expect(page).toHaveURL(/\/commits\?cursor=/u);
+  await expect(
+    recent.getByRole("link", {
+      name: "01c0ffe feat(birmel): add the voice session store",
+    }),
+  ).toBeVisible();
+  await expect(recent.getByRole("link", { name: /^aaaaaaa/u })).toHaveCount(0);
+  // Delivery saw this commit before it captured titles: the sha stands alone.
+  await expect(
+    recent.getByRole("link", { name: "03c0ffe", exact: true }),
+  ).toBeVisible();
+  await expect(pages.getByRole("link", { name: "Older" })).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+
+  await pages.getByRole("link", { name: "Newest" }).click();
+  await expect(page).toHaveURL(/\/commits$/u);
+  await expect(recent.getByRole("link", { name: /^aaaaaaa/u })).toBeVisible();
+  await page.goBack();
+  await expect(page).toHaveURL(/\/commits\?cursor=/u);
+  await expect(
+    recent.getByRole("link", { name: "03c0ffe", exact: true }),
   ).toBeVisible();
 });
 

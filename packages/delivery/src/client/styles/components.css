@@ -501,14 +501,53 @@ label.checkbox input {
   border-top: 0;
 }
 
+/* A title is free text: one long token must wrap, not widen the page. */
+.commit-subject,
+.commit-title {
+  overflow-wrap: anywhere;
+}
+
 .commit-headline {
   margin-left: 0.2rem;
+}
+
+.commit-meta {
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  justify-content: flex-end;
+}
+
+.commit-author {
+  overflow-wrap: anywhere;
+}
+
+.commit-title {
+  color: var(--text);
+  display: block;
+  font-weight: 600;
+}
+
+.commit-byline {
+  display: block;
+  margin-block-end: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.commit-list + .pager:not(:empty) {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
 }
 
 @media (max-width: 48rem) {
   .commit-row {
     grid-template-columns: 1fr;
     row-gap: 0.15rem;
+  }
+
+  .commit-meta {
+    justify-content: flex-start;
   }
 }
 

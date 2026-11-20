@@ -77,6 +77,7 @@ import {
   markQualificationAttempt,
   qualify,
 } from "./delivery-qualification.ts";
+import { recordSourceCommit } from "./hub/source-commit.ts";
 import { reconcile } from "./delivery-selection.ts";
 import { registerWorker, workers } from "./worker-pool/registration.ts";
 import { retireWorker } from "./worker-pool/retirement.ts";
@@ -223,6 +224,7 @@ export class Delivery {
   build = findBuild;
   markQualificationAttempt = markQualificationAttempt;
   qualify = qualify;
+  recordSourceCommit = recordSourceCommit;
   reconcile = reconcile;
   workers = workers;
   registerWorker = registerWorker;

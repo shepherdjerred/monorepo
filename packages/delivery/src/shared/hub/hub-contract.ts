@@ -320,8 +320,16 @@ export type CommitEnvironmentGroup = z.infer<
 
 export const CommitStatusSchema = z.object({
   sha: z.string().min(7),
+  /**
+   * First line of the commit message, read from Woodpecker when a build of the
+   * commit was qualified. Null when Delivery holds none: the commit predates
+   * capture, no build of it has been checked yet, or its message is empty.
+   */
+  title: z.string().nullable(),
+  /** Woodpecker's pipeline author, the forge account behind the push; null as `title` is. */
+  author: z.string().nullable(),
   verdict: CommitVerdictSchema,
-  /** A build of this commit, for its lazily fetched headline; null if unseen. */
+  /** A build of this commit, for its source panel; null if unseen. */
   buildId: IdentifierSchema.nullable(),
   /** First time Delivery heard of this commit. */
   seenAt: TimestampSchema.nullable(),
@@ -339,6 +347,8 @@ export type CommitStatus = z.infer<typeof CommitStatusSchema>;
 
 export const CommitSummarySchema = CommitStatusSchema.pick({
   sha: true,
+  title: true,
+  author: true,
   verdict: true,
   seenAt: true,
 }).extend({
@@ -357,6 +367,9 @@ export const CommitSummarySchema = CommitStatusSchema.pick({
 });
 export type CommitSummary = z.infer<typeof CommitSummarySchema>;
 
-export const CommitListSchema = z.object({
-  items: z.array(CommitSummarySchema),
+export const CommitListSchema = pageSchema(CommitSummarySchema);
+
+export const CommitListQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
 });
+export type CommitListQuery = z.infer<typeof CommitListQuerySchema>;
