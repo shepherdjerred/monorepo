@@ -37,6 +37,8 @@ type PrepareSnapshot = {
   inputColor: string | undefined;
   audioOnly: boolean | undefined;
   audioVolume: number | undefined;
+  readrate: number | undefined;
+  readrateInitialBurst: number | undefined;
   playType: string | undefined;
   hasAudioSink: boolean;
   videoPlayoutDelayMaxMs: number | undefined;
@@ -56,6 +58,8 @@ function snapshotPrepare(prepare: NonNullable<PlayerOptions>["prepare"]) {
     inputColor: prepare?.inputColor,
     audioOnly: prepare?.audioOnly,
     audioVolume: prepare?.audioVolume,
+    readrate: prepare?.readrate,
+    readrateInitialBurst: prepare?.readrateInitialBurst,
   };
 }
 
@@ -134,6 +138,7 @@ async function startPipelineRun(options: {
 }) {
   const { factory, attempts } = makeFakeFactory(options.startErrors);
   const observerCalls: (boolean | undefined)[] = [];
+  const observerLiveCalls: (boolean | undefined)[] = [];
   const streamer = new StreambotStreamer(
     USER_TOKEN,
     loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
@@ -142,6 +147,7 @@ async function startPipelineRun(options: {
       createPlayer: factory,
       createObserver: (hardware, now, onStall, observerOptions) => {
         observerCalls.push(observerOptions?.audioOnly);
+        observerLiveCalls.push(observerOptions?.live);
         return createStreamObserver(hardware, now, onStall, observerOptions);
       },
     },
@@ -158,7 +164,7 @@ async function startPipelineRun(options: {
   );
   void markHandled(run);
   await flush();
-  return { attempts, run, streamer, observerCalls };
+  return { attempts, run, streamer, observerCalls, observerLiveCalls };
 }
 
 const MUSIC_SOURCE: ResolvedSource = {
@@ -343,7 +349,7 @@ describe("transport dispatch by media kind", () => {
     await run;
   });
 
-  test("a live source gets the configured rebuffer cushion; seekable media does not", async () => {
+  test("a live source gets the configured rebuffer cushion, omits ffmpeg readrate, and marks the observer live", async () => {
     const live = await startPipelineRun({
       pipelineMode: "hw",
       resolved: { ...RESOLVED_HDR_WITH_SUBS, live: true },
@@ -351,11 +357,17 @@ describe("transport dispatch by media kind", () => {
     // A live input cannot be read ahead, so the pacer must rebuild a cushion instead of skipping
     // sleeps to catch up — that catch-up never succeeds and turns every HLS segment into a burst.
     expect(live.attempts[0]?.liveBufferMs).toBe(4000);
+    expect(live.attempts[0]?.readrate).toBeUndefined();
+    expect(live.attempts[0]?.readrateInitialBurst).toBeUndefined();
+    expect(live.observerLiveCalls).toEqual([true]);
     live.attempts[0]?.resolve();
     await live.run;
 
     const seekable = await startPipelineRun({ pipelineMode: "hw" });
     expect(seekable.attempts[0]?.liveBufferMs).toBeUndefined();
+    expect(seekable.attempts[0]?.readrate).toBe(1);
+    expect(seekable.attempts[0]?.readrateInitialBurst).toBe(2.5);
+    expect(seekable.observerLiveCalls).toEqual([false]);
     seekable.attempts[0]?.resolve();
     await seekable.run;
   });

@@ -242,6 +242,14 @@ export const streamHardware = new Gauge({
   registers: [register],
 });
 
+/** 1 when an active segment on this hardware path is reading a live source, 0 when seekable. */
+export const streamLive = new Gauge({
+  name: "streambot_stream_live",
+  help: "Whether an active streaming segment on this hardware path is reading a live source (1) or seekable media (0)",
+  labelNames: ["hardware"] as const,
+  registers: [register],
+});
+
 // --- segment lifecycle ------------------------------------------------------
 
 export const streamActive = new Gauge({

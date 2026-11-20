@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import {
+  buildGoLivePlayOptions,
   buildMusicPrepareOptions,
   buildVideoPrepareOptions,
 } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
@@ -47,7 +48,7 @@ describe("buildMusicPrepareOptions", () => {
     expect(options.hardwarePipelineMode).toBeUndefined();
   });
 
-  test("keeps readrate pacing, but never bursts an unprofiled transport", () => {
+  test("keeps readrate pacing on seekable audio, omits it on live sources, and never bursts", () => {
     const options = buildMusicPrepareOptions({
       stream,
       resolved: MUSIC,
@@ -61,6 +62,16 @@ describe("buildMusicPrepareOptions", () => {
     // on the first audio a listener hears, over a path nobody has measured. This package requires
     // profiling real output before changing timing or buffers, so music stays paced until then.
     expect(options.readrateInitialBurst).toBeUndefined();
+
+    const liveOptions = buildMusicPrepareOptions({
+      stream,
+      resolved: { ...MUSIC, live: true },
+      startSeconds: 0,
+      volumePercent: 100,
+    });
+    expect(liveOptions.readrate).toBeUndefined();
+    expect("readrate" in liveOptions).toBe(false);
+    expect(liveOptions.readrateInitialBurst).toBeUndefined();
   });
 
   test("passes no audioVolume, because the mixer owns music gain", () => {
@@ -273,5 +284,42 @@ describe("buildVideoPrepareOptions", () => {
         pipelineMode: "sw",
       }).customInputOptions,
     ).toBeUndefined();
+  });
+
+  test("omits readrate and readrateInitialBurst on live video while preserving seekable pacing", () => {
+    const seekable = buildVideoPrepareOptions({
+      stream,
+      resolved: VIDEO,
+      startSeconds: 0,
+      volumePercent: 100,
+      pipelineMode: "hw",
+    });
+    expect(seekable.readrate).toBe(stream.readrate);
+    expect(seekable.readrateInitialBurst).toBe(stream.readrateInitialBurst);
+
+    const live = buildVideoPrepareOptions({
+      stream,
+      resolved: { ...VIDEO, live: true },
+      startSeconds: 0,
+      volumePercent: 100,
+      pipelineMode: "hw",
+    });
+    expect(live.readrate).toBeUndefined();
+    expect(live.readrateInitialBurst).toBeUndefined();
+    expect("readrate" in live).toBe(false);
+    expect("readrateInitialBurst" in live).toBe(false);
+
+    // Play-side Go Live options retain the startup burst and add the live rebuffer cushion.
+    expect(buildGoLivePlayOptions(stream, { live: true })).toEqual({
+      type: "go-live",
+      readrateInitialBurst: stream.readrateInitialBurst,
+      videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
+      liveBufferMs: stream.liveBufferMs,
+    });
+    expect(buildGoLivePlayOptions(stream, {})).toEqual({
+      type: "go-live",
+      readrateInitialBurst: stream.readrateInitialBurst,
+      videoPlayoutDelayMaxMs: stream.videoPlayoutDelayMaxMs,
+    });
   });
 });
