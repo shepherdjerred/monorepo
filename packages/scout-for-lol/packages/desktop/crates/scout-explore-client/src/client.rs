@@ -9,10 +9,11 @@ use reqwest::{Client, RequestBuilder, Response};
 use scout_client_core::backend::backend_origin;
 use scout_client_core::credentials::DeviceCredential;
 use scout_client_core::desktop_api::{
-    ActiveRun, AppTurnRequest, AssetsResponse, AttachmentDiscardRequest, ConversationGetRequest,
-    ConversationListResponse, EmptyRequest, ExploreStatusResponse, ModelsResponse, OkResponse,
-    PNG_CONTENT_TYPE, RunActiveResponse, RunOutcome, RunOutcomeResponse, RunRequest,
-    RunStartRequest, RunStopResponse, SetLeafRequest, ShareResponse, VisualizationRequest,
+    ActiveRun, AppTurnRequest, AssetsResponse, AttachmentDiscardRequest, CoachReviewRequest,
+    CoachReviewResponse, ConversationGetRequest, ConversationListResponse, EmptyRequest,
+    ExploreStatusResponse, ModelsResponse, OkResponse, PNG_CONTENT_TYPE, RunActiveResponse,
+    RunOutcome, RunOutcomeResponse, RunRequest, RunStartRequest, RunStopResponse, SetLeafRequest,
+    ShareResponse, VisualizationRequest,
 };
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -231,6 +232,21 @@ impl ExploreClient {
         request: &AppTurnRequest,
     ) -> Result<ActiveRun, ExploreClientError> {
         self.call(Route::ExploreRunsStartApp, request).await
+    }
+
+    /// `coach/reviews/get`: read the post-game review the server produced for
+    /// a finished game this device recorded. The server starts it; the client
+    /// never does.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal (`not_found` when there is
+    /// no review for the game), or a contract mismatch.
+    pub async fn get_coach_review(
+        &self,
+        request: &CoachReviewRequest,
+    ) -> Result<CoachReviewResponse, ExploreClientError> {
+        self.call(Route::CoachReviewsGet, request).await
     }
 
     /// `explore/runs/stop`: stop a running turn; the server keeps the partial

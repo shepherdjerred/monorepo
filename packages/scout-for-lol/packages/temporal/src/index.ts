@@ -33,6 +33,11 @@ export {
   ScoutDuelSeriesInputSchema,
   ScoutDuelSeriesRefreshResultSchema,
   ScoutDuelSeriesChangeSchema,
+  ScoutCoachReviewInputSchema,
+  ScoutCoachReviewResultSchema,
+  ScoutCoachReviewSettleInputSchema,
+  ScoutCoachReviewSkipReasonSchema,
+  ScoutCoachReviewStartResultSchema,
 } from "./contracts.ts";
 export type {
   InitialHistoryPageResult,
@@ -65,6 +70,11 @@ export type {
   ScoutDuelSeriesInput,
   ScoutDuelSeriesRefreshResult,
   ScoutDuelSeriesChange,
+  ScoutCoachReviewInput,
+  ScoutCoachReviewResult,
+  ScoutCoachReviewSettleInput,
+  ScoutCoachReviewSkipReason,
+  ScoutCoachReviewStartResult,
 } from "./contracts.ts";
 export {
   SCOUT_WORKFLOW_NAMES,
@@ -85,6 +95,7 @@ export {
   scoutHallBaselineWorkflowId,
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
+  scoutCoachReviewWorkflowId,
   SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES,
   SCOUT_REDRIVABLE_WORKFLOW_NAMES,
   SCOUT_REUSE_POLICIES,

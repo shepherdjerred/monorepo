@@ -3,6 +3,8 @@ import {
   COACH_APP_INITIATION_SECTION,
   COACH_APP_INITIATIONS,
   COACH_CONTEXT_SECTIONS,
+  COACH_SERVER_INITIATION_SECTION,
+  CoachAppInitiationSchema,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import fixtures from "@scout-for-lol/data/scout-client/coach-context.fixtures.json" with { type: "json" };
@@ -142,6 +144,7 @@ describe("projectGameContext", () => {
       "player_typed",
       "player_voice",
       ...COACH_APP_INITIATIONS,
+      "app_postgame",
     ]);
   });
 
@@ -218,7 +221,10 @@ describe("projectGameContext", () => {
         const belongs =
           initiation === "player_typed" ||
           initiation === "player_voice" ||
-          COACH_APP_INITIATION_SECTION[initiation] === section;
+          {
+            ...COACH_APP_INITIATION_SECTION,
+            ...COACH_SERVER_INITIATION_SECTION,
+          }[initiation] === section;
         expect(accepted.includes(section), label).toBe(
           flags.coachEnabled && belongs,
         );
@@ -311,6 +317,11 @@ describe("projectGameContext", () => {
       { coachEnabled: true, liveAnswersEnabled: true },
       "not_player_initiated",
     ],
+    [
+      "app_postgame",
+      { coachEnabled: true, liveAnswersEnabled: true },
+      "not_player_initiated",
+    ],
   ])(
     "live on a %s turn with %o is withheld for %s",
     (initiation, flags, reason) => {
@@ -327,4 +338,26 @@ describe("projectGameContext", () => {
       );
     },
   );
+});
+
+describe("the server-started post-game review", () => {
+  const flags = { coachEnabled: true, liveAnswersEnabled: true };
+
+  test("carries the postgame section and nothing else", () => {
+    const result = projectGameContext(
+      { postgame: complete["postgame"], pregame: complete["pregame"] },
+      { initiation: "app_postgame", flags },
+    );
+    if (!result.ok) throw new Error("the complete context was refused");
+    expect(result.projection.accepted).toEqual(["postgame"]);
+    expect(result.projection.withheld).toEqual([
+      { section: "pregame", reason: "section_outside_initiation" },
+    ]);
+  });
+
+  test("is not a client initiation, so the app route cannot start it", () => {
+    expect(CoachAppInitiationSchema.safeParse("app_postgame").success).toBe(
+      false,
+    );
+  });
 });

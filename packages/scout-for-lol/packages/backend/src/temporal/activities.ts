@@ -289,6 +289,18 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
         await import("#src/progression/duels/series-workflow-state.ts");
       await markDuelSeriesOverdue(input);
     },
+    startCoachReview: async (input) => {
+      const { startCoachReview } = await import("#src/coach/review.ts");
+      const { coachReviewDependencies } =
+        await import("#src/coach/review-runtime.ts");
+      return await startCoachReview(coachReviewDependencies(), input);
+    },
+    settleCoachReview: async (input) => {
+      const { settleCoachReview } = await import("#src/coach/review.ts");
+      const { coachReviewDependencies } =
+        await import("#src/coach/review-runtime.ts");
+      return await settleCoachReview(coachReviewDependencies(), input);
+    },
   };
 }
 function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {

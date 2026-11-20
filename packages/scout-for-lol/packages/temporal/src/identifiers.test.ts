@@ -16,6 +16,7 @@ import {
   scoutPreRenameActivityType,
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
+  scoutCoachReviewWorkflowId,
   scoutHallBaselineWorkflowId,
   scoutIngestionReconciliationGatewayReadyWorkflowId,
   scoutExploreHistoryWorkflowId,
@@ -92,6 +93,13 @@ describe("Scout Temporal identifiers", () => {
     expect(scoutReportScheduleId("beta", "report_123")).toBe(
       "scout-beta-report-report_123",
     );
+    expect(
+      scoutCoachReviewWorkflowId(
+        "beta",
+        "123456789012345678",
+        "NA1_5123456789",
+      ),
+    ).toBe("scout-beta-coach-review-123456789012345678-NA1_5123456789");
     expect(scoutHallBaselineWorkflowId("beta", "guild_123", 4)).toBe(
       "scout-beta-hall-guild_123-4",
     );

@@ -20,6 +20,7 @@ import {
   scoutHallBaselineWorkflowId,
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
+  scoutCoachReviewWorkflowId,
   scoutTaskQueues,
   type ScoutIngestionReconciliationInput,
   type ScoutExploreHistoryInput,
@@ -31,6 +32,7 @@ import {
   type ScoutHallBaselineInput,
   type ScoutChallengeRunRecomputeInput,
   type ScoutDuelSeriesInput,
+  type ScoutCoachReviewInput,
 } from "@scout-for-lol/temporal";
 import { duelSeriesChangedSignal } from "@scout-for-lol/temporal/signals";
 import { reconcileReportSchedulesSignal } from "@scout-for-lol/temporal/signals";
@@ -345,6 +347,39 @@ export async function startScoutChallengeRunRecompute(
         "Pages through Scout evidence and atomically replaces one challenge-run revision.",
       ),
     },
+  );
+}
+
+/**
+ * Start the post-game review for one owner and match. The ID is derived from
+ * both, and a closed execution is joined rather than restarted: whichever of
+ * the recording and the match evidence arrives second, and any retry, is one
+ * review.
+ */
+export async function startScoutCoachReview(
+  client: Client,
+  input: ScoutCoachReviewInput,
+): Promise<WorkflowHandle> {
+  const workflowId = scoutCoachReviewWorkflowId(
+    input.stage,
+    input.ownerId,
+    input.matchId,
+  );
+  return await startOrReuseWorkflow<WorkflowHandle>(
+    async () =>
+      await client.workflow.start(SCOUT_WORKFLOW_NAMES.coachReview, {
+        ...RESTART_FAILED_START_POLICIES,
+        workflowId,
+        taskQueue: scoutTaskQueues(input.stage).workflow,
+        args: [input],
+        ...startMetadata(
+          input.stage,
+          "api",
+          "Review a recorded Scout game",
+          "Starts one Explore turn once the game's recording and match evidence exist.",
+        ),
+      }),
+    () => client.workflow.getHandle(workflowId),
   );
 }
 

@@ -620,6 +620,7 @@ model User {
   scoutClientDevices   ScoutClientDevice[]
   scoutClientApprovals ScoutClientPairing[]  @relation("ScoutClientPairingApprover")
   scoutCoachTurns      ScoutCoachTurn[]
+  scoutCoachArtifacts  ScoutCoachArtifact[]
   riotAccounts         RiotAccountPreference[]
   riotLinkAttempts     RiotOAuthLinkAttempt[]
 }
@@ -977,8 +978,8 @@ model ScoutCoachTurn {
   conversationId     String
   runId              String   @unique
   questionMessageId  String
-  /// `player_typed`, `player_voice`, `app_champ_select` or `app_pregame`
-  /// (`coach/context-policy.ts`).
+  /// `player_typed`, `player_voice`, `app_champ_select`, `app_pregame` or
+  /// `app_postgame` (`coach/context-policy.ts`).
   initiation         String
   /// The client's opaque id for the champ select or game an app-started turn
   /// belongs to; the server-side limit of 4 champ-select and 1 pre-game turns
@@ -1005,6 +1006,31 @@ model ScoutCoachTurn {
   @@index([deviceId, createdAt])
   @@index([conversationId])
   @@index([ownerId, initiation, gameKey])
+}
+
+/// What the coach produced for one finished game the owner recorded. One row
+/// per owner, match and kind; the review workflow creates it before it starts
+/// the Explore turn, so a retried or doubled trigger finds it and starts
+/// nothing twice. The review itself is the Explore conversation named here.
+model ScoutCoachArtifact {
+  id             String   @id @default(uuid())
+  ownerId        String
+  /// The Riot match ID the review covers.
+  matchId        String
+  /// `review` today.
+  kind           String
+  /// `pending`, `ready`, `declined` or `failed`.
+  status         String
+  /// The Explore run and conversation, set once the turn has started.
+  runId          String?  @unique
+  conversationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  owner User @relation(fields: [ownerId], references: [discordId], onDelete: Cascade)
+
+  @@unique([ownerId, matchId, kind])
+  @@index([ownerId, createdAt])
 }
 
 /// A saved explore conversation. Explore queries the whole report lake rather

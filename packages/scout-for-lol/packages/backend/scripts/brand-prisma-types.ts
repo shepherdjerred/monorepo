@@ -423,6 +423,10 @@ const MODEL_FIELD_TYPE_MAP: Record<string, Record<string, string | null>> = {
   PuuidKeyMap: {
     status: null,
   },
+  // The coach artifact's status is its own closed vocabulary.
+  ScoutCoachArtifact: {
+    status: null,
+  },
 };
 
 function getBrandedType(
