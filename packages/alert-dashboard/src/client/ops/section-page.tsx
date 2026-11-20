@@ -9,9 +9,9 @@ import {
   PageHeading,
   RangePicker,
   SeverityBadge,
-  SignalList,
   WithSnapshot,
 } from "./ops-ui.tsx";
+import { SignalList } from "./signal-list.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { useRange } from "#client/charts/use-range.ts";
 import type { SeriesPresetId } from "#shared/ops-schema";

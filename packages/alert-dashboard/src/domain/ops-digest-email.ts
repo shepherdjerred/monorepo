@@ -1,5 +1,9 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
+import {
+  groupSignals,
+  type SignalEntry,
+} from "@shepherdjerred/ops-model/signal-groups.ts";
 import type { Signal } from "@shepherdjerred/ops-model/snapshot.ts";
 
 import { ALERTS_PUBLIC_URL } from "#domain/ops-changes";
@@ -12,6 +16,7 @@ import {
   trendDelta,
 } from "#shared/ops-format";
 
+/** Rows per list. A group of same-kind signals is one row. */
 const MAX_SIGNALS = 15;
 const MAX_CHANGES = 25;
 
@@ -66,22 +71,47 @@ function signalLink(signal: Signal): string {
     : `<a href="${escapeHtml(link.url)}" style="color:#0b0b0b">${title}</a>`;
 }
 
+/**
+ * The rows a list shows and how many signals they leave out. Same-kind
+ * signals collapse into one row before the cap applies, so ten failed
+ * restores cost one row rather than most of the list.
+ */
+function cappedEntries(signals: readonly Signal[]): {
+  shown: SignalEntry[];
+  hidden: number;
+} {
+  const shown = groupSignals(signals).slice(0, MAX_SIGNALS);
+  const covered = shown.reduce(
+    (count, entry) => count + (entry.type === "signal" ? 1 : entry.count),
+    0,
+  );
+  return { shown, hidden: signals.length - covered };
+}
+
+function signalRow(severity: Severity, body: string): string {
+  return `<tr><td style="width:92px;padding:8px 10px 8px 0;vertical-align:top;white-space:nowrap">${pill(severity)}</td><td style="padding:8px 0;border-bottom:1px solid #e1e0d9">${body}</td></tr>`;
+}
+
+function entryRow(entry: SignalEntry): string {
+  if (entry.type === "group") {
+    return signalRow(entry.severity, escapeHtml(entry.label));
+  }
+  const { signal } = entry;
+  const detail =
+    signal.detail === undefined
+      ? ""
+      : `<div style="color:#52514e;font-size:13px">${escapeHtml(signal.detail)}</div>`;
+  return signalRow(signal.severity, `${signalLink(signal)}${detail}`);
+}
+
 function signalRows(signals: readonly Signal[], empty: string): string {
   if (signals.length === 0)
     return `<p style="margin:0;color:#52514e">${escapeHtml(empty)}</p>`;
-  const rows = signals
-    .slice(0, MAX_SIGNALS)
-    .map((signal) => {
-      const detail =
-        signal.detail === undefined
-          ? ""
-          : `<div style="color:#52514e;font-size:13px">${escapeHtml(signal.detail)}</div>`;
-      return `<tr><td style="width:92px;padding:8px 10px 8px 0;vertical-align:top;white-space:nowrap">${pill(signal.severity)}</td><td style="padding:8px 0;border-bottom:1px solid #e1e0d9">${signalLink(signal)}${detail}</td></tr>`;
-    })
-    .join("");
+  const { shown, hidden } = cappedEntries(signals);
+  const rows = shown.map((entry) => entryRow(entry)).join("");
   const more =
-    signals.length > MAX_SIGNALS
-      ? `<p style="margin:6px 0 0;color:#52514e;font-size:13px">and ${String(signals.length - MAX_SIGNALS)} more on the dashboard</p>`
+    hidden > 0
+      ? `<p style="margin:6px 0 0;color:#52514e;font-size:13px">and ${String(hidden)} more on the dashboard</p>`
       : "";
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">${rows}</table>${more}`;
 }
@@ -158,16 +188,21 @@ function htmlBody(report: DigestReport): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapeHtml(title)}</title></head><body style="margin:0;background:#f9f9f7;font-family:${FONT};color:#0b0b0b"><div style="max-width:640px;margin:0 auto;padding:24px 16px"><div style="background:#fcfcfb;border:1px solid #e1e0d9;border-radius:12px;padding:24px"><p style="margin:0;color:#176b4d;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Hub · ${escapeHtml(report.periodKey)}</p><h1 style="margin:6px 0 12px;font-size:24px">${escapeHtml(title)}</h1><p style="margin:0">${pill(report.status.severity)} <span style="margin-left:6px">${escapeHtml(report.status.summary)}</span></p>${stale}${sections}<p style="margin:28px 0 0"><a href="${ALERTS_PUBLIC_URL}/" style="display:inline-block;padding:10px 14px;border-radius:7px;background:#176b4d;color:#ffffff;text-decoration:none;font-weight:700">Open Hub</a></p></div></div></body></html>`;
 }
 
+function textEntry(entry: SignalEntry): string {
+  if (entry.type === "group") {
+    return `  - [${SEVERITY_LABEL[entry.severity]}] ${entry.label}`;
+  }
+  const { signal } = entry;
+  return `  - [${SEVERITY_LABEL[signal.severity]}] ${signal.title}${signal.links[0] === undefined ? "" : ` <${signal.links[0].url}>`}`;
+}
+
 function textSignals(signals: readonly Signal[], empty: string): string {
-  return signals.length === 0
-    ? `  ${empty}`
-    : signals
-        .slice(0, MAX_SIGNALS)
-        .map(
-          (signal) =>
-            `  - [${SEVERITY_LABEL[signal.severity]}] ${signal.title}${signal.links[0] === undefined ? "" : ` <${signal.links[0].url}>`}`,
-        )
-        .join("\n");
+  if (signals.length === 0) return `  ${empty}`;
+  const { shown, hidden } = cappedEntries(signals);
+  return [
+    ...shown.map((entry) => textEntry(entry)),
+    ...(hidden > 0 ? [`  and ${String(hidden)} more on the dashboard`] : []),
+  ].join("\n");
 }
 
 function textBody(report: DigestReport): string {

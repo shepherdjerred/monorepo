@@ -10,6 +10,8 @@ const USAGE = `toolkit ops summary [--json] [--needs-me] [--section <id>]
 
 Reads the homelab ops snapshot and prints overall severity, staleness, one
 line per section, what is waiting on you, and the top attention signals.
+Three or more signals of a groupable kind (Renovate updates, failed restores,
+paused schedules) print as one counted line; --json lists every signal.
 
 Options:
   --json            Print the snapshot (or the selected slice) as JSON

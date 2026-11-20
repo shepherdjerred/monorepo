@@ -11,8 +11,8 @@ import {
   ExternalLink,
   PageHeading,
   SeverityBadge,
-  SignalList,
 } from "./ops-ui.tsx";
+import { SignalList } from "./signal-list.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";
 import type { ServiceDetail } from "#shared/ops-schema";

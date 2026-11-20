@@ -21,7 +21,12 @@ The core module has two halves in one process:
   Maintenance, and Review pages plus the daily and weekly digest email. Home
   summarizes status, firing alerts, what waits on Jerred, and Tracker triage
   from the snapshot, and links to Tracker, Delivery, and the tools. Trend charts read Prometheus through named
-  presets only; the browser never sends PromQL.
+  presets only; the browser never sends PromQL. Every signal list renders
+  through `SignalList` (`src/client/ops/signal-list.tsx`): it collapses
+  same-kind signals with ops-model's `groupSignals` (an allowlist of kinds, so
+  alerts never collapse), shows at most ten entries, and expands in place.
+  There is no uncapped mode; the digest email groups the same way before its
+  own row cap. `e2e/volume.spec.ts` bounds page height at production volume.
 - **Alert ledger.** Alertmanager remains authoritative for evaluation,
   grouping, inhibition, routing, and silences; this service stores occurrence
   history, serves the Alerts, History, and System pages, sends grouped opening

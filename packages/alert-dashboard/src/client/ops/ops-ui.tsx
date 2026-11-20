@@ -6,7 +6,6 @@ import type {
   Link as OpsLink,
   Metric,
   Section,
-  Signal,
 } from "@shepherdjerred/ops-model/snapshot.ts";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -103,85 +102,6 @@ export function ServiceLink({
     <Link className="chip service-chip" to={`/services/${id}`}>
       {service?.title ?? id}
     </Link>
-  );
-}
-
-function SignalItem({
-  signal,
-  isNew,
-  showService,
-}: {
-  readonly signal: Signal;
-  readonly isNew: boolean;
-  readonly showService: boolean;
-}): React.JSX.Element {
-  const [primary, ...rest] = signal.links;
-  return (
-    <li className="signal">
-      <SeverityBadge severity={signal.severity} />
-      <div className="signal-body">
-        <p className="signal-title">
-          {primary === undefined ? (
-            signal.title
-          ) : (
-            <a href={primary.url} target="_blank" rel="noreferrer">
-              {signal.title}
-            </a>
-          )}
-          {isNew ? <span className="new-tag">New</span> : null}
-        </p>
-        {signal.detail === undefined ? null : (
-          <p className="signal-detail">{signal.detail}</p>
-        )}
-        <div className="signal-meta">
-          {showService && signal.service !== undefined ? (
-            <ServiceLink id={signal.service} />
-          ) : null}
-          {signal.since === undefined ? null : (
-            <span className="mono">since {age(signal.since)}</span>
-          )}
-          {rest.map((link) => (
-            <ExternalLink className="chip" key={link.url} link={link} />
-          ))}
-        </div>
-      </div>
-    </li>
-  );
-}
-
-export function SignalList({
-  signals,
-  empty,
-  newIds,
-  showService = true,
-  limit,
-}: {
-  readonly signals: readonly Signal[];
-  readonly empty: string;
-  readonly newIds?: ReadonlySet<string>;
-  readonly showService?: boolean;
-  readonly limit?: number;
-}): React.JSX.Element {
-  if (signals.length === 0) return <p className="list-empty">{empty}</p>;
-  const shown = limit === undefined ? signals : signals.slice(0, limit);
-  return (
-    <>
-      <ul className="signal-list">
-        {shown.map((signal) => (
-          <SignalItem
-            key={signal.id}
-            signal={signal}
-            isNew={newIds?.has(signal.id) ?? false}
-            showService={showService}
-          />
-        ))}
-      </ul>
-      {shown.length < signals.length ? (
-        <p className="list-more">
-          {signals.length - shown.length} more not shown
-        </p>
-      ) : null}
-    </>
   );
 }
 

@@ -13,10 +13,10 @@ import { useMarkSeen } from "./ops-api.ts";
 import {
   PageHeading,
   SectionCard,
-  SignalList,
   StatusBanner,
   WithSnapshot,
 } from "./ops-ui.tsx";
+import { SignalList } from "./signal-list.tsx";
 import { Button } from "#components/button";
 
 /** Where each section's card links for its detail. */
@@ -67,7 +67,7 @@ function NewSinceLastVisit({
       <SignalList
         signals={fresh}
         empty="Nothing new since you last marked everything seen."
-        limit={5}
+        cap={5}
       />
     </section>
   );

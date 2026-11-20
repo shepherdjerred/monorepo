@@ -2,7 +2,10 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { applyFreshness } from "@shepherdjerred/ops-model/assemble.ts";
+import {
+  applyFreshness,
+  assembleSnapshot,
+} from "@shepherdjerred/ops-model/assemble.ts";
 import { parseSnapshot } from "@shepherdjerred/ops-model/snapshot.ts";
 import {
   formatOpsSummary,
@@ -146,6 +149,119 @@ describe("ops summary rendering", () => {
     );
     expect(parseSectionId("delivery")).toBe("delivery");
     expect(() => parseSectionId("nope")).toThrow(/Unknown section "nope"/);
+  });
+});
+
+function volumeSnapshot() {
+  const sources = fixture.sources.map((source) => ({ ...source, ok: true }));
+  const restore = (index: number) => ({
+    id: `restore-${String(index)}`,
+    source: "maintenance" as const,
+    section: "maintenance" as const,
+    kind: "restore-failure",
+    severity: "warning" as const,
+    needsMe: true,
+    title: `Velero restore drill-${String(index)}: PartiallyFailed`,
+  });
+  const approval = (index: number) => ({
+    id: `approval-${String(index)}`,
+    source: "renovate" as const,
+    section: "delivery" as const,
+    kind: "renovate-approval",
+    severity: "info" as const,
+    needsMe: true,
+    title: `chore(deps): update dependency pkg-${String(index)}`,
+  });
+  const alert = (index: number) => ({
+    id: `alert-${String(index)}`,
+    source: "alerts" as const,
+    section: "alerts" as const,
+    kind: "alert",
+    severity: "error" as const,
+    needsMe: true,
+    title: `HostAlert${String(index)}`,
+  });
+  return applyFreshness(
+    assembleSnapshot({
+      generatedAt: new Date(GENERATED),
+      sources,
+      signals: [
+        ...Array.from({ length: 10 }, (_, index) => restore(index)),
+        ...Array.from({ length: 100 }, (_, index) => approval(index)),
+        ...Array.from({ length: 4 }, (_, index) => alert(index)),
+        { ...restore(99), severity: "error" as const },
+      ],
+      metrics: [],
+    }),
+    FRESH_NOW,
+  );
+}
+
+describe("ops summary grouping", () => {
+  const snapshot = volumeSnapshot();
+
+  test("same-kind signals print as one counted line; alerts stay individual", () => {
+    const output = formatOpsSummary(snapshot, {
+      needsMe: true,
+      section: undefined,
+    });
+    // The heading counts signals, not lines.
+    expect(output).toContain("Needs you (115):");
+    expect(output).toContain(
+      "  - [WARNING] maintenance: 10 failed Velero restores",
+    );
+    expect(output).toContain(
+      "  - [INFO] delivery: 100 Renovate updates awaiting approval",
+    );
+    expect(output.match(/HostAlert\d/gu)).toHaveLength(4);
+    // A lone restore at another severity is not folded into the group.
+    expect(output).toContain(
+      "  - [ERROR] maintenance: Velero restore drill-99: PartiallyFailed",
+    );
+    expect(output).not.toContain("drill-0:");
+    expect(output).not.toContain("pkg-0");
+    expect(
+      output.split("\n").filter((line) => line.startsWith("  - ")),
+    ).toHaveLength(7);
+  });
+
+  test("top attention caps lines and counts the signals they cover", () => {
+    const output = formatOpsSummary(snapshot, {
+      needsMe: false,
+      section: undefined,
+    });
+    // 4 alerts, then the lone error restore: 5 lines covering 5 of 15.
+    expect(output).toContain("Top attention (5 of 15):");
+    const withGroup = formatOpsSummary(
+      {
+        ...snapshot,
+        sections: snapshot.sections.filter(
+          (section) => section.id !== "alerts",
+        ),
+      },
+      { needsMe: false, section: undefined },
+    );
+    // The error restore, then one line for the ten warning restores.
+    expect(withGroup).toContain("Top attention (11 of 11):");
+  });
+
+  test("a section prints its groups; --json keeps every signal", () => {
+    const delivery = formatOpsSummary(snapshot, {
+      needsMe: false,
+      section: "delivery",
+    });
+    expect(delivery).toContain("Signals (100):");
+    expect(delivery).toContain(
+      "  - [INFO] 100 Renovate updates awaiting approval",
+    );
+    expect(delivery).not.toContain("pkg-1");
+
+    const json = opsSummaryJson(snapshot, {
+      needsMe: true,
+      section: undefined,
+    });
+    expect(json).toHaveProperty("signals");
+    expect("signals" in json ? json.signals : []).toHaveLength(115);
   });
 });
 

@@ -13,7 +13,8 @@ import { ArrowRightIcon, ExternalLinkIcon } from "lucide-react";
 import { Link } from "react-router";
 
 import { firingAlertSignals, firingAlertsHint } from "./home-signals.ts";
-import { SignalList, SnapshotBlock, StatusBanner } from "./ops-ui.tsx";
+import { SnapshotBlock, StatusBanner } from "./ops-ui.tsx";
+import { SignalList } from "./signal-list.tsx";
 import { formatValue } from "#shared/ops-format";
 
 type Reading = { readonly text: string; readonly severity: Severity };
@@ -123,7 +124,7 @@ function Summary({
             signals={firingSignals}
             empty="No alerts are firing."
             newIds={newIds}
-            limit={5}
+            cap={5}
           />
         </section>
         <section className="panel list-panel" aria-labelledby="waiting-heading">
@@ -139,7 +140,7 @@ function Summary({
             signals={needsMe}
             empty="Nothing is waiting on you."
             newIds={newIds}
-            limit={5}
+            cap={5}
           />
         </section>
       </div>
