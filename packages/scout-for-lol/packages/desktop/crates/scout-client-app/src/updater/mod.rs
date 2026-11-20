@@ -147,7 +147,9 @@ fn production_target() -> Option<(Platform, Arc<dyn Installer>)> {
 /// No installer runs on this platform, so the build does not update.
 #[cfg(not(any(windows, target_os = "macos")))]
 fn production_target() -> Option<(Platform, Arc<dyn Installer>)> {
-    None
+    // `Platform::current` is `None` here, and there is no installer to pair
+    // with it either way.
+    Platform::current().and(None)
 }
 
 /// Start the updater for this build, or `None` when it must not update.

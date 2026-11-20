@@ -51,8 +51,7 @@ pub enum Platform {
 
 impl Platform {
     /// The platform this build runs on, when the updater can install for it.
-    /// Linux builds do not update themselves, so only tests call this there.
-    #[cfg(any(windows, target_os = "macos", test))]
+    /// Linux builds do not update themselves, so this is `None` there.
     #[must_use]
     pub const fn current() -> Option<Self> {
         if cfg!(all(windows, target_arch = "x86_64")) {
