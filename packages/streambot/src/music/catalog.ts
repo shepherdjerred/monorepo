@@ -311,6 +311,19 @@ export class MusicCatalog {
     });
   }
 
+  /** The artist's name for an id the catalog issued; `artistRecordings` searches by name. */
+  async artist(id: string, signal: AbortSignal): Promise<{ name: string }> {
+    if (!z.uuid().safeParse(id).success)
+      throw new MusicError(
+        404,
+        "not_found",
+        "This music page is no longer available.",
+      );
+    return z
+      .object({ name: z.string().min(1) })
+      .parse(await this.request("artist/" + id + "?fmt=json", signal));
+  }
+
   async artistRecordings(
     artistName: string,
     signal: AbortSignal,

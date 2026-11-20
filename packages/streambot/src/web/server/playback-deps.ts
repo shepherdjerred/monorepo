@@ -7,10 +7,13 @@ import type { ChannelId } from "@shepherdjerred/streambot/types/ids.ts";
 import type { WebCatalog } from "./catalog.ts";
 import type { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
 import type { MusicService } from "@shepherdjerred/streambot/music/service.ts";
+import type { MusicSearchProviders } from "@shepherdjerred/streambot/music/search-provider.ts";
 
 export type WebPlaybackDeps = {
   schedules?: LolPlaybackSchedules;
   music?: MusicService;
+  /** Providers behind music search in the unified `/api/search/v2` endpoints. */
+  musicSearch?: MusicSearchProviders;
   expandPlaylist?: (
     url: string,
     signal: AbortSignal,

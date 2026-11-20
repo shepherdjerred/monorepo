@@ -181,6 +181,30 @@ startup fails when the flag is on and they are absent.
 
 ## Music discovery and playlists
 
+The web remote searches music through a provider chosen by the
+`streambot-music-search-provider` Flipt flag (`youtube-music`, the default, or
+`musicbrainz`; any other value is an error). A YouTube Music result is the
+playable item: its `music.youtube.com` watch page becomes the source, so there
+is no YouTube search-and-match step. The adapter in
+[`src/music/youtube-music.ts`](src/music/youtube-music.ts) uses the unofficial
+`youtubei.js` (pinned exactly) only to search; yt-dlp still resolves playback.
+Every item is validated against a strict schema, and `bun run ytmusic:probe`
+runs a few live searches through the adapter and prints counts, latencies and
+validation drops, for checking reachability from a deployed pod. It is manual
+and never part of CI or the image build.
+
+`GET /api/search/v2?guildId=&kind=&q=` returns one result group per request
+(`songs`, `albums`, `artists`, `library`, `videos`, `live`, `history`) as typed
+rows with a selection token and the actions (`listen`, `watch`) the viewer may
+take, so the client loads groups independently. `GET /api/search/v2/suggest`
+returns up to eight typeahead strings, and `GET /api/music/v2/album` and
+`/artist` return a header and rows. These draw on their own per-session budget
+(600 requests per minute) instead of the 120 that protect commands. A provider
+failure returns 503 `music_search_unavailable` for that group only. The older
+`/api/search`, `/api/music/*`, `/api/sports`, `/api/library`, and `/api/history`
+endpoints are unchanged. Metrics are `streambot_web_search_*` and
+`streambot_music_provider_*`; none label a query, title, or id.
+
 `/music search`, `/music artist`, and `/music album` browse the MusicBrainz
 catalog without consuming a streaming account. The Music page adds edition
 selection, album queues, and a YouTube recording picker. Confident matches use

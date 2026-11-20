@@ -11,6 +11,7 @@
     "#sports-png-fixture": "./test/fixtures/sports-png.ts",
     "#lol-fixture": "./test/fixtures/lol.ts",
     "#music-fixture": "./test/music/fixture.ts",
+    "#youtube-music-fixture": "./test/music/youtube-music-fixture.ts",
     "#architecture": "./architecture.config.ts",
     "#web-fixture": "./test/web/web-fixture.ts",
     "#numbered-fixture": "./test/session/numbered-fixture.ts"
@@ -44,6 +45,7 @@
     "lint": "eslint . && check-architecture",
     "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/streambot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t streambot:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
+    "ytmusic:probe": "bun scripts/ytmusic-probe.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
@@ -79,6 +81,7 @@
     "react-router": "^8.3.0",
     "spotify-url-info": "3.3.3",
     "xstate": "^5.32.4",
+    "youtubei.js": "18.3.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

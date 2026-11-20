@@ -305,6 +305,7 @@ export const STREAMBOT_VARIANT_FLAG_KEYS = [
   "streambot-reconnect-delay-seconds",
   "streambot-reconnect-max-attempts",
   "streambot-subtitle-languages",
+  "streambot-music-search-provider",
 ] as const;
 
 export type StreambotVariantFlagKey =

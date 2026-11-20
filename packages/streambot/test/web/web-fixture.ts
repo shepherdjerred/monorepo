@@ -29,6 +29,7 @@ import { WebSessionStore } from "@shepherdjerred/streambot/web/server/session-st
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import type { MusicService } from "@shepherdjerred/streambot/music/service.ts";
+import { searchControls } from "./web-fixture-music.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import type { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
 import {
@@ -179,6 +180,7 @@ export function webFixture(
   let radioEnabled = options.radioEnabled ?? true;
   let tvEnabled = options.tvEnabled ?? true;
   let plexEnabled = false;
+  const search = searchControls();
   let allocated = false;
   let numbered = false;
   let allocatedChannel: PlaybackChannelNumber | undefined;
@@ -232,7 +234,7 @@ export function webFixture(
     assistantV2: () => Promise.resolve(advanced),
     history: () => Promise.resolve(options.history !== undefined),
     automaticChannelRouting: () => Promise.resolve(options.automatic === true),
-    musicOverVoice: () => Promise.resolve(true),
+    musicOverVoice: () => Promise.resolve(search.listen()),
     sportsStreaming: () => Promise.resolve(sportsEnabled),
     lolEsports: () => Promise.resolve(options.lol === true),
     lolAutoplay: () => Promise.resolve(options.lol === true),
@@ -244,6 +246,7 @@ export function webFixture(
       ? {}
       : { schedules: options.schedules }),
     ...(options.music === undefined ? {} : { music: options.music }),
+    ...search.deps(options.music),
     ...(options.expandPlaylist === undefined
       ? {}
       : { expandPlaylist: options.expandPlaylist }),
@@ -469,6 +472,7 @@ export function webFixture(
     setPlexEnabled: (value: boolean) => {
       plexEnabled = value;
     },
+    ...search.setters,
     setBeforeResolve: (value: typeof beforeResolve) => {
       beforeResolve = value;
     },
@@ -478,25 +482,4 @@ export function webFixture(
       store.close();
     },
   };
-}
-
-/** Runs the Discord OAuth start and callback round trip against a fixture handler. */
-export async function discordLogin(
-  handler: (request: Request) => Promise<Response>,
-  origin = "http://127.0.0.1:8080",
-): Promise<Response> {
-  const start = await handler(new Request(origin + "/api/auth/discord/start"));
-  const state = new URL(start.headers.get("location") ?? "").searchParams.get(
-    "state",
-  );
-  const cookie = start.headers
-    .getSetCookie()
-    .map((value) => value.split(";")[0])
-    .join("; ");
-  return await handler(
-    new Request(
-      origin + "/api/auth/discord/callback?code=fixture&state=" + String(state),
-      { headers: { cookie } },
-    ),
-  );
 }

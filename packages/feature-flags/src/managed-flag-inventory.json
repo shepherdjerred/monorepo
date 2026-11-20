@@ -3716,6 +3716,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-music-search-provider",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-media-assistant",
+      "purpose": "Select the provider behind web remote music search: youtube-music (typed songs, albums and artists that are directly playable) or musicbrainz. Any other value is rejected.",
+      "type": "variant",
+      "default": "youtube-music",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-subtitles-include-auto-generated",
       "owner": "streambot",
       "namespace": "streambot",

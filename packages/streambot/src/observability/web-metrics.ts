@@ -55,6 +55,7 @@ const THROWN_WEB_ERROR_CODES = [
   "method",
   "music_disabled",
   "music_query",
+  "music_search_unavailable",
   "no_session",
   "no_station",
   "no_video",
@@ -156,6 +157,64 @@ export const PLAY_SURFACES = [
 ] as const;
 export type PlaySurface = (typeof PLAY_SURFACES)[number];
 
+/** Result groups of the unified search; one request loads exactly one. */
+export const WEB_SEARCH_KINDS = [
+  "songs",
+  "albums",
+  "artists",
+  "library",
+  "videos",
+  "live",
+  "history",
+] as const;
+export type WebSearchKind = (typeof WEB_SEARCH_KINDS)[number];
+
+/** Who answered a search group: a music provider or the first-party source behind the group. */
+export const WEB_SEARCH_PROVIDERS = [
+  "youtube-music",
+  "musicbrainz",
+  "local",
+  "youtube",
+  "sports",
+  "history",
+] as const;
+export type WebSearchProvider = (typeof WEB_SEARCH_PROVIDERS)[number];
+
+export const WEB_SEARCH_OUTCOMES = [
+  "results",
+  "empty",
+  "unavailable",
+  "timeout",
+  "aborted",
+  "error",
+] as const;
+export type WebSearchOutcome = (typeof WEB_SEARCH_OUTCOMES)[number];
+
+/** Calls a music search provider can be asked to make. `parser` counts upstream schema drift. */
+export const MUSIC_PROVIDER_OPERATIONS = [
+  "search_song",
+  "search_video",
+  "search_album",
+  "search_artist",
+  "suggest",
+  "album",
+  "artist",
+  "parser",
+] as const;
+export type MusicProviderOperation = (typeof MUSIC_PROVIDER_OPERATIONS)[number];
+
+export const MUSIC_PROVIDER_OUTCOMES = [
+  "ok",
+  "empty",
+  "invalid",
+  "unsupported",
+  "unavailable",
+  "timeout",
+  "aborted",
+  "error",
+] as const;
+export type MusicProviderOutcome = (typeof MUSIC_PROVIDER_OUTCOMES)[number];
+
 export const WEB_LOGIN_OUTCOMES = [
   "success",
   "cancelled",
@@ -210,6 +269,42 @@ export const webLoginsTotal = new Counter({
   name: "streambot_web_logins_total",
   help: "Streambot web sign-in callbacks by outcome",
   labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
+export const webSearchTotal = new Counter({
+  name: "streambot_web_search_total",
+  help: "Unified web search requests by result group, answering provider and outcome",
+  labelNames: ["kind", "provider", "outcome"] as const,
+  registers: [register],
+});
+
+export const webSearchDurationSeconds = new Histogram({
+  name: "streambot_web_search_duration_seconds",
+  help: "Unified web search duration by result group and answering provider",
+  labelNames: ["kind", "provider"] as const,
+  buckets: LATENCY_BUCKETS,
+  registers: [register],
+});
+
+export const musicProviderRequestsTotal = new Counter({
+  name: "streambot_music_provider_requests_total",
+  help: "Calls to a music search provider by operation and outcome",
+  labelNames: ["provider", "operation", "outcome"] as const,
+  registers: [register],
+});
+
+export const musicProviderDroppedItemsTotal = new Counter({
+  name: "streambot_music_provider_dropped_items_total",
+  help: "Provider items discarded because they failed strict validation, or parser nodes the upstream client could not read",
+  labelNames: ["provider", "operation"] as const,
+  registers: [register],
+});
+
+export const musicProviderDroppedArtworkTotal = new Counter({
+  name: "streambot_music_provider_dropped_artwork_total",
+  help: "Provider artwork URLs omitted because their host is not allowed; the item itself is kept",
+  labelNames: ["provider"] as const,
   registers: [register],
 });
 

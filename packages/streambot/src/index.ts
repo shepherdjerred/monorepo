@@ -45,11 +45,15 @@ import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-histo
 import { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
 import { MusicService } from "@shepherdjerred/streambot/music/service.ts";
 import { MusicCatalog } from "@shepherdjerred/streambot/music/catalog.ts";
+import { MusicBrainzProvider } from "@shepherdjerred/streambot/music/musicbrainz-provider.ts";
+import { createMusicSearchProviders } from "@shepherdjerred/streambot/music/search-instrumentation.ts";
+import { YouTubeMusicProvider } from "@shepherdjerred/streambot/music/youtube-music.ts";
 import { SpotifyMetadata } from "@shepherdjerred/streambot/music/spotify.ts";
 import { RadioCurator } from "@shepherdjerred/streambot/station/radio-curator.ts";
 import { createTvCurator } from "@shepherdjerred/streambot/station/tv-curator.ts";
 import {
   mediaFeatureGate,
+  musicSearchProviderName,
   webUiEnabled,
   plexPostersEnabled,
 } from "@shepherdjerred/streambot/config/media-features.ts";
@@ -157,8 +161,9 @@ async function main(): Promise<void> {
     path.join(config.state.dir, "streambot.sqlite"),
   );
   history.prune();
+  const musicCatalog = new MusicCatalog();
   const music = new MusicService(
-    new MusicCatalog(),
+    musicCatalog,
     new SpotifyMetadata(),
     (query, signal, limit) => searchYoutube(config, query, signal, limit),
   );
@@ -307,6 +312,13 @@ async function main(): Promise<void> {
           playback: {
             ...(schedules === undefined ? {} : { schedules }),
             music,
+            musicSearch: createMusicSearchProviders(
+              {
+                "youtube-music": new YouTubeMusicProvider(),
+                musicbrainz: new MusicBrainzProvider(musicCatalog),
+              },
+              musicSearchProviderName,
+            ),
             expandPlaylist: (url, signal, progress) =>
               expandPlaylist(config, url, signal, progress),
             expandPlaylistWithMetadata: (url, signal) =>

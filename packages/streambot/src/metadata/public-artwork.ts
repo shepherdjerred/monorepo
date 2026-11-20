@@ -7,12 +7,17 @@ import {
 import {
   isSpotifyArtworkUrl,
   SPOTIFY_ARTWORK_HOSTS,
+  YOUTUBE_MUSIC_ARTWORK_HOSTS,
 } from "@shepherdjerred/streambot/music/artwork.ts";
 
 export const ARTWORK_HOSTS: readonly string[] = [
-  "image.tmdb.org",
-  "i.ytimg.com",
-  "img.youtube.com",
+  ...new Set([
+    "image.tmdb.org",
+    "i.ytimg.com",
+    "img.youtube.com",
+    // YouTube Music covers and artist photos; the CSP `img-src` is built from this list.
+    ...YOUTUBE_MUSIC_ARTWORK_HOSTS,
+  ]),
   ...SPOTIFY_ARTWORK_HOSTS,
   SPORTS_ARTWORK_HOST,
   LOL_ARTWORK_HOST,
