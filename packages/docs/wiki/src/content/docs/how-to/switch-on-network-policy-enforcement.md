@@ -289,7 +289,9 @@ while its namespace is still open, so its connections open under the enforcer.
 
 2. Read `restart-plan.sh`. It lists PostgreSQL clusters first, then Temporal
    with its server first, then everything else. Each workload has a restart
-   command and a wait command.
+   command and a wait command. The PostgreSQL StatefulSets use the `OnDelete`
+   update strategy, so their restart deletes the pod and the wait checks that
+   pod is Ready again.
 
 3. Run it one tier at a time. Stop at the first wait that fails:
 
@@ -297,7 +299,21 @@ while its namespace is still open, so its connections open under the enforcer.
    bash -e restart-plan.sh
    ```
 
-4. Check the namespaces again:
+4. The plan restarts `woodpecker/woodpecker-woodpecker-server`, and the
+   queue pause from step 2 does not survive that restart. Queued pipelines,
+   including ones on `main`, start as soon as the server is back, and
+   dependent workflows can start before the ones they depend on finish. Check
+   the queue:
+
+   ```bash
+   toolkit ci load
+   ```
+
+   `liskov` has already rebooted, so CI running from here on is safe. Cancel
+   and restart any `main` pipeline whose `images` step failed with a missing
+   `caddyfile` handoff.
+
+5. Check the namespaces again:
 
    ```bash
    bun run --cwd packages/homelab netpol:check --all-staged --expect-stage open
