@@ -79,6 +79,16 @@ test("household migration keeps existing library without manufacturing permanent
         where: { id: `episode:${episode.id}` },
       }),
     ).toMatchObject({ kind: "episode", date: "2026-01-02", precision: "day" });
+    // The current client writes every current MediaItem column, so new rows
+    // need the rest of the committed schema, not only the household boundary.
+    for (const name of migrations
+      .filter(
+        (candidate) =>
+          /^\d{14}_/u.test(candidate) &&
+          candidate > "20261114000100_household_library",
+      )
+      .sort())
+      cluster.applyMigration(name);
     const fresh = await current.mediaItem.create({
       data: { kind: "movie", title: "New temporary movie" },
     });
