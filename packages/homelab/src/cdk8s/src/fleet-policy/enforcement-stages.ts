@@ -41,7 +41,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "minecraft-tsmc": "open",
   "node-tuning": "open",
   phoenix: "open",
-  pinchtab: "open",
+  pinchtab: "enforced",
   postal: "open",
   prometheus: "open",
   redlib: "enforced",
