@@ -52,7 +52,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   seaweedfs: "open",
   "starlight-karma-bot-beta": "open",
   "starlight-karma-bot-prod": "open",
-  stash: "open",
+  stash: "enforced",
   "storm-brain": "open",
   "storm-forum": "open",
   syncthing: "open",
