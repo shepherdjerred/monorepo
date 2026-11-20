@@ -50,6 +50,13 @@ const BY_DOMAIN: Record<ChangeDomain, (change: ChangeEvent) => QueryKey[]> = {
   monitor: (change) => [["deployment", change.entityId], ...INTENT],
 };
 
+/**
+ * The overview grid's key. It sits under `["hub"]`, the prefix every change
+ * invalidates, so the grid refreshes whenever the pipelines read does: any
+ * change can move a status, a count or an attention item on either.
+ */
+export const GRID_KEY = ["hub", "grid"] as const;
+
 /** Query-key prefixes a committed change can make stale. */
 export function keysForChange(change: ChangeEvent): QueryKey[] {
   return [["hub"], ["activity"], ...BY_DOMAIN[change.domain](change)];

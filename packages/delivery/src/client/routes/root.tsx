@@ -15,6 +15,7 @@ import { awaitsDecision } from "#client/model/view.ts";
 export type RouterContext = { queryClient: QueryClient; feed: ChangeFeed };
 
 const NAVIGATION = [
+  { to: "/", label: "Overview", exact: true },
   { to: "/commits", label: "Commits", exact: false },
   { to: "/pipelines", label: "Pipelines", exact: false },
   { to: "/deployments", label: "Deployments", exact: false },
@@ -88,7 +89,7 @@ function RootLayout() {
         Skip to content
       </a>
       <header className="masthead">
-        <Link to="/commits" className="brand">
+        <Link to="/" className="brand">
           <span className="brand-mark" aria-hidden="true">
             ⟶
           </span>
@@ -113,7 +114,7 @@ export function NotFound() {
       <PageHeader title="Not found" />
       <p>
         Nothing lives at this address.{" "}
-        <Link to="/pipelines">Return to pipelines</Link>.
+        <Link to="/">Return to the overview</Link>.
       </p>
     </>
   );

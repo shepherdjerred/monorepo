@@ -8,6 +8,7 @@ import { api, expectNoHorizontalOverflow } from "./helpers.ts";
 import { FAILED_COMMIT_TITLE, LONG_COMMIT_TITLE } from "./commits.ts";
 
 const ROUTES = [
+  ["/", "Overview"],
   ["/commits", "Commits"],
   ["/commits/aaaaaaa", "Commit aaaaaaa"],
   ["/pipelines", "Pipelines"],
@@ -47,10 +48,8 @@ test("every route deep-links to its own page and title", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("the commit list is home and answers per environment", async ({
-  page,
-}) => {
-  await page.goto("/");
+test("the commit list answers per environment", async ({ page }) => {
+  await page.goto("/commits");
   await expect(page).toHaveURL(/\/commits$/u);
   await page.getByRole("link", { name: /^aaaaaaa/u }).click();
   await expect(page).toHaveURL(/\/commits\/a{40}$/u);

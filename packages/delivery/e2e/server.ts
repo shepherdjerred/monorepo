@@ -13,6 +13,7 @@ import { platformFixture } from "#testing/platform-fixture.ts";
 import { seedPlatformBrowser } from "./platform.ts";
 import { serveHarness } from "./harness.ts";
 import { describeSeededCommits, seedCommitHistory } from "./commits.ts";
+import { seedOverviewGroup } from "./overview.ts";
 import {
   requestTestPlan,
   checkpointTestPlan,
@@ -41,6 +42,7 @@ async function startHarness() {
   // Oldest first: the commit list needs a second page behind every other seed.
   await seedCommitHistory(delivery);
   await seedDelivery(delivery);
+  await seedOverviewGroup(delivery, cluster.database);
   const forum = await seedBrowserForum(delivery);
   await seedContentRecovery(delivery, forum.id);
   const scout = await workerFixture(delivery, "scout-prod");

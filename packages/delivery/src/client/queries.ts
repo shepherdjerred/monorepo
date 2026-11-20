@@ -5,6 +5,7 @@ import type {
   DeploymentListQuery,
 } from "#shared/hub/hub-contract.ts";
 import { delivery, hub } from "./api.ts";
+import { GRID_KEY } from "./change-keys.ts";
 
 /** A running CI pipeline is not a Delivery change, so it is polled. */
 const RUNNING_CI_POLL_MS = 10_000;
@@ -17,6 +18,7 @@ export const queries = {
       staleTime: Infinity,
     }),
   hub: () => queryOptions({ queryKey: ["hub"], queryFn: () => hub.hub() }),
+  grid: () => queryOptions({ queryKey: GRID_KEY, queryFn: () => hub.grid() }),
   // An object key cannot collide with a commit's `["commits", sha]`.
   commits: (cursor: string | undefined) =>
     queryOptions({

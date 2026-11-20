@@ -65,7 +65,8 @@ TanStack Router definitions in `src/client/router.tsx`:
 
 | URL                            | Page                                                         |
 | ------------------------------ | ------------------------------------------------------------ |
-| `/commits` (home)              | Commits by title and author, each with an "is it deployed?"  |
+| `/` (home)                     | Overview: every active service, its environments, attention  |
+| `/commits`                     | Commits by title and author, each with an "is it deployed?"  |
 | `/commits/:sha`                | One commit: title, CI, every changed service by environment  |
 | `/pipelines`                   | Every pipeline's newest execution, attention items, tools    |
 | `/pipelines/:id`               | Promotion: source, build, test, version set, environments    |
@@ -76,6 +77,22 @@ TanStack Router definitions in `src/client/router.tsx`:
 | `/recovery-intents/:id`        | One unified recovery intent and its inspection evidence      |
 | `/deployments`, `/approvals`   | Deployment history; pending approvals and plans, recent ones |
 | `/artifacts`, `/activity`      | Build qualification; the audit trail with catalog reconciles |
+
+The overview reads `GET /api/v1/hub/grid` (`src/infrastructure/hub/grid.ts`):
+every service whose lifecycle is `active` and that the server's catalog
+declares, under its catalog group, including services only the v2 catalog
+names. The page shows one panel per catalog kind; a group of several services
+keeps its own heading, and a group of one is just that service. Each
+environment carries the status of its newest deployment (`not_started` when
+Delivery has recorded none), whether that deployment requires recovery, and
+the accepted set revision with the time its deployment finished. That is
+Delivery's deployment record, not runtime health: the route never asks ArgoCD,
+and live state stays on the environment page's runtime panel. It issues nine
+statements however many services it lists and traces no execution, because
+every change event refetches it. Its attention items are the ones `GET /hub`
+computes (`src/infrastructure/hub/attention.ts`), limited to active
+environments. `?q=` and `?status=` filter by service name and by an
+environment's status.
 
 A commit has one build per service, but only a build that produced a version
 set (or a platform deployment) changed anything. `GET /api/v1/commits` and
@@ -279,6 +296,7 @@ gives each model route's scope and toolkit command.
 | Attest an operator-run stage                                    | `POST /deployments/:id/attestations`                                  |
 | Retire a service                                                | `POST /services/:id/retire`                                           |
 | Hub, service pipeline and paginated executions                  | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`              |
+| Every active service and its environments' deployment record    | `GET /hub/grid`                                                       |
 | One change, traced from build or set revision                   | `GET /builds/:id`, `GET /versions/:id/trace`                          |
 | Paginated commits, deployments, builds and audit activity       | `GET /commits`, `GET /deployments`, `GET /builds`, `GET /activity`    |
 | One commit by full sha or unambiguous prefix                    | `GET /commits/:sha`                                                   |
