@@ -13,6 +13,7 @@
   "binariesDir": "../target/package/stable",
   "resources": [{ "src": "../target/voice-models", "target": "voice-models" }],
   "binaries": [{ "path": "scout-client", "main": true }],
+  "macos": { "infoPlistPath": "Info.plist" },
   "nsis": {
     "installMode": "currentUser",
     "installerIcon": "../assets/icon.ico",

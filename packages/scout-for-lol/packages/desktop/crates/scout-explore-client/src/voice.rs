@@ -8,8 +8,9 @@
 //! `done`. A turn is one request; a lost stream is not resumed here, because
 //! the run it started can be followed over `runs/stream` like any other.
 //!
-//! No UI and no hotkeys live here: the window and the global shortcut are the
-//! next stage's.
+//! The recording arrives as a [`PlayerAuthored`] utterance: only the
+//! supervisor's voice capture mints one. No UI, hotkeys or audio devices live
+//! here.
 
 use std::collections::VecDeque;
 use std::fmt;
@@ -23,6 +24,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 
+use crate::authored::PlayerAuthored;
 use crate::client::ExploreClient;
 use crate::contract::{VOICE_MAX_DURATION_MS, VOICE_MIN_DURATION_MS, VOICE_SAMPLE_RATE_HZ};
 use crate::error::ExploreClientError;
@@ -520,12 +522,13 @@ impl ExploreClient {
     /// after the stream opens arrive as its events.
     pub async fn start_voice_turn(
         &self,
-        utterance: &Utterance,
+        utterance: &PlayerAuthored<Utterance>,
         trigger: VoiceTrigger,
         conversation_id: Option<Uuid>,
         game_context: Option<GameContext>,
     ) -> Result<VoiceTurnEvents, ExploreClientError> {
-        let request = VoiceTurnRequest::new(utterance, trigger, conversation_id, game_context);
+        let request =
+            VoiceTurnRequest::new(utterance.get(), trigger, conversation_id, game_context);
         let response = self.open_voice_turn(&request).await?;
         Ok(voice_events(response.bytes_stream()))
     }

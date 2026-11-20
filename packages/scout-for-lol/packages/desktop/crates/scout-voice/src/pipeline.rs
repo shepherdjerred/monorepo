@@ -147,7 +147,13 @@ impl<K: KeywordSpotter, V: VoiceActivity, W: WakeVerifier> VoicePipeline<K, V, W
 
     /// Follow League's gameflow: conversation mode is on only in game.
     pub fn set_gameflow_phase(&mut self, phase: &GameflowPhase) {
-        let open = conversation_open(phase);
+        self.set_conversation_open(conversation_open(phase));
+    }
+
+    /// Turn hands-free listening on or off. The app decides this from the
+    /// gameflow phase together with the player's own choices (opted in, not
+    /// muted, conversation mode on).
+    pub fn set_conversation_open(&mut self, open: bool) {
         if open != self.machine.conversation_open {
             self.apply(if open {
                 VoiceEvent::ConversationOpened

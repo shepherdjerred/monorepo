@@ -23,6 +23,7 @@ use std::collections::BTreeMap;
 
 mod chat;
 mod chat_visuals;
+mod voice;
 
 pub use chat::{
     ChatAttachment, ChatAvailability, ChatCoachOption, ChatCommand, ChatComposer, ChatConversation,
@@ -33,9 +34,12 @@ pub use chat_visuals::{
     ChatIcon, ChatImage, ChatLoadoutCard, ChatMatchCard, ChatMatchPlayer, ChatMatchTeam, ChatTable,
     ChatTableLayout, ChatVisual, ChatVisuals,
 };
+pub use voice::{
+    VoiceCommand, VoiceConsent, VoiceSettings, VoiceSnapshot, VoiceState, VoiceTurnView,
+};
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 9;
+pub const PROTOCOL_VERSION: u32 = 10;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -106,6 +110,16 @@ pub enum SupervisorMessage {
         /// The allowlisted summary.
         live: Option<LiveGameSnapshot>,
     },
+    /// Where the microphone is, and the voice settings. Sent when it changes.
+    Voice {
+        /// What the window shows.
+        voice: VoiceSnapshot,
+    },
+    /// The spoken turn, or none before the first one. Sent when it changes.
+    VoiceTurn {
+        /// What Scout heard and answered.
+        turn: Option<VoiceTurnView>,
+    },
     /// Bring the window to the front (the tray's "Open" while it is running).
     Show,
     /// Scout is quitting: close the window and exit.
@@ -143,6 +157,11 @@ pub enum WindowMessage {
     SetStartAtLogin {
         /// Whether Scout Client starts at login.
         enabled: bool,
+    },
+    /// A voice choice: consent, mute, or settings.
+    Voice {
+        /// What the player chose.
+        command: VoiceCommand,
     },
     /// Change the two privacy switches. Both are sent together so the
     /// supervisor never has to merge a half-known state.
@@ -417,8 +436,18 @@ mod tests {
         ChatRole, ChatStatus, ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion,
         ChatVisual, ChatVisuals, CounterReading, DiagnosticsSnapshot, GameflowPhase,
         LiveGameSnapshot, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage,
-        UpdateSnapshot, UpdateStatus, WindowMessage, check_protocol, decode_line, encode_line,
+        UpdateSnapshot, UpdateStatus, VoiceCommand, VoiceConsent, VoiceSettings, VoiceSnapshot,
+        VoiceState, VoiceTurnView, WindowMessage, check_protocol, decode_line, encode_line,
     };
+
+    fn voice_settings() -> VoiceSettings {
+        VoiceSettings {
+            conversation_mode: true,
+            push_to_talk: true,
+            push_to_talk_key: "F8".to_owned(),
+            mute_key: "Shift+F8".to_owned(),
+        }
+    }
 
     const CONVERSATION: Uuid = Uuid::from_u128(0x0b5e_4a1c_7f00_4e5a_9c1d_2f3e_4a5b_6c7d);
 
@@ -622,6 +651,27 @@ mod tests {
                     creep_score: 87,
                 }),
             },
+            SupervisorMessage::Voice {
+                voice: VoiceSnapshot::default(),
+            },
+            SupervisorMessage::Voice {
+                voice: VoiceSnapshot {
+                    state: VoiceState::Error,
+                    consent: VoiceConsent::Accepted,
+                    consent_requested: false,
+                    muted: true,
+                    settings: Some(voice_settings()),
+                    detail: Some("No microphone is connected.".to_owned()),
+                },
+            },
+            SupervisorMessage::VoiceTurn { turn: None },
+            SupervisorMessage::VoiceTurn {
+                turn: Some(VoiceTurnView {
+                    heard: Some("What should I build next?".to_owned()),
+                    answer: Some("Zhonya's Hourglass.".to_owned()),
+                    error: None,
+                }),
+            },
             SupervisorMessage::Show,
             SupervisorMessage::Close,
         ]
@@ -649,7 +699,7 @@ mod tests {
         };
         assert_eq!(live.summary(), "Ahri, level 10, 4/2/7, 87 CS, 7:01");
         assert_eq!(
-            PROTOCOL_VERSION, 9,
+            PROTOCOL_VERSION, 10,
             "a new message or field bumps the protocol"
         );
     }
@@ -752,6 +802,17 @@ mod tests {
             },
             WindowMessage::Chat {
                 command: ChatCommand::ChooseModel { model: None },
+            },
+            WindowMessage::Voice {
+                command: VoiceCommand::Consent { accepted: true },
+            },
+            WindowMessage::Voice {
+                command: VoiceCommand::SetMuted { muted: true },
+            },
+            WindowMessage::Voice {
+                command: VoiceCommand::SetSettings {
+                    settings: voice_settings(),
+                },
             },
             WindowMessage::SetStartAtLogin { enabled: true },
             WindowMessage::SetPrivacy {
@@ -860,6 +921,38 @@ mod tests {
         ] {
             assert!(decode_line::<SupervisorMessage>(line).is_err(), "{line}");
         }
+    }
+
+    #[test]
+    fn voice_messages_have_a_fixed_wire_shape_and_carry_no_audio() -> Result<(), super::CodecError>
+    {
+        assert_eq!(
+            encode_line(&WindowMessage::Voice {
+                command: VoiceCommand::SetMuted { muted: true }
+            })?,
+            "{\"type\":\"voice\",\"command\":{\"action\":\"set_muted\",\"muted\":true}}\n"
+        );
+        assert_eq!(
+            encode_line(&SupervisorMessage::Voice {
+                voice: VoiceSnapshot::default()
+            })?,
+            "{\"type\":\"voice\",\"voice\":{\"state\":\"off\",\"consent\":\"not_asked\",\"consent_requested\":false,\"muted\":false,\"settings\":null,\"detail\":null}}\n"
+        );
+        for line in [
+            // An unknown state, a recording, and a stray settings field.
+            r#"{"type":"voice","voice":{"state":"streaming","consent":"accepted","consent_requested":false,"muted":false,"settings":null,"detail":null}}"#,
+            r#"{"type":"voice_turn","turn":{"heard":null,"answer":null,"error":null,"audio":"UklGRg=="}}"#,
+        ] {
+            assert!(decode_line::<SupervisorMessage>(line).is_err(), "{line}");
+        }
+        for line in [
+            r#"{"type":"voice","command":{"action":"set_settings","settings":{"conversation_mode":true,"push_to_talk":true,"push_to_talk_key":"F8","mute_key":"F9","wake_word":"hey"}}}"#,
+            r#"{"type":"voice","command":{"action":"record"}}"#,
+            r#"{"type":"voice","command":{"action":"consent"}}"#,
+        ] {
+            assert!(decode_line::<WindowMessage>(line).is_err(), "{line}");
+        }
+        Ok(())
     }
 
     #[test]

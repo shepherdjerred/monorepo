@@ -10,6 +10,10 @@
 //! Settings are one small JSON file in the per-user data directory, beside but
 //! apart from the outbox: the outbox file is scoped to a backend and device
 //! and is recreated on pairing, which must not reset a privacy choice.
+//!
+//! The same file keeps the voice choices ([`VoiceSettings`]): whether the
+//! player agreed to voice at all, which is off until they do, and the
+//! push-to-talk and mute keys.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -104,15 +108,61 @@ impl PrivacyGates {
     }
 }
 
-/// What is on disk: the privacy switches and the last version that ran, which
-/// is how an applied update is noticed.
+/// The push-to-talk key until the player picks another.
+pub const DEFAULT_PUSH_TO_TALK_KEY: &str = "F8";
+/// The mute key until the player picks another.
+pub const DEFAULT_MUTE_KEY: &str = "Shift+F8";
+
+/// The player's voice choices.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct VoiceSettings {
+    /// Whether the player agreed to voice: `None` until asked. Nothing opens
+    /// the microphone unless this is `Some(true)`.
+    pub consent: Option<bool>,
+    /// Listen for "hey scout" while a game is loading or in progress.
+    pub conversation_mode: bool,
+    /// Hold a key to ask. On by default.
+    pub push_to_talk: bool,
+    /// The push-to-talk key, as a global-hotkey accelerator.
+    pub push_to_talk_key: String,
+    /// The mute key, as a global-hotkey accelerator.
+    pub mute_key: String,
+}
+
+impl Default for VoiceSettings {
+    fn default() -> Self {
+        Self {
+            consent: None,
+            conversation_mode: true,
+            push_to_talk: true,
+            push_to_talk_key: DEFAULT_PUSH_TO_TALK_KEY.to_owned(),
+            mute_key: DEFAULT_MUTE_KEY.to_owned(),
+        }
+    }
+}
+
+/// What is on disk: the privacy switches, the voice choices, and the last
+/// version that ran, which is how an applied update is noticed.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct StoredSettings {
     #[serde(flatten)]
     privacy: PrivacySettings,
+    #[serde(default)]
+    voice: VoiceSettings,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     last_run_version: Option<String>,
+}
+
+impl StoredSettings {
+    fn fresh() -> Self {
+        Self {
+            privacy: PrivacySettings::default(),
+            voice: VoiceSettings::default(),
+            last_run_version: None,
+        }
+    }
 }
 
 /// Why settings could not be read or written.
@@ -148,10 +198,9 @@ impl SettingsStore {
     fn read(&self) -> Result<StoredSettings, SettingsError> {
         match std::fs::read_to_string(&self.path) {
             Ok(text) => Ok(serde_json::from_str(&text)?),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(StoredSettings {
-                privacy: PrivacySettings::default(),
-                last_run_version: None,
-            }),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                Ok(StoredSettings::fresh())
+            }
             Err(error) => Err(error.into()),
         }
     }
@@ -179,11 +228,31 @@ impl SettingsStore {
     ///
     /// Returns an error when the file cannot be written.
     pub fn save(&self, settings: PrivacySettings) -> Result<(), SettingsError> {
-        let mut stored = self.read().unwrap_or(StoredSettings {
-            privacy: settings,
-            last_run_version: None,
-        });
+        let mut stored = self.read().unwrap_or_else(|_| StoredSettings::fresh());
         stored.privacy = settings;
+        self.write(&stored)
+    }
+
+    /// The voice choices. A missing file, or a file from before voice, is
+    /// the defaults: not yet agreed to.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for an unreadable or malformed file; voice then
+    /// stays off.
+    pub fn load_voice(&self) -> Result<VoiceSettings, SettingsError> {
+        Ok(self.read()?.voice)
+    }
+
+    /// Persist the voice choices, keeping everything else in the file.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the file cannot be read or written. A damaged
+    /// file is not overwritten, so the privacy switches in it are not lost.
+    pub fn save_voice(&self, voice: &VoiceSettings) -> Result<(), SettingsError> {
+        let mut stored = self.read()?;
+        stored.voice = voice.clone();
         self.write(&stored)
     }
 
@@ -206,7 +275,7 @@ impl SettingsStore {
 
 #[cfg(test)]
 mod tests {
-    use super::{PrivacyGates, PrivacySettings, SettingsStore};
+    use super::{PrivacyGates, PrivacySettings, SettingsStore, VoiceSettings};
 
     fn store() -> Result<(tempdir::Dir, SettingsStore), Box<dyn std::error::Error>> {
         let directory = tempdir::Dir::new()?;
@@ -292,6 +361,62 @@ mod tests {
         store.note_run_version("0.1.0")?;
         store.save(PrivacySettings::all_off())?;
         assert_eq!(store.note_run_version("0.2.0")?.as_deref(), Some("0.1.0"));
+        Ok(())
+    }
+
+    #[test]
+    fn voice_is_off_until_agreed_and_keeps_push_to_talk_on()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let (directory, store) = store()?;
+        let fresh = store.load_voice()?;
+        assert_eq!(fresh.consent, None);
+        assert!(fresh.push_to_talk && fresh.conversation_mode);
+        assert_eq!(
+            (fresh.push_to_talk_key.as_str(), fresh.mute_key.as_str()),
+            ("F8", "Shift+F8")
+        );
+        // A file written before voice existed reads as the defaults.
+        std::fs::write(
+            directory.path().join("settings.json"),
+            r#"{"sendErrorReports":false,"sendUsageData":true}"#,
+        )?;
+        assert_eq!(store.load_voice()?, VoiceSettings::default());
+        Ok(())
+    }
+
+    #[test]
+    fn a_voice_choice_survives_a_restart_and_keeps_privacy()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let (directory, store) = store()?;
+        store.save(PrivacySettings::all_off())?;
+        let chosen = VoiceSettings {
+            consent: Some(true),
+            conversation_mode: false,
+            push_to_talk: true,
+            push_to_talk_key: "Alt+KeyV".to_owned(),
+            mute_key: "F9".to_owned(),
+        };
+        store.save_voice(&chosen)?;
+        let reopened = SettingsStore::in_directory(directory.path());
+        assert_eq!(reopened.load_voice()?, chosen);
+        assert_eq!(reopened.load()?, PrivacySettings::all_off());
+        // Saving privacy keeps the voice choice too.
+        reopened.save(PrivacySettings::default())?;
+        assert_eq!(reopened.load_voice()?, chosen);
+        Ok(())
+    }
+
+    #[test]
+    fn a_damaged_file_keeps_voice_off_and_is_not_overwritten()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let (directory, store) = store()?;
+        std::fs::write(directory.path().join("settings.json"), "{not json")?;
+        assert!(store.load_voice().is_err());
+        assert!(store.save_voice(&VoiceSettings::default()).is_err());
+        assert_eq!(
+            std::fs::read_to_string(directory.path().join("settings.json"))?,
+            "{not json"
+        );
         Ok(())
     }
 

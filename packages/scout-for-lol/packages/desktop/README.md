@@ -81,12 +81,13 @@ plus diagnostics counters and recent events), `phase` changes, `update` (the
 self-update state), the six chat parts (`chat_status`,
 `chat_conversations`, `chat_transcript`, `chat_turn`, `chat_images`,
 `chat_composer`; see
-"Explore chat"), the
+"Explore chat"), `voice` and `voice_turn` (see "Voice"), the
 diagnostics bundle on request, `show`, and `close`. The window sends its own
 `hello`, then `pair`, `disconnect`, `open_url` (http and https only),
 `open_log_folder`, `request_diagnostics`, `set_start_at_login`, `set_privacy`,
 `chat` (refresh, open, new, send, stop, edit, regenerate, switch version,
-attach, remove attachment, share, revoke share, choose model), and `quit`. Decoding is strict: an
+attach, remove attachment, share, revoke share, choose model), `voice`
+(consent, set muted, set settings), and `quit`. Decoding is strict: an
 unknown type is a broken contract, and the supervisor treats it as a window
 crash. Logging goes to stderr in both processes, because the window's stdout
 carries the protocol.
@@ -418,6 +419,49 @@ reading `WindowMode` from League's game settings to warn about exclusive
 fullscreen, the native code under `scout-platform`, and the beta-only proactive
 detectors. On macOS the cards stay in the main window if the overlay does not
 work there.
+
+### Voice
+
+With the gpui window on Windows and macOS, the player can ask Scout a
+question aloud: say "hey scout" during a game, or hold the push-to-talk key.
+The supervisor owns everything that touches audio (`scout-client-app`'s
+`voice` module); the window process never opens the microphone and never sees
+audio.
+
+- **Consent first.** Voice is off until the player agrees. The first time it
+  is asked for (a game starts in conversation mode, or push-to-talk is
+  pressed), the supervisor brings the window forward with the "Talk to
+  Scout?" question. The choice is kept in `settings.json` beside the privacy
+  switches; a declined choice is not asked again and gives the keys back.
+  Settings → Voice turns it on or off later.
+- **The microphone.** `scout-voice`'s engine runs on its own thread and holds
+  the input device open only while it is needed: in conversation mode from
+  gameflow `GameStart` until the game leaves `InProgress` (`WaitingForStats`,
+  `EndOfGame` and every other phase close it), or while push-to-talk is held.
+  It closes while an answer is fetched and spoken, so Scout's own voice cannot
+  wake it, and whenever the player mutes. Models load only after consent, from
+  a `voice-models` directory beside the executable or in the data directory,
+  each file checked against its pinned SHA-256; without them voice shows an
+  error and stays off.
+- **Keys.** Push-to-talk (on by default, `F8`) and mute (`Shift+F8`) are
+  global keys from `global-hotkey`, registered on the tray's event loop
+  (`hotkeys.rs`). A global key is taken from every other app, League
+  included, so the offered keys are ones League leaves unbound. Settings
+  offers a few of each; any global-hotkey accelerator set in `settings.json`
+  works too.
+- **A question.** A finished utterance becomes a 16 kHz mono WAV, the only
+  thing marked `PlayerAuthored` besides typed text, and goes to
+  `coach/voice/turns` with the chat's open conversation and, during a game,
+  the supervisor's own allowlisted live snapshot. The server transcribes it,
+  re-checks the wake phrase, and streams `transcript`, `run`, `answer`, the
+  answer's speech as `audio` chunks, and `done`. The answer plays on the
+  default output device; pressing push-to-talk over it cuts it off.
+- **The window.** `voice` carries the microphone's state (off, listening,
+  recording, thinking, speaking, muted, error), consent and the settings;
+  `voice_turn` carries what Scout heard and answered. The state shows beside
+  "Scout" on every page, and clicking it mutes or unmutes. The spoken turn
+  shows above the chat transcript, and the conversation that holds it opens
+  when the answer is done.
 
 ## Release profiles
 
@@ -983,18 +1027,20 @@ stays in memory on the device to time the game start.
 
 ### What leaves this device, and when
 
-| Data                                                         | Leaves the device?         | When                                                                                                                                                                                                                                          | Controlled by          |
-| ------------------------------------------------------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| Live game snapshot (`allgamedata` projection)                | Only with a chat question  | When you send a question during a game with **Using your live game** on                                                                                                                                                                       | The composer chip      |
-| Live game recordings (`recordings.sqlite3`)                  | Yes, to the Scout API      | Once, after the game ends, while paired; kept locally 20 games or 30 days                                                                                                                                                                     | Disconnect the device  |
-| Live game in-progress marker (`live_game_frame` observation) | Yes, to the Scout API      | Once per game, while paired; carries no game data (`{"inProgress": true}`)                                                                                                                                                                    | Disconnect the device  |
-| Match, lobby, profile and Clash observations                 | Yes, to the Scout API      | While paired, from the outbox                                                                                                                                                                                                                 | Disconnect the device  |
-| Replay files                                                 | Yes, to the Scout API      | After a game, while paired                                                                                                                                                                                                                    | Disconnect the device  |
-| Explore chat questions                                       | Yes, to the Scout API      | When you send one                                                                                                                                                                                                                             | Not sending            |
-| Error reports                                                | Yes, to Bugsink, scrubbed  | On an error or crash                                                                                                                                                                                                                          | **Send error reports** |
-| Usage events                                                 | Yes, through the Scout API | On a product event                                                                                                                                                                                                                            | **Send usage data**    |
-| Champion select (`live::champ_select` projection)            | No                         | Not collected yet                                                                                                                                                                                                                             | Never sent             |
-| Microphone audio (`scout-voice`)                             | No, not yet                | Not captured yet: the crate is not wired into the app. Once it is, only one finished WAV per spoken question goes to `coach/voice/turns` (`scout-explore-client::voice`), after the wake phrase or push-to-talk; the microphone never streams | Never sent             |
+| Data                                                         | Leaves the device?         | When                                                                                                                                                                                  | Controlled by                    |
+| ------------------------------------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| Live game snapshot (`allgamedata` projection)                | Only with a question       | When you send a typed question during a game with **Using your live game** on, or ask one aloud during a game                                                                         | The composer chip; voice consent |
+| Live game recordings (`recordings.sqlite3`)                  | Yes, to the Scout API      | Once, after the game ends, while paired; kept locally 20 games or 30 days                                                                                                             | Disconnect the device            |
+| Live game in-progress marker (`live_game_frame` observation) | Yes, to the Scout API      | Once per game, while paired; carries no game data (`{"inProgress": true}`)                                                                                                            | Disconnect the device            |
+| Match, lobby, profile and Clash observations                 | Yes, to the Scout API      | While paired, from the outbox                                                                                                                                                         | Disconnect the device            |
+| Replay files                                                 | Yes, to the Scout API      | After a game, while paired                                                                                                                                                            | Disconnect the device            |
+| Explore chat questions                                       | Yes, to the Scout API      | When you send one                                                                                                                                                                     | Not sending                      |
+| Error reports                                                | Yes, to Bugsink, scrubbed  | On an error or crash                                                                                                                                                                  | **Send error reports**           |
+| Usage events                                                 | Yes, through the Scout API | On a product event                                                                                                                                                                    | **Send usage data**              |
+| Champion select (`live::champ_select` projection)            | No                         | Not collected yet                                                                                                                                                                     | Never sent                       |
+| Microphone audio while listening (`scout-voice`)             | No                         | Never: listening for "hey scout" runs on this computer, and audio that is not a question is dropped as it arrives                                                                     | Never sent                       |
+| A spoken question                                            | Yes, to the Scout API      | Only as a finished utterance: one WAV per question, after "hey scout" or while push-to-talk is held, sent to `coach/voice/turns` once you stop speaking; the microphone never streams | Voice consent, mute              |
+| Spoken answers                                               | No, they arrive            | Played on this computer as they stream in; nothing is kept                                                                                                                            | Voice consent                    |
 
 The live game snapshot reaches Scout only as a chat question's game context.
 While a game is live the composer shows **Using your live game**, on until you

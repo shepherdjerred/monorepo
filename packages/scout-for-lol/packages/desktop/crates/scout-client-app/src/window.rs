@@ -207,9 +207,12 @@ fn receive(inbox: &Mutex<Inbox>, error_gate: &SendGate, line: &str) -> Result<()
         SupervisorMessage::DiagnosticsBundle { text } => inbox.bundle = Some(text),
         SupervisorMessage::Show => inbox.show = true,
         SupervisorMessage::Close => inbox.close = true,
-        // The gpui window renders chat and the live game line; the egui
-        // window has neither.
+        // The gpui window renders chat, voice and the live game line; the
+        // egui window has none of them, and the supervisor runs no voice
+        // behind it.
         SupervisorMessage::LiveGame { .. }
+        | SupervisorMessage::Voice { .. }
+        | SupervisorMessage::VoiceTurn { .. }
         | SupervisorMessage::ChatStatus { .. }
         | SupervisorMessage::ChatConversations { .. }
         | SupervisorMessage::ChatTranscript { .. }

@@ -18,8 +18,10 @@ pub(super) fn outbox_file_name(backend_origin: &str, device_id: Option<Uuid>) ->
     format!("outbox-{}.db", hex::encode(hasher.finalize()))
 }
 
-/// The per-user directory holding the outbox and the diagnostics log.
-pub(crate) fn data_directory() -> Option<PathBuf> {
+/// The per-user directory holding the outbox and the diagnostics log. The
+/// voice model lookup also searches it for a hand-placed `voice-models`.
+#[must_use]
+pub fn data_directory() -> Option<PathBuf> {
     let profile = ReleaseProfile::compiled();
     let project = ProjectDirs::from(
         profile.data_qualifier,

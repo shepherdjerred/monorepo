@@ -157,3 +157,13 @@ impl AudioInput for CpalInput {
         }
     }
 }
+
+/// The default input device, opened fresh each time the engine wants it.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct DefaultMicrophone;
+
+impl crate::engine::Microphone for DefaultMicrophone {
+    fn open(&mut self) -> Result<Box<dyn AudioInput>, VoiceError> {
+        Ok(Box::new(CpalInput::open_default()?))
+    }
+}

@@ -18,6 +18,7 @@ use crate::kit::{
     note_text, row, section_heading, status_line,
 };
 use crate::views::{Send, button};
+use crate::voice_model::VoiceTurnModel;
 
 /// The composer's place in the keyboard order: first.
 pub const TAB_COMPOSER: isize = 1;
@@ -48,6 +49,8 @@ pub struct ChatControls<'a> {
     pub handler: ControlHandler,
     /// Attaches the image files a paste carried.
     pub on_images: Rc<dyn Fn(Vec<PathBuf>)>,
+    /// The latest spoken turn, shown above the transcript.
+    pub voice_turn: Option<VoiceTurnModel>,
 }
 
 /// The chat page for `screen`.
@@ -80,6 +83,7 @@ fn conversation(model: ConversationModel, controls: ChatControls<'_>) -> impl In
         send,
         handler,
         on_images,
+        voice_turn,
     } = controls;
     let body = if model.loading {
         column()
@@ -141,6 +145,7 @@ fn conversation(model: ConversationModel, controls: ChatControls<'_>) -> impl In
                 "Anyone with this link can read the conversation: {url}"
             )))
         }))
+        .children(voice_turn.map(voice_strip))
         .child(column().flex_1().min_h_0().child(body))
         .children(
             model
@@ -155,6 +160,17 @@ fn conversation(model: ConversationModel, controls: ChatControls<'_>) -> impl In
             &handler,
             on_images,
         ))
+}
+
+/// The latest spoken turn: what Scout heard, its answer, or why it stopped.
+fn voice_strip(turn: VoiceTurnModel) -> impl IntoElement {
+    column()
+        .px_6()
+        .pb_2()
+        .gap_1()
+        .children(turn.heard.map(status_line))
+        .children(turn.answer.map(body_text))
+        .children(turn.error.map(error_notice))
 }
 
 /// Everything under the transcript: the editing banner, the images waiting,

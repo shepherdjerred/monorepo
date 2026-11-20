@@ -74,3 +74,16 @@ describe("voice model packaging", () => {
     );
   });
 });
+
+describe("macOS microphone declaration", () => {
+  test.each(["stable", "beta"])(
+    "%s merges an Info.plist that explains microphone use",
+    (channel) => {
+      const config: unknown = JSON.parse(read(`packaging/${channel}.json`));
+      expect(config).toMatchObject({ macos: { infoPlistPath: "Info.plist" } });
+      expect(read("packaging/Info.plist")).toContain(
+        "<key>NSMicrophoneUsageDescription</key>",
+      );
+    },
+  );
+});

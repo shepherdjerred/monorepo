@@ -13,6 +13,7 @@ use gpui_kit::{
 
 use super::theme::{color, length, theme};
 use crate::view_model::Tone;
+use crate::voice_model::MicTone;
 
 /// A click handler that needs no view state: it sends an IPC command.
 pub type Handler = Rc<dyn Fn(&mut Window, &mut App)>;
@@ -464,17 +465,121 @@ impl NavSection {
     }
 }
 
+/// The microphone indicator: a small pill beside the brand that says where
+/// the microphone is, and mutes or unmutes it when clicked.
+#[derive(IntoElement)]
+pub struct MicPill {
+    label: SharedString,
+    tone: MicTone,
+    on_click: Option<Handler>,
+}
+
+impl MicPill {
+    /// A pill reading `label`; `on_click` is none when it cannot mute.
+    pub fn new(label: impl Into<SharedString>, tone: MicTone, on_click: Option<Handler>) -> Self {
+        Self {
+            label: label.into(),
+            tone,
+            on_click,
+        }
+    }
+}
+
+impl RenderOnce for MicPill {
+    fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
+        let tokens = theme();
+        let (dot, text) = match self.tone {
+            MicTone::Idle => (tokens.text_muted, tokens.text_muted),
+            MicTone::Live => (tokens.success, tokens.success_on_surface),
+            MicTone::Busy => (tokens.primary, tokens.text),
+            MicTone::Alert => (tokens.danger, tokens.danger_on_surface),
+        };
+        let pill = h_flex()
+            .id("mic-indicator")
+            .gap_1()
+            .px_2()
+            .py_0p5()
+            .rounded(px(999.))
+            .border(length(tokens.border_width))
+            .border_color(color(tokens.border))
+            .bg(color(tokens.surface_raised))
+            .text_xs()
+            .font_weight(FontWeight::MEDIUM)
+            .text_color(color(text))
+            .child(div().size(px(6.)).rounded(px(3.)).bg(color(dot)))
+            .child(self.label);
+        match self.on_click {
+            Some(on_click) => pill
+                .cursor_pointer()
+                .hover(|style| style.bg(color(tokens.interactive_hover)))
+                .on_click(move |_, window, cx| on_click(window, cx)),
+            None => pill,
+        }
+    }
+}
+
+/// A question over the whole window: a dimmed backdrop and a card with a
+/// title, its explanation and the answers.
+#[must_use]
+pub fn modal(
+    title: impl Into<SharedString>,
+    body: impl Into<SharedString>,
+    actions: impl IntoIterator<Item = ScoutButton>,
+) -> AnyElement {
+    let tokens = theme();
+    div()
+        .id("modal")
+        .absolute()
+        .top_0()
+        .left_0()
+        .size_full()
+        .flex()
+        .items_center()
+        .justify_center()
+        .bg(color(tokens.overlay))
+        // Clicks on the backdrop stop here rather than reaching the page.
+        .on_click(|_, _, _| {})
+        .child(
+            v_flex()
+                .w(px(440.))
+                .p_6()
+                .gap_3()
+                .rounded(length(tokens.radius_medium))
+                .border(length(tokens.border_width))
+                .border_color(color(tokens.border))
+                .bg(color(tokens.surface_raised))
+                .child(
+                    div()
+                        .text_lg()
+                        .font_weight(FontWeight::BOLD)
+                        .text_color(color(tokens.text))
+                        .child(title.into()),
+                )
+                .child(
+                    div()
+                        .w_full()
+                        .text_color(color(tokens.text))
+                        .child(body.into()),
+                )
+                .child(action_row().pt_2().children(actions)),
+        )
+        .into_any_element()
+}
+
 /// The window frame: a sidebar on the left, the page on the right.
 ///
 /// The sidebar's main section (the conversations) takes the height left
 /// over and scrolls; the secondary section (the status pages) sits at the
-/// bottom under its own heading.
+/// bottom under its own heading. The microphone indicator, when voice is
+/// on offer, sits beside the brand so every page shows it.
 #[derive(IntoElement)]
 pub struct Shell {
     brand: SharedString,
     main: NavSection,
     secondary: NavSection,
     page: AnyElement,
+    status: Option<MicPill>,
+    overlay: Option<AnyElement>,
 }
 
 impl Shell {
@@ -490,7 +595,23 @@ impl Shell {
             main,
             secondary,
             page,
+            status: None,
+            overlay: None,
         }
+    }
+
+    /// Show `pill` beside the brand.
+    #[must_use]
+    pub fn status(mut self, pill: Option<MicPill>) -> Self {
+        self.status = pill;
+        self
+    }
+
+    /// Show `overlay` over the whole window.
+    #[must_use]
+    pub fn overlay(mut self, overlay: Option<AnyElement>) -> Self {
+        self.overlay = overlay;
+        self
     }
 }
 
@@ -509,6 +630,7 @@ impl RenderOnce for Shell {
     fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
         let tokens = theme();
         h_flex()
+            .relative()
             .size_full()
             .items_start()
             .bg(color(tokens.canvas))
@@ -523,12 +645,17 @@ impl RenderOnce for Shell {
                     .border_r(length(tokens.border_width))
                     .border_color(color(tokens.border))
                     .child(
-                        div()
-                            .text_lg()
-                            .font_weight(FontWeight::BOLD)
-                            .text_color(color(tokens.primary))
+                        h_flex()
+                            .justify_between()
                             .pb_2()
-                            .child(self.brand),
+                            .child(
+                                div()
+                                    .text_lg()
+                                    .font_weight(FontWeight::BOLD)
+                                    .text_color(color(tokens.primary))
+                                    .child(self.brand),
+                            )
+                            .children(self.status),
                     )
                     .child(sidebar_heading(self.main.heading))
                     .child(
@@ -546,5 +673,6 @@ impl RenderOnce for Shell {
             // `min_w_0` lets the page shrink to the window: a flex item
             // otherwise refuses to be narrower than its longest unwrapped line.
             .child(div().flex_1().min_w_0().h_full().child(self.page))
+            .children(self.overlay)
     }
 }

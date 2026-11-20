@@ -10,7 +10,8 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use scout_desktop_ipc::{
     ChatParts, GameflowPhase, LiveGameSnapshot, PROTOCOL_VERSION, StateSnapshot, SupervisorMessage,
-    UpdateSnapshot, WindowMessage, check_protocol, decode_line, encode_line,
+    UpdateSnapshot, VoiceSnapshot, VoiceTurnView, WindowMessage, check_protocol, decode_line,
+    encode_line,
 };
 
 /// What the supervisor has told the window so far.
@@ -28,6 +29,10 @@ pub struct WindowState {
     pub live_game: Option<LiveGameSnapshot>,
     /// Explore chat, as the supervisor relays it.
     pub chat: ChatParts,
+    /// Where the microphone is, and the voice settings.
+    pub voice: VoiceSnapshot,
+    /// The spoken turn, once there has been one.
+    pub voice_turn: Option<VoiceTurnView>,
     /// Whether any snapshot has arrived, so a default snapshot is never
     /// mistaken for the user's privacy choice.
     pub state_received: bool,
@@ -86,6 +91,14 @@ impl WindowState {
             }
             SupervisorMessage::LiveGame { live } => {
                 self.live_game = live;
+                Effect::Render
+            }
+            SupervisorMessage::Voice { voice } => {
+                self.voice = voice;
+                Effect::Render
+            }
+            SupervisorMessage::VoiceTurn { turn } => {
+                self.voice_turn = turn;
                 Effect::Render
             }
             SupervisorMessage::DiagnosticsBundle { text } => Effect::CopyBundle(text),

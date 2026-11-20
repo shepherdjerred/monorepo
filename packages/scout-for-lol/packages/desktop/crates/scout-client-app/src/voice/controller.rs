@@ -1,0 +1,544 @@
+//! What voice does next, as a pure function of what happened.
+//!
+//! The [`Controller`] holds the player's choices (consent, conversation
+//! mode, push-to-talk, mute), the gameflow, the microphone engine's state and
+//! the spoken turn in flight. Each [`Input`] returns the [`Effect`]s the
+//! service carries out, so every rule here is tested without a device, a
+//! thread or a socket.
+//!
+//! The rules that matter:
+//!
+//! - Nothing opens the microphone until the player has agreed. Asking for
+//!   voice first (a game starting in conversation mode, or the push-to-talk
+//!   key) shows the first-use question instead.
+//! - Conversation mode listens only from `GameStart` until the game ends,
+//!   and never while muted.
+//! - The microphone is closed while an answer is fetched and spoken; the
+//!   engine holds the utterance's turn until the controller finishes it.
+
+use base64::Engine as _;
+use base64::engine::general_purpose::STANDARD;
+use scout_client_core::live::gameflow::GameflowPhase;
+use scout_client_core::settings::VoiceSettings;
+use scout_desktop_ipc::{
+    VoiceCommand, VoiceConsent, VoiceSettings as WireSettings, VoiceSnapshot, VoiceState,
+    VoiceTurnView,
+};
+use scout_explore_client::voice::{SpeechEncoding, VoiceTurnEvent};
+use scout_voice::conversation::conversation_open;
+use scout_voice::playback::pcm_s16le;
+use scout_voice::{EngineCommand, EngineEvent, Utterance};
+use uuid::Uuid;
+
+use crate::hotkeys::{HotkeyBindings, HotkeyEvent, validate};
+
+/// What a spoken turn reported.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TurnUpdate {
+    /// One event of the answer's stream.
+    Event(VoiceTurnEvent),
+    /// The turn could not start (no credential, a refusal, a recording the
+    /// route would not take); safe to show.
+    Refused(String),
+    /// The stream broke before `done`; safe to show.
+    Broken(String),
+}
+
+/// Something that happened.
+#[derive(Debug)]
+pub enum Input {
+    /// The gameflow phase changed.
+    Phase(GameflowPhase),
+    /// A global key.
+    Hotkey(HotkeyEvent),
+    /// A choice from the window.
+    Window(VoiceCommand),
+    /// The microphone engine.
+    Engine(EngineEvent),
+    /// The spoken turn.
+    Turn(TurnUpdate),
+    /// The spoken answer finished playing.
+    Drained,
+}
+
+/// Something the service must do.
+#[derive(Debug, PartialEq)]
+pub enum Effect {
+    /// Load the models and start the microphone engine.
+    StartEngine,
+    /// Tell the engine.
+    Engine(EngineCommand),
+    /// Persist the choices.
+    Save(VoiceSettings),
+    /// Register these keys.
+    Bind(HotkeyBindings),
+    /// Send this utterance to Scout.
+    Ask(Utterance),
+    /// Queue speech.
+    Play {
+        /// Samples per second.
+        sample_rate_hz: u32,
+        /// Mono samples.
+        pcm: Vec<i16>,
+    },
+    /// Fall silent.
+    StopPlayback,
+    /// Report [`Input::Drained`] once queued speech has played.
+    AwaitDrain,
+    /// Bring the window forward for the first-use question.
+    ShowWindow,
+    /// Show this conversation, which now holds the spoken turn.
+    OpenConversation(Uuid),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum EngineStatus {
+    /// Not started: the player has not agreed yet.
+    Stopped,
+    /// Loading the models.
+    Starting,
+    /// Taking commands.
+    Ready,
+    /// The models or the thread failed; voice cannot run.
+    Unavailable(String),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Turn {
+    Idle,
+    /// The utterance was sent; waiting for the answer.
+    Thinking,
+    /// The answer is playing; `done` says whether the stream has ended.
+    Speaking {
+        done: bool,
+    },
+}
+
+/// What the engine last reported about the microphone.
+#[derive(Debug, Clone, Copy)]
+struct Microphone {
+    state: scout_voice::VoiceState,
+    open: bool,
+    /// The device failed; hands-free listening waits for the next game,
+    /// unmute or settings change.
+    failed: bool,
+}
+
+/// What the engine was last told.
+#[derive(Debug, Clone, Copy, Default)]
+struct Told {
+    listening: bool,
+    push_to_talk: bool,
+}
+
+/// Voice's state.
+#[derive(Debug)]
+pub struct Controller {
+    settings: VoiceSettings,
+    /// Why the stored settings could not be read; voice stays off.
+    settings_problem: Option<String>,
+    engine: EngineStatus,
+    microphone: Microphone,
+    told: Told,
+    consent_requested: bool,
+    muted: bool,
+    in_game: bool,
+    turn: Turn,
+    conversation: Option<Uuid>,
+    error: Option<String>,
+    view: Option<VoiceTurnView>,
+}
+
+/// The settings as the window shows them.
+#[must_use]
+pub fn wire_settings(settings: &VoiceSettings) -> WireSettings {
+    WireSettings {
+        conversation_mode: settings.conversation_mode,
+        push_to_talk: settings.push_to_talk,
+        push_to_talk_key: settings.push_to_talk_key.clone(),
+        mute_key: settings.mute_key.clone(),
+    }
+}
+
+impl Controller {
+    /// A controller for the stored choices, or for a settings file that
+    /// could not be read (`stored` is the error), which keeps voice off.
+    /// Returns the effects to start with: binding the keys, and starting
+    /// the engine when the player already agreed.
+    #[must_use]
+    pub fn new(stored: Result<VoiceSettings, String>) -> (Self, Vec<Effect>) {
+        let (settings, settings_problem) = match stored {
+            Ok(settings) => (settings, None),
+            Err(problem) => (
+                VoiceSettings {
+                    consent: Some(false),
+                    ..VoiceSettings::default()
+                },
+                Some(format!(
+                    "Voice is off: Scout could not read its settings ({problem})."
+                )),
+            ),
+        };
+        let mut controller = Self {
+            settings,
+            settings_problem,
+            engine: EngineStatus::Stopped,
+            microphone: Microphone {
+                state: scout_voice::VoiceState::Idle,
+                open: false,
+                failed: false,
+            },
+            told: Told::default(),
+            consent_requested: false,
+            muted: false,
+            in_game: false,
+            turn: Turn::Idle,
+            conversation: None,
+            error: None,
+            view: None,
+        };
+        let mut effects = vec![Effect::Bind(controller.bindings())];
+        controller.start_engine_if_agreed(&mut effects);
+        (controller, effects)
+    }
+
+    const fn agreed(&self) -> bool {
+        matches!(self.settings.consent, Some(true)) && self.settings_problem.is_none()
+    }
+
+    fn bindings(&self) -> HotkeyBindings {
+        // A player who declined voice gets their keys back. Before anyone
+        // asked, push-to-talk is bound, because pressing it is how voice is
+        // first asked for.
+        if self.settings_problem.is_some() || self.settings.consent == Some(false) {
+            return HotkeyBindings::default();
+        }
+        HotkeyBindings {
+            push_to_talk: self
+                .settings
+                .push_to_talk
+                .then(|| self.settings.push_to_talk_key.clone()),
+            mute: Some(self.settings.mute_key.clone()),
+        }
+    }
+
+    fn start_engine_if_agreed(&mut self, effects: &mut Vec<Effect>) {
+        if self.agreed() && self.engine == EngineStatus::Stopped {
+            self.engine = EngineStatus::Starting;
+            effects.push(Effect::StartEngine);
+        }
+    }
+
+    fn ask_for_consent(&mut self, effects: &mut Vec<Effect>) {
+        if self.settings.consent.is_none()
+            && self.settings_problem.is_none()
+            && !self.consent_requested
+        {
+            self.consent_requested = true;
+            effects.push(Effect::ShowWindow);
+        }
+    }
+
+    /// Whether hands-free listening should be on now.
+    fn wants_listening(&self) -> bool {
+        self.agreed()
+            && self.engine == EngineStatus::Ready
+            && self.settings.conversation_mode
+            && self.in_game
+            && !self.muted
+            && !self.microphone.failed
+    }
+
+    /// Tell the engine about any change in what it should be doing.
+    fn sync(&mut self, effects: &mut Vec<Effect>) {
+        let wants = self.wants_listening();
+        if wants != self.told.listening {
+            self.told.listening = wants;
+            effects.push(Effect::Engine(EngineCommand::Conversation(wants)));
+        }
+    }
+
+    fn release_push_to_talk(&mut self, effects: &mut Vec<Effect>) {
+        if self.told.push_to_talk {
+            self.told.push_to_talk = false;
+            effects.push(Effect::Engine(EngineCommand::PushToTalk(false)));
+        }
+    }
+
+    fn finish_turn(&mut self, effects: &mut Vec<Effect>) {
+        self.turn = Turn::Idle;
+        effects.push(Effect::Engine(EngineCommand::FinishTurn));
+        if let Some(conversation) = self.conversation.take() {
+            effects.push(Effect::OpenConversation(conversation));
+        }
+    }
+
+    /// Apply one input.
+    pub fn handle(&mut self, input: Input) -> Vec<Effect> {
+        let mut effects = Vec::new();
+        match input {
+            Input::Phase(phase) => self.phase(&phase, &mut effects),
+            Input::Hotkey(event) => self.hotkey(event, &mut effects),
+            Input::Window(command) => self.window(command, &mut effects),
+            Input::Engine(event) => self.engine(event, &mut effects),
+            Input::Turn(update) => self.turn(update, &mut effects),
+            Input::Drained => {
+                if self.turn == (Turn::Speaking { done: true }) {
+                    self.finish_turn(&mut effects);
+                }
+            }
+        }
+        self.sync(&mut effects);
+        effects
+    }
+
+    fn phase(&mut self, phase: &GameflowPhase, effects: &mut Vec<Effect>) {
+        let in_game = conversation_open(phase);
+        if in_game != self.in_game {
+            self.in_game = in_game;
+            self.microphone.failed = false;
+        }
+        if in_game && self.settings.conversation_mode {
+            self.ask_for_consent(effects);
+        }
+    }
+
+    fn hotkey(&mut self, event: HotkeyEvent, effects: &mut Vec<Effect>) {
+        match event {
+            HotkeyEvent::PushToTalk(true) => self.press_push_to_talk(effects),
+            HotkeyEvent::PushToTalk(false) => self.release_push_to_talk(effects),
+            HotkeyEvent::ToggleMute => self.set_muted(!self.muted, effects),
+            HotkeyEvent::BindFailed(message) => self.error = Some(message),
+        }
+    }
+
+    fn press_push_to_talk(&mut self, effects: &mut Vec<Effect>) {
+        if !self.settings.push_to_talk || self.told.push_to_talk {
+            return;
+        }
+        if !self.agreed() {
+            self.ask_for_consent(effects);
+            return;
+        }
+        if self.muted || self.engine != EngineStatus::Ready || self.turn == Turn::Thinking {
+            return;
+        }
+        if matches!(self.turn, Turn::Speaking { .. }) {
+            // Talking over the answer cuts it off and asks again.
+            effects.push(Effect::StopPlayback);
+            self.finish_turn(effects);
+        }
+        self.microphone.failed = false;
+        self.error = None;
+        self.told.push_to_talk = true;
+        effects.push(Effect::Engine(EngineCommand::PushToTalk(true)));
+    }
+
+    fn set_muted(&mut self, muted: bool, effects: &mut Vec<Effect>) {
+        if muted == self.muted {
+            return;
+        }
+        self.muted = muted;
+        if muted {
+            self.release_push_to_talk(effects);
+        } else {
+            self.microphone.failed = false;
+        }
+    }
+
+    fn save(&self, effects: &mut Vec<Effect>) {
+        effects.push(Effect::Save(self.settings.clone()));
+        effects.push(Effect::Bind(self.bindings()));
+    }
+
+    fn window(&mut self, command: VoiceCommand, effects: &mut Vec<Effect>) {
+        if self.settings_problem.is_some() {
+            // Nothing is saved over a file Scout could not read.
+            return;
+        }
+        match command {
+            VoiceCommand::Consent { accepted } => {
+                self.consent_requested = false;
+                self.settings.consent = Some(accepted);
+                if !accepted {
+                    self.release_push_to_talk(effects);
+                }
+                self.save(effects);
+                self.start_engine_if_agreed(effects);
+            }
+            VoiceCommand::SetMuted { muted } => self.set_muted(muted, effects),
+            VoiceCommand::SetSettings { settings } => {
+                if let Err(problem) = validate(&settings.push_to_talk_key, &settings.mute_key) {
+                    self.error = Some(problem);
+                    return;
+                }
+                self.error = None;
+                self.microphone.failed = false;
+                self.settings = VoiceSettings {
+                    consent: self.settings.consent,
+                    conversation_mode: settings.conversation_mode,
+                    push_to_talk: settings.push_to_talk,
+                    push_to_talk_key: settings.push_to_talk_key,
+                    mute_key: settings.mute_key,
+                };
+                if !self.settings.push_to_talk {
+                    self.release_push_to_talk(effects);
+                }
+                self.save(effects);
+            }
+        }
+    }
+
+    fn engine(&mut self, event: EngineEvent, effects: &mut Vec<Effect>) {
+        match event {
+            EngineEvent::Ready => self.engine = EngineStatus::Ready,
+            EngineEvent::State {
+                state,
+                microphone_open,
+            } => {
+                self.microphone.state = state;
+                self.microphone.open = microphone_open;
+            }
+            EngineEvent::Utterance(utterance) => {
+                if self.muted || self.turn != Turn::Idle || !self.agreed() {
+                    // Muted mid-question, or a turn already running: the
+                    // recording is dropped, never sent.
+                    effects.push(Effect::Engine(EngineCommand::FinishTurn));
+                    return;
+                }
+                self.told.push_to_talk = false;
+                self.error = None;
+                self.turn = Turn::Thinking;
+                self.view = Some(VoiceTurnView::default());
+                effects.push(Effect::Ask(utterance));
+            }
+            EngineEvent::Failed(message) => {
+                self.told.push_to_talk = false;
+                // The engine has put itself to rest.
+                self.told.listening = false;
+                if self.engine == EngineStatus::Ready {
+                    self.microphone.failed = true;
+                    self.error = Some(format!("The microphone stopped: {message}"));
+                } else {
+                    self.engine = EngineStatus::Unavailable(format!(
+                        "Voice could not start on this computer: {message}"
+                    ));
+                }
+            }
+        }
+    }
+
+    fn turn(&mut self, update: TurnUpdate, effects: &mut Vec<Effect>) {
+        if self.turn == Turn::Idle {
+            return;
+        }
+        let view = self.view.get_or_insert_with(VoiceTurnView::default);
+        match update {
+            TurnUpdate::Event(VoiceTurnEvent::Transcript { text, .. }) => view.heard = Some(text),
+            TurnUpdate::Event(VoiceTurnEvent::Run {
+                conversation_id, ..
+            }) => self.conversation = Some(conversation_id),
+            TurnUpdate::Event(VoiceTurnEvent::Answer { text, .. }) => view.answer = Some(text),
+            TurnUpdate::Event(VoiceTurnEvent::Audio {
+                encoding: SpeechEncoding::PcmS16le,
+                sample_rate_hz,
+                base64,
+                ..
+            }) => match STANDARD
+                .decode(base64.as_bytes())
+                .map_err(|error| error.to_string())
+                .and_then(|bytes| pcm_s16le(&bytes).map_err(|error| error.to_string()))
+            {
+                Ok(pcm) => {
+                    self.turn = Turn::Speaking { done: false };
+                    effects.push(Effect::Play {
+                        sample_rate_hz,
+                        pcm,
+                    });
+                }
+                Err(problem) => {
+                    view.error = Some(format!("Scout's answer could not be played: {problem}"));
+                }
+            },
+            TurnUpdate::Event(VoiceTurnEvent::Error { message, .. }) => {
+                view.error = Some(message);
+            }
+            TurnUpdate::Event(VoiceTurnEvent::Done { .. }) => {
+                if matches!(self.turn, Turn::Speaking { .. }) {
+                    self.turn = Turn::Speaking { done: true };
+                    effects.push(Effect::AwaitDrain);
+                } else {
+                    self.finish_turn(effects);
+                }
+            }
+            TurnUpdate::Refused(message) | TurnUpdate::Broken(message) => {
+                view.error = Some(message);
+                if matches!(self.turn, Turn::Speaking { .. }) {
+                    self.turn = Turn::Speaking { done: true };
+                    effects.push(Effect::AwaitDrain);
+                } else {
+                    self.finish_turn(effects);
+                }
+            }
+        }
+    }
+
+    /// What the window shows.
+    #[must_use]
+    pub fn snapshot(&self) -> VoiceSnapshot {
+        let consent = match self.settings.consent {
+            None => VoiceConsent::NotAsked,
+            Some(true) => VoiceConsent::Accepted,
+            Some(false) => VoiceConsent::Declined,
+        };
+        let unavailable = match &self.engine {
+            EngineStatus::Unavailable(message) => Some(message.clone()),
+            _ => None,
+        };
+        let detail = self
+            .settings_problem
+            .clone()
+            .or(unavailable)
+            .or_else(|| self.error.clone());
+        let state = if self.settings_problem.is_some() {
+            VoiceState::Error
+        } else if !self.agreed() {
+            VoiceState::Off
+        } else if matches!(self.turn, Turn::Speaking { .. }) {
+            VoiceState::Speaking
+        } else if self.turn == Turn::Thinking {
+            VoiceState::Thinking
+        } else if self.muted {
+            VoiceState::Muted
+        } else if matches!(
+            self.microphone.state,
+            scout_voice::VoiceState::Capturing { .. }
+        ) && self.microphone.open
+        {
+            VoiceState::Capturing
+        } else if detail.is_some() {
+            VoiceState::Error
+        } else if self.microphone.state == scout_voice::VoiceState::Armed && self.microphone.open {
+            VoiceState::Listening
+        } else {
+            VoiceState::Off
+        };
+        VoiceSnapshot {
+            state,
+            consent,
+            consent_requested: self.consent_requested,
+            muted: self.muted,
+            settings: Some(wire_settings(&self.settings)),
+            detail,
+        }
+    }
+
+    /// The spoken turn the window shows.
+    #[must_use]
+    pub fn turn_view(&self) -> Option<VoiceTurnView> {
+        self.view.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests;
