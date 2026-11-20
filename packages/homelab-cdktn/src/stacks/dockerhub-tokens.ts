@@ -22,7 +22,7 @@ export class DockerhubTokensStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "dockerhub-tokens", {
       requiredVersion: ">= 1.11.0",
-      providerConstraints: { docker: "0.7.0" },
+      providerConstraints: { docker: "0.8.0" },
     });
 
     encryptStateAndPlans(this, {

@@ -112,7 +112,7 @@ describe("cloudflare stack", () => {
     expect(terraform.required_version).toBe(">= 1.10.0");
     // The lock file records these constraints; different ones rewrite it.
     expect(terraform.required_providers).toEqual({
-      cloudflare: { source: "cloudflare/cloudflare", version: "~> 5.27.0" },
+      cloudflare: { source: "cloudflare/cloudflare", version: "~> 5.29.0" },
       http: { source: "hashicorp/http", version: "~> 3.5" },
     });
     // One of the established plaintext states: no encryption block.

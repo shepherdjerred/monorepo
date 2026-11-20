@@ -134,7 +134,7 @@
       "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
     },
     "required_providers": {
-      "docker": { "source": "docker/docker", "version": "0.7.0" }
+      "docker": { "source": "docker/docker", "version": "0.8.0" }
     },
     "required_version": ">= 1.11.0"
   },

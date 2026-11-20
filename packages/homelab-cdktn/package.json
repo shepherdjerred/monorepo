@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "@shepherdjerred/version-catalog": "workspace:*",
-    "cdktn": "0.25.0",
-    "cdktn-cli": "0.25.0",
+    "cdktn": "0.25.1",
+    "cdktn-cli": "0.25.1",
     "constructs": "10.8.1",
     "homelab": "workspace:*",
     "prettier": "^3.9.9"

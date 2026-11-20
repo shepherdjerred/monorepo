@@ -35,7 +35,7 @@ export class CloudflareStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "cloudflare", {
       requiredVersion: ">= 1.10.0",
-      providerConstraints: { cloudflare: "~> 5.27.0", http: "~> 3.5" },
+      providerConstraints: { cloudflare: "~> 5.29.0", http: "~> 3.5" },
     });
 
     const accountId = new TerraformVariable(this, "cloudflare_account_id", {
