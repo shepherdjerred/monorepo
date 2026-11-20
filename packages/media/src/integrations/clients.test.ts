@@ -286,6 +286,12 @@ describe("Plex observations", () => {
   });
 });
 
+function tmdbAnswering(payload: object) {
+  return new TmdbClient({ kind: "bearer", token: "fixture-token" }, async () =>
+    Response.json(payload),
+  );
+}
+
 describe("TMDB discovery", () => {
   it("keeps movie and series results while excluding people", async () => {
     const client = new TmdbClient(
@@ -308,6 +314,7 @@ describe("TMDB discovery", () => {
               overview: "",
               release_date: "2020-01-01",
               poster_path: null,
+              backdrop_path: null,
               original_language: "en",
             },
             {
@@ -318,6 +325,7 @@ describe("TMDB discovery", () => {
               overview: "",
               first_air_date: "2021-01-01",
               poster_path: null,
+              backdrop_path: null,
               original_language: "en",
             },
             { id: 3, media_type: "person", name: "Fixture" },
@@ -330,6 +338,36 @@ describe("TMDB discovery", () => {
       "movie",
       "tv",
     ]);
+  });
+
+  it("reads artwork from title details and rejects a title that omits it", async () => {
+    const details = {
+      id: 7,
+      title: "Fixture",
+      original_title: "Fixture",
+      overview: "A synopsis.",
+      release_date: "2020-01-01",
+      poster_path: "/poster.jpg",
+      backdrop_path: "/backdrop.jpg",
+      original_language: "en",
+      imdb_id: null,
+      runtime: 90,
+    };
+    expect(await tmdbAnswering(details).movie(7)).toMatchObject({
+      poster_path: "/poster.jpg",
+      backdrop_path: "/backdrop.jpg",
+      overview: "A synopsis.",
+    });
+    expect(
+      await tmdbAnswering({
+        ...details,
+        poster_path: null,
+        backdrop_path: null,
+      }).movie(7),
+    ).toMatchObject({ poster_path: null, backdrop_path: null });
+    const withoutBackdrop: Partial<typeof details> = { ...details };
+    delete withoutBackdrop.backdrop_path;
+    await expect(tmdbAnswering(withoutBackdrop).movie(7)).rejects.toThrow();
   });
 
   it("preserves throttling without leaking provider response bodies", async () => {

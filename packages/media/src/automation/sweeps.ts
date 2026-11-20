@@ -29,6 +29,16 @@ import {
   sweepPersonalMovieDueV4,
 } from "./reconciliation/personal-movie-due.ts";
 
+/**
+ * How many titles one 50-row due page may queue for artwork alone. A kept or
+ * followed title is refreshed regardless and never counts. Every refresh drains
+ * through the shared first-in-first-out outbox, so this holds a first backfill
+ * to one refresh for every five rows the sweep visits. A title that waits is
+ * still unobserved at the next six-hourly sweep, and any one page is cleared
+ * within five.
+ */
+const ARTWORK_BACKFILL_PER_PAGE = 10;
+
 /** Each page is bounded and cursor order is stable under concurrent inserts. */
 export function createSweepActivities(
   context: MediaAutomationContext,
@@ -117,6 +127,7 @@ async function sweepIntentPage(
           media.map((item) => item.id),
         )
       : new Set<string>();
+  const artwork = { remaining: ARTWORK_BACKFILL_PER_PAGE };
   for (const item of media) {
     const intent = defaultIntent(item.intents);
     if (intent === null) throw new Error("Sweep item lost default target");
@@ -127,7 +138,7 @@ async function sweepIntentPage(
         deferred,
       );
     } else {
-      await queueDue(context, item);
+      await queueDue(context, item, artwork);
     }
   }
   return {
@@ -160,6 +171,7 @@ async function sweepDefaultWatchItem(
 async function queueDue(
   context: MediaAutomationContext,
   item: Prisma.MediaItemGetPayload<{ include: { intents: true } }>,
+  artwork: { remaining: number },
 ) {
   const intent = defaultIntent(item.intents);
   if (intent === null) throw new Error("Sweep item lost desired state");
@@ -167,6 +179,7 @@ async function queueDue(
     context,
     item,
     intent.libraryKeep,
+    artwork,
   );
   if (!intent.desiredPresence) return;
   await serializable(context.db, (tx) =>
@@ -230,11 +243,23 @@ async function queueDueOperation(
   });
 }
 
-/** Public catalog dates/status are informational and do not require file-write authority. */
+/**
+ * Public catalog dates, status and artwork are informational and do not require
+ * file-write authority. A kept or followed title is refreshed every period. Any
+ * other owned title is refreshed only until its artwork has been observed once,
+ * which is the whole backfill: the refresh records the observation and the
+ * title stops matching.
+ */
 async function queueCalendarRefresh(
   context: MediaAutomationContext,
-  item: { id: string; kind: string; tmdbId: number | null },
+  item: {
+    id: string;
+    kind: string;
+    tmdbId: number | null;
+    artworkObservedAt: Date | null;
+  },
   libraryKeep: boolean,
+  artwork: { remaining: number },
 ) {
   if ((item.kind !== "movie" && item.kind !== "series") || item.tmdbId === null)
     return false;
@@ -250,7 +275,11 @@ async function queueCalendarRefresh(
         },
         select: { id: true },
       });
-  if (!libraryKeep && claim === null) return false;
+  if (!libraryKeep && claim === null) {
+    if (item.artworkObservedAt !== null || artwork.remaining === 0)
+      return false;
+    artwork.remaining--;
+  }
   await serializable(context.db, (tx) =>
     queueOperation(tx, {
       key: `calendar:${item.id}:${String(Math.floor(Date.now() / 21_600_000))}`,

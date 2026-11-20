@@ -7,7 +7,10 @@ import {
   loadMovieCatalogIdentity,
   loadSeriesCatalogIdentity,
 } from "#infrastructure/catalog-identity/catalog.ts";
-import { persistCatalogMedia } from "#infrastructure/catalog-identity/persist.ts";
+import {
+  catalogArtwork,
+  persistCatalogMedia,
+} from "#infrastructure/catalog-identity/persist.ts";
 import { lockCanonicalMedia } from "#infrastructure/editions/locks.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
@@ -78,6 +81,7 @@ export function createCatalogActivities(
             originalLanguage: series.original_language,
             runtimeMinutes: null,
             identity,
+            artwork: catalogArtwork(series),
             seriesStatus: seriesLifecycleStatus(series.status),
           });
           return item;
@@ -199,6 +203,7 @@ async function refreshMovieCalendar(
       originalLanguage: movie.original_language,
       runtimeMinutes: movie.runtime,
       identity,
+      artwork: catalogArtwork(movie),
       releaseDates: normalizeMovieReleases(movie.release_dates?.results ?? []),
     });
     await tx.$executeRaw`UPDATE "Operation" SET result = COALESCE(result, '{}'::jsonb) || '{"movieCalendarComplete":true}'::jsonb WHERE id = ${input.operationId}`;

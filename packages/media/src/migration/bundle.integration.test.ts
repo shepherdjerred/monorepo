@@ -116,6 +116,7 @@ async function catalogResponse(url: URL) {
       overview: "",
       release_date: "2020-01-01",
       poster_path: null,
+      backdrop_path: null,
       original_language: "en",
       imdb_id: null,
       runtime: 90,
@@ -128,6 +129,7 @@ async function catalogResponse(url: URL) {
       overview: "",
       first_air_date: "2020-01-01",
       poster_path: null,
+      backdrop_path: null,
       original_language: "en",
       seasons: [
         { id: 45, season_number: 1, episode_count: 1, name: "Season 1" },
@@ -323,6 +325,7 @@ test("ambiguous TVDB lookup and contradictory external IDs cannot bootstrap cata
         overview: "",
         release_date: "2020-01-01",
         poster_path: null,
+        backdrop_path: null,
         original_language: "en",
         imdb_id: "tt999",
         runtime: 90,
