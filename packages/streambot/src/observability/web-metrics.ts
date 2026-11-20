@@ -1,4 +1,4 @@
-import { Counter, Histogram } from "prom-client";
+import { Counter, Gauge, Histogram } from "prom-client";
 import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 
 // Every label below comes from a closed set. Raw error codes, paths, actions and surfaces are
@@ -74,6 +74,8 @@ const THROWN_WEB_ERROR_CODES = [
   "rate_limit",
   "requester_changed",
   "requester_required",
+  "room_stream_capacity",
+  "room_stream_limit",
   "scheduling_unavailable",
   "selection_capacity",
   "selection_expired",
@@ -215,6 +217,52 @@ export const playRequestsTotal = new Counter({
   name: "streambot_play_requests_total",
   help: "Play requests (not tracks: a 40-track playlist is one request) by entry-point surface and outcome",
   labelNames: ["surface", "outcome"] as const,
+  registers: [register],
+});
+
+/** Why a room event stream ended, or was refused at connect (`limit`). */
+export const WEB_SSE_CLOSE_REASONS = [
+  "client_closed",
+  "server_shutdown",
+  "unauthorized",
+  "limit",
+  "error",
+] as const;
+export type WebSseCloseReason = (typeof WEB_SSE_CLOSE_REASONS)[number];
+
+export const WEB_SSE_EVENTS = ["room", "error", "heartbeat"] as const;
+export type WebSseEvent = (typeof WEB_SSE_EVENTS)[number];
+
+export const webSseConnections = new Gauge({
+  name: "streambot_web_sse_connections",
+  help: "Open Streambot web room event streams",
+  registers: [register],
+});
+
+export const webSseEventsTotal = new Counter({
+  name: "streambot_web_sse_events_total",
+  help: "Frames written to room event streams by event name",
+  labelNames: ["event"] as const,
+  registers: [register],
+});
+
+export const webSseDroppedTotal = new Counter({
+  name: "streambot_web_sse_dropped_total",
+  help: "Room snapshots replaced by a newer one because the client had not read the previous frame",
+  registers: [register],
+});
+
+export const webSseConnectionSeconds = new Histogram({
+  name: "streambot_web_sse_connection_seconds",
+  help: "How long established room event streams stayed open, observed at close",
+  buckets: [1, 5, 30, 60, 300, 900, 3600, 14_400, 86_400],
+  registers: [register],
+});
+
+export const webSseClosedTotal = new Counter({
+  name: "streambot_web_sse_closed_total",
+  help: "Room event streams that ended, or were refused at connect, by closed reason",
+  labelNames: ["reason"] as const,
   registers: [register],
 });
 

@@ -50,6 +50,7 @@ import {
 import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
 import { NumberedSessions } from "@shepherdjerred/streambot/session/numbered-sessions.ts";
 import { enqueueSessionSnapshot } from "@shepherdjerred/streambot/session/session-checkpoint.ts";
+import { RoomChangeHub } from "@shepherdjerred/streambot/session/room-change-hub.ts";
 import { createSession } from "@shepherdjerred/streambot/session/create-session.ts";
 import {
   AUDIO_CHANNEL,
@@ -72,6 +73,7 @@ export class SessionManager {
   private readonly fetchPoster: PosterFetcher | undefined;
   readonly stationFeeder: StationFeeder;
   readonly numbered: NumberedSessions;
+  readonly changes = new RoomChangeHub();
 
   constructor(deps: SessionManagerDeps) {
     this.deps = deps;
@@ -422,6 +424,7 @@ export class SessionManager {
   private spawn(params: SpawnParams): Session {
     return createSession(params, {
       deps: this.deps,
+      changes: this.changes,
       stationFeeder: this.stationFeeder,
       controlVoiceStation: ({ session, ...input }) =>
         executeVoiceStationControl({

@@ -17,6 +17,7 @@ import {
 import { createPlaybackInspector } from "@shepherdjerred/streambot/session/playback-log.ts";
 import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
 import { SessionObserver } from "@shepherdjerred/streambot/session/session-observer.ts";
+import type { RoomChangeHub } from "@shepherdjerred/streambot/session/room-change-hub.ts";
 import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
 import type { StationFeeder } from "@shepherdjerred/streambot/station/station-feeder.ts";
 import type {
@@ -31,6 +32,8 @@ import type {
 } from "@shepherdjerred/streambot/state/station-schema.ts";
 type CreateSessionOptions = {
   deps: SessionManagerDeps;
+  /** Told about every change a viewer of this room could see; see `room-change-hub.ts`. */
+  changes: RoomChangeHub;
   stationFeeder: StationFeeder;
   controlVoiceStation?: (input: {
     session: Session;
@@ -110,6 +113,16 @@ export function createSession(
       : { fetchPoster: options.fetchPoster }),
   });
 
+  // A station starts, stops and records its recent items by reassigning `session.station`, which
+  // no actor event reports, so the setter is where web viewers of the room learn about it.
+  let station = params.station;
+  const notifyRoom = () => {
+    options.changes.notify({
+      guildId: params.guildId,
+      channelId: session.voiceChannelId,
+      userId: null,
+    });
+  };
   const session: Session = {
     ...identity,
     key: keyOf(params.guildId, params.voiceChannelId, params.playbackChannel),
@@ -138,7 +151,13 @@ export function createSession(
     voiceRecoveryStarted: false,
     pendingSubtitleMenu: false,
     historyRunRecorded: false,
-    station: params.station,
+    get station() {
+      return station;
+    },
+    set station(value) {
+      station = value;
+      notifyRoom();
+    },
     voiceAssistant: null,
     teardownHold: new TeardownHold(() => {
       options.teardown(session);
@@ -198,9 +217,11 @@ export function createSession(
   const subscription = actor.subscribe((snapshot) => {
     observer.handle(snapshot);
     options.stationFeeder.poke(session);
+    notifyRoom();
   });
   session.unsubscribe = () => {
     subscription.unsubscribe();
+    notifyRoom();
   };
 
   options.sessions.set(session.key, session);

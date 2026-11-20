@@ -3,6 +3,7 @@ import type {
   PlaybackEvent,
   ResolvedSource,
 } from "@shepherdjerred/streambot/machine/types.ts";
+import { RoomChangeHub } from "@shepherdjerred/streambot/session/room-change-hub.ts";
 import { sessionRevision } from "@shepherdjerred/streambot/session/session-revision.ts";
 import { ChannelSelection } from "@shepherdjerred/streambot/session/channel-selection.ts";
 import {
@@ -162,6 +163,15 @@ export function webFixture(
     id: CHANNEL,
     name: "Movie night",
   };
+  const changes = new RoomChangeHub();
+  const announceChange = (userId: string | null = null) => {
+    changes.notify({ guildId: GUILD, channelId: CHANNEL, userId });
+  };
+  const otherChannels = new Map<
+    string,
+    { id: typeof CHANNEL; name: string } | null
+  >();
+  const disabledGuilds = new Set<string>();
   let member = true;
   let enabled = true;
   let advanced = true;
@@ -189,6 +199,9 @@ export function webFixture(
     includeSubtitles: true,
   });
   const { actor, handle } = primarySlot;
+  actor.subscribe(() => {
+    announceChange();
+  });
   const owner = primarySlot;
   const discovery = new DiscoveryService({
     library: () => library,
@@ -243,8 +256,14 @@ export function webFixture(
         selection,
         maximum: () => 3,
       },
-      getExisting: (_guild, _channel, slot) =>
-        allocated && slot === allocatedChannel ? handle : null,
+      changes,
+      getExisting: (guild, channelId, slot) =>
+        allocated &&
+        guild === GUILD &&
+        channelId === CHANNEL &&
+        slot === allocatedChannel
+          ? handle
+          : null,
       ensureForPlay: (params) => {
         allocated = true;
         allocatedChannel = params.playbackChannel;
@@ -256,6 +275,7 @@ export function webFixture(
         allocatedChannel = params.playbackChannel;
         allocations += 1;
         const added = await primarySlot.startStation(params.station);
+        announceChange();
         return { handle, added };
       },
       stopStation: (params) => {
@@ -267,6 +287,7 @@ export function webFixture(
           return null;
         }
         const stopped = primarySlot.stopStation();
+        announceChange();
         if (
           stopped !== null &&
           actor.getSnapshot().matches("idle") &&
@@ -290,7 +311,8 @@ export function webFixture(
     bot: {
       webGuilds: (ids) => guilds.filter((guild) => ids.includes(guild.id)),
       webVerifyMember: () => Promise.resolve(member),
-      webVoiceChannel: (guildId) => (guildId === GUILD ? channel : null),
+      webVoiceChannel: (guildId) =>
+        guildId === GUILD ? channel : (otherChannels.get(guildId) ?? null),
       webReady: () => true,
       webRequesterName: (_guild, user) =>
         Promise.resolve(user === USER ? username : "Casey"),
@@ -307,7 +329,8 @@ export function webFixture(
       },
     },
     featureGate,
-    webEnabled: () => Promise.resolve(enabled),
+    webEnabled: (guildId) =>
+      Promise.resolve(enabled && !disabledGuilds.has(guildId)),
     announce: (_id, message) => {
       announcements.push(message);
       return Promise.resolve();
@@ -402,7 +425,21 @@ export function webFixture(
     },
     setChannel: (value: typeof channel) => {
       channel = value;
+      announceChange(USER);
     },
+    /** Put the viewer in (or out of) a voice channel of a server other than the primary one. */
+    setChannelIn: (
+      guildId: string,
+      value: { id: typeof CHANNEL; name: string } | null,
+    ) => {
+      otherChannels.set(guildId, value);
+      changes.notify({ guildId, channelId: value?.id ?? null, userId: USER });
+    },
+    setGuildEnabled: (guildId: string, value: boolean) => {
+      if (value) disabledGuilds.delete(guildId);
+      else disabledGuilds.add(guildId);
+    },
+    changes,
     enableNumbered: (slot = 2) => {
       numbered = true;
       selection.select(

@@ -149,6 +149,11 @@ export class CommandBot {
     });
     this.client.on(Events.VoiceStateUpdate, (oldState, newState) => {
       this.voiceTopology.handle(oldState, newState);
+      this.deps.getSessions().changes.notify({
+        guildId: newState.guild.id,
+        channelId: newState.channelId,
+        userId: newState.id,
+      });
     });
     registerTopologyListeners(this.client, () => this.deps.getSessions());
     registerGatewayHealthListeners(this.client);

@@ -11,6 +11,7 @@ import type { WebSession, WebSessionStore } from "./session-store.ts";
 import type { WebPlayback } from "./playback.ts";
 import { WebActions } from "./actions.ts";
 import { WebMusic } from "./music.ts";
+import { WebRoomRoutes } from "./room/index.ts";
 import { WebError, requestInput } from "./errors.ts";
 import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -82,6 +83,11 @@ export function createWebHandler(deps: {
   });
   const actions = new WebActions(deps.playback);
   const music = new WebMusic(deps.playback);
+  const room = new WebRoomRoutes(
+    deps.playback,
+    async (guildId, userId) =>
+      (await deps.plexPostersEnabled?.(guildId, userId)) ?? false,
+  );
   const requests = new Map<
     string,
     { count: number; artwork: number; resets: number }
@@ -104,8 +110,10 @@ export function createWebHandler(deps: {
       ["GET", "POST"].includes(request.method)
     )
       return await webSchedules(request, session, deps.playback);
-    if (url.pathname === "/api/auth/logout" && request.method === "POST")
+    if (url.pathname === "/api/auth/logout" && request.method === "POST") {
+      room.streams.closeSession(session.key);
       return auth.logout(request);
+    }
     if (url.pathname === "/api/me" && request.method === "GET") {
       return Response.json({
         user: session.identity,
@@ -115,6 +123,10 @@ export function createWebHandler(deps: {
           usageAnalytics().analyticsId(session.identity.userId) ?? null,
       });
     }
+    const roomResponse = await room.handle(request, url, session, () =>
+      auth.session(request),
+    );
+    if (roomResponse !== null) return roomResponse;
     const musicResponse = await observeMusicSearch(request, url, session, () =>
       music.handle(request, url, session),
     );
@@ -405,7 +417,7 @@ export function createWebHandler(deps: {
     return { response, failure };
   }
 
-  return async (request: Request): Promise<Response> => {
+  const handler = async (request: Request): Promise<Response> => {
     // Health, readiness and static assets are not API traffic and stay untraced.
     if (!new URL(request.url).pathname.startsWith("/api/")) {
       const { response } = await respond(request);
@@ -452,6 +464,12 @@ export function createWebHandler(deps: {
       },
     );
   };
+  // Open event streams outlive their request span; shutdown ends them explicitly.
+  return Object.assign(handler, {
+    closeStreams: () => {
+      room.streams.closeAll();
+    },
+  });
 }
 
 function annotateRequestSpan(
