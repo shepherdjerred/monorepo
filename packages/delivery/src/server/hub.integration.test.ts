@@ -3,6 +3,7 @@ import { audit } from "#infrastructure/delivery-records.ts";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery, testExecutor, testOperator } from "#testing/seed.ts";
 import { fixtureEnrichment } from "#testing/enrichment-fixture.ts";
+import { readChangeFeed } from "#testing/http-app.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import {
@@ -246,23 +247,13 @@ describe("hub integrations", () => {
 
 describe("hub change feed", () => {
   test("streams committed audit events", async () => {
-    const response = await app.request("/api/v1/events", { headers });
-    expect(response.headers.get("content-type")).toContain("text/event-stream");
-    const reader = response.body?.getReader();
-    if (reader === undefined) throw new Error("SSE body missing");
-    const decoder = new TextDecoder();
-    const ready = await reader.read();
-    let text = decoder.decode(ready.value);
-    expect(text).toContain("event: ready");
-    await snapshot("hub-feed-event");
-    while (!text.includes("event: change")) {
-      const chunk = await reader.read();
-      if (chunk.done) break;
-      text += decoder.decode(chunk.value);
-    }
+    const text = await readChangeFeed(
+      await app.request("/api/v1/events", { headers }),
+      () => snapshot("hub-feed-event"),
+      (read) => read.includes("event: change"),
+    );
     expect(text).toContain('"action":"snapshot.imported"');
     expect(text).toContain('"domain":"snapshot"');
-    await reader.cancel();
   });
 });
 

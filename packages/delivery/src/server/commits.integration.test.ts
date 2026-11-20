@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { registerTestService } from "#testing/services.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
+import { readChangeFeed } from "#testing/http-app.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createQualifier } from "#infrastructure/qualification.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
@@ -504,23 +505,13 @@ describe("capture at qualification", () => {
   });
 
   test("an open page is told when a pending build's qualification first records its commit", async () => {
-    const response = await read("/api/v1/events");
-    expect(response.headers.get("content-type")).toContain("text/event-stream");
-    const reader = response.body?.getReader();
-    if (reader === undefined) throw new Error("SSE body missing");
-    const decoder = new TextDecoder();
-    const ready = await reader.read();
-    let text = decoder.decode(ready.value);
-    expect(text).toContain("event: ready");
     pipelines.set(35, answer(34, "running", 0));
     const buildId = await buildOf(34);
-    await qualify(buildId);
-    while (!text.includes('"action":"build.source_recorded"')) {
-      const chunk = await reader.read();
-      if (chunk.done) break;
-      text += decoder.decode(chunk.value);
-    }
-    await reader.cancel();
+    const text = await readChangeFeed(
+      await read("/api/v1/events"),
+      () => qualify(buildId),
+      (seen) => seen.includes('"action":"build.source_recorded"'),
+    );
     const changes = text
       .split("\n")
       .filter((line) => line.startsWith('data: {"id"'))
