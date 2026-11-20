@@ -402,6 +402,18 @@ export type PrometheusadapterHelmValues = {
    */
   priorityClassName?: string;
   /**
+   * Set the schedulerName for prometheus-adapter pods
+   *
+   * @default ""
+   */
+  schedulerName?: string;
+  /**
+   * Set the runtimeClassName for prometheus-adapter pods
+   *
+   * @default ""
+   */
+  runtimeClassName?: string;
+  /**
    * Override the release namespace (for multi-namespace deployments in combined charts)
    *
    * @default ""
@@ -568,6 +580,8 @@ export type PrometheusadapterHelmParameters = {
   listenPort?: string;
   nodeSelector?: string;
   priorityClassName?: string;
+  schedulerName?: string;
+  runtimeClassName?: string;
   namespaceOverride?: string;
   "prometheus.url"?: string;
   "prometheus.port"?: string;

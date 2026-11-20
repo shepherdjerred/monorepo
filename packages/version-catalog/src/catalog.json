@@ -192,7 +192,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "92.2.0",
+      "value": "92.22.0",
       "component": true
     },
     {
@@ -205,7 +205,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "5.3.0",
+      "value": "5.4.2",
       "component": true
     },
     {
@@ -218,7 +218,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "11.20.0",
+      "value": "11.21.3",
       "component": true
     },
     {
@@ -700,7 +700,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "7.3.0",
+      "value": "7.7.0",
       "component": true
     },
     {
@@ -739,7 +739,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "2.4.0",
+      "value": "2.4.3",
       "component": true
     },
     {
@@ -765,7 +765,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v5.12.6@sha256:4b3d29a66c1dd11d513f8378907953b3c2c0c0535cbf5cf8fe83f7f398ae8b4c",
+      "value": "v5.12.11@sha256:cfa6c8f63e6d626f90208f2880f15bd5facc279daec1b9bb642af07aa850d95e",
       "component": true
     },
     {
@@ -1510,7 +1510,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$"
       },
-      "value": "version-20.20.0-nonroot@sha256:2ac6874a4f743a626060adb6988b6dbd558530a0e06685334f63f8a779aaabb5",
+      "value": "version-20.27.0-nonroot@sha256:d7f50b316f7801d3b1335a1825e9415a519d5ded7a9d9197c2664989e737d748",
       "notes": [
         "Phoenix publishes semver releases only under version-X.Y.Z tags; the nonroot",
         "variant runs as UID 65532 and is the one the upstream Helm chart deploys."

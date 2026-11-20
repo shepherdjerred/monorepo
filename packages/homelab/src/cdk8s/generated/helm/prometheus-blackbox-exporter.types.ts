@@ -435,7 +435,7 @@ export type PrometheusblackboxexporterHelmValuesServiceMonitor = {
   /**
    * If true, a ServiceMonitor CRD is created for a prometheus operator
    * https://github.com/coreos/prometheus-operator for blackbox-exporter itself
-   * Port can be defined by assigning a value for the port key below
+   * Name of the Service port to scrape. Defaults to "http".
    * If true, a ServiceMonitor CRD is created for a prometheus operator
    * https://github.com/coreos/prometheus-operator for each target
    *
@@ -461,7 +461,7 @@ export type PrometheusblackboxexporterHelmValuesServiceMonitor = {
    */
   path?: string;
   /**
-   * Of type: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#tlsconfig
+   * Of type: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.TLSConfig
    *
    * @default {}
    */
@@ -613,7 +613,7 @@ export type PrometheusblackboxexporterHelmValuesPodMonitoring = {
    */
   path?: string;
   /**
-   * Of type: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#tlsconfig
+   * Of type: https://github.com/GoogleCloudPlatform/prometheus-engine/blob/main/doc/api.md#tls
    *
    * @default {}
    */
@@ -840,7 +840,7 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderImage = {
    */
   repository?: string;
   /**
-   * @default "v0.94.1"
+   * @default "v0.95.2"
    */
   tag?: string;
   /**
@@ -941,6 +941,8 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderService = {
 
 export type PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitor = {
   /**
+   * Name of the Service port to scrape. Defaults to "reloader-web".
+   *
    * @default {...} (7 keys)
    */
   selfMonitor?: PrometheusblackboxexporterHelmValuesConfigReloaderServiceMonitorSelfMonitor;
@@ -1147,7 +1149,7 @@ export type PrometheusblackboxexporterHelmValues = {
    * ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
    * A HTTPRoute (Gateway API) resource is an alternative to Ingress for routing
    * external HTTP traffic to the blackbox exporter Service.
-   * ref: https://gateway-api.sigs.k8s.io/api-types/httproute/
+   * ref: https://gateway-api.sigs.k8s.io/reference/api-types/httproute/
    *
    * @default {...} (6 keys)
    */
