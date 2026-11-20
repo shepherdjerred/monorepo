@@ -173,6 +173,26 @@ The API server listens on port 7341 and the Vite dev server on 7342 (proxying
 `/api` and `/trpc` to 7341). The UI and tRPC transport share the same process
 in production (`bun run start`).
 
+To work on the client without any of that setup, run `bun run dev:fixture`. It
+starts the same Vite dev server with hot reload, but puts the in-memory fixture
+server (`e2e/server.ts`) on port 7341 in place of the real API. It needs no
+database, credentials, Grafana, or Prometheus, and no prior `bun run build`.
+`OPS_FIXTURE` selects the ops snapshot it serves:
+
+| `OPS_FIXTURE`          | Snapshot                                                                                                                                                                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `volume` (the default) | Production volume as the collector emits it today: about 220 signals, over 120 waiting on you, one signal per pending Renovate update                                                                                                                   |
+| `volume-aggregate`     | The same world after the in-flight collector fixes: Renovate updates and healthy Renovate pull requests are one signal each, restore failures have their own kind, and `alerts.firing` carries its severity. About 115 signals, under 30 waiting on you |
+| `default`              | The small snapshot the Playwright specs assert against                                                                                                                                                                                                  |
+
+Any other value stops the fixture server at startup. The volume snapshots live
+in `src/test-fixtures/ops-snapshot-volume.ts` and use the collector's real
+signal ids, kinds, and metric ids, so they are also the fixtures to import in
+client tests. While `OPS_FIXTURE` is set the fixture server re-ingests its
+snapshot every five minutes, as the collector does, so a long-running session
+never goes stale. Series charts and alert ledger pages show the fixture
+server's fixed sample data.
+
 | Route                                   | Purpose                                                                                                                                    |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `POST /internal/v1/alertmanager/events` | Alertmanager v4 webhook (bearer `ALERT_DASHBOARD_WEBHOOK_TOKEN`)                                                                           |
@@ -227,6 +247,7 @@ generates inline.
 | Command                      | What it does                                                                          |
 | ---------------------------- | ------------------------------------------------------------------------------------- |
 | `bun run dev`                | API server + Vite dev server                                                          |
+| `bun run dev:fixture`        | Fixture server + Vite dev server; no database or credentials (see `OPS_FIXTURE`)      |
 | `bun run start`              | Production server (`src/server/index.ts`)                                             |
 | `bun run build`              | Vite production build                                                                 |
 | `bun run generate`           | Generate the Prisma client                                                            |
