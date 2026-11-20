@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { registerTestService } from "#testing/services.ts";
+import { testExecutor } from "#testing/seed.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { TITLE_LIMIT } from "#infrastructure/hub/source-commit.ts";
 
@@ -54,6 +55,7 @@ async function ciBuild(
       pipelineNumber: options.pipelineNumber,
     },
   });
+  return id;
 }
 
 /** A cached CI run as the hub's Woodpecker reader stores it: no commit sha. */
@@ -189,7 +191,7 @@ describe("source commit backfill", () => {
 
   test("a rerun commit takes its first pipeline, and empty values are recorded as absent", async () => {
     const cluster = await before();
-    await ciBuild(cluster, {
+    const rerun = await ciBuild(cluster, {
       sourceRevision: sha("a"),
       pipelineNumber: 7,
       status: "verified",
@@ -233,17 +235,26 @@ describe("source commit backfill", () => {
       author: "shepherdjerred",
     });
 
-    // Capture after the migration leaves a backfilled commit as it is.
+    // Capture after the migration leaves a backfilled commit as it is, and
+    // publishes no change for it.
     await new Delivery(cluster.database).recordSourceCommit({
       sourceRevision: sha("a"),
       message: "a later qualification",
       author: "someone-else",
       pipelineNumber: 10,
+      buildId: rerun,
+      actor: testExecutor,
+      requestId: "qualify-after-backfill",
     });
     expect(
       await cluster.database.sourceCommit.findUnique({
         where: { sourceRevision: sha("a") },
       }),
     ).toEqual(rows.get(sha("a")));
+    expect(
+      await cluster.database.audit.count({
+        where: { action: "build.source_recorded" },
+      }),
+    ).toBe(0);
   });
 });

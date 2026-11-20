@@ -4,6 +4,8 @@ import { registerTestService } from "#testing/services.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createQualifier } from "#infrastructure/qualification.ts";
+import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
+import { ChangeEventSchema } from "#shared/hub/change-contract.ts";
 import { PAGE_SIZE } from "#infrastructure/hub/cursor.ts";
 import { TITLE_LIMIT } from "#infrastructure/hub/source-commit.ts";
 import {
@@ -33,6 +35,7 @@ const pipelines = new Map<number, Record<string, unknown>>();
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let delivery: Delivery;
+let feed: ReturnType<typeof createChangeListener>;
 let app: ReturnType<typeof createApp>;
 let builds = 0;
 
@@ -113,13 +116,47 @@ async function qualify(buildId: string) {
     headers: { Authorization: `Bearer ${TOKEN}` },
   });
   expect(response.status).toBe(200);
+  return response;
+}
+
+/** The arcade build of the commit at `position`. */
+async function buildOf(position: number) {
+  const build = await cluster.database.build.findFirstOrThrow({
+    where: { sourceRevision: sha(position), serviceId: "arcade" },
+  });
+  return build.id;
+}
+
+/** The qualification a report came from: the arcade build of the commit at `position`. */
+async function qualificationOf(position: number, requestId: string) {
+  return { buildId: await buildOf(position), actor: testExecutor, requestId };
+}
+
+/** Every change published for the first record of a commit's title and author. */
+function sourceRecorded(revision: string) {
+  return cluster.database.audit.findMany({
+    where: {
+      action: "build.source_recorded",
+      metadata: { path: ["sourceRevision"], equals: revision },
+    },
+    select: {
+      actor: true,
+      action: true,
+      entityId: true,
+      requestId: true,
+      metadata: true,
+    },
+  });
 }
 
 beforeAll(async () => {
   cluster = await createTestDatabase();
   delivery = new Delivery(cluster.database);
+  feed = createChangeListener(cluster.url);
+  await feed.start();
   app = createApp({
     delivery,
+    changeFeed: feed,
     ciOrigin: "https://woodpecker.sjer.red",
     ciRepositoryId: 1,
     peerAddress: () => "127.0.0.1",
@@ -185,6 +222,7 @@ beforeAll(async () => {
 }, 120_000);
 
 afterAll(async () => {
+  await feed.stop();
   await cluster.close();
 });
 
@@ -272,6 +310,7 @@ describe("commit titles and authors", () => {
         "  feat(delivery): show commit titles (#4723)  \n\nWhy\n\nBare shas.",
       author: " shepherdjerred ",
       pipelineNumber: COMMITS,
+      ...(await qualificationOf(COMMITS - 1, "request-newest")),
     });
     const expected = {
       sha: newest,
@@ -303,6 +342,7 @@ describe("commit titles and authors", () => {
 
   test("the first record wins and repeats change nothing", async () => {
     const revision = sha(20);
+    const first = await qualificationOf(20, "request-first");
     await Promise.all(
       Array.from({ length: 20 }, () =>
         delivery.recordSourceCommit({
@@ -310,6 +350,7 @@ describe("commit titles and authors", () => {
           message: "fix(arcade): the push itself",
           author: "shepherdjerred",
           pipelineNumber: 21,
+          ...first,
         }),
       ),
     );
@@ -321,6 +362,7 @@ describe("commit titles and authors", () => {
       message: "a rerun cannot rewrite the title",
       author: "someone-else",
       pipelineNumber: 99,
+      ...(await qualificationOf(20, "request-rerun")),
     });
     expect(
       await cluster.database.sourceCommit.findMany({
@@ -332,6 +374,53 @@ describe("commit titles and authors", () => {
       author: "shepherdjerred",
       pipelineNumber: 21,
     });
+    // Twenty racing reports and a rerun published one change between them.
+    expect(await sourceRecorded(revision)).toEqual([
+      {
+        actor: testExecutor.id,
+        action: "build.source_recorded",
+        entityId: first.buildId,
+        requestId: "request-first",
+        metadata: { sourceRevision: revision, pipelineNumber: 21 },
+      },
+    ]);
+  });
+
+  test("the first record is audited to its build, principal and request; a later build's report is not", async () => {
+    // The commit two services built: each build reports it when qualified.
+    const revision = sha(3);
+    const arcade = await qualificationOf(3, "request-arcade");
+    const scout = await cluster.database.build.findFirstOrThrow({
+      where: { sourceRevision: revision, serviceId: "scout-for-lol" },
+    });
+    expect(await sourceRecorded(revision)).toEqual([]);
+    const report = {
+      sourceRevision: revision,
+      message: "feat: one commit, two services",
+      author: "shepherdjerred",
+      pipelineNumber: 4,
+    };
+    await delivery.recordSourceCommit({ ...report, ...arcade });
+    const published = [
+      {
+        actor: testExecutor.id,
+        action: "build.source_recorded",
+        entityId: arcade.buildId,
+        requestId: "request-arcade",
+        metadata: { sourceRevision: revision, pipelineNumber: 4 },
+      },
+    ];
+    expect(await sourceRecorded(revision)).toEqual(published);
+    await delivery.recordSourceCommit({
+      ...report,
+      buildId: scout.id,
+      actor: testExecutor,
+      requestId: "request-scout",
+    });
+    expect(await sourceRecorded(revision)).toEqual(published);
+    expect(
+      await cluster.database.audit.count({ where: { entityId: scout.id } }),
+    ).toBe(0);
   });
 
   test("a title is one bounded line; an empty message or author is recorded as absent", async () => {
@@ -340,12 +429,14 @@ describe("commit titles and authors", () => {
       message: `${"é".repeat(TITLE_LIMIT + 50)}\nsecond line`,
       author: "",
       pipelineNumber: 22,
+      ...(await qualificationOf(21, "request-bounded")),
     });
     await delivery.recordSourceCommit({
       sourceRevision: sha(22),
       message: "\n\nonly a body",
       author: "shepherdjerred",
       pipelineNumber: 23,
+      ...(await qualificationOf(22, "request-untitled")),
     });
     expect(await commit(sha(21))).toMatchObject({
       title: "é".repeat(TITLE_LIMIT),
@@ -372,13 +463,6 @@ function answer(position: number, status: string, finished: number) {
   };
 }
 
-async function buildOf(position: number) {
-  const build = await cluster.database.build.findFirstOrThrow({
-    where: { sourceRevision: sha(position), serviceId: "arcade" },
-  });
-  return build.id;
-}
-
 describe("capture at qualification", () => {
   test("a commit whose CI is still running gets its title while its build stays pending", async () => {
     pipelines.set(31, answer(30, "running", 0));
@@ -387,6 +471,70 @@ describe("capture at qualification", () => {
       verdict: "building",
       title: "feat: commit 30",
       author: "shepherdjerred",
+    });
+  });
+
+  test("the first capture is the pending build's only audited change, in the qualify request's name", async () => {
+    pipelines.set(34, answer(33, "running", 0));
+    const buildId = await buildOf(33);
+    const response = await qualify(buildId);
+    const audited = () =>
+      cluster.database.audit.findMany({
+        where: { entityId: buildId },
+        select: {
+          actor: true,
+          action: true,
+          requestId: true,
+          metadata: true,
+        },
+      });
+    const captured = [
+      {
+        actor: testExecutor.id,
+        action: "build.source_recorded",
+        requestId: response.headers.get("x-request-id"),
+        metadata: { sourceRevision: sha(33), pipelineNumber: 34 },
+      },
+    ];
+    expect(await audited()).toEqual(captured);
+    // The next poll of the still-running pipeline publishes nothing more.
+    await qualify(buildId);
+    expect(await audited()).toEqual(captured);
+    expect(await commit(sha(33))).toMatchObject({ verdict: "building" });
+  });
+
+  test("an open page is told when a pending build's qualification first records its commit", async () => {
+    const response = await read("/api/v1/events");
+    expect(response.headers.get("content-type")).toContain("text/event-stream");
+    const reader = response.body?.getReader();
+    if (reader === undefined) throw new Error("SSE body missing");
+    const decoder = new TextDecoder();
+    const ready = await reader.read();
+    let text = decoder.decode(ready.value);
+    expect(text).toContain("event: ready");
+    pipelines.set(35, answer(34, "running", 0));
+    const buildId = await buildOf(34);
+    await qualify(buildId);
+    while (!text.includes('"action":"build.source_recorded"')) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      text += decoder.decode(chunk.value);
+    }
+    await reader.cancel();
+    const changes = text
+      .split("\n")
+      .filter((line) => line.startsWith('data: {"id"'))
+      .map((line) => {
+        const raw: unknown = JSON.parse(line.slice("data: ".length));
+        return ChangeEventSchema.parse(raw);
+      })
+      .filter((change) => change.entityId === buildId);
+    expect(changes).toMatchObject([
+      { domain: "build", action: "build.source_recorded", entityId: buildId },
+    ]);
+    expect(await commit(sha(34))).toMatchObject({
+      verdict: "building",
+      title: "feat: commit 34",
     });
   });
 
@@ -413,5 +561,7 @@ describe("capture at qualification", () => {
         where: { sourceRevision: sha(0) },
       }),
     ).toBeNull();
+    expect(await sourceRecorded(sha(0))).toEqual([]);
+    expect(await sourceRecorded(sha(32))).toEqual([]);
   });
 });

@@ -151,6 +151,9 @@ export async function seedCommitHistory(delivery: Delivery) {
         message: `${commit.title}\n\nSeeded by the browser harness.`,
         author: commit.author,
         pipelineNumber,
+        buildId: build.buildId,
+        actor: testExecutor,
+        requestId: `history/${tag}/source`,
       });
   }
 }
@@ -164,7 +167,12 @@ export async function describeSeededCommits(delivery: Delivery) {
   const builds = await delivery.database.build.findMany({
     where: { sourceKind: "ci", serviceId: { not: SERVICE } },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-    select: { sourceRevision: true, serviceId: true, pipelineNumber: true },
+    select: {
+      id: true,
+      sourceRevision: true,
+      serviceId: true,
+      pipelineNumber: true,
+    },
   });
   const described = new Set<string>();
   for (const build of builds) {
@@ -177,6 +185,9 @@ export async function describeSeededCommits(delivery: Delivery) {
       message: `feat(${build.serviceId}): publish the ${build.serviceId} fixture\n\nSeeded by the browser harness.`,
       author: "shepherdjerred",
       pipelineNumber: build.pipelineNumber,
+      buildId: build.id,
+      actor: testExecutor,
+      requestId: `describe/${build.id}`,
     });
   }
 }

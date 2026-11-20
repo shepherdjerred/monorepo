@@ -1,10 +1,15 @@
 import { describe, expect, test } from "vitest";
 import { ciIdentity, createQualifier } from "./qualification.ts";
 import type { SourceCommitReport } from "./hub/source-commit.ts";
+import { testExecutor } from "#testing/seed.ts";
 
+/** Who asked for a qualification, and in which request. */
+const asked = { actor: testExecutor, requestId: "qualify-request" };
 const build = {
   ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/42",
   sourceRevision: "a".repeat(40),
+  buildId: "build-42",
+  ...asked,
 };
 const MESSAGE = "feat(arcade): ship it (#42)\n\nWhy\n\nBecause.";
 
@@ -57,7 +62,7 @@ describe("exact CI qualification", () => {
     ["failure", 123, "failed"],
     ["canceled", 123, "failed"],
   ] as const)(
-    "CI %s finished=%s qualifies as %s and reports the commit's message and author",
+    "CI %s finished=%s qualifies as %s and reports the commit's message and author for the build and request",
     async (status, finished, expected) => {
       const { qualify, reports } = qualifier({
         number: 42,
@@ -76,6 +81,9 @@ describe("exact CI qualification", () => {
           message: MESSAGE,
           author: "shepherdjerred",
           pipelineNumber: 42,
+          buildId: "build-42",
+          actor: testExecutor,
+          requestId: "qualify-request",
         },
       ]);
     },
@@ -98,6 +106,8 @@ describe("exact CI qualification", () => {
     const lane = {
       ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/77",
       sourceRevision: "c".repeat(40),
+      buildId: "build-77",
+      ...asked,
     };
     const { qualify } = qualifier({}, (input) => {
       if (!(input instanceof URL))

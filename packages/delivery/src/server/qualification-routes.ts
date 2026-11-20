@@ -2,15 +2,15 @@ import type { Hono } from "hono";
 import type { Principal } from "#shared/contract.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { requireScope } from "#infrastructure/auth.ts";
+import type { QualificationRequest } from "#infrastructure/qualification.ts";
 import { DeliveryError } from "#domain/error.ts";
 
 export function registerQualificationRoutes(
   app: Hono<{ Variables: { principal: Principal; requestId: string } }>,
   delivery: Delivery,
-  qualifyBuild: (input: {
-    ciUrl: string;
-    sourceRevision: string;
-  }) => Promise<"pending" | "verified" | "failed">,
+  qualifyBuild: (
+    input: QualificationRequest,
+  ) => Promise<"pending" | "verified" | "failed">,
 ) {
   app.get("/api/v1/qualification/pending", async (c) => {
     requireScope(c.get("principal"), "execute");
@@ -34,6 +34,9 @@ export function registerQualificationRoutes(
       const status = await qualifyBuild({
         ciUrl: build.ciUrl,
         sourceRevision: build.sourceRevision,
+        buildId: build.id,
+        actor: c.get("principal"),
+        requestId: c.get("requestId"),
       });
       return c.json(
         await delivery.qualify(build.id, status, c.get("principal")),

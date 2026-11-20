@@ -101,6 +101,13 @@ the push. Either is `null` when Delivery holds none: the commit predates
 capture, no build of it has been checked yet, or Woodpecker reported it empty.
 The list never asks GitHub, so it works with GitHub enrichment off.
 
+The report that first records a commit also writes one `build.source_recorded`
+audit row in the same transaction, for the build being qualified and in the
+name of the principal and request that asked. That row is the change event an
+open commit list or commit page refetches on, so a title appears as soon as
+the first check of any of its builds commits, while that build is still
+pending. Later reports of the same commit record and audit nothing.
+
 `GET /api/v1/commits` returns 25 commits and a `nextCursor`; `?cursor=` reads
 the next page and an invalid cursor is a 400. Commits are ordered by when
 Delivery first heard of each (its oldest CI build), then by sha. That time

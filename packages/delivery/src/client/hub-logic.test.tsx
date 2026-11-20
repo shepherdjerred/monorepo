@@ -188,6 +188,8 @@ describe("change feed keys", () => {
     // `["commits"]` prefixes both `["commits", { cursor }]` and `["commits", sha]`.
     for (const action of [
       "build.verified",
+      // A commit's title and author were first recorded, its build still pending.
+      "build.source_recorded",
       "deployment.stage",
       "environment.registered",
       "versionSet.composed",

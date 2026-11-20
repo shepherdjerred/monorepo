@@ -18,9 +18,10 @@ import {
   PublishBuildSchema,
   StageRequestSchema,
 } from "#shared/contract.ts";
-import type { Principal, PublishBuild } from "#shared/contract.ts";
+import type { Principal } from "#shared/contract.ts";
 import { CreateDeploymentV2Schema } from "#shared/deployment-request-contract.ts";
 import { ciIdentity } from "#infrastructure/qualification.ts";
+import type { QualificationRequest } from "#infrastructure/qualification.ts";
 import type { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { registerWorkerRoutes } from "./worker-routes.ts";
 import { registerSelectionRoutes } from "./selection-routes.ts";
@@ -81,7 +82,7 @@ type Options = {
   /** The process's shutdown drain; a draining API reports itself unready. */
   drain?: Drain;
   qualifyBuild: (
-    input: Pick<PublishBuild, "ciUrl" | "sourceRevision">,
+    input: QualificationRequest,
   ) => Promise<"pending" | "verified" | "failed">;
 };
 /**
