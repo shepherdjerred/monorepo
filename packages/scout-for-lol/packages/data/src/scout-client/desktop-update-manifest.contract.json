@@ -1,5 +1,11 @@
 {
   "contractVersion": 1,
+  "contractMinorVersion": 0,
+  "compatibility": {
+    "additive": "bumps contractMinorVersion: new platform keys and new fields; clients ignore unknown platforms and fields and accept any minor",
+    "breaking": "bumps contractVersion at a new manifest path; the old path keeps the old major; clients refuse an unknown major",
+    "clientValidation": "a client validates every field it uses and its own platform entry strictly, and nothing else"
+  },
   "origin": "https://download.scout-for-lol.com",
   "manifestPath": "/{channel}.json",
   "releasePath": "/releases/{version}/{file}",

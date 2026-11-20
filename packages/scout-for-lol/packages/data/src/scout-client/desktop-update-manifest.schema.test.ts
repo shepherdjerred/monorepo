@@ -1,13 +1,16 @@
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
 import rawContract from "./desktop-update-manifest.contract.json" with { type: "json" };
 import rawFixtures from "./desktop-update-manifest.fixtures.json" with { type: "json" };
 import {
   SCOUT_DESKTOP_UPDATE_ORIGIN,
   ScoutDesktopUpdateChannelSchema,
   ScoutDesktopUpdateFormatSchema,
+  ScoutDesktopUnsupportedSchemaError,
   ScoutDesktopUpdateManifestSchema,
   ScoutDesktopUpdatePlatformSchema,
   compareScoutDesktopVersions,
+  readScoutDesktopUpdateManifest,
   scoutDesktopPlatformFormats,
 } from "./desktop-update-manifest.schema.ts";
 import {
@@ -38,6 +41,18 @@ if (
 }
 const stableMacSha256 = stableMac.sha256;
 
+const withEntry = (entry: Record<string, unknown>) => ({
+  ...stable,
+  platforms: { "windows-x86_64": { ...stableWindows, ...entry } },
+});
+
+const PlatformKeys = z.looseObject({
+  platforms: z.record(z.string(), z.unknown()).optional(),
+});
+function shippedPlatforms(body: unknown): string[] {
+  return Object.keys(PlatformKeys.parse(body).platforms ?? {});
+}
+
 describe("Scout desktop update manifest contract", () => {
   test("keeps the Zod schema aligned with the shared contract", () => {
     expect(SCOUT_DESKTOP_UPDATE_ORIGIN).toBe(rawContract.origin);
@@ -61,6 +76,8 @@ describe("Scout desktop update manifest contract", () => {
         Object.values(rawContract.platforms).flatMap(({ formats }) => formats),
       ),
     );
+    expect(rawContract.contractVersion).toBe(1);
+    expect(rawContract.contractMinorVersion).toBe(0);
     expect(rawContract.manifestPath).toBe("/{channel}.json");
     expect(rawContract.releasePath).toBe("/releases/{version}/{file}");
     expect(channelManifestKey("stable")).toBe("stable.json");
@@ -78,6 +95,76 @@ describe("Scout desktop update manifest contract", () => {
     expect(ScoutDesktopUpdateManifestSchema.safeParse(body).success).toBe(
       false,
     );
+  });
+
+  test.each(rawFixtures.forwardCompatible)(
+    "an installed client reads $reason, the publisher refuses it",
+    ({ body }) => {
+      for (const platform of ScoutDesktopUpdatePlatformSchema.options) {
+        const read = readScoutDesktopUpdateManifest(body, platform);
+        expect(read.channel).toBe(body.channel);
+        expect(read.artifact !== undefined).toBe(
+          shippedPlatforms(body).includes(platform),
+        );
+      }
+      const publishable = ScoutDesktopUpdateManifestSchema.safeParse(body);
+      expect(publishable.success).toBe(false);
+    },
+  );
+
+  test.each(rawFixtures.invalid)(
+    "a client refuses $reason for the platforms it names",
+    ({ body }) => {
+      const named = ScoutDesktopUpdatePlatformSchema.options.filter(
+        (platform) => shippedPlatforms(body).includes(platform),
+      );
+      const platforms =
+        named.length > 0 ? named : ScoutDesktopUpdatePlatformSchema.options;
+      for (const platform of platforms) {
+        expect(() => readScoutDesktopUpdateManifest(body, platform)).toThrow();
+      }
+    },
+  );
+
+  test("refuses a higher major with a typed error before reading the rest", () => {
+    const major = rawFixtures.invalid.find(({ reason }) =>
+      reason.startsWith("a higher major"),
+    );
+    expect(() =>
+      readScoutDesktopUpdateManifest(major?.body, "windows-x86_64"),
+    ).toThrow(ScoutDesktopUnsupportedSchemaError);
+  });
+
+  test("an additive field does not exempt an own entry from the other rules", () => {
+    expect(() =>
+      readScoutDesktopUpdateManifest(
+        withEntry({ format: "app", metadata: 1 }),
+        "windows-x86_64",
+      ),
+    ).toThrow(/installs from nsis/);
+    expect(() =>
+      readScoutDesktopUpdateManifest(
+        withEntry({
+          url: "https://example.com/releases/0.2.0/a.exe",
+          metadata: 1,
+        }),
+        "windows-x86_64",
+      ),
+    ).toThrow(/artifact url/);
+  });
+
+  test("a client ignores a malformed entry for a platform it does not run on", () => {
+    const body = structuredClone(stable);
+    body.platforms = {
+      ...body.platforms,
+      "windows-x86_64": { ...stableWindows, sha256: "nope" },
+    };
+    expect(
+      readScoutDesktopUpdateManifest(body, "darwin-universal").artifact,
+    ).toEqual(stableMac);
+    expect(() =>
+      readScoutDesktopUpdateManifest(body, "windows-x86_64"),
+    ).toThrow();
   });
 
   test.each(rawFixtures.versionOrdering)(

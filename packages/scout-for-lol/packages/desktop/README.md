@@ -665,9 +665,23 @@ for Apple silicon and Intel). A release may carry either or both; a build
 whose platform is missing is offered nothing. Artifact URLs must be exactly
 `https://download.scout-for-lol.com/releases/<version>/<file>`.
 
-Every client refuses a manifest with a platform key or schema version it does
-not know, so once a build is installed a new platform would strand it. Decide
-forward compatibility before the first publication (AI-720).
+**Compatibility.** The manifest is read by builds that stay installed, so it
+is forward compatible by design (AI-720). `schema` is the major version and
+`schemaMinor` the minor; both are in the contract. An additive change (a new
+platform key such as `windows-aarch64`, or a new field anywhere) bumps only
+`schemaMinor`. A client reads such a manifest as before: it ignores unknown
+fields, ignores every platform entry except the one for the platform it runs
+on (a key it has never heard of included), and accepts any minor. What it does
+use, its own platform entry and the channel, versions, notes and timestamp, it
+still validates strictly, and a malformed own entry is an error. A breaking
+change bumps `schema` and is published at a new path (for example
+`<channel>.v2.json`) while the publisher keeps writing the old path, so
+installed builds keep reading the major they understand. A client that meets
+another major refuses it with `ManifestError::UnsupportedSchema` before
+reading anything else. The publication script's Zod schema stays strict: it
+writes exactly the current contract, and an unknown platform or field there
+is a mistake. The shared fixtures (`forwardCompatible` and `invalid`) pin both
+sides.
 
 **Keys.** The minisign private keys and their passwords are in 1Password, in
 the `Homelab` vault, item `Scout Desktop release`, fields
