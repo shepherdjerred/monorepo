@@ -42,9 +42,11 @@ export async function verifyVisibilityHttp(
     );
     const joined = MediaDetailSchema.parse(JSON.parse(body));
     expect(joined.visibility.torrents[0]?.diagnostics).toBeNull();
-    expect(joined.visibility.attempts.map((row) => row.id)).toEqual([
+    expect(detail.visibility.attempts.map((row) => row.id)).toEqual([
       f.attempt.id,
     ]);
+    expect(joined.visibility.attempts).toEqual([]);
+    expect(body).not.toContain(f.attempt.id);
     expect(joined.visibility.torrents.map((row) => row.id)).toEqual([
       f.torrent.id,
     ]);

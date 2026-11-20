@@ -21,6 +21,7 @@ import {
   type VisibilitySections,
 } from "./access.ts";
 import { mediaVisibility } from "./detail.ts";
+import { memberDetail } from "./member-detail.ts";
 import { externalAvailableMediaIds } from "#infrastructure/external-library/availability.ts";
 import type { MediaVisibility } from "#shared/visibility/detail.ts";
 import {
@@ -186,7 +187,7 @@ export function readMediaDetail(
       visible: reader.visible,
     });
     const household = await defaultHouseholdCaptionRequirements(tx, item);
-    return MediaDetailSchema.parse({
+    const detail = MediaDetailSchema.parse({
       ...item,
       availability: external.has(item.id) ? "available" : item.availability,
       intent: defaultIntent(item.intents),
@@ -225,6 +226,7 @@ export function readMediaDetail(
         ? await scopedRemovalConfirmation(tx, mediaId, reader.visible)
         : {}),
     });
+    return reader.owner ? detail : memberDetail(detail);
   });
 }
 

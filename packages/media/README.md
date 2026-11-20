@@ -914,6 +914,16 @@ filesystem paths and unrelated shared-pack claims do not enter this response.
 Aggregate metrics at `/metrics` remain read-only and contain no media/user/torrent
 identifiers.
 
+Anyone but a current, unrestricted owner reads a member projection
+(`infrastructure/visibility/member-detail.ts`) of that response. A member keeps
+each related download's state, progress and freshness, and loses how the title
+was acquired: the acquisition attempts, each download's ratio, seeded time and
+observation time, the assigned quality profile and the subtitle policies. Every
+withheld field takes a value its contract already allowed (an empty list or
+`null`), so the response keeps its shape. `GET /api/v1/media/:id/releases`
+applies the same line: it authorizes a requester as before and then returns
+release candidates only to an owner, and an empty list to anyone else.
+
 ## Plex association contract
 
 An availability timestamp or Plex rating key does not establish current playback.
