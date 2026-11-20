@@ -1,0 +1,152 @@
+name: npm Publish Gateway
+
+on:
+  push:
+    tags:
+      - "astro-opengraph-images-v[0-9]*"
+      - "webring-v[0-9]*"
+      - "helm-types-v[0-9]*"
+      - "home-assistant-v[0-9]*"
+  workflow_dispatch:
+    inputs:
+      package_dir:
+        description: "Package directory to publish"
+        required: true
+        type: choice
+        options:
+          - packages/astro-opengraph-images
+          - packages/webring
+          - packages/homelab/src/helm-types
+          - packages/home-assistant
+      tag:
+        description: "npm dist-tag"
+        required: true
+        default: "dev"
+        type: string
+      dev_suffix:
+        description: "Optional dev suffix number (appends -dev.<n> to package.json version)"
+        required: false
+        type: string
+      dry_run:
+        description: "Dry run: build without publishing to npm registry"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure modern npm CLI
+        run: npm install -g npm@latest
+
+      - name: Resolve target package and options
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+            echo "Triggered by release tag: ${TAG_NAME}"
+            case "${TAG_NAME}" in
+              astro-opengraph-images-v*)
+                PKG_DIR="packages/astro-opengraph-images"
+                ;;
+              webring-v*)
+                PKG_DIR="packages/webring"
+                ;;
+              helm-types-v*)
+                PKG_DIR="packages/homelab/src/helm-types"
+                ;;
+              home-assistant-v*)
+                PKG_DIR="packages/home-assistant"
+                ;;
+              *)
+                echo "ERROR: Unrecognized tag pattern: ${TAG_NAME}" >&2
+                exit 1
+                ;;
+            esac
+            NPM_TAG="latest"
+            DEV_SUFFIX=""
+            DRY_RUN="false"
+          else
+            PKG_DIR="${{ github.event.inputs.package_dir }}"
+            NPM_TAG="${{ github.event.inputs.tag }}"
+            DEV_SUFFIX="${{ github.event.inputs.dev_suffix }}"
+            DRY_RUN="${{ github.event.inputs.dry_run }}"
+          fi
+
+          PKG_NAME=$(jq -r '.name // empty' "${PKG_DIR}/package.json")
+          if [ -z "${PKG_NAME}" ]; then
+            echo "ERROR: Could not resolve package name from ${PKG_DIR}/package.json" >&2
+            exit 1
+          fi
+
+          {
+            echo "pkg_dir=${PKG_DIR}"
+            echo "pkg_name=${PKG_NAME}"
+            echo "tag=${NPM_TAG}"
+            echo "dev_suffix=${DEV_SUFFIX}"
+            echo "dry_run=${DRY_RUN}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: |
+          bun install --frozen-lockfile --filter "${{ steps.resolve.outputs.pkg_name }}"
+
+      - name: Apply ephemeral dev version
+        if: steps.resolve.outputs.dev_suffix != ''
+        shell: bash
+        run: |
+          PKG_JSON="${{ steps.resolve.outputs.pkg_dir }}/package.json"
+          BASE_VERSION=$(jq -r '.version // "0.0.0"' "$PKG_JSON")
+          DEV_VERSION="${BASE_VERSION}-dev.${{ steps.resolve.outputs.dev_suffix }}"
+          echo "Bumping version: ${BASE_VERSION} -> ${DEV_VERSION}"
+          jq ".version = \"${DEV_VERSION}\"" "$PKG_JSON" > "${PKG_JSON}.tmp" && mv "${PKG_JSON}.tmp" "$PKG_JSON"
+
+      - name: Build package
+        run: |
+          bun --no-install run --cwd "${{ steps.resolve.outputs.pkg_dir }}" build
+
+      - name: Check if version already published
+        id: check_published
+        shell: bash
+        run: |
+          PKG_JSON="${{ steps.resolve.outputs.pkg_dir }}/package.json"
+          TARGET_VERSION=$(jq -r '.version' "$PKG_JSON")
+          PKG_NAME="${{ steps.resolve.outputs.pkg_name }}"
+          echo "Checking if ${PKG_NAME}@${TARGET_VERSION} already exists on npm registry..."
+          if npm view "${PKG_NAME}@${TARGET_VERSION}" version >/dev/null 2>&1; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "Package ${PKG_NAME}@${TARGET_VERSION} is already published; skipping."
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm (Trusted Publishing with Provenance)
+        if: steps.resolve.outputs.dry_run != 'true' && steps.check_published.outputs.already_published != 'true'
+        shell: bash
+        run: |
+          npm publish "${{ steps.resolve.outputs.pkg_dir }}" \
+            --tag "${{ steps.resolve.outputs.tag }}" \
+            --access public \
+            --provenance

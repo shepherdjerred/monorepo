@@ -4,6 +4,9 @@ import {
   EXPIRY_WARNING_DAYS,
   expiryWarning,
   verifyTokenBypasses2fa,
+  normalizePackageDir,
+  buildWorkflowDispatchArgs,
+  parseArgs,
   type TokenIntrospectionFetcher,
 } from "./publish-npm.ts";
 
@@ -132,5 +135,103 @@ describe("verifyTokenBypasses2fa", () => {
     await verifyTokenBypasses2fa(token, { fetcher, now });
     expect(pages).toHaveLength(2);
     expect(pages[1]).toBe("https://registry.npmjs.org/-/npm/v1/tokens?page=2");
+  });
+});
+
+describe("normalizePackageDir", () => {
+  test("normalizes dot directory relative to package root", () => {
+    expect(normalizePackageDir(".", "/repo/packages/webring", "/repo")).toBe(
+      "packages/webring",
+    );
+  });
+
+  test("normalizes repo-relative path", () => {
+    expect(normalizePackageDir("packages/webring", "/repo", "/repo")).toBe(
+      "packages/webring",
+    );
+  });
+
+  test("normalizes nested package directory", () => {
+    expect(
+      normalizePackageDir(
+        ".",
+        "/repo/packages/homelab/src/helm-types",
+        "/repo",
+      ),
+    ).toBe("packages/homelab/src/helm-types");
+  });
+});
+
+describe("buildWorkflowDispatchArgs", () => {
+  test("formats basic workflow dispatch command arguments", () => {
+    const args = buildWorkflowDispatchArgs({
+      packageDir: "packages/webring",
+      tag: "latest",
+    });
+    expect(args).toEqual([
+      "workflow",
+      "run",
+      "npm-publish.yml",
+      "-F",
+      "package_dir=packages/webring",
+      "-F",
+      "tag=latest",
+    ]);
+  });
+
+  test("includes dev suffix and dry-run flags when provided", () => {
+    const args = buildWorkflowDispatchArgs({
+      packageDir: "packages/astro-opengraph-images",
+      tag: "dev",
+      devSuffix: "15",
+      dryRun: true,
+    });
+    expect(args).toEqual([
+      "workflow",
+      "run",
+      "npm-publish.yml",
+      "-F",
+      "package_dir=packages/astro-opengraph-images",
+      "-F",
+      "tag=dev",
+      "-F",
+      "dev_suffix=15",
+      "-F",
+      "dry_run=true",
+    ]);
+  });
+});
+
+describe("parseArgs", () => {
+  test("defaults dispatch to true when NPM_TOKEN is unset in environment", () => {
+    const parsed = parseArgs(["packages/webring"], {});
+    expect(parsed.dispatch).toBe(true);
+    expect(parsed.tag).toBe("latest");
+    expect(parsed.pkgDir).toBe("packages/webring");
+  });
+
+  test("defaults dispatch to false when NPM_TOKEN is present in environment", () => {
+    const parsed = parseArgs(["packages/webring"], {
+      NPM_TOKEN: "npm_test123",
+    });
+    expect(parsed.dispatch).toBe(false);
+  });
+
+  test("allows explicitly forcing --dispatch even with NPM_TOKEN set", () => {
+    const parsed = parseArgs(["packages/webring", "--dispatch"], {
+      NPM_TOKEN: "npm_test123",
+    });
+    expect(parsed.dispatch).toBe(true);
+  });
+
+  test("allows explicitly forcing --no-dispatch even with NPM_TOKEN unset", () => {
+    const parsed = parseArgs(["packages/webring", "--no-dispatch"], {});
+    expect(parsed.dispatch).toBe(false);
+  });
+
+  test("infers dev tag when devSuffix is passed", () => {
+    const parsed = parseArgs(["packages/webring", "--dev-suffix", "3"], {});
+    expect(parsed.tag).toBe("dev");
+    expect(parsed.devSuffix).toBe("3");
   });
 });
