@@ -28,6 +28,10 @@ Runtime files live under
 `~/Library/Application Support/justin-principal-engineer`. The configuration
 contract is in `config.example.json`.
 
+Set `agents.codex.openAiApiKey` to a 1Password reference for a key from the
+dedicated Justin OpenAI project. Its enforced API spend limit is $50 USD per
+UTC calendar month, with a spend alert at $40.
+
 Configure `tracker.team` as `AI` and `tracker.url` with the private Tracker
 endpoint. Justin takes unassigned Backlog and Todo issues or explicit handoffs
 with `agent:codex`. Tracker priority determines which eligible issue runs next,

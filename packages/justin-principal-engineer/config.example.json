@@ -29,7 +29,7 @@
   },
   "agents": {
     "codex": {
-      "openAiApiKey": "op://Automation/OpenAI/credential",
+      "openAiApiKey": "op://Automation/Justin-OpenAI/credential",
       "model": "gpt-6-luna"
     }
   },
