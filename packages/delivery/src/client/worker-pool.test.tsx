@@ -1,0 +1,171 @@
+import { describe, expect, test, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as fixtures from "#testing/model-fixtures.ts";
+import {
+  WorkerPoolSnapshotSchema,
+  WorkerPoolStateSchema,
+  WorkerVersionSchema,
+  workerHostSpecification,
+} from "#shared/worker-contract.ts";
+import { ConfirmDialogProvider } from "#client/components/confirm-dialog.tsx";
+import { renderWithRouter } from "#client/test-router.tsx";
+import { WorkerPoolPanel } from "./worker-pool.tsx";
+
+// The hub client resolves its API origin from the page; static rendering has none.
+vi.hoisted(() => {
+  Object.defineProperty(globalThis, "location", {
+    value: new URL("https://delivery.invalid/"),
+    configurable: true,
+  });
+});
+
+const INTRODUCED = "45cf1828-0f01-4bcd-8dab-592769df488f";
+
+/** One Scout production worker build, named by a single hex digit. */
+function worker(digit: string, replicas: 0 | 1) {
+  const digest = `sha256:${digit.repeat(64)}`;
+  return WorkerVersionSchema.parse({
+    id: `worker/${digit}`,
+    environmentId: fixtures.PROD,
+    buildId: digit.repeat(40),
+    artifactId: `scout-prod/image/${digit}`,
+    artifactBuildId: `artifact-build-${digit}`,
+    sourceRevision: digit.repeat(40),
+    image: `docker.io/shepherdjerred/scout-for-lol@${digest}`,
+    digest,
+    introducedByDeploymentId: INTRODUCED,
+    host: workerHostSpecification("scout-prod"),
+    replicas,
+    generation: 1,
+    retiredAt: null,
+  });
+}
+
+const SELECTED = worker("a", 1);
+const RETAINED = worker("b", 1);
+const VERSIONS = [
+  SELECTED,
+  RETAINED,
+  worker("c", 0),
+  worker("d", 0),
+  worker("e", 0),
+];
+
+/** The deployment whose frozen pool selected build `a`. */
+const accepted = fixtures.recordedDeployment({
+  id: "scout-prod-42",
+  kind: "deploy",
+  status: "succeeded",
+  revision: 42,
+  workerSnapshot: WorkerPoolSnapshotSchema.parse({
+    schema: "delivery-worker-pool/v1",
+    environmentId: fixtures.PROD,
+    environmentGeneration: 12,
+    target: "scout-prod",
+    candidateBuildId: SELECTED.buildId,
+    versions: [SELECTED, RETAINED],
+  }),
+});
+
+function panel(options: { versions?: typeof VERSIONS; permitted?: boolean }) {
+  const client = new QueryClient();
+  client.setQueryData(
+    ["workers", fixtures.PROD],
+    WorkerPoolStateSchema.parse({
+      environmentId: fixtures.PROD,
+      generation: 12,
+      versions: options.versions ?? VERSIONS,
+    }),
+  );
+  return renderWithRouter(
+    <QueryClientProvider client={client}>
+      <ConfirmDialogProvider>
+        <WorkerPoolPanel
+          environment={fixtures.environments.prod}
+          deployments={[accepted]}
+          permitted={options.permitted ?? true}
+          onDeployment={() => Promise.resolve()}
+        />
+      </ConfirmDialogProvider>
+    </QueryClientProvider>,
+  ).replaceAll("<!-- -->", "");
+}
+
+/** Each body row of a rendered worker table. */
+function rows(html: string) {
+  return html.split("<tbody>").slice(1).join("").split("<tr>").slice(1);
+}
+
+describe("retained workers", () => {
+  test("lists builds with a desired host and collapses retained artifacts without one", () => {
+    const html = panel({});
+    // A closed disclosure, labelled with how many artifacts it holds.
+    const artifacts = html.indexOf(
+      '<details class="disclosure"><summary><span class="disclosure-label">Retained artifacts with no desired host</span><span class="disclosure-count">3</span></summary>',
+    );
+    expect(artifacts).toBeGreaterThan(-1);
+    const hosted = rows(html.slice(0, artifacts));
+    const unhosted = rows(html.slice(artifacts));
+    expect(hosted).toHaveLength(2);
+    expect(hosted[0]).toContain("1 · selected");
+    expect(hosted[1]).toContain("1 · retained");
+    expect(unhosted).toHaveLength(3);
+    for (const row of unhosted) {
+      expect(row).toContain("Zero · artifact retained");
+      expect(row).not.toContain("Request retirement");
+    }
+    // The collapsed table has no retirement column: nothing there has a host to stop.
+    expect(html.slice(artifacts)).not.toContain("<th>Retirement</th>");
+    expect(html.slice(0, artifacts)).toContain("<th>Retirement</th>");
+  });
+
+  test("a row shortens its build and digest and keeps every full identity behind its host line", () => {
+    const [, retained = ""] = rows(panel({}));
+    const build = "b".repeat(40);
+    const digest = `sha256:${"b".repeat(64)}`;
+    expect(retained).toContain(
+      `<abbr class="mono identifier" title="${build}"><span aria-hidden="true">bbbbbbbbbbbb…</span><span class="visually-hidden">${build}</span></abbr>`,
+    );
+    expect(retained).toContain(
+      `<abbr class="mono identifier" title="${digest}"><span aria-hidden="true">sha256:bbbbbbbbbbbb</span><span class="visually-hidden">${digest}</span></abbr>`,
+    );
+    expect(retained).toContain(
+      '<summary><span class="disclosure-label">scout-prod-workflows · prod / scout-prod</span></summary>',
+    );
+    const provenance = retained.slice(retained.indexOf("worker-provenance"));
+    expect(provenance).toContain(
+      `<dt>Image</dt><dd class="mono">docker.io/shepherdjerred/scout-for-lol@${digest}</dd>`,
+    );
+    expect(provenance).toContain(
+      `<dt>Build</dt><dd class="mono">${build}</dd>`,
+    );
+    expect(provenance).toContain(
+      '<dt>Artifact</dt><dd class="mono">scout-prod/image/b · build artifact-build-b</dd>',
+    );
+    expect(provenance).toContain(`href="/deployments/${INTRODUCED}"`);
+    expect(provenance).toContain("<dd>scout-prod · scout-prod-workflows</dd>");
+    expect(provenance).toContain("prod / scout-prod-workflows / scout-prod");
+  });
+
+  test("only a retained build with a host offers retirement, named by its build", () => {
+    const [selected = "", retained = ""] = rows(panel({}));
+    expect(selected).not.toContain("Request retirement");
+    const described = /id="(?<id>[^"]+)"/u.exec(retained)?.groups?.["id"];
+    expect(described).toBeDefined();
+    expect(retained).toContain(
+      `<button type="button" class="secondary-button danger" aria-describedby="${described ?? ""}">Request retirement</button>`,
+    );
+    expect(panel({ permitted: false })).not.toContain("Request retirement");
+  });
+
+  test("a pool with no desired host says so above its collapsed artifacts", () => {
+    const html = panel({ versions: [worker("c", 0)] });
+    expect(html).toContain("No worker build has a desired host.");
+    expect(html).toContain('<span class="disclosure-count">1</span>');
+    expect(rows(html)).toHaveLength(1);
+  });
+
+  test("every row asks through the page's one dialog", () => {
+    expect(panel({}).match(/<dialog/gu)).toHaveLength(1);
+  });
+});

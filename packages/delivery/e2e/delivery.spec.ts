@@ -73,6 +73,13 @@ test("select an immutable release, inspect queued execution, and cancel safely",
   ).toBeVisible();
   await expect(main).toContainText("No runtime observation");
   await expect(main).toContainText("Unknown");
+  // Nothing is released here yet, and the release action leads the page.
+  await expect(main.locator(".page-header")).toContainText(
+    "Nothing accepted yet · Deploys automatically · generation 0 · Nothing in flight",
+  );
+  await expect(main.getByRole("region").first()).toHaveAccessibleName(
+    "Request a release",
+  );
   await main
     .getByRole("combobox", { name: "Version set", exact: true })
     .selectOption({ index: 1 });

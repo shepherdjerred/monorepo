@@ -34,8 +34,12 @@ export async function openDeployment(
   return selected.id;
 }
 
-/** Accept the open native confirmation dialog. */
+/**
+ * Accept the open native confirmation dialog. Every confirm button asks
+ * through the page's one dialog element, so the open one is the only one.
+ */
 export async function confirm(page: Page, label: string) {
+  await expect(page.locator("dialog")).toHaveCount(1);
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: label, exact: true }).click();
@@ -117,6 +121,14 @@ export async function expectAccessible(page: Page, path: string) {
   await expect(
     page.locator("[role=status]", { hasText: "Loading" }),
   ).toHaveCount(0);
+  await expectNoViolations(page, path);
+}
+
+/**
+ * Require no WCAG 2.2 AA violation in the page as it now stands, such as with
+ * a disclosure expanded or a dialog open; `path` names the state in a failure.
+ */
+export async function expectNoViolations(page: Page, path: string) {
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();

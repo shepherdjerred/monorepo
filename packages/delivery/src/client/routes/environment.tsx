@@ -1,8 +1,10 @@
 import { Link, createRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import type { EnvironmentPageDetail } from "#shared/hub/hub-contract.ts";
 import { queries } from "#client/queries.ts";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { ToolLinks } from "#client/components/links.tsx";
+import { Status, statusLabel } from "#client/components/status.tsx";
 import { useNow } from "#client/components/time.tsx";
 import { RuntimePanel } from "#client/components/integrations.tsx";
 import { DeploymentTable } from "#client/components/deployment-table.tsx";
@@ -12,7 +14,17 @@ import { PlatformReleaseForm } from "#client/platform-release-form.tsx";
 import { WorkerPoolPanel } from "#client/worker-pool.tsx";
 import { ForumBaselinePanel } from "#client/forum-baseline.tsx";
 import { EnvironmentModel } from "#client/model/environment-model.tsx";
-import { canDeploy } from "#client/presentation.ts";
+import {
+  DeploymentLink,
+  SetRevision,
+  SetRevisionLink,
+  type RevisionNumbers,
+} from "#client/model/selection-facts.tsx";
+import {
+  canDeploy,
+  isTerminal,
+  revisionNumbers,
+} from "#client/presentation.ts";
 import { EnvironmentSearchSchema } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
 
@@ -28,6 +40,100 @@ function policy(detail: {
     : `Promotes from ${detail.promotionSourceEnvironmentId}`;
 }
 
+/**
+ * What is unfinished here: the deployment the executor holds, else the newest
+ * one still queued or waiting, with how many more wait behind it.
+ */
+function InFlight({
+  detail,
+  revisions,
+}: {
+  detail: EnvironmentPageDetail;
+  revisions: RevisionNumbers;
+}) {
+  const active = detail.environment.activeDeploymentId;
+  const unfinished = detail.deployments.filter(
+    (deployment) => !isTerminal(deployment),
+  );
+  const lead =
+    unfinished.find((deployment) => deployment.id === active) ?? unfinished[0];
+  if (lead === undefined)
+    return active === null ? (
+      "Nothing in flight"
+    ) : (
+      <>
+        In flight: deployment <DeploymentLink id={active} short />
+      </>
+    );
+  return (
+    <>
+      <Link
+        to="/deployments/$deploymentId"
+        params={{ deploymentId: lead.id }}
+        className="environment-in-flight"
+      >
+        <Status
+          value={lead.status}
+          label={
+            <>
+              {lead.kind}{" "}
+              {lead.platformSnapshot === null && (
+                <>
+                  <SetRevision
+                    id={lead.versionSetRevisionId}
+                    revisions={revisions}
+                  />{" "}
+                </>
+              )}
+              {statusLabel(lead.status)}
+            </>
+          }
+        />
+      </Link>
+      {unfinished.length > 1 && (
+        <>
+          {" "}
+          and{" "}
+          <Link
+            to="/deployments"
+            search={{ environment: detail.environment.id }}
+          >
+            {unfinished.length - 1} more
+          </Link>
+        </>
+      )}
+    </>
+  );
+}
+
+/** One line under the title: what runs here, under which policy, and what is in flight. */
+function Summary({
+  detail,
+  revisions,
+}: {
+  detail: EnvironmentPageDetail;
+  revisions: RevisionNumbers;
+}) {
+  const { environment } = detail;
+  const accepted = environment.acceptedVersionSetRevisionId;
+  return (
+    <>
+      {accepted === null ? (
+        "Nothing accepted yet"
+      ) : (
+        <>
+          Accepted <SetRevisionLink id={accepted} revisions={revisions} />
+        </>
+      )}
+      {" · "}
+      {policy(environment)}
+      {" · "}generation {environment.generation}
+      {" · "}
+      <InFlight detail={detail} revisions={revisions} />
+    </>
+  );
+}
+
 function EnvironmentPage() {
   const { _splat: environmentId = "" } = Route.useParams();
   const search = Route.useSearch();
@@ -37,6 +143,7 @@ function EnvironmentPage() {
   const identity = useQuery(queries.identity());
   const overview = useQuery(queries.overview());
   const { environment } = detail;
+  const revisions = revisionNumbers(detail);
   const permitted = identity.data !== undefined && canDeploy(identity.data);
   const platform =
     environment.id === "gitops/root" ||
@@ -59,31 +166,13 @@ function EnvironmentPage() {
           </Link>
         }
         title={environment.id}
-        description={`${policy(environment)} · generation ${String(environment.generation)}`}
+        description={<Summary detail={detail} revisions={revisions} />}
         actions={<ToolLinks links={detail.links} />}
-      />
-      <div className="detail-grid">
-        <EnvironmentState
-          environment={environment}
-          versions={detail.versionSets}
-          now={now}
-        />
-        <RuntimePanel environmentId={environment.id} />
-      </div>
-      <EnvironmentModel
-        environmentId={environment.id}
-        permitted={permitted}
-        onDeployment={open}
       />
       {environment.activeDeploymentId !== null && (
         <p className="notice info">
           Active deployment{" "}
-          <Link
-            to="/deployments/$deploymentId"
-            params={{ deploymentId: environment.activeDeploymentId }}
-          >
-            {environment.activeDeploymentId}
-          </Link>
+          <DeploymentLink id={environment.activeDeploymentId} short />
         </p>
       )}
       {platform ? (
@@ -108,6 +197,20 @@ function EnvironmentPage() {
           onRequested={(deployment) => open(deployment.id)}
         />
       )}
+      <div className="detail-grid">
+        <EnvironmentState
+          environment={environment}
+          versions={detail.versionSets}
+          now={now}
+        />
+        <RuntimePanel environmentId={environment.id} />
+      </div>
+      <EnvironmentModel
+        environmentId={environment.id}
+        permitted={permitted}
+        revisions={revisions}
+        onDeployment={open}
+      />
       {overview.data !== undefined && (
         <>
           <WorkerPoolPanel

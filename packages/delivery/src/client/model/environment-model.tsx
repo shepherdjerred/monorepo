@@ -11,6 +11,8 @@ import type {
 import { delivery } from "#client/api.ts";
 import { queries } from "#client/queries.ts";
 import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
+import { Disclosure } from "#client/components/disclosure.tsx";
+import { Identifier } from "#client/components/identifier.tsx";
 import { ErrorNotice } from "#client/components/notices.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { MonitorPanel } from "./monitor-panel.tsx";
@@ -18,14 +20,19 @@ import {
   DeploymentLink,
   QueryPanel,
   SelectionFacts,
+  SetRevision,
+  SetRevisionLink,
+  type RevisionNumbers,
 } from "./selection-facts.tsx";
-import { rebindChanges } from "./view.ts";
+import { rebindChanges, splitCandidates } from "./view.ts";
 import { Fact, Facts } from "#client/components/facts.tsx";
 
 type Requested = Awaited<ReturnType<ModelRoutes["createDeployment"]>>;
 type Actions = {
   environmentId: string;
   permitted: boolean;
+  /** The revision number of each set revision the page has loaded. */
+  revisions: RevisionNumbers;
   onDeployment: (deploymentId: string) => Promise<void>;
 };
 
@@ -59,6 +66,7 @@ function SelectionPanel({
   view,
   environmentId,
   permitted,
+  revisions,
   onDeployment,
 }: Actions & { view: EnvironmentSelection }) {
   const changes = rebindChanges(view);
@@ -81,9 +89,9 @@ function SelectionPanel({
         <p className="empty">No selection has been accepted yet.</p>
       ) : (
         <>
-          <SelectionFacts selection={view.accepted} />
+          <SelectionFacts selection={view.accepted} revisions={revisions} />
           <p>
-            Frozen by <DeploymentLink id={view.acceptedDeploymentId} />
+            Frozen by <DeploymentLink id={view.acceptedDeploymentId} short />
           </p>
         </>
       )}
@@ -129,9 +137,15 @@ function SelectionPanel({
           }}
         >
           <p>
-            Keeps set revision {view.accepted?.versionSetRevisionId} and moves
-            to recipe {view.declared.recipeRevisionId} with configuration{" "}
-            {view.declared.configurationRevisionId}.
+            Keeps set revision{" "}
+            {view.accepted !== null && (
+              <SetRevision
+                id={view.accepted.versionSetRevisionId}
+                revisions={revisions}
+              />
+            )}{" "}
+            and moves to recipe {view.declared.recipeRevisionId} with
+            configuration {view.declared.configurationRevisionId}.
           </p>
           <p>{approvalNote(view)}</p>
         </ConfirmButton>
@@ -145,17 +159,20 @@ function Candidate({
   candidate,
   view,
   environmentId,
+  revisions,
   disabled,
   onRollback,
 }: {
   candidate: RollbackCandidate;
   view: EnvironmentSelection | undefined;
   environmentId: string;
+  revisions: RevisionNumbers;
   disabled: boolean;
   onRollback: (deploymentId: string) => void;
 }) {
   const label = useId();
   const reason = useId();
+  const { selection } = candidate;
   // The accepted selection is itself a source: restoring it re-asserts its
   // frozen inputs after a failed or drifted target.
   const current = candidate.deploymentId === view?.acceptedDeploymentId;
@@ -163,11 +180,26 @@ function Candidate({
   return (
     <li className={candidate.eligible ? undefined : "candidate-excluded"}>
       <div className="candidate-heading">
-        <span id={label}>
-          <DeploymentLink id={candidate.deploymentId} /> · accepted{" "}
-          <RelativeTime value={candidate.acceptedAt} />
-          {current && <span className="badge badge-current">Accepted now</span>}
-        </span>
+        <div className="candidate-identity" id={label}>
+          <p className="candidate-selection">
+            <strong>
+              <SetRevisionLink
+                id={selection.versionSetRevisionId}
+                revisions={revisions}
+              />
+            </strong>{" "}
+            · recipe <span className="mono">{selection.recipeRevisionId}</span>{" "}
+            · configuration{" "}
+            <span className="mono">{selection.configurationRevisionId}</span>
+            {current && (
+              <span className="badge badge-current">Accepted now</span>
+            )}
+          </p>
+          <p className="candidate-origin">
+            Accepted <RelativeTime value={candidate.acceptedAt} /> by deployment{" "}
+            <DeploymentLink id={candidate.deploymentId} short />
+          </p>
+        </div>
         {candidate.eligible ? (
           <ConfirmButton
             label={action}
@@ -180,11 +212,15 @@ function Candidate({
             }}
           >
             <p>
-              {current ? "Re-asserts" : "Restores"} the selection accepted by{" "}
-              {candidate.deploymentId}: set revision{" "}
-              {candidate.selection.versionSetRevisionId}, recipe{" "}
-              {candidate.selection.recipeRevisionId}, configuration{" "}
-              {candidate.selection.configurationRevisionId}.
+              {current ? "Re-asserts" : "Restores"} the selection accepted by
+              deployment <Identifier value={candidate.deploymentId} />: set
+              revision{" "}
+              <SetRevision
+                id={selection.versionSetRevisionId}
+                revisions={revisions}
+              />
+              , recipe {selection.recipeRevisionId}, configuration{" "}
+              {selection.configurationRevisionId}.
             </p>
             {view !== undefined && <p>{approvalNote(view)}</p>}
             <p>Data restoration remains a separate recovery operation.</p>
@@ -200,7 +236,6 @@ function Candidate({
           </button>
         )}
       </div>
-      <SelectionFacts selection={candidate.selection} />
       {!candidate.eligible && (
         <p className="candidate-reason" id={reason}>
           <strong>Not eligible:</strong> {candidate.reason}
@@ -215,6 +250,7 @@ function RollbackCandidates({
   view,
   environmentId,
   permitted,
+  revisions,
   onDeployment,
 }: Actions & {
   candidates: RollbackCandidate[];
@@ -229,6 +265,34 @@ function RollbackCandidates({
     view === undefined
       ? "The binding generation is unavailable, so a rollback cannot be requested."
       : refusal(view, permitted);
+  const { shown, older } = splitCandidates(
+    candidates,
+    view?.acceptedDeploymentId,
+  );
+  const list = (items: RollbackCandidate[], start: number) => (
+    <ol className="candidates" start={start}>
+      {items.map((candidate) => (
+        <Candidate
+          key={candidate.deploymentId}
+          candidate={candidate}
+          view={view}
+          environmentId={environmentId}
+          revisions={revisions}
+          disabled={refused !== null || request.isPending}
+          onRollback={(selectionDeploymentId) => {
+            if (view === undefined) return;
+            request.mutate({
+              requestId: crypto.randomUUID(),
+              environmentId,
+              expectedGeneration: view.bindingGeneration,
+              kind: "rollback",
+              selectionDeploymentId,
+            });
+          }}
+        />
+      ))}
+    </ol>
+  );
   return (
     <>
       <p className="muted">
@@ -238,27 +302,12 @@ function RollbackCandidates({
         or cross a point-of-no-return step.
       </p>
       {request.error !== null && <ErrorNotice error={request.error} />}
-      <ol className="candidates">
-        {candidates.map((candidate) => (
-          <Candidate
-            key={candidate.deploymentId}
-            candidate={candidate}
-            view={view}
-            environmentId={environmentId}
-            disabled={refused !== null || request.isPending}
-            onRollback={(selectionDeploymentId) => {
-              if (view === undefined) return;
-              request.mutate({
-                requestId: crypto.randomUUID(),
-                environmentId,
-                expectedGeneration: view.bindingGeneration,
-                kind: "rollback",
-                selectionDeploymentId,
-              });
-            }}
-          />
-        ))}
-      </ol>
+      {list(shown, 1)}
+      {older.length > 0 && (
+        <Disclosure summary="Older candidates" count={older.length}>
+          {list(older, shown.length + 1)}
+        </Disclosure>
+      )}
       {refused !== null && <p className="notice">{refused}</p>}
     </>
   );

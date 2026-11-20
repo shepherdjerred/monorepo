@@ -8,6 +8,7 @@ import {
   imageCheckSummary,
   messageNotice,
   observation,
+  revisionNumbers,
   versionLabel,
 } from "./presentation.ts";
 import { BuildCatalog } from "./artifacts.tsx";
@@ -164,5 +165,26 @@ describe("release state presentation", () => {
   test("unknown revision IDs remain visible rather than disappearing", () => {
     expect(versionLabel("missing:revision", [])).toBe("missing:revision");
     expect(versionLabel(null, [])).toBe("Unknown");
+  });
+  test("revision numbers come from the loaded version sets and the recent deployments", () => {
+    const numbers = revisionNumbers({
+      versionSets: [
+        { id: "arcade:9", revision: 9 },
+        { id: "arcade:8", revision: 8 },
+      ],
+      // A deployment of a set revision older than the loaded version sets
+      // still carries its number.
+      deployments: [
+        { versionSetRevisionId: "arcade:8", versionSetRevision: 8 },
+        { versionSetRevisionId: "arcade:2", versionSetRevision: 2 },
+      ],
+    });
+    expect(Object.fromEntries(numbers)).toEqual({
+      "arcade:2": 2,
+      "arcade:8": 8,
+      "arcade:9": 9,
+    });
+    // A set revision in neither list has no number, so the page shows its id.
+    expect(numbers.get("arcade:1")).toBeUndefined();
   });
 });

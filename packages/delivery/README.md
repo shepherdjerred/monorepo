@@ -132,9 +132,22 @@ never moves while a pipeline keeps registering builds, so a page does not
 reshuffle under a reader. The page's "Older" and "Newest" links carry the
 cursor as a search parameter.
 
-Filters and pages are search parameters. Forms are native `<form>` elements
-and confirmations are native `<dialog>` elements. The server returns
-`index.html` for every non-API path.
+Filters and pages are search parameters. Forms are native `<form>` elements.
+Every confirmation asks through one native `<dialog>` that the root layout
+mounts (`ConfirmDialogProvider`): a `ConfirmButton` renders its own question
+into that dialog while it is open, so a page with forty confirm buttons has one
+dialog element. The server returns `index.html` for every non-API path.
+
+The environment page leads with a summary line (the accepted revision, the
+approval policy and the deployment in flight) and the release form, then
+release state, runtime, selection, monitor, rollback candidates, retained
+workers and recent deployments. It lists the five newest rollback candidates
+and the accepted one, and collapses the older ones; it lists worker builds
+with a desired host and collapses retained artifacts without one. The
+rollback-candidate and worker routes stay unpaged, because the toolkit reads
+the whole lists. A candidate shows its set revision as `r274` when the page
+has loaded that set revision (the service's 50 newest version sets and the
+environment's 20 newest deployments) and as a short id otherwise.
 
 `GET /api/v1/events` is a Server-Sent Events stream of committed changes. An
 `Audit` insert trigger issues `pg_notify`, so an event is published only after

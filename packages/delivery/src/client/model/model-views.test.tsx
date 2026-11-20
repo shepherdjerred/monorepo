@@ -5,6 +5,7 @@ import * as fixtures from "#testing/model-fixtures.ts";
 import { PipelineDefinitionSchema } from "#shared/contract.ts";
 import { renderWithRouter } from "#client/test-router.tsx";
 import { queries } from "#client/queries.ts";
+import { ConfirmDialogProvider } from "#client/components/confirm-dialog.tsx";
 import { ApprovalQueue } from "./approval-queue.tsx";
 import { DeploymentModel } from "./deployment-model.tsx";
 import { EnvironmentModel } from "./environment-model.tsx";
@@ -18,6 +19,7 @@ import {
   rebindChanges,
   retryable,
   specializedRecoveryShown,
+  splitCandidates,
 } from "./view.ts";
 
 // The hub client resolves its API origin from the page; static rendering has none.
@@ -33,12 +35,23 @@ function markup(node: ReactNode) {
   return renderWithRouter(node).replaceAll("<!-- -->", "");
 }
 
+const CLOSED_DIALOG = '<dialog><form method="dialog"></form></dialog>';
+
+/**
+ * What a component renders below the page's providers. The page's one
+ * confirmation dialog follows it, closed, and no confirm button adds another.
+ */
 function render(node: ReactNode, seed?: (client: QueryClient) => void) {
   const client = new QueryClient();
   seed?.(client);
-  return markup(
-    <QueryClientProvider client={client}>{node}</QueryClientProvider>,
+  const html = markup(
+    <QueryClientProvider client={client}>
+      <ConfirmDialogProvider>{node}</ConfirmDialogProvider>
+    </QueryClientProvider>,
   );
+  expect(html.match(/<dialog/gu)).toHaveLength(1);
+  expect(html).toContain(CLOSED_DIALOG);
+  return html.replace(CLOSED_DIALOG, "");
 }
 
 /** Each `<li>` of the rendered candidate list. */
@@ -141,19 +154,52 @@ describe("model view helpers", () => {
       false,
     ]);
   });
+
+  test("keeps the first five candidates in sight, and the accepted one wherever it sits", () => {
+    const candidates = Array.from({ length: 8 }, (_, index) => ({
+      deploymentId: `d${String(index + 1)}`,
+    }));
+    const split = (accepted: string | null | undefined, count = 8) => {
+      const { shown, older } = splitCandidates(
+        candidates.slice(0, count),
+        accepted,
+      );
+      return [shown, older].map((list) =>
+        list.map((candidate) => candidate.deploymentId).join(" "),
+      );
+    };
+    expect(split("d1")).toEqual(["d1 d2 d3 d4 d5", "d6 d7 d8"]);
+    expect(split("d7")).toEqual(["d1 d2 d3 d4 d5 d7", "d6 d8"]);
+    // Nothing accepted, or the selection view unavailable: only the first five.
+    expect(split(null)).toEqual(["d1 d2 d3 d4 d5", "d6 d7 d8"]);
+    expect(split(undefined)).toEqual(["d1 d2 d3 d4 d5", "d6 d7 d8"]);
+    expect(split("d1", 5)).toEqual(["d1 d2 d3 d4 d5", ""]);
+  });
 });
 
-function environment(permitted: boolean) {
+/** The revision numbers the environment page loads: the fixture's version sets. */
+const REVISIONS = new Map(
+  fixtures.versionSets.map((version) => [version.id, version.revision]),
+);
+
+function environment(
+  permitted: boolean,
+  state: {
+    selection?: typeof fixtures.selections.prod;
+    candidates?: typeof fixtures.rollbackCandidates.prod;
+  } = {},
+) {
   return render(
     <EnvironmentModel
       environmentId={fixtures.PROD}
       permitted={permitted}
+      revisions={REVISIONS}
       onDeployment={() => Promise.resolve()}
     />,
     (client) => {
       client.setQueryData(
         queries.selection(fixtures.PROD).queryKey,
-        fixtures.selections.prod,
+        state.selection ?? fixtures.selections.prod,
       );
       client.setQueryData(
         queries.monitor(fixtures.PROD).queryKey,
@@ -161,16 +207,34 @@ function environment(permitted: boolean) {
       );
       client.setQueryData(
         queries.rollbackCandidates(fixtures.PROD).queryKey,
-        fixtures.rollbackCandidates.prod,
+        state.candidates ?? fixtures.rollbackCandidates.prod,
       );
     },
   );
 }
 
+/** `count` accepted selections, newest first, as `deployment-1` onwards. */
+function manyCandidates(count: number) {
+  const [template] = fixtures.rollbackCandidates.prod.candidates;
+  if (template === undefined) throw new Error("fixture has a candidate");
+  return {
+    candidates: Array.from({ length: count }, (_, index) => ({
+      ...template,
+      deploymentId: `deployment-${String(index + 1)}`,
+    })),
+  };
+}
+
 describe("environment model panels", () => {
   test("shows the accepted selection beside the declared binding", () => {
     const html = environment(true);
-    expect(html).toContain("scout-for-lol:r42");
+    const selection = html.slice(0, html.indexOf("Rollback candidates"));
+    // The accepted set revision reads as its number and links to its page.
+    expect(selection).toMatch(
+      /<a[^>]*href="\/versions\/scout-for-lol%3Ar42"[^>]*><span class="revision">r42<\/span><\/a>/u,
+    );
+    expect(selection).toContain("Frozen by");
+    expect(selection).toContain('href="/deployments/scout-prod-42"');
     expect(html).toContain("scout-prod-config/8");
     expect(html).toContain("differs from accepted");
     expect(html).toContain("Human approval required");
@@ -190,6 +254,87 @@ describe("environment model panels", () => {
     );
     expect(items[3]).toContain('disabled=""');
     expect(items[3]).toContain("point of no return");
+    // Four candidates fit in sight, so nothing is collapsed.
+    expect(html).not.toContain("<details");
+  });
+
+  test("names a candidate by its revision number, recipe, configuration and deployment", () => {
+    const uuid = "45cf1828-0f01-4bcd-8dab-592769df488f";
+    const deployment = "0b6b6f0e-52a4-4c0e-9d0c-3f5c0f6f7a11";
+    const [known] = fixtures.rollbackCandidates.prod.candidates;
+    if (known === undefined) throw new Error("fixture has a candidate");
+    const html = environment(true, {
+      candidates: {
+        candidates: [
+          known,
+          {
+            ...known,
+            deploymentId: deployment,
+            selection: { ...known.selection, versionSetRevisionId: uuid },
+          },
+        ],
+      },
+    });
+    const [first, second] = candidateItems(
+      html.slice(html.indexOf("candidates")),
+    );
+    expect(first).toMatch(
+      /<a[^>]*href="\/versions\/scout-for-lol%3Ar41"[^>]*><span class="revision">r41<\/span><\/a>/u,
+    );
+    expect(first).toContain('recipe <span class="mono">scout-prod/4</span>');
+    expect(first).toContain(
+      'configuration <span class="mono">scout-prod-config/7</span>',
+    );
+    expect(first).toContain('href="/deployments/scout-prod-41"');
+    // A set revision the page has not loaded keeps its id: short in sight,
+    // whole in the title and in the accessible text.
+    expect(second).toContain(`href="/versions/${uuid}"`);
+    expect(second).toContain(
+      `<abbr class="mono identifier" title="${uuid}"><span aria-hidden="true">45cf1828</span><span class="visually-hidden">${uuid}</span></abbr>`,
+    );
+    expect(second).not.toContain('class="revision"');
+    // The deployment id is short in sight and whole in the same two places.
+    expect(second).toContain(
+      `<abbr class="mono identifier" title="${deployment}"><span aria-hidden="true">0b6b6f0e</span><span class="visually-hidden">${deployment}</span></abbr>`,
+    );
+  });
+
+  test("lists the first five candidates and collapses the older ones behind their count", () => {
+    const html = environment(true, { candidates: manyCandidates(8) });
+    const list = html.slice(html.indexOf("candidates"));
+    const [shown = "", older = ""] = list.split("<details");
+    expect(candidateItems(shown)).toHaveLength(5);
+    expect(candidateItems(older)).toHaveLength(3);
+    expect(older).toContain(
+      '<summary><span class="disclosure-label">Older candidates</span><span class="disclosure-count">3</span></summary>',
+    );
+    // The collapsed list is closed, continues the numbering, and still
+    // offers every older candidate.
+    expect(older).toMatch(/^ class="disclosure">/u);
+    expect(older).toContain('<ol class="candidates" start="6">');
+    for (const id of ["deployment-6", "deployment-7", "deployment-8"])
+      expect(older).toContain(`href="/deployments/${id}"`);
+    expect(older.match(/>Roll back to this<\/button>/gu)).toHaveLength(3);
+  });
+
+  test("the accepted candidate stays in sight when it is older than the first five", () => {
+    const html = environment(true, {
+      candidates: manyCandidates(8),
+      selection: {
+        ...fixtures.selections.prod,
+        acceptedDeploymentId: "deployment-7",
+      },
+    });
+    const list = html.slice(html.indexOf("candidates"));
+    const [shown = "", older = ""] = list.split("<details");
+    const visible = candidateItems(shown);
+    expect(visible).toHaveLength(6);
+    expect(visible[5]).toContain('href="/deployments/deployment-7"');
+    expect(visible[5]).toContain("Accepted now");
+    expect(visible[5]).toContain(">Re-assert this selection</button>");
+    expect(older).not.toContain("deployment-7");
+    expect(older).toContain('<span class="disclosure-count">2</span>');
+    expect(older).toContain('<ol class="candidates" start="7">');
   });
 
   test("a read-only identity cannot request a rollback or rebind", () => {

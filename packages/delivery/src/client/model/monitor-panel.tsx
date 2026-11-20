@@ -141,7 +141,7 @@ export function MonitorPanel({ status }: { status: MonitorStatus }) {
           {status.deploymentId === null ? (
             "No accepted deployment"
           ) : (
-            <DeploymentLink id={status.deploymentId} />
+            <DeploymentLink id={status.deploymentId} short />
           )}
         </Fact>
       </Facts>
