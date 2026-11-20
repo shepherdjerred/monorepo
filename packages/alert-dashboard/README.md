@@ -98,7 +98,9 @@ cell is a day with a confirmed post, darker for more; a heavy outline is a day
 with a failed run, and a day can be both. A short bar is a run that posted
 nothing and did not fail. Each publishing occurrence counts once and its
 recorded attempt decides it, so a run that failed and was later confirmed is a
-post. Skips, previews, reconciliation and cleanup are not activity. Confirmed
+post. An unconfirmed attempt counts as a failure only after its run has ended,
+never while that run is still in progress. Skips, previews, reconciliation and
+cleanup are not activity. Confirmed
 posts are known for all time, but failed and no-post runs are known only as far
 back as the retained run batches, so an empty day older than the oldest batch
 is drawn as a baseline meaning "no run records kept" rather than as a quiet

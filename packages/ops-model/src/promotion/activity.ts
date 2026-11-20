@@ -31,8 +31,9 @@ const executed = (entry: PromotionHistoryEntry) =>
 /**
  * Daily publishing activity for one source. Each occurrence counts once: a
  * recorded attempt is the final word on its occurrence, so a run that failed
- * and was later confirmed is a post. Skips, previews, reconciliation and
- * cleanup are not activity.
+ * and was later confirmed is a post. An unconfirmed attempt counts only once
+ * its run has ended. Skips, previews, reconciliation and cleanup are not
+ * activity.
  */
 export function promotionSourceActivity(input: {
   targetId: string;
@@ -66,9 +67,23 @@ export function promotionSourceActivity(input: {
       .filter((entry) => entry.timeBasis === "attempt")
       .map((entry) => entry.occurrenceId),
   );
+  // A publishing run checkpoints its attempt as uncertain before it submits.
+  // Until that run ends, the checkpoint is progress, not an outcome.
+  const active = new Set(
+    own
+      .filter(
+        (entry) =>
+          entry.timeBasis === "execution" &&
+          (entry.status === "queued" || entry.status === "running"),
+      )
+      .map((entry) => entry.occurrenceId),
+  );
   for (const entry of own) {
     if (successes.includes(entry)) continue;
-    if (entry.occurrenceId !== null && confirmed.has(entry.occurrenceId))
+    if (
+      entry.occurrenceId !== null &&
+      (confirmed.has(entry.occurrenceId) || active.has(entry.occurrenceId))
+    )
       continue;
     const counted =
       entry.timeBasis === "attempt" ||

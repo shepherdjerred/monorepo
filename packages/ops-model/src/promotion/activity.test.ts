@@ -147,6 +147,38 @@ it("counts each occurrence once and lets the recorded attempt decide it", () => 
   });
 });
 
+it("does not call an attempt failed while its run is still in progress", () => {
+  const checkpoint = attempt({
+    occurrenceId: "live",
+    status: "uncertain",
+    finishedAt: null,
+  });
+  const quiet = { posts: 0, failures: 0, noAction: 0 };
+  for (const status of ["running", "queued"])
+    expect(
+      activity([checkpoint, run({ occurrenceId: "live", status })]).on(
+        "2026-11-18",
+      ),
+    ).toEqual(quiet);
+  // Once the run has ended, or its record is gone, the open attempt is a failure.
+  for (const ended of [
+    [run({ occurrenceId: "live", status: "interrupted" })],
+    [run({ occurrenceId: "live", status: "blocked" })],
+    [],
+  ])
+    expect(activity([checkpoint, ...ended]).on("2026-11-18")).toEqual({
+      ...quiet,
+      failures: 1,
+    });
+  // A confirmed attempt is a post even before its run reports back.
+  expect(
+    activity([
+      attempt({ occurrenceId: "live" }),
+      run({ occurrenceId: "live", status: "running" }),
+    ]).on("2026-11-18"),
+  ).toEqual({ ...quiet, posts: 1 });
+});
+
 it("leaves skips, pending runs, other modes and other sources out", () => {
   const result = activity([
     run({ occurrenceId: null, status: "skipped" }),
