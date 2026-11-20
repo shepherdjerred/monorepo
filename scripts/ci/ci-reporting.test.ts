@@ -553,6 +553,7 @@ describe("CI reporting manifest", () => {
           "scripts/network-policy/namespace-checks.test.ts",
           "scripts/network-policy/check-namespace.test.ts",
           "scripts/network-policy/open-namespace.test.ts",
+          "scripts/network-policy/restart-plan.test.ts",
         ],
       },
     ]);

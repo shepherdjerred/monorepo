@@ -217,11 +217,26 @@ that live state.
 | `bun run netpol:open <namespace>\|--all --apply --reason "<why>"` | Break-glass: open the namespace(s) in the cluster                 |
 | `bun run netpol:open <namespace>\|--all --close`                  | Dry run: the break-glass policies that would be deleted           |
 | `bun run netpol:open <namespace>\|--all --close --apply`          | Delete the break-glass policies                                   |
+| `bun run netpol:restart-plan [--namespace <name>]... [--json]`    | Read-only: the ordered restart of policy-selected workloads       |
+
+`netpol:restart-plan` prints `kubectl rollout restart` and `rollout status`
+commands and runs none of them. It lists every Deployment, StatefulSet and
+DaemonSet with a pod that a policy other than the staging and break-glass
+policies selects: PostgreSQL clusters first, then the `temporal` namespace with
+its server first, then the rest. Host-network pods are left out, and selected
+pods no rollout owns are listed as comments. It is the workaround for
+[kube-network-policies#418](https://github.com/kubernetes-sigs/kube-network-policies/issues/418)
+in [Switch on network policy enforcement](../docs/wiki/src/content/docs/how-to/switch-on-network-policy-enforcement.md).
 
 `netpol:check` exits non-zero when any check fails. `--since-minutes <n>`
 (default 10) sets the restart and denial window; `--expect-stage
 open|enforced` fails when the staging policy's stage differs;
 `--allow-break-glass` accepts a live break-glass policy.
+
+`denials` reads Loki, not `kubectl logs`: the enforcer logs every packet at
+`--v=2`, so on a busy node its container log rotates within about a minute.
+Each denial line is paired with the same agent pod's `Evaluating packet` line
+for that packet id, which names the pods.
 
 | Check      | Source                                                                                       | Result                                                                       |
 | ---------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -230,7 +245,7 @@ open|enforced` fails when the staging policy's stage differs;
 | `services` | Services and EndpointSlices: every Service backed by pods has a ready endpoint               | Pass or fail                                                                 |
 | `urls`     | Hosts from `platform-model.json`; path and accepted statuses from the live blackbox `Probe`s | Pass, fail or not checked                                                    |
 | `probes`   | `toolkit prom query probe_success` for the namespace's `Probe` jobs                          | Pass, fail or not checked                                                    |
-| `denials`  | `kube-network-policies` container log of the `kube-flannel` pods                             | A note; never gates                                                          |
+| `denials`  | Loki (`toolkit loki query`): the `kube-network-policies` log of the `kube-flannel` pods      | A note; never gates; "not available" when Loki cannot be read                |
 
 `--coverage` reads only policies and pods. It lists every namespace that has a
 NetworkPolicy other than its own staging policy, with its policy count, pod
@@ -405,7 +420,7 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash
-VERSION=v1.14.2
+VERSION=v1.14.6
 # Upgrade the CI worker first. The short MagicDNS name is a direct worker
 # endpoint; a worker cannot proxy its own Talos request. Use the Torvalds
 # Tailscale FQDN for all control-plane operations.

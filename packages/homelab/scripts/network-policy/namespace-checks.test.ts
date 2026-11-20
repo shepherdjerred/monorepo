@@ -265,8 +265,8 @@ describe("blackbox probes", () => {
 });
 
 describe("denials", () => {
-  const a = "[pod/kube-flannel-a/kube-network-policies]";
-  const b = "[pod/kube-flannel-b/kube-network-policies]";
+  const a = "[kube-flannel-a]";
+  const b = "[kube-flannel-b]";
   const [evalA7, deniedA7, evalB7, deniedB7, evalA8, limited] = [
     `${a} I1114 12:00:00.1 1 logging.go:67] "Evaluating packet" id=7 direction="egress" srcPod="tracker/tracker-0" dstPod="flipt/flipt-0"`,
     `${a} I1114 12:00:00.2 1 engine.go:57] "Packet denied by egress policy" id=7`,
@@ -286,13 +286,32 @@ describe("denials", () => {
     expect(denialsFor("kube-system", lines)).toEqual([]);
   });
 
-  test("are a note, and not available without the enforcer", () => {
-    expect(
-      evaluateDenials("tracker", { available: true, lines, minutes: 10 }),
-    ).toMatchObject({
+  test("the latest evaluation of an id before its denial is the packet", () => {
+    // The enforcer evaluates a packet's egress, then its ingress, under one id.
+    const egress = `${a} I1120 06:46:59.1 1 logging.go:67] "Evaluating packet" id=9 direction="Egress" srcPod="tracker/client" dstPod="media/server"`;
+    const ingress = `${a} I1120 06:46:59.2 1 logging.go:67] "Evaluating packet" id=9 direction="Ingress" srcPod="tracker/client" dstPod="media/server"`;
+    const denied = `${a} I1120 06:46:59.3 1 engine.go:68] "Packet denied by ingress policy" id=9`;
+    expect(denialsFor("media", [egress, ingress, denied])).toEqual([
+      `${denied} <- ${ingress}`,
+    ]);
+  });
+
+  test("are a note, a lower bound at the Loki limit, and not available without evidence", () => {
+    const log = {
+      available: true as const,
+      lines,
+      minutes: 10,
+      limitReached: false,
+    };
+    expect(evaluateDenials("tracker", log)).toMatchObject({
       status: "info",
       summary: "1 denials involving this namespace in the last 10m",
     });
+    expect(
+      evaluateDenials("tracker", { ...log, limitReached: true }).summary,
+    ).toBe(
+      "at least 1 denials involving this namespace in the last 10m (a Loki query reached its line limit)",
+    );
     expect(
       evaluateDenials("tracker", { available: false, reason: "no container" }),
     ).toMatchObject({ status: "info", summary: "not available: no container" });

@@ -21,6 +21,7 @@ import { platformModel, publicHostnames } from "#platform-model";
 import { breakGlassNamespaces, breakGlassState } from "./break-glass.ts";
 import {
   commandFailure,
+  firstLine,
   kubectlJson,
   runCommand,
   type CommandRunner,
@@ -30,6 +31,7 @@ import {
   PodSummarySchema,
   renderCoverage,
 } from "./coverage.ts";
+import { readEnforcerLog } from "./enforcer-log.ts";
 import {
   EndpointSliceSchema,
   evaluateDenials,
@@ -67,9 +69,6 @@ import {
   type NetworkPolicy,
 } from "./staging-policy.ts";
 
-const ENFORCER_NAMESPACE = "kube-system";
-const ENFORCER_DAEMONSET = "kube-flannel";
-const ENFORCER_CONTAINER = "kube-network-policies";
 const URL_TIMEOUT_MS = 15_000;
 
 export type CheckOptions = {
@@ -166,19 +165,6 @@ function list<ITEM extends z.ZodType>(item: ITEM) {
   return z.object({ items: z.array(item) });
 }
 
-const DaemonSetSchema = z.object({
-  spec: z.object({
-    selector: z.object({ matchLabels: z.record(z.string(), z.string()) }),
-    template: z.object({
-      spec: z.object({ containers: z.array(z.object({ name: z.string() })) }),
-    }),
-  }),
-});
-
-function firstLine(text: string): string {
-  return (text.trim().split("\n")[0] ?? "").slice(0, 200);
-}
-
 /** `probe_success` through toolkit; any failure is "not checked", never a pass. */
 export async function readProbeSuccess(
   run: CommandRunner,
@@ -190,61 +176,10 @@ export async function readProbeSuccess(
     : { available: false, reason: firstLine(commandFailure(command, result)) };
 }
 
-/** The enforcer sidecar's log from every node, when the sidecar exists. */
-export async function readEnforcerLog(
-  run: CommandRunner,
-  minutes: number,
-): Promise<EnforcerLog> {
-  const get = [
-    "kubectl",
-    "--namespace",
-    ENFORCER_NAMESPACE,
-    "get",
-    "daemonset",
-    ENFORCER_DAEMONSET,
-    "-o",
-    "json",
-  ];
-  const found = await run(get);
-  if (found.exitCode !== 0) {
-    return { available: false, reason: firstLine(commandFailure(get, found)) };
-  }
-  const { selector, template } = DaemonSetSchema.parse(
-    JSON.parse(found.stdout),
-  ).spec;
-  if (
-    !template.spec.containers.some(({ name }) => name === ENFORCER_CONTAINER)
-  ) {
-    return {
-      available: false,
-      reason: `${ENFORCER_DAEMONSET} has no ${ENFORCER_CONTAINER} container (enforcement is not switched on)`,
-    };
-  }
-  // `logs ds/<name>` reads one pod only; the selector reads every node's.
-  const logs = [
-    "kubectl",
-    "--namespace",
-    ENFORCER_NAMESPACE,
-    "logs",
-    "--selector",
-    Object.entries(selector.matchLabels)
-      .map(([key, value]) => `${key}=${value}`)
-      .join(","),
-    "--container",
-    ENFORCER_CONTAINER,
-    `--since=${String(minutes)}m`,
-    "--tail=-1",
-    "--prefix",
-  ];
-  const read = await run(logs);
-  return read.exitCode === 0
-    ? { available: true, lines: read.stdout.split("\n"), minutes }
-    : { available: false, reason: firstLine(commandFailure(logs, read)) };
-}
-
 export async function readClusterFacts(
   run: CommandRunner,
   sinceMinutes: number,
+  now: Date,
 ): Promise<ClusterFacts> {
   const [policies, probes, ingresses, probeSuccess, enforcerLog] =
     await Promise.all([
@@ -260,7 +195,7 @@ export async function readClusterFacts(
         list(IngressSchema),
       ),
       readProbeSuccess(run),
-      readEnforcerLog(run, sinceMinutes),
+      readEnforcerLog(run, sinceMinutes, now),
     ]);
   return {
     policies,
@@ -371,6 +306,7 @@ export async function runCheck(
   const cluster = await readClusterFacts(
     dependencies.run,
     options.sinceMinutes,
+    dependencies.now(),
   );
   if (options.target !== "all-staged") {
     const report = await checkNamespace(

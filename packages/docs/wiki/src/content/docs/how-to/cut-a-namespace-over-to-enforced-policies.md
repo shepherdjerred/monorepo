@@ -125,7 +125,7 @@ The staging policy ships with the namespace's own release. `argocd` and
    | `services` | Every Service backed by pods has a ready endpoint                     |
    | `urls`     | The namespace's public and tailnet URLs answer as their probes expect |
    | `probes`   | Every blackbox probe of the namespace reports success                 |
-   | `denials`  | Never fails. It lists enforcer log lines that look like denials       |
+   | `denials`  | Never fails. It counts the namespace's denials in Loki                |
 
    The restart and denial window is ten minutes. Widen it with
    `--since-minutes` when the sync landed earlier than that.
@@ -135,23 +135,33 @@ The staging policy ships with the namespace's own release. `argocd` and
    connections into the namespace. An outbound call the policy forgot fails
    here and nowhere else.
 
-4. Read the enforcer's log for the window that covers step 3. The `denials`
-   check is a note, not a gate, so read it yourself.
-
-   The enforcer's denial line names only the packet's `id`. The
-   `Evaluating packet` line logged just before it, with the same `id`, names
-   the source and destination pods. This prints each denial that involves the
-   namespace, after the line that names its pods:
+4. Read the denials for the window that covers step 3. The `denials` check
+   is a note, not a gate, so read it yourself:
 
    ```bash
-   kubectl --namespace kube-system logs \
-     --selector k8s-app=flannel,tier=node \
-     --container kube-network-policies \
-     --since=10m --tail=-1 --prefix \
-     | grep -E '"(Evaluating packet|Packet denied by (egress|ingress) policy)"' \
-     | grep -B1 '"Packet denied by' \
-     | grep -A1 -E '(srcPod|dstPod)="NAMESPACE/'
+   bun run netpol:check NAMESPACE --since-minutes 30
    ```
+
+   The enforcer's denial line names only the packet's `id`. The check pairs
+   it with the same agent pod's `Evaluating packet` line for that `id`, which
+   names the source and destination pods, and prints the first five pairs.
+   It reads both from Loki: on a busy node the enforcer's container log
+   rotates within about a minute, so `kubectl logs` misses most of the
+   window. `not available` means Loki could not be read, not that nothing was
+   denied.
+
+   To see every pair, list the denials, then each agent pod's packets for
+   their ids:
+
+   ```bash
+   toolkit loki query --since 30m --limit 5000 \
+     '{namespace="kube-system", container="kube-network-policies"} |~ "Packet denied by (egress|ingress) policy"'
+   toolkit loki query --since 30m --limit 5000 \
+     '{namespace="kube-system", container="kube-network-policies", pod="AGENT_POD"} |= "Evaluating packet" |~ "id=(ID|ID)[^0-9]"'
+   ```
+
+   An agent evaluates a packet's egress and then its ingress under the same
+   `id`; the evaluation logged last before the denial is its packet.
 
    An egress denial needs a rule on the `srcPod` side, an ingress denial on
    the `dstPod` side. `external` is an address outside the pod network. Each

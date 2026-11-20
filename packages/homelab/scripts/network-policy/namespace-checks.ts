@@ -406,9 +406,18 @@ export function evaluateProbes(
   };
 }
 
-/** The enforcer's recent log, or why there is none to read. */
+/**
+ * The enforcer's denial evidence, or why there is none to read. Each line is
+ * prefixed with its agent pod in brackets. `limitReached` means a Loki query
+ * returned its line limit, so the count is a lower bound.
+ */
 export type EnforcerLog =
-  | { available: true; lines: readonly string[]; minutes: number }
+  | {
+      available: true;
+      lines: readonly string[];
+      minutes: number;
+      limitReached: boolean;
+    }
   | { available: false; reason: string };
 
 // kube-network-policies v1.1.2 (klog text). A denial line carries only the
@@ -421,7 +430,12 @@ const DENIED = /"Packet denied by (?:egress|ingress) policy".*?\bid=(\d+)/u;
 const EVALUATING = /"Evaluating packet".*?\bid=(\d+)/u;
 const SHOWN_DENIALS = 5;
 
-/** `kubectl logs --prefix` names the agent pod; packet ids are per agent. */
+/** The packet id of a denial line. */
+export function deniedPacketId(line: string): string | undefined {
+  return DENIED.exec(line)?.[1];
+}
+
+/** The `[pod]` prefix names the agent; packet ids are per agent. */
 function agentOf(line: string): string {
   return /^\[[^\]]+\]/u.exec(line)?.[0] ?? "";
 }
@@ -453,9 +467,9 @@ export function denialsFor(
       evaluated.set(`${agentOf(line)}#${evaluating[1] ?? ""}`, line);
       continue;
     }
-    const denied = DENIED.exec(line);
-    if (denied !== null) {
-      const packet = evaluated.get(`${agentOf(line)}#${denied[1] ?? ""}`);
+    const denied = deniedPacketId(line);
+    if (denied !== undefined) {
+      const packet = evaluated.get(`${agentOf(line)}#${denied}`);
       if (
         packet !== undefined &&
         (inNamespace(field(packet, "srcPod"), namespace) ||
@@ -482,10 +496,13 @@ export function evaluateDenials(
     };
   }
   const denials = denialsFor(namespace, log.lines);
+  const counted = `${String(denials.length)} denials involving this namespace in the last ${String(log.minutes)}m`;
   return {
     check: "denials",
     status: "info",
-    summary: `${String(denials.length)} denials involving this namespace in the last ${String(log.minutes)}m`,
+    summary: log.limitReached
+      ? `at least ${counted} (a Loki query reached its line limit)`
+      : counted,
     details: denials.slice(0, SHOWN_DENIALS),
   };
 }
