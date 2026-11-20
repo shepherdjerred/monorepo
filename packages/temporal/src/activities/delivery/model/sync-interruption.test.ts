@@ -8,7 +8,6 @@ import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
 import { argoApplication } from "#lib/delivery/model/step-testing.ts";
 import { forumDetail } from "#lib/delivery/model/forum-testing.ts";
 import { withLeaseLoss } from "#lib/delivery/model/effect-signal.ts";
-import { DELIVERY_EXECUTOR_REPLACED } from "#shared/delivery-executor.ts";
 import type * as ArgoClient from "#lib/delivery/argo-client.ts";
 import type * as Argocd from "#activities/delivery/argocd.ts";
 import type * as Stages from "./stages.ts";
@@ -56,6 +55,7 @@ vi.mock("./forum-bundle.ts", () => ({
 }));
 
 const { sync } = await import("./kubernetes.ts");
+const { runDeliveryModelStep } = await import("./steps.ts");
 
 const WORKER_SHUTDOWN = new ActivityCancellationDetails({
   workerShutdown: true,
@@ -118,13 +118,6 @@ async function failureOf(run: Promise<unknown>): Promise<unknown> {
   throw new Error("The sync attempt unexpectedly succeeded");
 }
 
-async function replaced(run: Promise<unknown>) {
-  const error = await failureOf(run);
-  expect(error).toBeInstanceOf(ApplicationFailure);
-  if (!(error instanceof ApplicationFailure)) throw error;
-  return error;
-}
-
 beforeEach(() => {
   state.events = [];
   state.reads = [];
@@ -134,7 +127,7 @@ afterEach(() => {
 });
 
 describe("A self-hosted sync interrupted by its own executor's replacement (D8)", () => {
-  test("the worker shutdown leaves the stage running, and the successor attempt only reads back the recorded request", async () => {
+  test("the worker shutdown returns executorReplaced with the stage running, and the successor attempt only reads back the recorded request", async () => {
     const { current, recipe } = fixture(true);
     const requestId = deliveryOperationId(current.deployment.id);
     const outgoing = new MockActivityEnvironment();
@@ -142,15 +135,12 @@ describe("A self-hosted sync interrupted by its own executor's replacement (D8)"
     guardedCommand("sleep", () => {
       outgoing.cancel("WORKER_SHUTDOWN", WORKER_SHUTDOWN);
     });
-    const failure = await replaced(
-      outgoing.run(sync, current, recipe, "step-sync"),
+    const outcome = await outgoing.run(
+      runDeliveryModelStep,
+      current.deployment.id,
+      "step-sync",
     );
-    expect(failure.type).toBe(DELIVERY_EXECUTOR_REPLACED);
-    expect(failure.message).toContain(requestId);
-    // The killed CLI's own failure is kept as the cause.
-    expect(failure.cause?.message).toBe(
-      "Guarded Argo sync-managed failed; inspect the recorded request before retrying",
-    );
+    expect(outcome).toEqual({ waiting: false, executorReplaced: true });
     expect(state.events).toEqual([
       "read",
       "step-sync running",
@@ -161,7 +151,12 @@ describe("A self-hosted sync interrupted by its own executor's replacement (D8)"
     state.events = [];
     state.reads = [requested("Running"), requested("Succeeded")];
     const successor = new MockActivityEnvironment();
-    await successor.run(sync, current, recipe, "step-sync");
+    const settledOutcome = await successor.run(
+      runDeliveryModelStep,
+      current.deployment.id,
+      "step-sync",
+    );
+    expect(settledOutcome).toEqual({ waiting: false });
     expect(state.events).toEqual([
       "read",
       "step-sync running",

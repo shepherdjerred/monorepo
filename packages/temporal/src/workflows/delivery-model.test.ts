@@ -2,6 +2,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { describe, expect, it } from "vitest";
+import type { DeliveryModelStepResult } from "#shared/delivery-executor.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   createDeliveryWorkers,
@@ -98,7 +99,10 @@ function successorActivities(calls: string[]) {
  * A self-hosted deployment's activities (D8): `sync` runs as its sync step,
  * after the step is journaled.
  */
-function selfHostedActivities(calls: string[], sync: () => void) {
+function selfHostedActivities(
+  calls: string[],
+  sync: () => DeliveryModelStepResult | undefined,
+) {
   return {
     ...modelActivities(calls),
     planDeliveryModel: () => ({
@@ -109,8 +113,9 @@ function selfHostedActivities(calls: string[], sync: () => void) {
     }),
     runDeliveryModelStep: (_id: string, key: string) => {
       calls.push(key);
-      if (key === "step-sync") sync();
-      return { waiting: false };
+      return key === "step-sync"
+        ? (sync() ?? { waiting: false })
+        : { waiting: false };
     },
     handOffDelivery: () => {
       calls.push("handoff");
@@ -120,11 +125,27 @@ function selfHostedActivities(calls: string[], sync: () => void) {
 
 /**
  * The sync step's first `times` attempts are killed by their own worker's
- * shutdown, as the step reports it; later attempts read back and settle.
+ * shutdown, returning `{ waiting: false, executorReplaced: true }` without
+ * failing the Temporal Activity; later attempts read back and settle.
  */
 function interruptedSync(calls: string[], times: number) {
   let attempts = 0;
-  return () => {
+  return (): DeliveryModelStepResult | undefined => {
+    attempts++;
+    if (attempts > times) return;
+    calls.push("replaced");
+    return { waiting: false, executorReplaced: true };
+  };
+}
+
+/**
+ * Legacy pre-typed-return replacement behavior where `runDeliveryModelStep`
+ * threw `ApplicationFailure` of type `DeliveryExecutorReplaced`; retained so
+ * recorded histories continue to replay identically.
+ */
+function legacyThrownInterruptedSync(calls: string[], times: number) {
+  let attempts = 0;
+  return (): undefined => {
     attempts++;
     if (attempts > times) return;
     calls.push("replaced");
@@ -597,7 +618,7 @@ describe("Delivery self-hosted handoff (D8)", () => {
 });
 
 describe("A self-hosted step interrupted by its own executor's replacement (D8)", () => {
-  it("a sync interrupted by its own executor's replacement runs again on the successor worker, then hands off (D8)", async () => {
+  it("a sync interrupted by its own executor's replacement runs again on the successor worker without Activity failure, then hands off (D8)", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const calls: string[] = [];
     const { workflows, activities } = await createDeliveryWorkers(
@@ -606,6 +627,42 @@ describe("A self-hosted step interrupted by its own executor's replacement (D8)"
     );
     try {
       const workflowId = `model-replaced-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(executeDeployment(environment, workflowId)),
+      );
+      expect(calls).toEqual([
+        "lease",
+        "step-apply-safety",
+        "lease",
+        "step-sync",
+        "replaced",
+        "lease",
+        "step-sync",
+        "handoff",
+      ]);
+      const history = await environment.client.workflow
+        .getHandle(workflowId)
+        .fetchHistory();
+      expect(
+        history.events?.some(
+          (event) => event.activityTaskFailedEventAttributes != null,
+        ),
+      ).toBe(false);
+      await replayDelivery(environment, workflowId);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("resumes and replays histories that recorded the legacy DeliveryExecutorReplaced ActivityFailure", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(
+      environment,
+      selfHostedActivities(calls, legacyThrownInterruptedSync(calls, 1)),
+    );
+    try {
+      const workflowId = `model-legacy-replaced-${crypto.randomUUID()}`;
       await workflows.runUntil(
         activities.runUntil(executeDeployment(environment, workflowId)),
       );
@@ -717,7 +774,10 @@ describe("A self-hosted step interrupted by its own executor's replacement (D8)"
     const activities = await Worker.create({
       ...connection,
       taskQueue: TASK_QUEUES.DELIVERY,
-      activities: selfHostedActivities(calls, interruptedSync(calls, 1)),
+      activities: selfHostedActivities(
+        calls,
+        legacyThrownInterruptedSync(calls, 1),
+      ),
     });
     try {
       await expect(

@@ -269,7 +269,7 @@ describe("Ops activity isolation", () => {
     expect(ops).toMatchObject({
       kind: "activity",
       activities: opsWorkerActivities,
-      maxConcurrentActivityTaskExecutions: 4,
+      maxConcurrentActivityTaskExecutions: 16,
     });
     expect(infra).toMatchObject({ maxConcurrentActivityTaskExecutions: 1 });
     expect(mining).toMatchObject({ maxConcurrentActivityTaskExecutions: 1 });

@@ -27,7 +27,11 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 const weatherActivities = proxyActivities<WeatherActivities>({
   taskQueue: TASK_QUEUES.HOME,
   startToCloseTimeout: "30 seconds",
-  retry: { maximumAttempts: 3 },
+  retry: {
+    initialInterval: "15 seconds",
+    backoffCoefficient: 2,
+    maximumAttempts: 4,
+  },
 });
 
 const BEDROOM_MEDIA = "media_player.bedroom" as const;

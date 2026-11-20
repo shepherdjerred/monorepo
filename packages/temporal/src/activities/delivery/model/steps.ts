@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { EvidenceInput } from "@shepherdjerred/delivery/contract";
 import type { RecipeDefinition } from "@shepherdjerred/delivery/model-contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
+import type { DeliveryModelStepResult } from "#shared/delivery-executor.ts";
 import {
   deploymentSteps,
   oracleProbes,
@@ -76,15 +77,14 @@ async function runKubernetesStep(
   recipe: KubernetesApplicationRecipe,
   steps: readonly ModelStep[],
   frozen: Extract<ModelStep, { adapter: "kubernetes" }>,
-): Promise<{ waiting: boolean }> {
+): Promise<DeliveryModelStepResult> {
   const { key, step } = frozen;
   switch (step.kind) {
     case "apply-safety":
       await applySafety(current, recipe, key);
       return { waiting: false };
     case "sync":
-      await sync(current, recipe, key);
-      return { waiting: false };
+      return await sync(current, recipe, key);
     case "worker-rollout":
       requireSettledBefore(steps, current.stages, key);
       await runWorkerRolloutStep(current, key);
@@ -115,13 +115,15 @@ async function runKubernetesStep(
 
 /**
  * Runs one frozen step by key; a settled step is a no-op so a resumed run
- * never repeats it. `waiting` asks the Workflow to run it again later. The
- * lease is renewed for as long as the step runs.
+ * never repeats it. `waiting` asks the Workflow to run it again later;
+ * `executorReplaced` asks a self-hosted deployment Workflow to renew the lease
+ * and run the interrupted sync step again on the replacement worker. The lease
+ * is renewed for as long as the step runs.
  */
 export async function runDeliveryModelStep(
   id: string,
   key: string,
-): Promise<{ waiting: boolean }> {
+): Promise<DeliveryModelStepResult> {
   const current = await requireOwned(id);
   const settled = current.stages.some(
     (stage) => stage.key === key && stage.status === "succeeded",
@@ -137,7 +139,7 @@ export async function runDeliveryModelStep(
 async function runOwnedStep(
   current: Awaited<ReturnType<typeof requireOwned>>,
   key: string,
-): Promise<{ waiting: boolean }> {
+): Promise<DeliveryModelStepResult> {
   const recipe = requireModelRecipe(current);
   const steps = deploymentSteps(current);
   const step = requireStep(steps, key);

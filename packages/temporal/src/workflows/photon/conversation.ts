@@ -9,6 +9,7 @@ import {
   log,
   isCancellation,
   ParentClosePolicy,
+  patched,
   proxyActivities,
   setHandler,
   startChild,
@@ -39,6 +40,8 @@ const join = proxyActivities<Pick<PhotonActivities, "waitForPhotonCommand">>({
   heartbeatTimeout: "1 minute",
   retry: { maximumAttempts: 5 },
 });
+
+export const PHOTON_UPDATE_BEFORE_CHILD_PATCH = "photon-update-before-child-v1";
 
 export async function photonConversationWorkflow(
   rawState: PhotonConversationState,
@@ -107,7 +110,11 @@ export async function photonConversationWorkflow(
     completed += 1
   ) {
     await condition(
-      () => state.pending.length > 0 || workflowInfo().continueAsNewSuggested,
+      () =>
+        (state.pending.length > 0 &&
+          (!patched(PHOTON_UPDATE_BEFORE_CHILD_PATCH) ||
+            allHandlersFinished())) ||
+        workflowInfo().continueAsNewSuggested,
     );
     const command = state.pending[0];
     if (command === undefined) break;
