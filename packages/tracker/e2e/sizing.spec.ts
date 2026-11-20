@@ -128,3 +128,38 @@ test("effort shows on list rows and supports multi-value XS + S filtering", asyn
   await expect(row(page, sId)).toBeVisible();
   await expect(row(page, xlId)).toHaveCount(0);
 });
+
+test("votes self-escalate untriaged issues and display Auto · +votes", async ({
+  page,
+  request,
+}) => {
+  const tag = scratchTag();
+  const identifier = await createIssue(request, {
+    teamKey: scratchTeam,
+    title: `Vote escalation ${tag}`,
+  });
+
+  for (const index of [1, 2]) {
+    const res = await request.post("/trpc/votes.cast", {
+      data: {
+        actor: {
+          key: `codex:voter-${String(index)}-${tag}`,
+          name: `Voter ${String(index)}`,
+          kind: "agent",
+          metadata: {},
+        },
+        identifier,
+      },
+    });
+    expect(res.ok()).toBe(true);
+  }
+
+  await page.goto(`/issues/${identifier}`);
+  const priority = page.locator("#property-priority");
+  await expect(priority).toHaveValue("0");
+  await expect(page.locator(".priority-mode")).toHaveCount(0);
+
+  await page.getByRole("button", { name: /^2 votes$/u }).click();
+  await expect(priority).toHaveValue("3");
+  await expect(page.locator(".priority-mode")).toHaveText("Auto · +votes");
+});

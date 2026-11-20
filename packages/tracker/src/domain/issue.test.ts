@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computePriority,
+  isVoteBoostedPriority,
   midpoint,
   parseIdentifier,
   resolveIssuePriority,
@@ -71,24 +72,36 @@ describe("issue invariants", () => {
     expect(avatarSvg("human:jerred")).not.toBe(avatarSvg("codex:one"));
     expect(avatarSvg("<script>alert(1)</script>")).not.toContain("script");
   });
-  it("computes priority from impact, urgency, and votes with manual override", () => {
+  it("computes priority from impact, urgency, and progressive vote boosts with manual override", () => {
+    // Untriaged issues stay at 0 below 3 votes, then self-escalate at 3 / 8 / 20 votes.
+    expect(computePriority({ impact: null, urgency: null, voteCount: 2 })).toBe(
+      0,
+    );
+    expect(computePriority({ impact: null, urgency: null, voteCount: 3 })).toBe(
+      3,
+    );
+    expect(computePriority({ impact: null, urgency: null, voteCount: 8 })).toBe(
+      2,
+    );
     expect(
-      computePriority({ impact: null, urgency: null, voteCount: 50 }),
-    ).toBe(0);
-    expect(
-      computePriority({ impact: "high", urgency: "high", voteCount: 0 }),
+      computePriority({ impact: null, urgency: null, voteCount: 20 }),
     ).toBe(1);
     expect(
-      computePriority({ impact: "low", urgency: "low", voteCount: 25 }),
+      isVoteBoostedPriority({ impact: null, urgency: null, voteCount: 2 }),
+    ).toBe(false);
+    expect(
+      isVoteBoostedPriority({ impact: null, urgency: null, voteCount: 3 }),
+    ).toBe(true);
+
+    // Base matrix without votes
+    expect(
+      computePriority({ impact: "high", urgency: "high", voteCount: 0 }),
     ).toBe(1);
     expect(
       computePriority({ impact: "high", urgency: "medium", voteCount: 0 }),
     ).toBe(2);
     expect(
       computePriority({ impact: "medium", urgency: "high", voteCount: 0 }),
-    ).toBe(2);
-    expect(
-      computePriority({ impact: "low", urgency: "low", voteCount: 8 }),
     ).toBe(2);
     expect(
       computePriority({ impact: "medium", urgency: "medium", voteCount: 0 }),
@@ -108,6 +121,39 @@ describe("issue invariants", () => {
     expect(
       computePriority({ impact: "high", urgency: null, voteCount: 0 }),
     ).toBe(2);
+
+    // Progressive vote boosts on sized issues: +1 tier at 3+, +2 at 8+, +3 at 20+
+    expect(
+      computePriority({ impact: "low", urgency: "low", voteCount: 2 }),
+    ).toBe(4);
+    expect(
+      computePriority({ impact: "low", urgency: "low", voteCount: 3 }),
+    ).toBe(3);
+    expect(
+      computePriority({ impact: "low", urgency: "low", voteCount: 8 }),
+    ).toBe(2);
+    expect(
+      computePriority({ impact: "low", urgency: "low", voteCount: 20 }),
+    ).toBe(1);
+    expect(
+      computePriority({ impact: "medium", urgency: "medium", voteCount: 3 }),
+    ).toBe(2);
+    expect(
+      computePriority({ impact: "medium", urgency: "medium", voteCount: 8 }),
+    ).toBe(1);
+    expect(
+      computePriority({ impact: "high", urgency: "medium", voteCount: 3 }),
+    ).toBe(1);
+    expect(
+      isVoteBoostedPriority({ impact: "high", urgency: "high", voteCount: 10 }),
+    ).toBe(false);
+    expect(
+      isVoteBoostedPriority({
+        impact: "medium",
+        urgency: "medium",
+        voteCount: 4,
+      }),
+    ).toBe(true);
 
     const base: {
       priority: number;
@@ -140,7 +186,7 @@ describe("issue invariants", () => {
     );
     expect(stillPinned).toEqual({ priority: 1, priorityManual: true });
 
-    // Resetting priorityManual: false snaps back to computed value
+    // Resetting priorityManual: false snaps back to computed value (2 base - 2 boost = 1)
     const unpinned = resolveIssuePriority(
       {
         ...base,
@@ -151,6 +197,13 @@ describe("issue invariants", () => {
       },
       { priorityManual: false },
     );
-    expect(unpinned).toEqual({ priority: 2, priorityManual: false });
+    expect(unpinned).toEqual({ priority: 1, priorityManual: false });
+
+    // Explicitly clearing priority to 0 on a vote-escalated untriaged issue pins manual 0
+    const pinnedZeroOnVoted = resolveIssuePriority(
+      { ...base, priority: 3, voteCount: 5 },
+      { priority: 0 },
+    );
+    expect(pinnedZeroOnVoted).toEqual({ priority: 0, priorityManual: true });
   });
 });

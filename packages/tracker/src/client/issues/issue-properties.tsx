@@ -7,6 +7,7 @@ import {
   ThumbsUp,
   UserRoundX,
 } from "lucide-react";
+import { computePriority, isVoteBoostedPriority } from "#domain/issue.ts";
 import { ActorChip, Avatar, Swatch } from "#client/ui/ui.tsx";
 import { AbsoluteTime } from "#client/ui/time.tsx";
 import type { BootstrapData, IssueDetailData } from "#client/data/api.ts";
@@ -114,6 +115,53 @@ function VoteButton({
   );
 }
 
+function PriorityModeIndicator({
+  issue,
+  disabled,
+  update,
+}: {
+  issue: IssueDetailData;
+  disabled: boolean;
+  update: (change: Exclude<IssueChange, { kind: "move" }>) => void;
+}) {
+  const input = {
+    impact: issue.impact,
+    urgency: issue.urgency,
+    voteCount: issue.voteCount,
+  };
+  if (issue.priorityManual) {
+    return (
+      <button
+        type="button"
+        id="property-priority-auto"
+        className="priority-mode-reset"
+        disabled={disabled}
+        onClick={() => {
+          update({ kind: "priorityAuto" });
+        }}
+      >
+        Pinned · Auto
+      </button>
+    );
+  }
+  if (computePriority(input) === 0) return null;
+  const voteBoosted = isVoteBoostedPriority(input);
+  return (
+    <span
+      className="priority-mode"
+      data-mode="auto"
+      data-vote-boosted={voteBoosted ? "" : undefined}
+      title={
+        voteBoosted
+          ? `Boosted by ${String(issue.voteCount)} votes`
+          : "Derived from impact and urgency"
+      }
+    >
+      {voteBoosted ? "Auto · +votes" : "Auto"}
+    </span>
+  );
+}
+
 function SizingFields({
   issue,
   disabled,
@@ -123,7 +171,6 @@ function SizingFields({
   disabled: boolean;
   update: (change: Exclude<IssueChange, { kind: "move" }>) => void;
 }) {
-  const sized = issue.impact !== null || issue.urgency !== null;
   return (
     <>
       <div className="property-field">
@@ -131,24 +178,11 @@ function SizingFields({
           <label className="property-name" htmlFor="property-priority">
             Priority
           </label>
-          {sized &&
-            (issue.priorityManual ? (
-              <button
-                type="button"
-                id="property-priority-auto"
-                className="priority-mode-reset"
-                disabled={disabled}
-                onClick={() => {
-                  update({ kind: "priorityAuto" });
-                }}
-              >
-                Pinned · Auto
-              </button>
-            ) : (
-              <span className="priority-mode" data-mode="auto">
-                Auto
-              </span>
-            ))}
+          <PriorityModeIndicator
+            issue={issue}
+            disabled={disabled}
+            update={update}
+          />
         </div>
         <EnumPicker
           id="property-priority"

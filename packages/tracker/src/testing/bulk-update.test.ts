@@ -407,13 +407,30 @@ it("updates effort, impact, urgency, and resets priorityManual across multiple i
     [untriaged.identifier, urgent.identifier, pinned.identifier],
     { impact: null, urgency: null, effort: null },
   );
-  for (const item of cleared.items) {
-    expect(item).toMatchObject({
+  expect(cleared.items).toEqual([
+    expect.objectContaining({
+      identifier: untriaged.identifier,
+      impact: null,
+      urgency: null,
+      effort: null,
+      priority: 2,
+      priorityManual: false,
+    }),
+    expect.objectContaining({
+      identifier: urgent.identifier,
       impact: null,
       urgency: null,
       effort: null,
       priority: 0,
       priorityManual: false,
-    });
-  }
+    }),
+    expect.objectContaining({
+      identifier: pinned.identifier,
+      impact: null,
+      urgency: null,
+      effort: null,
+      priority: 0,
+      priorityManual: false,
+    }),
+  ]);
 });

@@ -279,16 +279,22 @@ Issues carry native `urgency` (`high`, `medium`, `low` or `null`), `impact`
 (`high`, `medium`, `low` or `null`), `effort` (`xs`, `s`, `m`, `l`, `xl` or
 `null`) and `priorityManual` (`boolean`). When `priorityManual` is `false`,
 `priority` is derived deterministically from `impact`, `urgency` and
-`voteCount` (`0` = No priority when both `impact` and `urgency` are `null`;
-otherwise missing `impact` or `urgency` stands in as `medium`: `high` + `high`
-or `voteCount >= 25` is `1` Urgent; `high` + `medium`, `medium` + `high` or
-`voteCount >= 8` is `2` High; `medium` + `medium`, `high` + `low` or `low` +
-`high` is `3` Medium; otherwise `4` Low) and recomputes automatically on
-create, sizing updates and vote casts/removals. Setting `priority` explicitly
-pins `priorityManual: true` (except setting `0` while `impact` and `urgency`
-are both `null`); passing `priorityManual: false` (or clicking `Pinned · Auto`
-in the issue panel or running `Reset priority to auto` in the command palette)
-clears the manual override and snaps `priority` back to its computed value.
+`voteCount`: base sizing maps `high` + `high` to `1` Urgent, `high` + `medium`
+or `medium` + `high` to `2` High, `medium` + `medium`, `high` + `low` or `low`
+
+- `high` to `3` Medium, and remaining sized pairs to `4` Low (with a single
+  missing `impact` or `urgency` standing in as `medium`), while votes boost
+  priority by `+1` tier at `3+` votes, `+2` tiers at `8+` votes, and `+3` tiers
+  (`1` Urgent) at `20+` votes. Untriaged issues (`impact` and `urgency` both
+  `null`) stay `0` No priority below `3` votes and self-escalate at `3+` votes
+  (`3` Medium at `3–7` votes, `2` High at `8–19` votes, `1` Urgent at `20+`
+  votes); issue detail surfaces `Auto · +votes` whenever votes lift the derived
+  tier. Priority recomputes automatically on create, sizing updates and vote
+  casts/removals. Setting `priority` explicitly pins `priorityManual: true`
+  (except setting `0` when computed auto priority is already `0`); passing
+  `priorityManual: false` (or clicking `Pinned · Auto` in the issue panel or
+  running `Reset priority to auto` in the command palette) clears the manual
+  override and snaps `priority` back to its computed value.
 
 Identifiers, state names/types, label names and project slugs are the public
 references. The API includes issue search/list/detail/history, comments,
