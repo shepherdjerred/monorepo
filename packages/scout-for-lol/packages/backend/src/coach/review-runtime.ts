@@ -55,7 +55,11 @@ export function coachReviewDependencies(): CoachReviewDependencies {
     },
     matchParticipants: async (matchId) => {
       const resolution = await resolveResultEvidence(matchId, []);
-      return resolution.kind === "available"
+      // The review reads Riot match documents from the lake and refuses client
+      // end-of-game records, so client-only evidence is not yet reviewable;
+      // the evidence trigger and the schedule retry once the Riot record lands.
+      return resolution.kind === "available" &&
+        resolution.value.source === "RIOT"
         ? resolution.value.participants.flatMap((player) =>
             player.identity.kind === "riot" ? [player.identity.puuid] : [],
           )
