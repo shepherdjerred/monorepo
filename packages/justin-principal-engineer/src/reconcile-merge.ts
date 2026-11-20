@@ -318,20 +318,6 @@ export async function pauseTask(input: {
   console.error(`${input.state.issue.identifier}: parked for human input`);
 }
 
-export async function pauseAfterNoChangeFeedback(input: {
-  state: TaskState;
-  tracker: TrackerClient;
-  store: StateStore;
-}): Promise<void> {
-  await pauseTask({
-    state: input.state,
-    reason:
-      "The agent reported no change after owner feedback; explicit confirmation is required before merging.",
-    tracker: input.tracker,
-    store: input.store,
-  });
-}
-
 export async function recordFailure(input: {
   state: TaskState;
   error: unknown;
