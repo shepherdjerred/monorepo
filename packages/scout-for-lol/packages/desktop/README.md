@@ -388,6 +388,37 @@ Not in the window yet: native interactive charts, the @-mention picker, export,
 the raw payload viewer and native intent confirmation (a confirmation card opens
 the web conversation).
 
+### In-game overlay
+
+`scout-overlay` is the toolkit-independent core of the in-game overlay. It has
+no window, no gpui and no platform dependency (an architecture test fails if it
+gains one), so it runs and is tested on Linux CI.
+
+Built:
+
+- `card`: the card contract. `data/src/scout-client/overlay-card.schema.json`
+  is the source of truth (`pregame_plan`, `answer`, `status`, `proactive`,
+  `review_ready`); Zod and the strict serde types both hold
+  `overlay-card.fixtures.json` to it.
+- `controller`: `OverlayController`, a pure state machine that takes the clock
+  and returns an `OverlayView`. The overlay shows only while the gameflow phase
+  is `InProgress` and tears down, queue included, when the game ends. Cards are
+  ordered by priority then age, expire after their TTL, and the queue is
+  bounded. It is click-through, and the only input is a hotkey: dismiss,
+  expand, next. A `proactive` card is accepted only when the passed-in
+  `ProactivePolicy` allows it; `ProactivePolicy::production()` never does.
+- `geometry`: anchor, safe-area, HUD-avoidance and DPI-scale placement from a
+  screen rectangle and League's HUD regions.
+
+Waits for the Windows hardware spike, and is not in this crate: the window
+itself (a pop-up that takes no focus, with transparent, click-through and
+no-activate styles over League in borderless mode, or a small separate overlay
+process driven over the same IPC if that fails), registering the hotkeys,
+reading `WindowMode` from League's game settings to warn about exclusive
+fullscreen, the native code under `scout-platform`, and the beta-only proactive
+detectors. On macOS the cards stay in the main window if the overlay does not
+work there.
+
 ## Release profiles
 
 The product ships as two builds that differ only by a compiled-in profile,
