@@ -13,12 +13,26 @@
 //! supervisor also runs chat and, on Windows and macOS, voice: it owns the
 //! microphone and the global keys, and the window only shows them.
 
+#[cfg_attr(
+    not(any(target_os = "windows", target_os = "macos")),
+    expect(
+        dead_code,
+        reason = "Linux builds have no microphone, so the voice service is never started"
+    )
+)]
 mod hotkeys;
 mod supervisor;
 mod toolkit;
 mod tray;
 mod ui;
 mod updater;
+#[cfg_attr(
+    not(any(target_os = "windows", target_os = "macos")),
+    expect(
+        dead_code,
+        reason = "Linux builds have no microphone, so the voice service is never started"
+    )
+)]
 mod voice;
 mod window;
 
