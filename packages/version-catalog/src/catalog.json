@@ -1539,7 +1539,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.32.1@sha256:acecbab5b0b8ae9cf4012b508866ca97feda3709577bf157b537239f40029049"
+      "value": "1.32.2@sha256:7bf69188a6232fea14869b9cef3d94aa82a1601d99517f7e86c71f22da4e0670"
     },
     {
       "name": "temporalio/ui",
@@ -1551,7 +1551,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.55.0@sha256:3899d5cf749b5555c9f798d46f2423b1d6190ea391ca713db5d1bba961759e58"
+      "value": "2.58.1@sha256:ac3c13eddb4547d830991bb5eee93a5d97140134522b7297fdb2be1fe25ef925"
     },
     {
       "name": "temporalio/admin-tools",
@@ -1563,7 +1563,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.32.1@sha256:9ef0dc5b063bf4ffd5c1512de72e0e73e225bd2c7006a18ce69bd592a8862a83"
+      "value": "1.32.2@sha256:4a95866efba29d7e17ab012df5232795e8b0ad0f7d5f9d1ec4df321f7792a754"
     },
     {
       "name": "flipt-io/flipt",
