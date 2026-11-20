@@ -89,6 +89,7 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
       "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
       "packages/homelab/src/cdk8s/src/misc/common.ts",
       "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
+      "packages/homelab/src/cdk8s/src/misc/static-site-headers.ts",
       "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
       // The site table's hostnames and buckets.
       "packages/homelab/src/platform-model.json",

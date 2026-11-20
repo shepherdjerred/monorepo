@@ -76,7 +76,9 @@ OpenTofu half.
 - A **public hostname** is a `TunnelBinding` to a Service, and a proxied CNAME
   to the tunnel.
 - A **static site** is a Caddy host serving a bucket, and that bucket with its
-  expiry and its zone's cache rule.
+  expiry and its zone's cache rule. Each of its **aliases** is one more Caddy
+  host on the same bucket, with a tunnel route and a CNAME of its own, so a
+  page of the site can be another name's address without a redirect.
 - A **tailnet service** is a Tailscale ingress, Service or device, and the tag
   owners in the tailnet policy.
 - A **bucket consumer** is a bucket name in a workload's environment, and the

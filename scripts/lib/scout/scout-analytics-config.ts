@@ -12,6 +12,8 @@ const AnalyticsRegistrySchema = z
       z.object({
         key: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
         hostname: z.string().min(1),
+        /** Other hostnames that serve the same site and tracker. */
+        aliases: z.array(z.string().min(1)).min(1).optional(),
         sessionReplay: z.boolean(),
         marketing: z
           .object({
@@ -26,12 +28,15 @@ const AnalyticsRegistrySchema = z
     const hostnames = new Set<string>();
     const siteKeys = new Set<string>();
     for (const site of registry.sites) {
-      if (hostnames.has(site.hostname)) {
-        context.addIssue({
-          code: "custom",
-          path: ["sites"],
-          message: `Duplicate analytics hostname: ${site.hostname}`,
-        });
+      for (const hostname of [site.hostname, ...(site.aliases ?? [])]) {
+        if (hostnames.has(hostname)) {
+          context.addIssue({
+            code: "custom",
+            path: ["sites"],
+            message: `Duplicate analytics hostname: ${hostname}`,
+          });
+        }
+        hostnames.add(hostname);
       }
       if (siteKeys.has(site.key)) {
         context.addIssue({
@@ -40,7 +45,6 @@ const AnalyticsRegistrySchema = z
           message: `Duplicate analytics site key: ${site.key}`,
         });
       }
-      hostnames.add(site.hostname);
       siteKeys.add(site.key);
     }
     const scoutProd = registry.sites.find((site) => site.key === "scout-prod");

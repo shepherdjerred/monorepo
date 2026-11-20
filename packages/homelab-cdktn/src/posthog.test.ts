@@ -22,7 +22,11 @@ const ConfigurationSchema = z.looseObject({
 
 const RegistrySchema = z.looseObject({
   sites: z.array(
-    z.looseObject({ hostname: z.string(), sessionReplay: z.boolean() }),
+    z.looseObject({
+      hostname: z.string(),
+      aliases: z.array(z.string()).optional(),
+      sessionReplay: z.boolean(),
+    }),
   ),
 });
 
@@ -274,8 +278,17 @@ describe("posthog", () => {
         path.join(import.meta.dir, "../../../config/analytics-sites.json"),
       ).json(),
     );
-    expect(resource["posthog_project_settings"]?.["monorepo"]).toEqual({
-      app_urls: sites.map((site) => `https://${site.hostname}`),
+    const origins = (site: (typeof sites)[number]) =>
+      [site.hostname, ...(site.aliases ?? [])].map(
+        (hostname) => `https://${hostname}`,
+      );
+    const settings = resource["posthog_project_settings"]?.["monorepo"];
+    // An alias reports through its site's tracker, so it is allowed like the
+    // site; replay is recorded only on a listed origin.
+    for (const allowed of ["app_urls", "recording_domains"])
+      expect(settings?.[allowed], allowed).toContain("https://join.ts-mc.net");
+    expect(settings).toEqual({
+      app_urls: sites.flatMap((site) => origins(site)),
       autocapture_web_vitals_opt_in: true,
       capture_performance_opt_in: true,
       cookieless_server_hash_mode: 0,
@@ -283,7 +296,7 @@ describe("posthog", () => {
       project_id: PROJECT,
       recording_domains: sites
         .filter((site) => site.sessionReplay)
-        .map((site) => `https://${site.hostname}`),
+        .flatMap((site) => origins(site)),
       session_recording_opt_in: true,
       test_account_filters:
         '${jsonencode([{"key" = "id", "operator" = "not_in", "type" = "cohort", "value" = posthog_cohort.internal_test_users.id}])}',

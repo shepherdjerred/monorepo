@@ -2,11 +2,8 @@ import { describe, expect, it, test } from "vitest";
 import { App, Chart } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
-import {
-  generateCaddyfile,
-  renderHeaderBlock,
-  S3StaticSites,
-} from "./s3-static-site.ts";
+import { generateCaddyfile, S3StaticSites } from "./s3-static-site.ts";
+import { renderHeaderBlock } from "./static-site-headers.ts";
 
 const ProbeSchema = z.object({
   apiVersion: z.literal("monitoring.coreos.com/v1"),
@@ -615,6 +612,107 @@ describe("response headers", () => {
     expect(block).toContain(
       String.raw`X-Test-Header "value with \"quote\" and \\backslash"`,
     );
+  });
+});
+
+describe("static site aliases", () => {
+  const site = {
+    hostname: "public.ts-mc.net",
+    bucket: "landing-pages",
+    probes: [{ endpoint: "item", path: "/item/" as const }],
+    responseHeaders: { "Content-Security-Policy": "default-src 'self'" },
+    aliases: [
+      { hostname: "join.ts-mc.net", rootPath: "/item/about/" as const },
+      { hostname: "mirror.ts-mc.net" },
+    ],
+  };
+  const caddyfile = generateCaddyfile({
+    sites: [site],
+    s3Endpoint: "https://seaweedfs.example.test",
+  });
+  const block = (hostname: string): string => {
+    const found = caddyfile
+      .split(/^(?=http:\/\/)/m)
+      .find((candidate) => candidate.startsWith(`http://${hostname} {`));
+    if (found === undefined) throw new Error(`no block for ${hostname}`);
+    return found;
+  };
+
+  it("serves the site's bucket and headers on every alias", () => {
+    for (const hostname of ["join.ts-mc.net", "mirror.ts-mc.net"]) {
+      expect(block(hostname)).toContain("bucket landing-pages");
+      expect(block(hostname)).toContain(
+        `Content-Security-Policy "default-src 'self'"`,
+      );
+    }
+  });
+
+  it("serves an alias's root path at / with a rewrite, never a redirect", () => {
+    const join = block("join.ts-mc.net");
+    expect(join).toContain("\trewrite / /item/about/\n");
+    // The only redirect is the shared trailing-slash rule, which `/` cannot match.
+    expect(join.match(/^\tredir /gm)).toEqual(["\tredir "]);
+    expect("/").not.toMatch(/^\/[^.]*[^/]$/);
+    // The rewrite precedes the bucket lookup that serves it.
+    expect(join.indexOf("rewrite / ")).toBeLessThan(join.indexOf("s3proxy {"));
+  });
+
+  it("leaves the site and an alias without a root path on the bucket root", () => {
+    expect(block("public.ts-mc.net")).not.toContain("rewrite");
+    expect(block("mirror.ts-mc.net")).not.toContain("rewrite");
+  });
+
+  test("routes each alias through the tunnel and probes its root without following redirects", () => {
+    const app = new App();
+    const chart = new Chart(app, "test", { namespace: "s3-static-sites" });
+    new S3StaticSites(chart, "s3-static-sites", {
+      credentialsSecretName: "seaweedfs-s3-credentials",
+      s3Endpoint: "https://seaweedfs.sjer.red",
+      sites: [site],
+    });
+    const documents = parseDocuments(app.synthYaml());
+
+    const BindingSchema = z.looseObject({
+      kind: z.literal("TunnelBinding"),
+      subjects: z.array(
+        z.looseObject({ spec: z.looseObject({ fqdn: z.string() }) }),
+      ),
+    });
+    const bound = documents
+      .map((document) => BindingSchema.safeParse(document))
+      .filter((result) => result.success)
+      .flatMap((result) =>
+        result.data.subjects.map((subject) => subject.spec.fqdn),
+      );
+    expect(bound.toSorted()).toEqual([
+      "join.ts-mc.net",
+      "mirror.ts-mc.net",
+      "public.ts-mc.net",
+    ]);
+
+    const probes = documents
+      .map((document) => ProbeSchema.safeParse(document))
+      .filter((result) => result.success)
+      .map((result) => result.data);
+    expect(probes.map((probe) => probe.metadata.name).toSorted()).toEqual([
+      "static-site-join-ts-mc-net",
+      "static-site-mirror-ts-mc-net",
+      "static-site-public-ts-mc-net",
+      "static-site-public-ts-mc-net-item",
+    ]);
+    const join = probes.find(
+      (probe) => probe.metadata.name === "static-site-join-ts-mc-net",
+    );
+    expect(join?.spec).toMatchObject({
+      jobName: "static-site-join.ts-mc.net",
+      module: "http_200_no_redirect",
+      targets: {
+        staticConfig: {
+          static: ["https://join.ts-mc.net"],
+          labels: { endpoint: "root", path: "/", site: "join.ts-mc.net" },
+        },
+      },
+    });
   });
 });
 

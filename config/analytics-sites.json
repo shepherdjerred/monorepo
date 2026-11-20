@@ -67,6 +67,7 @@
     {
       "key": "landing-pages",
       "hostname": "public.ts-mc.net",
+      "aliases": ["join.ts-mc.net"],
       "sessionReplay": true
     },
     {
