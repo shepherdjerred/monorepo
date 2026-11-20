@@ -222,6 +222,9 @@ export function mapAlerts(
         label: "Firing alerts",
         value: firing.length,
         unit: "count",
+        // The count is only as healthy as its worst alert: left at the `ok`
+        // default, the tile renders green with a critical alert firing.
+        severity: worstSeverity(firing.map((alert) => alertSeverity(alert))),
       }),
       metric({
         section: "alerts",

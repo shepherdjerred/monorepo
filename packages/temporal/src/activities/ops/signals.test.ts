@@ -7,7 +7,6 @@ import {
   mapAi,
   monthProgress,
   monthToDateWindow,
-  quotaSeverity,
   type AiSamples,
 } from "./ai.ts";
 import { mapBugsink, unresolvedByProject } from "./bugsink.ts";
@@ -269,12 +268,6 @@ describe("ai", () => {
     expect(monthToDateWindow(new Date("2026-10-01T00:00:10Z"))).toBe("60s");
   });
 
-  test("quota thresholds", () => {
-    expect(quotaSeverity(0.5)).toBe("ok");
-    expect(quotaSeverity(0.8)).toBe("warning");
-    expect(quotaSeverity(0.97)).toBe("error");
-  });
-
   test("projects month-end spend and warns before the budget is spent", () => {
     // 80% of the budget spent by the 24th projects past the budget at month end.
     const spent = OPS_POLICY.monthlyApiBudgetUsd * 0.8;
@@ -305,7 +298,8 @@ describe("ai", () => {
     expect(metrics["ai.cost.month_to_date_usd"]).toEqual([spent, "ok"]);
     expect(metrics["ai.cost.projected_month_usd"]?.[1]).toBe("warning");
     expect(metrics["ai.tokens_24h"]).toEqual([1000, "ok"]);
-    expect(metrics["ai.quota.max_used_ratio"]).toEqual([0.85, "warning"]);
+    // 85% of a session window that resets in three hours clears by itself.
+    expect(metrics["ai.quota.max_used_ratio"]).toEqual([0.85, "info"]);
     expect(result.signals[0]?.attributes).toEqual({
       provider: "anthropic",
       windowId: "5h",
@@ -314,7 +308,7 @@ describe("ai", () => {
       resetsAt: "2026-09-24T15:00:00.000Z",
     });
     expect(result.signals.map((s) => [s.id, s.severity])).toEqual([
-      ["ai:quota:anthropic:5h", "warning"],
+      ["ai:quota:anthropic:5h", "info"],
       ["ai:budget", "warning"],
       ["ai:tool-cost:claude-code", "ok"],
     ]);
@@ -326,5 +320,208 @@ describe("ai", () => {
       result.metrics.find((m) => m.id === "ai.tokens_24h")?.value,
     ).toBeNull();
     expect(result.signals).toEqual([]);
+  });
+});
+
+type QuotaSamples = Pick<AiSamples, "quotas" | "quotaResets">;
+
+/** One quota window; `resetInHours` is relative to `now`, negative = passed. */
+function quotaWindow(window: {
+  provider: string;
+  id: string;
+  kind: string;
+  usedRatio: number;
+  resetInHours?: number;
+}): QuotaSamples {
+  const labels = { provider: window.provider, window_id: window.id };
+  return {
+    quotas: [sample(window.usedRatio, { ...labels, window_kind: window.kind })],
+    quotaResets:
+      window.resetInHours === undefined
+        ? []
+        : [
+            sample(
+              (now.getTime() + window.resetInHours * 3_600_000) / 1000,
+              labels,
+            ),
+          ],
+  };
+}
+
+const session = { id: "5h", kind: "session" };
+const weekly = { id: "7d", kind: "weekly" };
+
+function quotaResult(...windows: readonly QuotaSamples[]) {
+  const result = mapAi(
+    ai({
+      quotas: windows.flatMap((window) => window.quotas),
+      quotaResets: windows.flatMap((window) => window.quotaResets),
+    }),
+    now,
+  );
+  const max = result.metrics.find((m) => m.id === "ai.quota.max_used_ratio");
+  return {
+    signals: result.signals.map((s) => [s.id, s.severity, s.title]),
+    metric: [max?.value, max?.severity],
+  };
+}
+
+function unknownReset(id: string, usedRatio: number): QuotaSamples {
+  return quotaWindow({ provider: "claude", id, kind: "weekly", usedRatio });
+}
+
+describe("ai quota windows", () => {
+  test("thresholds apply to a window with no known reset", () => {
+    expect(
+      quotaResult(
+        unknownReset("a", 0.5),
+        unknownReset("b", 0.8),
+        unknownReset("c", 0.97),
+      ),
+    ).toEqual({
+      signals: [
+        ["ai:quota:claude:a", "ok", "claude weekly: 50% used"],
+        ["ai:quota:claude:b", "warning", "claude weekly: 80% used"],
+        ["ai:quota:claude:c", "error", "claude weekly: 97% used"],
+      ],
+      metric: [0.97, "error"],
+    });
+  });
+
+  test("an exhausted window whose reset has passed is a stale reading, not a problem", () => {
+    const result = mapAi(
+      ai(
+        quotaWindow({
+          provider: "claude",
+          ...session,
+          usedRatio: 1,
+          resetInHours: -2,
+        }),
+      ),
+      now,
+    );
+    expect(result.signals).toMatchObject([
+      {
+        id: "ai:quota:claude:5h",
+        kind: "quota-window",
+        severity: "info",
+        needsMe: false,
+        title: "claude session: reset since last reading (was 100%)",
+        attributes: {
+          provider: "claude",
+          windowId: "5h",
+          windowKind: "session",
+          usedRatio: 1,
+          resetsAt: "2026-09-24T10:00:00.000Z",
+        },
+      },
+    ]);
+    // The only window no longer exists, so there is no current reading.
+    const max = result.metrics.find((m) => m.id === "ai.quota.max_used_ratio");
+    expect([max?.value, max?.severity]).toEqual([null, "ok"]);
+  });
+
+  test("a healthy window whose reset has passed stays ok", () => {
+    expect(
+      quotaResult(
+        quotaWindow({
+          provider: "claude",
+          ...session,
+          usedRatio: 0.4,
+          resetInHours: -2,
+        }),
+      ),
+    ).toEqual({
+      signals: [
+        [
+          "ai:quota:claude:5h",
+          "ok",
+          "claude session: reset since last reading (was 40%)",
+        ],
+      ],
+      metric: [null, "ok"],
+    });
+  });
+
+  test("an exhausted window resetting in three hours never raises the banner", () => {
+    expect(
+      quotaResult(
+        quotaWindow({
+          provider: "claude",
+          ...session,
+          usedRatio: 1,
+          resetInHours: 3,
+        }),
+      ),
+    ).toEqual({
+      signals: [["ai:quota:claude:5h", "info", "claude session: 100% used"]],
+      metric: [1, "info"],
+    });
+  });
+
+  test("a weekly window at 96% three days before its reset is an error", () => {
+    expect(
+      quotaResult(
+        quotaWindow({
+          provider: "claude",
+          ...weekly,
+          usedRatio: 0.96,
+          resetInHours: 3 * 24,
+        }),
+      ),
+    ).toEqual({
+      signals: [["ai:quota:claude:7d", "error", "claude weekly: 96% used"]],
+      metric: [0.96, "error"],
+    });
+  });
+
+  test("the metric reads only windows that still exist", () => {
+    expect(
+      quotaResult(
+        // Stale: reset an hour ago, so its 100% is not the fullest window.
+        quotaWindow({
+          provider: "claude",
+          ...session,
+          usedRatio: 1,
+          resetInHours: -1,
+        }),
+        // Fullest current window, but it clears by itself in three hours.
+        quotaWindow({
+          provider: "codex",
+          ...session,
+          usedRatio: 0.99,
+          resetInHours: 3,
+        }),
+        // Less full, yet the only one that needs attention.
+        quotaWindow({
+          provider: "claude",
+          ...weekly,
+          usedRatio: 0.85,
+          resetInHours: 3 * 24,
+        }),
+        quotaWindow({
+          provider: "codex",
+          ...weekly,
+          usedRatio: 0.3,
+          resetInHours: 5 * 24,
+        }),
+      ),
+    ).toEqual({
+      signals: [
+        [
+          "ai:quota:claude:5h",
+          "info",
+          "claude session: reset since last reading (was 100%)",
+        ],
+        ["ai:quota:codex:5h", "info", "codex session: 99% used"],
+        ["ai:quota:claude:7d", "warning", "claude weekly: 85% used"],
+        ["ai:quota:codex:7d", "ok", "codex weekly: 30% used"],
+      ],
+      metric: [0.99, "warning"],
+    });
+  });
+
+  test("no quota windows at all is a null reading", () => {
+    expect(quotaResult()).toEqual({ signals: [], metric: [null, "ok"] });
   });
 });

@@ -188,41 +188,185 @@ describe("github", () => {
   });
 });
 
+function renovatePr(
+  number: number,
+  overrides: Partial<OpenPullRequest> = {},
+): OpenPullRequest {
+  return pr({
+    number,
+    branch: `renovate/pr-${String(number)}`,
+    author: { login: "renovate", kind: "bot" },
+    ...overrides,
+  });
+}
+
 describe("renovate", () => {
-  test("approvals need me; pending checks aggregate; PRs are listed", () => {
-    const body = [
-      " - [ ] <!-- approve-branch=renovate/a -->update a",
-      " - [ ] <!-- approve-branch=renovate/b -->update b",
-      " - [ ] <!-- unpend-branch=renovate/c -->update c",
-    ].join("\n");
+  const dashboardUrl = "https://github.com/shepherdjerred/monorepo/issues/481";
+  const dashboardLink = {
+    kind: "github",
+    label: "Dependency Dashboard",
+    url: dashboardUrl,
+  };
+
+  function dashboard(lines: readonly string[]) {
+    return { number: 481, url: dashboardUrl, body: lines.join("\n") };
+  }
+
+  test("approvals are one signal that needs me; pending checks aggregate; a failing PR is listed", () => {
     const result = mapRenovate(
-      {
-        number: 481,
-        url: "https://github.com/shepherdjerred/monorepo/issues/481",
-        body,
-      },
-      [
-        pr({
-          number: 9,
-          branch: "renovate/d",
-          author: { login: "renovate", kind: "bot" },
-          checks: "FAILURE",
-        }),
-        pr({}),
-      ],
+      dashboard([
+        " - [ ] <!-- approve-branch=renovate/a -->update a",
+        " - [ ] <!-- approve-branch=renovate/b -->update b",
+        " - [ ] <!-- unpend-branch=renovate/c -->update c",
+      ]),
+      [renovatePr(9, { checks: "FAILURE" }), pr({})],
     );
     expect(result.signals.map((s) => [s.id, s.severity, s.needsMe])).toEqual([
-      ["renovate:approve:renovate/a", "info", true],
-      ["renovate:approve:renovate/b", "info", true],
+      ["renovate:awaiting-approval", "info", true],
       ["renovate:pending-checks", "info", false],
       ["renovate:pr:9", "warning", false],
     ]);
+    expect(result.signals[0]).toEqual({
+      id: "renovate:awaiting-approval",
+      source: "renovate",
+      section: "delivery",
+      kind: "renovate-approval",
+      severity: "info",
+      needsMe: true,
+      title: "2 Renovate updates awaiting approval",
+      detail: "update a; update b",
+      attributes: { count: 2 },
+      links: [dashboardLink],
+    });
     expect(result.counts).toEqual({
       "awaiting-approval": 2,
       "pending-checks": 1,
       "open-pr": 1,
     });
     expect(result.metrics.map((m) => m.value)).toEqual([4, 2]);
+  });
+
+  test("a hundred approvals are still one thing waiting on me", () => {
+    const result = mapRenovate(
+      dashboard(
+        Array.from(
+          { length: 100 },
+          (_, index) =>
+            ` - [ ] <!-- approve-branch=renovate/dep-${String(index)} -->chore(deps): update dependency-${String(index)} to v2`,
+        ),
+      ),
+      [],
+    );
+    expect(result.signals.filter((s) => s.needsMe).map((s) => s.id)).toEqual([
+      "renovate:awaiting-approval",
+    ]);
+    const [approval] = result.signals;
+    expect(approval?.title).toBe("100 Renovate updates awaiting approval");
+    expect(approval?.attributes).toEqual({ count: 100 });
+    expect(approval?.detail).toHaveLength(500);
+    expect(approval?.detail).toMatch(
+      /^chore\(deps\): update dependency-0 to v2; chore\(deps\): update dependency-1 to v2; .*…$/u,
+    );
+    expect(result.counts["awaiting-approval"]).toBe(100);
+    expect(result.metrics.map((m) => [m.value, m.severity])).toEqual([
+      [100, "ok"],
+      [100, "info"],
+    ]);
+  });
+
+  test("a single approval is singular", () => {
+    const result = mapRenovate(
+      dashboard([" - [ ] <!-- approve-branch=renovate/a -->update a"]),
+      [],
+    );
+    expect(result.signals.map((s) => [s.id, s.title, s.detail])).toEqual([
+      [
+        "renovate:awaiting-approval",
+        "1 Renovate update awaiting approval",
+        "update a",
+      ],
+    ]);
+  });
+
+  test("zero approvals emits no approval signal", () => {
+    const pendingOnly = mapRenovate(
+      dashboard([" - [ ] <!-- unpend-branch=renovate/c -->update c"]),
+      [],
+    );
+    expect(pendingOnly.signals.map((s) => s.id)).toEqual([
+      "renovate:pending-checks",
+    ]);
+    const empty = mapRenovate(dashboard([]), []);
+    expect(empty.signals).toEqual([]);
+    expect(empty.counts).toEqual({
+      "awaiting-approval": 0,
+      "pending-checks": 0,
+      "open-pr": 0,
+    });
+    expect(empty.metrics.map((m) => [m.value, m.severity])).toEqual([
+      [0, "ok"],
+      [0, "ok"],
+    ]);
+  });
+
+  test("a failing or conflicting PR stays individual while healthy PRs aggregate", () => {
+    const result = mapRenovate(dashboard([]), [
+      renovatePr(9, { checks: "FAILURE", createdAt: daysAgo(8) }),
+      renovatePr(10, { createdAt: daysAgo(3) }),
+      renovatePr(11, { createdAt: daysAgo(5) }),
+      renovatePr(12, { mergeable: "CONFLICTING", createdAt: daysAgo(9) }),
+      renovatePr(13, { checks: "PENDING", createdAt: daysAgo(2) }),
+      renovatePr(14, { checks: "ERROR", createdAt: daysAgo(1) }),
+      pr({ createdAt: daysAgo(30) }),
+    ]);
+    expect(result.signals.map((s) => [s.id, s.severity, s.needsMe])).toEqual([
+      ["renovate:pr:9", "warning", false],
+      ["renovate:pr:12", "warning", false],
+      ["renovate:pr:14", "warning", false],
+      ["renovate:open-prs", "info", false],
+    ]);
+    expect(result.signals[0]).toEqual({
+      id: "renovate:pr:9",
+      source: "renovate",
+      section: "delivery",
+      kind: "renovate-pr",
+      severity: "warning",
+      needsMe: false,
+      title: "#9 feat(birmel): add a thing",
+      since: daysAgo(8),
+      attributes: { checks: "FAILURE", mergeable: "MERGEABLE" },
+      links: [
+        {
+          kind: "github",
+          label: "PR #9",
+          url: "https://github.com/shepherdjerred/monorepo/pull/1",
+        },
+      ],
+    });
+    // Oldest healthy PR (#11, five days), not the older failing or foreign ones.
+    expect(result.signals[3]).toEqual({
+      id: "renovate:open-prs",
+      source: "renovate",
+      section: "delivery",
+      kind: "renovate-open-prs",
+      severity: "info",
+      needsMe: false,
+      title: "3 Renovate pull requests open",
+      since: daysAgo(5),
+      attributes: { count: 3 },
+      links: [dashboardLink],
+    });
+    expect(result.counts["open-pr"]).toBe(6);
+    expect(result.metrics.map((m) => m.value)).toEqual([6, 0]);
+  });
+
+  test("a single healthy PR is singular", () => {
+    const result = mapRenovate(dashboard([]), [
+      renovatePr(10, { createdAt: daysAgo(3) }),
+    ]);
+    expect(result.signals.map((s) => [s.id, s.title, s.since])).toEqual([
+      ["renovate:open-prs", "1 Renovate pull request open", daysAgo(3)],
+    ]);
   });
 });
 

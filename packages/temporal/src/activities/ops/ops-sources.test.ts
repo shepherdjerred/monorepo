@@ -110,7 +110,7 @@ describe("ops source collectors", () => {
     });
     const result = await collectRenovate(github);
     expect(result.signals.map((signal) => signal.id)).toEqual([
-      "renovate:approve:renovate/a",
+      "renovate:awaiting-approval",
     ]);
     expect("counts" in result).toBe(false);
     const text = await metricsText();

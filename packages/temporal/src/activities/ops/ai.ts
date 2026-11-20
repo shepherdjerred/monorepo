@@ -1,7 +1,11 @@
 import type { PrometheusSample } from "@shepherdjerred/ops-clients/prometheus.ts";
 import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
 import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
-import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
+import { quotaWindowSeverity } from "@shepherdjerred/ops-model/quota.ts";
+import {
+  worstSeverity,
+  type Severity,
+} from "@shepherdjerred/ops-model/severity.ts";
 import type { SignalInput } from "@shepherdjerred/ops-model/snapshot.ts";
 import { metricsLink } from "./ops-links.ts";
 import { metric, type OpsCollection } from "./ops-types.ts";
@@ -65,13 +69,6 @@ export function monthToDateWindow(now: Date): string {
   return `${String(Math.max(60, seconds))}s`;
 }
 
-export function quotaSeverity(ratio: number): Severity {
-  if (ratio >= OPS_POLICY.quotaErrorRatio) {
-    return "error";
-  }
-  return ratio >= OPS_POLICY.quotaWarningRatio ? "warning" : "ok";
-}
-
 function total(samples: readonly PrometheusSample[]): number | null {
   const finite = samples.filter((sample) => Number.isFinite(sample.value));
   return finite.length === 0
@@ -79,10 +76,26 @@ function total(samples: readonly PrometheusSample[]): number | null {
     : finite.reduce((sum, sample) => sum + sample.value, 0);
 }
 
-function quotaSignals(
+type QuotaWindow = {
+  provider: string;
+  windowId: string;
+  kind: string;
+  usedRatio: number;
+  resetsAtMs: number | undefined;
+  /**
+   * The reset is behind `now`: the reading describes a window that no longer
+   * exists, and the tracker has not reported the new one yet.
+   */
+  resetPassed: boolean;
+  severity: Severity;
+};
+
+function quotaWindows(
   samples: readonly PrometheusSample[],
   resets: readonly PrometheusSample[],
-): SignalInput[] {
+  now: Date,
+): QuotaWindow[] {
+  const nowMs = now.getTime();
   const resetSeconds = new Map(
     resets.map((reset) => [
       `${reset.metric["provider"] ?? ""}\u{0}${reset.metric["window_id"] ?? ""}`,
@@ -95,34 +108,55 @@ function quotaSignals(
     if (provider === "" || windowId === "") {
       throw new Error("ai_subscription_quota_used_ratio sample lacks labels");
     }
-    const kind = sample.metric["window_kind"] ?? windowId;
     const reset = resetSeconds.get(`${provider}\u{0}${windowId}`);
+    const resetsAtMs =
+      reset === undefined || !Number.isFinite(reset) ? undefined : reset * 1000;
     return {
-      id: `ai:quota:${provider}:${windowId}`,
-      source: "ai",
-      section: "ai",
-      kind: "quota-window",
-      severity: quotaSeverity(sample.value),
-      needsMe: false,
-      title: `${provider} ${kind}: ${String(Math.round(sample.value * 100))}% used`,
-      attributes: {
-        provider,
-        windowId,
-        windowKind: kind,
+      provider,
+      windowId,
+      kind: sample.metric["window_kind"] ?? windowId,
+      usedRatio: sample.value,
+      resetsAtMs,
+      resetPassed: resetsAtMs !== undefined && resetsAtMs <= nowMs,
+      severity: quotaWindowSeverity({
         usedRatio: sample.value,
-        ...(reset === undefined || !Number.isFinite(reset)
-          ? {}
-          : { resetsAt: new Date(reset * 1000).toISOString() }),
-      },
-      links: [
-        metricsLink(
-          "Quota usage",
-          `ai_subscription_quota_used_ratio{provider="${provider}",window_id="${windowId}"}`,
-          "now-7d",
-        ),
-      ],
+        nowMs,
+        ...(resetsAtMs === undefined ? {} : { resetsAtMs }),
+      }),
     };
   });
+}
+
+function quotaSignal(window: QuotaWindow): SignalInput {
+  const { provider, windowId, kind, usedRatio, resetsAtMs } = window;
+  const percent = String(Math.round(usedRatio * 100));
+  return {
+    id: `ai:quota:${provider}:${windowId}`,
+    source: "ai",
+    section: "ai",
+    kind: "quota-window",
+    severity: window.severity,
+    needsMe: false,
+    title: window.resetPassed
+      ? `${provider} ${kind}: reset since last reading (was ${percent}%)`
+      : `${provider} ${kind}: ${percent}% used`,
+    attributes: {
+      provider,
+      windowId,
+      windowKind: kind,
+      usedRatio,
+      ...(resetsAtMs === undefined
+        ? {}
+        : { resetsAt: new Date(resetsAtMs).toISOString() }),
+    },
+    links: [
+      metricsLink(
+        "Quota usage",
+        `ai_subscription_quota_used_ratio{provider="${provider}",window_id="${windowId}"}`,
+        "now-7d",
+      ),
+    ],
+  };
 }
 
 function budgetSignal(mtd: number, projected: number): SignalInput[] {
@@ -205,8 +239,9 @@ export function mapAi(samples: AiSamples, now: Date): OpsCollection {
   const overBudget = mtd > budget;
   const projectedOver =
     projected > budget * OPS_POLICY.budgetProjectionWarningRatio;
+  const windows = quotaWindows(samples.quotas, samples.quotaResets, now);
   const signals: SignalInput[] = [
-    ...quotaSignals(samples.quotas, samples.quotaResets),
+    ...windows.map((window) => quotaSignal(window)),
     ...budgetSignal(mtd, projected),
     ...providerCostSignals(samples),
   ];
@@ -217,8 +252,13 @@ export function mapAi(samples: AiSamples, now: Date): OpsCollection {
         (sum, value) => (value === null ? sum : sum + value),
         0,
       );
-  const quotaRatios = samples.quotas.map((sample) => sample.value);
-  const maxQuota = quotaRatios.length === 0 ? null : Math.max(...quotaRatios);
+  // A window whose reset has passed says nothing about how full it is now, so
+  // the headline reads only the windows that still exist.
+  const currentWindows = windows.filter((window) => !window.resetPassed);
+  const maxQuota =
+    currentWindows.length === 0
+      ? null
+      : Math.max(...currentWindows.map((window) => window.usedRatio));
   return {
     signals,
     metrics: [
@@ -255,7 +295,9 @@ export function mapAi(samples: AiSamples, now: Date): OpsCollection {
         label: "Fullest quota window",
         value: maxQuota,
         unit: "ratio",
-        severity: maxQuota === null ? "ok" : quotaSeverity(maxQuota),
+        severity: worstSeverity(
+          currentWindows.map((window) => window.severity),
+        ),
       }),
     ],
     changes: [],

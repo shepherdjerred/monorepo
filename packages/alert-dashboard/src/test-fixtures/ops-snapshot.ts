@@ -122,13 +122,15 @@ function signals(now: Temporal.Instant): SignalInput[] {
       ],
     },
     {
-      id: "renovate:approve:react-router",
+      id: "renovate:awaiting-approval",
       source: "renovate",
       section: "delivery",
       kind: "renovate-approval",
       severity: "info",
       needsMe: true,
-      title: "Renovate: approve react-router 8.4",
+      title: "3 Renovate updates awaiting approval",
+      detail: "react-router 8.4; vite 8.1; zod 4.5",
+      attributes: { count: 3 },
       links: [
         { kind: "github", label: "Dashboard", url: `${github}/issues/1` },
       ],

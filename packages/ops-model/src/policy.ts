@@ -18,6 +18,12 @@ export const OPS_POLICY = {
   quotaWarningRatio: 0.8,
   quotaErrorRatio: 0.95,
   /**
+   * A quota window that resets within this long clears by itself (a 5-hour
+   * rolling window, or a weekly one in its final hours), so it never rates
+   * worse than `info`.
+   */
+  quotaSelfHealingMinutes: 360,
+  /**
    * Month-to-date pay-as-you-go API spend budget across OpenAI, Anthropic,
    * and Google, excluding fixed subscriptions.
    */
