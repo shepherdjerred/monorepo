@@ -420,7 +420,7 @@ describe("command", () => {
     expect(renderPlan(plan)).toContain(
       [
         "kubectl -n media delete pod/media-postgresql-0 --wait=true",
-        "kubectl -n media wait --for=condition=Ready pod/media-postgresql-0 --timeout=10m",
+        "kubectl -n media wait --for=create --for=condition=Ready pod/media-postgresql-0 --timeout=10m",
       ].join("\n"),
     );
     expect(renderPlan(plan)).toContain(

@@ -279,7 +279,7 @@ export function restartCommands(workload: Workload): [string, string] {
     const kubectl = `kubectl -n ${workload.namespace}`;
     return [
       `${kubectl} delete ${pods} --wait=true`,
-      `${kubectl} wait --for=condition=Ready ${pods} --timeout=10m`,
+      `${kubectl} wait --for=create --for=condition=Ready ${pods} --timeout=10m`,
     ];
   }
   const target = `${workload.kind.toLowerCase()}/${workload.name}`;
