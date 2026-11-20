@@ -13,8 +13,30 @@ use super::controller::TurnUpdate;
 /// the answer.
 pub trait TurnRunner: Send + Sync {
     /// Start `turn` and report its progress on `updates`, ending with `done`,
-    /// a refusal, or a broken stream.
-    fn run(&self, turn: SpokenTurn, updates: UnboundedSender<TurnUpdate>);
+    /// a refusal, or a broken stream. Dropping the returned handle stops the
+    /// turn, so a superseded turn never reports into the next one.
+    fn run(&self, turn: SpokenTurn, updates: UnboundedSender<TurnUpdate>) -> TurnHandle;
+}
+
+/// A running turn; dropping it aborts the request and its forwarding.
+#[derive(Debug, Default)]
+pub struct TurnHandle(Option<tokio::task::AbortHandle>);
+
+impl TurnHandle {
+    /// A turn with nothing to stop.
+    #[cfg(test)]
+    #[must_use]
+    pub const fn detached() -> Self {
+        Self(None)
+    }
+}
+
+impl Drop for TurnHandle {
+    fn drop(&mut self) {
+        if let Some(task) = &self.0 {
+            task.abort();
+        }
+    }
 }
 
 /// What a refusal says to the player.
@@ -54,9 +76,9 @@ impl ScoutTurns {
 }
 
 impl TurnRunner for ScoutTurns {
-    fn run(&self, turn: SpokenTurn, updates: UnboundedSender<TurnUpdate>) {
+    fn run(&self, turn: SpokenTurn, updates: UnboundedSender<TurnUpdate>) -> TurnHandle {
         let origin = self.origin.clone();
-        tokio::spawn(async move {
+        let task = tokio::spawn(async move {
             // Read the credential each turn: pairing may have replaced it,
             // and the store can block on the operating system.
             let client =
@@ -86,6 +108,7 @@ impl TurnRunner for ScoutTurns {
                 }
             }
         });
+        TurnHandle(Some(task.abort_handle()))
     }
 }
 
@@ -109,6 +132,17 @@ mod tests {
             .iter()
             .map(|(event, data)| Ok(format!("event: {event}\ndata: {data}\n\n")))
             .collect()
+    }
+
+    #[tokio::test]
+    async fn dropping_the_handle_stops_a_turn_from_reporting() {
+        let (updates, mut received) = mpsc::unbounded_channel();
+        let task = tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            let _ = updates.send(TurnUpdate::Broken("late".to_owned()));
+        });
+        drop(super::TurnHandle(Some(task.abort_handle())));
+        assert!(received.recv().await.is_none());
     }
 
     #[tokio::test]

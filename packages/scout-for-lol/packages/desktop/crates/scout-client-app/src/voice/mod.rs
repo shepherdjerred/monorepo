@@ -34,7 +34,7 @@ use tokio::time::Instant;
 
 use self::capture::spoken_turn;
 use self::controller::{Controller, Effect, Input, TurnUpdate};
-use self::turns::TurnRunner;
+use self::turns::{TurnHandle, TurnRunner};
 use crate::hotkeys::{HotkeyEvent, HotkeyPort};
 use crate::supervisor::Control;
 
@@ -172,6 +172,7 @@ pub fn spawn(ports: VoicePorts, inputs: VoiceInputs) -> VoiceHandle {
         engine: None,
         engine_events,
         turn_updates,
+        running_turn: None,
         drain_deadline: None,
         chat: inputs.chat.clone(),
         state: inputs.state.clone(),
@@ -194,6 +195,8 @@ struct Service {
     engine: Option<Box<dyn EnginePort>>,
     engine_events: mpsc::UnboundedSender<EngineEvent>,
     turn_updates: mpsc::UnboundedSender<TurnUpdate>,
+    /// The turn being answered; replacing or dropping it stops that request.
+    running_turn: Option<TurnHandle>,
     /// While speech plays out: when to give up waiting for it.
     drain_deadline: Option<Instant>,
     chat: Option<ChatRelay>,
@@ -319,7 +322,10 @@ impl Service {
                     .and_then(|chat| chat.subscribe().borrow().status.open_conversation);
                 let live = self.state.borrow().live_game.clone();
                 match spoken_turn(&recorded, conversation, live.as_ref()) {
-                    Ok(turn) => self.ports.turns.run(turn, self.turn_updates.clone()),
+                    Ok(turn) => {
+                        self.running_turn =
+                            Some(self.ports.turns.run(turn, self.turn_updates.clone()));
+                    }
                     Err(message) => {
                         let _ = self.turn_updates.send(TurnUpdate::Refused(message));
                     }
@@ -336,6 +342,8 @@ impl Service {
             Effect::StopPlayback => {
                 self.ports.speaker.stop();
                 self.drain_deadline = None;
+                // Talking over the answer also ends its request.
+                self.running_turn = None;
             }
             Effect::AwaitDrain => {
                 self.drain_deadline =

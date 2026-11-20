@@ -25,7 +25,7 @@ use uuid::Uuid;
 
 use super::capture::SpokenTurn;
 use super::controller::TurnUpdate;
-use super::turns::TurnRunner;
+use super::turns::{TurnHandle, TurnRunner};
 use super::{EnginePort, EngineStarter, VoiceHandle, VoiceInputs, VoicePorts, VoiceStore, spawn};
 use crate::hotkeys::{HotkeyBindings, HotkeyEvent, HotkeyPort};
 use crate::supervisor::Control;
@@ -90,7 +90,7 @@ struct FakeTurns {
 }
 
 impl TurnRunner for FakeTurns {
-    fn run(&self, turn: SpokenTurn, updates: mpsc::UnboundedSender<TurnUpdate>) {
+    fn run(&self, turn: SpokenTurn, updates: mpsc::UnboundedSender<TurnUpdate>) -> TurnHandle {
         self.asked
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
@@ -101,6 +101,7 @@ impl TurnRunner for FakeTurns {
                 duration_ms: turn.utterance.get().duration_ms(),
             });
         *self.updates.lock().unwrap_or_else(PoisonError::into_inner) = Some(updates);
+        TurnHandle::detached()
     }
 }
 
