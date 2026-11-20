@@ -143,7 +143,7 @@ test("backblaze encrypts state and plans and keeps its lock constraints", async 
   });
   // The lock file records these constraints; a different one rewrites it.
   expect(terraform.required_providers).toEqual({
-    b2: { source: "backblaze/b2", version: "0.14.0" },
+    b2: { source: "backblaze/b2", version: "0.14.1" },
     onepassword: { source: "1password/onepassword", version: "~> 3.0" },
   });
   expect(terraform.required_version).toBe(">= 1.11.0");

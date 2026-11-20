@@ -35,7 +35,7 @@ export class CloudflareTokensStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "cloudflare-tokens", {
       requiredVersion: ">= 1.11.0",
-      providerConstraints: { cloudflare: "~> 5.27.0" },
+      providerConstraints: { cloudflare: "~> 5.29.0" },
     });
     encryptStateAndPlans(this, {
       description:
