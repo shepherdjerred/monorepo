@@ -21,11 +21,12 @@ export class MusicQueueMatch {
     const input = await readRequestInput(InputSchema, request);
     if (input.playback.guildId !== guildId)
       throw new WebError(400, "guild_changed", "Refresh playback.");
-    const context = await this.music.playback.commandContext(session, {
-      ...input.playback,
-      action: "volume",
-      percent: 100,
-    });
+    // Replacing an entry by its position is bound to the revision the viewer saw.
+    const context = await this.music.playback.commandContext(
+      session,
+      { ...input.playback, action: "volume", percent: 100 },
+      { positional: true },
+    );
     const item = context.handle.view().queue[input.position - 1];
     const track = item?.source?.music;
     if (item === undefined || track === undefined)

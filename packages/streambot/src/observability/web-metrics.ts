@@ -45,8 +45,11 @@ const THROWN_WEB_ERROR_CODES = [
   "history_unavailable",
   "invalid_channel",
   "invalid_request",
+  "item_finished",
   "join_voice",
   "library_changed",
+  "listen_disabled",
+  "listen_sports",
   "load_missing",
   "lol_disabled",
   "method",
@@ -54,6 +57,7 @@ const THROWN_WEB_ERROR_CODES = [
   "music_query",
   "no_session",
   "no_station",
+  "no_video",
   "not_found",
   "not_upcoming",
   "oauth_state",
@@ -84,6 +88,7 @@ const THROWN_WEB_ERROR_CODES = [
   "spotify_metadata",
   "spotify_unavailable",
   "station_unavailable",
+  "stream_limit",
   "subtitle_audio",
   "subtitle_picker_busy",
   "subtitles_unavailable",
@@ -135,6 +140,10 @@ export function webCommandAction(action: string): WebCommandAction {
   return WEB_COMMAND_ACTIONS.find((known) => known === action) ?? "invalid";
 }
 
+/** The viewer's explicit Listen/Watch choice; the classic remote and non-play commands send none. */
+export const WEB_TRANSPORTS = ["listen", "watch", "unspecified"] as const;
+export type WebTransportLabel = (typeof WEB_TRANSPORTS)[number];
+
 export const PLAY_SURFACES = [
   "web",
   "slash",
@@ -174,8 +183,8 @@ export const webRequestDurationSeconds = new Histogram({
 
 export const webCommandsTotal = new Counter({
   name: "streambot_web_commands_total",
-  help: "Streambot web remote commands by action and outcome",
-  labelNames: ["action", "outcome"] as const,
+  help: "Streambot web remote commands by action, requested transport and outcome",
+  labelNames: ["action", "transport", "outcome"] as const,
   registers: [register],
 });
 
@@ -184,6 +193,14 @@ export const webCommandDurationSeconds = new Histogram({
   help: "Streambot web remote command duration by action",
   labelNames: ["action"] as const,
   buckets: LATENCY_BUCKETS,
+  registers: [register],
+});
+
+export const webTimeToPlaybackSeconds = new Histogram({
+  name: "streambot_web_time_to_playback_seconds",
+  help: "Time from accepting a web play command to its item streaming, for items expected to start immediately",
+  labelNames: ["transport"] as const,
+  buckets: [0.5, 1, 2, 3, 5, 8, 13, 20, 30, 45, 60, 120],
   registers: [register],
 });
 

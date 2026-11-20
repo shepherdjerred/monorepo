@@ -72,12 +72,9 @@ function assertManualStationChannel(
   }
 }
 
+/** Starting or stopping a station applies to the slot's current state, not a viewed revision. */
 function resolveStationTargetSlot(
-  playback: WebPlayback,
-  input: Extract<WebCommand, { action: "station" }>,
   target: {
-    readonly guildId: GuildId;
-    readonly channelId: ChannelId;
     readonly playbackChannel: PlaybackChannelNumber | undefined;
     readonly auto: boolean;
   },
@@ -86,29 +83,6 @@ function resolveStationTargetSlot(
   const defaultSlot = kind === "tv" ? VIDEO_CHANNEL : AUDIO_CHANNEL;
   const targetSlot = target.auto ? defaultSlot : target.playbackChannel;
   assertManualStationChannel(kind, targetSlot, target.auto);
-  if (
-    target.auto &&
-    target.playbackChannel !== defaultSlot &&
-    Object.keys(input.slotRevisions).length > 0
-  ) {
-    const slotRevision = input.slotRevisions[String(defaultSlot)];
-    if (
-      slotRevision === undefined ||
-      playback.deps.sessions.revision(
-        target.guildId,
-        target.channelId,
-        defaultSlot,
-      ) !== slotRevision
-    ) {
-      throw new WebError(
-        409,
-        "playback_changed",
-        kind === "tv"
-          ? "Refresh playback before starting TV mode."
-          : "Refresh playback before starting Radio.",
-      );
-    }
-  }
   return targetSlot;
 }
 
@@ -155,7 +129,7 @@ export async function executeWebStationCommand(
   const kind: StationKind = input.mode;
   await assertWebStationEnabled(playback, kind, target.scope);
   target.guard();
-  const targetSlot = resolveStationTargetSlot(playback, input, target, kind);
+  const targetSlot = resolveStationTargetSlot(target, kind);
   if (playback.deps.sessions.startStation === undefined) {
     throw new WebError(
       503,

@@ -3,7 +3,11 @@ import { MusicQuerySchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
 import { queueBatch } from "@shepherdjerred/streambot/commands/queue-batch.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import type { WebCommand } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import type {
+  WebCommand,
+  WebCommandResult,
+} from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { PlayReceipt, withTransport } from "./command/play-receipt.ts";
 import type { WebPlayback } from "./playback.ts";
 import type { WebSession } from "./session-store.ts";
 import { Selections } from "./selections.ts";
@@ -223,16 +227,19 @@ export class WebMusic {
     session: WebSession,
     input: Extract<WebCommand, { action: "play" }>,
     signal: AbortSignal,
-  ): Promise<{ message: string; loadId?: string } | null> {
+  ): Promise<WebCommandResult | null> {
+    const receipt = new PlayReceipt(input.transport);
     const selection = input.selection;
     if (selection.kind !== "music" && selection.kind !== "playlist")
-      return await this.links.execute(session, input);
+      return await this.links.execute(session, input, receipt);
     const feature =
       selection.kind === "music"
         ? this.get(session, input.guildId, selection.id).feature
         : "playlists";
     await this.require(session, input.guildId, feature);
-    const context = await this.playback.commandContext(session, input);
+    const context = await this.playback.commandContext(session, input, {
+      receipt,
+    });
     try {
       const sources =
         selection.kind === "music"
@@ -243,14 +250,15 @@ export class WebMusic {
               selection.id,
               selection.revision,
             );
-      return await queueBatch({
+      const result = await queueBatch({
         deps: context.commandDeps,
-        sources,
+        sources: withTransport(sources, input.transport),
         userId: context.userId,
         placement: input.placement,
         signal,
         surface: "web",
       });
+      return context.playResult(result.message);
     } finally {
       this.playback.deps.sessions.releaseUnused(
         context.guildId,

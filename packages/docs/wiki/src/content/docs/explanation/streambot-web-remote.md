@@ -24,22 +24,62 @@ Client-supplied user identities cannot authorize an action.
 
 The web remote gives everyone currently in that voice channel shared control.
 Its authorization adapter retains the real requester when adding media.
-Splitting viewed slot and target slot let play actions land in a different queue than the viewer inspected.
-One [snapshot selector](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/snapshot.ts)
-combines `Auto` with numbered channels so the displayed queue and manual actions always match.
-`Auto` follows an occupied slot first, while numbered choices share personal focus with Discord commands.
 Channel 1 plays mic audio; channel 2 and higher play Go Live video.
-Each slot keeps its own player and queue. Selecting one does not acquire a userbot.
-Legacy mixed queues keep their existing behavior until they finish.
+Each slot keeps its own player and queue. Inspecting one does not acquire a userbot.
 Existing slash, card, and voice permissions retain their defaults in
 the [shared controls](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/commands/playback-controls.ts).
 
+## The viewer chooses Listen or Watch
+
+Whether media plays as audio or as a stream is the viewer's choice, made on each play request.
+Listen is voice audio that everyone in the channel hears. Watch is a Go Live stream that people open.
+Server-side `Auto` guessed the transport from metadata, so a viewer could not predict where a click would land.
+Naming the transport makes the button the destination.
+
+The [web playback adapter](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/playback.ts)
+sends Listen to channel 1 and Watch to channel 2, or to a further slot when the viewer starts another stream.
+These requests bypass the personal channel selection and `Auto`, and never move that selection.
+The selection is shared with Discord commands, so a web click should not redirect someone's next `/play`.
+The response names the transport and the viewer's voice channel, so the page can say where the media went.
+Only the requesting viewer receives that channel name; logs and metrics record the transport alone.
+
+A request is refused when its transport cannot be honoured, rather than quietly played the other way.
+Watch is refused when [resolution](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/resolve.ts)
+probes the media and ffprobe finds no picture.
+yt-dlp metadata reports missing video inconsistently, so only the probe decides.
+Listen is refused for live sports and wherever music over voice is disabled.
+A legacy room has one mixed queue, so there Listen and Watch become the item's mode; only an extra stream is refused.
+
+Requests that name no transport keep the older routing, because Discord commands and the classic page still send them.
+The [snapshot selector](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/snapshot.ts)
+combines `Auto` with numbered channels for those requests, so the displayed queue and their destination match.
+Legacy mixed queues keep their existing behavior until they finish.
+
 ## A page can become stale
 
-A queue position has meaning only within the session revision the viewer saw.
-Actions include that revision, the voice-channel identity, and the selected playback slot.
-The server rechecks them after asynchronous media resolution and before dispatch.
-A changed queue, voice channel, or personal selection produces a refreshable conflict instead of controlling a different item.
+Only an action that names a queue position depends on the state the viewer saw.
+Remove, move, replacing a queued recording, and subtitle choices carry the session revision.
+The [web playback adapter](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/playback.ts)
+refuses them with a refreshable conflict when the revision changed.
+After a shuffle, position 3 is a different item, so acting on it would edit something the viewer never chose.
+
+Every other action applies to the current state when it lands.
+That covers adding to the queue, playing next or now, volume, loop, pause, skip, stop, clear, shuffle, and stations.
+The revision changes on every actor event, including a track starting.
+Binding these actions to it refused clicks that meant the same thing a moment later.
+The same rule holds after slow media resolution: a queue addition lands behind whatever arrived meanwhile.
+The [playback machine](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/machine/playback-machine.ts)
+appends, prepends, or replaces the current item for these events without reading any viewer-supplied position.
+
+Pause, resume, skip, and seek still act on one particular item.
+A client may send that item's opaque token, and the server refuses the action if a different item now plays.
+Tokens are random per queue entry and reveal no path or URL.
+The [session observer](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/session-observer.ts)
+carries a token across re-resolution and crash retries, so one request keeps one token until it finishes.
+Two requests for the same media get different tokens, so a stale skip cannot skip a repeat.
+
+The voice channel is rechecked before every dispatch.
+Requests without a transport also recheck the personal selection, because it chose their destination.
 
 Subtitle choices refer to tracks actually enumerated from the current source.
 They expire and are bound to the viewer, source, and revision.

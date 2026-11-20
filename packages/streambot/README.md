@@ -73,6 +73,20 @@ therefore splits identities:
   until the viewer chooses `Auto` or `/stream select auto:true`; player-card `channel` deep
   links select that numbered channel on load and clear the query parameter. Each slot retains
   its own queue, and legacy sessions finish in their original mode.
+  A web `play` command may instead carry `transport: "listen" | "watch"`: Listen plays voice
+  audio on channel 1, Watch plays Go Live video on channel 2 (or an explicit
+  `playbackChannel` ≥ 2 up to the server's maximum for another stream). It ignores the
+  personal selection and `Auto`, never changes them, and in a legacy room becomes the item's
+  mode on the single queue. Other commands target a named slot with `targeting: "explicit"`.
+  Play results report `destination { transport, voiceChannelName }` (returned to the
+  requesting viewer only) and `position` (0 when it starts immediately). Refusals are 409s:
+  `no_video` (ffprobe found no picture for Watch), `listen_disabled`
+  (`streambot-music-over-voice-enabled` off), `listen_sports`, `stream_limit`, and
+  `channels_unavailable` (an extra stream in a legacy room).
+  Only `remove`, `move`, subtitle choices, and replacing a queued recording are bound to the
+  snapshot `revision`; every other command applies to the current state. `pause`, `resume`,
+  `skip`, and `seek` accept the snapshot item's opaque `token` as `expectCurrent` and
+  answer `item_finished` when a different item is playing.
   `/plex`, `/search`, `/sports`, and `/history` preserve submitted searches, filters,
   series, pagination, and server context in URLs. Deep links survive OAuth sign-in;
   browser Back/Forward restores the page and its scroll position.
@@ -131,8 +145,12 @@ the headline signal is `streambot_ffmpeg_speed_ratio`.
 The web remote and every play entry point are measured with closed label sets
 only (no Discord IDs, names, queries, titles or URLs): `streambot_web_requests_total{route,status_class,code}`,
 `streambot_web_request_duration_seconds{route}`,
-`streambot_web_commands_total{action,outcome}`,
+`streambot_web_commands_total{action,transport,outcome}` (`transport` is the requested
+`listen|watch|unspecified`),
 `streambot_web_command_duration_seconds{action}`,
+`streambot_web_time_to_playback_seconds{transport}` (command accepted to the item streaming,
+observed only for items expected to start immediately; pending starts are a 64-entry
+in-memory map evicted by size, not by timers),
 `streambot_web_logins_total{outcome}`, and
 `streambot_play_requests_total{surface,outcome}` (`surface` is
 `web|slash|message|voice|card|other`; it counts requests, not tracks, so a

@@ -142,7 +142,11 @@ export function createWebHandler(deps: {
         const action = webCommandAction(input?.action ?? "invalid");
         const outcome = failure?.outcome ?? "ok";
         const code = failure?.code ?? "ok";
-        webCommandsTotal.inc({ action, outcome });
+        const transport =
+          input?.action === "play"
+            ? (input.transport ?? "unspecified")
+            : "unspecified";
+        webCommandsTotal.inc({ action, transport, outcome });
         webCommandDurationSeconds.observe(
           { action },
           (performance.now() - started) / 1000,
@@ -162,6 +166,7 @@ export function createWebHandler(deps: {
                 selection_kind: input.selection.kind,
               }
             : {}),
+          transport,
           outcome,
           code,
           duration_ms: roundMilliseconds(started),
@@ -181,7 +186,7 @@ export function createWebHandler(deps: {
     }
     const result = await actions.execute(session, input, signal);
     music.cancelRoom(session, input);
-    return Response.json({ message: result.message });
+    return Response.json(result);
   }
 
   async function browseMedia(
