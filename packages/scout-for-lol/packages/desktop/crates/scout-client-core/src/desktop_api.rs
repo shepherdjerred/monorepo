@@ -837,17 +837,16 @@ mod tests {
     use super::{
         ActiveRun, AppInitiation, AppTurnRequest, AssetsResponse, AttachmentDiscardRequest,
         COACH_REVIEWS_GET_PATH, COACH_VOICE_TURNS_PATH, CoachReviewRequest, CoachReviewResponse,
-        ConversationGetRequest, ConversationListResponse,
-        DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH,
-        DesktopApiContract, DesktopApiError, DeviceScope, EXPLORE_ASSETS_PATH,
-        EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH,
-        EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_APP_PATH, EXPLORE_RUNS_START_PATH,
-        EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH,
-        EXPLORE_VISUALIZATION_PATH, EmptyRequest, ExploreStatusResponse, ModelsResponse,
-        OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE, PairingV2Response, PngResponse,
-        RouteResponseKind, RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest,
-        RunStopResponse, ScopeRequest, ScopeRequestResponse, SetLeafRequest, ShareResponse,
-        VisualizationRequest,
+        ConversationGetRequest, ConversationListResponse, DESKTOP_CONTRACT_HEADER,
+        DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError,
+        DeviceScope, EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH,
+        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
+        EXPLORE_RUNS_START_APP_PATH, EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH,
+        EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EXPLORE_VISUALIZATION_PATH, EmptyRequest,
+        ExploreStatusResponse, ModelsResponse, OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE,
+        PairingV2Response, PngResponse, RouteResponseKind, RunActiveResponse, RunOutcomeResponse,
+        RunRequest, RunStartRequest, RunStopResponse, ScopeRequest, ScopeRequestResponse,
+        SetLeafRequest, ShareResponse, VisualizationRequest,
     };
     use crate::protocol::CreatePairingRequest;
 

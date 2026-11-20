@@ -4,13 +4,17 @@ import { Worker } from "@temporalio/worker";
 import { scoutCoachReviewWorkflow } from "#src/workflows/index.ts";
 
 let environment: TestWorkflowEnvironment;
-const runningWorkers: Worker[] = [];
-const workerRuns: Promise<void>[] = [];
+const started: { worker: Worker; finished: Promise<void> }[] = [];
 
 async function startWorker(worker: Worker): Promise<void> {
-  runningWorkers.push(worker);
-  workerRuns.push(worker.run());
-  while (worker.getState() === "INITIALIZED") await new Promise(setImmediate);
+  started.push({ worker, finished: worker.run() });
+  await waitUntilStarted(worker);
+}
+
+async function waitUntilStarted(worker: Worker): Promise<void> {
+  while (worker.getState() === "INITIALIZED") {
+    await new Promise((resolve) => setImmediate(resolve));
+  }
 }
 
 async function startWorkers(
@@ -39,10 +43,11 @@ beforeEach(async () => {
 }, 60_000);
 
 afterEach(async () => {
-  for (const worker of runningWorkers.splice(0)) {
+  const finishing = started.splice(0);
+  for (const { worker } of finishing) {
     if (worker.getState() === "RUNNING") worker.shutdown();
   }
-  await Promise.allSettled(workerRuns.splice(0));
+  await Promise.allSettled(finishing.map(({ finished }) => finished));
   await environment.teardown();
 });
 

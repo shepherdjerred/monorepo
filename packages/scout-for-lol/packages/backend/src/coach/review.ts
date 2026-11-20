@@ -217,7 +217,9 @@ export async function readReviewEvidence(
   });
   const ownedPuuids = new Set(owned.map((account) => account.puuid));
   const recording = recordings.find(
-    (row) => row.localPuuid !== null && ownedPuuids.has(row.localPuuid),
+    (row) =>
+      row.localPuuid !== null &&
+      ownedPuuids.has(LeaguePuuidSchema.parse(row.localPuuid)),
   );
   const recorded = recording?.localPuuid;
   if (recording === undefined || recorded === null || recorded === undefined) {
