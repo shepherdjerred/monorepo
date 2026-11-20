@@ -1,18 +1,79 @@
 import { z } from "zod";
-import { isSpotifyArtworkUrl } from "./artwork.ts";
+import { isSpotifyArtworkUrl, isYouTubeMusicArtworkUrl } from "./artwork.ts";
 
-export const MusicTrackSchema = z.strictObject({
-  provider: z.enum(["musicbrainz", "spotify"]),
-  id: z.string().min(1),
-  title: z.string().min(1),
-  artists: z.array(z.string().min(1)).min(1),
-  album: z.string().optional(),
-  version: z.string().optional(),
-  durationSeconds: z.number().nonnegative().optional(),
-  canonicalUrl: z.url(),
-  artworkId: z.uuid().optional(),
-  artworkUrl: z.string().refine(isSpotifyArtworkUrl).optional(),
-});
+export const MusicProviderSchema = z.enum([
+  "musicbrainz",
+  "spotify",
+  "youtube-music",
+]);
+export type MusicProvider = z.infer<typeof MusicProviderSchema>;
+
+/** Attribution text for a persisted music identity. */
+export const MUSIC_PROVIDER_LABELS: Readonly<Record<MusicProvider, string>> = {
+  musicbrainz: "MusicBrainz",
+  spotify: "Spotify",
+  "youtube-music": "YouTube Music",
+};
+
+/** The one canonical page for a YouTube Music track id. */
+export function youtubeMusicTrackUrl(id: string): string {
+  return "https://music.youtube.com/watch?v=" + encodeURIComponent(id);
+}
+
+export const MusicTrackSchema = z
+  .strictObject({
+    provider: MusicProviderSchema,
+    id: z.string().min(1),
+    title: z.string().min(1),
+    artists: z.array(z.string().min(1)).min(1),
+    album: z.string().optional(),
+    version: z.string().optional(),
+    durationSeconds: z.number().nonnegative().optional(),
+    canonicalUrl: z.url(),
+    artworkId: z.uuid().optional(),
+    artworkUrl: z.string().optional(),
+  })
+  .superRefine((track, ctx) => {
+    if (track.provider !== "youtube-music") {
+      if (
+        track.artworkUrl !== undefined &&
+        !isSpotifyArtworkUrl(track.artworkUrl)
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["artworkUrl"],
+          message: "Invalid input",
+        });
+      }
+      return;
+    }
+    if (
+      track.artworkUrl !== undefined &&
+      !isYouTubeMusicArtworkUrl(track.artworkUrl)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["artworkUrl"],
+        message:
+          "YouTube Music artwork must be an https YouTube image host URL",
+      });
+    }
+    // YouTube Music ids are not MusicBrainz release groups: no Cover Art Archive lookup.
+    if (track.artworkId !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["artworkId"],
+        message: "YouTube Music tracks carry no MusicBrainz artwork id",
+      });
+    }
+    if (track.canonicalUrl !== youtubeMusicTrackUrl(track.id)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["canonicalUrl"],
+        message: "YouTube Music tracks use their music.youtube.com watch URL",
+      });
+    }
+  });
 export type MusicTrack = z.infer<typeof MusicTrackSchema>;
 export const MusicEntitySchema = z.strictObject({
   kind: z.enum(["artist", "album", "song"]),

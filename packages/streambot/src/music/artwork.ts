@@ -22,13 +22,42 @@ export function isSpotifyArtworkUrl(value: string): boolean {
   }
 }
 
+/** Thumbnail hosts a YouTube Music writer may persist; exact hostnames only. */
+export const YOUTUBE_MUSIC_ARTWORK_HOSTS: readonly string[] = [
+  "i.ytimg.com",
+  "lh3.googleusercontent.com",
+  "yt3.googleusercontent.com",
+  "yt3.ggpht.com",
+];
+
+export function isYouTubeMusicArtworkUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "https:" &&
+      YOUTUBE_MUSIC_ARTWORK_HOSTS.includes(url.hostname) &&
+      url.username === "" &&
+      url.password === "" &&
+      url.port === ""
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function musicArtworkUrl(
   music:
-    | { artworkId?: string | undefined; artworkUrl?: string | undefined }
+    | {
+        provider?: string | undefined;
+        artworkId?: string | undefined;
+        artworkUrl?: string | undefined;
+      }
     | undefined,
   guildId?: string,
 ): string | undefined {
   if (music?.artworkUrl !== undefined) return music.artworkUrl;
+  // Cover Art Archive keys are MusicBrainz release groups only.
+  if (music?.provider === "youtube-music") return;
   if (music?.artworkId === undefined) return;
   return guildId === undefined
     ? "https://coverartarchive.org/release-group/" +
