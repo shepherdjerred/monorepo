@@ -20,6 +20,7 @@ export const EXPLORE_SKILL_CAPABILITIES = [
   "riot-history",
   "mvp-votes",
   "clash",
+  "live-game",
 ] as const;
 
 export const ExploreSkillCapabilitySchema = z.enum(EXPLORE_SKILL_CAPABILITIES);

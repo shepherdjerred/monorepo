@@ -1,6 +1,7 @@
 import {
   SCOUT_DESKTOP_RUN_START_MAX_BYTES,
   SCOUT_DESKTOP_API_ROUTES,
+  SCOUT_DESKTOP_COACH_OPTIONS_CONTRACT_VERSION,
   SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION,
   SCOUT_DESKTOP_PNG_CONTENT_TYPE,
   ScoutDesktopEmptyRequestSchema,
@@ -70,6 +71,25 @@ function originFor(
     : exploreOriginForPreDesktopReader(origin);
 }
 
+/**
+ * A transcript as this client's contract version reads it. A client below 7
+ * has a strict message type that does not know `coachOptions`, so the key is
+ * left out for it; the answer's prose still says what the options argued.
+ */
+function transcriptFor<
+  T extends { messages: readonly { coachOptions: unknown }[] },
+>(contractVersion: number, transcript: T) {
+  if (contractVersion >= SCOUT_DESKTOP_COACH_OPTIONS_CONTRACT_VERSION) {
+    return transcript;
+  }
+  return {
+    ...transcript,
+    messages: transcript.messages.map(
+      ({ coachOptions: _coachOptions, ...message }) => message,
+    ),
+  };
+}
+
 const exploreStatus: DesktopRouteHandler = async ({ caller, body }) => {
   if (!ScoutDesktopExploreStatusRequestSchema.safeParse(body).success) {
     return invalidRequest();
@@ -114,17 +134,18 @@ const getConversation: DesktopRouteHandler = async ({
     caller.userId,
   );
   // Another user's conversation is indistinguishable from a missing one.
-  return transcript === null
-    ? desktopErrorResponse("not_found", "Conversation not found.")
-    : desktopJsonResponse(
-        ScoutDesktopConversationGetResponseSchema.parse({
-          ...transcript,
-          conversation: {
-            ...transcript.conversation,
-            origin: originFor(contractVersion, transcript.conversation.origin),
-          },
-        }),
-      );
+  if (transcript === null) {
+    return desktopErrorResponse("not_found", "Conversation not found.");
+  }
+  const response = ScoutDesktopConversationGetResponseSchema.parse({
+    ...transcript,
+    conversation: {
+      ...transcript.conversation,
+      origin: originFor(contractVersion, transcript.conversation.origin),
+    },
+  });
+  // After the parse: its schema would put the defaulted key back.
+  return desktopJsonResponse(transcriptFor(contractVersion, response));
 };
 
 const ASSETS: ScoutDesktopAssetsResponse = {

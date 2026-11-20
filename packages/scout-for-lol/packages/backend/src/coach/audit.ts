@@ -14,6 +14,11 @@ import type {
 export type CoachTurnRecord = {
   readonly deviceId: string;
   readonly initiation: CoachTurnInitiation;
+  /**
+   * The client's id for the champ select or game an app-started turn belongs
+   * to, which the per-game limit counts by; null for a player-typed turn.
+   */
+  readonly gameKey: string | null;
   readonly projection: CoachContextProjection;
   readonly flags: CoachPolicyFlags;
 };
@@ -44,6 +49,7 @@ export async function recordCoachTurn(
       runId: input.run.runId,
       questionMessageId: input.run.questionMessageId,
       initiation: record.initiation,
+      gameKey: record.gameKey,
       sectionsPresent: [...record.projection.present],
       sectionsAccepted: [...record.projection.accepted],
       coachEnabled: record.flags.coachEnabled,

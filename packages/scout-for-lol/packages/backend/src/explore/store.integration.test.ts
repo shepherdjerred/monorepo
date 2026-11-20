@@ -71,6 +71,7 @@ const ANSWER = {
   loadoutCards: [],
   caveats: ["Only 12 games."],
   followUps: ["How does that change by patch?"],
+  coachOptions: null,
 };
 
 const MATCH_CARD = ExploreMatchCardSchema.parse({

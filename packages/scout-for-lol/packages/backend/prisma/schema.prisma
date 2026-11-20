@@ -977,8 +977,12 @@ model ScoutCoachTurn {
   conversationId     String
   runId              String   @unique
   questionMessageId  String
-  /// `player_typed` or `app_initiated` (`coach/context-policy.ts`).
+  /// `player_typed`, `app_champ_select` or `app_pregame` (`coach/context-policy.ts`).
   initiation         String
+  /// The client's opaque id for the champ select or game an app-started turn
+  /// belongs to; the server-side limit of 4 champ-select and 1 pre-game turns
+  /// per game counts rows by it. Null for a player-typed turn.
+  gameKey            String?
   /// Sections, in contract order: `champSelect`, `pregame`, `live`, `postgame`.
   sectionsPresent    String[]
   sectionsAccepted   String[]
@@ -994,6 +998,7 @@ model ScoutCoachTurn {
   @@index([ownerId, createdAt])
   @@index([deviceId, createdAt])
   @@index([conversationId])
+  @@index([ownerId, initiation, gameKey])
 }
 
 /// A saved explore conversation. Explore queries the whole report lake rather
@@ -1110,6 +1115,9 @@ model ExploreMessage {
   /// JSON string arrays; empty when the turn produced none.
   caveats        String   @default("[]")
   followUps      String   @default("[]")
+  /// JSON array matching CoachOptionsSchema (2 to 4 labeled options); null
+  /// for an answer that offered none.
+  coachOptions   String?
   /// JSON blobs matching ReportAiPreviewSummarySchema / VisualizationSnapshotSchema.
   preview        String?
   visualization  String?

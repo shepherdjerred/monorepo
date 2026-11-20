@@ -85,6 +85,7 @@ test("Discord reserves a shared durable run before its worker produces the saved
           includeVisualization: false,
           caveats: [],
           followUps: [],
+          coachOptions: null,
           matchCards: [],
           loadoutCards: [],
         },

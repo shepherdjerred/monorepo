@@ -129,11 +129,30 @@ export function exploreFollowUpRow(input: {
   );
 }
 
-function formatAnswer(message: ExploreMessage): string {
-  if (message.caveats.length === 0) {
-    return message.content;
-  }
-  return `${message.content}\n\n**Caveats**\n${message.caveats
-    .map((caveat) => `- ${caveat}`)
+/**
+ * The answer's multiple-choice options as a compact list: one numbered line
+ * each, the label in bold and its rationale after it. Discord has no chips for
+ * a choice that is not a question, and a list reads the same to everyone.
+ */
+export function formatCoachOptions(
+  options: ExploreMessage["coachOptions"],
+): string | null {
+  if (options === null) return null;
+  return `**Options**\n${options
+    .map(
+      (option, index) =>
+        `${(index + 1).toString()}. **${escapeMarkdown(option.label)}** - ${option.rationale}`,
+    )
     .join("\n")}`;
+}
+
+function formatAnswer(message: ExploreMessage): string {
+  const options = formatCoachOptions(message.coachOptions);
+  const caveats =
+    message.caveats.length === 0
+      ? null
+      : `**Caveats**\n${message.caveats.map((caveat) => `- ${caveat}`).join("\n")}`;
+  return [message.content, options, caveats]
+    .filter((part) => part !== null)
+    .join("\n\n");
 }

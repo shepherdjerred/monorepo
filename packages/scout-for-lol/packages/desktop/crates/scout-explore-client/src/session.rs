@@ -13,16 +13,17 @@ use std::path::{Path, PathBuf};
 
 use scout_client_core::coach_context::GameContext;
 use scout_client_core::desktop_api::{
-    ActiveRun, AttachPoint, ConversationListResponse, ConversationSummary, ExploreModel,
-    ModelsResponse, RunStartRequest,
+    ActiveRun, AppTurnRequest, AttachPoint, ConversationListResponse, ConversationSummary,
+    ExploreModel, ModelsResponse, RunStartRequest,
 };
 use scout_desktop_ipc::{
-    ChatAttachment, ChatAvailability, ChatComposer, ChatConversation, ChatDraft, ChatDraftState,
-    ChatImage, ChatMessage, ChatModelOption, ChatParts, ChatRole, ChatStatus, ChatToolStatus,
-    ChatToolStep, ChatTranscript, ChatTurn, ChatVersion, ChatVisuals,
+    ChatAttachment, ChatAvailability, ChatCoachOption, ChatComposer, ChatConversation, ChatDraft,
+    ChatDraftState, ChatImage, ChatMessage, ChatModelOption, ChatParts, ChatRole, ChatStatus,
+    ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion, ChatVisuals,
 };
 use uuid::Uuid;
 
+use crate::app_turns::AppTurn;
 use crate::authored::PlayerAuthored;
 use crate::data_dragon::DataDragon;
 use crate::error::{ExploreClientError, Recovery};
@@ -675,6 +676,24 @@ impl ChatSession {
         ))
     }
 
+    /// The question that picking option `index` of the answer `message_id`
+    /// asks: its label, read from the saved answer so the window never
+    /// supplies text. It is a plain question, so it never carries the game.
+    pub fn choose_option(&mut self, message_id: Uuid, index: u8) -> Option<RunStartRequest> {
+        let label = self
+            .transcript
+            .as_ref()?
+            .messages
+            .iter()
+            .find(|message| message.id == message_id && message.role == MessageRole::Assistant)?
+            .coach_options
+            .as_ref()?
+            .get(usize::from(index))?
+            .label
+            .clone();
+        self.submit(&format!("Tell me more about {label}"))
+    }
+
     /// Show another version of a turn. Returns the conversation and the
     /// message whose branch to show, to send to the server.
     pub fn switch_version(&mut self, message_id: Uuid) -> Option<(Uuid, Uuid)> {
@@ -970,6 +989,19 @@ pub fn tool_step(entry: &TraceEntry) -> ChatToolStep {
 
 /// Where a message stands among its turn's versions; none for a turn with
 /// one version.
+/// The `runs/start-app` body for a turn Scout asks for. It sets the one
+/// section the turn carries and no question: a turn the player did not start
+/// never carries live state, and the server words its question.
+#[must_use]
+pub fn app_turn_request(turn: &AppTurn) -> AppTurnRequest {
+    AppTurnRequest {
+        conversation_id: None,
+        initiation: turn.initiation,
+        game_key: turn.game_key.clone(),
+        game_context: turn.context.clone(),
+    }
+}
+
 fn chat_version(message: &ExploreMessage) -> Option<ChatVersion> {
     if message.version_count < 2 {
         return None;
@@ -1007,6 +1039,15 @@ fn project_message(
         content: message.content.clone(),
         tools: message.trace.iter().map(tool_step).collect(),
         caveats: message.caveats.clone(),
+        coach_options: message
+            .coach_options
+            .iter()
+            .flatten()
+            .map(|option| ChatCoachOption {
+                label: option.label.clone(),
+                rationale: option.rationale.clone(),
+            })
+            .collect(),
         visuals,
         version: chat_version(message),
         attachments: message

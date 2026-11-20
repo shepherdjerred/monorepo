@@ -342,6 +342,7 @@ async function appendCompleteAnswer(input: {
       loadoutCards: [],
       caveats: [],
       followUps: [],
+      coachOptions: null,
     },
     preview: null,
     visualization: null,

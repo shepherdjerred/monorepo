@@ -204,6 +204,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     // clicked "Confirm the weekly report in Explore" and was told nothing had
     // been created.
     "A follow-up is a question you can answer on the next turn. Never phrase one as an action — 'Confirm…', 'Post…', 'Enable…', 'Delete…' — or offer one you could not answer with the tools you have. Confirming happens on the confirmation card, never through a follow-up.",
+    "Set `coachOptions` to null unless a loaded skill tells you to offer options for a choice the player is making. When it does, give two to four options, each a short `label` and a one-sentence `rationale` that argues for it; offer them as choices, never as commands.",
     "Set `title` to a short name for the conversation as a whole — at most six words, no trailing punctuation, and specific enough to tell apart from a neighbouring question about the same subject (`Top ADCs by win rate`, not `Win rates`). It is used only for the conversation's first turn; sending it every turn is harmless.",
     "",
     "## Scout's setup features",

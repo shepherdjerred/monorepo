@@ -187,6 +187,7 @@ function toStreamMessage(message: ExploreMessage) {
     loadoutCards: _loadoutCards,
     guildIds: _guildIds,
     attachments: _attachments,
+    coachOptions: _coachOptions,
     ...streamMessage
   } = message;
   return ExploreStreamMessageSchema.parse(streamMessage);

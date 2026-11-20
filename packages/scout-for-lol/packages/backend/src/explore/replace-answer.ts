@@ -5,7 +5,11 @@ import type {
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { ExploreNotFoundError } from "#src/explore/store.ts";
-import { toMessage, versionsOf } from "#src/explore/store-mappers.ts";
+import {
+  coachOptionsColumn,
+  toMessage,
+  versionsOf,
+} from "#src/explore/store-mappers.ts";
 
 /** Replace a just-created answer when cancellation wins during persistence. */
 export async function replaceExploreAnswer(
@@ -25,6 +29,7 @@ export async function replaceExploreAnswer(
       queryText: input.answer.queryText,
       caveats: JSON.stringify(input.answer.caveats),
       followUps: JSON.stringify(input.answer.followUps),
+      coachOptions: coachOptionsColumn(input.answer.coachOptions),
       preview: null,
       visualization: null,
       matchCards: null,

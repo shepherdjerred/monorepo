@@ -199,6 +199,17 @@ impl SwitcherView {
     }
 }
 
+/// One option of a multiple-choice coach answer: a chip to pick, and the
+/// reason the answer gave for it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OptionChip {
+    /// The chip. Picking it asks Scout about the option, from the saved
+    /// answer; the window sends no text.
+    pub control: Control,
+    /// One line on why the option is worth considering.
+    pub rationale: String,
+}
+
 /// One row of the transcript: a question, or an answer with its steps.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TranscriptRow {
@@ -216,6 +227,8 @@ pub struct TranscriptRow {
     pub activity: Option<String>,
     /// Caveats under a persisted answer.
     pub caveats: Vec<String>,
+    /// The options a persisted answer offers for a choice.
+    pub options: Vec<OptionChip>,
     /// The error a run reported.
     pub error: Option<String>,
     /// A persisted answer's chart or table and its cards.
@@ -254,6 +267,7 @@ impl TranscriptRow {
             tools: Vec::new(),
             activity: None,
             caveats: Vec::new(),
+            options: Vec::new(),
             error: None,
             images: Vec::new(),
             switcher: None,
@@ -580,6 +594,29 @@ fn message_actions(message: &ChatMessage, enabled: bool) -> Vec<Control> {
     vec![control]
 }
 
+fn option_chips(message: &ChatMessage, enabled: bool) -> Vec<OptionChip> {
+    message
+        .coach_options
+        .iter()
+        .zip(0_u8..)
+        .map(|(option, index)| {
+            let mut control = Control::send(
+                format!("option-{}-{index}", message.id),
+                option.label.clone(),
+                ChatCommand::ChooseOption {
+                    message_id: message.id,
+                    index,
+                },
+            );
+            control.enabled = enabled;
+            OptionChip {
+                control,
+                rationale: option.rationale.clone(),
+            }
+        })
+        .collect()
+}
+
 fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
     // Versions, Edit and Regenerate wait for a running turn, and for a
     // version switch that has not been read back yet.
@@ -596,6 +633,7 @@ fn rows(parts: &ChatParts) -> Vec<TranscriptRow> {
             tools: tools(&message.tools),
             activity: None,
             caveats: message.caveats.clone(),
+            options: option_chips(message, !turn_running),
             error: None,
             pictures: message
                 .visuals

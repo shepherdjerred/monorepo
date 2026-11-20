@@ -39,6 +39,12 @@ pub const RUNS_STREAM: &str =
 pub const CONVERSATIONS_GET_VISUALS: &str = include_str!(
     "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-get-visuals.json"
 );
+/// The golden champion-select answer with multiple-choice options.
+pub const CONVERSATIONS_GET_COACH: &str = include_str!(
+    "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-get-coach.json"
+);
+/// The answer in [`CONVERSATIONS_GET_COACH`] that carries the options.
+pub const COACH_ANSWER: Uuid = Uuid::from_u128(0xd2e3_f4a5_1b2c_4d3e_9f40_5b6c_7d8e_9f02);
 /// The Data Dragon version the golden `explore/assets` answer names.
 pub const DATA_DRAGON_VERSION: &str = "16.22.1";
 
@@ -236,6 +242,18 @@ pub fn visuals() -> Result<ChatSession, GoldenError> {
     session.open(transcript.conversation.id);
     session.opened(transcript);
     session.art_loaded(data_dragon()?);
+    Ok(session)
+}
+
+/// A session showing a champion-select answer that offers three options.
+///
+/// # Errors
+/// A golden file does not parse.
+pub fn coach_options() -> Result<ChatSession, GoldenError> {
+    let transcript: Transcript = serde_json::from_value(response(CONVERSATIONS_GET_COACH)?)?;
+    let mut session = ready()?;
+    session.open(transcript.conversation.id);
+    session.opened(transcript);
     Ok(session)
 }
 

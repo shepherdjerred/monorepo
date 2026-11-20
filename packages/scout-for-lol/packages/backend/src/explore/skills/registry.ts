@@ -37,6 +37,8 @@ export type ExploreSkillOptions = {
   riotHistory?: boolean | undefined;
   clash?: boolean | undefined;
   hallOfFame?: boolean | undefined;
+  /** True only when the turn carries a game context the coach policy validated and projected. */
+  liveGame?: boolean | undefined;
   surface?: ExploreSurface | undefined;
 };
 
@@ -92,6 +94,8 @@ export function enabledExploreSkills(
         return options.mvpVotes != null;
       case "clash":
         return options.clash === true;
+      case "live-game":
+        return options.liveGame === true;
     }
   });
 }

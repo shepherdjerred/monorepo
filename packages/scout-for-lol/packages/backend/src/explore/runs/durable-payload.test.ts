@@ -76,6 +76,7 @@ function record(
   return {
     deviceId: "4fa2a856-53af-42a4-85af-5cc085a942a3",
     initiation: "player_typed",
+    gameKey: null,
     flags: { coachEnabled: true, liveAnswersEnabled: false },
     projection: {
       context: accepted,

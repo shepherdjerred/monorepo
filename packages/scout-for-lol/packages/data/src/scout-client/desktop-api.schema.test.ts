@@ -21,8 +21,11 @@ import shareFixture from "./desktop-fixtures/explore-conversations-share.json" w
 import revokeShareFixture from "./desktop-fixtures/explore-conversations-revoke-share.json" with { type: "json" };
 import uploadFixture from "./desktop-fixtures/explore-attachments-upload.json" with { type: "json" };
 import discardFixture from "./desktop-fixtures/explore-attachments-discard.json" with { type: "json" };
+import startAppFixture from "./desktop-fixtures/explore-runs-start-app.json" with { type: "json" };
+import coachGetFixture from "./desktop-fixtures/explore-conversations-get-coach.json" with { type: "json" };
 import startActionsFixture from "./desktop-fixtures/explore-runs-start-actions.json" with { type: "json" };
 import { ScoutClientCreatePairingSchema } from "./protocol.schema.ts";
+import { ScoutDesktopAppTurnRequestSchema } from "./coach-context.schema.ts";
 import {
   ExploreActiveRunSchema,
   ExploreRunObserveRequestSchema,
@@ -67,6 +70,7 @@ import {
   ScoutDesktopScopeRequestResponseSchema,
   ScoutDesktopScopeRequestSchema,
   ScoutDesktopRunActiveResponseSchema,
+  ScoutDesktopConversationGetResponseSchema as CoachTranscriptSchema,
   ScoutDesktopRunStartRequestSchema,
   ScoutDesktopRunStopResponseSchema,
   ScoutDesktopRunStreamResponseSchema,
@@ -115,6 +119,11 @@ const ROUTE_SCHEMAS: Record<
     request: ScoutDesktopRunStartRequestSchema,
     response: ExploreActiveRunSchema,
     fixture: startFixture,
+  },
+  explore_runs_start_app: {
+    request: ScoutDesktopAppTurnRequestSchema,
+    response: ExploreActiveRunSchema,
+    fixture: startAppFixture,
   },
   explore_runs_stop: {
     request: ExploreRunObserveRequestSchema,
@@ -295,6 +304,22 @@ describe("Scout desktop API contract", () => {
         reason,
       ).toBe(false);
     }
+  });
+
+  test("a coach answer's options survive the transcript, and a pre-7 message without them still parses", () => {
+    const transcript = CoachTranscriptSchema.parse(coachGetFixture.response);
+    const answer = transcript.messages.find(
+      (message) => message.role === "assistant",
+    );
+    expect(answer?.coachOptions).toHaveLength(3);
+    const { coachOptions: _dropped, ...older } = coachGetFixture.response
+      .messages[1] ?? { coachOptions: null };
+    expect(
+      CoachTranscriptSchema.parse({
+        ...coachGetFixture.response,
+        messages: [coachGetFixture.response.messages[0], older],
+      }).messages[1]?.coachOptions,
+    ).toBeNull();
   });
 
   test("the model list is the web picker's list, and a model outside it is refused", () => {

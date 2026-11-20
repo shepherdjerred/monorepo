@@ -9,7 +9,7 @@ use reqwest::{Client, RequestBuilder, Response};
 use scout_client_core::backend::backend_origin;
 use scout_client_core::credentials::DeviceCredential;
 use scout_client_core::desktop_api::{
-    ActiveRun, AssetsResponse, AttachmentDiscardRequest, ConversationGetRequest,
+    ActiveRun, AppTurnRequest, AssetsResponse, AttachmentDiscardRequest, ConversationGetRequest,
     ConversationListResponse, EmptyRequest, ExploreStatusResponse, ModelsResponse, OkResponse,
     PNG_CONTENT_TYPE, RunActiveResponse, RunOutcome, RunOutcomeResponse, RunRequest,
     RunStartRequest, RunStopResponse, SetLeafRequest, ShareResponse, VisualizationRequest,
@@ -215,6 +215,21 @@ impl ExploreClient {
         request: &RunStartRequest,
     ) -> Result<ActiveRun, ExploreClientError> {
         self.call(Route::ExploreRunsStart, request).await
+    }
+
+    /// `explore/runs/start-app`: start a turn Scout asks for itself, such as
+    /// champion-select advice. No free text and no live state ride on it.
+    ///
+    /// # Errors
+    ///
+    /// Returns a transport failure, a typed refusal (`rate_limited` once the
+    /// game's turns are used, `feature_disabled` with the coach off), or a
+    /// contract mismatch.
+    pub async fn start_app_run(
+        &self,
+        request: &AppTurnRequest,
+    ) -> Result<ActiveRun, ExploreClientError> {
+        self.call(Route::ExploreRunsStartApp, request).await
     }
 
     /// `explore/runs/stop`: stop a running turn; the server keeps the partial

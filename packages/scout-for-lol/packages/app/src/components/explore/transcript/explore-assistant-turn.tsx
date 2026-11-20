@@ -1,3 +1,4 @@
+import { AssistantTurnChoices } from "#src/components/explore/transcript/explore-coach-options.tsx";
 import { memo, useEffect, useState } from "react";
 import {
   Check,
@@ -294,24 +295,10 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
         showRawTrace={props.showRawTrace}
       />
 
-      {props.showFollowUps &&
-        actions.onFollowUp !== undefined &&
-        message.followUps.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {message.followUps.map((followUp) => (
-              <Button
-                key={followUp}
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  actions.onFollowUp?.(followUp);
-                }}
-              >
-                {followUp}
-              </Button>
-            ))}
-          </div>
-        )}
+      <AssistantTurnChoices
+        message={message}
+        onFollowUp={props.showFollowUps ? actions.onFollowUp : undefined}
+      />
     </div>
   );
 });

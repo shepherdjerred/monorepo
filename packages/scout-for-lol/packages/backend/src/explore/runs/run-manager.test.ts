@@ -92,6 +92,7 @@ function successfulResult(answer: string): ExploreAgentResult {
       loadoutCards: [],
       caveats: [],
       followUps: [],
+      coachOptions: null,
     },
     preview: null,
     visualization: null,

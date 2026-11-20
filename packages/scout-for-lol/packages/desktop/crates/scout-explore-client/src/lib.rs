@@ -16,11 +16,14 @@
 //! - [`asset_cache`]: the bounded disk cache charts and card art land in.
 //! - [`relay`]: the supervisor's task that runs the client against a session
 //!   and publishes those parts, so the credential never leaves the supervisor.
+//! - [`app_turns`]: when Scout asks for champion-select advice or the pre-game
+//!   plan itself, and never with live state.
 //! - [`PlayerAuthored`]: text the player typed, the only kind of question a
 //!   game context may ride on.
 //!
 //! The crate has no UI dependency; the window renders the parts it publishes.
 
+pub mod app_turns;
 pub mod asset_cache;
 mod authored;
 mod client;

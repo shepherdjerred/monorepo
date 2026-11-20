@@ -386,6 +386,10 @@ impl Relay {
                 let request = self.session.edit(message_id, &question);
                 self.start(request);
             }
+            ChatCommand::ChooseOption { message_id, index } => {
+                let request = self.session.choose_option(message_id, index);
+                self.start(request);
+            }
             ChatCommand::Regenerate { message_id } => {
                 let request = self.session.regenerate(message_id);
                 self.start(request);

@@ -147,3 +147,64 @@ export const CoachGameContextSchema = z
   );
 export type CoachGameContext = z.infer<typeof CoachGameContextSchema>;
 export type CoachLiveContext = z.infer<typeof CoachLiveSchema>;
+
+/**
+ * The turns Scout Desktop may ask for without the player asking: advice on a
+ * pick or ban that changed, and the plan at the start of a game. Each names
+ * the one section it may carry, and neither may carry `live`: Riot's policy
+ * prohibits unprompted alerts from live state, so only a turn the player
+ * started may. The server's gate (`backend/src/coach/context-policy.ts`)
+ * enforces it; this table is the contract both ends share.
+ */
+export const COACH_APP_INITIATIONS = [
+  "app_champ_select",
+  "app_pregame",
+] as const;
+export const CoachAppInitiationSchema = z.enum(COACH_APP_INITIATIONS);
+export type CoachAppInitiation = z.infer<typeof CoachAppInitiationSchema>;
+
+export const COACH_APP_INITIATION_SECTION = {
+  app_champ_select: "champSelect",
+  app_pregame: "pregame",
+} as const satisfies Record<CoachAppInitiation, CoachContextSection>;
+
+/** Server-enforced ceiling of app-started turns per game key, by initiation. */
+export const COACH_APP_TURN_LIMITS = {
+  app_champ_select: 4,
+  app_pregame: 1,
+} as const satisfies Record<CoachAppInitiation, number>;
+
+/** The client's opaque id for one champ select or one game; at most 64 chars. */
+export const CoachGameKeySchema = z
+  .string()
+  .regex(/^[\w-]{1,64}$/, "a game key is 1 to 64 letters, digits, _ or -");
+
+/**
+ * `runs/start-app`: a turn Scout starts itself. It has no question (the
+ * server words it) and no `live` section: a pick or ban change carries the
+ * champion-select screen, the first moment of a game carries the loading
+ * screen, and nothing else. `gameKey` is the client's opaque id for that
+ * champ select or game; the server allows 4 champ-select turns and 1
+ * pre-game turn per key.
+ */
+export const ScoutDesktopAppTurnRequestSchema = z
+  .strictObject({
+    conversationId: z.uuid().nullable(),
+    initiation: CoachAppInitiationSchema,
+    gameKey: CoachGameKeySchema,
+    gameContext: CoachGameContextSchema,
+  })
+  .refine(
+    (request) => {
+      const allowed = COACH_APP_INITIATION_SECTION[request.initiation];
+      return Object.keys(request.gameContext).every((key) => key === allowed);
+    },
+    {
+      message:
+        "An app-started turn carries only the section its initiation names, never live state.",
+      path: ["gameContext"],
+    },
+  );
+export type ScoutDesktopAppTurnRequest = z.infer<
+  typeof ScoutDesktopAppTurnRequestSchema
+>;

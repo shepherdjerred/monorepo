@@ -83,6 +83,7 @@ describe("explore stream mapping", () => {
         loadoutCards: [],
         caveats: [],
         followUps: [],
+        coachOptions: null,
       }),
     );
 

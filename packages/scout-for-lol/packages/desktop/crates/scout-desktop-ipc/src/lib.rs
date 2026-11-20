@@ -25,9 +25,9 @@ mod chat;
 mod chat_visuals;
 
 pub use chat::{
-    ChatAttachment, ChatAvailability, ChatCommand, ChatComposer, ChatConversation, ChatDraft,
-    ChatDraftState, ChatMessage, ChatModelOption, ChatParts, ChatRole, ChatStatus, ChatToolStatus,
-    ChatToolStep, ChatTranscript, ChatTurn, ChatVersion,
+    ChatAttachment, ChatAvailability, ChatCoachOption, ChatCommand, ChatComposer, ChatConversation,
+    ChatDraft, ChatDraftState, ChatMessage, ChatModelOption, ChatParts, ChatRole, ChatStatus,
+    ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion,
 };
 pub use chat_visuals::{
     ChatIcon, ChatImage, ChatLoadoutCard, ChatMatchCard, ChatMatchPlayer, ChatMatchTeam, ChatTable,
@@ -35,7 +35,7 @@ pub use chat_visuals::{
 };
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 8;
+pub const PROTOCOL_VERSION: u32 = 9;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -412,12 +412,12 @@ mod tests {
     use uuid::Uuid;
 
     use super::{
-        ChatAttachment, ChatAvailability, ChatCommand, ChatComposer, ChatConversation, ChatDraft,
-        ChatDraftState, ChatImage, ChatMessage, ChatModelOption, ChatRole, ChatStatus,
-        ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion, ChatVisual,
-        ChatVisuals, CounterReading, DiagnosticsSnapshot, GameflowPhase, LiveGameSnapshot,
-        PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot,
-        UpdateStatus, WindowMessage, check_protocol, decode_line, encode_line,
+        ChatAttachment, ChatAvailability, ChatCoachOption, ChatCommand, ChatComposer,
+        ChatConversation, ChatDraft, ChatDraftState, ChatImage, ChatMessage, ChatModelOption,
+        ChatRole, ChatStatus, ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion,
+        ChatVisual, ChatVisuals, CounterReading, DiagnosticsSnapshot, GameflowPhase,
+        LiveGameSnapshot, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage,
+        UpdateSnapshot, UpdateStatus, WindowMessage, check_protocol, decode_line, encode_line,
     };
 
     const CONVERSATION: Uuid = Uuid::from_u128(0x0b5e_4a1c_7f00_4e5a_9c1d_2f3e_4a5b_6c7d);
@@ -458,6 +458,10 @@ mod tests {
                         content: "**54%** over 40 games.\n\n| a | b |".to_owned(),
                         tools: vec![step.clone()],
                         caveats: vec!["Ranked solo only.".to_owned()],
+                        coach_options: vec![ChatCoachOption {
+                            label: "Ornn".to_owned(),
+                            rationale: "Adds the frontline your team lacks.".to_owned(),
+                        }],
                         visuals: ChatVisuals {
                             visual: Some(ChatVisual::Chart {
                                 image: "chart:a:b".to_owned(),
@@ -645,7 +649,7 @@ mod tests {
         };
         assert_eq!(live.summary(), "Ahri, level 10, 4/2/7, 87 CS, 7:01");
         assert_eq!(
-            PROTOCOL_VERSION, 8,
+            PROTOCOL_VERSION, 9,
             "a new message or field bumps the protocol"
         );
     }

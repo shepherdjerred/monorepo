@@ -54,6 +54,7 @@ export async function persistPartialAnswer(
       input.stopped ? EXPLORE_STOPPED_CAVEAT : EXPLORE_INTERRUPTED_CAVEAT,
     ],
     followUps: [],
+    coachOptions: null,
   };
   if (input.existingMessageId !== null) {
     return await replaceExploreAnswer(client, {

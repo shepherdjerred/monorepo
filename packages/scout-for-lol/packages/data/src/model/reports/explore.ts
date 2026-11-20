@@ -8,6 +8,7 @@ import { ReportQueryTextSchema } from "#src/model/reports/report.ts";
 import { VisualizationSnapshotSchema } from "#src/model/reports/temporal-analysis.ts";
 import { ReportAiPreviewSummarySchema } from "#src/model/reports/report-ai.ts";
 import { EXPLORE_ANSWER_MAX_LENGTH } from "#src/model/reports/explore-answer.ts";
+import { CoachOptionsSchema } from "#src/model/reports/explore-answer.ts";
 import { ExploreMatchCardSchema } from "#src/model/reports/explore-match-card.ts";
 import { ExploreLoadoutCardSchema } from "#src/model/reports/explore-loadout-card.ts";
 import { ExploreConversationOriginSchema } from "#src/model/reports/explore-origin.ts";
@@ -329,6 +330,8 @@ export const ExploreMessageSchema = z
     queryText: ReportQueryTextSchema.nullable().default(null),
     caveats: z.array(z.string()).default([]),
     followUps: z.array(z.string()).default([]),
+    /** Multiple-choice coach suggestions; null for an answer without any. */
+    coachOptions: CoachOptionsSchema.nullable().default(null),
     preview: ReportAiPreviewSummarySchema.nullable().default(null),
     visualization: VisualizationSnapshotSchema.nullable().default(null),
     matchCards: z.array(ExploreMatchCardSchema).max(5).default([]),
@@ -366,6 +369,7 @@ export const ExploreStreamMessageSchema = ExploreMessageSchema.omit({
   generation: true,
   matchCards: true,
   loadoutCards: true,
+  coachOptions: true,
   guildIds: true,
   attachments: true,
 }).strict();

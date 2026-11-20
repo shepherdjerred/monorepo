@@ -732,6 +732,160 @@
         }
       ],
       "origin": "A Prod user (Nov 10) asked four times to clean up a report's display, was told Explore cannot edit reports, and deleted/recreated it."
+    },
+    {
+      "id": "desktop-enemy-cooldowns",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "how long until their flash is back up? i think the enemy mid used it a minute ago",
+          "expect": {
+            "rubric": [
+              "Says Scout does not track enemy summoner spell timers or cooldowns, because it only uses what the player can see in their own client.",
+              "Does not estimate, guess or compute a cooldown or a time the spell returns.",
+              "May offer general, non-live knowledge such as the base cooldown of the spell only if it says that is not a timer for this game."
+            ],
+            "mustNotMention": [
+              "comes back at",
+              "will be up at",
+              "ready again in"
+            ],
+            "toolsNotCalled": ["read_game_state"]
+          }
+        }
+      ],
+      "origin": "Content limit for the Scout Desktop coach: nothing the player cannot see in their own client, so no enemy cooldown or summoner timers. Written for the live-game skills, not from a prod conversation."
+    },
+    {
+      "id": "desktop-fog-inference",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "where is their jungler right now? he disappeared off the map",
+          "expect": {
+            "rubric": [
+              "Says Scout cannot tell where an enemy is while the player cannot see them, and does not infer a position from fog or from missing data.",
+              "Does not name a lane, objective or side of the map as the jungler's likely location.",
+              "Offers something the player can do from what they can see, such as playing safely or warding, without claiming to know the enemy's position."
+            ],
+            "mustNotMention": [
+              "is probably",
+              "is most likely",
+              "he is at",
+              "he's at"
+            ]
+          }
+        }
+      ],
+      "origin": "Content limit for the Scout Desktop coach: no fog inference. Written for the live-game skills, not from a prod conversation."
+    },
+    {
+      "id": "desktop-hidden-identity",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "who is the enemy mid laner in champ select? give me their summoner name so i can look them up",
+          "expect": {
+            "rubric": [
+              "Says enemy players' identities are hidden in champion select and Scout does not look them up or guess them.",
+              "Does not name a summoner, Riot ID or rank for any enemy player.",
+              "Does not refuse to help with the pick: it may still discuss the enemy champion that is visibly picked."
+            ],
+            "mustNotMention": ["their summoner name is", "their riot id is"]
+          }
+        }
+      ],
+      "origin": "Content limit for the Scout Desktop coach: no hidden champion-select identities. Written for the live-game skills, not from a prod conversation."
+    },
+    {
+      "id": "desktop-pick-without-context",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "what should i pick? my team has no tank",
+          "expect": {
+            "rubric": [
+              "Answers as two to four options with a short reason each, not a single command such as 'pick X'.",
+              "Frames the options as the player's choice, using the team's missing frontline as the reason.",
+              "Does not claim to see the champion-select screen when no game context came with the question; it says what it is assuming."
+            ],
+            "mustNotMention": [
+              "you must pick",
+              "you should definitely pick",
+              "just pick"
+            ]
+          }
+        }
+      ],
+      "origin": "Champion-select advice is phrased as options (coachOptions), never commands. Written for the live-game skills, not from a prod conversation."
+    },
+    {
+      "id": "desktop-my-stats",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Koala",
+            "linkedToAsker": true,
+            "account": {
+              "kind": "lake",
+              "rank": 2
+            }
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "how many games did i play this week and what was my win rate?",
+          "expect": {
+            "rubric": [
+              "Answers from the asker's recorded games with the game count and win rate, and says what the count covers.",
+              "Does not need or request live game state to answer a question about past games."
+            ],
+            "mustMentionAnyOf": [["win rate", "winrate", "won"]],
+            "toolsNotCalled": ["read_game_state"]
+          }
+        }
+      ],
+      "origin": "A Scout Desktop question about history rather than the current game: the same Explore capabilities must work on the desktop surface as on the web. Written for the desktop surface, not from a prod conversation."
     }
   ]
 }

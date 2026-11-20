@@ -24,6 +24,9 @@ const GET: &str = include_str!(
 const VISUALS: &str = include_str!(
     "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-get-visuals.json"
 );
+const COACH: &str = include_str!(
+    "../../../../data/src/scout-client/desktop-fixtures/explore-conversations-get-coach.json"
+);
 const RUNS_STREAM: &str =
     include_str!("../../../../data/src/scout-client/desktop-fixtures/explore-runs-stream.json");
 const REDUCER: &str =
@@ -70,6 +73,46 @@ fn the_golden_transcript_parses_strictly() -> TestResult {
 #[test]
 fn the_golden_visuals_transcript_parses_strictly() -> TestResult {
     check_route::<ConversationGetRequest, Transcript>(VISUALS, "explore_conversations_get")
+}
+
+#[test]
+fn the_golden_coach_transcript_parses_strictly_and_carries_its_options() -> TestResult {
+    check_route::<ConversationGetRequest, Transcript>(COACH, "explore_conversations_get")?;
+    let transcript: Transcript =
+        serde_json::from_value(serde_json::from_str::<Value>(COACH)?["response"].clone())?;
+    let labels: Vec<&str> = transcript
+        .messages
+        .iter()
+        .filter_map(|message| message.coach_options.as_ref())
+        .flatten()
+        .map(|option| option.label.as_str())
+        .collect();
+    assert_eq!(labels, ["Ornn", "Orianna", "Ahri"]);
+    Ok(())
+}
+
+#[test]
+fn a_message_from_a_server_before_contract_7_has_no_options() -> TestResult {
+    // A server below contract 7 never sends the key; it reads as none.
+    let mut get: Value = serde_json::from_str(GET)?;
+    let message = get["response"]["messages"][1].clone();
+    assert!(message.get("coachOptions").is_some());
+    get["response"]["messages"][1]
+        .as_object_mut()
+        .ok_or("message")?
+        .remove("coachOptions");
+    let parsed: ExploreMessage = serde_json::from_value(get["response"]["messages"][1].clone())?;
+    assert_eq!(parsed.coach_options, None);
+    Ok(())
+}
+
+#[test]
+fn the_final_stream_frame_never_carries_options() -> TestResult {
+    let stream: Value = serde_json::from_str(RUNS_STREAM)?;
+    let mut final_frame = stream["response"]["events"][8].clone();
+    final_frame["message"]["coachOptions"] = json!([]);
+    assert!(serde_json::from_value::<StreamEvent>(final_frame).is_err());
+    Ok(())
 }
 
 #[test]

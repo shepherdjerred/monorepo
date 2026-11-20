@@ -117,6 +117,7 @@ async function answerWithChart(userId: typeof OWNER_ID) {
       includeVisualization: true,
       caveats: [],
       followUps: [],
+      coachOptions: null,
       matchCards: [],
       loadoutCards: [],
     },

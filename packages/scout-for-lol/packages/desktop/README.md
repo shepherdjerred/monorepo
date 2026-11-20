@@ -860,6 +860,15 @@ its own latest allowlisted snapshot, projected to
 (`PlayerAuthored` in `scout-explore-client`). An edit or a regenerate never
 carries it, and the server's coach policy decides what of it Explore may read.
 
+Scout can also ask for coaching itself, from `scout-explore-client`'s
+`app_turns` planner: champion-select advice when a pick or ban changes (at most
+4 per champion select) and the plan when a game first reaches `InProgress`.
+These turns go to `runs/start-app` with only the champion-select or loading
+screen section, never the live snapshot and never text; the server enforces the
+same limits. The supervisor does not collect the champion-select screen yet, so
+nothing starts these turns from the client today. Options an answer offers appear as chips, and picking one asks
+Scout about that option from the saved answer without the game.
+
 ## Diagnostics
 
 The release binary is a GUI-subsystem process with no console, so it writes
