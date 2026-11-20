@@ -6,8 +6,20 @@
 //!
 //! The manifest is transport metadata, not the trust root: every artifact is
 //! verified against a public key compiled into the build before anything runs.
-//! Validation is still strict, because a malformed manifest is a broken
-//! publication, not something to guess around.
+//! Validation is still strict for everything this build uses, because a
+//! malformed manifest is a broken publication, not something to guess around.
+//!
+//! The contract is versioned and read by builds that stay installed, so it is
+//! forward compatible on purpose. `schema` is the major version: any other
+//! major is refused with [`ManifestError::UnsupportedSchema`], before the rest
+//! of the document is read, since a breaking change may reshape it (breaking
+//! changes ship at a new manifest path, so this path keeps its major).
+//! `schemaMinor` only grows with additive changes and any value is accepted.
+//! Unknown fields are ignored, and so is every platform entry but the one for
+//! the platform this build runs on, including platform keys it has never
+//! heard of; that one entry is validated in full.
+
+use std::collections::BTreeMap;
 
 use chrono::DateTime;
 use semver::Version;
@@ -22,7 +34,7 @@ const MAX_NOTES_BYTES: usize = 8_192;
 const MAX_SIGNATURE_BYTES: usize = 2_048;
 /// The largest installer, in bytes.
 pub const MAX_ARTIFACT_BYTES: u64 = 268_435_456;
-/// The contract version this client reads.
+/// The contract major version this client reads.
 const CONTRACT_VERSION: u8 = 1;
 /// The longest file name inside a release directory.
 const MAX_FILE_NAME_BYTES: usize = 128;
@@ -53,7 +65,6 @@ impl Platform {
     }
 
     /// The platform's key in the manifest's `platforms`.
-    #[cfg(test)]
     #[must_use]
     pub const fn key(self) -> &'static str {
         match self {
@@ -81,6 +92,12 @@ pub enum ManifestError {
     /// It is not JSON of the contract's shape.
     #[error("the update manifest is not valid: {0}")]
     Malformed(String),
+    /// It is a major version of the contract this client does not read.
+    #[error("the update manifest is schema {found}, this build reads schema {CONTRACT_VERSION}")]
+    UnsupportedSchema {
+        /// The major version the manifest names.
+        found: u64,
+    },
     /// It breaks a rule JSON shape cannot express.
     #[error("the update manifest breaks the contract: {0}")]
     Contract(&'static str),
@@ -104,9 +121,8 @@ pub enum ArtifactFormat {
     App,
 }
 
-/// One platform's signed installer.
+/// One platform's signed installer. Later additive fields are ignored.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub struct Artifact {
     /// Where the installer is downloaded from.
     pub url: String,
@@ -120,25 +136,26 @@ pub struct Artifact {
     pub format: ArtifactFormat,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields)]
-struct Platforms {
-    #[serde(rename = "windows-x86_64")]
-    windows_x86_64: Option<Artifact>,
-    #[serde(rename = "darwin-universal")]
-    darwin_universal: Option<Artifact>,
+/// Just the major version, read first so another major is refused unread.
+#[derive(Deserialize)]
+struct SchemaProbe {
+    schema: u64,
 }
 
+/// A manifest as this build reads it. Unknown fields are ignored; `platforms`
+/// keeps every entry unparsed so only this build's own is held to the schema.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 struct RawManifest {
-    schema: u8,
+    /// Any minor is accepted; it is read only to prove the field is well formed.
+    #[serde(rename = "schemaMinor")]
+    _schema_minor: u32,
     channel: String,
     version: String,
     minimum_version: String,
     published_at: String,
     notes: String,
-    platforms: Platforms,
+    platforms: BTreeMap<String, serde_json::Value>,
 }
 
 /// A manifest that passed every contract rule.
@@ -152,25 +169,33 @@ pub struct Manifest {
     pub minimum_version: Version,
     /// Release notes, plain text.
     pub notes: String,
-    windows_x86_64: Option<Artifact>,
-    darwin_universal: Option<Artifact>,
+    artifact: Option<Artifact>,
 }
 
 impl Manifest {
-    /// Read and validate a manifest fetched from `origin` for `channel`.
+    /// Read and validate a manifest fetched from `origin` for `channel`, for a
+    /// build running on `platform`.
     ///
     /// # Errors
     ///
     /// Returns the first rule the manifest breaks.
-    pub fn parse(bytes: &[u8], origin: &str, channel: &str) -> Result<Self, ManifestError> {
+    pub fn parse(
+        bytes: &[u8],
+        origin: &str,
+        channel: &str,
+        platform: Platform,
+    ) -> Result<Self, ManifestError> {
         if bytes.len() > MAX_MANIFEST_BYTES {
             return Err(ManifestError::TooLarge);
         }
-        let raw: RawManifest = serde_json::from_slice(bytes)
-            .map_err(|error| ManifestError::Malformed(error.to_string()))?;
-        if raw.schema != CONTRACT_VERSION {
-            return Err(ManifestError::Contract("unknown schema version"));
+        let malformed = |error: serde_json::Error| ManifestError::Malformed(error.to_string());
+        let probe: SchemaProbe = serde_json::from_slice(bytes).map_err(malformed)?;
+        if probe.schema != u64::from(CONTRACT_VERSION) {
+            return Err(ManifestError::UnsupportedSchema {
+                found: probe.schema,
+            });
         }
+        let raw: RawManifest = serde_json::from_slice(bytes).map_err(malformed)?;
         if raw.channel != channel {
             return Err(ManifestError::WrongChannel {
                 expected: channel.to_owned(),
@@ -188,21 +213,15 @@ impl Manifest {
             return Err(ManifestError::Contract("notes are too long"));
         }
         validate_published_at(&raw.published_at)?;
-        let artifacts = [
-            (
-                Platform::WindowsX86_64,
-                raw.platforms.windows_x86_64.as_ref(),
-            ),
-            (
-                Platform::DarwinUniversal,
-                raw.platforms.darwin_universal.as_ref(),
-            ),
-        ];
-        if artifacts.iter().all(|(_, artifact)| artifact.is_none()) {
+        if raw.platforms.is_empty() {
             return Err(ManifestError::Contract("no platform artifact"));
         }
-        for (platform, artifact) in artifacts {
-            let Some(artifact) = artifact else { continue };
+        let artifact = raw
+            .platforms
+            .get(platform.key())
+            .map(|entry| Artifact::deserialize(entry).map_err(malformed))
+            .transpose()?;
+        if let Some(artifact) = &artifact {
             if artifact.format != platform.format() {
                 return Err(ManifestError::Contract(
                     "an artifact is not in its platform's format",
@@ -215,18 +234,15 @@ impl Manifest {
             version,
             minimum_version,
             notes: raw.notes,
-            windows_x86_64: raw.platforms.windows_x86_64,
-            darwin_universal: raw.platforms.darwin_universal,
+            artifact,
         })
     }
 
-    /// The release's installer for `platform`, when it ships one.
+    /// The release's installer for the platform it was parsed for, when it
+    /// ships one.
     #[must_use]
-    pub fn artifact(&self, platform: Platform) -> Option<&Artifact> {
-        match platform {
-            Platform::WindowsX86_64 => self.windows_x86_64.as_ref(),
-            Platform::DarwinUniversal => self.darwin_universal.as_ref(),
-        }
+    pub const fn artifact(&self) -> Option<&Artifact> {
+        self.artifact.as_ref()
     }
 }
 
@@ -348,6 +364,7 @@ mod tests {
         assert_eq!(limit("signatureMaxBytes")?, MAX_SIGNATURE_BYTES as u64);
         assert_eq!(limit("artifactMaxBytes")?, MAX_ARTIFACT_BYTES);
         assert_eq!(contract["contractVersion"], 1);
+        assert_eq!(contract["contractMinorVersion"], 0);
         assert_eq!(contract["manifestPath"], "/{channel}.json");
         assert_eq!(contract["releasePath"], "/releases/{version}/{file}");
         assert_eq!(contract["channels"], serde_json::json!(["stable", "beta"]));
@@ -382,6 +399,17 @@ mod tests {
         Ok(())
     }
 
+    const PLATFORMS: [Platform; 2] = [Platform::WindowsX86_64, Platform::DarwinUniversal];
+
+    fn parse(body: &Value, channel: &str, platform: Platform) -> Result<Manifest, ManifestError> {
+        Manifest::parse(
+            body.to_string().as_bytes(),
+            &origin().map_err(|error| ManifestError::Malformed(error.to_string()))?,
+            channel,
+            platform,
+        )
+    }
+
     #[test]
     fn every_valid_fixture_is_accepted() -> TestResult {
         let fixtures = fixtures()?;
@@ -389,11 +417,11 @@ mod tests {
         assert_ne!(valid.len(), 0);
         for fixture in valid {
             let channel = fixture["channel"].as_str().ok_or("channel")?;
-            let manifest = Manifest::parse(fixture.to_string().as_bytes(), &origin()?, channel)?;
-            assert_eq!(manifest.channel, channel);
-            for platform in [Platform::WindowsX86_64, Platform::DarwinUniversal] {
+            for platform in PLATFORMS {
+                let manifest = parse(fixture, channel, platform)?;
+                assert_eq!(manifest.channel, channel);
                 let shipped = fixture["platforms"].get(platform.key()).is_some();
-                let artifact = manifest.artifact(platform);
+                let artifact = manifest.artifact();
                 assert_eq!(artifact.is_some(), shipped, "{}", platform.key());
                 if let Some(artifact) = artifact {
                     assert_eq!(artifact.format, platform.format());
@@ -404,34 +432,86 @@ mod tests {
     }
 
     #[test]
+    fn a_newer_manifest_is_read_by_this_client() -> TestResult {
+        let fixtures = fixtures()?;
+        let newer = fixtures["forwardCompatible"]
+            .as_array()
+            .ok_or("forwardCompatible fixtures")?;
+        assert_ne!(newer.len(), 0);
+        for fixture in newer {
+            let reason = fixture["reason"].as_str().unwrap_or("?");
+            let body = &fixture["body"];
+            let channel = body["channel"].as_str().ok_or("channel")?;
+            for platform in PLATFORMS {
+                let manifest = parse(body, channel, platform)
+                    .map_err(|error| format!("{reason} for {}: {error}", platform.key()))?;
+                let shipped = body["platforms"].get(platform.key()).is_some();
+                assert_eq!(manifest.artifact().is_some(), shipped, "{reason}");
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn another_major_is_refused_with_a_typed_error_before_the_rest_is_read() {
+        let body = serde_json::json!({ "schema": 3, "releases": [] });
+        for platform in PLATFORMS {
+            assert_eq!(
+                parse(&body, "stable", platform),
+                Err(ManifestError::UnsupportedSchema { found: 3 })
+            );
+        }
+        let zero = serde_json::json!({ "schema": 0 });
+        assert_eq!(
+            parse(&zero, "stable", Platform::WindowsX86_64),
+            Err(ManifestError::UnsupportedSchema { found: 0 })
+        );
+    }
+
+    #[test]
+    fn only_the_entry_for_this_platform_is_validated() -> TestResult {
+        let mut body = fixtures()?["valid"][0].clone();
+        body["platforms"]["windows-x86_64"]["sha256"] = "nope".into();
+        let mac = parse(&body, "stable", Platform::DarwinUniversal)?;
+        assert!(mac.artifact().is_some());
+        assert!(matches!(
+            parse(&body, "stable", Platform::WindowsX86_64),
+            Err(ManifestError::Contract(_))
+        ));
+        let mut body = fixtures()?["valid"][0].clone();
+        body["platforms"]["darwin-universal"] = serde_json::json!({ "url": 7 });
+        assert!(parse(&body, "stable", Platform::WindowsX86_64).is_ok());
+        assert!(matches!(
+            parse(&body, "stable", Platform::DarwinUniversal),
+            Err(ManifestError::Malformed(_))
+        ));
+        Ok(())
+    }
+
+    #[test]
     fn a_macos_build_reads_its_app_archive_and_nothing_else() -> TestResult {
         let fixtures = fixtures()?;
-        let both = Manifest::parse(
-            fixtures["valid"][0].to_string().as_bytes(),
-            &origin()?,
-            "stable",
-        )?;
-        let mac = both
-            .artifact(Platform::DarwinUniversal)
-            .ok_or("a macOS artifact")?;
+        let both = parse(&fixtures["valid"][0], "stable", Platform::DarwinUniversal)?;
+        let mac = both.artifact().ok_or("a macOS artifact")?;
         assert_eq!(mac.format, ArtifactFormat::App);
         assert_eq!(
             artifact_file_name(&mac.url, &origin()?, "0.2.0").as_deref(),
             Some("scout-desktop-stable_0.2.0_universal.app.tar.gz")
         );
-        assert_ne!(
-            both.artifact(Platform::WindowsX86_64),
-            both.artifact(Platform::DarwinUniversal)
-        );
+        let windows = parse(&fixtures["valid"][0], "stable", Platform::WindowsX86_64)?;
+        assert_ne!(windows.artifact(), both.artifact());
 
         // A release that ships macOS first offers Windows nothing yet.
-        let mac_only = Manifest::parse(
-            fixtures["valid"][2].to_string().as_bytes(),
-            &origin()?,
-            "beta",
-        )?;
-        assert!(mac_only.artifact(Platform::DarwinUniversal).is_some());
-        assert_eq!(mac_only.artifact(Platform::WindowsX86_64), None);
+        let mac_only = &fixtures["valid"][2];
+        assert!(
+            parse(mac_only, "beta", Platform::DarwinUniversal)?
+                .artifact()
+                .is_some()
+        );
+        assert_eq!(
+            parse(mac_only, "beta", Platform::WindowsX86_64)?.artifact(),
+            None
+        );
         Ok(())
     }
 
@@ -454,10 +534,23 @@ mod tests {
         assert_ne!(invalid.len(), 0);
         for fixture in invalid {
             let reason = fixture["reason"].as_str().unwrap_or("?");
-            let body = fixture["body"].to_string();
-            let channel = fixture["body"]["channel"].as_str().unwrap_or("stable");
-            let accepted = Manifest::parse(body.as_bytes(), &origin()?, channel).is_ok();
-            assert!(!accepted, "{reason} must be refused");
+            let body = &fixture["body"];
+            let channel = body["channel"].as_str().unwrap_or("stable");
+            // A fault in a platform entry is the concern of builds for that
+            // platform only; every other fault is refused by all of them.
+            let named: Vec<Platform> = PLATFORMS
+                .into_iter()
+                .filter(|platform| body["platforms"].get(platform.key()).is_some())
+                .collect();
+            let platforms = if named.is_empty() {
+                PLATFORMS.to_vec()
+            } else {
+                named
+            };
+            for platform in platforms {
+                let accepted = parse(body, channel, platform).is_ok();
+                assert!(!accepted, "{reason} must be refused for {}", platform.key());
+            }
         }
         Ok(())
     }
@@ -465,8 +558,7 @@ mod tests {
     #[test]
     fn a_manifest_for_another_channel_is_refused() -> TestResult {
         let fixtures = fixtures()?;
-        let beta = fixtures["valid"][1].to_string();
-        let error = Manifest::parse(beta.as_bytes(), &origin()?, "stable");
+        let error = parse(&fixtures["valid"][1], "stable", Platform::WindowsX86_64);
         assert!(matches!(error, Err(ManifestError::WrongChannel { .. })));
         Ok(())
     }
@@ -475,7 +567,7 @@ mod tests {
     fn an_oversized_manifest_is_refused_before_it_is_parsed() -> TestResult {
         let bytes = vec![b' '; MAX_MANIFEST_BYTES + 1];
         assert_eq!(
-            Manifest::parse(&bytes, &origin()?, "stable"),
+            Manifest::parse(&bytes, &origin()?, "stable", Platform::WindowsX86_64),
             Err(ManifestError::TooLarge)
         );
         Ok(())

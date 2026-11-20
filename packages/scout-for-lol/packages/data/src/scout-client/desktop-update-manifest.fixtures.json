@@ -2,6 +2,7 @@
   "valid": [
     {
       "schema": 1,
+      "schemaMinor": 0,
       "channel": "stable",
       "version": "0.2.0",
       "minimumVersion": "0.1.0",
@@ -26,6 +27,7 @@
     },
     {
       "schema": 1,
+      "schemaMinor": 0,
       "channel": "beta",
       "version": "1.0.0-beta.2",
       "minimumVersion": "1.0.0-beta.2",
@@ -43,6 +45,7 @@
     },
     {
       "schema": 1,
+      "schemaMinor": 0,
       "channel": "beta",
       "version": "1.0.0-beta.3",
       "minimumVersion": "1.0.0-beta.2",
@@ -55,6 +58,158 @@
           "size": 1,
           "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
           "format": "app"
+        }
+      }
+    }
+  ],
+  "forwardCompatible": [
+    {
+      "reason": "an unknown platform key next to the known ones",
+      "body": {
+        "schema": 1,
+        "schemaMinor": 0,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "Scout Desktop now updates itself.",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "nsis"
+          },
+          "darwin-universal": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_universal.app.tar.gz",
+            "sha256": "60303ae22b998861bce3b28f33eec1be758a213c86c93c076dbe9f558c11c752",
+            "size": 52428800,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "app"
+          },
+          "linux-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0.AppImage",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "appimage"
+          }
+        }
+      }
+    },
+    {
+      "reason": "an unknown additive top-level field",
+      "body": {
+        "schema": 1,
+        "schemaMinor": 0,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "Scout Desktop now updates itself.",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "nsis"
+          },
+          "darwin-universal": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_universal.app.tar.gz",
+            "sha256": "60303ae22b998861bce3b28f33eec1be758a213c86c93c076dbe9f558c11c752",
+            "size": 52428800,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "app"
+          }
+        },
+        "rolloutPercent": 10
+      }
+    },
+    {
+      "reason": "an unknown additive field inside an artifact",
+      "body": {
+        "schema": 1,
+        "schemaMinor": 0,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "Scout Desktop now updates itself.",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "nsis",
+            "delta": {
+              "from": "0.1.0"
+            }
+          },
+          "darwin-universal": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_universal.app.tar.gz",
+            "sha256": "60303ae22b998861bce3b28f33eec1be758a213c86c93c076dbe9f558c11c752",
+            "size": 52428800,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "app",
+            "delta": {
+              "from": "0.1.0"
+            }
+          }
+        }
+      }
+    },
+    {
+      "reason": "a higher minor version",
+      "body": {
+        "schema": 1,
+        "schemaMinor": 7,
+        "channel": "stable",
+        "version": "0.2.0",
+        "minimumVersion": "0.1.0",
+        "publishedAt": "2026-11-14T12:00:00Z",
+        "notes": "Scout Desktop now updates itself.",
+        "platforms": {
+          "windows-x86_64": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
+            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+            "size": 14680064,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "nsis"
+          },
+          "darwin-universal": {
+            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_universal.app.tar.gz",
+            "sha256": "60303ae22b998861bce3b28f33eec1be758a213c86c93c076dbe9f558c11c752",
+            "size": 52428800,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "app"
+          }
+        }
+      }
+    },
+    {
+      "reason": "a platform this client does not run on, in a shape it does not know",
+      "body": {
+        "schema": 1,
+        "schemaMinor": 0,
+        "channel": "beta",
+        "version": "1.0.0-beta.3",
+        "minimumVersion": "1.0.0-beta.2",
+        "publishedAt": "2026-12-02T00:00:00Z",
+        "notes": "macOS first.",
+        "platforms": {
+          "darwin-universal": {
+            "url": "https://download.scout-for-lol.com/releases/1.0.0-beta.3/scout-desktop-beta_1.0.0-beta.3_universal.app.tar.gz",
+            "sha256": "fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9",
+            "size": 1,
+            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkKUlVTZ29WL0NXQ24rNXc2ZktTVHNDQkJvN0EwemE5akVsTVNMdlQ3cHIzRkZnU3pJYk52b3BnMW53RzVwKzlnMU9HK1F0ejZQdG8yNk12SldiSGFwODFiNVZsN0tVcEozdkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0Njk0MjQxCWZpbGU6Zi50eHQKQWNGQVpsSFcrZ3lHM3cwUTJGRnVlQTNiWWYxS0JXT1JBVTlGTzNnMXE1VDd3ajhpeTF1dlE1VE5wTGVzR3BsSVZwTXY3NjBZZm5zVjYrVXRJMzZzQ1E9PQo=",
+            "format": "app"
+          },
+          "windows-aarch64": {
+            "anything": "a future platform entry, not validated by this client"
+          }
         }
       }
     }
@@ -76,6 +231,7 @@
       "reason": "an unknown channel",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "nightly",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -88,6 +244,7 @@
       "reason": "no platform artifact",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -100,6 +257,7 @@
       "reason": "a minimum version newer than the release",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.3.0",
@@ -120,6 +278,7 @@
       "reason": "an artifact on another host",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -140,6 +299,7 @@
       "reason": "an artifact outside its own version directory",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -160,6 +320,7 @@
       "reason": "an artifact url with a path traversal",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -180,6 +341,7 @@
       "reason": "a plain-http artifact url",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -200,6 +362,7 @@
       "reason": "an uppercase or short sha256",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -220,6 +383,7 @@
       "reason": "a zero-byte artifact",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -240,6 +404,7 @@
       "reason": "a missing signature",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -250,47 +415,6 @@
             "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
             "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
             "size": 14680064,
-            "format": "nsis"
-          }
-        }
-      }
-    },
-    {
-      "reason": "an unknown platform",
-      "body": {
-        "schema": 1,
-        "channel": "stable",
-        "version": "0.2.0",
-        "minimumVersion": "0.1.0",
-        "publishedAt": "2026-11-14T12:00:00Z",
-        "notes": "",
-        "platforms": {
-          "linux-x86_64": {
-            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0.AppImage",
-            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-            "size": 14680064,
-            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
-            "format": "nsis"
-          }
-        }
-      }
-    },
-    {
-      "reason": "an unknown field",
-      "body": {
-        "schema": 1,
-        "channel": "stable",
-        "version": "0.2.0",
-        "minimumVersion": "0.1.0",
-        "publishedAt": "2026-11-14T12:00:00Z",
-        "notes": "",
-        "rolloutPercent": 10,
-        "platforms": {
-          "windows-x86_64": {
-            "url": "https://download.scout-for-lol.com/releases/0.2.0/scout-desktop-stable_0.2.0_x64-setup.exe",
-            "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
-            "size": 14680064,
-            "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIGNhcmdvLXBhY2thZ2VyIHNlY3JldCBrZXkK",
             "format": "nsis"
           }
         }
@@ -300,6 +424,7 @@
       "reason": "a publication time that is not a real date",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -320,6 +445,7 @@
       "reason": "a macOS artifact in the Windows installer format",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -340,6 +466,7 @@
       "reason": "a Windows artifact in the macOS app-archive format",
       "body": {
         "schema": 1,
+        "schemaMinor": 0,
         "channel": "stable",
         "version": "0.2.0",
         "minimumVersion": "0.1.0",
@@ -354,6 +481,18 @@
             "format": "app"
           }
         }
+      }
+    },
+    {
+      "reason": "a higher major version with a different shape",
+      "body": {
+        "schema": 3,
+        "channel": "stable",
+        "releases": [
+          {
+            "version": "0.2.0"
+          }
+        ]
       }
     }
   ],

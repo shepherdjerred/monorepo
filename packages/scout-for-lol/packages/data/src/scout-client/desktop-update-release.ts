@@ -1,6 +1,8 @@
 import { isDeepStrictEqual } from "node:util";
 import {
   SCOUT_DESKTOP_UPDATE_ORIGIN,
+  SCOUT_DESKTOP_UPDATE_SCHEMA,
+  SCOUT_DESKTOP_UPDATE_SCHEMA_MINOR,
   ScoutDesktopUpdateManifestSchema,
   ScoutDesktopUpdatePlatformSchema,
   compareScoutDesktopVersions,
@@ -93,7 +95,8 @@ export function buildUpdateManifest(
     };
   }
   return ScoutDesktopUpdateManifestSchema.parse({
-    schema: 1,
+    schema: SCOUT_DESKTOP_UPDATE_SCHEMA,
+    schemaMinor: SCOUT_DESKTOP_UPDATE_SCHEMA_MINOR,
     channel: input.channel,
     version: input.version,
     minimumVersion: input.minimumVersion,

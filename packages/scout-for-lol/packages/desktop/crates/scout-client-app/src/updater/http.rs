@@ -106,6 +106,7 @@ impl HttpUpdater {
             &body,
             &self.endpoint.origin,
             &self.endpoint.channel,
+            self.platform,
         )?)
     }
 
@@ -129,7 +130,7 @@ impl Updater for HttpUpdater {
             prune_staging(&self.staging, None).await;
             return Ok(None);
         }
-        let Some(artifact) = manifest.artifact(self.platform).cloned() else {
+        let Some(artifact) = manifest.artifact().cloned() else {
             return Ok(None);
         };
         let Some(file_name) = artifact_file_name(
@@ -389,6 +390,7 @@ mod tests {
             }
             let manifest = json!({
                 "schema": 1,
+                "schemaMinor": 0,
                 "channel": channel,
                 "version": version,
                 "minimumVersion": minimum,
