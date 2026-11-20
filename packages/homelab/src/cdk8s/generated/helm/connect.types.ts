@@ -711,7 +711,7 @@ export type ConnectHelmValuesOperator = {
   /**
    * The 1Password Operator version to pull
    *
-   * @default "1.12.0"
+   * @default "1.12.1"
    */
   version?: string;
   /**

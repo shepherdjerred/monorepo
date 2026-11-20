@@ -93,6 +93,16 @@ export type TailscaleoperatorHelmValuesOperatorConfig = {
    */
   securityContext?: TailscaleoperatorHelmValuesOperatorConfigSecurityContext;
   extraEnv?: unknown[];
+  /**
+   * Default for the tailscale.com/share-acme-account annotation on new
+   * ProxyGroups. When true, the operator provisions a shared per-tailnet
+   * ACME account key Secret and configures proxies to use it, preserving
+   * Let's Encrypt's ARI "replaces" renewal exemption across pod restarts
+   * and ProxyGroup recreation. See #18251.
+   *
+   * @default false
+   */
+  sharedACMEAccountKey?: boolean;
 };
 
 export type TailscaleoperatorHelmValuesOperatorConfigImage = {
@@ -231,9 +241,36 @@ export type TailscaleoperatorHelmValuesApiServerProxyConfig = {
 export type TailscaleoperatorHelmValues = {
   /**
    * Copyright (c) Tailscale Inc & contributors
-   * Operator oauth credentials. If unset a Secret named operator-oauth must be
-   * precreated or oauthSecretVolume needs to be adjusted. This block will be
-   * overridden by oauthSecretVolume, if set.
+   * nameOverride and fullnameOverride customize the names of the resources
+   * created by this chart. fullnameOverride is used verbatim as the resource
+   * name and takes precedence. nameOverride is combined with the release name
+   * instead, producing resources named "<release-name>-<nameOverride>".
+   * If neither is set, resources use "operator" for namespaced resources,
+   * "tailscale-operator" for cluster-scoped ones.
+   * The Secret the operator stores its tailnet device state in also follows
+   * this name. Changing these values on an existing installation therefore
+   * gives the operator a fresh state Secret and it will re-register as a new
+   * device on the tailnet; the old Secret and device are left behind.
+   * Changing these on an existing installation also changes the operator
+   * Deployment's pod selector, which Kubernetes treats as immutable, so
+   * "helm upgrade" will fail. Delete the existing Deployment (or uninstall and
+   * reinstall the chart) first.
+   * Similarly, if you precreate the oauth credentials Secret instead of setting
+   * the oauth block below, its name must be "<fullname>-oauth", so
+   * "myname-oauth" when fullnameOverride is set to "myname". The operator's Pod
+   * will not start if that Secret is missing.
+   *
+   * @default ""
+   */
+  nameOverride?: string;
+  /**
+   * @default ""
+   */
+  fullnameOverride?: string;
+  /**
+   * Operator oauth credentials. If unset a Secret named <fullname>-oauth
+   * (operator-oauth by default) must be precreated or oauthSecretVolume needs to
+   * be adjusted. This block will be overridden by oauthSecretVolume, if set.
    *
    * @default {"clientId":"","clientSecret":"","audience":""}
    */
@@ -265,12 +302,12 @@ export type TailscaleoperatorHelmValues = {
    */
   installCRDs?: boolean;
   /**
-   * In the case that you already have a tailscale ingressclass in your cluster (or vcluster), you can disable the creation here
-   *
-   * @default {...} (16 keys)
+   * @default {...} (17 keys)
    */
   operatorConfig?: TailscaleoperatorHelmValuesOperatorConfig;
   /**
+   * In the case that you already have a tailscale ingressclass in your cluster (or vcluster), you can disable the creation here
+   *
    * @default {"name":"tailscale","enabled":true}
    */
   ingressClass?: TailscaleoperatorHelmValuesIngressClass;
@@ -299,6 +336,8 @@ export type TailscaleoperatorHelmValues = {
 };
 
 export type TailscaleoperatorHelmParameters = {
+  nameOverride?: string;
+  fullnameOverride?: string;
   "oauth.clientId"?: string;
   "oauth.clientSecret"?: string;
   "oauth.audience"?: string;
@@ -317,6 +356,7 @@ export type TailscaleoperatorHelmParameters = {
   "operatorConfig.affinity"?: string;
   "operatorConfig.priorityClassName"?: string;
   "operatorConfig.extraEnv"?: string;
+  "operatorConfig.sharedACMEAccountKey"?: string;
   "ingressClass.name"?: string;
   "ingressClass.enabled"?: string;
   "proxyConfig.image.repository"?: string;
