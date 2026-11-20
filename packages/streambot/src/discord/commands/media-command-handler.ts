@@ -49,7 +49,9 @@ export class MediaCommandHandler {
         case "leave":
           return this.playback.leave();
         case "previous":
-          return await this.playback.previous(interaction.userId);
+          return await this.playback.previous(interaction.userId, undefined, {
+            surface: "slash",
+          });
         default:
           throw new PlaybackCommandBoundaryError("Unknown playback command.");
       }
@@ -272,6 +274,7 @@ export class MediaCommandHandler {
         placement,
         userId: interaction.userId,
         spoken: false,
+        surface: "slash",
         sourceOverride: candidate.source,
       });
       return;

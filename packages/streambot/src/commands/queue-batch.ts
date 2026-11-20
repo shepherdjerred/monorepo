@@ -1,3 +1,5 @@
+import type { PlaySurface } from "@shepherdjerred/streambot/observability/web-metrics.ts";
+import { observePlay } from "./play-observation.ts";
 import type { PlaybackCommandServiceDeps } from "./playback-command-types.ts";
 import { PlaybackCommandService } from "./playback-command-service.ts";
 import {
@@ -22,6 +24,8 @@ type BatchInput = {
   userId: UserId;
   placement: "queue" | "next" | "now";
   signal: AbortSignal;
+  /** Entry point counted in `streambot_play_requests_total`; one request per batch. */
+  surface: PlaySurface;
 };
 type Group = { target: PlaybackCommandServiceDeps; items: QueuedSource[] };
 
@@ -206,5 +210,5 @@ class QueueBatch {
   }
 }
 export function queueBatch(input: BatchInput): Promise<{ message: string }> {
-  return new QueueBatch(input).run();
+  return observePlay(input, () => new QueueBatch(input).run());
 }

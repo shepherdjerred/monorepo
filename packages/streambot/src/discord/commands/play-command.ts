@@ -5,6 +5,7 @@
  * input gets a specific error instead of a silent "Queued" — the resolved result is threaded onto
  * the queued item so the machine's `resolving` state reuses it instead of re-fetching.
  */
+import { observePlay } from "@shepherdjerred/streambot/commands/play-observation.ts";
 import type {
   CommandHandlerDeps,
   CommandInteraction,
@@ -296,7 +297,9 @@ async function runPlaylist(
     AbortSignal.timeout(PLAYLIST_TIMEOUT_MS),
   );
   if (deps.routePlayback !== undefined) {
-    await runAutomaticPlaylist(input, items);
+    await observePlay({ surface: "slash" }, () =>
+      runAutomaticPlaylist(input, items),
+    );
     return;
   }
   const scope =
@@ -381,6 +384,8 @@ async function runAutomaticPlaylist(
       source: "youtube",
       userId: interaction.userId,
       spoken: false,
+      surface: "slash",
+      observedByCaller: true,
       placement: playlistItemPlacement(index, placement, next),
       sourceOverride: { kind: "url", url: item.url },
       ...(input.mode === undefined ? {} : { mode: input.mode }),
@@ -403,6 +408,7 @@ async function runDiscoveredPlay(input: DiscoveredPlayInput): Promise<void> {
       placement,
       userId: interaction.userId,
       spoken: false,
+      surface: "slash",
       ...(subtitles === undefined ? {} : { subtitles }),
       ...(mode === undefined ? {} : { mode }),
       ...(input.provider === undefined ? {} : { provider: input.provider }),

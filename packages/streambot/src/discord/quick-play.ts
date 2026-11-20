@@ -41,7 +41,7 @@ export async function quickPlay(
     await loadMusicLink(
       issuer,
       deps,
-      { query, placement: "queue", mode: null },
+      { query, placement: "queue", mode: null, surface: "message" },
       reply,
     )
   )
@@ -53,6 +53,7 @@ export async function quickPlay(
     source: "auto",
     placement: "queue",
     spoken: false,
+    surface: "message",
     userId: UserIdSchema.parse(issuer.user.id),
   });
   const url = await webPageUrl(

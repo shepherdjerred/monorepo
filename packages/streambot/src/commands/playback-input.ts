@@ -1,3 +1,4 @@
+import type { PlaySurface } from "@shepherdjerred/streambot/observability/web-metrics.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import type { MediaMode } from "@shepherdjerred/streambot/sources/media-kind.ts";
 import type {
@@ -56,6 +57,10 @@ export type PlayInput = {
   /** Per-request transport override; `undefined` and `"auto"` both mean "let the classifier decide". */
   readonly mode?: MediaMode;
   readonly provider?: SportsProvider | "auto";
+  /** Entry point for `streambot_play_requests_total`; omitted means `other`. */
+  readonly surface?: PlaySurface;
+  /** The caller already counts this operation once (for example a playlist loop); skip counting here. */
+  readonly observedByCaller?: true;
 };
 
 export type SelectedMedia = {

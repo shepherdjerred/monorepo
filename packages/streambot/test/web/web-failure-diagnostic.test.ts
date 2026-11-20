@@ -1,4 +1,7 @@
 import { expect, test } from "vitest";
+import { webErrorCode } from "@shepherdjerred/streambot/observability/web-metrics.ts";
+import { WebError } from "@shepherdjerred/streambot/web/server/errors.ts";
+import { classifyWebFailure } from "@shepherdjerred/streambot/web/server/telemetry.ts";
 import {
   webFailureDiagnostic,
   webFailureEndpoint,
@@ -41,4 +44,35 @@ test("unknown error names and codes remain private, and cyclic causes are bounde
       new Request("http://localhost/api/private-user?credential=private"),
     ),
   ).toBe("other");
+});
+
+test("telemetry classification maps errors to closed codes and outcomes", () => {
+  const signal = new AbortController().signal;
+  expect(webErrorCode("playback_changed")).toBe("playback_changed");
+  expect(webErrorCode("private-user-code")).toBe("other");
+  expect(
+    classifyWebFailure(new WebError(409, "playback_changed", "x"), signal),
+  ).toMatchObject({
+    status: 409,
+    code: "playback_changed",
+    outcome: "conflict",
+  });
+  expect(
+    classifyWebFailure(new WebError(429, "rate_limit", "x"), signal),
+  ).toMatchObject({ outcome: "rate_limited" });
+  expect(
+    classifyWebFailure(new WebError(418, "private-user-code", "x"), signal),
+  ).toMatchObject({ code: "other", outcome: "invalid" });
+  expect(classifyWebFailure(new Error("private"), signal)).toMatchObject({
+    code: "unavailable",
+    outcome: "error",
+    kind: "unexpected",
+  });
+  const gone = new AbortController();
+  gone.abort();
+  expect(classifyWebFailure(new Error("private"), gone.signal)).toMatchObject({
+    code: "client_aborted",
+    outcome: "aborted",
+    kind: "aborted",
+  });
 });

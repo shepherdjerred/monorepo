@@ -122,6 +122,7 @@ export class WebActions {
         userId: context.userId,
         sourceOverride: selected.source,
         spoken: false,
+        surface: "web",
         signal,
       });
     } finally {

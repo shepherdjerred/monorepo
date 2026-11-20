@@ -104,6 +104,7 @@ export function bindPlaybackVoiceCommandPort(
         userId,
         signal,
         spoken: true,
+        surface: "voice",
         ...(spokenCommand === null ? {} : { utterance: spokenCommand }),
       });
       return result.message;
@@ -141,6 +142,7 @@ export function bindPlaybackVoiceCommandPort(
       const spokenCommand = observed.spokenCommand();
       const result = await service.previous(userId, signal, {
         spoken: true,
+        surface: "voice",
         ...(spokenCommand === null ? {} : { utterance: spokenCommand }),
       });
       return result.message;
