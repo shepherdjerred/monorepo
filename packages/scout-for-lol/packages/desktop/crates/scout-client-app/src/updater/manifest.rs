@@ -11,7 +11,7 @@
 
 use chrono::DateTime;
 use semver::Version;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 
 /// The largest manifest the client reads, in bytes.
@@ -32,17 +32,41 @@ const MAX_FILE_NAME_BYTES: usize = 128;
 pub enum Platform {
     /// Windows on x86-64, installed from a `cargo-packager` NSIS installer.
     WindowsX86_64,
+    /// macOS on Apple silicon or Intel, updated from an archive of the
+    /// universal `.app` bundle.
+    DarwinUniversal,
 }
 
 impl Platform {
     /// The platform this build runs on, when the updater can install for it.
-    /// macOS and Linux builds do not update themselves yet.
+    /// Linux builds do not update themselves.
     #[must_use]
     pub const fn current() -> Option<Self> {
         if cfg!(all(windows, target_arch = "x86_64")) {
             Some(Self::WindowsX86_64)
+        } else if cfg!(target_os = "macos") {
+            Some(Self::DarwinUniversal)
         } else {
             None
+        }
+    }
+
+    /// The platform's key in the manifest's `platforms`.
+    #[cfg(test)]
+    #[must_use]
+    pub const fn key(self) -> &'static str {
+        match self {
+            Self::WindowsX86_64 => "windows-x86_64",
+            Self::DarwinUniversal => "darwin-universal",
+        }
+    }
+
+    /// The one artifact format this platform installs from.
+    #[must_use]
+    pub const fn format(self) -> ArtifactFormat {
+        match self {
+            Self::WindowsX86_64 => ArtifactFormat::Nsis,
+            Self::DarwinUniversal => ArtifactFormat::App,
         }
     }
 }
@@ -70,11 +94,13 @@ pub enum ManifestError {
 }
 
 /// The installer format of an artifact.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ArtifactFormat {
     /// A `cargo-packager` NSIS installer.
     Nsis,
+    /// A gzipped tar of the signed, notarized and stapled `.app` bundle.
+    App,
 }
 
 /// One platform's signed installer.
@@ -98,6 +124,8 @@ pub struct Artifact {
 struct Platforms {
     #[serde(rename = "windows-x86_64")]
     windows_x86_64: Option<Artifact>,
+    #[serde(rename = "darwin-universal")]
+    darwin_universal: Option<Artifact>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -124,6 +152,7 @@ pub struct Manifest {
     /// Release notes, plain text.
     pub notes: String,
     windows_x86_64: Option<Artifact>,
+    darwin_universal: Option<Artifact>,
 }
 
 impl Manifest {
@@ -158,11 +187,26 @@ impl Manifest {
             return Err(ManifestError::Contract("notes are too long"));
         }
         validate_published_at(&raw.published_at)?;
-        let artifacts = [raw.platforms.windows_x86_64.as_ref()];
-        if artifacts.iter().all(Option::is_none) {
+        let artifacts = [
+            (
+                Platform::WindowsX86_64,
+                raw.platforms.windows_x86_64.as_ref(),
+            ),
+            (
+                Platform::DarwinUniversal,
+                raw.platforms.darwin_universal.as_ref(),
+            ),
+        ];
+        if artifacts.iter().all(|(_, artifact)| artifact.is_none()) {
             return Err(ManifestError::Contract("no platform artifact"));
         }
-        for artifact in artifacts.into_iter().flatten() {
+        for (platform, artifact) in artifacts {
+            let Some(artifact) = artifact else { continue };
+            if artifact.format != platform.format() {
+                return Err(ManifestError::Contract(
+                    "an artifact is not in its platform's format",
+                ));
+            }
             validate_artifact(artifact, origin, &raw.version)?;
         }
         Ok(Self {
@@ -171,6 +215,7 @@ impl Manifest {
             minimum_version,
             notes: raw.notes,
             windows_x86_64: raw.platforms.windows_x86_64,
+            darwin_universal: raw.platforms.darwin_universal,
         })
     }
 
@@ -179,6 +224,7 @@ impl Manifest {
     pub fn artifact(&self, platform: Platform) -> Option<&Artifact> {
         match platform {
             Platform::WindowsX86_64 => self.windows_x86_64.as_ref(),
+            Platform::DarwinUniversal => self.darwin_universal.as_ref(),
         }
     }
 }
@@ -306,8 +352,20 @@ mod tests {
         assert_eq!(contract["channels"], serde_json::json!(["stable", "beta"]));
         assert_eq!(
             contract["platforms"],
-            serde_json::json!({ "windows-x86_64": { "formats": ["nsis"] } })
+            serde_json::json!({
+                "windows-x86_64": { "formats": ["nsis"] },
+                "darwin-universal": { "formats": ["app"] },
+            })
         );
+        for platform in [Platform::WindowsX86_64, Platform::DarwinUniversal] {
+            let format = serde_json::to_value(platform.format())?;
+            assert_eq!(
+                contract["platforms"][platform.key()]["formats"],
+                serde_json::json!([format]),
+                "{}",
+                platform.key()
+            );
+        }
         assert_eq!(
             contract["fileNamePattern"],
             format!("^[a-z0-9][a-z0-9._-]{{0,{}}}$", MAX_FILE_NAME_BYTES - 1)
@@ -332,12 +390,60 @@ mod tests {
             let channel = fixture["channel"].as_str().ok_or("channel")?;
             let manifest = Manifest::parse(fixture.to_string().as_bytes(), &origin()?, channel)?;
             assert_eq!(manifest.channel, channel);
-            let artifact = manifest
-                .artifact(Platform::WindowsX86_64)
-                .ok_or("artifact")?;
-            assert_eq!(artifact.format, ArtifactFormat::Nsis);
+            for platform in [Platform::WindowsX86_64, Platform::DarwinUniversal] {
+                let shipped = fixture["platforms"].get(platform.key()).is_some();
+                let artifact = manifest.artifact(platform);
+                assert_eq!(artifact.is_some(), shipped, "{}", platform.key());
+                if let Some(artifact) = artifact {
+                    assert_eq!(artifact.format, platform.format());
+                }
+            }
         }
         Ok(())
+    }
+
+    #[test]
+    fn a_macos_build_reads_its_app_archive_and_nothing_else() -> TestResult {
+        let fixtures = fixtures()?;
+        let both = Manifest::parse(
+            fixtures["valid"][0].to_string().as_bytes(),
+            &origin()?,
+            "stable",
+        )?;
+        let mac = both
+            .artifact(Platform::DarwinUniversal)
+            .ok_or("a macOS artifact")?;
+        assert_eq!(mac.format, ArtifactFormat::App);
+        assert_eq!(
+            artifact_file_name(&mac.url, &origin()?, "0.2.0").as_deref(),
+            Some("scout-desktop-stable_0.2.0_universal.app.tar.gz")
+        );
+        assert_ne!(
+            both.artifact(Platform::WindowsX86_64),
+            both.artifact(Platform::DarwinUniversal)
+        );
+
+        // A release that ships macOS first offers Windows nothing yet.
+        let mac_only = Manifest::parse(
+            fixtures["valid"][2].to_string().as_bytes(),
+            &origin()?,
+            "beta",
+        )?;
+        assert!(mac_only.artifact(Platform::DarwinUniversal).is_some());
+        assert_eq!(mac_only.artifact(Platform::WindowsX86_64), None);
+        Ok(())
+    }
+
+    #[test]
+    fn this_build_knows_its_platform() {
+        let expected = if cfg!(all(windows, target_arch = "x86_64")) {
+            Some(Platform::WindowsX86_64)
+        } else if cfg!(target_os = "macos") {
+            Some(Platform::DarwinUniversal)
+        } else {
+            None
+        };
+        assert_eq!(Platform::current(), expected);
     }
 
     #[test]

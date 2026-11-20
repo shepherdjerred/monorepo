@@ -1,10 +1,13 @@
+import { isDeepStrictEqual } from "node:util";
 import {
   SCOUT_DESKTOP_UPDATE_ORIGIN,
   ScoutDesktopUpdateManifestSchema,
+  ScoutDesktopUpdatePlatformSchema,
   compareScoutDesktopVersions,
   type ScoutDesktopUpdateArtifact,
   type ScoutDesktopUpdateChannel,
   type ScoutDesktopUpdateManifest,
+  type ScoutDesktopUpdatePlatform,
 } from "./desktop-update-manifest.schema.ts";
 
 /**
@@ -29,8 +32,38 @@ export function publicUrl(key: string): string {
   return `${SCOUT_DESKTOP_UPDATE_ORIGIN}/${key}`;
 }
 
+/**
+ * The name a platform's update artifact is published under, inside
+ * `releases/<version>/`. Windows ships the NSIS installer itself; macOS ships
+ * a gzipped tar of the notarized `.app` bundle.
+ */
+export function updateArtifactFileName(
+  channel: ScoutDesktopUpdateChannel,
+  version: string,
+  platform: ScoutDesktopUpdatePlatform,
+): string {
+  switch (platform) {
+    case "windows-x86_64":
+      return `scout-desktop-${channel}_${version}_x64-setup.exe`;
+    case "darwin-universal":
+      return `scout-desktop-${channel}_${version}_universal.app.tar.gz`;
+  }
+}
+
+/**
+ * The name the macOS disk image is published under. It is what a person
+ * downloads to install the first time; installed builds update from the
+ * app archive instead, so the disk image is not in the manifest.
+ */
+export function macDiskImageFileName(
+  channel: ScoutDesktopUpdateChannel,
+  version: string,
+): string {
+  return `scout-desktop-${channel}_${version}_universal.dmg`;
+}
+
 export type PublishedArtifact = Omit<ScoutDesktopUpdateArtifact, "url"> & {
-  /** Name the installer is uploaded under, inside `releases/<version>/`. */
+  /** Name the artifact is uploaded under, inside `releases/<version>/`. */
   fileName: string;
 };
 
@@ -40,14 +73,25 @@ export type BuildManifestInput = {
   minimumVersion: string;
   notes: string;
   publishedAt: string;
-  windows: PublishedArtifact;
+  /** The update artifacts this publication carries; at least one. */
+  platforms: Partial<Record<ScoutDesktopUpdatePlatform, PublishedArtifact>>;
 };
 
 /** Build and validate the manifest for one release. */
 export function buildUpdateManifest(
   input: BuildManifestInput,
 ): ScoutDesktopUpdateManifest {
-  const { fileName, ...artifact } = input.windows;
+  const platforms: Partial<
+    Record<ScoutDesktopUpdatePlatform, ScoutDesktopUpdateArtifact>
+  > = {};
+  for (const [key, published] of Object.entries(input.platforms)) {
+    const platform = ScoutDesktopUpdatePlatformSchema.parse(key);
+    const { fileName, ...artifact } = published;
+    platforms[platform] = {
+      url: publicUrl(releaseObjectKey(input.version, fileName)),
+      ...artifact,
+    };
+  }
   return ScoutDesktopUpdateManifestSchema.parse({
     schema: 1,
     channel: input.channel,
@@ -55,12 +99,64 @@ export function buildUpdateManifest(
     minimumVersion: input.minimumVersion,
     publishedAt: input.publishedAt,
     notes: input.notes,
-    platforms: {
-      "windows-x86_64": {
-        url: publicUrl(releaseObjectKey(input.version, fileName)),
-        ...artifact,
-      },
+    platforms,
+  });
+}
+
+/**
+ * The manifest to publish, given the live one and a candidate built from the
+ * artifacts on this machine.
+ *
+ * Windows and macOS are built on different hosts, so one version reaches the
+ * channel in up to two publications. The first publishes a newer version with
+ * its own platform (after the never-downgrade checks); a later one for the
+ * same version adds a platform the live manifest lacks and keeps everything
+ * else, including the notes and minimum version, which must match. A platform
+ * already live is never replaced: identical bytes mean there is nothing to
+ * publish, different ones mean a version bump.
+ */
+export function resolvePublication(
+  live: ScoutDesktopUpdateManifest | null,
+  candidate: ScoutDesktopUpdateManifest,
+): ScoutDesktopUpdateManifest {
+  if (
+    live?.channel !== candidate.channel ||
+    compareScoutDesktopVersions(candidate.version, live.version) !== 0
+  ) {
+    assertNeverDowngrade(live, candidate);
+    return candidate;
+  }
+  const added = Object.entries(candidate.platforms).filter(
+    ([platform, artifact]) => {
+      const current =
+        live.platforms[ScoutDesktopUpdatePlatformSchema.parse(platform)];
+      if (current === undefined) return true;
+      if (!isDeepStrictEqual(current, artifact)) {
+        throw new Error(
+          `Version ${candidate.version} is already live on ${candidate.channel} with a different ${platform} artifact; bump the version`,
+        );
+      }
+      return false;
     },
+  );
+  if (added.length === 0) {
+    throw new Error(
+      `Version ${candidate.version} is already live on ${candidate.channel}; bump the version`,
+    );
+  }
+  if (candidate.notes !== live.notes) {
+    throw new Error(
+      `Version ${candidate.version} is live with other release notes; publish the second platform with the same notes file`,
+    );
+  }
+  if (candidate.minimumVersion !== live.minimumVersion) {
+    throw new Error(
+      `Version ${candidate.version} is live with minimum version ${live.minimumVersion}; a second platform cannot change it`,
+    );
+  }
+  return ScoutDesktopUpdateManifestSchema.parse({
+    ...live,
+    platforms: { ...live.platforms, ...Object.fromEntries(added) },
   });
 }
 

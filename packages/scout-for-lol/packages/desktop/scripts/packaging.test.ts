@@ -70,7 +70,7 @@ describe("voice model packaging", () => {
     const prepare = read("scripts/prepare-package.ts");
     expect(prepare.indexOf("fetch-voice-models.ts")).toBeGreaterThan(-1);
     expect(prepare.indexOf("fetch-voice-models.ts")).toBeLessThan(
-      prepare.indexOf('cargo", "build'),
+      prepare.indexOf("const cargoBuild"),
     );
   });
 });

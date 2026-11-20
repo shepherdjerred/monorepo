@@ -3,6 +3,9 @@
 // installer binary name. NSIS keys its process kill, shortcuts and uninstall
 // on that name, so beta stages `scout-client-beta` and installs beside stable.
 // It also assembles the voice models that packaging/*.json ships as a resource.
+// With SCOUT_DESKTOP_TARGET=universal-apple-darwin (set by the macOS release
+// lane, package-macos.ts) it builds the arm64 and x86_64 slices and joins them
+// with `lipo` into one universal binary.
 //   bun scripts/prepare-package.ts stable|beta
 import { copyFile, mkdir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
@@ -41,23 +44,61 @@ if ((await fetchModels.exited) !== 0) {
   throw new Error("assembling the voice models failed");
 }
 
-const build = Bun.spawn(
-  ["cargo", "build", "--release", "--locked", "--package", "scout-client-app"],
-  {
+async function run(command: string[], failure: string): Promise<void> {
+  const child = Bun.spawn(command, {
     cwd: root,
     env: { ...process.env, SCOUT_DESKTOP_PROFILE: channel },
     stdout: "inherit",
     stderr: "inherit",
-  },
-);
-if ((await build.exited) !== 0) {
-  throw new Error("cargo build failed");
+  });
+  if ((await child.exited) !== 0) {
+    throw new Error(failure);
+  }
 }
 
-const extension = process.platform === "win32" ? ".exe" : "";
+const cargoBuild = [
+  "cargo",
+  "build",
+  "--release",
+  "--locked",
+  "--package",
+  "scout-client-app",
+];
 const staged = join(root, "target/package", channel);
 await mkdir(staged, { recursive: true });
-await copyFile(
-  join(root, `target/release/scout-client${extension}`),
-  join(staged, `${binaryName}${extension}`),
-);
+const target = process.env["SCOUT_DESKTOP_TARGET"];
+if (target === undefined || target === "") {
+  await run(cargoBuild, "cargo build failed");
+  const extension = process.platform === "win32" ? ".exe" : "";
+  await copyFile(
+    join(root, `target/release/scout-client${extension}`),
+    join(staged, `${binaryName}${extension}`),
+  );
+} else if (
+  target === "universal-apple-darwin" &&
+  process.platform === "darwin"
+) {
+  const slices = ["aarch64-apple-darwin", "x86_64-apple-darwin"];
+  for (const slice of slices) {
+    await run(
+      [...cargoBuild, "--target", slice],
+      `cargo build ${slice} failed`,
+    );
+  }
+  await run(
+    [
+      "lipo",
+      "-create",
+      "-output",
+      join(staged, binaryName),
+      ...slices.map((slice) =>
+        join(root, `target/${slice}/release/scout-client`),
+      ),
+    ],
+    "lipo could not join the slices",
+  );
+} else {
+  throw new Error(
+    `SCOUT_DESKTOP_TARGET=${target} is not a release target on ${process.platform}; only universal-apple-darwin on macOS is`,
+  );
+}

@@ -17,6 +17,8 @@ chrono.workspace = true
 directories.workspace = true
 eframe.workspace = true
 egui.workspace = true
+# The macOS updater unpacks the signed app archive in place.
+flate2.workspace = true
 hex.workspace = true
 minisign-verify.workspace = true
 open.workspace = true
@@ -25,6 +27,7 @@ semver.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
+tar.workspace = true
 thiserror.workspace = true
 scout-client-core = { path = "../scout-client-core" }
 scout-client-runtime = { path = "../scout-client-runtime" }
