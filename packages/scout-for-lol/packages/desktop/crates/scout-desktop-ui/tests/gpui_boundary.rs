@@ -1,12 +1,14 @@
 //! gpui-kit pins a pre-1.0 GPUI snapshot. Only `scout-desktop-ui` may depend
 //! on it, and only where the window runs, so an upgrade touches one crate and
-//! Linux CI never needs GUI libraries.
+//! Linux CI never needs GUI libraries. `scout-overlay` is the toolkit-free
+//! overlay core; it must stay free of gpui and every other window toolkit.
 
 use std::process::Command;
 
 use serde_json::Value;
 
 const UI_CRATE: &str = "scout-desktop-ui";
+const OVERLAY_CRATE: &str = "scout-overlay";
 const WINDOW_TARGETS: &[&str] = &[
     "cfg(any(windows, target_os = \"macos\"))",
     "cfg(target_os = \"macos\")",
@@ -77,7 +79,9 @@ fn only_the_ui_crate_depends_on_gpui() -> Result<(), Box<dyn std::error::Error>>
         .map(|(member, ..)| member.as_str())
         .collect::<std::collections::BTreeSet<_>>();
     assert!(
-        members.contains(UI_CRATE) && members.contains("scout-client-app"),
+        members.contains(UI_CRATE)
+            && members.contains(OVERLAY_CRATE)
+            && members.contains("scout-client-app"),
         "cargo metadata did not list the workspace: {members:?}"
     );
     let outside = declared
@@ -111,6 +115,35 @@ fn the_ui_crate_takes_gpui_only_on_windows_and_macos() -> Result<(), Box<dyn std
     assert!(
         ungated.is_empty(),
         "GPUI dependencies must be gated to Windows and macOS: {ungated:?}"
+    );
+    Ok(())
+}
+
+#[test]
+fn the_overlay_core_has_no_window_toolkit() -> Result<(), Box<dyn std::error::Error>> {
+    const TOOLKITS: &[&str] = &[
+        "eframe",
+        "egui",
+        "winit",
+        "tray-icon",
+        "winsafe",
+        "objc2-app-kit",
+    ];
+    let overlay = declared_dependencies()?
+        .into_iter()
+        .filter(|(member, ..)| member == OVERLAY_CRATE)
+        .collect::<Vec<_>>();
+    assert!(
+        !overlay.is_empty(),
+        "{OVERLAY_CRATE} declares no dependencies"
+    );
+    let toolkits = overlay
+        .iter()
+        .filter(|(_, package, ..)| is_gpui(package) || TOOLKITS.contains(&package.as_str()))
+        .collect::<Vec<_>>();
+    assert!(
+        toolkits.is_empty(),
+        "{OVERLAY_CRATE} must stay toolkit-independent: {toolkits:?}"
     );
     Ok(())
 }

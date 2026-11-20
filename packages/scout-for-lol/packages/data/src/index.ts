@@ -8,6 +8,7 @@ export * from "./scout-client/desktop-events.schema.ts";
 export * from "./scout-client/desktop-api.schema.ts";
 export * from "./scout-client/desktop-voice.schema.ts";
 export * from "./scout-client/coach-context.schema.ts";
+export * from "./scout-client/overlay-card.schema.ts";
 export * from "./seasons.ts";
 
 export * from "./league/data-source.ts";

@@ -1,0 +1,198 @@
+{
+  "valid": [
+    {
+      "name": "pregame plan",
+      "body": {
+        "id": "plan-1",
+        "kind": "pregame_plan",
+        "title": "Your plan",
+        "lines": [
+          "Take Flash and Ignite",
+          "Ban Zed if you can",
+          "Ward river at 2:30"
+        ],
+        "priority": "normal",
+        "ttlSecs": 120
+      }
+    },
+    {
+      "name": "answer at the bounds",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": ["x", "x", "x", "x", "x"],
+        "priority": "high",
+        "ttlSecs": 600
+      }
+    },
+    {
+      "name": "status",
+      "body": {
+        "id": "status-recording",
+        "kind": "status",
+        "title": "Recording",
+        "lines": ["Scout is capturing this game"],
+        "priority": "low",
+        "ttlSecs": 1
+      }
+    },
+    {
+      "name": "proactive",
+      "body": {
+        "id": "trigger-enemy-fed",
+        "kind": "proactive",
+        "title": "Enemy fed",
+        "lines": ["Their jungler is 5/0"],
+        "priority": "normal",
+        "ttlSecs": 20
+      }
+    },
+    {
+      "name": "review ready",
+      "body": {
+        "id": "review-1",
+        "kind": "review_ready",
+        "title": "Review ready",
+        "lines": ["Open Scout to read your post-game review"],
+        "priority": "normal",
+        "ttlSecs": 300
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "reason": "an unknown kind",
+      "body": {
+        "id": "a",
+        "kind": "ad",
+        "title": "T",
+        "lines": ["x"],
+        "priority": "low",
+        "ttlSecs": 5
+      }
+    },
+    {
+      "reason": "an unknown key",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": ["x"],
+        "priority": "low",
+        "ttlSecs": 5,
+        "riotId": "Name#EUW"
+      }
+    },
+    {
+      "reason": "a missing field",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": ["x"],
+        "priority": "low"
+      }
+    },
+    {
+      "reason": "an empty id",
+      "body": {
+        "id": "",
+        "kind": "answer",
+        "title": "T",
+        "lines": ["x"],
+        "priority": "low",
+        "ttlSecs": 5
+      }
+    },
+    {
+      "reason": "an overlong title",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "lines": ["x"],
+        "priority": "low",
+        "ttlSecs": 5
+      }
+    },
+    {
+      "reason": "no lines",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": [],
+        "priority": "low",
+        "ttlSecs": 5
+      }
+    },
+    {
+      "reason": "six lines",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": ["x", "x", "x", "x", "x", "x"],
+        "priority": "low",
+        "ttlSecs": 5
+      }
+    },
+    {
+      "reason": "an empty line",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": [""],
+        "priority": "low",
+        "ttlSecs": 5
+      }
+    },
+    {
+      "reason": "an unknown priority",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": ["x"],
+        "priority": "urgent",
+        "ttlSecs": 5
+      }
+    },
+    {
+      "reason": "a zero ttl",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": ["x"],
+        "priority": "low",
+        "ttlSecs": 0
+      }
+    },
+    {
+      "reason": "a ttl over ten minutes",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": ["x"],
+        "priority": "low",
+        "ttlSecs": 601
+      }
+    },
+    {
+      "reason": "a fractional ttl",
+      "body": {
+        "id": "a",
+        "kind": "answer",
+        "title": "T",
+        "lines": ["x"],
+        "priority": "low",
+        "ttlSecs": 1.5
+      }
+    },
+    { "reason": "a null body", "body": null }
+  ]
+}

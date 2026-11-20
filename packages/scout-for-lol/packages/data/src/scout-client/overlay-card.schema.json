@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scout-for-lol.com/schemas/scout-client/overlay-card.schema.json",
+  "title": "Scout overlay card",
+  "description": "One card Scout Desktop's in-game overlay may show: short text the player could read in their own client, with no Riot ID or summoner name. Unknown keys are refused. Zod (overlay-card.schema.ts) and serde (scout-overlay src/card.rs) both hold the shared fixtures in overlay-card.fixtures.json to this file. Whether a proactive card may be shown at all is the overlay's policy, not this schema.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Stable per card; offering the same id again replaces the card.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["pregame_plan", "answer", "status", "proactive", "review_ready"]
+    },
+    "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "lines": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 160 },
+      "minItems": 1,
+      "maxItems": 5
+    },
+    "priority": { "type": "string", "enum": ["low", "normal", "high"] },
+    "ttlSecs": {
+      "description": "Seconds the card stays queued before it expires.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 600
+    }
+  },
+  "required": ["id", "kind", "title", "lines", "priority", "ttlSecs"],
+  "additionalProperties": false
+}
