@@ -98,6 +98,8 @@ export const PlayerItemSchema = z.strictObject({
   durationSeconds: z.number().nullable(),
   mediaKind: z.enum(["music", "video"]).nullable(),
   artworkUrl: ArtworkUrlSchema.optional(),
+  /** Opaque identity of this queue entry; send it back as `expectCurrent` once it is playing. */
+  token: z.string().optional(),
 });
 export const WebStationScopeSchema = z.enum(["room", "mine", "server"]);
 export const WebTvPresetSchema = z.enum([
@@ -153,12 +155,28 @@ const commandBase = {
   playbackChannel: z.number().int().positive().nullable().default(null),
   selectionVersion: z.string().nullable().default(null),
   slotRevisions: z.record(z.string(), z.string().nullable()).default({}),
+  /**
+   * `explicit` targets `playbackChannel` as given (`null` is a legacy room's single queue) instead
+   * of the viewer's personal Streambot channel selection.
+   */
+  targeting: z.literal("explicit").optional(),
 };
+/** Listen is voice audio everyone in the channel hears; Watch is a Go Live stream. */
+export const TransportSchema = z.enum(["listen", "watch"]);
+export type WebTransport = z.infer<typeof TransportSchema>;
+/** An item token from the snapshot; a stale click on a different item is refused. */
+const expectCurrent = z.string().min(1).max(100).optional();
+const CurrentItemCommandSchema = z.strictObject({
+  ...commandBase,
+  action: z.enum(["pause", "resume", "skip"]),
+  expectCurrent,
+});
 const SimpleCommandSchema = z.strictObject({
   ...commandBase,
-  action: z.enum(["pause", "resume", "skip", "stop", "clear", "shuffle"]),
+  action: z.enum(["stop", "clear", "shuffle"]),
 });
 export const CommandSchema = z.union([
+  CurrentItemCommandSchema,
   SimpleCommandSchema,
   z.strictObject({
     ...commandBase,
@@ -170,11 +188,14 @@ export const CommandSchema = z.union([
     action: z.literal("play"),
     selection: MediaSelectionSchema,
     placement: z.enum(["queue", "next", "now"]),
+    /** Overrides personal selection and automatic routing; absent keeps both. */
+    transport: TransportSchema.optional(),
   }),
   z.strictObject({
     ...commandBase,
     action: z.literal("seek"),
     seconds: z.number().min(0),
+    expectCurrent,
   }),
   z.strictObject({
     ...commandBase,
@@ -215,7 +236,17 @@ export type WebCommand = z.infer<typeof CommandSchema>;
 export const CommandResultSchema = z.strictObject({
   message: z.string(),
   loadId: z.string().optional(),
+  /** Where a play request went. The channel name is for the requesting viewer only. */
+  destination: z
+    .strictObject({
+      transport: TransportSchema,
+      voiceChannelName: z.string(),
+    })
+    .optional(),
+  /** The first played item's 1-based place in the queue, or `0` when it is starting right away. */
+  position: z.number().int().nonnegative().optional(),
 });
+export type WebCommandResult = z.infer<typeof CommandResultSchema>;
 export const SubtitleMenuSchema = z.strictObject({
   revision: z.string(),
   tracks: z.array(z.strictObject({ token: z.string(), label: z.string() })),

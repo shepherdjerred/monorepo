@@ -373,7 +373,7 @@ export class PlaybackCommandService extends PlaybackControls {
   ): Promise<ResolvedSource | undefined> {
     const { source, play, query, intent, scope } = input;
     if (input.preResolved !== undefined) return input.preResolved;
-    if (source.kind === "file") return undefined;
+    if (source.kind === "file" && play.probeFiles !== true) return undefined;
     const signal = this.boundedSignal(play.signal);
     try {
       const resolved = await this.deps.resolvePlaySource(source, signal);

@@ -20,6 +20,12 @@ import {
   type PersistedStation,
 } from "@shepherdjerred/streambot/state/station-schema.ts";
 import type { CuratedStationItem } from "@shepherdjerred/streambot/station/station-types.ts";
+import {
+  itemTokens,
+  locateDispatched,
+  observePlaybackItem,
+  queueEntries,
+} from "@shepherdjerred/streambot/session/item-tokens.ts";
 import type {
   ChannelId,
   GuildId,
@@ -385,7 +391,15 @@ export function createFixtureSlot(options: FixtureSlotOptions) {
     }
   }
 
-  actor.subscribe(() => {
+  actor.subscribe((snapshot) => {
+    // Mirrors the production session observer, which follows every snapshot.
+    observePlaybackItem(
+      actor,
+      typeof snapshot.value === "string"
+        ? snapshot.value
+        : JSON.stringify(snapshot.value),
+      snapshot.context,
+    );
     if (
       slot.station !== undefined &&
       actor.getSnapshot().context.queue.length < 2
@@ -394,32 +408,39 @@ export function createFixtureSlot(options: FixtureSlotOptions) {
     }
   });
 
+  const dispatch: SessionHandle["dispatch"] = (event) => {
+    options.events?.push(event);
+    if (
+      event.type === "STOP" ||
+      event.type === "LEAVE" ||
+      event.type === "CLEAR"
+    ) {
+      slot.station = undefined;
+    } else if (event.type === "SKIP" && slot.station !== undefined) {
+      const current = actor.getSnapshot().context.current;
+      if (current !== null) {
+        slot.station = {
+          ...slot.station,
+          skippedIdentities: appendStationRingBuffer(
+            slot.station.skippedIdentities,
+            sourceIdentity(current.source),
+            MAX_STATION_SKIPPED_IDENTITIES,
+          ),
+        };
+      }
+    }
+    actor.send(event);
+  };
   const handle: SessionHandle = {
     ...EMPTY_HANDLE,
     station: () => slot.station ?? null,
-    dispatch: (event) => {
-      options.events?.push(event);
-      if (
-        event.type === "STOP" ||
-        event.type === "LEAVE" ||
-        event.type === "CLEAR"
-      ) {
-        slot.station = undefined;
-      } else if (event.type === "SKIP" && slot.station !== undefined) {
-        const current = actor.getSnapshot().context.current;
-        if (current !== null) {
-          slot.station = {
-            ...slot.station,
-            skippedIdentities: appendStationRingBuffer(
-              slot.station.skippedIdentities,
-              sourceIdentity(current.source),
-              MAX_STATION_SKIPPED_IDENTITIES,
-            ),
-          };
-        }
-      }
-      actor.send(event);
+    dispatch,
+    dispatchTracked: (event) => {
+      const before = queueEntries(actor.getSnapshot().context);
+      dispatch(event);
+      return locateDispatched(actor, before, actor.getSnapshot().context);
     },
+    itemTokens: () => itemTokens(actor, actor.getSnapshot().context),
     view: () => buildPlaybackView(actor.getSnapshot(), position),
     seek: (seconds) => {
       position = seconds;

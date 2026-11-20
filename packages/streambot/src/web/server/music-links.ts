@@ -6,6 +6,7 @@ import { queueBatch } from "@shepherdjerred/streambot/commands/queue-batch.ts";
 import type { WebCommand } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { WebMusicOwner } from "./music-owner.ts";
 import type { WebSession } from "./session-store.ts";
+import { withTransport, type PlayReceipt } from "./command/play-receipt.ts";
 
 export class ExternalMusicQueue {
   constructor(private readonly music: WebMusicOwner) {}
@@ -37,6 +38,7 @@ export class ExternalMusicQueue {
   async execute(
     session: WebSession,
     input: Extract<WebCommand, { action: "play" }>,
+    receipt: PlayReceipt,
   ) {
     const selection = input.selection;
     if (selection.kind !== "url") return null;
@@ -45,7 +47,9 @@ export class ExternalMusicQueue {
     if (spotify !== null)
       await this.music.require(session, input.guildId, "spotify");
     const playback = this.music.playback;
-    const context = await playback.commandContext(session, input);
+    const context = await playback.commandContext(session, input, {
+      receipt,
+    });
     const load = this.music.service().loads.start(
       {
         userId: context.userId,
@@ -67,7 +71,7 @@ export class ExternalMusicQueue {
           context.guard();
           const result = await queueBatch({
             deps: context.commandDeps,
-            sources,
+            sources: withTransport(sources, input.transport),
             userId: context.userId,
             placement: input.placement,
             signal,
@@ -87,6 +91,7 @@ export class ExternalMusicQueue {
         }
       },
     );
-    return { message: load.message, loadId: load.id };
+    // The batch loads after this response, so only the destination is known now.
+    return { ...context.playResult(load.message), loadId: load.id };
   }
 }

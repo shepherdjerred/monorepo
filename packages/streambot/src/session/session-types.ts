@@ -20,6 +20,10 @@ import type {
 } from "@shepherdjerred/streambot/machine/types.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type {
+  DispatchedItem,
+  ItemTokens,
+} from "@shepherdjerred/streambot/session/item-tokens.ts";
+import type {
   PlayerCardManager,
   PlayerCardPort,
 } from "@shepherdjerred/streambot/discord/player-card/player-card-manager.ts";
@@ -83,6 +87,10 @@ export type SessionHandle = {
    * subsumes the source-kind check (a `file:` id can never equal a `url:`/`search:` id).
    */
   currentSourceId: () => string | null;
+  /** Opaque per-entry tokens (see `item-tokens.ts`); safe to show to a remote client. */
+  itemTokens: () => ItemTokens;
+  /** Dispatch an event and report where the first entry it added landed, if any. */
+  dispatchTracked: (event: PlaybackEvent) => DispatchedItem | null;
   /** True while a subtitle picker is already open for this session (single-flight guard). */
   hasPendingSubtitleMenu: () => boolean;
   /** Claim the single-flight slot; returns false if one was already claimed. */
@@ -181,6 +189,8 @@ export const EMPTY_HANDLE: SessionHandle = {
   voiceDebugCaptureStatus: () => null,
   listSubtitleCandidates: () => Promise.resolve([]),
   currentSourceId: () => null,
+  itemTokens: () => ({ current: null, queue: [] }),
+  dispatchTracked: () => null,
   hasPendingSubtitleMenu: () => false,
   claimSubtitleMenu: () => true,
   releaseSubtitleMenu: () => {

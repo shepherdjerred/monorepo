@@ -14,12 +14,31 @@ import type {
 import type { StationFeeder } from "@shepherdjerred/streambot/station/station-feeder.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import { queuedDisplay } from "./queued-display.ts";
+import { itemTokens, locateDispatched, queueEntries } from "./item-tokens.ts";
 
 export function buildSessionHandle(
   config: Config,
   session: Session,
   feeder?: StationFeeder,
 ): SessionHandle {
+  const dispatch: SessionHandle["dispatch"] = (event) => {
+    if (session.torndown)
+      throw new PlaybackCommandBoundaryError(
+        "That playback ended while the command was loading. Try again.",
+      );
+    feeder?.onBeforeDispatch(session, event);
+    session.actor.send(
+      event.type === "ADD" ||
+        event.type === "ADD_NEXT" ||
+        event.type === "PLAY_NOW"
+        ? {
+            ...event,
+            queuedAt: event.queuedAt ?? Date.now(),
+            display: queuedDisplay(event),
+          }
+        : event,
+    );
+  };
   return {
     ...(session.playbackChannel === undefined
       ? {}
@@ -27,24 +46,18 @@ export function buildSessionHandle(
     ...(session.instanceId === undefined
       ? {}
       : { instanceId: session.instanceId }),
-    dispatch: (event) => {
-      if (session.torndown)
-        throw new PlaybackCommandBoundaryError(
-          "That playback ended while the command was loading. Try again.",
-        );
-      feeder?.onBeforeDispatch(session, event);
-      session.actor.send(
-        event.type === "ADD" ||
-          event.type === "ADD_NEXT" ||
-          event.type === "PLAY_NOW"
-          ? {
-              ...event,
-              queuedAt: event.queuedAt ?? Date.now(),
-              display: queuedDisplay(event),
-            }
-          : event,
+    dispatch,
+    dispatchTracked: (event) => {
+      const before = queueEntries(session.actor.getSnapshot().context);
+      dispatch(event);
+      return locateDispatched(
+        session.actor,
+        before,
+        session.actor.getSnapshot().context,
       );
     },
+    itemTokens: () =>
+      itemTokens(session.actor, session.actor.getSnapshot().context),
     view: () =>
       buildPlaybackView(
         session.actor.getSnapshot(),

@@ -3,12 +3,21 @@ import {
   subtitleTrackRef,
   type SubtitleCandidate,
 } from "@shepherdjerred/streambot/sources/subtitles.ts";
-import type { WebCommand } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import type {
+  WebCommand,
+  WebCommandResult,
+} from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import type { WebSession } from "./session-store.ts";
 import { Selections, SELECTIONS_PER_OWNER } from "./selections.ts";
 import { WebError } from "./errors.ts";
 import type { WebPlayback } from "./playback.ts";
 import { executeWebStationCommand } from "./station-action.ts";
+import {
+  PlayReceipt,
+  isSportsSource,
+  transportMode,
+} from "./command/play-receipt.ts";
 
 type TrackSelection = {
   sourceId: string;
@@ -24,7 +33,7 @@ export class WebActions {
     session: WebSession,
     input: WebCommand,
     signal: AbortSignal,
-  ): Promise<{ message: string }> {
+  ): Promise<WebCommandResult> {
     if (input.action === "select")
       return await this.playback.selectChannel(session, input);
     if (input.action === "station")
@@ -35,6 +44,14 @@ export class WebActions {
         signal,
       );
     if (input.action === "play") return await this.play(session, input, signal);
+    const result = await this.control(session, input);
+    return { message: result.message };
+  }
+
+  private async control(
+    session: WebSession,
+    input: Exclude<WebCommand, { action: "select" | "station" | "play" }>,
+  ): Promise<{ message: string }> {
     const context = await this.playback.commandContext(session, input);
     const { service, userId, handle } = context;
     try {
@@ -96,7 +113,8 @@ export class WebActions {
     session: WebSession,
     input: Extract<WebCommand, { action: "play" }>,
     signal: AbortSignal,
-  ) {
+  ): Promise<WebCommandResult> {
+    const receipt = new PlayReceipt(input.transport);
     await this.playback.authorize(session, input.guildId);
     const owner = session.key + ":" + input.guildId;
     if (
@@ -113,9 +131,17 @@ export class WebActions {
       input.selection.kind === "history"
         ? await this.playback.history.select(input.selection.id, owner, signal)
         : this.playback.deps.catalog.select(input.selection, owner);
-    const context = await this.playback.commandContext(session, input);
+    if (input.transport === "listen" && isSportsSource(selected.source))
+      throw new WebError(
+        409,
+        "listen_sports",
+        "Live sports can only be watched.",
+      );
+    const context = await this.playback.commandContext(session, input, {
+      receipt,
+    });
     try {
-      return await context.service.play({
+      const result = await context.service.play({
         query: selected.title,
         source: "auto",
         placement: input.placement,
@@ -124,7 +150,26 @@ export class WebActions {
         spoken: false,
         surface: "web",
         signal,
+        ...(input.transport === undefined
+          ? {}
+          : {
+              mode: transportMode(input.transport),
+              probeFiles: input.transport === "watch",
+            }),
       });
+      return context.playResult(result.message);
+    } catch (error) {
+      if (
+        input.transport === "watch" &&
+        receipt.noVideo &&
+        error instanceof PlaybackCommandBoundaryError
+      )
+        throw new WebError(
+          409,
+          "no_video",
+          "This has no video to watch. Choose Listen instead.",
+        );
+      throw error;
     } finally {
       this.playback.deps.sessions.releaseUnused(
         context.guildId,

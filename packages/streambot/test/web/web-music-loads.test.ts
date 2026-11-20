@@ -42,7 +42,7 @@ async function startLoad(f: ReturnType<typeof webFixture>) {
   if (result.loadId === undefined) throw new Error("Missing load ID");
   return result.loadId;
 }
-test.each(["cancel", "voice", "slot", "membership", "stop", "queue"] as const)(
+test.each(["cancel", "voice", "slot", "membership", "stop"] as const)(
   "late playlist metadata cannot enqueue after %s",
   async (boundary) => {
     const pending = Promise.withResolvers<typeof ITEMS>();
@@ -53,7 +53,7 @@ test.each(["cancel", "voice", "slot", "membership", "stop", "queue"] as const)(
     });
     fixture = f;
     if (boundary === "slot") f.enableNumbered(2);
-    if (boundary === "stop" || boundary === "queue") await f.seed();
+    if (boundary === "stop") await f.seed();
     const id = await startLoad(f);
     switch (boundary) {
       case "cancel": {
@@ -85,20 +85,6 @@ test.each(["cancel", "voice", "slot", "membership", "stop", "queue"] as const)(
         expect(response.status).toBe(200);
         break;
       }
-      case "queue": {
-        const response = await f.handler(
-          f.command({
-            action: "play",
-            placement: "queue",
-            selection: {
-              kind: "url",
-              url: "https://www.youtube.com/watch?v=oldqueued01",
-            },
-          }),
-        );
-        expect(response.status).toBe(200);
-        break;
-      }
     }
     pending.resolve(ITEMS);
     const progress = await settle(f, id);
@@ -109,14 +95,45 @@ test.each(["cancel", "voice", "slot", "membership", "stop", "queue"] as const)(
       .context.queue.map((item) =>
         item.source.kind === "url" ? item.source.url : item.source.kind,
       );
-    expect(queued).toEqual(
-      boundary === "queue"
-        ? ["https://www.youtube.com/watch?v=oldqueued01"]
-        : [],
-    );
+    expect(queued).toEqual([]);
     expect(f.allocations()).toBe(0);
   },
 );
+
+test("a playlist that finishes loading after another request queues behind it", async () => {
+  const pending = Promise.withResolvers<typeof ITEMS>();
+  const f = webFixture("http://127.0.0.1:8080", "/nonexistent", false, {
+    music: fixtureMusic(),
+    musicEnabled: true,
+    expandPlaylist: () => pending.promise,
+  });
+  fixture = f;
+  await f.seed();
+  const id = await startLoad(f);
+  const other = await f.handler(
+    f.command({
+      action: "play",
+      placement: "queue",
+      selection: {
+        kind: "url",
+        url: "https://www.youtube.com/watch?v=oldqueued01",
+      },
+    }),
+  );
+  expect(other.status).toBe(200);
+  pending.resolve(ITEMS);
+  const progress = await settle(f, id);
+  expect(progress.state).toBe("ready");
+  const queued = f.actor
+    .getSnapshot()
+    .context.queue.map((item) =>
+      item.source.kind === "url" ? item.source.url : item.source.kind,
+    );
+  expect(queued).toEqual([
+    "https://www.youtube.com/watch?v=oldqueued01",
+    "https://www.youtube.com/watch?v=h5EofwRzit0",
+  ]);
+});
 
 test.each(["queue", "next", "now"] as const)(
   "album %s preserves order around existing queued media",

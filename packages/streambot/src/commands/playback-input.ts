@@ -56,6 +56,11 @@ export type PlayInput = {
   readonly subtitles?: SubtitlePref;
   /** Per-request transport override; `undefined` and `"auto"` both mean "let the classifier decide". */
   readonly mode?: MediaMode;
+  /**
+   * Resolve (and so ffprobe) a local file before queueing it. The web remote's Watch sets this so
+   * a file with no picture is refused at request time instead of failing when it reaches the front.
+   */
+  readonly probeFiles?: boolean;
   readonly provider?: SportsProvider | "auto";
   /** Entry point for `streambot_play_requests_total`; omitted means `other`. */
   readonly surface?: PlaySurface;

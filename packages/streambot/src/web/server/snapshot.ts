@@ -76,6 +76,7 @@ export async function buildWebSnapshot(
       ? null
       : deps.sessions.getExisting(guildId, channel.id, playbackChannel);
   const view = handle?.view() ?? IDLE_VIEW;
+  const tokens = handle?.itemTokens() ?? { current: null, queue: [] };
   const source = view.current?.source;
   return {
     channel,
@@ -93,9 +94,21 @@ export async function buildWebSnapshot(
     current:
       view.current === null
         ? null
-        : await playerItem(owner, view.current, guildId, session),
+        : await playerItem(
+            owner,
+            { item: view.current, token: tokens.current },
+            guildId,
+            session,
+          ),
     queue: await Promise.all(
-      view.queue.map((item) => playerItem(owner, item, guildId, session)),
+      view.queue.map((item, index) =>
+        playerItem(
+          owner,
+          { item, token: tokens.queue[index] ?? null },
+          guildId,
+          session,
+        ),
+      ),
     ),
     positionSeconds: view.positionSeconds,
     paused: view.paused === true,
@@ -216,10 +229,14 @@ function slots(
 
 async function playerItem(
   owner: SnapshotOwner,
-  item: ReturnType<SessionHandle["view"]>["queue"][number],
+  entry: {
+    readonly item: ReturnType<SessionHandle["view"]>["queue"][number];
+    readonly token: string | null;
+  },
   guildId: string,
   session: WebSession,
 ) {
+  const { item, token } = entry;
   const artworkUrl = owner.deps.catalog.artwork.forSource(
     item.source,
     guildId,
@@ -240,6 +257,7 @@ async function playerItem(
       null,
     durationSeconds: item.durationSeconds,
     mediaKind: item.mediaKind,
+    ...(token === null ? {} : { token }),
     ...(artworkUrl === undefined ? {} : { artworkUrl }),
     ...(item.source?.kind !== "url" ||
     item.source.sportsEvent?.artwork === undefined

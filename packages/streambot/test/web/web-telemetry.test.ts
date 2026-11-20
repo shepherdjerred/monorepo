@@ -12,6 +12,7 @@ import {
   webLoginsTotal,
   webRequestDurationSeconds,
   webRequestsTotal,
+  webTimeToPlaybackSeconds,
 } from "@shepherdjerred/streambot/observability/web-metrics.ts";
 import { MusicAlbumSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { fixtureMusic, ALBUM } from "#music-fixture";
@@ -53,6 +54,7 @@ beforeEach(() => {
     webCommandsTotal,
     webCommandDurationSeconds,
     webLoginsTotal,
+    webTimeToPlaybackSeconds,
     playRequestsTotal,
   ])
     metric.reset();
@@ -146,6 +148,19 @@ async function drive(): Promise<{ traceId: string }> {
   expect(played.status).toBe(200);
   const traceId = played.headers.get("x-trace-id") ?? "";
   expect(traceId).toMatch(/^[0-9a-f]{32}$/u);
+  const listened = await fixture.handler(
+    fixture.command({
+      action: "play",
+      selection: { kind: "url", url: "https://example.com/" + QUERY },
+      placement: "queue",
+      transport: "listen",
+    }),
+  );
+  expect(listened.status).toBe(200);
+  // The channel name is returned to the requesting viewer only.
+  expect(await listened.json()).toMatchObject({
+    destination: { transport: "listen", voiceChannelName: "Movie night" },
+  });
 
   await fixture.seed();
   const stale = fixture.command({ action: "remove", position: 1 });
@@ -193,7 +208,7 @@ test("requests, commands, logins and play outcomes are counted with closed label
       status_class: statusClass,
       code,
     });
-  expect(await request("/api/commands", "2xx", "ok")).toBe(1);
+  expect(await request("/api/commands", "2xx", "ok")).toBe(2);
   expect(await request("/api/commands", "4xx", "playback_changed")).toBe(1);
   expect(await request("/api/sports", "5xx", "unavailable")).toBe(1);
   expect(await request("/api/sports", "aborted", "client_aborted")).toBe(1);
@@ -203,15 +218,16 @@ test("requests, commands, logins and play outcomes are counted with closed label
       route: "/api/search",
     }),
   ).toBe(1);
-  const command = (action: string, outcome: string) =>
-    count("streambot_web_commands_total", { action, outcome });
-  expect(await command("play", "ok")).toBe(1);
-  expect(await command("remove", "conflict")).toBe(1);
+  const command = (action: string, transport: string, outcome: string) =>
+    count("streambot_web_commands_total", { action, transport, outcome });
+  expect(await command("play", "unspecified", "ok")).toBe(1);
+  expect(await command("play", "listen", "ok")).toBe(1);
+  expect(await command("remove", "unspecified", "conflict")).toBe(1);
   expect(
     await count("streambot_web_command_duration_seconds_count", {
       action: "play",
     }),
-  ).toBe(1);
+  ).toBe(2);
   expect(
     await count("streambot_web_logins_total", { outcome: "success" }),
   ).toBe(1);
@@ -220,7 +236,7 @@ test("requests, commands, logins and play outcomes are counted with closed label
       surface: "web",
       outcome: "ok",
     }),
-  ).toBe(1);
+  ).toBe(2);
 });
 
 test("request, command and login log lines have a closed shape and aborts are not errors", async () => {
@@ -245,10 +261,19 @@ test("request, command and login log lines have a closed shape and aborts are no
       action: "play",
       placement: "queue",
       selection_kind: "library",
+      transport: "unspecified",
       outcome: "ok",
       code: "ok",
       duration_ms: expect.any(Number),
       traceId,
+    }),
+  );
+  expect(logs("web command")).toContainEqual(
+    expect.objectContaining({
+      action: "play",
+      selection_kind: "url",
+      transport: "listen",
+      outcome: "ok",
     }),
   );
   expect(logs("web command")).toContainEqual(

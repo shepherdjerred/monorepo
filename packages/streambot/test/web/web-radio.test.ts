@@ -136,19 +136,13 @@ test("starts and stops Radio via Web /api/commands, projects snapshot.station, a
     expect(snap.queue).toHaveLength(2);
   });
 
-  const staleRes = await activeFixture.handler(
-    activeFixture.command({
-      action: "station",
-      mode: "off",
-      revision: "stale-revision",
-    }),
-  );
-  expect(staleRes.status).toBe(409);
-
+  // Stopping a station names no queue position, so it applies to the current state even when
+  // the page's revision is stale.
   const stopRes = await activeFixture.handler(
     activeFixture.command({
       action: "station",
       mode: "off",
+      revision: "stale-revision",
     }),
   );
   expect(stopRes.status).toBe(200);
@@ -157,6 +151,12 @@ test("starts and stops Radio via Web /api/commands, projects snapshot.station, a
   );
   expect(afterStop.station).toBeNull();
   expect(afterStop.queue).toHaveLength(0);
+
+  const repeated = await activeFixture.handler(
+    activeFixture.command({ action: "station", mode: "off" }),
+  );
+  expect(repeated.status).toBe(409);
+  expect(await repeated.json()).toMatchObject({ code: "no_station" });
 });
 
 test("routes Auto-mode Web from Channel 2 onto Channel 1 and follows slot 1", async () => {

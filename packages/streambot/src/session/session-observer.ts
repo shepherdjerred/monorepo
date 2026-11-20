@@ -7,6 +7,7 @@ import {
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
 import type { Session } from "@shepherdjerred/streambot/session/session-types.ts";
+import { observePlaybackItem } from "@shepherdjerred/streambot/session/item-tokens.ts";
 
 type ObservedSnapshot = {
   readonly value: unknown;
@@ -56,6 +57,11 @@ export class SessionObserver {
     this.updateLifecycle(stateName, snapshot.context.queue.length);
     this.updatePlaybackHistory(stateName, snapshot.context);
     this.trackResolvingRequest(stateName, snapshot.context);
+    observePlaybackItem(
+      this.options.session.actor,
+      stateName,
+      snapshot.context,
+    );
   }
 
   private trackResolvingRequest(
