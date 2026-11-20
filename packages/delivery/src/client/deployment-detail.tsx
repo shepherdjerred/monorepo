@@ -15,6 +15,7 @@ import {
 } from "./platform-recovery.tsx";
 import { FrozenForumBaseline } from "./forum-baseline.tsx";
 import { ContentRecovery } from "./content-recovery.tsx";
+import { Disclosure } from "#client/components/disclosure.tsx";
 
 export function sourceLabel(detail: Detail) {
   const deployment = detail.deployment;
@@ -148,8 +149,7 @@ export function DeploymentRecord({
       </div>
       <section className="panel" aria-labelledby="inputs-heading">
         <h2 id="inputs-heading">Frozen inputs</h2>
-        <details>
-          <summary>Pinned pipeline and configuration</summary>
+        <Disclosure summary="Pinned pipeline and configuration">
           <pre>
             {JSON.stringify(
               {
@@ -160,7 +160,7 @@ export function DeploymentRecord({
               2,
             )}
           </pre>
-        </details>
+        </Disclosure>
         <FrozenInputs detail={detail} />
       </section>
     </>

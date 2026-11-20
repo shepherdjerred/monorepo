@@ -210,7 +210,26 @@ export const EnvironmentDetailSchema = z.object({
 });
 export type EnvironmentDetail = z.infer<typeof EnvironmentDetailSchema>;
 
-export const DeploymentPageSchema = pageSchema(DeploymentSchema);
+/**
+ * A deployment as a list row: the record plus the revision number of the set
+ * revision it deploys, so a list says `r274` without a read per row.
+ */
+export const DeploymentListItemSchema = DeploymentSchema.extend({
+  versionSetRevision: z.number().int().positive(),
+});
+export type DeploymentListItem = z.infer<typeof DeploymentListItemSchema>;
+
+export const DeploymentPageSchema = pageSchema(DeploymentListItemSchema);
+
+/**
+ * The environment page's read of `EnvironmentDetailSchema`: its recent
+ * deployments are list rows. The base schema stays as the toolkit reads it,
+ * so a toolkit of either age parses a server of either age.
+ */
+export const EnvironmentPageDetailSchema = EnvironmentDetailSchema.extend({
+  deployments: z.array(DeploymentListItemSchema),
+});
+export type EnvironmentPageDetail = z.infer<typeof EnvironmentPageDetailSchema>;
 
 export const BuildWithArtifactsSchema = BuildViewSchema.extend({
   artifacts: z.array(ArtifactVersionSchema),

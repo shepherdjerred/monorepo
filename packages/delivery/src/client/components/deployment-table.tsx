@@ -1,13 +1,38 @@
 import { Link } from "@tanstack/react-router";
-import type { Deployment } from "#shared/contract.ts";
+import type { DeploymentListItem } from "#shared/hub/hub-contract.ts";
+import { Identifier, Revision } from "./identifier.tsx";
 import { Status } from "./status.tsx";
 import { RelativeTime } from "./time.tsx";
+
+/**
+ * What a deployment releases: a platform release names its source build, and
+ * every other kind names its set revision by number.
+ */
+function Release({ deployment }: { deployment: DeploymentListItem }) {
+  if (deployment.platformSnapshot !== null)
+    return (
+      <Link
+        to="/builds/$"
+        params={{ _splat: deployment.platformSnapshot.source.id }}
+      >
+        <Identifier value={deployment.platformSnapshot.source.id} />
+      </Link>
+    );
+  return (
+    <Link
+      to="/versions/$versionSetId"
+      params={{ versionSetId: deployment.versionSetRevisionId }}
+    >
+      <Revision revision={deployment.versionSetRevision} />
+    </Link>
+  );
+}
 
 export function DeploymentTable({
   deployments,
   empty,
 }: {
-  deployments: Deployment[];
+  deployments: DeploymentListItem[];
   empty: string;
 }) {
   if (deployments.length === 0) return <p className="empty">{empty}</p>;
@@ -37,9 +62,8 @@ export function DeploymentTable({
               <td>
                 <Status value={deployment.status} />
               </td>
-              <td className="mono">
-                {deployment.platformSnapshot?.source.id ??
-                  deployment.versionSetRevisionId}
+              <td>
+                <Release deployment={deployment} />
               </td>
               <td>
                 <RelativeTime value={deployment.createdAt} />

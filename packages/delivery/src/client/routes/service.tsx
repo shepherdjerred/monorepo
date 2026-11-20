@@ -9,6 +9,7 @@ import { PipelineGraph } from "#client/components/pipeline/pipeline-graph.tsx";
 import { pipelineStages } from "#client/components/pipeline/pipeline-view-model.ts";
 import { CursorSearchSchema } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
+import { revisionLabel } from "#client/components/identifier.tsx";
 
 function ServiceLayout() {
   const { serviceId } = serviceRoute.useParams();
@@ -114,7 +115,8 @@ function ExecutionsPage() {
                           to="/versions/$versionSetId"
                           params={{ versionSetId: execution.versionSet.id }}
                         >
-                          Composed r{execution.versionSet.revision}
+                          Composed{" "}
+                          {revisionLabel(execution.versionSet.revision)}
                         </Link>
                       )
                     ) : (
@@ -134,7 +136,7 @@ function ExecutionsPage() {
                   <td>
                     {execution.versionSet === null
                       ? "—"
-                      : `r${String(execution.versionSet.revision)}`}
+                      : revisionLabel(execution.versionSet.revision)}
                   </td>
                   <td>
                     <ul className="inline-list">

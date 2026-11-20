@@ -9,6 +9,7 @@ import { Status } from "#client/components/status.tsx";
 import { Duration, RelativeTime } from "#client/components/time.tsx";
 import { ShortSha, TargetLink, ToolLinks } from "#client/components/links.tsx";
 import { stageSummary } from "./pipeline-view-model.ts";
+import { revisionLabel } from "#client/components/identifier.tsx";
 
 function transitionLabel(transition: Transition) {
   if (!transition.enabled) return "Disabled for this environment";
@@ -71,7 +72,7 @@ function Revision({ stage }: { stage: PipelineStage }) {
   if (execution === null) return null;
   const label = (
     <>
-      {execution.revision !== null && `r${String(execution.revision)} · `}
+      {execution.revision !== null && `${revisionLabel(execution.revision)} · `}
       {execution.sourceRevision === null ? (
         "composed"
       ) : (

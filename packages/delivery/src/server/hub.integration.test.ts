@@ -12,6 +12,7 @@ import {
   CommitStatusSchema,
   DeploymentPageSchema,
   EnvironmentDetailSchema,
+  EnvironmentPageDetailSchema,
   ExecutionPageSchema,
   ExecutionTraceSchema,
   HubOverviewSchema,
@@ -179,6 +180,14 @@ describe("hub reads", () => {
     );
     expect(detail.versionSets[0]?.id).toBe(fixture.versionSet.id);
     expect(detail.links[0]?.kind).toBe("argocd");
+    // The page's read of the same response names each recent deployment's
+    // set revision by number.
+    const page = EnvironmentPageDetailSchema.parse(
+      await body("/api/v1/environments/arcade%2Fprod"),
+    );
+    expect(page.deployments.map((row) => row.versionSetRevision)).toEqual([
+      fixture.versionSet.revision,
+    ]);
     expect(await status("/api/v1/environments/missing%2Fenv")).toBe(404);
     expect(await status("/api/v1/builds/missing")).toBe(404);
     expect(await status("/api/v1/services/not-a-service/pipeline")).toBe(404);
@@ -209,6 +218,9 @@ describe("hub pagination", () => {
       await body("/api/v1/deployments?environmentId=arcade%2Fprod"),
     );
     expect(deployments.items).toHaveLength(1);
+    expect(deployments.items[0]?.versionSetRevision).toBe(
+      fixture.versionSet.revision,
+    );
   });
 });
 

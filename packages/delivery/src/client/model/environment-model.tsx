@@ -20,6 +20,7 @@ import {
   SelectionFacts,
 } from "./selection-facts.tsx";
 import { rebindChanges } from "./view.ts";
+import { Fact, Facts } from "#client/components/facts.tsx";
 
 type Requested = Awaited<ReturnType<ModelRoutes["createDeployment"]>>;
 type Actions = {
@@ -65,28 +66,16 @@ function SelectionPanel({
   const refused = refusal(view, permitted);
   return (
     <>
-      <dl className="facts">
-        <div>
-          <dt>Role</dt>
-          <dd>{view.role}</dd>
-        </div>
-        <div>
-          <dt>Lifecycle</dt>
-          <dd>{view.lifecycle}</dd>
-        </div>
-        <div>
-          <dt>Approval policy</dt>
-          <dd>
-            {view.approvalPolicy === "required"
-              ? "Human approval required"
-              : "No approval"}
-          </dd>
-        </div>
-        <div>
-          <dt>Binding generation</dt>
-          <dd>{view.bindingGeneration}</dd>
-        </div>
-      </dl>
+      <Facts>
+        <Fact label="Role">{view.role}</Fact>
+        <Fact label="Lifecycle">{view.lifecycle}</Fact>
+        <Fact label="Approval policy">
+          {view.approvalPolicy === "required"
+            ? "Human approval required"
+            : "No approval"}
+        </Fact>
+        <Fact label="Binding generation">{view.bindingGeneration}</Fact>
+      </Facts>
       <h3>Accepted selection</h3>
       {view.accepted === null || view.acceptedDeploymentId === null ? (
         <p className="empty">No selection has been accepted yet.</p>
@@ -99,30 +88,21 @@ function SelectionPanel({
         </>
       )}
       <h3>Declared binding</h3>
-      <dl className="facts">
-        <div>
-          <dt>Recipe kind</dt>
-          <dd>{view.declared.recipeKind}</dd>
-        </div>
-        <div>
-          <dt>Recipe revision</dt>
-          <dd className="mono">
-            {view.declared.recipeRevisionId}
-            {changes?.recipeRevisionId !== undefined && (
-              <span className="differs"> · differs from accepted</span>
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt>Configuration revision</dt>
-          <dd className="mono">
-            {view.declared.configurationRevisionId}
-            {changes?.configurationRevisionId !== undefined && (
-              <span className="differs"> · differs from accepted</span>
-            )}
-          </dd>
-        </div>
-      </dl>
+      <Facts>
+        <Fact label="Recipe kind">{view.declared.recipeKind}</Fact>
+        <Fact label="Recipe revision" mono>
+          {view.declared.recipeRevisionId}
+          {changes?.recipeRevisionId !== undefined && (
+            <span className="differs"> · differs from accepted</span>
+          )}
+        </Fact>
+        <Fact label="Configuration revision" mono>
+          {view.declared.configurationRevisionId}
+          {changes?.configurationRevisionId !== undefined && (
+            <span className="differs"> · differs from accepted</span>
+          )}
+        </Fact>
+      </Facts>
       {request.error !== null && <ErrorNotice error={request.error} />}
       <div className="form-footer">
         <p>

@@ -4,31 +4,28 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import type { Selection } from "#shared/model/contract.ts";
 import { ErrorNotice } from "#client/components/notices.tsx";
 import { selectionCoordinates } from "./view.ts";
+import { Fact, Facts } from "#client/components/facts.tsx";
 
 /** One selection (4.9): set revision, recipe revision and configuration revision. */
 export function SelectionFacts({ selection }: { selection: Selection }) {
   const [set, ...revisions] = selectionCoordinates(selection);
   return (
-    <dl className="facts">
-      <div>
-        <dt>{set.label}</dt>
-        <dd>
-          <Link
-            to="/versions/$versionSetId"
-            params={{ versionSetId: set.value }}
-            className="mono"
-          >
-            {set.value}
-          </Link>
-        </dd>
-      </div>
+    <Facts>
+      <Fact label={set.label}>
+        <Link
+          to="/versions/$versionSetId"
+          params={{ versionSetId: set.value }}
+          className="mono"
+        >
+          {set.value}
+        </Link>
+      </Fact>
       {revisions.map((coordinate) => (
-        <div key={coordinate.label}>
-          <dt>{coordinate.label}</dt>
-          <dd className="mono">{coordinate.value}</dd>
-        </div>
+        <Fact key={coordinate.label} label={coordinate.label} mono>
+          {coordinate.value}
+        </Fact>
       ))}
-    </dl>
+    </Facts>
   );
 }
 

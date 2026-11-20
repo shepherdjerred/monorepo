@@ -1,9 +1,10 @@
-import { DeploymentSchema } from "#shared/contract.ts";
-import type {
-  ActivityQuery,
-  BuildListQuery,
-  DeploymentListQuery,
-  EnvironmentDetail,
+import {
+  DeploymentListItemSchema,
+  type ActivityQuery,
+  type BuildListQuery,
+  type DeploymentListItem,
+  type DeploymentListQuery,
+  type EnvironmentPageDetail,
 } from "#shared/hub/hub-contract.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { wire } from "#infrastructure/delivery-records.ts";
@@ -18,6 +19,32 @@ import { required } from "#infrastructure/delivery-records.ts";
 import { decodeCursor, olderThan, page, PAGE_SIZE } from "./cursor.ts";
 import { activityEntry, buildView, serviceSummary } from "./views.ts";
 import { version } from "#infrastructure/delivery-data.ts";
+
+/**
+ * Deployment rows as list items: each with the revision number of its set
+ * revision, read for the whole page at once.
+ */
+async function listItems(
+  database: Database,
+  rows: { versionSetRevisionId: string }[],
+): Promise<DeploymentListItem[]> {
+  const sets = await database.versionSet.findMany({
+    where: { id: { in: rows.map((row) => row.versionSetRevisionId) } },
+    select: { id: true, revision: true },
+  });
+  const revisions = new Map(sets.map((set) => [set.id, set.revision]));
+  return rows.map((row) =>
+    DeploymentListItemSchema.parse(
+      wire({
+        ...row,
+        versionSetRevision: required(
+          revisions.get(row.versionSetRevisionId) ?? null,
+          "Version set revision",
+        ),
+      }),
+    ),
+  );
+}
 
 export async function deploymentPage(
   database: Database,
@@ -37,7 +64,7 @@ export async function deploymentPage(
   });
   const selected = page(rows, PAGE_SIZE, (row) => row.createdAt);
   return {
-    items: selected.items.map((row) => DeploymentSchema.parse(wire(row))),
+    items: await listItems(database, selected.items),
     nextCursor: selected.nextCursor,
   };
 }
@@ -91,7 +118,7 @@ export async function activityPage(database: Database, query: ActivityQuery) {
 export async function environmentDetail(
   database: Database,
   environmentId: string,
-): Promise<EnvironmentDetail> {
+): Promise<EnvironmentPageDetail> {
   const env = await readEnvironment(database, environmentId);
   const [pipelineRow, sourceEnvironment, versionRows, deployments] =
     await Promise.all([
@@ -124,7 +151,7 @@ export async function environmentDetail(
     versionSets: await Promise.all(
       versionRows.map((row) => version(database, row.id)),
     ),
-    deployments: deployments.map((row) => DeploymentSchema.parse(wire(row))),
+    deployments: await listItems(database, deployments),
     links:
       env.application === null ? [] : [argocdApplicationLink(env.application)],
   };

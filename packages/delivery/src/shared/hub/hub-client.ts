@@ -6,7 +6,7 @@ import {
   CommitListSchema,
   CommitStatusSchema,
   DeploymentPageSchema,
-  EnvironmentDetailSchema,
+  EnvironmentPageDetailSchema,
   ExecutionPageSchema,
   ExecutionTraceSchema,
   HubOverviewSchema,
@@ -68,7 +68,7 @@ export function createHubClient(options: RequestOptions) {
     environment: (environmentId: string) =>
       request(
         `/environments/${segment(environmentId)}`,
-        EnvironmentDetailSchema,
+        EnvironmentPageDetailSchema,
       ),
     deployments: (input: DeploymentListQuery) =>
       request(`/deployments${query(input)}`, DeploymentPageSchema),

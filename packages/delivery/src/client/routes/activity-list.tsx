@@ -5,6 +5,7 @@ import {
 } from "#shared/model/route-contract.ts";
 import { RelativeTime } from "#client/components/time.tsx";
 import { TargetLink } from "#client/components/links.tsx";
+import { Fact, Facts } from "#client/components/facts.tsx";
 
 /** One catalog reconcile: what the document created, renamed, rebound, retired and refused (4.1). */
 function CatalogReconcile({ result }: { result: CatalogReconcileRecord }) {
@@ -32,16 +33,21 @@ function CatalogReconcile({ result }: { result: CatalogReconcileRecord }) {
           The record already matched the catalog document.
         </p>
       ) : (
-        <dl className="facts">
+        <Facts>
           {changed.map(([label, ids]) => (
-            <div key={label}>
-              <dt>
-                {label} ({ids.length})
-              </dt>
-              <dd className="mono">{ids.join(", ")}</dd>
-            </div>
+            <Fact
+              key={label}
+              label={
+                <>
+                  {label} ({ids.length})
+                </>
+              }
+              mono
+            >
+              {ids.join(", ")}
+            </Fact>
           ))}
-        </dl>
+        </Facts>
       )}
       <p className="muted">
         {result.unchanged} unchanged · {result.edges} prerequisite edges ·{" "}

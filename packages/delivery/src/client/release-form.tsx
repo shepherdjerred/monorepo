@@ -7,6 +7,7 @@ import type { CreateDeploymentV2Request } from "#shared/model/routes-client.ts";
 import type { EnvironmentDetail } from "#shared/hub/hub-contract.ts";
 import { delivery } from "./api.ts";
 import { ErrorNotice, errorMessage } from "#client/components/notices.tsx";
+import { revisionLabel } from "#client/components/identifier.tsx";
 
 type Kind = "deploy" | "promote";
 const KindSchema = z.enum(["deploy", "promote"]);
@@ -146,7 +147,7 @@ export function ReleaseForm({
   const label = (id: string | null) =>
     detail.versionSets.find((version) => version.id === id)?.revision;
   return (
-    <section className="panel release-panel" aria-labelledby="release-heading">
+    <section className="panel" aria-labelledby="release-heading">
       <h2 id="release-heading">Request a release</h2>
       <form action={submit}>
         <div className="form-grid">
@@ -183,7 +184,7 @@ export function ReleaseForm({
                 <option value="">Choose a version set</option>
                 {detail.versionSets.map((version) => (
                   <option key={version.id} value={version.id}>
-                    r{version.revision} · {version.id}
+                    {revisionLabel(version.revision)} · {version.id}
                   </option>
                 ))}
               </select>

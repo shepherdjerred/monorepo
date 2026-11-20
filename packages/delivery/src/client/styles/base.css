@@ -4,37 +4,43 @@
   box-sizing: border-box;
 }
 html {
-  scroll-padding-top: 72px;
+  scroll-padding-top: var(--masthead-clearance);
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.5;
+  line-height: var(--leading-normal);
   color: var(--text);
   background: var(--canvas);
   text-size-adjust: 100%;
 }
 body {
   margin: 0;
+  font-size: var(--text-md);
   background: var(--canvas);
 }
+/* One page title, one panel heading, one sub-heading. */
 h1,
 h2,
 h3 {
-  line-height: 1.25;
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-semibold);
   margin: 0;
 }
 h1 {
-  font-size: 1.75rem;
-  letter-spacing: -0.02em;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-title);
 }
 h2 {
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
 }
 h3 {
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 p {
   margin: 0 0 var(--space-2);
   overflow-wrap: anywhere;
+}
+small {
+  font-size: var(--text-xs);
 }
 a {
   color: var(--link);
@@ -60,8 +66,8 @@ textarea {
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-small);
-  padding: 6px 10px;
-  min-height: 34px;
+  padding: var(--space-1) var(--control-pad-x);
+  min-height: var(--control-height);
   max-width: 100%;
 }
 textarea {
@@ -75,48 +81,74 @@ textarea:user-invalid {
 }
 label {
   display: grid;
+  /* The control may be narrower than its longest option, so it never widens the page. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-1);
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
 }
 table {
   width: 100%;
   border-collapse: collapse;
+  line-height: var(--leading-snug);
 }
 th,
 td {
-  text-align: left;
+  text-align: start;
   vertical-align: top;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--row-pad-y) var(--row-pad-x);
   border-bottom: 1px solid var(--border);
 }
-thead th {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-weight: 600;
+/* The outer cells line up with the heading above the table. */
+:is(th, td):first-child {
+  padding-inline-start: 0;
+}
+:is(th, td):last-child {
+  padding-inline-end: 0;
+}
+tbody th {
+  font-weight: var(--weight-semibold);
+}
+/*
+ * One label treatment: a column header, a facts label and an eyebrow all name
+ * the value beside them, so they share a size, a case and a color.
+ */
+thead th,
+.facts dt,
+.eyebrow {
+  font-size: var(--text-2xs);
+  line-height: var(--leading-snug);
+  font-weight: var(--weight-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-muted);
+}
+thead th {
+  vertical-align: bottom;
+  border-bottom-color: var(--border-strong);
 }
 td small,
 th small {
   display: block;
   color: var(--text-muted);
-  font-weight: 400;
+  font-weight: var(--weight-regular);
 }
 pre {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: var(--text-mono);
+  line-height: var(--leading-snug);
   background: var(--surface-sunken);
   border-radius: var(--radius-small);
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0;
   overflow: auto;
   max-width: 100%;
 }
 /* A disclosure is a target: at least 24px (WCAG 2.5.8), 44px under touch. */
 details > summary {
   cursor: pointer;
-  min-height: 24px;
-  line-height: 24px;
+  min-height: var(--target-min);
+  line-height: var(--target-min);
 }
 abbr[title] {
   text-decoration: none;
@@ -128,18 +160,28 @@ dialog {
   color: var(--text);
   padding: var(--space-5);
   width: min(480px, calc(100vw - 32px));
-  box-shadow: 0 16px 48px rgb(0 0 0 / 30%);
+  box-shadow: var(--shadow-overlay);
 }
 dialog::backdrop {
-  background: rgb(0 0 0 / 45%);
+  background: var(--backdrop);
 }
 dialog h2 {
   margin-bottom: var(--space-3);
 }
 .mono {
   font-family: var(--font-mono);
-  font-size: 0.85em;
+  font-size: var(--text-mono);
   overflow-wrap: anywhere;
+}
+/* A row header names its row: its column is as wide as the name. */
+tbody th.mono {
+  overflow-wrap: break-word;
+}
+/* Mono inside a second line takes that line's size. */
+small.mono,
+small .mono,
+.mono small {
+  font-size: var(--text-xs);
 }
 .muted {
   color: var(--text-muted);

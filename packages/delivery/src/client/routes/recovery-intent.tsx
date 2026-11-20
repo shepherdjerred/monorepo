@@ -6,6 +6,8 @@ import { Status } from "#client/components/status.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { DeploymentLink } from "#client/model/selection-facts.tsx";
 import { Route as rootRoute } from "./root.tsx";
+import { Fact, Facts } from "#client/components/facts.tsx";
+import { Disclosure } from "#client/components/disclosure.tsx";
 
 /** One operator-authorised inspection of a `recovery-required` deployment (4.15). */
 function RecoveryIntentPage() {
@@ -29,42 +31,29 @@ function RecoveryIntentPage() {
       />
       <section className="panel" aria-labelledby="intent-heading">
         <h2 id="intent-heading">Inspection</h2>
-        <dl className="facts">
-          <div>
-            <dt>Deployment</dt>
-            <dd>
-              <DeploymentLink id={intent.deploymentId} />
-            </dd>
-          </div>
-          <div>
-            <dt>Step</dt>
-            <dd>{intent.step ?? "Whole deployment"}</dd>
-          </div>
-          <div>
-            <dt>Expected generation</dt>
-            <dd>{intent.expectedGeneration}</dd>
-          </div>
-          <div>
-            <dt>Settled</dt>
-            <dd>
-              {intent.settledAt === null ? (
-                "Pending"
-              ) : (
-                <RelativeTime value={intent.settledAt} />
-              )}
-            </dd>
-          </div>
-        </dl>
+        <Facts>
+          <Fact label="Deployment">
+            <DeploymentLink id={intent.deploymentId} />
+          </Fact>
+          <Fact label="Step">{intent.step ?? "Whole deployment"}</Fact>
+          <Fact label="Expected generation">{intent.expectedGeneration}</Fact>
+          <Fact label="Settled">
+            {intent.settledAt === null ? (
+              "Pending"
+            ) : (
+              <RelativeTime value={intent.settledAt} />
+            )}
+          </Fact>
+        </Facts>
         <p>{intent.reason}</p>
         <p className="muted">
           Settlement reads the target with a credential the executor does not
           hold, rechecks this fingerprint and generation, and keeps the
           deployment&apos;s result and the accepted selection.
         </p>
-        <details>
-          <summary>Snapshot fingerprint</summary>
+        <Disclosure summary="Snapshot fingerprint">
           <p className="mono">{intent.fingerprint}</p>
-        </details>
+        </Disclosure>
       </section>
       <section className="panel" aria-labelledby="intent-evidence-heading">
         <h2 id="intent-evidence-heading">Inspection evidence</h2>

@@ -6,6 +6,7 @@ import { ErrorNotice } from "#client/components/notices.tsx";
 import { TracePage } from "./trace-page.tsx";
 import { VersionSearchSchema, formSearch } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
+import { revisionLabel } from "#client/components/identifier.tsx";
 
 function Comparison({ from, to }: { from: string; to: string }) {
   const diff = useQuery({
@@ -41,7 +42,10 @@ function VersionPage() {
   const revision = data.versionSet?.revision ?? 0;
   return (
     <>
-      <TracePage trace={data} title={`Version set r${String(revision)}`} />
+      <TracePage
+        trace={data}
+        title={`Version set ${revisionLabel(revision)}`}
+      />
       <section className="panel" aria-labelledby="compare-heading">
         <h2 id="compare-heading">Compare</h2>
         <form
@@ -63,7 +67,7 @@ function VersionPage() {
                 ?.filter((version) => version.id !== versionSetId)
                 .map((version) => (
                   <option key={version.id} value={version.id}>
-                    r{version.revision}
+                    {revisionLabel(version.revision)}
                   </option>
                 ))}
             </select>

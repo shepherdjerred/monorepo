@@ -1,5 +1,6 @@
 import type { Environment, VersionSetRevision } from "#shared/contract.ts";
 import { observation, versionLabel } from "#client/presentation.ts";
+import { Fact, Facts } from "./facts.tsx";
 
 /**
  * Desired, observed and accepted are separate claims; show each. The observed
@@ -17,26 +18,17 @@ export function EnvironmentState({
   return (
     <section className="panel" aria-labelledby="state-heading">
       <h2 id="state-heading">Release state</h2>
-      <dl className="facts versions">
-        <div>
-          <dt>Desired</dt>
-          <dd>
-            {versionLabel(environment.desiredVersionSetRevisionId, versions)}
-          </dd>
-        </div>
-        <div>
-          <dt>Observed</dt>
-          <dd>
-            {versionLabel(environment.observedVersionSetRevisionId, versions)}
-          </dd>
-        </div>
-        <div>
-          <dt>Accepted</dt>
-          <dd>
-            {versionLabel(environment.acceptedVersionSetRevisionId, versions)}
-          </dd>
-        </div>
-      </dl>
+      <Facts>
+        <Fact label="Desired">
+          {versionLabel(environment.desiredVersionSetRevisionId, versions)}
+        </Fact>
+        <Fact label="Observed">
+          {versionLabel(environment.observedVersionSetRevisionId, versions)}
+        </Fact>
+        <Fact label="Accepted">
+          {versionLabel(environment.acceptedVersionSetRevisionId, versions)}
+        </Fact>
+      </Facts>
       <p className="muted">{observation(environment, now)}</p>
     </section>
   );

@@ -5,6 +5,7 @@ import type { BuildWithArtifacts } from "#shared/hub/hub-contract.ts";
 import { artifactToolLinks } from "#shared/hub/artifact-links.ts";
 import { Status } from "#client/components/status.tsx";
 import { ShortSha, ToolLinks } from "#client/components/links.tsx";
+import { Disclosure } from "#client/components/disclosure.tsx";
 
 /** What qualified a build that has no CI run to link. */
 function evidenceSummary(sourceKind: BuildSourceKind) {
@@ -112,8 +113,7 @@ export function SelectedArtifacts({
   version: VersionSetRevision;
 }) {
   return (
-    <details>
-      <summary>Selected artifacts</summary>
+    <Disclosure summary="Selected artifacts">
       <dl className="component-list">
         {Object.entries(version.components).map(([component, artifact]) => (
           <div key={component}>
@@ -131,6 +131,6 @@ export function SelectedArtifacts({
           </div>
         ))}
       </dl>
-    </details>
+    </Disclosure>
   );
 }
