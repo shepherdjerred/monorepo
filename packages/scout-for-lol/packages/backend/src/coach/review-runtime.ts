@@ -13,6 +13,9 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { startScoutCoachReview } from "#src/temporal/starts.ts";
+import { storedRawArchiveDescriptor } from "#src/report-lake/durable-receipts.ts";
+import { readArchivedCanonicalMatch } from "#src/report-lake/receipted-archive.ts";
+import { reviewableMatchParticipants } from "./review-match.ts";
 import { reconcileCoachReviews } from "./review-reconcile.ts";
 import {
   REVIEW_KIND,
@@ -53,18 +56,32 @@ export function coachReviewDependencies(): CoachReviewDependencies {
       }
       return false;
     },
-    matchParticipants: async (matchId) => {
-      const resolution = await resolveResultEvidence(matchId, []);
-      // The review reads Riot match documents from the lake and refuses client
-      // end-of-game records, so client-only evidence is not yet reviewable;
-      // the evidence trigger and the schedule retry once the Riot record lands.
-      return resolution.kind === "available" &&
-        resolution.value.source === "RIOT"
-        ? resolution.value.participants.flatMap((player) =>
-            player.identity.kind === "riot" ? [player.identity.puuid] : [],
-          )
-        : null;
-    },
+    matchParticipants: async (matchId) =>
+      await reviewableMatchParticipants(
+        {
+          storedMatchCoverage: async (id) => {
+            const archive = await storedRawArchiveDescriptor(
+              prisma,
+              id,
+              "match",
+            );
+            if (archive === null) return null;
+            const record = await readArchivedCanonicalMatch(archive, id);
+            return record.coverage;
+          },
+          resultParticipants: async (id) => {
+            const resolution = await resolveResultEvidence(id, []);
+            return resolution.kind === "available"
+              ? resolution.value.participants.flatMap((player) =>
+                  player.identity.kind === "riot"
+                    ? [player.identity.puuid]
+                    : [],
+                )
+              : null;
+          },
+        },
+        matchId,
+      ),
     startRun: async (ownerId, request, guildIds, coach) =>
       await exploreRunManager.start(
         { userId: ownerId },
