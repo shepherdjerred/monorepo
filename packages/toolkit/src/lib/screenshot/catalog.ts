@@ -93,6 +93,20 @@ export const PACKAGES: PackageEntry[] = [
     readyPath: "/api/version",
     requiresAuth: "scout-dev-login",
   },
+  {
+    alias: "media",
+    cwd: "packages/media",
+    // Fixture mode: the Vite dev server over a read-only fixture API, so a
+    // capture needs no Plex, PostgreSQL, or Temporal. It signs in as the
+    // owner; pass `--env MEDIA_FIXTURE_PERSONA=member` for the member view.
+    devCommand: ["bun", "run", "dev:fixture"],
+    devRunner: "vite",
+    expectedPort: 7358,
+    defaultRoute: "/",
+    // Vite answers before the fixture API it proxies to; wait on the session
+    // read so a capture never lands on the sign-in screen.
+    readyPath: "/api/v1/me",
+  },
 ];
 
 export function resolvePackage(alias: string): PackageEntry {

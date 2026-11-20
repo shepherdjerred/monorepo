@@ -83,7 +83,9 @@
         "scripts/**/*.ts",
         "e2e/system/run-peer.ts",
         "e2e/pms/prepare.ts",
-        "e2e/pms/run.ts"
+        "e2e/pms/run.ts",
+        "playwright.config.ts",
+        "e2e/browser/**/*.ts"
       ],
       "project": [
         "src/**/*.{ts,tsx}",

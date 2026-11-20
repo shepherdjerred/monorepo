@@ -26,6 +26,17 @@ const workspaces = new Map<string, WorkspacePackage>([
     { dir: "packages/alert-dashboard/", workspaceDependencies: [] },
   ],
   [
+    "@shepherdjerred/media",
+    {
+      dir: "packages/media/",
+      workspaceDependencies: ["@shepherdjerred/config"],
+    },
+  ],
+  [
+    "@shepherdjerred/config",
+    { dir: "packages/config/", workspaceDependencies: [] },
+  ],
+  [
     "@scout-for-lol/app",
     {
       dir: "packages/scout-for-lol/packages/app/",
@@ -88,6 +99,17 @@ describe("Playwright target selection", () => {
         ),
       ),
     ).toEqual(["@shepherdjerred/delivery"]);
+  });
+  test("selects Media browser acceptance for its client, fixtures, or dependencies", async () => {
+    for (const changed of [
+      "packages/media/src/client/library/page.tsx",
+      "packages/media/src/testing/fixture-api/library.ts",
+      "packages/config/src/index.ts",
+    ]) {
+      expect(
+        packages(await selectPlaywrightTargets([changed], ".", workspaces)),
+      ).toEqual(["@shepherdjerred/media"]);
+    }
   });
   test("selects only reverse-dependent browser targets", async () => {
     expect(

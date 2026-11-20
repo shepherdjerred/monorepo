@@ -29,6 +29,10 @@ export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
     reportDirectory: "shepherdjerred__alert-dashboard",
   },
   {
+    package: "@shepherdjerred/media",
+    reportDirectory: "shepherdjerred__media",
+  },
+  {
     package: "@scout-for-lol/app",
     reportDirectory: "scout-for-lol__app",
   },

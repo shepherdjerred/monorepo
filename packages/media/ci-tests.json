@@ -28,5 +28,11 @@
         "60000"
       ]
     }
+  ],
+  "excludedSuites": [
+    {
+      "path": "e2e/browser",
+      "reason": "Playwright suite; runs in the browser E2E lane (ci/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+    }
   ]
 }
