@@ -111,6 +111,17 @@ export function codesignCommand(identity: string, path: string): string[] {
 }
 
 /**
+ * Sign the disk image. The hardened runtime applies to code, not to a disk
+ * image, so only the identity and a timestamp.
+ */
+export function diskImageCodesignCommand(
+  identity: string,
+  path: string,
+): string[] {
+  return ["codesign", "--force", "--timestamp", "--sign", identity, path];
+}
+
+/**
  * Archive the app for the updater as `<Product>.app/...`, without
  * AppleDouble files, extended attributes or ACLs: the code signature and the
  * stapled ticket live inside the bundle, and `._*` entries would break the
@@ -493,7 +504,7 @@ export async function packageMac(input: MacPackageInput): Promise<void> {
   });
   await rm(staging, { recursive: true, force: true });
   if (signing === null) {
-    wouldRun(codesignCommand("<Developer ID>", diskImage));
+    wouldRun(diskImageCodesignCommand("<Developer ID>", diskImage));
     wouldRun(notarizeCommand(diskImage, "<notary profile>"));
     wouldRun(["xcrun", "stapler", "staple", diskImage]);
     wouldRun(["xcrun", "stapler", "validate", diskImage]);
@@ -508,17 +519,9 @@ export async function packageMac(input: MacPackageInput): Promise<void> {
       diskImage,
     ]);
   } else {
-    await run(
-      [
-        "codesign",
-        "--force",
-        "--timestamp",
-        "--sign",
-        signing.identity,
-        diskImage,
-      ],
-      { cwd: root },
-    );
+    await run(diskImageCodesignCommand(signing.identity, diskImage), {
+      cwd: root,
+    });
     await run(notarizeCommand(diskImage, signing.notaryProfile), {
       cwd: root,
     });

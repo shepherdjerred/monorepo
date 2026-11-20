@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   MAC_UNIVERSAL_TARGET,
   codesignCommand,
+  diskImageCodesignCommand,
   diskImageCommand,
   findDeveloperIdIdentity,
   macOutputNames,
@@ -60,6 +61,17 @@ describe("the macOS release lane", () => {
       "--sign",
       HASH_B,
       "/x/Scout Desktop.app",
+    ]);
+  });
+
+  test("signs the disk image without the runtime option, which is for code", () => {
+    expect(diskImageCodesignCommand(HASH_B, "/out/a.dmg")).toEqual([
+      "codesign",
+      "--force",
+      "--timestamp",
+      "--sign",
+      HASH_B,
+      "/out/a.dmg",
     ]);
   });
 
