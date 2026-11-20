@@ -6,11 +6,11 @@
  * The macOS/Windows cross-compiler Dockerfiles hardcode their own copies of
  * the Rust and .NET SDK versions (documented in-file as "must match
  * .mise.toml" / "must match global.json") instead of reading the
- * repo-authoritative values. Renovate updates `.mise.toml` (native `mise`
- * manager) and `global.json` (native dotnet-sdk manager) independently —
- * nothing keeps the Dockerfile copies in sync, and nothing previously failed
- * CI when they drifted. This check makes that drift fail loudly instead of
- * silently building a cross-compiler image against a stale toolchain.
+ * repo-authoritative values. Renovate groups each set into one branch (the
+ * "Rust toolchain", ".NET SDK" and "OpenTofu" rules in renovate.json), but a
+ * hand edit, or a copy a group rule does not match, can still drift. This
+ * check makes that drift fail loudly instead of silently building a
+ * cross-compiler image against a stale toolchain.
  *
  * The Temporal worker image pins its own OpenTofu release the same way, and
  * Delivery plans and applies stacks with that binary. It drifted a minor

@@ -45,39 +45,22 @@
     },
     {
       "customType": "regex",
-      "description": "Tool versions in standalone CI scripts (Xcode Cloud)",
-      "managerFilePatterns": ["packages/tasks-for-obsidian/ios/ci_scripts/**"],
-      "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+?)(?:\\s+versioning=(?<versioning>[a-z-]+))?\\n[ \\t]*(?:ARG )?\\w+=(?:\")?(?<currentValue>[a-zA-Z0-9._-]+)(?:\")?"
-      ]
-    },
-    {
-      "customType": "regex",
-      "description": "Pinned Cloudflare cf CLI preview version in the chezmoi bunx wrapper",
-      "managerFilePatterns": ["packages/dotfiles/dot_local/bin/executable_cf"],
-      "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+)\\n[ \\t]*CF_VERSION=(?<currentValue>[0-9][a-zA-Z0-9._-]*)"
-      ]
-    },
-    {
-      "customType": "regex",
-      "description": "Pinned tool versions in application Dockerfile ARGs",
+      "description": "Hinted version pins. Grammar: a comment `renovate: datasource=X depName=Y [packageName=P] [registryUrl=U] [versioning=V] [extractVersion=RE]` directly above `ARG|ENV NAME=VALUE`, `NAME=\"VALUE\"`, `NAME = \"VALUE\"` or `[export] const NAME = \"VALUE\"`. An `ARG *_COMMIT=<sha>` on the next line is that version's commit and moves with it. `datasource=git-refs depName=Y packageName=<repo URL> ref=HEAD|branch=<name>` above `ARG|ENV NAME=<sha>` follows a branch head. Checksum ARGs beside a pin are NOT updated: Mend-hosted Renovate cannot run post-upgrade commands, so such a bump is half an upgrade; a human refreshes the companion named in the PR body and the image build or pin check fails until then. scripts/checks/deps/check-renovate-hints.ts fails on any hint this grammar does not extract.",
       "managerFilePatterns": [
-        "packages/discord-plays-pokemon/Dockerfile",
-        "packages/streambot/Dockerfile"
+        "/(^|/)Dockerfile$/",
+        "/(^|/)[^/]+\\.Dockerfile$/",
+        "ci/scripts/toolchain.sh",
+        "packages/tasks-for-obsidian/ios/ci_scripts/**",
+        "packages/dotfiles/dot_local/bin/executable_cf",
+        "packages/fonts/patch-berkeley-mono.py",
+        "packages/toolkit/src/lib/brim/capture/engine.ts",
+        "scripts/**/*.ts",
+        "packages/*/scripts/**/*.ts"
       ],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+?)(?:\\s+versioning=(?<versioning>[a-z-]+))?\\n[ \\t]*ARG\\s+(?:YT_DLP_VERSION|UV_VERSION)=(?<currentValue>[a-zA-Z0-9._-]+)"
+        "(?:#|//)[ \\t]*renovate:[ \\t]*datasource=(?<datasource>[a-z][a-z0-9.-]*)[ \\t]+depName=(?<depName>\\S+)(?:[ \\t]+packageName=(?<packageName>\\S+))?(?:[ \\t]+registryUrl=(?<registryUrl>\\S+))?(?:[ \\t]+versioning=(?<versioning>\\S+))?(?:[ \\t]+extractVersion=(?<extractVersion>\\S+))?[ \\t]*\\r?\\n[ \\t]*(?:(?:ARG|ENV)[ \\t]+|(?:export[ \\t]+)?const[ \\t]+)?[A-Za-z_][A-Za-z0-9_]*[ \\t]*=[ \\t]*[\"']?(?<currentValue>[A-Za-z0-9][A-Za-z0-9._~-]*)[\"']?(?:[ \\t]*\\r?\\n[ \\t]*(?:ARG|ENV)[ \\t]+[A-Za-z_][A-Za-z0-9_]*_COMMIT=(?<currentDigest>[a-f0-9]{40}))?",
+        "#[ \\t]*renovate:[ \\t]*datasource=(?<datasource>git-refs)[ \\t]+depName=(?<depName>\\S+)[ \\t]+packageName=(?<packageName>\\S+)[ \\t]+(?:ref=HEAD|branch=(?<currentValue>\\S+))[ \\t]*\\r?\\n[ \\t]*(?:ARG|ENV)[ \\t]+[A-Za-z_][A-Za-z0-9_]*=(?<currentDigest>[a-f0-9]{40})"
       ]
-    },
-    {
-      "customType": "regex",
-      "description": "Apple codesign (rcodesign) version pin in the macOS cross-compiler toolchain image",
-      "managerFilePatterns": ["packages/macos-cross-compiler/Dockerfile"],
-      "matchStrings": [
-        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+)\\n[ \\t]*ARG APPLE_CODESIGN_VERSION=(?<currentValue>[0-9][a-zA-Z0-9._-]*)"
-      ],
-      "extractVersionTemplate": "^apple-codesign/(?<version>.*)$"
     },
     {
       "customType": "regex",
@@ -135,19 +118,11 @@
     },
     {
       "customType": "regex",
-      "description": "Version pins in TypeScript scripts annotated with `// renovate:` that have no native manager",
-      "managerFilePatterns": ["scripts/**/*.ts", "packages/*/scripts/**/*.ts"],
-      "matchStrings": [
-        "// renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\n\\s*(?:export\\s+)?const\\s+[A-Za-z_][A-Za-z0-9_]*\\s*=\\s*\"(?<currentValue>[^\"]+)\"",
-        "// renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\n[^\\n]*:(?<currentValue>[0-9][^\"'}\\s]*)"
-      ]
-    },
-    {
-      "customType": "regex",
-      "description": "Amazon Corretto JDK pin in .mise.toml. Renovate's native mise/java datasource cannot resolve the corretto-X.Y.Z.B.R build string, so track corretto/corretto-25 GitHub release tags (e.g. 25.0.4.7.1) directly.",
+      "description": "Pins in .mise.toml that Renovate's native mise manager cannot resolve. Amazon Corretto: the native mise/java datasource cannot resolve the corretto-X.Y.Z.B.R build string, so track corretto/corretto-25 GitHub release tags (e.g. 25.0.4.7.1) directly. .NET SDK: native mise reports dotnet as an unsupported datasource, so track the dotnet-version datasource that global.json already uses. Every other tool in the file is tracked natively and carries no hint.",
       "managerFilePatterns": [".mise.toml"],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\njava = \"corretto-(?<currentValue>[0-9.]+)\""
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\njava = \"corretto-(?<currentValue>[0-9.]+)\"",
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s*\\ndotnet = \"(?<currentValue>[0-9][0-9.]*)\""
       ]
     }
   ],
@@ -373,6 +348,158 @@
       "description": "The repository-owned AsusWRT provider is built and installed from packages/terraform-provider-asuswrt; it is intentionally not published to a provider registry.",
       "matchDatasources": ["terraform-provider"],
       "matchPackageNames": ["shepherdjerred/asuswrt"],
+      "enabled": false
+    },
+    {
+      "description": "mise rust and both cross-compiler RUST_VERSION ARGs must be equal (scripts/checks/deps/check-toolchain-version-sync.ts), so they move in one PR.",
+      "groupName": "Rust toolchain",
+      "matchDatasources": ["rust-version"],
+      "matchPackageNames": ["rust"],
+      "matchFileNames": [
+        ".mise.toml",
+        "packages/macos-cross-compiler/Dockerfile",
+        "packages/windows-cross-compiler/Dockerfile"
+      ],
+      "prBodyNotes": [
+        "Check `rustc -vV` for {{{newVersion}}}: `LLVM_VERSION` in `packages/macos-cross-compiler/Dockerfile` must be at least rustc's LLVM major. Relock with `mise lock --platform linux-x64,macos-arm64`."
+      ]
+    },
+    {
+      "description": "mise dotnet, global.json and both DOTNET_SDK_VERSION ARGs must be equal (scripts/checks/deps/check-toolchain-version-sync.ts). Half upgrade: Renovate cannot compute the SHA512 companions.",
+      "groupName": ".NET SDK",
+      "matchDatasources": ["dotnet-version"],
+      "matchPackageNames": ["dotnet-sdk"],
+      "prBodyNotes": [
+        "**Half upgrade.** Replace `DOTNET_SDK_SHA512_AMD64` and `DOTNET_SDK_SHA512_ARM64` in `packages/windows-cross-compiler/Dockerfile` and `packages/temporal/Dockerfile` with the linux-x64 and linux-arm64 SHA512 of dotnet-sdk {{{newVersion}}}."
+      ]
+    },
+    {
+      "description": "The .mise.toml custom manager owns the dotnet line; keep the native mise manager from ever duplicating it.",
+      "matchManagers": ["mise"],
+      "matchDepNames": ["dotnet"],
+      "matchFileNames": [".mise.toml"],
+      "enabled": false
+    },
+    {
+      "description": "mise opentofu and the Temporal worker TOFU_VERSION must be equal (scripts/checks/deps/check-toolchain-version-sync.ts).",
+      "groupName": "OpenTofu",
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["opentofu/opentofu"]
+    },
+    {
+      "description": "ci-image MISE_VERSION must equal toolchain.sh MISE_BOOTSTRAP_VERSION (scripts/checks/deps/check-mise-lock-sync.ts). Half upgrade: Renovate cannot compute the release checksums.",
+      "groupName": "mise",
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["jdx/mise"],
+      "prBodyNotes": [
+        "**Half upgrade.** Refresh `MISE_BOOTSTRAP_SHA256` in `ci/scripts/toolchain.sh` and `checksum_macos_*` in `packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh` from the release's SHASUMS256.txt."
+      ]
+    },
+    {
+      "description": "Local, CI and image PostgreSQL binaries stay in lockstep across .mise.toml and the Temporal and Media images.",
+      "groupName": "postgresql-binaries",
+      "matchPackageNames": ["theseus-rs/postgresql-binaries"]
+    },
+    {
+      "description": "Keep the uv binary pin equal across the CI and application images.",
+      "groupName": "uv image binary",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["pypi"],
+      "matchPackageNames": ["uv"]
+    },
+    {
+      "description": "mise gh and the Temporal worker GH_CLI_VERSION move together.",
+      "groupName": "GitHub CLI",
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["cli/cli"]
+    },
+    {
+      "description": "mise argocd and the Temporal worker ARGOCD_CLI_VERSION move together.",
+      "groupName": "Argo CD CLI",
+      "matchDatasources": ["github-releases"],
+      "matchPackageNames": ["argoproj/argo-cd"]
+    },
+    {
+      "description": "The mise Temporal CLI and the Temporal worker TEMPORAL_CLI_VERSION move together.",
+      "groupName": "Temporal CLI",
+      "matchPackageNames": ["temporalio/cli"]
+    },
+    {
+      "description": "mise lychee and the Temporal worker LYCHEE_VERSION move together so local link checks match the weekly report.",
+      "groupName": "lychee",
+      "matchPackageNames": ["lycheeverse/lychee"]
+    },
+    {
+      "description": "The Temporal worker's Woodpecker CLI moves with the Woodpecker server and agent images.",
+      "groupName": "Woodpecker",
+      "matchPackageNames": [
+        "woodpecker-ci/woodpecker",
+        "woodpeckerci/woodpecker-server",
+        "woodpeckerci/woodpecker-agent"
+      ]
+    },
+    {
+      "description": "The Temporal worker's Trivy binary moves with the catalog Trivy image.",
+      "groupName": "Trivy",
+      "matchPackageNames": ["aquasecurity/trivy", "aquasec/trivy"]
+    },
+    {
+      "description": "The Temporal worker's Kometa checkout moves with the catalog Kometa image.",
+      "groupName": "Kometa",
+      "matchPackageNames": ["Kometa-Team/Kometa", "kometateam/kometa"]
+    },
+    {
+      "description": "WINE_VERSION and WINEHQ_PACKAGE_VERSION move together (packages/windows-cross-compiler/src/pins.test.ts). Half upgrade: Renovate cannot compute the source checksum or re-apply the Wine patches.",
+      "groupName": "Wine",
+      "matchPackageNames": ["wine-mirror/wine", "winehq-stable"],
+      "prBodyNotes": [
+        "**Half upgrade.** Refresh `WINE_SOURCE_SHA256`, re-apply every `wine-patches/*.patch` with `--fuzz=0`, and update the `wine --version` literal in `packages/windows-cross-compiler/Dockerfile`."
+      ]
+    },
+    {
+      "description": "Half upgrade: each of these pins has checksum ARGs directly below it that Renovate cannot compute.",
+      "matchFileNames": ["packages/windows-cross-compiler/Dockerfile"],
+      "matchPackageNames": [
+        "rust-lang/rustup",
+        "rust-cross/cargo-xwin",
+        "Winetricks/winetricks"
+      ],
+      "prBodyNotes": [
+        "**Half upgrade.** Refresh the `*_SHA256*` ARGs directly below {{{depName}}} in `{{{packageFile}}}`."
+      ]
+    },
+    {
+      "description": "Half upgrade: the Nerd Fonts patcher archive is checksum-pinned beside its version.",
+      "matchPackageNames": ["ryanoasis/nerd-fonts"],
+      "prBodyNotes": [
+        "**Half upgrade.** Refresh `FONT_PATCHER_SHA256` in `packages/fonts/patch-berkeley-mono.py`."
+      ]
+    },
+    {
+      "description": "cctools-port links apple-libtapi, so the two branch-head pins in the macOS cross-compiler move together.",
+      "groupName": "Apple cctools sources",
+      "matchDatasources": ["git-refs"],
+      "matchDepNames": ["apple-libtapi", "cctools-port"]
+    },
+    {
+      "description": "The deb and git-refs datasources carry no release timestamps. Under the strict 30-day release-age gate an update without a timestamp stays pending forever, so these skip the gate.",
+      "matchDatasources": ["deb", "git-refs"],
+      "minimumReleaseAge": "0 days"
+    },
+    {
+      "description": "GrimAC resolves from a Modrinth Ivy repository (packages/the-storm/plugin/settings.gradle.kts), not Maven Central; the Maven lookup can only fail or be rate limited.",
+      "matchManagers": ["gradle"],
+      "matchDatasources": ["maven"],
+      "matchFileNames": ["packages/the-storm/**"],
+      "matchPackageNames": ["ac.grim.artifact:grimac-bukkit"],
+      "enabled": false
+    },
+    {
+      "description": "The Storm client's Minecraft version follows the Paper line by hand. Fabric Loom resolves com.mojang:minecraft itself; it has no Maven release metadata to look up.",
+      "matchManagers": ["gradle"],
+      "matchDatasources": ["maven"],
+      "matchFileNames": ["packages/the-storm/**"],
+      "matchPackageNames": ["com.mojang:minecraft"],
       "enabled": false
     }
   ],

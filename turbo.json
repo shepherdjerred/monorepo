@@ -661,6 +661,21 @@
         "ci/scripts/toolchain.sh"
       ]
     },
+    // A `# renovate:` hint can sit in any tracked text file, so every file is
+    // an input; the check itself only reads the files `git grep` finds.
+    "//#renovate-hints": {
+      "inputs": [
+        "scripts/checks/deps/check-renovate-hints.ts",
+        "renovate.json",
+        "**/*",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
     "//#toolchain-version-sync": {
       "inputs": [
         "scripts/checks/deps/check-toolchain-version-sync.ts",

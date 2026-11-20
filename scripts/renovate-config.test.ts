@@ -39,12 +39,107 @@ const RenovateConfigSchema = z.object({
       groupName: z.string().optional(),
       enabled: z.boolean().optional(),
       minimumReleaseAge: z.string().nullable().optional(),
+      prBodyNotes: z.array(z.string()).optional(),
     }),
   ),
   ignorePaths: z.array(z.string()),
 });
 
 const root = `${import.meta.dir}/..`;
+
+type RenovateConfig = z.infer<typeof RenovateConfigSchema>;
+type RegexManager = z.infer<typeof RegexManagerSchema>;
+type PackageRule = RenovateConfig["packageRules"][number];
+
+type HintedPin = {
+  file: string;
+  datasource: string | undefined;
+  depName: string | undefined;
+  currentValue: string | undefined;
+  currentDigest: string | undefined;
+  extractVersion: string | undefined;
+  matchedText: string;
+};
+
+async function loadRenovateConfig(): Promise<RenovateConfig> {
+  return RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+}
+
+function hintedPinManager(config: RenovateConfig): RegexManager {
+  const manager = config.customManagers.find((candidate) =>
+    candidate.description.startsWith("Hinted version pins"),
+  );
+  if (manager === undefined) {
+    throw new Error("Hinted version pin Renovate manager is missing");
+  }
+  return manager;
+}
+
+// Renovate compiles each matchString with the global flag only and reports
+// the matches of every expression; file order keeps the table readable.
+async function extractPins(
+  manager: RegexManager,
+  file: string,
+): Promise<HintedPin[]> {
+  const source = await Bun.file(`${root}/${file}`).text();
+  return manager.matchStrings
+    .flatMap((expression) => [...source.matchAll(new RegExp(expression, "g"))])
+    .toSorted((left, right) => left.index - right.index)
+    .map((match) => ({
+      file,
+      datasource: match.groups?.["datasource"],
+      depName: match.groups?.["depName"],
+      currentValue: match.groups?.["currentValue"],
+      currentDigest: match.groups?.["currentDigest"],
+      extractVersion: match.groups?.["extractVersion"],
+      matchedText: match[0],
+    }));
+}
+
+// The slice of Renovate's packageRules matching these tests need: every
+// matcher a rule states must hold, and a later rule's groupName wins.
+function matchesName(patterns: string[] | undefined, value: string): boolean {
+  if (patterns === undefined) return true;
+  return patterns.some((pattern) => {
+    if (
+      pattern.length > 2 &&
+      pattern.startsWith("/") &&
+      pattern.endsWith("/")
+    ) {
+      return new RegExp(pattern.slice(1, -1)).test(value);
+    }
+    return pattern.includes("*")
+      ? new Bun.Glob(pattern).match(value)
+      : pattern.toLowerCase() === value.toLowerCase();
+  });
+}
+
+type RuleSubject = {
+  manager: string;
+  file: string;
+  datasource: string;
+  depName: string;
+  packageName: string;
+};
+
+function groupNameFor(
+  rules: PackageRule[],
+  subject: RuleSubject,
+): string | undefined {
+  let groupName: string | undefined;
+  for (const rule of rules) {
+    if (rule.groupName === undefined) continue;
+    if (rule.matchManagers?.includes(subject.manager) === false) continue;
+    if (rule.matchDatasources?.includes(subject.datasource) === false) continue;
+    if (!matchesName(rule.matchFileNames, subject.file)) continue;
+    if (!matchesName(rule.matchPackageNames, subject.packageName)) continue;
+    if (!matchesName(rule.matchDepNames, subject.depName)) continue;
+    groupName = rule.groupName;
+  }
+  return groupName;
+}
 
 test("uses Renovate as a manually approved dependency dashboard", async () => {
   const config = RenovateConfigSchema.parse(
@@ -345,33 +440,18 @@ test("keeps Storm tool versions managed at the authoritative Gradle catalog", as
 });
 
 test("updates application Dockerfile tool pins without hardcoded test fixtures", async () => {
-  const config = RenovateConfigSchema.parse(
-    await Bun.file(`${root}/renovate.json`).json(),
-  );
-  const manager = config.customManagers.find(
-    (candidate) =>
-      candidate.description ===
-      "Pinned tool versions in application Dockerfile ARGs",
-  );
-  if (manager === undefined) {
-    throw new Error("Application Dockerfile ARG Renovate manager is missing");
-  }
-  const expression = manager.matchStrings[0];
-  if (expression === undefined) {
-    throw new Error("Application Dockerfile ARG Renovate matcher is missing");
-  }
+  const config = await loadRenovateConfig();
+  const manager = hintedPinManager(config);
   const pinsByFile = await Promise.all(
-    manager.managerFilePatterns.map(async (path) => {
-      const source = await Bun.file(`${root}/${path}`).text();
-      return [...source.matchAll(new RegExp(expression, "gm"))].map(
-        (match) => ({
-          depName: match.groups?.["depName"],
-          currentValue: match.groups?.["currentValue"],
-        }),
-      );
-    }),
+    [
+      "packages/discord-plays-pokemon/Dockerfile",
+      "packages/streambot/Dockerfile",
+    ].map((file) => extractPins(manager, file)),
   );
-  const pins = pinsByFile.flat();
+  const pins = pinsByFile.flat().map(({ depName, currentValue }) => ({
+    depName,
+    currentValue,
+  }));
   expect(pins).toEqual([
     { depName: "uv", currentValue: expect.stringMatching(/^\d/) },
     { depName: "yt-dlp/yt-dlp", currentValue: expect.stringMatching(/^\d/) },
@@ -392,27 +472,19 @@ test("updates application Dockerfile tool pins without hardcoded test fixtures",
 });
 
 test("extracts an Apple codesign version pin from the macOS cross-compiler Dockerfile", async () => {
-  const config = RenovateConfigSchema.parse(
-    await Bun.file(`${root}/renovate.json`).json(),
+  const config = await loadRenovateConfig();
+  const pins = await extractPins(
+    hintedPinManager(config),
+    "packages/macos-cross-compiler/Dockerfile",
   );
-  const manager = config.customManagers.find((candidate) =>
-    candidate.managerFilePatterns.includes(
-      "packages/macos-cross-compiler/Dockerfile",
-    ),
+  const codesign = pins.find(
+    (pin) => pin.depName === "indygreg/apple-platform-rs",
   );
-  if (manager === undefined) {
-    throw new Error("Apple codesign Renovate manager is missing");
-  }
-  const expression = manager.matchStrings[0];
-  if (expression === undefined) {
-    throw new Error("Apple codesign matcher is missing");
-  }
-  const source = await Bun.file(
-    `${root}/packages/macos-cross-compiler/Dockerfile`,
-  ).text();
-  const match = new RegExp(expression).exec(source);
-  expect(match?.groups?.["depName"]).toBe("indygreg/apple-platform-rs");
-  expect(match?.groups?.["currentValue"]).toBe("0.29.0");
+  expect(codesign?.datasource).toBe("github-releases");
+  expect(codesign?.currentValue).toBe("0.29.0");
+  // apple-platform-rs tags every crate it releases; only the codesign tags
+  // are versions of this binary.
+  expect(codesign?.extractVersion).toBe("^apple-codesign/(?<version>.*)$");
 });
 
 test("extracts identical Swift base image digest pins from both sources", async () => {
@@ -519,4 +591,543 @@ test("extracts every OpenTofu provider pin with its registry", async () => {
       rule.matchPackageNames?.includes("shepherdjerred/asuswrt"),
     ),
   ).toMatchObject({ matchDatasources: ["terraform-provider"], enabled: false });
+});
+
+// Every pin the hinted-pin manager owns. `plain` is a bare version, `v` keeps
+// the upstream tag's `v`, `tag` is a whole release tag, and `commit` is a
+// branch head with no version at all.
+const HINTED_PINS: [
+  file: string,
+  datasource: string,
+  depName: string,
+  shape: "plain" | "v" | "tag" | "commit",
+][] = [
+  ["ci/ci-image/Dockerfile", "github-releases", "jdx/mise", "v"],
+  ["ci/ci-image/Dockerfile", "pypi", "uv", "plain"],
+  ["ci/ci-playwright/Dockerfile", "github-releases", "jdx/mise", "v"],
+  ["ci/scripts/toolchain.sh", "github-releases", "jdx/mise", "v"],
+  [
+    "packages/delivery/Dockerfile",
+    "github-releases",
+    "kubernetes/kubernetes",
+    "v",
+  ],
+  ["packages/discord-plays-pokemon/Dockerfile", "pypi", "uv", "plain"],
+  ["packages/dotfiles/dot_local/bin/executable_cf", "npm", "cf", "plain"],
+  [
+    "packages/fonts/patch-berkeley-mono.py",
+    "github-releases",
+    "ryanoasis/nerd-fonts",
+    "v",
+  ],
+  [
+    "packages/macos-cross-compiler/Dockerfile",
+    "github-releases",
+    "llvm/llvm-project",
+    "plain",
+  ],
+  [
+    "packages/macos-cross-compiler/Dockerfile",
+    "git-refs",
+    "apple-libtapi",
+    "commit",
+  ],
+  [
+    "packages/macos-cross-compiler/Dockerfile",
+    "git-refs",
+    "cctools-port",
+    "commit",
+  ],
+  ["packages/macos-cross-compiler/Dockerfile", "rust-version", "rust", "plain"],
+  [
+    "packages/macos-cross-compiler/Dockerfile",
+    "github-releases",
+    "indygreg/apple-platform-rs",
+    "plain",
+  ],
+  [
+    "packages/media/Dockerfile",
+    "github-releases",
+    "theseus-rs/postgresql-binaries",
+    "plain",
+  ],
+  [
+    "packages/streambot/Dockerfile",
+    "github-releases",
+    "yt-dlp/yt-dlp",
+    "plain",
+  ],
+  [
+    "packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh",
+    "github-releases",
+    "jdx/mise",
+    "plain",
+  ],
+  ["packages/temporal/Dockerfile", "dotnet-version", "dotnet-sdk", "plain"],
+  ["packages/temporal/Dockerfile", "github-releases", "cli/cli", "plain"],
+  [
+    "packages/temporal/Dockerfile",
+    "github-releases",
+    "kubernetes/kubernetes",
+    "v",
+  ],
+  [
+    "packages/temporal/Dockerfile",
+    "github-releases",
+    "github/github-mcp-server",
+    "plain",
+  ],
+  ["packages/temporal/Dockerfile", "github-releases", "siderolabs/talos", "v"],
+  [
+    "packages/temporal/Dockerfile",
+    "github-releases",
+    "opentofu/opentofu",
+    "plain",
+  ],
+  ["packages/temporal/Dockerfile", "github-releases", "argoproj/argo-cd", "v"],
+  [
+    "packages/temporal/Dockerfile",
+    "github-releases",
+    "vmware-tanzu/velero",
+    "v",
+  ],
+  [
+    "packages/temporal/Dockerfile",
+    "github-releases",
+    "woodpecker-ci/woodpecker",
+    "plain",
+  ],
+  [
+    // github-tags, as the mise manager uses for its copy of this tool: the two
+    // datasources date a release differently, so mixing them would let the
+    // release-age gate offer each copy a different version.
+    "packages/temporal/Dockerfile",
+    "github-tags",
+    "temporalio/cli",
+    "plain",
+  ],
+  ["packages/temporal/Dockerfile", "github-releases", "grafana/gcx", "plain"],
+  ["packages/temporal/Dockerfile", "pypi", "uv", "plain"],
+  [
+    "packages/temporal/Dockerfile",
+    "github-releases",
+    "aquasecurity/trivy",
+    "plain",
+  ],
+  [
+    "packages/temporal/Dockerfile",
+    "github-releases",
+    "lycheeverse/lychee",
+    "tag",
+  ],
+  [
+    "packages/temporal/Dockerfile",
+    "github-tags",
+    "Kometa-Team/Kometa",
+    "plain",
+  ],
+  [
+    "packages/temporal/Dockerfile",
+    "github-releases",
+    "theseus-rs/postgresql-binaries",
+    "plain",
+  ],
+  [
+    "packages/toolkit/src/lib/brim/capture/engine.ts",
+    "pypi",
+    "mitmproxy",
+    "plain",
+  ],
+  [
+    "packages/windows-cross-compiler/Dockerfile",
+    "github-tags",
+    "wine-mirror/wine",
+    "plain",
+  ],
+  [
+    "packages/windows-cross-compiler/Dockerfile",
+    "dotnet-version",
+    "dotnet-sdk",
+    "plain",
+  ],
+  [
+    "packages/windows-cross-compiler/Dockerfile",
+    "rust-version",
+    "rust",
+    "plain",
+  ],
+  [
+    "packages/windows-cross-compiler/Dockerfile",
+    "github-tags",
+    "rust-lang/rustup",
+    "plain",
+  ],
+  [
+    "packages/windows-cross-compiler/Dockerfile",
+    "github-releases",
+    "rust-cross/cargo-xwin",
+    "plain",
+  ],
+  [
+    "packages/windows-cross-compiler/Dockerfile",
+    "deb",
+    "winehq-stable",
+    "plain",
+  ],
+  [
+    "packages/windows-cross-compiler/Dockerfile",
+    "github-tags",
+    "Winetricks/winetricks",
+    "plain",
+  ],
+  ["scripts/misc/migration-core.ts", "npm", "pyright", "plain"],
+  ["scripts/tools/ruff-check.ts", "pypi", "ruff", "plain"],
+];
+
+const PIN_SHAPES = {
+  plain: /^\d[\w.~-]*$/,
+  v: /^v\d[\w.-]*$/,
+  tag: /^[a-z][a-z-]*-v\d[\w.-]*$/,
+} as const;
+
+async function extractHintedPinTable(
+  config: RenovateConfig,
+): Promise<HintedPin[]> {
+  const manager = hintedPinManager(config);
+  const files = [...new Set(HINTED_PINS.map(([file]) => file))];
+  const pinsByFile = await Promise.all(
+    files.map((file) => extractPins(manager, file)),
+  );
+  return pinsByFile.flat();
+}
+
+function miseManager(config: RenovateConfig): RegexManager {
+  const manager = config.customManagers.find((candidate) =>
+    candidate.managerFilePatterns.includes(".mise.toml"),
+  );
+  if (manager === undefined) {
+    throw new Error(".mise.toml Renovate manager is missing");
+  }
+  return manager;
+}
+
+test("extracts every hinted version pin and nothing else from those files", async () => {
+  const pins = await extractHintedPinTable(await loadRenovateConfig());
+
+  expect(
+    pins.map(({ file, datasource, depName }) => [file, datasource, depName]),
+  ).toEqual(
+    HINTED_PINS.map(([file, datasource, depName]) => [
+      file,
+      datasource,
+      depName,
+    ]),
+  );
+  for (const [index, [file, , depName, shape]] of HINTED_PINS.entries()) {
+    const pin = pins[index];
+    if (pin === undefined) {
+      throw new Error(`Missing extracted pin for ${depName} in ${file}`);
+    }
+    if (shape === "commit") {
+      expect(pin.currentValue).toBeUndefined();
+      expect(pin.currentDigest).toMatch(/^[a-f0-9]{40}$/);
+    } else {
+      expect(pin.currentValue).toMatch(PIN_SHAPES[shape]);
+    }
+  }
+
+  // Kometa is cloned at a tag and verified against that tag's commit, so the
+  // version and the commit must sit in one match to move together.
+  const kometa = pins.find((pin) => pin.depName === "Kometa-Team/Kometa");
+  expect(kometa?.currentDigest).toMatch(/^[a-f0-9]{40}$/);
+  expect(kometa?.extractVersion).toBe(String.raw`^v(?<version>\d+\.\d+\.\d+)$`);
+  expect(
+    pins.filter(
+      (pin) =>
+        pin.currentDigest !== undefined && pin.currentValue !== undefined,
+    ),
+  ).toEqual([kometa]);
+});
+
+test("rewrites only the pin when Renovate replaces a hinted value", async () => {
+  // Renovate replaces every occurrence of the value inside the matched text,
+  // so a hint or neighbouring line that repeats it would be rewritten too.
+  const pins = await extractHintedPinTable(await loadRenovateConfig());
+  for (const pin of pins) {
+    for (const value of [pin.currentValue, pin.currentDigest]) {
+      if (value === undefined) continue;
+      expect(
+        pin.matchedText.split(value),
+        `${pin.depName ?? "?"} in ${pin.file}`,
+      ).toHaveLength(2);
+    }
+  }
+});
+
+test("tracks the mise pins the native manager cannot resolve", async () => {
+  const config = await loadRenovateConfig();
+  expect(hintedPinManager(config).managerFilePatterns).not.toContain(
+    ".mise.toml",
+  );
+
+  const pins = await extractPins(miseManager(config), ".mise.toml");
+  expect(
+    pins.map(({ datasource, depName, currentValue }) => ({
+      datasource,
+      depName,
+      currentValue,
+    })),
+  ).toEqual([
+    {
+      datasource: "dotnet-version",
+      depName: "dotnet-sdk",
+      currentValue: expect.stringMatching(/^\d+\.\d+\.\d+$/),
+    },
+    {
+      datasource: "github-releases",
+      depName: "corretto/corretto-25",
+      currentValue: expect.stringMatching(/^\d+(?:\.\d+){4}$/),
+    },
+  ]);
+
+  // Native mise tracks every other tool, so a hint above one would be dead.
+  const source = await Bun.file(`${root}/.mise.toml`).text();
+  expect(source.match(/^# renovate:/gm)).toHaveLength(pins.length);
+
+  expect(
+    config.packageRules.find(
+      (rule) =>
+        rule.matchManagers?.includes("mise") === true &&
+        rule.matchDepNames?.includes("dotnet") === true,
+    ),
+  ).toMatchObject({ matchFileNames: [".mise.toml"], enabled: false });
+});
+
+test("moves pins that must stay equal in one Renovate branch", async () => {
+  const config = await loadRenovateConfig();
+  const pins = [
+    ...(await extractHintedPinTable(config)),
+    ...(await extractPins(miseManager(config), ".mise.toml")),
+  ];
+
+  function extracted(file: string, depName: string): RuleSubject {
+    const pin = pins.find(
+      (candidate) => candidate.file === file && candidate.depName === depName,
+    );
+    if (pin?.datasource === undefined) {
+      throw new Error(`No hinted pin for ${depName} in ${file}`);
+    }
+    return {
+      manager: "custom.regex",
+      file,
+      datasource: pin.datasource,
+      depName,
+      packageName: depName,
+    };
+  }
+  // Renovate's native managers name these themselves: the mise manager maps a
+  // tool to its upstream datasource and package, and the nuget manager reads
+  // the SDK from global.json.
+  const miseRust: RuleSubject = {
+    manager: "mise",
+    file: ".mise.toml",
+    datasource: "rust-version",
+    depName: "rust",
+    packageName: "rust",
+  };
+  const globalJsonSdk: RuleSubject = {
+    manager: "nuget",
+    file: "global.json",
+    datasource: "dotnet-version",
+    depName: "dotnet-sdk",
+    packageName: "dotnet-sdk",
+  };
+  const miseOpenTofu: RuleSubject = {
+    manager: "mise",
+    file: ".mise.toml",
+    datasource: "github-releases",
+    depName: "opentofu",
+    packageName: "opentofu/opentofu",
+  };
+  const misePostgres: RuleSubject = {
+    manager: "mise",
+    file: ".mise.toml",
+    datasource: "github-releases",
+    depName: "github:theseus-rs/postgresql-binaries",
+    packageName: "theseus-rs/postgresql-binaries",
+  };
+
+  const windows = "packages/windows-cross-compiler/Dockerfile";
+  const macos = "packages/macos-cross-compiler/Dockerfile";
+  const temporal = "packages/temporal/Dockerfile";
+  const groups: Record<string, RuleSubject[]> = {
+    "Rust toolchain": [
+      miseRust,
+      extracted(macos, "rust"),
+      extracted(windows, "rust"),
+    ],
+    ".NET SDK": [
+      globalJsonSdk,
+      extracted(".mise.toml", "dotnet-sdk"),
+      extracted(windows, "dotnet-sdk"),
+      extracted(temporal, "dotnet-sdk"),
+    ],
+    OpenTofu: [miseOpenTofu, extracted(temporal, "opentofu/opentofu")],
+    mise: [
+      extracted("ci/ci-image/Dockerfile", "jdx/mise"),
+      extracted("ci/ci-playwright/Dockerfile", "jdx/mise"),
+      extracted("ci/scripts/toolchain.sh", "jdx/mise"),
+    ],
+    "postgresql-binaries": [
+      misePostgres,
+      extracted(temporal, "theseus-rs/postgresql-binaries"),
+      extracted("packages/media/Dockerfile", "theseus-rs/postgresql-binaries"),
+    ],
+    "Talos and Kubernetes": [
+      extracted(temporal, "siderolabs/talos"),
+      extracted(temporal, "kubernetes/kubernetes"),
+      extracted("packages/delivery/Dockerfile", "kubernetes/kubernetes"),
+    ],
+    Wine: [
+      extracted(windows, "wine-mirror/wine"),
+      extracted(windows, "winehq-stable"),
+    ],
+    "Apple cctools sources": [
+      extracted(macos, "apple-libtapi"),
+      extracted(macos, "cctools-port"),
+    ],
+  };
+
+  for (const [groupName, subjects] of Object.entries(groups)) {
+    for (const subject of subjects) {
+      expect(
+        groupNameFor(config.packageRules, subject),
+        `${subject.depName} in ${subject.file}`,
+      ).toBe(groupName);
+    }
+  }
+
+  // The sync checks compare these values literally, so the hinted copies
+  // must already be equal for one branch to keep them equal.
+  for (const groupName of ["Rust toolchain", ".NET SDK", "mise"]) {
+    const values = new Set(
+      pins
+        .filter((pin) =>
+          groups[groupName]?.some(
+            (subject) =>
+              subject.manager === "custom.regex" &&
+              subject.file === pin.file &&
+              subject.depName === pin.depName,
+          ),
+        )
+        .map((pin) => pin.currentValue),
+    );
+    expect(values.size, groupName).toBe(1);
+  }
+});
+
+test("names the companion a reviewer must refresh on a half upgrade", async () => {
+  const config = await loadRenovateConfig();
+  const notes = (packageName: string, file: string): string =>
+    config.packageRules
+      .filter(
+        (rule) =>
+          rule.prBodyNotes !== undefined &&
+          matchesName(rule.matchPackageNames, packageName) &&
+          matchesName(rule.matchFileNames, file),
+      )
+      .flatMap((rule) => rule.prBodyNotes ?? [])
+      .join("\n");
+  const windows = "packages/windows-cross-compiler/Dockerfile";
+
+  expect(notes("dotnet-sdk", windows)).toContain("DOTNET_SDK_SHA512_AMD64");
+  expect(notes("jdx/mise", "ci/scripts/toolchain.sh")).toContain(
+    "MISE_BOOTSTRAP_SHA256",
+  );
+  expect(notes("wine-mirror/wine", windows)).toContain("WINE_SOURCE_SHA256");
+  for (const packageName of [
+    "rust-lang/rustup",
+    "rust-cross/cargo-xwin",
+    "Winetricks/winetricks",
+  ]) {
+    expect(notes(packageName, windows)).toContain("_SHA256");
+  }
+  expect(
+    notes("ryanoasis/nerd-fonts", "packages/fonts/patch-berkeley-mono.py"),
+  ).toContain("FONT_PATCHER_SHA256");
+
+  // Each named companion must exist where the note says it does.
+  const windowsSource = await Bun.file(`${root}/${windows}`).text();
+  expect(windowsSource).toContain("ARG DOTNET_SDK_SHA512_AMD64=");
+  expect(windowsSource).toContain("ARG WINE_SOURCE_SHA256=");
+  expect(
+    await Bun.file(`${root}/packages/temporal/Dockerfile`).text(),
+  ).toContain("ARG DOTNET_SDK_SHA512_ARM64=");
+  expect(await Bun.file(`${root}/ci/scripts/toolchain.sh`).text()).toContain(
+    "MISE_BOOTSTRAP_SHA256=",
+  );
+  expect(
+    await Bun.file(`${root}/packages/fonts/patch-berkeley-mono.py`).text(),
+  ).toContain("FONT_PATCHER_SHA256");
+});
+
+test("releases timestamp-less datasources from the release-age gate", async () => {
+  const config = await loadRenovateConfig();
+  const rule = config.packageRules.find(
+    (candidate) =>
+      candidate.matchDatasources?.includes("git-refs") === true &&
+      candidate.minimumReleaseAge !== undefined,
+  );
+
+  expect(rule?.matchDatasources).toEqual(["deb", "git-refs"]);
+  expect(rule?.minimumReleaseAge).toBe("0 days");
+  expect(rule?.matchPackageNames).toBeUndefined();
+});
+
+test("does not look up Storm artifacts that Maven Central cannot resolve", async () => {
+  const config = await loadRenovateConfig();
+  for (const packageName of [
+    "ac.grim.artifact:grimac-bukkit",
+    "com.mojang:minecraft",
+  ]) {
+    expect(
+      config.packageRules.find((rule) =>
+        rule.matchPackageNames?.includes(packageName),
+      ),
+    ).toMatchObject({
+      matchManagers: ["gradle"],
+      matchDatasources: ["maven"],
+      matchFileNames: ["packages/the-storm/**"],
+      enabled: false,
+    });
+  }
+  const catalog = await Bun.file(
+    `${root}/packages/the-storm/plugin/gradle/libs.versions.toml`,
+  ).text();
+  expect(catalog).toContain("ac.grim.artifact:grimac-bukkit");
+  expect(catalog).toContain("com.mojang:minecraft");
+});
+
+test("keeps every custom manager expression within RE2 syntax", async () => {
+  // Renovate compiles these with RE2, which has no lookaround and no
+  // backreferences; it would reject such an expression at run time.
+  const raw = z
+    .object({
+      customManagers: z.array(
+        z.looseObject({ matchStrings: z.array(z.string()) }),
+      ),
+    })
+    .parse(await Bun.file(`${root}/renovate.json`).json());
+  const expressions = raw.customManagers.flatMap((manager) => [
+    ...manager.matchStrings,
+    ...Object.entries(manager)
+      .filter(([key]) => key.endsWith("Template"))
+      .flatMap(([, value]) => (typeof value === "string" ? [value] : [])),
+  ]);
+
+  expect(expressions.length).toBeGreaterThan(0);
+  for (const expression of expressions) {
+    expect(expression).not.toMatch(/\(\?<?[=!]/);
+    expect(expression).not.toMatch(/\\[1-9]/);
+  }
 });

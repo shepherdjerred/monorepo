@@ -3,7 +3,7 @@ FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1
 WORKDIR /app
 
 FROM base AS native-tools
-# renovate: datasource=github-releases depName=kubernetes/kubectl
+# renovate: datasource=github-releases depName=kubernetes/kubernetes
 ARG KUBECTL_VERSION=v1.37.1
 ARG TARGETARCH
 # Bun's HTTPS client and SHA-256 implementation avoid extra unpinned build tools.
