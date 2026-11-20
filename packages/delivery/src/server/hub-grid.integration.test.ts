@@ -5,19 +5,18 @@ import { PrismaClient } from "#generated/prisma/client.ts";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery, testExecutor, testOperator } from "#testing/seed.ts";
 import { registerTestService } from "#testing/services.ts";
-import { fixtureEnrichment } from "#testing/enrichment-fixture.ts";
+import { createHubTestApp } from "#testing/http-app.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { index } from "#infrastructure/delivery-data.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import { hubGrid } from "#infrastructure/hub/grid.ts";
 import { HubGridSchema } from "#shared/hub/hub-contract.ts";
-import { createApp } from "./app.ts";
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let delivery: Delivery;
 let fixture: Awaited<ReturnType<typeof seedDelivery>>;
 let feed: ReturnType<typeof createChangeListener>;
-let app: ReturnType<typeof createApp>;
+let app: ReturnType<typeof createHubTestApp>;
 /** A client of its own, so a count is one read's statements and nothing else's. */
 let counting: PrismaClient<"query">;
 let statements = 0;
@@ -73,23 +72,7 @@ beforeAll(async () => {
   });
   feed = createChangeListener(cluster.url);
   await feed.start();
-  app = createApp({
-    delivery,
-    changeFeed: feed,
-    enrichment: fixtureEnrichment(cluster.database),
-    ciOrigin: "https://woodpecker.sjer.red",
-    ciRepositoryId: 1,
-    qualifyBuild: () => Promise.resolve("verified"),
-    peerAddress: () => "127.0.0.1",
-    config: {
-      publicOrigin: "http://delivery.test",
-      machineCredentials: [],
-      writesEnabled: () => Promise.resolve(true),
-      enabledEnvironments: () => Promise.resolve(["arcade/prod"]),
-      operatorLogins: () => Promise.resolve([testOperator.id]),
-      trustedProxyAddresses: () => Promise.resolve(["127.0.0.1"]),
-    },
-  });
+  app = createHubTestApp(delivery, feed);
 }, 120_000);
 
 afterAll(async () => {

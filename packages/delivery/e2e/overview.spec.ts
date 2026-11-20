@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
+import { HubGridSchema } from "#shared/hub/hub-contract.ts";
 import {
-  EnvironmentDetailSchema,
-  HubGridSchema,
-} from "#shared/hub/hub-contract.ts";
-import { DeploymentSchema } from "#shared/contract.ts";
-import { api, expectNoHorizontalOverflow } from "./helpers.ts";
+  api,
+  expectNoHorizontalOverflow,
+  requestArcadeDeployment,
+} from "./helpers.ts";
 
 const NAVIGATION = [
   "Overview",
@@ -265,33 +265,9 @@ test("a deployment moves its tile without a reload", async ({
   await expect(
     page.getByRole("status").filter({ hasText: "Live" }),
   ).toBeVisible();
-  const detail = await api(
-    page,
-    "/api/v1/environments/arcade%2Fprod",
-    EnvironmentDetailSchema,
-  );
-  const version = detail.versionSets[0];
-  if (version === undefined) throw new Error("Arcade version fixture required");
-  if (baseURL === undefined) throw new Error("Playwright baseURL required");
-  const headers = { Origin: baseURL };
-  const created = await page.request.post("/api/v1/deployments", {
-    headers,
-    data: {
-      requestId: crypto.randomUUID(),
-      environmentId: "arcade/prod",
-      versionSetRevisionId: version.id,
-      expectedGeneration: detail.environment.generation,
-      kind: "deploy",
-    },
-  });
-  expect(created.status()).toBe(201);
-  const deployment = DeploymentSchema.parse(await created.json());
+  const { deployment, cancel } = await requestArcadeDeployment(page, baseURL);
   const chip = tile(page, "Arcade").getByRole("link", { name: /^prod / });
   await expect(chip).toContainText(deployment.status.replaceAll("_", " "));
-  const canceled = await page.request.post(
-    `/api/v1/deployments/${deployment.id}/cancel`,
-    { headers },
-  );
-  expect(canceled.status()).toBe(200);
+  await cancel();
   await expect(chip).toContainText("canceled");
 });

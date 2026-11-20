@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { HubOverviewSchema } from "#shared/hub/hub-contract.ts";
 import {
-  EnvironmentDetailSchema,
-  HubOverviewSchema,
-} from "#shared/hub/hub-contract.ts";
-import { DeploymentSchema } from "#shared/contract.ts";
-import { api, expectNoHorizontalOverflow } from "./helpers.ts";
+  api,
+  expectNoHorizontalOverflow,
+  requestArcadeDeployment,
+} from "./helpers.ts";
 import { FAILED_COMMIT_TITLE, LONG_COMMIT_TITLE } from "./commits.ts";
 
 const ROUTES = [
@@ -224,33 +224,9 @@ test("committed changes appear live without a reload", async ({
   ).toBeVisible();
   const rows = page.getByRole("main").getByRole("row");
   const before = await rows.count();
-  const detail = await api(
-    page,
-    "/api/v1/environments/arcade%2Fprod",
-    EnvironmentDetailSchema,
-  );
-  const version = detail.versionSets[0];
-  if (version === undefined) throw new Error("Arcade version fixture required");
-  if (baseURL === undefined) throw new Error("Playwright baseURL required");
-  const headers = { Origin: baseURL };
-  const created = await page.request.post("/api/v1/deployments", {
-    headers,
-    data: {
-      requestId: crypto.randomUUID(),
-      environmentId: "arcade/prod",
-      versionSetRevisionId: version.id,
-      expectedGeneration: detail.environment.generation,
-      kind: "deploy",
-    },
-  });
-  expect(created.status()).toBe(201);
-  const deployment = DeploymentSchema.parse(await created.json());
+  const { deployment, cancel } = await requestArcadeDeployment(page, baseURL);
   await expect(rows).toHaveCount(before + (before === 0 ? 2 : 1));
-  const canceled = await page.request.post(
-    `/api/v1/deployments/${deployment.id}/cancel`,
-    { headers },
-  );
-  expect(canceled.status()).toBe(200);
+  await cancel();
   await expect(
     page.locator(`tr:has(a[href="/deployments/${deployment.id}"])`),
   ).toContainText("canceled");

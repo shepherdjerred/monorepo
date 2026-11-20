@@ -2,25 +2,22 @@ import type { Delivery } from "#infrastructure/delivery.ts";
 import type { RuntimeConfig } from "#infrastructure/config.ts";
 import { createApp } from "#server/app.ts";
 import type { Drain } from "#server/drain.ts";
+import { fixtureEnrichment } from "./enrichment-fixture.ts";
 import { testOperator } from "./seed.ts";
 
-/** Actual auth/middleware stack with an isolated loopback test ingress. */
-export function createTestApp(
-  delivery: Delivery,
-  config: Pick<
-    RuntimeConfig,
-    "machineCredentials" | "writesEnabled" | "enabledEnvironments"
-  >,
-  sourceRevision?: string,
-  drain?: Drain,
-) {
-  return createApp({
-    ...(sourceRevision === undefined ? {} : { sourceRevision }),
-    ...(drain === undefined ? {} : { drain }),
+type TestConfig = Pick<
+  RuntimeConfig,
+  "machineCredentials" | "writesEnabled" | "enabledEnvironments"
+>;
+type AppOptions = Parameters<typeof createApp>[0];
+
+/** The isolated loopback ingress every test app shares: CI doubles, peer and operator. */
+function testIngress(delivery: Delivery, config: TestConfig) {
+  return {
     delivery,
     ciOrigin: "https://woodpecker.sjer.red",
     ciRepositoryId: 1,
-    qualifyBuild: () => Promise.resolve("verified"),
+    qualifyBuild: () => Promise.resolve("verified" as const),
     peerAddress: () => "127.0.0.1",
     config: {
       ...config,
@@ -28,6 +25,40 @@ export function createTestApp(
       operatorLogins: () => Promise.resolve([testOperator.id]),
       trustedProxyAddresses: () => Promise.resolve(["127.0.0.1"]),
     },
+  } satisfies AppOptions;
+}
+
+/** Actual auth/middleware stack with an isolated loopback test ingress. */
+export function createTestApp(
+  delivery: Delivery,
+  config: TestConfig,
+  sourceRevision?: string,
+  drain?: Drain,
+) {
+  return createApp({
+    ...(sourceRevision === undefined ? {} : { sourceRevision }),
+    ...(drain === undefined ? {} : { drain }),
+    ...testIngress(delivery, config),
+  });
+}
+
+/**
+ * The app as the browser hub reads it: the test ingress with writes on for
+ * arcade/prod, a live change feed and the Woodpecker, GitHub and ArgoCD
+ * doubles behind the integration routes.
+ */
+export function createHubTestApp(
+  delivery: Delivery,
+  changeFeed: NonNullable<AppOptions["changeFeed"]>,
+) {
+  return createApp({
+    ...testIngress(delivery, {
+      machineCredentials: [],
+      writesEnabled: () => Promise.resolve(true),
+      enabledEnvironments: () => Promise.resolve(["arcade/prod"]),
+    }),
+    changeFeed,
+    enrichment: fixtureEnrichment(delivery.database),
   });
 }
 

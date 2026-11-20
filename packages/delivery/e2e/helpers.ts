@@ -1,6 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
-import { DeploymentPageSchema } from "#shared/hub/hub-contract.ts";
+import { DeploymentSchema } from "#shared/contract.ts";
+import {
+  DeploymentPageSchema,
+  EnvironmentDetailSchema,
+} from "#shared/hub/hub-contract.ts";
 
 /** Open the newest matching deployment of an environment by its deep link. */
 export async function openDeployment(
@@ -62,6 +66,48 @@ export async function api<T>(
   expect(response.status()).toBe(200);
   const body: unknown = await response.json();
   return schema.parse(body);
+}
+
+/**
+ * Request a deploy of Arcade production's newest version set through the
+ * API, as another client would while a page is open. Returns the deployment
+ * and a `cancel` that requests its cancellation.
+ */
+export async function requestArcadeDeployment(
+  page: Page,
+  baseURL: string | undefined,
+) {
+  const detail = await api(
+    page,
+    "/api/v1/environments/arcade%2Fprod",
+    EnvironmentDetailSchema,
+  );
+  const version = detail.versionSets[0];
+  if (version === undefined) throw new Error("Arcade version fixture required");
+  if (baseURL === undefined) throw new Error("Playwright baseURL required");
+  const headers = { Origin: baseURL };
+  const created = await page.request.post("/api/v1/deployments", {
+    headers,
+    data: {
+      requestId: crypto.randomUUID(),
+      environmentId: "arcade/prod",
+      versionSetRevisionId: version.id,
+      expectedGeneration: detail.environment.generation,
+      kind: "deploy",
+    },
+  });
+  expect(created.status()).toBe(201);
+  const deployment = DeploymentSchema.parse(await created.json());
+  return {
+    deployment,
+    cancel: async () => {
+      const canceled = await page.request.post(
+        `/api/v1/deployments/${deployment.id}/cancel`,
+        { headers },
+      );
+      expect(canceled.status()).toBe(200);
+    },
+  };
 }
 
 /** Open a page once it has loaded and require no WCAG 2.2 AA violation. */
