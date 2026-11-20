@@ -288,7 +288,8 @@ fn start_voice(
 ) -> Option<voice::VoiceHandle> {
     let ports = voice::VoicePorts {
         engine: Box::new(voice::device::ModelEngine::new(
-            scout_client_runtime::runtime::voice_model_directories(),
+            std::env::current_exe().ok(),
+            scout_client_runtime::runtime::data_directory(),
         )),
         turns: Box::new(voice::turns::ScoutTurns::new(origin)),
         speaker: Box::new(scout_voice::playback::device::CpalSpeaker::default()),

@@ -18,8 +18,10 @@ pub(super) fn outbox_file_name(backend_origin: &str, device_id: Option<Uuid>) ->
     format!("outbox-{}.db", hex::encode(hasher.finalize()))
 }
 
-/// The per-user directory holding the outbox and the diagnostics log.
-pub(crate) fn data_directory() -> Option<PathBuf> {
+/// The per-user directory holding the outbox and the diagnostics log. The
+/// voice model lookup also searches it for a hand-placed `voice-models`.
+#[must_use]
+pub fn data_directory() -> Option<PathBuf> {
     let profile = ReleaseProfile::compiled();
     let project = ProjectDirs::from(
         profile.data_qualifier,
@@ -48,23 +50,6 @@ pub fn explore_cache_directory() -> PathBuf {
         || std::env::temp_dir().join("scout-explore-cache"),
         |directory| directory.join("explore-cache"),
     )
-}
-
-/// Where the voice models may be, in the order they are tried: a
-/// `voice-models` directory beside the executable, where an installer puts
-/// them, then one in the per-user data directory. Nothing downloads them at
-/// runtime; `bun run voice:models` assembles the directory for development.
-#[must_use]
-pub fn voice_model_directories() -> Vec<PathBuf> {
-    let beside_executable = std::env::current_exe().ok().and_then(|executable| {
-        executable
-            .parent()
-            .map(|directory| directory.join("voice-models"))
-    });
-    beside_executable
-        .into_iter()
-        .chain(data_directory().map(|directory| directory.join("voice-models")))
-        .collect()
 }
 
 pub(super) fn outbox_path(backend_origin: &str, device_id: Option<Uuid>) -> PathBuf {
