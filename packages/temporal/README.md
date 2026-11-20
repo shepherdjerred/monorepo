@@ -51,18 +51,20 @@ Histories recorded before `delivery-self-hosted-handoff-v1` accept as before.
 
 The sync that applies a self-hosted change can replace the Delivery worker
 running it. The SDK cancels that Activity with `WORKER_SHUTDOWN`, which kills
-the guarded Argo command; while the lease is still held the step fails as
-`DeliveryExecutorReplaced` with its stage left `running`, and the Workflow
-renews the lease and runs the same step on the replacement worker. Because the
-request already reached the Application, that attempt only reads it back (or
-adopts the live matching operation through the guarded command) and settles the
-stage, so the deployment hands off instead of ending recovery-required. A
-Failed owned operation, a refused or failed guarded command, a lost lease, a
-requested cancellation, an ordinary deployment, and a fourth consecutive
-replacement of one step still fail as before. The classification runs on the
-outgoing worker, so it applies once the running Delivery worker carries it;
-histories recorded before `delivery-executor-replaced-resume-v1` finish
-failed as they did.
+the guarded Argo command; while the lease is still held `runDeliveryModelStep`
+returns `{ waiting: false, executorReplaced: true }` with its stage left
+`running` instead of failing the Activity, and the Workflow renews the lease and
+runs the same step on the replacement worker (histories that recorded the
+earlier `DeliveryExecutorReplaced` Activity failure continue to replay
+identically). Because the request already reached the Application, that attempt
+only reads it back (or adopts the live matching operation through the guarded
+command) and settles the stage, so the deployment hands off instead of ending
+recovery-required. A Failed owned operation, a refused or failed guarded
+command, a lost lease, a requested cancellation, an ordinary deployment, and a
+fourth consecutive replacement of one step still fail as before. The
+classification runs on the outgoing worker, so it applies once the running
+Delivery worker carries it; histories recorded before
+`delivery-executor-replaced-resume-v1` finish failed as they did.
 
 `scripts/rollout/delivery-settlement-recovery.ts` provides independent result
 settlement when an unavailable executor cannot finish its recorded result.
@@ -798,23 +800,23 @@ poll `beta` for the explicit notification acceptance canary. Other central
 Activity queues are `prod` only. Retired economy schedules are removed by
 schedule reconciliation.
 
-| Role              | Queue or surface                                                                       |               Activity concurrency |
-| ----------------- | -------------------------------------------------------------------------------------- | ---------------------------------: |
-| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-photon` |                        4 per queue |
-| `home`            | `home`                                                                                 |                                  4 |
-| `reports`         | `reports`                                                                              |                                  4 |
-| `infra`           | `infra`, `mining-reset`; bounded Ops collection on `ops`                               | 1 on each legacy queue; 4 on `ops` |
-| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                        |                        1 per queue |
-| `scout`           | `scout`                                                                                |                                  1 |
-| `agent`           | `agent-task`                                                                           |                                  1 |
-| `promotion`       | `storm-promotion`, `storm-promotion-control`                                           |                        1 per queue |
-| `glitter-corpus`  | `glitter-corpus`                                                                       |                                  1 |
-| `glitter-context` | `glitter-context`                                                                      |                                  1 |
-| `maintenance`     | `maintenance`                                                                          |                                  1 |
-| `media-network`   | `media-network`                                                                        |                                  4 |
-| `media-files`     | `media-files`                                                                          |                                  1 |
-| `workflows`       | `monorepo-workflows`                                                                   |                               none |
-| `streambot`       | `streambot`                                                                            |                                  1 |
+| Role              | Queue or surface                                                                       |                Activity concurrency |
+| ----------------- | -------------------------------------------------------------------------------------- | ----------------------------------: |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-photon` |                         4 per queue |
+| `home`            | `home`                                                                                 |                                   4 |
+| `reports`         | `reports`                                                                              |                                   4 |
+| `infra`           | `infra`, `mining-reset`; bounded Ops collection on `ops`                               | 1 on each legacy queue; 16 on `ops` |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                        |                         1 per queue |
+| `scout`           | `scout`                                                                                |                                   1 |
+| `agent`           | `agent-task`                                                                           |                                   1 |
+| `promotion`       | `storm-promotion`, `storm-promotion-control`                                           |                         1 per queue |
+| `glitter-corpus`  | `glitter-corpus`                                                                       |                                   1 |
+| `glitter-context` | `glitter-context`                                                                      |                                   1 |
+| `maintenance`     | `maintenance`                                                                          |                                   1 |
+| `media-network`   | `media-network`                                                                        |                                   4 |
+| `media-files`     | `media-files`                                                                          |                                   1 |
+| `workflows`       | `monorepo-workflows`                                                                   |                                none |
+| `streambot`       | `streambot`                                                                            |                                   1 |
 
 The `streambot-lol-playback` Schedule reconciles explicitly selected LoL series
 through the isolated `streambot` Activity queue. The worker receives only its

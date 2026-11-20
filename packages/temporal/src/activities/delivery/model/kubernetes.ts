@@ -4,7 +4,7 @@ import {
   effectSignal,
   interruptedByWorkerShutdown,
 } from "#lib/delivery/model/effect-signal.ts";
-import { DELIVERY_EXECUTOR_REPLACED } from "#shared/delivery-executor.ts";
+import type { DeliveryModelStepResult } from "#shared/delivery-executor.ts";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import type {
@@ -339,24 +339,27 @@ async function waitForReadback(
  *
  * A self-hosted sync may replace the very worker running it (D8). When that
  * worker's shutdown kills the step while it still holds the lease, the step
- * fails as `DeliveryExecutorReplaced`, leaving its stage `running`, and the
- * Workflow runs it again on the replacement worker. Every other failure,
- * a Failed or Error owned operation included, fails as before.
+ * returns `{ waiting: false, executorReplaced: true }`, leaving its stage
+ * `running`, and the Workflow runs it again on the replacement worker without
+ * recording an Activity failure. Every other failure, a Failed or Error owned
+ * operation included, fails as before.
  */
 export async function sync(
   current: DeploymentDetail,
   recipe: KubernetesApplicationRecipe,
   key: string,
-) {
+): Promise<DeliveryModelStepResult> {
   try {
     await syncOwned(current, recipe, key);
+    return { waiting: false };
   } catch (error) {
     if (!current.selfHosted || !interruptedByWorkerShutdown()) throw error;
-    throw ApplicationFailure.create({
-      type: DELIVERY_EXECUTOR_REPLACED,
-      message: `The ${key} step was interrupted by its own executor's replacement; it resumes by reading back request ${deliveryOperationId(current.deployment.id)}`,
-      ...(error instanceof Error ? { cause: error } : {}),
-    });
+    const requestId = deliveryOperationId(current.deployment.id);
+    Context.current().log.info(
+      `The ${key} step was interrupted by its own executor's replacement; it resumes by reading back request ${requestId}`,
+      error instanceof Error ? { cause: error.message } : {},
+    );
+    return { waiting: false, executorReplaced: true };
   }
 }
 

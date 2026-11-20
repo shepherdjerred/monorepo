@@ -326,7 +326,7 @@ describe("goodMorningPreheat", () => {
         goodMorningPreheat,
         `preheat-weather-outage-${crypto.randomUUID()}`,
       );
-      expect(scenario.weatherAttempts).toBe(3);
+      expect(scenario.weatherAttempts).toBe(4);
       expect(climateCalls(scenario)).toEqual([]);
       expect(scenario.outcomes).toEqual([
         {
@@ -440,7 +440,7 @@ describe("goodMorningWakeUp", () => {
       const workflowId = `wake-weather-outage-${crypto.randomUUID()}`;
       await runWorker(scenario, goodMorningWakeUp, workflowId);
 
-      expect(scenario.weatherAttempts).toBe(3);
+      expect(scenario.weatherAttempts).toBe(4);
       expectDegradedWakeRoutine(
         scenario,
         "wake-routine-complete-weather-unavailable",
@@ -450,6 +450,18 @@ describe("goodMorningWakeUp", () => {
       const history = await testEnv.client.workflow
         .getHandle(workflowId)
         .fetchHistory();
+      const weatherScheduled = history.events?.find(
+        (event) =>
+          event.activityTaskScheduledEventAttributes?.activityType?.name ===
+          "getOutdoorTemperatureC",
+      );
+      const weatherRetryPolicy =
+        weatherScheduled?.activityTaskScheduledEventAttributes?.retryPolicy;
+      expect(Number(weatherRetryPolicy?.initialInterval?.seconds)).toBe(15);
+      expect(weatherRetryPolicy).toMatchObject({
+        backoffCoefficient: 2,
+        maximumAttempts: 4,
+      });
       await Worker.runReplayHistory(
         { workflowsPath: new URL("../index.ts", import.meta.url).pathname },
         history,

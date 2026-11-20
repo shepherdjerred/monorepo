@@ -1,4 +1,5 @@
 import { ApplicationFailure } from "@temporalio/common";
+import { temporalWorkflowTracingModulePath } from "@shepherdjerred/temporal-observability/interceptors";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import {
   bundleWorkflowCode,
@@ -13,6 +14,7 @@ import {
 } from "#lib/photon/fixtures.test-support.ts";
 import { normalizePhotonMessage } from "#lib/photon/messages.ts";
 import {
+  admitPhotonMessageUpdate,
   PhotonCommandSchema,
   PhotonConversationStateSchema,
   photonCommandWorkflowId,
@@ -333,6 +335,112 @@ describe("Photon durable conversation admission", () => {
         await replay(env, workflowId, original.runId);
         await handle.cancel();
       });
+    } finally {
+      activityWorker.shutdown();
+      await activities;
+      await env.teardown();
+    }
+  }, 120_000);
+});
+
+async function recordTwoTurnConversationHistory(input: {
+  env: TestWorkflowEnvironment;
+  worker: Worker;
+  delivered: string[];
+  prefix: string;
+}) {
+  const { env, worker, delivered, prefix } = input;
+  const conversationId = `photon-conv-${prefix}`;
+  const first = { ...message(`${prefix}-1`), conversationId };
+  const second = { ...message(`${prefix}-2`), conversationId };
+  const workflowId = photonConversationWorkflowId(conversationId);
+  return await worker.runUntil(async () => {
+    expect(await admitPhotonMessage(env.client.workflow, first)).toMatchObject({
+      status: "accepted",
+    });
+    await expect
+      .poll(() => delivered.includes(first.messageId), { timeout: 10_000 })
+      .toBe(true);
+    const handle = env.client.workflow.getHandle(workflowId);
+    expect(
+      await handle.executeUpdate(admitPhotonMessageUpdate, { args: [second] }),
+    ).toMatchObject({ status: "accepted" });
+    await expect
+      .poll(() => delivered.includes(second.messageId), { timeout: 10_000 })
+      .toBe(true);
+    const history = await handle.fetchHistory();
+    await handle.cancel();
+    return history;
+  });
+}
+
+describe("Photon conversation tracing replay determinism", () => {
+  test("replays conversation updates deterministically across call-graph tracing on and off", async () => {
+    const env = await TestWorkflowEnvironment.createTimeSkipping();
+    let exportedSpanBatches = 0;
+    const dummyTracingSinks = {
+      exporter: {
+        export: {
+          fn: () => {
+            exportedSpanBatches += 1;
+          },
+          callDuringReplay: false,
+        },
+      },
+    };
+    const delivered: string[] = [];
+    const activityWorker = await Worker.create({
+      connection: env.nativeConnection,
+      taskQueue: TASK_QUEUES.AGENT_CHAT_PHOTON,
+      activities: {
+        preparePhotonCommand: () => ({ kind: "message", content: "help" }),
+        deliverPhotonResponse: (input: PhotonDelivery) => {
+          delivered.push(input.messageId);
+          return { messageId: "outgoing" };
+        },
+      },
+    });
+    const activities = activityWorker.run();
+    try {
+      const tracedWorker = await Worker.create({
+        connection: env.nativeConnection,
+        taskQueue: TASK_QUEUES.WORKFLOWS,
+        workflowsPath,
+        interceptors: {
+          workflowModules: [temporalWorkflowTracingModulePath()],
+        },
+        sinks: dummyTracingSinks,
+      });
+      const tracedHistory = await recordTwoTurnConversationHistory({
+        env,
+        worker: tracedWorker,
+        delivered,
+        prefix: "traced",
+      });
+      expect(exportedSpanBatches).toBeGreaterThan(0);
+      await Worker.runReplayHistory({ workflowBundle }, tracedHistory);
+
+      const untracedWorker = await Worker.create({
+        connection: env.nativeConnection,
+        taskQueue: TASK_QUEUES.WORKFLOWS,
+        workflowBundle,
+      });
+      const untracedHistory = await recordTwoTurnConversationHistory({
+        env,
+        worker: untracedWorker,
+        delivered,
+        prefix: "untraced",
+      });
+      await Worker.runReplayHistory(
+        {
+          workflowsPath,
+          interceptors: {
+            workflowModules: [temporalWorkflowTracingModulePath()],
+          },
+          sinks: dummyTracingSinks,
+        },
+        untracedHistory,
+      );
     } finally {
       activityWorker.shutdown();
       await activities;

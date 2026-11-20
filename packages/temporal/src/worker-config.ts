@@ -204,7 +204,7 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     role: "infra",
     taskQueue: TASK_QUEUES.OPS,
     activities: opsWorkerActivities,
-    maxConcurrentActivityTaskExecutions: 4,
+    maxConcurrentActivityTaskExecutions: 16,
   },
   {
     kind: "activity",
