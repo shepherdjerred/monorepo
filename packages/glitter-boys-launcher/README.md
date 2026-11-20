@@ -300,7 +300,10 @@ The Windows release environment requires Azure CLI signed in with permission to
 use the configured certificate profile, PowerShell 7, Windows SDK signing tools,
 and the verified Microsoft Artifact Signing Client 1.0.146 under
 `%LOCALAPPDATA%/Microsoft/ArtifactSigning/`. Public account/profile metadata lives
-in `scripts/artifact-signing.json`; no certificate private key is exported.
+in `packages/native-release/windows/artifact-signing.json`; no certificate private key is exported.
+The signing, verification and preflight scripts live in the shared
+[`native-release`](../native-release/README.md) package; the launcher passes
+them the publisher from `release-profile.json`.
 The Ed25519 private key is read from the 1Password Private vault item
 `Glitter Boys launcher release`, field `update-signing-key`. The release terminal can receive the
 credential `GLITTER_BOYS_UPDATE_SIGNING_KEY` as PEM. Never log it. The key
@@ -334,7 +337,7 @@ Windows signing runner. Homelab infrastructure still follows its GitOps release 
 
 5. Confirm the configured account `jerredsigning` and certificate profile
    `publictrust` are Active. Their endpoint is `https://wus2.codesigning.azure.net`.
-   `scripts/artifact-signing.json` is the source of truth. Only Azure CLI
+   `packages/native-release/windows/artifact-signing.json` is the source of truth. Only Azure CLI
    authentication is enabled by this metadata, so a different Azure application's
    login will not authorize signing.
 6. The signing identity needs **Artifact Signing Certificate Profile Signer** on
@@ -433,7 +436,7 @@ points to the exact release. Do not add a docs link to the site homepage.
 1. Download the installer from `/docs/launcher/`. In PowerShell, run
    `Get-AuthenticodeSignature -LiteralPath <installer-path>`; expect `Valid`,
    publisher `Jerred Shepherd`, and a timestamp certificate. The stricter script
-   is `scripts/verify-signature.ps1`, which compares the full publisher subject.
+   is `packages/native-release/windows/verify-signature.ps1`, which compares the full publisher subject.
 2. Install into a fresh Windows x64 test account or isolated installation
    directory. Check its Start menu/desktop shortcuts and the signatures of the
    bootstrap, `versions/<version>/glitter-boys.exe`, and uninstaller.

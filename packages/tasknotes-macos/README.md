@@ -59,9 +59,15 @@ bun run mac:generate       # xcodegen generate → TaskNotes.xcodeproj
 bun run mac:app:release    # Release TaskNotes.app build
 bun run mac:smoke          # Release launch smoke check (--facet-release-smoke)
 bun run mac:e2e            # XCUITest smoke suite
+bun run mac:release        # Developer ID export, notarize, staple, assess (--dry-run needs no credentials)
 bun run mac:verify         # generate + build + test + lint + format + app + smoke
 bun run test               # Vitest suite for scripts/
 ```
+
+`mac:release` does the Xcode archive and export itself and uses the shared
+[`native-release`](../native-release/README.md) helpers for the Developer ID
+identity and notary-profile preflight, notarization, stapling and Gatekeeper
+assessment.
 
 To regenerate native license notices after changing `Package.resolved`:
 

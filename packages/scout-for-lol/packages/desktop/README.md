@@ -522,7 +522,9 @@ variable the script sets, and the config only names the installer. Build on
 the platform the format targets. These scripts produce unsigned installers
 for local use. Release builds go through `release:package:<channel>` (see
 "Releasing an update"), which on macOS also signs with Developer ID and
-notarizes; Windows Authenticode signing is not part of either path yet.
+notarizes through the shared `packages/native-release` helpers (codesign,
+`notarytool`, `stapler`, `spctl` and their credential preflight, also used by
+TaskNotes); Windows Authenticode signing is not part of either path yet.
 
 ### Voice models in the installers
 

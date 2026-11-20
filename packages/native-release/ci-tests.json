@@ -1,0 +1,10 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/native-release",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["test"]
+    }
+  ]
+}

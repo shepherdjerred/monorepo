@@ -17,10 +17,12 @@ import { readProfile } from "../../packages/glitter-boys-launcher/scripts/releas
 import { SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
 import { requireEnv } from "../lib/run.ts";
 import { parsePublicationRecord } from "../../packages/glitter-boys-launcher/scripts/public-release.ts";
+import { run } from "../../packages/glitter-boys-launcher/scripts/windows-tools.ts";
+import { bunRunner } from "../../packages/native-release/src/runner.ts";
 import {
   powershell,
-  run,
-} from "../../packages/glitter-boys-launcher/scripts/windows-tools.ts";
+  verifySignature,
+} from "../../packages/native-release/src/windows.ts";
 const repository = fileURLToPath(new URL("../..", import.meta.url));
 const root = path.join(repository, "packages", "glitter-boys-launcher");
 const hash = (bytes: Uint8Array) =>
@@ -221,20 +223,11 @@ export async function publishLauncher(dryRun: boolean) {
     );
   if (profile.publisher === null)
     throw new Error("Release publisher is required");
-  await run(
-    [
-      await powershell(),
-      "-NoProfile",
-      "-NonInteractive",
-      "-File",
-      path.join(root, "scripts", "verify-signature.ps1"),
-      "-Path",
-      path.join(directory, installerName),
-      "-Publisher",
-      profile.publisher,
-    ],
-    root,
-  );
+  await verifySignature(bunRunner, {
+    file: path.join(directory, installerName),
+    publisher: profile.publisher,
+    cwd: root,
+  });
   const scratch = await mkdtemp(
     path.join(os.tmpdir(), "glitter-release-verify-"),
   );
@@ -256,20 +249,11 @@ export async function publishLauncher(dryRun: boolean) {
       hash(await payload.bytes()) !== release.executable_sha256
     )
       throw new Error("Update executable does not match its signed manifest");
-    await run(
-      [
-        await powershell(),
-        "-NoProfile",
-        "-NonInteractive",
-        "-File",
-        path.join(root, "scripts/verify-signature.ps1"),
-        "-Path",
-        path.join(scratch, "glitter-boys.exe"),
-        "-Publisher",
-        profile.publisher,
-      ],
-      root,
-    );
+    await verifySignature(bunRunner, {
+      file: path.join(scratch, "glitter-boys.exe"),
+      publisher: profile.publisher,
+      cwd: root,
+    });
   } finally {
     await removeScratch(scratch);
   }

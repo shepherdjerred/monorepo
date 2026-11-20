@@ -42,6 +42,29 @@
 // be executed on a machine with no certificate.
 
 import { basename, join, resolve } from "node:path";
+import {
+  bunRunner,
+  capture,
+  run as runCommand,
+} from "@shepherdjerred/native-release/runner";
+import {
+  assertHardenedRuntime,
+  assertNotaryProfile,
+  assertTeamId,
+  assess,
+  assessCommand,
+  codesignVerifyCommand,
+  missingTools,
+  notarizationArchiveCommand,
+  notarizeBundle,
+  notarizeCommand,
+  readDeveloperIdIdentity,
+  stapleAndValidate,
+  stapleCommand,
+  stapleValidateCommand,
+  verifyCodesign,
+  xcrunProbe,
+} from "@shepherdjerred/native-release/apple";
 
 const packageRoot = resolve(import.meta.dir, "..");
 
@@ -49,7 +72,6 @@ const packageRoot = resolve(import.meta.dir, "..");
 
 type RunOptions = {
   readonly cwd?: string;
-  readonly stdin?: string;
   /** Capture stdout and return it instead of streaming it to the terminal. */
   readonly capture?: boolean;
   /**
@@ -64,43 +86,23 @@ type RunOptions = {
 };
 
 /**
- * Run a command, or die describing it.
- *
- * There is deliberately no "keep going" mode and no swallowed exit code: this
- * script signs and ships executable code, and a step that half-worked has to
- * stop the lane rather than be reported and stepped over.
+ * Run a command, or die describing it. There is deliberately no "keep going"
+ * mode: this script signs and ships executable code, and a step that
+ * half-worked has to stop the lane.
  */
 async function run(
   command: readonly string[],
   options: RunOptions = {},
 ): Promise<string> {
-  const child = Bun.spawn(command, {
-    cwd: options.cwd ?? packageRoot,
-    stdin:
-      options.stdin === undefined
-        ? "ignore"
-        : new TextEncoder().encode(options.stdin),
-    stdout: options.capture === true ? "pipe" : "inherit",
-    stderr: options.capture === true ? "pipe" : "inherit",
-  });
-  const stdout =
-    options.capture === true ? await new Response(child.stdout).text() : "";
-  const stderr =
-    options.capture === true ? await new Response(child.stderr).text() : "";
-  const status = await child.exited;
-  if (status !== 0) {
-    const detail = options.capture === true ? `\n${stdout}\n${stderr}` : "";
-    throw new Error(
-      `${command.join(" ")} exited ${status.toString()}${detail}`,
-    );
+  const cwd = options.cwd ?? packageRoot;
+  if (options.capture === true) {
+    return capture(bunRunner, command, {
+      cwd,
+      includeStderr: options.includeStderr,
+    });
   }
-  return options.includeStderr === true ? `${stdout}${stderr}` : stdout;
-}
-
-/** Whether a tool resolves at all, so a missing one is named rather than guessed at. */
-async function toolExists(command: readonly string[]): Promise<boolean> {
-  const child = Bun.spawn(command, { stdout: "ignore", stderr: "ignore" });
-  return (await child.exited) === 0;
+  await runCommand(bunRunner, command, { cwd });
+  return "";
 }
 
 function fail(message: string): never {
@@ -212,11 +214,7 @@ function readConfiguration(dryRun: boolean): ReleaseConfiguration {
     );
   }
   const teamId = Bun.env["TASKNOTES_MAC_TEAM_ID"] ?? UNSET;
-  if (!dryRun && !/^[A-Z0-9]{10}$/.test(teamId)) {
-    fail(
-      `TASKNOTES_MAC_TEAM_ID is not a 10-character team identifier: ${teamId}`,
-    );
-  }
+  if (!dryRun) assertTeamId("TASKNOTES_MAC_TEAM_ID", teamId);
   return {
     teamId,
     notaryProfile: Bun.env["TASKNOTES_MAC_NOTARY_PROFILE"] ?? UNSET,
@@ -267,101 +265,52 @@ async function preflight(
       ["xcodegen", "--version"],
       "mise install (shared root toolchain)",
     ],
-    ["notarytool", ["xcrun", "--find", "notarytool"], "ships with Xcode"],
-    ["stapler", ["xcrun", "--find", "stapler"], "ships with Xcode"],
-    // `xcrun --find` rather than a `--version` probe: `codesign --version` and
-    // `spctl --version` are not flags either tool accepts, so probing them that
-    // way reports every healthy machine as broken.
-    [
-      "codesign",
-      ["xcrun", "--find", "codesign"],
-      "ships with the command line tools",
-    ],
-    [
-      "spctl",
-      ["xcrun", "--find", "spctl"],
-      "ships with the command line tools",
-    ],
-    [
-      "ditto",
-      ["xcrun", "--find", "ditto"],
-      "ships with the command line tools",
-    ],
-    [
-      "plutil",
-      ["xcrun", "--find", "plutil"],
-      "ships with the command line tools",
-    ],
-    [
-      "security",
-      ["xcrun", "--find", "security"],
-      "ships with the command line tools",
-    ],
+    ["notarytool", xcrunProbe("notarytool"), "ships with Xcode"],
+    ["stapler", xcrunProbe("stapler"), "ships with Xcode"],
+    ["codesign", xcrunProbe("codesign"), "ships with the command line tools"],
+    ["spctl", xcrunProbe("spctl"), "ships with the command line tools"],
+    ["ditto", xcrunProbe("ditto"), "ships with the command line tools"],
+    ["plutil", xcrunProbe("plutil"), "ships with the command line tools"],
+    ["security", xcrunProbe("security"), "ships with the command line tools"],
   ];
-  const missingTools: string[] = [];
-  for (const [name, probe, remedy] of tools) {
-    if (!(await toolExists(probe))) {
-      missingTools.push(`  ${name} — ${remedy}`);
-    }
-  }
-  if (missingTools.length > 0) {
-    fail(`missing required tools:\n${missingTools.join("\n")}`);
-  }
-
-  const identities = await run(
-    ["security", "find-identity", "-v", "-p", "codesigning"],
-    {
-      capture: true,
-    },
+  const missingNames = new Set(
+    await missingTools(
+      bunRunner,
+      tools.map(([name, probe]) => ({ name, probe })),
+      { cwd: packageRoot },
+    ),
   );
-  const hasDeveloperId = identities
-    .split("\n")
-    .some(
-      (line) =>
-        line.includes("Developer ID Application") &&
-        line.includes(`(${configuration.teamId})`),
-    );
-  if (!hasDeveloperId) {
-    const message =
-      `no "Developer ID Application" certificate for team ${configuration.teamId} is in ` +
-      "any unlocked keychain.\n" +
-      "  Create one at https://developer.apple.com/account/resources/certificates and\n" +
-      "  install it, or unlock the keychain that holds it. Present identities:\n" +
-      identities;
-    if (!dryRun) {
-      fail(message);
-    }
-    console.warn(`[dry-run] ${message}`);
+  const missingLines = tools
+    .filter(([name]) => missingNames.has(name))
+    .map(([name, , remedy]) => `  ${name} — ${remedy}`);
+  if (missingLines.length > 0) {
+    fail(`missing required tools:\n${missingLines.join("\n")}`);
   }
 
-  // ⚠️ No `--limit`. `notarytool history` in Xcode 27 does not accept it and
-  // exits 64 with "Unknown option '--limit'", which this probe reported as
-  // "notarytool could not use keychain profile" — a stored, Apple-validated
-  // credential being described as missing, with instructions to store it again.
-  //
-  // It survived because the probe had never run against a real credential: the
-  // preflight fails on the certificate check first when there is no Developer
-  // ID identity, so this line was only ever reached on a machine that was
-  // already fully set up. The first time it ran for real, it was wrong.
-  const notaryReachable = await toolExists([
-    "xcrun",
-    "notarytool",
-    "history",
-    "--keychain-profile",
-    configuration.notaryProfile,
-  ]);
-  if (!notaryReachable) {
-    const message =
-      `notarytool could not use keychain profile "${configuration.notaryProfile}".\n` +
-      "  Store it once with:\n" +
-      `    xcrun notarytool store-credentials ${configuration.notaryProfile} \\\n` +
-      `      --apple-id <apple-id> --team-id ${configuration.teamId}\n` +
-      "  It prompts for an app-specific password and keeps it in the keychain. Do not " +
-      "put it in a file or in this repository.";
-    if (!dryRun) {
-      fail(message);
+  // A dry run has no certificate or profile by design, so a missing one is a
+  // warning there and a hard stop otherwise.
+  const credentialChecks = [
+    () =>
+      readDeveloperIdIdentity(bunRunner, configuration.teamId, {
+        cwd: packageRoot,
+      }),
+    () =>
+      assertNotaryProfile(
+        bunRunner,
+        configuration.notaryProfile,
+        configuration.teamId,
+        { cwd: packageRoot },
+      ),
+  ];
+  for (const check of credentialChecks) {
+    try {
+      await check();
+    } catch (error) {
+      if (!dryRun) throw error;
+      console.warn(
+        `[dry-run] ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
-    console.warn(`[dry-run] ${message}`);
   }
 }
 
@@ -392,19 +341,15 @@ async function verifyExportedApp(
   //
   // `codesign --display --verbose` prints `flags=0x10000(runtime)` when it is
   // on. Its absence here means the archive was built without it.
-  const signature = await run(["codesign", "--display", "--verbose=2", app], {
-    capture: true,
-    includeStderr: true,
-  });
-  if (!signature.includes("runtime")) {
-    fail(
-      "the exported app is not built with the hardened runtime, which notarization " +
-        "requires. It is passed as ENABLE_HARDENED_RUNTIME=YES on the archive command " +
-        "rather than set in project.yml — deliberately, because it makes an ad-hoc " +
-        "local Release build unlaunchable — so check that the archive step still " +
-        "passes it.",
-    );
-  }
+  await assertHardenedRuntime(
+    bunRunner,
+    app,
+    "It is passed as ENABLE_HARDENED_RUNTIME=YES on the archive command " +
+      "rather than set in project.yml — deliberately, because it makes an ad-hoc " +
+      "local Release build unlaunchable — so check that the archive step still " +
+      "passes it.",
+    { cwd: packageRoot },
+  );
 
   const entitlementsPath = join(releaseDirectory, "exported.entitlements");
   await run([
@@ -571,51 +516,22 @@ async function main(): Promise<void> {
 
     announce("what the credentialed half would do");
     wouldRun(exportCommand);
-    wouldRun([
-      "codesign",
-      "--verify",
-      "--deep",
-      "--strict",
-      "--verbose=2",
-      exportedApp,
-    ]);
-    wouldRun([
-      "ditto",
-      "-c",
-      "-k",
-      "--sequesterRsrc",
-      "--keepParent",
-      exportedApp,
-      join(releaseDirectory, "notarization-TaskNotes-<version>.zip"),
-    ]);
-    wouldRun([
-      "xcrun",
-      "notarytool",
-      "submit",
-      join(releaseDirectory, "notarization-TaskNotes-<version>.zip"),
-      "--keychain-profile",
-      configuration.notaryProfile,
-      "--wait",
-    ]);
-    wouldRun(["xcrun", "stapler", "staple", exportedApp]);
-    wouldRun(["xcrun", "stapler", "validate", exportedApp]);
-    wouldRun([
-      "spctl",
-      "--assess",
-      "--type",
-      "execute",
-      "--verbose=4",
-      exportedApp,
-    ]);
-    wouldRun([
-      "ditto",
-      "-c",
-      "-k",
-      "--sequesterRsrc",
-      "--keepParent",
-      exportedApp,
-      join(releaseDirectory, "TaskNotes-<version>.zip"),
-    ]);
+    const dryRunZip = join(
+      releaseDirectory,
+      "notarization-TaskNotes-<version>.zip",
+    );
+    wouldRun(codesignVerifyCommand(exportedApp));
+    wouldRun(notarizationArchiveCommand(exportedApp, dryRunZip));
+    wouldRun(notarizeCommand(dryRunZip, configuration.notaryProfile));
+    wouldRun(stapleCommand(exportedApp));
+    wouldRun(stapleValidateCommand(exportedApp));
+    wouldRun(assessCommand("app", exportedApp));
+    wouldRun(
+      notarizationArchiveCommand(
+        exportedApp,
+        join(releaseDirectory, "TaskNotes-<version>.zip"),
+      ),
+    );
     console.log(
       "\nUnproven without a Developer ID certificate and App Store Connect " +
         "credentials: the export, the notarization round trip, stapling, and the " +
@@ -634,14 +550,7 @@ async function main(): Promise<void> {
   // entitlements across nested code. Different flag, same spelling. It is what
   // walks into the embedded `TaskNotesCore.framework` rather than stopping at
   // the app's own signature.
-  await run([
-    "codesign",
-    "--verify",
-    "--deep",
-    "--strict",
-    "--verbose=2",
-    exportedApp,
-  ]);
+  await verifyCodesign(bunRunner, exportedApp, { cwd: packageRoot });
 
   const archiveName = `TaskNotes-${version}.zip`;
   const notarizationZip = join(releaseDirectory, `notarization-${archiveName}`);
@@ -651,62 +560,28 @@ async function main(): Promise<void> {
   // archive that preserves the symlinks a framework's version layout depends
   // on. The app embeds `TaskNotesCore.framework`, so a zip that follows
   // symlinks flattens `Versions/` and breaks its code signature.
-  await run([
-    "ditto",
-    "-c",
-    "-k",
-    "--sequesterRsrc",
-    "--keepParent",
-    exportedApp,
-    notarizationZip,
-  ]);
-  await run([
-    "xcrun",
-    "notarytool",
-    "submit",
-    notarizationZip,
-    "--keychain-profile",
-    configuration.notaryProfile,
-    "--wait",
-  ]);
+  await notarizeBundle(bunRunner, {
+    app: exportedApp,
+    archive: notarizationZip,
+    profile: configuration.notaryProfile,
+    cwd: packageRoot,
+  });
 
   announce("stapling and assessing");
   // Staple the *app*, not the zip: the ticket has to travel inside the bundle
   // so a first launch works with no network. That is also why the distributable
   // archive is built again below, after stapling.
-  await run(["xcrun", "stapler", "staple", exportedApp]);
-  await run(["xcrun", "stapler", "validate", exportedApp]);
-  await run([
-    "spctl",
-    "--assess",
-    "--type",
-    "execute",
-    "--verbose=4",
-    exportedApp,
-  ]);
-  await run([
-    "codesign",
-    "--verify",
-    "--deep",
-    "--strict",
-    "--verbose=2",
-    exportedApp,
-  ]);
+  const options = { cwd: packageRoot };
+  await stapleAndValidate(bunRunner, exportedApp, options);
+  await assess(bunRunner, "app", exportedApp, options);
+  await verifyCodesign(bunRunner, exportedApp, options);
 
   announce("building the distributable archive");
   // Beside the export rather than in a persistent directory somewhere else.
   // There is no update feed to accumulate into: the app never self-updates, so
   // a release is one zip that a human moves wherever it is being handed out.
   const distributable = join(releaseDirectory, archiveName);
-  await run([
-    "ditto",
-    "-c",
-    "-k",
-    "--sequesterRsrc",
-    "--keepParent",
-    exportedApp,
-    distributable,
-  ]);
+  await run(notarizationArchiveCommand(exportedApp, distributable));
 
   announce("done");
   console.log(`  app        ${exportedApp}`);

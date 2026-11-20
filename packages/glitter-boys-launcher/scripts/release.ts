@@ -1,5 +1,5 @@
 import { packageSigned } from "./package-signed.ts";
-import { powershell } from "./windows-tools.ts";
+import { powershell } from "@shepherdjerred/native-release/windows";
 import { releasePreflight } from "./release-preflight.ts";
 import {
   publicationPreflight,

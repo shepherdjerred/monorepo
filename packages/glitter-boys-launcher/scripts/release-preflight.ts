@@ -2,7 +2,8 @@ import path from "node:path";
 import { createPrivateKey, createPublicKey, type KeyObject } from "node:crypto";
 import { readProfile, type ReleaseProfile } from "./release-profile.ts";
 import { readUpdateKey } from "./provision-update-key.ts";
-import { powershell, run } from "./windows-tools.ts";
+import { bunRunner } from "@shepherdjerred/native-release/runner";
+import { preflightSigning } from "@shepherdjerred/native-release/windows";
 import { versionParts } from "./release-manifest.ts";
 export async function signingKey(profile: ReleaseProfile): Promise<KeyObject> {
   const key = createPrivateKey(
@@ -37,16 +38,7 @@ export async function releasePreflight(root: string) {
   if (!version) throw new Error("Missing launcher workspace version");
   versionParts(version);
   const key = await signingKey(profile);
-  await run(
-    [
-      await powershell(),
-      "-NoProfile",
-      "-NonInteractive",
-      "-File",
-      path.join(root, "scripts/preflight-signing.ps1"),
-    ],
-    root,
-  );
+  await preflightSigning(bunRunner, root);
   return { profile, version, key };
 }
 if (import.meta.main) {
