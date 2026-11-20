@@ -130,10 +130,12 @@ without removing its node identity labels.
 
 The exported `prepareTorvaldsSandboxUpdate(currentYaml, runner)` accepts an
 existing complete configuration and returns `{ config, evidence }` in memory.
-It changes only the declared namespace quota and immutable named seccomp profile,
-preserves all other documents and fields, and validates the full result through
-stdin. An unexpected current quota, duplicate profile, differing value under the
-same versioned profile name, malformed YAML, or unrelated semantic change fails.
+It changes only the declared namespace quota and the immutable named seccomp
+profiles, preserves all other documents and fields, and validates the full
+result through stdin. It adds each declared profile that is missing and never
+removes one. An unexpected current quota, duplicate profile, differing value
+under the same versioned profile name, malformed YAML, or unrelated semantic
+change fails.
 The lower-level `plan-update` CLI reads the current configuration from stdin and
 prints only evidence, never the returned configuration.
 
@@ -145,10 +147,25 @@ guard detects a competing change; it is not a server-side conditional write.
 
 ## Regenerating the promotion seccomp profile
 
-[`seccomp/promotion-policy.json`](seccomp/promotion-policy.json) is the canonical
-profile name, reviewed versions, capabilities, baseline checksum, and syscall
-delta. The adjacent Go generator uses the upstream containerd implementation
-pinned by `go.mod` and `go.sum`. Build from the repository root:
+[`seccomp/promotion-policy.json`](seccomp/promotion-policy.json) lists every
+profile the node carries. Each entry is the canonical profile name, generated
+patch, reviewed versions, capabilities, baseline checksum, and syscall delta.
+`selected` names the one the promotion chart references and the operator's
+runtime guard follows; any other entry is a replacement staged ahead of its
+release or a predecessor awaiting retirement. Each profile is generated into
+its own `torvalds/patches/<patch>.yaml`, which Talos appends to the node's
+profile list.
+
+A profile is containerd's unmodified default for the worker's bounding
+capabilities, with the entry's `delta` rules appended and nothing removed. The
+delta admits the two `clone` flag sets and the `unshare(CLONE_NEWUSER)` call
+Bubblewrap uses to create its namespaces, `mount` and `pivot_root` for its
+root filesystem, and `umount2` with `MNT_DETACH`.
+
+The adjacent Go generator uses the upstream containerd implementation pinned by
+`go.mod` and `go.sum`, so it reproduces only the entry reviewed for that
+release. An older entry stays bound to its committed patch by its baseline
+checksum. Build from the repository root:
 
 ```bash
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
@@ -157,27 +174,32 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
 ```
 
 Run that binary inside the inspected Linux amd64 worker image, with networking
-disabled, no capabilities, and no new privileges. Supply all four observed
-runtime versions; the current reviewed invocation is:
+disabled, no capabilities, and no new privileges. Name the profile and supply
+all four observed runtime versions; the current reviewed invocation is:
 
 ```bash
 /tmp/promotion-seccomp-generator \
-  --talos-version 1.14.2 \
-  --containerd-version 2.3.6 \
+  --profile-name promotion-codex-01621-containerd-237-v1.json \
+  --talos-version 1.14.6 \
+  --containerd-version 2.3.7 \
   --codex-version 0.162.1 \
   --bubblewrap-version 0.12.0 \
   --codex-cli /app/node_modules/.bun/@openai+codex@0.162.1/node_modules/@openai/codex/bin/codex.js
 ```
 
-Talos/containerd values come from node readback. The generator also invokes the
+Talos/containerd values come from node readback, or from the target release's
+published component versions when the profile is staged ahead of an upgrade;
+the operator then requires the live pair before the chart may select it. The
+generator also invokes the
 installed system Bubblewrap and Codex CLI, verifies its compiled containerd
 dependency and architecture, and checks the complete baseline hash before
 adding the delta.
 That hash binds the reviewed capability set and kernel-conditioned rules;
 the current baseline includes containerd's Linux ≥4.8 rules. A mismatch requires
 review, rather than updating the checksum merely to make generation pass.
-`catalog-pins.test.ts` checks the source Talos/Codex versions, actual worker
-capabilities, exact baseline, delta, and quota. Emulated execution proves
+`catalog-pins.test.ts` checks every entry's exact baseline and delta, and the
+selected entry's source Talos/Codex versions, actual worker capabilities, and
+quota. Emulated execution proves
 generation only; runtime acceptance uses the actual production architecture.
 
 The system Bubblewrap probe records installed software; it does not establish
@@ -188,11 +210,14 @@ Accept that selected helper and its isolation boundaries on the production
 architecture before resuming promotion work.
 
 Capture stdout as YAML, then format it with repository Prettier using
-`--stdin-filepath packages/homelab/src/talos/torvalds/patches/promotion-seccomp.yaml`.
-The formatted output must exactly match
-`torvalds/patches/promotion-seccomp.yaml` when reproducing an unchanged policy.
-For a reviewed content change, choose a new versioned profile name and update
-its consumers together. Install and verify the node profile before releasing
-the chart that selects it; retire the old profile after no desired or running
-pod references it. Live installation and rollback remain in the linked operator
-how-to.
+`--stdin-filepath` set to the entry's patch under
+`packages/homelab/src/talos/torvalds/patches/`. The formatted output must
+exactly match that file when reproducing an unchanged policy.
+
+For a reviewed content change, add an entry under a new versioned profile name
+with its own patch, list that patch in `TORVALDS_SOURCE_PATCHES`, and move the
+generator's containerd pin when the runtime changes. Leave `selected` alone:
+the node must carry the replacement before any chart selects it. Change
+`selected` in the delivery that moves the dependency's source pin, and remove
+the old entry and patch after no desired or running pod references it. Live
+installation, the switch, and retirement remain in the linked operator how-to.

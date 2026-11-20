@@ -23,8 +23,17 @@ import (
 //go:embed promotion-policy.json
 var policyJSON []byte
 
+// policies is the reviewed provenance for every profile the node carries.
+// Selected names the one the promotion chart references; the generator emits
+// exactly the profile named by --profile-name.
+type policies struct {
+	Selected string   `json:"selected"`
+	Profiles []policy `json:"profiles"`
+}
+
 type policy struct {
 	ProfileName       string               `json:"profileName"`
+	Patch             string               `json:"patch"`
 	Architecture      string               `json:"architecture"`
 	TalosVersion      string               `json:"talosVersion"`
 	ContainerdVersion string               `json:"containerdVersion"`
@@ -36,12 +45,13 @@ type policy struct {
 }
 
 func generate() error {
-	var p policy
+	var all policies
 	decoder := json.NewDecoder(bytes.NewReader(policyJSON))
 	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&p); err != nil {
+	if err := decoder.Decode(&all); err != nil {
 		return err
 	}
+	profileName := flag.String("profile-name", "", "required reviewed profile name to generate")
 	observed := map[string]*string{}
 	for _, name := range []string{"talos", "containerd", "codex", "bubblewrap"} {
 		observed[name] = flag.String(name+"-version", "", "required observed runtime version (without v prefix)")
@@ -50,6 +60,17 @@ func generate() error {
 	flag.Parse()
 	if flag.NArg() != 0 {
 		return fmt.Errorf("unexpected positional arguments")
+	}
+	var p policy
+	matches := 0
+	for _, candidate := range all.Profiles {
+		if candidate.ProfileName == *profileName {
+			p = candidate
+			matches++
+		}
+	}
+	if matches != 1 {
+		return fmt.Errorf("--profile-name %q must name exactly one reviewed profile", *profileName)
 	}
 	expected := map[string]string{"talos": p.TalosVersion, "containerd": p.ContainerdVersion, "codex": p.CodexVersion, "bubblewrap": p.BubblewrapVersion}
 	for name, version := range expected {

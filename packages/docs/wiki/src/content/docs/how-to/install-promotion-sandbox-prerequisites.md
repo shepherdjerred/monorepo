@@ -34,9 +34,9 @@ The [operator](packages/homelab/src/talos/promotion-sandbox.ts) uses the authent
 Its output contains only hashes, resource versions, and bounded policy evidence.
 Keep the reported `planSha256` for the apply command.
 
-Check that the plan selects the reviewed quota and named profile.
-The [runtime guard](packages/homelab/src/talos/promotion-sandbox.ts) requires the profile's pinned Talos release on Linux amd64 metal.
-It independently reads the Kubernetes node's containerd version and requires the [profile provenance](packages/homelab/src/talos/seccomp/promotion-policy.json) pin.
+Check that the plan selects the reviewed quota and lists every declared profile under `profiles`.
+The [runtime guard](packages/homelab/src/talos/promotion-sandbox.ts) requires the selected profile's pinned Talos release on Linux amd64 metal.
+It independently reads the Kubernetes node's containerd version and requires the selected [profile provenance](packages/homelab/src/talos/seccomp/promotion-policy.json) pin.
 The candidate preserves every other live configuration field, including extension documents and credentials.
 Native validation receives the complete candidate through stdin.
 Do not redirect a full machine configuration, native diff, or credential document to a file.
@@ -65,9 +65,9 @@ If its configuration already matches, applying that plan runs verification witho
 
 Require `applied-and-verified` or `already-configured-and-verified` from the operator.
 The [verification sequence](packages/homelab/src/talos/promotion-sandbox.ts) requires both active and persistent configurations to equal the complete candidate semantically.
-It then checks the runtime namespace quota, installed profile, and Talos health.
-The profile's canonical JSON hash must match the reviewed source.
-The receipt also records the actual installed file's byte hash, independently of JSON formatting.
+It then checks the runtime namespace quota, every installed profile, and Talos health.
+Each profile's canonical JSON hash must match the reviewed source.
+The receipt's `installedProfiles` also records each installed file's byte hash, independently of JSON formatting.
 
 Check existing workloads through their normal health and user-flow probes.
 Attach the safe operator receipt and those results to the delivery evidence.
@@ -81,15 +81,75 @@ Its sticky bit prevents provider subprocesses from replacing parent-owned tempor
 Run its offline sandbox boundary probe before resuming promotion work.
 Keep production publishing disabled until its own approved acceptance checks pass.
 
-## 5. Refresh a profile before upgrading its dependencies
+## 5. Replace a profile before upgrading its dependencies
 
-Follow the [profile regeneration procedure](packages/homelab/src/talos/README.md) whenever its pinned runtime, provider, or worker capabilities change.
-Review the regenerated baseline and exception delta, then rerun the native sandbox matrix and negative boundary probes.
-Use a new profile name when its contents change.
+Replace the profile whenever its pinned runtime, provider, or worker capabilities change.
+A profile never changes under its name, so a replacement is a second profile that the node carries beside the first.
+The [provenance file](packages/homelab/src/talos/seccomp/promotion-policy.json) lists every profile the node carries and names the one the chart selects.
 
-Install and verify the replacement profile before releasing a chart that selects it.
-Retire an old profile only after no desired or running pod references it.
-The [provenance regression](packages/homelab/src/talos/catalog-pins.test.ts) checks the declared compatibility boundary against source pins.
+### Stage the replacement
+
+Follow the [profile regeneration procedure](packages/homelab/src/talos/README.md) to add the replacement's provenance entry and generated patch.
+Leave `selected` on the current profile.
+Review the regenerated baseline against the current one, and confirm the exception delta is unchanged.
+Deliver that change on its own; it alters no workload.
+
+### Install it beside the current profile
+
+Run this while the node still runs the release the current profile was reviewed for.
+The runtime guard follows the selected profile, so it accepts that release and refuses the replacement's.
+
+```bash
+bun run --cwd packages/homelab talos:promotion-sandbox
+```
+
+Check that `profiles` lists both names with the hashes you reviewed.
+Check that `changedPaths` names only the namespace quota and those two profiles.
+Then apply the reviewed digest, as in step 3:
+
+```bash
+bun run --cwd packages/homelab talos:promotion-sandbox --apply REVIEWED_PLAN_SHA256
+```
+
+Require `applied-and-verified` with both profiles under `installedProfiles`.
+Confirm the running worker still selects the current profile and is ready:
+
+```bash
+kubectl -n temporal get deployment temporal-temporal-promotion-worker \
+  --output jsonpath='{.spec.template.spec.containers[0].securityContext.seccompProfile.localhostProfile}{"\n"}{.status.readyReplicas}{"\n"}'
+```
+
+### Switch the chart with the dependency
+
+Change `selected` in the same delivery that moves the dependency's source pin.
+The [provenance regression](packages/homelab/src/talos/catalog-pins.test.ts) fails until the selected profile's Talos release, provider version, and capabilities match the source pins, so neither change can merge without the other.
+For a Talos or containerd change, perform the live upgrade as part of that delivery, following the [upgrade procedure](packages/homelab/README.md).
+Then confirm the node reports the replacement's reviewed runtime:
+
+```bash
+kubectl get node torvalds \
+  --output jsonpath='{.status.nodeInfo.osImage}{"\n"}{.status.nodeInfo.containerRuntimeVersion}{"\n"}'
+```
+
+Run the plan again from that delivery's checkout.
+Its guard now requires the upgraded runtime, and applying the plan must report `already-configured-and-verified`.
+Until the chart rolls out, the worker keeps the previous profile on the upgraded runtime; keep promotion disabled for that interval.
+
+After the chart release, confirm the rollout and the selected profile:
+
+```bash
+kubectl -n temporal rollout status deployment/temporal-temporal-promotion-worker
+kubectl -n temporal get pods --selector component=promotion-worker \
+  --output jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.containers[0].securityContext.seccompProfile.localhostProfile}{" "}{.status.containerStatuses[0].ready}{"\n"}{end}'
+```
+
+Repeat the workload acceptance in step 4, including the native sandbox matrix and negative boundary probes, before resuming promotion work.
+
+### Retire the previous profile
+
+Retire a profile only after no desired or running pod references it.
+Remove its provenance entry and patch in a later delivery.
+The operator installs profiles and never removes one, so a retired profile stays on the node as unowned configuration until a separately reviewed node change deletes it.
 
 ## Related
 

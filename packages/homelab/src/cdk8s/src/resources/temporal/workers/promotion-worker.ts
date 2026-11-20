@@ -61,7 +61,7 @@ export function createTemporalPromotionWorker(
     name: "temporal-promotion-worker",
     component: "promotion-worker",
     // Install and verify the node prerequisite before releasing this opt-in.
-    sandboxSeccompProfile: `profiles/${promotionPolicy.profileName}`,
+    sandboxSeccompProfile: `profiles/${promotionPolicy.selected}`,
     initializeStickyTmpDirectory: true,
     terminationGraceSeconds: PROMOTION_POD_TERMINATION_SECONDS,
     serviceAccount,

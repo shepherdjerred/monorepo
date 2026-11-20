@@ -6,9 +6,26 @@ import { parseVersionCatalog } from "@shepherdjerred/version-catalog";
 import rawVersionCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import { lookupExecutable } from "@shepherdjerred/toolkit/lib/passthrough.ts";
 import { canonicalJson } from "#scripts/canonical-json.ts";
+import promotionPolicy from "./seccomp/promotion-policy.json";
 
 const ObjectSchema = z.record(z.string(), z.unknown());
-const PROFILE_NAME = "promotion-codex-01621-containerd-236-v1.json";
+/**
+ * Every reviewed profile the node carries, each in its own generated patch:
+ * the one the promotion chart selects plus any replacement staged ahead of it
+ * or predecessor awaiting retirement. Names are immutable and unique.
+ */
+export const PROMOTION_PROFILES = promotionPolicy.profiles.map(
+  ({ profileName, patch }) => ({ profileName, patch }),
+);
+const OWNED_PROFILE_NAMES = new Set(
+  PROMOTION_PROFILES.map((profile) => profile.profileName),
+);
+if (
+  OWNED_PROFILE_NAMES.size !== PROMOTION_PROFILES.length ||
+  !OWNED_PROFILE_NAMES.has(promotionPolicy.selected)
+) {
+  throw new Error("Promotion policy profile names are not unique and selected");
+}
 const catalog = parseVersionCatalog(rawVersionCatalog);
 const sourceRoot = new URL("torvalds/patches/", import.meta.url);
 
@@ -93,6 +110,7 @@ export const TORVALDS_SOURCE_PATCHES = [
   "kubelet",
   "sysctls",
   "promotion-seccomp",
+  "promotion-seccomp-containerd-237",
   "watchdog",
   "zfs",
   "interface",
@@ -150,10 +168,24 @@ export async function validateTorvaldsSource(
       "Generated Talos kernel module list contains duplicate declarations",
     );
   }
+  // Each profile has its own patch; a merge that replaced the list instead of
+  // appending to it would silently drop one.
+  const generatedProfiles = profiles(
+    object(machineDocument(documents)["machine"]),
+  ).map((profile) => profile["name"]);
+  if (
+    canonicalJson(generatedProfiles) !==
+    canonicalJson(PROMOTION_PROFILES.map((profile) => profile.profileName))
+  ) {
+    throw new Error(
+      "Generated Talos seccomp profiles differ from the declared promotion profiles",
+    );
+  }
   return {
     validated: true,
     talosVersion,
     patches: TORVALDS_SOURCE_PATCHES,
+    seccompProfiles: generatedProfiles,
     documentCount: documents.length,
     kernelModules: moduleNames,
     credentials: "synthetic-in-memory-only",
@@ -178,6 +210,28 @@ function profiles(machine: Record<string, unknown>): Record<string, unknown>[] {
   return value.map((entry: unknown) => object(entry));
 }
 
+function isOwnedProfile(profile: Record<string, unknown>) {
+  const name = profile["name"];
+  return typeof name === "string" && OWNED_PROFILE_NAMES.has(name);
+}
+
+/** The single profile a generated patch declares, under its reviewed name. */
+async function declaredProfile(profileName: string, patch: string) {
+  const document = parseMachineConfig(
+    await Bun.file(publicPatch(patch)).text(),
+  );
+  const declared = profiles(object(document[0]?.["machine"]));
+  const profile = declared[0];
+  if (
+    document.length !== 1 ||
+    declared.length !== 1 ||
+    profile?.["name"] !== profileName
+  ) {
+    throw new Error("Expected exactly the declared promotion seccomp profile");
+  }
+  return profile;
+}
+
 function withoutOwnedPolicy(documents: Record<string, unknown>[]) {
   const copy = structuredClone(documents);
   const machine = object(machineDocument(copy)["machine"]);
@@ -186,7 +240,7 @@ function withoutOwnedPolicy(documents: Record<string, unknown>[]) {
   if (Object.keys(sysctls).length === 0) delete machine["sysctls"];
   else machine["sysctls"] = sysctls;
   const retained = profiles(machine).filter(
-    (profile) => profile["name"] !== PROFILE_NAME,
+    (profile) => !isOwnedProfile(profile),
   );
   if (retained.length === 0) delete machine["seccompProfiles"];
   else machine["seccompProfiles"] = retained;
@@ -221,17 +275,12 @@ export async function prepareTorvaldsSandboxUpdate(
   ];
   if (declaredQuota !== "128")
     throw new Error("Unexpected declared sandbox namespace quota");
-  const profilePatch = parseMachineConfig(
-    await Bun.file(publicPatch("promotion-seccomp")).text(),
+  const declaredProfiles = await Promise.all(
+    PROMOTION_PROFILES.map(async ({ profileName, patch }) => ({
+      profileName,
+      entry: await declaredProfile(profileName, patch),
+    })),
   );
-  const declaredProfiles = profiles(object(profilePatch[0]?.["machine"]));
-  const declaredProfile = declaredProfiles[0];
-  if (
-    declaredProfiles.length !== 1 ||
-    declaredProfile?.["name"] !== PROFILE_NAME
-  ) {
-    throw new Error("Expected exactly the declared promotion seccomp profile");
-  }
   const documents = parseMachineConfig(current);
   const document = machineDocument(documents);
   const machine = object(document["machine"]);
@@ -248,24 +297,21 @@ export async function prepareTorvaldsSandboxUpdate(
   }
   sysctls["user.max_user_namespaces"] = declaredQuota;
   machine["sysctls"] = sysctls;
-  const existingProfiles = profiles(machine);
-  const matches = existingProfiles.filter(
-    (profile) => profile["name"] === PROFILE_NAME,
-  );
-  if (matches.length > 1)
-    throw new Error("Duplicate promotion seccomp profiles in current config");
-  if (
-    matches[0] !== undefined &&
-    canonicalJson(matches[0]) !== canonicalJson(declaredProfile)
-  ) {
-    throw new Error(
-      "Existing versioned promotion seccomp profile differs from the declared immutable profile",
+  // Installed profiles keep their position; missing ones append in policy order.
+  const updatedProfiles = profiles(machine);
+  for (const { profileName, entry } of declaredProfiles) {
+    const matches = updatedProfiles.filter(
+      (profile) => profile["name"] === profileName,
     );
+    if (matches.length > 1)
+      throw new Error("Duplicate promotion seccomp profiles in current config");
+    if (matches[0] === undefined) updatedProfiles.push(entry);
+    else if (canonicalJson(matches[0]) !== canonicalJson(entry)) {
+      throw new Error(
+        "Existing versioned promotion seccomp profile differs from the declared immutable profile",
+      );
+    }
   }
-  const updatedProfiles = existingProfiles.map((profile) =>
-    profile["name"] === PROFILE_NAME ? declaredProfile : profile,
-  );
-  if (matches.length === 0) updatedProfiles.push(declaredProfile);
   machine["seccompProfiles"] = updatedProfiles;
   document["machine"] = machine;
   const config = documents.map((entry) => stringify(entry)).join("---\n");
@@ -282,11 +328,16 @@ export async function prepareTorvaldsSandboxUpdate(
       afterSha256: hash(config),
       unchangedConfigSha256,
       quota: declaredQuota,
-      profileName: PROFILE_NAME,
-      profileSha256: hash(canonicalJson(declaredProfile["value"])),
+      selectedProfileName: promotionPolicy.selected,
+      profiles: declaredProfiles.map(({ profileName, entry }) => ({
+        profileName,
+        profileSha256: hash(canonicalJson(entry["value"])),
+      })),
       changedPaths: [
         "machine.sysctls.user.max_user_namespaces",
-        `machine.seccompProfiles[name=${PROFILE_NAME}]`,
+        ...PROMOTION_PROFILES.map(
+          ({ profileName }) => `machine.seccompProfiles[name=${profileName}]`,
+        ),
       ],
     },
   };
