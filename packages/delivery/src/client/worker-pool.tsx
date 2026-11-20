@@ -172,7 +172,10 @@ function WorkerRow({
    * The retirement this row offers; null where its build cannot be retired
    * now, and undefined in a table with no retirement column.
    */
-  retire: { disabled: boolean; request: () => void } | null | undefined;
+  retire:
+    | { disabled: boolean; pending: boolean; request: () => void }
+    | null
+    | undefined;
 }) {
   const build = useId();
   return (
@@ -191,6 +194,7 @@ function WorkerRow({
               danger
               describedBy={build}
               disabled={retire.disabled}
+              pending={retire.pending}
               onConfirm={retire.request}
             >
               <p>
@@ -294,7 +298,8 @@ export function WorkerPoolPanel({
                     selected !== undefined &&
                     worker.buildId !== selected
                       ? {
-                          disabled: busy || retirement.isPending,
+                          disabled: busy,
+                          pending: retirement.isPending,
                           request: () => {
                             retirement.mutate(worker);
                           },

@@ -231,7 +231,7 @@ describe("search params", () => {
   });
 });
 
-/** A confirm button; "Retire" is the dangerous, disabled one. */
+/** A confirm button; "Retire" is the dangerous, disabled one and "Rebind" is waiting. */
 function confirmButton(label: string, describedBy?: string) {
   return (
     <ConfirmButton
@@ -240,6 +240,7 @@ function confirmButton(label: string, describedBy?: string) {
       confirmLabel={`${label} it`}
       danger={label === "Retire"}
       disabled={label === "Retire"}
+      pending={label === "Rebind"}
       {...(describedBy === undefined ? {} : { describedBy })}
       onConfirm={() => {
         // Static render only.
@@ -289,6 +290,11 @@ describe("presentation", () => {
     );
     expect(html).toContain(
       '<button type="button" class="secondary-button danger" disabled="">Retire</button>',
+    );
+    // A waiting button reads as disabled without being disabled, so it can
+    // keep the focus the closing dialog returned to it.
+    expect(html).toContain(
+      '<button type="button" class="secondary-button" aria-disabled="true">Rebind</button>',
     );
   });
 

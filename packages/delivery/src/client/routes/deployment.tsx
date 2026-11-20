@@ -149,7 +149,7 @@ function DeploymentPage() {
               title="Cancel this deployment?"
               confirmLabel="Request cancellation"
               danger
-              disabled={action.isPending || deployment.cancelRequested}
+              pending={action.isPending || deployment.cancelRequested}
               onConfirm={() => {
                 action.mutate({ kind: "cancel" });
               }}
@@ -166,10 +166,9 @@ function DeploymentPage() {
               title="Retry this release?"
               confirmLabel="Request retry"
               disabled={
-                action.isPending ||
-                deployment.recoveryRequired ||
-                producerRestorationPending
+                deployment.recoveryRequired || producerRestorationPending
               }
+              pending={action.isPending}
               onConfirm={() => {
                 action.mutate({ kind: "retry" });
               }}

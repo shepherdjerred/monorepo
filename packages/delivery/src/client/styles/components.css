@@ -88,7 +88,8 @@
   color: var(--failed);
   border-color: var(--failed);
 }
-button:disabled {
+button:disabled,
+button[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
 }

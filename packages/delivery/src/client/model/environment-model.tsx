@@ -124,7 +124,8 @@ function SelectionPanel({
           label="Rebind"
           title={`Rebind ${environmentId}?`}
           confirmLabel="Request rebind"
-          disabled={changes === null || refused !== null || request.isPending}
+          disabled={changes === null || refused !== null}
+          pending={request.isPending}
           onConfirm={() => {
             if (changes === null) return;
             request.mutate({
@@ -161,6 +162,7 @@ function Candidate({
   environmentId,
   revisions,
   disabled,
+  pending,
   onRollback,
 }: {
   candidate: RollbackCandidate;
@@ -168,6 +170,7 @@ function Candidate({
   environmentId: string;
   revisions: RevisionNumbers;
   disabled: boolean;
+  pending: boolean;
   onRollback: (deploymentId: string) => void;
 }) {
   const label = useId();
@@ -207,6 +210,7 @@ function Candidate({
             confirmLabel="Request rollback"
             describedBy={label}
             disabled={disabled}
+            pending={pending}
             onConfirm={() => {
               onRollback(candidate.deploymentId);
             }}
@@ -278,7 +282,8 @@ function RollbackCandidates({
           view={view}
           environmentId={environmentId}
           revisions={revisions}
-          disabled={refused !== null || request.isPending}
+          disabled={refused !== null}
+          pending={request.isPending}
           onRollback={(selectionDeploymentId) => {
             if (view === undefined) return;
             request.mutate({

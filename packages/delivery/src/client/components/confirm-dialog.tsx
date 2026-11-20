@@ -117,10 +117,19 @@ export function ConfirmQuestion({
   );
 }
 
+/** The route's h1 (`PageHeader`), where focus goes when its own place is gone. */
+const PAGE_HEADING = "#main-heading";
+
 /**
  * A button that asks before acting, through the page's one native modal
  * dialog (`ConfirmDialogProvider`): focus moves into it, Escape cancels, and
  * focus returns to the button on close.
+ *
+ * The button keeps that focus while its confirmed action is `pending`: it
+ * reads as disabled and ignores a press, but is not disabled, because a
+ * disabled element cannot hold focus and the browser would drop it to the
+ * document. When the button leaves the page while focused, focus moves to
+ * the page heading, the same place a navigation puts it.
  */
 export function ConfirmButton({
   label,
@@ -129,6 +138,7 @@ export function ConfirmButton({
   confirmLabel,
   danger = false,
   disabled = false,
+  pending = false,
   describedBy,
   onConfirm,
 }: {
@@ -137,7 +147,10 @@ export function ConfirmButton({
   children: ReactNode;
   confirmLabel: string;
   danger?: boolean;
+  /** The action is not available: the button can be neither pressed nor focused. */
   disabled?: boolean;
+  /** The confirmed action is in flight: the button waits and stays focusable. */
+  pending?: boolean;
   /** The id of text that tells this button apart from others with its label. */
   describedBy?: string;
   onConfirm: () => void;
@@ -147,10 +160,13 @@ export function ConfirmButton({
     throw new Error("ConfirmButton renders below a ConfirmDialogProvider");
   const id = useId();
   const { ask, answerWith, release } = host;
-  // A button that leaves the page takes its open question with it.
   const leaving = useCallback(
-    () => () => {
+    (trigger: HTMLButtonElement | null) => () => {
+      // A button that leaves the page takes its open question with it; the
+      // closing dialog hands focus back to the button first.
       release(id);
+      if (trigger !== null && document.activeElement === trigger)
+        document.querySelector<HTMLElement>(PAGE_HEADING)?.focus();
     },
     [release, id],
   );
@@ -161,9 +177,10 @@ export function ConfirmButton({
         type="button"
         className={danger ? "secondary-button danger" : "secondary-button"}
         disabled={disabled}
+        aria-disabled={pending ? true : undefined}
         aria-describedby={describedBy}
         onClick={() => {
-          ask(id, onConfirm);
+          if (!pending) ask(id, onConfirm);
         }}
       >
         {label}

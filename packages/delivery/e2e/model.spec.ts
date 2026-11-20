@@ -29,13 +29,15 @@ async function openEnvironment(page: Page) {
  * Capture the next deployment request without sending it, so every spec
  * reads the same seeded record; the server's admission of each kind is
  * covered by its integration tests. The route is in place before the caller
- * acts; the returned function waits for the request.
+ * acts; the returned function waits for the request. With `held`, the
+ * request stays in flight until that promise settles, then fails.
  */
-async function captureDeploymentRequest(page: Page) {
+async function captureDeploymentRequest(page: Page, held?: Promise<unknown>) {
   const { promise, resolve } = Promise.withResolvers<unknown>();
   await page.route("**/api/v1/deployments", async (route) => {
     if (route.request().method() !== "POST") return route.continue();
     resolve(route.request().postDataJSON());
+    await held;
     return route.abort("failed");
   });
   return async () => CreateDeploymentV2Schema.parse(await promise);
@@ -229,11 +231,28 @@ test("every confirmation asks through the page's one dialog and returns focus to
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toBeHidden();
   await expect(rebind).toBeFocused();
-  // Confirming closes the dialog and returns focus to the button the same way.
+  // Confirming closes the dialog and returns focus to the button the same
+  // way. The request is held in flight, so the page renders its waiting
+  // state: the button reads as disabled and keeps the focus it was given.
   await rebind.click();
-  const sent = await captureDeploymentRequest(page);
+  const flight = Promise.withResolvers<unknown>();
+  const sent = await captureDeploymentRequest(page, flight.promise);
   await confirm(page, "Request rebind");
   expect(await sent()).toMatchObject({ kind: "rebind" });
+  await expect(rebind).toHaveAttribute("aria-disabled", "true");
+  await expect(rebind).toBeFocused();
+  // A press while it waits asks nothing and sends nothing more.
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  // The request fails: the button is ready again, still focused.
+  flight.resolve(null);
+  await expect(
+    page
+      .getByRole("region", { name: "Selection", exact: true })
+      .getByRole("alert"),
+  ).toBeVisible();
+  await expect(rebind).not.toHaveAttribute("aria-disabled");
+  await expect(rebind).toBeEnabled();
   await expect(rebind).toBeFocused();
   await expect(page.locator("dialog")).toHaveCount(1);
 });

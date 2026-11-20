@@ -94,6 +94,12 @@ test("select an immutable release, inspect queued execution, and cancel safely",
   await main.getByRole("button", { name: "Request cancellation" }).click();
   await confirm(page, "Request cancellation");
   await expect(main.getByText("canceled", { exact: true })).toBeVisible();
+  // The button left with its action done; the focus it held moves to the
+  // page heading instead of falling to the document.
+  await expect(
+    main.getByRole("button", { name: "Request cancellation" }),
+  ).toHaveCount(0);
+  await expect(page.locator("#main-heading")).toBeFocused();
   await page
     .getByRole("navigation", { name: "Main" })
     .getByRole("link", { name: "Artifacts" })

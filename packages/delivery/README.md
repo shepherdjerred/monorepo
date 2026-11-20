@@ -136,7 +136,11 @@ Filters and pages are search parameters. Forms are native `<form>` elements.
 Every confirmation asks through one native `<dialog>` that the root layout
 mounts (`ConfirmDialogProvider`): a `ConfirmButton` renders its own question
 into that dialog while it is open, so a page with forty confirm buttons has one
-dialog element. The server returns `index.html` for every non-API path.
+dialog element. The dialog returns focus to its button. While the confirmed
+action is in flight the button is `aria-disabled` rather than disabled, because
+a disabled element cannot hold focus; a focused button that leaves the page
+hands its focus to the page heading. The server returns `index.html` for every
+non-API path.
 
 The environment page leads with a summary line (the accepted revision, the
 approval policy and the deployment in flight) and the release form, then
