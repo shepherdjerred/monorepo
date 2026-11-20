@@ -16,7 +16,8 @@ import {
   queueUnhealthy,
 } from "#src/reconcile-merge.ts";
 import { AutonomousBlocker } from "#src/domain/autonomy.ts";
-import { GitHubClient, type PullRequest } from "#src/integrations/github.ts";
+import { GitHubClient } from "#src/integrations/github.ts";
+import type { PullRequest } from "#src/integrations/github-pull-request.ts";
 
 function state(): TaskState {
   const issue: TrackerIssue = {
@@ -203,6 +204,7 @@ describe("review provider outages", () => {
       headRefName: "agent/xx-1",
       baseRefName: "main",
       isDraft: false,
+      state: "OPEN",
       mergedAt: null,
       mergeCommit: null,
       author: { login: "app/justin-principal-engineer", is_bot: true },
@@ -246,6 +248,7 @@ describe("completeTask", () => {
         phase: "completing",
         prNumber: 7,
         prUrl: "https://example.com/pr/7",
+        mergeCommitSha: "a".repeat(40),
       },
       tracker,
       save: saveStub(saved),
@@ -297,6 +300,7 @@ describe("completeTask", () => {
           phase: "completing",
           prNumber: 7,
           prUrl: "https://example.com/pr/7",
+          mergeCommitSha: "a".repeat(40),
         },
         tracker,
         save: saveStub(saved),

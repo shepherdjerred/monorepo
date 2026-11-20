@@ -1,13 +1,14 @@
 ---
 title: The local Tracker agent queue
-description: Why curated autonomous DevEx work and owner-approved work share a host-controlled delivery boundary.
+description: Why Tracker intake, Docker coding turns, and owner-approved merges use separate boundaries.
 sidebar:
   order: 5
 ---
 
-The local Tracker agent queue separates coding from delivery authority, with autonomous merge available for explicitly curated DevEx work.
+The local Tracker agent queue separates coding from delivery authority. Justin
+can keep taking work while the owner reviews earlier pull requests.
 
-Tracker is only the intake queue. The MacBook owns durable task state, Docker
+Tracker holds the intake queue. The Mac owns durable task state, Docker
 owns each bounded coding turn, and GitHub owns review and merge evidence.
 
 ```mermaid
@@ -23,12 +24,13 @@ stateDiagram-v2
   AwaitingCI --> Implementing: fix required
 ```
 
-## Quiet periods are absence, not sleep
+## Waiting PRs leave the coding slot free
 
 [The launchd reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/host/launchd.ts)
 starts one reconcile process every 60 seconds. [The reconciler state
 machine](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
-claims the local lock, advances one transition, writes state, and exits.
+claims the local lock, observes waiting PRs, advances work, and exits. It runs
+one coding turn at a time and keeps up to three pull requests open.
 
 No model process or container remains alive while CI runs or approval is
 pending. A fresh SDK turn starts only for initial implementation, owner
@@ -55,9 +57,9 @@ the [workspace publisher](https://github.com/shepherdjerred/monorepo/blob/main/p
 to publish. It also gathers provider-specific findings and CI logs before asking
 for a repair turn.
 
-## Curation grants a narrow delivery authority
+## Curation limits DevEx changes
 
-Autonomous work needs an explicit ticket label and host-resolved authorization.
+Scoped DevEx work needs an explicit ticket label and host-resolved authorization.
 The host checks the full branch before publication and merge, including edits
 from earlier turns. That prevents a repair from expanding a small task into
 infrastructure, dependency, credential, or delivery-policy changes.
@@ -67,10 +69,6 @@ The host compares dependency declarations and resolution fields while permitting
 package metadata and test registration. Required checks and review assess the
 complete change.
 
-The [reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
-persists each task's delivery mode. Existing active work therefore retains its
-owner approval requirement when autonomous delivery becomes available.
-
 The coding container cannot authorize its own merge. Git-Spice runs the host
 readiness check, and the merge request names the validated head. GitHub merge
 readback and base-branch ancestry are required before Tracker completion.
@@ -79,11 +77,10 @@ The finish line is confirmed merge; deployment requires separate evidence.
 ```mermaid
 stateDiagram-v2
   accTitle: Tracker agent merge authorization
-  accDescr: Green CI allows curated autonomous work to merge directly. Other work waits for owner approval. Both paths complete only after a confirmed merge.
+  accDescr: A pull request with green CI waits for approval of its current commit and completes after a confirmed merge.
   direction TB
 
-  CI --> Merging: green, autonomous
-  CI --> Approval: green, owner-approved
+  CI --> Approval: green
   Approval --> Merging: exact-head approval
   Merging --> Done: confirmed merge
   Done --> [*]
@@ -93,14 +90,14 @@ stateDiagram-v2
 
 Green CI includes the repository's automated Codex review gate. The
 [GitHub integration](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/integrations/github.ts)
-waits, for owner-approved work, for an `APPROVED` review from Jerred's pinned account ID and login
+waits for an `APPROVED` review from Jerred's pinned account ID and login
 whose `commit_id` equals the current PR head.
 
 A push invalidates that authorization in the reconciler even if GitHub still
 displays an older approval. Merge performs the same gate and approval checks
 again, closing the race between observation and mutation.
 
-## Failure parks one task, not the queue
+## A pass frees the slot for another issue
 
 An implementation, checkout, or publishing failure gets one automatic retry.
 Repeated failure adds `agent:needs-human` and parks the task. Observation
@@ -108,9 +105,10 @@ failures get five attempts to tolerate transient GitHub or CI outages;
 the [reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
 owns those transitions.
 
-Autonomous work has a bounded repair budget that survives restarts. Temporary
-external failures back off instead of spending coding turns on unavailable
-services. Permanent blockers stop that task while allowing other work to run.
+Automated repairs have a bounded budget that survives restarts. Justin records
+a pass when it lacks a verifiable path forward. Closing a passed PR frees the
+slot while preserving the branch. A material Tracker edit can restart that
+issue, using the same PR and a fresh review.
 
 Base drift is restacked with Git-Spice. If that stops on conflicts, a fresh
 agent turn resolves them and the host explicitly continues the interrupted

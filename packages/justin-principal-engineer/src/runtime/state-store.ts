@@ -1,4 +1,4 @@
-import { mkdir, readdir, rename } from "node:fs/promises";
+import { mkdir, readdir, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 
 import { TaskStateSchema, type TaskState } from "#src/domain/schemas.ts";
@@ -111,5 +111,11 @@ export class StateStore {
     const temporary = `${destination}.${crypto.randomUUID()}.tmp`;
     await Bun.write(temporary, `${JSON.stringify(parsed, null, 2)}\n`);
     await rename(temporary, destination);
+  }
+
+  public async discardClaim(state: TaskState): Promise<void> {
+    if (state.phase !== "claiming" || state.claimFromPhase !== undefined)
+      throw new Error("Only an unclaimed task may be discarded");
+    await unlink(issueStatePath(this.paths, state.issue.identifier));
   }
 }

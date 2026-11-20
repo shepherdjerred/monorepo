@@ -1,12 +1,13 @@
 # justin-principal-engineer
 
-Local macOS automation that turns a labeled Tracker issue into a reviewed,
-merged pull request. Curated DevEx issues can run through merge autonomously;
-other issues retain exact-head owner approval.
+Local macOS automation that turns the highest-priority eligible Tracker issue
+into a reviewed pull request. Justin merges after the owner approves the current
+head and the required checks pass.
 
-The CLI is intentionally one-shot. `launchd` starts `reconcile` every minute;
-each invocation advances one durable task and exits. Coding turns run through
-the Codex SDK inside Docker. GitHub App credentials, CI access, commits,
+The CLI is one-shot. `launchd` starts `reconcile` every minute. One coding turn
+runs at a time, with up to three open PRs waiting for CI or review. Coding turns
+run through the Codex SDK inside Docker using OpenAI API billing. GitHub App
+credentials, CI access, commits,
 pull requests, evidence uploads, approvals, and
 merges stay on the host.
 
@@ -27,12 +28,16 @@ Runtime files live under
 `~/Library/Application Support/justin-principal-engineer`. The configuration
 contract is in `config.example.json`.
 
+Set `agents.codex.openAiApiKey` to a 1Password reference for a key from the
+dedicated Justin OpenAI project. Its enforced API spend limit is $50 USD per
+UTC calendar month, with a spend alert at $40.
+
 Configure `tracker.team` as `AI` and `tracker.url` with the private Tracker
-endpoint. Queue reads and writes use `toolkit tracker`; no issue-service token
-is required. Mutations identify the runner as `justin:<issue identifier>` and
-record the configured model with the toolkit's host/git metadata. Autonomous
-authorization uses the Developer Experience project slug. Existing task-state
-snapshots still parse, and issue refreshes replace their service data by identifier.
+endpoint. Justin takes unassigned Backlog and Todo issues or explicit handoffs
+with `agent:codex`. Tracker priority determines which eligible issue runs next,
+with the oldest issue first on ties and unprioritized issues last. Queue reads
+and writes use `toolkit tracker`. Mutations identify the runner as
+`justin:<issue identifier>` and record the configured model.
 Build and install the matching toolkit with
 `bun run --cwd packages/toolkit build` and
 `bun run --cwd packages/toolkit install:local` before restarting the runner.
@@ -96,9 +101,9 @@ For one foreground reconcile with local source:
 bun run dev:once
 ```
 
-These commands process live issues and can publish or merge PRs under the
-ticket's delivery policy. Use a bounded issue to exercise the flow. See the
-setup guide linked below for configuration and enqueueing.
+These commands process the live priority queue and can publish or merge PRs.
+Use the focused tests below for isolated verification. See the setup guide
+for configuration and explicit handoffs.
 
 Run focused checks separately:
 
@@ -127,7 +132,7 @@ agent sees private Tracker comments. Changed files are checked for private
 comment content before and after verification. Local checks do not replace
 exact-head Woodpecker CI or the ticket's merge authorization.
 
-## Autonomous DevEx delivery
+## Scoped DevEx work
 
 An issue must belong to the `AI` team's `Developer Experience` project and
 carry both `agent:codex` and `agent:autonomous`. The host also resolves the
@@ -159,18 +164,15 @@ and provider-specific Codex and CodeRabbit finding keys feed those repairs.
 Only findings the agent reports addressed are resolved, with a visible audit.
 The repository's existing automated review policy remains authoritative.
 
-Green exact-head CI queues a Git-Spice merge without owner approval for
-autonomous tasks. The host readiness hook rechecks the issue, flag, full branch
-scope, PR identity, branch, head, and CI. The merge API is bound to that head.
-Tracker completes only after GitHub confirms the merge commit and the host
-verifies it is an ancestor of the fetched base branch. This completion does
-not imply deployment or production acceptance.
+All PRs wait for the pinned owner's approval of the current head. For scoped
+DevEx work, the host readiness hook also rechecks the issue, flag, and full
+branch scope. Git-Spice binds the merge to the approved head. Tracker completes
+after GitHub confirms the merge and the host verifies base-branch ancestry.
 
-Autonomous failures use `agent:blocked`, with the reason and retry time shown
-in status and Tracker. Temporary provider or CI failures retry after 5, 15,
-then 60 minutes, capped at hourly. CI pending for an hour also yields the
-active slot. Exhausted repair budgets and scope violations remain blocked
-without further coding turns. Other issues can run while a task is blocked.
+Scoped DevEx policy violations and external blockers use `agent:blocked`.
+Temporary failures retry after 5, 15, then 60 minutes, capped at hourly.
+Status and Tracker show the reason and next retry. A task with no remaining
+repair turns can pass and wait for updated context.
 
 After fixing an external blocker or authorizing a policy correction, use
 `bun packages/justin-principal-engineer/src/cli.ts retry AI-123` to queue an
@@ -185,6 +187,18 @@ the required CI fix through GitOps or rerun the interrupted pipeline, then
 remove `agent:needs-human` to resume. The CI extension names Justin's exact
 `justin-principal-engineer[bot]` identity; forks and untrusted senders remain
 rejected. Autonomous tasks use the blocked recovery described above.
+
+## Passes and monitoring
+
+Justin can pass when it cannot implement or verify a task. The issue stays open
+with `agent:needs-human` and a Tracker note. Justin closes its PR, if present,
+and preserves the branch. A title or description change or a new or edited human
+comment makes the issue eligible again. Justin reuses the PR and waits for fresh
+approval after reopening it.
+
+Use `daemon status --json` to inspect task phases. Structured events stay under
+the runner's local log directory. Grafana shows queue depth, wait durations,
+outcomes, reconcile freshness, and Codex usage.
 
 See [Run the agent queue](../docs/wiki/src/content/docs/how-to/run-the-tracker-agent-queue.md)
 for setup and operation.

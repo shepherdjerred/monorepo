@@ -1,18 +1,17 @@
 import { implementTask } from "#src/reconcile-implementation.ts";
 import * as deliveryHealth from "#src/domain/delivery-health.ts";
 import type { Config, PrHealth, TaskState } from "#src/domain/schemas.ts";
-import { DockerAgentRunner } from "#src/host/docker.ts";
+import {
+  DockerAgentRunner,
+  WorkspaceVerificationFailure,
+} from "#src/host/docker.ts";
 import { publishTask } from "#src/reconcile-publication.ts";
 import { GitWorkspace } from "#src/host/git-workspace.ts";
-import { createTaskState } from "#src/host/task-state.ts";
 import { retryBlockedTask } from "#src/host/task-retry.ts";
-import type { PullRequest } from "#src/integrations/github.ts";
+import type { PullRequest } from "#src/integrations/github-pull-request.ts";
 import { githubHost } from "#src/integrations/github-host.ts";
 import { checkGitHubAccess } from "#src/integrations/github-access.ts";
-import {
-  createTrackerClient,
-  providerForIssue,
-} from "#src/integrations/tracker.ts";
+import { createTrackerClient } from "#src/integrations/tracker.ts";
 import type { TrackerClient } from "#src/integrations/tracker.ts";
 import { runnerCli, type RuntimePaths } from "#src/runtime/paths.ts";
 import { writeInfo } from "#src/runtime/output.ts";
@@ -22,18 +21,17 @@ import { currentTimestamp } from "#src/runtime/time.ts";
 import * as reconcileMerge from "#src/reconcile-merge.ts";
 import { failureCountForSave } from "#src/reconcile-state.ts";
 import path from "node:path";
-import {
-  AutonomousBlocker,
-  autonomyIssueBlocker,
-  isAutonomousIssue,
-} from "#src/domain/autonomy.ts";
-import { autonomyEnabled } from "#src/host/autonomy-policy.ts";
+import { AutonomousBlocker } from "#src/domain/autonomy.ts";
 import { DeliveryAuthorization } from "#src/host/delivery-authorization.ts";
 import { handleAutonomousFailure } from "#src/reconcile-autonomy.ts";
 import {
   needsAutonomyReview,
   queueAutonomyReview,
 } from "#src/reconcile-promotion.ts";
+import { finishPass, privateEvidence } from "#src/reconcile-pass.ts";
+import { QueueScheduler } from "#src/reconcile-queue.ts";
+import type { JustinTelemetry } from "#src/runtime/telemetry.ts";
+
 export class Reconciler {
   private readonly store: StateStore;
   private readonly tracker: TrackerClient;
@@ -42,16 +40,23 @@ export class Reconciler {
   private readonly withGitHub: ReturnType<typeof githubHost>;
   private readonly cliPath: string;
   private readonly authorization: DeliveryAuthorization;
+  private readonly queue: QueueScheduler;
+  private readonly telemetry: JustinTelemetry | undefined;
   public constructor(
     private readonly config: Config,
     private readonly paths: RuntimePaths,
     private readonly run: CommandRunner,
-    runnerSource?: string,
+    options?: {
+      runnerSource?: string | undefined;
+      telemetry?: JustinTelemetry | undefined;
+    },
   ) {
+    const { runnerSource, telemetry } = options ?? {};
+    this.telemetry = telemetry;
     this.store = new StateStore(paths);
     this.tracker = createTrackerClient(config, run);
     this.git = new GitWorkspace(config, run);
-    this.agent = new DockerAgentRunner(config, run, runnerSource);
+    this.agent = new DockerAgentRunner(config, run, runnerSource, telemetry);
     this.withGitHub = githubHost(config, paths, run);
     this.authorization = new DeliveryAuthorization({
       config,
@@ -62,126 +67,74 @@ export class Reconciler {
       withGitHub: this.withGitHub,
     });
     this.cliPath = runnerCli(config.repository.stableCheckout, runnerSource);
+    this.queue = new QueueScheduler({
+      config,
+      paths,
+      run,
+      telemetry,
+      store: this.store,
+      tracker: this.tracker,
+      withGitHub: this.withGitHub,
+      save: this.save.bind(this),
+      advanceSafely: this.advanceSafely.bind(this),
+    });
   }
   public async reconcile(): Promise<void> {
     await this.store.initialize();
     const outcome = await this.store.withLock(async () => {
-      await checkGitHubAccess({
-        config: this.config,
-        paths: this.paths,
-        run: this.run,
-      });
-      await this.reconcileLocked();
-      return true;
+      await this.telemetry?.begin();
+      let result: "success" | "failure" = "failure";
+      try {
+        await checkGitHubAccess({
+          config: this.config,
+          paths: this.paths,
+          run: this.run,
+        });
+        await this.queue.reconcileLocked();
+        result = "success";
+        return true;
+      } finally {
+        if (this.telemetry !== undefined) {
+          try {
+            await this.telemetry.finish(result, await this.store.list());
+          } catch {
+            console.error("Justin could not record reconcile telemetry");
+          }
+        }
+      }
     });
     if (outcome === undefined) {
       writeInfo("Another reconciler owns the local lock; exiting");
     }
   }
-  private async reconcileLocked(): Promise<void> {
-    const states = await this.store.list();
-    const active = states.find(
-      ({ phase }) =>
-        phase !== "done" && phase !== "needs_human" && phase !== "blocked",
-    );
-    if (active !== undefined) {
-      await this.advanceSafely(active);
-      return;
-    }
-    const due = states.find(
-      (state) =>
-        state.phase === "blocked" &&
-        state.nextAttemptAt !== null &&
-        Date.parse(state.nextAttemptAt) <= Date.now(),
-    );
-    if (due !== undefined) {
-      const issue = await this.tracker.refreshIssue(due.issue.identifier);
-      if (issue === null) throw new Error("Blocked task's issue disappeared");
-      const resumed = {
-        ...due,
-        issue,
-        phase: due.blockedFromPhase ?? due.resumePhase ?? "awaiting_ci",
-        resumePhase: due.blockedFromPhase === null ? null : due.resumePhase,
-        blockedFromPhase: null,
-        nextAttemptAt: null,
-      };
-      await this.store.save(resumed);
-      await this.advanceSafely(resumed);
-      return;
-    }
-    const issue = await this.tracker.nextIssue(async (candidate) => {
-      const parked = states.some(
-        (state) =>
-          state.issue.identifier === candidate.identifier &&
-          state.phase === "blocked",
-      );
-      return (
-        !parked &&
-        (!isAutonomousIssue(candidate) ||
-          (autonomyIssueBlocker(candidate) === null &&
-            (await autonomyEnabled(candidate, this.paths))))
-      );
-    });
-    if (issue === null) {
-      writeInfo("Queue is quiet: no eligible Tracker issue");
-      return;
-    }
-    const provider = providerForIssue(issue);
-    if (provider === undefined) {
-      throw new Error(
-        `${issue.identifier} does not select exactly one provider`,
-      );
-    }
-    const timestamp = currentTimestamp();
-    const existing = states.find(
-      ({ issue: savedIssue }) => savedIssue.identifier === issue.identifier,
-    );
-    if (existing !== undefined) {
-      if (existing.phase !== "needs_human") {
-        throw new Error(
-          `${issue.identifier} already has local state in ${existing.phase}`,
-        );
-      }
-      const resumed: TaskState = {
-        ...existing,
-        issue,
-        provider,
-        deliveryMode: isAutonomousIssue(issue)
-          ? "autonomous"
-          : existing.deliveryMode,
-        implementationStarted:
-          existing.implementationStarted || existing.prNumber !== null,
-        autonomyReviewPending:
-          (isAutonomousIssue(issue) && existing.prNumber !== null) ||
-          existing.autonomyReviewPending,
-        phase: "claiming",
-        resumePhase: existing.resumePhase ?? "implementing",
-        failureCount: 0,
-        lastFailureFingerprint: null,
-        updatedAt: timestamp,
-      };
-      await this.store.save(resumed);
-      await this.advanceSafely(resumed);
-      return;
-    }
-    const state = createTaskState({
-      issue,
-      provider,
-      paths: this.paths,
-      deliveryMode: isAutonomousIssue(issue) ? "autonomous" : "owner_approved",
-    });
-    await this.store.save(state);
-    await this.advanceSafely(state);
-  }
   private async advanceSafely(initial: TaskState): Promise<void> {
     try {
-      await this.advance(initial);
+      if (this.telemetry === undefined) await this.advance(initial);
+      else
+        await this.telemetry.stage(initial.phase, initial, () =>
+          this.advance(initial),
+        );
     } catch (error) {
       const states = await this.store.list();
       const latest =
         states.find(
           ({ issue }) => issue.identifier === initial.issue.identifier,
         ) ?? initial;
+      if (latest.phase === "passing") {
+        console.error(
+          `${latest.issue.identifier}: pass will resume on the next reconcile`,
+        );
+        return;
+      }
+      if (error instanceof WorkspaceVerificationFailure) {
+        await this.save(latest, "implementing", {
+          pendingDiagnostics: privateEvidence(error.message),
+        });
+        writeInfo(
+          `${latest.issue.identifier}: host verification repair queued`,
+        );
+        return;
+      }
       if (latest.deliveryMode === "autonomous") {
         await handleAutonomousFailure({
           initial,
@@ -218,7 +171,14 @@ export class Reconciler {
     return next;
   }
   private async advance(state: TaskState): Promise<void> {
-    if (state.deliveryMode === "autonomous" && state.phase !== "completing")
+    const newClaim =
+      state.phase === "claiming" &&
+      (state.intake !== undefined || state.claimFromPhase !== undefined);
+    if (
+      !newClaim &&
+      state.deliveryMode === "autonomous" &&
+      !["completing", "passing"].includes(state.phase)
+    )
       state = await this.authorization.authorizeAutonomous(state);
     if (needsAutonomyReview(state)) {
       await queueAutonomyReview({
@@ -231,13 +191,9 @@ export class Reconciler {
       return;
     }
     switch (state.phase) {
-      case "claiming": {
-        await this.tracker.claim(state.issue);
-        const nextPhase = state.resumePhase ?? "claimed";
-        await this.save(state, nextPhase, { resumePhase: null });
-        writeInfo(`Claimed ${state.issue.identifier} for ${state.provider}`);
+      case "claiming":
+        await this.queue.advanceClaim(state);
         return;
-      }
       case "claimed": {
         await this.withGitHub(async (_github, env) =>
           this.git.create(state.checkoutPath, state.branch, env),
@@ -265,6 +221,8 @@ export class Reconciler {
           tracker: this.tracker,
           save: this.save.bind(this),
           writeInfo,
+          baseBranch: this.config.repository.baseBranch,
+          store: this.store,
           ready: () => this.mergeReady(state),
           mergeCommand: [
             process.execPath,
@@ -278,37 +236,51 @@ export class Reconciler {
             this.git.confirmMerged(state.checkoutPath, sha, env),
         });
         return;
-      case "completing": {
-        if (state.deliveryMode === "autonomous" && state.prNumber !== null) {
-          const number = state.prNumber;
-          const merged = await this.withGitHub(async (github, env) => {
-            const pr = await github.pullRequest(number);
-            if (pr.mergedAt === null || pr.mergeCommit === null)
-              throw new Error("Autonomous task's merge is not confirmed");
-            await this.git.confirmMerged(
-              state.checkoutPath,
-              pr.mergeCommit.oid,
-              env,
-            );
-            return pr.mergeCommit.oid;
-          });
-          state = await this.save(state, "completing", {
-            mergeCommitSha: merged,
-          });
-        }
-        await reconcileMerge.completeTask({
-          state,
-          tracker: this.tracker,
-          save: this.save.bind(this),
-          writeInfo,
-        });
+      case "completing":
+        await this.complete(state);
         return;
-      }
       case "needs_human":
       case "blocked":
+      case "passed":
       case "done":
         return;
+      case "passing":
+        await finishPass({
+          state,
+          tracker: this.tracker,
+          withGitHub: this.withGitHub,
+          store: this.store,
+          baseBranch: this.config.repository.baseBranch,
+        });
+        return;
     }
+  }
+  private async complete(initial: TaskState): Promise<void> {
+    let state = initial;
+    if (initial.prNumber !== null && initial.mergeCommitSha === null) {
+      const number = initial.prNumber;
+      const merged = await this.withGitHub(async (github, env) => {
+        const pr = await github.pullRequest(number);
+        this.assertTaskPullRequest(initial, pr);
+        if (pr.state !== "MERGED" || pr.mergeCommit === null)
+          throw new Error("Task's merge is not confirmed");
+        await this.git.confirmMerged(
+          initial.checkoutPath,
+          pr.mergeCommit.oid,
+          env,
+        );
+        return pr.mergeCommit.oid;
+      });
+      state = await this.save(initial, "completing", {
+        mergeCommitSha: merged,
+      });
+    }
+    await reconcileMerge.completeTask({
+      state,
+      tracker: this.tracker,
+      save: this.save.bind(this),
+      writeInfo,
+    });
   }
   private async implement(state: TaskState): Promise<void> {
     await implementTask({
@@ -329,6 +301,7 @@ export class Reconciler {
       agent: this.agent,
       paths: this.paths,
       run: this.run,
+      baseBranch: this.config.repository.baseBranch,
       withGitHub: this.withGitHub.bind(this),
       save: this.save.bind(this),
     });
@@ -342,6 +315,8 @@ export class Reconciler {
     return await this.withGitHub(async (github, env) => {
       if (state.prNumber === null) throw new Error("Observed task has no PR");
       const pr = await github.pullRequest(state.prNumber);
+      if (await this.observeTerminalPullRequest(state, pr))
+        return { kind: "transition" };
       const feedback = await github.feedback(
         state.prNumber,
         new Set(state.seenFeedbackIds),
@@ -376,23 +351,7 @@ export class Reconciler {
         return { kind: "transition" };
       }
       if (deliveryHealth.deliveryNeedsRestack(health)) {
-        const conflict = await this.git.restack(state.checkoutPath, env);
-        await this.save(
-          state,
-          conflict === null ? "publishing" : "implementing",
-          {
-            pendingHealth: conflict === null ? null : health,
-            pendingDiagnostics: conflict,
-            restackInProgress: conflict !== null,
-            latestHeadSha: pr.headRefOid,
-            ...(conflict === null
-              ? { evidencePublished: false, evidenceMarkdown: [] }
-              : {}),
-          },
-        );
-        writeInfo(
-          `${state.issue.identifier}: ${conflict === null ? "restacked on current main" : "restack conflicts queued for a fresh turn"}`,
-        );
+        await this.restackTask(state, pr, health, env);
         return { kind: "transition" };
       }
       if (state.failureCount > 0) {
@@ -415,6 +374,49 @@ export class Reconciler {
       return { kind: "health", health, pr };
     });
   }
+  private async restackTask(
+    state: TaskState,
+    pr: PullRequest,
+    health: PrHealth,
+    env: Readonly<Record<string, string>>,
+  ) {
+    const conflict = await this.git.restack(state.checkoutPath, env);
+    await this.save(state, conflict === null ? "publishing" : "implementing", {
+      pendingHealth: conflict === null ? null : health,
+      pendingDiagnostics: conflict,
+      restackInProgress: conflict !== null,
+      latestHeadSha: pr.headRefOid,
+      ...(conflict === null
+        ? { evidencePublished: false, evidenceMarkdown: [] }
+        : {}),
+    });
+    writeInfo(
+      `${state.issue.identifier}: ${conflict === null ? "restacked on current main" : "restack conflicts queued for a fresh turn"}`,
+    );
+  }
+  private async observeTerminalPullRequest(state: TaskState, pr: PullRequest) {
+    this.assertTaskPullRequest(state, pr);
+    if (pr.state === "OPEN") return false;
+    if (pr.state === "MERGED")
+      await this.save(state, "completing", { latestHeadSha: pr.headRefOid });
+    else
+      await reconcileMerge.pauseTask({
+        state,
+        reason: "The pull request was closed. Reopen it before requeueing.",
+        tracker: this.tracker,
+        store: this.store,
+      });
+    return true;
+  }
+  private assertTaskPullRequest(state: TaskState, pr: PullRequest) {
+    if (
+      pr.baseRefName !== this.config.repository.baseBranch ||
+      pr.headRefName !== state.branch
+    )
+      throw new Error(
+        "The pull request no longer matches the task branch and base",
+      );
+  }
   private async observeCi(state: TaskState): Promise<void> {
     const observation = await this.observe(state);
     if (observation.kind === "transition") return;
@@ -428,24 +430,15 @@ export class Reconciler {
           true,
         );
       writeInfo(`${state.issue.identifier}: CI is still pending`);
+      this.telemetry?.decision("awaiting_ci", state);
       return;
     }
     await this.withGitHub(async (github) => {
       if (observation.pr.isDraft) await github.markReady(observation.pr.number);
     });
-    await this.save(
-      state,
-      state.deliveryMode === "autonomous" ? "merging" : "awaiting_approval",
-      {
-        latestHeadSha: observation.pr.headRefOid,
-      },
-    );
-    if (state.deliveryMode === "autonomous") {
-      writeInfo(
-        `${state.issue.identifier}: CI is green; autonomous merge queued`,
-      );
-      return;
-    }
+    await this.save(state, "awaiting_approval", {
+      latestHeadSha: observation.pr.headRefOid,
+    });
     writeInfo(
       `${state.issue.identifier}: CI is green; waiting for owner approval`,
     );
@@ -464,9 +457,11 @@ export class Reconciler {
         await github.hasExactHeadApproval(
           observation.pr.number,
           observation.pr.headRefOid,
+          state.previousApprovalIds,
         ),
     );
     if (!approved) {
+      this.telemetry?.decision("awaiting_approval", state);
       writeInfo(
         `${state.issue.identifier}: waiting for exact-head owner approval`,
       );

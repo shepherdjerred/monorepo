@@ -2,6 +2,7 @@
 
 import { AgentTurnInputSchema } from "#src/domain/schemas.ts";
 import { runCodexTurn } from "#src/agent/codex.ts";
+import { PROGRESS_PREFIX } from "#src/agent/progress.ts";
 
 async function readInput(): Promise<string> {
   return await new Response(Bun.stdin.stream()).text();
@@ -21,6 +22,8 @@ async function main(): Promise<void> {
     prompt: input.prompt,
     model: input.model,
     apiKey: requireCredential("OPENAI_API_KEY"),
+    onProgress: (progress) =>
+      process.stdout.write(PROGRESS_PREFIX + JSON.stringify(progress) + "\n"),
   });
   process.stdout.write(`JPE_RESULT:${JSON.stringify(output)}\n`);
 }

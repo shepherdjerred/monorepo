@@ -4,12 +4,14 @@ import {
 } from "#src/domain/delivery-health.ts";
 import type { Config, PrHealth, TaskState } from "#src/domain/schemas.ts";
 import { ciOperatorBlocker } from "#src/integrations/ci.ts";
-import type { GitHubClient, PullRequest } from "#src/integrations/github.ts";
+import type { GitHubClient } from "#src/integrations/github.ts";
+import type { PullRequest } from "#src/integrations/github-pull-request.ts";
 import type { TrackerClient } from "#src/integrations/tracker.ts";
 import type { StateStore } from "#src/runtime/state-store.ts";
 import { currentTimestamp } from "#src/runtime/time.ts";
 import { AutonomousBlocker } from "#src/domain/autonomy.ts";
 import type { ReviewFindingRef } from "#src/domain/schemas.ts";
+import { privateEvidence } from "#src/reconcile-pass.ts";
 
 type Save = (
   state: TaskState,
@@ -131,9 +133,11 @@ export async function mergeTask(input: {
   tracker: TrackerClient;
   save: Save;
   writeInfo: (message: string) => void;
+  baseBranch: string;
+  store: TaskStore;
   ready?: () => Promise<boolean>;
   mergeCommand?: readonly string[];
-  confirmMerged?: (
+  confirmMerged: (
     sha: string,
     env: Readonly<Record<string, string>>,
   ) => Promise<void>;
@@ -145,12 +149,25 @@ export async function mergeTask(input: {
   const prNumber = state.prNumber;
   await input.withGitHub(async (github, env) => {
     let pr: PullRequest = await github.pullRequest(prNumber);
+    if (pr.baseRefName !== input.baseBranch || pr.headRefName !== state.branch)
+      throw new Error("Merge requires the task's PR base and head branch");
+    if (pr.state === "CLOSED") {
+      await pauseTask({
+        state,
+        reason: "The pull request was closed. Reopen it before requeueing.",
+        tracker: input.tracker,
+        store: input.store,
+      });
+      return;
+    }
     if (pr.mergedAt === null) {
       const health = await github.health(pr.number, state.checkoutPath);
-      const approved =
-        state.deliveryMode === "autonomous" ||
-        (await github.hasExactHeadApproval(pr.number, pr.headRefOid));
-      if (!approved || !deliveryIsHealthy(health)) {
+      const approved = await github.hasExactHeadApproval(
+        pr.number,
+        pr.headRefOid,
+        state.previousApprovalIds,
+      );
+      if (!approved || pr.isDraft || !deliveryIsHealthy(health)) {
         await input.save(state, "awaiting_ci", {
           latestHeadSha: pr.headRefOid,
         });
@@ -188,14 +205,7 @@ export async function mergeTask(input: {
     }
     if (pr.mergeCommit === null)
       throw new Error("Merged PR has no merge commit");
-    if (
-      state.deliveryMode === "autonomous" &&
-      input.confirmMerged === undefined
-    )
-      throw new Error(
-        "Autonomous completion requires base-branch ancestry verification",
-      );
-    await input.confirmMerged?.(pr.mergeCommit.oid, env);
+    await input.confirmMerged(pr.mergeCommit.oid, env);
     // Persist the completion phase before cleanup: if any step below
     // fails, the next run retries only completion from "completing"
     // instead of launching another agent turn against a half-done issue.
@@ -219,17 +229,15 @@ export async function completeTask(input: {
   writeInfo: (message: string) => void;
 }): Promise<void> {
   const { state } = input;
-  if (
-    state.deliveryMode === "autonomous" &&
-    state.prUrl !== null &&
-    state.mergeCommitSha === null
-  )
-    throw new Error("Autonomous completion requires a confirmed merge commit");
+  if (state.prUrl !== null && state.mergeCommitSha === null)
+    throw new Error(
+      "Completing a pull request requires a confirmed merge commit",
+    );
   // Only the merge path sets a PR URL; the agent no-change path completes
   // without one. Either way the terminal Tracker state lands inside the
   // cleanup call, after the labels.
   if (state.prUrl === null) {
-    await input.tracker.completeNoChange(state.issue);
+    await input.tracker.completeNoChange(state.issue, state.noChangeEvidence);
     await input.save(state, "done", { resumePhase: null });
     input.writeInfo(
       `${state.issue.identifier}: no change was needed; issue completed`,
@@ -302,32 +310,12 @@ export async function pauseTask(input: {
     // effort — the original error still throws so the failure is recorded.
     try {
       await input.tracker.requeue(input.state.issue);
-    } catch (rollbackError) {
-      const detail =
-        rollbackError instanceof Error
-          ? rollbackError.message
-          : String(rollbackError);
-      console.error(
-        `${input.state.issue.identifier}: park rollback failed: ${detail}`,
-      );
+    } catch {
+      console.error(`${input.state.issue.identifier}: park rollback failed`);
     }
     throw error;
   }
-  console.error(`${input.state.issue.identifier}: ${input.reason}`);
-}
-
-export async function pauseAfterNoChangeFeedback(input: {
-  state: TaskState;
-  tracker: TrackerClient;
-  store: StateStore;
-}): Promise<void> {
-  await pauseTask({
-    state: input.state,
-    reason:
-      "The agent reported no change after owner feedback; explicit confirmation is required before merging.",
-    tracker: input.tracker,
-    store: input.store,
-  });
+  console.error(`${input.state.issue.identifier}: parked for human input`);
 }
 
 export async function recordFailure(input: {
@@ -336,8 +324,9 @@ export async function recordFailure(input: {
   tracker: TrackerClient;
   store: StateStore;
 }): Promise<void> {
-  const message =
-    input.error instanceof Error ? input.error.message : String(input.error);
+  const message = privateEvidence(
+    input.error instanceof Error ? input.error.message : String(input.error),
+  );
   const failureCount = input.state.failureCount + 1;
   const limit = ["claiming", "claimed", "implementing", "publishing"].includes(
     input.state.phase,
@@ -361,6 +350,6 @@ export async function recordFailure(input: {
   }
   await input.store.save(failed);
   console.error(
-    `${input.state.issue.identifier}: ${message} (attempt ${String(failureCount)}/${String(limit)})`,
+    `${input.state.issue.identifier}: ${input.state.phase} failed (attempt ${String(failureCount)}/${String(limit)})`,
   );
 }

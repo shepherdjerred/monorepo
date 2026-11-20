@@ -1,4 +1,5 @@
 import type { TaskState } from "#src/domain/schemas.ts";
+import { MAX_OPEN_PULL_REQUESTS } from "#src/domain/schemas.ts";
 import type { DeliveryAuthorization } from "#src/host/delivery-authorization.ts";
 import type { GitWorkspace } from "#src/host/git-workspace.ts";
 import type { DockerAgentRunner } from "#src/host/docker.ts";
@@ -6,11 +7,59 @@ import type { TrackerClient } from "#src/integrations/tracker.ts";
 import type { RuntimePaths } from "#src/runtime/paths.ts";
 import type { CommandRunner } from "#src/runtime/process.ts";
 import type { WithGitHub } from "#src/reconcile-merge.ts";
+import type { GitHubClient } from "#src/integrations/github.ts";
 import { captureEvidence } from "#src/host/evidence.ts";
 import { writeInfo } from "#src/runtime/output.ts";
 
+async function publicationSlotAvailable(
+  github: GitHubClient,
+  state: TaskState,
+) {
+  const open = await github.openPullRequestNumbers();
+  if (open.length < MAX_OPEN_PULL_REQUESTS) return true;
+  writeInfo(`${state.issue.identifier}: waiting for a pull request slot`);
+  return false;
+}
+
+async function pullRequestForPublication(
+  state: TaskState,
+  github: GitHubClient,
+  baseBranch: string,
+  save: Parameters<typeof publishTask>[0]["save"],
+) {
+  if (state.lastPass?.closedPullRequest !== true) {
+    const pr = await github.pullRequestForBranch(state.branch);
+    return pr !== null || (await publicationSlotAvailable(github, state))
+      ? { state, pr }
+      : null;
+  }
+  if (state.prNumber === null)
+    throw new Error("Passed task has no pull request to reopen");
+  const pr = await github.pullRequest(state.prNumber);
+  if (pr.headRefName !== state.branch || pr.baseRefName !== baseBranch)
+    throw new Error("Pull request branch changed before reopening");
+  if (pr.state === "MERGED") {
+    await save(state, "merging");
+    return null;
+  }
+  if (pr.state === "CLOSED" && !(await publicationSlotAvailable(github, state)))
+    return null;
+  // Save the owner reviews before reopening. A resumed retry after a
+  // successful reopen must still recognize approvals from the old attempt.
+  const next =
+    state.previousApprovalIds === undefined
+      ? await save(state, "publishing", {
+          previousApprovalIds: await github.approvalIds(pr.number),
+        })
+      : state;
+  if (pr.state === "CLOSED") await github.setPullRequestOpen(pr.number, true);
+  if (!pr.isDraft) await github.markDraft(pr.number);
+  return { state: next, pr };
+}
+
 export async function publishTask(input: {
   state: TaskState;
+  baseBranch: string;
   authorization: DeliveryAuthorization;
   git: GitWorkspace;
   tracker: TrackerClient;
@@ -55,7 +104,15 @@ export async function publishTask(input: {
     await input.authorization.checkAutonomousScope(state);
   }
   await input.withGitHub(async (github, env) => {
-    let pr = await github.pullRequestForBranch(state.branch);
+    const publication = await pullRequestForPublication(
+      state,
+      github,
+      input.baseBranch,
+      input.save,
+    );
+    if (publication === null) return;
+    state = publication.state;
+    let { pr } = publication;
     const requested = [
       ...output.resolvedFindings,
       ...output.resolvedFindingKeys.map((key) => ({
@@ -160,7 +217,12 @@ export async function publishTask(input: {
           : `\n## Visual evidence\n\n${current.evidenceMarkdown.join("\n\n")}\n`
       }`,
     );
-    await input.save(current, "awaiting_ci", { restackInProgress: false });
+    await input.save(current, "awaiting_ci", {
+      restackInProgress: false,
+      ...(current.lastPass === undefined
+        ? {}
+        : { lastPass: { ...current.lastPass, closedPullRequest: false } }),
+    });
     writeInfo(`${state.issue.identifier}: ${pr.url} is waiting for CI`);
   });
 }

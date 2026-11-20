@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const ProviderSchema = z.enum(["codex"]);
 export type Provider = z.infer<typeof ProviderSchema>;
+export const MAX_OPEN_PULL_REQUESTS = 3;
 
 export const TaskPhaseSchema = z.enum([
   "claiming",
@@ -14,6 +15,8 @@ export const TaskPhaseSchema = z.enum([
   "completing",
   "needs_human",
   "blocked",
+  "passing",
+  "passed",
   "done",
 ]);
 export const TrackerIssueSchema = z.object({
@@ -23,6 +26,9 @@ export const TrackerIssueSchema = z.object({
   description: z.string().nullable().default(null),
   url: z.url(),
   priority: z.number().int(),
+  revision: z.number().int().positive().optional(),
+  assigneeId: z.string().nullable().optional(),
+  archivedAt: z.string().nullable().optional(),
   team: z.object({ key: z.string().min(1) }).optional(),
   project: z
     .object({
@@ -69,7 +75,7 @@ const VisualTargetSchema = z.object({
 });
 
 export const AgentOutputSchema = z.object({
-  status: z.enum(["changed", "no_change", "needs_human"]),
+  status: z.enum(["changed", "no_change", "needs_human", "pass"]),
   commitTitle: z
     .string()
     .regex(
@@ -170,9 +176,34 @@ export const PrHealthSchema = z.object({
 });
 export type PrHealth = z.infer<typeof PrHealthSchema>;
 
+const AttemptContextSchema = z.object({
+  issueDigest: z.string().min(1),
+  humanComments: z.array(z.object({ id: z.string(), digest: z.string() })),
+});
+export type AttemptContext = z.infer<typeof AttemptContextSchema>;
+
+const PassReasonSchema = z.enum([
+  "agent_pass",
+  "unverified_no_change",
+  "context_changed",
+  "repair_budget",
+  "verification_failed",
+  "unresolved_feedback",
+]);
+export type PassReason = z.infer<typeof PassReasonSchema>;
+
+const PassRecordSchema = z.object({
+  id: z.uuid(),
+  reason: PassReasonSchema,
+  note: z.string().min(1),
+  closedPullRequest: z.boolean(),
+});
+
 export const TaskStateSchema = z.object({
   issue: TrackerIssueSchema,
   provider: ProviderSchema,
+  intake: z.enum(["automatic", "handoff"]).optional(),
+  claimFromPhase: z.enum(["needs_human", "passed"]).optional(),
   deliveryMode: z
     .enum(["owner_approved", "autonomous"])
     .default("owner_approved"),
@@ -195,6 +226,10 @@ export const TaskStateSchema = z.object({
   prNumber: z.number().int().positive().nullable(),
   prUrl: z.url().nullable(),
   latestHeadSha: z.string().nullable(),
+  previousApprovalIds: z.array(z.number().int().positive()).optional(),
+  attemptContext: AttemptContextSchema.optional(),
+  lastPass: PassRecordSchema.optional(),
+  noChangeEvidence: z.string().min(1).optional(),
   lastAgentOutput: AgentOutputSchema.nullable(),
   pendingFeedback: z.array(FeedbackSchema),
   pendingHealth: PrHealthSchema.nullable(),

@@ -3304,7 +3304,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "tofu-openai/prod/1",
-      "configurationRevisionId": "tofu-openai/prod/5"
+      "configurationRevisionId": "tofu-openai/prod/6"
     },
     {
       "id": "tofu-posthog/prod",
@@ -3408,7 +3408,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "alloy-gateway/prod/1",
-      "configurationRevisionId": "alloy-gateway/prod/2"
+      "configurationRevisionId": "alloy-gateway/prod/3"
     },
     {
       "id": "promtail/prod",

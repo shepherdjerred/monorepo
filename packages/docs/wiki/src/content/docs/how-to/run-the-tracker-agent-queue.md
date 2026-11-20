@@ -1,11 +1,11 @@
 ---
 title: Run the Tracker agent queue
-description: Configure the local Mac runner, enqueue a task for owner approval or autonomous DevEx delivery, and inspect recovery.
+description: Start Justin on a Mac, hand off Tracker issues, approve pull requests, and recover passed work.
 sidebar:
   order: 2
 ---
 
-Configure the runner once, then choose owner-approved work or autonomous DevEx delivery when enqueueing an issue.
+Configure Justin to take work from Tracker and deliver it for owner review.
 
 ## 1. Create the GitHub App
 
@@ -37,11 +37,8 @@ toolkit tracker label create --team AI --name agent:codex --color '#059669'
 toolkit tracker label create --team AI --name agent:needs-human --color '#DC2626'
 ```
 
-Applying `agent:codex` is the entire enqueue action. The runner accepts
-issues in the configured `tracker.team`, defaulting to `AI`, in any
-non-terminal state. It chooses the highest priority, then the oldest issue.
-Tracker scopes labels to teams. Inspect existing labels before creating them;
-imported workspaces may already contain them. Agents create issues only in AI.
+Use `agent:codex` for explicit handoffs. The `AI` queue also picks up unassigned
+Backlog and Todo issues. Inspect team labels before creating them.
 
 ## 3. Write the local configuration
 
@@ -77,14 +74,15 @@ toolkit tracker whoami --json
 ```
 
 ```bash
-bun packages/justin-principal-engineer/src/cli.ts doctor
+scripts/onepassword/with-service-account.sh \
+  bun packages/justin-principal-engineer/src/cli.ts doctor
 bun packages/justin-principal-engineer/src/cli.ts daemon install
 bun packages/justin-principal-engineer/src/cli.ts daemon status
 ```
 
-`doctor` checks the required CLIs, Docker daemon, Tracker catalog and labels, 1Password
-references, pinned container image, and GitHub App repository access. Installing
-from a temporary Herdr worktree is rejected.
+Run `doctor` with the same Keychain-backed 1Password account as the LaunchAgent.
+It checks the required CLIs, Docker daemon, Tracker catalog, 1Password references,
+container image, and GitHub App access. Install from the stable checkout.
 
 For local iteration, unload the installed service and run from the monorepo root:
 
@@ -100,24 +98,23 @@ These commands operate the configured live queue. See the
 [package contributor reference](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/README.md)
 for the reload and credential contracts.
 
-## 5. Enqueue a small task
+## 5. Hand off a task
 
-Write a bounded issue with an observable finish line. Add `agent:codex` and
-leave the issue wherever it is. The next reconcile claims it, moves it to
-`In Progress`, and creates a draft PR. The provider label stays on for the
-whole task and is removed on merge.
+Write a bounded issue with an observable finish line. Leave unassigned `AI`
+work in Backlog or Todo, or add `agent:codex` for an explicit handoff. Justin
+claims the highest-priority eligible issue when a PR slot is available.
 
-For autonomous delivery, use an issue in the `AI` team's `Developer Experience`
+For scoped DevEx work, use an issue in the `AI` team's `Developer Experience`
 project. State the allowed files, expected behavior, and focused verification.
 Choose a small code, CLI, test, or documentation change within the
-[autonomous scope contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/README.md#autonomous-devex-delivery).
+[scoped DevEx contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/README.md#scoped-devex-work).
 
 Enable that issue through the managed flag or local file targeting described
 in the same reference. Add both `agent:codex` and `agent:autonomous` to enqueue
 it. For a parked legacy task, also remove `agent:needs-human` once to opt it in.
 Justin reviews the current ticket, comments, and existing PR in a fresh coding
 turn before it publishes or merges. That turn uses the existing repair budget.
-No further human approval is needed for that delivery mode.
+Approve the current PR head as usual.
 
 The [Tracker integration](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/integrations/tracker.ts)
 and [reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
@@ -127,7 +124,7 @@ and [host evidence upload](https://github.com/shepherdjerred/monorepo/blob/main/
 the host uploads only the resulting trusted PNG when the agent returns a known
 `toolkit screenshot` target.
 
-## 6. Observe delivery or approve owner-controlled work
+## 6. Approve the current PR head
 
 Leave issue comments, review bodies, inline comments, or screenshots on the PR.
 Only feedback from Jerred's pinned GitHub identity starts a repair turn.
@@ -138,9 +135,6 @@ that exact-head approval, then squash-merges and completes the Tracker issue.
 
 Any later push requires a new approval.
 
-For autonomous work, inspect the PR and local status instead. The
-[reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
-repairs failing checks within its persisted budget and merges after green CI.
 Confirm the issue reaches `Done` with its merged PR linked. Deployment is a
 separate acceptance step.
 
@@ -149,17 +143,18 @@ separate acceptance step.
 Inspect the reason in Tracker or local status:
 
 ```bash
-bun packages/justin-principal-engineer/src/cli.ts daemon status
+bun packages/justin-principal-engineer/src/cli.ts daemon status --json
 ```
 
-Resolve the external problem or add the missing decision. In Tracker, remove
-`agent:needs-human`. The provider label is still on the issue, so the next
-reconcile requeues it directly.
+Read the pass reason in Tracker. Update the issue title or description, or
+leave a comment with the missing information. This makes the issue eligible
+again at its current priority. Justin reuses the checkout and any existing PR.
+Approve the PR again if Justin reopens it.
 
-The runner restores the phase recorded before parking and reuses the task clone.
-Other queued issues can run while this task remains parked.
+For an operator action such as rerunning an interrupted CI pipeline, resolve
+the problem and remove `agent:needs-human` to resume the recorded phase.
 
-For autonomous work, inspect `agent:blocked`, its reason, and its next retry
+For scoped DevEx work, inspect `agent:blocked`, its reason, and its next retry
 time. Temporary failures retry automatically. Resolve the external dependency
 before a retry. Resolve a scope violation or authorize its policy correction
 before requesting an immediate retry:
@@ -169,8 +164,13 @@ bun packages/justin-principal-engineer/src/cli.ts retry AI-123
 ```
 
 The command rechecks authorization and publication scope, then resumes the
-recorded phase with its existing work and repair budget. An exhausted budget
-requires a new, explicitly scoped task. Do not edit runtime state to reset it.
+recorded phase with its existing work and repair budget.
+
+## 8. Monitor the queue
+
+Use the Justin dashboard in Grafana for queue depth, wait times, failures, and
+Codex usage. Use `daemon status --json` to identify the task and look up its issue
+ID in the structured logs under the runner's `logs` directory.
 
 ## Related
 

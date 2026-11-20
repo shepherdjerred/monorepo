@@ -46,6 +46,7 @@ describe("pull request ownership", () => {
       baseRefName: "main",
       mergeCommit: null,
       isDraft: true,
+      state: "OPEN",
       mergedAt: null,
       author,
     };
@@ -143,6 +144,44 @@ describe("exact-head approval", () => {
     );
     await expect(client.hasExactHeadApproval(1, HEAD)).resolves.toBe(false);
   });
+
+  test("requires a new owner review after reopen, even for an unchanged head", async () => {
+    const identity = {
+      approver: { login: "shepherdjerred", id: 3_904_778 },
+      expectedBotLogin: "justin-principal-engineer[bot]",
+    };
+    const initial = review({
+      id: 1,
+      state: "APPROVED",
+      commitId: HEAD,
+      submittedAt: "2026-01-01T00:00:00Z",
+    });
+    const initialClient = new GitHubClient(
+      "owner/repo",
+      identity,
+      runner(initial),
+      {},
+    );
+    const excluded = await initialClient.approvalIds(1);
+    await expect(
+      initialClient.hasExactHeadApproval(1, HEAD, excluded),
+    ).resolves.toBe(false);
+    const fresh = review({
+      id: 2,
+      state: "APPROVED",
+      commitId: HEAD,
+      submittedAt: initial.submitted_at,
+    });
+    const client = new GitHubClient(
+      "owner/repo",
+      identity,
+      runner([initial, fresh]),
+      {},
+    );
+    await expect(client.hasExactHeadApproval(1, HEAD, excluded)).resolves.toBe(
+      true,
+    );
+  });
 });
 
 describe("merge", () => {
@@ -159,6 +198,7 @@ describe("merge", () => {
         headRefName: "task/ai-84",
         baseRefName: "main",
         isDraft: false,
+        state: merged ? "MERGED" : "OPEN",
         author: { login: "app/justin-principal-engineer", is_bot: true },
         mergedAt: merged ? "2026-01-01T00:00:00Z" : null,
         mergeCommit: merged ? { oid: "b".repeat(40) } : null,

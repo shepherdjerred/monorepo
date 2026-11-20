@@ -4,6 +4,7 @@ import { exportCiCapacityDashboardJson } from "@shepherdjerred/homelab/cdk8s/gra
 import { ConfigMap } from "cdk8s-plus-31";
 import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai/ai-provider-dashboard.ts";
 import { exportGitckupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/gitckup-dashboard.ts";
+import { exportJustinDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/justin-dashboard.ts";
 import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout/scout-dashboard.ts";
 import { exportScoutDurableDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout/scout-durable-dashboard.ts";
 import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/smartctl-dashboard.ts";
@@ -184,6 +185,12 @@ export const ALL_DASHBOARDS: DashboardConfig[] = [
   CI_CAPACITY_DASHBOARD,
   DISCORD_PLAYS_DASHBOARD,
   GITCKUP_DASHBOARD,
+  {
+    id: "justin-dashboard-configmap",
+    name: "justin-dashboard",
+    jsonFilename: "justin.json",
+    exportFn: exportJustinDashboardJson,
+  },
   {
     id: "network-policy-enforcement-dashboard-configmap",
     name: "network-policy-enforcement-dashboard",
