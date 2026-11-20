@@ -13,7 +13,9 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { startScoutCoachReview } from "#src/temporal/starts.ts";
+import { reconcileCoachReviews } from "./review-reconcile.ts";
 import {
+  REVIEW_KIND,
   reviewReady,
   splitMatchId,
   type CoachReviewDependencies,
@@ -129,5 +131,28 @@ export async function onMatchEvidenceStored(matchId: string): Promise<void> {
   const owners = new Set(recordings.map((row) => row.device.ownerId));
   for (const ownerId of owners) {
     await triggerCoachReview({ ownerId, matchId });
+  }
+}
+
+/**
+ * The scheduled repair (`scoutIngestionReconciliationWorkflow`, every
+ * minute): start the review for every recorded game whose review never began,
+ * so a start that failed in either trigger is retried by the schedule rather
+ * than waiting for the recording to be re-sent.
+ */
+export async function reconcileCoachReviewStarts(): Promise<void> {
+  const deps = coachReviewDependencies();
+  const result = await reconcileCoachReviews(
+    {
+      client: prisma,
+      trigger: async (input) => await triggerCoachReview(input, deps),
+      now: () => new Date(),
+    },
+    REVIEW_KIND,
+  );
+  if (result.started > 0) {
+    logger.info(
+      `started ${String(result.started)} post-game review(s) the triggers missed`,
+    );
   }
 }

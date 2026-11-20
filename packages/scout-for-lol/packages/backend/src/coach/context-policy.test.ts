@@ -243,7 +243,9 @@ describe("projectGameContext", () => {
       }
     });
   });
+});
 
+describe("projectGameContext refusals and reasons", () => {
   test("a smuggled key anywhere refuses the whole context under every flag and initiation", () => {
     everyCase(
       0x7a_11_57,

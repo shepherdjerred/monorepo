@@ -2,6 +2,7 @@ import {
   condition,
   continueAsNew,
   deprecatePatch,
+  patched,
   getExternalWorkflowHandle,
   isCancellation,
   setHandler,
@@ -236,6 +237,11 @@ export async function scoutIngestionReconciliationWorkflow(
     } catch (error) {
       if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
     }
+  }
+  // A command added after the existing ones: an execution that began before
+  // this deploy replays without it.
+  if (patched("scout-coach-review-reconcile-v1")) {
+    await backgroundActivities(input.stage).reconcileCoachReviews(input);
   }
   setWorkflowPhase("**Phase:** ingestion reconciliation complete");
   return "completed";

@@ -20,8 +20,8 @@ const logger = createLogger("result-projection");
 /**
  * Match evidence is one of the two inputs of the post-game review: when a
  * game the owner recorded gets its result, the review may start. It never
- * fails the evidence pipeline; a failed start is logged, and the recording
- * upload's retry starts it again.
+ * fails the evidence pipeline; a failed start is logged, and the scheduled
+ * review reconciliation (`reconcileCoachReviewStarts`) starts it again.
  */
 async function startCoachReviewsForResult(matchId: string): Promise<void> {
   try {

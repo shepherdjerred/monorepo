@@ -295,6 +295,11 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
         await import("#src/coach/review-runtime.ts");
       return await startCoachReview(coachReviewDependencies(), input);
     },
+    reconcileCoachReviews: async () => {
+      const { reconcileCoachReviewStarts } =
+        await import("#src/coach/review-runtime.ts");
+      await reconcileCoachReviewStarts();
+    },
     settleCoachReview: async (input) => {
       const { settleCoachReview } = await import("#src/coach/review.ts");
       const { coachReviewDependencies } =
