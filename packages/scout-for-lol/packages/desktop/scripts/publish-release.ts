@@ -3,16 +3,19 @@
 //   bun run release:publish:stable -- --notes-file notes.md [--dry-run]
 //   bun run release:publish:beta   -- --notes-file notes.md [--dry-run]
 //
-// Inputs are the signed installer and its `.sig` that `release:package:<channel>`
-// left in `dist/<channel>/`. The script verifies the signature with the
-// channel's public key, builds the manifest, refuses to downgrade the live
-// channel, uploads the immutable release objects, publishes the manifest under
-// an ETag precondition, and reads everything back from the public host.
+// Inputs are the signed outputs `release:package:<channel>` left in
+// `dist/<channel>/` (see release-artifacts.ts): the Windows installer and its
+// `.sig`, the macOS app archive, its `.sig` and the disk image, or both. The
+// script verifies every signature with the channel's public key, builds the
+// manifest, refuses to downgrade the live channel (a second platform for the
+// live version is added beside the first), uploads the immutable release
+// objects, publishes the manifest under an ETag precondition, and reads
+// everything back from the public host.
 //
 // Never run from CI and never against the live bucket without an operator.
 // `--dry-run` does everything except upload and needs no credentials.
 import { createHash } from "node:crypto";
-import { readdir, readFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SEAWEEDFS_ENDPOINT } from "../../../../../scripts/lib/seaweedfs.ts";
@@ -23,14 +26,20 @@ import {
   ScoutDesktopUpdateManifestSchema,
   SCOUT_DESKTOP_UPDATE_LIMITS,
   type ScoutDesktopUpdateChannel,
+  type ScoutDesktopUpdatePlatform,
 } from "../../data/src/scout-client/desktop-update-manifest.schema.ts";
 import {
-  assertNeverDowngrade,
   buildUpdateManifest,
   channelManifestKey,
   publicUrl,
   releaseObjectKey,
+  resolvePublication,
+  type PublishedArtifact,
 } from "../../data/src/scout-client/desktop-update-release.ts";
+import {
+  artifactContentType,
+  readLocalArtifacts,
+} from "./release-artifacts.ts";
 import {
   RELEASE_BUCKET,
   publicReadback,
@@ -94,26 +103,6 @@ async function readUpdateKey(channel: string): Promise<string> {
   return profile.update_public_key;
 }
 
-/** The installer `cargo packager` wrote for `version`, and its signature. */
-async function readSignedInstaller(channel: string, version: string) {
-  const directory = join(root, "dist", channel);
-  const suffix = `_${version}_x64-setup.exe`;
-  const matches = (await readdir(directory)).filter((name) =>
-    name.endsWith(suffix),
-  );
-  const [name, ...others] = matches;
-  if (name === undefined || others.length > 0) {
-    throw new Error(
-      `Expected exactly one *${suffix} in ${directory}; run release:package:${channel} for ${version}`,
-    );
-  }
-  const body = new Uint8Array(await readFile(join(directory, name)));
-  const signature = (
-    await readFile(join(directory, `${name}.sig`), "utf8")
-  ).trim();
-  return { body, signature };
-}
-
 function openBucket(): Bucket {
   return {
     config: {
@@ -143,18 +132,34 @@ async function readLiveManifest(bucket: Bucket, key: string) {
 export async function publishRelease(options: Options): Promise<void> {
   const { channel } = options;
   const version = await workspaceVersion();
-  const installer = await readSignedInstaller(channel, version);
+  const artifacts = await readLocalArtifacts(root, channel, version);
+  console.log(
+    `Found ${channel} ${version} outputs for ${artifacts.map(({ platform }) => platform).join(" and ")}.`,
+  );
 
   // The same check the client makes, before anything leaves this machine.
-  verifyMinisign({
-    publicKeyBase64: await readUpdateKey(channel),
-    signatureBase64: installer.signature,
-    data: installer.body,
-  });
+  const publicKey = await readUpdateKey(channel);
+  for (const artifact of artifacts) {
+    verifyMinisign({
+      publicKeyBase64: publicKey,
+      signatureBase64: artifact.signature,
+      data: artifact.body,
+    });
+  }
 
   const notes = (await readFile(options.notesFile, "utf8")).trim();
-  const fileName = `scout-desktop-${channel}_${version}_x64-setup.exe`;
-  const sha256 = createHash("sha256").update(installer.body).digest("hex");
+  const platforms: Partial<
+    Record<ScoutDesktopUpdatePlatform, PublishedArtifact>
+  > = {};
+  for (const artifact of artifacts) {
+    platforms[artifact.platform] = {
+      fileName: artifact.fileName,
+      sha256: createHash("sha256").update(artifact.body).digest("hex"),
+      size: artifact.body.length,
+      signature: artifact.signature,
+      format: artifact.platform === "windows-x86_64" ? "nsis" : "app",
+    };
+  }
   const draft = (minimumVersion: string) =>
     buildUpdateManifest({
       channel,
@@ -162,19 +167,13 @@ export async function publishRelease(options: Options): Promise<void> {
       minimumVersion,
       notes,
       publishedAt: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
-      windows: {
-        fileName,
-        sha256,
-        size: installer.body.length,
-        signature: installer.signature,
-        format: "nsis",
-      },
+      platforms,
     });
 
   if (options.dryRun) {
     const manifest = draft(options.minimumVersion ?? version);
     console.log(
-      `Validated ${channel} ${version}: the installer is signed by the channel key, and the manifest follows the contract. No uploads.`,
+      `Validated ${channel} ${version}: every artifact is signed by the channel key, and the manifest follows the contract. No uploads.`,
     );
     console.log(JSON.stringify(manifest, null, 2));
     return;
@@ -183,30 +182,40 @@ export async function publishRelease(options: Options): Promise<void> {
   const bucket = openBucket();
   const manifestKey = channelManifestKey(channel);
   const live = await readLiveManifest(bucket, manifestKey);
-  const manifest = draft(
-    options.minimumVersion ?? live.manifest?.minimumVersion ?? version,
+  // Never downgrade the channel, even if an old build directory is selected;
+  // a second platform for the live version is merged in beside the first.
+  const manifest = resolvePublication(
+    live.manifest,
+    draft(options.minimumVersion ?? live.manifest?.minimumVersion ?? version),
   );
-  // Never downgrade the channel, even if an old build directory is selected.
-  assertNeverDowngrade(live.manifest, manifest);
 
   const encoder = new TextEncoder();
-  const installerKey = releaseObjectKey(version, fileName);
-  const signatureKey = `${installerKey}.sig`;
-  await putImmutable(bucket, {
-    key: installerKey,
-    body: installer.body,
-    contentType: "application/vnd.microsoft.portable-executable",
-  });
-  await putImmutable(bucket, {
-    key: signatureKey,
-    body: encoder.encode(installer.signature),
-    contentType: "text/plain; charset=utf-8",
-  });
-  await publicReadback(publicUrl(installerKey), installer.body);
-  await publicReadback(
-    publicUrl(signatureKey),
-    encoder.encode(installer.signature),
-  );
+  for (const artifact of artifacts) {
+    const artifactKey = releaseObjectKey(version, artifact.fileName);
+    const objects = [
+      {
+        key: artifactKey,
+        body: artifact.body,
+        contentType: artifactContentType(artifact.platform),
+      },
+      {
+        key: `${artifactKey}.sig`,
+        body: encoder.encode(artifact.signature),
+        contentType: "text/plain; charset=utf-8",
+      },
+      ...artifact.companions.map((companion) => ({
+        key: releaseObjectKey(version, companion.fileName),
+        body: companion.body,
+        contentType: companion.contentType,
+      })),
+    ];
+    for (const object of objects) {
+      await putImmutable(bucket, object);
+    }
+    for (const object of objects) {
+      await publicReadback(publicUrl(object.key), object.body);
+    }
+  }
 
   // The manifest goes last: until it lands, no client can see the release.
   const body = encoder.encode(`${JSON.stringify(manifest, null, 2)}\n`);

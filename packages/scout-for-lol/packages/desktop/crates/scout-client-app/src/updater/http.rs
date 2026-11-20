@@ -263,7 +263,7 @@ mod tests {
 
     use super::{HttpUpdater, UpdateEndpoint};
     use crate::updater::install::Installer;
-    use crate::updater::manifest::Platform;
+    use crate::updater::manifest::{ArtifactFormat, Platform};
     use crate::updater::verify::VerifyError;
     use crate::updater::verify::testing::{PAYLOAD, PAYLOAD_SIGNATURE, TEST_PUBLIC_KEY};
     use crate::updater::{UpdateError, Updater};
@@ -357,6 +357,36 @@ mod tests {
 
         /// Publish `version` on `channel` with the signed fixture installer.
         fn publish(&self, channel: &str, version: &str, minimum: &str) {
+            self.publish_platforms(channel, version, minimum, &[Platform::WindowsX86_64]);
+        }
+
+        /// Publish `version` with the signed fixture as each platform's
+        /// artifact.
+        fn publish_platforms(
+            &self,
+            channel: &str,
+            version: &str,
+            minimum: &str,
+            platforms: &[Platform],
+        ) {
+            let mut entries = serde_json::Map::new();
+            for platform in platforms {
+                let file = match platform {
+                    Platform::WindowsX86_64 => "installer.exe",
+                    Platform::DarwinUniversal => "scout-desktop.app.tar.gz",
+                };
+                entries.insert(
+                    platform.key().to_owned(),
+                    json!({
+                        "url": format!("{}/releases/{version}/{file}", self.origin),
+                        "sha256": hex::encode(Sha256::digest(PAYLOAD)),
+                        "size": PAYLOAD.len(),
+                        "signature": PAYLOAD_SIGNATURE.trim(),
+                        "format": platform.format(),
+                    }),
+                );
+                self.serve(&format!("/releases/{version}/{file}"), 200, PAYLOAD);
+            }
             let manifest = json!({
                 "schema": 1,
                 "channel": channel,
@@ -364,20 +394,13 @@ mod tests {
                 "minimumVersion": minimum,
                 "publishedAt": "2026-11-14T12:00:00Z",
                 "notes": "Notes.",
-                "platforms": { "windows-x86_64": {
-                    "url": format!("{}/releases/{version}/installer.exe", self.origin),
-                    "sha256": hex::encode(Sha256::digest(PAYLOAD)),
-                    "size": PAYLOAD.len(),
-                    "signature": PAYLOAD_SIGNATURE.trim(),
-                    "format": "nsis"
-                }}
+                "platforms": entries,
             });
             self.serve(
                 &format!("/{channel}.json"),
                 200,
                 manifest.to_string().as_bytes(),
             );
-            self.serve(&format!("/releases/{version}/installer.exe"), 200, PAYLOAD);
         }
     }
 
@@ -407,6 +430,10 @@ mod tests {
     }
 
     async fn fixture() -> Result<Fixture, Box<dyn std::error::Error>> {
+        fixture_for(Platform::WindowsX86_64).await
+    }
+
+    async fn fixture_for(platform: Platform) -> Result<Fixture, Box<dyn std::error::Error>> {
         let host = Host::start().await?;
         let staging = std::env::temp_dir()
             .join(format!("scout-updater-{}", uuid::Uuid::new_v4()))
@@ -418,7 +445,7 @@ mod tests {
                 channel: "stable".to_owned(),
             },
             TEST_PUBLIC_KEY.trim(),
-            Platform::WindowsX86_64,
+            platform,
             staging.clone(),
             Arc::clone(&installer) as Arc<dyn Installer>,
         )?;
@@ -632,6 +659,52 @@ mod tests {
         // Once the build catches up, nothing stays staged.
         fixture.updater.check(&version("0.3.0")?).await?;
         assert!(!fixture.staging.join("0.3.0").exists());
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_macos_build_downloads_and_installs_its_app_archive() -> TestResult {
+        let fixture = fixture_for(Platform::DarwinUniversal).await?;
+        fixture.host.publish_platforms(
+            "stable",
+            "0.2.0",
+            "0.1.0",
+            &[Platform::WindowsX86_64, Platform::DarwinUniversal],
+        );
+        let update = fixture
+            .updater
+            .check(&version("0.1.0")?)
+            .await?
+            .ok_or("an update")?;
+        assert_eq!(update.file_name, "scout-desktop.app.tar.gz");
+        assert_eq!(update.artifact.format, ArtifactFormat::App);
+        let staged = fixture.updater.download(&update).await?;
+        fixture.updater.install(&staged, false)?;
+        assert_eq!(
+            fixture
+                .installer
+                .runs
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .clone(),
+            [(staged.path.clone(), false)]
+        );
+        assert_eq!(fixture.host.requested("/releases/0.2.0/installer.exe"), 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_release_without_this_platform_offers_nothing() -> TestResult {
+        let windows = fixture_for(Platform::WindowsX86_64).await?;
+        windows
+            .host
+            .publish_platforms("stable", "0.2.0", "0.1.0", &[Platform::DarwinUniversal]);
+        assert_eq!(windows.updater.check(&version("0.1.0")?).await?, None);
+
+        let mac = fixture_for(Platform::DarwinUniversal).await?;
+        mac.host
+            .publish_platforms("stable", "0.2.0", "0.1.0", &[Platform::WindowsX86_64]);
+        assert_eq!(mac.updater.check(&version("0.1.0")?).await?, None);
         Ok(())
     }
 }

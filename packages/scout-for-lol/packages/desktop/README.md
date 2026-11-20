@@ -475,9 +475,10 @@ without Finder automation access (SSH, an agent), it fails with `AppleEvent
 timed out`; set `CI=true` so create-dmg skips that step (the image is the same,
 minus its icon placement). Always package through these scripts: the profile is chosen by the environment
 variable the script sets, and the config only names the installer. Build on
-the platform the format targets. These scripts produce unsigned installers;
-operating-system code signing (Authenticode, notarization) is not part of
-them yet, and update signing is a separate step in "Releasing an update".
+the platform the format targets. These scripts produce unsigned installers
+for local use. Release builds go through `release:package:<channel>` (see
+"Releasing an update"), which on macOS also signs with Developer ID and
+notarizes; Windows Authenticode signing is not part of either path yet.
 
 ### Voice models in the installers
 
@@ -547,9 +548,17 @@ on its own tokio runtime.
    installer then starts the new version). A required update, where the
    running build is below the manifest's `minimumVersion`, skips the ten
    minutes. The installer is verified once more immediately before it runs.
-4. The installer is the `cargo packager` NSIS installer, run passively (`/P
-/NS`, plus `/R` for an idle install) and detached, so it outlives the
-   supervisor that started it.
+4. On Windows the artifact is the `cargo packager` NSIS installer, run
+   passively (`/P /NS`, plus `/R` for an idle install) and detached, so it
+   outlives the supervisor that started it. On macOS it is a gzipped tar of
+   the notarized, stapled `.app` (`install::AppBundleInstaller`): the archive
+   is unpacked into a hidden directory beside the running bundle (one volume,
+   so both renames are atomic), checked to hold exactly one `.app` with an
+   `Info.plist`, and swapped in at the running bundle's path, so the Dock,
+   Finder and the start-at-login item keep pointing at it. If the swap fails
+   the running version is put back. For an idle install a detached `/bin/sh`
+   waits for the supervisor's process to end (it holds the single-instance
+   lock) and then `open`s the bundle.
 
 **It never interrupts a live game.** An install, whether on quit or at idle,
 starts only while the gameflow phase is `Disconnected`, `None` or `Lobby`
@@ -575,9 +584,12 @@ whether it is required, never a URL or path), and both windows show it as an
 other event, so an opted-out user sends nothing.
 
 **Where it does not run.** A development build (no `SCOUT_DESKTOP_PROFILE`), a
-build started with `--server=`, and any platform other than Windows x86-64
-(macOS DMG and Linux builds have no installer the updater can run) never update.
-`ReleaseProfile::is_packaged()` is what separates a packaged build.
+build started with `--server=`, and Linux never update.
+`ReleaseProfile::is_packaged()` is what separates a packaged build. On macOS
+an install fails, and is recorded in diagnostics, when the app runs from
+somewhere it cannot replace itself: the mounted disk image, a Gatekeeper
+translocated copy (an app opened straight from Downloads), or a folder the
+user cannot write. Dragging Scout Desktop to Applications avoids all three.
 
 **Mechanism.** `cargo packager` signs installers with minisign
 (`cargo packager signer`), and the client verifies that signature with
@@ -601,8 +613,15 @@ is the language-neutral source of truth, with
 and `updater/manifest.rs` (serde plus the rules JSON cannot express) validating
 the same file. It holds the channel, the version, the `minimumVersion`, a UTC
 `publishedAt`, the release notes, and per platform artifact the URL, SHA-256,
-size, minisign signature and format. Artifact URLs must be exactly
+size, minisign signature and format. Two platforms exist, each with one
+format: `windows-x86_64` (`nsis`) and `darwin-universal` (`app`, one archive
+for Apple silicon and Intel). A release may carry either or both; a build
+whose platform is missing is offered nothing. Artifact URLs must be exactly
 `https://download.scout-for-lol.com/releases/<version>/<file>`.
+
+Every client refuses a manifest with a platform key or schema version it does
+not know, so once a build is installed a new platform would strand it. Decide
+forward compatibility before the first publication (AI-720).
 
 **Keys.** The minisign private keys and their passwords are in 1Password, in
 the `Homelab` vault, item `Scout Desktop release`, fields
@@ -621,36 +640,96 @@ Releases are manual and operator-run. Nothing in CI or Delivery runs these
 steps, and the publication script is never run against the live bucket by a
 pull request.
 
-1. Set the workspace `version` in `Cargo.toml` above the live channel's, and
-   write release notes to a file.
-2. On the Windows host, `bun run release:package:stable` (or `:beta`) builds
-   the installer with that channel's profile and signs it. The channel's
-   signing key and password are resolved from 1Password for that process only
-   (`release-signing.<channel>.env` holds locators, never values). Output:
-   `dist/<channel>/` with the installer and its `.sig`.
+1. Set the workspace `version` in `Cargo.toml` and both `packaging/*.json`
+   above the live channel's, and write release notes to a file.
+2. Package on each host. `bun run release:package:stable` (or `:beta`) builds
+   for the platform it runs on with that channel's profile and signs the
+   update artifact. The channel's update signing key and password are
+   resolved from 1Password for that process only
+   (`release-signing.<channel>.env` holds locators, never values).
+   - **Windows:** the NSIS installer and its `.sig` in `dist/<channel>/`.
+   - **macOS:** see "Cutting a macOS release" below. Output in
+     `dist/<channel>/macos/`: the update archive
+     `scout-desktop-<channel>_<version>_universal.app.tar.gz`, its `.sig`, and
+     the disk image `scout-desktop-<channel>_<version>_universal.dmg`.
 3. Preview without credentials:
    `bun run release:publish:stable -- --notes-file notes.md --dry-run`
-   verifies the signature with the channel's public key and prints the
-   manifest it would publish.
-4. Publish: `bun run release:publish:stable -- --notes-file notes.md
-[--minimum-version X.Y.Z]`. The script, in order:
-   - refuses an installer that the channel's public key does not verify;
+   verifies every signature it finds with the channel's public key and prints
+   the manifest it would publish.
+4. Publish from each host: `bun run release:publish:stable -- --notes-file
+notes.md [--minimum-version X.Y.Z]`. The script publishes whichever
+   platforms this host packaged for the workspace version. The first host
+   publishes the new version with its platform; the second adds its platform
+   to that same live version with the same notes file and minimum version,
+   and never replaces a platform already live. (Copying one host's outputs to
+   the other and publishing both at once works too.) The script, in order:
+   - refuses any artifact that the channel's public key does not verify;
    - reads the live manifest and refuses to publish a version that is not
      newer, or a `minimumVersion` below the live one (never downgrade);
-   - uploads `releases/<version>/<installer>` and its `.sig` as immutable
-     objects (`Cache-Control: public, max-age=31536000, immutable`, created
-     with `If-None-Match: *`; identical bytes already there are a no-op so an
+   - uploads each platform's artifact and `.sig` (and, for macOS, the disk
+     image) under `releases/<version>/` as immutable objects
+     (`Cache-Control: public, max-age=31536000, immutable`, created with
+     `If-None-Match: *`; identical bytes already there are a no-op so an
      interrupted run can be retried, different bytes are refused);
-   - reads both back from `https://download.scout-for-lol.com`;
+   - reads them back from `https://download.scout-for-lol.com`;
    - only then replaces `<channel>.json` (`Cache-Control: no-cache`) under an
      `If-Match` ETag precondition, so a concurrent publisher is refused, and
      reads it back from the public host. Until that last write no client can
      see the release.
-5. Raise the backend's minimum version in Flipt only after the release is
+5. Raise the backend's minimum version in Flipt only after every platform is
    public, when the old builds must update.
 
 Rollback is roll-forward: publish a newer version that contains the fix. A
 channel never serves an older version than a client has.
+
+#### Cutting a macOS release
+
+The lane is `scripts/package-macos.ts`, the codesign, `notarytool`, `stapler`
+and `spctl` sequence of `packages/tasknotes-macos/scripts/release.ts`. Once per
+Mac:
+
+- Install Xcode or the command line tools, and both Rust targets:
+  `mise exec -- rustup target add aarch64-apple-darwin x86_64-apple-darwin`.
+- Install the "Developer ID Application" certificate in the login keychain
+  (`security find-identity -v -p codesigning` lists it).
+- Store a notarization profile:
+  `xcrun notarytool store-credentials <profile> --apple-id <id> --team-id <team>`.
+  It prompts for an app-specific password and keeps it in the keychain; it
+  never goes in a file or this repository.
+
+Then, for each release:
+
+```bash
+export SCOUT_DESKTOP_MAC_TEAM_ID=<team>               # public, not a secret
+export SCOUT_DESKTOP_MAC_NOTARY_PROFILE=<profile>     # a keychain entry's name
+bun run release:package:stable                        # or :beta
+```
+
+The script fails before building when a tool, a Rust target, the team's
+Developer ID identity (exactly one), the notary profile or the update key is
+missing. It then:
+
+1. runs `cargo packager --formats app --target universal-apple-darwin` with
+   the update key and every `APPLE_*` variable removed from its environment,
+   so the packager neither signs nor notarizes on its own.
+   `prepare-package.ts` builds the `aarch64-apple-darwin` and
+   `x86_64-apple-darwin` slices and joins them with `lipo`; the script checks
+   `lipo -archs` reports both;
+2. signs the app with the hardened runtime and a secure timestamp, verifies
+   it, notarizes a `ditto` zip of it (`notarytool submit --wait`), staples the
+   ticket to the app, validates the staple and assesses it with
+   `spctl --type execute`;
+3. archives the stapled app with `tar --no-mac-metadata --no-xattrs --no-acls`
+   (no AppleDouble `._*` entries to break the seal) and signs the archive with
+   `cargo packager signer sign`, then verifies that signature against the
+   channel's public key;
+4. builds the disk image with `hdiutil` (the app and an `Applications` link),
+   signs, notarizes and staples it, and assesses it with `spctl --type open`.
+
+`bun run release:package:stable -- --dry-run` needs no credential: it builds
+the universal app, the archive and an unsigned disk image into
+`dist/<channel>/macos-dry-run/`, which publication never reads, and prints the
+signing and notarization commands instead of running them.
 
 Release objects live in the `scout-desktop` SeaweedFS bucket behind
 `download.scout-for-lol.com` (declared in `packages/homelab`; the bucket and

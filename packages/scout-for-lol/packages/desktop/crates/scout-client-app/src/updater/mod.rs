@@ -9,9 +9,11 @@
 //! pool, never on the UI event loop (the tray owns the main thread) or in the
 //! window process.
 //!
-//! The mechanism is `cargo-packager`'s own: installers are signed with
+//! The mechanism is `cargo-packager`'s own: update artifacts are signed with
 //! `cargo packager` (minisign), and this build verifies them against the
-//! channel's public key compiled in from the release profile. The
+//! channel's public key compiled in from the release profile. Windows updates
+//! from the NSIS installer; macOS from a tar of the notarized `.app` bundle,
+//! which `install::AppBundleInstaller` unpacks over the running bundle. The
 //! `cargo-packager-updater` crate is not used; see the desktop README for why.
 //! [`Updater`] is the seam, so the service logic is tested without a network.
 
@@ -122,13 +124,29 @@ pub trait Updater: Send + Sync + 'static {
     fn install(&self, staged: &StagedUpdate, restart: bool) -> Result<(), UpdateError>;
 }
 
+/// This build's platform and the installer that runs its artifacts, when the
+/// updater can install here.
 #[cfg(windows)]
-fn production_installer() -> Option<Arc<dyn Installer>> {
-    Some(Arc::new(install::NsisInstaller))
+fn production_target() -> Option<(Platform, Arc<dyn Installer>)> {
+    Platform::current().map(|platform| {
+        let installer: Arc<dyn Installer> = Arc::new(install::NsisInstaller);
+        (platform, installer)
+    })
 }
 
-#[cfg(not(windows))]
-fn production_installer() -> Option<Arc<dyn Installer>> {
+/// This build's platform and the installer that runs its artifacts, when the
+/// updater can install here.
+#[cfg(target_os = "macos")]
+fn production_target() -> Option<(Platform, Arc<dyn Installer>)> {
+    Platform::current().map(|platform| {
+        let installer: Arc<dyn Installer> = Arc::new(install::AppBundleInstaller);
+        (platform, installer)
+    })
+}
+
+/// No installer runs on this platform, so the build does not update.
+#[cfg(not(any(windows, target_os = "macos")))]
+fn production_target() -> Option<(Platform, Arc<dyn Installer>)> {
     None
 }
 
@@ -147,8 +165,7 @@ pub fn start_for_this_build(
     if !ReleaseProfile::is_packaged() || server_overridden {
         return None;
     }
-    let platform = Platform::current()?;
-    let installer = production_installer()?;
+    let (platform, installer) = production_target()?;
     let profile = ReleaseProfile::compiled();
     let staging = ProjectDirs::from(
         profile.data_qualifier,

@@ -23,7 +23,39 @@ export type ScoutDesktopUpdateChannel = z.infer<
   typeof ScoutDesktopUpdateChannelSchema
 >;
 
-export const ScoutDesktopUpdateFormatSchema = z.enum(["nsis"]);
+/**
+ * What a platform's update artifact is: `nsis` is the `cargo packager` NSIS
+ * installer (Windows); `app` is a gzipped tar of the signed, notarized and
+ * stapled `.app` bundle (macOS), which the client unpacks in place.
+ */
+export const ScoutDesktopUpdateFormatSchema = z.enum(["nsis", "app"]);
+export type ScoutDesktopUpdateFormat = z.infer<
+  typeof ScoutDesktopUpdateFormatSchema
+>;
+
+/** Platforms the channel ships, each with the one format it installs from. */
+export const ScoutDesktopUpdatePlatformSchema = z.enum([
+  "windows-x86_64",
+  "darwin-universal",
+]);
+export type ScoutDesktopUpdatePlatform = z.infer<
+  typeof ScoutDesktopUpdatePlatformSchema
+>;
+
+const PLATFORM_FORMATS: Record<
+  ScoutDesktopUpdatePlatform,
+  readonly ScoutDesktopUpdateFormat[]
+> = {
+  "windows-x86_64": ["nsis"],
+  "darwin-universal": ["app"],
+};
+
+/** The formats `platform` installs from, as the shared contract lists them. */
+export function scoutDesktopPlatformFormats(
+  platform: ScoutDesktopUpdatePlatform,
+): readonly ScoutDesktopUpdateFormat[] {
+  return PLATFORM_FORMATS[platform];
+}
 
 const VERSION_PATTERN = new RegExp(rawContract.versionPattern, "i");
 const FILE_NAME_PATTERN = new RegExp(rawContract.fileNamePattern);
@@ -130,6 +162,7 @@ export const ScoutDesktopUpdateManifestSchema = z
     notes: z.string().max(rawContract.limits.notesMaxBytes),
     platforms: z.strictObject({
       "windows-x86_64": ScoutDesktopUpdateArtifactSchema.optional(),
+      "darwin-universal": ScoutDesktopUpdateArtifactSchema.optional(),
     }),
   })
   .superRefine((manifest, context) => {
@@ -157,8 +190,16 @@ export const ScoutDesktopUpdateManifestSchema = z
         message: "a release needs at least one platform artifact",
       });
     }
-    for (const [platform, artifact] of artifacts) {
+    for (const [key, artifact] of artifacts) {
       if (artifact === undefined) continue;
+      const platform = ScoutDesktopUpdatePlatformSchema.parse(key);
+      if (!PLATFORM_FORMATS[platform].includes(artifact.format)) {
+        context.addIssue({
+          code: "custom",
+          path: ["platforms", platform, "format"],
+          message: `${platform} installs from ${PLATFORM_FORMATS[platform].join(" or ")}, not ${artifact.format}`,
+        });
+      }
       if (parseArtifactUrl(artifact.url, manifest.version) === undefined) {
         context.addIssue({
           code: "custom",

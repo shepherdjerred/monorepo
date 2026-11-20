@@ -5,7 +5,12 @@
   "releasePath": "/releases/{version}/{file}",
   "channels": ["stable", "beta"],
   "platforms": {
-    "windows-x86_64": { "formats": ["nsis"] }
+    "windows-x86_64": {
+      "formats": ["nsis"]
+    },
+    "darwin-universal": {
+      "formats": ["app"]
+    }
   },
   "versionPattern": "^\\d{1,5}\\.\\d{1,5}\\.\\d{1,5}(?:-[a-z0-9.-]{1,32})?$",
   "publishedAtPattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",

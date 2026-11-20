@@ -27,6 +27,7 @@ directories = "6.0.0"
 eframe = { version = "0.36.2", default-features = false, features = ["accesskit", "default_fonts", "glow", "persistence", "wayland", "x11"] }
 egui = "0.36.2"
 fastrand = "2.5.0"
+flate2 = "1.1.10"
 futures-util = "0.3.31"
 # gpui-kit pins a pre-1.0 GPUI snapshot and ships weekly. All three are exact
 # pins used only by scout-desktop-ui; an upgrade is its own PR, re-checked on
@@ -51,6 +52,7 @@ semver = "1.0.28"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 sha2 = "0.11.0"
+tar = { version = "0.4.46", default-features = false }
 thiserror = "2.0.21"
 tokio = { version = "1.53.2", features = ["fs", "io-util", "macros", "rt-multi-thread", "sync", "time"] }
 tracing = "0.1.44"
