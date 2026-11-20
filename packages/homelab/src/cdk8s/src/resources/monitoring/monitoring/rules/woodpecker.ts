@@ -211,6 +211,25 @@ function attributedPodParentCounter(metric: string): string {
   return withWoodpeckerPodMetadata(podParentCounter(metric));
 }
 
+function podParentPresence(): string {
+  // Linux cgroupv2 (io.stat) emits no container_fs_writes_bytes_total series
+  // until a cgroup performs its first physical block-device write, so zero-write
+  // steps like codex-review-gate never appear in block I/O counters. Parent-cgroup
+  // CPU telemetry exists from pod start and joins the same KSM metadata.
+  return `(
+  ${withWoodpeckerPodMetadata(
+    `max by (namespace, pod, node) (
+    container_cpu_usage_seconds_total{
+      namespace="woodpecker-ci",
+      pod=~"${CI_JOB_POD_PATTERN}",
+      container="",
+      id=~"${CI_POD_PARENT_CGROUP_PATTERN}"
+    }
+  )`,
+  )}
+) * 0 + 1`;
+}
+
 function containerCounter(metric: string): string {
   return withWoodpeckerPodMetadata(
     `max by (namespace, pod, node, container, device) (
@@ -327,7 +346,7 @@ export function getWoodpeckerRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           record: "woodpecker:pod_parent_sample_present",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `${CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC} * 0 + 1`,
+            podParentPresence(),
           ),
         },
       ],
@@ -357,9 +376,9 @@ export function getWoodpeckerRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "WoodpeckerCIIOTelemetryMissing",
           annotations: {
             summary:
-              "A running Woodpecker job pod has no attributed parent-cgroup I/O samples",
+              "A running Woodpecker job pod has no attributed parent-cgroup telemetry",
             description: escapePrometheusTemplate(
-              "Woodpecker pod {{ $labels.pod }} has been running for more than one minute without a unique, metadata-attributed pod-parent filesystem sample.",
+              "Woodpecker pod {{ $labels.pod }} has been running for more than one minute without a unique, metadata-attributed pod-parent cgroup sample.",
             ),
           },
           // Select the running cohort from the pod name itself. Requiring

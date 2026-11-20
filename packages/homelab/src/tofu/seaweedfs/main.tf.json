@@ -128,7 +128,7 @@
         "input": {
           "bucket": "${aws_s3_bucket.ci_handoff.id}",
           "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
-          "expire_days": 30
+          "expire_days": 7
         },
         "provisioner": [
           {

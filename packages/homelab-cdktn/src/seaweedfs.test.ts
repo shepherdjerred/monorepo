@@ -238,7 +238,7 @@ const TERRAFORM_DATA = {
     "expire-streambot-voice-captures",
     "voice-captures/",
   ),
-  ci_handoff_lifecycle: expiry("ci_handoff", 30, "expire-ci-handoff", ""),
+  ci_handoff_lifecycle: expiry("ci_handoff", 7, "expire-ci-handoff", ""),
 };
 
 describe("seaweedfs", () => {

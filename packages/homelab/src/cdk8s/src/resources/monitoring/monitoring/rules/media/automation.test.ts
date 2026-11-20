@@ -1,17 +1,19 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { expect, test } from "vitest";
+import { test } from "vitest";
+import { runPromtoolFixture } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/platform/promtool-fixture.ts";
 import { getMediaRuleGroups } from "./automation.ts";
 
-test("watch alerts distinguish stale evidence from fresh, inactive, and unneeded observations", async () => {
+function requireMediaExpression(alert: string): string {
   const expression = getMediaRuleGroups()
-    .flatMap((group) => {
-      if (group.rules === undefined) throw new Error("Missing media rules");
-      return group.rules;
-    })
-    .find((rule) => rule.alert === "MediaWatchEvidenceStale")?.expr.value;
-  if (expression === undefined) throw new Error("Missing media watch alert");
+    .flatMap((group) => group.rules ?? [])
+    .find((rule) => rule.alert === alert)?.expr.value;
+  if (typeof expression !== "string") {
+    throw new TypeError(`Missing ${alert} expression`);
+  }
+  return expression;
+}
+
+test("watch alerts distinguish stale evidence from fresh, inactive, and unneeded observations", async () => {
+  const expression = requireMediaExpression("MediaWatchEvidenceStale");
   const labels = '{namespace="media",pod="media-api"}';
   const cases = [
     {
@@ -43,47 +45,90 @@ test("watch alerts distinguish stale evidence from fresh, inactive, and unneeded
       expected: [],
     },
   ];
-  const directory = await mkdtemp(path.join(tmpdir(), "media-promql-"));
-  try {
-    const filename = path.join(directory, "tests.json");
-    await Bun.write(
-      filename,
-      JSON.stringify({
-        evaluation_interval: "1m",
-        tests: cases.map((entry) => ({
-          name: entry.name,
-          interval: "1m",
-          input_series: [
-            {
-              series: `media_watch_evidence_oldest_timestamp_seconds${labels}`,
-              values: `${String(entry.timestamp)}+0x20`,
-            },
-            {
-              series: `media_watch_evidence_required${labels}`,
-              values: `${String(entry.required)}+0x20`,
-            },
-            {
-              series: `media_runtime_active${labels}`,
-              values: `${String(entry.active)}+0x20`,
-            },
-          ],
-          promql_expr_test: [
-            { expr: expression, eval_time: "20m", exp_samples: entry.expected },
-          ],
-        })),
-      }),
-    );
-    const process = Bun.spawn(["promtool", "test", "rules", filename], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    const [stdout, stderr, exitCode] = await Promise.all([
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-      process.exited,
-    ]);
-    expect(exitCode, stdout + stderr).toBe(0);
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
+  await runPromtoolFixture({
+    evaluation_interval: "1m",
+    tests: cases.map((entry) => ({
+      name: entry.name,
+      interval: "1m",
+      input_series: [
+        {
+          series: `media_watch_evidence_oldest_timestamp_seconds${labels}`,
+          values: `${String(entry.timestamp)}+0x20`,
+        },
+        {
+          series: `media_watch_evidence_required${labels}`,
+          values: `${String(entry.required)}+0x20`,
+        },
+        {
+          series: `media_runtime_active${labels}`,
+          values: `${String(entry.active)}+0x20`,
+        },
+      ],
+      promql_expr_test: [
+        { expr: expression, eval_time: "20m", exp_samples: entry.expected },
+      ],
+    })),
+  });
+});
+
+test("reconciliation alerts gate on active runtime and collapse pod rollouts to namespace", async () => {
+  const expression = requireMediaExpression(
+    "MediaOperationsNeedReconciliation",
+  );
+  await runPromtoolFixture({
+    evaluation_interval: "1m",
+    tests: [
+      {
+        name: "active runtime across two pods during rollout collapses to one namespace series",
+        interval: "1m",
+        input_series: [
+          {
+            series:
+              'media_operations_reconciling{namespace="media",pod="media-api-old"}',
+            values: "63+0x20",
+          },
+          {
+            series:
+              'media_runtime_active{namespace="media",pod="media-api-old"}',
+            values: "1+0x20",
+          },
+          {
+            series:
+              'media_operations_reconciling{namespace="media",pod="media-api-new"}',
+            values: "63+0x20",
+          },
+          {
+            series:
+              'media_runtime_active{namespace="media",pod="media-api-new"}',
+            values: "1+0x20",
+          },
+        ],
+        promql_expr_test: [
+          {
+            expr: expression,
+            eval_time: "20m",
+            exp_samples: [{ labels: '{namespace="media"}', value: 63 }],
+          },
+        ],
+      },
+      {
+        name: "observe-only runtime suppresses reconciliation alert",
+        interval: "1m",
+        input_series: [
+          {
+            series:
+              'media_operations_reconciling{namespace="media",pod="media-api"}',
+            values: "63+0x20",
+          },
+          {
+            series: 'media_runtime_active{namespace="media",pod="media-api"}',
+            values: "0+0x20",
+          },
+        ],
+        promql_expr_test: [
+          { expr: expression, eval_time: "20m", exp_samples: [] },
+        ],
+      },
+    ],
+  });
 });

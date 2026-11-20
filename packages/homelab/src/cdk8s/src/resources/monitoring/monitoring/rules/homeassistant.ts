@@ -219,7 +219,7 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
       rules: [
         createSensorAlert({
           name: "LitterRobotLitterLow",
-          entity: "trmnl_petcare_litter_percent",
+          entity: "max by (namespace) (trmnl_petcare_litter_percent)",
           condition: "<",
           threshold: 60,
           description: "LR5 globe litter is below 60%: {{ $value }}%.",
@@ -228,14 +228,14 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         expressionAlert({
           name: "LitterRobotWasteHigh",
           expression:
-            "trmnl_petcare_litter_waste_percent > 60 and trmnl_petcare_litter_waste_percent <= 80",
+            "max by (namespace) (trmnl_petcare_litter_waste_percent) > 60 and max by (namespace) (trmnl_petcare_litter_waste_percent) <= 80",
           description: "LR5 waste drawer is above 60%: {{ $value }}%.",
           summary: "Storage LR5 waste drawer high",
           duration: "30m",
         }),
         createSensorAlert({
           name: "LitterRobotWasteCritical",
-          entity: "trmnl_petcare_litter_waste_percent",
+          entity: "max by (namespace) (trmnl_petcare_litter_waste_percent)",
           condition: ">",
           threshold: 80,
           description: "LR5 waste drawer is above 80%: {{ $value }}%.",
@@ -252,7 +252,7 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         expressionAlert({
           name: "LitterRobotHopperLowOrDisconnected",
           expression:
-            'trmnl_petcare_litter_hopper_status{status=~"low|empty|disconnected|unknown"} == 1 and on () trmnl_petcare_litter_source_fresh == 1',
+            'max by (namespace) (trmnl_petcare_litter_hopper_status{status=~"low|empty|disconnected|unknown"}) == 1 and on (namespace) max by (namespace) (trmnl_petcare_litter_source_fresh) == 1',
           description:
             "LR5 hopper is low, empty, disconnected, or reporting an unknown state.",
           summary: "Storage LR5 hopper needs attention",
@@ -260,7 +260,7 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         expressionAlert({
           name: "LitterRobotHopperFault",
           expression:
-            'trmnl_petcare_litter_hopper_status{status=~"jammed|motor-fault|fault"} == 1 and on () trmnl_petcare_litter_source_fresh == 1',
+            'max by (namespace) (trmnl_petcare_litter_hopper_status{status=~"jammed|motor-fault|fault"}) == 1 and on (namespace) max by (namespace) (trmnl_petcare_litter_source_fresh) == 1',
           description: "LR5 hopper reports a jam or explicit fault.",
           summary: "Storage LR5 hopper fault",
           severity: "critical",
@@ -269,7 +269,7 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         expressionAlert({
           name: "LitterRobotFault",
           expression:
-            "(trmnl_petcare_litter_fault == 1 or trmnl_petcare_litter_online == 0 or trmnl_petcare_litter_hopper_installed == 0 or trmnl_petcare_litter_hopper_enabled == 0) and on () trmnl_petcare_litter_source_fresh == 1",
+            'max by (namespace) (trmnl_petcare_litter_fault == 1 or trmnl_petcare_litter_online == 0 or trmnl_petcare_litter_hopper_installed == 0 or trmnl_petcare_litter_hopper_enabled == 0) and on (namespace) max by (namespace) (trmnl_petcare_litter_source_fresh) == 1 unless on () (max(homeassistant_binary_sensor_state{entity="binary_sensor.litter_robot_problem"}) == 1)',
           description:
             "LR5 reports a robot fault, dirty laser, removed bonnet/drawer, offline state, or disabled/missing hopper.",
           summary: "Storage LR5 fault",
@@ -296,7 +296,7 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         expressionAlert({
           name: "LitterRobotFilterOverdue",
           expression:
-            "time() > trmnl_petcare_litter_filter_due_timestamp_seconds",
+            "time() > max by (namespace) (trmnl_petcare_litter_filter_due_timestamp_seconds)",
           description: "The LR5 filter replacement date has passed.",
           summary: "Storage LR5 filter overdue",
           duration: "1h",

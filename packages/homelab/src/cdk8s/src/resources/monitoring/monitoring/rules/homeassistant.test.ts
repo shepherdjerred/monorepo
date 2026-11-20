@@ -63,17 +63,23 @@ describe("Home Assistant rules", () => {
     expect(
       litterRules.find((rule) => rule.alert === "LitterRobotLitterLow")?.expr
         .value,
-    ).toBe("trmnl_petcare_litter_percent < 60");
+    ).toBe("max by (namespace) (trmnl_petcare_litter_percent) < 60");
     expect(
       litterRules.find((rule) => rule.alert === "LitterRobotWasteHigh")?.expr
         .value,
     ).toBe(
-      "trmnl_petcare_litter_waste_percent > 60 and trmnl_petcare_litter_waste_percent <= 80",
+      "max by (namespace) (trmnl_petcare_litter_waste_percent) > 60 and max by (namespace) (trmnl_petcare_litter_waste_percent) <= 80",
     );
     expect(
       litterRules.find((rule) => rule.alert === "LitterRobotWasteCritical")
         ?.expr.value,
-    ).toBe("trmnl_petcare_litter_waste_percent > 80");
+    ).toBe("max by (namespace) (trmnl_petcare_litter_waste_percent) > 80");
+    expect(
+      litterRules.find((rule) => rule.alert === "LitterRobotFilterOverdue")
+        ?.expr.value,
+    ).toBe(
+      "time() > max by (namespace) (trmnl_petcare_litter_filter_due_timestamp_seconds)",
+    );
 
     const feederRules = groups.find(
       (group) => group.name === "homeassistant-petlibro-feeders",
@@ -115,14 +121,16 @@ describe("Home Assistant rules", () => {
       expect(
         litterRules.find((rule) => rule.alert === alert)?.expr.value,
         alert,
-      ).toContain("and on () trmnl_petcare_litter_source_fresh == 1");
+      ).toContain(
+        "and on (namespace) max by (namespace) (trmnl_petcare_litter_source_fresh) == 1",
+      );
     }
 
     const litterFault = litterRules.find(
       (rule) => rule.alert === "LitterRobotFault",
     );
     expect(litterFault?.expr.value).toBe(
-      "(trmnl_petcare_litter_fault == 1 or trmnl_petcare_litter_online == 0 or trmnl_petcare_litter_hopper_installed == 0 or trmnl_petcare_litter_hopper_enabled == 0) and on () trmnl_petcare_litter_source_fresh == 1",
+      'max by (namespace) (trmnl_petcare_litter_fault == 1 or trmnl_petcare_litter_online == 0 or trmnl_petcare_litter_hopper_installed == 0 or trmnl_petcare_litter_hopper_enabled == 0) and on (namespace) max by (namespace) (trmnl_petcare_litter_source_fresh) == 1 unless on () (max(homeassistant_binary_sensor_state{entity="binary_sensor.litter_robot_problem"}) == 1)',
     );
     expect(litterFault?.for).toBe("15m");
 
@@ -330,6 +338,10 @@ describe("Home Assistant rules — environment and automation dependencies", () 
     expect(configuration).toContain(
       "select.dockstream_2_smart_fountain_water_dispensing_mode') != 'Flowing Water (Constant)'",
     );
+    expect(configuration).toContain("has_value('sensor.storage_status_code')");
+    expect(configuration).not.toContain(
+      "if states('sensor.storage_status_code') in ['rdy'",
+    );
   });
 });
 
@@ -531,6 +543,101 @@ describe("Home Assistant pet-care fan-out and feeder battery rules", () => {
               eval_time: "20m",
               exp_samples: [
                 { labels: '{entity="sensor.front_door_battery"}', value: 15 },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
+});
+
+describe("Home Assistant LR5 pod rollout and fault deduplication", () => {
+  test("collapses LR5 pod rollouts by namespace and suppresses LitterRobotFault when HA problem is active", async () => {
+    const litterRules =
+      getHomeAssistantRuleGroups().find(
+        (group) => group.name === "homeassistant-litter-robot",
+      )?.rules ?? [];
+    const faultExpr = litterRules.find(
+      (rule) => rule.alert === "LitterRobotFault",
+    )?.expr.value;
+    const wasteExpr = litterRules.find(
+      (rule) => rule.alert === "LitterRobotWasteCritical",
+    )?.expr.value;
+
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        {
+          interval: "1m",
+          input_series: [
+            {
+              series:
+                'trmnl_petcare_litter_fault{namespace="trmnl-dashboard",pod="pod-a"}',
+              values: "1x20",
+            },
+            {
+              series:
+                'trmnl_petcare_litter_fault{namespace="trmnl-dashboard",pod="pod-b"}',
+              values: "1x20",
+            },
+            {
+              series:
+                'trmnl_petcare_litter_source_fresh{namespace="trmnl-dashboard",pod="pod-a"}',
+              values: "1x20",
+            },
+            {
+              series:
+                'trmnl_petcare_litter_waste_percent{namespace="trmnl-dashboard",pod="pod-a"}',
+              values: "90x20",
+            },
+            {
+              series:
+                'trmnl_petcare_litter_waste_percent{namespace="trmnl-dashboard",pod="pod-b"}',
+              values: "90x20",
+            },
+            {
+              series:
+                'homeassistant_binary_sensor_state{entity="binary_sensor.litter_robot_problem"}',
+              values: "1x20",
+            },
+          ],
+          promql_expr_test: [
+            { expr: faultExpr, eval_time: "20m", exp_samples: [] },
+            {
+              expr: wasteExpr,
+              eval_time: "20m",
+              exp_samples: [
+                { labels: '{namespace="trmnl-dashboard"}', value: 90 },
+              ],
+            },
+          ],
+        },
+        {
+          interval: "1m",
+          input_series: [
+            {
+              series:
+                'trmnl_petcare_litter_hopper_enabled{namespace="trmnl-dashboard",pod="pod-a"}',
+              values: "0x20",
+            },
+            {
+              series:
+                'trmnl_petcare_litter_source_fresh{namespace="trmnl-dashboard",pod="pod-a"}',
+              values: "1x20",
+            },
+            {
+              series:
+                'homeassistant_binary_sensor_state{entity="binary_sensor.litter_robot_problem"}',
+              values: "0x20",
+            },
+          ],
+          promql_expr_test: [
+            {
+              expr: faultExpr,
+              eval_time: "20m",
+              exp_samples: [
+                { labels: '{namespace="trmnl-dashboard"}', value: 0 },
               ],
             },
           ],

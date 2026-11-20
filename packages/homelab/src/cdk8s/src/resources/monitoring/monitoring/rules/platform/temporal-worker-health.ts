@@ -216,10 +216,10 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
             annotations: {
               summary: `Temporal activity poller unavailable for ${definition.queue}`,
               description:
-                "The domain queue has had no activity-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
+                "The domain queue has had neither an idle activity-task poller nor an active activity execution slot for five minutes. Inspect its worker pod and Temporal connectivity.",
             },
             expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-              `(count(sum by (exported_namespace) (temporal_worker_num_pollers{${pollerSelector},poller_type="activity_task"}) > 0) or vector(0)) < ${String(definition.servedNamespaces.length)}`,
+              `(count((sum by (exported_namespace) (temporal_worker_num_pollers{${pollerSelector},poller_type="activity_task"}) > 0) or (sum by (exported_namespace) (temporal_worker_worker_task_slots_used{${pollerSelector},worker_type="ActivityWorker"}) > 0)) or vector(0)) < ${String(definition.servedNamespaces.length)}`,
             ),
             for: "5m",
             labels,

@@ -56,12 +56,12 @@ function lifecycleConfiguration(command: string) {
 }
 
 describe("SeaweedFS ci-handoff bucket", () => {
-  test("expires every object after 30 days", async () => {
+  test("expires every object after 7 days", async () => {
     const resource = await lifecycleResource("ci_handoff_lifecycle");
 
     expect(resource.input["bucket"]).toBe("${aws_s3_bucket.ci_handoff.id}");
-    // Handoffs are build-scoped; 30 days leaves room to inspect a failed run.
-    expect(resource.input["expire_days"]).toBe(30);
+    // Handoffs are build-scoped; 7 days leaves room to inspect a failed run.
+    expect(resource.input["expire_days"]).toBe(7);
     expect(
       lifecycleConfiguration(
         resource.provisioner[0]?.["local-exec"].command ?? "",

@@ -16,26 +16,34 @@ describe("Streambot pipeline alert activity matching", () => {
       alert: "StreambotEncoderStalled",
       metric: 'streambot_ffmpeg_out_time_seconds_total{hardware="true"}',
       values: "0+0x12",
+      companion: {
+        metric: 'streambot_ffmpeg_speed_ratio{hardware="true"}',
+        values: "0+0x12",
+      },
     },
     {
       alert: "StreambotEncoderProducerAhead",
       metric: 'streambot_ffmpeg_speed_ratio{hardware="true"}',
       values: "1.5+0x12",
+      companion: undefined,
     },
     {
       alert: "StreambotEncoderFallingBehind",
       metric: 'streambot_ffmpeg_speed_ratio{hardware="true"}',
       values: "0.5+0x12",
+      companion: undefined,
     },
     {
       alert: "StreambotProgressStalled",
       metric: "streambot_ffmpeg_progress_age_seconds{}",
       values: "10+0x12",
+      companion: undefined,
     },
     {
       alert: "StreambotPlaybackBehindSchedule",
       metric: 'streambot_playback_behind_seconds{kind="video"}',
       values: "2+0x12",
+      companion: undefined,
     },
   ])("$alert handles concurrent segments and idle telemetry", async (entry) => {
     const expression = requireRule(entry.alert).expr.value;
@@ -53,6 +61,16 @@ describe("Streambot pipeline alert activity matching", () => {
               .replace(",}", "}"),
             values: entry.values,
           },
+          ...(entry.companion === undefined
+            ? []
+            : [
+                {
+                  series: entry.companion.metric
+                    .replace("{", '{namespace="media",pod="streambot-active",')
+                    .replace(",}", "}"),
+                  values: entry.companion.values,
+                },
+              ]),
           {
             series:
               'streambot_stream_active{namespace="media",pod="streambot-active"}',
@@ -67,6 +85,71 @@ describe("Streambot pipeline alert activity matching", () => {
           },
         ],
       })),
+    });
+  });
+
+  test("ignores dormant hardware counters during audio-only playback and suppresses ProducerAhead on live streams", async () => {
+    const stalledExpr = requireRule("StreambotEncoderStalled").expr.value;
+    const aheadExpr = requireRule("StreambotEncoderProducerAhead").expr.value;
+    expect(requireRule("StreambotEncoderFallingBehind").for).toBe("2m");
+    expect(requireRule("StreambotPlaybackBehindSchedule").for).toBe("1m");
+    expect(requireRule("StreambotExternalBufferHeavy").for).toBe("5m");
+
+    await runPromtoolFixture({
+      evaluation_interval: "15s",
+      tests: [
+        {
+          interval: "15s",
+          input_series: [
+            {
+              series:
+                'streambot_ffmpeg_out_time_seconds_total{namespace="media",pod="streambot-active",hardware="true"}',
+              values: "3600+0x12",
+            },
+            {
+              series:
+                'streambot_ffmpeg_out_time_seconds_total{namespace="media",pod="streambot-active",hardware="false"}',
+              values: "0+15x12",
+            },
+            {
+              series:
+                'streambot_ffmpeg_speed_ratio{namespace="media",pod="streambot-active",hardware="false"}',
+              values: "1+0x12",
+            },
+            {
+              series:
+                'streambot_stream_active{namespace="media",pod="streambot-active"}',
+              values: "1+0x12",
+            },
+          ],
+          promql_expr_test: [
+            { expr: stalledExpr, eval_time: "2m", exp_samples: [] },
+          ],
+        },
+        {
+          interval: "15s",
+          input_series: [
+            {
+              series:
+                'streambot_ffmpeg_speed_ratio{namespace="media",pod="streambot-active",hardware="true"}',
+              values: "1.5+0x12",
+            },
+            {
+              series:
+                'streambot_stream_active{namespace="media",pod="streambot-active"}',
+              values: "1+0x12",
+            },
+            {
+              series:
+                'streambot_stream_live{namespace="media",pod="streambot-active",hardware="true"}',
+              values: "1+0x12",
+            },
+          ],
+          promql_expr_test: [
+            { expr: aheadExpr, eval_time: "2m", exp_samples: [] },
+          ],
+        },
+      ],
     });
   });
 });

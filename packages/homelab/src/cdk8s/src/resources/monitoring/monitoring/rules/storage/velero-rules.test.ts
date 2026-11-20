@@ -20,15 +20,24 @@ describe("ZFS dataset snapshot count alert", () => {
 });
 
 describe("Velero backup duration alert", () => {
-  it("counts each backup over 30 minutes instead of averaging durations", () => {
-    const expression = alertExpression("VeleroBackupDurationExcessive");
+  it("counts each backup over 60 minutes with namespace label for InfoInhibitor", () => {
+    const rule = getVeleroRuleGroups()
+      .flatMap((group) => group.rules ?? [])
+      .find((candidate) => candidate.alert === "VeleroBackupDurationExcessive");
+    if (rule === undefined)
+      throw new Error("missing VeleroBackupDurationExcessive");
+    const expression = String(rule.expr.value);
 
     expect(expression).toContain(
-      'velero_backup_duration_seconds_bucket{le="1800.0"}',
+      'velero_backup_duration_seconds_bucket{le="3600.0"}',
     );
+    expect(expression).not.toContain('le="1800.0"');
     expect(expression).toContain("velero_backup_duration_seconds_count");
     expect(expression).not.toContain("velero_backup_duration_seconds_sum");
     expect(expression).not.toMatch(/velero_backup_duration_seconds\)/u);
+    expect(rule.labels).toEqual({ severity: "info", namespace: "velero" });
+    expect(rule.annotations?.["message"]).toContain('printf "%.0f"');
+    expect(rule.annotations?.["message"]).toContain("longer than 60 minutes");
   });
 });
 

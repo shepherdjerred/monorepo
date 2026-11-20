@@ -394,13 +394,13 @@ export class SeaweedfsStack extends HomelabStack {
     const ciHandoff = this.bucket("ci-handoff", { adopt: true });
 
     // Every handoff value and artifact tree is build-scoped: steps read only
-    // their own pipeline's keys. Thirty days leaves room to inspect
+    // their own pipeline's keys. Seven days leaves room to inspect
     // a failed run's diagnostics (`toolkit ci analyze` defaults to 72 hours)
     // without letting the bucket grow without bound. Anything that must
     // outlive that belongs in a durable bucket, not here.
     this.expiry("ci_handoff_lifecycle", {
       bucket: ciHandoff,
-      days: 30,
+      days: 7,
       rule: "expire-ci-handoff",
       prefix: "",
     });

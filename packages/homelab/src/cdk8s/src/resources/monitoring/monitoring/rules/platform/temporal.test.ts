@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { runPromtoolFixture } from "./promtool-fixture.ts";
 import { getTemporalRuleGroups } from "./temporal.ts";
 import { TEMPORAL_DOMAIN_QUEUES } from "./temporal-worker-health.ts";
 
@@ -65,8 +66,8 @@ describe("Temporal workflow outcome rules", () => {
         '__name__=~"temporal_worker_workflow_task_execution_failed(_total)?"',
       );
     }
-    expect(expressions.get("TemporalWorkflowNondeterministic")).toContain(
-      'failure_reason="NonDeterminismError"',
+    expect(expressions.get("TemporalWorkflowNondeterministic")).toBe(
+      'sum by (exported_namespace, task_queue, workflow_type) (increase({__name__=~"temporal_worker_workflow_task_execution_failed(_total)?",exported_namespace=~"prod|beta",failure_reason="NonDeterminismError"}[30m])) > 0 or sum by (exported_namespace, task_queue, workflow_type) (increase(service_errors_nondeterministic[30m])) > 0',
     );
     // activity_fail counts only failures that will not be retried;
     // activity_task_fail counts every attempt. It comes from the server, so
@@ -312,6 +313,120 @@ describe("Temporal domain poller scoping", () => {
     expect(
       expressionsFor("TemporalDomainActivityPollerUnavailable", "scout")[0],
     ).toContain('exported_namespace=~"prod|beta"');
+    expect(
+      expressionsFor(
+        "TemporalDomainActivityPollerUnavailable",
+        "maintenance",
+      )[0],
+    ).toBe(
+      '(count((sum by (exported_namespace) (temporal_worker_num_pollers{namespace="woodpecker-ci",exported_namespace=~"prod",task_queue="maintenance",poller_type="activity_task"}) > 0) or (sum by (exported_namespace) (temporal_worker_worker_task_slots_used{namespace="woodpecker-ci",exported_namespace=~"prod",task_queue="maintenance",worker_type="ActivityWorker"}) > 0)) or vector(0)) < 1',
+    );
+  });
+
+  test("treats single-slot activity execution and routine Glitter thread additions as healthy", async () => {
+    const groups = getTemporalRuleGroups();
+    const healthExpr = groups
+      .find((group) => group.name === "temporal-platform-health")
+      ?.rules?.find((rule) => rule.alert === "TemporalWorkflowNondeterministic")
+      ?.expr.value;
+    const maintenanceExpr = groups
+      .find((group) => group.name === "temporal-workflow-failures")
+      ?.rules?.find(
+        (rule) =>
+          rule.alert === "TemporalDomainActivityPollerUnavailable" &&
+          rule.labels?.["task_queue"] === "maintenance",
+      )?.expr.value;
+    const glitterRule = groups
+      .find((group) => group.name === "glitter-discord-corpus")
+      ?.rules?.find(
+        (rule) => rule.alert === "GlitterCorpusInventoryScopeChanged",
+      );
+    expect(glitterRule?.expr.value).toBe(
+      'sum(glitter_corpus_inventory_scope_changes{change=~"removed|scope-decision-changed"}) > 0',
+    );
+    expect(glitterRule?.annotations?.["description"]).toContain(
+      "removed or newly excluded/changed-scope channels/threads",
+    );
+
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        {
+          interval: "1m",
+          input_series: [
+            {
+              series:
+                'temporal_worker_num_pollers{namespace="woodpecker-ci",exported_namespace="prod",task_queue="maintenance",poller_type="activity_task"}',
+              values: "0x10",
+            },
+            {
+              series:
+                'temporal_worker_worker_task_slots_used{namespace="woodpecker-ci",exported_namespace="prod",task_queue="maintenance",worker_type="ActivityWorker"}',
+              values: "1x10",
+            },
+            {
+              series: 'glitter_corpus_inventory_scope_changes{change="added"}',
+              values: "4x10",
+            },
+            {
+              series:
+                'temporal_worker_workflow_task_execution_failed_total{exported_namespace="prod",task_queue="monorepo-workflows",workflow_type="photonConversationWorkflow",failure_reason="NonDeterminismError",pod="retained-a"}',
+              values: "0 1 1 1 1 1 1 1 1 1",
+            },
+            {
+              series:
+                'temporal_worker_workflow_task_execution_failed_total{exported_namespace="prod",task_queue="monorepo-workflows",workflow_type="photonConversationWorkflow",failure_reason="NonDeterminismError",pod="retained-b"}',
+              values: "0 0 0 0 1 1 1 1 1 1",
+            },
+          ],
+          promql_expr_test: [
+            { expr: maintenanceExpr, eval_time: "9m", exp_samples: [] },
+            {
+              expr: glitterRule?.expr.value,
+              eval_time: "9m",
+              exp_samples: [],
+            },
+            {
+              expr: `count(${String(healthExpr)})`,
+              eval_time: "9m",
+              exp_samples: [{ labels: "{}", value: 1 }],
+            },
+          ],
+        },
+        {
+          interval: "1m",
+          input_series: [
+            {
+              series:
+                'temporal_worker_num_pollers{namespace="woodpecker-ci",exported_namespace="prod",task_queue="maintenance",poller_type="activity_task"}',
+              values: "0x10",
+            },
+            {
+              series:
+                'temporal_worker_worker_task_slots_used{namespace="woodpecker-ci",exported_namespace="prod",task_queue="maintenance",worker_type="ActivityWorker"}',
+              values: "0x10",
+            },
+            {
+              series:
+                'glitter_corpus_inventory_scope_changes{change="removed"}',
+              values: "1x10",
+            },
+          ],
+          promql_expr_test: [
+            {
+              expr: maintenanceExpr,
+              eval_time: "9m",
+              exp_samples: [{ labels: "{}", value: 0 }],
+            },
+            {
+              expr: glitterRule?.expr.value,
+              eval_time: "9m",
+              exp_samples: [{ labels: "{}", value: 1 }],
+            },
+          ],
+        },
+      ],
+    });
   });
 });
 
