@@ -1574,7 +1574,11 @@ refreshed every six-hour due sweep. Any other owned title is queued for the same
 existing titles are backfilled; an empty observation counts, so a title TMDB has
 no images for is not asked about again. Each 50-row due page queues at most ten
 titles for artwork alone, so a first backfill adds at most one refresh for every
-five rows a sweep visits, and any one page is cleared within five sweeps.
+five rows a sweep visits. That budget rotates with the six-hour period: the page
+is scanned as a ring from a start that advances ten rows each period, so every
+waiting title is tried at least once in any five consecutive periods. A title
+whose refresh keeps failing, such as one TMDB has removed, stays unobserved and
+is retried on its turn, but it cannot keep the titles after it from theirs.
 
 The owner numbering API reads `GET /api/v1/admin/numbering/series/:id/groups`
 and `GET /api/v1/admin/numbering/series/:id/groups/:groupId`. Only a listed TMDB

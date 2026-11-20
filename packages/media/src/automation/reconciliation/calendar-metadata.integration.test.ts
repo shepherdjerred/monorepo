@@ -1,9 +1,10 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
 import { createCatalogActivities } from "./catalog.ts";
 import { createSweepActivities } from "#automation/sweeps.ts";
 
 const harness = automationTestHarness();
+const SIX_HOURS = 21_600_000;
 
 test("movie calendar refresh is retry-safe information only and preserves passive file authority", async () => {
   const db = harness.database();
@@ -287,14 +288,13 @@ test("an owned title nobody keeps or follows is refreshed each period until its 
   expect(await refreshesQueued(media.id)).toBe(queued);
 });
 
-test("a first artwork backfill is bounded per page, never displaces a kept title, and finishes in later periods", async () => {
+test("a first artwork backfill is bounded per page, never displaces a kept title, and titles that keep failing cannot hold the budget", async () => {
   const db = harness.database();
   // Everything earlier tests left behind has been observed.
   await db.mediaItem.updateMany({
     where: { artworkObservedAt: null },
     data: { artworkObservedAt: new Date() },
   });
-  await nextSweepPeriod();
   const backlog: { id: string }[] = [];
   for (let index = 0; index < 12; index++)
     backlog.push(
@@ -321,32 +321,37 @@ test("a first artwork backfill is bounded per page, never displaces a kept title
     },
   });
   expect(await db.mediaItem.count()).toBeLessThanOrEqual(50);
-  const queuedFrom = async () => {
-    const targets = await db.operation.findMany({
+  // The budget's start rotates with the six-hour period. Begin at a period
+  // whose turn starts at the first row of the page.
+  const period = Math.ceil(Date.now() / SIX_HOURS / 5) * 5;
+  const clock = vi.spyOn(Date, "now");
+  const sweepIn = async (index: number) => {
+    clock.mockReturnValue(index * SIX_HOURS + 1);
+    await sweepDuePage();
+    const queued = await db.operation.findMany({
       where: {
         kind: "refresh_catalog",
-        targetId: { in: backlog.map((item) => item.id) },
+        idempotencyKey: { endsWith: `:${String(index)}` },
       },
       select: { targetId: true },
     });
-    return targets
-      .flatMap((operation) =>
-        operation.targetId === null ? [] : [operation.targetId],
-      )
-      .sort();
+    return new Set(queued.map((operation) => operation.targetId));
   };
-  await sweepDuePage();
-  expect(await queuedFrom()).toEqual(
-    backlog.slice(0, 10).map((item) => item.id),
-  );
-  expect(await refreshesQueued(kept.id)).toBe(1);
-  // The first ten are observed by their refreshes; the rest follow next period.
-  await db.mediaItem.updateMany({
-    where: { id: { in: await queuedFrom() } },
-    data: { artworkObservedAt: new Date() },
-  });
-  await nextSweepPeriod();
-  await sweepDuePage();
-  expect(await queuedFrom()).toEqual(backlog.map((item) => item.id));
-  expect(await refreshesQueued(kept.id)).toBe(2);
+  try {
+    const first = await sweepIn(period);
+    expect(backlog.filter((item) => first.has(item.id))).toEqual(
+      backlog.slice(0, 10),
+    );
+    expect(first.has(kept.id)).toBe(true);
+    // Not one of those ten refreshes succeeds, so all ten are still
+    // unobserved. The two titles after them must still get their turn.
+    const second = await sweepIn(period + 1);
+    expect(backlog.filter((item) => second.has(item.id))).toEqual([
+      ...backlog.slice(0, 8),
+      ...backlog.slice(10),
+    ]);
+    expect(second.has(kept.id)).toBe(true);
+  } finally {
+    clock.mockRestore();
+  }
 });
