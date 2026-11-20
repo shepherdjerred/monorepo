@@ -51,6 +51,7 @@
     "fast-xml-parser": "5.11.1",
     "@aws-sdk/client-s3": "^3.1001.0",
     "@openai/agents": "0.20.0",
+    "posthog-node": "^5.39.4",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.223.0",
     "@opentelemetry/core": "^2.12.0",

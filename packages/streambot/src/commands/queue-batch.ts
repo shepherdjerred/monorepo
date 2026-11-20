@@ -210,5 +210,7 @@ class QueueBatch {
   }
 }
 export function queueBatch(input: BatchInput): Promise<{ message: string }> {
-  return observePlay(input, () => new QueueBatch(input).run());
+  return observePlay(input, () => new QueueBatch(input).run(), {
+    batch: true,
+  });
 }

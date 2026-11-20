@@ -10,6 +10,12 @@ const AnalyticsRegistrySchema = z.object({
   ),
 });
 
+/** The shared PostHog capture destination for server-side events that belong to no site. */
+export function analyticsCaptureDestination() {
+  const registry = AnalyticsRegistrySchema.parse(analyticsRegistryJson);
+  return { projectToken: registry.projectToken, apiHost: registry.apiHost };
+}
+
 /** Public capture bootstrap shared by hosted applications; never an operator API key. */
 export function siteAnalyticsConfiguration(siteKey: string) {
   const registry = AnalyticsRegistrySchema.parse(analyticsRegistryJson);

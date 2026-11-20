@@ -159,6 +159,26 @@ in-memory map evicted by size, not by timers),
 `web login` log lines and the `streambot.web.request`/`streambot.web.command`
 spans share that trace id.
 
+### Usage analytics
+
+When the Flipt flag `streambot-usage-analytics-enabled` is on (default on),
+Streambot sends pseudonymous usage events to PostHog Cloud:
+`streambot_play_requested` (surface, outcome, placement, batch, web-only
+selection kind), `streambot_command_used` (web action, outcome, code; plays are
+covered by the play event), `streambot_web_signed_in`,
+`streambot_search_performed` (source, had_results, latency bucket),
+`streambot_station_started` (kind, scope), and `streambot_playlist_action`
+(action). Properties are closed sets, booleans or buckets. The distinct id is a
+random UUID minted per Discord user and stored only in
+`$STATE_DIR/streambot-analytics.sqlite`; the mapping never leaves the process,
+and no Discord id, name, guild, channel, title, query or URL is ever sent.
+`/api/me` exposes the same UUID as `analyticsId` for a later browser tracker.
+Captures are counted in `streambot_analytics_events_total{event,outcome}`
+(`captured|dropped|disabled|failed`), never block or alter a request, and are
+flushed on graceful shutdown. The public project token and host come from
+`POSTHOG_PROJECT_TOKEN` and `POSTHOG_API_HOST` (set by the homelab chart);
+startup fails when the flag is on and they are absent.
+
 ## Music discovery and playlists
 
 `/music search`, `/music artist`, and `/music album` browse the MusicBrainz

@@ -113,6 +113,15 @@ const DEFINITION = {
       env: "STREAMER_RECONNECT_MAX_ATTEMPTS",
     },
   },
+  usageAnalyticsEnabled: {
+    schema: DynamicBooleanSchema,
+    sources: ["flag", "env", "default"],
+    default: true,
+    names: {
+      flag: "streambot-usage-analytics-enabled",
+      env: "USAGE_ANALYTICS_ENABLED",
+    },
+  },
   playerCardTickMs: {
     schema: z.coerce.number().int().nonnegative(),
     sources: ["flag", "env", "default"],
@@ -178,6 +187,7 @@ function buildSnapshot(
           reconnectEnabled: "boolean",
           reconnectDelaySeconds: "number",
           reconnectMaxAttempts: "number",
+          usageAnalyticsEnabled: "boolean",
           playerCardTickMs: "number",
           playerCardRepostAfterMessages: "number",
           idleTimeoutSeconds: "number",
@@ -208,6 +218,7 @@ export type DynamicConfigSeed = {
   readonly reconnectEnabled?: boolean;
   readonly reconnectDelaySeconds?: number;
   readonly reconnectMaxAttempts?: number;
+  readonly usageAnalyticsEnabled?: boolean;
   readonly playerCardTickMs?: number;
   readonly playerCardRepostAfterMessages?: number;
   readonly idleTimeoutSeconds?: number;
@@ -228,6 +239,7 @@ export function dynamicConfigSeed(config: Config): DynamicConfigSeed {
     reconnectEnabled: config.reconnect.enabled,
     reconnectDelaySeconds: config.reconnect.delaySeconds,
     reconnectMaxAttempts: config.reconnect.maxAttempts,
+    usageAnalyticsEnabled: config.analytics.enabled,
     playerCardTickMs: config.playerCard.tickMs,
     playerCardRepostAfterMessages: config.playerCard.repostAfterMessages,
     idleTimeoutSeconds: config.idleTimeoutSeconds,
@@ -246,6 +258,7 @@ function applySnapshot(config: Config): void {
   config.reconnect.enabled = snapshot.get("reconnectEnabled");
   config.reconnect.delaySeconds = snapshot.get("reconnectDelaySeconds");
   config.reconnect.maxAttempts = snapshot.get("reconnectMaxAttempts");
+  config.analytics.enabled = snapshot.get("usageAnalyticsEnabled");
   config.playerCard.tickMs = snapshot.get("playerCardTickMs");
   config.playerCard.repostAfterMessages = snapshot.get(
     "playerCardRepostAfterMessages",

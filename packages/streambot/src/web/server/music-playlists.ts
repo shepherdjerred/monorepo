@@ -10,6 +10,7 @@ import type {
   PlaylistViewer,
   PlaylistContent,
 } from "@shepherdjerred/streambot/music/playlists.ts";
+import { usageAnalytics } from "@shepherdjerred/streambot/observability/product-analytics.ts";
 import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
 import { CommandSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { WebMusicOwner } from "./music-owner.ts";
@@ -277,6 +278,18 @@ export class WebPlaylists {
     if (request.method !== "POST")
       throw new WebError(405, "method", "This method is not supported.");
     const input = await readRequestInput(PlaylistMutationSchema, request);
+    const response = await this.mutate(input, request, session);
+    usageAnalytics().capture(session.identity.userId, {
+      event: "streambot_playlist_action",
+      properties: { action: input.action },
+    });
+    return response;
+  }
+  private async mutate(
+    input: z.infer<typeof PlaylistMutationSchema>,
+    request: Request,
+    session: WebSession,
+  ) {
     await this.music.require(session, input.guildId, "playlists");
     const viewer = this.viewer(session, input.guildId);
     if (input.action === "create")

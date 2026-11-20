@@ -17,7 +17,13 @@ import {
 import { MusicAlbumSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { fixtureMusic, ALBUM } from "#music-fixture";
 import { LibraryPageSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
-import { CHANNEL, GUILD, USER, webFixture } from "./web-fixture.ts";
+import {
+  CHANNEL,
+  GUILD,
+  USER,
+  discordLogin,
+  webFixture,
+} from "./web-fixture.ts";
 import { fixtureSports } from "./web-fixture-media.ts";
 
 const USERNAME = "telemetry-private-username";
@@ -100,23 +106,7 @@ function get(path: string) {
 }
 
 async function login() {
-  const start = await fixture.handler(
-    new Request("http://127.0.0.1:8080/api/auth/discord/start"),
-  );
-  const state = new URL(start.headers.get("location") ?? "").searchParams.get(
-    "state",
-  );
-  const cookie = start.headers
-    .getSetCookie()
-    .map((value) => value.split(";")[0])
-    .join("; ");
-  return await fixture.handler(
-    new Request(
-      "http://127.0.0.1:8080/api/auth/discord/callback?code=fixture&state=" +
-        String(state),
-      { headers: { cookie } },
-    ),
-  );
+  return await discordLogin(fixture.handler);
 }
 
 async function json(response: Response): Promise<unknown> {

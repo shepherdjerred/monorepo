@@ -297,8 +297,10 @@ async function runPlaylist(
     AbortSignal.timeout(PLAYLIST_TIMEOUT_MS),
   );
   if (deps.routePlayback !== undefined) {
-    await observePlay({ surface: "slash" }, () =>
-      runAutomaticPlaylist(input, items),
+    await observePlay(
+      { surface: "slash", userId: interaction.userId, placement },
+      () => runAutomaticPlaylist(input, items),
+      { batch: true },
     );
     return;
   }

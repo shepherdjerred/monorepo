@@ -3506,6 +3506,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-usage-analytics-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-dynamic",
+      "purpose": "Send pseudonymous Streambot usage events (entry point, outcome, closed categories; never Discord identity or content) to PostHog.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-radio-enabled",
       "owner": "streambot",
       "namespace": "streambot",

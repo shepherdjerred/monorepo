@@ -23,6 +23,8 @@ export const MeSchema = z.strictObject({
   user: IdentitySchema,
   guilds: z.array(GuildSchema),
   csrfToken: z.string(),
+  /** Random pseudonym for usage analytics; `null` only when the id store is full. */
+  analyticsId: z.uuid().nullable(),
 });
 export const LibraryItemSchema = z.strictObject({
   id: z.string(),
