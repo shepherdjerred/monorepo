@@ -41,6 +41,11 @@ if (
 }
 const stableMacSha256 = stableMac.sha256;
 
+const withEntry = (entry: Record<string, unknown>) => ({
+  ...stable,
+  platforms: { "windows-x86_64": { ...stableWindows, ...entry } },
+});
+
 const PlatformKeys = z.looseObject({
   platforms: z.record(z.string(), z.unknown()).optional(),
 });
@@ -128,6 +133,24 @@ describe("Scout desktop update manifest contract", () => {
     expect(() =>
       readScoutDesktopUpdateManifest(major?.body, "windows-x86_64"),
     ).toThrow(ScoutDesktopUnsupportedSchemaError);
+  });
+
+  test("an additive field does not exempt an own entry from the other rules", () => {
+    expect(() =>
+      readScoutDesktopUpdateManifest(
+        withEntry({ format: "app", metadata: 1 }),
+        "windows-x86_64",
+      ),
+    ).toThrow(/installs from nsis/);
+    expect(() =>
+      readScoutDesktopUpdateManifest(
+        withEntry({
+          url: "https://example.com/releases/0.2.0/a.exe",
+          metadata: 1,
+        }),
+        "windows-x86_64",
+      ),
+    ).toThrow(/artifact url/);
   });
 
   test("a client ignores a malformed entry for a platform it does not run on", () => {

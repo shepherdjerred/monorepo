@@ -211,7 +211,7 @@ function refineManifest(
     });
   }
   for (const platform of check) {
-    const artifact = ScoutDesktopUpdateArtifactSchema.safeParse(
+    const artifact = ScoutDesktopUpdateArtifactLooseSchema.safeParse(
       manifest.platforms[platform],
     );
     if (!artifact.success) continue;
