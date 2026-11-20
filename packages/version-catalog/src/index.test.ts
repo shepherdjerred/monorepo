@@ -150,6 +150,22 @@ describe("Delivery component naming", () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
+  test("every committed component image pins a release tag, never a moving one", () => {
+    // Delivery keys an upstream artifact by its tag and refuses a second
+    // digest for the same tag, so a moving tag stops publication at its
+    // first digest refresh.
+    const moving = componentEntries(parseVersionCatalog(rawCatalog))
+      .filter((entry) => entry.artifactType === "image")
+      .filter((entry) => {
+        const [tag = ""] = entry.value.split("@");
+        return (
+          !/\d/u.test(tag) || /^(?:latest|stable|edge|main|master)$/u.test(tag)
+        );
+      })
+      .map((entry) => entry.name);
+    expect(moving).toEqual([]);
+  });
+
   test("a GitHub source is an archive of its tagged commit, named by its repository", () => {
     const source = {
       name: "adyanth/cloudflare-operator",
