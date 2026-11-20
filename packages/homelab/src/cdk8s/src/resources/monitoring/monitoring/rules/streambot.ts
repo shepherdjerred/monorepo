@@ -249,6 +249,54 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
         },
+        // --- web remote --------------------------------------------------------------
+        // Each rule carries a minimum-volume floor so one failed request on a quiet evening
+        // cannot fire it. Client aborts are excluded from every denominator.
+        {
+          alert: "StreambotWebServerErrors",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            '((sum(increase(streambot_web_requests_total{status_class="5xx"}[15m])) or vector(0)) + (sum(increase(streambot_web_requests_total{code="unavailable",status_class!~"5xx|aborted"}[15m])) or vector(0))) / sum(increase(streambot_web_requests_total{status_class!="aborted"}[15m])) > 0.05 and sum(increase(streambot_web_requests_total{status_class!="aborted"}[15m])) >= 50',
+          ),
+          for: "5m",
+          labels: { severity: "warning", category: "web" },
+          annotations: {
+            summary:
+              "More than 5% of Streambot web requests failed with a server error",
+            description: escapePrometheusTemplate(
+              "At least 50 web API requests arrived in 15 minutes and more than 5% returned 5xx or an `unavailable` failure. Open the Streambot Web Remote dashboard (uid streambot-web), read the error rate by code, then follow the reference id of a failing request into Tempo and Loki as described in the wiki how-to diagnose-streambot-web.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotWebTimeToPlaybackSlow",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "histogram_quantile(0.95, sum by (transport, le) (rate(streambot_web_time_to_playback_seconds_bucket[30m]))) > 20 and on (transport) sum by (transport) (increase(streambot_web_time_to_playback_seconds_count[30m])) >= 10",
+          ),
+          for: "10m",
+          labels: { severity: "warning", category: "web" },
+          annotations: {
+            summary:
+              "Streambot web play commands take more than 20 seconds to start streaming (p95)",
+            description: escapePrometheusTemplate(
+              "The p95 time from an accepted web play command to the item streaming exceeded 20 seconds for transport {{ $labels.transport }}, with at least 10 starts in 30 minutes. Compare the dashboard's time-to-playback and search-latency panels, then check the pipeline-health alerts above for encoder or voice-session trouble.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotMusicSearchProviderFailing",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum by (provider) (increase(streambot_music_provider_requests_total{operation!="parser",outcome=~"unavailable|timeout|error"}[30m])) / sum by (provider) (increase(streambot_music_provider_requests_total{operation!="parser",outcome!="aborted"}[30m])) > 0.5 and sum by (provider) (increase(streambot_music_provider_requests_total{operation!="parser",outcome!="aborted"}[30m])) >= 20',
+          ),
+          for: "10m",
+          labels: { severity: "warning", category: "web" },
+          annotations: {
+            summary:
+              "A Streambot music search provider is failing more than half its calls",
+            description: escapePrometheusTemplate(
+              "Provider {{ $labels.provider }} returned unavailable, timeout or error for more than 50% of at least 20 calls in 30 minutes. Search results for its kinds are degraded or empty. Check the dashboard's music provider panels and the provider's upstream status.",
+            ),
+          },
+        },
         // --- viewer-side symptoms ----------------------------------------------------
         {
           alert: "StreambotLateFramesElevated",

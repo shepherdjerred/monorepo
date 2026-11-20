@@ -2442,6 +2442,346 @@
             "yAxisScaleType": "linear"
           }
         }
+      },
+      "streambot_commands_by_action": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "action",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_command_used",
+              "kind": "EventsNode",
+              "name": "streambot_command_used"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_playlist_actions": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "action",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_playlist_action",
+              "kind": "EventsNode",
+              "name": "streambot_playlist_action"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_plays_by_placement": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "placement",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_play_requested",
+              "kind": "EventsNode",
+              "name": "streambot_play_requested"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_plays_by_selection_kind": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "selection_kind",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_play_requested",
+              "kind": "EventsNode",
+              "name": "streambot_play_requested"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_plays_by_surface": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "surface",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_play_requested",
+              "kind": "EventsNode",
+              "name": "streambot_play_requested"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_search_to_play": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": { "date_from": "-90d", "explicitDate": false },
+          "filterTestAccounts": false,
+          "funnelsFilter": {
+            "funnelOrderType": "ordered",
+            "funnelStepReference": "total",
+            "funnelVizType": "steps",
+            "funnelWindowInterval": 30,
+            "funnelWindowIntervalUnit": "minute"
+          },
+          "kind": "FunnelsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_search_performed",
+              "kind": "EventsNode",
+              "name": "streambot_search_performed"
+            },
+            {
+              "event": "streambot_play_requested",
+              "kind": "EventsNode",
+              "name": "streambot_play_requested"
+            }
+          ]
+        }
+      },
+      "streambot_sign_ins": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_web_signed_in",
+              "kind": "EventsNode",
+              "name": "streambot_web_signed_in"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsLineGraph",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_station_starts_by_kind": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": { "breakdown": "kind", "breakdown_type": "event" },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_station_started",
+              "kind": "EventsNode",
+              "name": "streambot_station_started"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_station_starts_by_scope": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "scope",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_station_started",
+              "kind": "EventsNode",
+              "name": "streambot_station_started"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_weekly_active_users": {
+        "kind": "InsightVizNode",
+        "source": {
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [
+            {
+              "key": "app",
+              "operator": "exact",
+              "type": "event",
+              "value": ["streambot"]
+            }
+          ],
+          "series": [
+            {
+              "event": null,
+              "kind": "EventsNode",
+              "math": "dau",
+              "name": "All events"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsLineGraph",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
       }
     },
     "storm_metrics": {
@@ -2568,6 +2908,13 @@
         "deleted": false,
         "description": "Private Minecraft product metrics for The Storm. Production human players only. Named Minecraft identities; no chat, commands, IP addresses or replay.",
         "name": "The Storm — Product Metrics",
+        "pinned": false,
+        "project_id": "549883"
+      },
+      "streambot_usage": {
+        "deleted": false,
+        "description": "How the Streambot web remote is used: weekly active users, plays by surface and placement, commands by action, search-to-play conversion, station starts, playlist actions, and sign-ins.",
+        "name": "Streambot Usage",
         "pinned": false,
         "project_id": "549883"
       }
@@ -3262,6 +3609,86 @@
         "name": "${each.value.name}",
         "project_id": "549883",
         "query_json": "${jsonencode({ kind = \"DataVisualizationNode\", display = each.value.display, source = { kind = \"HogQLQuery\", query = each.value.query, filters = { dateRange = { date_from = \"-90d\", date_to = null } } } })}"
+      },
+      "streambot_commands_by_action": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Which remote controls people use.",
+        "name": "Remote commands by action (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_commands_by_action\"])}"
+      },
+      "streambot_playlist_actions": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Playlist changes by action.",
+        "name": "Playlist actions (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_playlist_actions\"])}"
+      },
+      "streambot_plays_by_placement": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Whether a play request queued, played next, or played now.",
+        "name": "Play requests by placement (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_plays_by_placement\"])}"
+      },
+      "streambot_plays_by_selection_kind": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "The kind of item each play request selected.",
+        "name": "Play requests by selection kind (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_plays_by_selection_kind\"])}"
+      },
+      "streambot_plays_by_surface": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Play requests by entry point: web, slash command, message, voice, or card.",
+        "name": "Play requests by surface (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_plays_by_surface\"])}"
+      },
+      "streambot_search_to_play": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Searches followed by a play request within 30 minutes.",
+        "name": "Search to play conversion",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_search_to_play\"])}"
+      },
+      "streambot_sign_ins": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Successful Discord sign-ins to the web remote.",
+        "name": "Sign-ins (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_sign_ins\"])}"
+      },
+      "streambot_station_starts_by_kind": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Radio and TV station starts.",
+        "name": "Station starts by kind (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_station_starts_by_kind\"])}"
+      },
+      "streambot_station_starts_by_scope": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "The scope each station start was seeded from.",
+        "name": "Station starts by scope (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_station_starts_by_scope\"])}"
+      },
+      "streambot_weekly_active_users": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Distinct pseudonymous users with any Streambot web event, per week.",
+        "name": "Weekly active users",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_weekly_active_users\"])}"
       }
     },
     "posthog_organization_member": {
