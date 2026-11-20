@@ -655,20 +655,22 @@ it("promotes and demotes unpinned issues across the 8-vote and 25-vote threshold
   expect(pinned).toMatchObject({ priority: 4, priorityManual: true });
   expect(untriaged.priority).toBe(0);
 
-  for (let index = 0; index < 2; index += 1) {
-    await caller.votes.cast({
-      actor: thresholdVoter(index),
-      identifier: unpinned.identifier,
-    });
-    await caller.votes.cast({
-      actor: thresholdVoter(index),
-      identifier: pinned.identifier,
-    });
-    await caller.votes.cast({
-      actor: thresholdVoter(index),
-      identifier: untriaged.identifier,
-    });
-  }
+  const castForAll = async (fromIndex: number, toExclusive: number) => {
+    for (let index = fromIndex; index < toExclusive; index += 1) {
+      for (const identifier of [
+        unpinned.identifier,
+        pinned.identifier,
+        untriaged.identifier,
+      ]) {
+        await caller.votes.cast({
+          actor: thresholdVoter(index),
+          identifier,
+        });
+      }
+    }
+  };
+
+  await castForAll(0, 2);
   expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
     voteCount: 2,
     priority: 4,
@@ -679,20 +681,7 @@ it("promotes and demotes unpinned issues across the 8-vote and 25-vote threshold
   });
 
   // 3rd vote boosts low/low from 4 -> 3 (Medium) and self-escalates untriaged from 0 -> 3.
-  for (let index = 2; index < 7; index += 1) {
-    await caller.votes.cast({
-      actor: thresholdVoter(index),
-      identifier: unpinned.identifier,
-    });
-    await caller.votes.cast({
-      actor: thresholdVoter(index),
-      identifier: pinned.identifier,
-    });
-    await caller.votes.cast({
-      actor: thresholdVoter(index),
-      identifier: untriaged.identifier,
-    });
-  }
+  await castForAll(2, 7);
   expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
     voteCount: 7,
     priority: 3,
@@ -705,18 +694,7 @@ it("promotes and demotes unpinned issues across the 8-vote and 25-vote threshold
   });
 
   // 8th vote promotes both unpinned low/low and untriaged to High (2); pinned stays 4.
-  await caller.votes.cast({
-    actor: thresholdVoter(7),
-    identifier: unpinned.identifier,
-  });
-  await caller.votes.cast({
-    actor: thresholdVoter(7),
-    identifier: pinned.identifier,
-  });
-  await caller.votes.cast({
-    actor: thresholdVoter(7),
-    identifier: untriaged.identifier,
-  });
+  await castForAll(7, 8);
   expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
     voteCount: 8,
     priority: 2,
