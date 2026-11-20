@@ -653,7 +653,7 @@ impl ChatSession {
 
     /// Begin the turn Scout asks for itself. Returns the `runs/start-app` body,
     /// or none when a turn cannot start now (chat is gated or another turn is
-    /// running); the planner has counted it, so it is not asked again.
+    /// running). The supervisor does not offer one while a player turn runs.
     ///
     /// A select's or game's first turn opens its own conversation and shows
     /// it; later turns for the same one continue it while it is still open.

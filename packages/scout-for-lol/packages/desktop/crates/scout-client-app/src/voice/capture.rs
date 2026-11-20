@@ -4,9 +4,12 @@
 //! player said the wake word or held push-to-talk. This is the one place in
 //! the workspace that marks such a recording as the player's own
 //! ([`PlayerAuthored::from_voice_capture`]); a test in `scout-explore-client`
-//! holds it to this file. Only a turn built here may carry the live game.
+//! holds it to this file. Only a turn built here may carry the live game, and
+//! one spoken in champion select carries what the select shows, as a typed
+//! question does.
 
 use scout_client_core::coach_context::GameContext;
+use scout_client_core::live::champ_select::ChampSelectSnapshot;
 use scout_client_core::live::snapshot::LiveSnapshot;
 use scout_explore_client::PlayerAuthored;
 use scout_explore_client::voice::{Utterance, VoiceTrigger};
@@ -21,7 +24,8 @@ pub struct SpokenTurn {
     pub trigger: VoiceTrigger,
     /// The conversation to continue; none starts a new one.
     pub conversation_id: Option<Uuid>,
-    /// The game in progress, allowlisted and validated.
+    /// The game in progress, or the champion-select screen, allowlisted and
+    /// validated.
     pub game: Option<GameContext>,
 }
 
@@ -38,6 +42,18 @@ fn live_game(snapshot: &LiveSnapshot) -> Option<GameContext> {
     }
 }
 
+/// The champion-select screen as the coach contract carries it, or none when
+/// this screen breaks a bound Scout would refuse, so the question still goes.
+fn champ_select_game(snapshot: &ChampSelectSnapshot) -> Option<GameContext> {
+    match GameContext::champ_select(snapshot) {
+        Ok(game) => Some(game),
+        Err(error) => {
+            tracing::warn!(%error, "asking without the champion select");
+            None
+        }
+    }
+}
+
 /// Turn what the microphone engine recorded into a question.
 ///
 /// # Errors
@@ -48,6 +64,7 @@ pub fn spoken_turn(
     recorded: &scout_voice::Utterance,
     conversation_id: Option<Uuid>,
     live: Option<&LiveSnapshot>,
+    champ_select: Option<&ChampSelectSnapshot>,
 ) -> Result<SpokenTurn, String> {
     let wav = recorded
         .to_wav()
@@ -62,7 +79,9 @@ pub fn spoken_turn(
         utterance: PlayerAuthored::from_voice_capture(utterance),
         trigger,
         conversation_id,
-        game: live.and_then(live_game),
+        game: live
+            .and_then(live_game)
+            .or_else(|| champ_select.and_then(champ_select_game)),
     })
 }
 
@@ -86,12 +105,17 @@ mod tests {
     #[test]
     fn a_recording_becomes_a_checked_wav_with_its_trigger() -> Result<(), String> {
         let conversation = Uuid::from_u128(7);
-        let turn = spoken_turn(&recorded(2, Trigger::PushToTalk), Some(conversation), None)?;
+        let turn = spoken_turn(
+            &recorded(2, Trigger::PushToTalk),
+            Some(conversation),
+            None,
+            None,
+        )?;
         assert_eq!(turn.trigger, VoiceTrigger::PushToTalk);
         assert_eq!(turn.conversation_id, Some(conversation));
         assert_eq!(turn.utterance.get().duration_ms(), 2_000);
         assert!(turn.game.is_none());
-        let wake = spoken_turn(&recorded(1, Trigger::Wake), None, None)?;
+        let wake = spoken_turn(&recorded(1, Trigger::Wake), None, None, None)?;
         assert_eq!(wake.trigger, VoiceTrigger::WakeWord);
         Ok(())
     }
@@ -102,7 +126,9 @@ mod tests {
             samples: vec![0.25; 160],
             ..recorded(0, Trigger::PushToTalk)
         };
-        let error = spoken_turn(&tap, None, None).err().unwrap_or_default();
+        let error = spoken_turn(&tap, None, None, None)
+            .err()
+            .unwrap_or_default();
         assert!(error.contains("too short"), "{error}");
     }
 }

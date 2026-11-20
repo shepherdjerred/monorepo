@@ -79,6 +79,7 @@ struct Asked {
     trigger: VoiceTrigger,
     conversation_id: Option<Uuid>,
     with_game: bool,
+    with_champ_select: bool,
     duration_ms: u32,
 }
 
@@ -98,6 +99,10 @@ impl TurnRunner for FakeTurns {
                 trigger: turn.trigger,
                 conversation_id: turn.conversation_id,
                 with_game: turn.game.is_some(),
+                with_champ_select: turn
+                    .game
+                    .as_ref()
+                    .is_some_and(|game| game.champ_select.is_some() && game.live.is_none()),
                 duration_ms: turn.utterance.get().duration_ms(),
             });
         *self.updates.lock().unwrap_or_else(PoisonError::into_inner) = Some(updates);
@@ -182,7 +187,7 @@ struct Harness {
     relayed: mpsc::UnboundedReceiver<RelayCommand>,
     snapshot: watch::Receiver<VoiceSnapshot>,
     turn: watch::Receiver<Option<VoiceTurnView>>,
-    _state: watch::Sender<RuntimeState>,
+    state: watch::Sender<RuntimeState>,
     _parts: watch::Sender<ChatParts>,
 }
 
@@ -271,7 +276,7 @@ fn start(stored: VoiceSettings) -> Harness {
         keys,
         control,
         relayed,
-        _state: state,
+        state,
         _parts: parts,
     }
 }
@@ -375,6 +380,7 @@ async fn a_push_to_talk_question_is_sent_with_the_live_game_and_its_answer_plays
             trigger: VoiceTrigger::PushToTalk,
             conversation_id: Some(CONVERSATION),
             with_game: true,
+            with_champ_select: false,
             duration_ms: 2_000,
         }]
     );
@@ -382,6 +388,55 @@ async fn a_push_to_talk_question_is_sent_with_the_live_game_and_its_answer_plays
         .until_snapshot(|s| s.state == VoiceState::Thinking)
         .await?;
     answer_and_play(&mut harness).await
+}
+
+#[tokio::test]
+async fn a_question_spoken_in_champion_select_carries_the_select_and_never_a_game() -> TestResult {
+    use scout_client_core::live::champ_select::{AllySlot, ChampSelectSnapshot, EnemySlot};
+
+    let harness = start(VoiceSettings {
+        conversation_mode: false,
+        ..agreed()
+    });
+    harness.until(|| read(&harness.engine.starts) == 1).await?;
+    harness.engine.emit(EngineEvent::Ready)?;
+    harness.state.send_modify(|state| {
+        state.live_game = None;
+        state.champ_select = Some(ChampSelectSnapshot {
+            phase: Some("BAN_PICK".to_owned()),
+            local_cell_id: 0,
+            my_team: vec![AllySlot {
+                cell_id: 0,
+                champion_id: 103,
+                assigned_position: Some("middle".to_owned()),
+            }],
+            their_team: vec![EnemySlot {
+                cell_id: 5,
+                champion_id: 238,
+            }],
+            my_bans: Vec::new(),
+            their_bans: Vec::new(),
+        });
+    });
+    harness.phase.send_replace(GameflowPhase::ChampSelect);
+    harness.keys.send(HotkeyEvent::PushToTalk(true))?;
+    harness
+        .until(|| harness.engine_commands() == [EngineCommand::PushToTalk(true)])
+        .await?;
+    harness.keys.send(HotkeyEvent::PushToTalk(false))?;
+    harness.engine.emit(EngineEvent::Utterance(Utterance {
+        samples: vec![0.25; 32_000],
+        trigger: Trigger::PushToTalk,
+        reason: EndReason::PushToTalkReleased,
+        wake_score: None,
+    }))?;
+    harness
+        .until(|| !read(&harness.turns.asked).is_empty())
+        .await?;
+    let asked = read(&harness.turns.asked);
+    assert_eq!(asked.len(), 1);
+    assert!(asked[0].with_champ_select, "the select rides along");
+    Ok(())
 }
 
 /// Scout answers the question in flight aloud; the turn ends once the

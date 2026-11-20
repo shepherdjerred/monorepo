@@ -25,7 +25,7 @@ pub mod turns;
 use std::time::Duration;
 
 use scout_client_core::settings::{SettingsStore, VoiceSettings};
-use scout_client_runtime::runtime::{PhaseReceiver, StateReceiver};
+use scout_client_runtime::runtime::{GameflowPhase, PhaseReceiver, StateReceiver};
 use scout_desktop_ipc::{ChatCommand, VoiceCommand, VoiceSnapshot, VoiceTurnView};
 use scout_explore_client::relay::ChatRelay;
 use scout_voice::{EngineCommand, EngineEvent, SpeechOutput};
@@ -176,6 +176,7 @@ pub fn spawn(ports: VoicePorts, inputs: VoiceInputs) -> VoiceHandle {
         drain_deadline: None,
         chat: inputs.chat.clone(),
         state: inputs.state.clone(),
+        phase: inputs.phase.clone(),
         control: inputs.control.clone(),
         snapshot,
         turn,
@@ -201,6 +202,7 @@ struct Service {
     drain_deadline: Option<Instant>,
     chat: Option<ChatRelay>,
     state: StateReceiver,
+    phase: PhaseReceiver,
     control: mpsc::UnboundedSender<Control>,
     snapshot: watch::Sender<VoiceSnapshot>,
     turn: watch::Sender<Option<VoiceTurnView>>,
@@ -320,8 +322,23 @@ impl Service {
                     .chat
                     .as_ref()
                     .and_then(|chat| chat.subscribe().borrow().status.open_conversation);
-                let live = self.state.borrow().live_game.clone();
-                match spoken_turn(&recorded, conversation, live.as_ref()) {
+                let (live, champ_select) = {
+                    let state = self.state.borrow();
+                    // Like a typed question: during champion select, while
+                    // the coach is on, what the select shows.
+                    let selecting = *self.phase.borrow() == GameflowPhase::ChampSelect
+                        && self.chat.as_ref().is_none_or(ChatRelay::coach_enabled);
+                    (
+                        state.live_game.clone(),
+                        state.champ_select.clone().filter(|_| selecting),
+                    )
+                };
+                match spoken_turn(
+                    &recorded,
+                    conversation,
+                    live.as_ref(),
+                    champ_select.as_ref(),
+                ) {
                     Ok(turn) => {
                         self.running_turn =
                             Some(self.ports.turns.run(turn, self.turn_updates.clone()));
