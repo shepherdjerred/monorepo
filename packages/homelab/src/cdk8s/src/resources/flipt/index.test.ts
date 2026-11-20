@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/flipt.ts";
 import {
   createRepositoryInitializationScript,
@@ -257,7 +258,10 @@ describe("Flipt chart", () => {
     );
     expect(initializer?.command).toEqual(["/bin/sh", "-c"]);
     expect(initializer?.image).toMatch(
-      /^docker\.io\/alpine\/git:2\.54\.0@sha256:[a-f\d]{64}$/,
+      /^docker\.io\/alpine\/git:.+@sha256:[a-f\d]{64}$/,
+    );
+    expect(initializer?.image).toBe(
+      `docker.io/alpine/git:${versions["alpine/git"]}`,
     );
     const initializationScript = initializer?.args?.[0] ?? "";
     expect(initializationScript).toContain(

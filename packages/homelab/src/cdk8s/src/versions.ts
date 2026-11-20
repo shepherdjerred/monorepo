@@ -53,7 +53,7 @@ export const ADAPTIVE_LIGHTING_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/JeffSteinbok/hass-dreo/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const DREO_TARBALL_SHA256 =
-  "55d528f26a8e91feb614cabab1c2a3b8520e918f4cf2e5ed9e7aacdef303b373";
+  "685f1fcde0ac3a6b131ff3e933a092a18321223dc431ef6355d870b657793dd7";
 
 /**
  * SHA-256 of the GitHub release tarball for `magico13/ha-emporia-vue`,
@@ -64,7 +64,7 @@ export const DREO_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/magico13/ha-emporia-vue/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const EMPORIA_VUE_TARBALL_SHA256 =
-  "98c93e9420845c425d9e33fabf49426172a02868ee97cb5d0aa9cd759663a247";
+  "f3372a4b4f533d60128b9d1844f2cdd55d314c221c2ee1159f345fde151a5109";
 
 /**
  * SHA-256 of the GitHub release tarball for `dlarrick/hass-kumo`, pinned to
@@ -75,7 +75,7 @@ export const EMPORIA_VUE_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/dlarrick/hass-kumo/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const KUMO_TARBALL_SHA256 =
-  "34b88547e0809b7849ba1fc1a3f149777a1a44a1d97bc56fed734224fdfbef0b";
+  "e47bc5899f582c5edb9b3aed32ee698994145e016833a8c7866c2d42ee5d0ae1";
 
 /**
  * SHA-256 of the GitHub release tarball for `kgelinas/Mysa_HA` (true
@@ -112,7 +112,7 @@ export const PETLIBRO_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/AlexxIT/SonoffLAN/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const SONOFF_TARBALL_SHA256 =
-  "4d2ee5ef9fb1a497b26379dd7d774ec5aec31f2c5a3bfd82766bc3f745d05d14";
+  "9ba430f7871a330698d04207dcbb738f3da410dda4c84e17480e516e0e537485";
 
 /**
  * SHA-256 of the GitHub release tarball for `elax46/custom-brand-icons`
@@ -125,6 +125,6 @@ export const SONOFF_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/elax46/custom-brand-icons/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const CUSTOM_BRAND_ICONS_TARBALL_SHA256 =
-  "3f1d70118cb1fa4d4ebbccaedf8c168a8a7e34ea1cfed5c18b01e7fb1c01d6de";
+  "008078956fb7a19a5842a02e7bfc0c79849e2fd4df39f301daa45f44dcdc62b9";
 
 export default versions;
