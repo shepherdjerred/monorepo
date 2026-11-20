@@ -99,6 +99,23 @@ const many = (count: number, status: PipelineStatus = "succeeded") =>
     workflow(index + 1, `lane-${String(index + 1)}`, status),
   );
 
+/**
+ * A Build stage of `count` passed workflows, except those whose position has
+ * another state, and how the card lists them once they collapse.
+ */
+function buildWorkflows(
+  count: number,
+  states: Partial<Record<number, PipelineStatus>>,
+) {
+  const workflows = many(count).map((lane, index) => ({
+    ...lane,
+    status: states[index] ?? lane.status,
+  }));
+  const [build] = pipelineStages([stage("build", [])], run(workflows));
+  if (build === undefined) throw new Error("Build stage required");
+  return { workflows, list: stageActionList(build).collapsed };
+}
+
 describe("a workflow's second line", () => {
   it("counts the steps of a workflow that passed, even when Woodpecker stopped its service with a failure", () => {
     const [, tests] = pipelineStages(
@@ -217,20 +234,12 @@ describe("how a stage lists its actions", () => {
   });
 
   it("opens the list and leads with what failed, is running or awaits approval", () => {
-    const workflows = many(14);
-    for (const [index, status] of [
-      [3, "running"],
-      [7, "awaiting_approval"],
-      [9, "failed"],
-      [11, "running"],
-    ] as const) {
-      const lane = workflows[index];
-      if (lane === undefined) throw new Error("Workflow fixture required");
-      lane.status = status;
-    }
-    const [build] = pipelineStages([stage("build", [])], run(workflows));
-    if (build === undefined) throw new Error("Build stage required");
-    const list = stageActionList(build).collapsed;
+    const { list } = buildWorkflows(14, {
+      3: "running",
+      7: "awaiting_approval",
+      9: "failed",
+      11: "running",
+    });
     expect(list?.open).toBe(true);
     expect(list?.summary).toBe(
       "10 passed · 1 failed · 2 running · 1 awaiting approval",
@@ -254,20 +263,12 @@ describe("how a stage lists its actions", () => {
   });
 
   it("stays closed for states that need nobody: queued, pending, canceled, not started", () => {
-    const workflows = many(8);
-    for (const [index, status] of [
-      [0, "queued"],
-      [1, "pending"],
-      [2, "canceled"],
-      [3, "not_started"],
-    ] as const) {
-      const lane = workflows[index];
-      if (lane === undefined) throw new Error("Workflow fixture required");
-      lane.status = status;
-    }
-    const [build] = pipelineStages([stage("build", [])], run(workflows));
-    if (build === undefined) throw new Error("Build stage required");
-    const list = stageActionList(build).collapsed;
+    const { workflows, list } = buildWorkflows(8, {
+      0: "queued",
+      1: "pending",
+      2: "canceled",
+      3: "not_started",
+    });
     expect(list?.open).toBe(false);
     // Nothing leads, so the list keeps the run's order.
     expect(list?.actions.map((entry) => entry.title)).toEqual(
