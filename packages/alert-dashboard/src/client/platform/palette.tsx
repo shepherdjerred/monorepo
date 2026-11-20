@@ -30,10 +30,18 @@ export function setPaletteOpen(next: boolean): void {
   for (const listener of listeners) listener();
 }
 
+/** Whether a key press is the palette's global shortcut, ⌘K or Ctrl+K. */
+export function isPaletteShortcut(event: KeyboardEvent): boolean {
+  return (
+    event.key.toLowerCase() === "k" &&
+    (event.metaKey || event.ctrlKey) &&
+    !event.altKey &&
+    !event.shiftKey
+  );
+}
+
 document.addEventListener("keydown", (event) => {
-  if (event.key.toLowerCase() !== "k") return;
-  if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey)
-    return;
+  if (!isPaletteShortcut(event)) return;
   event.preventDefault();
   setPaletteOpen(!paletteOpen);
 });

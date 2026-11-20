@@ -55,7 +55,7 @@ function Launcher(): React.JSX.Element {
             <li key={item.to}>
               <Link className="launcher-card" to={item.to}>
                 <item.icon aria-hidden="true" />
-                <span>{item.label}</span>
+                <span>{item.title}</span>
               </Link>
             </li>
           ))}

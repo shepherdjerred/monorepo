@@ -55,6 +55,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@axe-core/playwright": "^4.14.0",
         "@playwright/test": "1.64.0",
         "@shepherdjerred/architecture": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",

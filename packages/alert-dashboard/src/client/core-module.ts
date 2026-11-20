@@ -7,6 +7,7 @@ import {
   GaugeIcon,
   GitPullRequestIcon,
   HistoryIcon,
+  MegaphoneIcon,
   ServerCogIcon,
   WrenchIcon,
 } from "lucide-react";
@@ -86,7 +87,7 @@ export const coreModule: ClientModule = {
   icon: GaugeIcon,
   basePath: "",
   routes: [
-    { path: "promotion", page: PromotionPage, chrome: "bare" },
+    { path: "promotion", page: PromotionPage },
     { path: "", page: HomePage },
     { path: "overview", page: OverviewPage },
     { path: "services", page: ServicesPage },
@@ -100,6 +101,7 @@ export const coreModule: ClientModule = {
     { path: "history", page: HistoryPage },
     { path: "system", page: SystemPage },
   ],
+  // Entries without a `group` sit under the module title, "Ops".
   nav: [
     { label: "Home", icon: HouseIcon, path: "" },
     { label: "Overview", icon: GaugeIcon, path: "overview" },
@@ -107,12 +109,23 @@ export const coreModule: ClientModule = {
     // "Flow", not "Delivery": Delivery is the separate release app.
     { label: "Flow", icon: GitPullRequestIcon, path: "delivery" },
     { label: "AI", icon: BotIcon, path: "ai" },
-    { label: "Promotion", icon: ActivityIcon, path: "promotion" },
     { label: "Maintenance", icon: WrenchIcon, path: "maintenance" },
     { label: "Review", icon: CalendarRangeIcon, path: "review" },
-    { label: "Alerts", icon: ActivityIcon, path: "alerts" },
-    { label: "History", icon: HistoryIcon, path: "history" },
-    { label: "System", icon: ServerCogIcon, path: "system" },
+    {
+      label: "Active",
+      title: "Active alerts",
+      group: "Alerts",
+      icon: ActivityIcon,
+      path: "alerts",
+    },
+    { label: "History", group: "Alerts", icon: HistoryIcon, path: "history" },
+    { label: "System", group: "Alerts", icon: ServerCogIcon, path: "system" },
+    {
+      label: "Promotion",
+      group: "The Storm",
+      icon: MegaphoneIcon,
+      path: "promotion",
+    },
   ],
   commands: coreCommands,
   search: coreSearch,

@@ -31,7 +31,7 @@ describe("the composed module registry", () => {
     expect(
       registry.routes.map((route) => `${route.chrome} ${route.path}`),
     ).toEqual([
-      "bare /promotion",
+      "shell /promotion",
       "shell /",
       "shell /overview",
       "shell /services",
@@ -47,19 +47,49 @@ describe("the composed module registry", () => {
     ]);
   });
 
-  it("keeps the primary navigation in order", () => {
-    expect(registry.nav.map((item) => `${item.label} ${item.to}`)).toEqual([
-      "Home /",
-      "Overview /overview",
-      "Services /services",
-      "Flow /delivery",
-      "AI /ai",
-      "Promotion /promotion",
-      "Maintenance /maintenance",
-      "Review /review",
-      "Alerts /alerts",
-      "History /history",
-      "System /system",
+  it("groups the primary navigation under Ops, Alerts, and The Storm", () => {
+    expect(
+      registry.navGroups.map((group) => ({
+        label: group.label,
+        items: group.items.map((item) => `${item.label} ${item.to}`),
+      })),
+    ).toEqual([
+      {
+        label: "Ops",
+        items: [
+          "Home /",
+          "Overview /overview",
+          "Services /services",
+          "Flow /delivery",
+          "AI /ai",
+          "Maintenance /maintenance",
+          "Review /review",
+        ],
+      },
+      {
+        label: "Alerts",
+        items: ["Active /alerts", "History /history", "System /system"],
+      },
+      { label: "The Storm", items: ["Promotion /promotion"] },
+    ]);
+  });
+
+  it("keeps the flat navigation in group order, with full names", () => {
+    expect(registry.nav).toEqual(
+      registry.navGroups.flatMap((group) => group.items),
+    );
+    expect(registry.nav.map((item) => item.title)).toEqual([
+      "Home",
+      "Overview",
+      "Services",
+      "Flow",
+      "AI",
+      "Maintenance",
+      "Review",
+      "Active alerts",
+      "History",
+      "System",
+      "Promotion",
     ]);
   });
 
@@ -93,6 +123,97 @@ describe("module validation", () => {
       "/notes/entries/:id",
     ]);
     expect(resolved.nav.map((item) => item.to)).toEqual(["/", "/notes"]);
+  });
+
+  it("groups a nav entry under its module title unless it names a group", () => {
+    const resolved = resolveModules([
+      core,
+      module({
+        routes: [
+          { path: "", page: Page },
+          { path: "archive", page: Page },
+          { path: "tags", page: Page },
+        ],
+        nav: [
+          { label: "Notes", icon: GaugeIcon, path: "" },
+          { label: "Tags", group: "Library", icon: GaugeIcon, path: "tags" },
+          {
+            label: "Archive",
+            title: "Notes archive",
+            icon: GaugeIcon,
+            path: "archive",
+          },
+        ],
+      }),
+      module({
+        id: "journal",
+        title: "Journal",
+        basePath: "/journal",
+        nav: [{ label: "Entries", group: "Notes", icon: GaugeIcon, path: "" }],
+      }),
+    ]);
+    expect(
+      resolved.navGroups.map((group) => ({
+        label: group.label,
+        items: group.items.map((item) => item.to),
+      })),
+    ).toEqual([
+      { label: "Notes", items: ["/", "/notes", "/notes/archive", "/journal"] },
+      { label: "Library", items: ["/notes/tags"] },
+    ]);
+    expect(resolved.nav.map((item) => `${item.group}: ${item.title}`)).toEqual([
+      "Notes: Notes",
+      "Notes: Notes",
+      "Library: Tags",
+      "Notes: Notes archive",
+      "Notes: Entries",
+    ]);
+  });
+
+  it("rejects a blank nav group", () => {
+    expect(() =>
+      resolveModules([
+        module({
+          nav: [{ label: "Notes", group: " ", icon: GaugeIcon, path: "" }],
+        }),
+      ]),
+    ).toThrow('Module "notes" nav entry "Notes" has a blank group');
+    expect(() => resolveModules([module({ title: "" })])).toThrow(
+      "has a blank group",
+    );
+  });
+
+  it("rejects the same nav target declared twice", () => {
+    expect(() =>
+      resolveModules([
+        module({
+          nav: [
+            { label: "Notes", icon: GaugeIcon, path: "" },
+            { label: "All notes", icon: GaugeIcon, path: "" },
+          ],
+        }),
+      ]),
+    ).toThrow('Nav entry "/notes" is declared by both "notes" and "notes"');
+  });
+
+  it("rejects a nav entry that points at no declared route", () => {
+    expect(() =>
+      resolveModules([
+        module({
+          nav: [{ label: "Archive", icon: GaugeIcon, path: "archive" }],
+        }),
+      ]),
+    ).toThrow(
+      'Nav entry "/notes/archive" of "notes" points at no declared route',
+    );
+    expect(() =>
+      resolveModules([
+        module({
+          routes: [{ path: "entries/:id", page: Page }],
+          nav: [{ label: "Entry", icon: GaugeIcon, path: "entries" }],
+        }),
+      ]),
+    ).toThrow("points at no declared route");
   });
 
   it("rejects duplicate module ids", () => {

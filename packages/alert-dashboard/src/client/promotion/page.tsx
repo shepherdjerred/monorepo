@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PromotionOverviewSchema } from "@shepherdjerred/ops-model/promotion/model.ts";
-import { setThemePreference, useThemePreference } from "#client/theme.ts";
 import { RunPanel } from "./run-panel.tsx";
 import { SourceGroups } from "./source-groups.tsx";
 import { HistoryPanel } from "./history-panel.tsx";
@@ -10,12 +9,15 @@ import { PromotionSpendSummary } from "./spend-summary.tsx";
 import { sourceTimingSummary } from "./source-timing.ts";
 import { ActivityLegend } from "./activity-strip.tsx";
 
-export function PromotionPage() {
+/**
+ * The promotion report itself, without any app chrome: the Hub shell frames
+ * it at `/promotion`, and the standalone local launcher adds its own bar.
+ */
+export function PromotionContent() {
   const initialSource =
     new URLSearchParams(location.search).get("source") ?? "";
   const [source, setSource] = useState(initialSource);
   const [showHistory, setShowHistory] = useState(initialSource !== "");
-  const theme = useThemePreference();
   const overview = useQuery({
     queryKey: ["promotion", "run-summary"],
     queryFn: async () => {
@@ -42,24 +44,6 @@ export function PromotionPage() {
   return (
     <>
       <title>The Storm promotion · Hub</title>
-      <header className="app-header">
-        <a className="brand" href="/">
-          Hub
-        </a>
-        <nav aria-label="Primary navigation">
-          <a href="/promotion" aria-current="page">
-            Promotion
-          </a>
-        </nav>
-        <button
-          className="p-theme"
-          onClick={() => {
-            setThemePreference(theme === "dark" ? "light" : "dark");
-          }}
-        >
-          Theme: {theme}
-        </button>
-      </header>
       <main className="p-main">
         <div className="p-heading">
           <div>
@@ -123,4 +107,9 @@ export function PromotionPage() {
       </main>
     </>
   );
+}
+
+/** The `/promotion` route; the Hub shell supplies the navigation around it. */
+export function PromotionPage() {
+  return <PromotionContent />;
 }

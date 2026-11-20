@@ -36,7 +36,7 @@ export function App(): React.JSX.Element {
         {registry.routes
           .filter((route) => route.chrome === "bare")
           .map((route) => routeElement(route))}
-        <Route element={<Shell nav={registry.nav} />}>
+        <Route element={<Shell groups={registry.navGroups} />}>
           {registry.routes
             .filter((route) => route.chrome === "shell")
             .map((route) => routeElement(route))}

@@ -1,3 +1,17 @@
+/* The standalone launcher's bar; inside Hub the shell frames the page. */
+.p-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--topbar-h);
+  padding: 0 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--header-bg);
+  backdrop-filter: blur(12px);
+}
 .p-main {
   max-width: 1160px;
   margin: auto;
@@ -500,7 +514,10 @@
   border-radius: 6px;
   margin: 18px 0;
 }
-@media (max-width: 760px) {
+/* Sized by the content column, which is narrower than the viewport beside
+   the Hub sidebar. The standalone launcher wraps the page in the same
+   `.app-content` container. */
+@container content (max-width: 760px) {
   .p-main {
     padding: 20px 16px 40px;
   }

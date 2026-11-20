@@ -23,7 +23,13 @@ const notes: ClientModule = {
   ],
   nav: [
     { label: "Notes", icon: GaugeIcon, path: "" },
-    { label: "Archive", icon: GaugeIcon, path: "archive" },
+    {
+      label: "Archive",
+      title: "Notes archive",
+      group: "Library",
+      icon: GaugeIcon,
+      path: "archive",
+    },
   ],
   commands: [
     {
@@ -60,7 +66,7 @@ describe("palette sections", () => {
     expect(labels("", [])).toEqual([
       {
         heading: "Pages",
-        labels: ["Go to Notes", "Go to Archive", "Go to Journal"],
+        labels: ["Go to Notes", "Go to Notes archive", "Go to Journal"],
       },
       { heading: "Commands", labels: ["New note"] },
     ]);
@@ -68,10 +74,22 @@ describe("palette sections", () => {
 
   it("matches pages by label and commands by label or keyword", () => {
     expect(labels("ARCH", [])).toEqual([
-      { heading: "Pages", labels: ["Go to Archive"] },
+      { heading: "Pages", labels: ["Go to Notes archive"] },
     ]);
     expect(labels("create", [])).toEqual([
       { heading: "Commands", labels: ["New note"] },
+    ]);
+  });
+
+  it("matches pages by their full name and their navigation group", () => {
+    expect(labels("notes arch", [])).toEqual([
+      { heading: "Pages", labels: ["Go to Notes archive"] },
+    ]);
+    expect(labels("libr", [])).toEqual([
+      { heading: "Pages", labels: ["Go to Notes archive"] },
+    ]);
+    expect(labels("go to j", [])).toEqual([
+      { heading: "Pages", labels: ["Go to Journal"] },
     ]);
   });
 
