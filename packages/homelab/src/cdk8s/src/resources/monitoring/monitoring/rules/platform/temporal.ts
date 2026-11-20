@@ -515,11 +515,11 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Glitter Discord corpus inventory scope changed",
             description: escapePrometheusTemplate(
-              "The latest Discord inventory has {{ $value }} added, removed, or newly excluded channels/threads compared with the published baseline. Review the immutable inventory before accepting the new scope.",
+              "The latest Discord inventory has {{ $value }} removed or newly excluded/changed-scope channels/threads compared with the published baseline. Review the immutable inventory before accepting the new scope.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "sum(glitter_corpus_inventory_scope_changes) > 0",
+            'sum(glitter_corpus_inventory_scope_changes{change=~"removed|scope-decision-changed"}) > 0',
           ),
           for: "15m",
           labels: {

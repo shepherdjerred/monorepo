@@ -74,7 +74,9 @@ describe("SeaweedFS data-preserving capacity migration", () => {
       expect(spec.accessModes).toEqual(["ReadWriteOnce"]);
       expect(spec.storageClassName).toBe("zfs-ssd");
       expect(spec.resources.requests.storage).toBe(
-        claim.metadata.name === "data-filer-seaweedfs-filer-0" ? "4Gi" : "1Ti",
+        claim.metadata.name === "data-filer-seaweedfs-filer-0"
+          ? "4Gi"
+          : "1536Gi",
       );
       expect(claim.spec).not.toHaveProperty("volumeName");
       expect(claim.spec).not.toHaveProperty("selector");

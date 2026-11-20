@@ -35,7 +35,7 @@ export function getMediaRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "MediaOperationsNeedReconciliation",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "media_operations_reconciling > 0",
+            "max by (namespace) (media_operations_reconciling and on (namespace, pod) media_runtime_active == 1) > 0",
           ),
           for: "15m",
           labels: { severity: "warning", category: "media" },

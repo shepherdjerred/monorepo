@@ -87,3 +87,89 @@ test("watch alerts distinguish stale evidence from fresh, inactive, and unneeded
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("reconciliation alerts gate on active runtime and collapse pod rollouts to namespace", async () => {
+  const expression = getMediaRuleGroups()
+    .flatMap((group) => group.rules ?? [])
+    .find((rule) => rule.alert === "MediaOperationsNeedReconciliation")
+    ?.expr.value;
+  if (typeof expression !== "string") {
+    throw new TypeError("Missing media reconciliation alert");
+  }
+  const directory = await mkdtemp(path.join(tmpdir(), "media-reconcile-"));
+  try {
+    const filename = path.join(directory, "tests.json");
+    await Bun.write(
+      filename,
+      JSON.stringify({
+        evaluation_interval: "1m",
+        tests: [
+          {
+            name: "active runtime across two pods during rollout collapses to one namespace series",
+            interval: "1m",
+            input_series: [
+              {
+                series:
+                  'media_operations_reconciling{namespace="media",pod="media-api-old"}',
+                values: "63+0x20",
+              },
+              {
+                series:
+                  'media_runtime_active{namespace="media",pod="media-api-old"}',
+                values: "1+0x20",
+              },
+              {
+                series:
+                  'media_operations_reconciling{namespace="media",pod="media-api-new"}',
+                values: "63+0x20",
+              },
+              {
+                series:
+                  'media_runtime_active{namespace="media",pod="media-api-new"}',
+                values: "1+0x20",
+              },
+            ],
+            promql_expr_test: [
+              {
+                expr: expression,
+                eval_time: "20m",
+                exp_samples: [{ labels: '{namespace="media"}', value: 63 }],
+              },
+            ],
+          },
+          {
+            name: "observe-only runtime suppresses reconciliation alert",
+            interval: "1m",
+            input_series: [
+              {
+                series:
+                  'media_operations_reconciling{namespace="media",pod="media-api"}',
+                values: "63+0x20",
+              },
+              {
+                series:
+                  'media_runtime_active{namespace="media",pod="media-api"}',
+                values: "0+0x20",
+              },
+            ],
+            promql_expr_test: [
+              { expr: expression, eval_time: "20m", exp_samples: [] },
+            ],
+          },
+        ],
+      }),
+    );
+    const process = Bun.spawn(["promtool", "test", "rules", filename], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(process.stdout).text(),
+      new Response(process.stderr).text(),
+      process.exited,
+    ]);
+    expect(exitCode, stdout + stderr).toBe(0);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});

@@ -3,6 +3,7 @@ import type {
   PrometheusRuleSpecGroups,
   PrometheusRuleSpecGroupsRules,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
+import { runPromtoolFixture } from "./platform/promtool-fixture.ts";
 import {
   CI_JOB_POD_PATTERN,
   CI_POD_CHILD_CGROUP_PATTERN,
@@ -136,11 +137,88 @@ describe("Woodpecker CI I/O recording rules", () => {
     );
   });
 
-  it("records one sample-presence series from the parent counter only", () => {
+  it("records one sample-presence series from parent-cgroup CPU and pod metadata", async () => {
     const rule = recordingRule("woodpecker:pod_parent_sample_present");
-    expect(ruleExpression(rule)).toBe(
-      `${CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC} * 0 + 1`,
-    );
+    const expression = ruleExpression(rule);
+    expect(expression).toContain("container_cpu_usage_seconds_total");
+    expect(expression).toContain("max by (namespace, pod, node)");
+    expect(expression).toContain('container=""');
+    expect(expression).toContain(`pod=~"${CI_JOB_POD_PATTERN}"`);
+    expect(expression).toContain(`id=~"${CI_POD_PARENT_CGROUP_PATTERN}"`);
+    expect(expression).toContain("label_ci_sjer_red_step_key");
+    expect(expression).toContain("annotation_ci_sjer_red_pipeline_url");
+    expect(expression).toContain("* 0 + 1");
+    expect(expression).not.toContain("container_fs_writes_bytes_total");
+
+    const pod = "wp-01k8x9m2n4p6q8r0s2t4v6w8y0";
+    const missingExpr = ruleExpression(
+      alertRule("WoodpeckerCIIOTelemetryMissing"),
+    ).replace("woodpecker:pod_parent_sample_present", `(${expression})`);
+    await runPromtoolFixture({
+      evaluation_interval: "10s",
+      tests: [
+        {
+          interval: "10s",
+          input_series: [
+            {
+              series: `kube_pod_status_phase{namespace="woodpecker-ci",pod="${pod}",phase="Running"}`,
+              values: "1x12",
+            },
+            {
+              series: `container_cpu_usage_seconds_total{namespace="woodpecker-ci",pod="${pod}",node="liskov",container="",id="/kubepods/burstable/pod123"}`,
+              values: "0x12",
+            },
+            {
+              series: `kube_pod_labels{namespace="woodpecker-ci",pod="${pod}",label_ci_sjer_red_commit="abc123",label_ci_sjer_red_step_key="codex-review-gate"}`,
+              values: "1x12",
+            },
+            {
+              series: `kube_pod_annotations{namespace="woodpecker-ci",pod="${pod}",annotation_ci_sjer_red_branch="main",annotation_ci_sjer_red_pipeline_url="https://woodpecker.sjer.red/repos/1/pipeline/2"}`,
+              values: "1x12",
+            },
+          ],
+          promql_expr_test: [
+            {
+              expr: expression,
+              eval_time: "1m",
+              exp_samples: [
+                {
+                  labels: `{annotation_ci_sjer_red_branch="main",annotation_ci_sjer_red_pipeline_url="https://woodpecker.sjer.red/repos/1/pipeline/2",label_ci_sjer_red_commit="abc123",label_ci_sjer_red_step_key="codex-review-gate",namespace="woodpecker-ci",node="liskov",pod="${pod}"}`,
+                  value: 1,
+                },
+              ],
+            },
+            { expr: missingExpr, eval_time: "1m", exp_samples: [] },
+          ],
+        },
+        {
+          interval: "10s",
+          input_series: [
+            {
+              series: `kube_pod_status_phase{namespace="woodpecker-ci",pod="${pod}",phase="Running"}`,
+              values: "1x12",
+            },
+            {
+              series: `container_cpu_usage_seconds_total{namespace="woodpecker-ci",pod="${pod}",node="liskov",container="",id="/kubepods/burstable/pod123"}`,
+              values: "0x12",
+            },
+          ],
+          promql_expr_test: [
+            { expr: expression, eval_time: "1m", exp_samples: [] },
+            {
+              expr: missingExpr,
+              eval_time: "1m",
+              exp_samples: [
+                {
+                  labels: `{namespace="woodpecker-ci",pod="${pod}"}`,
+                  value: 1,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
   });
 
   it("rolls the conservative pod-lifetime cohort total up at a slower cadence", () => {

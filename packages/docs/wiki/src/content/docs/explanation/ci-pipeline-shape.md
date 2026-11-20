@@ -407,7 +407,7 @@ Reads fail loudly by design. A defaulted `{}` would let a release step deploy
 nothing and report success.
 
 Nothing in the bucket needs to outlive its build for long. The `seaweedfs`
-OpenTofu stack gives it a lifecycle rule that expires every object after 30
+OpenTofu stack gives it a lifecycle rule that expires every object after seven
 days. No step reads
 another pipeline's handoff except a reviewed platform plan, and that plan is
 refused after 24 hours. Evidence that must be kept belongs in a durable bucket.

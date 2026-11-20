@@ -78,7 +78,7 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase({__name__=~"temporal_worker_workflow_task_execution_failed(_total)?",exported_namespace=~"prod|beta",failure_reason="NonDeterminismError"}[10m]) > 0 or increase(service_errors_nondeterministic[10m]) > 0',
+          'sum by (exported_namespace, task_queue, workflow_type) (increase({__name__=~"temporal_worker_workflow_task_execution_failed(_total)?",exported_namespace=~"prod|beta",failure_reason="NonDeterminismError"}[30m])) > 0 or sum by (exported_namespace, task_queue, workflow_type) (increase(service_errors_nondeterministic[30m])) > 0',
         ),
         for: "1m",
         labels: { severity: "critical" },

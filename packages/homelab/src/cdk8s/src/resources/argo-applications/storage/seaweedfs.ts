@@ -67,7 +67,7 @@ export function createSeaweedfsResources(chart: Chart): void {
   // changes, while SeaweedFS continues mounting the same datasets.
   for (const [name, storage] of [
     ["data-filer-seaweedfs-filer-0", "4Gi"],
-    ["data-seaweedfs-volume-0", "1Ti"],
+    ["data-seaweedfs-volume-0", "1536Gi"],
   ] as const) {
     new KubePersistentVolumeClaim(chart, `${name}-capacity`, {
       metadata: {

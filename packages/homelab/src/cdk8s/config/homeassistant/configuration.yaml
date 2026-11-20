@@ -278,10 +278,13 @@ template:
       - name: "Litter Robot Stalled"
         unique_id: litter_robot_stalled
         device_class: problem
-        # A fault or missing status is not recovery; only ready/complete clears.
+        # Missing status marks the sensor unavailable so Temporal preserves any
+        # active stall incident; explicit fault/full-drawer codes stay available
+        # (off here, on in litter_robot_problem) without tripping entity-unavailable.
+        availability: >
+          {{ "{{" }} has_value('sensor.storage_status_code') {{ "}}" }}
         state: >
-          {{ "{{" }} states('sensor.storage_status_code') in ['ccp', 'cd', 'cst', 'ec', 'p', 'csi', 'pwru', 'pwrd']
-             if states('sensor.storage_status_code') in ['rdy', 'ccc', 'ccp', 'cd', 'cst', 'ec', 'p', 'csi', 'pwru', 'pwrd'] else none {{ "}}" }}
+          {{ "{{" }} states('sensor.storage_status_code') in ['ccp', 'cd', 'cst', 'ec', 'p', 'csi', 'pwru', 'pwrd'] {{ "}}" }}
         attributes:
           problem_detail: >
             Litter-Robot has not returned to ready for 45 minutes.
