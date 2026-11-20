@@ -9,16 +9,17 @@ import { useId, useState } from "react";
 import { ExternalLink, ServiceLink, SeverityBadge } from "./ops-ui.tsx";
 import { age } from "#client/time.ts";
 
-/** Entries a list shows before the rest sit behind "Show all". */
+/** Entries a list shows before the rest sit behind "Show N more". */
 const DEFAULT_CAP = 10;
-/** Member rows an opened group shows before its own "Show all". */
+/** Member rows an opened group shows before its own "Show N more". */
 const GROUP_MEMBER_CAP = 25;
 /** An overflow this small is shown outright; a toggle would hide less than it costs. */
 const CAP_SLACK = 2;
 
 type Capped<T> = {
   readonly shown: readonly T[];
-  readonly total: number;
+  /** Items the cap is holding back while collapsed. */
+  readonly hidden: number;
   /** Whether the list is long enough to need the toggle at all. */
   readonly capped: boolean;
   readonly expanded: boolean;
@@ -30,7 +31,7 @@ function useCapped<T>(items: readonly T[], cap: number): Capped<T> {
   const capped = items.length > cap + CAP_SLACK;
   return {
     shown: capped && !expanded ? items.slice(0, cap) : items,
-    total: items.length,
+    hidden: capped ? items.length - cap : 0,
     capped,
     expanded,
     toggle: () => {
@@ -56,7 +57,7 @@ function ListToggle({
       aria-controls={controls}
       onClick={list.toggle}
     >
-      {list.expanded ? "Show fewer" : `Show all ${String(list.total)}`}
+      {list.expanded ? "Show fewer" : `Show ${String(list.hidden)} more`}
       <Icon aria-hidden="true" />
     </button>
   );

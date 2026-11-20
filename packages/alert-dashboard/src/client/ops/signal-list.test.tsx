@@ -60,14 +60,14 @@ describe("SignalList", () => {
     const listId = /<ul class="signal-list" id="([^"]+)"/u.exec(html)?.[1];
     expect(listId).toBeDefined();
     expect(html).toContain(
-      `<button type="button" class="list-toggle" aria-expanded="false" aria-controls="${listId ?? ""}">Show all 13`,
+      `<button type="button" class="list-toggle" aria-expanded="false" aria-controls="${listId ?? ""}">Show 3 more`,
     );
   });
 
   it("honours a caller's cap", () => {
     const html = render(signals(8, "alert"), { cap: 5 });
     expect(rows(html)).toBe(5);
-    expect(html).toContain("Show all 8");
+    expect(html).toContain("Show 3 more");
   });
 
   it("collapses an allowlisted kind into one closed disclosure row", () => {

@@ -29,6 +29,7 @@ type PageBudget = {
 
 /**
  * Bounds are about 1.5x the heights measured with grouped, capped lists
+ * (1.25x for /maintenance, whose uncapped height was only 4769 / 9339)
  * (per-update / aggregate, desktop then phone):
  *
  *   /overview     3221 / 2539   6456 / 5956
@@ -53,7 +54,7 @@ const PAGES: readonly PageBudget[] = [
   {
     path: "/maintenance",
     heading: "Maintenance",
-    maxHeight: { desktop: 5100, phone: 10_700 },
+    maxHeight: { desktop: 4300, phone: 8900 },
   },
   {
     path: "/ai",
@@ -156,7 +157,7 @@ test("per-update: Renovate approvals collapse into one expandable row", async ({
   // 123 signals are 24 entries, and the list shows the ten worst.
   const entries = waiting.locator(".signal-list").first().locator("> li");
   await expect(entries).toHaveCount(10);
-  const showAll = waiting.getByRole("button", { name: "Show all 24" });
+  const showAll = waiting.getByRole("button", { name: "Show 14 more" });
   await expect(showAll).toHaveAttribute("aria-expanded", "false");
   await showAll.click();
   await expect(entries).toHaveCount(24);
@@ -186,7 +187,7 @@ test("per-update: Renovate approvals collapse into one expandable row", async ({
   await expect(group.locator(".signal").first()).toContainText(
     "chore(deps): update dependency",
   );
-  await group.getByRole("button", { name: "Show all 100" }).click();
+  await group.getByRole("button", { name: "Show 75 more" }).click();
   await expect(group.locator(".signal")).toHaveCount(100);
   await group.getByRole("button", { name: "Show fewer" }).click();
   await expect(group.locator(".signal")).toHaveCount(25);
@@ -196,7 +197,7 @@ test("per-update: Renovate approvals collapse into one expandable row", async ({
   await showFewer.click();
   await expect(entries).toHaveCount(10);
   await expect(
-    waiting.getByRole("button", { name: "Show all 24" }),
+    waiting.getByRole("button", { name: "Show 14 more" }),
   ).toHaveAttribute("aria-expanded", "false");
 });
 
@@ -229,7 +230,7 @@ test("alerts are never collapsed", async ({ page }) => {
   const attention = page.locator("section", {
     has: page.getByRole("heading", { name: /Needs attention/u }),
   });
-  await attention.getByRole("button", { name: "Show all 39" }).click();
+  await attention.getByRole("button", { name: "Show 29 more" }).click();
   await expect(attention.locator(".signal")).toHaveCount(39);
   await expect(attention.locator(".signal-group")).toHaveCount(0);
 });
