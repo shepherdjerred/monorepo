@@ -100,7 +100,8 @@ function PlanReview({
       {(detail.state === "preparing" || detail.state === "applying") && (
         <p>
           Checks run in the background.{" "}
-          <Link to="/activity">View activity</Link> for progress or failures.
+          <Link to="/manage/activity">View activity</Link> for progress or
+          failures.
         </p>
       )}
       <p>

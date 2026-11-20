@@ -60,9 +60,9 @@ function shared(persona: Persona): RouteSpec[] {
  */
 const MEMBER_ROUTES: readonly RouteSpec[] = [
   {
-    label: "member /",
+    label: "member /discover",
     persona: "member",
-    path: "/",
+    path: "/discover",
     heading: "What’s your next watch?",
   },
   {
@@ -76,12 +76,6 @@ const MEMBER_ROUTES: readonly RouteSpec[] = [
     persona: "member",
     path: "/calendar",
     heading: "Calendar",
-  },
-  {
-    label: "member /activity",
-    persona: "member",
-    path: "/activity",
-    heading: "Activity",
   },
   {
     label: "member /removals",
@@ -116,28 +110,33 @@ const MEMBER_ROUTES: readonly RouteSpec[] = [
   ...shared("member"),
 ];
 
+/** The owner's Manage pages, each opened by its own address. */
+const MANAGE_ROUTES: readonly RouteSpec[] = [
+  { path: "/manage/household", heading: "Household" },
+  { path: "/manage/quality", heading: "Quality" },
+  { path: "/manage/subtitles", heading: "Subtitles" },
+  { path: "/manage/plex", heading: "Plex" },
+  { path: "/manage/numbering", heading: "Numbering" },
+  { path: "/manage/providers", heading: "Providers and seeding" },
+  { path: "/manage/activity", heading: "Activity" },
+  { path: "/manage/recovery", heading: "Recovery" },
+  { path: "/manage/migration", heading: "Migration" },
+].map((route) => ({
+  ...route,
+  label: `owner ${route.path}`,
+  persona: "owner" as const,
+}));
+
 /**
  * The owner's own pages, plus the household pages that show an owner more
  * than a member (library keeping controls, title administration).
  *
- * Not covered: `/recovery/native` and `/admin/subtitle-replacements`, whose
- * operator inventories have no fixture yet.
+ * Not covered: `/manage/recovery/native` and
+ * `/manage/subtitles/replacements`, whose operator inventories have no
+ * fixture yet.
  */
 const OWNER_ROUTES: readonly RouteSpec[] = [
-  {
-    label: "owner /admin",
-    persona: "owner",
-    path: "/admin",
-    heading: "Administration",
-  },
-  {
-    label: "owner /admin/migration",
-    persona: "owner",
-    path: "/admin/migration",
-    heading: "Bring your library over.",
-    // This page has no PageTitle and keeps the title from index.html.
-    title: "Media · Your next watch",
-  },
+  ...MANAGE_ROUTES,
   ...shared("owner"),
 ];
 

@@ -42,12 +42,12 @@ export function NativeArchiveIndex({ user }: { user: MediaUser }) {
     },
     onSuccess: (result) => {
       if (result.nativeRecoveryId !== undefined)
-        void navigate(`/recovery/native/${result.nativeRecoveryId}`);
+        void navigate(`/manage/recovery/native/${result.nativeRecoveryId}`);
     },
   });
   return (
     <>
-      <PageTitle eyebrow="Operator recovery" title="Review upgrade archives">
+      <PageTitle title="Review upgrade archives">
         <p>
           Select the old versions whose original expiry cleanup should resume.
           The review includes retained dependencies and current playable files,
@@ -55,7 +55,7 @@ export function NativeArchiveIndex({ user }: { user: MediaUser }) {
         </p>
       </PageTitle>
       <p>
-        <Link to="/recovery/native">Native file recovery</Link> ·{" "}
+        <Link to="/manage/recovery/native">Native file recovery</Link> ·{" "}
         <Link to="/recovery">Household recovery protection</Link>
       </p>
       {inventory.isPending && <Loading />}

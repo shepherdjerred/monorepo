@@ -62,7 +62,7 @@ export function MovieCaptionReplacementV2({
     return (
       <Notice>
         Review prepared for {movieEditionDisplayLabel(prepared.scope.edition)}.{" "}
-        <Link to={`/admin/subtitle-replacements/${prepared.id}`}>
+        <Link to={`/manage/subtitles/replacements/${prepared.id}`}>
           Inspect and approve the exact replacement
         </Link>
       </Notice>

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { z } from "zod";
 import { CatalogDetailSchema, CatalogSearchSchema } from "#shared/api.ts";
 import type { CatalogDetail } from "#shared/api.ts";
@@ -18,8 +18,17 @@ import { EmptyState, ErrorNotice, Loading, PageTitle } from "./components.tsx";
 const AdoptResultSchema = z.object({ mediaId: z.string() });
 
 export function Discover() {
-  const [text, setText] = useState("");
-  const [search, setSearch] = useState("");
+  // The search is the address's `q`, so a result list can be linked to and
+  // survives a reload. The shell's search field navigates here with it.
+  const [params, setParams] = useSearchParams();
+  const search = params.get("q")?.trim() ?? "";
+  const [text, setText] = useState(search);
+  // A search that arrives from outside this form replaces what was typed.
+  const [shown, setShown] = useState(search);
+  if (shown !== search) {
+    setShown(search);
+    setText(search);
+  }
   const results = useQuery({
     queryKey: ["catalog", search],
     enabled: search.length > 0,
@@ -31,17 +40,14 @@ export function Discover() {
   });
   return (
     <>
-      <PageTitle
-        eyebrow="Make yourself at home"
-        title="What’s your next watch?"
-      >
+      <PageTitle title="What’s your next watch?">
         <p>Find a film, follow a series, and we’ll take it from here.</p>
       </PageTitle>
       <form
         className="search-form"
         onSubmit={(event) => {
           event.preventDefault();
-          setSearch(text.trim());
+          setParams({ q: text.trim() });
         }}
       >
         <span className="search-icon" aria-hidden="true">
@@ -118,7 +124,6 @@ function DiscoverWelcome() {
   return (
     <section className="welcome-card">
       <div>
-        <span className="eyebrow">One request. Everything handled.</span>
         <h2>
           A little less searching.
           <br />A lot more watching.
@@ -169,13 +174,13 @@ export function CatalogPage({ user }: { user: MediaUser }) {
   const item = detail.data;
   return (
     <>
-      <Link className="back-link" to="/">
+      <Link className="back-link" to="/discover">
         ← Discover
       </Link>
-      <PageTitle
-        eyebrow={`${item.kind === "movie" ? "Film" : "Series"} · ${item.date.slice(0, 4)}`}
-        title={item.title}
-      >
+      <PageTitle title={item.title}>
+        <p>
+          {item.kind === "movie" ? "Film" : "Series"}, {item.date.slice(0, 4)}
+        </p>
         <p>{item.overview}</p>
       </PageTitle>
       <div className="detail-columns">

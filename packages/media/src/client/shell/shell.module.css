@@ -1,0 +1,261 @@
+/*
+ * The signed-in frame. Sizes shared with the rest of the client
+ * (`--shell-top`, `--shell-bottom`, `--shell-gutter`) are set on the root in
+ * `styles.css`, because the document's scroll padding depends on them.
+ */
+@layer components {
+  .shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-3);
+    padding-inline-start: max(var(--space-3), env(safe-area-inset-left, 0px));
+    background: var(--surface-sunken);
+    border-inline-end: 1px solid var(--border);
+  }
+  .brand {
+    align-self: flex-start;
+    margin-inline-start: var(--space-3);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    border-radius: var(--radius-control);
+  }
+  .brandDot {
+    color: var(--text-accent);
+  }
+  .nav {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .navGroup {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .navGroupLabel {
+    margin: 0;
+    padding: 0 var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-tight);
+  }
+  .navList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .navItem {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    font-weight: 500;
+  }
+  .navItem svg {
+    flex: none;
+    width: 18px;
+    height: 18px;
+  }
+  .navItem:hover {
+    color: var(--text);
+    background: color-mix(in srgb, var(--surface-selected) 60%, transparent);
+  }
+  .navItem:focus-visible {
+    outline-offset: -3px;
+  }
+  .navItem[aria-current="page"] {
+    background: var(--surface-selected);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .navItem[aria-current="page"] svg {
+    color: var(--text-accent);
+  }
+  /* The fill is quiet on the sunken sidebar; the mark is what tells the
+     current page apart without relying on color. */
+  .navItem[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    inset-block: 11px;
+    inset-inline-start: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--accent-strong);
+  }
+
+  /* Page column */
+  .column {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .topBar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--shell-top);
+    padding: 0 var(--shell-gutter);
+    padding-inline-end: max(
+      var(--shell-gutter),
+      env(safe-area-inset-right, 0px)
+    );
+    background: var(--canvas);
+    border-bottom: 1px solid var(--border);
+  }
+  .search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 520px;
+    min-height: 40px;
+    padding: 0 var(--space-4);
+    background: var(--field);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+  }
+  .search svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    font-size: var(--text-sm);
+  }
+  /* The ring is drawn around the whole field, not the bare input. */
+  .search input:focus-visible {
+    outline: none;
+  }
+  .search:focus-within {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .topActions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-inline-start: auto;
+  }
+  .iconButton {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--text);
+  }
+  .iconButton svg {
+    width: 18px;
+    height: 18px;
+  }
+  .iconButton:hover {
+    background: var(--surface-selected);
+  }
+  .iconButton[aria-current="page"] {
+    background: var(--surface-selected);
+    border: 2px solid var(--accent-strong);
+    color: var(--text-accent);
+  }
+  .iconButton:focus-visible {
+    outline-offset: 2px;
+  }
+  /* A flex column, as the page always was: the pages' own vertical margins
+     are written for a container where they do not collapse. */
+  .main {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: var(--content-width);
+    min-width: 0;
+    padding: var(--space-6) var(--shell-gutter) var(--space-7);
+    padding-inline-end: max(
+      var(--shell-gutter),
+      env(safe-area-inset-right, 0px)
+    );
+  }
+  /* The skip link and a loading page focus the region itself. */
+  .main:focus {
+    outline: none;
+  }
+
+  @media (pointer: coarse) {
+    .navItem,
+    .search {
+      min-height: 44px;
+    }
+    .iconButton {
+      width: 44px;
+      height: 44px;
+    }
+    /* Below 16px, iOS zooms the page when the field takes focus. */
+    .search input {
+      height: 42px;
+      font-size: 1rem;
+    }
+  }
+
+  /* Phones: the sidebar gives way to the tab bar in `tab-bar.module.css`. */
+  @media (max-width: 760px) {
+    .shell {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .sidebar {
+      display: none;
+    }
+    .topBar {
+      padding-inline-start: max(
+        var(--shell-gutter),
+        env(safe-area-inset-left, 0px)
+      );
+    }
+    .search {
+      max-width: none;
+    }
+    /* Clear of the tab bar, so the last row of a list is never under it. */
+    .main {
+      padding-top: var(--space-5);
+      padding-bottom: calc(
+        var(--space-6) + var(--shell-bottom) + env(safe-area-inset-bottom, 0px)
+      );
+      padding-inline-start: max(
+        var(--shell-gutter),
+        env(safe-area-inset-left, 0px)
+      );
+    }
+  }
+}

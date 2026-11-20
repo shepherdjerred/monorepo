@@ -27,7 +27,7 @@ test("a wire status outside the table is neutral", () => {
 });
 
 test("the page title is one text node, which React requires of a title", () => {
-  expect(
-    renderToStaticMarkup(<PageTitle eyebrow="Household" title="Library" />),
-  ).toContain("<title>Library · Media</title>");
+  expect(renderToStaticMarkup(<PageTitle title="Library" />)).toContain(
+    "<title>Library · Media</title>",
+  );
 });

@@ -61,15 +61,12 @@ export function NativeCompensationIndex({ user }: { user: MediaUser }) {
     },
     onSuccess: (result) => {
       if (result.nativeRecoveryId !== undefined)
-        void navigate(`/recovery/native/${result.nativeRecoveryId}`);
+        void navigate(`/manage/recovery/native/${result.nativeRecoveryId}`);
     },
   });
   return (
     <>
-      <PageTitle
-        eyebrow="Operator recovery"
-        title="Review interrupted upgrades"
-      >
+      <PageTitle title="Review interrupted upgrades">
         <p>
           Restore the reviewed predecessor files while retaining successor
           bytes. A restored database cannot prove whether the successor was
@@ -77,7 +74,7 @@ export function NativeCompensationIndex({ user }: { user: MediaUser }) {
         </p>
       </PageTitle>
       <p>
-        <Link to="/recovery/native">Native file recovery</Link> ·{" "}
+        <Link to="/manage/recovery/native">Native file recovery</Link> ·{" "}
         <Link to="/recovery">Household protection</Link>
       </p>
       {(inventory.isPending || context.isPending) && <Loading />}

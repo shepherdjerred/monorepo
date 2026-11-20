@@ -73,22 +73,20 @@ function ReplacementIndex({ user }: { user: MediaUser }) {
     onSuccess: (result) => {
       if (result.subtitleReplacementId !== undefined)
         void navigate(
-          `/admin/subtitle-replacements/${result.subtitleReplacementId}`,
+          `/manage/subtitles/replacements/${result.subtitleReplacementId}`,
         );
     },
   });
   return (
     <>
-      <PageTitle eyebrow="Library care" title="Subtitle replacement">
+      <PageTitle title="Subtitle replacement">
         <p>
           Review an exact, validated replacement for an owned installed sidecar.
           Videos and embedded subtitles stay unchanged.
         </p>
       </PageTitle>
       <p>
-        <Link to="/admin">
-          Upload a replacement candidate in Administration
-        </Link>
+        <Link to="/manage/subtitles">Upload a replacement candidate</Link>
       </p>
       {list.error !== null && <ErrorNotice error={list.error} />}
       {targets.error !== null && <ErrorNotice error={targets.error} />}
@@ -186,7 +184,7 @@ function ReplacementIndex({ user }: { user: MediaUser }) {
             <article key={item.id} className="list-item">
               <div>
                 <h3>
-                  <Link to={`/admin/subtitle-replacements/${item.id}`}>
+                  <Link to={`/manage/subtitles/replacements/${item.id}`}>
                     {item.titles.map((title) => title.title).join(" · ")}
                   </Link>
                 </h3>

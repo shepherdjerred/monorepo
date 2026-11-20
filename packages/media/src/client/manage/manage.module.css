@@ -1,0 +1,107 @@
+@layer components {
+  .layout {
+    container: manage / inline-size;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: 184px minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .rail {
+    position: sticky;
+    top: calc(var(--shell-top) + var(--space-5));
+  }
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    font-weight: 500;
+  }
+  .link:hover {
+    color: var(--text);
+    background: var(--surface);
+  }
+  .link:focus-visible {
+    outline-offset: -3px;
+  }
+  .link[aria-current="page"] {
+    background: var(--surface-selected);
+    color: var(--text);
+    font-weight: 600;
+  }
+  /* The mark, not the fill, is what tells the current page apart. */
+  .link[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    inset-block: 9px;
+    inset-inline-start: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--accent-strong);
+  }
+  /* Kept a flex column so the sections keep the spacing they had on the
+     single Administration page, where margins did not collapse. */
+  .page {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  @media (pointer: coarse) {
+    .link {
+      min-height: 44px;
+    }
+  }
+
+  /* No room for a rail: the list becomes one scrolling row above the page. */
+  @container manage (max-width: 719px) {
+    .columns {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+    .rail {
+      position: static;
+      /* To the edges of the page, so the row scrolls under them. */
+      margin-inline: calc(-1 * var(--shell-gutter));
+    }
+    .list {
+      display: flex;
+      gap: var(--space-2);
+      overflow-x: auto;
+      padding: 3px var(--shell-gutter);
+      /* A fading end says the row continues; the padding lets the last
+         link scroll clear of it. */
+      padding-inline-end: var(--space-7);
+      mask-image: linear-gradient(
+        to right,
+        black calc(100% - var(--space-7)),
+        transparent
+      );
+    }
+    .link {
+      flex: none;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 0 var(--space-4);
+    }
+    .link[aria-current="page"] {
+      border-color: var(--accent-strong);
+    }
+    .link[aria-current="page"]::before {
+      content: none;
+    }
+  }
+}

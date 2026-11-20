@@ -1,6 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
-import type { MediaUser } from "#shared/contract.ts";
 import { RemovalHistoryPageSchema } from "#shared/household/calendar.ts";
 import { readApi } from "#client/api.ts";
 import {
@@ -16,7 +15,7 @@ import {
 import "#client/calendar/style.css";
 import { firstListCursor } from "#client/household/list-cursor.ts";
 
-export function RemovalHistoryPage({ user }: { user: MediaUser }) {
+export function RemovalHistoryPage() {
   const history = useInfiniteQuery({
     queryKey: ["removal-history"],
     initialPageParam: firstListCursor(),
@@ -30,14 +29,7 @@ export function RemovalHistoryPage({ user }: { user: MediaUser }) {
   const items = history.data?.pages.flatMap((page) => page.items) ?? [];
   return (
     <>
-      <PageTitle
-        eyebrow={
-          user.role === "owner"
-            ? "Household library history"
-            : "Your request history"
-        }
-        title="Removed titles"
-      >
+      <PageTitle title="Removed titles">
         <p>
           What Media removed, why it left, and whether it can still be restored.
           The record stays after the files are purged.

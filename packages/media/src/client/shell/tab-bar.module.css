@@ -1,0 +1,192 @@
+@layer components {
+  /* Shown on phones only; the sidebar carries navigation everywhere else. */
+  .tabBar {
+    display: none;
+  }
+
+  @media (max-width: 760px) {
+    .tabBar {
+      position: fixed;
+      inset-inline: 0;
+      bottom: 0;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      /* `--shell-bottom` is this bar's height above the safe area. */
+      min-height: calc(var(--shell-bottom) + env(safe-area-inset-bottom, 0px));
+      padding: 0 max(var(--space-1), env(safe-area-inset-right, 0px))
+        env(safe-area-inset-bottom, 0px)
+        max(var(--space-1), env(safe-area-inset-left, 0px));
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+  }
+  .tab {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 2px;
+    min-width: 0;
+    min-height: 48px;
+    padding: var(--space-1) 2px;
+    border: 0;
+    background: none;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: var(--leading-tight);
+    text-align: center;
+  }
+  .tab svg {
+    width: 20px;
+    height: 20px;
+  }
+  .tab:focus-visible {
+    outline-offset: -3px;
+  }
+  .tab[aria-current] {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .tab[aria-current] svg {
+    color: var(--text-accent);
+  }
+  /* The same mark the sidebar uses, along the top edge. */
+  .tab[aria-current]::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    inset-inline-start: 50%;
+    width: 24px;
+    height: 3px;
+    margin-inline-start: -12px;
+    border-radius: 0 0 3px 3px;
+    background: var(--accent-strong);
+  }
+
+  /*
+   * More: a sheet that rises from the bottom edge. Only a phone can open
+   * it, but it is styled at every width, so one left open while the device
+   * turns to landscape stays visible and closable.
+   */
+  .sheet {
+    inset: auto 0 0;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    max-height: 85dvh;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-4)
+      calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: var(--shadow-raised);
+    /* Scrolling the sheet or its backdrop never scrolls the page behind. */
+    overscroll-behavior: contain;
+  }
+  .sheet::backdrop {
+    background: var(--scrim);
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+  .sheetHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+  }
+  .sheetHeader h2 {
+    margin: 0;
+    padding-inline-start: var(--space-3);
+    font-size: var(--text-lg);
+  }
+  .sheetClose {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--text-muted);
+  }
+  .sheetClose svg {
+    width: 20px;
+    height: 20px;
+  }
+  .sheetGroup {
+    margin: var(--space-4) 0 var(--space-1);
+    padding: 0 var(--space-3);
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    line-height: var(--leading-tight);
+    letter-spacing: 0;
+  }
+  .sheetList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .sheetLink {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 48px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-control);
+    color: var(--text);
+    font-size: var(--text-md);
+    font-weight: 500;
+  }
+  .sheetLink svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+  }
+  .sheetLink:focus-visible {
+    outline-offset: -3px;
+  }
+  .sheetLink[aria-current="page"] {
+    background: var(--surface-selected);
+    font-weight: 600;
+  }
+  .sheetLink[aria-current="page"] svg {
+    color: var(--text-accent);
+  }
+  .sheetLink[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    inset-block: 14px;
+    inset-inline-start: 0;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--accent-strong);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .sheet[open] {
+      animation: rise var(--dur-3) var(--ease-out);
+    }
+    .sheet[open]::backdrop {
+      animation: dim var(--dur-3) var(--ease-out);
+    }
+  }
+  @keyframes rise {
+    from {
+      translate: 0 100%;
+    }
+  }
+  @keyframes dim {
+    from {
+      opacity: 0;
+    }
+  }
+}

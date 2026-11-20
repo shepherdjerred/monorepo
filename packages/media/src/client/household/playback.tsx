@@ -62,10 +62,7 @@ export function PlaybackHistoryPage({ user }: { user: MediaUser }) {
   });
   return (
     <>
-      <PageTitle
-        eyebrow={user.role === "owner" ? "Household activity" : "Your activity"}
-        title="Watch history"
-      >
+      <PageTitle title="Watch history">
         <p>
           What is playing, what you have watched, and the titles you return to.
         </p>

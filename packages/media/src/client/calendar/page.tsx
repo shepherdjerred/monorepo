@@ -1,6 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import type { MediaUser } from "#shared/contract.ts";
 import {
   CalendarPageSchema,
   type CalendarEvent,
@@ -24,7 +23,7 @@ import {
 } from "./dates.ts";
 import "./style.css";
 
-export function CalendarPage({ user }: { user: MediaUser }) {
+export function CalendarPage() {
   const [anchor, setAnchor] = useState(localToday);
   const [view, setView] = useState<"month" | "week" | "agenda">("month");
   const [kind, setKind] = useState("all");
@@ -57,14 +56,7 @@ export function CalendarPage({ user }: { user: MediaUser }) {
   }
   return (
     <>
-      <PageTitle
-        eyebrow={
-          user.role === "owner"
-            ? "Your household collection"
-            : "Your followed titles"
-        }
-        title="Calendar"
-      >
+      <PageTitle title="Calendar">
         <p>
           TV air dates and US cinema, digital, and physical movie releases.
           Dates may change; availability shows what is ready in your library.
