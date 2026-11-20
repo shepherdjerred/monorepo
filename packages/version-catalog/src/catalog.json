@@ -102,7 +102,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v0.26.0@sha256:dacc7cb7039db091bbc336959724af93f6d75a1d628a66fe3a96973879c59dc9"
+      "value": "v0.34.1@sha256:11d5b54740daf399155d7c2dbbecc4085a021c818de5b677fcac5df2e60c6045"
     },
     {
       "name": "connect",
@@ -293,7 +293,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "loose"
       },
-      "value": "1.43.4.10903-e5521bd8c-amd64@sha256:dbb879bf58c3fc56635f21ac48c32aa6853aaa23d4a57b102033b6dc6d2d9cee"
+      "value": "1.43.5.11079-b3b13e506-amd64@sha256:32dead43c01e8ff6189504ff0d048b16cf084a1dc37d8906fef8f3537d067e4d"
     },
     {
       "name": "linuxserver/tautulli",
@@ -317,7 +317,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "1.6.2@sha256:c1673816321156b904af9b7e6415ea547ae9622e4acc375358f1e1eb9ed1e904"
+      "value": "1.6.2@sha256:e0c5d45965242830c5eeddaafe9ae2b5e8ca3f6c01ecda9ee9364f550921dc50"
     },
     {
       "name": "seerr-team/seerr",
@@ -329,7 +329,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "v3.5.0@sha256:27602401178d54f1964442287b9f23f67a3fa2252645ee8065839ea1c3f69e45"
+      "value": "v3.5.2@sha256:aadee014b40e28cf9aa4928bc9d1183a6eb08f8c44d543cddc9efdcb16549be2"
     },
     {
       "name": "kometateam/kometa",
@@ -341,7 +341,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v2.5.2@sha256:06e498cded70c9815522c6b2d8708b31759c1e37714746d1eeb56f1e40a8fd95"
+      "value": "v2.5.5@sha256:864cec57d099c71a26a5a5ce2784d34d9b53874c91269c3a12df3949eab96562"
     },
     {
       "name": "linuxserver/prowlarr",
@@ -353,7 +353,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.6.5@sha256:f9151e5bc1025c6d0a630d503210cdcb6bb55a7cc098562609d96a408d838902"
+      "value": "2.7.0@sha256:6660787a99b2e58203539583663c973b48979fc00ff2cb78dc0ea17429e1f6ef"
     },
     {
       "name": "qdm12/gluetun",
@@ -377,7 +377,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "5.2.4@sha256:b522f9f4b769f8f36d49d22d5eb6a92e9aa18904c6a1830b1439df511ec21983",
+      "value": "5.3.0@sha256:3d4c4545d51a690a0df15a2ff99038823a88a9822df8e794526447b9afbd7384",
       "notes": [
         "Keep this on qBittorrent app versions only. LinuxServer also publishes",
         "stale OS-style tags like 20.04.1 that resolve to old app builds."
@@ -393,7 +393,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "6.4.4@sha256:7dfd049e79c00b16fbc29c3f5d96a9e7b9e73a23930b4c5b3c4541d60b366814"
+      "value": "6.4.4@sha256:7a20f20de63706eee2ff6e4ac1f989a70c961f456aa47ccb6c78f2bb7657d9ae"
     },
     {
       "name": "linuxserver/sonarr",
@@ -405,7 +405,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "4.0.20@sha256:f247545d23ba8b233d6604575347e48a623fe6ad75dda02348bf81917f3b5c06"
+      "value": "4.0.20@sha256:c7d1df25e428da6c9ace05daea0d34e59522978a3843ea1944812f855af4086c"
     },
     {
       "name": "timothyjmiller/cloudflare-ddns",
@@ -417,7 +417,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:5f2471be9efd9f0c95f973645cc87f05d501020ded94d380a2120fbfdf812d3d"
+      "value": "latest@sha256:7e43f85f03b94513d2f05d84ac0f39293e9d339e00b2d64b5cc7bf73e8429d94"
     },
     {
       "name": "cloudflare/cloudflared",
@@ -477,7 +477,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.24.3@sha256:3fef66d575ea0ea9d50aad3e05c36619228557cfa888557eac2035215a29a321"
+      "value": "11.27.0@sha256:0f3ad23ccf5ff2256ad8cc060ab0fc987b8f52a8427eac337f93b058fa628f35"
     },
     {
       "name": "koush/scrypted",
@@ -522,7 +522,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.11.10"
+      "value": "v1.11.11"
     },
     {
       "name": "magico13/ha-emporia-vue",
@@ -533,7 +533,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v0.12.3"
+      "value": "v0.13.0"
     },
     {
       "name": "dlarrick/hass-kumo",
@@ -544,7 +544,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v0.4.6"
+      "value": "v0.4.8"
     },
     {
       "name": "kgelinas/Mysa_HA",
@@ -577,7 +577,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v3.13.1"
+      "value": "v3.13.3"
     },
     {
       "name": "elax46/custom-brand-icons",
@@ -588,7 +588,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "2026.07.0"
+      "value": "2026.11.3"
     },
     {
       "name": "linuxserver/syncthing",
@@ -600,7 +600,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.1.6@sha256:8a381a5a11225475cc4a14ad4fee7c627fdc4fa5804fe3a34febe3aeda9f4e23"
+      "value": "2.1.7@sha256:c4207d8f5b66d5f67eedb636b75500b5a04898e9f33299d252f4b966c41a4128"
     },
     {
       "name": "dotdc/grafana-dashboards-kubernetes",
@@ -611,7 +611,7 @@
         "datasource": "github-releases",
         "versioning": "semver-coerced"
       },
-      "value": "v3.0.8"
+      "value": "v3.0.9"
     },
     {
       "name": "chartmuseum",
@@ -675,7 +675,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.4.6-alpine@sha256:7af8255207ee9964ccb4eec8ce4b7a40b777769665e3ae83897fb01b24d8a43a",
+      "value": "3.4.8-alpine@sha256:8aa6458a9d22a8364a2d2ee9ce93de0cc4a2789e3cf63f0b44adc972863724d7",
       "component": true
     },
     {
@@ -791,7 +791,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.30.3@sha256:fe45c15dc79573231629588e194f142adffae6bdeae6036401011c63ba644c94"
+      "value": "1.30.4@sha256:af44385229541bee24aa9148d0ff8f3b40e095373c63a2c0f74e09a27d3c59df"
     },
     {
       "name": "oven/bun",
@@ -875,7 +875,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa"
+      "value": "0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb"
     },
     {
       "name": "semgrep/semgrep",
@@ -887,7 +887,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.180.0@sha256:529ee8a277ec8adc5b534d7c74eea0a47e9de21d62852b6ba7ac6ba9566845c3"
+      "value": "1.186.0@sha256:6e1b04340e60e910fbb4ddbf3c857ab0918f064417ad5ac530014ccb3cf8c8f1"
     },
     {
       "name": "woodpeckerci/woodpecker-server",
@@ -935,7 +935,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.10.1@sha256:550075c844fcec0af41d9d28f9860aa5d8c43e1e9419be4b9266dc02c2f29804"
+      "value": "2.12.1@sha256:b8d2401997be68ec25d62bd753fe5d30236e029fe007a5e823177e0e485ae205"
     },
     {
       "name": "ducktors/turborepo-remote-cache",
@@ -947,7 +947,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.14.3@sha256:781b0549dca80cf5aca27bf416fc766d44cad57333a7368098a755c5f12b8822",
+      "value": "2.14.5@sha256:58f0aeeb78d9e5de6ff0fe989fcfaa7ca3df467769780e378a87af8d24806b48",
       "notes": [
         "Self-hosted Turborepo remote cache backing the workspace task graph."
       ]
@@ -992,7 +992,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "v0.34.0@sha256:b059f8d7226d0b326bc871af489a5dddf65e36af4d20d14251b072974d9ee87c",
+      "value": "v0.35.1@sha256:baf6138eb8c37644800c7c913fba051e840ebb9ba13eaf92d92ef9a1712d0b4c",
       "notes": [
         "Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a",
         "compressed ZFS PVC, replacing the per-run throwaway builder inside dind \u2014",
@@ -1009,7 +1009,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.14-alpine@sha256:f6a589d43c42b9e7f7dc67a12d37132491f362859a5d750607710cc56da3bc72"
+      "value": "3.14-alpine@sha256:5862d971d1f0ae26b258cefa4e893556b1d3aba81bd2ff30888704ad378bab67"
     },
     {
       "name": "bitnamilegacy/kubectl",
@@ -1151,7 +1151,7 @@
         "registryUrl": "https://ghcr.io/recyclarr",
         "versioning": "docker"
       },
-      "value": "8.7.3@sha256:9c6c74d52cfc6f740a5a3624aa83867e171bb70b90453ddb7a4048b8c80445f9"
+      "value": "8.8.1@sha256:3e9c41b9ec29bbf65fe846864058730d321a21f7695d8c0d9437b73e34d50ad9"
     },
     {
       "name": "siderolabs/talos",
@@ -1240,7 +1240,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "v1.7.0@sha256:02dbf86bd2850dcb94e7df5684159b954386e978e20f6b473f92efa62335f552"
+      "value": "v1.8.0@sha256:f27cc3b38a7383353ccdd8517f6b57187cc90ad9e6504049630c25e111f590e9"
     },
     {
       "name": "jsclayton/prometheus-plex-exporter",
@@ -1329,7 +1329,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:354e5aec20455bce931a05fa791c51e4a45879015bee09591295c76fe88c037e"
+      "value": "latest@sha256:687181819d6e3f04124a21aec1aeef1d8a5d6a924c0d8e8f0cf66b8f0ce15a7c"
     },
     {
       "name": "bitnami/mysqld-exporter",
@@ -1341,7 +1341,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:389ccc1a8661857e34770432c9c737b1cc59351d13be91b93df03db817d0a7db"
+      "value": "latest@sha256:6d49e9b6da985db2a70d932076ed465fa8aefe16f8514443fc92724eae46bea6"
     },
     {
       "name": "postalserver/postal",
@@ -1365,7 +1365,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "8.5.12-fpm-bookworm@sha256:740a5adab5af19504d8aa0754e903e20b40b0153cfd4013c11e4df2029a7b73c"
+      "value": "8.5.13-fpm-bookworm@sha256:bad1d3498eaa489efe88c1d532e47e2f4111304c3f0b19fbc428842c39ec155c"
     },
     {
       "name": "library/mariadb",
@@ -1377,7 +1377,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.8@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15"
+      "value": "11.8@sha256:e1d5495f445654134f226f55a41ce0da227116f6f27f283101f405c794d841fc"
     },
     {
       "name": "boky/postfix",
@@ -1389,7 +1389,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef"
+      "value": "latest@sha256:0632783c64183446c4edeae9092a2e015fdc0c4e8a3976bdf8878a7fc2146361"
     },
     {
       "name": "library/busybox",
@@ -1414,7 +1414,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:4b3d9475d65571d28cbb19544d3820ec2945e4c8b2f18279394282b8dc3a592e",
+      "value": "latest@sha256:7834187596ad56fd5a81436114e0b0b9dd54c91bb43946d1f7145b2be5f9c3d2",
       "notes": [
         "Alpine-based image bundling yq + busybox coreutils (sh/find/cmp/diff/cp);",
         "used by the Minecraft config-drift init container for semantic YAML/JSON",
@@ -1432,7 +1432,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6"
+      "value": "latest@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf"
     },
     {
       "name": "alpine/git",
@@ -1444,7 +1444,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2.54.0@sha256:a4bb51f1a3553df194ce679fc1db721d8bfba2046fa1a88fe9d4ac551ffbce25",
+      "value": "2.54.1@sha256:2306e2b05ee0ef99f5d25b0779f645b24ae9f91ba187107503592fcdfe78da3a",
       "notes": [
         "Initializes Flipt's local storage as committed normal Git repositories."
       ]
@@ -1459,7 +1459,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:10212b643245b97d0369d1be3448cc35e61f7df78b4861cf7df90608e9c803d3"
+      "value": "latest@sha256:8264741ba5d8f7f6a7d312fb048d1f84ec3286ca17abf569f0d06c4c666c60c8"
     },
     {
       "name": "library/debian",
@@ -1471,7 +1471,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587"
+      "value": "bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc"
     },
     {
       "name": "library/nginx",
@@ -1483,7 +1483,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.31.6-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2",
+      "value": "1.31.9-alpine@sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7",
       "notes": [
         "Also CI's Gradle build cache, which relies on the image's WebDAV module and BusyBox cryptpw; keep the alpine variant."
       ]
