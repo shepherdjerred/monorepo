@@ -27,6 +27,7 @@
         "scripts/generate-caddyfile.ts",
         "scripts/check-caddyfile.ts",
         "src/misc/s3-static-site.ts",
+        "src/misc/static-site-headers.ts",
         "src/misc/common.ts",
         "src/resources/s3-static-sites/sites.ts"
       ]

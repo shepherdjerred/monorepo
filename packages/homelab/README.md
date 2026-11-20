@@ -84,6 +84,12 @@ rest from the registries that already own it (`domain-registry.json`, the
 | `ScopedCredential` | `OnePasswordItem` naming the title   | the `onepassword_item` that writes it        |
 | `BucketConsumer`   | bucket name in a workload's env      | the SeaweedFS bucket                         |
 
+A static site can declare `aliases`: further hostnames the origin serves from
+the same bucket, each with its own tunnel binding and CNAME.
+`src/cdk8s/src/resources/s3-static-sites/sites.ts` can give an alias a root
+path, which serves one page of the bucket at the alias's `/` with HTTP 200
+instead of a redirect.
+
 cdk8s renders from the model. Its constructs take a model entry instead of a
 string, looked up with `publicHostname`, `publicHostnameOfService`,
 `staticSite`, `tailnetService` or `consumedBucket`; an id the model does not

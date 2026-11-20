@@ -240,6 +240,31 @@ const DISAGREEMENTS: [string, Sides, Partial<Record<RuleId, string[]>>][] = [
     { staticSitesWithoutCaddySite: ["www.example.com"] },
   ],
   [
+    "an alias the static-site origin does not serve from its site's bucket",
+    {
+      ...agreed,
+      definitions: {
+        ...definitions,
+        model: {
+          ...model,
+          staticSites: model.staticSites.map((site) => ({
+            ...site,
+            aliases: ["alias.example.com", "other.example.com"],
+          })),
+        },
+      },
+      kubernetes: {
+        ...kubernetes,
+        caddySites: [
+          ...kubernetes.caddySites,
+          { hostname: "alias.example.com", bucket: "www" },
+          { hostname: "other.example.com", bucket: "elsewhere" },
+        ],
+      },
+    },
+    { staticSitesWithoutCaddySite: ["other.example.com"] },
+  ],
+  [
     "a static site whose bucket and cache rule are missing",
     {
       ...agreed,

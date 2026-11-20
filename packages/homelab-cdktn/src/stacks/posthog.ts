@@ -31,9 +31,20 @@ const PROJECT_ID = "549883";
 
 const AnalyticsRegistrySchema = z.looseObject({
   sites: z.array(
-    z.looseObject({ hostname: z.string(), sessionReplay: z.boolean() }),
+    z.looseObject({
+      hostname: z.string(),
+      aliases: z.array(z.string()).optional(),
+      sessionReplay: z.boolean(),
+    }),
   ),
 });
+
+/** The origins a site reports from: its hostname, then its aliases. */
+function origins(site: { hostname: string; aliases?: string[] }): string[] {
+  return [site.hostname, ...(site.aliases ?? [])].map(
+    (hostname) => `https://${hostname}`,
+  );
+}
 
 /**
  * Every first-party site that reports to PostHog. The registry is imported
@@ -218,7 +229,7 @@ export class PosthogStack extends HomelabStack {
     internalTestUsers.importFrom(`${PROJECT_ID}/469393`);
 
     const settings = new ProjectSettings(this, "project_settings_monorepo", {
-      appUrls: ANALYTICS_SITES.map((site) => `https://${site.hostname}`),
+      appUrls: ANALYTICS_SITES.flatMap((site) => origins(site)),
       autocaptureWebVitalsOptIn: true,
       capturePerformanceOptIn: true,
       cookielessServerHashMode: 0,
@@ -226,7 +237,7 @@ export class PosthogStack extends HomelabStack {
       projectId: PROJECT_ID,
       recordingDomains: ANALYTICS_SITES.filter(
         (site) => site.sessionReplay,
-      ).map((site) => `https://${site.hostname}`),
+      ).flatMap((site) => origins(site)),
       sessionRecordingOptIn: true,
       testAccountFilters: Fn.jsonencode([
         {

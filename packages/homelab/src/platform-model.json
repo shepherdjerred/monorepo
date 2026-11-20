@@ -226,7 +226,8 @@
     {
       "hostname": "public.ts-mc.net",
       "bucket": "landing-pages",
-      "immutablePrefixes": ["_astro/"]
+      "immutablePrefixes": ["_astro/"],
+      "aliases": ["join.ts-mc.net"]
     },
     {
       "hostname": "wiki.sjer.red",

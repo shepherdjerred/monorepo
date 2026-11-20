@@ -267,6 +267,10 @@
       "to": "cloudflare_dns_record.clauderon_com_apex"
     },
     {
+      "from": "cloudflare_dns_record.ts_mc_net_aaaa_join",
+      "to": "cloudflare_dns_record.ts_mc_net_cname_join"
+    },
+    {
       "from": "cloudflare_zone_dnssec.better_skill_capped_com",
       "to": "module.domain_baseline[\"better-skill-capped.com\"].cloudflare_zone_dnssec.dnssec"
     },
@@ -4419,24 +4423,6 @@
         "type": "TXT",
         "zone_id": "${cloudflare_zone.ts_mc_net.id}"
       },
-      "ts_mc_net_a_join": {
-        "content": "192.0.2.1",
-        "depends_on": ["cloudflare_ruleset.ts_mc_net_redirects"],
-        "name": "join",
-        "proxied": true,
-        "ttl": 1,
-        "type": "A",
-        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
-      },
-      "ts_mc_net_aaaa_join": {
-        "content": "100::",
-        "depends_on": ["cloudflare_ruleset.ts_mc_net_redirects"],
-        "name": "join",
-        "proxied": true,
-        "ttl": 1,
-        "type": "AAAA",
-        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
-      },
       "ts_mc_net_baseline_caa_iodef": {
         "data": {
           "flags": 0,
@@ -4631,6 +4617,14 @@
       "ts_mc_net_cname_docs": {
         "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
         "name": "docs",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
+      "ts_mc_net_cname_join": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "join",
         "proxied": true,
         "ttl": 1,
         "type": "CNAME",
@@ -4974,27 +4968,6 @@
           }
         ],
         "zone_id": "${cloudflare_zone.sjer_red.id}"
-      },
-      "ts_mc_net_redirects": {
-        "kind": "zone",
-        "name": "ts-mc.net dynamic redirects",
-        "phase": "http_request_dynamic_redirect",
-        "rules": [
-          {
-            "action": "redirect",
-            "action_parameters": {
-              "from_value": {
-                "preserve_query_string": true,
-                "status_code": 301,
-                "target_url": { "value": "https://public.ts-mc.net/the-storm/" }
-              }
-            },
-            "description": "Redirect join.ts-mc.net to The Storm landing page",
-            "expression": "(http.host eq \"join.ts-mc.net\")",
-            "ref": "join_to_the_storm"
-          }
-        ],
-        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
       }
     },
     "cloudflare_tiered_cache": {

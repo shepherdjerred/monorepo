@@ -187,6 +187,7 @@ id the model does not declare throws during synthesis.
 | A tailnet ingress                 | `host: tailnetService("plex")` on `TailscaleIngress`, `LinuxServerApp` and `FirstPartyWebService`                |
 | A tailnet name in a URL or header | `tailnetService("plex").fqdn` or `.origin`                                                                       |
 | A static site                     | an entry under `staticSites` in the model; `resources/s3-static-sites/sites.ts` adds probes, proxies and headers |
+| Another hostname for a site       | the hostname under the site's `aliases` in the model; `aliasRoots` in `sites.ts` names the page it serves at `/` |
 | A bucket name in a workload's env | `...seaweedfsS3.bucketEnv("S3_BUCKET", "tracker")`                                                               |
 | The in-cluster S3 endpoint        | `seaweedfsS3.endpoint`                                                                                           |
 

@@ -12,6 +12,7 @@ import {
   publicHostnameOfService,
   publicHostnames,
   staticSite,
+  staticSiteHostnames,
   tailnetService,
   tailnetTagOwners,
   scopedCredentials,
@@ -21,15 +22,19 @@ import {
 } from "homelab/src/platform-model.ts";
 
 describe("platform model", () => {
-  test("public hostnames include every static site and mail-policy host", () => {
+  test("public hostnames include every static site, alias and mail-policy host", () => {
     const hostnames = publicHostnames();
+    const served = platformModel.staticSites.flatMap((site) =>
+      staticSiteHostnames(site),
+    );
+    expect(served).toContain("join.ts-mc.net");
     expect(hostnames).toHaveLength(
       platformModel.publicHostnames.length +
-        platformModel.staticSites.length +
+        served.length +
         mailPolicyHosts.length,
     );
     for (const hostname of [
-      ...platformModel.staticSites.map((site) => site.hostname),
+      ...served,
       ...mailPolicyHosts.map((host) => host.hostname),
     ])
       expect(hostnames).toContainEqual({
@@ -53,6 +58,32 @@ describe("platform model", () => {
     ]);
     expect(byZone.get("better-skill-capped.com")).toEqual(["/assets/"]);
     expect(byZone.has("statically-typed.com")).toBe(false);
+  });
+
+  test("an alias brings its site's immutable prefixes to its own zone", () => {
+    const [site] = modelJson.staticSites;
+    if (site === undefined) throw new Error("the model declares no site");
+    const model = PlatformModelSchema.parse({
+      ...modelJson,
+      staticSites: [
+        {
+          hostname: "statically-typed.com",
+          bucket: site.bucket,
+          immutablePrefixes: ["_astro/"],
+          aliases: ["alias.glitter-boys.com"],
+        },
+      ],
+    });
+    expect(immutablePathPrefixesByZone(model)).toEqual(
+      new Map([
+        ["glitter-boys.com", ["/_astro/"]],
+        ["statically-typed.com", ["/_astro/"]],
+      ]),
+    );
+    // The bucket is still expired once, by the site that owns it.
+    expect(immutablePrefixesByBucket(model)).toEqual(
+      new Map([[site.bucket, ["_astro/"]]]),
+    );
   });
 
   test("a bucket expires the immutable prefixes of the site it serves", () => {
@@ -131,6 +162,18 @@ describe("platform model", () => {
       /Duplicate static site bucket/,
     ],
     [
+      "an alias that is another site's hostname",
+      (model) => ({
+        ...model,
+        staticSites: model.staticSites.map((site) =>
+          site.hostname === "public.ts-mc.net"
+            ? { ...site, aliases: ["docs.ts-mc.net"] }
+            : site,
+        ),
+      }),
+      /Duplicate static site hostname: docs\.ts-mc\.net/,
+    ],
+    [
       "a service tag the tailnet does not declare",
       (model) => ({
         ...model,
@@ -161,6 +204,32 @@ describe("platform model", () => {
     ],
   ])("the schema rejects %s", (_name, change, message) => {
     expect(() => PlatformModelSchema.parse(change(modelJson))).toThrow(message);
+  });
+});
+
+describe("static site aliases", () => {
+  test("an alias cannot take a hostname routed to another Service", () => {
+    const model = PlatformModelSchema.parse({
+      ...modelJson,
+      staticSites: modelJson.staticSites.map((site) =>
+        site.hostname === "public.ts-mc.net"
+          ? { ...site, aliases: ["plex.sjer.red"] }
+          : site,
+      ),
+    });
+    expect(() => publicHostnames(model)).toThrow(
+      /Duplicate public hostname: plex\.sjer\.red/,
+    );
+  });
+
+  test("an alias is routed to the static-site origin, and is not a site of its own", () => {
+    expect(publicHostname("join.ts-mc.net")).toEqual({
+      hostname: "join.ts-mc.net",
+      ...platformModel.staticSiteOrigin,
+    });
+    expect(() => staticSite("join.ts-mc.net")).toThrow(
+      /declares 0 entries for static site join\.ts-mc\.net/,
+    );
   });
 });
 

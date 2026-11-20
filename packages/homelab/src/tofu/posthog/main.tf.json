@@ -3295,6 +3295,7 @@
           "https://cook.sjer.red",
           "https://stocks.sjer.red",
           "https://public.ts-mc.net",
+          "https://join.ts-mc.net",
           "https://wiki.sjer.red"
         ],
         "autocapture_web_vitals_opt_in": true,
@@ -3315,6 +3316,7 @@
           "https://cook.sjer.red",
           "https://stocks.sjer.red",
           "https://public.ts-mc.net",
+          "https://join.ts-mc.net",
           "https://wiki.sjer.red"
         ],
         "session_recording_opt_in": true,

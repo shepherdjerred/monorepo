@@ -63,13 +63,13 @@ describe("cloudflare stack", () => {
       ),
     ).toEqual({
       cloudflare_ct_alerting: 10,
-      // 93 application records and 208 of the ten baselines.
-      cloudflare_dns_record: 301,
+      // 92 application records and 208 of the ten baselines.
+      cloudflare_dns_record: 300,
       cloudflare_r2_bucket: 4,
       cloudflare_r2_bucket_lifecycle: 4,
       cloudflare_r2_custom_domain: 2,
       cloudflare_r2_managed_domain: 4,
-      cloudflare_ruleset: 8,
+      cloudflare_ruleset: 7,
       cloudflare_tiered_cache: 3,
       cloudflare_turnstile_widget: 1,
       cloudflare_zone: 10,
@@ -91,7 +91,6 @@ describe("cloudflare stack", () => {
       "scout_for_lol_com_static_cache",
       "sjer_red_redirects",
       "sjer_red_static_cache",
-      "ts_mc_net_redirects",
     ]);
     // A bucket and the resources declared for it share its HCL name.
     for (const type of [
@@ -277,8 +276,8 @@ describe("cloudflare records and redirects", () => {
     const tunnel = Object.entries(records ?? {}).filter(
       ([, record]) => record["content"] === TUNNEL,
     );
-    // 46 application hostnames and each zone's MTA-STS policy host.
-    expect(tunnel).toHaveLength(56);
+    // 47 application hostnames and each zone's MTA-STS policy host.
+    expect(tunnel).toHaveLength(57);
     for (const [name, record] of tunnel)
       expect(record, name).toMatchObject({
         type: "CNAME",
@@ -363,10 +362,32 @@ describe("cloudflare records and redirects", () => {
         "cloudflare_ruleset.clauderon_com_redirect",
       ],
     });
-    for (const join of ["ts_mc_net_aaaa_join", "ts_mc_net_a_join"])
-      expect(records?.[join]?.["depends_on"], join).toEqual([
-        "cloudflare_ruleset.ts_mc_net_redirects",
-      ]);
+  });
+
+  test("join.ts-mc.net is a tunnel hostname, not a redirect", async () => {
+    const { moved, resource } = await cloudflare();
+    const records = resource["cloudflare_dns_record"];
+    expect(records?.["ts_mc_net_cname_join"]).toEqual({
+      zone_id: zoneId("ts-mc.net"),
+      ttl: 1,
+      name: "join",
+      type: "CNAME",
+      content: tunnelCnameTarget(),
+      proxied: true,
+    });
+    // The CNAME takes over the AAAA placeholder's state, so it is created
+    // after both placeholders and the redirect ruleset are destroyed.
+    expect(moved).toContainEqual({
+      from: "cloudflare_dns_record.ts_mc_net_aaaa_join",
+      to: "cloudflare_dns_record.ts_mc_net_cname_join",
+    });
+    for (const retired of ["ts_mc_net_aaaa_join", "ts_mc_net_a_join"])
+      expect(records?.[retired], retired).toBeUndefined();
+    // Java clients still resolve the game server through the SRV record.
+    expect(records?.["ts_mc_net_srv_minecraft_join"]).toMatchObject({
+      name: "_minecraft._tcp.join",
+      type: "SRV",
+    });
   });
 
   test("the bulk redirect ruleset keeps its rule ids and order and is never destroyed", async () => {

@@ -141,7 +141,7 @@ describe("cloudflare state migrations", () => {
 
   test("a baseline resource keeps the identity it had before and inside the module", async () => {
     const { moved } = await cloudflare();
-    expect(moved).toHaveLength(139 + 293);
+    expect(moved).toHaveLength(139 + 293 + 1);
     const byFrom = new Map(moved.map(({ from, to }) => [from, to]));
     const chain = (address: string) => {
       const hops = [address];
@@ -183,6 +183,10 @@ describe("cloudflare state migrations", () => {
     expect(chain("cloudflare_dns_record.clauderon_com_cname_apex")).toEqual([
       "cloudflare_dns_record.clauderon_com_cname_apex",
       "cloudflare_dns_record.clauderon_com_apex",
+    ]);
+    expect(chain("cloudflare_dns_record.ts_mc_net_aaaa_join")).toEqual([
+      "cloudflare_dns_record.ts_mc_net_aaaa_join",
+      "cloudflare_dns_record.ts_mc_net_cname_join",
     ]);
     expect(
       chain("cloudflare_dns_record.sjer_red_dmarc_report_glitter_boys_com"),

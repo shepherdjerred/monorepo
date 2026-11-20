@@ -46,13 +46,23 @@ export type PublicHostname = z.infer<typeof PublicHostnameSchema>;
  * `immutablePrefixes` are the bucket key prefixes that hold content-hashed
  * assets: the bucket expires old ones, and the hostname's Cloudflare zone
  * respects their origin Cache-Control.
+ *
+ * `aliases` are further hostnames the origin serves from the same bucket.
+ * Each is routed through the tunnel like `hostname`, so a page of the site
+ * can be another name's address without a redirect.
  */
 export const StaticSiteSchema = z.strictObject({
   hostname: dnsName,
   bucket: bucketName,
   immutablePrefixes: z.array(z.string().regex(/^[^/].*\/$/)),
+  aliases: z.array(dnsName).min(1).optional(),
 });
 export type StaticSite = z.infer<typeof StaticSiteSchema>;
+
+/** Every hostname a static site is served on: its own, then its aliases. */
+export function staticSiteHostnames(site: StaticSite): string[] {
+  return [site.hostname, ...(site.aliases ?? [])];
+}
 
 /**
  * A tailnet device a cluster workload publishes as `<host>.<tailnet domain>`.
@@ -172,7 +182,12 @@ export const PlatformModelSchema = z
       .superRefine(unique((entry) => entry.hostname, "public hostname")),
     staticSites: z
       .array(StaticSiteSchema)
-      .superRefine(unique((site) => site.hostname, "static site hostname"))
+      .superRefine((sites, context) => {
+        unique((hostname: string) => hostname, "static site hostname")(
+          sites.flatMap((site) => staticSiteHostnames(site)),
+          context,
+        );
+      })
       .superRefine(unique((site) => site.bucket, "static site bucket")),
     tailnetServices: z
       .array(TailnetServiceSchema)
@@ -264,8 +279,8 @@ export function seaweedfsTailnetS3Endpoint(
 
 /**
  * Every hostname routed through the tunnel: the declared ones, each static
- * site, and the MTA-STS policy host of each registered domain. The last two
- * are served by the static-site origin.
+ * site and its aliases, and the MTA-STS policy host of each registered
+ * domain. The last two are served by the static-site origin.
  */
 export function publicHostnames(
   model: PlatformModel = platformModel,
@@ -273,7 +288,7 @@ export function publicHostnames(
   const hostnames: PublicHostname[] = [
     ...model.publicHostnames,
     ...[
-      ...model.staticSites.map((site) => site.hostname),
+      ...model.staticSites.flatMap((site) => staticSiteHostnames(site)),
       ...mailPolicyHosts.map((host) => host.hostname),
     ].map((hostname) => ({ hostname, ...model.staticSiteOrigin })),
   ];
@@ -282,7 +297,8 @@ export function publicHostnames(
 
 /**
  * The URL path prefixes each Cloudflare zone caches as immutable: the
- * immutable bucket prefixes of every static site in the zone.
+ * immutable bucket prefixes of every static site with a hostname or an alias
+ * in the zone.
  */
 export function immutablePathPrefixesByZone(
   model: PlatformModel = platformModel,
@@ -290,10 +306,12 @@ export function immutablePathPrefixesByZone(
   const byZone = new Map<string, Set<string>>();
   for (const site of model.staticSites) {
     if (site.immutablePrefixes.length === 0) continue;
-    const zone = zoneOf(site.hostname);
-    const prefixes = byZone.get(zone) ?? new Set<string>();
-    for (const prefix of site.immutablePrefixes) prefixes.add(`/${prefix}`);
-    byZone.set(zone, prefixes);
+    for (const hostname of staticSiteHostnames(site)) {
+      const zone = zoneOf(hostname);
+      const prefixes = byZone.get(zone) ?? new Set<string>();
+      for (const prefix of site.immutablePrefixes) prefixes.add(`/${prefix}`);
+      byZone.set(zone, prefixes);
+    }
   }
   return new Map(
     [...byZone].map(([zone, prefixes]) => [zone, [...prefixes].toSorted()]),
@@ -429,7 +447,7 @@ function declared<ITEM>(
   return item;
 }
 
-/** The tunnel route of a hostname: declared, a static site, or a mail-policy host. */
+/** The tunnel route of a hostname: declared, a static site or its alias, or a mail-policy host. */
 export function publicHostname(
   hostname: string,
   model: PlatformModel = platformModel,

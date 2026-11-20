@@ -3,13 +3,8 @@ import type { TerraformStack, TerraformVariable } from "cdktn";
 import { TurnstileWidget } from "#generated/providers/cloudflare/turnstile-widget/index.ts";
 import type { Zone } from "#generated/providers/cloudflare/zone/index.ts";
 import published from "#src/stacks/cloudflare/published-txt-records.json" with { type: "json" };
-import {
-  cname,
-  edgePlaceholder,
-  srvRecords,
-  txt,
-} from "#src/stacks/cloudflare/records.ts";
-import { edgeRedirect } from "#src/stacks/cloudflare/zones.ts";
+import { cname, srvRecords, txt } from "#src/stacks/cloudflare/records.ts";
+import { moved } from "#src/state-migrations.ts";
 
 /**
  * Records of ts-mc.net the platform model does not declare; its tunnel
@@ -22,27 +17,18 @@ export function tsMcNet(stack: TerraformStack, zone: Zone): void {
     content: "ddns.sjer.red",
     proxied: false,
   });
-  // join.ts-mc.net 301-redirects to The Storm landing page at the edge. The
-  // proxied placeholder records let Cloudflare's edge answer HTTP/HTTPS
-  // requests and run the redirect before any origin fetch.
-  const redirects = edgeRedirect(stack, "ts_mc_net_redirects", zone.id, {
-    rulesetName: "ts-mc.net dynamic redirects",
-    ref: "join_to_the_storm",
-    description: "Redirect join.ts-mc.net to The Storm landing page",
-    expression: '(http.host eq "join.ts-mc.net")',
-    preserveQueryString: true,
-    targetUrl: { value: "https://public.ts-mc.net/the-storm/" },
-  });
-  edgePlaceholder(stack, "ts_mc_net_aaaa_join", zone, {
-    name: "join",
-    type: "AAAA",
-    dependsOn: [redirects],
-  });
-  edgePlaceholder(stack, "ts_mc_net_a_join", zone, {
-    name: "join",
-    type: "A",
-    dependsOn: [redirects],
-  });
+  // join.ts-mc.net is an alias of the landing-pages site in the platform
+  // model, so `platform.ts` renders its tunnel CNAME. It was a pair of
+  // placeholder addresses behind an edge redirect, and Cloudflare rejects a
+  // CNAME while an address record of the same name exists. The CNAME takes
+  // over the AAAA record's state, which orders the change in one apply: both
+  // placeholders are destroyed before the redirect ruleset they depended on,
+  // and the ruleset before the CNAME is created.
+  moved(
+    stack,
+    "cloudflare_dns_record.ts_mc_net_aaaa_join",
+    "cloudflare_dns_record.ts_mc_net_cname_join",
+  );
 
   const minecraft = {
     priority: 0,

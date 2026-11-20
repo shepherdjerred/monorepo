@@ -1,5 +1,6 @@
 import {
   seaweedfsTailnetS3Endpoint,
+  staticSiteHostnames,
   tunnelCnameTarget,
   type PlatformDefinitions,
 } from "homelab/src/platform-model.ts";
@@ -138,18 +139,18 @@ export const RULES: readonly Rule[] = [
   },
   {
     id: "staticSitesWithoutCaddySite",
-    name: "every static site is served from its bucket by the static-site origin",
+    name: "every static site and alias is served from its bucket by the static-site origin",
     violations: ({ definitions, kubernetes }) =>
-      definitions.model.staticSites
-        .filter(
-          (site) =>
+      definitions.model.staticSites.flatMap((site) =>
+        staticSiteHostnames(site).filter(
+          (hostname) =>
             !kubernetes.caddySites.some(
               (rendered) =>
-                rendered.hostname === site.hostname &&
+                rendered.hostname === hostname &&
                 rendered.bucket === site.bucket,
             ),
-        )
-        .map((site) => site.hostname),
+        ),
+      ),
   },
 
   {

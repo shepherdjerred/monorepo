@@ -176,8 +176,14 @@ const scoutDocsProbes = [
   },
 ] as const satisfies NonNullable<StaticSiteConfig["probes"]>;
 
-/** What a site adds to the hostname and bucket the platform model declares. */
-type SiteOptions = Omit<StaticSiteConfig, "hostname" | "bucket">;
+/**
+ * What a site adds to the hostname, bucket and aliases the platform model
+ * declares. `aliasRoots` names the bucket directory an alias serves at `/`;
+ * an alias without one serves the bucket root, like the site.
+ */
+type SiteOptions = Omit<StaticSiteConfig, "hostname" | "bucket" | "aliases"> & {
+  aliasRoots?: Readonly<Record<string, `/${string}/`>>;
+};
 
 /** The Scout site: the SPA and docs from the bucket, with API traffic to the stage backend. */
 function scoutSite(stage: "prod" | "beta"): SiteOptions {
@@ -292,6 +298,9 @@ const SITE_OPTIONS: Readonly<Record<string, SiteOptions>> = {
       },
     ],
     responseHeaders: { "Content-Security-Policy": landingPagesCsp },
+    // join.ts-mc.net is The Storm about page's own address: `/` answers with
+    // the page and HTTP 200, so community posts link it without a redirect.
+    aliasRoots: { "join.ts-mc.net": "/the-storm/about/" },
   },
   "wiki.sjer.red": {
     probes: [
@@ -308,17 +317,38 @@ const SITE_OPTIONS: Readonly<Record<string, SiteOptions>> = {
   "public.sjer.red": {},
 };
 
-// A site is added in the model. Options for a hostname the model does not
-// declare would otherwise be silently dropped.
-for (const hostname of Object.keys(SITE_OPTIONS)) staticSite(hostname);
+// A site or alias is added in the model. Options for a hostname the model does
+// not declare would otherwise be silently dropped.
+for (const [hostname, options] of Object.entries(SITE_OPTIONS)) {
+  const declared = staticSite(hostname).aliases ?? [];
+  for (const alias of Object.keys(options.aliasRoots ?? {})) {
+    if (!declared.includes(alias))
+      throw new Error(
+        `platform-model.json declares no alias ${alias} for static site ${hostname}`,
+      );
+  }
+}
 
 // DNS records for all sites are managed by OpenTofu (src/tofu/cloudflare/).
 export const staticSites: StaticSiteConfig[] = platformModel.staticSites.map(
-  ({ hostname, bucket }) => ({
-    hostname,
-    bucket,
-    ...SITE_OPTIONS[hostname],
-  }),
+  ({ hostname, bucket, aliases }) => {
+    const { aliasRoots, ...options } = SITE_OPTIONS[hostname] ?? {};
+    return {
+      hostname,
+      bucket,
+      ...(aliases === undefined
+        ? {}
+        : {
+            aliases: aliases.map((alias) => {
+              const rootPath = aliasRoots?.[alias];
+              return rootPath === undefined
+                ? { hostname: alias }
+                : { hostname: alias, rootPath };
+            }),
+          }),
+      ...options,
+    };
+  },
 );
 
 // In-cluster SeaweedFS S3 gateway. Caddy/s3proxy runs in this cluster, so it must

@@ -23,6 +23,10 @@ import {
   type MailPolicy,
 } from "homelab/src/domain-registry.ts";
 import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import {
+  renderHeaderBlock,
+  renderHeaderValues,
+} from "./static-site-headers.ts";
 
 export type MailPolicyHost = {
   hostname: string;
@@ -69,9 +73,22 @@ export type StaticSiteSpaFallback = {
   responseHeaders?: Record<string, string | null>;
 };
 
+/**
+ * Another hostname that serves a site's bucket, with the site's headers,
+ * proxies and fallbacks. `rootPath` is the bucket directory its `/` serves, so
+ * a page deep in the bucket can be the alias's front page with HTTP 200 and no
+ * redirect. Every other path is the bucket's own, which is how the page's
+ * root-relative assets resolve on the alias.
+ */
+export type StaticSiteAlias = {
+  hostname: string;
+  rootPath?: `/${string}/`;
+};
+
 export type StaticSiteConfig = {
   hostname: string;
   bucket: string;
+  aliases?: StaticSiteAlias[];
   indexFile?: string;
   notFoundPage?: string;
   probes?: StaticSiteProbeConfig[];
@@ -79,7 +96,7 @@ export type StaticSiteConfig = {
   spaFallbacks?: StaticSiteSpaFallback[];
   /**
    * Per-site response-header overrides. Merged on top of `defaultResponseHeaders`
-   * (which apply to every site). Set a value to override; set to `null` to delete
+   * in `static-site-headers.ts` (which apply to every site). Set a value to override; set to `null` to delete
    * a default (rendered as `-HeaderName` in the Caddyfile).
    *
    * The merged set is rendered as a single `header { ... }` block at the top of
@@ -88,73 +105,6 @@ export type StaticSiteConfig = {
    */
   responseHeaders?: Record<string, string | null>;
 };
-
-/**
- * Defense-in-depth response headers applied to every site. CSP is intentionally
- * NOT here — it's per-app because each app has different image hosts, inline
- * script needs, etc. Sites that need CSP set it via `responseHeaders`.
- *
- * HSTS deliberately uses `max-age=31536000` WITHOUT `includeSubDomains` or
- * `preload` as the default — a misconfigured subdomain could otherwise become
- * permanently unreachable from browsers. Sites that want broader HSTS scope opt
- * in via `responseHeaders`.
- */
-export const defaultResponseHeaders: Record<string, string> = {
-  "Strict-Transport-Security": "max-age=31536000",
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy":
-    "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-};
-
-/**
- * Render the merged-and-per-site Caddyfile `header { ... }` block for one site.
- * Returns an empty string when there are no headers to set (currently never
- * happens because `defaultResponseHeaders` is non-empty).
- *
- * Caddy's `header` directive with an unprefixed name uses Set semantics — it
- * overwrites any upstream-provided value. `null` overrides emit a `-Name`
- * delete directive instead.
- */
-function renderHeaderValues(
-  values: ReadonlyMap<string, string | null>,
-  indentation: number,
-  stripServer: boolean,
-): string {
-  const lines: string[] = [];
-  const valueIndent = "\t".repeat(indentation + 1);
-  for (const [name, value] of values) {
-    if (value === null) {
-      lines.push(`${valueIndent}-${name}`);
-    } else {
-      // Caddy requires quoting whenever the value contains spaces or special
-      // chars. Always quote to keep the rendering deterministic.
-      const escaped = value
-        .replaceAll(`\\`, `\\\\`)
-        .replaceAll(`"`, String.raw`\"`);
-      lines.push(`${valueIndent}${name} "${escaped}"`);
-    }
-  }
-  if (stripServer) lines.push(`${valueIndent}-Server`);
-
-  if (lines.length === 0) return "";
-  const blockIndent = "\t".repeat(indentation);
-  return `${blockIndent}header {\n${lines.join("\n")}\n${blockIndent}}`;
-}
-
-export function renderHeaderBlock(
-  overrides: Record<string, string | null> | undefined,
-): string {
-  const merged = new Map<string, string | null>();
-  for (const [name, value] of Object.entries(defaultResponseHeaders)) {
-    merged.set(name, value);
-  }
-  for (const [name, value] of Object.entries(overrides ?? {})) {
-    merged.set(name, value);
-  }
-  return renderHeaderValues(merged, 1, true);
-}
 
 export type S3StaticSitesProps = {
   sites: StaticSiteConfig[];
@@ -178,6 +128,26 @@ function originRoute(hostname: string): PublicHostname {
   return { hostname, ...platformModel.staticSiteOrigin };
 }
 
+/** A hostname the origin answers on: a site's own, or one of its aliases. */
+type ServedHost = {
+  site: StaticSiteConfig;
+  hostname: string;
+  rootPath: string | undefined;
+  alias: boolean;
+};
+
+function servedHosts(site: StaticSiteConfig): ServedHost[] {
+  return [
+    { site, hostname: site.hostname, rootPath: undefined, alias: false },
+    ...(site.aliases ?? []).map((alias) => ({
+      site,
+      hostname: alias.hostname,
+      rootPath: alias.rootPath,
+      alias: true,
+    })),
+  ];
+}
+
 /**
  * Generates a Caddyfile for S3 static sites.
  * Exported for testing/validation purposes.
@@ -192,12 +162,12 @@ export function generateCaddyfile(props: CaddyfileGeneratorProps): string {
 }
 `);
 
-  for (const site of props.sites) {
+  for (const { site, hostname, rootPath } of props.sites.flatMap((entry) =>
+    servedHosts(entry),
+  )) {
     const indexFile = site.indexFile ?? "index.html";
     const notFoundPage = site.notFoundPage ?? "404.html";
-    const address = site.hostname.includes("://")
-      ? site.hostname
-      : `http://${site.hostname}`;
+    const address = hostname.includes("://") ? hostname : `http://${hostname}`;
 
     // `handle` blocks evaluate in registration order, not by specificity.
     // Sort by literal path length descending so longer/narrower paths
@@ -268,12 +238,20 @@ ${renderS3Proxy(spa.fallbackPath)}
 
     const headerBlock = renderHeaderBlock(site.responseHeaders);
 
+    // `rewrite` runs after `redir` and before `handle`, and `/` matches only
+    // the root, so the bucket lookup sees `rootPath` while the visitor keeps
+    // the alias's own address and query string.
+    const rootRewrite =
+      rootPath === undefined
+        ? ""
+        : `\n\t# Serve ${rootPath} at the root of this hostname, without a redirect\n\trewrite / ${rootPath}\n`;
+
     blocks.push(`${address} {
 ${headerBlock ? `${headerBlock}\n\n` : ""}\t# Redirect directory-style paths to include trailing slash
 	# Matches paths like /foo/bar but not /foo/bar/ or /foo/bar.html
 ${noTrailingSlashMatcher}
 	redir @noTrailingSlash {uri}/ 301
-${proxyBlocks ? `\n${proxyBlocks}\n` : ""}${spaBlocks ? `\n${spaBlocks}\n` : ""}
+${rootRewrite}${proxyBlocks ? `\n${proxyBlocks}\n` : ""}${spaBlocks ? `\n${spaBlocks}\n` : ""}
 	handle {
 ${renderS3Proxy(notFoundPage)}
 	}
@@ -340,6 +318,14 @@ function probeConfigs(
 
   return configs;
 }
+
+/**
+ * An alias exists to answer at its own address, so its one probe fails on a
+ * redirect. The paths behind it are the site's, which the site's probes cover.
+ */
+const ALIAS_PROBES: Required<StaticSiteProbeConfig>[] = [
+  { endpoint: "root", path: "/", module: "http_200_no_redirect" },
+];
 
 export class S3StaticSites extends Construct {
   public readonly service: Service;
@@ -500,29 +486,27 @@ export class S3StaticSites extends Construct {
       });
     }
 
-    for (const site of props.sites) {
+    for (const { site, hostname, alias } of props.sites.flatMap((entry) =>
+      servedHosts(entry),
+    )) {
       // DNS is managed by OpenTofu — operator must not touch DNS records.
-      createCloudflareTunnelBinding(
-        this,
-        `tunnel-${hostnameSlug(site.hostname)}`,
-        {
-          serviceName: this.service.name,
-          namespace,
-          hostname: originRoute(site.hostname),
-          disableDnsUpdates: true,
-          port: 80,
-          // Static sites already get bespoke Probe coverage below (per-site,
-          // per-endpoint, with SSL-expiry and slow-response checks) — the
-          // generic auto-registered probe would just be a redundant duplicate.
-          disableProbe: true,
-        },
-      );
+      createCloudflareTunnelBinding(this, `tunnel-${hostnameSlug(hostname)}`, {
+        serviceName: this.service.name,
+        namespace,
+        hostname: originRoute(hostname),
+        disableDnsUpdates: true,
+        port: 80,
+        // Static sites already get bespoke Probe coverage below (per-site,
+        // per-endpoint, with SSL-expiry and slow-response checks) — the
+        // generic auto-registered probe would just be a redundant duplicate.
+        disableProbe: true,
+      });
 
-      for (const probe of probeConfigs(site)) {
+      for (const probe of alias ? ALIAS_PROBES : probeConfigs(site)) {
         const nameSuffix =
           probe.endpoint === "root"
-            ? hostnameSlug(site.hostname)
-            : `${hostnameSlug(site.hostname)}-${probe.endpoint}`;
+            ? hostnameSlug(hostname)
+            : `${hostnameSlug(hostname)}-${probe.endpoint}`;
 
         // Create Probe for HTTP monitoring via blackbox-exporter
         new Probe(this, `probe-${nameSuffix}`, {
@@ -534,8 +518,8 @@ export class S3StaticSites extends Construct {
           spec: {
             jobName:
               probe.endpoint === "root"
-                ? `static-site-${site.hostname}`
-                : `static-site-${site.hostname}-${probe.endpoint}`,
+                ? `static-site-${hostname}`
+                : `static-site-${hostname}-${probe.endpoint}`,
             interval: "60s",
             module: probe.module,
             prober: {
@@ -543,11 +527,11 @@ export class S3StaticSites extends Construct {
             },
             targets: {
               staticConfig: {
-                static: [probeTargetUrl(site.hostname, probe.path)],
+                static: [probeTargetUrl(hostname, probe.path)],
                 labels: {
                   endpoint: probe.endpoint,
                   path: probe.path,
-                  site: site.hostname,
+                  site: hostname,
                 },
               },
             },

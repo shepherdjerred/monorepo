@@ -153,6 +153,33 @@ describe("ScoutQL reference probes", () => {
   }
 });
 
+describe("landing pages static site", () => {
+  const landing = staticSites.find(
+    ({ hostname }) => hostname === "public.ts-mc.net",
+  );
+  if (landing === undefined) {
+    throw new Error("public.ts-mc.net static site is missing");
+  }
+
+  test("join.ts-mc.net serves The Storm about page at its root", () => {
+    expect(landing.aliases).toEqual([
+      { hostname: "join.ts-mc.net", rootPath: "/the-storm/about/" },
+    ]);
+    // The page the alias fronts is probed on the site itself.
+    expect(landing.probes).toContainEqual({
+      endpoint: "the-storm-about",
+      path: "/the-storm/about/",
+      module: "http_200_no_redirect",
+    });
+    const caddyfile = generateCaddyfile({
+      sites: [landing],
+      s3Endpoint: "https://seaweedfs.example.test",
+    });
+    expect(caddyfile).toContain("http://join.ts-mc.net {");
+    expect(caddyfile).toContain("\trewrite / /the-storm/about/\n");
+  });
+});
+
 describe("human wiki static site", () => {
   const wiki = staticSites.find(({ hostname }) => hostname === "wiki.sjer.red");
   if (wiki === undefined) {
