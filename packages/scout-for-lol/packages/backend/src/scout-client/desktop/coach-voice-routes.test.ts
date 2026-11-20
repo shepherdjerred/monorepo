@@ -54,11 +54,16 @@ vi.mock("#src/configuration/flags.ts", async (importOriginal) => ({
   ...(await importOriginal()),
   isPolicyEnabled: mocks.isPolicyEnabled,
 }));
+// The run is observed through the persisted row, never the manager's local
+// placeholder: the worker that finishes it may be another process.
+vi.mock("#src/explore/runs/durable-runs.ts", async (importOriginal) => ({
+  ...(await importOriginal()),
+  subscribeDurableExploreRun: mocks.subscribeRun,
+}));
 vi.mock("#src/explore/runs/run-manager.ts", async (importOriginal) => ({
   ...(await importOriginal()),
   exploreRunManager: {
     start: mocks.startRun,
-    subscribeDurable: mocks.subscribeRun,
     settleDurablePlaceholder: mocks.settleRun,
   },
 }));
@@ -176,6 +181,7 @@ function unsubscribe(): void {
 /** A durable subscription that reports the run done with `outcome`. */
 function runEndingWith(outcome: string) {
   return async (
+    _database: unknown,
     _runId: string,
     _userId: string,
     subscriber: (event: unknown) => void,
@@ -411,6 +417,13 @@ describe("coach/voice/turns proof of initiation", () => {
     });
     expect(stream.at(-1)).toEqual({ type: "done", outcome: "succeeded" });
     expect(mocks.settleRun).toHaveBeenCalledWith(run.runId, "succeeded");
+    // Observed through the persisted run, owner-scoped.
+    expect(mocks.subscribeRun).toHaveBeenCalledWith(
+      expect.anything(),
+      run.runId,
+      OWNER_ID,
+      expect.any(Function),
+    );
   });
 
   test("a wake-word turn whose transcript lacks the phrase is refused and starts nothing", async () => {

@@ -26,6 +26,7 @@ import {
 } from "#src/coach/voice-turn.ts";
 import { exploreSpendPolicy } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
+import { subscribeDurableExploreRun } from "#src/explore/runs/durable-runs.ts";
 import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import { classifyExploreStartError } from "#src/explore/runs/start-refusal.ts";
 import {
@@ -259,7 +260,10 @@ async function waitForOutcome(
     VoiceTurnOutcome,
     "refused"
   > | null>();
-  const unsubscribe = await exploreRunManager.subscribeDurable(
+  // The worker may run in another process, so a local placeholder would never
+  // see completion; observe the persisted run row directly.
+  const unsubscribe = await subscribeDurableExploreRun(
+    prisma,
     runId,
     userId,
     (event) => {
