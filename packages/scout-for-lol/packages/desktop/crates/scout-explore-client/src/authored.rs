@@ -7,9 +7,14 @@
 //! is called in exactly one place: where the relay reads the composer's
 //! `send`, the text the player typed in the window. A game context rides only
 //! on a question of this type ([`crate::session::ChatSession::submit_with_game`]),
-//! so nothing else in the supervisor (a future voice capture, a follow-up chip,
-//! an app-initiated trigger) can start a turn that carries live state without
-//! adding a constructor of its own, with its own proof, here.
+//! so nothing else in the supervisor (a follow-up chip, an app-initiated
+//! trigger) can start a turn that carries live state without adding a
+//! constructor of its own, with its own proof, here.
+//!
+//! A spoken turn ([`crate::voice`]) is the one other carrier, and its proof is
+//! not a type: the request holds audio and no text, and the server transcribes
+//! it itself, refusing a wake-word turn whose transcript does not open with
+//! the wake phrase.
 //!
 //! The tests below hold that boundary over the whole desktop workspace.
 
@@ -91,13 +96,15 @@ mod tests {
 
     #[test]
     fn only_the_session_puts_a_game_on_a_turn() -> TestResult {
-        // The field's declaration, and the one turn builder that sets it.
+        // The field's declaration, the one typed-turn builder that sets it,
+        // and the spoken turn, whose proof the server makes from its audio.
         let needle = ["game_context", ": "].concat();
         assert_eq!(
             files_naming(&needle)?,
             [
                 "scout-client-core/src/desktop_api.rs",
-                "scout-explore-client/src/session.rs"
+                "scout-explore-client/src/session.rs",
+                "scout-explore-client/src/voice.rs"
             ]
         );
         Ok(())

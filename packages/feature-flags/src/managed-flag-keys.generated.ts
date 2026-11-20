@@ -190,6 +190,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout_desktop_explore_enabled",
   "scout_desktop_coach",
   "scout_coach_live_answers",
+  "scout_desktop_voice",
   "scout-consumer-player-profiles-enabled",
   "scout-explore-analysis-enabled",
   "scout-explore-model-picker-enabled",

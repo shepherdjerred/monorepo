@@ -16,10 +16,11 @@ import { useTRPC } from "#src/lib/query/trpc.ts";
 /**
  * The transcript shape this bundle parses. The server down-shapes older
  * versions for tabs still running an earlier bundle; v5 is the first that
- * knows the `desktop` origin. Every `explore.get` key uses it, so a cache
- * update and the query it targets always agree.
+ * knows the `desktop` origin, and v6 the first that knows `low` reasoning
+ * effort. Every `explore.get` key uses it, so a cache update and the query it
+ * targets always agree.
  */
-export const EXPLORE_TRANSCRIPT_VERSION = 5;
+export const EXPLORE_TRANSCRIPT_VERSION = 6;
 
 const NO_MESSAGES: ExploreMessage[] = [];
 const NO_QUOTA: ExploreQuotaSnapshot[] = [];

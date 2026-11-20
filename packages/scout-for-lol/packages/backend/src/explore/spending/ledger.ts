@@ -162,6 +162,67 @@ export async function reserveExploreCall(
   });
 }
 
+/**
+ * What one minute of audio costs on the models a spoken turn calls, in
+ * microdollars, from OpenAI's published per-minute estimates
+ * (https://platform.openai.com/docs/pricing): $0.006 a minute transcribed,
+ * $0.015 a minute spoken. The model catalog prices tokens and images only, so
+ * audio is priced here, by the length of audio actually sent or received.
+ */
+export const EXPLORE_AUDIO_MICROS_PER_MINUTE = {
+  "gpt-4o-transcribe": 6000,
+  "gpt-4o-mini-tts": 15_000,
+} as const;
+export type ExploreAudioModel = keyof typeof EXPLORE_AUDIO_MICROS_PER_MINUTE;
+
+/** The ledger charge for `audioMs` of audio on `model`, at least one micro. */
+export function exploreAudioMicros(
+  model: ExploreAudioModel,
+  audioMs: number,
+): number {
+  if (!Number.isFinite(audioMs) || audioMs < 0) {
+    throw new Error("Audio duration must be a non-negative number");
+  }
+  return Math.max(
+    1,
+    Math.ceil((EXPLORE_AUDIO_MICROS_PER_MINUTE[model] * audioMs) / 60_000),
+  );
+}
+
+/**
+ * Record a spoken turn's transcription or speech in the ledger Explore's text
+ * spend uses, settled at once: the audio's length is known exactly, so there
+ * is nothing to hold. The row counts toward the same monthly owner and global
+ * totals, so a spoken turn spends the same allowance a typed one does.
+ */
+export async function recordExploreAudioSpend(
+  input: {
+    ownerId: string;
+    runId: string;
+    model: ExploreAudioModel;
+    audioMs: number;
+    now?: Date;
+  },
+  database: Pick<Db, "exploreSpend"> = prisma,
+): Promise<number> {
+  const micros = exploreAudioMicros(input.model, input.audioMs);
+  const now = input.now ?? new Date();
+  await database.exploreSpend.create({
+    data: {
+      runId: input.runId,
+      ownerId: DiscordAccountIdSchema.parse(input.ownerId),
+      model: input.model,
+      month: now.toISOString().slice(0, 7),
+      reservedMicros: micros,
+      budgetMicros: micros,
+      state: "settled",
+      usage: JSON.stringify({ audioMs: Math.round(input.audioMs) }),
+      settledAt: now,
+    },
+  });
+  return micros;
+}
+
 const UsageSchema = z.looseObject({
   inputTokens: z.looseObject({
     total: z.number().int().nonnegative(),

@@ -24,6 +24,7 @@ import discardFixture from "./desktop-fixtures/explore-attachments-discard.json"
 import startAppFixture from "./desktop-fixtures/explore-runs-start-app.json" with { type: "json" };
 import coachGetFixture from "./desktop-fixtures/explore-conversations-get-coach.json" with { type: "json" };
 import startActionsFixture from "./desktop-fixtures/explore-runs-start-actions.json" with { type: "json" };
+import voiceTurnFixture from "./desktop-fixtures/coach-voice-turns.json" with { type: "json" };
 import { ScoutClientCreatePairingSchema } from "./protocol.schema.ts";
 import { ScoutDesktopAppTurnRequestSchema } from "./coach-context.schema.ts";
 import {
@@ -77,6 +78,17 @@ import {
   ScoutDesktopScopeSchema,
   type ScoutDesktopApiRoute,
 } from "./desktop-api.schema.ts";
+import {
+  SCOUT_DESKTOP_VOICE_MAX_WAV_BYTES,
+  SCOUT_DESKTOP_VOICE_MIN_WAV_BYTES,
+  SCOUT_DESKTOP_VOICE_TURN,
+  SCOUT_DESKTOP_VOICE_TURN_EVENT_TYPES,
+  SCOUT_DESKTOP_VOICE_TURN_MAX_BYTES,
+  ScoutDesktopVoiceTurnErrorCodeSchema,
+  ScoutDesktopVoiceTurnRequestSchema,
+  ScoutDesktopVoiceTurnStreamResponseSchema,
+} from "./desktop-voice.schema.ts";
+import { COACH_GAME_CONTEXT_MAX_BYTES } from "./coach-context.schema.ts";
 
 type RouteFixture = {
   readonly route: string;
@@ -185,6 +197,11 @@ const ROUTE_SCHEMAS: Record<
     response: ScoutDesktopOkResponseSchema,
     fixture: discardFixture,
   },
+  coach_voice_turns: {
+    request: ScoutDesktopVoiceTurnRequestSchema,
+    response: ScoutDesktopVoiceTurnStreamResponseSchema,
+    fixture: voiceTurnFixture,
+  },
 };
 
 const routeNames = ScoutDesktopApiRouteSchema.options;
@@ -244,11 +261,11 @@ describe("Scout desktop API contract", () => {
     expect(types).toEqual(rawContract.streamEvents);
   });
 
-  test("only the stream route answers with an event stream", () => {
+  test("only the run stream and voice turns answer with an event stream", () => {
     const streaming = routeNames.filter(
       (name) => SCOUT_DESKTOP_API_ROUTES[name].response === "event-stream",
     );
-    expect(streaming).toEqual(["explore_runs_stream"]);
+    expect(streaming).toEqual(["explore_runs_stream", "coach_voice_turns"]);
   });
 
   test("only the chart route answers with a PNG", () => {
@@ -357,6 +374,53 @@ describe("Scout desktop API contract", () => {
         error: "not_found",
         message: "Conversation not found.",
         detail: "extra",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("Scout desktop voice turn contract", () => {
+  test("the voice vocabulary is the contract's, and the golden turn holds every event", () => {
+    expect(SCOUT_DESKTOP_VOICE_TURN).toEqual(rawContract.voiceTurn);
+    expect(SCOUT_DESKTOP_VOICE_TURN_EVENT_TYPES).toEqual(
+      rawContract.voiceTurn.events,
+    );
+    expect(ScoutDesktopVoiceTurnErrorCodeSchema.options).toEqual(
+      rawContract.voiceTurn.errors,
+    );
+    const types = ScoutDesktopVoiceTurnStreamResponseSchema.parse(
+      voiceTurnFixture.response,
+    ).events.map((event) => event.type);
+    expect(types).toEqual(rawContract.voiceTurn.events);
+    for (const { flow, events } of voiceTurnFixture.refusals) {
+      const parsed = ScoutDesktopVoiceTurnStreamResponseSchema.parse({
+        events,
+      }).events;
+      expect(parsed.at(-1), flow).toEqual({ type: "done", outcome: "refused" });
+      expect(
+        parsed.some((event) => event.type === "run"),
+        flow,
+      ).toBe(false);
+    }
+  });
+
+  test("the voice caps are one 16 kHz mono PCM16 utterance of at most 15 seconds", () => {
+    expect(SCOUT_DESKTOP_VOICE_MAX_WAV_BYTES).toBe(44 + 15 * 16_000 * 2);
+    expect(SCOUT_DESKTOP_VOICE_MIN_WAV_BYTES).toBe(44 + 0.2 * 16_000 * 2);
+    const golden = Buffer.from(voiceTurnFixture.request.audio.base64, "base64");
+    expect(golden.byteLength).toBe(SCOUT_DESKTOP_VOICE_MIN_WAV_BYTES);
+    expect(SCOUT_DESKTOP_VOICE_TURN_MAX_BYTES).toBeGreaterThan(
+      COACH_GAME_CONTEXT_MAX_BYTES +
+        (4 * SCOUT_DESKTOP_VOICE_MAX_WAV_BYTES) / 3,
+    );
+    const tooLong = "A".repeat(
+      4 * Math.ceil(SCOUT_DESKTOP_VOICE_MAX_WAV_BYTES / 3) + 4,
+    );
+    expect(
+      ScoutDesktopVoiceTurnRequestSchema.safeParse({
+        trigger: "push_to_talk",
+        conversationId: null,
+        audio: { mediaType: "audio/wav", base64: tooLong },
       }).success,
     ).toBe(false);
   });

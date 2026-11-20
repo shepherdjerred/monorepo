@@ -361,10 +361,14 @@ describe("desktop Explore runs against a real database", () => {
         runId: summary.runId,
         questionMessageId: summary.questionMessageId,
         initiation: "player_typed",
+        // A typed turn names no game: the database ties gameKey to voice.
+        gameKey: null,
         sectionsPresent: ["live"],
         sectionsAccepted: ["live"],
         coachEnabled: true,
         liveAnswersEnabled: true,
+        voiceTrigger: null,
+        wakeVerification: null,
         createdAt: expect.any(Date),
       },
     ]);

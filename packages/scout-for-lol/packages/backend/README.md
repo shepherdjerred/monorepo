@@ -1000,14 +1000,18 @@ player asked from live state, so `scout_coach_live_answers` is its kill switch.
 Both flags default on in beta and production, are read for the owner and then
 each eligible server, and are evaluated only for a turn that carries a context.
 
-Player initiation is proven minimally: a context rides only on a question the
-player typed (`runs/start` with a non-null `question`); a regenerate that
-carries one is a 400 `invalid_turn`. Voice turns and follow-up chips need their
-own proof before they may carry one. Every turn that carries a context writes a
-`ScoutCoachTurn` row (owner, device, conversation, run and question ids; the
-initiation; the sections sent and accepted; both flags as evaluated) and never
-the context itself. The row is written in the transaction that reserves the
-run, so no coach turn starts without it.
+Player initiation is proven per route. A typed turn (`player_typed`) carries a
+context only on a question the player typed (`runs/start` with a non-null
+`question`); a regenerate that carries one is a 400 `invalid_turn`. A spoken
+turn (`player_voice`, below) proves it from audio. Follow-up chips still need
+their own proof. Every turn that carries a context, and every spoken turn,
+writes a `ScoutCoachTurn` row (owner, device, conversation, run and question
+ids; the initiation; a spoken turn's trigger and wake verification; the
+sections sent and accepted; both flags as evaluated) and never the context or
+the transcript. The row is written in the transaction that reserves the run,
+so no coach turn starts without it, and the table's checks refuse a
+`player_voice` row without its proof or a wake-word row the server did not
+verify.
 
 The projected context (only the sections the policy let through) is stored on
 the durable run as `coach` and reaches the agent for that turn alone: a
@@ -1034,11 +1038,61 @@ champion-select advice when a pick or ban changes and for the plan at the first
 `InProgress`. It takes an initiation (`app_champ_select` or `app_pregame`), the
 client's `gameKey` and exactly the section that initiation names, never
 `live`, and the server words the question. It allows 4 champion-select turns and
-1 pre-game turn per game key, counted from `ScoutCoachTurn`. A champion-select
-or in-game context runs the in-game profile (`coach/execution-profile.ts`: low
-effort, 6 steps, 1,200 output tokens); a pre-game plan runs the Explore
-settings. These are public-tier features behind `scout_desktop_coach`; they do
-not read `scout_coach_proactive`.
+1 pre-game turn per game key, counted from `ScoutCoachTurn`. These are
+public-tier features behind `scout_desktop_coach`; they do not read
+`scout_coach_proactive`.
+
+#### The in-game profile
+
+Every coach surface shares one execution profile (`coach/execution-profile.ts`).
+A turn whose projected context is champion select or a live game, typed,
+spoken or app-started, runs it: `gpt-6-luna` at low reasoning effort, six
+steps and 1,200 output tokens; a pre-game plan or a post-game review runs the
+Explore settings. `gpt-6-luna` is the catalog's cheapest tool-calling,
+structured-output model, described as the fast GPT-6 tier for bounded
+companion conversations, and Explore's own default. Effort is the
+`reasoningEffort` parameter of `withExploreSpend`. An in-game run is reserved
+`quotaExempt` and admitted by its own allowance instead of Explore's question
+windows (`IN_GAME_COACH_QUOTA_RULES` in `temporal/durable-quota.ts`, counted
+from audit rows whose champion-select or live section was accepted), sized for
+abuse protection so a long game is never cut off; the active-run limits and the
+spend ledger apply as for any turn. An answer records its model and effort as
+`generation` (`low` in game). A reader that predates `low` (an `explore.get`
+bundle below version 6, a desktop client below contract 8) is sent such an
+answer without its provenance (`withoutUnknownEffort`) rather than a value it
+would refuse.
+
+#### Spoken coach turns
+
+`POST /api/scout-client/v1/coach/voice/turns`
+(`scout-client/desktop/coach-voice-routes.ts`, desktop contract 8) answers one
+spoken question. The body is the trigger (`wake_word` or `push_to_talk`), the
+conversation, an optional `gameContext`, and one finished utterance as a
+base64 16 kHz mono 16-bit PCM WAV of 200 ms to 15 s; there is no text field.
+The answer is an event stream of the contract's `voiceTurn` events:
+`transcript`, `run`, `answer`, `audio` (24 kHz PCM chunks), `error` and a final
+`done`.
+
+The server proves the player asked: it transcribes the audio itself
+(`transcribeVoiceQuestion`), and a `wake_word` turn must open with the wake
+phrase in that transcript (`verifyWakeTranscript` with `VOICE_WAKE_PREFIXES`,
+the gate Discord voice uses), which is stripped before the question starts a
+durable Explore turn on the `voice` surface, so the agent also writes a spoken
+summary. The coach policy treats `player_voice` as it treats `player_typed`.
+
+Before the stream opens the route refuses, as typed errors: no device or
+`explore` scope, `scout_desktop_voice` or `scout_desktop_coach` off
+(`feature_disabled`; both default on), more than ten voice turns a minute from
+one device (`rate_limited`), a body or utterance outside the contract
+(`invalid_request`), a context that breaks it (`invalid_game_context`), and a
+deployment with no voice credential (`unavailable`). The credential is the
+`voiceAssistant` one Discord voice reads (`VOICE_OPENAI_API_KEY_FILE`, the
+`scout-openai` Secret), mounted on the app pods in beta and production. After
+the stream opens, a wake phrase the server did not hear, a spent allowance or
+quota, and a failed answer are `error` events. Transcription and speech are
+recorded in the Explore spend ledger by the length of audio, settled at once
+(`recordExploreAudioSpend`); a provider budget refusal is a `budget_exhausted`
+event.
 
 ### Raw observation archive
 

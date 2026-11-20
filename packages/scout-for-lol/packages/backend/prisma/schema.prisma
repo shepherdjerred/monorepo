@@ -963,8 +963,8 @@ model ScoutClientCanonicalMatch {
   @@index([selectedAt])
 }
 
-/// One Explore turn from Scout Desktop that carried a game context, written
-/// whether or not any of it reached the agent. It answers "which turns sent
+/// One Explore turn from Scout Desktop that carried a game context, or was
+/// spoken, written whether or not any context reached the agent. It answers "which turns sent
 /// what kind of game state, and why was it allowed": the sections the device
 /// sent and the ones the coach policy let through, how the turn began, and
 /// both flags as evaluated. Identifiers only; the context itself is never
@@ -977,12 +977,18 @@ model ScoutCoachTurn {
   conversationId     String
   runId              String   @unique
   questionMessageId  String
-  /// `player_typed`, `app_champ_select` or `app_pregame` (`coach/context-policy.ts`).
+  /// `player_typed`, `player_voice`, `app_champ_select` or `app_pregame`
+  /// (`coach/context-policy.ts`).
   initiation         String
   /// The client's opaque id for the champ select or game an app-started turn
   /// belongs to; the server-side limit of 4 champ-select and 1 pre-game turns
-  /// per game counts rows by it. Null for a player-typed turn.
+  /// per game counts rows by it. Null for a turn the player typed or spoke.
   gameKey            String?
+  /// A spoken turn's trigger, `wake_word` or `push_to_talk`; null otherwise.
+  voiceTrigger       String?
+  /// How the server judged a spoken turn's wake phrase: `verified` or
+  /// `not_required` (push-to-talk); null for a turn that was not spoken.
+  wakeVerification   String?
   /// Sections, in contract order: `champSelect`, `pregame`, `live`, `postgame`.
   sectionsPresent    String[]
   sectionsAccepted   String[]

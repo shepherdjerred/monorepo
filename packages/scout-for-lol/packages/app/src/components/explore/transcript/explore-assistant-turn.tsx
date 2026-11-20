@@ -240,7 +240,8 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
             : message.generation.model === "gpt-6-luna"
               ? "GPT-6 Luna"
               : message.generation.model}{" "}
-          · High reasoning
+          · {message.generation.reasoningEffort === "low" ? "Low" : "High"}{" "}
+          reasoning
         </p>
       )}
 

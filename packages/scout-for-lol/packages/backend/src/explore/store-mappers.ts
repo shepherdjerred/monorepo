@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   CoachOptionsSchema,
   ExploreConversationSchema,
+  ExploreGenerationSchema,
   ExploreMatchCardSchema,
   ExploreLoadoutCardSchema,
   ExploreMessageSchema,
@@ -103,12 +104,7 @@ export function toMessage(
       : {
           generation: parseJsonColumn(
             row.generation,
-            z
-              .object({
-                model: z.string().min(1),
-                reasoningEffort: z.literal("high"),
-              })
-              .strict(),
+            ExploreGenerationSchema,
             "generation",
           ),
         }),

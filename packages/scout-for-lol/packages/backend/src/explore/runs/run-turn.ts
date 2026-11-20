@@ -6,6 +6,7 @@ import {
   EXPLORE_TIMEOUT_MS,
   type CoachGameContext,
   type DiscordChannelId,
+  type ExploreGeneration,
   type ExploreMessage,
   ExploreStreamMessageSchema,
   type ExploreStreamEvent,
@@ -13,6 +14,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
+import { coachRunSettings } from "#src/coach/execution-profile.ts";
 import { ExploreBudgetError } from "#src/explore/spending/ledger.ts";
 import { ExploreCardSelectionError } from "#src/explore-match/card-selection-error.ts";
 import { durableExploreQuotaStatus } from "#src/temporal/durable-quota.ts";
@@ -100,10 +102,23 @@ async function turnQuota(
 function chosenModel(model: string | undefined) {
   return model === undefined ? {} : { model };
 }
-function storedProvenance(model: string | undefined) {
+/**
+ * Which model wrote a saved answer, and at what effort: the turn's own model
+ * at `high`, or the in-game profile's pinned model at `low`. A turn with no
+ * pinned model of either kind records none.
+ */
+export function turnProvenance(
+  started: StartedExploreTurn,
+  coach: CoachGameContext | null | undefined,
+): ExploreGeneration | undefined {
+  const profile = coachRunSettings(coach);
+  const model = profile.model ?? started.model;
   return model === undefined
-    ? {}
-    : { generation: { model, reasoningEffort: "high" as const } };
+    ? undefined
+    : { model, reasoningEffort: profile.reasoningEffort };
+}
+function storedProvenance(generation: ExploreGeneration | undefined) {
+  return generation === undefined ? {} : { generation };
 }
 /** Durable diagnostics contain categories, never provider/SQL/user payloads. */
 export function exploreFailureCode(
@@ -334,7 +349,7 @@ export async function runPersistedExploreTurn(
       ...(result.inlineEntities === undefined
         ? {}
         : { inlineEntities: result.inlineEntities }),
-      ...storedProvenance(input.started.model),
+      ...storedProvenance(turnProvenance(input.started, input.coach)),
       preview: result.preview,
       visualization: result.visualization,
       matchCards: result.matchCards,
@@ -385,6 +400,7 @@ export async function runPersistedExploreTurn(
         : await salvagePartialAnswer({
             client: dependencies.client,
             started: input.started,
+            generation: turnProvenance(input.started, input.coach),
             guildIds: input.guildIds,
             stopped: outcome === "stopped",
             text: streamedAnswer,
@@ -440,6 +456,8 @@ export async function runPersistedExploreTurn(
 async function salvagePartialAnswer(input: {
   client: ExtendedPrismaClient;
   started: StartedExploreTurn;
+  /** The answer's provenance, from `turnProvenance`. */
+  generation: ExploreGeneration | undefined;
   guildIds: readonly DiscordGuildId[];
   stopped: boolean;
   text: string;
@@ -449,7 +467,7 @@ async function salvagePartialAnswer(input: {
 }): Promise<ExploreMessage | null> {
   try {
     const salvaged = await persistPartialAnswer(input.client, {
-      ...chosenModel(input.started.model),
+      generation: input.generation,
       guildIds: input.guildIds,
       stopped: input.stopped,
       conversationId: input.started.conversationId,

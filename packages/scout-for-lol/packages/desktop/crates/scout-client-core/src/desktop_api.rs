@@ -26,7 +26,7 @@ use crate::coach_context::GameContext;
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 7;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 8;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
 /// Path of the route that starts a turn Scout asks for itself.
@@ -53,6 +53,8 @@ pub const EXPLORE_CONVERSATIONS_GET_PATH: &str = "/api/scout-client/v1/explore/c
 pub const EXPLORE_ASSETS_PATH: &str = "/api/scout-client/v1/explore/assets";
 /// Path of the `image/png` route that draws one answer's chart.
 pub const EXPLORE_VISUALIZATION_PATH: &str = "/api/scout-client/v1/explore/visualization";
+/// Path of the `text/event-stream` route that answers one spoken question.
+pub const COACH_VOICE_TURNS_PATH: &str = "/api/scout-client/v1/coach/voice/turns";
 /// The content type of a `png` route's answer.
 pub const PNG_CONTENT_TYPE: &str = "image/png";
 
@@ -676,6 +678,54 @@ pub struct DesktopRoute {
     pub response: RouteResponseKind,
 }
 
+/// The utterance a voice turn uploads: one PCM WAV of this shape and length.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VoiceTurnAudioContract {
+    /// The upload's media type.
+    pub media_type: String,
+    /// Samples per second.
+    pub sample_rate_hz: u32,
+    /// Interleaved channels.
+    pub channels: u16,
+    /// Bits per sample.
+    pub bits_per_sample: u16,
+    /// The shortest utterance the server reads as speech.
+    pub min_duration_ms: u32,
+    /// The longest utterance the desktop records.
+    pub max_duration_ms: u32,
+}
+
+/// The spoken answer's PCM chunks.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VoiceTurnSpeechContract {
+    /// The sample encoding.
+    pub encoding: String,
+    /// Samples per second.
+    pub sample_rate_hz: u32,
+    /// Interleaved channels.
+    pub channels: u16,
+    /// The largest chunk one `audio` event carries.
+    pub max_chunk_bytes: u32,
+}
+
+/// `coach/voice/turns`' own vocabulary, separate from `runs/stream`'s.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct VoiceTurnContract {
+    /// What may start a recording.
+    pub triggers: Vec<String>,
+    /// The upload.
+    pub audio: VoiceTurnAudioContract,
+    /// The answer's speech.
+    pub speech: VoiceTurnSpeechContract,
+    /// Every voice event type, in order.
+    pub events: Vec<String>,
+    /// Every in-stream refusal code.
+    pub errors: Vec<String>,
+}
+
 /// The shared contract file.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -694,6 +744,8 @@ pub struct DesktopApiContract {
     pub routes: BTreeMap<String, DesktopRoute>,
     /// Every `runs/stream` event type.
     pub stream_events: Vec<String>,
+    /// `coach/voice/turns`' upload, speech, events and refusals.
+    pub voice_turn: VoiceTurnContract,
     /// Chart kinds drawn as native rows rather than as the server's PNG.
     pub native_visualization_kinds: Vec<String>,
     /// Refusal codes and their HTTP status.
@@ -710,16 +762,17 @@ mod tests {
 
     use super::{
         ActiveRun, AppInitiation, AppTurnRequest, AssetsResponse, AttachmentDiscardRequest,
-        ConversationGetRequest, ConversationListResponse, DESKTOP_CONTRACT_HEADER,
-        DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError,
-        DeviceScope, EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH,
-        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
-        EXPLORE_RUNS_START_APP_PATH, EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH,
-        EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EXPLORE_VISUALIZATION_PATH, EmptyRequest,
-        ExploreStatusResponse, ModelsResponse, OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE,
-        PairingV2Response, PngResponse, RouteResponseKind, RunActiveResponse, RunOutcomeResponse,
-        RunRequest, RunStartRequest, RunStopResponse, ScopeRequest, ScopeRequestResponse,
-        SetLeafRequest, ShareResponse, VisualizationRequest,
+        COACH_VOICE_TURNS_PATH, ConversationGetRequest, ConversationListResponse,
+        DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH,
+        DesktopApiContract, DesktopApiError, DeviceScope, EXPLORE_ASSETS_PATH,
+        EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH,
+        EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_APP_PATH, EXPLORE_RUNS_START_PATH,
+        EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH,
+        EXPLORE_VISUALIZATION_PATH, EmptyRequest, ExploreStatusResponse, ModelsResponse,
+        OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE, PairingV2Response, PngResponse,
+        RouteResponseKind, RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest,
+        RunStopResponse, ScopeRequest, ScopeRequestResponse, SetLeafRequest, ShareResponse,
+        VisualizationRequest,
     };
     use crate::protocol::CreatePairingRequest;
 
@@ -778,6 +831,8 @@ mod tests {
     const RUNS_START_APP: &str = include_str!(
         "../../../../data/src/scout-client/desktop-fixtures/explore-runs-start-app.json"
     );
+    const VOICE_TURNS: &str =
+        include_str!("../../../../data/src/scout-client/desktop-fixtures/coach-voice-turns.json");
     const START_ACTIONS: &str = include_str!(
         "../../../../data/src/scout-client/desktop-fixtures/explore-runs-start-actions.json"
     );
@@ -834,6 +889,7 @@ mod tests {
         assert_eq!(
             paths,
             BTreeMap::from([
+                ("coach_voice_turns", COACH_VOICE_TURNS_PATH),
                 ("device_scope_requests", DEVICE_SCOPE_REQUESTS_PATH),
                 ("explore_assets", EXPLORE_ASSETS_PATH),
                 (
@@ -880,7 +936,7 @@ mod tests {
             .filter(|(_, route)| route.response == RouteResponseKind::EventStream)
             .map(|(name, _)| name.as_str())
             .collect();
-        assert_eq!(streaming, vec!["explore_runs_stream"]);
+        assert_eq!(streaming, vec!["coach_voice_turns", "explore_runs_stream"]);
         let images: Vec<&str> = contract
             .routes
             .iter()
@@ -919,6 +975,7 @@ mod tests {
             REVOKE_SHARE,
             ATTACHMENTS_UPLOAD,
             ATTACHMENTS_DISCARD,
+            VOICE_TURNS,
         ] {
             let fixture: Value = serde_json::from_str(fixture)?;
             named.push(fixture["route"].as_str().ok_or("route name")?.to_owned());

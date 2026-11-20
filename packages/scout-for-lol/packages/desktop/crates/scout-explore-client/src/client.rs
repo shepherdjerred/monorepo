@@ -22,6 +22,7 @@ use uuid::Uuid;
 use crate::contract::{CONTRACT_HEADER, CONTRACT_VERSION, Route};
 use crate::error::{ExploreClientError, classify_rejection, retry_after};
 use crate::model::{Attachment, AttachmentMediaType, AttachmentUploadRequest, Transcript};
+use crate::voice::VoiceTurnRequest;
 
 /// How long a REST call may take end to end.
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
@@ -469,6 +470,40 @@ impl ExploreClient {
             return Err(ExploreClientError::Unexpected {
                 status: response.status().as_u16(),
                 detail: format!("runs/stream answered {content_type:?}, not text/event-stream"),
+            });
+        }
+        Ok(response)
+    }
+}
+
+impl ExploreClient {
+    /// Post one voice turn, returning the response only when it is a
+    /// `text/event-stream`. It rides the stream client: an answer can take
+    /// longer than a REST call may, and the server keeps the stream alive.
+    pub(crate) async fn open_voice_turn(
+        &self,
+        request: &VoiceTurnRequest,
+    ) -> Result<Response, ExploreClientError> {
+        let response = checked(
+            self.post(&self.stream_http, Route::CoachVoiceTurns)?
+                .header(reqwest::header::ACCEPT, "text/event-stream")
+                .json(request)
+                .send()
+                .await
+                .map_err(ExploreClientError::Transport)?,
+        )
+        .await?;
+        let content_type = response
+            .headers()
+            .get(reqwest::header::CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_default();
+        if !content_type.starts_with("text/event-stream") {
+            return Err(ExploreClientError::Unexpected {
+                status: response.status().as_u16(),
+                detail: format!(
+                    "coach/voice/turns answered {content_type:?}, not text/event-stream"
+                ),
             });
         }
         Ok(response)

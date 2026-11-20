@@ -2696,6 +2696,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_desktop_voice",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Spoken coach turns in Scout Desktop (coach/voice/turns): whether the server transcribes a finished utterance and answers it aloud. Evaluated per device owner (user, then the owner's Explore-eligible servers) beside scout_desktop_coach; off refuses the route before any audio is read.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-consumer-player-profiles-enabled",
       "owner": "scout",
       "namespace": "scout",

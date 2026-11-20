@@ -7,6 +7,7 @@ import {
   type ExploreAttachPoint,
   type ExploreConversation,
   type ExploreConversationOrigin,
+  type ExploreGeneration,
   type ExploreMessage,
   type ExploreMatchCard,
   type ExploreLoadoutCard,
@@ -337,7 +338,7 @@ export async function appendExploreAnswer(
     conversationId: string;
     parentMessageId: string;
     answer: ExploreAnswer;
-    generation?: { model: string; reasoningEffort: "high" };
+    generation?: ExploreGeneration;
     inlineEntities?: NonNullable<ExploreMessage["inlineEntities"]>;
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
