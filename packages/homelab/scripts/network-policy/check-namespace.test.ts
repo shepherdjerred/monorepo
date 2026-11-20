@@ -1,11 +1,16 @@
 import { describe, expect, test } from "vitest";
 import {
   parseCheckArguments,
-  readEnforcerLog,
   readProbeSuccess,
   runCheck,
   type CheckDependencies,
 } from "./check-namespace.ts";
+import {
+  evaluationQueries,
+  IDS_PER_QUERY,
+  LOKI_MAX_LINES,
+  readEnforcerLog,
+} from "./enforcer-log.ts";
 import {
   breakGlassPolicy,
   fakeRunner,
@@ -14,6 +19,7 @@ import {
   probe,
   stagingPolicy,
 } from "./fixtures.ts";
+import { denialsFor } from "./namespace-checks.ts";
 
 const daemonSet = (...containers: string[]) => ({
   stdout: JSON.stringify({
@@ -26,17 +32,59 @@ const daemonSet = (...containers: string[]) => ({
   }),
 });
 
+const NOW = new Date("2026-11-20T07:00:00Z");
+
+type LokiValue = { timestamp: string; line: string } | [string, string];
+
+/** A `toolkit loki query -o json` answer: one stream per agent pod. */
+function loki(streams: Record<string, LokiValue[]>): { stdout: string } {
+  return {
+    stdout: JSON.stringify({
+      status: "success",
+      data: {
+        resultType: "streams",
+        result: Object.entries(streams).map(([pod, values]) => ({
+          stream: { container: "kube-network-policies", pod },
+          values,
+        })),
+      },
+    }),
+  };
+}
+
+const gcxError = {
+  exitCode: 1,
+  stdout: JSON.stringify({
+    type: "gcx.error",
+    error: {
+      summary: "Invalid query",
+      details: "Loki query failed (HTTP 400)\n\nquery timed out",
+    },
+  }),
+};
+
+const sidecar = daemonSet("kube-flannel", "kube-network-policies");
+const evaluating = (id: number, source: string, destination: string) =>
+  `I1120 06:59:00.0 1 logging.go:67] "Evaluating packet" id=${String(id)} direction="Ingress" srcPod="${source}" dstPod="${destination}" packet=<`;
+const denied = (id: number) =>
+  `I1120 06:59:00.1 1 engine.go:68] "Packet denied by ingress policy" id=${String(id)}`;
+
 const readyPod = {
   metadata: { name: "app-0" },
   status: { phase: "Running", conditions: [{ type: "Ready", status: "True" }] },
 };
 
+type Replies = Parameters<typeof fakeRunner>[0];
+
+/** `enforcer` replies come first, so they override the defaults. */
 function cluster(
   policies: unknown[],
   pods: unknown[] = [readyPod],
   probes: unknown[] = [],
+  enforcer: Replies = [],
 ) {
   return fakeRunner([
+    ...enforcer,
     ["get networkpolicies", items(...policies)],
     ["get probes", items(...probes)],
     ["get ingresses", items()],
@@ -52,7 +100,7 @@ function dependencies(run: CheckDependencies["run"]): CheckDependencies {
   return {
     run,
     fetchUrl: () => Promise.resolve({ status: 200, body: "" }),
-    now: () => new Date("2026-11-13T12:00:00Z"),
+    now: () => NOW,
   };
 }
 
@@ -179,12 +227,14 @@ describe("optional sources", () => {
       reason: expect.stringContaining("toolkit prom query probe_success"),
     });
   });
+});
 
-  test("the enforcer log is not available until the sidecar exists", async () => {
+describe("enforcer denials from Loki", () => {
+  test("are not available until the sidecar exists", async () => {
     const { run, calls } = fakeRunner([
       ["get daemonset", daemonSet("kube-flannel")],
     ]);
-    expect(await readEnforcerLog(run, 10)).toEqual({
+    expect(await readEnforcerLog(run, 10, NOW)).toEqual({
       available: false,
       reason:
         "kube-flannel has no kube-network-policies container (enforcement is not switched on)",
@@ -192,19 +242,178 @@ describe("optional sources", () => {
     expect(calls).toHaveLength(1);
   });
 
-  test("the enforcer log is read from every node's pod", async () => {
+  test("pair each denial with its own agent's evaluation of the same id", async () => {
+    // Both agents denied a packet with id 7; ids are per agent pod.
     const { run, calls } = fakeRunner([
-      ["get daemonset", daemonSet("kube-flannel", "kube-network-policies")],
-      ["logs", { stdout: "line one\nline two" }],
+      ["get daemonset", sidecar],
+      [
+        'pod="kube-flannel-a"',
+        loki({
+          "kube-flannel-a": [
+            ["100", evaluating(7, "tracker/tracker-0", "flipt/flipt-0")],
+          ],
+        }),
+      ],
+      [
+        'pod="kube-flannel-b"',
+        loki({
+          "kube-flannel-b": [
+            {
+              timestamp: "300",
+              line: evaluating(7, "my-tracker/x", "media/plex-0"),
+            },
+          ],
+        }),
+      ],
+      [
+        "Packet denied",
+        // Loki answers newest first.
+        loki({
+          "kube-flannel-b": [{ timestamp: "400", line: denied(7) }],
+          "kube-flannel-a": [["200", denied(7)]],
+        }),
+      ],
     ]);
-    expect(await readEnforcerLog(run, 15)).toEqual({
+    const log = await readEnforcerLog(run, 10, NOW);
+    expect(log).toEqual({
       available: true,
-      lines: ["line one", "line two"],
-      minutes: 15,
+      lines: [
+        `[kube-flannel-a] ${evaluating(7, "tracker/tracker-0", "flipt/flipt-0")}`,
+        `[kube-flannel-a] ${denied(7)}`,
+        `[kube-flannel-b] ${evaluating(7, "my-tracker/x", "media/plex-0")}`,
+        `[kube-flannel-b] ${denied(7)}`,
+      ],
+      minutes: 10,
+      limitReached: false,
     });
-    expect(calls[1]?.command.join(" ")).toBe(
-      "kubectl --namespace kube-system logs --selector k8s-app=flannel,tier=node --container kube-network-policies --since=15m --tail=-1 --prefix",
+    const lines = log.available ? log.lines : [];
+    expect(denialsFor("tracker", lines)).toHaveLength(1);
+    expect(denialsFor("media", lines)).toEqual([
+      `[kube-flannel-b] ${denied(7)} <- [kube-flannel-b] ${evaluating(7, "my-tracker/x", "media/plex-0")}`,
+    ]);
+    expect(denialsFor("my", lines)).toEqual([]);
+    expect(calls.map(({ command }) => command)).toEqual([
+      [
+        "kubectl",
+        "--namespace",
+        "kube-system",
+        "get",
+        "daemonset",
+        "kube-flannel",
+        "-o",
+        "json",
+      ],
+      [
+        "toolkit",
+        "loki",
+        "query",
+        '{namespace="kube-system", container="kube-network-policies"} |~ "Packet denied by (egress|ingress) policy"',
+        "--from",
+        "2026-11-20T06:50:00.000Z",
+        "--to",
+        "2026-11-20T07:00:00.000Z",
+        "--limit",
+        "5000",
+        "-o",
+        "json",
+      ],
+      ...["kube-flannel-b", "kube-flannel-a"].map((pod) => [
+        "toolkit",
+        "loki",
+        "query",
+        `{namespace="kube-system", container="kube-network-policies", pod="${pod}"} |= "Evaluating packet" |~ "id=(7)[^0-9]"`,
+        "--from",
+        "2026-11-20T06:49:50.000Z",
+        "--to",
+        "2026-11-20T07:00:00.000Z",
+        "--limit",
+        "5000",
+        "-o",
+        "json",
+      ]),
+    ]);
+  });
+
+  test("no denial reads no evaluation", async () => {
+    const { run, calls } = fakeRunner([
+      ["get daemonset", sidecar],
+      ["Packet denied", loki({})],
+    ]);
+    expect(await readEnforcerLog(run, 10, NOW)).toEqual({
+      available: true,
+      lines: [],
+      minutes: 10,
+      limitReached: false,
+    });
+    expect(calls).toHaveLength(2);
+  });
+
+  test("a failed Loki read is not available with the reason, never zero", async () => {
+    const deniedFails = fakeRunner([
+      ["get daemonset", sidecar],
+      ["Packet denied", gcxError],
+    ]);
+    expect(await readEnforcerLog(deniedFails.run, 10, NOW)).toEqual({
+      available: false,
+      reason:
+        "toolkit loki query exited 1: Loki query failed (HTTP 400) query timed out",
+    });
+    const evaluationFails = fakeRunner([
+      ["get daemonset", sidecar],
+      ["Evaluating packet", gcxError],
+      ["Packet denied", loki({ "kube-flannel-a": [["200", denied(7)]] })],
+    ]);
+    expect(await readEnforcerLog(evaluationFails.run, 10, NOW)).toMatchObject({
+      available: false,
+      reason: expect.stringContaining("query timed out"),
+    });
+    const garbled = fakeRunner([
+      ["get daemonset", sidecar],
+      ["Packet denied", { stdout: "not json" }],
+    ]);
+    expect(await readEnforcerLog(garbled.run, 10, NOW)).toEqual({
+      available: false,
+      reason: "unexpected Loki response",
+    });
+  });
+
+  test("a full Loki answer marks the count as a lower bound", async () => {
+    const { run } = fakeRunner([
+      ["get daemonset", sidecar],
+      ["Evaluating packet", loki({})],
+      [
+        "Packet denied",
+        loki({
+          "kube-flannel-a": Array.from(
+            { length: LOKI_MAX_LINES },
+            (_, index): LokiValue => [String(index), denied(7)],
+          ),
+        }),
+      ],
+    ]);
+    expect(await readEnforcerLog(run, 10, NOW)).toMatchObject({
+      available: true,
+      limitReached: true,
+    });
+  });
+
+  test("ids are batched per agent pod and deduplicated", () => {
+    const entries = [
+      ...Array.from({ length: IDS_PER_QUERY + 1 }, (_, id) => ({
+        pod: "kube-flannel-a",
+        timestamp: 1n,
+        line: denied(id),
+      })),
+      { pod: "kube-flannel-b", timestamp: 1n, line: denied(3) },
+      { pod: "kube-flannel-b", timestamp: 2n, line: denied(3) },
+    ];
+    const queries = evaluationQueries(entries);
+    expect(queries).toHaveLength(3);
+    expect(queries[1]).toContain(
+      `pod="kube-flannel-a"} |= "Evaluating packet" |~ "id=(${String(IDS_PER_QUERY)})[^0-9]"`,
     );
+    expect(queries[2]).toContain(`pod="kube-flannel-b"`);
+    expect(queries[2]).toContain(`"id=(3)[^0-9]"`);
   });
 });
 
@@ -230,9 +439,63 @@ describe("the gate", () => {
     for (const { command, stdin } of calls) {
       expect(stdin).toBeUndefined();
       expect(command.join(" ")).toMatch(
-        /^(?:kubectl (?:--namespace \S+ )?(?:get|logs) |toolkit prom query )/u,
+        /^(?:kubectl (?:--namespace \S+ )?get |toolkit (?:prom|loki) query )/u,
       );
     }
+  });
+
+  test("reports the namespace's denials from Loki as a note", async () => {
+    const { run, calls } = cluster(
+      [stagingPolicy("tracker", "enforced")],
+      [readyPod],
+      [],
+      [
+        ["get daemonset kube-flannel", sidecar],
+        [
+          "Evaluating packet",
+          loki({
+            "kube-flannel-z6rmb": [
+              ["100", evaluating(9, "tracker/client", "media/server")],
+            ],
+          }),
+        ],
+        ["Packet denied", loki({ "kube-flannel-z6rmb": [["200", denied(9)]] })],
+      ],
+    );
+    const result = await runCheck(
+      parseCheckArguments(["tracker", "--since-minutes", "60"]),
+      dependencies(run),
+    );
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toContain(
+      "INFO         denials   1 denials involving this namespace in the last 60m",
+    );
+    expect(result.output).toContain(
+      `    - [kube-flannel-z6rmb] ${denied(9)} <- [kube-flannel-z6rmb] ${evaluating(9, "tracker/client", "media/server")}`,
+    );
+    expect(calls.map(({ command }) => command.join(" "))).toContainEqual(
+      expect.stringContaining("--from 2026-11-20T06:00:00.000Z"),
+    );
+  });
+
+  test("an unreadable Loki leaves the denials not available, not zero", async () => {
+    const { run } = cluster(
+      [stagingPolicy("tracker", "enforced")],
+      [readyPod],
+      [],
+      [
+        ["get daemonset kube-flannel", sidecar],
+        ["Packet denied", gcxError],
+      ],
+    );
+    const result = await runCheck(
+      parseCheckArguments(["tracker"]),
+      dependencies(run),
+    );
+    expect(result.output).toContain(
+      "INFO         denials   not available: toolkit loki query exited 1: Loki query failed (HTTP 400) query timed out",
+    );
+    expect(result.output).not.toContain("0 denials");
   });
 
   test("exits non-zero on a failed check and on a missing namespace", async () => {

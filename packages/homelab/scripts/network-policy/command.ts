@@ -43,6 +43,11 @@ export function commandFailure(
   return `${command.join(" ")} exited ${String(result.exitCode)}: ${detail}`;
 }
 
+/** The first line of a failure, short enough for a report row. */
+export function firstLine(text: string): string {
+  return (text.trim().split("\n")[0] ?? "").slice(0, 200);
+}
+
 /** `kubectl <args> -o json`, validated. A non-zero exit or another shape throws. */
 export async function kubectlJson<SCHEMA extends z.ZodType>(
   run: CommandRunner,

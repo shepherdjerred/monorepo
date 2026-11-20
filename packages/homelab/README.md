@@ -227,6 +227,11 @@ in [Switch on network policy enforcement](../docs/wiki/src/content/docs/how-to/s
 open|enforced` fails when the staging policy's stage differs;
 `--allow-break-glass` accepts a live break-glass policy.
 
+`denials` reads Loki, not `kubectl logs`: the enforcer logs every packet at
+`--v=2`, so on a busy node its container log rotates within about a minute.
+Each denial line is paired with the same agent pod's `Evaluating packet` line
+for that packet id, which names the pods.
+
 | Check      | Source                                                                                       | Result                                                                       |
 | ---------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `stage`    | The live staging and break-glass policies                                                    | Reported; fails if unrecognized, unexpected, or a break-glass policy is live |
@@ -234,7 +239,7 @@ open|enforced` fails when the staging policy's stage differs;
 | `services` | Services and EndpointSlices: every Service backed by pods has a ready endpoint               | Pass or fail                                                                 |
 | `urls`     | Hosts from `platform-model.json`; path and accepted statuses from the live blackbox `Probe`s | Pass, fail or not checked                                                    |
 | `probes`   | `toolkit prom query probe_success` for the namespace's `Probe` jobs                          | Pass, fail or not checked                                                    |
-| `denials`  | `kube-network-policies` container log of the `kube-flannel` pods                             | A note; never gates                                                          |
+| `denials`  | Loki (`toolkit loki query`): the `kube-network-policies` log of the `kube-flannel` pods      | A note; never gates; "not available" when Loki cannot be read                |
 
 `--coverage` reads only policies and pods. It lists every namespace that has a
 NetworkPolicy other than its own staging policy, with its policy count, pod
