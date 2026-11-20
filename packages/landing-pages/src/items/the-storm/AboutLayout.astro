@@ -3,6 +3,7 @@ import "./about.css";
 import { Font, getImage } from "astro:assets";
 import Base from "../../layouts/Base.astro";
 import windmill from "./assets/windmill.jpg";
+import { server } from "./server.ts";
 
 interface Props {
   title: string;
@@ -24,6 +25,7 @@ const card = await getImage({
   title={title}
   description={description}
   themeColor="#142d22"
+  canonical={server.aboutUrl}
   image={{
     src: new URL(card.src, Astro.site).href,
     alt: "A Minecraft windmill above a wheat field on a sunny day.",

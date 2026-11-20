@@ -33,6 +33,9 @@ export const server = {
   forum: "https://ts-mc.net/",
   map: "https://bluemap.ts-mc.net/",
   about: "/the-storm/about/",
+  // The about page's own address: the static-site origin serves it at the root
+  // of join.ts-mc.net with HTTP 200, so this is its canonical URL.
+  aboutUrl: "https://join.ts-mc.net/",
   join: "#join",
   consoles: "#consoles",
   guides: {

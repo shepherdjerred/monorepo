@@ -8,10 +8,13 @@ interface Props {
   image?: { src: string; alt: string; width: number; height: number };
   themeColor: string;
   noindex?: boolean;
+  /** The page's own address when it is not its path on this host. */
+  canonical?: string;
 }
 
 const { pageKey, title, description, image, themeColor, noindex } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const canonical =
+  Astro.props.canonical ?? new URL(Astro.url.pathname, Astro.site).href;
 ---
 
 <!doctype html>
