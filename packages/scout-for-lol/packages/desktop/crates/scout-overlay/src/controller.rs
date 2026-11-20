@@ -183,10 +183,19 @@ impl OverlayController {
                 .then(a.seq.cmp(&b.seq))
         });
         if self.entries.len() > self.config.max_queued
-            && let Some(dropped) = self.entries.pop()
-            && dropped.card.id == id
+            && let Some(lowest) = self.entries.last().map(|entry| entry.card.priority)
         {
-            return Err(OfferError::QueueFull);
+            // Entries sort by priority then age, so the oldest card of the
+            // lowest priority is the first of that group.
+            let evict = self
+                .entries
+                .iter()
+                .position(|entry| entry.card.priority == lowest)
+                .unwrap_or(self.entries.len() - 1);
+            let dropped = self.entries.remove(evict);
+            if dropped.card.id == id {
+                return Err(OfferError::QueueFull);
+            }
         }
         Ok(())
     }
@@ -402,6 +411,25 @@ mod tests {
         controller.tick(11_000);
         assert!(!controller.view().visible);
         assert_eq!(controller.view().queued, 0);
+    }
+
+    #[test]
+    fn a_full_queue_evicts_the_oldest_card_of_equal_priority() {
+        let mut controller = OverlayController::new(
+            ProactivePolicy::production(),
+            ControllerConfig { max_queued: 2 },
+        );
+        controller.set_in_game(true, 0);
+        for id in ["a", "b", "c"] {
+            assert_eq!(
+                controller.offer(answer(id, CardPriority::Normal), 0),
+                Ok(())
+            );
+        }
+        assert_eq!(controller.view().queued, 2);
+        assert_eq!(shown(&controller), Some("b"));
+        assert!(controller.handle(HotkeyEvent::Next, 0));
+        assert_eq!(shown(&controller), Some("c"));
     }
 
     #[test]

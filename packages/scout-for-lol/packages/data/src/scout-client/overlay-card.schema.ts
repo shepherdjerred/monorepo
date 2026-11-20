@@ -23,11 +23,25 @@ export type OverlayCardKind = z.infer<typeof OverlayCardKindSchema>;
 
 export const OverlayCardPrioritySchema = z.enum(["low", "normal", "high"]);
 
+/** Bound by Unicode code points, as the JSON Schema and the Rust validator do. */
+function boundedText(min: number, max: number) {
+  return z.string().refine(
+    (value) => {
+      let length = 0;
+      for (const _ of value) {
+        length += 1;
+      }
+      return length >= min && length <= max;
+    },
+    { message: `must be ${String(min)} to ${String(max)} characters` },
+  );
+}
+
 export const OverlayCardSchema = z.strictObject({
-  id: z.string().min(1).max(64),
+  id: boundedText(1, 64),
   kind: OverlayCardKindSchema,
-  title: z.string().min(1).max(80),
-  lines: z.array(z.string().min(1).max(160)).min(1).max(5),
+  title: boundedText(1, 80),
+  lines: z.array(boundedText(1, 160)).min(1).max(5),
   priority: OverlayCardPrioritySchema,
   ttlSecs: z.number().int().min(1).max(600),
 });

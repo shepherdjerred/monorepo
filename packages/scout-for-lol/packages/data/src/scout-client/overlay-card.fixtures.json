@@ -58,6 +58,17 @@
         "priority": "normal",
         "ttlSecs": 300
       }
+    },
+    {
+      "name": "a title of 80 non-BMP characters",
+      "body": {
+        "id": "e",
+        "kind": "answer",
+        "title": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "lines": ["x"],
+        "priority": "low",
+        "ttlSecs": 5
+      }
     }
   ],
   "invalid": [
@@ -193,6 +204,20 @@
         "ttlSecs": 1.5
       }
     },
-    { "reason": "a null body", "body": null }
+    {
+      "reason": "a null body",
+      "body": null
+    },
+    {
+      "reason": "a title of 81 non-BMP characters",
+      "body": {
+        "id": "e",
+        "kind": "answer",
+        "title": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "lines": ["x"],
+        "priority": "low",
+        "ttlSecs": 5
+      }
+    }
   ]
 }
