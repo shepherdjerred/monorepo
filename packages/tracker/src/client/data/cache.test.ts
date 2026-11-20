@@ -196,12 +196,12 @@ describe("issue changes", () => {
     expect(
       changePatch(overridden, { kind: "priorityAuto" }, workspaceFixture),
     ).toEqual({ priority: 1, priorityManual: false });
-    // Votes promote an auto-sized issue once they cross the threshold.
+    // Votes promote auto-sized and untriaged issues across 3 / 8 / 20 thresholds.
     const lowSized = detailFixture(
       issueFixture(3, {
         impact: "low",
         urgency: "low",
-        priority: 4,
+        priority: 3,
         voteCount: 7,
       }),
     );
@@ -211,6 +211,22 @@ describe("issue changes", () => {
       voteCount: 8,
       viewerVoted: true,
       priority: 2,
+      priorityManual: false,
+    });
+    const untriaged = detailFixture(
+      issueFixture(4, {
+        impact: null,
+        urgency: null,
+        priority: 0,
+        voteCount: 2,
+      }),
+    );
+    expect(
+      changePatch(untriaged, { kind: "vote", voted: true }, workspaceFixture),
+    ).toEqual({
+      voteCount: 3,
+      viewerVoted: true,
+      priority: 3,
       priorityManual: false,
     });
   });

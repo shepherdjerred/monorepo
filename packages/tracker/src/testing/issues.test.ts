@@ -1,5 +1,5 @@
 import { Forum } from "#infrastructure/forum.ts";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, expect, it } from "vitest";
@@ -655,37 +655,46 @@ it("promotes and demotes unpinned issues across the 8-vote and 25-vote threshold
   expect(pinned).toMatchObject({ priority: 4, priorityManual: true });
   expect(untriaged.priority).toBe(0);
 
-  for (let index = 0; index < 7; index += 1) {
-    await caller.votes.cast({
-      actor: thresholdVoter(index),
-      identifier: unpinned.identifier,
-    });
-    await caller.votes.cast({
-      actor: thresholdVoter(index),
-      identifier: pinned.identifier,
-    });
-    await caller.votes.cast({
-      actor: thresholdVoter(index),
-      identifier: untriaged.identifier,
-    });
-  }
+  const castForAll = async (fromIndex: number, toExclusive: number) => {
+    for (let index = fromIndex; index < toExclusive; index += 1) {
+      for (const identifier of [
+        unpinned.identifier,
+        pinned.identifier,
+        untriaged.identifier,
+      ]) {
+        await caller.votes.cast({
+          actor: thresholdVoter(index),
+          identifier,
+        });
+      }
+    }
+  };
+
+  await castForAll(0, 2);
   expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
+    voteCount: 2,
     priority: 4,
   });
+  expect(await issues.byIdentifier(untriaged.identifier)).toMatchObject({
+    voteCount: 2,
+    priority: 0,
+  });
 
-  // 8th vote crosses the High (2) threshold for unpinned triaged issues only.
-  await caller.votes.cast({
-    actor: thresholdVoter(7),
-    identifier: unpinned.identifier,
+  // 3rd vote boosts low/low from 4 -> 3 (Medium) and self-escalates untriaged from 0 -> 3.
+  await castForAll(2, 7);
+  expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
+    voteCount: 7,
+    priority: 3,
+    priorityManual: false,
   });
-  await caller.votes.cast({
-    actor: thresholdVoter(7),
-    identifier: pinned.identifier,
+  expect(await issues.byIdentifier(untriaged.identifier)).toMatchObject({
+    voteCount: 7,
+    priority: 3,
+    priorityManual: false,
   });
-  await caller.votes.cast({
-    actor: thresholdVoter(7),
-    identifier: untriaged.identifier,
-  });
+
+  // 8th vote promotes both unpinned low/low and untriaged to High (2); pinned stays 4.
+  await castForAll(7, 8);
   expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
     voteCount: 8,
     priority: 2,
@@ -698,40 +707,89 @@ it("promotes and demotes unpinned issues across the 8-vote and 25-vote threshold
   });
   expect(await issues.byIdentifier(untriaged.identifier)).toMatchObject({
     voteCount: 8,
-    priority: 0,
+    priority: 2,
     priorityManual: false,
   });
 
-  // Removing the 8th vote drops unpinned priority back to 4.
+  // Removing the 8th vote drops unpinned priority back to Medium (3).
   await caller.votes.remove({
     actor: thresholdVoter(7),
     identifier: unpinned.identifier,
   });
   expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
     voteCount: 7,
-    priority: 4,
+    priority: 3,
     priorityManual: false,
   });
 
-  // Reaching 25 votes promotes unpinned priority to Urgent (1), and removing 25th returns to High (2).
-  for (let index = 7; index < 25; index += 1) {
+  // Reaching 20 votes promotes unpinned priority to Urgent (1), and removing 20th returns to High (2).
+  for (let index = 7; index < 20; index += 1) {
     await caller.votes.cast({
       actor: thresholdVoter(index),
       identifier: unpinned.identifier,
     });
   }
   expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
-    voteCount: 25,
+    voteCount: 20,
     priority: 1,
     priorityManual: false,
   });
   await caller.votes.remove({
-    actor: thresholdVoter(24),
+    actor: thresholdVoter(19),
     identifier: unpinned.identifier,
   });
   expect(await issues.byIdentifier(unpinned.identifier)).toMatchObject({
-    voteCount: 24,
+    voteCount: 19,
     priority: 2,
     priorityManual: false,
+  });
+});
+
+it("migration 20261120000000_vote_boosted_priority backfills stale unpinned rows without touching pinned ones", async () => {
+  const medVoted = await create("Backfill med 6 votes", {
+    impact: "medium",
+    urgency: "medium",
+  });
+  const untriagedVoted = await create("Backfill untriaged 5 votes");
+  const pinnedLow = await create("Backfill pinned low 12 votes", {
+    impact: "low",
+    urgency: "low",
+    priority: 4,
+  });
+
+  // Simulate pre-migration state where voteCount was populated before curve refinement.
+  await suite.database.issue.update({
+    where: { id: medVoted.id },
+    data: { voteCount: 6, priority: 3, priorityManual: false },
+  });
+  await suite.database.issue.update({
+    where: { id: untriagedVoted.id },
+    data: { voteCount: 5, priority: 0, priorityManual: false },
+  });
+  await suite.database.issue.update({
+    where: { id: pinnedLow.id },
+    data: { voteCount: 12, priority: 4, priorityManual: true },
+  });
+
+  const sql = await readFile(
+    path.resolve(
+      import.meta.dirname,
+      "../../prisma/migrations/20261120000000_vote_boosted_priority/migration.sql",
+    ),
+    "utf8",
+  );
+  await suite.database.$executeRawUnsafe(sql);
+
+  expect(await issues.byIdentifier(medVoted.identifier)).toMatchObject({
+    priority: 2,
+    priorityManual: false,
+  });
+  expect(await issues.byIdentifier(untriagedVoted.identifier)).toMatchObject({
+    priority: 3,
+    priorityManual: false,
+  });
+  expect(await issues.byIdentifier(pinnedLow.identifier)).toMatchObject({
+    priority: 4,
+    priorityManual: true,
   });
 });
