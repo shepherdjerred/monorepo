@@ -1,6 +1,5 @@
 import { ExternalLinkIcon } from "lucide-react";
 import { Suspense } from "react";
-import { Link } from "react-router";
 
 import { APPS, TOOLS, type ExternalEntry } from "./external-links.ts";
 import { PageHeading } from "./ops/ops-ui.tsx";
@@ -15,7 +14,7 @@ function ExternalGroup({
 }): React.JSX.Element {
   const id = `launcher-${title.toLowerCase()}`;
   return (
-    <>
+    <div className="launcher-group">
       <h3 id={id}>{title}</h3>
       <ul className="launcher-grid" aria-labelledby={id}>
         {entries.map((entry) => (
@@ -36,45 +35,34 @@ function ExternalGroup({
           </li>
         ))}
       </ul>
-    </>
+    </div>
   );
 }
 
 function Launcher(): React.JSX.Element {
-  const { nav } = useRegistry();
   return (
     <section aria-labelledby="launcher-heading">
       <h2 className="block-heading" id="launcher-heading">
         Launcher
       </h2>
-      <h3 id="launcher-pages">Pages</h3>
-      <ul className="launcher-grid" aria-labelledby="launcher-pages">
-        {nav
-          .filter((item) => item.to !== "/")
-          .map((item) => (
-            <li key={item.to}>
-              <Link className="launcher-card" to={item.to}>
-                <item.icon aria-hidden="true" />
-                <span>{item.title}</span>
-              </Link>
-            </li>
-          ))}
-      </ul>
-      <ExternalGroup title="Apps" entries={APPS} />
-      <ExternalGroup title="Tools" entries={TOOLS} />
+      <div className="launcher-groups">
+        <ExternalGroup title="Apps" entries={APPS} />
+        <ExternalGroup title="Tools" entries={TOOLS} />
+      </div>
     </section>
   );
 }
 
 /**
- * The landing page: every module's Home block, then a launcher for the
- * app's own pages and the tools around it. The launcher is static, so it
- * stays usable when a module's data is unavailable.
+ * The landing page: every module's Home block, the ops overview first, then a
+ * launcher for the other apps and the tools. The app's own pages are in the
+ * sidebar. The launcher is static, so it stays usable when a module's data is
+ * unavailable.
  */
 export function HomePage(): React.JSX.Element {
   const { modules } = useRegistry();
   return (
-    <main>
+    <main className="home">
       <title>Home · Hub</title>
       <PageHeading eyebrow="Homelab" title="Home" />
       {modules.flatMap((module) =>

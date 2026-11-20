@@ -17,16 +17,24 @@ The core module has two halves in one process:
   [`@shepherdjerred/ops-model`](../ops-model/README.md) snapshot and change
   events every five minutes. The dashboard stores them in SQLite, applies the
   freshness policy at read time (a stale snapshot is never green), and renders
-  Home (`/`), Overview (`/overview`), Services, Flow (`/delivery`), AI,
-  Maintenance, and Review pages plus the daily and weekly digest email. Home
-  summarizes status, firing alerts, what waits on Jerred, and Tracker triage
-  from the snapshot, and links to Tracker, Delivery, and the tools. Trend charts read Prometheus through named
-  presets only; the browser never sends PromQL. Every signal list renders
-  through `SignalList` (`src/client/ops/signal-list.tsx`): it collapses
-  same-kind signals with ops-model's `groupSignals` (an allowlist of kinds, so
-  alerts never collapse), shows at most ten entries, and expands in place.
-  There is no uncapped mode; the digest email groups the same way before its
-  own row cap. `e2e/volume.spec.ts` bounds page height at production volume.
+  Home (`/`), Services, Flow (`/delivery`), AI, Maintenance, and Review pages
+  plus the daily and weekly digest email. Home is the one overview page. In
+  order it shows the overall status; tiles for firing alerts, what waits on
+  Jerred, and Tracker triage; a card per area; a "Needs attention" list beside
+  what is new since the last visit; and a launcher for Tracker, Delivery, and
+  the tools. "Needs attention" lists every signal at attention severity or
+  waiting on Jerred, and its filter narrows it to what waits on him
+  (`/?show=waiting`, where the "Waiting on you" tile links). `/overview` was
+  a separate page and now redirects to `/`, keeping its query string. Trend
+  charts read Prometheus through named presets only; the browser never sends
+  PromQL. Every signal list renders through `SignalList`
+  (`src/client/ops/signal-list.tsx`): it collapses same-kind signals with
+  ops-model's `groupSignals` (an allowlist of kinds, so alerts never
+  collapse), shows a capped number of entries (ten unless the list sets its
+  own), and expands in place. There is no uncapped mode; the digest email
+  groups the same way before its own row cap. `e2e/volume.spec.ts` bounds
+  page height at production volume and how far down Home its area cards
+  start.
 - **Alert ledger.** Alertmanager remains authoritative for evaluation,
   grouping, inhibition, routing, and silences; this service stores occurrence
   history, serves the Alerts, History, and System pages, sends grouped opening
@@ -335,7 +343,10 @@ URLs. Every other module is a self-contained area with its own URL prefix.
 
 A client module declares `id`, `title`, `icon`, `basePath`, `routes`, and
 `nav`, plus optional `commands`, `search`, and `homeCards`. Home renders
-every module's `homeCards`, and the ⌘K command palette
+every module's `homeCards` in module order, then its launcher of other apps
+and tools. The core module's one card is the whole ops overview
+(`src/client/ops/home-overview.tsx`), so another module's cards sit between it
+and the launcher. The ⌘K command palette
 (`src/client/platform/palette.tsx`) lists every module's nav entries and
 `commands` and calls each `search` with the debounced query; the core module
 searches catalog services and recent alerts. The router and the

@@ -27,7 +27,7 @@ function module(overrides: Partial<ClientModule>): ClientModule {
 const core = module({ id: CORE_MODULE_ID, basePath: "" });
 
 describe("the composed module registry", () => {
-  it("serves Home at the root, Overview at /overview, and every other URL unchanged", () => {
+  it("serves Home at the root, keeps /overview for its redirect, and leaves every other URL unchanged", () => {
     expect(
       registry.routes.map((route) => `${route.chrome} ${route.path}`),
     ).toEqual([
@@ -58,7 +58,6 @@ describe("the composed module registry", () => {
         label: "Ops",
         items: [
           "Home /",
-          "Overview /overview",
           "Services /services",
           "Flow /delivery",
           "AI /ai",
@@ -80,7 +79,6 @@ describe("the composed module registry", () => {
     );
     expect(registry.nav.map((item) => item.title)).toEqual([
       "Home",
-      "Overview",
       "Services",
       "Flow",
       "AI",

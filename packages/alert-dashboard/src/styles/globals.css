@@ -984,8 +984,8 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 18px 20px;
-  margin-bottom: 18px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
   border: 1px solid var(--line);
   border-left: 4px solid var(--status-unknown);
   border-radius: 12px;
@@ -1010,19 +1010,12 @@ tbody tr:hover {
   font-weight: 600;
 }
 .status-meta {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   font-size: 0.85rem;
 }
 .lede {
   margin: -16px 0 18px;
 }
-.overview-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 18px;
-  align-items: start;
-}
-.overview-side,
 .stack {
   display: grid;
   gap: 18px;
@@ -1242,12 +1235,17 @@ tbody tr:hover {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
+/* Each card's heading, summary and metrics sit on row tracks shared with the
+   cards beside it, so the three line up across a row whatever wraps. */
 .section-card {
   display: grid;
+  grid-row: span 3;
+  grid-template-rows: auto 1fr auto;
+  grid-template-rows: subgrid;
   align-content: start;
   gap: 8px;
   min-width: 0;
-  padding: 16px;
+  padding: 14px 14px 16px;
   border: 1px solid var(--line);
   border-top: 3px solid var(--status-unknown);
   border-radius: 10px;
@@ -1292,6 +1290,26 @@ tbody tr:hover {
 .incident-panel .metric-row {
   padding: 0;
 }
+/* Three across, so a card is the same height whatever its metrics are named;
+   the values share a baseline when one label wraps and its neighbour does not. */
+.section-card .metric-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.section-card .metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 7px 8px;
+}
+.section-card .metric span {
+  font-size: 0.7rem;
+}
+.section-card .metric strong {
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
 .incident-panel .metric-row {
   padding: 0 18px 16px;
 }
@@ -1355,6 +1373,17 @@ tbody tr:hover {
 }
 .segmented button:focus-visible {
   outline: 3px solid var(--accent-ring);
+}
+.segmented-count {
+  margin-left: 0.15rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.panel-heading .segmented {
+  flex: none;
+}
+.panel-heading .segmented button {
+  white-space: nowrap;
 }
 .chart-grid {
   display: grid;
@@ -1648,13 +1677,21 @@ tbody tr:hover {
 .delta-flat {
   color: var(--muted);
 }
-@container content (max-width: 1100px) {
-  .section-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* Three metric tiles no longer fit across a card: it keeps its title, badge
+   and summary. */
+@container content (max-width: 1000px) {
+  .section-card {
+    grid-row: span 2;
+  }
+  .section-card header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .section-card .metric-row {
+    display: none;
   }
 }
 @container content (max-width: 900px) {
-  .overview-grid,
   .service-layout,
   .section-columns,
   .chart-grid,
@@ -1665,7 +1702,20 @@ tbody tr:hover {
 }
 @media (max-width: 600px) {
   .section-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  /* Nine areas leave one over; it takes the full row instead of half of it. */
+  .section-grid > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .section-card {
+    grid-row: auto;
+    grid-template-rows: none;
+    padding: 10px 12px 12px;
+  }
+  .section-card p {
+    display: none;
   }
   .status-banner {
     align-items: flex-start;
@@ -1716,6 +1766,13 @@ tbody tr:hover {
 }
 
 /* ---- Home ---- */
+/* Home leads with the overview, so its heading sits closer to it. */
+.home .page-heading {
+  margin-bottom: 18px;
+}
+.home .block-heading {
+  margin: 22px 0 10px;
+}
 .stat-grid,
 .launcher-grid {
   list-style: none;
@@ -1726,9 +1783,9 @@ tbody tr:hover {
 .stat-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
-  margin-bottom: 18px;
 }
 .stat-card {
+  min-width: 0;
   border: 1px solid var(--line);
   border-top: 3px solid var(--status-unknown);
   border-radius: 10px;
@@ -1746,11 +1803,18 @@ tbody tr:hover {
 .stat-card.stat-error {
   border-top-color: var(--status-critical);
 }
+/* The label and the severity badge share the first row; the number and its
+   hint share the second, on one baseline. */
 .stat-card a {
-  position: relative;
   display: grid;
-  gap: 2px;
-  padding: 14px 16px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label label sev"
+    "value hint hint";
+  align-items: center;
+  gap: 2px 10px;
+  height: 100%;
+  padding: 11px 14px 9px;
   border-radius: 0 0 9px 9px;
   text-decoration: none;
 }
@@ -1762,46 +1826,75 @@ tbody tr:hover {
   color: var(--muted);
   font-size: 0.78rem;
 }
+.stat-label {
+  grid-area: label;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.stat-card .sev {
+  grid-area: sev;
+}
 .stat-card strong {
+  grid-area: value;
+  align-self: baseline;
   font:
     700 1.7rem "Berkeley Mono",
     monospace;
 }
+.stat-hint {
+  grid-area: hint;
+  align-self: baseline;
+  min-width: 0;
+}
 .stat-external {
-  position: absolute;
-  top: 14px;
-  right: 14px;
+  flex: none;
   width: 0.8rem;
   height: 0.8rem;
-  color: var(--muted);
 }
-.home-lists {
+.home-columns {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   gap: 18px;
   align-items: start;
+  margin-top: 18px;
 }
-.panel-link {
-  display: inline-flex;
+/* One heading holds a filter and the other a button; a shared height starts
+   both lists on the same line. Either control drops under its heading when
+   the two do not fit on one line. */
+.home-columns .panel-heading {
+  flex-wrap: wrap;
+  min-height: 68px;
+}
+.home-columns .panel-heading h2 {
   flex: none;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--accent);
-  font-size: 0.82rem;
-  font-weight: 650;
-  text-decoration: none;
-  white-space: nowrap;
 }
-.panel-link:hover {
-  text-decoration: underline;
+.attention-panel {
+  scroll-margin-top: 16px;
 }
-.panel-link svg {
-  width: 0.8rem;
-  height: 0.8rem;
+/* Apps beside Tools: one column of apps and three of tools make a block
+   with no part-filled row. */
+.launcher-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  gap: 0 10px;
+}
+.launcher-groups h3 {
+  margin-top: 0;
 }
 .launcher-grid {
-  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+}
+.launcher-group:first-child .launcher-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.launcher-card span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .launcher-card {
   display: flex;
@@ -1828,16 +1921,56 @@ tbody tr:hover {
   height: 0.8rem;
 }
 @container content (max-width: 900px) {
-  .home-lists {
+  .home-columns {
     grid-template-columns: 1fr;
+  }
+  .launcher-groups {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px 0;
+  }
+  .launcher-group:first-child .launcher-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+/* Too narrow for three tiles to hold a label beside a badge: each tile
+   becomes one row that leads with its number. */
+@container content (max-width: 720px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .stat-card a {
+    grid-template-columns: 3.75rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      "value label sev"
+      "value hint sev";
+    gap: 0 10px;
+    padding: 8px 14px;
+  }
+  .stat-card strong {
+    align-self: center;
+    font-size: 1.45rem;
+  }
+  .stat-label {
+    color: var(--ink);
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+}
+@media (max-width: 900px) {
+  /* The top bar is sticky at this width and would cover the panel's heading. */
+  .attention-panel {
+    scroll-margin-top: calc(var(--topbar-h) + 12px);
   }
 }
 @media (max-width: 600px) {
-  .stat-grid {
-    grid-template-columns: 1fr;
-  }
-  .launcher-grid {
+  .launcher-grid,
+  .launcher-group:first-child .launcher-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .launcher-card {
+    gap: 0.5rem;
+    padding: 11px 12px;
   }
 }
 

@@ -32,19 +32,21 @@ type PageBudget = {
  * (1.25x for /maintenance, whose uncapped height was only 4769 / 9339)
  * (per-update / aggregate, desktop then phone):
  *
- *   /overview     3221 / 2539   6456 / 5956
+ *   /             1835 / 1894   2997 / 3103
  *   /delivery     2184 / 2355   4170 / 4402
  *   /maintenance  3415 / 2660   7110 / 5757
  *   /ai           3009 / 3009   4606 / 4606
  *
- * Before lists were capped, /overview was 11842px and /delivery 9284px at
- * desktop width on the same fixture (22908px and 16295px on a phone).
+ * Before lists were capped, /delivery was 9284px at desktop width on the same
+ * fixture (16295px on a phone). Home's lists were then on /overview, which
+ * was 11842px (22908px on a phone), and 3221 / 2539 (6456 / 5956) once
+ * capped.
  */
 const PAGES: readonly PageBudget[] = [
   {
-    path: "/overview",
-    heading: "Overview",
-    maxHeight: { desktop: 4800, phone: 9700 },
+    path: "/",
+    heading: "Home",
+    maxHeight: { desktop: 2850, phone: 4700 },
   },
   {
     path: "/delivery",
@@ -71,6 +73,13 @@ const MAX_TRENDS_TOP: Record<ViewportName, number> = {
   desktop: 2300,
   phone: 4400,
 };
+
+/**
+ * How far down Home its Areas grid may start at desktop width, so the grid
+ * opens on the first screen. Measured 397 in both variants; on /overview the
+ * same grid started at 2747 once lists were capped.
+ */
+const MAX_AREAS_TOP = 560;
 
 async function serveVolume(page: Page, variant: VolumeVariant): Promise<void> {
   const snapshot = volumeSnapshotResponse(
@@ -137,10 +146,30 @@ for (const variant of VARIANTS) {
   }
 }
 
-function waitingOnYou(page: Page) {
-  return page.locator("section", {
-    has: page.getByRole("heading", { name: /Waiting on you/u }),
+for (const variant of VARIANTS) {
+  test(`${variant} Home shows where things are wrong on its first screen`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(VIEWPORTS.desktop);
+    await serveVolume(page, variant);
+    await page.goto("/");
+    const areas = page.getByRole("region", { name: "Areas" });
+    await expect(areas.locator(".section-card")).toHaveCount(9);
+    const box = await areas.boundingBox();
+    expect(box?.y).toBeLessThan(MAX_AREAS_TOP);
+    // The count metric is `ok` in one variant and `error` in the other; a
+    // critical alert fires in both, so the tile is an error in both.
+    const firing = page
+      .getByRole("list", { name: "At a glance" })
+      .getByRole("listitem")
+      .filter({ hasText: "Firing alerts" });
+    await expect(firing).toHaveClass(/\bstat-error\b/u);
+    await expect(firing).toContainText("Error");
   });
+}
+
+function attentionPanel(page: Page) {
+  return page.getByRole("region", { name: "Needs attention" });
 }
 
 test("per-update: Renovate approvals collapse into one expandable row", async ({
@@ -148,16 +177,16 @@ test("per-update: Renovate approvals collapse into one expandable row", async ({
 }) => {
   await page.setViewportSize(VIEWPORTS.desktop);
   await serveVolume(page, "per-update");
-  await page.goto("/overview");
-  const waiting = waitingOnYou(page);
-  await expect(
-    waiting.getByRole("heading", { name: /Waiting on you/u }),
-  ).toContainText("123");
+  await page.goto("/?show=waiting");
+  const waiting = attentionPanel(page);
+  const filter = waiting.getByRole("radio", { name: /^Waiting on you/u });
+  await expect(filter).toHaveAttribute("aria-checked", "true");
+  await expect(filter).toContainText("123");
 
-  // 123 signals are 24 entries, and the list shows the ten worst.
+  // 123 signals are 24 entries, and the list shows the eight worst.
   const entries = waiting.locator(".signal-list").first().locator("> li");
-  await expect(entries).toHaveCount(10);
-  const showAll = waiting.getByRole("button", { name: "Show 14 more" });
+  await expect(entries).toHaveCount(8);
+  const showAll = waiting.getByRole("button", { name: "Show 16 more" });
   await expect(showAll).toHaveAttribute("aria-expanded", "false");
   await showAll.click();
   await expect(entries).toHaveCount(24);
@@ -195,9 +224,9 @@ test("per-update: Renovate approvals collapse into one expandable row", async ({
   await expect(group.locator(".signal")).toHaveCount(0);
 
   await showFewer.click();
-  await expect(entries).toHaveCount(10);
+  await expect(entries).toHaveCount(8);
   await expect(
-    waiting.getByRole("button", { name: "Show 14 more" }),
+    waiting.getByRole("button", { name: "Show 16 more" }),
   ).toHaveAttribute("aria-expanded", "false");
 });
 
@@ -206,8 +235,8 @@ test("aggregate: failed restores lead the list as one row", async ({
 }) => {
   await page.setViewportSize(VIEWPORTS.phone);
   await serveVolume(page, "aggregate");
-  await page.goto("/overview");
-  const waiting = waitingOnYou(page);
+  await page.goto("/?show=waiting");
+  const waiting = attentionPanel(page);
   const first = waiting.locator(".signal-list").first().locator("> li").first();
   await expect(first).toHaveClass("signal-group");
   await expect(first.locator("summary")).toContainText(
@@ -226,11 +255,26 @@ test("aggregate: failed restores lead the list as one row", async ({
 test("alerts are never collapsed", async ({ page }) => {
   await page.setViewportSize(VIEWPORTS.desktop);
   await serveVolume(page, "per-update");
-  await page.goto("/overview");
-  const attention = page.locator("section", {
-    has: page.getByRole("heading", { name: /Needs attention/u }),
-  });
-  await attention.getByRole("button", { name: "Show 29 more" }).click();
-  await expect(attention.locator(".signal")).toHaveCount(39);
-  await expect(attention.locator(".signal-group")).toHaveCount(0);
+  await page.goto("/");
+  const attention = attentionPanel(page);
+  await expect(attention.getByRole("radio", { name: /^All/u })).toContainText(
+    "143",
+  );
+  // 143 signals are 44 entries: the 100 approvals are one row, and each of
+  // the other 43 signals, every alert among them, keeps a row of its own.
+  await attention.getByRole("button", { name: "Show 36 more" }).click();
+  await expect(attention.locator(".signal")).toHaveCount(43);
+  const groups = attention.locator(".signal-group");
+  await expect(groups).toHaveCount(1);
+  await expect(groups.locator("summary")).toContainText(
+    "100 Renovate updates awaiting approval",
+  );
+  for (const title of [
+    "torvalds has under 5% memory available",
+    "Scout Riot API error rate is above 5%",
+    "PVC media/plex-config is 87% full",
+  ])
+    await expect(attention.locator(".signal", { hasText: title })).toHaveCount(
+      1,
+    );
 });

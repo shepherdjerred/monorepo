@@ -43,9 +43,6 @@ test("the sidebar lists every page under its group", async ({ page }) => {
           - link "Home":
             - /url: /
         - listitem:
-          - link "Overview":
-            - /url: /overview
-        - listitem:
           - link "Services":
             - /url: /services
         - listitem:
@@ -90,7 +87,7 @@ test("every sidebar link is on screen at 1280px without scrolling", async ({
   await page.goto("/");
   const nav = page.getByRole("navigation", PRIMARY);
   const links = nav.getByRole("link");
-  await expect(links).toHaveCount(11);
+  await expect(links).toHaveCount(10);
   for (const link of await links.all())
     await expect(link).toBeInViewport({ ratio: 1 });
   expect(
@@ -158,7 +155,7 @@ test("the phone drawer opens from the top bar, traps focus, and closes on Escape
   await expect(drawer).toBeVisible();
   await expect(drawer.getByRole("navigation", PRIMARY)).toBeVisible();
   await expect(page.getByRole("navigation", PRIMARY)).toHaveCount(1);
-  await expect(drawer.getByRole("link")).toHaveCount(11);
+  await expect(drawer.getByRole("link")).toHaveCount(10);
   await expect(drawer.getByRole("link", { name: "Home" })).toHaveAttribute(
     "aria-current",
     "page",
@@ -279,7 +276,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(await violations(new AxeBuilder({ page }))).toEqual([]);
     await page.getByRole("button", { name: "Open navigation" }).click();
     const drawer = page.getByRole("dialog", { name: "Navigation" });
-    await expect(drawer.getByRole("link")).toHaveCount(11);
+    await expect(drawer.getByRole("link")).toHaveCount(10);
     // Let the slide-in finish so contrast is measured on the settled drawer.
     await expect(drawer).not.toHaveAttribute("data-starting-style", "");
     expect(await violations(new AxeBuilder({ page }))).toEqual([]);
