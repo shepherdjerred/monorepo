@@ -28,6 +28,7 @@ import {
   SCOUT_DESKTOP_CONTRACT_HEADER,
   SCOUT_DESKTOP_CONTRACT_VERSION,
   ScoutDesktopApiErrorSchema,
+  ScoutDesktopCoachTriggerResponseSchema,
   ScoutDesktopRunActiveResponseSchema,
   type ExploreStreamEvent,
   type ScoutDesktopScope,
@@ -41,6 +42,7 @@ import { secretDigest } from "#src/scout-client/secrets.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import coachFixtures from "@scout-for-lol/data/scout-client/coach-context.fixtures.json" with { type: "json" };
+import triggerFixture from "@scout-for-lol/data/scout-client/desktop-fixtures/coach-triggers.json" with { type: "json" };
 
 type ControlledRun = {
   readonly params: ExploreAgentParams;
@@ -457,5 +459,165 @@ describe("the desktop origin in browsers", () => {
       trpc.prisma
         .$executeRaw`UPDATE "ExploreConversation" SET "origin" = 'mobile' WHERE "id" = ${conversationId}`,
     ).rejects.toThrow();
+  });
+});
+
+/**
+ * `coach/triggers` (beta only): the receipts that bound proactive turns, the
+ * audit row each one writes, and the constraints that keep both inside the
+ * coach vocabulary. Deleting the devices in `beforeEach` cascades to both.
+ */
+/** Finish every controlled run and wait until the owner has none. */
+async function settle(): Promise<void> {
+  for (const run of runs.splice(0)) run.resolve(successfulResult("Ok."));
+  await vi.waitFor(() => {
+    expect(runManager().list(OWNER)).toEqual([]);
+  });
+}
+
+describe("proactive coach triggers against a real database", () => {
+  const TRIGGERS = ROUTES.coach_triggers.path;
+
+  test("a trigger starts one proactive turn with one receipt and one audit row, and its retry is a duplicate", async () => {
+    const token = await deviceToken();
+    const response = await post(TRIGGERS, token, triggerFixture.request);
+    expect(response.status).toBe(200);
+    const body = ScoutDesktopCoachTriggerResponseSchema.parse(
+      await response.json(),
+    );
+    if (body.status !== "started") throw new Error("the trigger did not start");
+
+    expect(await trpc.prisma.scoutCoachTriggerReceipt.findMany()).toEqual([
+      {
+        id: expect.any(String),
+        ownerId: OWNER,
+        deviceId: expect.any(String),
+        gameKey: triggerFixture.request.gameKey,
+        kind: "enemy_item_spike",
+        windowKey: "Zed:6692",
+        runId: body.run.runId,
+        createdAt: expect.any(Date),
+      },
+    ]);
+    expect(await trpc.prisma.scoutCoachTurn.findMany()).toMatchObject([
+      {
+        runId: body.run.runId,
+        initiation: "app_proactive",
+        gameKey: triggerFixture.request.gameKey,
+        sectionsPresent: ["live"],
+        sectionsAccepted: ["live"],
+      },
+    ]);
+    const run = await agentRun(0);
+    expect(run.params.coach).toEqual({ live: triggerFixture.request.snapshot });
+    expect(run.params.question.startsWith("Scout noticed ")).toBe(true);
+
+    await settle();
+    const retry = await post(TRIGGERS, token, triggerFixture.request);
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toEqual({ status: "duplicate" });
+    expect(await trpc.prisma.scoutCoachTriggerReceipt.count()).toBe(1);
+    expect(await trpc.prisma.scoutCoachTurn.count()).toBe(1);
+  });
+
+  test("another event within 90 seconds is refused and writes nothing", async () => {
+    const token = await deviceToken();
+    const first = await post(TRIGGERS, token, triggerFixture.request);
+    expect(first.status).toBe(200);
+    await settle();
+
+    const response = await post(TRIGGERS, token, {
+      ...triggerFixture.request,
+      trigger: triggerFixture.triggers[1],
+    });
+    expect(response.status).toBe(429);
+    expect(await refusal(response)).toBe("rate_limited");
+    expect(await trpc.prisma.scoutCoachTriggerReceipt.count()).toBe(1);
+    expect(await trpc.prisma.scoutCoachTurn.count()).toBe(1);
+  });
+
+  test("production writes nothing whatever the flags say", async () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+    const token = await deviceToken();
+
+    const response = await post(TRIGGERS, token, triggerFixture.request);
+    expect(response.status).toBe(503);
+    expect(await trpc.prisma.scoutCoachTriggerReceipt.count()).toBe(0);
+    expect(await trpc.prisma.scoutCoachTurn.count()).toBe(0);
+    expect(runs).toEqual([]);
+  });
+
+  test("the database holds receipts and proactive audit rows to the coach vocabulary", async () => {
+    await deviceToken();
+    const device = await trpc.prisma.scoutClientDevice.findFirstOrThrow();
+    const receipt = {
+      ownerId: OWNER,
+      deviceId: device.id,
+      gameKey: "g-db",
+      kind: "enemy_fed",
+      windowKey: "Zed",
+      runId: "00000000-0000-4000-8000-000000000001",
+    };
+    await trpc.prisma.scoutCoachTriggerReceipt.create({ data: receipt });
+    // The same event twice, under another run.
+    await expect(
+      trpc.prisma.scoutCoachTriggerReceipt.create({
+        data: { ...receipt, runId: "00000000-0000-4000-8000-000000000002" },
+      }),
+    ).rejects.toThrow();
+    // A kind the contract does not name.
+    await expect(
+      trpc.prisma.scoutCoachTriggerReceipt.create({
+        data: {
+          ...receipt,
+          kind: "enemy_jungler_missing",
+          runId: "00000000-0000-4000-8000-000000000003",
+        },
+      }),
+    ).rejects.toThrow();
+
+    const turn = {
+      ownerId: OWNER,
+      deviceId: device.id,
+      conversationId: "00000000-0000-4000-8000-000000000010",
+      questionMessageId: "00000000-0000-4000-8000-000000000011",
+      gameKey: "g-db",
+      coachEnabled: true,
+      liveAnswersEnabled: true,
+    };
+    // A champ-select turn still never carries live state.
+    await expect(
+      trpc.prisma.scoutCoachTurn.create({
+        data: {
+          ...turn,
+          runId: "00000000-0000-4000-8000-000000000012",
+          initiation: "app_champ_select",
+          sectionsPresent: ["champSelect", "live"],
+          sectionsAccepted: ["champSelect", "live"],
+        },
+      }),
+    ).rejects.toThrow();
+    // A proactive turn carries live and nothing else.
+    await expect(
+      trpc.prisma.scoutCoachTurn.create({
+        data: {
+          ...turn,
+          runId: "00000000-0000-4000-8000-000000000013",
+          initiation: "app_proactive",
+          sectionsPresent: ["pregame", "live"],
+          sectionsAccepted: ["pregame", "live"],
+        },
+      }),
+    ).rejects.toThrow();
+    await trpc.prisma.scoutCoachTurn.create({
+      data: {
+        ...turn,
+        runId: "00000000-0000-4000-8000-000000000014",
+        initiation: "app_proactive",
+        sectionsPresent: ["live"],
+        sectionsAccepted: ["live"],
+      },
+    });
   });
 });

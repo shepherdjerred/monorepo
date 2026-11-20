@@ -621,6 +621,7 @@ model User {
   scoutClientApprovals ScoutClientPairing[]  @relation("ScoutClientPairingApprover")
   scoutCoachTurns      ScoutCoachTurn[]
   scoutCoachArtifacts  ScoutCoachArtifact[]
+  scoutCoachTriggers   ScoutCoachTriggerReceipt[]
   riotAccounts         RiotAccountPreference[]
   riotLinkAttempts     RiotOAuthLinkAttempt[]
 }
@@ -726,6 +727,7 @@ model ScoutClientDevice {
   replayArtifacts ScoutClientReplayArtifact[]
   versions        ScoutClientDeviceVersion[]
   coachTurns      ScoutCoachTurn[]
+  coachTriggers   ScoutCoachTriggerReceipt[]
 
   @@index([ownerId, deviceState])
   @@index([lastSeenAt])
@@ -978,8 +980,9 @@ model ScoutCoachTurn {
   conversationId     String
   runId              String   @unique
   questionMessageId  String
-  /// `player_typed`, `player_voice`, `app_champ_select`, `app_pregame` or
-  /// `app_postgame` (`coach/context-policy.ts`).
+  /// `player_typed`, `player_voice`, `app_champ_select`, `app_pregame`,
+  /// `app_postgame` or the beta-only `app_proactive`
+  /// (`coach/context-policy.ts`).
   initiation         String
   /// The client's opaque id for the champ select or game an app-started turn
   /// belongs to; the server-side limit of 4 champ-select and 1 pre-game turns
@@ -1031,6 +1034,35 @@ model ScoutCoachArtifact {
 
   @@unique([ownerId, matchId, kind])
   @@index([ownerId, createdAt])
+}
+
+/// One proactive coach trigger the server admitted (`coach/triggers`, beta
+/// only; production refuses the route). It is how the server bounds turns
+/// Scout starts from live state: at most one per event, 10 per game per
+/// owner, 90 seconds apart per owner (`coach/proactive-triggers.ts`). Written
+/// in the transaction that reserves the run and its `ScoutCoachTurn`, so a
+/// receipt exists exactly when its turn does. Identifiers only.
+model ScoutCoachTriggerReceipt {
+  id        String   @id @default(uuid())
+  ownerId   String
+  deviceId  String
+  /// The client's opaque id for the game.
+  gameKey   String
+  /// `enemy_item_spike`, `enemy_fed`, `damage_profile_shift`,
+  /// `healing_threat` or `death_streak`.
+  kind      String
+  /// What makes two triggers of one kind the same event, derived by the
+  /// server from the evidence (`triggerWindowKey`), never sent by the client.
+  windowKey String
+  runId     String   @unique
+  createdAt DateTime @default(now())
+
+  owner  User              @relation(fields: [ownerId], references: [discordId], onDelete: Cascade)
+  device ScoutClientDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, gameKey, kind, windowKey])
+  @@index([ownerId, createdAt])
+  @@index([deviceId])
 }
 
 /// A saved explore conversation. Explore queries the whole report lake rather

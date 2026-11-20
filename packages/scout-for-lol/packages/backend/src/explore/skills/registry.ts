@@ -39,6 +39,11 @@ export type ExploreSkillOptions = {
   hallOfFame?: boolean | undefined;
   /** True only when the turn carries a game context the coach policy validated and projected. */
   liveGame?: boolean | undefined;
+  /**
+   * True only on a beta proactive coach turn: a live context, a question the
+   * trigger route worded, and an environment that is not production.
+   */
+  proactiveCoach?: boolean | undefined;
   surface?: ExploreSurface | undefined;
 };
 
@@ -96,6 +101,8 @@ export function enabledExploreSkills(
         return options.clash === true;
       case "live-game":
         return options.liveGame === true;
+      case "proactive-coach":
+        return options.liveGame === true && options.proactiveCoach === true;
     }
   });
 }

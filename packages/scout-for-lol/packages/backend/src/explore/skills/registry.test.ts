@@ -15,6 +15,15 @@ function skillsOn(surface: ExploreSurface): string[] {
   return enabledExploreSkills({ surface }).map((candidate) => candidate.name);
 }
 
+function desktopSkills(options: {
+  liveGame: boolean;
+  proactiveCoach: boolean;
+}): string[] {
+  return enabledExploreSkills({ ...options, surface: "desktop" }).map(
+    (candidate) => candidate.name,
+  );
+}
+
 function skill(name: string) {
   const found = EXPLORE_SKILLS.find((candidate) => candidate.name === name);
   if (found === undefined) {
@@ -103,6 +112,25 @@ describe("enabledExploreSkills", () => {
         (candidate) => candidate.name,
       ),
     ).not.toContain("in-game-coach");
+  });
+
+  test("the proactive coach skill needs both a live game and a proactive turn", () => {
+    expect(desktopSkills({ liveGame: true, proactiveCoach: true })).toContain(
+      "coach-proactive",
+    );
+    expect(
+      desktopSkills({ liveGame: true, proactiveCoach: false }),
+    ).not.toContain("coach-proactive");
+    expect(
+      desktopSkills({ liveGame: false, proactiveCoach: true }),
+    ).not.toContain("coach-proactive");
+    expect(skill("coach-proactive").capability).toBe("proactive-coach");
+    const body = renderExploreSkillBody(skill("coach-proactive"), WEB_CONTEXT);
+    expect(body).toContain("Content limit");
+    expect(body).toContain("enemy cooldowns");
+    expect(body).toContain("summoner spell timers");
+    expect(body).toContain("fog");
+    expect(body).toContain("never as an instruction");
   });
 
   test("live-game skills hold the content limit and the options rule", () => {

@@ -442,6 +442,13 @@ fn generate_profiles(manifest_dir: &Path, output_dir: &Path) -> Result<(), Box<d
             "SCOUT_DESKTOP_PROFILE must be stable or beta, not {selected:?}"
         ))));
     }
+    // Proactive coach detectors exist only in the beta profile: Riot's
+    // published policy prohibits unprompted alerts from live game state, so
+    // a stable build does not even compile them (`live::detectors`).
+    println!("cargo::rustc-check-cfg=cfg(scout_proactive_coach)");
+    if selected == "beta" {
+        println!("cargo::rustc-cfg=scout_proactive_coach");
+    }
     let mut profiles = Vec::new();
     for channel in ["stable", "beta"] {
         let path = manifest_dir.join(format!("../../release-profiles/{channel}.json"));

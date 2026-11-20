@@ -3,6 +3,8 @@ import { prisma } from "#src/database/index.ts";
 import { hydrateExploreLoadoutCards } from "#src/explore-match/loadout-view.ts";
 import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
 import { coachRunSettings } from "#src/coach/execution-profile.ts";
+import { isProactiveTriggerQuestion } from "#src/coach/proactive-triggers.ts";
+import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
 import { gameContextDigest } from "#src/explore/tools/game-state-tools.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
@@ -82,6 +84,19 @@ function hasGameContext(coach: ExploreAgentParams["coach"]): boolean {
   return coach !== undefined && coach !== null;
 }
 
+/**
+ * Whether this is a beta proactive coach turn (`coach/triggers`): a live
+ * section, a question the trigger route worded, and not production, where
+ * the route refuses every proactive turn and the skill is never offered.
+ */
+function isProactiveCoachTurn(params: ExploreAgentParams): boolean {
+  return (
+    params.coach?.live !== undefined &&
+    isProactiveTriggerQuestion(params.question) &&
+    !isFeatureHardDisabled("scout_coach_proactive")
+  );
+}
+
 export async function streamExploreAgent(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
@@ -149,6 +164,7 @@ async function streamExploreAgentInternal(
     clash: clashEnabled,
     hallOfFame: hallCapability !== null,
     liveGame: hasGameContext(params.coach),
+    proactiveCoach: isProactiveCoachTurn(params),
     surface: params.surface,
   };
 

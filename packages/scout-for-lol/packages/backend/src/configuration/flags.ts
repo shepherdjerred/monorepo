@@ -167,6 +167,7 @@ export type FlagName =
   | "scout_desktop_coach"
   | "scout_coach_live_answers"
   | "scout_desktop_voice"
+  | "scout_coach_proactive"
   | "scout_operations_console_enabled"
   | "scout_durable_orchestration_enabled"
   | "scout_support_conversations_enabled"
@@ -190,6 +191,10 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "dare_notifications_enabled",
     "duels_enabled",
     "voice_assistant_enabled",
+    // Riot's published policy prohibits unprompted alerts from live game
+    // state. `coach/proactive-policy.ts` refuses the route in production
+    // before it reads this flag; this keeps every other reader closed too.
+    "scout_coach_proactive",
   ],
 );
 
@@ -398,6 +403,20 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * switch for the server's audio spend.
    */
   scout_desktop_voice: { default: true, overrides: [] },
+  /**
+   * Proactive coach turns: Scout Desktop's beta build asks for one when a
+   * scoreboard detector fires (`coach/triggers`). Read with the other two
+   * coach flags by `scout-client/desktop/coach-trigger-routes.ts`.
+   *
+   * Never in production. Riot's published policy prohibits unprompted alerts
+   * from live game state, so production hard-disables this flag above and
+   * `coach/proactive-policy.ts` refuses the route there before reading it; no
+   * Flipt value changes that. Beta has it on for everyone, matching Flipt.
+   */
+  scout_coach_proactive: {
+    default: false,
+    overrides: [{ value: true, attributes: {}, betaOnly: true }],
+  },
   /**
    * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
    *

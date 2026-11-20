@@ -1,0 +1,1146 @@
+{
+  "route": "coach_triggers",
+  "note": "Beta only, refused in production whatever the flags say. A trigger kind, its scoreboard evidence and the live snapshot it was read from; never free text. The server words the question, spaces admitted triggers 90 seconds apart, admits at most 10 per game and admits each event once.",
+  "request": {
+    "conversationId": null,
+    "gameKey": "g-2026-11-19T20-14-02Z",
+    "trigger": {
+      "kind": "enemy_item_spike",
+      "champion": "Zed",
+      "itemId": 6692,
+      "itemName": "Eclipse",
+      "completedItems": 1
+    },
+    "snapshot": {
+      "game": {
+        "mode": "CLASSIC",
+        "map": "Map11",
+        "gameTimeSecs": 1104
+      },
+      "own": {
+        "gold": 412,
+        "maxHealth": 1630.0,
+        "health": 1210.5,
+        "resource": "MANA",
+        "maxResource": 1120.0,
+        "currentResource": 640.0,
+        "armor": 71.2,
+        "magicResist": 52.6,
+        "attackDamage": 88.0,
+        "abilityPower": 311.0,
+        "attackSpeed": 0.74,
+        "moveSpeed": 370.0,
+        "critChance": 0.0
+      },
+      "participants": [
+        {
+          "team": "order",
+          "isSelf": true,
+          "champion": "Ahri",
+          "level": 13,
+          "kills": 1,
+          "deaths": 4,
+          "assists": 5,
+          "creepScore": 151,
+          "items": [
+            {
+              "itemId": 6655,
+              "name": "Luden's Echo",
+              "count": 1
+            },
+            {
+              "itemId": 3020,
+              "name": "Sorcerer's Shoes",
+              "count": 1
+            }
+          ],
+          "summonerSpells": ["Flash", "Ignite"],
+          "keystone": "Electrocute"
+        },
+        {
+          "team": "order",
+          "isSelf": false,
+          "champion": "Garen",
+          "level": 12,
+          "kills": 3,
+          "deaths": 3,
+          "assists": 2,
+          "creepScore": 140,
+          "items": [
+            {
+              "itemId": 3078,
+              "name": "Trinity Force",
+              "count": 1
+            }
+          ],
+          "summonerSpells": ["Flash", "Teleport"],
+          "keystone": "Conqueror"
+        },
+        {
+          "team": "chaos",
+          "isSelf": false,
+          "champion": "Zed",
+          "level": 14,
+          "kills": 7,
+          "deaths": 1,
+          "assists": 2,
+          "creepScore": 163,
+          "items": [
+            {
+              "itemId": 6692,
+              "name": "Eclipse",
+              "count": 1
+            },
+            {
+              "itemId": 3111,
+              "name": "Mercury's Treads",
+              "count": 1
+            }
+          ],
+          "summonerSpells": ["Flash", "Ignite"],
+          "keystone": "Electrocute"
+        },
+        {
+          "team": "chaos",
+          "isSelf": false,
+          "champion": "Vladimir",
+          "level": 12,
+          "kills": 2,
+          "deaths": 2,
+          "assists": 4,
+          "creepScore": 130,
+          "items": [
+            {
+              "itemId": 4633,
+              "name": "Riftmaker",
+              "count": 1
+            },
+            {
+              "itemId": 3072,
+              "name": "Bloodthirster",
+              "count": 1
+            }
+          ],
+          "summonerSpells": ["Flash", "Teleport"],
+          "keystone": "Phase Rush"
+        }
+      ],
+      "eventCount": 31,
+      "latestEvent": {
+        "id": 30,
+        "kind": "ChampionKill",
+        "timeSecs": 1098.25
+      }
+    }
+  },
+  "response": {
+    "status": "started",
+    "run": {
+      "runId": "6b0f3a52-6c7d-4b90-a1e2-3f4a5b6c7d81",
+      "conversationId": "5d2a7c90-3e41-4b8f-a6d5-1c9e0f8b7a23",
+      "questionMessageId": "d1d2e3f4-0a1b-4c2d-8e3f-4a5b6c7d8e02",
+      "leafIdAtStart": null,
+      "versionCountAtStart": 0,
+      "startedAt": "2026-11-19T20:32:31.000Z"
+    }
+  },
+  "duplicateResponse": {
+    "status": "duplicate"
+  },
+  "triggers": [
+    {
+      "kind": "enemy_item_spike",
+      "champion": "Zed",
+      "itemId": 6692,
+      "itemName": "Eclipse",
+      "completedItems": 1
+    },
+    {
+      "kind": "enemy_fed",
+      "champion": "Zed",
+      "kills": 7,
+      "deaths": 1,
+      "assists": 2
+    },
+    {
+      "kind": "damage_profile_shift",
+      "from": "mixed",
+      "to": "physical",
+      "physicalItems": 2,
+      "magicItems": 1
+    },
+    {
+      "kind": "healing_threat",
+      "healingItems": 2
+    },
+    {
+      "kind": "death_streak",
+      "deaths": 4,
+      "deathsWithoutTakedown": 3
+    }
+  ],
+  "invalidRequests": [
+    {
+      "reason": "a free-text question",
+      "body": {
+        "conversationId": null,
+        "gameKey": "g-2026-11-19T20-14-02Z",
+        "trigger": {
+          "kind": "enemy_item_spike",
+          "champion": "Zed",
+          "itemId": 6692,
+          "itemName": "Eclipse",
+          "completedItems": 1
+        },
+        "snapshot": {
+          "game": {
+            "mode": "CLASSIC",
+            "map": "Map11",
+            "gameTimeSecs": 1104
+          },
+          "own": {
+            "gold": 412,
+            "maxHealth": 1630.0,
+            "health": 1210.5,
+            "resource": "MANA",
+            "maxResource": 1120.0,
+            "currentResource": 640.0,
+            "armor": 71.2,
+            "magicResist": 52.6,
+            "attackDamage": 88.0,
+            "abilityPower": 311.0,
+            "attackSpeed": 0.74,
+            "moveSpeed": 370.0,
+            "critChance": 0.0
+          },
+          "participants": [
+            {
+              "team": "order",
+              "isSelf": true,
+              "champion": "Ahri",
+              "level": 13,
+              "kills": 1,
+              "deaths": 4,
+              "assists": 5,
+              "creepScore": 151,
+              "items": [
+                {
+                  "itemId": 6655,
+                  "name": "Luden's Echo",
+                  "count": 1
+                },
+                {
+                  "itemId": 3020,
+                  "name": "Sorcerer's Shoes",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "order",
+              "isSelf": false,
+              "champion": "Garen",
+              "level": 12,
+              "kills": 3,
+              "deaths": 3,
+              "assists": 2,
+              "creepScore": 140,
+              "items": [
+                {
+                  "itemId": 3078,
+                  "name": "Trinity Force",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Conqueror"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Zed",
+              "level": 14,
+              "kills": 7,
+              "deaths": 1,
+              "assists": 2,
+              "creepScore": 163,
+              "items": [
+                {
+                  "itemId": 6692,
+                  "name": "Eclipse",
+                  "count": 1
+                },
+                {
+                  "itemId": 3111,
+                  "name": "Mercury's Treads",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Vladimir",
+              "level": 12,
+              "kills": 2,
+              "deaths": 2,
+              "assists": 4,
+              "creepScore": 130,
+              "items": [
+                {
+                  "itemId": 4633,
+                  "name": "Riftmaker",
+                  "count": 1
+                },
+                {
+                  "itemId": 3072,
+                  "name": "Bloodthirster",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Phase Rush"
+            }
+          ],
+          "eventCount": 31,
+          "latestEvent": {
+            "id": 30,
+            "kind": "ChampionKill",
+            "timeSecs": 1098.25
+          }
+        },
+        "question": "What should I do about Zed?"
+      }
+    },
+    {
+      "reason": "an unknown trigger kind",
+      "body": {
+        "conversationId": null,
+        "gameKey": "g-2026-11-19T20-14-02Z",
+        "trigger": {
+          "kind": "enemy_jungler_missing",
+          "champion": "Zed"
+        },
+        "snapshot": {
+          "game": {
+            "mode": "CLASSIC",
+            "map": "Map11",
+            "gameTimeSecs": 1104
+          },
+          "own": {
+            "gold": 412,
+            "maxHealth": 1630.0,
+            "health": 1210.5,
+            "resource": "MANA",
+            "maxResource": 1120.0,
+            "currentResource": 640.0,
+            "armor": 71.2,
+            "magicResist": 52.6,
+            "attackDamage": 88.0,
+            "abilityPower": 311.0,
+            "attackSpeed": 0.74,
+            "moveSpeed": 370.0,
+            "critChance": 0.0
+          },
+          "participants": [
+            {
+              "team": "order",
+              "isSelf": true,
+              "champion": "Ahri",
+              "level": 13,
+              "kills": 1,
+              "deaths": 4,
+              "assists": 5,
+              "creepScore": 151,
+              "items": [
+                {
+                  "itemId": 6655,
+                  "name": "Luden's Echo",
+                  "count": 1
+                },
+                {
+                  "itemId": 3020,
+                  "name": "Sorcerer's Shoes",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "order",
+              "isSelf": false,
+              "champion": "Garen",
+              "level": 12,
+              "kills": 3,
+              "deaths": 3,
+              "assists": 2,
+              "creepScore": 140,
+              "items": [
+                {
+                  "itemId": 3078,
+                  "name": "Trinity Force",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Conqueror"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Zed",
+              "level": 14,
+              "kills": 7,
+              "deaths": 1,
+              "assists": 2,
+              "creepScore": 163,
+              "items": [
+                {
+                  "itemId": 6692,
+                  "name": "Eclipse",
+                  "count": 1
+                },
+                {
+                  "itemId": 3111,
+                  "name": "Mercury's Treads",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Vladimir",
+              "level": 12,
+              "kills": 2,
+              "deaths": 2,
+              "assists": 4,
+              "creepScore": 130,
+              "items": [
+                {
+                  "itemId": 4633,
+                  "name": "Riftmaker",
+                  "count": 1
+                },
+                {
+                  "itemId": 3072,
+                  "name": "Bloodthirster",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Phase Rush"
+            }
+          ],
+          "eventCount": 31,
+          "latestEvent": {
+            "id": 30,
+            "kind": "ChampionKill",
+            "timeSecs": 1098.25
+          }
+        }
+      }
+    },
+    {
+      "reason": "evidence with a note",
+      "body": {
+        "conversationId": null,
+        "gameKey": "g-2026-11-19T20-14-02Z",
+        "trigger": {
+          "kind": "enemy_item_spike",
+          "champion": "Zed",
+          "itemId": 6692,
+          "itemName": "Eclipse",
+          "completedItems": 1,
+          "note": "Zed is about to roam"
+        },
+        "snapshot": {
+          "game": {
+            "mode": "CLASSIC",
+            "map": "Map11",
+            "gameTimeSecs": 1104
+          },
+          "own": {
+            "gold": 412,
+            "maxHealth": 1630.0,
+            "health": 1210.5,
+            "resource": "MANA",
+            "maxResource": 1120.0,
+            "currentResource": 640.0,
+            "armor": 71.2,
+            "magicResist": 52.6,
+            "attackDamage": 88.0,
+            "abilityPower": 311.0,
+            "attackSpeed": 0.74,
+            "moveSpeed": 370.0,
+            "critChance": 0.0
+          },
+          "participants": [
+            {
+              "team": "order",
+              "isSelf": true,
+              "champion": "Ahri",
+              "level": 13,
+              "kills": 1,
+              "deaths": 4,
+              "assists": 5,
+              "creepScore": 151,
+              "items": [
+                {
+                  "itemId": 6655,
+                  "name": "Luden's Echo",
+                  "count": 1
+                },
+                {
+                  "itemId": 3020,
+                  "name": "Sorcerer's Shoes",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "order",
+              "isSelf": false,
+              "champion": "Garen",
+              "level": 12,
+              "kills": 3,
+              "deaths": 3,
+              "assists": 2,
+              "creepScore": 140,
+              "items": [
+                {
+                  "itemId": 3078,
+                  "name": "Trinity Force",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Conqueror"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Zed",
+              "level": 14,
+              "kills": 7,
+              "deaths": 1,
+              "assists": 2,
+              "creepScore": 163,
+              "items": [
+                {
+                  "itemId": 6692,
+                  "name": "Eclipse",
+                  "count": 1
+                },
+                {
+                  "itemId": 3111,
+                  "name": "Mercury's Treads",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Vladimir",
+              "level": 12,
+              "kills": 2,
+              "deaths": 2,
+              "assists": 4,
+              "creepScore": 130,
+              "items": [
+                {
+                  "itemId": 4633,
+                  "name": "Riftmaker",
+                  "count": 1
+                },
+                {
+                  "itemId": 3072,
+                  "name": "Bloodthirster",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Phase Rush"
+            }
+          ],
+          "eventCount": 31,
+          "latestEvent": {
+            "id": 30,
+            "kind": "ChampionKill",
+            "timeSecs": 1098.25
+          }
+        }
+      }
+    },
+    {
+      "reason": "a summoner name in the snapshot",
+      "body": {
+        "conversationId": null,
+        "gameKey": "g-2026-11-19T20-14-02Z",
+        "trigger": {
+          "kind": "enemy_item_spike",
+          "champion": "Zed",
+          "itemId": 6692,
+          "itemName": "Eclipse",
+          "completedItems": 1
+        },
+        "snapshot": {
+          "game": {
+            "mode": "CLASSIC",
+            "map": "Map11",
+            "gameTimeSecs": 1104
+          },
+          "own": {
+            "gold": 412,
+            "maxHealth": 1630.0,
+            "health": 1210.5,
+            "resource": "MANA",
+            "maxResource": 1120.0,
+            "currentResource": 640.0,
+            "armor": 71.2,
+            "magicResist": 52.6,
+            "attackDamage": 88.0,
+            "abilityPower": 311.0,
+            "attackSpeed": 0.74,
+            "moveSpeed": 370.0,
+            "critChance": 0.0
+          },
+          "participants": [
+            {
+              "team": "order",
+              "isSelf": true,
+              "champion": "Ahri",
+              "level": 13,
+              "kills": 1,
+              "deaths": 4,
+              "assists": 5,
+              "creepScore": 151,
+              "items": [
+                {
+                  "itemId": 6655,
+                  "name": "Luden's Echo",
+                  "count": 1
+                },
+                {
+                  "itemId": 3020,
+                  "name": "Sorcerer's Shoes",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "order",
+              "isSelf": false,
+              "champion": "Garen",
+              "level": 12,
+              "kills": 3,
+              "deaths": 3,
+              "assists": 2,
+              "creepScore": 140,
+              "items": [
+                {
+                  "itemId": 3078,
+                  "name": "Trinity Force",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Conqueror"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Zed",
+              "level": 14,
+              "kills": 7,
+              "deaths": 1,
+              "assists": 2,
+              "creepScore": 163,
+              "items": [
+                {
+                  "itemId": 6692,
+                  "name": "Eclipse",
+                  "count": 1
+                },
+                {
+                  "itemId": 3111,
+                  "name": "Mercury's Treads",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute",
+              "summonerName": "someone"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Vladimir",
+              "level": 12,
+              "kills": 2,
+              "deaths": 2,
+              "assists": 4,
+              "creepScore": 130,
+              "items": [
+                {
+                  "itemId": 4633,
+                  "name": "Riftmaker",
+                  "count": 1
+                },
+                {
+                  "itemId": 3072,
+                  "name": "Bloodthirster",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Phase Rush"
+            }
+          ],
+          "eventCount": 31,
+          "latestEvent": {
+            "id": 30,
+            "kind": "ChampionKill",
+            "timeSecs": 1098.25
+          }
+        }
+      }
+    },
+    {
+      "reason": "a cooldown in the snapshot",
+      "body": {
+        "conversationId": null,
+        "gameKey": "g-2026-11-19T20-14-02Z",
+        "trigger": {
+          "kind": "enemy_item_spike",
+          "champion": "Zed",
+          "itemId": 6692,
+          "itemName": "Eclipse",
+          "completedItems": 1
+        },
+        "snapshot": {
+          "game": {
+            "mode": "CLASSIC",
+            "map": "Map11",
+            "gameTimeSecs": 1104
+          },
+          "own": {
+            "gold": 412,
+            "maxHealth": 1630.0,
+            "health": 1210.5,
+            "resource": "MANA",
+            "maxResource": 1120.0,
+            "currentResource": 640.0,
+            "armor": 71.2,
+            "magicResist": 52.6,
+            "attackDamage": 88.0,
+            "abilityPower": 311.0,
+            "attackSpeed": 0.74,
+            "moveSpeed": 370.0,
+            "critChance": 0.0
+          },
+          "participants": [
+            {
+              "team": "order",
+              "isSelf": true,
+              "champion": "Ahri",
+              "level": 13,
+              "kills": 1,
+              "deaths": 4,
+              "assists": 5,
+              "creepScore": 151,
+              "items": [
+                {
+                  "itemId": 6655,
+                  "name": "Luden's Echo",
+                  "count": 1
+                },
+                {
+                  "itemId": 3020,
+                  "name": "Sorcerer's Shoes",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "order",
+              "isSelf": false,
+              "champion": "Garen",
+              "level": 12,
+              "kills": 3,
+              "deaths": 3,
+              "assists": 2,
+              "creepScore": 140,
+              "items": [
+                {
+                  "itemId": 3078,
+                  "name": "Trinity Force",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Conqueror"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Zed",
+              "level": 14,
+              "kills": 7,
+              "deaths": 1,
+              "assists": 2,
+              "creepScore": 163,
+              "items": [
+                {
+                  "itemId": 6692,
+                  "name": "Eclipse",
+                  "count": 1
+                },
+                {
+                  "itemId": 3111,
+                  "name": "Mercury's Treads",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute",
+              "summonerSpellCooldowns": [0, 120]
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Vladimir",
+              "level": 12,
+              "kills": 2,
+              "deaths": 2,
+              "assists": 4,
+              "creepScore": 130,
+              "items": [
+                {
+                  "itemId": 4633,
+                  "name": "Riftmaker",
+                  "count": 1
+                },
+                {
+                  "itemId": 3072,
+                  "name": "Bloodthirster",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Phase Rush"
+            }
+          ],
+          "eventCount": 31,
+          "latestEvent": {
+            "id": 30,
+            "kind": "ChampionKill",
+            "timeSecs": 1098.25
+          }
+        }
+      }
+    },
+    {
+      "reason": "no snapshot",
+      "body": {
+        "conversationId": null,
+        "gameKey": "g-2026-11-19T20-14-02Z",
+        "trigger": {
+          "kind": "enemy_item_spike",
+          "champion": "Zed",
+          "itemId": 6692,
+          "itemName": "Eclipse",
+          "completedItems": 1
+        }
+      }
+    },
+    {
+      "reason": "a bad game key",
+      "body": {
+        "conversationId": null,
+        "gameKey": "game key with spaces",
+        "trigger": {
+          "kind": "enemy_item_spike",
+          "champion": "Zed",
+          "itemId": 6692,
+          "itemName": "Eclipse",
+          "completedItems": 1
+        },
+        "snapshot": {
+          "game": {
+            "mode": "CLASSIC",
+            "map": "Map11",
+            "gameTimeSecs": 1104
+          },
+          "own": {
+            "gold": 412,
+            "maxHealth": 1630.0,
+            "health": 1210.5,
+            "resource": "MANA",
+            "maxResource": 1120.0,
+            "currentResource": 640.0,
+            "armor": 71.2,
+            "magicResist": 52.6,
+            "attackDamage": 88.0,
+            "abilityPower": 311.0,
+            "attackSpeed": 0.74,
+            "moveSpeed": 370.0,
+            "critChance": 0.0
+          },
+          "participants": [
+            {
+              "team": "order",
+              "isSelf": true,
+              "champion": "Ahri",
+              "level": 13,
+              "kills": 1,
+              "deaths": 4,
+              "assists": 5,
+              "creepScore": 151,
+              "items": [
+                {
+                  "itemId": 6655,
+                  "name": "Luden's Echo",
+                  "count": 1
+                },
+                {
+                  "itemId": 3020,
+                  "name": "Sorcerer's Shoes",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "order",
+              "isSelf": false,
+              "champion": "Garen",
+              "level": 12,
+              "kills": 3,
+              "deaths": 3,
+              "assists": 2,
+              "creepScore": 140,
+              "items": [
+                {
+                  "itemId": 3078,
+                  "name": "Trinity Force",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Conqueror"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Zed",
+              "level": 14,
+              "kills": 7,
+              "deaths": 1,
+              "assists": 2,
+              "creepScore": 163,
+              "items": [
+                {
+                  "itemId": 6692,
+                  "name": "Eclipse",
+                  "count": 1
+                },
+                {
+                  "itemId": 3111,
+                  "name": "Mercury's Treads",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Ignite"],
+              "keystone": "Electrocute"
+            },
+            {
+              "team": "chaos",
+              "isSelf": false,
+              "champion": "Vladimir",
+              "level": 12,
+              "kills": 2,
+              "deaths": 2,
+              "assists": 4,
+              "creepScore": 130,
+              "items": [
+                {
+                  "itemId": 4633,
+                  "name": "Riftmaker",
+                  "count": 1
+                },
+                {
+                  "itemId": 3072,
+                  "name": "Bloodthirster",
+                  "count": 1
+                }
+              ],
+              "summonerSpells": ["Flash", "Teleport"],
+              "keystone": "Phase Rush"
+            }
+          ],
+          "eventCount": 31,
+          "latestEvent": {
+            "id": 30,
+            "kind": "ChampionKill",
+            "timeSecs": 1098.25
+          }
+        }
+      }
+    },
+    {
+      "reason": "a game context instead of a snapshot",
+      "body": {
+        "conversationId": null,
+        "gameKey": "g-2026-11-19T20-14-02Z",
+        "trigger": {
+          "kind": "enemy_item_spike",
+          "champion": "Zed",
+          "itemId": 6692,
+          "itemName": "Eclipse",
+          "completedItems": 1
+        },
+        "gameContext": {
+          "live": {
+            "game": {
+              "mode": "CLASSIC",
+              "map": "Map11",
+              "gameTimeSecs": 1104
+            },
+            "own": {
+              "gold": 412,
+              "maxHealth": 1630.0,
+              "health": 1210.5,
+              "resource": "MANA",
+              "maxResource": 1120.0,
+              "currentResource": 640.0,
+              "armor": 71.2,
+              "magicResist": 52.6,
+              "attackDamage": 88.0,
+              "abilityPower": 311.0,
+              "attackSpeed": 0.74,
+              "moveSpeed": 370.0,
+              "critChance": 0.0
+            },
+            "participants": [
+              {
+                "team": "order",
+                "isSelf": true,
+                "champion": "Ahri",
+                "level": 13,
+                "kills": 1,
+                "deaths": 4,
+                "assists": 5,
+                "creepScore": 151,
+                "items": [
+                  {
+                    "itemId": 6655,
+                    "name": "Luden's Echo",
+                    "count": 1
+                  },
+                  {
+                    "itemId": 3020,
+                    "name": "Sorcerer's Shoes",
+                    "count": 1
+                  }
+                ],
+                "summonerSpells": ["Flash", "Ignite"],
+                "keystone": "Electrocute"
+              },
+              {
+                "team": "order",
+                "isSelf": false,
+                "champion": "Garen",
+                "level": 12,
+                "kills": 3,
+                "deaths": 3,
+                "assists": 2,
+                "creepScore": 140,
+                "items": [
+                  {
+                    "itemId": 3078,
+                    "name": "Trinity Force",
+                    "count": 1
+                  }
+                ],
+                "summonerSpells": ["Flash", "Teleport"],
+                "keystone": "Conqueror"
+              },
+              {
+                "team": "chaos",
+                "isSelf": false,
+                "champion": "Zed",
+                "level": 14,
+                "kills": 7,
+                "deaths": 1,
+                "assists": 2,
+                "creepScore": 163,
+                "items": [
+                  {
+                    "itemId": 6692,
+                    "name": "Eclipse",
+                    "count": 1
+                  },
+                  {
+                    "itemId": 3111,
+                    "name": "Mercury's Treads",
+                    "count": 1
+                  }
+                ],
+                "summonerSpells": ["Flash", "Ignite"],
+                "keystone": "Electrocute"
+              },
+              {
+                "team": "chaos",
+                "isSelf": false,
+                "champion": "Vladimir",
+                "level": 12,
+                "kills": 2,
+                "deaths": 2,
+                "assists": 4,
+                "creepScore": 130,
+                "items": [
+                  {
+                    "itemId": 4633,
+                    "name": "Riftmaker",
+                    "count": 1
+                  },
+                  {
+                    "itemId": 3072,
+                    "name": "Bloodthirster",
+                    "count": 1
+                  }
+                ],
+                "summonerSpells": ["Flash", "Teleport"],
+                "keystone": "Phase Rush"
+              }
+            ],
+            "eventCount": 31,
+            "latestEvent": {
+              "id": 30,
+              "kind": "ChampionKill",
+              "timeSecs": 1098.25
+            }
+          }
+        }
+      }
+    }
+  ]
+}

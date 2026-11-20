@@ -1116,7 +1116,36 @@ it). It carries only the `postgame` section, never `live`: the recording is
 post-game data, not fed through the live gate. The result is a
 `ScoutCoachArtifact` row (kind `review`: `pending`, `ready`, `declined` for an
 Explore quota or spend refusal, or `failed`) naming the Explore conversation,
-and the desktop reads it with `POST coach/reviews/get` (desktop contract 8).
+and the desktop reads it with `POST coach/reviews/get` (desktop contract 9).
+
+#### Proactive coach triggers (beta only)
+
+`coach/triggers` is the one route on which Scout starts a turn from live
+state. Riot's published policy prohibits unprompted alerts from live game
+state, so production refuses it with `feature_disabled` before reading the body
+or any flag (`coach/proactive-policy.ts`), and `scout_coach_proactive` is also
+on the production hard-disable list in `configuration/flags.ts`. Elsewhere the
+turn needs `scout_desktop_coach`, `scout_coach_live_answers` and
+`scout_coach_proactive` for the owner; the flag is on in beta and recorded as
+a production default-off exception (AI-558).
+
+The body is a trigger kind (`enemy_item_spike`, `enemy_fed`,
+`damage_profile_shift`, `healing_threat`, `death_streak`), the detector's
+scoreboard evidence, and the live snapshot it fired on
+(`data/src/scout-client/coach-trigger.schema.ts`); there is no free text. The
+server checks the evidence against the snapshot, words the question itself
+(it begins "Scout noticed", which is how the agent offers the
+`coach-proactive` skill), and projects the snapshot through the coach policy
+as initiation `app_proactive`, which carries `live` and nothing else. The turn
+runs the in-game profile and spends the in-game allowance, not Explore's
+question windows: its projected `live` section selects both
+(`coachRunSettings`), and its audit row counts toward
+`IN_GAME_COACH_QUOTA_RULES`. It writes its `ScoutCoachTurn` row like any coach
+turn. In the same transaction it writes a `ScoutCoachTriggerReceipt` under a
+per-owner advisory lock (`coach/proactive-triggers.ts`): the same event (kind
+plus a server-derived window, unique per owner and game) is admitted once and a
+retry answers `duplicate`; admitted triggers are at least 90 seconds apart per
+owner and at most 10 per game, answered `rate_limited` otherwise.
 
 ### Raw observation archive
 

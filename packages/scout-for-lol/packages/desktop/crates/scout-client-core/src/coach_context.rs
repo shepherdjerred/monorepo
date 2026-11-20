@@ -449,7 +449,12 @@ impl PregameContext {
 }
 
 impl LiveContext {
-    fn validate(&self) -> Result<(), ContextError> {
+    /// Check what serde cannot: every string and list bound.
+    ///
+    /// # Errors
+    ///
+    /// [`ContextError`] naming the first field out of bounds.
+    pub fn validate(&self) -> Result<(), ContextError> {
         text("live.game.mode", &self.game.mode, NAME_MAX)?;
         text("live.game.map", &self.game.map, NAME_MAX)?;
         text("live.own.resource", &self.own.resource, NAME_MAX)?;

@@ -21,6 +21,7 @@ export const EXPLORE_SKILL_CAPABILITIES = [
   "mvp-votes",
   "clash",
   "live-game",
+  "proactive-coach",
 ] as const;
 
 export const ExploreSkillCapabilitySchema = z.enum(EXPLORE_SKILL_CAPABILITIES);

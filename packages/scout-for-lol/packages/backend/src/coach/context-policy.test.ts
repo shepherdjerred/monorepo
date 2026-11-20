@@ -9,6 +9,7 @@ import {
 import { z } from "zod";
 import fixtures from "@scout-for-lol/data/scout-client/coach-context.fixtures.json" with { type: "json" };
 import {
+  COACH_PROACTIVE_INITIATION,
   CoachTurnInitiationSchema,
   PLAYER_INITIATIONS,
   projectGameContext,
@@ -22,10 +23,13 @@ const complete = JsonObjectSchema.parse(fixtures.valid[0]?.body);
 const INITIATIONS = CoachTurnInitiationSchema.options;
 const FLAG_STATES: readonly CoachPolicyFlags[] = [false, true].flatMap(
   (coachEnabled) =>
-    [false, true].map((liveAnswersEnabled) => ({
-      coachEnabled,
-      liveAnswersEnabled,
-    })),
+    [false, true].flatMap((liveAnswersEnabled) =>
+      [false, true].map((proactiveEnabled) => ({
+        coachEnabled,
+        liveAnswersEnabled,
+        proactiveEnabled,
+      })),
+    ),
 );
 
 /** A small seeded generator, so a failure names a reproducible case. */
@@ -123,14 +127,18 @@ function projected(
 }
 
 describe("projectGameContext", () => {
-  test("no flag or initiation lets live state through on a turn the player did not start", () => {
+  test("live state passes only on a player's turn or an admitted proactive turn", () => {
     everyCase(0x5c_0a_7c, ({ raw, initiation, flags, label }) => {
       const projection = projected(raw, initiation, flags, label);
       const liveThrough =
         projection.context?.live !== undefined ||
         projection.accepted.includes("live");
+      const startedBy =
+        PLAYER_INITIATIONS.has(initiation) ||
+        (initiation === COACH_PROACTIVE_INITIATION &&
+          flags.proactiveEnabled === true);
       const allowed =
-        PLAYER_INITIATIONS.has(initiation) &&
+        startedBy &&
         flags.coachEnabled &&
         flags.liveAnswersEnabled &&
         "live" in raw;
@@ -145,6 +153,7 @@ describe("projectGameContext", () => {
       "player_voice",
       ...COACH_APP_INITIATIONS,
       "app_postgame",
+      COACH_PROACTIVE_INITIATION,
     ]);
   });
 
@@ -224,6 +233,7 @@ describe("projectGameContext", () => {
           {
             ...COACH_APP_INITIATION_SECTION,
             ...COACH_SERVER_INITIATION_SECTION,
+            [COACH_PROACTIVE_INITIATION]: "live",
           }[initiation] === section;
         expect(accepted.includes(section), label).toBe(
           flags.coachEnabled && belongs,
@@ -324,6 +334,21 @@ describe("projectGameContext refusals and reasons", () => {
       { coachEnabled: true, liveAnswersEnabled: true },
       "not_player_initiated",
     ],
+    [
+      COACH_PROACTIVE_INITIATION,
+      { coachEnabled: true, liveAnswersEnabled: true, proactiveEnabled: true },
+      null,
+    ],
+    [
+      COACH_PROACTIVE_INITIATION,
+      { coachEnabled: true, liveAnswersEnabled: false, proactiveEnabled: true },
+      "live_answers_disabled",
+    ],
+    [
+      COACH_PROACTIVE_INITIATION,
+      { coachEnabled: false, liveAnswersEnabled: true, proactiveEnabled: true },
+      "coach_disabled",
+    ],
   ])(
     "live on a %s turn with %o is withheld for %s",
     (initiation, flags, reason) => {
@@ -361,5 +386,50 @@ describe("the server-started post-game review", () => {
     expect(CoachAppInitiationSchema.safeParse("app_postgame").success).toBe(
       false,
     );
+  });
+});
+
+describe("projectGameContext on a proactive turn", () => {
+  test("a proactive turn without proactiveEnabled never carries live, whatever else is on", () => {
+    for (const flags of [
+      { coachEnabled: true, liveAnswersEnabled: true },
+      { coachEnabled: true, liveAnswersEnabled: true, proactiveEnabled: false },
+    ]) {
+      const result = projectGameContext(
+        { live: complete["live"] },
+        { initiation: COACH_PROACTIVE_INITIATION, flags },
+      );
+      if (!result.ok) throw new Error("the complete live section was refused");
+      expect(result.projection.context).toBeNull();
+      expect(result.projection.withheld).toEqual([
+        { section: "live", reason: "proactive_disabled" },
+      ]);
+    }
+  });
+
+  test("a proactive turn carries live and nothing else", () => {
+    const result = projectGameContext(
+      {
+        champSelect: complete["champSelect"],
+        pregame: complete["pregame"],
+        live: complete["live"],
+        postgame: complete["postgame"],
+      },
+      {
+        initiation: COACH_PROACTIVE_INITIATION,
+        flags: {
+          coachEnabled: true,
+          liveAnswersEnabled: true,
+          proactiveEnabled: true,
+        },
+      },
+    );
+    if (!result.ok) throw new Error("the complete context was refused");
+    expect(result.projection.accepted).toEqual(["live"]);
+    expect(result.projection.withheld.map((entry) => entry.reason)).toEqual([
+      "section_outside_initiation",
+      "section_outside_initiation",
+      "section_outside_initiation",
+    ]);
   });
 });

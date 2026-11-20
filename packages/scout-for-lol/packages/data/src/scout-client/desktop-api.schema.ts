@@ -63,8 +63,12 @@ import {
  *   event. A message's `generation.reasoningEffort` gains `low`, the in-game
  *   coach's; an older client is sent no provenance for such an answer. The
  *   server deploys first.
+ * - 10: `coach/triggers`, a proactive coach turn Scout Desktop's beta build
+ *   asks for when a scoreboard detector fires (`coach-trigger.schema.ts`): a
+ *   trigger kind, its evidence and the live snapshot, never free text. It is
+ *   refused in production whatever the flags say. The server deploys first.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 9;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 10;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
 /** The first contract version whose messages may carry `coachOptions`. */
@@ -231,6 +235,12 @@ export const SCOUT_DESKTOP_API_ROUTES = {
     scope: "explore",
     response: "json",
   },
+  coach_triggers: {
+    method: "POST",
+    path: "/api/scout-client/v1/coach/triggers",
+    scope: "explore",
+    response: "json",
+  },
 } as const satisfies Record<
   string,
   {
@@ -263,6 +273,7 @@ export const ScoutDesktopApiRouteSchema = z.enum([
   "explore_attachments_discard",
   "coach_voice_turns",
   "coach_reviews_get",
+  "coach_triggers",
 ]);
 
 /** Every typed refusal a desktop route answers with, and its HTTP status. */
