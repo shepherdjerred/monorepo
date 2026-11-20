@@ -80,18 +80,23 @@ export function buildMusicPrepareOptions(
     audioOnly: true,
     includeAudio: true,
     bitrateAudio: input.stream.bitrateAudioKbps,
-    // `readrate` carries over: an unpaced demux outruns the send loop and grows the buffer pool
-    // until GC pauses it, and that shape is identical whatever the bitrate.
+    // `readrate` carries over on seekable media: an unpaced demux outruns the send loop and grows
+    // the buffer pool until GC pauses it, and that shape is identical whatever the bitrate. Omit
+    // it on live sources (`resolved.live === true`), where ffmpeg warns `-readrate` can drop
+    // packets.
     //
-    // `readrateInitialBurst` deliberately does NOT. On Go Live the burst pre-rolls a cushion into
-    // the receiver's jitter buffer, and it was tuned against real ffmpeg output there. This
-    // transport is different in the way that matters: `attachPipeline` makes the lone AudioStream
-    // `noSleep` for the burst window, so 2.5 s would push ~125 Opus packets back-to-back down the
-    // ordinary voice connection before pacing starts — a burst onto a path whose behaviour nobody
-    // has measured, on the very first audio a listener hears. This package's rule is to profile
-    // real output before changing timing or buffers; until someone has, the safe default is the
-    // paced one. Enable it here once there is a live measurement to point at.
-    readrate: input.stream.readrate,
+    // `readrateInitialBurst` deliberately does NOT carry over. On Go Live the burst pre-rolls a
+    // cushion into the receiver's jitter buffer, and it was tuned against real ffmpeg output there.
+    // This transport is different in the way that matters: `attachPipeline` makes the lone
+    // AudioStream `noSleep` for the burst window, so 2.5 s would push ~125 Opus packets
+    // back-to-back down the ordinary voice connection before pacing starts — a burst onto a path
+    // whose behaviour nobody has measured, on the very first audio a listener hears. This
+    // package's rule is to profile real output before changing timing or buffers; until someone
+    // has, the safe default is the paced one. Enable it here once there is a live measurement to
+    // point at.
+    ...(input.resolved.live === true
+      ? {}
+      : { readrate: input.stream.readrate }),
     ...startTimeOption(input.startSeconds),
     ...headerOptions(input.resolved.ffmpegInputHeaders),
     ...(input.resolved.ffmpegInputOptions === undefined
@@ -124,16 +129,22 @@ export function buildVideoPrepareOptions(
     videoCodec: Utils.normalizeVideoCodec("H264"),
     hardwareAcceleratedDecoding: useHardware,
     minimizeLatency: false,
-    // Bound ffmpeg's input demux to a multiple of realtime. Without this, a fast GPU encoder
-    // runs the source at 3-5× realtime and the NUT-pipe consumer cannot drain that fast,
-    // causing the downstream JS buffer pool to grow at ~25 MB/s until major GC pauses the
-    // send loop ≥ 200 ms and the Discord receiver's jitter buffer shows a ~1 s freeze.
-    readrate: stream.readrate,
-    // Pre-roll this many seconds at full speed before readrate pacing engages. The play-side
-    // pacer (readrateInitialBurst below) forwards the pre-roll into the receiver's jitter
-    // buffer, which absorbs transient production dips on heavy-bitrate scenes — without it the
-    // realtime-paced pipeline has zero margin and every dip stutters playback.
-    readrateInitialBurst: stream.readrateInitialBurst,
+    // Bound ffmpeg's input demux to a multiple of realtime on seekable media. Without this, a fast
+    // GPU encoder runs the source at 3-5× realtime and the NUT-pipe consumer cannot drain that
+    // fast, causing the downstream JS buffer pool to grow at ~25 MB/s until major GC pauses the
+    // send loop ≥ 200 ms and the Discord receiver's jitter buffer shows a ~1 s freeze. Pre-rolling
+    // `readrateInitialBurst` seconds at full speed before pacing engages lets the play-side pacer
+    // forward a cushion into the receiver's jitter buffer for transient production dips.
+    //
+    // Omit both on live sources (`resolved.live === true`), where ffmpeg warns `-readrate` can
+    // cause packet loss and non-`.m3u8` live manifests (such as ClearKey DASH `.mpd`) are not
+    // caught by `prepareStream`'s URL filename check.
+    ...(resolved.live === true
+      ? {}
+      : {
+          readrate: stream.readrate,
+          readrateInitialBurst: stream.readrateInitialBurst,
+        }),
     // The gain ffmpeg's output `volume` filter starts at. Unity renders as the literal `1.0`, which
     // is byte-identical to the value this filter always carried, so a 100% segment emits exactly
     // the command line it did before this option existed.

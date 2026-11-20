@@ -37,6 +37,7 @@ import {
   sendSyncEventsTotal,
   sendSyncWaitSecondsTotal,
   streamHardware,
+  streamLive,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const log = logger.child("streamer:metrics");
@@ -111,15 +112,23 @@ export type StreamObserverOptions = {
    * segment from overwriting or removing a concurrent video's readings.
    */
   readonly audioOnly?: boolean;
+  /** Whether this segment reads a live broadcast (`1`) rather than seekable media (`0`). */
+  readonly live?: boolean;
 };
+
+function liveGaugeValue(options: StreamObserverOptions): number {
+  return options.live === true ? 1 : 0;
+}
 
 export function playbackObserverOptions(
   audioOnly: boolean,
   pipelineMode: PlaybackDiagnosticContext["pipelineMode"],
   offsetSeconds: () => number,
+  live = false,
 ): StreamObserverOptions {
   return {
     audioOnly,
+    live,
     diagnosticContext: {
       transport: audioOnly ? "voice" : "go-live",
       pipelineMode,
@@ -162,7 +171,9 @@ export function createStreamObserver(
         : Math.max(0, now() - lastProgressWallMs) / 1000,
   });
   let disposed = false;
+  const liveValue = liveGaugeValue(options);
   if (!audioOnly) gauges.set(streamHardware, {}, hardware ? 1 : 0, "min");
+  gauges.set(streamLive, { hardware: hw }, liveValue, "max");
   let prevMediaSeconds: number | undefined;
   let prevWallMs: number | undefined;
   let lastProgressWallMs: number | undefined;
@@ -214,6 +225,7 @@ export function createStreamObserver(
       if (disposed) return;
       const engaged = commandUsesHardwareDecode(command);
       if (!audioOnly) gauges.set(hwDecodeEngaged, {}, engaged ? 1 : 0, "min");
+      gauges.set(streamLive, { hardware: hw }, liveValue, "max");
       diagnostics.reset();
       // The command can contain signed media URLs and HTTP authorization headers.
       log.info("ffmpeg command started", { hwDecodeEngaged: engaged });

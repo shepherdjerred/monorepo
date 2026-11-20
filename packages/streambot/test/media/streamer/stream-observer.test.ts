@@ -3,6 +3,7 @@ import {
   commandUsesHardwareDecode,
   createStreamObserver,
   parseTimemarkSeconds,
+  playbackObserverOptions,
   STALL_AFTER_SECONDS,
 } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import { LIVE_BUFFER_MAX_MS } from "@shepherdjerred/streambot/config/schema.ts";
@@ -13,6 +14,7 @@ import {
   liveScheduleEventsTotal,
   pipelineQueueDepth,
   sendLateFramesTotal,
+  streamLive,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 
 describe("parseTimemarkSeconds", () => {
@@ -359,5 +361,79 @@ describe("audio-only segments suppress the video-only gauges", () => {
     expect(after.values.find((v) => v.labels.kind === "video")?.value).toBe(7);
     expect(after.values.find((v) => v.labels.kind === "audio")?.value).toBe(3);
     video.dispose();
+  });
+});
+
+async function liveSeriesValue(
+  hardware: "true" | "false",
+): Promise<number | undefined> {
+  const metric = await streamLive.get();
+  return metric.values.find((v) => v.labels.hardware === hardware)?.value;
+}
+
+describe("streambot_stream_live owned gauge", () => {
+  test("reports 1 for live, 0 for seekable/omitted, and removes the series on dispose", async () => {
+    streamLive.reset();
+    const liveHw = createStreamObserver(true, undefined, undefined, {
+      live: true,
+    });
+    await expect(liveSeriesValue("true")).resolves.toBe(1);
+    await expect(liveSeriesValue("false")).resolves.toBeUndefined();
+    liveHw.dispose();
+    await expect(liveSeriesValue("true")).resolves.toBeUndefined();
+
+    const omittedSw = createStreamObserver(false);
+    await expect(liveSeriesValue("false")).resolves.toBe(0);
+    omittedSw.dispose();
+    await expect(liveSeriesValue("false")).resolves.toBeUndefined();
+
+    const explicitFalseHw = createStreamObserver(
+      true,
+      undefined,
+      undefined,
+      playbackObserverOptions(false, "hw", () => 0),
+    );
+    await expect(liveSeriesValue("true")).resolves.toBe(0);
+    explicitFalseHw.dispose();
+    await expect(liveSeriesValue("true")).resolves.toBeUndefined();
+
+    const viaHelper = createStreamObserver(
+      true,
+      undefined,
+      undefined,
+      playbackObserverOptions(false, "hw", () => 0, true),
+    );
+    await expect(liveSeriesValue("true")).resolves.toBe(1);
+    viaHelper.dispose();
+    await expect(liveSeriesValue("true")).resolves.toBeUndefined();
+  });
+
+  test("aggregates concurrent segments on the same hardware label with max and isolates labels", async () => {
+    streamLive.reset();
+    const seekableSw = createStreamObserver(false, undefined, undefined, {
+      live: false,
+    });
+    const liveSw = createStreamObserver(false, undefined, undefined, {
+      live: true,
+    });
+    const seekableHw = createStreamObserver(true, undefined, undefined, {
+      live: false,
+    });
+
+    await expect(liveSeriesValue("false")).resolves.toBe(1);
+    await expect(liveSeriesValue("true")).resolves.toBe(0);
+
+    // Disposing the live software segment restores the remaining seekable software segment's 0.
+    liveSw.dispose();
+    await expect(liveSeriesValue("false")).resolves.toBe(0);
+    await expect(liveSeriesValue("true")).resolves.toBe(0);
+
+    // Disposing the last software segment removes only hardware="false".
+    seekableSw.dispose();
+    await expect(liveSeriesValue("false")).resolves.toBeUndefined();
+    await expect(liveSeriesValue("true")).resolves.toBe(0);
+
+    seekableHw.dispose();
+    await expect(liveSeriesValue("true")).resolves.toBeUndefined();
   });
 });

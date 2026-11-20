@@ -430,6 +430,7 @@ export class StreambotStreamer implements StreamerLike {
         isMusic,
         pipelineMode,
         () => this.clock.stallOffsetSeconds,
+        input.resolved.live === true,
       ),
     );
 

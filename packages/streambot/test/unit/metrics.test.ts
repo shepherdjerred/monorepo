@@ -15,6 +15,7 @@ describe("metrics registry", () => {
   test("registers the headline streambot series", async () => {
     const body = await register.metrics();
     expect(body).toContain("streambot_ffmpeg_speed_ratio");
+    expect(body).toContain("streambot_stream_live");
     expect(body).toContain("streambot_send_frametime_ratio");
     expect(body).toContain("streambot_hw_decode_engaged");
     expect(body).toContain("streambot_source_info");
