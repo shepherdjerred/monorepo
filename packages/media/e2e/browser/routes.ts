@@ -8,13 +8,18 @@ export type RouteCase = {
   path: string;
   /** The page's level-one heading, proving the route rendered its own page. */
   heading: string;
+  /** The document title the page sets. */
+  title: string;
 };
+
+/** A route whose title is its heading, as every page built on PageTitle is. */
+type RouteSpec = Omit<RouteCase, "title"> & { title?: string };
 
 const movie = FEATURED.movie;
 const series = FEATURED.series;
 
 /** The pages both personas read; an owner sees extra controls on each. */
-function shared(persona: Persona): RouteCase[] {
+function shared(persona: Persona): RouteSpec[] {
   return [
     { label: `${persona} /library`, path: "/library", heading: "Library" },
     {
@@ -53,7 +58,7 @@ function shared(persona: Persona): RouteCase[] {
  * contracts have no fixture yet) and the `/notifications/email` and
  * `/notifications/discord` callbacks, which write as soon as they load.
  */
-const MEMBER_ROUTES: readonly RouteCase[] = [
+const MEMBER_ROUTES: readonly RouteSpec[] = [
   {
     label: "member /",
     persona: "member",
@@ -118,7 +123,7 @@ const MEMBER_ROUTES: readonly RouteCase[] = [
  * Not covered: `/recovery/native` and `/admin/subtitle-replacements`, whose
  * operator inventories have no fixture yet.
  */
-const OWNER_ROUTES: readonly RouteCase[] = [
+const OWNER_ROUTES: readonly RouteSpec[] = [
   {
     label: "owner /admin",
     persona: "owner",
@@ -130,8 +135,16 @@ const OWNER_ROUTES: readonly RouteCase[] = [
     persona: "owner",
     path: "/admin/migration",
     heading: "Bring your library over.",
+    // This page has no PageTitle and keeps the title from index.html.
+    title: "Media · Your next watch",
   },
   ...shared("owner"),
 ];
 
-export const ROUTES: readonly RouteCase[] = [...MEMBER_ROUTES, ...OWNER_ROUTES];
+export const ROUTES: readonly RouteCase[] = [
+  ...MEMBER_ROUTES,
+  ...OWNER_ROUTES,
+].map((route) => ({
+  ...route,
+  title: route.title ?? `${route.heading} · Media`,
+}));

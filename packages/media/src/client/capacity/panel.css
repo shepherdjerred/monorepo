@@ -1,3 +1,5 @@
-.capacity-facts dd {
-  overflow-wrap: anywhere;
+@layer pages {
+  .capacity-facts dd {
+    overflow-wrap: anywhere;
+  }
 }

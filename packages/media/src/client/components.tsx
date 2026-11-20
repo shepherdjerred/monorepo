@@ -1,5 +1,10 @@
 import { Link } from "react-router";
 import type { ReactNode } from "react";
+import {
+  STATUS_TONES,
+  wireStatusTone,
+  type KnownStatus,
+} from "./status/tone.ts";
 
 export function PageTitle({
   eyebrow,
@@ -12,7 +17,8 @@ export function PageTitle({
 }) {
   return (
     <header className="page-title">
-      <title>{title} · Media</title>
+      {/* One string child: React leaves a title with several text nodes empty. */}
+      <title>{`${title} · Media`}</title>
       <p className="eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
       {children}
@@ -50,8 +56,22 @@ export function ErrorNotice({ error }: { error: Error }) {
   return <Notice error>{error.message}</Notice>;
 }
 
-export function Status({ value }: { value: string }) {
-  return <span className={`status status-${value}`}>{humanize(value)}</span>;
+/** A badge for a status the contract types as an enum. */
+export function Status({ value }: { value: KnownStatus }) {
+  return (
+    <span className="status" data-tone={STATUS_TONES[value]}>
+      {humanize(value)}
+    </span>
+  );
+}
+
+/** A badge for a status the contract types as a plain string. */
+export function WireStatus({ value }: { value: string }) {
+  return (
+    <span className="status" data-tone={wireStatusTone(value)}>
+      {humanize(value)}
+    </span>
+  );
 }
 
 export function humanize(value: string): string {

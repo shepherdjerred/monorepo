@@ -1,0 +1,122 @@
+/*
+ * Element defaults. `reset` removes browser defaults; `base` gives bare
+ * elements the product's type and color. Both sit below `components` and
+ * `pages`, so any class rule overrides them without a specificity contest.
+ */
+@layer reset {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    min-width: 320px;
+  }
+  button,
+  input,
+  select {
+    font: inherit;
+  }
+  button,
+  a,
+  input,
+  summary {
+    -webkit-tap-highlight-color: transparent;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+}
+
+@layer base {
+  :root {
+    font-family: var(--font-body);
+    color: var(--text);
+    background: var(--canvas);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: wait;
+    opacity: 0.55;
+  }
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 4px;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+  h1 {
+    font-size: var(--text-display);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.055em;
+    font-weight: 600;
+    margin-bottom: var(--space-4);
+  }
+  h2 {
+    font-size: var(--text-lg);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.025em;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+  }
+  p {
+    line-height: var(--leading-normal);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-muted);
+  }
+  fieldset {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+  }
+  input[type="checkbox"] {
+    accent-color: var(--accent-strong);
+    width: 16px;
+    height: 16px;
+  }
+  details {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+  summary {
+    cursor: pointer;
+    padding: var(--space-2) 0;
+  }
+  pre {
+    overflow: auto;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-control);
+  }
+}

@@ -526,15 +526,58 @@ fixture by adding an entry; a new client read with no entry fails the browser
 suite with a `404`.
 
 The browser suite opens every member route and the main owner routes at 1440 and
-390 pixels wide. It fails on an error notice, a console or uncaught error, a
-failed API response, or a WCAG 2.2 AA violation that
-`e2e/browser/axe-baseline.ts` does not list. That baseline records the
-violations the client ships with today, by rule and route, and is compared
-exactly: fix a violation and its entry must be deleted. It may only shrink.
-Routes the fixture API cannot answer yet are listed in `e2e/browser/routes.ts`.
+390 pixels wide, in the light and the dark color scheme. It fails on an error
+notice, a console or uncaught error, a failed API response, a request to any
+other origin, a wrong document title, or a WCAG 2.2 AA violation, color contrast
+included, that `e2e/browser/axe-baseline.ts` does not list. That baseline is
+empty and compared exactly; nothing may be added to it to make a new violation
+pass. Routes the fixture API cannot answer yet are listed in
+`e2e/browser/routes.ts`.
 
 The suite runs in Woodpecker's browser lane with the other Playwright targets,
 not in the `ci` or `extended` Vitest tiers.
+
+### Client styles and themes
+
+The client is styled with plain global CSS in five cascade layers, lowest
+priority first: `reset`, `tokens`, `base`, `components`, `pages`.
+
+| File                                                     | Layer           | Holds                                                     |
+| -------------------------------------------------------- | --------------- | --------------------------------------------------------- |
+| `src/client/styles/tokens.css`                           | `tokens`        | Every color, type size, radius, shadow, and spacing step. |
+| `src/client/styles/fonts.css`                            | none            | The `@font-face` rules for the self-hosted fonts.         |
+| `src/client/styles/base.css`                             | `reset`, `base` | Element defaults.                                         |
+| `src/client/styles.css`                                  | `components`    | The layer order, the shell, and the shared class rules.   |
+| A feature's own stylesheet, such as `calendar/style.css` | `pages`         | Rules for one page or panel.                              |
+
+A rule in a later layer wins over an earlier one whatever its specificity, so a
+page rule never needs a longer selector to override a component. The browser
+fixes the layer order at the first `@layer` it reads, which is why `main.tsx`
+imports `styles.css` before the application.
+
+No stylesheet other than `tokens.css` holds a hex color. Semantic tokens such as
+`--surface` and `--text-muted` choose between raw palette values with
+`light-dark()`. That function is Baseline Newly available, so it never reaches a
+browser: Lightning CSS, which `vite.config.ts` selects as the CSS transformer,
+rewrites it for Vite's Baseline Widely available target into custom properties
+that follow `color-scheme`. The browser suite fails if the built stylesheet
+still contains `light-dark()`.
+
+The theme follows the system color scheme. Setting `data-theme="light"` or
+`data-theme="dark"` on the root element pins one; that attribute is the only
+supported switch, because the rewritten tokens follow the `color-scheme`
+declarations in `tokens.css` and not a `color-scheme` set from script. The
+`theme-color` metas in `index.html` repeat the two canvas colors.
+
+Status badges take one of five tones (`ok`, `progress`, `warn`, `danger`,
+`neutral`) from the table in `src/client/status/tone.ts`. `Status` accepts only
+the values in that table, so a contract enum that gains a value fails
+`typecheck` at the badge that shows it until the value has a tone. `WireStatus`
+is for the fields the API contract types as plain strings, where a word outside
+the table reads as neutral.
+
+DM Sans and Manrope are bundled from `@fontsource-variable` and served from
+`/assets`; the client requests nothing from another origin.
 
 ### Native subtitle tools
 
