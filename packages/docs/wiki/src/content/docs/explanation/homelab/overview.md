@@ -89,8 +89,9 @@ Each declared request covers that workload's own peak, but those peaks rarely co
 Summed, they left torvalds unschedulable while most of its CPU sat idle.
 In the 14 days before the change, pods requested 22.5 of 27 allocatable cores but used 4.7 at the 95th percentile.
 
-An admission policy therefore halves CPU requests and scales memory requests to 90% when a pod is created.
+An admission policy therefore halves CPU requests and scales memory requests to 85% when a pod is created.
 CPU takes the larger cut because contention only slows pods; memory exhaustion evicts or kills them.
+The memory factor stops at 85% because physical memory bounds it: with the ledger full at that factor, peak pod memory would sit about 7 GiB under the pod ceiling, and the node has no swap to absorb coinciding peaks.
 Pods with burst or infrastructure priority keep their memory request, since a fixed JVM heap is real usage.
 Limits, priority classes and kubelet eviction keep their declared values.
 

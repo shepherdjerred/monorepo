@@ -26,9 +26,17 @@ export const REQUEST_OVERCOMMIT_ANNOTATION =
  * CPU is compressible, so it takes the larger factor. Memory is not: its
  * factor is small, and burst and infrastructure pods keep their memory
  * request because a fixed JVM heap or control-plane footprint is real usage.
+ *
+ * Physical RAM bounds the memory factor, not the ledger. Over the 30 days to
+ * 2026-11-20, at 0.9, pods requested 83.5 of 95.4 Gi while their working set
+ * peaked at 77.6 Gi (p99 73.1) under the 99.4 Gi kubepods ceiling, and
+ * ProductionWakeCapacityInsufficient fired for 340 of 720 hours. Scaled
+ * linearly to a full ledger, 0.85 puts that peak near 92 Gi, 7 Gi under the
+ * ceiling; 0.8 would leave 3 Gi. 0.85 is the floor while the node has no
+ * swap to absorb coinciding peaks.
  */
 export const CPU_REQUEST_FACTOR = 0.5;
-export const MEMORY_REQUEST_FACTOR = 0.9;
+export const MEMORY_REQUEST_FACTOR = 0.85;
 const MEMORY_PRESERVED_PRIORITIES = [
   BURST_SERVICE_PRIORITY,
   INFRASTRUCTURE_PRIORITY,
