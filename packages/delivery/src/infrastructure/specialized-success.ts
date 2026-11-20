@@ -7,7 +7,8 @@ import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import { PipelineRevisionSchema } from "#shared/contract.ts";
 import { required, wire } from "./delivery-records.ts";
-import { recordedByStage, version, type Transaction } from "./delivery-data.ts";
+import { version, type Transaction } from "./delivery-data.ts";
+import { recordedByStage } from "#shared/evidence/scope.ts";
 import { validateTrmnlSuccess } from "./trmnl-policy.ts";
 
 /** Same deterministic identity used by the source-owned execution adapters. */

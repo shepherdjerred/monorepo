@@ -22,9 +22,16 @@ test("controller upgrade shows original cross-owner image and independent chart 
     chartArtifact: { id: "controller/chart/104" },
   });
   const main = page.getByRole("main");
-  await expect(
-    main.getByRole("heading", { name: "Independent control-plane upgrade" }),
-  ).toBeVisible();
+  // A queued deployment folds its frozen inputs; the upgrade opens on request.
+  const upgrade = main.getByRole("heading", {
+    name: "Independent control-plane upgrade",
+  });
+  await expect(upgrade).toBeHidden();
+  await main
+    .getByRole("region", { name: "Frozen inputs" })
+    .getByText("Control-plane upgrade", { exact: true })
+    .click();
+  await expect(upgrade).toBeVisible();
   await expect(main).toContainText("controller/image/101");
   await expect(main).toContainText("controller/image/102");
   await expect(main).toContainText("Owner temporal");

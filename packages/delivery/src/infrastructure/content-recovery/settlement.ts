@@ -18,6 +18,7 @@ import {
 import { contentIntentView } from "./context.ts";
 import { inspectContentProof } from "./proof.ts";
 import { settleRecoveryTarget } from "#infrastructure/recovery-settlement.ts";
+import { contentRecoveryEvidencePrefix } from "#shared/evidence/scope.ts";
 
 export async function admitContentRecoveryRepair(
   this: Delivery,
@@ -117,7 +118,7 @@ export async function completeContentRecovery(
           }),
         },
       ],
-      `content-recovery/${id}`,
+      contentRecoveryEvidencePrefix(id),
     );
     // The platform lock stays held: it is the journaled producer barrier,
     // and only the observed producer restoration releases it.

@@ -2,8 +2,6 @@ import type {
   DeploymentDetail as Detail,
   Principal,
 } from "#shared/contract.ts";
-import { Status } from "#client/components/status.tsx";
-import { Duration, RelativeTime } from "#client/components/time.tsx";
 import { isTerminal, messageNotice } from "./presentation.ts";
 import { SelectedArtifacts } from "./artifacts.tsx";
 import { FrozenWorkerPool } from "./worker-pool.tsx";
@@ -16,6 +14,7 @@ import {
 import { FrozenForumBaseline } from "./forum-baseline.tsx";
 import { ContentRecovery } from "./content-recovery.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
+import { DeploymentEvidence, StepTimeline } from "./deployment-steps.tsx";
 
 export function sourceLabel(detail: Detail) {
   const deployment = detail.deployment;
@@ -26,77 +25,60 @@ export function sourceLabel(detail: Detail) {
     : deployment.platformSnapshot.source.id;
 }
 
+/**
+ * What the deployment froze, each part folded away: a finished deployment is
+ * read for what happened, and its inputs are one click below. They open on
+ * their own while a human is deciding on exactly these inputs.
+ */
 function FrozenInputs({ detail }: { detail: Detail }) {
   const { deployment } = detail;
+  const reviewing = deployment.status === "awaiting_approval";
   return (
     <>
+      <p className="muted">
+        Pipeline <span className="mono">{detail.pipeline.id}</span> ·
+        configuration <span className="mono">{detail.configuration.id}</span>
+      </p>
       {deployment.controlPlaneSnapshot === null ? (
         deployment.platformSnapshot === null ? (
           <SelectedArtifacts version={detail.versionSet} />
         ) : (
-          <FrozenPlatform snapshot={deployment.platformSnapshot} />
+          <Disclosure summary="Platform release" open={reviewing}>
+            <FrozenPlatform snapshot={deployment.platformSnapshot} />
+          </Disclosure>
         )
       ) : (
-        <FrozenControlPlane snapshot={deployment.controlPlaneSnapshot} />
+        <Disclosure summary="Control-plane upgrade" open={reviewing}>
+          <FrozenControlPlane snapshot={deployment.controlPlaneSnapshot} />
+        </Disclosure>
       )}
       {deployment.workerSnapshot !== null && (
-        <FrozenWorkerPool
-          snapshot={deployment.workerSnapshot}
-          kind={deployment.kind}
-        />
+        <Disclosure
+          summary="Worker pool"
+          count={deployment.workerSnapshot.versions.length}
+          open={reviewing}
+        >
+          <FrozenWorkerPool
+            snapshot={deployment.workerSnapshot}
+            kind={deployment.kind}
+          />
+        </Disclosure>
       )}
-    </>
-  );
-}
-
-function StageTimeline({ detail }: { detail: Detail }) {
-  if (detail.stages.length === 0)
-    return <p className="empty">No stages have started.</p>;
-  const stages = detail.stages.toSorted((left, right) =>
-    (left.startedAt ?? left.updatedAt).localeCompare(
-      right.startedAt ?? right.updatedAt,
-    ),
-  );
-  return (
-    <ol className="stages">
-      {stages.map((stage) => (
-        <li key={stage.id} className={`stage-${stage.status}`}>
-          <div>
-            <strong>{stage.key}</strong>
-            <Status value={stage.status} />
-            {stage.startedAt !== null && (
-              <Duration
-                start={stage.startedAt}
-                end={stage.status === "running" ? null : stage.updatedAt}
-              />
+      <Disclosure summary="Pinned pipeline and configuration">
+        <pre className="receipt-json">
+          <code>
+            {JSON.stringify(
+              {
+                pipeline: detail.pipeline,
+                configuration: detail.configuration,
+              },
+              null,
+              2,
             )}
-          </div>
-          {stage.message !== "" && <p>{stage.message}</p>}
-          <small className="mono">{stage.operationId}</small>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-function Evidence({ detail }: { detail: Detail }) {
-  if (detail.evidence.length === 0)
-    return <p className="empty">No verification evidence recorded.</p>;
-  return (
-    <ul className="evidence">
-      {detail.evidence.map((item) => (
-        <li key={item.id}>
-          <span className="eyebrow">{item.kind}</span>
-          <p>{item.summary}</p>
-          {item.url !== undefined && (
-            <a href={item.url}>
-              View evidence<span aria-hidden="true"> ↗</span>
-            </a>
-          )}
-          <RelativeTime value={item.createdAt} />
-        </li>
-      ))}
-    </ul>
+          </code>
+        </pre>
+      </Disclosure>
+    </>
   );
 }
 
@@ -137,30 +119,24 @@ export function DeploymentRecord({
       />
       <ContentRecovery detail={detail} />
       <FrozenForumBaseline detail={detail} />
-      <div className="detail-grid">
-        <section className="panel" aria-labelledby="progress-heading">
+      <div className="deployment-record">
+        <section
+          className="panel deployment-steps"
+          aria-labelledby="progress-heading"
+        >
           <h2 id="progress-heading">Steps</h2>
-          <StageTimeline detail={detail} />
+          <StepTimeline detail={detail} />
         </section>
-        <section className="panel" aria-labelledby="evidence-heading">
+        <section
+          className="panel deployment-evidence"
+          aria-labelledby="evidence-heading"
+        >
           <h2 id="evidence-heading">Evidence</h2>
-          <Evidence detail={detail} />
+          <DeploymentEvidence detail={detail} />
         </section>
       </div>
       <section className="panel" aria-labelledby="inputs-heading">
         <h2 id="inputs-heading">Frozen inputs</h2>
-        <Disclosure summary="Pinned pipeline and configuration">
-          <pre>
-            {JSON.stringify(
-              {
-                pipeline: detail.pipeline,
-                configuration: detail.configuration,
-              },
-              null,
-              2,
-            )}
-          </pre>
-        </Disclosure>
         <FrozenInputs detail={detail} />
       </section>
     </>

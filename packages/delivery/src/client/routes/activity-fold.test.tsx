@@ -1,0 +1,235 @@
+import { describe, expect, it } from "vitest";
+import type { ActivityEntry } from "#shared/hub/hub-contract.ts";
+import { renderWithRouter } from "#client/test-router.tsx";
+import { foldActivity, outcomeOf } from "./activity-fold.ts";
+import { ActivityList } from "./activity-list.tsx";
+
+const FIRST = "45cf1828-0f01-4bcd-8dab-592769df488f";
+const SECOND = "3342245c-e1d6-4e4e-99bb-2c542d22b618";
+
+let sequence = 0;
+/** One audit row, newest first as the list is fetched. */
+function entry(
+  action: string,
+  entityId: string,
+  metadata: Record<string, unknown> = {},
+  actor = "executor",
+): ActivityEntry {
+  sequence += 1;
+  return {
+    id: `audit-${String(sequence)}`,
+    actor,
+    action,
+    entityId,
+    requestId: `request-${String(sequence)}`,
+    metadata,
+    occurredAt: new Date(
+      Date.UTC(2026, 10, 20, 9, 0, 60 - sequence),
+    ).toISOString(),
+    target: action.startsWith("deployment.")
+      ? { kind: "deployment", id: entityId }
+      : null,
+  };
+}
+
+function stage(entityId: string, key: string, status: string, actor?: string) {
+  return entry("deployment.stage", entityId, { stage: key, status }, actor);
+}
+
+/** The shape of the folded rows: an action, or the stages of one run. */
+function shape(entries: ActivityEntry[]) {
+  return foldActivity(entries).map((row) =>
+    row.kind === "entry"
+      ? row.entry.action
+      : row.entries.map(
+          (item) =>
+            `${item.entityId.slice(0, 4)}:${String(item.metadata["stage"])}`,
+        ),
+  );
+}
+
+describe("foldActivity", () => {
+  it("folds consecutive stage writes of one deployment into one row", () => {
+    expect(
+      shape([
+        entry("deployment.succeeded", FIRST),
+        stage(FIRST, "step-readback", "succeeded"),
+        stage(FIRST, "step-sync", "succeeded"),
+        stage(FIRST, "step-render", "succeeded"),
+        entry("deployment.claimed", FIRST),
+      ]),
+    ).toEqual([
+      "deployment.succeeded",
+      ["45cf:step-readback", "45cf:step-sync", "45cf:step-render"],
+      "deployment.claimed",
+    ]);
+  });
+
+  it("keeps a single stage write as a run of one", () => {
+    expect(shape([stage(FIRST, "step-sync", "running")])).toEqual([
+      ["45cf:step-sync"],
+    ]);
+  });
+
+  it("ends a run at another deployment, another actor or another action", () => {
+    expect(
+      shape([
+        stage(FIRST, "step-sync", "succeeded"),
+        stage(SECOND, "step-sync", "succeeded"),
+        stage(SECOND, "step-render", "succeeded", "operator@example.com"),
+        entry("platform.plan_recorded", SECOND),
+        stage(SECOND, "step-plan", "running"),
+      ]),
+    ).toEqual([
+      ["45cf:step-sync"],
+      ["3342:step-sync"],
+      ["3342:step-render"],
+      "platform.plan_recorded",
+      ["3342:step-plan"],
+    ]);
+  });
+
+  it("folds only what one page holds: a run cut by the page boundary is a row on each page", () => {
+    const run = [
+      stage(FIRST, "step-readback", "succeeded"),
+      stage(FIRST, "step-sync", "succeeded"),
+      stage(FIRST, "step-render", "succeeded"),
+    ];
+    expect(shape(run.slice(0, 2))).toEqual([
+      ["45cf:step-readback", "45cf:step-sync"],
+    ]);
+    expect(shape(run.slice(2))).toEqual([["45cf:step-render"]]);
+  });
+
+  it("drops no entry and keeps the fetched order", () => {
+    const entries = [
+      stage(FIRST, "b", "succeeded"),
+      stage(FIRST, "a", "succeeded"),
+      entry("build.published", "build-1"),
+      stage(SECOND, "a", "running"),
+    ];
+    expect(
+      foldActivity(entries).flatMap((row) =>
+        row.kind === "entry"
+          ? [row.entry.id]
+          : row.entries.map((item) => item.id),
+      ),
+    ).toEqual(entries.map((item) => item.id));
+  });
+});
+
+describe("outcomeOf", () => {
+  it("reads the result a deployment's closing action names", () => {
+    expect(outcomeOf("deployment.succeeded")).toBe("succeeded");
+    expect(outcomeOf("deployment.failed")).toBe("failed");
+    expect(outcomeOf("deployment.canceled")).toBe("canceled");
+    expect(outcomeOf("deployment.stage")).toBeNull();
+    expect(outcomeOf("build.failed")).toBeNull();
+  });
+});
+
+function render(entries: ActivityEntry[]) {
+  return renderWithRouter(<ActivityList entries={entries} />).replaceAll(
+    "<!-- -->",
+    "",
+  );
+}
+
+/** Each top-level row of the rendered list. */
+function rows(html: string) {
+  const list = html.slice(html.indexOf('<ol class="activity">'));
+  return list.split(/<li>(?=<time|<span><time)/u).slice(1);
+}
+
+describe("the activity list", () => {
+  it("names each stage and what it became, one row per run", () => {
+    const html = render([
+      stage(FIRST, "step-sync", "failed"),
+      stage(FIRST, "step-render", "succeeded"),
+      entry("deployment.claimed", FIRST),
+    ]);
+    expect(html).toMatch(/^<ol class="activity"><li>/u);
+    const [run = "", claimed = ""] = rows(html);
+    expect(rows(html)).toHaveLength(2);
+    expect(run).toContain('<ol class="activity-stages">');
+    expect(run.match(/<span class="mono">step-[a-z]+<\/span>/gu)).toEqual([
+      '<span class="mono">step-sync</span>',
+      '<span class="mono">step-render</span>',
+    ]);
+    expect(run).toContain("status-failed");
+    expect(run).toContain("status-succeeded");
+    expect(run).toContain(`href="/deployments/${FIRST}"`);
+    // The deployment is named once, by its short id with the full id kept.
+    expect(run.split(`title="${FIRST}"`)).toHaveLength(2);
+    expect(claimed).toContain("deployment.claimed");
+    expect(claimed).not.toContain("activity-stages");
+  });
+
+  it("refuses a stage write that carries no stage", () => {
+    expect(() => render([entry("deployment.stage", FIRST)])).toThrow();
+  });
+
+  it("shows what a request, a decision, a publication and a result recorded", () => {
+    const html = render([
+      entry("deployment.failed", FIRST),
+      entry(
+        "deployment.approve",
+        FIRST,
+        { override: true, decidedAtPlan: true },
+        "operator@example.com",
+      ),
+      entry("deployment.reject", SECOND, {
+        override: false,
+        decidedAtPlan: false,
+      }),
+      entry("deployment.requested", FIRST, {
+        environmentId: "arcade/prod",
+        versionSetRevisionId: SECOND,
+        catalogRevision: `sha256:${"b".repeat(64)}`,
+        override: ["set revision is not arcade/beta's accepted selection"],
+      }),
+      entry("build.published", "build-1", {
+        serviceId: "arcade",
+        sourceRevision: "c".repeat(40),
+      }),
+    ]);
+    const [
+      failed = "",
+      approved = "",
+      rejected = "",
+      requested = "",
+      published = "",
+    ] = rows(html);
+    expect(failed).toContain("status-failed");
+    expect(approved).toContain("status-granted");
+    expect(approved).toContain("Override");
+    expect(approved).toContain("at the saved plan");
+    expect(rejected).toContain("status-rejected");
+    expect(rejected).not.toContain("Override");
+    expect(rejected).not.toContain("at the saved plan");
+    expect(requested).toContain('href="/environments/arcade/prod"');
+    expect(requested).toContain(`href="/versions/${SECOND}"`);
+    expect(requested).toContain(
+      "set revision is not arcade/beta&#x27;s accepted selection",
+    );
+    expect(published).toContain("arcade");
+    expect(published).toContain("ccccccc");
+    expect(published).toContain(`title="${"c".repeat(40)}"`);
+  });
+
+  it("shows rows written before a field existed without inventing it", () => {
+    const html = render([
+      entry("deployment.approve", FIRST),
+      entry("deployment.requested", FIRST, { environmentId: "arcade/prod" }),
+    ]);
+    const [approved = "", requested = ""] = rows(html);
+    expect(approved).toContain("status-granted");
+    expect(approved).not.toContain("Override");
+    expect(requested).toContain("arcade/prod");
+    expect(requested).not.toContain("version set");
+  });
+
+  it("says so when there is no activity", () => {
+    expect(render([])).toBe('<p class="empty">No activity yet.</p>');
+  });
+});

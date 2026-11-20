@@ -20,6 +20,7 @@ import {
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
 import { audit } from "#infrastructure/delivery-records.ts";
+import { FINISH_EVIDENCE_PREFIX } from "#shared/evidence/scope.ts";
 
 type CatalogService = CatalogDocument["services"][number];
 type OldEntry = Prisma.VersionSetEntryGetPayload<{
@@ -315,7 +316,7 @@ async function acceptCarried(
         }),
       },
     ],
-    "finish",
+    FINISH_EVIDENCE_PREFIX,
   );
   // An acceptance moves the accepted pointer and the binding generation (V1).
   // The carried set starts the service's lineage at revision 1, so a v1

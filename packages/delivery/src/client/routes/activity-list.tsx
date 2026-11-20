@@ -3,9 +3,23 @@ import {
   CatalogReconcileRecordSchema,
   type CatalogReconcileRecord,
 } from "#shared/model/route-contract.ts";
+import { Link } from "@tanstack/react-router";
 import { RelativeTime } from "#client/components/time.tsx";
-import { TargetLink } from "#client/components/links.tsx";
+import { ShortSha, TargetLink } from "#client/components/links.tsx";
 import { Fact, Facts } from "#client/components/facts.tsx";
+import {
+  Identifier,
+  isOpaqueIdentifier,
+} from "#client/components/identifier.tsx";
+import { Status } from "#client/components/status.tsx";
+import {
+  DecisionActivitySchema,
+  PublishedActivitySchema,
+  RequestedActivitySchema,
+  StageActivitySchema,
+  foldActivity,
+  outcomeOf,
+} from "./activity-fold.ts";
 
 /** One catalog reconcile: what the document created, renamed, rebound, retired and refused (4.1). */
 function CatalogReconcile({ result }: { result: CatalogReconcileRecord }) {
@@ -57,11 +71,160 @@ function CatalogReconcile({ result }: { result: CatalogReconcileRecord }) {
   );
 }
 
+/** An id as people read it: a UUID or digest short, a name as written. */
+function Id({ value }: { value: string }) {
+  return isOpaqueIdentifier(value) ? (
+    <Identifier value={value} />
+  ) : (
+    <span className="mono">{value}</span>
+  );
+}
+
+/** What the entry is about, linked when the app has a page for it. */
+function Entity({ entry }: { entry: ActivityEntry }) {
+  return (
+    <span className="activity-entity">
+      {entry.target === null ? (
+        <Id value={entry.entityId} />
+      ) : (
+        <TargetLink target={entry.target}>
+          <Id value={entry.entityId} />
+        </TargetLink>
+      )}
+    </span>
+  );
+}
+
+/** What the common actions recorded beside their entity. */
+function Recorded({ entry }: { entry: ActivityEntry }) {
+  const outcome = outcomeOf(entry.action);
+  if (outcome !== null) return <Status value={outcome} />;
+  switch (entry.action) {
+    case "deployment.requested": {
+      const requested = RequestedActivitySchema.parse(entry.metadata);
+      return (
+        <>
+          {requested.environmentId !== undefined && (
+            <span>
+              to{" "}
+              <Link
+                to="/environments/$"
+                params={{ _splat: requested.environmentId }}
+              >
+                {requested.environmentId}
+              </Link>
+            </span>
+          )}
+          {requested.versionSetRevisionId !== undefined && (
+            <span>
+              version set{" "}
+              <Link
+                to="/versions/$versionSetId"
+                params={{ versionSetId: requested.versionSetRevisionId }}
+              >
+                <Id value={requested.versionSetRevisionId} />
+              </Link>
+            </span>
+          )}
+          {requested.override !== undefined && (
+            <span>
+              <span className="badge badge-override">Override</span>{" "}
+              {requested.override.join("; ")}
+            </span>
+          )}
+        </>
+      );
+    }
+    case "deployment.approve":
+    case "deployment.reject": {
+      const decision = DecisionActivitySchema.parse(entry.metadata);
+      return (
+        <>
+          <Status
+            value={
+              entry.action === "deployment.approve" ? "granted" : "rejected"
+            }
+          />
+          {decision.override === true && (
+            <span className="badge badge-override">Override</span>
+          )}
+          {decision.decidedAtPlan === true && <span>at the saved plan</span>}
+        </>
+      );
+    }
+    case "build.published": {
+      const published = PublishedActivitySchema.parse(entry.metadata);
+      return (
+        <>
+          {published.serviceId !== undefined && (
+            <span>{published.serviceId}</span>
+          )}
+          {published.sourceRevision !== undefined && (
+            <span>
+              source <ShortSha sha={published.sourceRevision} />
+            </span>
+          )}
+        </>
+      );
+    }
+    default: {
+      return null;
+    }
+  }
+}
+
+/** A run of stage writes spans more than a moment when its ends are a minute apart. */
+const SPAN_MS = 60_000;
+
+/** One deployment's consecutive stage writes: each stage and what it became, newest first. */
+function StageRun({
+  entries,
+}: {
+  entries: [ActivityEntry, ...ActivityEntry[]];
+}) {
+  const [newest] = entries;
+  const oldest = entries.at(-1) ?? newest;
+  const spans =
+    Date.parse(newest.occurredAt) - Date.parse(oldest.occurredAt) >= SPAN_MS;
+  return (
+    <li>
+      <span>
+        <RelativeTime value={newest.occurredAt} />
+        {spans && (
+          <small className="muted">
+            {" "}
+            from <RelativeTime value={oldest.occurredAt} />
+          </small>
+        )}
+      </span>
+      <span className="activity-action">{newest.action}</span>
+      <span className="activity-subject">
+        <Entity entry={newest} />
+        <ol className="activity-stages">
+          {entries.map((entry) => {
+            const recorded = StageActivitySchema.parse(entry.metadata);
+            return (
+              <li key={entry.id}>
+                <span className="mono">{recorded.stage}</span>
+                <Status value={recorded.status} />
+              </li>
+            );
+          })}
+        </ol>
+      </span>
+      <span className="muted">{newest.actor}</span>
+    </li>
+  );
+}
+
 export function ActivityList({ entries }: { entries: ActivityEntry[] }) {
   if (entries.length === 0) return <p className="empty">No activity yet.</p>;
   return (
     <ol className="activity">
-      {entries.map((entry) => {
+      {foldActivity(entries).map((row) => {
+        if (row.kind === "stages")
+          return <StageRun key={row.entries[0].id} entries={row.entries} />;
+        const { entry } = row;
         const catalog =
           entry.action === "catalog.reconciled"
             ? CatalogReconcileRecordSchema.parse(entry.metadata)
@@ -70,12 +233,9 @@ export function ActivityList({ entries }: { entries: ActivityEntry[] }) {
           <li key={entry.id}>
             <RelativeTime value={entry.occurredAt} />
             <span className="activity-action">{entry.action}</span>
-            <span className="activity-entity mono">
-              {entry.target === null ? (
-                entry.entityId
-              ) : (
-                <TargetLink target={entry.target}>{entry.entityId}</TargetLink>
-              )}
+            <span className="activity-subject">
+              <Entity entry={entry} />
+              <Recorded entry={entry} />
             </span>
             <span className="muted">{entry.actor}</span>
             {catalog !== null && <CatalogReconcile result={catalog} />}

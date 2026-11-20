@@ -31,6 +31,10 @@ import {
   required,
   wire,
 } from "#infrastructure/delivery-records.ts";
+import {
+  MONITOR_ALARM_EVIDENCE_PREFIX,
+  monitorEvidencePrefix,
+} from "#shared/evidence/scope.ts";
 
 async function recipeMonitor(tx: Transaction | Database, recipeId: string) {
   return monitorOf(
@@ -262,7 +266,7 @@ async function markSettled(
         }),
       },
     ],
-    { prefix: `monitor/${String(input.sequence)}`, appendOnly: true },
+    { prefix: monitorEvidencePrefix(input.sequence), appendOnly: true },
   );
   await tx.deployment.update({
     where: { id: row.id },
@@ -349,7 +353,7 @@ export async function observeMonitor(
       tx,
       deploymentId,
       [...alarmEvidence(preExisting, true), ...alarmEvidence(counted, false)],
-      { prefix: "monitor/alarms", appendOnly: true },
+      { prefix: MONITOR_ALARM_EVIDENCE_PREFIX, appendOnly: true },
     );
     if (outcome === "alarmed") await markAlarmed(tx, row);
     else if (outcome === "settled")

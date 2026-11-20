@@ -45,6 +45,10 @@ import {
   runningDeployment,
   stageWriter,
 } from "#infrastructure/execution/ownership.ts";
+import {
+  FINISH_EVIDENCE_PREFIX,
+  stageEvidencePrefix,
+} from "#shared/evidence/scope.ts";
 
 /**
  * Stages only a decision records (4.13, H6): an approve step waits on the
@@ -168,8 +172,8 @@ export async function recordStageIn(
     items,
     append ||
       (row.kind === "upgrade-control-plane" && input.key === "control-plane")
-      ? { prefix: `stage/${input.key}`, appendOnly: true }
-      : `stage/${input.key}`,
+      ? { prefix: stageEvidencePrefix(input.key), appendOnly: true }
+      : stageEvidencePrefix(input.key),
   );
   // The owning executor's stage proves it is alive: it renews the lease.
   if (leaseSeconds !== null)
@@ -282,7 +286,7 @@ export async function finish(
         "Deployment no longer owns the environment",
       );
     await validateSuccess(tx, row, input);
-    await evidence(tx, deploymentId, input.evidence, "finish");
+    await evidence(tx, deploymentId, input.evidence, FINISH_EVIDENCE_PREFIX);
     const accepted =
       input.status === "succeeded" && advancesAcceptance(row.kind);
     const now = new Date();

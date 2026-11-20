@@ -18,6 +18,7 @@ import {
   wire,
   required,
 } from "./delivery-records.ts";
+import { evidenceScopeId } from "#shared/evidence/scope.ts";
 
 export type Transaction = Prisma.TransactionClient;
 /** Ops-model titles and links; service existence and lifecycle live in the record. */
@@ -254,22 +255,9 @@ async function existingEvidence(
 }
 
 /**
- * Whether an evidence id was recorded by exactly this stage, as `evidence`
- * names it: `<deployment>/stage/<key>/<entry>`. A sub-stage keyed
- * `<key>/<name>` is a different stage.
+ * Record evidence under one writer's id scope. The id grammar is
+ * `#shared/evidence/scope.ts`, which the web client reads as well.
  */
-export function recordedByStage(
-  evidenceId: string,
-  deploymentId: string,
-  key: string,
-): boolean {
-  const scope = `${deploymentId}/stage/${key}/`;
-  return (
-    evidenceId.startsWith(scope) &&
-    !evidenceId.slice(scope.length).includes("/")
-  );
-}
-
 export async function evidence(
   tx: Transaction,
   deploymentId: string,
@@ -279,7 +267,7 @@ export async function evidence(
   const { prefix, appendOnly } =
     typeof target === "string" ? { prefix: target, appendOnly: false } : target;
   for (const [offset, item] of items.entries()) {
-    const scope = `${deploymentId}/${prefix}/`;
+    const scope = evidenceScopeId(deploymentId, prefix);
     const evidenceId = `${scope}${appendOnly ? fingerprint(item) : String(offset)}`;
     const existing = await existingEvidence(
       tx,

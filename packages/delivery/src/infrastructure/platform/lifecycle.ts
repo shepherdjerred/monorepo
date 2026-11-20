@@ -22,6 +22,7 @@ import {
   requirePlatformOwner,
 } from "./policy.ts";
 import { requirePlatformPrerequisites } from "./prerequisites.ts";
+import { stageEvidenceScopeId } from "#shared/evidence/scope.ts";
 
 type PlatformDeployment = {
   id: string;
@@ -199,7 +200,7 @@ export async function validatePlatformSuccess(
       nativeReceipt(entry.summary),
     );
     return (
-      entry.id.startsWith(`${row.id}/stage/${snapshot.kind}/`) &&
+      entry.id.startsWith(stageEvidenceScopeId(row.id, snapshot.kind)) &&
       parsed.success &&
       parsed.data.kind === snapshot.kind &&
       parsed.data.sourceBuildId === snapshot.source.id &&
