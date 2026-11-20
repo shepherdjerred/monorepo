@@ -116,10 +116,27 @@ export const TAILNET_METRICS_PORT = 4319;
 
 /**
  * Metric-name prefixes the tailnet receiver admits. The toolkit history
- * daemon on Jerred's Mac pushes AI usage and subscription quota; nothing else
- * may write into cluster Prometheus through this door.
+ * daemon on Jerred's Mac pushes AI usage and subscription quota. Justin's
+ * runner metrics use an exact allowlist on the same metrics-only route.
  */
 export const TAILNET_METRIC_NAME_PATTERN = "^(ai_usage_|ai_subscription_)";
+export const JUSTIN_METRIC_NAMES = [
+  "justin_reconcile_last_started_timestamp_seconds",
+  "justin_reconcile_last_success_timestamp_seconds",
+  "justin_stage_deadline_timestamp_seconds",
+  "justin_consecutive_failures",
+  "justin_queue_eligible",
+  "justin_open_pull_requests",
+  "justin_tasks",
+  "justin_oldest_wait_seconds",
+  "justin_task_transitions_total",
+  "justin_stage_elapsed_seconds_total",
+  "justin_stages_total",
+  "justin_reconciles_total",
+  "justin_codex_tokens_total",
+  "justin_passes_total",
+] as const;
+const justinMetricNamePattern = "^(" + JUSTIN_METRIC_NAMES.join("|") + ")$";
 
 // Metrics-only OTLP/HTTP receiver for workstation pushes arriving over the
 // Tailscale ingress. It is a separate receiver on its own port so the tailnet
@@ -145,7 +162,7 @@ const TAILNET_METRICS_CONFIG = `otelcol.receiver.otlp "tailnet_metrics" {
 otelcol.processor.filter "tailnet_metrics" {
   metrics {
     metric = [
-      ${riverString(`not IsMatch(name, "${TAILNET_METRIC_NAME_PATTERN}")`)},
+      ${riverString(`not IsMatch(name, "${TAILNET_METRIC_NAME_PATTERN}") and not (resource.attributes["service.name"] == "justin-principal-engineer" and IsMatch(name, "${justinMetricNamePattern}"))`)},
     ]
   }
 

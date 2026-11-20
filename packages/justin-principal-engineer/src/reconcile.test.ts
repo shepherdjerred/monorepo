@@ -3,7 +3,11 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
 
-import { AgentOutputSchema, ConfigSchema } from "#src/domain/schemas.ts";
+import {
+  AgentOutputSchema,
+  ConfigSchema,
+  type TrackerIssue,
+} from "#src/domain/schemas.ts";
 import {
   fakeTrackerRunner,
   recordedLabelMutations,
@@ -19,13 +23,19 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { DEVEX_PROJECT_SLUG } from "#src/domain/autonomy.ts";
 import { GitWorkspace } from "#src/host/git-workspace.ts";
-import { GitHubClient, type PullRequest } from "#src/integrations/github.ts";
+import { GitHubClient } from "#src/integrations/github.ts";
+import type { PullRequest } from "#src/integrations/github-pull-request.ts";
 import { DockerAgentRunner } from "#src/host/docker.ts";
 import { TrackerClient } from "#src/integrations/tracker.ts";
 import { checkGitHubAccess } from "#src/integrations/github-access.ts";
+import * as preflight from "#src/integrations/preflight.ts";
 
 vi.mock("#src/integrations/github-access.ts", () => ({
   checkGitHubAccess: vi.fn(() => Promise.resolve()),
+}));
+vi.mock("#src/integrations/preflight.ts", async (load) => ({
+  ...(await load<typeof preflight>()),
+  checkOpenAi: vi.fn(() => Promise.resolve("fixture")),
 }));
 
 vi.mock("#src/integrations/github-app.ts", () => ({
@@ -59,12 +69,17 @@ async function fixture() {
       messages.push(String(chunk));
       return true;
     });
+  const openPrs = vi
+    .spyOn(GitHubClient.prototype, "openPullRequestNumbers")
+    .mockResolvedValue([]);
   return {
     paths,
     config,
     messages,
+    openPrs,
     cleanup: async () => {
       output.mockRestore();
+      openPrs.mockRestore();
       await rm(home, { recursive: true });
     },
   };
@@ -179,6 +194,7 @@ describe("CI authorization recovery", () => {
           headRefName: state.branch,
           mergeCommit: null,
           isDraft: true,
+          state: "OPEN",
           mergedAt: null,
           author: { login: "app/justin-principal-engineer", is_bot: true },
         });
@@ -235,7 +251,24 @@ describe("CI authorization recovery", () => {
   });
 });
 
-async function autonomousFixture() {
+function automaticIssue(): TrackerIssue {
+  return {
+    id: "issue-3",
+    identifier: "AI-3",
+    title: "Top-priority fixture",
+    description: null,
+    url: "https://tracker.tailnet-1a49.ts.net/issues/AI-3",
+    team: { key: "AI" },
+    assigneeId: null,
+    revision: 1,
+    priority: 1,
+    createdAt: "2026-01-01T00:00:00Z",
+    state: { name: "Backlog", type: "backlog" },
+    labels: { nodes: [] },
+  };
+}
+
+async function autonomousFixture(extra: TrackerIssue[] = []) {
   const fixtureState = await fixture();
   const { paths, config } = fixtureState;
   await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
@@ -257,6 +290,7 @@ async function autonomousFixture() {
       description: null,
       url: "https://tracker.tailnet-1a49.ts.net/issues/AI-104",
       priority: 1,
+      revision: 1,
       team: { key: "AI" },
       project: {
         id: "project-developer-experience",
@@ -278,12 +312,15 @@ async function autonomousFixture() {
     headRefName: state.branch,
     baseRefName: "main",
     isDraft: false,
+    state: "OPEN",
     mergedAt: null,
     mergeCommit: null,
     author: { login: "app/justin-principal-engineer", is_bot: true },
   };
   const calls: string[][] = [];
-  const trackerRun = fakeTrackerRunner(calls, { refreshNodes: [state.issue] });
+  const trackerRun = fakeTrackerRunner(calls, {
+    refreshNodes: [state.issue, ...extra],
+  });
   const run: CommandRunner = async (args, options) => {
     if (args[0] === "op")
       return { ...respond(null), stdout: "fixture-credential" };
@@ -315,6 +352,7 @@ async function autonomousFixture() {
     .mockResolvedValue(false);
   const merge = vi.spyOn(GitHubClient.prototype, "merge").mockResolvedValue({
     ...pr,
+    state: "MERGED",
     mergedAt: "2026-01-01T00:00:00Z",
     mergeCommit: { oid: "b".repeat(40) },
   });
@@ -445,9 +483,11 @@ describe("autonomous promotion review", () => {
       findings: [finding],
       blockedReasons: [],
     });
-    vi.spyOn(TrackerClient.prototype, "agentContext").mockResolvedValue(
-      "Current private acceptance criteria",
-    );
+    vi.spyOn(TrackerClient.prototype, "issueContext").mockResolvedValue({
+      issue: f.state.issue,
+      comments: [],
+      prompt: "Current private acceptance criteria",
+    });
     vi.spyOn(GitWorkspace.prototype, "changedPaths").mockResolvedValue([
       "packages/toolkit/src/handlers/pr.test.ts",
     ]);
@@ -555,7 +595,7 @@ describe("autonomous merge acceptance", () => {
     const f = await autonomousFixture();
     const claim = vi
       .spyOn(TrackerClient.prototype, "claim")
-      .mockResolvedValue(undefined);
+      .mockResolvedValue(f.state.issue);
     try {
       await f.store.save({
         ...f.state,
@@ -577,6 +617,7 @@ describe("autonomous merge acceptance", () => {
     const f = await autonomousFixture();
     vi.spyOn(GitHubClient.prototype, "pullRequest").mockResolvedValue({
       ...f.pr,
+      state: "MERGED",
       mergedAt: "2026-01-01T00:00:00Z",
       mergeCommit: { oid: "b".repeat(40) },
     });
@@ -599,6 +640,127 @@ describe("autonomous merge acceptance", () => {
       expect(restack).not.toHaveBeenCalled();
       expect(agent).not.toHaveBeenCalled();
       expect(f.merge).not.toHaveBeenCalled();
+    } finally {
+      await f.cleanup();
+    }
+  });
+});
+
+describe("continuous queue", () => {
+  test("gives a newly approved merge priority over new coding", async () => {
+    const f = await autonomousFixture([automaticIssue()]);
+    try {
+      await f.store.save({
+        ...f.state,
+        phase: "awaiting_approval",
+        prNumber: f.pr.number,
+        prUrl: f.pr.url,
+        latestHeadSha: f.pr.headRefOid,
+      });
+      f.approval.mockResolvedValue(true);
+      const reconciler = new Reconciler(f.config, f.paths, f.run);
+      await reconciler.reconcile();
+      const states = await f.store.list();
+      expect(states.map(({ phase }) => phase)).toEqual(["merging"]);
+      await reconciler.reconcile();
+      expect(f.merge).toHaveBeenCalledOnce();
+    } finally {
+      await f.cleanup();
+    }
+  });
+
+  test("claims unassigned work while a PR waits and keeps its revision", async () => {
+    const f = await autonomousFixture([automaticIssue()]);
+    try {
+      f.openPrs.mockResolvedValue([f.pr.number]);
+      const reconciler = new Reconciler(f.config, f.paths, f.run);
+      await reconciler.reconcile();
+      const states = await f.store.list();
+      expect(
+        states.find(({ issue }) => issue.identifier === "AI-104")?.phase,
+      ).toBe("awaiting_approval");
+      expect(
+        states.find(({ issue }) => issue.identifier === "AI-3"),
+      ).toMatchObject({ phase: "claimed", intake: "automatic" });
+      expect(
+        f.calls.find((args) => args[3] === "update" && args[4] === "AI-3"),
+      ).toEqual(
+        expect.arrayContaining([
+          "--expected-revision",
+          "1",
+          "--add-label",
+          "agent:codex",
+        ]),
+      );
+      expect(f.merge).not.toHaveBeenCalled();
+    } finally {
+      await f.cleanup();
+    }
+  });
+
+  test("counts open bot PRs even without corresponding local state", async () => {
+    const f = await autonomousFixture([automaticIssue()]);
+    try {
+      f.openPrs.mockResolvedValue([f.pr.number, 81, 82]);
+      await new Reconciler(f.config, f.paths, f.run).reconcile();
+      const states = await f.store.list();
+      expect(states).toHaveLength(1);
+      expect(states[0]?.phase).toBe("awaiting_approval");
+    } finally {
+      await f.cleanup();
+    }
+  });
+
+  test("monitors published work during a model outage without claiming new issues", async () => {
+    const f = await autonomousFixture([automaticIssue()]);
+    vi.mocked(preflight.checkOpenAi).mockRejectedValueOnce(
+      new Error("model unavailable"),
+    );
+    try {
+      await expect(
+        new Reconciler(f.config, f.paths, f.run).reconcile(),
+      ).rejects.toThrow("model unavailable");
+      const states = await f.store.list();
+      expect(states).toHaveLength(1);
+      expect(states[0]?.phase).toBe("awaiting_approval");
+      expect(
+        f.calls.some((args) => args[3] === "update" && args[4] === "AI-3"),
+      ).toBe(false);
+    } finally {
+      await f.cleanup();
+    }
+  });
+
+  test("recovers a claim committed just before a restart", async () => {
+    const issue = automaticIssue();
+    const started: TrackerIssue = {
+      ...issue,
+      revision: 2,
+      state: { name: "In Progress", type: "started" },
+      labels: { nodes: [{ name: "agent:codex" }] },
+    };
+    const f = await autonomousFixture([started]);
+    const audit = vi
+      .spyOn(TrackerClient.prototype, "claimPreviouslyApplied")
+      .mockResolvedValue(true);
+    try {
+      await f.store.save({
+        ...createTaskState({ issue, provider: "codex", paths: f.paths }),
+        intake: "automatic",
+      });
+      await new Reconciler(f.config, f.paths, f.run).reconcile();
+      const states = await f.store.list();
+      expect(
+        states.find(({ issue: saved }) => saved.identifier === "AI-3"),
+      ).toMatchObject({
+        phase: "claimed",
+        intake: "automatic",
+        issue: { revision: 2 },
+      });
+      expect(audit).toHaveBeenCalledWith(issue);
+      expect(
+        f.calls.some((args) => args[3] === "update" && args[4] === "AI-3"),
+      ).toBe(false);
     } finally {
       await f.cleanup();
     }
@@ -684,18 +846,30 @@ describe("autonomous publication and completion", () => {
     },
   );
 
-  test("green CI goes directly to merge and completes only after ancestry confirmation", async () => {
+  test("scoped DevEx requires exact-head owner approval and confirmed ancestry", async () => {
     const f = await autonomousFixture();
     try {
       const reconciler = new Reconciler(f.config, f.paths, f.run);
       await reconciler.reconcile();
       const pending = await f.store.list();
-      expect(pending.map((state) => state.phase)).toEqual(["merging"]);
+      expect(pending.map((state) => state.phase)).toEqual([
+        "awaiting_approval",
+      ]);
+      await reconciler.reconcile();
+      expect(f.merge).not.toHaveBeenCalled();
+      f.approval.mockResolvedValue(true);
+      await reconciler.reconcile();
+      const merging = await f.store.list();
+      expect(merging[0]?.phase).toBe("merging");
       await reconciler.reconcile();
       const states = await f.store.list();
       expect(states[0]?.phase).toBe("done");
       expect(states[0]?.mergeCommitSha).toBe("b".repeat(40));
-      expect(f.approval).not.toHaveBeenCalled();
+      expect(f.approval).toHaveBeenCalledWith(
+        f.pr.number,
+        f.pr.headRefOid,
+        undefined,
+      );
       expect(f.merge).toHaveBeenCalledOnce();
       expect(f.confirmation).toHaveBeenCalledOnce();
       expect(f.calls.some((args) => args.includes("completed"))).toBe(true);
@@ -707,8 +881,10 @@ describe("autonomous publication and completion", () => {
   test("failed base ancestry leaves Tracker non-terminal and yields a retryable task", async () => {
     const f = await autonomousFixture();
     f.confirmation.mockRejectedValue(new Error("Merge commit is not on main"));
+    f.approval.mockResolvedValue(true);
     try {
       const reconciler = new Reconciler(f.config, f.paths, f.run);
+      await reconciler.reconcile();
       await reconciler.reconcile();
       await reconciler.reconcile();
       const states = await f.store.list();

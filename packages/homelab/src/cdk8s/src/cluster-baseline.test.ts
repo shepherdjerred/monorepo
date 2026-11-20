@@ -121,6 +121,7 @@ const CLUSTER_PLATFORM_INVENTORY = [
 const prometheusRules: readonly [namespace: string, name: string][] = [
   ["woodpecker", "woodpecker"],
   ["buildkitd", "buildkitd"],
+  ["prometheus", "justin"],
   ["prometheus", "alerting-control"],
   ["home", "homeassistant"],
   ["velero", "velero"],
@@ -175,6 +176,7 @@ const grafanaDashboards = [
   "discord-plays-dashboard",
   "feature-flags-dashboard",
   "gitckup-dashboard",
+  "justin-dashboard",
   "network-policy-enforcement-dashboard",
   "scout-for-lol-dashboard",
   "scout-for-lol-durable-dashboard",

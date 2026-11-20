@@ -45,6 +45,7 @@ export class DeliveryAuthorization {
   }
 
   public async mergeReady(state: TaskState): Promise<boolean> {
+    if (state.phase !== "merging") return false;
     if (state.deliveryMode === "autonomous") {
       if (state.autonomyReviewPending) return false;
       // This readiness hook is read-only; do not change task or Tracker state.
@@ -68,7 +69,11 @@ export class DeliveryAuthorization {
         pr.headRefName !== state.branch
       )
         return false;
-      if (pr.mergedAt !== null || pr.headRefOid !== state.latestHeadSha)
+      if (
+        pr.state !== "OPEN" ||
+        pr.isDraft ||
+        pr.headRefOid !== state.latestHeadSha
+      )
         return false;
       if (
         (await this.input.git.headSha(state.checkoutPath)) !==
@@ -81,9 +86,11 @@ export class DeliveryAuthorization {
         !deliveryIsHealthy(await github.health(pr.number, state.checkoutPath))
       )
         return false;
-      const approved =
-        state.deliveryMode !== "owner_approved" ||
-        (await github.hasExactHeadApproval(pr.number, pr.headRefOid));
+      const approved = await github.hasExactHeadApproval(
+        pr.number,
+        pr.headRefOid,
+        state.previousApprovalIds,
+      );
       const feedback = await github.feedback(
         pr.number,
         new Set(state.seenFeedbackIds),

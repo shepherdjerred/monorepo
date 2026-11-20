@@ -122,6 +122,21 @@ describe("Tracker queue selection", () => {
       ])?.identifier,
     ).toBe("SJ-3");
   });
+
+  test("mixes eligible automatic issues with labeled handoffs", () => {
+    const automatic = {
+      ...issue({ identifier: "AI-1", priority: 1, labels: [] }),
+      assigneeId: null,
+    };
+    const assigned = {
+      ...automatic,
+      identifier: "AI-2",
+      assigneeId: "human",
+    };
+    const handoff = issue({ identifier: "AI-3", priority: 2 });
+    expect(selectIssue([assigned, handoff, automatic])).toEqual(automatic);
+    expect(selectIssue([assigned, handoff])).toEqual(handoff);
+  });
 });
 
 const ApiVariablesSchema = z.object({
@@ -154,7 +169,41 @@ function apiVariables(recorded: string[][]): {
   });
 }
 
-describe("Tracker label mutations", () => {
+describe("Tracker conditional claim", () => {
+  test("an assignment or state change wins the claim revision check", async () => {
+    const recorded: string[][] = [];
+    const run = fakeTrackerRunner(recorded);
+    const client = new TrackerClient("AI", async (args, options) => {
+      const result = await run(args, options);
+      if (args[3] !== "update") return result;
+      return {
+        ...result,
+        exitCode: 1,
+        stdout: "",
+        stderr: "Issue AI-3 changed. Reload before saving.",
+      };
+    });
+    await expect(
+      client.claim(
+        {
+          ...issue({ identifier: "AI-3", labels: [] }),
+          revision: 4,
+          assigneeId: null,
+        },
+        { requireRevision: true },
+      ),
+    ).resolves.toBeNull();
+    expect(recorded.find((args) => args[3] === "update")).toEqual(
+      expect.arrayContaining([
+        "--expected-revision",
+        "4",
+        "--state",
+        "started",
+        "--add-label",
+        "agent:codex",
+      ]),
+    );
+  });
   test("needsHuman adds the home-team label by name", async () => {
     const recorded: string[][] = [];
     const client = new TrackerClient("SJ", fakeTrackerRunner(recorded));
@@ -175,7 +224,9 @@ describe("Tracker label mutations", () => {
       remove: [],
     });
   });
+});
 
+describe("Tracker label mutations", () => {
   test("needsHuman provisions the team label on first park", async () => {
     const recorded: string[][] = [];
     const client = new TrackerClient("SJ", fakeTrackerRunner(recorded));

@@ -1,4 +1,4 @@
-import type { PullRequest } from "#src/integrations/github.ts";
+import type { PullRequest } from "#src/integrations/github-pull-request.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
 
 function shellQuote(value: string): string {

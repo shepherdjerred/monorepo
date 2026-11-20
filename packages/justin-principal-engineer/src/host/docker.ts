@@ -11,6 +11,8 @@ import { checkOpenAi } from "#src/integrations/preflight.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
 import { writeInfo } from "#src/runtime/output.ts";
 import { verificationCommand } from "#src/host/verification.ts";
+import { parseAgentProgress } from "#src/agent/progress.ts";
+import type { JustinTelemetry } from "#src/runtime/telemetry.ts";
 
 const RESULT_PREFIX = "JPE_RESULT:";
 
@@ -67,6 +69,7 @@ export class DockerAgentRunner {
     private readonly config: Config,
     private readonly run: CommandRunner,
     private readonly sourcePackage?: string,
+    private readonly telemetry?: JustinTelemetry,
   ) {}
 
   public async verifyWorkspace(
@@ -94,7 +97,7 @@ export class DockerAgentRunner {
       ...dockerWorkspaceMounts(checkout),
       image,
     ];
-    writeInfo(`[verification] Running ${command.join(" ")}`);
+    writeInfo("[verification] Running host workspace checks");
     try {
       requireSuccess(
         "Verification dependency install",
@@ -335,6 +338,7 @@ export class DockerAgentRunner {
         `[agent] Running Codex with local source (${credential.model})`,
       );
     try {
+      const telemetry = this.telemetry;
       const result = await this.run(
         [
           "docker",
@@ -365,18 +369,36 @@ export class DockerAgentRunner {
           ),
           timeoutMs: this.config.docker.turnTimeoutMinutes * 60_000,
           graceMs: 15_000,
+          ...(telemetry === undefined
+            ? {}
+            : {
+                onStdoutLine: (line: string) => {
+                  const progress = parseAgentProgress(line);
+                  if (progress !== null) telemetry.progress(progress);
+                },
+              }),
         },
       );
-      requireSuccess("Agent container", result);
+      const scrub = (value: string) =>
+        value.replaceAll(credential.value, "[redacted]");
+      requireSuccess("Agent container", {
+        ...result,
+        stderr: scrub(result.stderr),
+      });
       const line = result.stdout
         .split("\n")
         .findLast((candidate) => candidate.startsWith(RESULT_PREFIX));
       if (line === undefined) {
         throw new Error("Agent container did not emit a structured result");
       }
-      return AgentOutputSchema.parse(
+      const output = AgentOutputSchema.parse(
         JSON.parse(line.slice(RESULT_PREFIX.length)),
       );
+      return {
+        ...output,
+        summary: scrub(output.summary),
+        verification: output.verification.map((value) => scrub(value)),
+      };
     } finally {
       const cleanup = await this.run(
         ["docker", "rm", "--force", containerName],

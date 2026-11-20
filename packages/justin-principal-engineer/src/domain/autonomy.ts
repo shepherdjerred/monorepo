@@ -9,13 +9,17 @@ export function isAutonomousIssue(issue: TrackerIssue): boolean {
   return issue.labels.nodes.some(({ name }) => name === AUTONOMOUS_LABEL);
 }
 
-export function autonomyIssueBlocker(issue: TrackerIssue): string | null {
+export function autonomyIssueBlocker(
+  issue: TrackerIssue,
+  allowPassed = false,
+): string | null {
   const labels = new Set(issue.labels.nodes.map(({ name }) => name));
   if (issue.team?.key !== "AI" || issue.project?.slug !== DEVEX_PROJECT_SLUG)
     return "Autonomous work requires the AI team's Developer Experience project";
   if (!labels.has(AUTONOMOUS_LABEL) || !labels.has("agent:codex"))
     return "Autonomous authorization was removed from the Tracker issue";
-  if (labels.has("agent:needs-human")) return "The issue is explicitly parked";
+  if (!allowPassed && labels.has("agent:needs-human"))
+    return "The issue is explicitly parked";
   return ["completed", "canceled", "duplicate"].includes(issue.state.type)
     ? "The Tracker issue is already terminal"
     : null;

@@ -28,6 +28,7 @@ import { getFliptRuleGroups } from "./rules/flipt.ts";
 import { getLlmRuleGroups } from "./rules/llm.ts";
 import { createWoodpeckerMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/woodpecker.ts";
 import { getOpsSnapshotRuleGroups } from "./rules/ops-snapshot.ts";
+import { getJustinRuleGroups } from "./rules/host-automation/justin.ts";
 import { getStormBrainRuleGroups } from "./rules/storm-brain.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 import { createNetworkPolicyEnforcementMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/network-policy-enforcement.ts";
@@ -38,6 +39,15 @@ export function createPrometheusMonitoring(chart: Chart) {
   createWoodpeckerMonitoring(chart);
   createBuildkitdMonitoring(chart);
   createNetworkPolicyEnforcementMonitoring(chart);
+
+  new PrometheusRule(chart, "prometheus-justin-rules", {
+    metadata: {
+      name: "prometheus-justin-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: { groups: getJustinRuleGroups() },
+  });
 
   new PrometheusRule(chart, "prometheus-media-rules", {
     metadata: {

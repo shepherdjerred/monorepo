@@ -12,6 +12,7 @@ export type RunCommandOptions = Readonly<{
   stdin?: string;
   timeoutMs?: number;
   graceMs?: number;
+  onStdoutLine?: (line: string) => void;
 }>;
 
 export type CommandRunner = (
@@ -27,6 +28,23 @@ function childEnvironment(options: RunCommandOptions): Record<string, string> {
     }
   }
   return { ...environment, ...options.env };
+}
+
+async function readStdout(
+  stream: ReadableStream<Uint8Array<ArrayBuffer>>,
+  onLine?: (line: string) => void,
+): Promise<string> {
+  if (onLine === undefined) return await new Response(stream).text();
+  const chunks: string[] = [];
+  let remainder = "";
+  for await (const chunk of stream.pipeThrough(new TextDecoderStream())) {
+    chunks.push(chunk);
+    const lines = (remainder + chunk).split("\n");
+    remainder = lines.pop() ?? "";
+    for (const line of lines) onLine(line);
+  }
+  if (remainder !== "") onLine(remainder);
+  return chunks.join("");
 }
 
 export const runCommand: CommandRunner = async (command, options = {}) => {
@@ -56,7 +74,7 @@ export const runCommand: CommandRunner = async (command, options = {}) => {
 
   const [exitCode, stdout, stderr] = await Promise.all([
     child.exited,
-    new Response(child.stdout).text(),
+    readStdout(child.stdout, options.onStdoutLine),
     new Response(child.stderr).text(),
   ]);
   clearTimeout(timeout);

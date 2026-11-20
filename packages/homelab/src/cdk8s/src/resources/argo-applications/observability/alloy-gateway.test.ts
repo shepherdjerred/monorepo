@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   ALLOY_GATEWAY_CONFIG,
   createAlloyGatewayApp,
+  JUSTIN_METRIC_NAMES,
   TAILNET_METRIC_NAME_PATTERN,
 } from "./alloy-gateway.ts";
 
@@ -69,8 +70,9 @@ describe("Alloy gateway tailnet metrics receiver", () => {
     const filter = block('otelcol.processor.filter "tailnet_metrics"');
     expect(TAILNET_METRIC_NAME_PATTERN).toBe("^(ai_usage_|ai_subscription_)");
     expect(filter).toContain(
-      String.raw`"not IsMatch(name, \"^(ai_usage_|ai_subscription_)\")"`,
+      String.raw`not IsMatch(name, \"^(ai_usage_|ai_subscription_)\") and not (resource.attributes[\"service.name\"] == \"justin-principal-engineer\"`,
     );
+    expect(filter).toContain("^(" + JUSTIN_METRIC_NAMES.join("|") + ")$");
     expect(filter).toContain(
       "metrics = [otelcol.processor.batch.tailnet_metrics.input]",
     );

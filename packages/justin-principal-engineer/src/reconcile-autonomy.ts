@@ -4,6 +4,7 @@ import type { TrackerClient } from "#src/integrations/tracker.ts";
 import type { StateStore } from "#src/runtime/state-store.ts";
 import { currentTimestamp } from "#src/runtime/time.ts";
 import { WorkspaceVerificationFailure } from "#src/host/docker.ts";
+import { privateEvidence } from "#src/reconcile-pass.ts";
 
 export async function handleAutonomousFailure(input: {
   initial: TaskState;
@@ -27,7 +28,9 @@ export async function handleAutonomousFailure(input: {
     latest.phase === "implementing" &&
     latest.repairTurnsUsed < MAX_REPAIR_TURNS &&
     !(error instanceof AutonomousBlocker);
-  const reason = error instanceof Error ? error.message : String(error);
+  const reason = privateEvidence(
+    error instanceof Error ? error.message : String(error),
+  );
   if (repairable || error instanceof WorkspaceVerificationFailure) {
     await input.save(latest, "implementing", {
       pendingDiagnostics:
@@ -58,6 +61,7 @@ export async function blockAutonomousTask(input: {
   store: StateStore;
 }): Promise<void> {
   const attempts = input.state.blockedAttempts + 1;
+  const reason = privateEvidence(input.reason);
   const delay = RETRY_MINUTES[Math.min(attempts - 1, RETRY_MINUTES.length - 1)];
   if (delay === undefined) throw new Error("Autonomous retry table is empty");
   const retryAt =
@@ -67,18 +71,18 @@ export async function blockAutonomousTask(input: {
   const next: TaskState = {
     ...input.state,
     phase: "blocked",
-    blockedReason: input.reason,
+    blockedReason: reason,
     blockedFromPhase: input.state.blockedFromPhase ?? input.state.phase,
     blockedAttempts: attempts,
     nextAttemptAt: retryAt,
     updatedAt: currentTimestamp(),
   };
   await input.store.save(next);
-  await input.tracker.blocked(input.state.issue, input.reason, retryAt, {
-    comment: input.state.blockedReason !== input.reason,
+  await input.tracker.blocked(input.state.issue, reason, retryAt, {
+    comment: input.state.blockedReason !== reason,
   });
   console.error(
-    `${input.state.issue.identifier}: blocked: ${input.reason}${retryAt === null ? "" : `; retry ${retryAt}`}`,
+    `${input.state.issue.identifier}: blocked${retryAt === null ? "" : `; retry ${retryAt}`}`,
   );
 }
 

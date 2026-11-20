@@ -66,29 +66,67 @@ function viewResult(args: readonly string[], nodes: TrackerIssue[]) {
       })
     : respond(JSON.stringify(wire(found)));
 }
+function startedIssueFixture(
+  args: readonly string[],
+  identifier: string,
+  state: TrackerIssue["state"],
+  current: TrackerIssue | undefined,
+) {
+  const team = identifier.split("-")[0] ?? "";
+  const names = new Set(
+    current?.labels.nodes.map(({ name }) => name) ?? ["agent:codex"],
+  );
+  for (let index = 0; index < args.length - 1; index += 1) {
+    const name = args[index + 1];
+    if (name === undefined) continue;
+    if (args[index] === "--add-label") names.add(name);
+    if (args[index] === "--remove-label") names.delete(name);
+  }
+  return respond(
+    JSON.stringify({
+      id: identifier,
+      title: identifier,
+      url: `https://tracker.tailnet-1a49.ts.net/issues/${identifier}`,
+      createdAt: "2026-01-01T00:00:00Z",
+      priority: 0,
+      team: { key: team },
+      assigneeId: null,
+      ...current,
+      identifier,
+      revision: (current?.revision ?? 1) + 1,
+      state,
+      labels: [...names].map((name) => ({ name })),
+    }),
+  );
+}
 function updateResult(
   args: readonly string[],
   states: ReturnType<typeof defaultStates>,
   mutateSuccess: boolean,
+  nodes: TrackerIssue[],
 ) {
   const identifier = args[4];
   if (identifier === undefined) throw new Error("Missing mutation identifier");
   const team = identifier.split("-")[0] ?? "";
   const stateIndex = args.indexOf("--state");
+  let state: TrackerIssue["state"] | undefined;
   if (stateIndex !== -1) {
     const target = args[stateIndex + 1];
     if (target === undefined) throw new Error("Missing state");
-    if (
-      states[team]?.some(
-        (state) => state.name === target || state.type === target,
-      ) !== true
-    )
+    state = states[team]?.find(
+      (candidate) => candidate.name === target || candidate.type === target,
+    );
+    if (state === undefined)
       return Promise.resolve({
         exitCode: 1,
         stdout: "",
         stderr: "Unknown state: " + target,
         timedOut: false,
       });
+  }
+  if (mutateSuccess && state?.type === "started") {
+    const current = nodes.find((entry) => entry.identifier === identifier);
+    return startedIssueFixture(args, identifier, state, current);
   }
   return !mutateSuccess &&
     (args.includes("--add-label") || args.includes("--remove-label"))
@@ -134,6 +172,7 @@ export function fakeTrackerRunner(
       );
     if (args[2] === "issue" && args[3] === "view")
       return viewResult(args, refreshNodes);
+    if (args[2] === "issue" && args[3] === "events") return respond("[]");
     if (args[2] === "team")
       return respond(
         JSON.stringify(Object.keys(teams).map((key) => ({ key }))),
@@ -147,7 +186,7 @@ export function fakeTrackerRunner(
       return respond(JSON.stringify(teams[team] ?? []));
     }
     return args[2] === "issue" && args[3] === "update"
-      ? updateResult(args, states, mutateSuccess)
+      ? updateResult(args, states, mutateSuccess, refreshNodes)
       : respond(JSON.stringify({ id: "fixture-comment" }));
   };
 }

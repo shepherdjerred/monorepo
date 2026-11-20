@@ -42,6 +42,7 @@ export function renderLaunchAgent(input: {
     <string>WOODPECKER_URL=${escapeXml(input.woodpeckerBaseUrl)}</string>
     <string>WOODPECKER_REPO_ID=${String(input.woodpeckerRepoId)}</string>
     <string>PINCHTAB_CONFIG=${escapeXml(input.pinchtabConfigPath)}</string>
+    <string>${escapeXml(path.join(input.checkout, "scripts/onepassword/with-service-account.sh"))}</string>
     <string>op</string>
     <string>run</string>
     <string>--</string>

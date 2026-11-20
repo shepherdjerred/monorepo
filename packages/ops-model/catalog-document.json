@@ -3408,7 +3408,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "alloy-gateway/prod/1",
-      "configurationRevisionId": "alloy-gateway/prod/2"
+      "configurationRevisionId": "alloy-gateway/prod/3"
     },
     {
       "id": "promtail/prod",

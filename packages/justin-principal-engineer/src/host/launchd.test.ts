@@ -21,6 +21,9 @@ describe("renderLaunchAgent", () => {
     expect(plist).toContain("<integer>60</integer>");
     expect(plist).not.toContain("KeepAlive");
     expect(plist).not.toContain("LINEAR_API_KEY");
+    expect(plist).toContain(
+      "<string>/Users/test/repo/scripts/onepassword/with-service-account.sh</string>",
+    );
     expect(plist).toContain("<string>op</string>");
     expect(plist).toContain(
       "WOODPECKER_TOKEN=op://Automation/Woodpecker/credential",

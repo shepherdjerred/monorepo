@@ -9,19 +9,13 @@ import {
 } from "#src/domain/schemas.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
 import { mergeWithGitSpice } from "#src/integrations/github-merge.ts";
-
-const PullRequestSchema = z.object({
-  number: z.number().int().positive(),
-  url: z.url(),
-  headRefOid: z.string().min(1),
-  isDraft: z.boolean(),
-  mergedAt: z.string().nullable(),
-  baseRefName: z.string().min(1),
-  headRefName: z.string().min(1),
-  mergeCommit: z.object({ oid: z.string().regex(/^[0-9a-f]{40}$/) }).nullable(),
-  author: z.object({ login: z.string(), is_bot: z.boolean() }),
-});
-export type PullRequest = z.infer<typeof PullRequestSchema>;
+import {
+  isBotPullRequestAuthor,
+  OpenPullRequestListSchema,
+  pullRequestFields,
+  PullRequestSchema,
+  type PullRequest,
+} from "#src/integrations/github-pull-request.ts";
 export type GitHubIdentity = Readonly<{
   approver: Readonly<{ login: string; id: number }>;
   expectedBotLogin: string;
@@ -71,16 +65,12 @@ export class GitHubClient {
     private readonly env: Readonly<Record<string, string>>,
   ) {}
 
+  private ownsPullRequest(author: PullRequest["author"]): boolean {
+    return isBotPullRequestAuthor(author, this.identity.expectedBotLogin);
+  }
+
   private verifyPullRequest(pr: PullRequest): PullRequest {
-    const expectedLogin = this.identity.expectedBotLogin;
-    // gh serializes GraphQL Bot actors as app/<slug>; REST uses <slug>[bot].
-    const appLogin = expectedLogin.endsWith("[bot]")
-      ? `app/${expectedLogin.slice(0, -"[bot]".length)}`
-      : undefined;
-    if (
-      !pr.author.is_bot ||
-      (pr.author.login !== expectedLogin && pr.author.login !== appLogin)
-    ) {
+    if (!this.ownsPullRequest(pr.author)) {
       throw new Error(
         `Refusing PR #${String(pr.number)}: author ${pr.author.login} is not ${this.identity.expectedBotLogin}`,
       );
@@ -129,7 +119,7 @@ export class GitHubClient {
             "--repo",
             this.repository,
             "--json",
-            "number,url,headRefOid,isDraft,mergedAt,author,baseRefName,headRefName,mergeCommit",
+            pullRequestFields,
           ]),
         ),
       ),
@@ -153,12 +143,28 @@ export class GitHubClient {
             "--state",
             "open",
             "--json",
-            "number,url,headRefOid,isDraft,mergedAt,author,baseRefName,headRefName,mergeCommit",
+            pullRequestFields,
           ]),
         ),
       );
     const value = values[0];
     return value === undefined ? null : this.verifyPullRequest(value);
+  }
+
+  public async openPullRequestNumbers(): Promise<number[]> {
+    const pulls = OpenPullRequestListSchema.parse(
+      await this.api("pulls?state=open&per_page=100"),
+    );
+    return pulls
+      .filter(
+        ({ user }) =>
+          user !== null &&
+          this.ownsPullRequest({
+            login: user.login,
+            is_bot: user.type === "Bot",
+          }),
+      )
+      .map(({ number }) => number);
   }
 
   public async health(number: number, checkout: string): Promise<PrHealth> {
@@ -383,30 +389,60 @@ export class GitHubClient {
     );
   }
 
-  public async hasExactHeadApproval(
-    number: number,
-    headSha: string,
-  ): Promise<boolean> {
+  private async ownerReviews(number: number) {
     const reviews = z
       .array(ReviewSchema)
       .parse(await this.api(`pulls/${String(number)}/reviews`));
+    return reviews.filter((review) =>
+      isApprover(
+        review.user,
+        this.identity.approver.login,
+        this.identity.approver.id,
+      ),
+    );
+  }
+
+  public async approvalIds(number: number): Promise<number[]> {
+    const reviews = await this.ownerReviews(number);
+    return reviews.map(({ id }) => id);
+  }
+
+  public async hasExactHeadApproval(
+    number: number,
+    headSha: string,
+    previousApprovalIds: readonly number[] = [],
+  ): Promise<boolean> {
+    const reviews = await this.ownerReviews(number);
     const mine = reviews
-      .filter((review) =>
-        isApprover(
-          review.user,
-          this.identity.approver.login,
-          this.identity.approver.id,
-        ),
-      )
       .filter((review) =>
         ["APPROVED", "CHANGES_REQUESTED", "DISMISSED"].includes(review.state),
       )
       .filter((review) => review.submitted_at !== null)
-      .sort((left, right) =>
-        (right.submitted_at ?? "").localeCompare(left.submitted_at ?? ""),
+      .sort(
+        (left, right) =>
+          (right.submitted_at ?? "").localeCompare(left.submitted_at ?? "") ||
+          right.id - left.id,
       );
     const latest = mine[0];
-    return latest?.state === "APPROVED" && latest.commit_id === headSha;
+    return (
+      latest?.state === "APPROVED" &&
+      latest.commit_id === headSha &&
+      !previousApprovalIds.includes(latest.id)
+    );
+  }
+
+  public async setPullRequestOpen(
+    number: number,
+    open: boolean,
+  ): Promise<void> {
+    const action = open ? "reopen" : "close";
+    await this.command([
+      "pr",
+      action,
+      String(number),
+      "--repo",
+      this.repository,
+    ]);
   }
 
   public async markReady(number: number): Promise<void> {
@@ -416,6 +452,17 @@ export class GitHubClient {
       String(number),
       "--repo",
       this.repository,
+    ]);
+  }
+
+  public async markDraft(number: number): Promise<void> {
+    await this.command([
+      "pr",
+      "ready",
+      String(number),
+      "--repo",
+      this.repository,
+      "--undo",
     ]);
   }
 

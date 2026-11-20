@@ -10,6 +10,8 @@ import { runtimePaths } from "#src/runtime/paths.ts";
 import { runCommand } from "#src/runtime/process.ts";
 import { writeInfo } from "#src/runtime/output.ts";
 import { StateStore } from "#src/runtime/state-store.ts";
+import { JustinTelemetry, telemetryLogPath } from "#src/runtime/telemetry.ts";
+import { taskStatusView } from "#src/runtime/status-view.ts";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
@@ -24,6 +26,7 @@ Usage:
   justin-principal-engineer retry <issue-identifier> [--runner-source <package-directory>]
   justin-principal-engineer merge-ready <issue-identifier> [--runner-source <package-directory>]
   justin-principal-engineer daemon <install|start|stop|status|uninstall>
+  justin-principal-engineer daemon status [--json]
 `;
 
 async function runReconcile(
@@ -36,14 +39,20 @@ async function runReconcile(
     options: { "runner-source": { type: "string" } },
     strict: true,
   });
-  const reconciler = new Reconciler(
-    await loadConfig(paths),
-    paths,
-    runCommand,
-    values["runner-source"] === undefined
-      ? undefined
-      : path.resolve(values["runner-source"]),
-  );
+  const config = await loadConfig(paths);
+  const reconciler = new Reconciler(config, paths, runCommand, {
+    ...(values["runner-source"] === undefined
+      ? {}
+      : { runnerSource: path.resolve(values["runner-source"]) }),
+    ...(command === "reconcile"
+      ? {
+          telemetry: new JustinTelemetry(
+            paths,
+            config.docker.turnTimeoutMinutes,
+          ),
+        }
+      : {}),
+  });
   if (command === "retry") {
     const identifier = args[1];
     if (identifier === undefined) throw new Error(USAGE);
@@ -90,9 +99,25 @@ async function main(args: readonly string[]): Promise<void> {
         await service.stop();
         return;
       case "status": {
-        await service.status();
+        const { values } = parseArgs({
+          args: args.slice(2),
+          options: { json: { type: "boolean" } },
+          strict: true,
+        });
         const store = new StateStore(paths);
         const states = await store.list();
+        if (values.json === true) {
+          writeInfo(
+            JSON.stringify({
+              loaded: await service.isLoaded(),
+              eventLog: telemetryLogPath(paths),
+              tasks: states.map((state) => taskStatusView(state)),
+            }),
+          );
+          return;
+        }
+        await service.status();
+        writeInfo("Events: " + telemetryLogPath(paths));
         for (const state of states) {
           writeInfo(formatTaskStatus(state));
         }
@@ -122,7 +147,13 @@ try {
   });
   await main(process.argv.slice(2));
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  console.error(
+    process.argv[2] === "reconcile"
+      ? "Justin reconcile failed. Inspect the local event log and run doctor."
+      : error instanceof Error
+        ? error.message
+        : String(error),
+  );
   process.exitCode = 1;
 } finally {
   await shutdownFeatureFlags();
