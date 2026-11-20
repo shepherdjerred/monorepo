@@ -5,6 +5,7 @@ import {
   PromotionRunRowSchema,
   PromotionRunSummarySchema,
   type PromotionRunRow,
+  type PromotionSourceActivity,
 } from "@shepherdjerred/ops-model/promotion/model.ts";
 import { SourceGroups } from "./source-groups.tsx";
 
@@ -28,7 +29,10 @@ function row(overrides: Partial<PromotionRunRow> = {}) {
   });
 }
 
-function render(rows: PromotionRunRow[]) {
+function render(
+  rows: PromotionRunRow[],
+  activity = new Map<string, PromotionSourceActivity>(),
+) {
   return renderToStaticMarkup(
     createElement(SourceGroups, {
       summary: PromotionRunSummarySchema.parse({
@@ -50,6 +54,7 @@ function render(rows: PromotionRunRow[]) {
         },
         rows,
       }),
+      activity,
       onHistory: vi.fn(),
     }),
   );
@@ -119,8 +124,30 @@ it("keeps all timing columns on disabled and waiting sources with explicit empty
 
 it("shows unavailable timing for an older producer rather than treating cooldown as a plan", () => {
   const html = render([row()]);
-  expect(html.match(/>Unavailable<\/span>/g)).toHaveLength(3);
+  expect(
+    html.match(
+      /class="p-source-timing"[^>]*><span class="p-muted">Unavailable<\/span>/g,
+    ),
+  ).toHaveLength(3);
   expect(html).not.toContain("Not recorded");
   expect(html).not.toContain("No confirmed success");
   expect(html).not.toContain('dateTime="2026-11-15T12:34:00Z"');
+});
+
+it("gives every source a thirty-day column that reads unavailable until its producer reports activity", () => {
+  const days = Array.from({ length: 30 }, () => ({
+    posts: 0,
+    failures: 0,
+    noAction: 0,
+  }));
+  const html = render(
+    [row(), row({ targetId: "topg", name: "TopG" })],
+    new Map([["pmc", { startDay: "2026-10-21", runDetailFrom: null, days }]]),
+  );
+  expect(html).toContain('<th scope="col">Last 30 days</th>');
+  expect(html.match(/data-label="Last 30 days"/g)).toHaveLength(2);
+  expect(html.match(/class="p-activity"/g)).toHaveLength(1);
+  expect(html).toContain(
+    'data-label="Last 30 days"><span class="p-muted">Unavailable</span>',
+  );
 });

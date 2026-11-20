@@ -96,6 +96,20 @@ it("reads production progress and receipts without initializing or mutating stat
   expect(
     view.overview.lastRun.rows.find((row) => row.targetId === "pmc")?.timing,
   ).toEqual(timing);
+  // Read at 01:00 Pacific on Nov 14; the post was confirmed just after midnight on Nov 12.
+  const activity = view.overview.sources.find(
+    (source) => source.id === "pmc",
+  )?.activity;
+  expect(activity?.startDay).toBe("2026-10-16");
+  expect(activity?.days).toHaveLength(30);
+  expect(activity?.days.at(-3)).toEqual({ posts: 1, failures: 0, noAction: 0 });
+  expect(
+    activity?.days.filter((day) => day.posts + day.failures + day.noAction > 0),
+  ).toHaveLength(1);
+  expect(
+    view.overview.sources.find((source) => source.id === "reddit-mcservers")
+      ?.activity?.days,
+  ).toHaveLength(30);
   const unavailable = await readProductionPromotionStatus(store, {
     now,
     readPlanning: () =>

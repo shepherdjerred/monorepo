@@ -8,6 +8,7 @@ import { HistoryPanel } from "./history-panel.tsx";
 import { time } from "./ui.tsx";
 import { PromotionSpendSummary } from "./spend-summary.tsx";
 import { sourceTimingSummary } from "./source-timing.ts";
+import { ActivityLegend } from "./activity-strip.tsx";
 
 export function PromotionPage() {
   const initialSource =
@@ -26,6 +27,11 @@ export function PromotionPage() {
     refetchOnWindowFocus: true,
   });
   const data = overview.data;
+  const activity = new Map(
+    (data?.sources ?? []).flatMap((item) =>
+      item.activity === undefined ? [] : [[item.id, item.activity] as const],
+    ),
+  );
   const historyFor = (id: string) => {
     setSource(id);
     setShowHistory(true);
@@ -83,8 +89,10 @@ export function PromotionPage() {
         {data && (
           <>
             <RunPanel summary={data.lastRun} />
+            {activity.size > 0 && <ActivityLegend />}
             <SourceGroups
               summary={sourceTimingSummary(data)}
+              activity={activity}
               onHistory={historyFor}
             />
             <details

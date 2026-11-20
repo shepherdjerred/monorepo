@@ -5,6 +5,15 @@ import type {
 } from "./model.ts";
 
 type Source = PromotionOverview["sources"][number];
+/** History statuses that mean an executed action did not end confirmed. */
+export const promotionFailureStatuses: readonly string[] = [
+  "blocked",
+  "failed",
+  "uncertain",
+  "rejected",
+  "filtered",
+  "interrupted",
+];
 export type RunState = Pick<PromotionRunRow, "health" | "outcome" | "reason">;
 type Context = {
   source: Source;
@@ -136,16 +145,7 @@ function terminalState({
   detail,
   knownGood,
 }: Context): RunState {
-  if (
-    [
-      "blocked",
-      "failed",
-      "uncertain",
-      "rejected",
-      "filtered",
-      "interrupted",
-    ].includes(status)
-  )
+  if (promotionFailureStatuses.includes(status))
     return { health: "error", outcome: "error", reason: failureReason(detail) };
   if (
     status === "verified" ||

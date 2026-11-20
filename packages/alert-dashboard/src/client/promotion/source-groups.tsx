@@ -1,8 +1,12 @@
 import type {
   PromotionRunRow,
   PromotionRunSummary,
+  PromotionSourceActivity,
 } from "@shepherdjerred/ops-model/promotion/model.ts";
 import { LinkOut, time } from "./ui.tsx";
+import { ActivityStrip } from "./activity-strip.tsx";
+
+type Activity = ReadonlyMap<string, PromotionSourceActivity>;
 
 function SourceTime({
   value,
@@ -50,10 +54,12 @@ function outcome(row: PromotionRunRow) {
 function SourceList({
   rows,
   label,
+  activity,
   onHistory,
 }: {
   rows: PromotionRunRow[];
   label: string;
+  activity: Activity;
   onHistory: (id: string) => void;
 }) {
   return (
@@ -69,6 +75,7 @@ function SourceList({
           <tr>
             <th scope="col">Source</th>
             <th scope="col">Outcome</th>
+            <th scope="col">Last 30 days</th>
             <th scope="col">Last run</th>
             <th scope="col">Last success</th>
             <th scope="col">Next planned</th>
@@ -135,6 +142,15 @@ function SourceList({
                   </div>
                 </details>
               </td>
+              <td className="p-source-activity" data-label="Last 30 days">
+                <ActivityStrip
+                  activity={activity.get(row.targetId)}
+                  name={row.name}
+                  onHistory={() => {
+                    onHistory(row.targetId);
+                  }}
+                />
+              </td>
               <td className="p-source-timing" data-label="Last run">
                 <SourceTime
                   value={row.timing?.lastRunAt}
@@ -164,9 +180,11 @@ function SourceList({
 
 export function SourceGroups({
   summary,
+  activity,
   onHistory,
 }: {
   summary: PromotionRunSummary;
+  activity: Activity;
   onHistory: (id: string) => void;
 }) {
   const issues = summary.rows.filter((row) => row.health === "error");
@@ -190,6 +208,7 @@ export function SourceGroups({
           <SourceList
             rows={issues}
             label="Sources needing attention"
+            activity={activity}
             onHistory={onHistory}
           />
         )}
@@ -202,6 +221,7 @@ export function SourceGroups({
           <SourceList
             rows={checking}
             label="Sources in progress"
+            activity={activity}
             onHistory={onHistory}
           />
         </section>
@@ -214,6 +234,7 @@ export function SourceGroups({
           <SourceList
             rows={done}
             label="Working sources"
+            activity={activity}
             onHistory={onHistory}
           />
         )}
@@ -225,6 +246,7 @@ export function SourceGroups({
             <SourceList
               rows={waiting}
               label="Sources not run"
+              activity={activity}
               onHistory={onHistory}
             />
           </details>
@@ -248,6 +270,7 @@ export function SourceGroups({
           <SourceList
             rows={disabled}
             label="Disabled sources"
+            activity={activity}
             onHistory={onHistory}
           />
         </div>

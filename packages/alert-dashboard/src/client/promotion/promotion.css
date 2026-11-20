@@ -206,10 +206,13 @@
   font-weight: 600;
 }
 .p-source-table thead th:first-child {
-  width: 23%;
+  width: 20%;
 }
 .p-source-table thead th:nth-child(2) {
-  width: 29%;
+  width: 23%;
+}
+.p-source-table thead th:nth-child(3) {
+  width: 24%;
 }
 .p-source-table tbody th {
   position: sticky;
@@ -247,6 +250,86 @@
 .p-source-time {
   font-family: inherit;
   font-variant-numeric: tabular-nums;
+}
+.p-activity {
+  display: grid;
+  gap: 6px;
+  min-block-size: 24px;
+  max-inline-size: 358px;
+  color: inherit;
+  text-decoration: none;
+}
+.p-activity:hover .p-activity-summary {
+  text-decoration: underline;
+}
+.p-activity-days {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 2px;
+}
+.p-activity-summary {
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+/* Fill means a confirmed post and a heavy outline a failed run, so the
+   states stay distinct without colour. */
+.p-day {
+  --p-day-post: #32976b;
+  --p-day-fail: #d45f54;
+  display: block;
+  box-sizing: border-box;
+  block-size: 16px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.p-day-post-1 {
+  border-color: var(--p-day-post);
+  background: color-mix(in oklab, var(--p-day-post) 35%, transparent);
+}
+.p-day-post-2 {
+  border-color: var(--p-day-post);
+  background: color-mix(in oklab, var(--p-day-post) 65%, transparent);
+}
+.p-day-post-3 {
+  border-color: var(--p-day-post);
+  background: var(--p-day-post);
+}
+.p-day-fail {
+  border: 2px solid var(--p-day-fail);
+}
+.p-day-idle {
+  block-size: 6px;
+  border-color: var(--muted);
+  background: var(--muted);
+}
+.p-day-gap {
+  border-color: transparent;
+  border-block-end-color: var(--line);
+  border-radius: 0;
+}
+@media (forced-colors: active) {
+  .p-day-post-1,
+  .p-day-post-2,
+  .p-day-post-3,
+  .p-day-idle {
+    background: CanvasText;
+  }
+}
+.p-activity-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0 0 18px;
+  font-size: 12px;
+}
+.p-activity-legend .p-day {
+  display: inline-block;
+  inline-size: 8px;
+  margin-inline-end: 3px;
+  vertical-align: middle;
 }
 @container (width < 860px) {
   .p-source-table,
@@ -294,6 +377,9 @@
   }
   .p-source-reason > p {
     margin-top: 0;
+  }
+  .p-activity-days {
+    gap: 1px;
   }
   .p-source-item:last-child {
     border-bottom: 0;

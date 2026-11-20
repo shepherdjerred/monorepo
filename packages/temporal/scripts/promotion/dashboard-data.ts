@@ -24,6 +24,7 @@ import { SolverBudgetSchema } from "#activities/promotion/store.ts";
 import { promotionSpendDay } from "#activities/promotion/control/budget.ts";
 import { promotionRunSummary } from "@shepherdjerred/ops-model/promotion/summary.ts";
 import { promotionHistoryTiming } from "@shepherdjerred/ops-model/promotion/timing.ts";
+import { promotionSourceActivity } from "@shepherdjerred/ops-model/promotion/activity.ts";
 import { localOwnerAlive } from "./process-owner.ts";
 import {
   PromotionAiLedgerSchema,
@@ -148,12 +149,19 @@ export async function readDashboard(directory: string) {
     interrupted:
       batch.finishedAt === null && ownerAbsent(batch.pid, batch.startedAt),
   }));
+  const now = Date.now();
   const sources = promotionManifest.targets.map((target) =>
-    sourceView(target, states.get(target.id), history, batches),
+    sourceView({
+      target,
+      state: states.get(target.id),
+      history,
+      batches,
+      now,
+    }),
   );
   const overview = PromotionOverviewSchema.parse({
     version: 1,
-    readAt: new Date().toISOString(),
+    readAt: new Date(now).toISOString(),
     scheduling: "manual",
     batches: presentationBatches,
     lastRun: promotionRunSummary({
@@ -252,12 +260,14 @@ function readSpend(objects: Map<string, unknown>) {
   };
 }
 
-function sourceView(
-  target: PromotionTarget,
-  state: PromotionState | undefined,
-  history: PromotionHistoryEntry[],
-  batches: PromotionBatch[],
-) {
+function sourceView(input: {
+  target: PromotionTarget;
+  state: PromotionState | undefined;
+  history: PromotionHistoryEntry[];
+  batches: PromotionBatch[];
+  now: number;
+}) {
+  const { target, state, history, batches, now } = input;
   const entries = history.filter((item) => item.targetId === target.id);
   const latest = entries.find((item) => item.timeBasis !== "attempt") ?? null;
   const deadline = state === undefined ? 0 : promotionDispatchAt(target, state);
@@ -285,6 +295,12 @@ function sourceView(
       nextPlannedAt: null,
       nextPlannedReason: "Manual runs only",
     },
+    activity: promotionSourceActivity({
+      targetId: target.id,
+      batches,
+      history: entries,
+      now,
+    }),
     latest,
     preview: entries.find((item) => item.mode === "preview") ?? null,
     lastAction:
