@@ -8,7 +8,8 @@ use scout_client_core::telemetry::{UsageEvent, WindowCrashCause, WindowCrashOutc
 use scout_client_runtime::instance::{InstanceLock, InstanceLockError};
 use scout_client_runtime::runtime::{GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver};
 use scout_desktop_ipc::{ChatCommand, ChatTurn, PROTOCOL_VERSION, SupervisorMessage};
-use scout_explore_client::relay::{ChatRelay, RelayCommand};
+use scout_explore_client::app_turns::CoachInput;
+use scout_explore_client::relay::{ChatRelay, DetachedRelay, RelayCommand};
 use tokio::sync::{mpsc, watch};
 
 use crate::updater::policy::UpdateConfig;
@@ -931,6 +932,7 @@ exit 0"#
                 live_game: true,
             },
             live_game: None,
+            champ_select: None,
         }
     );
     parts.send_modify(|parts| {
@@ -1082,6 +1084,7 @@ printf '{"type":"chat","command":{"action":"send","question":"And now?","live_ga
                 live_game: true,
             },
             live_game: Some(live_snapshot()),
+            champ_select: None,
         }
     );
     assert_eq!(
@@ -1092,6 +1095,154 @@ printf '{"type":"chat","command":{"action":"send","question":"And now?","live_ga
                 live_game: false,
             },
             live_game: None,
+            champ_select: None,
+        }
+    );
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+/// What champion select shows: the local player on Ahri against Zed.
+fn champ_select_snapshot() -> scout_client_core::live::champ_select::ChampSelectSnapshot {
+    use scout_client_core::live::champ_select::{AllySlot, ChampSelectSnapshot, EnemySlot};
+
+    ChampSelectSnapshot {
+        phase: Some("BAN_PICK".to_owned()),
+        local_cell_id: 0,
+        my_team: vec![AllySlot {
+            cell_id: 0,
+            champion_id: 103,
+            assigned_position: Some("middle".to_owned()),
+        }],
+        their_team: vec![EnemySlot {
+            cell_id: 5,
+            champion_id: 238,
+        }],
+        my_bans: vec![157],
+        their_bans: Vec::new(),
+    }
+}
+
+async fn next_coach(
+    coach: &mut mpsc::UnboundedReceiver<CoachInput>,
+) -> Result<CoachInput, Box<dyn std::error::Error>> {
+    tokio::time::timeout(PATIENCE, coach.recv())
+        .await?
+        .ok_or_else(|| "the coach channel closed".into())
+}
+
+#[tokio::test]
+async fn a_select_that_holds_still_is_advised_once_and_the_panel_clears_after_the_game()
+-> TestResult {
+    let DetachedRelay {
+        relay, mut coach, ..
+    } = ChatRelay::detached_coach();
+    let harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::default(),
+        |supervisor| {
+            supervisor
+                .with_chat(relay)
+                .with_coach_debounce(Duration::from_millis(20))
+        },
+    )?;
+    harness
+        .runtime_state
+        .send_modify(|state| state.champ_select = Some(champ_select_snapshot()));
+    harness.phase.send_replace(GameflowPhase::ChampSelect);
+
+    let CoachInput::Turn(turn) = next_coach(&mut coach).await? else {
+        return Err("the first input is a turn".into());
+    };
+    assert_eq!(
+        turn.initiation,
+        scout_client_core::desktop_api::AppInitiation::AppChampSelect
+    );
+    assert!(turn.context.live.is_none(), "never live state");
+    let select = turn.context.champ_select.ok_or("the select")?;
+    assert_eq!(select.my_team[0].champion_id, 103);
+
+    // An unchanged screen is not asked about again; leaving the game takes
+    // the panel down.
+    harness.phase.send_replace(GameflowPhase::EndOfGame);
+    assert_eq!(next_coach(&mut coach).await?, CoachInput::Clear);
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_coach_that_is_off_is_not_asked() -> TestResult {
+    let DetachedRelay {
+        relay,
+        mut coach,
+        coach_enabled,
+        ..
+    } = ChatRelay::detached_coach();
+    coach_enabled.store(false, std::sync::atomic::Ordering::Relaxed);
+    let harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::default(),
+        |supervisor| {
+            supervisor
+                .with_chat(relay)
+                .with_coach_debounce(Duration::from_millis(20))
+        },
+    )?;
+    harness
+        .runtime_state
+        .send_modify(|state| state.champ_select = Some(champ_select_snapshot()));
+    harness.phase.send_replace(GameflowPhase::ChampSelect);
+    // Several refresh ticks pass with a select that would be advised.
+    tokio::time::sleep(Duration::from_millis(2_500)).await;
+    assert!(coach.try_recv().is_err(), "nothing is started");
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn a_question_asked_in_champion_select_carries_the_select_and_never_a_game() -> TestResult {
+    let script = window_script(
+        r#"while IFS= read -r line; do
+  case "$line" in *'"type":"phase","phase":"champ_select"'*) break ;; esac
+done
+printf '{"type":"chat","command":{"action":"send","question":"Who counters Zed?","live_game":false}}\n'"#,
+    );
+    let (relay, mut commands, _parts) = ChatRelay::detached();
+    let harness = start_configured(
+        sh(&script, &[]),
+        true,
+        true,
+        GameflowPhase::default(),
+        |supervisor| supervisor.with_chat(relay),
+    )?;
+    assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    harness
+        .runtime_state
+        .send_modify(|state| state.champ_select = Some(champ_select_snapshot()));
+    harness.phase.send_replace(GameflowPhase::ChampSelect);
+    assert_eq!(
+        next_relayed(&mut commands).await?,
+        RelayCommand {
+            command: ChatCommand::Send {
+                question: "Who counters Zed?".to_owned(),
+                live_game: false,
+            },
+            live_game: None,
+            champ_select: Some(champ_select_snapshot()),
         }
     );
     harness.control.send(Control::Quit)?;

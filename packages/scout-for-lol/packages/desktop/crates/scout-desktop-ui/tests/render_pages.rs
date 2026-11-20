@@ -43,11 +43,11 @@ mod render {
         WindowBounds, WindowOptions, px, size,
     };
     use scout_desktop_ipc::{
-        ChatAvailability, ChatCommand, ChatImage, ChatParts, ChatStatus, CounterReading,
-        DiagnosticsSnapshot, GameflowPhase, LiveGameSnapshot, PROTOCOL_VERSION, PrivacySnapshot,
-        StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus, VoiceCommand, VoiceConsent,
-        VoiceSettings, VoiceSnapshot, VoiceState, VoiceTurnView, WindowMessage, decode_line,
-        encode_line,
+        ChatAvailability, ChatCoach, ChatCoachKind, ChatCommand, ChatImage, ChatParts, ChatStatus,
+        CounterReading, DiagnosticsSnapshot, GameflowPhase, LiveGameSnapshot, PROTOCOL_VERSION,
+        PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus,
+        VoiceCommand, VoiceConsent, VoiceSettings, VoiceSnapshot, VoiceState, VoiceTurnView,
+        WindowMessage, decode_line, encode_line,
     };
     use scout_desktop_ui::BuildInfo;
     use scout_desktop_ui::preview::{Incoming, Outbound, ScoutWindow, prepare};
@@ -720,6 +720,47 @@ mod render {
     /// The first option chip of the golden champion-select answer.
     const COACH_FIRST_OPTION: (f32, f32) = (334., 234.);
 
+    /// The coach panel over a champion select: the answer and its options as
+    /// chips above the conversation, and over a game's start the plan with no
+    /// options. Picking a chip sends the same follow-up as a transcript chip.
+    fn coach_panels(harness: &mut Harness) -> Result<(), Error> {
+        let mut parts = golden::coach_options()?.parts();
+        parts.coach = Some(ChatCoach {
+            kind: ChatCoachKind::ChampSelect,
+            message_id: golden::COACH_ANSWER,
+        });
+        harness.chat(parts.clone())?;
+        harness.capture("chat-coach-champ-select")?;
+        let sent = click_sends(harness, COACH_PANEL_FIRST_OPTION)?;
+        if sent
+            != [chat_command(ChatCommand::ChooseOption {
+                message_id: golden::COACH_ANSWER,
+                index: 0,
+            })]
+        {
+            return Err(format!("the panel's first option sent {sent:?}").into());
+        }
+
+        if let Some(transcript) = parts.transcript.as_mut() {
+            for message in &mut transcript.messages {
+                if message.id == golden::COACH_ANSWER {
+                    message.coach_options.clear();
+                    "Your lane is Ahri into Zed. Take Doran's Ring, hold Flash for his all-in, and look for a first back near level 5 with the wave pushed.".clone_into(&mut message.content);
+                }
+            }
+        }
+        parts.coach = Some(ChatCoach {
+            kind: ChatCoachKind::Pregame,
+            message_id: golden::COACH_ANSWER,
+        });
+        harness.chat(parts)?;
+        harness.capture("chat-coach-pregame")?;
+        Ok(())
+    }
+
+    /// The first option chip in the coach panel, above the transcript.
+    const COACH_PANEL_FIRST_OPTION: (f32, f32) = (334., 160.);
+
     /// The live game chip, above the composer while a game is live.
     const LIVE_GAME_CHIP: (f32, f32) = (330., 444.);
 
@@ -1001,6 +1042,7 @@ mod render {
         visual_states(&mut harness)?;
         chat_actions(&mut harness)?;
         coach_options(&mut harness)?;
+        coach_panels(&mut harness)?;
         live_game_chip(&mut harness)?;
         status_pages(&mut harness)?;
         voice_states(&mut harness)?;

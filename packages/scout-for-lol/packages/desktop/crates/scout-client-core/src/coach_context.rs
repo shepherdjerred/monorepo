@@ -20,6 +20,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use thiserror::Error;
 
+use crate::live::champ_select::ChampSelectSnapshot;
 use crate::live::snapshot::{
     LiveEvent, LiveGameInfo, LiveItem, LiveParticipant, LiveSnapshot, OwnStats, Team,
 };
@@ -351,6 +352,38 @@ impl GameContext {
         }
     }
 
+    /// A context of the champion-select screen alone: the allowlisted
+    /// projection of what the select shows, with no identity in it.
+    ///
+    /// # Errors
+    ///
+    /// [`ContextError`] when the screen breaks a bound the contract states, such
+    /// as a cell or champion that is not a small non-negative number.
+    pub fn champ_select(snapshot: &ChampSelectSnapshot) -> Result<Self, ContextError> {
+        let context = Self {
+            champ_select: Some(ChampSelectContext::try_from(snapshot)?),
+            ..Self::default()
+        };
+        context.validate()?;
+        Ok(context)
+    }
+
+    /// A context of the loading screen alone, read from the first frame of
+    /// the game: the mode and map and each player's champion, spells and
+    /// keystone, which the loading screen showed them.
+    ///
+    /// # Errors
+    ///
+    /// [`ContextError`] when the frame breaks a bound the contract states.
+    pub fn pregame(snapshot: &LiveSnapshot) -> Result<Self, ContextError> {
+        let context = Self {
+            pregame: Some(PregameContext::from(snapshot)),
+            ..Self::default()
+        };
+        context.validate()?;
+        Ok(context)
+    }
+
     /// Check what serde cannot: at least one section, and every bound.
     ///
     /// # Errors
@@ -540,6 +573,76 @@ impl From<&LiveSnapshot> for LiveContext {
     }
 }
 
+impl From<&LiveSnapshot> for PregameContext {
+    fn from(snapshot: &LiveSnapshot) -> Self {
+        Self {
+            game: PregameGame {
+                mode: snapshot.game.mode.clone(),
+                map: snapshot.game.map.clone(),
+            },
+            participants: snapshot
+                .participants
+                .iter()
+                .map(|player| PregameParticipant {
+                    team: player.team,
+                    is_self: player.is_self,
+                    champion: player.champion.clone(),
+                    summoner_spells: player.summoner_spells.clone(),
+                    keystone: player.keystone.clone(),
+                })
+                .collect(),
+        }
+    }
+}
+
+impl TryFrom<&ChampSelectSnapshot> for ChampSelectContext {
+    type Error = ContextError;
+
+    fn try_from(snapshot: &ChampSelectSnapshot) -> Result<Self, ContextError> {
+        let cell =
+            |path: &str, value: i64| u8::try_from(value).map_err(|_| ContextError(path.to_owned()));
+        let champion = |path: &str, value: i64| {
+            u32::try_from(value).map_err(|_| ContextError(path.to_owned()))
+        };
+        let champions = |path: &str, values: &[i64]| {
+            values
+                .iter()
+                .map(|value| champion(path, *value))
+                .collect::<Result<Vec<_>, _>>()
+        };
+        Ok(Self {
+            phase: snapshot.phase.clone(),
+            local_cell_id: cell("champSelect.localCellId", snapshot.local_cell_id)?,
+            my_team: snapshot
+                .my_team
+                .iter()
+                .map(|slot| {
+                    Ok(AllySlot {
+                        cell_id: cell("champSelect.myTeam.cellId", slot.cell_id)?,
+                        champion_id: champion("champSelect.myTeam.championId", slot.champion_id)?,
+                        assigned_role: slot.assigned_position.clone(),
+                    })
+                })
+                .collect::<Result<_, ContextError>>()?,
+            their_team: snapshot
+                .their_team
+                .iter()
+                .map(|slot| {
+                    Ok(EnemySlot {
+                        cell_id: cell("champSelect.theirTeam.cellId", slot.cell_id)?,
+                        champion_id: champion(
+                            "champSelect.theirTeam.championId",
+                            slot.champion_id,
+                        )?,
+                    })
+                })
+                .collect::<Result<_, ContextError>>()?,
+            my_bans: champions("champSelect.myBans", &snapshot.my_bans)?,
+            their_bans: champions("champSelect.theirBans", &snapshot.their_bans)?,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
@@ -550,6 +653,42 @@ mod tests {
     use crate::live::snapshot::tests::fixture_snapshot;
 
     type TestResult = Result<(), Box<dyn std::error::Error>>;
+
+    #[test]
+    fn the_select_screen_projects_without_an_identity() -> TestResult {
+        let snapshot = crate::live::champ_select::parse(&serde_json::from_str(include_str!(
+            "../testdata/live/champ-select.json"
+        ))?)?;
+        let context = GameContext::champ_select(&snapshot)?;
+        let select = context.champ_select.ok_or("champ select")?;
+        assert_eq!(select.my_team.len(), 5);
+        assert_eq!(select.my_team[2].champion_id, 103);
+        assert_eq!(select.my_bans, [238, 157]);
+        let wire = serde_json::to_string(&select)?;
+        for hidden in ["puuid", "summonerId", "gameName", "summonerName"] {
+            assert!(!wire.contains(hidden), "{hidden} crossed");
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn a_negative_cell_breaks_the_projection_rather_than_wrapping() -> TestResult {
+        let mut snapshot = crate::live::champ_select::parse(&serde_json::from_str(include_str!(
+            "../testdata/live/champ-select.json"
+        ))?)?;
+        snapshot.local_cell_id = -1;
+        assert!(GameContext::champ_select(&snapshot).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn the_first_frame_projects_the_loading_screen() -> TestResult {
+        let context = GameContext::pregame(&fixture_snapshot()?)?;
+        let pregame = context.pregame.ok_or("pregame")?;
+        assert!(context.live.is_none());
+        assert!(pregame.participants.iter().any(|player| player.is_self));
+        Ok(())
+    }
 
     const SCHEMA: &str =
         include_str!("../../../../data/src/scout-client/coach-context.schema.json");

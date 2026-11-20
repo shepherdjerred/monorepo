@@ -35,6 +35,7 @@ use tokio::sync::{mpsc, watch};
 
 use crate::updater::service::{InstallOutcome, UpdateHandle};
 use crate::voice::VoiceHandle;
+use coach::CoachDriver;
 
 /// A crash after this long is a fresh incident, not part of a crash loop.
 pub const STABLE_RUN: Duration = Duration::from_mins(10);
@@ -195,6 +196,8 @@ pub struct Supervisor<C: Collector> {
     /// Voice, when this build has it. The microphone and the device
     /// credential stay in this process.
     voice: Option<VoiceHandle>,
+    /// How long a champion select holds still before the coach advises.
+    coach_debounce: Duration,
     /// Held for the supervisor's life, so a second supervisor cannot share the
     /// outbox. The window process never takes it.
     _instance_lock: scout_client_runtime::instance::InstanceLock,
@@ -221,6 +224,7 @@ impl<C: Collector> Supervisor<C> {
             updates: None,
             chat: None,
             voice: None,
+            coach_debounce: coach::DEBOUNCE,
             _instance_lock: instance_lock,
         }
     }
@@ -243,6 +247,14 @@ impl<C: Collector> Supervisor<C> {
     #[must_use]
     pub fn with_voice(mut self, voice: VoiceHandle) -> Self {
         self.voice = Some(voice);
+        self
+    }
+
+    /// Shorten the champion-select wait, so a test does not sit through it.
+    #[cfg(test)]
+    #[must_use]
+    pub fn with_coach_debounce(mut self, debounce: Duration) -> Self {
+        self.coach_debounce = debounce;
         self
     }
 
@@ -269,6 +281,7 @@ impl<C: Collector> Supervisor<C> {
         let mut chat_parts = self.chat.as_ref().map(ChatRelay::subscribe);
         let mut voice = self.voice.as_ref().map(VoiceWatch::new);
         let mut pairing = pairing_key(&state.borrow());
+        let mut coach = CoachDriver::new(self.coach_debounce);
         let mut refresh = tokio::time::interval(REFRESH);
         refresh.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         let exit = loop {
@@ -324,12 +337,14 @@ impl<C: Collector> Supervisor<C> {
                     }
                 }
                 Ok(()) = phase.changed() => {
+                    self.drive_coach(&mut coach, &state, &phase);
                     if let Some(running) = window.as_mut() {
                         let message = phase_message(&phase.borrow_and_update());
                         self.deliver(running, &message).await;
                     }
                 }
                 _ = refresh.tick() => {
+                    self.drive_coach(&mut coach, &state, &phase);
                     if let Some(running) = window.as_mut() {
                         self.send_state(running, &state).await;
                     }
@@ -410,19 +425,47 @@ impl<C: Collector> Supervisor<C> {
         }
     }
 
+    /// Let the coach look at the League client and hand the chat relay what
+    /// it decides. Nothing runs while Scout says the coach is off for this
+    /// player, or with no chat to carry the turns.
+    fn drive_coach(&self, coach: &mut CoachDriver, state: &StateReceiver, phase: &PhaseReceiver) {
+        let Some(chat) = self.chat.as_ref().filter(|chat| chat.coach_enabled()) else {
+            return;
+        };
+        let phase = phase.borrow().clone();
+        let inputs = {
+            let runtime = state.borrow();
+            coach.tick(
+                Instant::now(),
+                &phase,
+                runtime.champ_select.as_ref(),
+                runtime.live_game.as_ref(),
+            )
+        };
+        for input in inputs {
+            chat.coach(input);
+        }
+    }
+
     /// A command from the window. A question whose composer chip asks for
     /// the live game carries the collector's latest allowlisted snapshot, the
-    /// one the window's `live_game` line is drawn from; the window itself
-    /// never supplies game data.
+    /// one the window's `live_game` line is drawn from, and a question asked
+    /// during champion select carries what the select shows; the window
+    /// itself never supplies game data.
     fn window_chat_command(&self, command: ChatCommand) {
         let Some(chat) = &self.chat else { return };
-        let live_game = match &command {
-            ChatCommand::Send {
-                live_game: true, ..
-            } => self.collector.state().borrow().live_game.clone(),
-            _ => None,
+        let (live_game, champ_select) = match &command {
+            ChatCommand::Send { live_game, .. } => {
+                let state = self.collector.state();
+                let runtime = state.borrow();
+                (
+                    live_game.then(|| runtime.live_game.clone()).flatten(),
+                    runtime.champ_select.clone(),
+                )
+            }
+            _ => (None, None),
         };
-        chat.send_with_live_game(command, live_game);
+        chat.send_with_game(command, live_game, champ_select);
     }
 
     /// Bring the window's chat up to date, sending only the parts that
@@ -1004,5 +1047,6 @@ fn window_crash_event(outcome: DiagnosticOutcome, detail: String) -> DiagnosticE
     .with_detail(detail)
 }
 
+mod coach;
 #[cfg(test)]
 mod tests;

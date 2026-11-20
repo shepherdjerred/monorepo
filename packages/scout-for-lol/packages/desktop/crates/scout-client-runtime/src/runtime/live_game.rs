@@ -14,6 +14,7 @@ use scout_client_core::outbox::ObservationOutbox;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use super::champ_select::ChampSelectWatcher;
 use super::gameflow::IN_PROGRESS_GAME_KEY;
 use super::paths::data_directory;
 use super::state::{StateHub, update_state};
@@ -26,6 +27,8 @@ pub(super) struct LiveGame<S = LiveClient> {
     /// What the hand-off needs to know when a game ends.
     upload: UploadContext,
     last_problem: Option<String>,
+    /// The champion-select screen, polled on the same tick.
+    champ_select: ChampSelectWatcher,
 }
 
 impl LiveGame<LiveClient> {
@@ -52,6 +55,7 @@ impl LiveGame<LiveClient> {
             session: client.map(|client| LiveGameSession::new(client, recorder, handoff)),
             upload,
             last_problem: None,
+            champ_select: ChampSelectWatcher::default(),
         }
     }
 }
@@ -74,6 +78,7 @@ impl<S: LiveGameSource> LiveGame<S> {
                 .get(key)
                 .and_then(|bytes| std::str::from_utf8(bytes).ok())
         };
+        self.champ_select.tick(state, diagnostics).await;
         self.upload.set_outbox(outbox.cloned());
         let Some(session) = &mut self.session else {
             self.upload
@@ -149,7 +154,7 @@ mod tests {
     use scout_client_core::protocol::{ObservationEnvelope, ObservationKind};
     use uuid::Uuid;
 
-    use super::{IN_PROGRESS_GAME_KEY, LiveGame};
+    use super::{ChampSelectWatcher, IN_PROGRESS_GAME_KEY, LiveGame};
     use crate::runtime::state::{StateHub, update_state};
 
     const FRAME: &str = include_str!("../../../scout-client-core/testdata/live/allgamedata.json");
@@ -193,6 +198,7 @@ mod tests {
             )),
             upload,
             last_problem: None,
+            champ_select: ChampSelectWatcher::default(),
         };
         let state = StateHub::default();
         update_state(&state, |snapshot| {

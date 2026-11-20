@@ -13,13 +13,14 @@ use std::path::{Path, PathBuf};
 
 use scout_client_core::coach_context::GameContext;
 use scout_client_core::desktop_api::{
-    ActiveRun, AppTurnRequest, AttachPoint, ConversationListResponse, ConversationSummary,
-    ExploreModel, ModelsResponse, RunStartRequest,
+    ActiveRun, AppInitiation, AppTurnRequest, AttachPoint, ConversationListResponse,
+    ConversationSummary, ExploreModel, ModelsResponse, RunStartRequest,
 };
 use scout_desktop_ipc::{
-    ChatAttachment, ChatAvailability, ChatCoachOption, ChatComposer, ChatConversation, ChatDraft,
-    ChatDraftState, ChatImage, ChatMessage, ChatModelOption, ChatParts, ChatRole, ChatStatus,
-    ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion, ChatVisuals,
+    ChatAttachment, ChatAvailability, ChatCoach, ChatCoachKind, ChatCoachOption, ChatComposer,
+    ChatConversation, ChatDraft, ChatDraftState, ChatImage, ChatMessage, ChatModelOption,
+    ChatParts, ChatRole, ChatStatus, ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn,
+    ChatVersion, ChatVisuals,
 };
 use uuid::Uuid;
 
@@ -130,6 +131,16 @@ struct FollowedTurn {
     stash: Vec<Draft>,
 }
 
+/// The coach conversation the panel above the chat shows: the select or game
+/// it belongs to, and the conversation its turns land in.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct CoachPanel {
+    kind: ChatCoachKind,
+    /// The champion select or game the turns were asked for.
+    key: String,
+    conversation: Uuid,
+}
+
 /// One desktop chat session.
 #[derive(Debug, Clone)]
 pub struct ChatSession {
@@ -156,6 +167,10 @@ pub struct ChatSession {
     /// Counts version switches. A transcript fetched before the latest one
     /// began describes the old branch and is refused.
     epoch: u64,
+    /// The coach conversation of the select or game in progress.
+    coach: Option<CoachPanel>,
+    /// The coach turn whose run `runs/start-app` has not created yet.
+    pending_coach: Option<(ChatCoachKind, String)>,
 }
 
 impl Default for ChatSession {
@@ -245,6 +260,8 @@ impl ChatSession {
             chosen_model: None,
             switching: false,
             epoch: 0,
+            coach: None,
+            pending_coach: None,
         }
     }
 
@@ -630,6 +647,77 @@ impl ChatSession {
         Some(self.begin_turn(Some(question), AttachPoint::Leaf, None, drafts, game))
     }
 
+    /// Begin the turn Scout asks for itself. Returns the `runs/start-app` body,
+    /// or none when a turn cannot start now (chat is gated or another turn is
+    /// running); the planner has counted it, so it is not asked again.
+    ///
+    /// A select's or game's first turn opens its own conversation and shows
+    /// it; later turns for the same one continue it while it is still open.
+    pub fn begin_app_turn(&mut self, turn: &AppTurn) -> Option<AppTurnRequest> {
+        if !self.can_start() {
+            return None;
+        }
+        let kind = match turn.initiation {
+            AppInitiation::AppChampSelect => ChatCoachKind::ChampSelect,
+            AppInitiation::AppPregame => ChatCoachKind::Pregame,
+        };
+        let continues = self.coach.as_ref().is_some_and(|coach| {
+            coach.key == turn.game_key && Some(coach.conversation) == self.open
+        });
+        if !continues {
+            self.start_new();
+        }
+        self.pending_coach = Some((kind, turn.game_key.clone()));
+        let started = self.begin_turn(None, AttachPoint::Leaf, None, Vec::new(), None);
+        Some(AppTurnRequest {
+            conversation_id: started.conversation_id,
+            ..app_turn_request(turn)
+        })
+    }
+
+    /// `runs/start-app` refused the turn. It was not asked for by the player,
+    /// so a coach that is off, a limit, or a busy conversation says nothing;
+    /// only a refusal that gates chat as a whole shows.
+    pub fn app_turn_failed(&mut self, error: &ExploreClientError) {
+        self.pending_coach = None;
+        self.turn = None;
+        match error.recovery() {
+            Some(
+                Recovery::FeatureDisabled
+                | Recovery::RetryLater { .. }
+                | Recovery::NotFound
+                | Recovery::ConversationBusy,
+            ) => {}
+            _ => self.request_failed(error),
+        }
+    }
+
+    /// Take the coach panel down: the select or game it described is over, or
+    /// Scout Coach is off.
+    pub fn clear_coach(&mut self) {
+        self.coach = None;
+        self.pending_coach = None;
+    }
+
+    /// The panel: the newest answer of the coach conversation, while it is
+    /// the one on screen.
+    fn coach_panel(&self) -> Option<ChatCoach> {
+        let coach = self.coach.as_ref()?;
+        let transcript = self.transcript.as_ref()?;
+        if transcript.conversation.id != coach.conversation {
+            return None;
+        }
+        let answer = transcript
+            .messages
+            .iter()
+            .rev()
+            .find(|message| message.role == MessageRole::Assistant)?;
+        Some(ChatCoach {
+            kind: coach.kind,
+            message_id: answer.id,
+        })
+    }
+
     /// Edit the question `message_id` into a new version of its turn.
     /// Returns the request to send, or none when it cannot be edited now.
     pub fn edit(&mut self, message_id: Uuid, question: &str) -> Option<RunStartRequest> {
@@ -740,12 +828,20 @@ impl ChatSession {
         turn.view.turn.conversation_id = Some(run.conversation_id);
         turn.view.turn.question_message_id = Some(run.question_message_id);
         turn.stash.clear();
+        if let Some((kind, key)) = self.pending_coach.take() {
+            self.coach = Some(CoachPanel {
+                kind,
+                key,
+                conversation: run.conversation_id,
+            });
+        }
         turn.run = Some(run);
     }
 
     /// `runs/start` refused the turn; the optimistic question goes away and
     /// the images go back to the composer.
     pub fn start_failed(&mut self, error: &ExploreClientError) {
+        self.pending_coach = None;
         if let Some(turn) = self.turn.take() {
             let mut restored = turn.stash;
             restored.append(&mut self.drafts);
@@ -883,6 +979,7 @@ impl ChatSession {
                 })
                 .collect(),
             composer: self.composer(),
+            coach: self.coach_panel(),
         }
     }
 

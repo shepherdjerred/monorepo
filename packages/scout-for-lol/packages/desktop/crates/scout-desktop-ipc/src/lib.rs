@@ -26,9 +26,10 @@ mod chat_visuals;
 mod voice;
 
 pub use chat::{
-    ChatAttachment, ChatAvailability, ChatCoachOption, ChatCommand, ChatComposer, ChatConversation,
-    ChatDraft, ChatDraftState, ChatMessage, ChatModelOption, ChatParts, ChatRole, ChatStatus,
-    ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion,
+    ChatAttachment, ChatAvailability, ChatCoach, ChatCoachKind, ChatCoachOption, ChatCommand,
+    ChatComposer, ChatConversation, ChatDraft, ChatDraftState, ChatMessage, ChatModelOption,
+    ChatParts, ChatRole, ChatStatus, ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn,
+    ChatVersion,
 };
 pub use chat_visuals::{
     ChatIcon, ChatImage, ChatLoadoutCard, ChatMatchCard, ChatMatchPlayer, ChatMatchTeam, ChatTable,
@@ -39,7 +40,7 @@ pub use voice::{
 };
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 10;
+pub const PROTOCOL_VERSION: u32 = 11;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -103,6 +104,11 @@ pub enum SupervisorMessage {
     ChatComposer {
         /// The composer.
         composer: ChatComposer,
+    },
+    /// The coach panel, or none when it is not showing.
+    ChatCoach {
+        /// The panel.
+        coach: Option<ChatCoach>,
     },
     /// The local player's live game, or none when no game is in progress.
     /// Sent when it changes.
@@ -431,13 +437,14 @@ mod tests {
     use uuid::Uuid;
 
     use super::{
-        ChatAttachment, ChatAvailability, ChatCoachOption, ChatCommand, ChatComposer,
-        ChatConversation, ChatDraft, ChatDraftState, ChatImage, ChatMessage, ChatModelOption,
-        ChatRole, ChatStatus, ChatToolStatus, ChatToolStep, ChatTranscript, ChatTurn, ChatVersion,
-        ChatVisual, ChatVisuals, CounterReading, DiagnosticsSnapshot, GameflowPhase,
-        LiveGameSnapshot, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage,
-        UpdateSnapshot, UpdateStatus, VoiceCommand, VoiceConsent, VoiceSettings, VoiceSnapshot,
-        VoiceState, VoiceTurnView, WindowMessage, check_protocol, decode_line, encode_line,
+        ChatAttachment, ChatAvailability, ChatCoach, ChatCoachKind, ChatCoachOption, ChatCommand,
+        ChatComposer, ChatConversation, ChatDraft, ChatDraftState, ChatImage, ChatMessage,
+        ChatModelOption, ChatRole, ChatStatus, ChatToolStatus, ChatToolStep, ChatTranscript,
+        ChatTurn, ChatVersion, ChatVisual, ChatVisuals, CounterReading, DiagnosticsSnapshot,
+        GameflowPhase, LiveGameSnapshot, PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot,
+        SupervisorMessage, UpdateSnapshot, UpdateStatus, VoiceCommand, VoiceConsent, VoiceSettings,
+        VoiceSnapshot, VoiceState, VoiceTurnView, WindowMessage, check_protocol, decode_line,
+        encode_line,
     };
 
     fn voice_settings() -> VoiceSettings {
@@ -555,6 +562,13 @@ mod tests {
                 ]
                 .into(),
             },
+            SupervisorMessage::ChatCoach {
+                coach: Some(ChatCoach {
+                    kind: ChatCoachKind::ChampSelect,
+                    message_id: Uuid::from_u128(9),
+                }),
+            },
+            SupervisorMessage::ChatCoach { coach: None },
             SupervisorMessage::ChatComposer {
                 composer: ChatComposer {
                     drafts: vec![
@@ -699,7 +713,7 @@ mod tests {
         };
         assert_eq!(live.summary(), "Ahri, level 10, 4/2/7, 87 CS, 7:01");
         assert_eq!(
-            PROTOCOL_VERSION, 10,
+            PROTOCOL_VERSION, 11,
             "a new message or field bumps the protocol"
         );
     }
