@@ -157,12 +157,22 @@ it("renders recorded history from an older worker without presenting cooldown ex
     nextPlannedReason: "Schedule data unavailable",
   });
   const html = renderToStaticMarkup(
-    createElement(SourceGroups, { summary, onHistory: vi.fn() }),
+    createElement(SourceGroups, {
+      summary,
+      activity: new Map(),
+      onHistory: vi.fn(),
+    }),
   );
   expect(html).toContain('dateTime="2026-11-13T20:00:00Z"');
   expect(html).toContain('dateTime="2026-11-12T12:09:54Z"');
   expect(html).toContain("Schedule data unavailable");
-  expect(html).not.toContain(">Unavailable</span>");
+  // An older worker has no daily activity to show; its timing is still derived.
+  expect(html).not.toMatch(
+    /class="p-source-timing"[^>]*><span class="p-muted">Unavailable<\/span>/,
+  );
+  expect(html).toContain(
+    'data-label="Last 30 days"><span class="p-muted">Unavailable</span>',
+  );
   expect(html).not.toContain('dateTime="2026-11-15T12:34:00Z"');
   expect(data.lastRun.rows[0]?.timing).toBeUndefined();
 });
@@ -226,7 +236,11 @@ it("keeps a manual older payload explicit when no execution or confirmed action 
     nextPlannedReason: "Manual runs only",
   });
   const html = renderToStaticMarkup(
-    createElement(SourceGroups, { summary, onHistory: vi.fn() }),
+    createElement(SourceGroups, {
+      summary,
+      activity: new Map(),
+      onHistory: vi.fn(),
+    }),
   );
   expect(html).toContain("Not recorded");
   expect(html).toContain("No confirmed success");

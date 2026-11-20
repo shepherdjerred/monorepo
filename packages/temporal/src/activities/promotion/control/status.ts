@@ -7,6 +7,7 @@ import {
 } from "@shepherdjerred/ops-model/promotion/model.ts";
 import { promotionRunSummary } from "@shepherdjerred/ops-model/promotion/summary.ts";
 import { promotionHistoryTiming } from "@shepherdjerred/ops-model/promotion/timing.ts";
+import { promotionSourceActivity } from "@shepherdjerred/ops-model/promotion/activity.ts";
 import {
   PromotionStateSchema,
   initialPromotionState,
@@ -213,6 +214,12 @@ export async function readProductionPromotionStatus(
             ...(planning === undefined ? {} : { planning }),
           }),
         },
+        activity: promotionSourceActivity({
+          targetId: target.id,
+          batches,
+          history: entries,
+          now,
+        }),
         latest: entries.find((h) => h.timeBasis === "execution") ?? null,
         preview: entries.find((h) => h.mode === "preview") ?? null,
         lastAction:

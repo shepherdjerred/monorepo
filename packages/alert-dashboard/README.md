@@ -93,6 +93,18 @@ Its next planned column says `Schedule data unavailable` until the producer can
 observe the schedule; the raw recorded cooldown is never presented as a planned
 run.
 
+Each source also shows its last 30 Pacific days as one cell per day. A filled
+cell is a day with a confirmed post, darker for more; a heavy outline is a day
+with a failed run, and a day can be both. A short bar is a run that posted
+nothing and did not fail. Each publishing occurrence counts once and its
+recorded attempt decides it, so a run that failed and was later confirmed is a
+post. Skips, previews, reconciliation and cleanup are not activity. Confirmed
+posts are known for all time, but failed and no-post runs are known only as far
+back as the retained run batches, so an empty day older than the oldest batch
+is drawn as a baseline meaning "no run records kept" rather than as a quiet
+day. The strip links to that source's history. An older producer that does not
+report activity shows `Unavailable`.
+
 The dashboard and runner are independent processes. Closing the page or stopping
 its launcher does not stop promotion execution. No publishing controls or
 unattended schedule are enabled by this command. Missing/invalid local storage

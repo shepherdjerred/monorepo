@@ -50,6 +50,22 @@ export const PromotionSourceTimingSchema = z.object({
   nextPlannedReason: z.string().min(1),
 });
 export type PromotionSourceTiming = z.infer<typeof PromotionSourceTimingSchema>;
+export const PromotionSourceActivitySchema = z.object({
+  // Pacific calendar day of days[0]; the last day is the day of the read.
+  startDay: z.iso.date(),
+  // Oldest day with retained run records. Earlier days know confirmed posts only.
+  runDetailFrom: z.iso.date().nullable(),
+  days: z.array(
+    z.object({
+      posts: z.number().int().nonnegative(),
+      failures: z.number().int().nonnegative(),
+      noAction: z.number().int().nonnegative(),
+    }),
+  ),
+});
+export type PromotionSourceActivity = z.infer<
+  typeof PromotionSourceActivitySchema
+>;
 export const PromotionRunRowSchema = z.object({
   targetId: z.string(),
   name: z.string(),
@@ -113,6 +129,8 @@ export const PromotionOverviewSchema = z.object({
       constraint: z.string(),
       nextAllowedAt: z.string().nullable(),
       timing: PromotionSourceTimingSchema.optional(),
+      // Additive v1 contract: older producers do not bucket history by day.
+      activity: PromotionSourceActivitySchema.optional(),
       latest: PromotionHistoryEntrySchema.nullable(),
       preview: PromotionHistoryEntrySchema.nullable(),
       lastAction: PromotionHistoryEntrySchema.nullable(),

@@ -67,6 +67,7 @@ it("reads legacy previews separately from confirmed actions without changing sto
       expect(source?.preview?.status).toBe("preview");
       expect(source?.latest?.timeBasis).toBe("report-saved");
       expect(source?.lastAction?.occurrenceId).toBe("manual/pmc");
+      expect(source?.activity?.days).toHaveLength(30);
       expect(source?.timing).toEqual({
         lastRunAt: null,
         lastSuccessAt: "2026-11-01T00:00:01Z",

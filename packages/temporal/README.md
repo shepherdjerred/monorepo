@@ -1434,6 +1434,9 @@ parent-only `OPS_INGEST_TOKEN`. The normal Hub client renders `/promotion`.
 Status reads do not initialize target state or release duplicate-prevention holds.
 Each scheduled sweep journals all selected and skipped sources; targeted
 previews and reconciliations retain their own scope and effective mode.
+The overview carries each source's last 30 Pacific days of activity, bucketed
+from recorded attempts and the retained batches; `runDetailFrom` names the
+oldest day those batches still cover.
 
 `the-storm-promotion-enabled` defaults off and settings default to an empty
 source allowlist. `dailySpendUsd` defaults to 5 and cannot exceed 5. Recorded
