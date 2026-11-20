@@ -20,6 +20,9 @@
     "release:publish": "bun scripts/with-publication-credentials.ts ../../../scripts/release/publish-launcher.ts",
     "release:provision-key": "bun scripts/provision-update-key.ts"
   },
+  "dependencies": {
+    "@shepherdjerred/native-release": "workspace:*"
+  },
   "devDependencies": {
     "vitest": "5.0.3"
   }

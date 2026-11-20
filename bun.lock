@@ -984,6 +984,9 @@
     },
     "packages/glitter-boys-launcher": {
       "name": "@shepherdjerred/glitter-boys-launcher",
+      "dependencies": {
+        "@shepherdjerred/native-release": "workspace:*",
+      },
       "devDependencies": {
         "vitest": "5.0.3",
       },
@@ -1420,6 +1423,25 @@
         "vitest": "5.0.3",
       },
     },
+    "packages/native-release": {
+      "name": "@shepherdjerred/native-release",
+      "version": "1.0.0",
+      "dependencies": {
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@tsconfig/node-lts": "^24.0.0",
+        "@tsconfig/recommended": "^1.0.13",
+        "@tsconfig/strictest": "^2.0.8",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.3",
+      },
+    },
     "packages/ops-clients": {
       "name": "@shepherdjerred/ops-clients",
       "version": "0.1.0",
@@ -1815,6 +1837,9 @@
     },
     "packages/scout-for-lol/packages/desktop": {
       "name": "@scout-for-lol/desktop",
+      "dependencies": {
+        "@shepherdjerred/native-release": "workspace:*",
+      },
       "devDependencies": {
         "vitest": "5.0.3",
       },
@@ -2218,6 +2243,9 @@
     },
     "packages/tasknotes-macos": {
       "name": "tasknotes-macos",
+      "dependencies": {
+        "@shepherdjerred/native-release": "workspace:*",
+      },
       "devDependencies": {
         "@vitest/coverage-istanbul": "5.0.1",
         "vitest": "5.0.1",
@@ -4683,6 +4711,8 @@
     "@shepherdjerred/media": ["@shepherdjerred/media@workspace:packages/media"],
 
     "@shepherdjerred/monarch": ["@shepherdjerred/monarch@workspace:packages/monarch"],
+
+    "@shepherdjerred/native-release": ["@shepherdjerred/native-release@workspace:packages/native-release"],
 
     "@shepherdjerred/ops-clients": ["@shepherdjerred/ops-clients@workspace:packages/ops-clients"],
 

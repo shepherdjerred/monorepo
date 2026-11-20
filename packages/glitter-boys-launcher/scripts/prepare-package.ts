@@ -1,4 +1,5 @@
-import { signArtifact } from "./windows-tools.ts";
+import { bunRunner } from "@shepherdjerred/native-release/runner";
+import { signArtifact } from "@shepherdjerred/native-release/windows";
 import { readProfile } from "./release-profile.ts";
 import { copyFile, mkdir, rm, realpath, lstat } from "node:fs/promises";
 import path from "node:path";
@@ -17,7 +18,12 @@ if ((await build.exited) !== 0) throw new Error("Launcher build failed");
 const target = path.resolve(root, process.env["CARGO_TARGET_DIR"] ?? "target");
 const binary = path.join(target, "release", "glitter-boys.exe");
 const profile = await readProfile(root);
-if (profile.publisher !== null) await signArtifact(root, binary);
+if (profile.publisher !== null)
+  await signArtifact(bunRunner, {
+    file: binary,
+    publisher: profile.publisher,
+    cwd: root,
+  });
 const layout = path.join(root, "target", "package-layout");
 // Only discard generated packaging output after proving its resolved location.
 await mkdir(layout, { recursive: true });

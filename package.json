@@ -146,6 +146,7 @@
     "packages/ops-clients",
     "packages/ops-model",
     "packages/monarch",
+    "packages/native-release",
     "packages/pr-fleet-controller",
     "packages/pr-fleet-controller/packages/web",
     "packages/release-tools",

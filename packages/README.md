@@ -106,6 +106,7 @@ hold only scoped invariants that agents must keep in context.
 | [pr-fleet-controller](pr-fleet-controller/)               | AI SDK controller that drives the open-PR fleet with a live dashboard          |
 | [justin-principal-engineer](justin-principal-engineer/)   | Local Tracker-to-PR queue with Docker coding turns and owner approval          |
 | [release-tools](release-tools/)                           | release-please wrapper for the release lane                                    |
+| [native-release](native-release/)                         | Shared Apple and Windows code-signing helpers for native release lanes         |
 | [dotfiles](dotfiles/)                                     | Dotfiles & shell config (chezmoi source)                                       |
 | [dotfiles-windows](dotfiles-windows/)                     | Windows PC chezmoi source: shell, configs, winget software record              |
 | [fonts](fonts/)                                           | Berkeley Mono Nerd Fonts patcher                                               |

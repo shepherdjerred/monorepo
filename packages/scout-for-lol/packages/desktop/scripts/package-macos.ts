@@ -7,8 +7,8 @@
 //   - `scout-desktop-<channel>_<version>_universal.dmg`, itself signed,
 //     notarized and stapled: what a person downloads to install.
 //
-// The codesign → notarytool → stapler → spctl sequence is the one
-// `packages/tasknotes-macos/scripts/release.ts` uses. The Developer ID
+// The codesign → notarytool → stapler → spctl sequence and its preflight come
+// from `packages/native-release`, the helpers TaskNotes uses too. The Developer ID
 // certificate lives in the operator's keychain and notarization authenticates
 // with a `notarytool` keychain profile, so the only secret this process
 // receives is the channel's update signing key, from 1Password through
@@ -25,6 +25,34 @@ import {
   macDiskImageFileName,
   updateArtifactFileName,
 } from "../../data/src/scout-client/desktop-update-release.ts";
+import {
+  bunRunner,
+  capture as captureCommand,
+  run as runCommand,
+} from "@shepherdjerred/native-release/runner";
+import {
+  assertHardenedRuntime,
+  assertTeamId,
+  assess,
+  assessCommand,
+  codesignCommand,
+  codesignVerifyCommand,
+  diskImageCodesignCommand,
+  missingTools,
+  notarizationArchiveCommand,
+  notarizeCommand,
+  notarizeBundle,
+  notarizeFile,
+  preflightAppleSigning,
+  signBundle,
+  signDiskImage,
+  stapleAndValidate,
+  stapleCommand,
+  stapleValidateCommand,
+  verifyCodesign,
+  xcrunProbe,
+  type AppleSigning,
+} from "@shepherdjerred/native-release/apple";
 import { macDryRunDirectory, macOutputDirectory } from "./release-artifacts.ts";
 
 /** The target cargo-packager names a universal macOS package after. */
@@ -44,44 +72,7 @@ const ENVIRONMENT_HELP = {
     "the notarytool keychain profile; create it once with `xcrun notarytool store-credentials <name> --apple-id <id> --team-id <team>`",
 } as const;
 
-export type MacSigning = {
-  /** SHA-1 of the Developer ID Application identity, unambiguous to codesign. */
-  identity: string;
-  notaryProfile: string;
-};
-
-/**
- * The Developer ID Application identity for `teamId` in
- * `security find-identity -v -p codesigning` output, by its SHA-1. Exactly one
- * must match; two would make the choice a guess.
- */
-export function findDeveloperIdIdentity(
-  identities: string,
-  teamId: string,
-): string {
-  const matches = identities
-    .split("\n")
-    .map((line) => /^\s*\d+\)\s+([0-9A-F]{40})\s+"(.+)"\s*$/.exec(line))
-    .filter((match) => match !== null)
-    .filter(
-      ([, , name]) =>
-        name?.startsWith("Developer ID Application: ") === true &&
-        name.endsWith(`(${teamId})`),
-    )
-    .map(([, hash]) => hash ?? "");
-  const [identity, ...others] = matches;
-  if (identity === undefined) {
-    throw new Error(
-      `No valid "Developer ID Application" certificate for team ${teamId} is in an unlocked keychain. Install it from https://developer.apple.com/account/resources/certificates or unlock its keychain. Present identities:\n${identities}`,
-    );
-  }
-  if (others.length > 0) {
-    throw new Error(
-      `More than one Developer ID Application certificate for team ${teamId}; remove the expired one so the choice is not a guess`,
-    );
-  }
-  return identity;
-}
+export type MacSigning = AppleSigning;
 
 /** The output file names for one release. */
 export function macOutputNames(
@@ -94,31 +85,6 @@ export function macOutputNames(
     signature: `${archive}.sig`,
     diskImage: macDiskImageFileName(channel, version),
   };
-}
-
-/** Sign one bundle or disk image with the hardened runtime and a timestamp. */
-export function codesignCommand(identity: string, path: string): string[] {
-  return [
-    "codesign",
-    "--force",
-    "--options",
-    "runtime",
-    "--timestamp",
-    "--sign",
-    identity,
-    path,
-  ];
-}
-
-/**
- * Sign the disk image. The hardened runtime applies to code, not to a disk
- * image, so only the identity and a timestamp.
- */
-export function diskImageCodesignCommand(
-  identity: string,
-  path: string,
-): string[] {
-  return ["codesign", "--force", "--timestamp", "--sign", identity, path];
 }
 
 /**
@@ -169,39 +135,13 @@ export function diskImageCommand(
 
 type RunOptions = { cwd: string; env?: Record<string, string | undefined> };
 
-/** Run a command, or throw describing it; a half-done signing step stops the lane. */
-async function run(command: string[], options: RunOptions): Promise<void> {
-  const child = Bun.spawn(command, {
-    cwd: options.cwd,
-    env: options.env ?? process.env,
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-  const status = await child.exited;
-  if (status !== 0) {
-    throw new Error(`${command.join(" ")} exited ${String(status)}`);
-  }
+function run(command: string[], options: RunOptions): Promise<void> {
+  return runCommand(bunRunner, command, options);
 }
 
 /** Run a command and return its stdout and stderr together. */
-async function capture(command: string[], cwd: string): Promise<string> {
-  const child = Bun.spawn(command, { cwd, stdout: "pipe", stderr: "pipe" });
-  const [stdout, stderr, status] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  if (status !== 0) {
-    throw new Error(
-      `${command.join(" ")} exited ${String(status)}\n${stdout}${stderr}`,
-    );
-  }
-  return `${stdout}${stderr}`;
-}
-
-async function succeeds(command: string[], cwd: string): Promise<boolean> {
-  const child = Bun.spawn(command, { cwd, stdout: "ignore", stderr: "ignore" });
-  return (await child.exited) === 0;
+function capture(command: string[], cwd: string): Promise<string> {
+  return captureCommand(bunRunner, command, { cwd, includeStderr: true });
 }
 
 function announce(step: string): void {
@@ -221,21 +161,21 @@ async function preflight(
   root: string,
   dryRun: boolean,
 ): Promise<MacSigning | null> {
-  const tools: [string, string[]][] = [
-    ["lipo", ["xcrun", "--find", "lipo"]],
-    ["codesign", ["xcrun", "--find", "codesign"]],
-    ["notarytool", ["xcrun", "--find", "notarytool"]],
-    ["stapler", ["xcrun", "--find", "stapler"]],
-    ["hdiutil", ["which", "hdiutil"]],
-    ["spctl", ["which", "spctl"]],
-    ["ditto", ["which", "ditto"]],
-    ["security", ["which", "security"]],
-    ["tar", ["which", "tar"]],
-  ];
-  const missing: string[] = [];
-  for (const [name, probe] of tools) {
-    if (!(await succeeds(probe, root))) missing.push(name);
-  }
+  const missing = await missingTools(
+    bunRunner,
+    [
+      { name: "lipo", probe: xcrunProbe("lipo") },
+      { name: "codesign", probe: xcrunProbe("codesign") },
+      { name: "notarytool", probe: xcrunProbe("notarytool") },
+      { name: "stapler", probe: xcrunProbe("stapler") },
+      { name: "hdiutil", probe: ["which", "hdiutil"] },
+      { name: "spctl", probe: ["which", "spctl"] },
+      { name: "ditto", probe: ["which", "ditto"] },
+      { name: "security", probe: ["which", "security"] },
+      { name: "tar", probe: ["which", "tar"] },
+    ],
+    { cwd: root },
+  );
   if (missing.length > 0) {
     throw new Error(
       `Missing ${missing.join(", ")}; install Xcode or the command line tools`,
@@ -273,11 +213,7 @@ async function preflight(
   }
   const teamId = process.env["SCOUT_DESKTOP_MAC_TEAM_ID"] ?? "";
   const notaryProfile = process.env["SCOUT_DESKTOP_MAC_NOTARY_PROFILE"] ?? "";
-  if (!/^[A-Z0-9]{10}$/.test(teamId)) {
-    throw new Error(
-      `SCOUT_DESKTOP_MAC_TEAM_ID is not a 10-character team ID: ${teamId}`,
-    );
-  }
+  assertTeamId("SCOUT_DESKTOP_MAC_TEAM_ID", teamId);
   for (const name of [
     "CARGO_PACKAGER_SIGN_PRIVATE_KEY",
     "CARGO_PACKAGER_SIGN_PRIVATE_KEY_PASSWORD",
@@ -288,25 +224,12 @@ async function preflight(
       );
     }
   }
-  const identity = findDeveloperIdIdentity(
-    await capture(
-      ["security", "find-identity", "-v", "-p", "codesigning"],
-      root,
-    ),
+  return preflightAppleSigning(bunRunner, {
+    teamIdVariable: "SCOUT_DESKTOP_MAC_TEAM_ID",
     teamId,
-  );
-  // `history` proves the stored profile authenticates without submitting.
-  if (
-    !(await succeeds(
-      ["xcrun", "notarytool", "history", "--keychain-profile", notaryProfile],
-      root,
-    ))
-  ) {
-    throw new Error(
-      `notarytool could not use keychain profile "${notaryProfile}". Store it once with xcrun notarytool store-credentials ${notaryProfile} --apple-id <apple-id> --team-id ${teamId}; it prompts for an app-specific password and keeps it in the keychain`,
-    );
-  }
-  return { identity, notaryProfile };
+    notaryProfile,
+    cwd: root,
+  });
 }
 
 /**
@@ -332,19 +255,6 @@ export function packagerEnvironment(
     SCOUT_DESKTOP_TARGET: MAC_UNIVERSAL_TARGET,
     SHERPA_ONNX_ARCHIVE_DIR: sherpaArchives,
   };
-}
-
-/** Notarize `path` (a zip or a disk image) and wait for Apple's verdict. */
-function notarizeCommand(path: string, profile: string): string[] {
-  return [
-    "xcrun",
-    "notarytool",
-    "submit",
-    path,
-    "--keychain-profile",
-    profile,
-    "--wait",
-  ];
 }
 
 export type MacPackageInput = {
@@ -408,57 +318,32 @@ export async function packageMac(input: MacPackageInput): Promise<void> {
   }
 
   const notarizationZip = join(output, "notarization.zip");
-  const zipCommand = [
-    "ditto",
-    "-c",
-    "-k",
-    "--sequesterRsrc",
-    "--keepParent",
-    app,
-    notarizationZip,
-  ];
-  const verifyCommand = [
-    "codesign",
-    "--verify",
-    "--deep",
-    "--strict",
-    "--verbose=2",
-    app,
-  ];
   announce("signing, notarizing and stapling the app");
   if (signing === null) {
     wouldRun(codesignCommand("<Developer ID>", app));
-    wouldRun(verifyCommand);
-    wouldRun(zipCommand);
+    wouldRun(codesignVerifyCommand(app));
+    wouldRun(notarizationArchiveCommand(app, notarizationZip));
     wouldRun(notarizeCommand(notarizationZip, "<notary profile>"));
-    wouldRun(["xcrun", "stapler", "staple", app]);
-    wouldRun(["xcrun", "stapler", "validate", app]);
-    wouldRun(["spctl", "--assess", "--type", "execute", "--verbose=4", app]);
+    wouldRun(stapleCommand(app));
+    wouldRun(stapleValidateCommand(app));
+    wouldRun(assessCommand("app", app));
   } else {
-    await run(codesignCommand(signing.identity, app), { cwd: root });
-    await run(verifyCommand, { cwd: root });
-    const display = await capture(
-      ["codesign", "--display", "--verbose=2", app],
-      root,
-    );
-    if (!display.includes("runtime")) {
-      throw new Error(
-        "The app is not signed with the hardened runtime, which notarization requires",
-      );
-    }
-    await run(zipCommand, { cwd: root });
-    await run(notarizeCommand(notarizationZip, signing.notaryProfile), {
-      cwd: root,
+    const options = { cwd: root };
+    await signBundle(bunRunner, signing.identity, app, options);
+    await verifyCodesign(bunRunner, app, options);
+    await assertHardenedRuntime(bunRunner, app, "", options);
+    await notarizeBundle(bunRunner, {
+      app,
+      archive: notarizationZip,
+      profile: signing.notaryProfile,
+      ...options,
     });
     await rm(notarizationZip);
     // Staple the app itself so a first launch needs no network; the update
     // archive and the disk image are both built from the stapled bundle.
-    await run(["xcrun", "stapler", "staple", app], { cwd: root });
-    await run(["xcrun", "stapler", "validate", app], { cwd: root });
-    await run(["spctl", "--assess", "--type", "execute", "--verbose=4", app], {
-      cwd: root,
-    });
-    await run(verifyCommand, { cwd: root });
+    await stapleAndValidate(bunRunner, app, options);
+    await assess(bunRunner, "app", app, options);
+    await verifyCodesign(bunRunner, app, options);
   }
 
   announce("the update archive");
@@ -506,40 +391,15 @@ export async function packageMac(input: MacPackageInput): Promise<void> {
   if (signing === null) {
     wouldRun(diskImageCodesignCommand("<Developer ID>", diskImage));
     wouldRun(notarizeCommand(diskImage, "<notary profile>"));
-    wouldRun(["xcrun", "stapler", "staple", diskImage]);
-    wouldRun(["xcrun", "stapler", "validate", diskImage]);
-    wouldRun([
-      "spctl",
-      "--assess",
-      "--type",
-      "open",
-      "--context",
-      "context:primary-signature",
-      "--verbose=4",
-      diskImage,
-    ]);
+    wouldRun(stapleCommand(diskImage));
+    wouldRun(stapleValidateCommand(diskImage));
+    wouldRun(assessCommand("diskImage", diskImage));
   } else {
-    await run(diskImageCodesignCommand(signing.identity, diskImage), {
-      cwd: root,
-    });
-    await run(notarizeCommand(diskImage, signing.notaryProfile), {
-      cwd: root,
-    });
-    await run(["xcrun", "stapler", "staple", diskImage], { cwd: root });
-    await run(["xcrun", "stapler", "validate", diskImage], { cwd: root });
-    await run(
-      [
-        "spctl",
-        "--assess",
-        "--type",
-        "open",
-        "--context",
-        "context:primary-signature",
-        "--verbose=4",
-        diskImage,
-      ],
-      { cwd: root },
-    );
+    const options = { cwd: root };
+    await signDiskImage(bunRunner, signing.identity, diskImage, options);
+    await notarizeFile(bunRunner, diskImage, signing.notaryProfile, options);
+    await stapleAndValidate(bunRunner, diskImage, options);
+    await assess(bunRunner, "diskImage", diskImage, options);
   }
 
   announce("done");
