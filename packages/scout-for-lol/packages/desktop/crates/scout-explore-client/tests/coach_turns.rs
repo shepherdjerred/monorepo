@@ -128,12 +128,20 @@ fn a_coach_that_is_off_or_a_spent_limit_says_nothing() -> TestResult {
         DesktopApiErrorCode::FeatureDisabled,
         DesktopApiErrorCode::RateLimited,
     ] {
-        let mut session = golden::ready()?;
+        // The player has a conversation open when the coach is refused.
+        let mut session = golden::coach_options()?;
+        let conversation = golden::coach_transcript()?.conversation.id;
         session
             .begin_app_turn(&select_turn("cs-1"))
             .ok_or("request")?;
         session.app_turn_failed(&refused(code));
         let parts = session.parts();
+        assert_eq!(
+            parts.status.open_conversation,
+            Some(conversation),
+            "{code:?}: the player's conversation is still open"
+        );
+        assert!(parts.transcript.is_some(), "{code:?}: and still shown");
         assert_eq!(parts.turn, None, "{code:?}: the optimistic turn is gone");
         assert_eq!(parts.status.notice, None, "{code:?}: no notice");
         assert_eq!(parts.status.availability, ChatAvailability::Ready);

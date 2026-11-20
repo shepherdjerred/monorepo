@@ -171,6 +171,9 @@ pub struct ChatSession {
     coach: Option<CoachPanel>,
     /// The coach turn whose run `runs/start-app` has not created yet.
     pending_coach: Option<(ChatCoachKind, String)>,
+    /// What a coach turn's new conversation took off the screen, put back if
+    /// the turn is refused.
+    displaced: Option<(Option<Uuid>, Option<Transcript>)>,
 }
 
 impl Default for ChatSession {
@@ -262,6 +265,7 @@ impl ChatSession {
             epoch: 0,
             coach: None,
             pending_coach: None,
+            displaced: None,
         }
     }
 
@@ -665,6 +669,7 @@ impl ChatSession {
             coach.key == turn.game_key && Some(coach.conversation) == self.open
         });
         if !continues {
+            self.displaced = Some((self.open, self.transcript.clone()));
             self.start_new();
         }
         self.pending_coach = Some((kind, turn.game_key.clone()));
@@ -681,6 +686,11 @@ impl ChatSession {
     pub fn app_turn_failed(&mut self, error: &ExploreClientError) {
         self.pending_coach = None;
         self.turn = None;
+        // The conversation the player had open comes back.
+        if let Some((open, transcript)) = self.displaced.take() {
+            self.open = open;
+            self.transcript = transcript;
+        }
         match error.recovery() {
             Some(
                 Recovery::FeatureDisabled
@@ -828,6 +838,7 @@ impl ChatSession {
         turn.view.turn.conversation_id = Some(run.conversation_id);
         turn.view.turn.question_message_id = Some(run.question_message_id);
         turn.stash.clear();
+        self.displaced = None;
         if let Some((kind, key)) = self.pending_coach.take() {
             self.coach = Some(CoachPanel {
                 kind,
