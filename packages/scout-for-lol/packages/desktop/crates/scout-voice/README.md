@@ -71,7 +71,11 @@ Silero VAD from the pinned URLs in the contract (the same files and checksums
 the backend image pins), and copies the trained verifier and keywords file
 from `backend/assets/voice`, where they are already committed. At runtime
 `ModelPaths::locate` checks every file again and fails on anything missing or
-altered. Bundling the directory into the installer is a later change.
+altered. The installers ship the directory as a `voice-models` resource and
+`ModelPaths::locate_installed` finds it beside the executable, in a macOS app
+bundle's `Resources`, or in `target/voice-models` during development; see
+"Voice models in the installers" in the desktop README for the layout and
+licences.
 
 `sherpa-onnx-sys` downloads its prebuilt static library from the sherpa-onnx
 GitHub release at build time without a checksum. `SHERPA_ONNX_ARCHIVE_DIR`
