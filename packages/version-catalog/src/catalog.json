@@ -1276,7 +1276,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.3.1"
+      "value": "28.3.12"
     },
     {
       "name": "seaweedfs",
@@ -1288,7 +1288,7 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.48.0",
+      "value": "4.54.0",
       "component": true
     },
     {
@@ -1301,7 +1301,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d",
+      "value": "4.54@sha256:4b42c212543a0acd4c0e675215ecdcaf62a186ef98def76c7e12701871222d15",
       "notes": [
         "Runs weed filer.backup beside the seaweedfs chart, whose servers use the chart's own image.",
         "renovate.json groups both so filer.backup tracks the server version."
@@ -1317,7 +1317,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.1.1"
+      "value": "28.1.6"
     },
     {
       "name": "bitnami/mariadb",
@@ -1353,7 +1353,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "3.3.7@sha256:e54b4a7eb106ee15eda5664311c4b9415546d4196f5c4336d23a78d6ce57b819"
+      "value": "3.4.0@sha256:7eb37cdce9fdeeeadd21b3ffb7b426564e5a1c0d2ade6fe0d62af5b618938bd3"
     },
     {
       "name": "library/php",
@@ -1498,7 +1498,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.6.1@sha256:c5e3657451f4ba1ddb145a5118a4347314206cc5ba98f40e5f268c6c0975963e"
+      "value": "2.6.3@sha256:d19378dc3ad8fac46b2d554019540e84d607c176b3e0774a10c55458f1288fa0"
     },
     {
       "name": "arizephoenix/phoenix",
@@ -1576,7 +1576,7 @@
         "versioning": "semver",
         "packageName": "flipt/flipt"
       },
-      "value": "v2.13.1@sha256:3118adad2f21d2d4793765265e9eb1c99b547019f062ce438430089ba7cea89b",
+      "value": "v2.14.2@sha256:121830e237c3a0d2b875f73905944d6ff301fdd7881c5abdec5f24f5549537e8",
       "notes": [
         "Feature flag server. Fair Core License; the free tier covers the UI, local git storage, and evaluation.",
         "A bump requires re-capturing packages/feature-flags/src/providers/fixtures/flipt-snapshot.default.json,",
