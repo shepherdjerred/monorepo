@@ -623,6 +623,15 @@ impl<C: Collector> Supervisor<C> {
     /// Write one message. A window that cannot take it is treated as crashed:
     /// it is killed, and its exit is handled like any other.
     async fn deliver(&self, window: &mut Window, message: &SupervisorMessage) {
+        // A window that has already exited cannot read, and a write to its
+        // pipe can still succeed: the pipe stays open for as long as any
+        // process holds its read end, and a window launched concurrently
+        // inherits that end between `fork` and `exec`. The exit status is the
+        // authority, so consult it before writing instead of the write's result.
+        if matches!(window.child.try_wait(), Ok(Some(_))) {
+            window.stdin = None;
+            return;
+        }
         let Some(stdin) = window.stdin.as_mut() else {
             return;
         };

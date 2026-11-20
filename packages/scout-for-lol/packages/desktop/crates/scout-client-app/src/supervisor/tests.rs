@@ -372,12 +372,11 @@ async fn window_crashes_become_bounded_usage_events() -> TestResult {
     Ok(())
 }
 
+/// Greets a window whose process has already exited and been waited for, and
+/// returns the window to inspect. Waiting for the exit first makes the "after
+/// the exit" side of the greeting race certain.
 #[cfg(unix)]
-#[tokio::test]
-async fn a_write_to_a_window_that_already_exited_does_not_blame_the_supervisor() -> TestResult {
-    // Whether the greeting lands before or after a quick exit is a race the
-    // supervisor cannot win, so it must not change the crash's cause. Waiting
-    // for the exit first makes the "after" side certain.
+async fn greet_an_exited_window() -> Result<Window, Box<dyn std::error::Error>> {
     let directory = scratch_directory()?;
     let (collector, _calls, _diagnostics, _usage) = FakeCollector::new();
     let launcher = sh("exit 3", &[]);
@@ -414,10 +413,56 @@ async fn a_write_to_a_window_that_already_exited_does_not_blame_the_supervisor()
             },
         )
         .await;
-    assert!(window.stdin.is_none());
-    assert_eq!(window.cause, None);
     drop(supervisor);
     std::fs::remove_dir_all(directory)?;
+    Ok(window)
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn a_write_to_a_window_that_already_exited_does_not_blame_the_supervisor() -> TestResult {
+    // Whether the greeting lands before or after a quick exit is a race the
+    // supervisor cannot win, so it must not change the crash's cause.
+    let window = greet_an_exited_window().await?;
+    assert!(window.stdin.is_none());
+    assert_eq!(window.cause, None);
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn an_exited_window_is_recognised_while_other_processes_launch() -> TestResult {
+    // A process forked elsewhere inherits every open pipe until it execs, so an
+    // exited window's pipe can keep a reader and accept a write. Launching
+    // processes continuously around the greeting makes that overlap routine;
+    // the exit status, not the write, must decide.
+    let launching = Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let launcher = {
+        let launching = Arc::clone(&launching);
+        std::thread::spawn(move || {
+            while launching.load(std::sync::atomic::Ordering::Relaxed) {
+                if let Ok(mut child) = std::process::Command::new("true")
+                    .stdin(std::process::Stdio::piped())
+                    .spawn()
+                {
+                    let _ = child.wait();
+                }
+            }
+        })
+    };
+    let mut outcome = Ok(());
+    for _ in 0..500 {
+        let window = greet_an_exited_window().await?;
+        if window.stdin.is_some() || window.cause.is_some() {
+            outcome = Err("a window that had exited kept its pipe or a cause");
+            break;
+        }
+    }
+    launching.store(false, std::sync::atomic::Ordering::Relaxed);
+    launcher
+        .join()
+        .map_err(|_| "the launching thread panicked")?;
+    outcome?;
     Ok(())
 }
 
