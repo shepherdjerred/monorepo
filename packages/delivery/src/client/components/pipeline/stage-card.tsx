@@ -8,7 +8,8 @@ import type {
 import { Status } from "#client/components/status.tsx";
 import { Duration, RelativeTime } from "#client/components/time.tsx";
 import { ShortSha, TargetLink, ToolLinks } from "#client/components/links.tsx";
-import { stageSummary } from "./pipeline-view-model.ts";
+import { Disclosure } from "#client/components/disclosure.tsx";
+import { stageActionList, stageSummary } from "./pipeline-view-model.ts";
 import { revisionLabel } from "#client/components/identifier.tsx";
 
 function transitionLabel(transition: Transition) {
@@ -101,8 +102,25 @@ function Revision({ stage }: { stage: PipelineStage }) {
   );
 }
 
+function ActionList({
+  label,
+  actions,
+}: {
+  label: string;
+  actions: PipelineAction[];
+}) {
+  return (
+    <ol className="actions" aria-label={label}>
+      {actions.map((action) => (
+        <ActionRow key={action.key} action={action} />
+      ))}
+    </ol>
+  );
+}
+
 export function StageCard({ stage }: { stage: PipelineStage }) {
   const heading = useId();
+  const { inline, collapsed } = stageActionList(stage);
   return (
     <section
       className={`stage-card stage-${stage.status}`}
@@ -121,13 +139,20 @@ export function StageCard({ stage }: { stage: PipelineStage }) {
         <Status value={stage.status} />
       </header>
       <Revision stage={stage} />
-      <p className="stage-summary">{stageSummary(stage)}</p>
-      {stage.actions.length > 0 && (
-        <ol className="actions" aria-label={`${stage.title} actions`}>
-          {stage.actions.map((action) => (
-            <ActionRow key={action.key} action={action} />
-          ))}
-        </ol>
+      {/* A collapsed list's own summary counts its outcomes. */}
+      {collapsed === null && (
+        <p className="stage-summary">{stageSummary(stage)}</p>
+      )}
+      {inline.length > 0 && (
+        <ActionList label={`${stage.title} actions`} actions={inline} />
+      )}
+      {collapsed !== null && (
+        <Disclosure summary={collapsed.summary} open={collapsed.open}>
+          <ActionList
+            label={`${stage.title} ${collapsed.label}`}
+            actions={collapsed.actions}
+          />
+        </Disclosure>
       )}
       {stage.environmentId !== null &&
         stage.transition?.mode === "promotion" && (

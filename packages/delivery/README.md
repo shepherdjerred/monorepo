@@ -41,7 +41,7 @@ The API listens on port 7353 by default. `bun run dev` starts its watcher;
 backend. The browser requires the same authenticated proxy as production.
 The Playwright harness supplies a separate real proxy and disposable database
 for local interaction tests (`e2e/server.ts` for the release specs and
-`e2e/model-server.ts` for `model.spec.ts`), picking worktree-isolated free
+`e2e/model-server.ts` for every `*model.spec.ts`), picking worktree-isolated free
 ports automatically unless `DELIVERY_E2E_PORT` or `DELIVERY_MODEL_E2E_PORT` is
 explicitly set. The model
 harness reconciles its own catalog and records Arcade's releases, a
@@ -50,7 +50,11 @@ at its approve step and archives for an operator-run stack and a channel
 (`e2e/model-plan.ts`), so its pages read the real model routes. Each harness
 names the images its ArgoCD double reports running (`liveImages`): Scout
 production's accepted and retained worker builds in the release harness,
-Arcade's accepted image in the model harness. Setting
+Arcade's accepted image in the model harness. It also names the run its
+Woodpecker double reports for a pipeline number (`ciRuns`): four workflows by
+default, every monorepo CI lane for Arcade's newest build in the model
+harness, and that run in progress with a failed workflow for the release
+harness's unqualified Streambot build (`e2e/pipeline-graph.ts`). Setting
 `DELIVERY_HARNESS_MACHINE_CREDENTIALS` to a JSON array of disposable machine
 credentials lets a client drive the admin and execute routes; the proxy then
 passes their bearer tokens through. `src/testing/model-fixtures.ts` holds
@@ -131,6 +135,19 @@ Delivery first heard of each (its oldest CI build), then by sha. That time
 never moves while a pipeline keeps registering builds, so a page does not
 reshuffle under a reader. The page's "Older" and "Newest" links carry the
 cursor as a search parameter.
+
+The promotion and change pages draw their stages as one graph
+(`src/client/components/pipeline/`). Wide, the stages are columns that share
+the width down to 10rem each, so seven stages fit a 1280px window and only a
+longer pipeline scrolls sideways; the transitions run along the top and each
+stage is as tall as its own actions. Narrow, the stages stack. A stage lists up
+to five actions; a longer list collapses behind a count of its outcomes
+("14 workflows passed", "12 passed · 1 failed · 1 running") and opens by itself
+while an action failed, is running or awaits approval, with those first. A CI
+workflow's second line names a failed step only when the workflow itself
+failed: Woodpecker also reports a step as failed when it stops a service
+container at the end of a workflow that passed. The rules are pure functions
+in `pipeline-view-model.ts`.
 
 Filters and pages are search parameters. Forms are native `<form>` elements.
 Every confirmation asks through one native `<dialog>` that the root layout

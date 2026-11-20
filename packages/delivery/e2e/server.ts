@@ -14,6 +14,7 @@ import { seedPlatformBrowser } from "./platform.ts";
 import { serveHarness } from "./harness.ts";
 import { describeSeededCommits, seedCommitHistory } from "./commits.ts";
 import { seedOverviewGroup } from "./overview.ts";
+import { RUNNING_PIPELINE, seedRunningPipeline } from "./pipeline-graph.ts";
 import {
   requestTestPlan,
   checkpointTestPlan,
@@ -130,6 +131,7 @@ async function startHarness() {
     platform.delivery,
     platform.sourceBuildId,
   );
+  await seedRunningPipeline(delivery);
   await describeSeededCommits(delivery);
   await serveHarness({
     cluster,
@@ -148,6 +150,7 @@ async function startHarness() {
         scoutPool.workerB.image,
       ],
     },
+    ciRuns: { [RUNNING_PIPELINE]: "monorepo-running" },
   });
 }
 try {

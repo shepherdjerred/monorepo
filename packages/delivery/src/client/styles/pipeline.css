@@ -1,50 +1,61 @@
-/* CodePipeline-style stage graph: an ordered list of stage cards. */
+/*
+ * CodePipeline-style stage graph: an ordered list of stage cards.
+ *
+ * Narrow, the stages stack with their transitions between them. Wide, each
+ * stage is a column sharing the row's width: the transitions run along one
+ * rail above the cards, and every card is as tall as its own content.
+ */
 .pipeline-scroll {
+  /* Only a graph with more stages than the width holds scrolls. */
   overflow-x: auto;
   padding: var(--space-2) var(--space-0) var(--space-4);
   scroll-snap-type: x proximity;
   container-type: inline-size;
 }
 .pipeline {
+  --stage-gap: var(--space-3);
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
-  gap: var(--space-2);
-  align-items: stretch;
+  flex-direction: column;
 }
 .pipeline-step {
   display: flex;
-  align-items: stretch;
+  flex-direction: column;
+  min-width: 0;
   scroll-snap-align: start;
 }
 .transition {
-  flex: 0 0 auto;
-  width: 84px;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: var(--space-1);
-  padding: 0 var(--space-1);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 52px;
   font-size: var(--text-xs);
+  line-height: var(--leading-tight);
   color: var(--text-muted);
 }
+.transition-label {
+  min-width: 0;
+}
+/* Stacked, the arrow points down from one card to the next. */
 .transition-arrow {
+  flex: none;
   display: block;
-  width: 68px;
-  height: 2px;
+  width: 2px;
+  height: 36px;
   background: var(--border-strong);
   position: relative;
 }
 .transition-arrow::after {
   content: "";
   position: absolute;
-  right: -1px;
-  top: -4px;
+  left: -4px;
+  bottom: -1px;
   border: 5px solid transparent;
-  border-left: 7px solid var(--border-strong);
-  border-right: 0;
+  border-top: 7px solid var(--border-strong);
+  border-bottom: 0;
 }
 .transition-approval .transition-label {
   color: var(--waiting);
@@ -52,7 +63,7 @@
 }
 .transition-disabled .transition-arrow {
   background: repeating-linear-gradient(
-    90deg,
+    180deg,
     var(--border-strong) 0 6px,
     transparent 6px 10px
   );
@@ -60,12 +71,8 @@
 .transition-disabled .transition-label {
   color: var(--failed);
 }
-.pipeline-step:first-child .stage-card {
-  margin-left: 0;
-}
 .stage-card {
-  width: 264px;
-  flex: 0 0 auto;
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-top: 4px solid var(--neutral);
@@ -90,11 +97,17 @@
 .stage-pending {
   border-top-color: var(--waiting);
 }
+/* A narrow column drops the status under the stage's name. */
 .stage-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: baseline;
-  gap: var(--space-2);
+  gap: var(--space-1) var(--space-2);
+}
+.stage-header h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .stage-header h3 a {
   color: inherit;
@@ -107,6 +120,18 @@
   font-size: var(--text-sm);
   color: var(--text-muted);
   margin: 0;
+}
+/* A long list's summary: its outcomes, with the list behind it. */
+.stage-card .disclosure > summary {
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  padding-block: var(--space-1);
+}
+.stage-card .disclosure > summary::before {
+  margin-inline-start: 0;
+}
+.stage-card .disclosure-body {
+  padding: var(--space-1) 0 0;
 }
 .actions {
   list-style: none;
@@ -130,6 +155,20 @@
   align-self: start;
   /* Contains the hidden label, so it scrolls with the graph. */
   position: relative;
+  padding-inline: var(--space-1);
+}
+/* The second line and the duration share a line while both fit. */
+.action-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-2);
+  min-width: 0;
+}
+.action-body strong,
+.action-body .tool-links {
+  flex: 0 0 100%;
+  min-width: 0;
 }
 .action-body p {
   margin: 0;
@@ -142,30 +181,69 @@
 .action-meta {
   font-size: var(--text-xs);
 }
-@container (width <= 720px) {
-  .pipeline,
-  .pipeline-step {
-    flex-direction: column;
+/* A name longer than its column wraps instead of widening the stage. */
+.action .tool-link {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: var(--leading-snug);
+  padding-block: var(--space-1);
+}
+/* The arrow stays with the link's last word. */
+.action .tool-link > span {
+  white-space: nowrap;
+}
+@container (width > 720px) {
+  /*
+   * One column per stage, sharing the width down to 10rem each: seven stages
+   * fit a 1280px window. Two rows shared by every column: the transition
+   * rail, then the cards.
+   */
+  .pipeline {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(10rem, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: var(--stage-gap);
   }
+  .pipeline-step {
+    grid-row: span 2;
+    display: grid;
+    grid-template-rows: subgrid;
+  }
+  /* A tall stage leaves its neighbours at their own height. */
   .stage-card {
-    width: 100%;
+    grid-row: 2;
+    align-self: start;
   }
   .transition {
-    width: auto;
-    height: 52px;
-    grid-auto-flow: column;
-    gap: var(--space-2);
+    grid-row: 1;
+    align-items: start;
+    justify-content: start;
+    min-height: 0;
+    padding: 0 0 var(--space-2);
   }
+  /* The arrow starts at the previous card's edge and crosses the gap. */
   .transition-arrow {
-    width: 2px;
-    height: 36px;
+    width: calc(var(--stage-gap) + var(--space-4));
+    height: 2px;
+    margin-inline-start: calc(-1 * var(--stage-gap));
+    /* Centres the line on the label's first line. */
+    margin-block-start: calc((var(--text-xs) * var(--leading-tight) - 2px) / 2);
   }
   .transition-arrow::after {
-    right: -4px;
-    top: auto;
-    bottom: -1px;
+    left: auto;
+    bottom: auto;
+    right: -1px;
+    top: -4px;
     border: 5px solid transparent;
-    border-top: 7px solid var(--border-strong);
-    border-bottom: 0;
+    border-left: 7px solid var(--border-strong);
+    border-right: 0;
+  }
+  .transition-disabled .transition-arrow {
+    background: repeating-linear-gradient(
+      90deg,
+      var(--border-strong) 0 6px,
+      transparent 6px 10px
+    );
   }
 }
