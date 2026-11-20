@@ -11,6 +11,7 @@
   "outDir": "../dist/beta",
   "beforePackagingCommand": "bun ../scripts/prepare-package.ts beta",
   "binariesDir": "../target/package/beta",
+  "resources": [{ "src": "../target/voice-models", "target": "voice-models" }],
   "binaries": [{ "path": "scout-client-beta", "main": true }],
   "nsis": {
     "installMode": "currentUser",

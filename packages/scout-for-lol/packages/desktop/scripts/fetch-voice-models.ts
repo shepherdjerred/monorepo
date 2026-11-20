@@ -16,11 +16,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { download, sha256 } from "./verified-download.ts";
+import { MODEL_STAGING_DIRECTORY } from "./voice-model-files.ts";
 import { SCOUT_VOICE_CASCADE } from "../../data/src/scout-client/voice-cascade.schema.ts";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const backendAssets = join(root, "../backend/assets/voice");
-const destination = process.argv[2] ?? join(root, "target/voice-models");
+const destination = process.argv[2] ?? join(root, MODEL_STAGING_DIRECTORY);
 const { models } = SCOUT_VOICE_CASCADE;
 const kws = models.keywordSpotter;
 

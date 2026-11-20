@@ -448,6 +448,40 @@ the platform the format targets. These scripts produce unsigned installers;
 operating-system code signing (Authenticode, notarization) is not part of
 them yet, and update signing is a separate step in "Releasing an update".
 
+### Voice models in the installers
+
+Both installers carry the `scout-voice` models as a `voice-models` resource
+(`resources` in `packaging/*.json`). `scripts/prepare-package.ts`, the
+packager's `beforePackagingCommand`, deletes `target/voice-models` and
+reassembles it with `scripts/fetch-voice-models.ts` before the build, so
+`package:*` and `release:package:*` both ship a fresh, complete directory. The
+script downloads the keyword spotter archive and Silero VAD from the SHA-256
+pins in the shared voice contract, copies the trained verifier from
+`backend/assets/voice`, and throws on any mismatch. Nothing is downloaded at
+runtime.
+
+At runtime `scout_voice::models::ModelPaths::locate_installed` searches, in
+order: `voice-models` beside the executable (Windows install directory),
+`../Resources/voice-models` (macOS app bundle), `../voice-models` (a
+development executable in `target/<profile>`, where `bun run voice:models`
+writes), then the per-user data directory. The first directory that exists must
+be complete and match every checksum; a damaged install is an error, not a
+reason to try the next directory.
+
+Licences of the shipped models:
+
+| File(s)                                                                        | Source                                                                                                                  | Licence                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Silero VAD (`silero_vad.onnx`)                                                 | [snakers4/silero-vad](https://github.com/snakers4/silero-vad)                                                           | [MIT](https://raw.githubusercontent.com/snakers4/silero-vad/master/LICENSE)                                                                                                                                     |
+| Keyword spotter encoder, decoder, joiner, tokens, BPE                          | [sherpa-onnx `kws-models` release](https://github.com/k2-fsa/sherpa-onnx/releases/tag/kws-models)                       | sherpa-onnx and icefall code is [Apache-2.0](https://raw.githubusercontent.com/k2-fsa/sherpa-onnx/master/LICENSE); the release publishes no separate licence for these weights, which are trained on GigaSpeech |
+| `melspectrogram.onnx`, `embedding_model.onnx`                                  | [livekit-wakeword](https://github.com/livekit/livekit-wakeword) frozen feature models (Google speech embedding lineage) | livekit-wakeword is [Apache-2.0](https://raw.githubusercontent.com/livekit/livekit-wakeword/main/LICENSE); the Google speech embedding is Apache-2.0                                                            |
+| `hey_scout.onnx`, `wake-verifier.json`, `hey-scout.txt`, `hey-scout-smoke.wav` | Trained by Scout (`backend/voice-training`)                                                                             | Scout's own                                                                                                                                                                                                     |
+
+openWakeWord's own pre-trained wake word models are CC BY-NC-SA 4.0. None of
+them ship; only the frozen feature models above and Scout's own classifier do.
+The keyword spotter weights' licence is not stated upstream and is tracked as
+AI-693 for legal review before a stable release.
+
 ### Release builds and the sherpa-onnx library
 
 `scout-voice` links sherpa-onnx, whose build script downloads a native

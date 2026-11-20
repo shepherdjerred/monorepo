@@ -5,7 +5,8 @@
 //! from the pinned downloads in the contract plus the trained verifier that
 //! is already committed in `backend/assets/voice`, checking every SHA-256.
 //! At runtime [`ModelPaths::locate`] checks the same checksums again and
-//! fails loudly on anything missing or altered.
+//! fails loudly on anything missing or altered. [`ModelPaths::locate_installed`]
+//! finds the directory the installers place beside or inside the app.
 
 use std::path::{Path, PathBuf};
 
@@ -88,6 +89,59 @@ impl ModelPaths {
             vad: checked(dir, &contract.models.vad.name, &contract.models.vad.sha256)?,
             verifier: VerifierPaths::locate(dir, contract)?,
         })
+    }
+}
+
+/// The directory name the installers use for the model files.
+pub const MODEL_DIRECTORY_NAME: &str = "voice-models";
+
+/// Where the model directory can be, in the order it is searched.
+///
+/// The installers place it as a resource named [`MODEL_DIRECTORY_NAME`]:
+/// beside the executable on Windows (NSIS) and in `Contents/Resources` of the
+/// app bundle on macOS. `bun run voice:models` assembles it in
+/// `target/voice-models`, which is beside the `debug` or `release` directory a
+/// development executable runs from. `data_dir` is the per-user data directory,
+/// for a copy placed there by hand.
+#[must_use]
+pub fn model_directories(executable: &Path, data_dir: Option<&Path>) -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+    if let Some(beside) = executable.parent() {
+        candidates.push(beside.join(MODEL_DIRECTORY_NAME));
+        // `Contents/MacOS/<exe>` in a bundle: resources are in `Contents/Resources`.
+        candidates.push(beside.join("../Resources").join(MODEL_DIRECTORY_NAME));
+        // `target/<profile>/<exe>` in development.
+        candidates.push(beside.join("..").join(MODEL_DIRECTORY_NAME));
+    }
+    if let Some(data) = data_dir {
+        candidates.push(data.join(MODEL_DIRECTORY_NAME));
+    }
+    candidates
+}
+
+impl ModelPaths {
+    /// Find the model directory for `executable` and check every file in it.
+    ///
+    /// The first candidate from [`model_directories`] that exists is used and
+    /// must be complete and unaltered; there is no fallback to a later
+    /// candidate once one exists, so a damaged install is reported, not hidden.
+    ///
+    /// # Errors
+    ///
+    /// Fails with [`VoiceError::MissingModel`] naming the first candidate when
+    /// none exists, and otherwise on a missing file or checksum mismatch.
+    pub fn locate_installed(
+        executable: &Path,
+        data_dir: Option<&Path>,
+        contract: &VoiceCascade,
+    ) -> Result<Self, VoiceError> {
+        let candidates = model_directories(executable, data_dir);
+        match candidates.iter().find(|dir| dir.is_dir()) {
+            Some(dir) => Self::locate(dir, contract),
+            None => Err(VoiceError::MissingModel(
+                candidates.into_iter().next().unwrap_or_default(),
+            )),
+        }
     }
 }
 

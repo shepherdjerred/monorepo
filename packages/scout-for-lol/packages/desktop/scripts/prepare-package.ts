@@ -2,10 +2,12 @@
 // the profile's compiled-in settings and stages it under the profile's
 // installer binary name. NSIS keys its process kill, shortcuts and uninstall
 // on that name, so beta stages `scout-client-beta` and installs beside stable.
+// It also assembles the voice models that packaging/*.json ships as a resource.
 //   bun scripts/prepare-package.ts stable|beta
-import { copyFile, mkdir, readFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { MODEL_STAGING_DIRECTORY } from "./voice-model-files.ts";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const channel = process.argv[2];
@@ -24,6 +26,19 @@ const binaryName =
     : undefined;
 if (binaryName === undefined) {
   throw new Error(`release-profiles/${channel}.json has no binary_name`);
+}
+
+// The voice models ship as the `voice-models` resource in packaging/*.json.
+// Assemble them fresh so a stale or partial directory is never packaged;
+// fetch-voice-models.ts checks every SHA-256 and throws on a mismatch.
+const modelDirectory = join(root, MODEL_STAGING_DIRECTORY);
+await rm(modelDirectory, { recursive: true, force: true });
+const fetchModels = Bun.spawn(
+  ["bun", "scripts/fetch-voice-models.ts", modelDirectory],
+  { cwd: root, stdout: "inherit", stderr: "inherit" },
+);
+if ((await fetchModels.exited) !== 0) {
+  throw new Error("assembling the voice models failed");
 }
 
 const build = Bun.spawn(

@@ -11,6 +11,7 @@
   "outDir": "../dist/stable",
   "beforePackagingCommand": "bun ../scripts/prepare-package.ts stable",
   "binariesDir": "../target/package/stable",
+  "resources": [{ "src": "../target/voice-models", "target": "voice-models" }],
   "binaries": [{ "path": "scout-client", "main": true }],
   "nsis": {
     "installMode": "currentUser",
