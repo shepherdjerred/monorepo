@@ -40,6 +40,16 @@ export const ReplicaSetSchema = z.object({
 });
 export type ReplicaSet = z.infer<typeof ReplicaSetSchema>;
 
+/** A StatefulSet or DaemonSet, read for its update strategy. */
+export const StrategyOwnerSchema = z.object({
+  kind: z.enum(["StatefulSet", "DaemonSet"]),
+  metadata: z.object({ name: z.string(), namespace: z.string() }),
+  spec: z.object({
+    updateStrategy: z.object({ type: z.string().optional() }).optional(),
+  }),
+});
+export type StrategyOwner = z.infer<typeof StrategyOwnerSchema>;
+
 const ExpressionSchema = z.object({
   key: z.string(),
   operator: z.enum(["In", "NotIn", "Exists", "DoesNotExist"]),
@@ -102,6 +112,13 @@ export type Workload = {
   tier: Tier;
   /** Selected pods of this workload. */
   pods: number;
+  /** Names of the selected pods. */
+  podNames: string[];
+  /**
+   * Set when the workload uses the OnDelete strategy: `rollout restart` only
+   * patches its template, so these pods are deleted and waited for by name.
+   */
+  onDeletePods?: string[];
 };
 
 /** A selected pod no rollout restarts: a Job's, a bare pod, a custom owner. */
@@ -195,6 +212,7 @@ export function restartPlan(
       name: owner.name,
       tier: known?.tier ?? tierOf(pod),
       pods: (known?.pods ?? 0) + 1,
+      podNames: [...(known?.podNames ?? []), name].toSorted(),
     });
   }
   return {
@@ -207,8 +225,63 @@ export function restartPlan(
   };
 }
 
+/**
+ * `rollout restart` only patches the template of an OnDelete workload. An
+ * OnDelete StatefulSet restarts by deleting its pods, which keep their names.
+ * An OnDelete DaemonSet's replacements get new names, so it is listed as not
+ * restarted.
+ */
+export function applyUpdateStrategies(
+  plan: RestartPlan,
+  owners: readonly StrategyOwner[],
+): RestartPlan {
+  const onDelete = new Set(
+    owners
+      .filter((owner) => owner.spec.updateStrategy?.type === "OnDelete")
+      .map((owner) =>
+        [owner.metadata.namespace, owner.kind, owner.metadata.name].join("/"),
+      ),
+  );
+  const isOnDelete = (workload: Workload) =>
+    onDelete.has([workload.namespace, workload.kind, workload.name].join("/"));
+  const daemonSets = plan.workloads.filter(
+    (workload) => workload.kind === "DaemonSet" && isOnDelete(workload),
+  );
+  return {
+    workloads: plan.workloads
+      .filter((workload) => !daemonSets.includes(workload))
+      .map((workload) =>
+        isOnDelete(workload)
+          ? { ...workload, onDeletePods: workload.podNames }
+          : workload,
+      ),
+    unmanaged: [
+      ...plan.unmanaged,
+      ...daemonSets.flatMap((workload) =>
+        workload.podNames.map((name) => ({
+          namespace: workload.namespace,
+          name,
+          owner: `DaemonSet/${workload.name} (OnDelete)`,
+        })),
+      ),
+    ].toSorted((left, right) =>
+      `${left.namespace}/${left.name}`.localeCompare(
+        `${right.namespace}/${right.name}`,
+      ),
+    ),
+  };
+}
+
 /** The two commands of one workload: restart it, then wait for it. */
 export function restartCommands(workload: Workload): [string, string] {
+  if (workload.onDeletePods !== undefined) {
+    const pods = workload.onDeletePods.map((pod) => `pod/${pod}`).join(" ");
+    const kubectl = `kubectl -n ${workload.namespace}`;
+    return [
+      `${kubectl} delete ${pods} --wait=true`,
+      `${kubectl} wait --for=condition=Ready ${pods} --timeout=10m`,
+    ];
+  }
   const target = `${workload.kind.toLowerCase()}/${workload.name}`;
   const kubectl = `kubectl -n ${workload.namespace} rollout`;
   return [
@@ -277,24 +350,33 @@ export async function runPlan(
   options: PlanOptions,
   run: CommandRunner,
 ): Promise<string> {
-  const [policies, pods, replicaSets] = await Promise.all([
-    readNetworkPolicies(run),
-    kubectlJson(
-      run,
-      ["get", "pods", "--all-namespaces"],
-      list(RestartPodSchema),
-    ),
-    kubectlJson(
-      run,
-      ["get", "replicasets", "--all-namespaces"],
-      list(ReplicaSetSchema),
-    ),
-  ]);
-  const plan = restartPlan(
-    policies,
-    pods.items,
-    replicaSets.items,
-    options.namespaces,
+  const [policies, pods, replicaSets, statefulSets, daemonSets] =
+    await Promise.all([
+      readNetworkPolicies(run),
+      kubectlJson(
+        run,
+        ["get", "pods", "--all-namespaces"],
+        list(RestartPodSchema),
+      ),
+      kubectlJson(
+        run,
+        ["get", "replicasets", "--all-namespaces"],
+        list(ReplicaSetSchema),
+      ),
+      kubectlJson(
+        run,
+        ["get", "statefulsets", "--all-namespaces"],
+        list(StrategyOwnerSchema),
+      ),
+      kubectlJson(
+        run,
+        ["get", "daemonsets", "--all-namespaces"],
+        list(StrategyOwnerSchema),
+      ),
+    ]);
+  const plan = applyUpdateStrategies(
+    restartPlan(policies, pods.items, replicaSets.items, options.namespaces),
+    [...statefulSets.items, ...daemonSets.items],
   );
   return options.json ? JSON.stringify(plan, null, 2) : renderPlan(plan);
 }

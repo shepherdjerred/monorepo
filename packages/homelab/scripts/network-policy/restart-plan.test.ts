@@ -7,6 +7,7 @@ import {
   stagingPolicy,
 } from "./fixtures.ts";
 import {
+  applyUpdateStrategies,
   parsePlanArguments,
   renderPlan,
   restartPlan,
@@ -14,6 +15,7 @@ import {
   selectorMatches,
   type ReplicaSet,
   type RestartPod,
+  type StrategyOwner,
 } from "./restart-plan.ts";
 import type { NetworkPolicy } from "./staging-policy.ts";
 
@@ -115,6 +117,19 @@ const replicaSets = [
 
 const viaReplicaSet = (name: string) => ({ kind: "ReplicaSet", name });
 const statefulSet = (name: string) => ({ kind: "StatefulSet", name });
+
+function strategy(
+  kind: StrategyOwner["kind"],
+  namespace: string,
+  name: string,
+  type: string,
+): StrategyOwner {
+  return {
+    kind,
+    metadata: { name, namespace },
+    spec: { updateStrategy: { type } },
+  };
+}
 
 const pods: RestartPod[] = [
   ...["x", "y"].map((suffix) =>
@@ -332,11 +347,13 @@ describe("command", () => {
     expect(() => parsePlanArguments(["--apply"])).toThrow(/Unknown argument/u);
   });
 
-  test("only reads: three kubectl get calls and no other command", async () => {
+  test("only reads: five kubectl get calls and no other command", async () => {
     const { run, calls } = fakeRunner([
       ["get networkpolicies", items(...policies)],
       ["get pods", items(...pods)],
       ["get replicasets", items(...replicaSets)],
+      ["get statefulsets", items()],
+      ["get daemonsets", items()],
     ]);
     const output = await runPlan({ json: false, namespaces: ["tracker"] }, run);
     expect(output).toContain(
@@ -346,6 +363,8 @@ describe("command", () => {
       "kubectl get networkpolicies.networking.k8s.io",
       "kubectl get pods",
       "kubectl get replicasets",
+      "kubectl get statefulsets",
+      "kubectl get daemonsets",
     ]);
     expect(calls.every((call) => call.stdin === undefined)).toBe(true);
   });
@@ -355,6 +374,8 @@ describe("command", () => {
       ["get networkpolicies", items(...policies)],
       ["get pods", items(...pods)],
       ["get replicasets", items(...replicaSets)],
+      ["get statefulsets", items()],
+      ["get daemonsets", items()],
     ]);
     const plan = JSON.parse(
       await runPlan({ json: true, namespaces: ["tracker"] }, run),
@@ -367,10 +388,54 @@ describe("command", () => {
           name: "tracker",
           tier: "other",
           pods: 2,
+          podNames: ["tracker-6f-x", "tracker-6f-y"],
         },
       ],
       unmanaged: [],
     });
+  });
+
+  test("OnDelete StatefulSets restart by deleting their pods, OnDelete DaemonSets are listed", () => {
+    const plan = applyUpdateStrategies(
+      restartPlan(
+        [selecting("media", "everything", {}), selecting("home", "all", {})],
+        [
+          pod("media", "media-postgresql-0", {
+            labels: spilo("media-postgresql"),
+            owner: statefulSet("media-postgresql"),
+          }),
+          pod("media", "sonarr-0", { owner: statefulSet("sonarr") }),
+          pod("home", "agent-abc", {
+            owner: { kind: "DaemonSet", name: "agent" },
+          }),
+        ],
+        [],
+      ),
+      [
+        strategy("StatefulSet", "media", "media-postgresql", "OnDelete"),
+        strategy("StatefulSet", "media", "sonarr", "RollingUpdate"),
+        strategy("DaemonSet", "home", "agent", "OnDelete"),
+      ],
+    );
+    expect(renderPlan(plan)).toContain(
+      [
+        "kubectl -n media delete pod/media-postgresql-0 --wait=true",
+        "kubectl -n media wait --for=condition=Ready pod/media-postgresql-0 --timeout=10m",
+      ].join("\n"),
+    );
+    expect(renderPlan(plan)).toContain(
+      "kubectl -n media rollout status statefulset/sonarr --timeout=10m",
+    );
+    expect(renderPlan(plan)).not.toContain(
+      "rollout status statefulset/media-postgresql",
+    );
+    expect(plan.unmanaged).toEqual([
+      {
+        namespace: "home",
+        name: "agent-abc",
+        owner: "DaemonSet/agent (OnDelete)",
+      },
+    ]);
   });
 
   test("a failed read throws instead of printing a partial plan", async () => {
