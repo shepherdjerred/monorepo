@@ -125,6 +125,14 @@ names the checksum. Renovate cannot compute it.
 
    The pin appears under `packageFiles.regex` for its file.
 
+:::caution
+The extract run above is safe. Never give a `--dry-run=lookup` run a
+placeholder Docker Hub secret. The `docker.io` host rule names the real
+account, so each Docker Hub lookup becomes a failed login. Docker Hub then
+locks the account, and image publishing on main fails. For a lookup, run
+against a copy of `renovate.json` with its `hostRules` entry removed.
+:::
+
 ## Track a Minecraft plugin from Modrinth
 
 A Modrinth plugin pin is its download URL, with no hint. The
