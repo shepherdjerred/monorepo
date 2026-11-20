@@ -54,6 +54,9 @@ import { assertNumberedPlayback } from "@shepherdjerred/streambot/commands/numbe
 import { requestedPlayMode } from "@shepherdjerred/streambot/commands/play-mode.ts";
 import { dispatchPlayRequest, playResult } from "./playback-request.ts";
 
+import { observePlay } from "./play-observation.ts";
+import type { PlaySurface } from "@shepherdjerred/streambot/observability/web-metrics.ts";
+
 const RESOLVE_TIMEOUT_MS = 30_000;
 
 export function normalizeVoicePlayQuery(query: string): string {
@@ -123,6 +126,10 @@ export class PlaybackCommandService extends PlaybackControls {
   }
 
   async play(input: PlayInput): Promise<PlaybackCommandResult> {
+    return await observePlay(input, () => this.playRequest(input));
+  }
+
+  private async playRequest(input: PlayInput): Promise<PlaybackCommandResult> {
     input.signal?.throwIfAborted();
     this.deps.preparePlayback?.();
     const query = this.normalizePlayQuery(input);
@@ -408,6 +415,7 @@ export class PlaybackCommandService extends PlaybackControls {
     options?: {
       readonly spoken?: boolean;
       readonly utterance?: string;
+      readonly surface?: PlaySurface;
     },
   ): Promise<PlaybackCommandResult> {
     const currentSource = this.deps.view().current?.source;
@@ -445,6 +453,7 @@ export class PlaybackCommandService extends PlaybackControls {
       userId,
       sourceOverride: candidate.source,
       ...(signal === undefined ? {} : { signal }),
+      ...(options?.surface === undefined ? {} : { surface: options.surface }),
       ...(options?.spoken === true ? { spoken: true } : {}),
       ...(options?.utterance === undefined
         ? {}

@@ -94,6 +94,7 @@ async function playlistResult(
       userId: UserIdSchema.parse(viewer.userId),
       placement: "queue",
       signal: AbortSignal.timeout(30_000),
+      surface: "slash",
     });
     return { id, lines: [result.message] };
   }

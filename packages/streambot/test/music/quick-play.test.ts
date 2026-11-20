@@ -24,7 +24,18 @@ import { SONG } from "#music-fixture";
 import { musicCommandContext } from "@shepherdjerred/streambot/discord/music-context.ts";
 import { queueBatch } from "@shepherdjerred/streambot/commands/queue-batch.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import { playRequestsTotal } from "@shepherdjerred/streambot/observability/web-metrics.ts";
 import { loadMusicLink } from "@shepherdjerred/streambot/discord/music-links.ts";
+
+async function playRequests(surface: string, outcome: string) {
+  const metric = await playRequestsTotal.get();
+  return metric.values
+    .filter(
+      (value) =>
+        value.labels.surface === surface && value.labels.outcome === outcome,
+    )
+    .reduce((total, value) => total + value.value, 0);
+}
 
 const services: ReturnType<typeof fixtureMusic>[] = [];
 const pendingPlaylistLoad = Promise.withResolvers<{
@@ -75,6 +86,7 @@ function gatedQueueDeps(
 }
 
 afterEach(() => {
+  playRequestsTotal.reset();
   for (const music of services.splice(0)) music.loads.close();
 });
 async function setup(
@@ -292,6 +304,7 @@ test("saved catalog tracks route to the audio slot when their request mode was s
     userId,
     placement: "queue",
     signal: new AbortController().signal,
+    surface: "slash",
   });
 
   expect(routed[0]?.mode).toBe("music");
@@ -299,6 +312,7 @@ test("saved catalog tracks route to the audio slot when their request mode was s
     type: "ADD_BATCH",
     items: [{ source: { music: SONG, mode: undefined } }],
   });
+  expect(await playRequests("slash", "ok")).toBe(1);
 });
 
 test("YouTube playlists reject subtitle requests on the audio slot", async () => {
@@ -316,6 +330,7 @@ test("YouTube playlists reject subtitle requests on the audio slot", async () =>
         query: "https://www.youtube.com/playlist?list=PLfixture",
         placement: "queue",
         mode: null,
+        surface: "slash",
         subtitles: { enabled: true },
       },
       f.reply,
@@ -352,9 +367,11 @@ test("saved LoL playlist sources respect the feature gate", async () => {
       userId,
       placement: "queue",
       signal: new AbortController().signal,
+      surface: "slash",
     }),
   ).rejects.toThrow("LoL Esports is not enabled here.");
   expect(routePlayback).not.toHaveBeenCalled();
+  expect(await playRequests("slash", "denied")).toBe(1);
 });
 
 test("saved sports playlist sources respect the sports feature gate", async () => {
@@ -371,6 +388,7 @@ test("saved sports playlist sources respect the sports feature gate", async () =
       userId,
       placement: "queue",
       signal: new AbortController().signal,
+      surface: "slash",
     }),
   ).rejects.toThrow("Sports streams are not enabled here.");
   expect(routePlayback).not.toHaveBeenCalled();
@@ -401,6 +419,7 @@ test("saved sports playlists reject the audio slot", async () => {
       userId,
       placement: "queue",
       signal: new AbortController().signal,
+      surface: "slash",
     }),
   ).rejects.toThrow("Sports need a video channel.");
   expect(events).toHaveLength(0);

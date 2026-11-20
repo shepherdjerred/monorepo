@@ -75,6 +75,7 @@ export async function playSportsSelection(
       userId,
       sourceOverride: { kind: "url", url: event.pageUrl, sportsEvent: event },
       spoken: false,
+      surface: "slash",
     });
     return `${playbackChannelLabel(PlaybackChannelNumberSchema.parse(2))}\n${result.message}`;
   }
@@ -126,6 +127,7 @@ export async function playSportsSelection(
         sportsEvent: event,
       },
       spoken: false,
+      surface: "slash",
     });
     return playbackChannel === undefined
       ? result.message

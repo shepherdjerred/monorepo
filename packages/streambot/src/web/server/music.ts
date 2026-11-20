@@ -249,6 +249,7 @@ export class WebMusic {
         userId: context.userId,
         placement: input.placement,
         signal,
+        surface: "web",
       });
     } finally {
       this.playback.deps.sessions.releaseUnused(

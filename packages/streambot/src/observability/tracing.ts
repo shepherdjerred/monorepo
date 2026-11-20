@@ -209,6 +209,24 @@ export async function withVoiceSpan<T>(
   });
 }
 
+/**
+ * Web request/command spans. Callers set the span status themselves because expected 4xx
+ * responses are not span errors; a thrown error only ends the span so no message text is exported.
+ */
+export async function withWebSpan<T>(
+  name: string,
+  attributes: Attributes,
+  fn: (span: Span) => Promise<T>,
+): Promise<T> {
+  return await tracer.startActiveSpan(name, { attributes }, async (span) => {
+    try {
+      return await fn(span);
+    } finally {
+      span.end();
+    }
+  });
+}
+
 export function markSpanError(span: Span, error: unknown): void {
   const normalized = error instanceof Error ? error : new Error(String(error));
   span.recordException(normalized);

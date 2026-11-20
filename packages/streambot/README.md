@@ -128,6 +128,19 @@ invoked actors. `yt-dlp` and `ffmpeg` are system binaries baked into the
 Docker image. Prometheus metrics are served on `/metrics` (default port 9466);
 the headline signal is `streambot_ffmpeg_speed_ratio`.
 
+The web remote and every play entry point are measured with closed label sets
+only (no Discord IDs, names, queries, titles or URLs): `streambot_web_requests_total{route,status_class,code}`,
+`streambot_web_request_duration_seconds{route}`,
+`streambot_web_commands_total{action,outcome}`,
+`streambot_web_command_duration_seconds{action}`,
+`streambot_web_logins_total{outcome}`, and
+`streambot_play_requests_total{surface,outcome}` (`surface` is
+`web|slash|message|voice|card|other`; it counts requests, not tracks, so a
+40-track playlist is one request). Each `/api/*` response carries an
+`x-trace-id` header when tracing is enabled; `web request`, `web command` and
+`web login` log lines and the `streambot.web.request`/`streambot.web.command`
+spans share that trace id.
+
 ## Music discovery and playlists
 
 `/music search`, `/music artist`, and `/music album` browse the MusicBrainz

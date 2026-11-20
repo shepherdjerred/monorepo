@@ -73,6 +73,7 @@ export async function runExternalMusicCommand(
       query,
       ...linkOptions(interaction),
       subtitles: linkSubtitles(interaction),
+      surface: "slash",
     },
     interactionMusicLinkReply(interaction),
   );
@@ -86,6 +87,7 @@ export async function loadMusicLink(
     placement: "queue" | "next" | "now";
     mode: Source["mode"] | null;
     subtitles?: Source["subtitles"];
+    surface: "slash" | "message";
   },
   reply: MusicLinkReply,
 ): Promise<boolean> {
@@ -172,6 +174,7 @@ export async function loadMusicLink(
           userId: UserIdSchema.parse(interaction.user.id),
           placement,
           signal,
+          surface: options.surface,
         });
         return {
           count: sources.length,

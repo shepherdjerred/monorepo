@@ -1,7 +1,6 @@
 import { serveWebAsset } from "./assets.ts";
 import { webSchedules } from "./schedules.ts";
 import { browseSports } from "./sports-request.ts";
-import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import {
   CommandSchema,
   type WebCommand,
@@ -12,15 +11,35 @@ import type { WebSession, WebSessionStore } from "./session-store.ts";
 import type { WebPlayback } from "./playback.ts";
 import { WebActions } from "./actions.ts";
 import { WebMusic } from "./music.ts";
-import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
-import { MusicMatchError } from "@shepherdjerred/streambot/music/matching.ts";
 import { WebError, requestInput } from "./errors.ts";
+import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { SpanStatusCode, trace, type Span } from "@opentelemetry/api";
+import { withWebSpan } from "@shepherdjerred/streambot/observability/tracing.ts";
+import {
+  webCommandAction,
+  webCommandDurationSeconds,
+  webCommandsTotal,
+  webLoginsTotal,
+  webRequestDurationSeconds,
+  webRequestsTotal,
+  webStatusClass,
+  type WebLoginOutcome,
+} from "@shepherdjerred/streambot/observability/web-metrics.ts";
+import {
+  classifyWebFailure,
+  outcomeForStatus,
+  roundMilliseconds,
+  webMethod,
+  type WebFailure,
+} from "./telemetry.ts";
 import { ARTWORK_HOSTS } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
 import {
   webFailureDiagnostic,
   webFailureEndpoint,
 } from "./failure-diagnostic.ts";
+
+const log = logger.child("web");
 
 async function readCommand(request: Request) {
   let value: unknown;
@@ -88,18 +107,67 @@ export function createWebHandler(deps: {
     }
     const musicResponse = await music.handle(request, url, session);
     if (musicResponse !== null) return musicResponse;
-    if (
-      request.method === "POST" &&
-      ["/api/commands", "/api/subtitles"].includes(url.pathname)
-    ) {
-      const input = await readCommand(request);
-      return url.pathname === "/api/subtitles"
-        ? Response.json(await actions.subtitles(session, input, request.signal))
-        : await executeCommand(session, input, request.signal);
-    }
+    if (request.method === "POST" && url.pathname === "/api/subtitles")
+      return Response.json(
+        await actions.subtitles(
+          session,
+          await readCommand(request),
+          request.signal,
+        ),
+      );
+    if (request.method === "POST" && url.pathname === "/api/commands")
+      return await observedCommand(request, session);
     if (request.method !== "GET")
       throw new WebError(405, "method", "This method is not supported.");
     return await browseMedia(request, url, session);
+  }
+
+  /** One span, metric sample and log line per command; the failure still propagates unchanged. */
+  async function observedCommand(
+    request: Request,
+    session: WebSession,
+  ): Promise<Response> {
+    const started = performance.now();
+    return await withWebSpan("streambot.web.command", {}, async (span) => {
+      let input: WebCommand | undefined;
+      let failure: WebFailure | undefined;
+      try {
+        input = await readCommand(request);
+        span.setAttribute("streambot.web.action", input.action);
+        return await executeCommand(session, input, request.signal);
+      } catch (error) {
+        failure = classifyWebFailure(error, request.signal);
+        throw error;
+      } finally {
+        const action = webCommandAction(input?.action ?? "invalid");
+        const outcome = failure?.outcome ?? "ok";
+        const code = failure?.code ?? "ok";
+        webCommandsTotal.inc({ action, outcome });
+        webCommandDurationSeconds.observe(
+          { action },
+          (performance.now() - started) / 1000,
+        );
+        span.setAttributes({
+          "streambot.web.action": action,
+          "streambot.web.outcome": outcome,
+          "streambot.web.code": code,
+        });
+        if (failure?.kind === "unexpected")
+          span.setStatus({ code: SpanStatusCode.ERROR });
+        log.info("web command", {
+          action,
+          ...(input?.action === "play"
+            ? {
+                placement: input.placement,
+                selection_kind: input.selection.kind,
+              }
+            : {}),
+          outcome,
+          code,
+          duration_ms: roundMilliseconds(started),
+        });
+      }
+    });
   }
 
   async function executeCommand(
@@ -214,6 +282,25 @@ export function createWebHandler(deps: {
       );
   }
 
+  async function observedLogin(request: Request): Promise<Response> {
+    let outcome: WebLoginOutcome = "failed";
+    try {
+      const response = await auth.callback(request);
+      outcome =
+        response.headers.get("location") === "/?login=cancelled"
+          ? "cancelled"
+          : "success";
+      return response;
+    } catch (error) {
+      if (error instanceof WebError && error.code === "oauth_state")
+        outcome = "invalid_state";
+      throw error;
+    } finally {
+      webLoginsTotal.inc({ outcome });
+      log.info("web login", { outcome });
+    }
+  }
+
   async function route(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/healthz") return new Response("ok\n");
@@ -229,7 +316,7 @@ export function createWebHandler(deps: {
       request.method === "GET" &&
       url.pathname === "/api/auth/discord/callback"
     )
-      return await auth.callback(request);
+      return await observedLogin(request);
     if (url.pathname.startsWith("/api/"))
       return await authenticated(request, url, auth.session(request));
     if (request.method !== "GET")
@@ -237,30 +324,23 @@ export function createWebHandler(deps: {
     return await serveWebAsset(url, deps.assetsDir);
   }
 
-  return async (request: Request): Promise<Response> => {
+  async function respond(
+    request: Request,
+  ): Promise<{ response: Response; failure: WebFailure | undefined }> {
     let response: Response;
+    let failure: WebFailure | undefined;
     try {
       response = await route(request);
     } catch (error) {
-      if (error instanceof WebError || error instanceof MusicError)
-        response = Response.json(
-          { code: error.code, message: error.message },
-          { status: error.status },
-        );
-      else if (
-        error instanceof PlaybackCommandBoundaryError ||
-        error instanceof MusicMatchError
-      )
-        response = Response.json(
-          { code: "playback_denied", message: error.message },
-          { status: 409 },
-        );
-      else {
-        logger.error("web request failed", {
-          layer: "web",
-          endpoint: webFailureEndpoint(request),
-          failure: webFailureDiagnostic(error),
-        });
+      failure = classifyWebFailure(error, request.signal);
+      if (failure.kind === "unexpected" || failure.kind === "aborted") {
+        // A client that left mid-request is reported by the request line, not as an error.
+        if (failure.kind === "unexpected")
+          logger.error("web request failed", {
+            layer: "web",
+            endpoint: webFailureEndpoint(request),
+            failure: webFailureDiagnostic(error),
+          });
         response = Response.json(
           {
             code: "unavailable",
@@ -269,7 +349,19 @@ export function createWebHandler(deps: {
           },
           { status: 503 },
         );
-      }
+      } else if (error instanceof WebError || error instanceof MusicError)
+        response = Response.json(
+          { code: error.code, message: error.message },
+          { status: error.status },
+        );
+      else
+        response = Response.json(
+          {
+            code: "playback_denied",
+            message: error instanceof Error ? error.message : "",
+          },
+          { status: 409 },
+        );
     }
     response.headers.set("x-content-type-options", "nosniff");
     response.headers.set("referrer-policy", "same-origin");
@@ -284,6 +376,72 @@ export function createWebHandler(deps: {
       !response.headers.has("cache-control")
     )
       response.headers.set("cache-control", "no-store");
-    return response;
+    return { response, failure };
+  }
+
+  return async (request: Request): Promise<Response> => {
+    // Health, readiness and static assets are not API traffic and stay untraced.
+    if (!new URL(request.url).pathname.startsWith("/api/")) {
+      const { response } = await respond(request);
+      return response;
+    }
+    const endpoint = webFailureEndpoint(request);
+    const method = webMethod(request.method);
+    const started = performance.now();
+    return await withWebSpan(
+      "streambot.web.request",
+      { "streambot.web.route": endpoint, "http.request.method": method },
+      async (span) => {
+        const { response, failure } = await respond(request);
+        const status = response.status;
+        const code = failure?.code ?? (status < 400 ? "ok" : "other");
+        const outcome = failure?.outcome ?? outcomeForStatus(status);
+        const statusClass =
+          failure?.kind === "aborted" ? "aborted" : webStatusClass(status);
+        webRequestsTotal.inc({
+          route: endpoint,
+          status_class: statusClass,
+          code,
+        });
+        webRequestDurationSeconds.observe(
+          { route: endpoint },
+          (performance.now() - started) / 1000,
+        );
+        annotateRequestSpan(span, { status, code, outcome, failure });
+        const traceId = span.spanContext().traceId;
+        if (trace.isSpanContextValid(span.spanContext()))
+          response.headers.set("x-trace-id", traceId);
+        const meta = {
+          route: endpoint,
+          method,
+          status,
+          code,
+          outcome,
+          duration_ms: roundMilliseconds(started),
+        };
+        if (status >= 500 && failure?.kind !== "aborted")
+          log.warn("web request", meta);
+        else log.info("web request", meta);
+        return response;
+      },
+    );
   };
+}
+
+function annotateRequestSpan(
+  span: Span,
+  input: {
+    status: number;
+    code: string;
+    outcome: string;
+    failure: WebFailure | undefined;
+  },
+): void {
+  span.setAttributes({
+    "http.response.status_code": input.status,
+    "streambot.web.code": input.code,
+    "streambot.web.outcome": input.outcome,
+  });
+  if (input.status >= 500 && input.failure?.kind !== "aborted")
+    span.setStatus({ code: SpanStatusCode.ERROR });
 }

@@ -226,6 +226,7 @@ export class DiscordMusicBrowser {
       userId: UserIdSchema.parse(component.user.id),
       placement: "queue",
       signal: this.lifetime,
+      surface: "slash",
     });
     await this.interaction.editReply({
       content:

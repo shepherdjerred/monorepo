@@ -71,6 +71,7 @@ export class ExternalMusicQueue {
             userId: context.userId,
             placement: input.placement,
             signal,
+            surface: "web",
           });
           return {
             count: sources.length,
