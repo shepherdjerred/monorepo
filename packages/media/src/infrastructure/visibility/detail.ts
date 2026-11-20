@@ -118,9 +118,13 @@ export async function mediaVisibility(
         attempts.some(
           (attempt) =>
             attempt.recoveryEpoch === input.epoch &&
-            !["completed", "cancelled", "failed", "rolled_back"].includes(
-              attempt.state,
-            ),
+            ![
+              "completed",
+              "cancelled",
+              "failed",
+              "rolled_back",
+              "obsolete",
+            ].includes(attempt.state),
         ),
     },
     attempts: attempts.slice(0, 20).map((attempt) => ({

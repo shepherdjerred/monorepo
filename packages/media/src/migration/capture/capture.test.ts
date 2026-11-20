@@ -141,7 +141,8 @@ test("forged counts, unknown payload keys and duplicate records are rejected", a
   ).toThrow();
   expect(() => validateCapture({ ...snapshot, apiKey: "secret" })).toThrow();
 });
-test("Sonarr capture retains disabled seasons and explicit per-episode monitoring separately", async () => {
+test("Sonarr capture retains exact filenames and independent season and episode monitoring", async () => {
+  const filePath = "/data/tv/Example/Example #1.mkv";
   const reply = captureGetFixture((url) => {
     if (url.pathname.endsWith("system/status")) return { version: "4.0.0" };
     if (url.pathname.endsWith("series"))
@@ -165,11 +166,19 @@ test("Sonarr capture retains disabled seasons and explicit per-episode monitorin
           seriesId: 3,
           seasonNumber: 1,
           episodeNumber: 1,
-          episodeFileId: 0,
+          episodeFileId: 5,
           monitored: true,
         },
       ];
-    return [];
+    return [
+      {
+        id: 5,
+        seriesId: 3,
+        path: filePath,
+        size: 1000,
+        quality: { quality: { id: 7 } },
+      },
+    ];
   });
   const capture = await captureManager(
     { ...source(), source: "sonarr" },
@@ -191,4 +200,7 @@ test("Sonarr capture retains disabled seasons and explicit per-episode monitorin
   expect(
     capture.records.find((record) => record.sourceId === "episode:4"),
   ).toMatchObject({ season: 1, episode: 1, monitored: true });
+  expect(
+    capture.records.find((record) => record.kind === "file"),
+  ).toMatchObject({ path: filePath, mediaSourceIds: ["episode:4"] });
 });
