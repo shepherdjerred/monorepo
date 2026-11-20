@@ -1,11 +1,13 @@
 import {
   groupSignals,
+  type SignalEntry,
   type SignalGroup,
 } from "@shepherdjerred/ops-model/signals/signal-groups.ts";
 import type { Signal } from "@shepherdjerred/ops-model/snapshot.ts";
-import { ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import { useId, useState } from "react";
 
+import { ListToggle, cappedCount, useCapped } from "./capped-list.tsx";
 import { ExternalLink, ServiceLink, SeverityBadge } from "./ops-ui.tsx";
 import { age } from "#client/time.ts";
 
@@ -13,55 +15,6 @@ import { age } from "#client/time.ts";
 const DEFAULT_CAP = 10;
 /** Member rows an opened group shows before its own "Show N more". */
 const GROUP_MEMBER_CAP = 25;
-/** An overflow this small is shown outright; a toggle would hide less than it costs. */
-const CAP_SLACK = 2;
-
-type Capped<T> = {
-  readonly shown: readonly T[];
-  /** Items the cap is holding back while collapsed. */
-  readonly hidden: number;
-  /** Whether the list is long enough to need the toggle at all. */
-  readonly capped: boolean;
-  readonly expanded: boolean;
-  readonly toggle: () => void;
-};
-
-function useCapped<T>(items: readonly T[], cap: number): Capped<T> {
-  const [expanded, setExpanded] = useState(false);
-  const capped = items.length > cap + CAP_SLACK;
-  return {
-    shown: capped && !expanded ? items.slice(0, cap) : items,
-    hidden: capped ? items.length - cap : 0,
-    capped,
-    expanded,
-    toggle: () => {
-      setExpanded((value) => !value);
-    },
-  };
-}
-
-function ListToggle({
-  list,
-  controls,
-}: {
-  readonly list: Capped<unknown>;
-  readonly controls: string;
-}): React.JSX.Element | null {
-  if (!list.capped) return null;
-  const Icon = list.expanded ? ChevronUpIcon : ChevronDownIcon;
-  return (
-    <button
-      type="button"
-      className="list-toggle"
-      aria-expanded={list.expanded}
-      aria-controls={controls}
-      onClick={list.toggle}
-    >
-      {list.expanded ? "Show fewer" : `Show ${String(list.hidden)} more`}
-      <Icon aria-hidden="true" />
-    </button>
-  );
-}
 
 function SignalItem({
   signal,
@@ -190,6 +143,49 @@ function SignalGroupItem({
       </details>
     </li>
   );
+}
+
+/** Characters of a title, and of a detail, that fit one line of a half-width panel. */
+const TITLE_LINE_CHARS = 36;
+const DETAIL_LINE_CHARS = 52;
+
+function textLines(text: string, lineChars: number): number {
+  return Math.max(1, Math.ceil(text.length / lineChars));
+}
+
+/** A row's padding plus the lines of text `SignalItem` or a group row gives it. */
+function entryLines(entry: SignalEntry): number {
+  if (entry.type === "group")
+    return (
+      1 +
+      textLines(entry.label, TITLE_LINE_CHARS) +
+      (entry.since === undefined ? 0 : 1)
+    );
+  const { title, detail, service, since, links } = entry.signal;
+  const hasMeta =
+    service !== undefined || since !== undefined || links.length > 1;
+  return (
+    1 +
+    textLines(title, TITLE_LINE_CHARS) +
+    (detail === undefined ? 0 : textLines(detail, DETAIL_LINE_CHARS)) +
+    (hasMeta ? 1 : 0)
+  );
+}
+
+/**
+ * About how tall a collapsed `SignalList` of these signals is, in lines of
+ * text. It is an estimate for laying panels out before they render, such as
+ * balancing two columns; nothing else should depend on it.
+ */
+export function estimatedListLines(
+  signals: readonly Signal[],
+  cap: number = DEFAULT_CAP,
+): number {
+  const entries = groupSignals(signals);
+  if (entries.length === 0) return 1;
+  const shown = entries.slice(0, cappedCount(entries.length, cap));
+  const toggle = shown.length < entries.length ? 2 : 0;
+  return shown.reduce((lines, entry) => lines + entryLines(entry), toggle);
 }
 
 /**

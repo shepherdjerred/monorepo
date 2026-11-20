@@ -1,4 +1,13 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
+
+import { DigestReportSchema } from "#shared/ops-schema";
+
+/** How far down the page an element starts, in px. */
+async function top(locator: Locator): Promise<number> {
+  const box = await locator.boundingBox();
+  if (box === null) throw new Error("the element is not rendered");
+  return box.y;
+}
 
 test("home answers what is wrong, where, and what waits on me", async ({
   page,
@@ -101,8 +110,134 @@ test("home launches the other apps and the tools", async ({ page }) => {
     .getByRole("navigation", { name: "Primary navigation" })
     .getByRole("link", { name: "Flow" })
     .click();
-  await expect(page).toHaveURL(/\/delivery$/u);
-  await expect(page).toHaveTitle("Delivery · Hub");
+  await expect(page).toHaveURL(/\/flow$/u);
+  await expect(page).toHaveTitle("Flow · Hub");
+  await expect(page.locator("main h1")).toHaveText("Flow");
+});
+
+test("/delivery redirects to /flow and keeps the query string and fragment", async ({
+  page,
+}) => {
+  await page.goto("/delivery");
+  await expect(page).toHaveURL(/\/flow$/u);
+  await expect(page).toHaveTitle("Flow · Hub");
+  await expect(page.locator("main h1")).toHaveText("Flow");
+
+  await page.goto("/delivery?range=30d#signals-work");
+  await expect(page).toHaveURL(/\/flow\?range=30d#signals-work$/u);
+  await expect(page.getByRole("radio", { name: "30d" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+});
+
+test("a section page leads with summaries, then trends, then the signals", async ({
+  page,
+}) => {
+  await page.goto("/maintenance");
+  await expect(page).toHaveTitle("Maintenance · Hub");
+  const summaries = page
+    .getByRole("region", { name: "Summary" })
+    .getByRole("article");
+  await expect(summaries).toHaveCount(4);
+  const maintenance = summaries.filter({
+    has: page.getByRole("heading", { name: "Maintenance" }),
+  });
+  await expect(maintenance).toContainText("Error");
+  // Every metric is on the card, not only the first three.
+  await expect(maintenance.locator(".metric")).toHaveCount(3);
+  await expect(
+    summaries
+      .filter({ has: page.getByRole("heading", { name: "Cluster & GitOps" }) })
+      .locator(".metric"),
+  ).toHaveCount(4);
+
+  // A metric that needs attention says so in words, not only with its bar.
+  const stale = maintenance.locator(".metric", { hasText: "Stale backups" });
+  await expect(stale).toHaveClass(/\bmetric-error\b/u);
+  await expect(stale).toContainText("error");
+  const disk = maintenance.locator(".metric", { hasText: "Max disk used" });
+  await expect(disk).toHaveClass(/\bmetric-ok\b/u);
+  await expect(disk).toHaveText("Max disk used71%");
+
+  // One panel per section, each with its count, below the charts.
+  const signals = page.getByRole("heading", { level: 2, name: "Signals" });
+  const trends = page.getByRole("heading", { level: 2, name: "Trends" });
+  expect(await top(trends)).toBeGreaterThan(await top(summaries.last()));
+  expect(await top(signals)).toBeGreaterThan(await top(trends));
+  const panels = page.locator(".signal-columns .panel");
+  await expect(panels).toHaveCount(4);
+  const backups = page.getByRole("region", { name: /^Maintenance/u });
+  await expect(backups.getByRole("heading", { level: 3 })).toHaveText(
+    /^Maintenance\s*\d+$/u,
+  );
+  await expect(backups.locator(".signal").first()).toBeVisible();
+  expect(await top(panels.first())).toBeGreaterThan(await top(signals));
+});
+
+test("a chart's legend shows the latest values until a point is hovered", async ({
+  page,
+}) => {
+  await page.goto("/flow");
+  const chart = page.locator("figure", {
+    has: page.getByRole("heading", { name: "Open pull requests" }),
+  });
+  const legend = chart.locator(".u-legend");
+  await expect(chart.locator("canvas")).toBeVisible();
+  // At rest: a time and a value for each series, never uPlot's `--`.
+  await expect(legend).not.toContainText("--");
+  await expect(legend.locator(".u-series")).toHaveCount(3);
+  for (const value of await legend.locator(".u-value").allTextContents())
+    expect(value).toMatch(/\d/u);
+  const atRest = await legend.innerText();
+
+  const plot = chart.locator(".u-over");
+  const box = await plot.boundingBox();
+  if (box === null) throw new Error("the chart has no plot area");
+  await page.mouse.move(box.x + box.width * 0.25, box.y + box.height / 2);
+  await expect(legend).not.toHaveText(atRest);
+  await expect(legend).not.toContainText("--");
+
+  await page.mouse.move(box.x + box.width / 2, box.y - 40);
+  await expect(legend).toHaveText(atRest);
+});
+
+test("review leads with its verdict, then numbers, charts and lists", async ({
+  page,
+}) => {
+  await page.goto("/review");
+  await expect(page).toHaveTitle("Review · Hub");
+  const banner = page.getByRole("region", { name: "Status" });
+  await expect(banner).toContainText("7 areas need attention");
+  await expect(banner).toContainText("Error");
+  await expect(
+    page.getByRole("region", { name: "Compared with the previous week" }),
+  ).toBeVisible();
+  const incidents = page.getByRole("region", { name: "Incidents" });
+  await expect(incidents.locator(".metric")).toHaveCount(3);
+  const changes = page.getByRole("region", { name: "Changes" });
+  await expect(changes.locator(".change").first()).toBeVisible();
+
+  // Banner, numbers, charts, then the lists.
+  const tops = await Promise.all(
+    [
+      banner,
+      incidents,
+      page.getByRole("heading", { level: 2, name: "Trends" }),
+      page.getByRole("region", { name: /^New this period/u }),
+    ].map((locator) => top(locator)),
+  );
+  expect(tops).toEqual(tops.toSorted((left, right) => left - right));
+
+  await page.getByRole("radio", { name: "Day" }).click();
+  await expect(page).toHaveURL(/kind=daily/u);
+  await expect(
+    page.getByRole("region", { name: /^New since the last digest/u }),
+  ).toBeVisible();
+  // The daily review has no week-over-week table.
+  await expect(
+    page.getByRole("region", { name: "Compared with the previous week" }),
+  ).toHaveCount(0);
 });
 
 test("/overview redirects to / and keeps the query string", async ({
@@ -120,6 +255,65 @@ test("/overview redirects to / and keeps the query string", async ({
       .getByRole("region", { name: "Needs attention" })
       .getByRole("radio", { name: /^Waiting on you/u }),
   ).toHaveAttribute("aria-checked", "true");
+});
+
+test("review draws its charts while the report is still loading", async ({
+  page,
+}) => {
+  const held = Promise.withResolvers<null>();
+  await page.route("**/api/v1/ops/review*", async (route) => {
+    await held.promise;
+    await route.continue();
+  });
+  await page.goto("/review");
+  const charts = page.locator(".chart-panel canvas");
+  await expect(charts).toHaveCount(4);
+  await expect(page.getByText("Loading review…")).toBeVisible();
+  const trends = page.getByRole("heading", { level: 2, name: "Trends" });
+  const before = await top(trends);
+
+  held.resolve(null);
+  await expect(page.getByRole("region", { name: "Status" })).toBeVisible();
+  await expect(charts).toHaveCount(4);
+  // The top block held its place, so the charts barely moved.
+  expect(Math.abs((await top(trends)) - before)).toBeLessThan(60);
+});
+
+test("a long change timeline shows fifteen changes until it is expanded", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/ops/review*", async (route) => {
+    const response = await route.fetch();
+    const report = DigestReportSchema.parse(await response.json());
+    const [first] = report.changes;
+    if (first === undefined) throw new Error("the fixture has no changes");
+    await route.fulfill({
+      response,
+      json: {
+        ...report,
+        changes: Array.from({ length: 40 }, (_, index) => ({
+          ...first,
+          id: `change-${String(index)}`,
+          title: `Change ${String(index + 1)}`,
+        })),
+      },
+    });
+  });
+  await page.goto("/review");
+  const changes = page.getByRole("region", { name: "Changes" });
+  const rows = changes.locator(".change");
+  await expect(rows).toHaveCount(15);
+  await expect(rows.last()).toContainText("Change 15");
+  const more = changes.getByRole("button", { name: "Show 25 more" });
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  await expect(changes.getByRole("list")).toHaveAttribute(
+    "id",
+    (await more.getAttribute("aria-controls")) ?? "missing",
+  );
+  await more.click();
+  await expect(rows).toHaveCount(40);
+  await changes.getByRole("button", { name: "Show fewer" }).click();
+  await expect(rows).toHaveCount(15);
 });
 
 test("service detail joins signals, the change timeline, and drill-down links", async ({
@@ -176,7 +370,7 @@ test("the ops layout fits a phone without horizontal scrolling", async ({
   await page.setViewportSize({ width: 375, height: 812 });
   for (const path of [
     "/",
-    "/delivery",
+    "/flow",
     "/maintenance",
     "/services/scout-for-lol",
     "/ai",

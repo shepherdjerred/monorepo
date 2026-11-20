@@ -25,22 +25,31 @@ type PageBudget = {
   readonly heading: string;
   /** Upper bounds on `scrollHeight`, in px. */
   readonly maxHeight: Record<ViewportName, number>;
+  /** Upper bounds on how far down the Trends charts start, in px. */
+  readonly maxTrendsTop?: Record<ViewportName, number>;
 };
 
 /**
- * Bounds are about 1.5x the heights measured with grouped, capped lists
- * (1.25x for /maintenance, whose uncapped height was only 4769 / 9339)
+ * Height bounds are about 1.5x the heights measured with grouped, capped
+ * lists (1.25x for /maintenance, whose uncapped height was only 4769 / 9339)
  * (per-update / aggregate, desktop then phone):
  *
  *   /             1835 / 1894   2997 / 3103
- *   /delivery     2184 / 2355   4170 / 4402
- *   /maintenance  3415 / 2660   7110 / 5757
- *   /ai           3009 / 3009   4606 / 4606
+ *   /flow         2399 / 2632   4354 / 4586
+ *   /maintenance  3543 / 2953   7363 / 6009
+ *   /ai           2991 / 2991   4640 / 4640
  *
- * Before lists were capped, /delivery was 9284px at desktop width on the same
- * fixture (16295px on a phone). Home's lists were then on /overview, which
- * was 11842px (22908px on a phone), and 3221 / 2539 (6456 / 5956) once
- * capped.
+ * Before lists were capped, /flow (then /delivery) was 9284px at desktop
+ * width on the same fixture (16295px on a phone). Home's lists were then on
+ * /overview, which was 11842px (22908px on a phone), and 3221 / 2539
+ * (6456 / 5956) once capped.
+ *
+ * The section pages put their summaries and charts above their signal lists,
+ * so the Trends heading starts at 476 on /flow and 756 on /maintenance at
+ * desktop width (725 and 1447 on a phone) in both variants; the bounds are
+ * about 1.5x that. With the lists first it started at 1379 / 1551 on /flow
+ * (2696 / 2928 on a phone) and at 2999 on /maintenance; before lists were
+ * capped, at 8479 on /flow (14821 on a phone).
  */
 const PAGES: readonly PageBudget[] = [
   {
@@ -49,14 +58,16 @@ const PAGES: readonly PageBudget[] = [
     maxHeight: { desktop: 2850, phone: 4700 },
   },
   {
-    path: "/delivery",
-    heading: "Delivery",
-    maxHeight: { desktop: 3500, phone: 6600 },
+    path: "/flow",
+    heading: "Flow",
+    maxHeight: { desktop: 3900, phone: 6800 },
+    maxTrendsTop: { desktop: 720, phone: 1100 },
   },
   {
     path: "/maintenance",
     heading: "Maintenance",
-    maxHeight: { desktop: 4300, phone: 8900 },
+    maxHeight: { desktop: 4400, phone: 9200 },
+    maxTrendsTop: { desktop: 1150, phone: 2200 },
   },
   {
     path: "/ai",
@@ -64,15 +75,6 @@ const PAGES: readonly PageBudget[] = [
     maxHeight: { desktop: 4500, phone: 6900 },
   },
 ];
-
-/**
- * How far down /delivery its Trends charts may start. Measured 1379 / 1551
- * at desktop width and 2696 / 2928 on a phone; it was 8479 and 14821.
- */
-const MAX_TRENDS_TOP: Record<ViewportName, number> = {
-  desktop: 2300,
-  phone: 4400,
-};
 
 /**
  * How far down Home its Areas grid may start at desktop width, so the grid
@@ -134,11 +136,11 @@ for (const variant of VARIANTS) {
             budget.maxHeight[viewportName],
           );
           expect(size.scrollWidth).toBeLessThanOrEqual(size.clientWidth);
-          if (budget.path === "/delivery") {
+          if (budget.maxTrendsTop !== undefined) {
             const trends = await page
               .getByRole("heading", { name: "Trends" })
               .boundingBox();
-            expect(trends?.y).toBeLessThan(MAX_TRENDS_TOP[viewportName]);
+            expect(trends?.y).toBeLessThan(budget.maxTrendsTop[viewportName]);
           }
         });
       }

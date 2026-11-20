@@ -15,7 +15,7 @@ import { lazy } from "react";
 
 import { coreCommands, coreSearch } from "./core-palette.ts";
 import { CORE_MODULE_ID, type ClientModule } from "./platform/module.ts";
-import { OverviewRedirect } from "./redirects.tsx";
+import { DeliveryRedirect, OverviewRedirect } from "./redirects.tsx";
 
 // Each page is its own chunk so the uPlot and ops-model code only loads on the
 // pages that render it.
@@ -40,9 +40,9 @@ const ServicePage = lazy(async () => {
   const module = await import("./ops/service-page.tsx");
   return { default: module.ServicePage };
 });
-const DeliveryPage = lazy(async () => {
+const FlowPage = lazy(async () => {
   const module = await import("./ops/section-page.tsx");
-  return { default: module.DeliveryPage };
+  return { default: module.FlowPage };
 });
 const MaintenancePage = lazy(async () => {
   const module = await import("./ops/section-page.tsx");
@@ -90,7 +90,9 @@ export const coreModule: ClientModule = {
     { path: "overview", page: OverviewRedirect },
     { path: "services", page: ServicesPage },
     { path: "services/:id", page: ServicePage },
-    { path: "delivery", page: DeliveryPage },
+    { path: "flow", page: FlowPage },
+    // Flow lived at /delivery; its URL still resolves.
+    { path: "delivery", page: DeliveryRedirect },
     { path: "ai", page: AiPage },
     { path: "maintenance", page: MaintenancePage },
     { path: "review", page: ReviewPage },
@@ -104,7 +106,7 @@ export const coreModule: ClientModule = {
     { label: "Home", icon: HouseIcon, path: "" },
     { label: "Services", icon: BoxesIcon, path: "services" },
     // "Flow", not "Delivery": Delivery is the separate release app.
-    { label: "Flow", icon: GitPullRequestIcon, path: "delivery" },
+    { label: "Flow", icon: GitPullRequestIcon, path: "flow" },
     { label: "AI", icon: BotIcon, path: "ai" },
     { label: "Maintenance", icon: WrenchIcon, path: "maintenance" },
     { label: "Review", icon: CalendarRangeIcon, path: "review" },

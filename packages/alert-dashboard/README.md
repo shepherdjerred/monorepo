@@ -17,7 +17,7 @@ The core module has two halves in one process:
   [`@shepherdjerred/ops-model`](../ops-model/README.md) snapshot and change
   events every five minutes. The dashboard stores them in SQLite, applies the
   freshness policy at read time (a stale snapshot is never green), and renders
-  Home (`/`), Services, Flow (`/delivery`), AI, Maintenance, and Review pages
+  Home (`/`), Services, Flow (`/flow`), AI, Maintenance, and Review pages
   plus the daily and weekly digest email. Home is the one overview page. In
   order it shows the overall status; tiles for firing alerts, what waits on
   Jerred, and Tracker triage; a card per area; a "Needs attention" list beside
@@ -25,16 +25,24 @@ The core module has two halves in one process:
   the tools. "Needs attention" lists every signal at attention severity or
   waiting on Jerred, and its filter narrows it to what waits on him
   (`/?show=waiting`, where the "Waiting on you" tile links). `/overview` was
-  a separate page and now redirects to `/`, keeping its query string. Trend
+  a separate page and now redirects to `/`, keeping its query string. Flow
+  (pull requests and Tracker work) and Maintenance are section pages
+  (`src/client/ops/section-page.tsx`): a summary card per snapshot section
+  with every metric, then the trend charts, then a signal list per section.
+  Flow was served at `/delivery`, the name of a different app; that URL
+  redirects to `/flow` with its query string and fragment. A metric tile at
+  warning, error, or unknown carries an accent bar and a named icon. Trend
   charts read Prometheus through named presets only; the browser never sends
-  PromQL. Every signal list renders through `SignalList`
+  PromQL. A chart's legend shows each series' newest sample until a point is
+  hovered. Every signal list renders through `SignalList`
   (`src/client/ops/signal-list.tsx`): it collapses same-kind signals with
   ops-model's `groupSignals` (an allowlist of kinds, so alerts never
   collapse), shows a capped number of entries (ten unless the list sets its
   own), and expands in place. There is no uncapped mode; the digest email
-  groups the same way before its own row cap. `e2e/volume.spec.ts` bounds
-  page height at production volume and how far down Home its area cards
-  start.
+  groups the same way before its own row cap. Change timelines cap the same
+  way, at fifteen. `e2e/volume.spec.ts` bounds page height at production
+  volume, how far down Home its area cards start, and how far down the
+  section pages their charts start.
 - **Alert ledger.** Alertmanager remains authoritative for evaluation,
   grouping, inhibition, routing, and silences; this service stores occurrence
   history, serves the Alerts, History, and System pages, sends grouped opening
@@ -204,7 +212,8 @@ database, credentials, Grafana, or Prometheus, and no prior `bun run build`.
 Any other value stops the fixture server at startup. The volume snapshots live
 in `src/test-fixtures/ops-snapshot-volume.ts` and use the collector's real
 signal ids, kinds, and metric ids, so they are also the fixtures to import in
-client tests. While `OPS_FIXTURE` is set the fixture server re-ingests its
+client tests. Both carry a week of changes, about ninety, so the Review and
+service timelines run past their cap. While `OPS_FIXTURE` is set the fixture server re-ingests its
 snapshot every five minutes, as the collector does, so a long-running session
 never goes stale. Series charts and alert ledger pages show the fixture
 server's fixed sample data.

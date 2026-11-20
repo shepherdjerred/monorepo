@@ -115,8 +115,9 @@ one is wanted, belongs in the `ops-snapshot` collector instead.
 So Hub links to Delivery and does not embed it. The browser-facing hosts of
 both apps live together in
 [`tool-links.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/ops-model/src/tool-links.ts).
-Hub's own release-flow page is labelled **Flow** rather than "Delivery", so the
-name points at only one app. How Delivery presents a release is covered in
+Hub's own page for pull requests and work is named **Flow** and served at
+`/flow`, not "Delivery", so the name points at only one app. Its earlier
+`/delivery` URL redirects there. How Delivery presents a release is covered in
 [how the Delivery web app follows a change](/explanation/homelab/delivery-hub/).
 
 ## Why the deployed name is still `alert-dashboard`

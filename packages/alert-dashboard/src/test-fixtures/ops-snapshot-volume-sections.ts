@@ -325,6 +325,64 @@ export function capacitySignals(): SignalInput[] {
   ];
 }
 
+/** Scopes the week's older merges rotate through, with the service each touches. */
+const MERGE_SCOPES = [
+  ["temporal", "temporal"],
+  ["homelab", undefined],
+  ["scout-for-lol", "scout-for-lol"],
+  ["toolkit", undefined],
+  ["tracker", "tracker"],
+  ["media", "streambot"],
+  ["birmel", "birmel"],
+  ["deps", undefined],
+] as const;
+const MERGE_SUBJECTS = [
+  "tighten retry policy",
+  "split the collector module",
+  "raise the memory limit",
+  "add a regression test",
+  "refresh pinned versions",
+] as const;
+
+/**
+ * The rest of a week at production pace: a merge every couple of hours and a
+ * Temporal worker rollout every eight, so the review and a busy service both
+ * hold more changes than a timeline shows at once.
+ */
+function earlierChanges(now: Temporal.Instant): ChangeEventInput[] {
+  const merges = Array.from({ length: 60 }, (_, index): ChangeEventInput => {
+    const number = 4579 - index * 3;
+    const [scope, service] = MERGE_SCOPES[index % MERGE_SCOPES.length] ?? [
+      "deps",
+      undefined,
+    ];
+    const subject = MERGE_SUBJECTS[index % MERGE_SUBJECTS.length] ?? "";
+    return {
+      source: "github",
+      externalId: `pr:${String(number)}`,
+      kind: "merge",
+      ...(service === undefined ? {} : { service }),
+      title: `#${String(number)} ${index % 3 === 0 ? "fix" : "chore"}(${scope}): ${subject}`,
+      occurredAt: ago(now, 22 + index * 2.4),
+      url: `${MONOREPO_URL}/pull/${String(number)}`,
+    };
+  });
+  const rollouts = Array.from({ length: 20 }, (_, index): ChangeEventInput => {
+    const id = 3120 - index;
+    return {
+      source: "argocd",
+      externalId: `temporal:deploy:${String(id)}`,
+      kind: "deploy",
+      service: "temporal",
+      title: `temporal deployed ${(0xa1_b2_c3 + index * 0x1_f3_d7).toString(16)}`,
+      occurredAt: ago(now, 6 + index * 8),
+      severity: "info",
+      url: `${ARGOCD_URL}/applications/argocd/temporal`,
+    };
+  });
+  return [...merges, ...rollouts];
+}
+
 export function volumeChanges(now: Temporal.Instant): ChangeEventInput[] {
   const merges = [
     [4713, "feat(tracker): surface sorting across views", "tracker", 1.5],
@@ -364,5 +422,6 @@ export function volumeChanges(now: Temporal.Instant): ChangeEventInput[] {
       severity: "info",
       url: `${ARGOCD_URL}/applications/argocd/${app}`,
     })),
+    ...earlierChanges(now),
   ];
 }

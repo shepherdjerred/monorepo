@@ -16,9 +16,10 @@ import {
   InfoIcon,
   OctagonAlertIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { Link } from "react-router";
 
+import { ListToggle, useCapped } from "./capped-list.tsx";
 import { isSnapshotUnavailable, snapshotQuery } from "./ops-api.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";
@@ -105,15 +106,30 @@ export function ServiceLink({
   );
 }
 
+/**
+ * One metric as a tile. A metric that needs attention carries an accent bar
+ * and a corner icon with its severity in words, so it never reads as healthy
+ * and never depends on colour alone. `ok` and `info` stay plain.
+ */
 export function MetricTile({
   metric,
 }: {
   readonly metric: Metric;
 }): React.JSX.Element {
+  const flagged = metric.severity !== "ok" && metric.severity !== "info";
+  const Icon = SEVERITY_ICON[metric.severity];
   return (
     <div className={`metric metric-${metric.severity}`}>
       <span>{metric.label}</span>
       <strong>{formatValue(metric.value, metric.unit)}</strong>
+      {flagged ? (
+        <>
+          <Icon className="metric-flag" aria-hidden="true" />
+          <span className="sr-only">
+            {SEVERITY_LABEL[metric.severity].toLowerCase()}
+          </span>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -149,62 +165,96 @@ export function SectionCard({
   );
 }
 
+/** A severity badge beside a one-line verdict, with a line of context under it. */
 export function StatusBanner({
-  snapshot,
+  severity,
+  summary,
+  label,
+  children,
 }: {
-  readonly snapshot: SnapshotResponse;
+  readonly severity: Severity;
+  readonly summary: string;
+  /** Names the region for assistive technology. */
+  readonly label: string;
+  /** The meta line: what the verdict covers or how old it is. */
+  readonly children: ReactNode;
 }): React.JSX.Element {
   return (
-    <section
-      className={`status-banner status-${snapshot.severity}`}
-      aria-label="Overall status"
-    >
-      <SeverityBadge severity={snapshot.severity} large />
+    <section className={`status-banner status-${severity}`} aria-label={label}>
+      <SeverityBadge severity={severity} large />
       <div>
-        <p className="status-summary">{snapshot.summary}</p>
-        <p className="status-meta">
-          Snapshot generated {age(snapshot.generatedAt)}
-          {snapshot.stale ? " · stale: treat green as unknown" : ""}
-        </p>
+        <p className="status-summary">{summary}</p>
+        <p className="status-meta">{children}</p>
       </div>
     </section>
   );
 }
 
+/** The latest snapshot's verdict and its age. */
+export function SnapshotStatusBanner({
+  snapshot,
+}: {
+  readonly snapshot: SnapshotResponse;
+}): React.JSX.Element {
+  return (
+    <StatusBanner
+      severity={snapshot.severity}
+      summary={snapshot.summary}
+      label="Overall status"
+    >
+      Snapshot generated {age(snapshot.generatedAt)}
+      {snapshot.stale ? " · stale: treat green as unknown" : ""}
+    </StatusBanner>
+  );
+}
+
+/** Changes a timeline shows before the rest sit behind "Show N more". */
+const CHANGE_CAP = 15;
+
+/** A newest-first list of changes, capped like every other ops list. */
 export function ChangeTimeline({
   changes,
   showService = true,
+  cap = CHANGE_CAP,
 }: {
   readonly changes: readonly ChangeView[];
   readonly showService?: boolean;
+  readonly cap?: number;
 }): React.JSX.Element {
+  const listId = useId();
+  const list = useCapped(changes, cap);
   if (changes.length === 0)
     return <p className="list-empty">No changes recorded.</p>;
   return (
-    <ol className="change-list">
-      {changes.map((change) => (
-        <li key={change.id} className={`change change-${change.severity}`}>
-          <span className="change-kind">{change.kind}</span>
-          <div>
-            <p>
-              {change.url === undefined ? (
-                change.title
-              ) : (
-                <a href={change.url} target="_blank" rel="noreferrer">
-                  {change.title}
-                </a>
-              )}
-            </p>
-            <div className="signal-meta">
-              <time dateTime={change.occurredAt}>{age(change.occurredAt)}</time>
-              {showService && change.service !== undefined ? (
-                <ServiceLink id={change.service} />
-              ) : null}
+    <>
+      <ol className="change-list" id={listId}>
+        {list.shown.map((change) => (
+          <li key={change.id} className={`change change-${change.severity}`}>
+            <span className="change-kind">{change.kind}</span>
+            <div>
+              <p>
+                {change.url === undefined ? (
+                  change.title
+                ) : (
+                  <a href={change.url} target="_blank" rel="noreferrer">
+                    {change.title}
+                  </a>
+                )}
+              </p>
+              <div className="signal-meta">
+                <time dateTime={change.occurredAt}>
+                  {age(change.occurredAt)}
+                </time>
+                {showService && change.service !== undefined ? (
+                  <ServiceLink id={change.service} />
+                ) : null}
+              </div>
             </div>
-          </div>
-        </li>
-      ))}
-    </ol>
+          </li>
+        ))}
+      </ol>
+      <ListToggle list={list} controls={listId} />
+    </>
   );
 }
 
