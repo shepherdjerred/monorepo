@@ -59,6 +59,8 @@ export type PlayInput = {
   readonly provider?: SportsProvider | "auto";
   /** Entry point for `streambot_play_requests_total`; omitted means `other`. */
   readonly surface?: PlaySurface;
+  /** The caller already counts this operation once (for example a playlist loop); skip counting here. */
+  readonly observedByCaller?: true;
 };
 
 export type SelectedMedia = {

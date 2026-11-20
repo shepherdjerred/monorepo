@@ -126,7 +126,9 @@ export class PlaybackCommandService extends PlaybackControls {
   }
 
   async play(input: PlayInput): Promise<PlaybackCommandResult> {
-    return await observePlay(input, () => this.playRequest(input));
+    return input.observedByCaller === true
+      ? await this.playRequest(input)
+      : await observePlay(input, () => this.playRequest(input));
   }
 
   private async playRequest(input: PlayInput): Promise<PlaybackCommandResult> {
