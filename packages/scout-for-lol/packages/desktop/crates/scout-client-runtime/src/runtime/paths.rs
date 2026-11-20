@@ -50,6 +50,23 @@ pub fn explore_cache_directory() -> PathBuf {
     )
 }
 
+/// Where the voice models may be, in the order they are tried: a
+/// `voice-models` directory beside the executable, where an installer puts
+/// them, then one in the per-user data directory. Nothing downloads them at
+/// runtime; `bun run voice:models` assembles the directory for development.
+#[must_use]
+pub fn voice_model_directories() -> Vec<PathBuf> {
+    let beside_executable = std::env::current_exe().ok().and_then(|executable| {
+        executable
+            .parent()
+            .map(|directory| directory.join("voice-models"))
+    });
+    beside_executable
+        .into_iter()
+        .chain(data_directory().map(|directory| directory.join("voice-models")))
+        .collect()
+}
+
 pub(super) fn outbox_path(backend_origin: &str, device_id: Option<Uuid>) -> PathBuf {
     let file_name = outbox_file_name(backend_origin, device_id);
     data_directory().map_or_else(

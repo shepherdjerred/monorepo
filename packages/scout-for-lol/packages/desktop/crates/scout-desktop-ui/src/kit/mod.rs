@@ -21,15 +21,16 @@ pub use chat::{
     pick_images, status_line,
 };
 pub use components::{
-    ButtonStyle, Handler, KeyValueTable, MonoLine, NavItem, NavSection, Page, ScoutButton,
-    ScoutToggle, ScrollLog, Shell, StatusRow, action_row, body_text, error_notice, note_text,
-    section_heading,
+    ButtonStyle, Handler, KeyValueTable, MicPill, MonoLine, NavItem, NavSection, Page, ScoutButton,
+    ScoutToggle, ScrollLog, Shell, StatusRow, action_row, body_text, error_notice, modal,
+    note_text, section_heading,
 };
 
 /// The GPUI types a view names, re-exported so views never import gpui-kit.
 pub mod prelude {
     pub use gpui_kit::{
-        App, Context, IntoElement, ParentElement, Render, Styled, Subscription, Task, Window,
+        AnyElement, App, Context, IntoElement, ParentElement, Render, Styled, Subscription, Task,
+        Window,
     };
 }
 

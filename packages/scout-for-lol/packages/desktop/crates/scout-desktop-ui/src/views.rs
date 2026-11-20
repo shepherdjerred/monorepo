@@ -1,16 +1,22 @@
-//! The four pages, rendered from their view models with the Scout kit.
+//! The four pages, rendered from their view models with the Scout kit, and
+//! voice's pieces: the microphone indicator, the first-use question, and the
+//! Settings section.
 
 use scout_desktop_ipc::WindowMessage;
 
 use crate::kit::prelude::{IntoElement, ParentElement as _};
 use crate::kit::{
-    ButtonStyle, Handler, KeyValueTable, MonoLine, Page, ScoutButton, ScoutToggle, ScrollLog,
-    StatusRow, action_row, body_text, error_notice, note_text, section_heading,
+    ButtonStyle, Handler, KeyValueTable, MicPill, MonoLine, Page, ScoutButton, ScoutToggle,
+    ScrollLog, StatusRow, action_row, body_text, error_notice, modal, note_text, section_heading,
 };
 use crate::view_model::{
     Action, ActivityModel, DiagnosticsModel, OBSERVATION_NOTE, OverviewModel, PRIVACY_NOTE,
     PRIVACY_SWITCHES_NOTE, SEND_ERROR_REPORTS_LABEL, SEND_USAGE_DATA_LABEL, START_AT_LOGIN_LABEL,
     SettingsModel,
+};
+use crate::voice_model::{
+    CONVERSATION_MODE_LABEL, ConsentDialog, KeyOption, MicIndicator, PUSH_TO_TALK_LABEL,
+    VOICE_NOTE, VoiceAction, VoiceSettingsModel,
 };
 
 /// Builds the handler that sends one command to the supervisor.
@@ -45,8 +51,93 @@ pub fn activity(model: ActivityModel) -> impl IntoElement {
     Page::new("Activity").child(body_text(model.summary))
 }
 
-/// The Settings page.
-pub fn settings(model: &SettingsModel, send: &Send) -> impl IntoElement {
+/// The microphone indicator for the sidebar.
+pub fn mic_pill(indicator: Option<MicIndicator>, send: &Send) -> Option<MicPill> {
+    indicator.map(|indicator| {
+        MicPill::new(
+            indicator.label,
+            indicator.tone,
+            indicator.toggle.map(|message| send(message)),
+        )
+    })
+}
+
+fn voice_button(action: &VoiceAction, style: ButtonStyle, send: &Send) -> ScoutButton {
+    ScoutButton::new(action.id, action.label, style, send(action.message.clone()))
+}
+
+/// The first-use question, over the whole window.
+pub fn consent_dialog(
+    dialog: Option<ConsentDialog>,
+    send: &Send,
+) -> Option<crate::kit::prelude::AnyElement> {
+    dialog.map(|dialog| {
+        modal(
+            dialog.title,
+            dialog.body,
+            [
+                voice_button(&dialog.accept, ButtonStyle::Primary, send),
+                voice_button(&dialog.decline, ButtonStyle::Secondary, send),
+            ],
+        )
+    })
+}
+
+fn key_row(label: &'static str, keys: &[KeyOption], send: &Send) -> impl IntoElement {
+    action_row()
+        .child(body_text(label).into_any_element())
+        .children(keys.iter().map(|key| {
+            ScoutButton::new(
+                key.id.clone(),
+                key.label.clone(),
+                if key.selected {
+                    ButtonStyle::Primary
+                } else {
+                    ButtonStyle::Secondary
+                },
+                send(key.message.clone()),
+            )
+        }))
+}
+
+/// The Settings page's voice section.
+fn voice_section(model: VoiceSettingsModel, send: &Send) -> Vec<crate::kit::prelude::AnyElement> {
+    let mut elements = vec![
+        section_heading("Voice").into_any_element(),
+        body_text(model.status).into_any_element(),
+        action_row()
+            .child(voice_button(&model.consent, ButtonStyle::Secondary, send))
+            .into_any_element(),
+        ScoutToggle::new(
+            "voice-conversation-mode",
+            CONVERSATION_MODE_LABEL,
+            model.conversation_mode.0,
+            send(model.conversation_mode.1),
+        )
+        .into_any_element(),
+        ScoutToggle::new(
+            "voice-push-to-talk",
+            PUSH_TO_TALK_LABEL,
+            model.push_to_talk.0,
+            send(model.push_to_talk.1),
+        )
+        .into_any_element(),
+        key_row("Push-to-talk key", &model.push_to_talk_keys, send).into_any_element(),
+        key_row("Mute key", &model.mute_keys, send).into_any_element(),
+        note_text(VOICE_NOTE).into_any_element(),
+    ];
+    if let Some(detail) = model.detail {
+        elements.push(error_notice(detail).into_any_element());
+    }
+    elements
+}
+
+/// The Settings page, with the voice section when this build has voice.
+pub fn settings(
+    model: &SettingsModel,
+    voice: Option<VoiceSettingsModel>,
+    send: &Send,
+) -> impl IntoElement {
     Page::new("Settings")
         .child(body_text(model.pairing_status.clone()))
         .child(
@@ -56,6 +147,11 @@ pub fn settings(model: &SettingsModel, send: &Send) -> impl IntoElement {
                     .iter()
                     .map(|action| button(action, send)),
             ),
+        )
+        .children(
+            voice
+                .map(|voice| voice_section(voice, send))
+                .unwrap_or_default(),
         )
         .child(section_heading("Startup"))
         .child(ScoutToggle::new(

@@ -38,7 +38,7 @@ mod upload;
 mod usage;
 
 pub(crate) use paths::data_directory;
-pub use paths::explore_cache_directory;
+pub use paths::{explore_cache_directory, voice_model_directories};
 pub use state::{GameflowPhase, RuntimeState};
 
 /// Latest-value subscription to the UI snapshot.
@@ -58,7 +58,9 @@ enum RuntimeCommand {
 }
 
 /// Where the settings file lives, when there is a per-user data directory.
-fn settings_store() -> Option<SettingsStore> {
+/// The supervisor's voice keeps its choices in the same file.
+#[must_use]
+pub fn settings_store() -> Option<SettingsStore> {
     data_directory().map(|directory| SettingsStore::in_directory(&directory))
 }
 

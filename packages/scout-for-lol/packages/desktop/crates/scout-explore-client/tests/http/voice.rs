@@ -7,6 +7,7 @@ use base64::engine::general_purpose::STANDARD;
 use futures_util::StreamExt;
 use scout_client_core::coach_context::GameContext;
 use scout_client_core::desktop_api::DesktopApiErrorCode;
+use scout_explore_client::PlayerAuthored;
 use scout_explore_client::contract::{
     CONTRACT_HEADER, CONTRACT_VERSION, Route, VOICE_MAX_DURATION_MS, VOICE_SAMPLE_RATE_HZ,
     VOICE_TURN_ERROR_CODES, VOICE_TURN_EVENT_TYPES,
@@ -35,6 +36,13 @@ fn golden_utterance(fixture: &Value) -> Result<Utterance, Box<dyn std::error::Er
             .ok_or("golden audio")?,
     )?;
     Ok(Utterance::from_wav(wav)?)
+}
+
+/// The golden recording as voice capture hands it over.
+fn spoken(fixture: &Value) -> Result<PlayerAuthored<Utterance>, Box<dyn std::error::Error>> {
+    Ok(PlayerAuthored::from_voice_capture(golden_utterance(
+        fixture,
+    )?))
 }
 
 /// A canonical mono 16-bit WAV of `samples` samples at `rate`.
@@ -163,7 +171,7 @@ async fn a_voice_turn_uploads_audio_only_and_reads_every_event() -> TestResult {
     let stream = server
         .client()?
         .start_voice_turn(
-            &golden_utterance(&fixture)?,
+            &spoken(&fixture)?,
             VoiceTrigger::WakeWord,
             Some(conversation),
             Some(context),
@@ -214,12 +222,7 @@ async fn a_refusal_before_the_stream_keeps_its_recovery() -> TestResult {
 
     let result = server
         .client()?
-        .start_voice_turn(
-            &golden_utterance(&fixture)?,
-            VoiceTrigger::PushToTalk,
-            None,
-            None,
-        )
+        .start_voice_turn(&spoken(&fixture)?, VoiceTrigger::PushToTalk, None, None)
         .await;
 
     match result {
@@ -245,12 +248,7 @@ async fn a_stream_that_closes_before_done_says_so() -> TestResult {
 
     let stream = server
         .client()?
-        .start_voice_turn(
-            &golden_utterance(&fixture)?,
-            VoiceTrigger::WakeWord,
-            None,
-            None,
-        )
+        .start_voice_turn(&spoken(&fixture)?, VoiceTrigger::WakeWord, None, None)
         .await?;
     let received = collect(stream).await;
 

@@ -11,12 +11,17 @@
 //! trigger) can start a turn that carries live state without adding a
 //! constructor of its own, with its own proof, here.
 //!
-//! A spoken turn ([`crate::voice`]) is the one other carrier, and its proof is
-//! not a type: the request holds audio and no text, and the server transcribes
-//! it itself, refusing a wake-word turn whose transcript does not open with
-//! the wake phrase.
+//! A spoken turn ([`crate::voice`]) is the one other carrier. Its request holds
+//! audio and no text, and the server transcribes it itself, refusing a
+//! wake-word turn whose transcript does not open with the wake phrase. On this
+//! side the recording is a `PlayerAuthored<Utterance>` too, minted only where
+//! the supervisor's voice capture hands over what the microphone recorded
+//! after a wake word or push-to-talk ([`PlayerAuthored::from_voice_capture`]),
+//! and [`crate::ExploreClient::start_voice_turn`] takes nothing else.
 //!
 //! The tests below hold that boundary over the whole desktop workspace.
+
+use crate::voice::Utterance;
 
 /// A value the player typed. It can be read, never minted, outside this crate.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -32,6 +37,17 @@ impl<T> PlayerAuthored<T> {
     #[must_use]
     pub const fn get(&self) -> &T {
         &self.0
+    }
+}
+
+impl PlayerAuthored<Utterance> {
+    /// A recording the player started, by saying the wake word or holding
+    /// push-to-talk. Only the supervisor's voice capture calls this, where
+    /// the microphone engine hands over a finished utterance; the test below
+    /// keeps it that way.
+    #[must_use]
+    pub const fn from_voice_capture(utterance: Utterance) -> Self {
+        Self(utterance)
     }
 }
 
@@ -89,6 +105,22 @@ mod tests {
             [
                 "scout-explore-client/src/authored.rs",
                 "scout-explore-client/src/relay.rs"
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn only_voice_capture_mints_a_spoken_turn() -> TestResult {
+        // The constructor's definition and this test, the supervisor's voice
+        // capture, and the route's own HTTP test.
+        let needle = ["from_", "voice_capture("].concat();
+        assert_eq!(
+            files_naming(&needle)?,
+            [
+                "scout-client-app/src/voice/capture.rs",
+                "scout-explore-client/src/authored.rs",
+                "scout-explore-client/tests/http/voice.rs"
             ]
         );
         Ok(())

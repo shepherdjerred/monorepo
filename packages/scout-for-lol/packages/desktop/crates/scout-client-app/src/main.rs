@@ -9,13 +9,17 @@
 //! owns the instance lock and the collector, never touches the GPU, and runs
 //! the window as a child (`--window`) that it relaunches when it crashes.
 //! The window renders with egui unless `SCOUT_DESKTOP_UI=gpui` or `--ui=gpui`
-//! selects the gpui-kit window (`scout-desktop-ui`).
+//! selects the gpui-kit window (`scout-desktop-ui`). With the gpui window, the
+//! supervisor also runs chat and, on Windows and macOS, voice: it owns the
+//! microphone and the global keys, and the window only shows them.
 
+mod hotkeys;
 mod supervisor;
 mod toolkit;
 mod tray;
 mod ui;
 mod updater;
+mod voice;
 mod window;
 
 use std::panic::AssertUnwindSafe;
@@ -37,6 +41,7 @@ use tracing_subscriber::EnvFilter;
 
 use crate::supervisor::{Supervisor, SupervisorExit, WindowLauncher};
 use crate::toolkit::{UI_ENVIRONMENT, WindowToolkit};
+use crate::voice::VoiceInputs;
 
 /// The argument that makes this executable the window process.
 const WINDOW_ARGUMENT: &str = "--window";
@@ -190,19 +195,29 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
     );
     let origin = backend_origin(arguments);
     let (control, control_receiver) = mpsc::unbounded_channel();
+    let (hotkey_events, hotkey_receiver) = mpsc::unbounded_channel();
+    let voice_control = control.clone();
     let server_overridden = arguments
         .iter()
         .any(|argument| argument.starts_with("--server="));
     let exit = tray::run(
         control,
-        Box::new(move |tray_available| {
+        hotkey_events,
+        Box::new(move |tray| {
             let diagnostics = Arc::clone(runtime.diagnostics());
+            let voice_inputs = VoiceInputs {
+                phase: runtime.gameflow_phase(),
+                state: runtime.state(),
+                hotkeys: hotkey_receiver,
+                chat: None,
+                control: voice_control,
+            };
             let supervisor = Supervisor::new(
                 instance_lock,
                 runtime,
                 launcher,
                 control_receiver,
-                tray_available,
+                tray.tray_available,
                 !background,
             );
             // A supervisor panic must end the process rather than leave a
@@ -216,13 +231,8 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
                             Some(updates) => supervisor.with_updates(updates),
                             None => supervisor,
                         };
-                    // Only the gpui window renders chat. The relay holds the
-                    // device credential here, never in the window process.
                     let supervisor = if toolkit == WindowToolkit::Gpui {
-                        supervisor.with_chat(ChatRelay::spawn(
-                            origin,
-                            scout_client_runtime::runtime::explore_cache_directory(),
-                        ))
+                        with_chat_and_voice(supervisor, origin, tray.hotkeys, voice_inputs)
                     } else {
                         supervisor
                     };
@@ -238,6 +248,66 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
     } else {
         ExitCode::SUCCESS
     }
+}
+
+/// Only the gpui window renders chat and voice. The relay holds the device
+/// credential in the supervisor, and voice holds the microphone there, never
+/// in the window process. Call on the supervisor's runtime.
+fn with_chat_and_voice(
+    supervisor: Supervisor<ClientRuntime>,
+    origin: String,
+    hotkeys: Option<Box<dyn hotkeys::HotkeyPort>>,
+    voice_inputs: VoiceInputs,
+) -> Supervisor<ClientRuntime> {
+    let chat = ChatRelay::spawn(
+        origin.clone(),
+        scout_client_runtime::runtime::explore_cache_directory(),
+    );
+    let supervisor = supervisor.with_chat(chat.clone());
+    let inputs = VoiceInputs {
+        chat: Some(chat),
+        ..voice_inputs
+    };
+    match start_voice(origin, hotkeys, inputs) {
+        Some(voice) => supervisor.with_voice(voice),
+        None => supervisor,
+    }
+}
+
+/// Start voice with the default microphone and speaker, the models beside
+/// the executable or in the data directory, and the settings file.
+#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[expect(
+    clippy::unnecessary_wraps,
+    reason = "the Linux build of this function has no voice to return"
+)]
+fn start_voice(
+    origin: String,
+    hotkeys: Option<Box<dyn hotkeys::HotkeyPort>>,
+    inputs: VoiceInputs,
+) -> Option<voice::VoiceHandle> {
+    let ports = voice::VoicePorts {
+        engine: Box::new(voice::device::ModelEngine::new(
+            scout_client_runtime::runtime::voice_model_directories(),
+        )),
+        turns: Box::new(voice::turns::ScoutTurns::new(origin)),
+        speaker: Box::new(scout_voice::playback::device::CpalSpeaker::default()),
+        store: Box::new(voice::FileStore(
+            scout_client_runtime::runtime::settings_store(),
+        )),
+        hotkeys,
+    };
+    Some(voice::spawn(ports, inputs))
+}
+
+/// Linux builds have no microphone support, so no voice.
+#[cfg(not(any(target_os = "windows", target_os = "macos")))]
+fn start_voice(
+    _origin: String,
+    _hotkeys: Option<Box<dyn hotkeys::HotkeyPort>>,
+    _inputs: VoiceInputs,
+) -> Option<voice::VoiceHandle> {
+    None
 }
 
 #[cfg(test)]

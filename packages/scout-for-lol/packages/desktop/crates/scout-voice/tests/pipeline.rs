@@ -312,11 +312,14 @@ fn a_rejected_candidate_produces_nothing_and_keeps_listening() -> TestResult {
 #[test]
 fn outside_a_game_the_microphone_is_closed_and_audio_is_dropped() -> TestResult {
     let mut pipeline = pipeline("HEY_SCOUT", true)?;
-    for phase in ["ChampSelect", "GameStart"] {
+    for phase in ["Lobby", "ChampSelect"] {
         pipeline.set_gameflow_phase(&GameflowPhase::from_label(phase));
         assert!(!pipeline.wants_microphone());
         assert_eq!(play(&mut pipeline, &wake_then_question()?)?.len(), 0);
     }
+    // The loading screen opens it, and the game keeps it open.
+    pipeline.set_gameflow_phase(&GameflowPhase::GameStart);
+    assert!(pipeline.wants_microphone());
     pipeline.set_gameflow_phase(&GameflowPhase::InProgress);
     assert!(pipeline.wants_microphone());
     pipeline.set_gameflow_phase(&GameflowPhase::EndOfGame);

@@ -23,6 +23,7 @@ use crate::view_model::{
     should_quit_on_close,
 };
 use crate::views;
+use crate::voice_model::{ConsentDialog, MicIndicator, VoiceSettingsModel, VoiceTurnModel};
 
 /// The exit status for a broken link. The supervisor treats it like a crash.
 const LINK_BROKEN: u8 = 3;
@@ -429,6 +430,7 @@ impl<W: Write + 'static> Render for ScoutWindow<W> {
             send: &send,
             handler,
             on_images: self.attach_files(),
+            voice_turn: VoiceTurnModel::new(self.link.voice_turn.as_ref()),
         };
         frame(
             self.page,
@@ -521,13 +523,20 @@ fn frame(
         )
         .into_any_element(),
         PageId::Activity => views::activity(ActivityModel::new(state)).into_any_element(),
-        PageId::Settings => views::settings(&SettingsModel::new(state), send).into_any_element(),
+        PageId::Settings => views::settings(
+            &SettingsModel::new(state),
+            VoiceSettingsModel::new(&link.voice),
+            send,
+        )
+        .into_any_element(),
         PageId::Diagnostics => {
             views::diagnostics(DiagnosticsModel::new(state, &link.phase, build), send)
                 .into_any_element()
         }
     };
     Shell::new("Scout", conversations, status, page)
+        .status(views::mic_pill(MicIndicator::new(&link.voice), send))
+        .overlay(views::consent_dialog(ConsentDialog::new(&link.voice), send))
 }
 
 /// The pieces the offscreen render test drives the real window with.

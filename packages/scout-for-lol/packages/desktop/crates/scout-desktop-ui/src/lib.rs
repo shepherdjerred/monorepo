@@ -19,6 +19,7 @@ pub mod tokens;
 pub mod view_model;
 #[cfg(any(windows, target_os = "macos"))]
 mod views;
+pub mod voice_model;
 #[cfg(any(windows, target_os = "macos"))]
 mod window;
 

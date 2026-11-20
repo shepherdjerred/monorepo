@@ -9,6 +9,10 @@
 //! time, with a stub PNG standing in for Scout's chart and flat squares for
 //! card art, written where the supervisor's cache would hold them.
 //!
+//! Voice renders last: the microphone indicator in every state, the first-use
+//! question, the spoken turn above the chat, and the Settings section, each
+//! from the supervisor's voice messages, with the commands its controls send.
+//!
 //! Set `SCOUT_DESKTOP_UI_CAPTURE_DIR` to also write one PNG per state there; a
 //! terminal without Screen Recording access cannot capture the live window.
 //! Windows has no headless GPUI renderer, and Linux does not build the window,
@@ -41,7 +45,8 @@ mod render {
     use scout_desktop_ipc::{
         ChatAvailability, ChatCommand, ChatImage, ChatParts, ChatStatus, CounterReading,
         DiagnosticsSnapshot, GameflowPhase, LiveGameSnapshot, PROTOCOL_VERSION, PrivacySnapshot,
-        StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus, WindowMessage, decode_line,
+        StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus, VoiceCommand, VoiceConsent,
+        VoiceSettings, VoiceSnapshot, VoiceState, VoiceTurnView, WindowMessage, decode_line,
         encode_line,
     };
     use scout_desktop_ui::BuildInfo;
@@ -862,6 +867,123 @@ mod render {
         Ok(())
     }
 
+    fn voice_settings() -> VoiceSettings {
+        VoiceSettings {
+            conversation_mode: true,
+            push_to_talk: true,
+            push_to_talk_key: "F8".to_owned(),
+            mute_key: "Shift+F8".to_owned(),
+        }
+    }
+
+    fn voice(state: VoiceState) -> SupervisorMessage {
+        SupervisorMessage::Voice {
+            voice: VoiceSnapshot {
+                state,
+                consent: VoiceConsent::Accepted,
+                consent_requested: false,
+                muted: state == VoiceState::Muted,
+                settings: Some(voice_settings()),
+                detail: (state == VoiceState::Error)
+                    .then(|| "The microphone stopped: no default input device".to_owned()),
+            },
+        }
+    }
+
+    fn voice_command(command: VoiceCommand) -> WindowMessage {
+        WindowMessage::Voice { command }
+    }
+
+    /// The microphone indicator, right of "Scout" at the top of the sidebar.
+    const MIC_INDICATOR: (f32, f32) = (150., 26.);
+    /// "Turn on voice" in the first-use question.
+    const CONSENT_ACCEPT: (f32, f32) = (238., 368.);
+    /// The F9 push-to-talk key on the Settings page.
+    const PUSH_TO_TALK_F9: (f32, f32) = (287., 400.);
+
+    fn voice_states(harness: &mut Harness) -> Result<(), Error> {
+        // The chat page, as a player sees it mid-game.
+        harness.click(NEW_CHAT.0, NEW_CHAT.1)?;
+        harness.chat(golden::settled()?.parts())?;
+        let before = harness.capture("voice-none")?;
+
+        // First use: the question over the window, before anything listens.
+        harness.receive(&SupervisorMessage::Voice {
+            voice: VoiceSnapshot {
+                state: VoiceState::Off,
+                consent: VoiceConsent::NotAsked,
+                consent_requested: true,
+                muted: false,
+                settings: Some(voice_settings()),
+                detail: None,
+            },
+        })?;
+        harness.capture("voice-consent")?;
+        let sent = click_sends(harness, CONSENT_ACCEPT)?;
+        if sent != [voice_command(VoiceCommand::Consent { accepted: true })] {
+            return Err(format!("Turn on voice sent {sent:?}").into());
+        }
+
+        // Every state the indicator shows.
+        for (state, name) in [
+            (VoiceState::Listening, "voice-listening"),
+            (VoiceState::Capturing, "voice-recording"),
+            (VoiceState::Thinking, "voice-thinking"),
+            (VoiceState::Muted, "voice-muted"),
+            (VoiceState::Error, "voice-error"),
+        ] {
+            harness.receive(&voice(state))?;
+            let shown = harness.capture(name)?;
+            if shown == before {
+                return Err(format!("{name} did not show the indicator").into());
+            }
+        }
+        harness.receive(&voice(VoiceState::Listening))?;
+        let sent = click_sends(harness, MIC_INDICATOR)?;
+        if sent != [voice_command(VoiceCommand::SetMuted { muted: true })] {
+            return Err(format!("the indicator sent {sent:?}").into());
+        }
+
+        // The spoken turn above the transcript, while Scout answers aloud.
+        harness.receive(&voice(VoiceState::Speaking))?;
+        harness.receive(&SupervisorMessage::VoiceTurn {
+            turn: Some(VoiceTurnView {
+                heard: Some("What should I build next against their Zed?".to_owned()),
+                answer: Some(
+                    "Zhonya's Hourglass: Zed has two items and your Seeker's Armguard is ready to upgrade."
+                        .to_owned(),
+                ),
+                error: None,
+            }),
+        })?;
+        harness.capture("voice-speaking")?;
+        harness.receive(&voice(VoiceState::Listening))?;
+        harness.receive(&SupervisorMessage::VoiceTurn {
+            turn: Some(VoiceTurnView {
+                heard: None,
+                answer: None,
+                error: Some("Scout did not hear \"hey scout\" at the start.".to_owned()),
+            }),
+        })?;
+        harness.capture("voice-turn-refused")?;
+
+        // Settings: the voice section, and picking another key.
+        let (x, y) = status_point(PageId::Settings)?;
+        harness.click(x, y)?;
+        harness.capture("settings-voice")?;
+        let sent = click_sends(harness, PUSH_TO_TALK_F9)?;
+        let expected = voice_command(VoiceCommand::SetSettings {
+            settings: VoiceSettings {
+                push_to_talk_key: "F9".to_owned(),
+                ..voice_settings()
+            },
+        });
+        if sent != [expected] {
+            return Err(format!("picking F9 sent {sent:?}").into());
+        }
+        Ok(())
+    }
+
     pub fn run() -> Result<(), Error> {
         let mut harness = Harness::open()?;
         harness.receive(&SupervisorMessage::Hello {
@@ -881,6 +1003,7 @@ mod render {
         coach_options(&mut harness)?;
         live_game_chip(&mut harness)?;
         status_pages(&mut harness)?;
+        voice_states(&mut harness)?;
 
         // Close from the supervisor ends the window's listener cleanly, and
         // sends nothing.

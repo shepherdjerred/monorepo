@@ -394,6 +394,7 @@ async fn greet_an_exited_window() -> Result<Window, Box<dyn std::error::Error>> 
         last_state: None,
         last_live: None,
         last_chat: None,
+        last_voice: None,
     };
     let (_control, receiver) = mpsc::unbounded_channel();
     let supervisor = Supervisor::new(

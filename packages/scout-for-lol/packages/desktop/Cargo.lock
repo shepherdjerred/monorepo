@@ -2893,6 +2893,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
 
 [[package]]
+name = "global-hotkey"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96daa86bdc1413406daee362a835e52c430c2193e5a5c328d1e522be140d1764"
+dependencies = [
+ "crossbeam-channel",
+ "keyboard-types",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "once_cell",
+ "thiserror 2.0.21",
+ "windows-sys 0.59.0",
+ "x11rb",
+ "xkeysym",
+]
+
+[[package]]
 name = "globset"
 version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7616,6 +7633,8 @@ dependencies = [
  "eframe",
  "egui",
  "flate2",
+ "futures-util",
+ "global-hotkey",
  "hex",
  "minisign-verify",
  "open",
@@ -7625,6 +7644,7 @@ dependencies = [
  "scout-desktop-ipc",
  "scout-desktop-ui",
  "scout-explore-client",
+ "scout-voice",
  "semver",
  "serde",
  "serde_json",

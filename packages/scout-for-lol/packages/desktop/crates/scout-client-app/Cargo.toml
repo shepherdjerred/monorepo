@@ -1,6 +1,6 @@
 [package]
 name = "scout-client-app"
-description = "Scout Desktop supervisor, tray, and egui window"
+description = "Scout Desktop supervisor, tray, voice, and egui window"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -19,6 +19,10 @@ eframe.workspace = true
 egui.workspace = true
 # The macOS updater unpacks the signed app archive in place.
 flate2.workspace = true
+futures-util.workspace = true
+# The push-to-talk and mute keys. Registered only on Windows and macOS, where
+# voice runs; the accelerator parser is tested everywhere.
+global-hotkey = "0.10.0"
 hex.workspace = true
 minisign-verify.workspace = true
 open.workspace = true
@@ -33,6 +37,7 @@ scout-client-core = { path = "../scout-client-core" }
 scout-client-runtime = { path = "../scout-client-runtime" }
 scout-desktop-ipc = { path = "../scout-desktop-ipc" }
 scout-explore-client = { path = "../scout-explore-client" }
+scout-voice = { path = "../scout-voice" }
 # Builds everywhere; it contains the gpui window only on Windows and macOS.
 scout-desktop-ui = { path = "../scout-desktop-ui" }
 tokio = { workspace = true, features = ["process"] }
@@ -40,6 +45,7 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 tray-icon.workspace = true
 url.workspace = true
+uuid.workspace = true
 
 # The supervisor's tray needs a platform event loop on Windows and macOS; a
 # windowless winit loop provides one without a graphics context.
@@ -52,7 +58,6 @@ winresource = "0.1.23"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["net", "process", "test-util"] }
-uuid.workspace = true
 
 [lints]
 workspace = true

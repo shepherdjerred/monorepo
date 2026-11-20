@@ -6,6 +6,9 @@
 //! never renders: it spawns this same executable with `--window`, talks to it
 //! over the child's stdio in `scout-desktop-ipc` JSON lines, and relaunches it
 //! when it dies.
+//!
+//! The microphone belongs here too ([`crate::voice`]): the window shows where
+//! it is and sends the player's voice choices, but never opens it.
 
 use std::path::{Path, PathBuf};
 use std::process::{ExitStatus, Stdio};
@@ -23,7 +26,7 @@ use scout_client_runtime::runtime::{
 use scout_desktop_ipc::{
     ChatCommand, ChatParts, CounterReading, DiagnosticsSnapshot, LiveGameSnapshot,
     PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot,
-    WindowMessage, check_protocol, decode_line, encode_line,
+    VoiceSnapshot, VoiceTurnView, WindowMessage, check_protocol, decode_line, encode_line,
 };
 use scout_explore_client::relay::ChatRelay;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
@@ -31,6 +34,7 @@ use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use tokio::sync::{mpsc, watch};
 
 use crate::updater::service::{InstallOutcome, UpdateHandle};
+use crate::voice::VoiceHandle;
 
 /// A crash after this long is a fresh incident, not part of a crash loop.
 pub const STABLE_RUN: Duration = Duration::from_mins(10);
@@ -188,6 +192,9 @@ pub struct Supervisor<C: Collector> {
     /// Explore chat, when the window renders it. The credential it uses stays
     /// in this process; the window only sees the chat parts.
     chat: Option<ChatRelay>,
+    /// Voice, when this build has it. The microphone and the device
+    /// credential stay in this process.
+    voice: Option<VoiceHandle>,
     /// Held for the supervisor's life, so a second supervisor cannot share the
     /// outbox. The window process never takes it.
     _instance_lock: scout_client_runtime::instance::InstanceLock,
@@ -213,6 +220,7 @@ impl<C: Collector> Supervisor<C> {
             status: watch::channel(WindowStatus::default()).0,
             updates: None,
             chat: None,
+            voice: None,
             _instance_lock: instance_lock,
         }
     }
@@ -228,6 +236,13 @@ impl<C: Collector> Supervisor<C> {
     #[must_use]
     pub fn with_chat(mut self, chat: ChatRelay) -> Self {
         self.chat = Some(chat);
+        self
+    }
+
+    /// Own the microphone and relay voice between the window and Scout.
+    #[must_use]
+    pub fn with_voice(mut self, voice: VoiceHandle) -> Self {
+        self.voice = Some(voice);
         self
     }
 
@@ -252,6 +267,7 @@ impl<C: Collector> Supervisor<C> {
         }
         let mut update_status = self.updates.as_ref().map(UpdateHandle::subscribe);
         let mut chat_parts = self.chat.as_ref().map(ChatRelay::subscribe);
+        let mut voice = self.voice.as_ref().map(VoiceWatch::new);
         let mut pairing = pairing_key(&state.borrow());
         let mut refresh = tokio::time::interval(REFRESH);
         refresh.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -259,15 +275,7 @@ impl<C: Collector> Supervisor<C> {
             tokio::select! {
                 control = self.control.recv() => match control {
                     Some(Control::OpenWindow) => {
-                        if let Some(running) = window.as_mut() {
-                            self.deliver(running, &SupervisorMessage::Show).await;
-                        } else {
-                            // An explicit open is a fresh start, not a
-                            // continuation of a crash loop.
-                            quick_crashes = 0;
-                            self.status.send_modify(|status| status.given_up = false);
-                            window = self.launch(&state, &phase).await;
-                        }
+                        self.open_window(&mut window, &mut quick_crashes, &state, &phase).await;
                     }
                     Some(Control::Quit) => break SupervisorExit::Quit,
                     None => break SupervisorExit::ControlClosed,
@@ -303,6 +311,11 @@ impl<C: Collector> Supervisor<C> {
                     self.observe_upgrade_required(&state);
                     if let Some(running) = window.as_mut() {
                         self.send_chat(running).await;
+                    }
+                }
+                true = VoiceWatch::changed(&mut voice) => {
+                    if let Some(running) = window.as_mut() {
+                        self.send_voice(running).await;
                     }
                 }
                 true = update_changed(&mut update_status) => {
@@ -341,6 +354,24 @@ impl<C: Collector> Supervisor<C> {
             updates.install(false, &phase.borrow());
         }
         exit
+    }
+
+    /// Show the window, starting it if it is not running. An explicit open
+    /// is a fresh start, not a continuation of a crash loop.
+    async fn open_window(
+        &self,
+        window: &mut Option<Window>,
+        quick_crashes: &mut u32,
+        state: &StateReceiver,
+        phase: &PhaseReceiver,
+    ) {
+        if let Some(running) = window.as_mut() {
+            self.deliver(running, &SupervisorMessage::Show).await;
+        } else {
+            *quick_crashes = 0;
+            self.status.send_modify(|status| status.given_up = false);
+            *window = self.launch(state, phase).await;
+        }
     }
 
     async fn state_changed(
@@ -407,6 +438,32 @@ impl<C: Collector> Supervisor<C> {
         window.last_chat = Some(parts);
     }
 
+    /// Bring the window's voice up to date: the microphone's state and the
+    /// spoken turn, each only when it changed since the window last heard.
+    async fn send_voice(&self, window: &mut Window) {
+        let Some(voice) = &self.voice else {
+            return;
+        };
+        let now = VoiceParts {
+            snapshot: voice.snapshot().borrow().clone(),
+            turn: voice.turn().borrow().clone(),
+        };
+        let last = window.last_voice.as_ref();
+        if last.map(|last| &last.snapshot) != Some(&now.snapshot) {
+            let message = SupervisorMessage::Voice {
+                voice: now.snapshot.clone(),
+            };
+            self.deliver(window, &message).await;
+        }
+        if window.last_voice.as_ref().map(|last| &last.turn) != Some(&now.turn) {
+            let message = SupervisorMessage::VoiceTurn {
+                turn: now.turn.clone(),
+            };
+            self.deliver(window, &message).await;
+        }
+        window.last_voice = Some(now);
+    }
+
     /// Start a staged update's installer when the app has sat idle. Returns
     /// whether it started, which ends this process.
     fn install_when_idle(&self, window_open: bool, phase: &PhaseReceiver) -> bool {
@@ -459,6 +516,7 @@ impl<C: Collector> Supervisor<C> {
             last_state: None,
             last_live: None,
             last_chat: None,
+            last_voice: None,
         };
         self.deliver(
             &mut window,
@@ -473,6 +531,7 @@ impl<C: Collector> Supervisor<C> {
         self.deliver(&mut window, &message).await;
         self.send_update(&mut window).await;
         self.send_chat(&mut window).await;
+        self.send_voice(&mut window).await;
         // A window that opens reloads the conversation list.
         self.chat_command(ChatCommand::Refresh);
         Some(window)
@@ -530,6 +589,11 @@ impl<C: Collector> Supervisor<C> {
                     .await;
             }
             WindowMessage::Chat { command } => self.window_chat_command(command),
+            WindowMessage::Voice { command } => {
+                if let Some(voice) = &self.voice {
+                    voice.send(command);
+                }
+            }
             WindowMessage::Quit => return Handled::Quit,
         }
         Handled::Continue
@@ -726,6 +790,42 @@ struct Window {
     last_live: Option<LiveGameSnapshot>,
     /// The chat parts this window holds, so a change sends only its delta.
     last_chat: Option<ChatParts>,
+    /// The voice state and spoken turn this window holds.
+    last_voice: Option<VoiceParts>,
+}
+
+/// What a window was last told about voice.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct VoiceParts {
+    snapshot: VoiceSnapshot,
+    turn: Option<VoiceTurnView>,
+}
+
+/// Both voice subscriptions, so one `select!` branch follows them.
+struct VoiceWatch {
+    snapshot: watch::Receiver<VoiceSnapshot>,
+    turn: watch::Receiver<Option<VoiceTurnView>>,
+}
+
+impl VoiceWatch {
+    fn new(voice: &VoiceHandle) -> Self {
+        Self {
+            snapshot: voice.snapshot(),
+            turn: voice.turn(),
+        }
+    }
+
+    /// The next change to either, or pending forever without voice. `false`
+    /// once voice has stopped, which happens only as Scout quits.
+    async fn changed(watch: &mut Option<Self>) -> bool {
+        let Some(watch) = watch.as_mut() else {
+            return std::future::pending().await;
+        };
+        tokio::select! {
+            changed = watch.snapshot.changed() => changed.is_ok(),
+            changed = watch.turn.changed() => changed.is_ok(),
+        }
+    }
 }
 
 impl Window {

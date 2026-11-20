@@ -7,22 +7,25 @@ second trigger.
 
 The crate opens no socket. The microphone never streams anywhere: the only
 output is an `Utterance`, and sending it to the server is the caller's
-decision. Nothing here is wired into the app yet.
+decision. The app's supervisor runs it (`scout-client-app`'s `voice`
+module); the window process never opens the microphone.
 
 ## Pieces
 
-| Module             | Role                                                                                   |
-| ------------------ | -------------------------------------------------------------------------------------- |
-| `audio`, `capture` | `AudioInput`: `FileInput` (WAV, cycling chunk sizes) and `CpalInput` (default device)  |
-| `resample`         | `MonoResampler`: downmix plus rubato's FFT resampler to 16 kHz                         |
-| `detect`           | `KeywordSpotter`, `VoiceActivity` and `WakeVerifier` traits                            |
-| `sherpa`           | sherpa-onnx keyword spotting and Silero VAD                                            |
-| `verifier`         | the trained "hey scout" phrase verifier (mel, embedding, classifier) on tract          |
-| `state`            | `VoiceMachine`: Idle, Armed, Capturing, Ended, as a pure transition function           |
-| `conversation`     | `conversation_open(phase)`: the microphone is open only while gameflow is `InProgress` |
-| `pipeline`         | `VoicePipeline`: pre-roll, candidate, verification, end of speech, limits              |
-| `contract`         | serde reader for `data/src/scout-client/voice-cascade.contract.json`                   |
-| `models`           | locating the model directory and checking every SHA-256                                |
+| Module             | Role                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------- |
+| `audio`, `capture` | `AudioInput`: `FileInput` (WAV, cycling chunk sizes) and `CpalInput` (default device)       |
+| `resample`         | `MonoResampler`: downmix plus rubato's FFT resampler to 16 kHz                              |
+| `detect`           | `KeywordSpotter`, `VoiceActivity` and `WakeVerifier` traits                                 |
+| `sherpa`           | sherpa-onnx keyword spotting and Silero VAD                                                 |
+| `verifier`         | the trained "hey scout" phrase verifier (mel, embedding, classifier) on tract               |
+| `state`            | `VoiceMachine`: Idle, Armed, Capturing, Ended, as a pure transition function                |
+| `conversation`     | `conversation_open(phase)`: the microphone is open only during `GameStart` and `InProgress` |
+| `pipeline`         | `VoicePipeline`: pre-roll, candidate, verification, end of speech, limits                   |
+| `engine`           | `VoiceEngine`: the pipeline and the input device on one thread, open only when needed       |
+| `playback`         | `SpeechOutput`: spoken answers on the default output device (`CpalSpeaker`)                 |
+| `contract`         | serde reader for `data/src/scout-client/voice-cascade.contract.json`                        |
+| `models`           | locating the model directory and checking every SHA-256                                     |
 
 The pipeline is a port of the capture half of
 `packages/voice-assistant/src/audio/audio-lifecycle.ts`, which the Discord

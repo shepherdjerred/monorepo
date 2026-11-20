@@ -2,12 +2,13 @@
 
 use scout_client_core::live::gameflow::GameflowPhase;
 
-/// Whether hands-free listening is on in `phase`: only while a game is in
-/// progress. Every other phase, including `WaitingForStats`, `PreEndOfGame`
-/// and `EndOfGame`, closes it, and so does a reconnect.
+/// Whether hands-free listening is on in `phase`: from the loading screen
+/// (`GameStart`) until the game ends. Every other phase, including
+/// `WaitingForStats`, `PreEndOfGame` and `EndOfGame`, closes it, and so does a
+/// reconnect.
 #[must_use]
 pub fn conversation_open(phase: &GameflowPhase) -> bool {
-    matches!(phase, GameflowPhase::InProgress)
+    matches!(phase, GameflowPhase::GameStart | GameflowPhase::InProgress)
 }
 
 #[cfg(test)]
@@ -17,7 +18,7 @@ mod tests {
     use super::conversation_open;
 
     #[test]
-    fn only_a_game_in_progress_opens_the_microphone() {
+    fn only_a_game_loading_or_in_progress_opens_the_microphone() {
         let closed = [
             GameflowPhase::Disconnected,
             GameflowPhase::None,
@@ -26,7 +27,6 @@ mod tests {
             GameflowPhase::CheckedIntoTournament,
             GameflowPhase::ReadyCheck,
             GameflowPhase::ChampSelect,
-            GameflowPhase::GameStart,
             GameflowPhase::FailedToLaunch,
             GameflowPhase::Reconnect,
             GameflowPhase::WaitingForStats,
@@ -38,6 +38,7 @@ mod tests {
         for phase in &closed {
             assert!(!conversation_open(phase), "{phase:?} opened the microphone");
         }
+        assert!(conversation_open(&GameflowPhase::GameStart));
         assert!(conversation_open(&GameflowPhase::InProgress));
     }
 
@@ -54,6 +55,6 @@ mod tests {
             .iter()
             .map(|label| conversation_open(&GameflowPhase::from_label(label)))
             .collect();
-        assert_eq!(open, [false, false, true, false, false]);
+        assert_eq!(open, [false, true, true, false, false]);
     }
 }
