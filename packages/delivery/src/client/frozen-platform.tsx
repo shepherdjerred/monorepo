@@ -14,7 +14,7 @@ export function FrozenPlatform({
             ? "Read-only OpenTofu plan"
             : "Exact saved OpenTofu plan"}
       </h3>
-      <p className="notice">
+      <p className="notice info">
         {snapshot.kind === "tofu-plan"
           ? "Planning changes no infrastructure and does not accept an application release."
           : "Infrastructure acceptance is recorded separately from application versions."}

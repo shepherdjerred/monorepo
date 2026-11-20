@@ -3,7 +3,11 @@ import { z } from "zod";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { MachineCredentialSchema } from "#infrastructure/config.ts";
 import { serveHarness } from "./harness.ts";
-import { MODEL_ENVIRONMENTS, seedModelBrowser } from "./model.ts";
+import {
+  MODEL_ACCEPTED_IMAGE,
+  MODEL_ENVIRONMENTS,
+  seedModelBrowser,
+} from "./model.ts";
 
 const harnessPort = Number(
   Bun.argv[2] ?? Bun.env["DELIVERY_MODEL_E2E_PORT"] ?? "17355",
@@ -28,6 +32,11 @@ try {
     delivery,
     port: harnessPort,
     enabledEnvironments: MODEL_ENVIRONMENTS,
+    // Both Arcade Applications run the image their environment accepted.
+    liveImages: {
+      arcade: [MODEL_ACCEPTED_IMAGE],
+      "arcade-beta": [MODEL_ACCEPTED_IMAGE],
+    },
     // Optional disposable machine tokens, so toolkit verbs can be run
     // against this harness; none are accepted unless the variable is set.
     machineCredentials: z

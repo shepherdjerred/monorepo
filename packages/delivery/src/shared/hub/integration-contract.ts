@@ -104,10 +104,19 @@ export type SourceChangeIntegration = z.infer<
   typeof SourceChangeIntegrationSchema
 >;
 
+/**
+ * One image component against the images ArgoCD reports running. Every live
+ * image is the accepted artifact, a retained worker build, or unexpected.
+ */
 export const ImageCheckSchema = z.object({
   component: z.string(),
   expected: z.string(),
   live: z.array(z.string()),
+  /** Live images a retained worker build explains. */
+  retained: z.number().int().nonnegative(),
+  /** Live images neither the accepted artifact nor a retained worker explains. */
+  unexpected: z.array(z.string()),
+  /** The accepted artifact is running and no live image is unexpected. */
   matches: z.boolean(),
 });
 export type ImageCheck = z.infer<typeof ImageCheckSchema>;

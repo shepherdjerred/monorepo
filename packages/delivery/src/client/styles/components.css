@@ -104,6 +104,14 @@ button:disabled {
   border-left-color: var(--failed);
   background: var(--failed-soft);
 }
+.notice.info {
+  border-left-color: var(--neutral);
+  background: var(--neutral-soft);
+}
+.notice.success {
+  border-left-color: var(--succeeded);
+  background: var(--succeeded-soft);
+}
 .empty {
   color: var(--text-muted);
   font-style: italic;
@@ -190,6 +198,10 @@ button:disabled {
   margin: 0;
   padding: 0;
 }
+.image-checks ul {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-5);
+}
 .attention li {
   display: flex;
   flex-wrap: wrap;
@@ -256,15 +268,6 @@ button:disabled {
   margin: 0;
   font-weight: 600;
   overflow-wrap: anywhere;
-}
-.freshness {
-  display: inline-flex;
-  gap: var(--space-2);
-  align-items: center;
-  font-size: 0.85rem;
-}
-.freshness.fresh .dot {
-  background: var(--succeeded);
 }
 .stages {
   list-style: none;

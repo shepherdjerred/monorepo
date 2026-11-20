@@ -28,25 +28,121 @@ const selected = VersionSetRevisionSchema.parse({
   },
 });
 
+const image = (char: string) =>
+  `docker.io/shepherdjerred/arcade@${digest(char)}`;
+const worker = (char: string, runtimeDigests: string[] = []) => ({
+  uri: "docker.io/shepherdjerred/arcade",
+  digest: digest(char),
+  runtimeDigests,
+});
+
 describe("compareLiveImages", () => {
   it("accepts the index or a platform runtime digest", () => {
-    expect(
-      compareLiveImages(selected, [
-        `docker.io/shepherdjerred/arcade@${digest("b")}`,
-      ])[0]?.matches,
-    ).toBe(true);
+    expect(compareLiveImages(selected, [image("b")], [])[0]?.matches).toBe(
+      true,
+    );
   });
 
   it("flags a different running digest", () => {
-    expect(
-      compareLiveImages(selected, [
-        `docker.io/shepherdjerred/arcade@${digest("c")}`,
-      ])[0]?.matches,
-    ).toBe(false);
+    expect(compareLiveImages(selected, [image("c")], [])[0]?.matches).toBe(
+      false,
+    );
   });
 
   it("skips components ArgoCD reports no image for", () => {
-    expect(compareLiveImages(selected, [])).toEqual([]);
-    expect(compareLiveImages(null, ["anything"])).toEqual([]);
+    expect(compareLiveImages(selected, [], [])).toEqual([]);
+    expect(compareLiveImages(null, ["anything"], [])).toEqual([]);
+  });
+
+  it("without a worker pool, every live image must be the accepted artifact", () => {
+    expect(compareLiveImages(selected, [image("a"), image("b")], [])).toEqual([
+      {
+        component: "image:arcade",
+        expected: digest("a"),
+        live: [image("a"), image("b")],
+        retained: 0,
+        unexpected: [],
+        matches: true,
+      },
+    ]);
+    expect(compareLiveImages(selected, [image("a"), image("c")], [])).toEqual([
+      {
+        component: "image:arcade",
+        expected: digest("a"),
+        live: [image("a"), image("c")],
+        retained: 0,
+        unexpected: [image("c")],
+        matches: false,
+      },
+    ]);
+  });
+
+  it("matches when retained worker builds explain every other live image", () => {
+    const live = [image("a"), image("c"), image("d"), image("f")];
+    expect(
+      compareLiveImages(selected, live, [
+        worker("c"),
+        worker("d"),
+        // A retained build is also running under its platform digest.
+        worker("e", [digest("f")]),
+      ]),
+    ).toEqual([
+      {
+        component: "image:arcade",
+        expected: digest("a"),
+        live,
+        retained: 3,
+        unexpected: [],
+        matches: true,
+      },
+    ]);
+  });
+
+  it("does not count the accepted artifact's own worker row as retained", () => {
+    const [check] = compareLiveImages(
+      selected,
+      [image("a"), image("c")],
+      [worker("a", [digest("b")]), worker("c")],
+    );
+    expect(check).toMatchObject({ retained: 1, unexpected: [], matches: true });
+  });
+
+  it("does not match while only retained builds run and the accepted digest is absent", () => {
+    const [check] = compareLiveImages(
+      selected,
+      [image("c"), image("d")],
+      [worker("c"), worker("d")],
+    );
+    expect(check).toMatchObject({
+      retained: 2,
+      unexpected: [],
+      matches: false,
+    });
+  });
+
+  it("lists a live image that nothing explains", () => {
+    const [check] = compareLiveImages(
+      selected,
+      [image("a"), image("c"), image("d")],
+      [worker("c")],
+    );
+    expect(check).toMatchObject({
+      retained: 1,
+      unexpected: [image("d")],
+      matches: false,
+    });
+  });
+
+  it("ignores a retained artifact of another image repository", () => {
+    const [check] = compareLiveImages(
+      selected,
+      [image("a"), image("c")],
+      [{ ...worker("c"), uri: "docker.io/shepherdjerred/other" }],
+    );
+    expect(check).toMatchObject({
+      retained: 0,
+      unexpected: [image("c")],
+      matches: false,
+    });
   });
 });

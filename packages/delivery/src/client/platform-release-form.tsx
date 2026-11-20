@@ -22,7 +22,7 @@ export function PlatformReleaseForm(props: Props) {
     return (
       <section className="panel" aria-label="Platform release request">
         <h2>Root release</h2>
-        <p className="notice">
+        <p className="notice info">
           The root release is retired. Each service&apos;s environment owns its
           Applications, and ordering is a prerequisite edge.
         </p>

@@ -4,7 +4,7 @@ import type {
 } from "#shared/contract.ts";
 import { Status } from "#client/components/status.tsx";
 import { Duration, RelativeTime } from "#client/components/time.tsx";
-import { isTerminal } from "./presentation.ts";
+import { isTerminal, messageNotice } from "./presentation.ts";
 import { SelectedArtifacts } from "./artifacts.tsx";
 import { FrozenWorkerPool } from "./worker-pool.tsx";
 import { FrozenPlatform } from "./frozen-platform.tsx";
@@ -13,7 +13,6 @@ import {
   PlatformRecovery,
   type RecoveryDecision,
 } from "./platform-recovery.tsx";
-import { MinecraftRecovery } from "./minecraft-recovery.tsx";
 import { FrozenForumBaseline } from "./forum-baseline.tsx";
 import { ContentRecovery } from "./content-recovery.tsx";
 
@@ -116,11 +115,7 @@ export function DeploymentRecord({
   return (
     <>
       {deployment.message !== null && (
-        <p
-          className={`notice ${deployment.status === "failed" ? "error" : ""}`}
-        >
-          {deployment.message}
-        </p>
+        <p className={messageNotice(deployment.status)}>{deployment.message}</p>
       )}
       {deployment.cancelRequested && !isTerminal(deployment) && (
         <p className="notice">
@@ -139,7 +134,6 @@ export function DeploymentRecord({
         pending={pending}
         onDecision={onRecoveryDecision}
       />
-      <MinecraftRecovery detail={detail} />
       <ContentRecovery detail={detail} />
       <FrozenForumBaseline detail={detail} />
       <div className="detail-grid">

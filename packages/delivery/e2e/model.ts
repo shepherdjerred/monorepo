@@ -18,6 +18,8 @@ import {
 
 export const MODEL_PROD = "arcade/prod";
 export const MODEL_BETA = "arcade/beta";
+/** The third release's image, the one both Arcade environments accepted. */
+export const MODEL_ACCEPTED_IMAGE = `docker.io/shepherdjerred/arcade@sha256:${"3".repeat(64)}`;
 export const MODEL_ENVIRONMENTS = [
   MODEL_BETA,
   MODEL_PROD,

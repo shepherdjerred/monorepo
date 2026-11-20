@@ -1,7 +1,10 @@
 import type { Environment, VersionSetRevision } from "#shared/contract.ts";
 import { observation, versionLabel } from "#client/presentation.ts";
 
-/** Desired, observed and accepted are separate claims; show each. */
+/**
+ * Desired, observed and accepted are separate claims; show each. The observed
+ * one is dated by the deployment that recorded it, not by a live probe.
+ */
 export function EnvironmentState({
   environment,
   versions,
@@ -11,7 +14,6 @@ export function EnvironmentState({
   versions: VersionSetRevision[];
   now: number;
 }) {
-  const observed = observation(environment, now);
   return (
     <section className="panel" aria-labelledby="state-heading">
       <h2 id="state-heading">Release state</h2>
@@ -35,10 +37,7 @@ export function EnvironmentState({
           </dd>
         </div>
       </dl>
-      <p className={`freshness ${observed.fresh ? "fresh" : "stale"}`}>
-        <span className="dot" aria-hidden="true" />
-        {observed.label}
-      </p>
+      <p className="muted">{observation(environment, now)}</p>
     </section>
   );
 }

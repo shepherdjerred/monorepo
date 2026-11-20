@@ -7,6 +7,7 @@ import type {
   UnavailableReason,
 } from "#shared/hub/integration-contract.ts";
 import { queries } from "#client/queries.ts";
+import { imageCheckSummary } from "#client/presentation.ts";
 import { Status } from "./status.tsx";
 import { Duration, RelativeTime } from "./time.tsx";
 import { ShortSha, ToolLinks } from "./links.tsx";
@@ -214,15 +215,27 @@ export function RuntimePanel({ environmentId }: { environmentId: string }) {
               </dd>
             </div>
           </dl>
+          {runtime.data.data.reconciledAt !== null && (
+            <p className="muted">
+              ArgoCD reconciled{" "}
+              <RelativeTime value={runtime.data.data.reconciledAt} />
+            </p>
+          )}
           {runtime.data.data.imageChecks.length > 0 && (
             <ul className="image-checks">
               {runtime.data.data.imageChecks.map((check) => (
                 <li key={check.component}>
-                  <Status value={check.matches ? "succeeded" : "failed"} />
-                  {check.component}{" "}
-                  {check.matches
-                    ? "runs the accepted digest"
-                    : "differs from the accepted digest"}
+                  <Status value={check.matches ? "succeeded" : "failed"} />{" "}
+                  {check.component} {imageCheckSummary(check)}
+                  {check.unexpected.length > 0 && (
+                    <ul aria-label={`${check.component} unexpected images`}>
+                      {check.unexpected.map((image) => (
+                        <li key={image} className="mono">
+                          {image}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>

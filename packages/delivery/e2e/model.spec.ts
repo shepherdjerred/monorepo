@@ -69,6 +69,19 @@ test("the environment shows its monitor and binding", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
+test("an environment with no worker pool compares only its accepted image", async ({
+  page,
+}) => {
+  await openEnvironment(page);
+  const runtime = page.getByRole("region", { name: "Live runtime" });
+  await expect(runtime).toContainText("image:arcade runs the accepted digest");
+  await expect(runtime).not.toContainText("retained worker build");
+  await expect(runtime.getByText("succeeded", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Release state" }),
+  ).toContainText("Observed when the last deployment finished");
+});
+
 test("rollback candidates mark the accepted one and exclude a lowered forward-only key", async ({
   page,
 }) => {

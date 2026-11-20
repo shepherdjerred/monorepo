@@ -3,7 +3,10 @@ import { testOperator } from "#testing/seed.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { createApp } from "#server/app.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
-import { fixtureEnrichment } from "#testing/enrichment-fixture.ts";
+import {
+  fixtureEnrichment,
+  type FixtureLiveImages,
+} from "#testing/enrichment-fixture.ts";
 import type { MachineCredentialSchema } from "#infrastructure/config.ts";
 import type { z } from "zod";
 
@@ -20,6 +23,8 @@ export async function serveHarness(options: {
   delivery: Delivery;
   port: number;
   enabledEnvironments: string[];
+  /** The images the ArgoCD double reports running, by Application name. */
+  liveImages?: FixtureLiveImages;
   /** Machine tokens the app accepts, so a CLI can drive admin and execute routes. */
   machineCredentials?: z.infer<typeof MachineCredentialSchema>[];
 }) {
@@ -31,7 +36,7 @@ export async function serveHarness(options: {
     // Every row is persisted through genuine publication, intent and evidence APIs.
     delivery: options.delivery,
     changeFeed,
-    enrichment: fixtureEnrichment(cluster.database),
+    enrichment: fixtureEnrichment(cluster.database, options.liveImages),
     ciOrigin: "https://woodpecker.sjer.red",
     ciRepositoryId: 1,
     qualifyBuild: () => Promise.resolve("verified"),

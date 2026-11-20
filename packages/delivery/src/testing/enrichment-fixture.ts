@@ -71,8 +71,14 @@ function commit(sha: string) {
   };
 }
 
+/** The images each ArgoCD Application double reports running, by Application name. */
+export type FixtureLiveImages = Record<string, string[]>;
+
 /** Upstream doubles for Woodpecker, GitHub and ArgoCD; never reach the network. */
-export function fixtureUpstreams(request: string | URL) {
+export function fixtureUpstreams(
+  request: string | URL,
+  liveImages: FixtureLiveImages = {},
+) {
   const url = new URL(String(request));
   const pipelineMatch = /^\/api\/repos\/1\/pipelines\/(\d+)$/.exec(
     url.pathname,
@@ -86,7 +92,10 @@ export function fixtureUpstreams(request: string | URL) {
     );
   if (url.hostname === "api.github.com")
     return Promise.resolve(Response.json(commit("a".repeat(40))));
-  if (url.hostname === "argocd.sjer.red")
+  const application = /^\/api\/v1\/applications\/([^/]+)$/u.exec(
+    url.pathname,
+  )?.[1];
+  if (application !== undefined && url.hostname === "argocd.sjer.red")
     return Promise.resolve(
       Response.json({
         status: {
@@ -98,14 +107,19 @@ export function fixtureUpstreams(request: string | URL) {
             message: "successfully synced",
             finishedAt: "2026-09-21T14:09:00Z",
           },
-          summary: { images: [] },
+          summary: {
+            images: liveImages[decodeURIComponent(application)] ?? [],
+          },
         },
       }),
     );
   return Promise.resolve(new Response("not found", { status: 404 }));
 }
 
-export function fixtureEnrichment(database: Database) {
+export function fixtureEnrichment(
+  database: Database,
+  liveImages: FixtureLiveImages = {},
+) {
   return createEnrichment({
     database,
     enabledSources: () => Promise.resolve(["woodpecker", "github", "argocd"]),
@@ -116,6 +130,6 @@ export function fixtureEnrichment(database: Database) {
     },
     github: { owner: "shepherdjerred", name: "monorepo", token: "fixture-gh" },
     argocd: { origin: "https://argocd.sjer.red", token: "fixture-argo" },
-    fetch: fixtureUpstreams,
+    fetch: (request) => fixtureUpstreams(request, liveImages),
   });
 }

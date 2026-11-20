@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { describe, expect, test, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as fixtures from "#testing/model-fixtures.ts";
+import { PipelineDefinitionSchema } from "#shared/contract.ts";
 import { renderWithRouter } from "#client/test-router.tsx";
 import { queries } from "#client/queries.ts";
 import { ApprovalQueue } from "./approval-queue.tsx";
@@ -212,6 +213,24 @@ describe("environment model panels", () => {
     expect(unmonitored).toContain("settled on acceptance");
     expect(unmonitored).not.toContain("Firing alarms");
   });
+
+  test("a settled monitor reads as a success and an alarmed one as an error", () => {
+    const settled = markup(
+      <MonitorPanel
+        status={{
+          ...fixtures.monitors.beta,
+          state: "settled",
+          settledAt: fixtures.monitors.unmonitored.settledAt,
+        }}
+      />,
+    );
+    expect(settled).toMatch(
+      /<p class="notice success">Settled .*every evidence count/u,
+    );
+    expect(markup(<MonitorPanel status={fixtures.monitors.prod} />)).toMatch(
+      /<p class="notice error">An alarm fired/u,
+    );
+  });
 });
 
 describe("deployment model", () => {
@@ -292,6 +311,54 @@ describe("deployment model", () => {
     expect(html).toContain("/recovery-intents/scout-prod-37/recovery/3");
     expect(html).not.toContain("No inspection has been requested");
   });
+
+  test.each([
+    undefined,
+    "verified-restore",
+    "retained-volume-restart",
+  ] as const)(
+    "a Minecraft deployment's intents stay listed under release mode %s, since no specialized panel shows them",
+    async (releaseMode) => {
+      const quarantined = fixtures.deploymentDetails.find(
+        (detail) => detail.recoveryIntents.length > 0,
+      );
+      if (quarantined === undefined) throw new Error("fixture detail");
+      const definition = PipelineDefinitionSchema.parse(
+        await Bun.file(
+          new URL(
+            "../../../registrations/specialized/minecraft-tsmc/pipeline.json",
+            import.meta.url,
+          ),
+        ).json(),
+      );
+      if (definition.kind !== "argocd" || !definition.minecraftUpgrade)
+        throw new Error("Expected the Minecraft policy");
+      if (releaseMode === undefined)
+        delete definition.minecraftUpgrade.releaseMode;
+      else definition.minecraftUpgrade.releaseMode = releaseMode;
+      const minecraft = {
+        ...fixtures.recoveryIntents.pending,
+        id: "scout-prod-37/recovery/4",
+        kind: "minecraft" as const,
+        sequence: 4,
+      };
+      const detail = {
+        ...quarantined,
+        pipeline: { ...quarantined.pipeline, definition },
+        deployment: { ...quarantined.deployment, recoveryRequired: true },
+        recoveryIntents: [minecraft],
+      };
+      expect(specializedRecoveryShown(detail, "minecraft")).toBe(false);
+      const listed = render(<DeploymentModel detail={detail} />);
+      expect(listed).toContain("/recovery-intents/scout-prod-37/recovery/4");
+      expect(listed).toContain("Intent 4");
+      expect(listed).toContain("minecraft");
+      // With no intent yet, the generic panel still says how to request one.
+      expect(
+        render(<DeploymentModel detail={{ ...detail, recoveryIntents: [] }} />),
+      ).toContain("No inspection has been requested");
+    },
+  );
 });
 
 describe("approval queue", () => {

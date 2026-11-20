@@ -187,10 +187,6 @@ export function DeploymentModel({ detail }: { detail: DeploymentDetailV2 }) {
         recoveryRequired={
           detail.deployment.recoveryRequired &&
           !(
-            specializedRecoveryShown(detail, "minecraft") &&
-            detail.minecraftRecoveries.length > 0
-          ) &&
-          !(
             specializedRecoveryShown(detail, "platform") &&
             detail.platformRecoveries.length > 0
           ) &&
