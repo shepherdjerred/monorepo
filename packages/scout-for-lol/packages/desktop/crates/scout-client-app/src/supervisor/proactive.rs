@@ -14,7 +14,10 @@
 //! per-game cap and duplicates. The driver keeps its own copies of those
 //! limits so it does not spam Scout:
 //!
-//! - one request per [`SPACING`], the server's own spacing;
+//! - one request per [`SPACING`]: the server's 90 seconds, measured from
+//!   its own admission, plus [`LATENCY_MARGIN`], so a slow previous request
+//!   and a fast next one never land inside the server's spacing (which Scout
+//!   answers `rate_limited`, stopping proactive turns for the game);
 //! - at most [`MAX_PER_GAME`] requests a game, the server's cap;
 //! - each event asked once a game, identified as the server's dedupe
 //!   receipts identify it: its kind and window
@@ -33,8 +36,13 @@ use scout_client_core::live::detectors::{DetectorState, ItemCatalog, detect};
 use scout_client_core::live::snapshot::LiveSnapshot;
 use scout_explore_client::proactive::ProactiveTurn;
 
-/// The least time between two requests, matching the server's spacing.
-pub(super) const SPACING: Duration = Duration::from_secs(90);
+/// The server's spacing between admitted triggers.
+const SERVER_SPACING: Duration = Duration::from_secs(90);
+/// Slack for request latency: the server measures its spacing from when it
+/// admitted the previous trigger, which can be later than when it was sent.
+pub(super) const LATENCY_MARGIN: Duration = Duration::from_secs(15);
+/// The least time between two requests.
+pub(super) const SPACING: Duration = SERVER_SPACING.saturating_add(LATENCY_MARGIN);
 /// The most requests one game makes, matching the server's cap.
 pub(super) const MAX_PER_GAME: u8 = 10;
 
