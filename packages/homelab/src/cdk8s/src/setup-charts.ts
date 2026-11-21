@@ -56,6 +56,8 @@ import {
   prepareDockerHubPullSecrets,
 } from "./dockerhub-pull-secrets.ts";
 
+import { createFlagsChart } from "./cdk8s-charts/flags.ts";
+
 /**
  * Sets up all charts for the application
  */
@@ -123,6 +125,8 @@ export async function setupCharts(app: App): Promise<void> {
   createStormBrainChart(app);
   createMcSandboxChart(app);
   createStormForumCharts(app);
+
+  createFlagsChart(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.

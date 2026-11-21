@@ -648,6 +648,12 @@
     "reason": "Rebuildable Gradle build cache"
   },
   {
+    "namespace": "flags",
+    "name": "flags-data",
+    "backup": "enabled",
+    "reason": "Flags SQLite documents"
+  },
+  {
     "namespace": "flipt",
     "name": "flipt-data",
     "backup": "enabled",

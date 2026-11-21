@@ -122,6 +122,7 @@
     "packages/dotfiles",
     "packages/eslint-config",
     "packages/feature-flags",
+    "packages/flags",
     "packages/glitter",
     "packages/glitter-boys",
     "packages/glitter-boys-launcher",

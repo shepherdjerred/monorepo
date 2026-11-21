@@ -469,6 +469,26 @@ const commands: Record<
     command: "cd /app/packages/arcade && bun packages/backend/src/smoke.ts",
     env: {},
   },
+  flags: {
+    command: [
+      "set -eu",
+      "cd /app/packages/flags",
+      "bun src/index.ts >/tmp/flags-smoke.log 2>&1 &",
+      "pid=$!",
+      "trap 'if kill -0 $pid; then kill $pid; wait $pid || test $? -eq 143; fi' EXIT",
+      "for _ in $(seq 1 30); do",
+      `  if bun -e 'const health = await fetch("http://127.0.0.1:17360/healthz"); if (!health.ok) process.exit(1);'; then exit 0; fi`,
+      "  if ! kill -0 $pid; then cat /tmp/flags-smoke.log; exit 1; fi",
+      "  sleep 1",
+      "done",
+      "cat /tmp/flags-smoke.log",
+      "exit 1",
+    ].join("\n"),
+    env: {
+      HOST: "127.0.0.1",
+      PORT: "17360",
+    },
+  },
 };
 
 /** The command and environment the in-image runner executes for `target`. */
