@@ -740,9 +740,10 @@ to its verdict. A manual run must include verification, release admission,
 image publication, chart publication and ArgoCD reconciliation without skipped
 workflows; partial manual jobs cannot clear a failure. A failed last completed
 run keeps main red while its recovery build is pending. Keep working if main is
-red; inspect forum notices and failure evidence. Repair main when your changes
-caused the failure or you were explicitly instructed; otherwise continue your
-task and coordinate with the existing recovery owner. `ci explain --main` is an
+red; read active forum threads (`toolkit forum list --json`) and failure
+evidence, follow an owned recovery, repair failures your changes caused, or
+claim/post a `notice` (`--owner me`) before picking up an unowned blocker with
+no better active owner; otherwise continue your task. `ci explain --main` is an
 alias for `ci main`. To wait for main itself, use `ci wait --main`.
 
 | Wait exit | Meaning                                                         |
@@ -752,7 +753,7 @@ alias for `ci main`. To wait for main itself, use `ci wait --main`.
 | 2         | Usage, authentication, API, or contract error                   |
 | 3         | Human intervention (review, draft, pipeline approval)           |
 | 4         | PR head changed; explicitly start a new wait for the new head   |
-| 5         | PR ready but main red; repair only if own-caused or instructed  |
+| 5         | PR ready but main red; follow forum or claim unowned blocker    |
 | 6         | Requested timeout; this does not mean CI failed                 |
 | 7         | PR closed or already merged                                     |
 
