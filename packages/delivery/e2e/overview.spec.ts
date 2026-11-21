@@ -247,6 +247,16 @@ test("the overview filters through the URL", async ({ page }) => {
   );
   await expect(tiles).toHaveCount(0);
 
+  // A submit trims what was typed, and the control still follows the URL.
+  await openOverview(page);
+  await filters.getByLabel("Service").fill("  flipt ");
+  await filters.getByRole("button", { name: "Filter" }).click();
+  await expect(page).toHaveURL(/\/\?q=flipt$/u);
+  await expect(filters.getByLabel("Service")).toHaveValue("flipt");
+  await page.goBack();
+  await expect(tiles).toHaveCount(total);
+  await expect(filters.getByLabel("Service")).toHaveValue("");
+
   // A deep link carries the filter, and a status alone filters too.
   await openOverview(page, "?status=not_started");
   await expect(filters.getByLabel("Newest deployment")).toHaveValue(

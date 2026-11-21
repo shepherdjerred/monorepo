@@ -10,6 +10,7 @@ import type {
 } from "#shared/hub/integration-contract.ts";
 import {
   INLINE_ACTION_LIMIT,
+  actionDetail,
   actionSummary,
   pipelineStages,
   stageActionList,
@@ -294,5 +295,35 @@ describe("how a stage lists its actions", () => {
     expect(environment.inline).toEqual([]);
     expect(environment.collapsed?.summary).toBe("7 actions succeeded");
     expect(environment.collapsed?.label).toBe("actions");
+  });
+});
+
+describe("the line under an action's title", () => {
+  it("shows a step's prose message", () => {
+    expect(
+      actionDetail({
+        ...action("stage:sync"),
+        detail: "step-sync: succeeded",
+      }),
+    ).toBe("step-sync: succeeded");
+    expect(actionDetail(action("stage:sync"))).toBeNull();
+  });
+
+  it("leaves a machine receipt to the deployment page", () => {
+    expect(
+      actionDetail({
+        ...action("stage:worker-image-provenance", "running"),
+        detail: JSON.stringify({
+          namespace: "delivery-worker-jobs",
+          name: "delivery-72a07907049f",
+        }),
+      }),
+    ).toBeNull();
+  });
+
+  it("keeps prose that only opens with a brace", () => {
+    expect(
+      actionDetail({ ...action("stage:sync"), detail: "{pending} on Argo" }),
+    ).toBe("{pending} on Argo");
   });
 });

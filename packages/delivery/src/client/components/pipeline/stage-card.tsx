@@ -9,7 +9,11 @@ import { Status } from "#client/components/status.tsx";
 import { Duration, RelativeTime } from "#client/components/time.tsx";
 import { ShortSha, TargetLink, ToolLinks } from "#client/components/links.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
-import { stageActionList, stageSummary } from "./pipeline-view-model.ts";
+import {
+  actionDetail,
+  stageActionList,
+  stageSummary,
+} from "./pipeline-view-model.ts";
 import { revisionLabel } from "#client/components/identifier.tsx";
 
 function transitionLabel(transition: Transition) {
@@ -42,6 +46,7 @@ export function TransitionMarker({ transition }: { transition: Transition }) {
 }
 
 function ActionRow({ action }: { action: PipelineAction }) {
+  const detail = actionDetail(action);
   return (
     <li className={`action action-${action.status}`}>
       <Status value={action.status} />
@@ -53,7 +58,7 @@ function ActionRow({ action }: { action: PipelineAction }) {
             <TargetLink target={action.target}>{action.title}</TargetLink>
           )}
         </strong>
-        {action.detail !== null && <p>{action.detail}</p>}
+        {detail !== null && <p>{detail}</p>}
         <p className="action-meta">
           {action.startedAt !== null && (
             <Duration start={action.startedAt} end={action.finishedAt} />
