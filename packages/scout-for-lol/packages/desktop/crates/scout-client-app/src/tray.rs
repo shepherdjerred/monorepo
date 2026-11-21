@@ -7,7 +7,7 @@
 //! another thread. On Linux the KSNI backend runs its own D-Bus thread, so no
 //! event loop is needed there.
 //!
-//! The same loop holds the global push-to-talk and mute keys
+//! The same loop holds the global push-to-talk, mute and overlay keys
 //! ([`crate::hotkeys::Registrar`]), which need it for the same reason.
 
 use scout_client_core::profile::ReleaseProfile;
@@ -15,7 +15,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use tray_icon::menu::{Menu, MenuEvent, MenuItem};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 
-use crate::hotkeys::{HotkeyEvent, HotkeyPort};
+use crate::hotkeys::{HotkeyEvent, HotkeyPort, OverlayKeyPort};
 use crate::supervisor::{Control, SupervisorExit};
 
 /// What the platform event loop offers the supervisor.
@@ -24,6 +24,8 @@ pub struct TrayContext {
     pub tray_available: bool,
     /// The global keys, when the event loop could create them.
     pub hotkeys: Option<Box<dyn HotkeyPort>>,
+    /// The overlay's keys, from the same event loop.
+    pub overlay_keys: Option<Box<dyn OverlayKeyPort>>,
 }
 
 /// The supervisor's work, given what the event loop offers.
@@ -64,6 +66,7 @@ pub fn run(
             return supervise(TrayContext {
                 tray_available: false,
                 hotkeys: None,
+                overlay_keys: None,
             });
         }
     };
@@ -94,6 +97,7 @@ pub fn run(
     let exit = supervise(TrayContext {
         tray_available: tray.is_some(),
         hotkeys: None,
+        overlay_keys: None,
     });
     drop(tray);
     exit
@@ -155,7 +159,7 @@ mod shell {
     use winit::window::WindowId;
 
     use super::{Supervise, TrayContext, create_tray};
-    use crate::hotkeys::{HotkeyBindings, HotkeyEvent, HotkeyPort, Registrar};
+    use crate::hotkeys::{HotkeyBindings, HotkeyEvent, HotkeyPort, OverlayKeyPort, Registrar};
     use crate::supervisor::{Control, SupervisorExit};
 
     pub(super) enum ShellEvent {
@@ -163,16 +167,30 @@ mod shell {
         Exit(SupervisorExit),
         /// Register these keys.
         Bind(HotkeyBindings),
+        /// Register (`true`) or release the overlay's keys.
+        BindOverlay(bool),
     }
 
     /// Asks the event loop's thread to change the registered keys.
     struct ProxyHotkeys(EventLoopProxy<ShellEvent>);
 
-    impl HotkeyPort for ProxyHotkeys {
-        fn bind(&self, bindings: HotkeyBindings) {
-            if self.0.send_event(ShellEvent::Bind(bindings)).is_err() {
+    impl ProxyHotkeys {
+        fn send(&self, event: ShellEvent) {
+            if self.0.send_event(event).is_err() {
                 tracing::info!("the Scout Client event loop had already stopped");
             }
+        }
+    }
+
+    impl HotkeyPort for ProxyHotkeys {
+        fn bind(&self, bindings: HotkeyBindings) {
+            self.send(ShellEvent::Bind(bindings));
+        }
+    }
+
+    impl OverlayKeyPort for ProxyHotkeys {
+        fn bind_overlay(&self, bound: bool) {
+            self.send(ShellEvent::BindOverlay(bound));
         }
     }
 
@@ -197,7 +215,7 @@ mod shell {
                 return;
             };
             self.tray = create_tray(self.control.clone());
-            self.hotkeys = match Registrar::new(self.hotkey_events.clone()) {
+            self.hotkeys = match Registrar::new(self.hotkey_events.clone(), self.control.clone()) {
                 Ok(registrar) => Some(registrar),
                 Err(error) => {
                     let _ = self.hotkey_events.send(HotkeyEvent::BindFailed(format!(
@@ -212,6 +230,10 @@ mod shell {
                     .hotkeys
                     .is_some()
                     .then(|| Box::new(ProxyHotkeys(self.proxy.clone())) as Box<dyn HotkeyPort>),
+                overlay_keys: self
+                    .hotkeys
+                    .is_some()
+                    .then(|| Box::new(ProxyHotkeys(self.proxy.clone())) as Box<dyn OverlayKeyPort>),
             };
             let proxy = self.proxy.clone();
             std::thread::spawn(move || {
@@ -233,6 +255,11 @@ mod shell {
                 ShellEvent::Bind(bindings) => {
                     if let Some(hotkeys) = self.hotkeys.as_mut() {
                         hotkeys.apply(&bindings);
+                    }
+                }
+                ShellEvent::BindOverlay(bound) => {
+                    if let Some(hotkeys) = self.hotkeys.as_mut() {
+                        hotkeys.apply_overlay(bound);
                     }
                 }
             }

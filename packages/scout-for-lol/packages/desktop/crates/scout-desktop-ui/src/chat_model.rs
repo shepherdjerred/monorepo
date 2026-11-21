@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use scout_desktop_ipc::{
     ChatAttachment, ChatAvailability, ChatCoachKind, ChatCommand, ChatDraftState, ChatImage,
     ChatMessage, ChatParts, ChatRole, ChatToolStatus, ChatToolStep, ChatTranscript, ChatVersion,
-    ChatVisuals, StateSnapshot, UpdateSnapshot, WindowMessage,
+    ChatVisuals, OverlayWarning, StateSnapshot, UpdateSnapshot, WindowMessage,
 };
 use uuid::Uuid;
 
@@ -444,6 +444,9 @@ pub struct ConversationModel {
     pub loading: bool,
     /// The coach panel, while Scout has coach advice for this moment.
     pub coach: Option<CoachPanelModel>,
+    /// Why the in-game overlay will not show in the coming game, said during
+    /// champion select.
+    pub overlay_warning: Option<&'static str>,
     /// The composer.
     pub composer: ComposerModel,
     /// Whether the run stream is reconnecting.
@@ -948,6 +951,7 @@ impl ChatScreen {
             title,
             rows: rows(parts),
             coach: coach_panel(parts),
+            overlay_warning: state.overlay_warning.map(OverlayWarning::message),
             loading,
             composer: composer(parts, ui, open_transcript.is_some()),
             reconnecting: status.reconnecting,
@@ -1329,6 +1333,36 @@ mod tests {
         });
         assert_eq!(conversation(&parts)?.coach, None);
         Ok(())
+    }
+
+    #[test]
+    fn an_exclusive_fullscreen_warning_shows_over_the_conversation() {
+        let parts = ChatParts {
+            status: ChatStatus {
+                availability: ChatAvailability::Ready,
+                ..ChatStatus::default()
+            },
+            ..ChatParts::default()
+        };
+        let quiet = StateSnapshot::default();
+        let warned = StateSnapshot {
+            overlay_warning: Some(scout_desktop_ipc::OverlayWarning::ExclusiveFullscreen),
+            ..StateSnapshot::default()
+        };
+        let warning = |state: &StateSnapshot| match ChatScreen::new(
+            &parts,
+            state,
+            &UpdateSnapshot::default(),
+        ) {
+            ChatScreen::Conversation(model) => model.overlay_warning,
+            ChatScreen::Loading | ChatScreen::Gate(_) => None,
+        };
+        assert_eq!(warning(&quiet), None);
+        let shown = warning(&warned).unwrap_or_default();
+        assert!(
+            shown.contains("Fullscreen") && shown.contains("Borderless"),
+            "{shown}"
+        );
     }
 
     #[cfg(scout_proactive_coach)]

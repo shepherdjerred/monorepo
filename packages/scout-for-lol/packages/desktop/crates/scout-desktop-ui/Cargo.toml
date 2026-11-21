@@ -9,6 +9,8 @@ publish.workspace = true
 
 [dependencies]
 scout-desktop-ipc = { path = "../scout-desktop-ipc" }
+# The overlay's card contract and placement; toolkit-free.
+scout-overlay = { path = "../scout-overlay" }
 uuid.workspace = true
 
 # The only GPUI dependencies in the workspace, and only where the window can
@@ -18,6 +20,25 @@ uuid.workspace = true
 async-channel.workspace = true
 gpui.workspace = true
 gpui-kit.workspace = true
+# The overlay window's native handle, for click-through (`src/native/`). The
+# version GPUI implements `HasWindowHandle` with.
+raw-window-handle = "0.6.2"
+
+# Click-through on macOS: `NSWindow.ignoresMouseEvents`, and a window class
+# that cannot become key. The versions GPUI's macOS platform already links.
+[target.'cfg(target_os = "macos")'.dependencies.objc2]
+version = "0.6.4"
+
+[target.'cfg(target_os = "macos")'.dependencies.objc2-app-kit]
+version = "0.3.2"
+default-features = false
+features = ["std", "NSResponder", "NSView", "NSWindow"]
+
+# Click-through, no-activate and topmost on Windows: the extended window
+# styles, `SetLayeredWindowAttributes` and `SetWindowPos`.
+[target.'cfg(windows)'.dependencies.winsafe]
+version = "0.0.27"
+features = ["user"]
 
 # Compile the Metal shaders when the window starts rather than at build time,
 # so a macOS build needs no Metal Toolchain download on top of Xcode.
@@ -48,6 +69,10 @@ gpui-platform = { workspace = true, features = ["runtime_shaders", "test-support
 
 [[test]]
 name = "render_pages"
+harness = false
+
+[[test]]
+name = "render_overlay"
 harness = false
 
 [lints]

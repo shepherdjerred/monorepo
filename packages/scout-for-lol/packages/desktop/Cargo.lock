@@ -7644,6 +7644,7 @@ dependencies = [
  "scout-desktop-ipc",
  "scout-desktop-ui",
  "scout-explore-client",
+ "scout-overlay",
  "scout-voice",
  "semver",
  "serde",
@@ -7703,6 +7704,7 @@ dependencies = [
 name = "scout-desktop-ipc"
 version = "0.1.0"
 dependencies = [
+ "scout-overlay",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
@@ -7718,10 +7720,15 @@ dependencies = [
  "gpui-pre",
  "gpui-pre-platform",
  "image",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "raw-window-handle",
  "scout-desktop-ipc",
  "scout-explore-client",
+ "scout-overlay",
  "serde_json",
  "uuid",
+ "winsafe",
 ]
 
 [[package]]
@@ -11010,6 +11017,12 @@ dependencies = [
  "toml 1.2.1+spec-1.1.0",
  "version_check",
 ]
+
+[[package]]
+name = "winsafe"
+version = "0.0.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bcfff8264c3af1b0352006934e2265365ecb5a145aee88e770dc8b82e0456f4f"
 
 [[package]]
 name = "wio"

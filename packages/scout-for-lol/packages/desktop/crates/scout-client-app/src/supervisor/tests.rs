@@ -1414,3 +1414,288 @@ async fn nothing_is_asked_without_item_facts() -> TestResult {
     std::fs::remove_dir_all(directory)?;
     Ok(())
 }
+
+/// An overlay stub: greets, reports `report` (a JSON line, or nothing), then
+/// appends every line it is sent to `$1` until `close` or a closed stdin.
+fn overlay_script(report: &str) -> String {
+    format!(
+        r#"printf '{{"type":"hello","protocol":{PROTOCOL_VERSION}}}\n'
+{report}
+while IFS= read -r line; do
+  printf '%s\n' "$line" >> "$1"
+  case "$line" in *'"type":"close"'*) exit 0 ;; esac
+done
+exit 0"#
+    )
+}
+
+/// What the overlay stub was sent so far.
+fn overlay_lines(log: &Path) -> Vec<scout_desktop_ipc::OverlayCommand> {
+    std::fs::read_to_string(log)
+        .unwrap_or_default()
+        .lines()
+        .filter_map(|line| scout_desktop_ipc::decode_line(line).ok())
+        .collect()
+}
+
+/// Wait until the overlay stub has been sent a line `matches` accepts.
+async fn overlay_sent(
+    log: &Path,
+    matches: impl Fn(&scout_desktop_ipc::OverlayCommand) -> bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    tokio::time::timeout(PATIENCE, async {
+        while !overlay_lines(log).iter().any(&matches) {
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    })
+    .await?;
+    Ok(())
+}
+
+fn shows(kind: scout_overlay::CardKind) -> impl Fn(&scout_desktop_ipc::OverlayCommand) -> bool {
+    move |command| {
+        matches!(
+            command,
+            scout_desktop_ipc::OverlayCommand::Frame { frame: Some(frame) } if frame.card.kind == kind
+        )
+    }
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn the_overlay_runs_for_the_game_shows_its_plan_and_takes_its_keys() -> TestResult {
+    use scout_desktop_ipc::{ChatCoachKind, OverlayCommand};
+
+    let scratch = scratch_directory()?;
+    let log = scratch.join("overlay.log");
+    let log_argument = log.to_str().ok_or("scratch path is not Unicode")?;
+    let DetachedRelay { relay, parts, .. } = ChatRelay::detached_coach();
+    let overlay = sh(
+        &overlay_script(r#"printf '{"type":"ready"}\n'"#),
+        &[log_argument],
+    );
+    let mut harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::ChampSelect,
+        |supervisor| supervisor.with_chat(relay).with_overlay(overlay, None),
+    )?;
+    harness.wait_for(|status| status.running).await?;
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert!(!log.exists(), "no overlay before the game is in progress");
+
+    harness.phase.send_replace(GameflowPhase::InProgress);
+    overlay_sent(&log, |command| {
+        matches!(command, OverlayCommand::Hello { protocol } if *protocol == PROTOCOL_VERSION)
+    })
+    .await?;
+    parts.send_replace(super::overlay::tests::parts_with_coach(
+        ChatCoachKind::Pregame,
+        "- Farm bot side\n- Ward river at 3:00\n- Group for dragon",
+    ));
+    overlay_sent(&log, shows(scout_overlay::CardKind::PregamePlan)).await?;
+    let Some(OverlayCommand::Frame { frame: Some(frame) }) = overlay_lines(&log)
+        .into_iter()
+        .find(shows(scout_overlay::CardKind::PregamePlan))
+    else {
+        return Err("the plan frame".into());
+    };
+    assert_eq!(frame.card.title, "Your game plan");
+    assert_eq!(frame.card.lines.len(), 3);
+    assert!(!frame.expanded);
+    assert_eq!(frame.keys.dismiss, "F7");
+
+    harness
+        .control
+        .send(Control::OverlayKey(crate::hotkeys::OverlayKey::Expand))?;
+    overlay_sent(
+        &log,
+        |command| matches!(command, OverlayCommand::Frame { frame: Some(frame) } if frame.expanded),
+    )
+    .await?;
+    harness
+        .control
+        .send(Control::OverlayKey(crate::hotkeys::OverlayKey::Dismiss))?;
+    overlay_sent(&log, |command| {
+        matches!(command, OverlayCommand::Frame { frame: None })
+    })
+    .await?;
+
+    // A dismissed plan is not offered again while the panel still shows it.
+    parts.send_modify(|parts| parts.status.reconnecting = true);
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert_eq!(
+        overlay_lines(&log)
+            .iter()
+            .filter(|command| shows(scout_overlay::CardKind::PregamePlan)(command))
+            .count(),
+        2,
+        "the plan, then the plan expanded"
+    );
+
+    harness.phase.send_replace(GameflowPhase::EndOfGame);
+    overlay_sent(&log, |command| matches!(command, OverlayCommand::Close)).await?;
+
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    assert!(
+        diagnostics
+            .events()
+            .iter()
+            .any(|event| event.summary().contains("click-through")),
+        "the overlay's readiness is recorded"
+    );
+    std::fs::remove_dir_all(directory)?;
+    std::fs::remove_dir_all(scratch)?;
+    Ok(())
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn an_unavailable_overlay_stays_down_for_the_game_and_the_window_keeps_running() -> TestResult
+{
+    use scout_desktop_ipc::ChatCoachKind;
+
+    let scratch = scratch_directory()?;
+    let log = scratch.join("overlay.log");
+    let log_argument = log.to_str().ok_or("scratch path is not Unicode")?;
+    let DetachedRelay { relay, parts, .. } = ChatRelay::detached_coach();
+    let overlay = sh(
+        &format!(
+            "{}\nexit 0",
+            overlay_script(r#"printf '{"type":"unavailable","reason":"no click-through"}\n'"#)
+                .lines()
+                .take(2)
+                .collect::<Vec<_>>()
+                .join("\n")
+        ),
+        &[log_argument],
+    );
+    let mut harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::InProgress,
+        |supervisor| supervisor.with_chat(relay).with_overlay(overlay, None),
+    )?;
+    harness.wait_for(|status| status.running).await?;
+    tokio::time::timeout(PATIENCE, async {
+        while !harness
+            .diagnostics
+            .events()
+            .iter()
+            .any(|event| event.summary().contains("no click-through"))
+        {
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    })
+    .await?;
+    parts.send_replace(super::overlay::tests::parts_with_coach(
+        ChatCoachKind::Pregame,
+        "Farm bot side",
+    ));
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert!(!log.exists(), "nothing is drawn once the overlay is down");
+    assert!(
+        harness.status.borrow().running,
+        "the main window is untouched"
+    );
+
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    std::fs::remove_dir_all(directory)?;
+    std::fs::remove_dir_all(scratch)?;
+    Ok(())
+}
+
+/// The real overlay on this screen, driven by the real supervisor through a
+/// mock gameflow: champion select, then `InProgress` with the game plan (and,
+/// in the beta build, what Scout noticed), the overlay keys, then the end of
+/// the game. It needs a display and the built `scout-client` beside the test
+/// binary (`cargo build -p scout-client-app` first), so it is not part of the
+/// suite; it is how the PR's recording is made:
+/// `cargo test -p scout-client-app overlay_on_screen -- --ignored --nocapture`.
+/// `SCOUT_OVERLAY_DEMO_STEP_MS` sets the pause between steps.
+#[cfg(target_os = "macos")]
+#[tokio::test]
+#[ignore = "opens the real overlay window on screen for a recording"]
+async fn overlay_on_screen() -> TestResult {
+    use crate::hotkeys::OverlayKey;
+    use scout_desktop_ipc::ChatCoachKind;
+
+    let step = Duration::from_millis(
+        std::env::var("SCOUT_OVERLAY_DEMO_STEP_MS")
+            .ok()
+            .and_then(|value| value.parse().ok())
+            .unwrap_or(3_000),
+    );
+    let binary = std::env::current_exe()?
+        .parent()
+        .and_then(Path::parent)
+        .ok_or("the test binary has no target directory")?
+        .join("scout-client");
+    if !binary.exists() {
+        return Err(format!("build {} first", binary.display()).into());
+    }
+    let DetachedRelay { relay, parts, .. } = ChatRelay::detached_coach();
+    let overlay = WindowLauncher::new(binary, vec!["--overlay".to_owned()]);
+    let mut harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::ChampSelect,
+        |supervisor| supervisor.with_chat(relay).with_overlay(overlay, None),
+    )?;
+    harness.wait_for(|status| status.running).await?;
+    println!("gameflow: InProgress");
+    harness.phase.send_replace(GameflowPhase::InProgress);
+    parts.send_replace(super::overlay::tests::parts_with_coach(
+        ChatCoachKind::Pregame,
+        "## Plan\n- Farm bot side until your first item\n- Ward the river brush at 3:00\n- Group for the first dragon at 5:00\n- Their jungler starts top: track him",
+    ));
+    tokio::time::sleep(step).await;
+    #[cfg(scout_proactive_coach)]
+    {
+        println!("beta: Scout noticed");
+        let mut noticed = super::overlay::tests::parts_with_coach(
+            ChatCoachKind::Proactive,
+            "Their Jinx just finished Infinity Edge.\nBuild armor next.",
+        );
+        if let Some(coach) = noticed.coach.as_mut() {
+            coach.message_id = uuid::Uuid::from_u128(3);
+        }
+        if let Some(message) = noticed
+            .transcript
+            .as_mut()
+            .and_then(|transcript| transcript.messages.first_mut())
+        {
+            message.id = uuid::Uuid::from_u128(3);
+        }
+        parts.send_replace(noticed);
+        tokio::time::sleep(step).await;
+    }
+    for key in [
+        OverlayKey::Expand,
+        OverlayKey::Next,
+        OverlayKey::Next,
+        OverlayKey::Dismiss,
+    ] {
+        println!("key: {key:?}");
+        harness.control.send(Control::OverlayKey(key))?;
+        tokio::time::sleep(step).await;
+    }
+    println!("gameflow: EndOfGame");
+    harness.phase.send_replace(GameflowPhase::EndOfGame);
+    tokio::time::sleep(step).await;
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, diagnostics, directory) = harness.finish().await?;
+    for event in diagnostics.events() {
+        println!("{}", event.summary());
+    }
+    assert_eq!(exit, SupervisorExit::Quit);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}

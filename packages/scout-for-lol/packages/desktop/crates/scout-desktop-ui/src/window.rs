@@ -544,6 +544,7 @@ pub mod preview {
     pub use super::ScoutWindow;
     use crate::kit::prelude::App;
     pub use crate::link::{Incoming, Outbound};
+    pub use crate::overlay::OverlayWindow;
 
     /// Initialize gpui-kit and install the Scout theme.
     pub fn prepare(cx: &mut App) {

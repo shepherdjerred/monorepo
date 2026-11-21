@@ -11,6 +11,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use thiserror::Error;
 
 use super::champ_select::{self, ChampSelectError, ChampSelectSnapshot};
+use super::game_settings::{self, GameSettingsError, GameWindowMode};
 use super::gameflow::{self, GameflowError, GameflowPhase};
 use super::model::AllGameData;
 use super::recording::{RecordingError, RecordingId, RecordingStore};
@@ -35,6 +36,9 @@ pub enum SourceError {
     /// The champion-select resource was malformed.
     #[error(transparent)]
     ChampSelect(#[from] ChampSelectError),
+    /// The game settings did not state a known window mode.
+    #[error(transparent)]
+    GameSettings(#[from] GameSettingsError),
 }
 
 /// Reads the in-game state of the running match.
@@ -57,6 +61,12 @@ pub trait LcuSource {
     fn champ_select(
         &self,
     ) -> impl Future<Output = Result<Option<ChampSelectSnapshot>, SourceError>> + Send;
+
+    /// The window mode the game will start in, or `None` when the client
+    /// serves no game settings.
+    fn game_window_mode(
+        &self,
+    ) -> impl Future<Output = Result<Option<GameWindowMode>, SourceError>> + Send;
 }
 
 impl LiveGameSource for LiveClient {
@@ -84,6 +94,13 @@ impl LcuSource for LcuClient {
             None => Ok(None),
         }
     }
+
+    async fn game_window_mode(&self) -> Result<Option<GameWindowMode>, SourceError> {
+        match self.get(LcuEndpoint::GameSettings).await? {
+            Some(value) => Ok(Some(game_settings::parse_window_mode(&value)?)),
+            None => Ok(None),
+        }
+    }
 }
 
 /// One moment of a recorded session.
@@ -105,6 +122,7 @@ pub struct ReplayFrame {
 pub struct ReplaySource {
     frames: Vec<ReplayFrame>,
     cursor: AtomicUsize,
+    window_mode: Option<GameWindowMode>,
 }
 
 impl ReplaySource {
@@ -114,7 +132,16 @@ impl ReplaySource {
         Self {
             frames,
             cursor: AtomicUsize::new(0),
+            window_mode: None,
         }
+    }
+
+    /// Serve `mode` as the game settings' window mode for the whole session;
+    /// without it the replay serves no game settings.
+    #[must_use]
+    pub const fn with_window_mode(mut self, mode: GameWindowMode) -> Self {
+        self.window_mode = Some(mode);
+        self
     }
 
     /// Replay a game recorded on this device: one `InProgress` frame per
@@ -182,6 +209,12 @@ impl LcuSource for ReplaySource {
             .current()
             .and_then(|frame| frame.champ_select.clone())))
     }
+
+    fn game_window_mode(
+        &self,
+    ) -> impl Future<Output = Result<Option<GameWindowMode>, SourceError>> {
+        std::future::ready(Ok(self.current().and(self.window_mode)))
+    }
 }
 
 #[cfg(test)]
@@ -191,6 +224,7 @@ mod tests {
 
     use super::{LcuSource, LiveGameSource, ReplayFrame, ReplaySource, SourceError};
     use crate::lcu::{LcuError, LiveClient, LiveClientEndpoint};
+    use crate::live::game_settings::GameWindowMode;
     use crate::live::gameflow::GameflowPhase;
     use crate::live::snapshot::tests::{FIXTURE, fixture_snapshot};
 
@@ -305,6 +339,25 @@ mod tests {
         assert!(!replay.advance());
         assert_eq!(replay.gameflow_phase().await?, None);
         assert_eq!(replay.champ_select().await?, None);
+        assert_eq!(replay.game_window_mode().await?, None);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn a_replay_serves_its_window_mode_until_the_client_closes()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let replay = ReplaySource::new(vec![ReplayFrame {
+            phase: GameflowPhase::ChampSelect,
+            live: None,
+            champ_select: None,
+        }])
+        .with_window_mode(GameWindowMode::Fullscreen);
+        assert_eq!(
+            replay.game_window_mode().await?,
+            Some(GameWindowMode::Fullscreen)
+        );
+        assert!(!replay.advance());
+        assert_eq!(replay.game_window_mode().await?, None);
         Ok(())
     }
 }

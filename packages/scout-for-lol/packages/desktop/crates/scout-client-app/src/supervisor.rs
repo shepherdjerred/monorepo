@@ -9,6 +9,10 @@
 //!
 //! The microphone belongs here too ([`crate::voice`]): the window shows where
 //! it is and sends the player's voice choices, but never opens it.
+//!
+//! So does the in-game overlay's state ([`overlay`]): the supervisor runs the
+//! overlay as a second child (`--overlay`) for the length of a game, decides
+//! which card it shows, and holds the keys that act on it.
 
 use std::path::{Path, PathBuf};
 use std::process::{ExitStatus, Stdio};
@@ -18,13 +22,14 @@ use std::time::{Duration, Instant};
 use scout_client_core::diagnostics::{
     DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics,
 };
+use scout_client_core::live::game_settings::GameWindowMode;
 use scout_client_core::settings::PrivacySettings;
 use scout_client_core::telemetry::{UsageEvent, WindowCrashCause, WindowCrashOutcome};
 use scout_client_runtime::runtime::{
     ClientRuntime, GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver,
 };
 use scout_desktop_ipc::{
-    ChatCommand, ChatParts, CounterReading, DiagnosticsSnapshot, LiveGameSnapshot,
+    ChatCommand, ChatParts, CounterReading, DiagnosticsSnapshot, LiveGameSnapshot, OverlayWarning,
     PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot,
     VoiceSnapshot, VoiceState, VoiceTurnView, WindowMessage, check_protocol, decode_line,
     encode_line,
@@ -34,9 +39,11 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdin, ChildStdout, Command};
 use tokio::sync::{mpsc, watch};
 
+use crate::hotkeys::{OverlayKey, OverlayKeyPort};
 use crate::updater::service::{InstallOutcome, UpdateHandle};
 use crate::voice::VoiceHandle;
 use coach::CoachDriver;
+use overlay::OverlayHost;
 
 /// A crash after this long is a fresh incident, not part of a crash loop.
 pub const STABLE_RUN: Duration = Duration::from_mins(10);
@@ -155,6 +162,15 @@ impl WindowLauncher {
 pub enum Control {
     /// Show the window, starting it if it is not running.
     OpenWindow,
+    /// An overlay key was pressed.
+    #[cfg_attr(
+        not(any(target_os = "windows", target_os = "macos", test)),
+        expect(
+            dead_code,
+            reason = "only the Windows and macOS hotkey registrar sends overlay keys; Linux has no overlay"
+        )
+    )]
+    OverlayKey(OverlayKey),
     /// Quit Scout.
     Quit,
 }
@@ -202,6 +218,10 @@ pub struct Supervisor<C: Collector> {
     /// Voice, when this build has it. The microphone and the device
     /// credential stay in this process.
     voice: Option<VoiceHandle>,
+    /// The in-game overlay, when this build has one. `run` takes it.
+    overlay: Option<OverlayHost>,
+    /// Whether this supervisor runs the overlay, for the fullscreen warning.
+    overlay_available: bool,
     /// How long a champion select holds still before the coach advises.
     coach_debounce: Duration,
     /// Held for the supervisor's life, so a second supervisor cannot share the
@@ -230,6 +250,8 @@ impl<C: Collector> Supervisor<C> {
             updates: None,
             chat: None,
             voice: None,
+            overlay: None,
+            overlay_available: false,
             coach_debounce: coach::DEBOUNCE,
             _instance_lock: instance_lock,
         }
@@ -253,6 +275,19 @@ impl<C: Collector> Supervisor<C> {
     #[must_use]
     pub fn with_voice(mut self, voice: VoiceHandle) -> Self {
         self.voice = Some(voice);
+        self
+    }
+
+    /// Run the in-game overlay with `launcher` for the length of each game,
+    /// holding its keys through `keys`.
+    #[must_use]
+    pub fn with_overlay(
+        mut self,
+        launcher: WindowLauncher,
+        keys: Option<Box<dyn OverlayKeyPort>>,
+    ) -> Self {
+        self.overlay = Some(OverlayHost::new(launcher, keys));
+        self.overlay_available = true;
         self
     }
 
@@ -288,6 +323,9 @@ impl<C: Collector> Supervisor<C> {
         let mut voice = self.voice.as_ref().map(VoiceWatch::new);
         let mut pairing = pairing_key(&state.borrow());
         let mut coach = CoachDriver::new(self.coach_debounce);
+        let mut overlay = self.overlay.take();
+        // A supervisor that starts mid-game opens the overlay now.
+        self.follow_overlay_phase(&mut overlay, &phase).await;
         let mut refresh = tokio::time::interval(REFRESH);
         refresh.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
         let exit = loop {
@@ -296,33 +334,21 @@ impl<C: Collector> Supervisor<C> {
                     Some(Control::OpenWindow) => {
                         self.open_window(&mut window, &mut quick_crashes, &state, &phase).await;
                     }
+                    Some(Control::OverlayKey(key)) => {
+                        OverlayHost::press(&mut overlay, key, self.collector.diagnostics()).await;
+                    }
                     Some(Control::Quit) => break SupervisorExit::Quit,
                     None => break SupervisorExit::ControlClosed,
                 },
-                event = next_event(&mut window) => match event {
-                    WindowEvent::Message(message) => {
-                        if let Some(running) = window.as_mut()
-                            && self.handle(running, message).await == Handled::Quit
-                        {
-                            break SupervisorExit::Quit;
-                        }
+                event = OverlayHost::next_event(&mut overlay) => {
+                    OverlayHost::react(&mut overlay, event, self.collector.diagnostics()).await;
+                }
+                event = next_event(&mut window) => {
+                    let windows = (&mut window, &mut quick_crashes);
+                    if let Some(exit) = self.window_event(event, windows, &state, &phase).await {
+                        break exit;
                     }
-                    WindowEvent::Unreadable(detail) => {
-                        if let Some(running) = window.as_mut() {
-                            self.record(window_crash_event(DiagnosticOutcome::Failed, detail));
-                            running.kill_because(WindowCrashCause::Unresponsive);
-                        }
-                    }
-                    WindowEvent::Exited(status) => {
-                        let Some(ended) = window.take() else { continue };
-                        self.status.send_modify(|status| status.running = false);
-                        match self.after_exit(&ended, status, &mut quick_crashes) {
-                            AfterExit::Relaunch => window = self.launch(&state, &phase).await,
-                            AfterExit::Wait => {}
-                            AfterExit::Quit => break SupervisorExit::WindowClosedWithoutTray,
-                        }
-                    }
-                },
+                }
                 Ok(()) = state.changed() => {
                     self.state_changed(window.as_mut(), &state, &mut pairing).await;
                 }
@@ -331,11 +357,13 @@ impl<C: Collector> Supervisor<C> {
                     if let Some(running) = window.as_mut() {
                         self.send_chat(running).await;
                     }
+                    self.offer_overlay_cards(&mut overlay).await;
                 }
                 true = VoiceWatch::changed(&mut voice) => {
                     if let Some(running) = window.as_mut() {
                         self.send_voice(running).await;
                     }
+                    self.offer_overlay_cards(&mut overlay).await;
                 }
                 true = update_changed(&mut update_status) => {
                     if let Some(running) = window.as_mut() {
@@ -348,33 +376,123 @@ impl<C: Collector> Supervisor<C> {
                         let message = phase_message(&phase.borrow_and_update());
                         self.deliver(running, &message).await;
                     }
+                    self.follow_overlay_phase(&mut overlay, &phase).await;
                 }
                 _ = refresh.tick() => {
                     self.drive_coach(&mut coach, &state, &phase);
                     if let Some(running) = window.as_mut() {
                         self.send_state(running, &state).await;
                     }
+                    OverlayHost::refresh(&mut overlay, self.collector.diagnostics()).await;
                     if self.install_when_idle(window.is_some(), &phase) {
                         break SupervisorExit::Updating;
                     }
                 }
             }
         };
-        if let Some(running) = window.take() {
+        self.finish(exit, window, overlay, &phase).await
+    }
+
+    /// Close the window and the overlay, stop collection, and install a
+    /// waiting update when the user quit.
+    async fn finish(
+        self,
+        exit: SupervisorExit,
+        window: Option<Window>,
+        overlay: Option<OverlayHost>,
+        phase: &PhaseReceiver,
+    ) -> SupervisorExit {
+        if let Some(running) = window {
             self.close(running).await;
         }
+        if let Some(mut host) = overlay {
+            host.stop();
+        }
         self.status.send_modify(|status| status.running = false);
+        let updates = self.updates.clone();
         self.collector.stop();
         // A user who quit gets the update they were waiting on, once the
         // outbox has been closed cleanly, and never over a live game.
         if matches!(
             exit,
             SupervisorExit::Quit | SupervisorExit::WindowClosedWithoutTray
-        ) && let Some(updates) = &self.updates
+        ) && let Some(updates) = &updates
         {
             updates.install(false, &phase.borrow());
         }
         exit
+    }
+
+    /// Act on what the window said or did. Returns why the supervisor should
+    /// stop, when it should.
+    async fn window_event(
+        &self,
+        event: WindowEvent,
+        (window, quick_crashes): (&mut Option<Window>, &mut u32),
+        state: &StateReceiver,
+        phase: &PhaseReceiver,
+    ) -> Option<SupervisorExit> {
+        match event {
+            WindowEvent::Message(message) => {
+                if let Some(running) = window.as_mut()
+                    && self.handle(running, message).await == Handled::Quit
+                {
+                    return Some(SupervisorExit::Quit);
+                }
+            }
+            WindowEvent::Unreadable(detail) => {
+                if let Some(running) = window.as_mut() {
+                    self.record(window_crash_event(DiagnosticOutcome::Failed, detail));
+                    running.kill_because(WindowCrashCause::Unresponsive);
+                }
+            }
+            WindowEvent::Exited(status) => {
+                let ended = window.take()?;
+                self.status.send_modify(|status| status.running = false);
+                match self.after_exit(&ended, status, quick_crashes) {
+                    AfterExit::Relaunch => *window = self.launch(state, phase).await,
+                    AfterExit::Wait => {}
+                    AfterExit::Quit => return Some(SupervisorExit::WindowClosedWithoutTray),
+                }
+            }
+        }
+        None
+    }
+
+    /// Open the overlay when a game starts and close it when it ends, then
+    /// offer it what the main window shows.
+    async fn follow_overlay_phase(&self, overlay: &mut Option<OverlayHost>, phase: &PhaseReceiver) {
+        let Some(host) = overlay.as_mut() else {
+            return;
+        };
+        let phase = phase.borrow().clone();
+        host.follow_phase(&phase, self.collector.diagnostics())
+            .await;
+        self.offer_overlay_cards(overlay).await;
+    }
+
+    /// Offer the overlay the coach panel and the spoken turn the main window
+    /// holds now, and send it what to draw.
+    async fn offer_overlay_cards(&self, overlay: &mut Option<OverlayHost>) {
+        let Some(host) = overlay.as_mut() else {
+            return;
+        };
+        let parts = self.chat.as_ref().map(ChatRelay::subscribe);
+        let voice = self
+            .voice
+            .as_ref()
+            .map(|voice| (voice.snapshot(), voice.turn()));
+        {
+            let parts = parts.as_ref().map(|parts| parts.borrow());
+            let voice = voice
+                .as_ref()
+                .map(|(snapshot, turn)| (snapshot.borrow().state, turn.borrow()));
+            host.observe(
+                parts.as_deref(),
+                voice.as_ref().map(|(state, turn)| (*state, turn.as_ref())),
+            );
+        }
+        host.flush(self.collector.diagnostics()).await;
     }
 
     /// Show the window, starting it if it is not running. An explicit open
@@ -761,6 +879,7 @@ impl<C: Collector> Supervisor<C> {
                     &runtime,
                     self.collector.diagnostics(),
                     self.collector.log_directory().is_some(),
+                    self.overlay_available,
                 ),
                 live_game_snapshot(&runtime),
             )
@@ -1019,12 +1138,15 @@ fn open_web_page(url: &str) {
     }
 }
 
-/// The window's view of the runtime.
+/// The window's view of the runtime. `overlay_available` is whether this
+/// supervisor runs the in-game overlay, which decides whether exclusive
+/// fullscreen is worth a warning.
 #[must_use]
 pub fn snapshot(
     state: &RuntimeState,
     diagnostics: &Diagnostics,
     log_folder_available: bool,
+    overlay_available: bool,
 ) -> StateSnapshot {
     StateSnapshot {
         league_connected: state.league_connected,
@@ -1042,6 +1164,9 @@ pub fn snapshot(
         pending_observations: u64::try_from(state.pending_observations).unwrap_or(u64::MAX),
         last_upload_at: state.last_upload_at.clone(),
         last_error: state.last_error.clone(),
+        overlay_warning: (overlay_available
+            && state.game_window_mode == Some(GameWindowMode::Fullscreen))
+        .then_some(OverlayWarning::ExclusiveFullscreen),
         diagnostics: DiagnosticsSnapshot {
             log_folder_available,
             counters: diagnostics
@@ -1112,6 +1237,7 @@ fn window_crash_event(outcome: DiagnosticOutcome, detail: String) -> DiagnosticE
 }
 
 mod coach;
+mod overlay;
 #[cfg(scout_proactive_coach)]
 mod proactive;
 #[cfg(test)]
