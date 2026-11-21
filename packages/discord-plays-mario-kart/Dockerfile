@@ -258,6 +258,9 @@ ENV GIT_SHA=${GIT_SHA}
 WORKDIR /app/packages/discord-plays-mario-kart
 USER 1000:1000
 ENV HOME=/tmp
+# The Prisma CLI runs at container start (migrations); keep its update-check
+# telemetry (checkpoint.prisma.io) off so it never attempts denied egress.
+ENV CHECKPOINT_DISABLE=1
 CMD ["sh", "-c", "cd packages/backend && bun x --no-install prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts"]
 
 FROM runtime AS smoke

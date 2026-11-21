@@ -159,6 +159,9 @@ ENV VERSION=${VERSION}
 ENV GIT_SHA=${GIT_SHA}
 ENV NODE_ENV=production
 ENV BIRMEL_SCREENSHOTS_DIR=/app/data/screenshots
+# The Prisma CLI runs at container start (migrations); keep its update-check
+# telemetry (checkpoint.prisma.io) off so it never attempts denied egress.
+ENV CHECKPOINT_DISABLE=1
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 # Run from the package dir so Bun resolves this package's tsconfig / imports map
