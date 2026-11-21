@@ -2,6 +2,7 @@ import type { MonitorStatus } from "#shared/model/contract.ts";
 import { Status } from "#client/components/status.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { DeploymentLink } from "./selection-facts.tsx";
+import { formatEvidence } from "./environment-status.ts";
 import {
   firingAlarms,
   monitorEvidence,
@@ -33,8 +34,8 @@ function EvidenceTable({ rows }: { rows: EvidenceRow[] }) {
               <td>
                 <span className="evidence-meter">
                   <span>
-                    {row.value === null ? "none" : String(row.value)} of{" "}
-                    {String(row.threshold)}
+                    {row.value === null ? "none" : formatEvidence(row.value)} of{" "}
+                    {formatEvidence(row.threshold)}
                   </span>
                   <meter
                     min={0}
@@ -148,8 +149,9 @@ export function MonitorPanel({ status }: { status: MonitorStatus }) {
       <Outcome status={status} />
       {status.monitor === null ? (
         <p className="muted">
-          No monitor is declared, so the accepted selection settled on
-          acceptance.
+          {status.deploymentId === null
+            ? "No monitor is declared, and nothing has been accepted here yet."
+            : "No monitor is declared, so the accepted selection settled on acceptance."}
         </p>
       ) : (
         <>

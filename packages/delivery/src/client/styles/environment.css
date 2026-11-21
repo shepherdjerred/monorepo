@@ -8,6 +8,30 @@
   text-decoration: underline;
 }
 
+/* The lock or the deployment in flight, right under the summary line. */
+.environment-notice > p {
+  margin: 0;
+}
+.environment-notice > p + p {
+  margin-top: var(--space-1);
+}
+
+/* The release form's footer: what happens next and what to check, beside the button. */
+.release-notes {
+  display: grid;
+  gap: var(--space-2);
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+.override-reason {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.diff-digests small {
+  overflow-wrap: anywhere;
+}
+
 /* A rollback candidate: what it restores, then when and by which deployment. */
 .candidate-heading {
   align-items: center;

@@ -45,11 +45,25 @@ export function TransitionMarker({ transition }: { transition: Transition }) {
   );
 }
 
+/**
+ * A step still recorded as running when its deployment ended: the server
+ * gives it the deployment's finish, and nothing reported how it ended.
+ */
+function interrupted(action: PipelineAction) {
+  return action.status === "running" && action.finishedAt !== null;
+}
+
 function ActionRow({ action }: { action: PipelineAction }) {
   const detail = actionDetail(action);
   return (
-    <li className={`action action-${action.status}`}>
-      <Status value={action.status} />
+    <li
+      className={`action action-${interrupted(action) ? "interrupted" : action.status}`}
+    >
+      {interrupted(action) ? (
+        <Status value="unknown" label="interrupted · outcome unknown" />
+      ) : (
+        <Status value={action.status} />
+      )}
       <div className="action-body">
         <strong>
           {action.target === null ? (

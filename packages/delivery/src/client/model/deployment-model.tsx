@@ -101,8 +101,10 @@ function ApprovalRecord({ approval }: { approval: ApprovalV2 }) {
             <RelativeTime value={approval.decidedAt} />
           )}
         </Fact>
+        {approval.reason !== null && (
+          <Fact label="Reason">{approval.reason}</Fact>
+        )}
       </Facts>
-      {approval.reason !== null && <p>{approval.reason}</p>}
       {approval.status === "expired" && (
         <p className="notice">
           This approval expired: the environment&apos;s binding generation moved

@@ -12,6 +12,16 @@ import { EnvironmentModel } from "./environment-model.tsx";
 import { MonitorPanel } from "./monitor-panel.tsx";
 import { PlanApproval } from "./plan-approval.tsx";
 import { ReleaseForm } from "#client/release-form.tsx";
+import { ApprovalForm } from "#client/forms/approval-form.tsx";
+import { diffVersionSets } from "#shared/contract.ts";
+import {
+  environmentBlocker,
+  formatEvidence,
+  inFlightStatus,
+  inFlightWords,
+  type Blocker,
+} from "./environment-status.ts";
+import { EnvironmentNotice, InFlightSummary } from "./environment-notices.tsx";
 import {
   awaitsDecision,
   firingAlarms,
@@ -187,6 +197,7 @@ function environment(
   state: {
     selection?: typeof fixtures.selections.prod;
     candidates?: typeof fixtures.rollbackCandidates.prod;
+    blocker?: Blocker;
   } = {},
 ) {
   return render(
@@ -194,6 +205,8 @@ function environment(
       environmentId={fixtures.PROD}
       permitted={permitted}
       revisions={REVISIONS}
+      blocker={state.blocker ?? null}
+      planWaiting={false}
       onDeployment={() => Promise.resolve()}
     />,
     (client) => {
@@ -594,13 +607,25 @@ describe("plan approval", () => {
   });
 });
 
-/** The release form for the beta environment under one release kind. */
+/**
+ * The release form for the prod environment under one release kind, with a
+ * version beta has not accepted chosen.
+ */
 function releaseForm(releaseKind: "deploy" | "operator-run") {
+  const detail = fixtures.environmentDetails.prod;
+  const unaccepted = detail.versionSets.find(
+    (version) =>
+      version.id !== detail.sourceEnvironment?.acceptedVersionSetRevisionId,
+  );
+  if (unaccepted === undefined) throw new Error("fixture has another version");
   return render(
     <ReleaseForm
-      detail={{ ...fixtures.environmentDetails.beta, releaseKind }}
+      detail={{ ...detail, releaseKind }}
       permitted
-      initialKind={undefined}
+      blocker={null}
+      planWaiting={false}
+      initialKind="deploy"
+      initialVersion={unaccepted.id}
       onRequested={() => Promise.resolve()}
     />,
   );
@@ -616,5 +641,337 @@ describe("release form", () => {
     const deployed = releaseForm("deploy");
     expect(deployed).toContain("Deploy a version");
     expect(deployed).toContain("Ask for an override approval");
+  });
+});
+
+describe("what stops an environment from taking a request", () => {
+  const { prod } = fixtures.environmentDetails;
+  const { quarantined37, rollback43, pending44, override45 } =
+    fixtures.deployments;
+  const idle = { ...prod.environment, activeDeploymentId: null };
+
+  test("a recovery-required owner locks it", () => {
+    expect(
+      environmentBlocker({
+        environment: { activeDeploymentId: quarantined37.id },
+        deployments: [quarantined37, pending44],
+      }),
+    ).toEqual({ kind: "locked", deployment: quarantined37 });
+  });
+
+  test("the owner, else the newest queued or waiting one, is in flight with the rest behind it", () => {
+    expect(environmentBlocker(prod)).toMatchObject({
+      kind: "in-flight",
+      deployment: { id: rollback43.id, status: "running" },
+      behind: 2,
+    });
+    expect(
+      environmentBlocker({
+        environment: idle,
+        deployments: [override45, pending44, quarantined37],
+      }),
+    ).toEqual({ kind: "in-flight", deployment: override45, behind: 1 });
+  });
+
+  test("an owner the page has not loaded is named by its id; an idle environment has nothing", () => {
+    expect(
+      environmentBlocker({
+        environment: { activeDeploymentId: "scout-prod-99" },
+        deployments: [quarantined37],
+      }),
+    ).toEqual({ kind: "held", deploymentId: "scout-prod-99" });
+    expect(
+      environmentBlocker({ environment: idle, deployments: [quarantined37] }),
+    ).toBeNull();
+  });
+
+  test("a running deployment whose saved plan waits reads as awaiting plan approval", () => {
+    expect(inFlightWords("running", true)).toBe("awaiting plan approval");
+    expect(inFlightStatus("running", true)).toBe("awaiting_approval");
+    expect(inFlightWords("awaiting_approval", false)).toBe("awaiting approval");
+    expect(inFlightWords("running", false)).toBe("running");
+  });
+
+  test("the top of the page says recovery is required, linked to the failed deployment", () => {
+    const locked: Blocker = { kind: "locked", deployment: quarantined37 };
+    const notice = markup(
+      <EnvironmentNotice blocker={locked} planWaiting={false} />,
+    );
+    expect(notice).toMatch(/^<div class="notice error environment-notice">/u);
+    expect(notice).toContain("<strong>Recovery required:</strong> deployment");
+    expect(notice).toContain('href="/deployments/scout-prod-37"');
+    expect(notice).toContain("A change may still be running outside Delivery");
+    expect(notice).not.toContain("In flight");
+    const summary = markup(
+      <InFlightSummary
+        blocker={locked}
+        planWaiting={false}
+        environmentId={fixtures.PROD}
+        revisions={REVISIONS}
+      />,
+    );
+    expect(summary).toContain("Recovery required");
+    expect(summary).not.toContain("In flight");
+  });
+
+  test("a deployment in flight is named with its state", () => {
+    const waiting: Blocker = {
+      kind: "in-flight",
+      deployment: pending44,
+      behind: 1,
+    };
+    expect(
+      markup(<EnvironmentNotice blocker={waiting} planWaiting={false} />),
+    ).toMatch(
+      /^<p class="notice info environment-notice"><strong>In flight:<\/strong> deployment .*is awaiting approval and 1 more wait behind it\./u,
+    );
+    const summary = markup(
+      <InFlightSummary
+        blocker={{ ...waiting, deployment: rollback43 }}
+        planWaiting
+        environmentId={fixtures.PROD}
+        revisions={REVISIONS}
+      />,
+    );
+    expect(summary).toContain("In flight:");
+    expect(summary).toContain("awaiting plan approval");
+    expect(summary).toContain('class="status status-awaiting_approval"');
+    expect(markup(<EnvironmentNotice blocker={null} planWaiting />)).toBe("");
+  });
+
+  test("rollback and rebind are disabled with a reason that links the deployment in the way", () => {
+    const html = environment(true, {
+      blocker: { kind: "in-flight", deployment: pending44, behind: 0 },
+    });
+    const items = candidateItems(html.slice(html.indexOf("candidates")));
+    expect(items.every((item) => item.includes('disabled=""'))).toBe(true);
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Rebind</u);
+    const reasons = [
+      ...html.matchAll(/<p class="notice" id="([^"]+)">Deployment <a/gu),
+    ].map((match) => match[1] ?? "");
+    // The selection panel's reason and the candidates' reason.
+    expect(reasons).toHaveLength(2);
+    for (const id of reasons) expect(html).toContain(id);
+    expect(html).toContain('href="/deployments/scout-prod-44"');
+    expect(html).toContain(
+      "is awaiting approval. Requests are refused until it finishes or is canceled.",
+    );
+  });
+});
+
+/** The release form for one environment detail, with what the page knows. */
+function requestForm(
+  props: Partial<Parameters<typeof ReleaseForm>[0]> = {},
+  seed?: (client: QueryClient) => void,
+) {
+  return render(
+    <ReleaseForm
+      detail={fixtures.environmentDetails.prod}
+      permitted
+      blocker={null}
+      planWaiting={false}
+      initialKind={undefined}
+      onRequested={() => Promise.resolve()}
+      {...props}
+    />,
+    seed,
+  );
+}
+
+/** Production's selection view once its accepted selection uses the declared binding. */
+function boundAsDeclared(client: QueryClient) {
+  client.setQueryData(queries.selection(fixtures.PROD).queryKey, {
+    ...fixtures.selections.prod,
+    declared: {
+      ...fixtures.selections.prod.declared,
+      configurationRevisionId:
+        fixtures.selections.prod.accepted?.configurationRevisionId ?? "",
+    },
+  });
+}
+
+/** Production's selection view as seeded: it declares a newer configuration than it accepted. */
+function rebinding(client: QueryClient) {
+  client.setQueryData(
+    queries.selection(fixtures.PROD).queryKey,
+    fixtures.selections.prod,
+  );
+}
+
+describe("the release form invites only a request that can succeed", () => {
+  const { prod } = fixtures.environmentDetails;
+
+  test("a locked environment disables the request and links the failed deployment", () => {
+    const html = requestForm({
+      blocker: {
+        kind: "locked",
+        deployment: fixtures.deployments.quarantined37,
+      },
+    });
+    const [, reason = ""] =
+      /<p class="notice" id="([^"]+)">Deployment <a[^>]*href="\/deployments\/scout-prod-37"/u.exec(
+        html,
+      ) ?? [];
+    expect(reason).not.toBe("");
+    expect(html).toContain(
+      `<button type="submit" class="primary-button" disabled="" aria-describedby="${reason}">Request deployment</button>`,
+    );
+    expect(html).toContain("failed and needs recovery");
+  });
+
+  test("promoting the release already accepted here is disabled with its reason", () => {
+    // Beta and prod both accepted r42, and prod's accepted selection uses its declared binding.
+    const html = requestForm({ initialKind: "promote" }, boundAsDeclared);
+    expect(html).toContain(
+      "r42 is already accepted here, so promoting it from scout-for-lol/beta would change nothing.",
+    );
+    expect(html).toMatch(/<button type="submit"[^>]*disabled=""/u);
+    // Left to choose, the form starts on a deploy instead.
+    expect(requestForm({}, boundAsDeclared)).toMatch(
+      /<option value="deploy" selected="">Deploy a version<\/option>/u,
+    );
+  });
+
+  test("promoting an accepted release under a changed binding stays available", () => {
+    // Prod declares a newer configuration than its accepted selection froze.
+    const html = requestForm({ initialKind: "promote" }, rebinding);
+    expect(html).not.toContain("would change nothing");
+    expect(html).not.toMatch(/<button type="submit"[^>]*disabled=""/u);
+    // Before the selection view loads, nothing is known, so nothing is refused.
+    expect(requestForm({ initialKind: "promote" })).not.toContain(
+      "would change nothing",
+    );
+  });
+
+  test("no version yet says so, links the pipeline and disables the request", () => {
+    const html = requestForm({
+      detail: { ...prod, versionSets: [] },
+      initialKind: "deploy",
+    });
+    expect(html).toContain(
+      "No version of Scout for LoL has been published yet",
+    );
+    expect(html).toContain('href="/pipelines/scout-for-lol"');
+    expect(html).not.toContain('<select name="version"');
+    expect(html).toMatch(/<button type="submit"[^>]*disabled=""/u);
+  });
+
+  test("the override choice appears only for a chosen version it applies to", () => {
+    expect(requestForm({ initialKind: "deploy" })).not.toContain(
+      "Ask for an override approval",
+    );
+    const accepted = requestForm({
+      initialKind: "deploy",
+      initialVersion: "scout-for-lol:r42",
+    });
+    expect(accepted).not.toContain("Ask for an override approval");
+    const unaccepted = requestForm({
+      initialKind: "deploy",
+      initialVersion: "scout-for-lol:r40",
+    });
+    expect(unaccepted).toContain("Ask for an override approval");
+    expect(unaccepted).toContain(
+      "scout-for-lol/beta has not accepted this version, so an ordinary deploy refuses it.",
+    );
+  });
+
+  test("a version reads as its revision, commit and age, not its id", () => {
+    const html = requestForm({ initialKind: "deploy" });
+    const labels = [
+      ...html.matchAll(/<option value="scout[^"]*">([^<]+)</gu),
+    ].map((match) => match[1] ?? "");
+    expect(labels).toHaveLength(5);
+    for (const label of labels)
+      expect(label).toMatch(/^r\d+ · [0-9a-f]{7} · /u);
+    expect(html).not.toContain("· scout-for-lol:r");
+  });
+
+  test("an alarm on the accepted release is mentioned beside the button", () => {
+    const html = requestForm({}, (client) => {
+      client.setQueryData(queries.monitor(fixtures.PROD).queryKey, {
+        ...fixtures.monitors.prod,
+        policy: "hold",
+      });
+    });
+    expect(html).toContain(
+      "An alarm fired on the accepted release and the environment is held for an operator.",
+    );
+    expect(html).toContain('href="#monitor-heading"');
+  });
+
+  test("component digests fold away behind a count while versions stay in sight", () => {
+    const from = fixtures.versionSets.at(0);
+    const to = fixtures.versionSets.at(-1);
+    if (from === undefined || to === undefined) throw new Error("fixtures");
+    const html = requestForm(
+      { initialKind: "deploy", initialVersion: to.id },
+      (client) => {
+        client.setQueryData(
+          ["diff", prod.environment.desiredVersionSetRevisionId, to.id],
+          diffVersionSets(from, to),
+        );
+      },
+    );
+    const diff = html.slice(html.indexOf('<div class="diff">'));
+    const [inSight = "", folded = ""] = diff.split("<details");
+    expect(inSight).toContain("image:scout-for-lol");
+    expect(inSight).toContain("2026.10.22");
+    expect(inSight).not.toContain("sha256:");
+    expect(folded).toContain(
+      '<span class="disclosure-label">Digests</span><span class="disclosure-count">1</span>',
+    );
+    expect(folded).toContain("sha256:");
+  });
+});
+
+describe("monitor numbers and wording", () => {
+  test("evidence reads to two decimals at most", () => {
+    expect(formatEvidence(55.4212888888889)).toBe("55.42");
+    expect(formatEvidence(50)).toBe("50");
+    const status = fixtures.monitors.prod;
+    const latest = status.latestObservation;
+    if (latest === null) throw new Error("fixture has an observation");
+    const html = markup(
+      <MonitorPanel
+        status={{
+          ...status,
+          latestObservation: {
+            ...latest,
+            evidence: { ...latest.evidence, "matches-processed": 55.4212889 },
+          },
+        }}
+      />,
+    );
+    expect(html).toContain("55.42 of 50");
+    expect(html).not.toContain("55.421");
+  });
+
+  test("with nothing accepted, no monitor does not claim a settled selection", () => {
+    const html = markup(
+      <MonitorPanel
+        status={{ ...fixtures.monitors.unmonitored, deploymentId: null }}
+      />,
+    );
+    expect(html).toContain("nothing has been accepted here yet");
+    expect(html).not.toContain("settled on acceptance");
+  });
+});
+
+describe("human decisions", () => {
+  test("a release decision marks its reason required and asks before rejecting", () => {
+    const html = render(<ApprovalForm onDecision={() => Promise.resolve()} />);
+    expect(html).toContain("Reason (required)");
+    expect(html).toMatch(/<textarea[^>]*required=""[^>]*aria-invalid="false"/u);
+    expect(html).toMatch(
+      /<button type="submit" class="primary-button">Approve release<\/button>/u,
+    );
+    // Reject is a confirm button: it opens the page's one dialog first.
+    expect(html).toMatch(
+      /<button type="button" class="secondary-button danger">Reject<\/button>/u,
+    );
+  });
+
+  test("a plan decision marks its reason required", () => {
+    expect(plan(fixtures.planWaiting)).toContain("Reason (required)");
   });
 });

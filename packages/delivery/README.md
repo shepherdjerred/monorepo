@@ -159,10 +159,20 @@ a disabled element cannot hold focus; a focused button that leaves the page
 hands its focus to the page heading. The server returns `index.html` for every
 non-API path.
 
-The environment page leads with a summary line (the accepted revision, the
-approval policy and the deployment in flight) and the release form, then
-release state, runtime, selection, monitor, rollback candidates, retained
-workers and recent deployments. It lists the five newest rollback candidates
+The environment page leads with its state, then the actions: a summary line
+(the accepted revision, the approval policy and the deployment in flight),
+a notice when a deployment holds the environment, release state and runtime,
+the release form, selection and monitor, rollback candidates, retained
+workers and recent deployments. The page refuses what the server would: it
+derives the deployment in the way from the environment's owner and its
+recent deployments (`model/environment-status.ts`, after
+`requireIdleEnvironment`). An owner that ended recovery-required reads as
+"Recovery required" and locks the page's requests; a queued, running or
+awaiting-approval one reads as in flight, and a running OpenTofu deployment
+whose saved plan waits reads as awaiting plan approval. While either holds,
+the release form, rebind and every rollback are disabled with a reason that
+links that deployment. Forms keep their input after a refusal, tie the
+server's message to the field it concerns and never show its error code. It lists the five newest rollback candidates
 and the accepted one, and collapses the older ones; it lists worker builds
 with a desired host and collapses retained artifacts without one. The
 rollback-candidate and worker routes stay unpaged, because the toolkit reads

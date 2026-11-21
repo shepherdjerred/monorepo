@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, createRoute, useNavigate } from "@tanstack/react-router";
 import {
   useMutation,
@@ -20,6 +21,8 @@ import { ToolLinks } from "#client/components/links.tsx";
 import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
 import { ErrorNotice } from "#client/components/notices.tsx";
 import { ApprovalForm } from "#client/forms/approval-form.tsx";
+import { DecisionOutcome } from "#client/forms/decision.tsx";
+import { WhyItFailed } from "#client/model/deployment-outcome.tsx";
 import { DeploymentRecord, sourceLabel } from "#client/deployment-detail.tsx";
 import { DeploymentModel } from "#client/model/deployment-model.tsx";
 import { PlanApproval } from "#client/model/plan-approval.tsx";
@@ -28,6 +31,13 @@ import type { RecoveryDecision } from "#client/platform-recovery.tsx";
 import { canApprove, canDeploy, isTerminal } from "#client/presentation.ts";
 import { Route as rootRoute } from "./root.tsx";
 import { revisionLabel } from "#client/components/identifier.tsx";
+
+/** What each decision on a release did, as the page states it afterwards. */
+const DECISION_OUTCOMES = {
+  approve:
+    "Release approved. The deployment is queued and starts once its gates pass.",
+  reject: "Release rejected. The deployment is canceled and will not run.",
+} as const;
 
 type Action =
   | { kind: "cancel" | "retry" }
@@ -92,6 +102,14 @@ function DeploymentPage() {
       intent.dispatchBarrier !== null && intent.barrierRestoredAt === null,
   );
   const retryable = offersRetry(deployment);
+  // What the last decision here did; focus moves to it once it is recorded.
+  const [outcome, setOutcome] = useState<{
+    deploymentId: string;
+    text: string;
+  } | null>(null);
+  function decided(text: string) {
+    setOutcome({ deploymentId: deployment.id, text });
+  }
   return (
     <>
       <PageHeader
@@ -102,8 +120,11 @@ function DeploymentPage() {
         }
         title={`Deployment to ${environment.id}`}
         description={
-          <span role="status" className="detail-summary">
-            <Status value={deployment.status} />
+          <span className="detail-summary">
+            {/* Only the status is live: the relative time beside it changes every minute. */}
+            <span role="status">
+              <Status value={deployment.status} />
+            </span>
             <span>{deployment.kind}</span>
             <Link
               to="/versions/$versionSetId"
@@ -121,6 +142,10 @@ function DeploymentPage() {
         }
         actions={<ToolLinks links={links(detail)} />}
       />
+      {outcome?.deploymentId === deployment.id && (
+        <DecisionOutcome text={outcome.text} />
+      )}
+      <WhyItFailed detail={detail} />
       {action.error !== null && <ErrorNotice error={action.error} />}
       {deployment.status === "awaiting_approval" &&
         principal !== undefined &&
@@ -133,6 +158,7 @@ function DeploymentPage() {
                 ...decision,
                 override: detail.approval?.override === true,
               });
+              decided(DECISION_OUTCOMES[decision.decision]);
               await queryClient.invalidateQueries();
             }}
           />
@@ -182,7 +208,11 @@ function DeploymentPage() {
         </div>
       )}
       {principal !== undefined && (
-        <PlanApproval detail={detail} principal={principal} />
+        <PlanApproval
+          detail={detail}
+          principal={principal}
+          onDecided={decided}
+        />
       )}
       <DeploymentModel detail={detail} />
       {principal !== undefined && (

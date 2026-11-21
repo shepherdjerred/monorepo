@@ -49,6 +49,20 @@
 .step-timeline > .step-running::before {
   background: var(--running);
 }
+/* Still recorded as running when its deployment ended: an open marker, outcome unknown. */
+.step-timeline > .step-interrupted::before {
+  background: var(--surface);
+  border: 2px solid var(--neutral);
+}
+
+/* Why a failed or locked deployment failed, at the top of its page. */
+.panel-failed {
+  border-color: var(--failed);
+}
+.failure-message {
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
 .step-head,
 .evidence-head {
   display: flex;

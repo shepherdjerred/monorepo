@@ -15,6 +15,7 @@ import { FrozenForumBaseline } from "./forum-baseline.tsx";
 import { ContentRecovery } from "./content-recovery.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
 import { DeploymentEvidence, StepTimeline } from "./deployment-steps.tsx";
+import { explainsFailure } from "./model/deployment-outcome.tsx";
 
 export function sourceLabel(detail: Detail) {
   const deployment = detail.deployment;
@@ -95,20 +96,21 @@ export function DeploymentRecord({
   onRecoveryDecision: (decision: RecoveryDecision) => void;
 }) {
   const { deployment } = detail;
+  // A failed or locked deployment's message and lock are explained at the
+  // top of the page; a decision's reason is the approval's own.
+  const explained = explainsFailure(deployment);
+  const message =
+    explained || deployment.message === detail.approval?.reason
+      ? null
+      : deployment.message;
   return (
     <>
-      {deployment.message !== null && (
-        <p className={messageNotice(deployment.status)}>{deployment.message}</p>
+      {message !== null && (
+        <p className={messageNotice(deployment.status)}>{message}</p>
       )}
       {deployment.cancelRequested && !isTerminal(deployment) && (
         <p className="notice">
           Cancellation requested. Waiting for the next safe boundary.
-        </p>
-      )}
-      {deployment.recoveryRequired && (
-        <p className="notice error">
-          Operator recovery is required. This environment remains locked until
-          the external operation has been inspected.
         </p>
       )}
       <PlatformRecovery

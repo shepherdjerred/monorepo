@@ -94,13 +94,78 @@ function grouped(detail: Detail) {
   );
 }
 
+type Stage = Detail["stages"][number];
+type DeploymentState = Pick<Detail["deployment"], "status">;
+
+/** The deployment states nothing runs in any more. */
+const ENDED: ReadonlySet<string> = new Set(["succeeded", "failed", "canceled"]);
+
+/**
+ * Whether a step is interrupted: still recorded as running after its
+ * deployment ended. Nothing reported how it ended, so its outcome is unknown.
+ */
+export function interrupted(
+  stage: Pick<Stage, "status">,
+  deployment: DeploymentState,
+) {
+  return stage.status === "running" && ENDED.has(deployment.status);
+}
+
+/**
+ * When a step's clock stops: when it last reported, or, for an interrupted
+ * step, when its deployment ended. A running step's clock keeps going.
+ */
+export function stepEnd(
+  stage: Pick<Stage, "status" | "updatedAt">,
+  deployment: Pick<Detail["deployment"], "status" | "finishedAt">,
+) {
+  if (interrupted(stage, deployment))
+    return deployment.finishedAt ?? stage.updatedAt;
+  return stage.status === "running" ? null : stage.updatedAt;
+}
+
+/** What an empty step list means for a deployment in this state. */
+export function noStepsMessage(deployment: DeploymentState) {
+  switch (deployment.status) {
+    case "succeeded": {
+      return "No step history was recorded for this deployment.";
+    }
+    case "failed":
+    case "canceled": {
+      return "The deployment ended before any step started.";
+    }
+    case "queued":
+    case "awaiting_approval":
+    case "running": {
+      return "No stages have started.";
+    }
+  }
+}
+
+/** A step's state: an interrupted one reads as such, not as running. */
+export function StepStatus({
+  stage,
+  deployment,
+}: {
+  stage: Pick<Stage, "status">;
+  deployment: DeploymentState;
+}) {
+  return interrupted(stage, deployment) ? (
+    <Status value="unknown" label="interrupted · outcome unknown" />
+  ) : (
+    <Status value={stage.status} />
+  );
+}
+
 /**
  * Each step in the order it started, with what it recorded beneath it. A
- * settled step folds its evidence away; a failed or running one shows it.
+ * settled step folds its evidence away; a failed, running or interrupted one
+ * shows it.
  */
 export function StepTimeline({ detail }: { detail: Detail }) {
+  const { deployment } = detail;
   if (detail.stages.length === 0)
-    return <p className="empty">No stages have started.</p>;
+    return <p className="empty">{noStepsMessage(deployment)}</p>;
   const groups = grouped(detail);
   const stages = detail.stages.toSorted((left, right) =>
     (left.startedAt ?? left.updatedAt).localeCompare(
@@ -115,14 +180,17 @@ export function StepTimeline({ detail }: { detail: Detail }) {
           stage.message === "" ? null : parseEvidenceSummary(stage.message);
         const record = message?.kind === "record" ? message : null;
         return (
-          <li key={stage.id} className={`step step-${stage.status}`}>
+          <li
+            key={stage.id}
+            className={`step step-${interrupted(stage, deployment) ? "interrupted" : stage.status}`}
+          >
             <div className="step-head">
               <strong className="step-key">{stage.key}</strong>
-              <Status value={stage.status} />
+              <StepStatus stage={stage} deployment={deployment} />
               {stage.startedAt !== null && (
                 <Duration
                   start={stage.startedAt}
-                  end={stage.status === "running" ? null : stage.updatedAt}
+                  end={stepEnd(stage, deployment)}
                 />
               )}
               <span className="step-meta">
