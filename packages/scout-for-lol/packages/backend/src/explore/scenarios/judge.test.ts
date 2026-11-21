@@ -117,6 +117,34 @@ describe("scenarioJudgeUserPrompt", () => {
     expect(prompt).toContain("Spoken to the user (voice): You're Tarrow.");
   });
 
+  test("shows the judge the projected game context and what was withheld", () => {
+    const prompt = scenarioJudgeUserPrompt({
+      world: WORLD,
+      surface: "desktop",
+      conversation: [],
+      question: "Champion select changed.",
+      answer: "Consider these.",
+      coachOptions: [{ label: "Ornn", rationale: "Adds a frontline." }],
+      coachGate: {
+        initiation: "app_champ_select",
+        sent: ["champSelect", "live"],
+        seen: ["champSelect"],
+        withheld: ["live (not_player_initiated)"],
+        digest: "Champion select: your team has Ahri.",
+      },
+      followUps: [],
+      trace: [],
+      payloads: [],
+      rubric: ["Answers."],
+    });
+    expect(prompt).toContain("The turn began as app_champ_select.");
+    expect(prompt).toContain(
+      "Withheld by policy: live (not_player_initiated).",
+    );
+    expect(prompt).toContain("Champion select: your team has Ahri.");
+    expect(prompt).toContain("Coach options: Ornn (Adds a frontline.)");
+  });
+
   test("says so when the turn produced no answer", () => {
     const prompt = scenarioJudgeUserPrompt({
       world: WORLD,

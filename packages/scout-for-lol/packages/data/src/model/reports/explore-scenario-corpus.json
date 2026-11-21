@@ -1543,8 +1543,8 @@
       "origin": "Written for the Scout Desktop coach, not from a prod conversation. Post-game review of a recorded game: the match comes from the tracked player's latest game with a stored timeline."
     },
     {
-      "id": "desktop-coach-voice-terse",
-      "surfaces": ["desktop"],
+      "id": "voice-coach-terse",
+      "surfaces": ["voice"],
       "asker": {
         "username": "koa",
         "displayName": "koa"
@@ -1675,14 +1675,14 @@
             "coachOptions": "absent",
             "mustNotMention": ["comes back at", "will be up at"],
             "rubric": [
-              "Answers a spoken two-word request in one to three short sentences that lead with the recommendation, with no headings, tables or long lists.",
+              "The spoken answer is one to three short plain sentences that lead with the recommendation, with no headings, tables or long lists; the saved answer may carry more detail.",
               "Grounds the answer in the player's own gold and items from the scoreboard and phrases it as something to consider.",
               "Does not ask the player to type more or to repeat the question, and does not state enemy cooldowns or positions."
             ]
           }
         }
       ],
-      "origin": "Written for the Scout Desktop coach, not from a prod conversation. A spoken, terse transcript: the answer must be short enough to hear mid-game."
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. A spoken, terse transcript: what the player hears must be short enough to take in mid-game."
     }
   ]
 }

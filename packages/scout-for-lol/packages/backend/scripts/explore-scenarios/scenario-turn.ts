@@ -11,6 +11,7 @@ import {
   ScenarioJudgementSchema,
   type ScenarioRubricResult,
 } from "#src/explore/scenarios/judge.ts";
+import { gameContextDigest } from "#src/explore/tools/game-state-tools.ts";
 import type { ScenarioCoachTurn } from "#src/explore/scenarios/coach-turn.ts";
 import { resolveScenarioAccount } from "#src/explore/scenarios/lake-accounts.ts";
 import type { ScenarioRunPlan } from "#src/explore/scenarios/plan.ts";
@@ -195,6 +196,10 @@ export async function gradeTurn(input: {
                   initiation: input.initiation,
                   sent: input.coachGate.projection.present,
                   seen: input.coachGate.projection.accepted,
+                  digest:
+                    input.coachGate.coach === null
+                      ? "(no game context reached the agent)"
+                      : gameContextDigest(input.coachGate.coach),
                   withheld: input.coachGate.projection.withheld.map(
                     (entry) => `${entry.section} (${entry.reason})`,
                   ),

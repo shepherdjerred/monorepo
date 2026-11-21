@@ -220,7 +220,7 @@ export const ExploreScenarioTurnSchema = z
   })
   .strict();
 
-/** A game context only Scout Desktop sends, naming a post-game player the guild tracks. */
+/** A game context only Scout Desktop sends, on the surface its initiation runs on, naming a post-game player the guild tracks. */
 function checkGameContexts(
   entry: {
     readonly id: string;
@@ -235,10 +235,13 @@ function checkGameContexts(
   const aliases = new Set(entry.guild.players.map((player) => player.alias));
   for (const { gameContext: game } of entry.turns) {
     if (game === undefined) continue;
-    if (entry.surfaces.length !== 1 || entry.surfaces[0] !== "desktop") {
+    // A spoken coach turn runs on the voice surface, like the voice route
+    // starts it; every other coach turn runs on the desktop surface.
+    const surface = game.initiation === "player_voice" ? "voice" : "desktop";
+    if (entry.surfaces.length !== 1 || entry.surfaces[0] !== surface) {
       context.addIssue({
         code: "custom",
-        message: `Case '${entry.id}' carries a game context, which only Scout Desktop sends; it must run on the desktop surface alone`,
+        message: `Case '${entry.id}' carries a ${game.initiation} game context, which must run on the ${surface} surface alone`,
       });
     }
     if (game.postgameOf === undefined) continue;

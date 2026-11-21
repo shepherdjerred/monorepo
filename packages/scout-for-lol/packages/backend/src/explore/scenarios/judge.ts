@@ -152,6 +152,8 @@ export function scenarioJudgeUserPrompt(input: {
         readonly sent: readonly string[];
         readonly seen: readonly string[];
         readonly withheld: readonly string[];
+        /** The projected context as the agent read it, values included. */
+        readonly digest: string;
       }
     | undefined;
   readonly trace: Parameters<typeof judgeEvidenceFromTrace>[0];
@@ -193,6 +195,8 @@ export function scenarioJudgeUserPrompt(input: {
           "",
           "## Game context (Scout Desktop)",
           `The turn began as ${input.coachGate.initiation}. The client sent: ${input.coachGate.sent.join(", ") || "nothing"}. The agent was allowed to see: ${input.coachGate.seen.join(", ") || "nothing"}. Withheld by policy: ${input.coachGate.withheld.join(", ") || "nothing"}.`,
+          "What the agent was given:",
+          input.coachGate.digest,
         ]),
     "",
     "## Tools this turn",

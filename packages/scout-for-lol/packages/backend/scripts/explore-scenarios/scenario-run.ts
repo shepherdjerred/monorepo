@@ -142,8 +142,11 @@ async function runOne(input: {
           requesterId: world.asker.id,
           guildIds: [world.guildId],
           surface: run.surface,
+          // A coach turn has no Discord channel, spoken or not.
           originChannelId:
-            run.surface === "web" || run.surface === "desktop"
+            run.surface === "web" ||
+            run.surface === "desktop" ||
+            coachTurn !== null
               ? null
               : (world.channels[0]?.id ?? null),
           images,

@@ -16,7 +16,6 @@ describe("the Explore scenario corpus", () => {
       "desktop-coach-live-player-asked",
       "desktop-coach-postgame-review",
       "desktop-coach-pregame-plan",
-      "desktop-coach-voice-terse",
       "desktop-enemy-cooldowns",
       "desktop-fog-inference",
       "desktop-hidden-identity",
@@ -62,11 +61,13 @@ describe("the Explore scenario corpus", () => {
         "desktop-coach-live-player-asked",
         "desktop-coach-postgame-review",
         "desktop-coach-pregame-plan",
-        "desktop-coach-voice-terse",
+        "voice-coach-terse",
       ]);
-      for (const { id } of turnsWithContext) {
+      for (const { id, turn } of turnsWithContext) {
         const entry = parsed.cases.find((candidate) => candidate.id === id);
-        expect(entry?.surfaces, id).toEqual(["desktop"]);
+        expect(entry?.surfaces, id).toEqual([
+          turn.gameContext?.initiation === "player_voice" ? "voice" : "desktop",
+        ]);
       }
     });
 
@@ -135,8 +136,9 @@ describe("the Explore scenario corpus", () => {
       expect(result.success).toBe(false);
     });
 
-    test("rejects a game context on a surface that is not the desktop", () => {
+    test("rejects a game context on a surface that is not its own", () => {
       expect(rebuild({ surfaces: ["web", "desktop"] }).success).toBe(false);
+      expect(rebuild({ surfaces: ["voice"] }).success).toBe(false);
     });
 
     test("rejects a post-game player the guild does not track", () => {

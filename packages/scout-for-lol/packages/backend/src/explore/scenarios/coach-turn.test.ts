@@ -126,10 +126,7 @@ describe("the scenario coach gate", () => {
       ).toThrow(APP_TURN_QUESTIONS[initiation]);
     }
     expect(
-      scenarioCoachQuestion(
-        "buy now",
-        gameContextOf("desktop-coach-voice-terse"),
-      ),
+      scenarioCoachQuestion("buy now", gameContextOf("voice-coach-terse")),
     ).toBe("buy now");
   });
 });
