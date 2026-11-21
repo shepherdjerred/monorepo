@@ -344,6 +344,12 @@ impl Controller {
             #[cfg(scout_proactive_coach)]
             Input::ProactiveSpeech(speech) => self.proactive_speech(speech, &mut effects),
         }
+        // Whatever changed (conversation mode turned off, consent withdrawn,
+        // muted, the game over, the microphone lost), Scout says nothing on
+        // its own once the player could not have asked for it to.
+        if !self.conversation_mode_live() {
+            self.stop_announcing(&mut effects);
+        }
         self.sync(&mut effects);
         effects
     }

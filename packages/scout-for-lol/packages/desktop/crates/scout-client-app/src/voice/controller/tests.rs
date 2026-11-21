@@ -658,3 +658,23 @@ fn speech_that_could_not_be_had_says_nothing_and_listening_resumes() {
     assert_eq!(controller.turn_view(), None);
     assert_eq!(controller.snapshot().state, VoiceState::Listening);
 }
+
+#[cfg(scout_proactive_coach)]
+#[test]
+fn turning_conversation_mode_off_while_speech_is_fetched_cancels_it() {
+    let mut controller = in_game();
+    controller.handle(Input::ProactiveAnswer(RUN));
+    let effects = controller.handle(Input::Window(VoiceCommand::SetSettings {
+        settings: WireSettings {
+            conversation_mode: false,
+            ..super::wire_settings(&agreed())
+        },
+    }));
+    assert!(effects.contains(&Effect::StopPlayback));
+    // The speech that arrives afterwards is not played.
+    assert_eq!(
+        controller.handle(Input::ProactiveSpeech(Ok(proactive_speech(4)))),
+        NOTHING
+    );
+    assert_ne!(controller.snapshot().state, VoiceState::Speaking);
+}
