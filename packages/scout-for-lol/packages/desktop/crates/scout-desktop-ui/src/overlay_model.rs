@@ -79,7 +79,10 @@ impl OverlayCardModel {
                 frame.queued - 1
             ));
         }
-        if frame.expanded && hidden > 0 {
+        if card.kind == CardKind::ReviewReady {
+            // The supervisor opens the review on this card's expand key.
+            hint.push(format!("{} open", frame.keys.expand));
+        } else if frame.expanded && hidden > 0 {
             hint.push(format!("{} less", frame.keys.expand));
         } else if hidden > 0 {
             hint.push(format!("{} {hidden} more lines", frame.keys.expand));
@@ -183,6 +186,13 @@ mod tests {
         let model = OverlayCardModel::new(&frame(CardKind::Status, 1, false, 1));
         assert_eq!(model.hint, "F7 dismiss");
         assert_eq!(model.tone, CardTone::Quiet);
+    }
+
+    #[test]
+    fn a_review_card_names_the_key_that_opens_it() {
+        let model = OverlayCardModel::new(&frame(CardKind::ReviewReady, 1, false, 1));
+        assert_eq!(model.badge, "Review ready");
+        assert_eq!(model.hint, "F7 dismiss  \u{b7}  Alt+F7 open");
     }
 
     #[test]

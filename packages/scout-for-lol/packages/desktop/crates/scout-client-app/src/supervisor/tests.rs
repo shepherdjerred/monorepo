@@ -1699,3 +1699,130 @@ async fn overlay_on_screen() -> TestResult {
     std::fs::remove_dir_all(directory)?;
     Ok(())
 }
+
+/// Answers every review request with what `answers` holds next, and counts
+/// the requests.
+struct FakeReviews {
+    answers: Mutex<Vec<super::review::ReviewAnswer>>,
+    asked: Arc<Mutex<Vec<String>>>,
+}
+
+impl super::ReviewSource for FakeReviews {
+    fn fetch(&self, match_id: String, done: mpsc::UnboundedSender<super::review::ReviewFetch>) {
+        self.asked
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(match_id.clone());
+        let mut answers = self.answers.lock().unwrap_or_else(PoisonError::into_inner);
+        let answer = if answers.len() > 1 {
+            answers.remove(0)
+        } else {
+            answers
+                .first()
+                .cloned()
+                .unwrap_or(super::review::ReviewAnswer::NotYet)
+        };
+        let _ = done.send((match_id, answer));
+    }
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn a_ready_review_opens_in_the_window_and_its_card_opens_it_next_game() -> TestResult {
+    use super::review::ReviewAnswer;
+    use scout_desktop_ipc::OverlayCommand;
+
+    let scratch = scratch_directory()?;
+    let log = scratch.join("overlay.log");
+    let log_argument = log.to_str().ok_or("scratch path is not Unicode")?;
+    let DetachedRelay {
+        relay,
+        mut commands,
+        ..
+    } = ChatRelay::detached_coach();
+    let review = uuid::Uuid::from_u128(0x5eed);
+    let asked = Arc::new(Mutex::new(Vec::new()));
+    let reviews = FakeReviews {
+        answers: Mutex::new(vec![
+            ReviewAnswer::NotYet,
+            ReviewAnswer::Pending,
+            ReviewAnswer::Ready(review),
+        ]),
+        asked: Arc::clone(&asked),
+    };
+    let overlay = sh(
+        &overlay_script(r#"printf '{"type":"ready"}\n'"#),
+        &[log_argument],
+    );
+    let mut harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::EndOfGame,
+        |supervisor| {
+            supervisor
+                .with_chat(relay)
+                .with_overlay(overlay, None)
+                .with_immediate_reviews(Box::new(reviews))
+        },
+    )?;
+    harness.wait_for(|status| status.running).await?;
+    // The collector saw game 5654104474 end; the history names its platform.
+    harness.runtime_state.send_modify(|state| {
+        state.ended_game_id = Some("5654104474".to_owned());
+        state.recent_match_ids = vec!["NA1_5654104475".to_owned(), "NA1_5654104474".to_owned()];
+    });
+    // Not yet, pending, then ready: one request per refresh, then none.
+    loop {
+        if next_command(&mut commands).await?
+            == (ChatCommand::Open {
+                conversation_id: review,
+            })
+        {
+            break;
+        }
+    }
+    assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    tokio::time::sleep(Duration::from_millis(2_500)).await;
+    assert_eq!(
+        asked
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .as_slice(),
+        ["NA1_5654104474"; 3],
+        "asked until ready, then stopped"
+    );
+    assert!(!log.exists(), "no overlay outside a game");
+
+    // The next game raises the card; its expand key opens the review.
+    harness.phase.send_replace(GameflowPhase::InProgress);
+    overlay_sent(&log, shows(scout_overlay::CardKind::ReviewReady)).await?;
+    harness
+        .control
+        .send(Control::OverlayKey(crate::hotkeys::OverlayKey::Expand))?;
+    loop {
+        if next_command(&mut commands).await?
+            == (ChatCommand::Open {
+                conversation_id: review,
+            })
+        {
+            break;
+        }
+    }
+    overlay_sent(&log, |command| {
+        matches!(command, OverlayCommand::Frame { frame: None })
+    })
+    .await?;
+
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    assert!(diagnostics.events().iter().any(|event| {
+        event
+            .summary()
+            .contains("review of NA1_5654104474 is ready")
+    }));
+    std::fs::remove_dir_all(directory)?;
+    std::fs::remove_dir_all(scratch)?;
+    Ok(())
+}

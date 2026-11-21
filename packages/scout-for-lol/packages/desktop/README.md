@@ -406,13 +406,13 @@ diagnostic and left down until the next game.
 
 What shows, from what the main window already holds:
 
-| Card           | From                                                   | Profile   |
-| -------------- | ------------------------------------------------------ | --------- |
-| `pregame_plan` | the coach panel's game plan                            | both      |
-| `answer`       | the spoken turn's answer, titled with the question     | both      |
-| `status`       | the spoken turn while Scout thinks, or why it failed   | both      |
-| `proactive`    | the coach panel's "Scout noticed" answer               | beta only |
-| `review_ready` | nothing yet: the desktop does not read `coach/reviews` | both      |
+| Card           | From                                                 | Profile   |
+| -------------- | ---------------------------------------------------- | --------- |
+| `pregame_plan` | the coach panel's game plan                          | both      |
+| `answer`       | the spoken turn's answer, titled with the question   | both      |
+| `status`       | the spoken turn while Scout thinks, or why it failed | both      |
+| `proactive`    | the coach panel's "Scout noticed" answer             | beta only |
+| `review_ready` | the last game's post-game review, at the next game   | both      |
 
 Champion-select advice stays in the main window. The overlay shows no ads.
 
@@ -1155,6 +1155,19 @@ select carries the same projection; it never carries the live snapshot.
 After a game you recorded, the server (never the client) reviews it once the
 recording and the match result are both stored; `ExploreClient::get_coach_review`
 reads that review's status and conversation through `coach/reviews/get`.
+
+The supervisor looks for it (`supervisor/review.rs`). The collector publishes
+the League game id it saw end and the Riot match ids of the newest match-history
+page; together they name the finished match (`NA1_5123456789`). The supervisor
+then asks `coach/reviews/get` 30 seconds later and again with backoff (1, 2, 4,
+then every 5 minutes), at most 12 times, about 45 minutes. `not_found` (no
+review yet), `pending` and transport failures ask again; `declined`, `failed`
+and refusals such as Scout Coach being off stop asking. A newer finished game
+replaces the one being asked about. When the review is ready, the supervisor
+opens its conversation in the main window and brings the window up, unless a
+game is being played then, and holds a `review_ready` overlay card for the
+next game. The overlay's expand key (**Alt+F7**) on that card opens the review
+in the main window. Each outcome is a `coach_review` diagnostic.
 
 The answer lands in its own conversation (one per select and one per game) and
 the chat page shows it in a coach panel above the transcript, with its options

@@ -12,7 +12,8 @@
 //!
 //! So does the in-game overlay's state ([`overlay`]): the supervisor runs the
 //! overlay as a second child (`--overlay`) for the length of a game, decides
-//! which card it shows, and holds the keys that act on it.
+//! which card it shows, and holds the keys that act on it. After a game it
+//! looks for the game's post-game review ([`review`]) and shows it when ready.
 
 use std::path::{Path, PathBuf};
 use std::process::{ExitStatus, Stdio};
@@ -44,6 +45,8 @@ use crate::updater::service::{InstallOutcome, UpdateHandle};
 use crate::voice::VoiceHandle;
 use coach::CoachDriver;
 use overlay::OverlayHost;
+use review::{ReviewEvent, ReviewFetch, ReviewPoller};
+pub use review::{ReviewSource, ScoutReviews};
 
 /// A crash after this long is a fresh incident, not part of a crash loop.
 pub const STABLE_RUN: Duration = Duration::from_mins(10);
@@ -222,6 +225,8 @@ pub struct Supervisor<C: Collector> {
     overlay: Option<OverlayHost>,
     /// Whether this supervisor runs the overlay, for the fullscreen warning.
     overlay_available: bool,
+    /// Where post-game reviews are read, when chat runs. `run` takes it.
+    reviews: Option<Reviews>,
     /// How long a champion select holds still before the coach advises.
     coach_debounce: Duration,
     /// Held for the supervisor's life, so a second supervisor cannot share the
@@ -252,6 +257,7 @@ impl<C: Collector> Supervisor<C> {
             voice: None,
             overlay: None,
             overlay_available: false,
+            reviews: None,
             coach_debounce: coach::DEBOUNCE,
             _instance_lock: instance_lock,
         }
@@ -291,6 +297,25 @@ impl<C: Collector> Supervisor<C> {
         self
     }
 
+    /// Look for each finished game's post-game review in `source`, and show
+    /// it when it is ready.
+    #[must_use]
+    pub fn with_reviews(mut self, source: Box<dyn ReviewSource>) -> Self {
+        self.reviews = Some(Reviews::new(source));
+        self
+    }
+
+    /// Ask about reviews on every refresh, so a test does not sit through
+    /// the backoff.
+    #[cfg(test)]
+    #[must_use]
+    pub fn with_immediate_reviews(mut self, source: Box<dyn ReviewSource>) -> Self {
+        let mut reviews = Reviews::new(source);
+        reviews.poller = ReviewPoller::immediate();
+        self.reviews = Some(reviews);
+        self
+    }
+
     /// Shorten the champion-select wait, so a test does not sit through it.
     #[cfg(test)]
     #[must_use]
@@ -324,6 +349,7 @@ impl<C: Collector> Supervisor<C> {
         let mut pairing = pairing_key(&state.borrow());
         let mut coach = CoachDriver::new(self.coach_debounce);
         let mut overlay = self.overlay.take();
+        let mut reviews = self.reviews.take();
         // A supervisor that starts mid-game opens the overlay now.
         self.follow_overlay_phase(&mut overlay, &phase).await;
         let mut refresh = tokio::time::interval(REFRESH);
@@ -335,11 +361,19 @@ impl<C: Collector> Supervisor<C> {
                         self.open_window(&mut window, &mut quick_crashes, &state, &phase).await;
                     }
                     Some(Control::OverlayKey(key)) => {
-                        OverlayHost::press(&mut overlay, key, self.collector.diagnostics()).await;
+                        let diagnostics = self.collector.diagnostics();
+                        if let Some(review) = OverlayHost::press(&mut overlay, key, diagnostics).await {
+                            self.open_review(review, (&mut window, &mut quick_crashes), &state, &phase).await;
+                        }
                     }
                     Some(Control::Quit) => break SupervisorExit::Quit,
                     None => break SupervisorExit::ControlClosed,
                 },
+                Some((match_id, answer)) = Reviews::next(&mut reviews) => {
+                    let event = reviews.as_mut().and_then(|reviews| reviews.settle(&match_id, answer));
+                    let windows = (&mut window, &mut quick_crashes);
+                    self.review_settled(event, &mut overlay, windows, &state, &phase).await;
+                }
                 event = OverlayHost::next_event(&mut overlay) => {
                     OverlayHost::react(&mut overlay, event, self.collector.diagnostics()).await;
                 }
@@ -384,6 +418,9 @@ impl<C: Collector> Supervisor<C> {
                         self.send_state(running, &state).await;
                     }
                     OverlayHost::refresh(&mut overlay, self.collector.diagnostics()).await;
+                    if let Some(reviews) = reviews.as_mut() {
+                        reviews.tick(&state.borrow());
+                    }
                     if self.install_when_idle(window.is_some(), &phase) {
                         break SupervisorExit::Updating;
                     }
@@ -391,6 +428,68 @@ impl<C: Collector> Supervisor<C> {
             }
         };
         self.finish(exit, window, overlay, &phase).await
+    }
+
+    /// A game's review is settled: show a ready one in the main window, unless
+    /// a game is being played, and raise its overlay card.
+    async fn review_settled(
+        &self,
+        event: Option<ReviewEvent>,
+        overlay: &mut Option<OverlayHost>,
+        windows: (&mut Option<Window>, &mut u32),
+        state: &StateReceiver,
+        phase: &PhaseReceiver,
+    ) {
+        match event {
+            Some(ReviewEvent::Ready {
+                match_id,
+                conversation_id,
+            }) => {
+                self.record(review_event(
+                    DiagnosticLevel::Info,
+                    DiagnosticOutcome::Succeeded,
+                    format!("the review of {match_id} is ready"),
+                ));
+                let playing = matches!(
+                    *phase.borrow(),
+                    GameflowPhase::InProgress | GameflowPhase::Reconnect
+                );
+                if playing {
+                    // Never take the screen from a game; the overlay card
+                    // opens it when the player asks.
+                    self.chat_command(ChatCommand::Refresh);
+                } else {
+                    self.open_review(conversation_id, windows, state, phase)
+                        .await;
+                }
+                if let Some(host) = overlay.as_mut() {
+                    host.review_ready(&match_id, conversation_id);
+                    host.flush(self.collector.diagnostics()).await;
+                }
+            }
+            Some(ReviewEvent::Stopped { match_id, reason }) => {
+                self.record(review_event(
+                    DiagnosticLevel::Info,
+                    DiagnosticOutcome::Skipped,
+                    format!("no review of {match_id}: {reason}"),
+                ));
+            }
+            None => {}
+        }
+    }
+
+    /// Open a review's conversation in the main window and bring the window
+    /// up, starting it if it is not running.
+    async fn open_review(
+        &self,
+        conversation_id: uuid::Uuid,
+        (window, quick_crashes): (&mut Option<Window>, &mut u32),
+        state: &StateReceiver,
+        phase: &PhaseReceiver,
+    ) {
+        self.chat_command(ChatCommand::Open { conversation_id });
+        self.chat_command(ChatCommand::Refresh);
+        self.open_window(window, quick_crashes, state, phase).await;
     }
 
     /// Close the window and the overlay, stop collection, and install a
@@ -1226,6 +1325,56 @@ fn phase_message(phase: &GameflowPhase) -> SupervisorMessage {
     SupervisorMessage::Phase { phase }
 }
 
+fn review_event(
+    level: DiagnosticLevel,
+    outcome: DiagnosticOutcome,
+    detail: String,
+) -> DiagnosticEvent {
+    DiagnosticEvent::new(level, DiagnosticCategory::Runtime, "coach_review", outcome)
+        .with_detail(detail)
+}
+
+/// The review poller, its source, and the channel answers come back on.
+struct Reviews {
+    poller: ReviewPoller,
+    source: Box<dyn ReviewSource>,
+    done: mpsc::UnboundedSender<ReviewFetch>,
+    answers: mpsc::UnboundedReceiver<ReviewFetch>,
+}
+
+impl Reviews {
+    fn new(source: Box<dyn ReviewSource>) -> Self {
+        let (done, answers) = mpsc::unbounded_channel();
+        Self {
+            poller: ReviewPoller::default(),
+            source,
+            done,
+            answers,
+        }
+    }
+
+    /// Follow the newest finished game and ask about its review when due.
+    fn tick(&mut self, state: &RuntimeState) {
+        let now = Instant::now();
+        self.poller.follow(review::finished_match_id(state), now);
+        if let Some(match_id) = self.poller.due(now) {
+            self.source.fetch(match_id, self.done.clone());
+        }
+    }
+
+    fn settle(&mut self, match_id: &str, answer: review::ReviewAnswer) -> Option<ReviewEvent> {
+        self.poller.settle(match_id, answer, Instant::now())
+    }
+
+    /// The next answer, or pending forever without reviews. Cancel-safe.
+    async fn next(reviews: &mut Option<Self>) -> Option<ReviewFetch> {
+        match reviews.as_mut() {
+            Some(reviews) => reviews.answers.recv().await,
+            None => std::future::pending().await,
+        }
+    }
+}
+
 fn window_crash_event(outcome: DiagnosticOutcome, detail: String) -> DiagnosticEvent {
     DiagnosticEvent::new(
         DiagnosticLevel::Critical,
@@ -1240,5 +1389,6 @@ mod coach;
 mod overlay;
 #[cfg(scout_proactive_coach)]
 mod proactive;
+mod review;
 #[cfg(test)]
 mod tests;

@@ -6,7 +6,7 @@ use scout_client_core::outbox::ObservationOutbox;
 use std::collections::HashMap;
 use tokio::task::JoinHandle;
 
-use super::state::{StateHub, set_error};
+use super::state::{StateHub, set_error, update_state};
 use std::sync::Arc;
 
 type CollectionTask = JoinHandle<(HashMap<String, Vec<u8>>, Result<(), String>)>;
@@ -50,6 +50,9 @@ impl CollectionWorkers {
             {
                 match task.await {
                     Ok((payloads, result)) => {
+                        if matches!(kind, Collector::History) {
+                            publish_recent_matches(state, &payloads);
+                        }
                         worker.payloads = payloads;
                         if let Err(error) = result {
                             set_error(state, error);
@@ -78,6 +81,22 @@ impl CollectionWorkers {
             worker.payloads.clear();
         }
     }
+}
+
+/// Publish the newest match-history page's match ids, which the history
+/// collector left in its payloads.
+fn publish_recent_matches(state: &StateHub, payloads: &HashMap<String, Vec<u8>>) {
+    let Some(ids) = payloads
+        .get(super::history::RECENT_MATCHES_KEY)
+        .and_then(|bytes| serde_json::from_slice::<Vec<String>>(bytes).ok())
+    else {
+        return;
+    };
+    update_state(state, |snapshot| {
+        if snapshot.recent_match_ids != ids {
+            snapshot.recent_match_ids = ids;
+        }
+    });
 }
 
 async fn collect(

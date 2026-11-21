@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use super::champ_select::ChampSelectWatcher;
-use super::gameflow::IN_PROGRESS_GAME_KEY;
+use super::gameflow::{ENDED_GAME_KEY, IN_PROGRESS_GAME_KEY};
 use super::paths::data_directory;
 use super::state::{StateHub, update_state};
 
@@ -79,6 +79,12 @@ impl<S: LiveGameSource> LiveGame<S> {
                 .and_then(|bytes| std::str::from_utf8(bytes).ok())
         };
         self.champ_select.tick(state, diagnostics).await;
+        let ended = text(ENDED_GAME_KEY).map(str::to_owned);
+        update_state(state, |snapshot| {
+            if snapshot.ended_game_id != ended {
+                snapshot.ended_game_id = ended;
+            }
+        });
         self.upload.set_outbox(outbox.cloned());
         let Some(session) = &mut self.session else {
             self.upload
