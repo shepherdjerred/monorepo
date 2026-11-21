@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { FleetPolicyPort } from "./fleet.ts";
 import {
   namespaceNamedBy,
+  peerNamespace,
   peerSelects,
   podsLabelled,
   portsCover,
@@ -60,6 +61,26 @@ describe("namespaceNamedBy", () => {
     expect(namespaceNamedBy(nsPeer("flipt"))).toBe("flipt");
     expect(namespaceNamedBy({ namespaceSelector: {} })).toBeUndefined();
     expect(namespaceNamedBy({ podSelector: {} })).toBeUndefined();
+  });
+});
+
+describe("peerNamespace", () => {
+  test("a peer without a namespaceSelector names the policy's namespace", () => {
+    expect(peerNamespace({ podSelector: {} }, "tasknotes")).toBe("tasknotes");
+  });
+
+  test("a namespaceSelector names the namespace it selects by name", () => {
+    expect(peerNamespace(nsPeer("flipt"), "tasknotes")).toBe("flipt");
+    expect(peerNamespace(nsPeer("tasknotes"), "tasknotes")).toBe("tasknotes");
+  });
+
+  test("an ipBlock or a selector on another label names no single namespace", () => {
+    expect(
+      peerNamespace({ ipBlock: { cidr: "0.0.0.0/0" } }, "tasknotes"),
+    ).toBeUndefined();
+    expect(
+      peerNamespace({ namespaceSelector: {}, podSelector: {} }, "tasknotes"),
+    ).toBeUndefined();
   });
 });
 

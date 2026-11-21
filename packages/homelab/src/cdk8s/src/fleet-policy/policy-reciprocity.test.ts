@@ -1,6 +1,17 @@
 import { describe, expect, test } from "vitest";
-import type { Fleet, FleetNetworkPolicy, FleetService } from "./fleet.ts";
-import { fleetOf, workload } from "./fleet-fixtures.ts";
+import type {
+  Fleet,
+  FleetNetworkPolicy,
+  FleetService,
+  NetworkPolicyPeer,
+} from "./fleet.ts";
+import {
+  fleetOf,
+  namespacePeer,
+  policy,
+  tcpPort,
+  workload,
+} from "./fleet-fixtures.ts";
 import { unreciprocatedRules } from "./policy-reciprocity.ts";
 
 const NAMESPACE_NAME = "kubernetes.io/metadata.name";
@@ -93,5 +104,103 @@ describe("unreciprocatedRules", () => {
     expect(unreciprocatedRules(fleetWith("elsewhere", []), "Egress")).toEqual(
       [],
     );
+  });
+});
+
+/**
+ * A tasknotes-shaped namespace: the app and its postgres-operator cluster,
+ * whose pods the operator renders and which are known only by the label the
+ * app's Egress rule names them by.
+ */
+const DATABASE = { "cluster-name": "notes-postgresql" };
+const TAILSCALE_ONLY = {
+  ingress: [{ peers: [namespacePeer("tailscale")], ports: undefined }],
+};
+
+function notesFleet(
+  databasePeer: NetworkPolicyPeer,
+  ingress: readonly FleetNetworkPolicy[],
+): Fleet {
+  return fleetOf({
+    workloads: [workload("notes", "notes", 3000)],
+    networkPolicies: [
+      policy("notes", "notes", {
+        egress: [{ peers: [databasePeer], ports: [tcpPort(5432)] }],
+      }),
+      ...ingress,
+    ],
+  });
+}
+
+const DATABASE_PEER = { podSelector: { matchLabels: DATABASE } };
+
+describe("unreciprocatedRules within one namespace", () => {
+  test("a namespace-wide Ingress policy that does not admit the app shuts it out of its own database", () => {
+    expect(
+      unreciprocatedRules(
+        notesFleet(DATABASE_PEER, [policy("notes", undefined, TAILSCALE_ONLY)]),
+        "Egress",
+      ),
+    ).toEqual([
+      "notes/notes-egress -> notes{cluster-name=notes-postgresql}:5432",
+    ]);
+  });
+
+  test("a namespaceSelector naming the policy's own namespace is checked too", () => {
+    const peer = { ...namespacePeer("notes"), ...DATABASE_PEER };
+    expect(
+      unreciprocatedRules(
+        notesFleet(peer, [policy("notes", undefined, TAILSCALE_ONLY)]),
+        "Egress",
+      ),
+    ).toEqual([
+      "notes/notes-egress -> notes{cluster-name=notes-postgresql}:5432",
+    ]);
+  });
+
+  test("an Ingress policy on the app alone leaves the database unpoliced", () => {
+    expect(
+      unreciprocatedRules(
+        notesFleet(DATABASE_PEER, [policy("notes", "notes", TAILSCALE_ONLY)]),
+        "Egress",
+      ),
+    ).toEqual([]);
+  });
+
+  test("a database policy admitting the app reciprocates the rule", () => {
+    const database: FleetNetworkPolicy = {
+      ...policy("notes", undefined, {
+        ingress: [
+          {
+            peers: [{ podSelector: { matchLabels: { app: "notes" } } }],
+            ports: [tcpPort(5432)],
+          },
+        ],
+      }),
+      podSelector: { matchLabels: DATABASE },
+    };
+    expect(
+      unreciprocatedRules(notesFleet(DATABASE_PEER, [database]), "Egress"),
+    ).toEqual([]);
+  });
+
+  test("an Ingress rule admitting pods of the namespace that never send to it grants nothing", () => {
+    const fleet = fleetOf({
+      workloads: [
+        workload("notes", "notes", 3000),
+        workload("notes", "cron", 8081),
+      ],
+      networkPolicies: [
+        policy("notes", "notes", {
+          ingress: [{ peers: [{ podSelector: {} }], ports: [tcpPort(3000)] }],
+        }),
+        policy("notes", undefined, {
+          egress: [{ peers: [namespacePeer("flipt")], ports: [tcpPort(8080)] }],
+        }),
+      ],
+    });
+    expect(unreciprocatedRules(fleet, "Ingress")).toEqual([
+      "notes/notes-ingress <- notes:3000",
+    ]);
   });
 });

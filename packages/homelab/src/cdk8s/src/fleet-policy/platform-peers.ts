@@ -1,11 +1,15 @@
 import { KUBERNETES_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
-import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
-import type { Fleet, FleetPolicyPort } from "./fleet.ts";
+import {
+  POSTGRES_OPERATOR_CLUSTER_LABELS,
+  postgresClusterPodLabels,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
+import type { Fleet, FleetPolicyPort, FleetPolicyRule } from "./fleet.ts";
 import {
   podsLabelled,
   policiesAllow,
   policiesSelecting,
   portsCover,
+  type Pods,
 } from "./network-reachability.ts";
 
 /**
@@ -54,6 +58,74 @@ export function apiServerRulesOffEndpoint(fleet: Fleet): string[] {
 const POSTGRES_OPERATOR_PORTS = [5432, 8008] as const;
 
 /**
+ * The postgres-operator clusters of the fleet and their pods, known by the
+ * labels the operator stamps on them.
+ */
+function postgresClusters(
+  fleet: Fleet,
+): { namespace: string; name: string; pods: Pods }[] {
+  return fleet.objects
+    .filter(
+      (object) =>
+        object.kind === "postgresql" &&
+        object.apiVersion.startsWith("acid.zalan.do/"),
+    )
+    .flatMap(({ metadata: { namespace, name } }) =>
+      namespace === undefined
+        ? []
+        : [
+            {
+              namespace,
+              name,
+              pods: podsLabelled(namespace, {
+                ...POSTGRES_OPERATOR_CLUSTER_LABELS,
+                ...postgresClusterPodLabels(name),
+              }),
+            },
+          ],
+    );
+}
+
+/**
+ * Whether an Egress rule reaches the API server: it opens the API server's
+ * port to every address or to the one the API server advertises.
+ */
+function reachesApiServer(rule: FleetPolicyRule): boolean {
+  const { cidr, port } = KUBERNETES_API_ENDPOINT;
+  return (
+    portsCover(rule.ports, tcpPort(port), NO_NAMED_PORTS) &&
+    (rule.peers === undefined ||
+      rule.peers.some(
+        ({ ipBlock }) =>
+          ipBlock !== undefined &&
+          (ipBlock.cidr === cidr || EVERY_ADDRESS.has(ipBlock.cidr)) &&
+          !(ipBlock.except ?? []).includes(cidr),
+      ))
+  );
+}
+
+/**
+ * postgres-operator clusters whose pods an Egress policy selects without
+ * letting them reach the Kubernetes API server, as `<namespace>/<cluster>`.
+ * Patroni keeps its leader lease and cluster state in the API server; a
+ * policy written for an app that also binds the database pods cuts it off.
+ * Prefer selecting the app's pods alone, which leaves the cluster unpoliced.
+ */
+export function postgresClustersWithoutApiServer(fleet: Fleet): string[] {
+  return postgresClusters(fleet)
+    .filter(({ pods }) => {
+      const policies = policiesSelecting(fleet, "Egress", pods);
+      return (
+        policies.length > 0 &&
+        !policies.some((policy) =>
+          policy.egress.some((rule) => reachesApiServer(rule)),
+        )
+      );
+    })
+    .map(({ namespace, name }) => `${namespace}/${name}`);
+}
+
+/**
  * postgres-operator clusters whose pods an Ingress policy selects without
  * admitting the operator, as `<namespace>/<cluster>:<port>`. The operator
  * syncs roles and databases over SQL and drives Patroni over its REST API, so
@@ -61,24 +133,16 @@ const POSTGRES_OPERATOR_PORTS = [5432, 8008] as const;
  */
 export function postgresClustersClosedToOperator(fleet: Fleet): string[] {
   const operator = podsLabelled("postgres-operator");
-  return fleet.objects
-    .filter(
-      (object) =>
-        object.kind === "postgresql" &&
-        object.apiVersion.startsWith("acid.zalan.do/"),
-    )
-    .flatMap(({ metadata: { namespace, name } }) => {
-      if (namespace === undefined) return [];
-      const pods = podsLabelled(namespace, postgresClusterPodLabels(name));
-      const policies = policiesSelecting(fleet, "Ingress", pods);
-      if (policies.length === 0) return [];
-      return POSTGRES_OPERATOR_PORTS.filter(
-        (port) =>
-          !policiesAllow(policies, "Ingress", {
-            peer: operator,
-            port: tcpPort(port),
-            destination: pods,
-          }),
-      ).map((port) => `${namespace}/${name}:${String(port)}`);
-    });
+  return postgresClusters(fleet).flatMap(({ namespace, name, pods }) => {
+    const policies = policiesSelecting(fleet, "Ingress", pods);
+    if (policies.length === 0) return [];
+    return POSTGRES_OPERATOR_PORTS.filter(
+      (port) =>
+        !policiesAllow(policies, "Ingress", {
+          peer: operator,
+          port: tcpPort(port),
+          destination: pods,
+        }),
+    ).map((port) => `${namespace}/${name}:${String(port)}`);
+  });
 }

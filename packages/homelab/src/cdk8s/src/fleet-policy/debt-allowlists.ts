@@ -311,14 +311,16 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
 export const PROBE_PORTS_NOT_ADMITTED: ReadonlySet<string> = new Set();
 
 /**
- * Egress rules naming another namespace whose Ingress policy does not admit
- * the rule's pods on the port (`<namespace>/<policy> -> <peer>:<port>`).
+ * Egress rules naming pods, of another namespace or the policy's own, whose
+ * Ingress policy does not admit the rule's pods on the port
+ * (`<namespace>/<policy> -> <peer>:<port>`).
  */
 export const UNRECIPROCATED_EGRESS_RULES: ReadonlySet<string> = new Set();
 
 /**
- * Ingress rules naming another namespace whose Egress policy does not let it
- * reach the rule's pods on the port (`<namespace>/<policy> <- <peer>:<port>`).
+ * Ingress rules naming pods, of another namespace or the policy's own, whose
+ * Egress policy does not let them reach the rule's pods on the port
+ * (`<namespace>/<policy> <- <peer>:<port>`).
  */
 export const UNRECIPROCATED_INGRESS_RULES: ReadonlySet<string> = new Set();
 

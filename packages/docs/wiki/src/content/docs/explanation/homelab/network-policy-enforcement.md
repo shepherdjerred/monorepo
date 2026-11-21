@@ -113,12 +113,16 @@ They prove that the declared topology is consistent with itself:
 
 - a Service endpoint named in a workload's literal environment is allowed by
   the policies on both ends;
-- a cross-namespace rule on one side has its counterpart on the other;
+- a rule naming pods on one side has its counterpart on the other, whether
+  those pods are in another namespace or the rule's own, such as an app and
+  its database;
 - every probed port admits the blackbox prober and the proxy or tunnel that
   routes to it;
 - every Tailscale Ingress backend admits its proxy;
 - every pod with an Egress policy can reach cluster DNS;
-- rules for the API server name the address it advertises.
+- rules for the API server name the address it advertises;
+- a PostgreSQL cluster an Egress policy binds can still reach the API server,
+  where Patroni keeps its leader lease.
 
 They cannot prove that the declared topology is the real one. A test reads
 manifests, not traffic.
