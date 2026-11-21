@@ -1,4 +1,4 @@
-import { useState, type SyntheticEvent } from "react";
+import { useId, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { MediaUser } from "#shared/contract.ts";
 import {
@@ -9,7 +9,11 @@ import {
   type PreviewNumberingGroup,
 } from "#shared/acquisition/numbering.ts";
 import { readApi, writeApi } from "#client/api.ts";
-import { ErrorNotice, Loading } from "#client/components.tsx";
+import { Button } from "#client/ui/button.tsx";
+import { Callout, LoadError } from "#client/ui/feedback.tsx";
+import { SelectField, TextField } from "#client/ui/field.tsx";
+import { Form } from "#client/ui/form.tsx";
+import { EmptyNote, Section, SkeletonRows } from "#client/ui/section.tsx";
 import { NumberingBatchReview } from "./numbering-review.tsx";
 
 export function NumberingGroups({
@@ -21,27 +25,27 @@ export function NumberingGroups({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <section className="panel stack-form">
-      <h3>Use a TMDB episode group</h3>
-      <p>
-        Review an absolute-order subgroup and choose its first release number.
-        Canonical Plex season and episode names stay the same.
-      </p>
+    <Section
+      title="Number a run from a TMDB episode group"
+      description="TMDB lists some series in aired order as well as by season. Pick one of those lists and the release number of its first entry, then review every number before it is saved. Season and episode names in Plex stay as they are."
+    >
       {open ? (
         <GroupChoice user={user} seriesId={seriesId} />
       ) : (
-        <button
-          className="button"
-          onClick={() => {
-            setOpen(true);
-          }}
-        >
-          Load episode groups
-        </button>
+        <div>
+          <Button
+            onClick={() => {
+              setOpen(true);
+            }}
+          >
+            Load episode groups
+          </Button>
+        </div>
       )}
-    </section>
+    </Section>
   );
 }
+
 function GroupChoice({
   user,
   seriesId,
@@ -58,35 +62,43 @@ function GroupChoice({
         NumberingGroupListSchema,
       ),
   });
+  const absolute = groups.data?.groups.filter((group) => group.type === 2);
   return (
-    <div className="stack-form">
-      {groups.isPending && <Loading />}
-      {groups.error !== null && <ErrorNotice error={groups.error} />}
-      <label>
-        Absolute-order group
-        <select
+    <>
+      {groups.isPending && (
+        <SkeletonRows label="Loading episode groups" rows={2} />
+      )}
+      {groups.error !== null && (
+        <LoadError
+          what="Episode groups"
+          error={groups.error}
+          retry={() => {
+            void groups.refetch();
+          }}
+        />
+      )}
+      {absolute?.length === 0 && (
+        <EmptyNote>
+          TMDB has no aired-order group for this series. You can still set each
+          episode’s number below.
+        </EmptyNote>
+      )}
+      {absolute !== undefined && absolute.length > 0 && (
+        <SelectField
+          label="Aired-order group"
           value={groupId}
           onChange={(event) => {
             setGroupId(event.target.value);
           }}
         >
           <option value="">Choose a group</option>
-          {groups.data?.groups
-            .filter((group) => group.type === 2)
-            .map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name} · {group.episodeCount} episodes
-              </option>
-            ))}
-        </select>
-      </label>
-      {groups.data !== undefined &&
-        !groups.data.groups.some((group) => group.type === 2) && (
-          <p>
-            No absolute-order groups are available. Existing manual mappings can
-            still be reviewed below.
-          </p>
-        )}
+          {absolute.map((group) => (
+            <option key={group.id} value={group.id}>
+              {group.name} ({group.episodeCount} episodes)
+            </option>
+          ))}
+        </SelectField>
+      )}
       {groupId !== "" && (
         <GroupInterpretation
           key={groupId}
@@ -95,9 +107,10 @@ function GroupChoice({
           groupId={groupId}
         />
       )}
-    </div>
+    </>
   );
 }
+
 function GroupInterpretation({
   user,
   seriesId,
@@ -107,6 +120,7 @@ function GroupInterpretation({
   seriesId: string;
   groupId: string;
 }) {
+  const headingId = useId();
   const detail = useQuery({
     queryKey: ["numbering-group-detail", seriesId, groupId],
     queryFn: () =>
@@ -115,7 +129,6 @@ function GroupInterpretation({
         NumberingGroupDetailSchema,
       ),
   });
-  const [error, setError] = useState<Error | null>(null);
   const preview = useMutation({
     mutationFn: (input: PreviewNumberingGroup) =>
       writeApi({
@@ -125,70 +138,79 @@ function GroupInterpretation({
         schema: NumberingGroupPreviewSchema,
       }),
   });
-  function submit(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
+  function submit(form: HTMLFormElement) {
     preview.reset();
-    const form = new FormData(event.currentTarget);
-    const parsed = PreviewNumberingGroupSchema.safeParse({
-      groupId,
-      subgroupId: form.get("subgroup"),
-      firstAbsoluteNumber: Number(form.get("first")),
-      offset: 0,
-    });
-    if (!parsed.success) {
-      setError(
-        new Error("Choose a subgroup and a positive first release number."),
-      );
-      return;
-    }
-    preview.mutate(parsed.data);
+    const fields = new FormData(form);
+    preview.mutate(
+      PreviewNumberingGroupSchema.parse({
+        groupId,
+        subgroupId: fields.get("subgroup"),
+        firstAbsoluteNumber: Number(fields.get("first")),
+        offset: 0,
+      }),
+    );
   }
-  if (detail.isPending) return <Loading />;
-  if (detail.error !== null) return <ErrorNotice error={detail.error} />;
+  if (detail.isPending) {
+    return <SkeletonRows label="Loading the group" rows={2} />;
+  }
+  if (detail.error !== null) {
+    return (
+      <LoadError
+        what="The group"
+        error={detail.error}
+        retry={() => {
+          void detail.refetch();
+        }}
+      />
+    );
+  }
   return (
-    <div className="stack-form">
-      <form
-        className="stack-form"
+    <>
+      <h3 className="sr-only" id={headingId}>
+        Preview the numbers
+      </h3>
+      <Form
+        labelledBy={headingId}
         onSubmit={submit}
-        onChange={() => {
+        onEdit={() => {
           preview.reset();
         }}
       >
-        <label>
-          Subgroup
-          <select name="subgroup" required defaultValue="">
-            <option value="">Choose a subgroup</option>
-            {detail.data.subgroups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name} · source order {group.firstOrder}–{group.lastOrder}{" "}
-                · {group.episodeCount} episodes
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Release number for the first source entry
-          <input
-            name="first"
-            type="number"
-            min="1"
-            max="100000"
-            step="1"
-            required
-          />
-        </label>
-        <p>
-          The preview applies your chosen first number to this subgroup’s source
-          ordering. It will reject missing entries, conflicting mappings or
-          unknown episode identities.
-        </p>
-        <button className="button" disabled={preview.isPending}>
-          Preview exact mappings
-        </button>
-      </form>
-      {error !== null && <ErrorNotice error={error} />}
-      {preview.error !== null && <ErrorNotice error={preview.error} />}
+        <SelectField
+          label="Part of the group"
+          name="subgroup"
+          required
+          requiredMessage="Choose the part of the group to number."
+          defaultValue=""
+        >
+          <option value="">Choose a part</option>
+          {detail.data.subgroups.map((group) => (
+            <option key={group.id} value={group.id}>
+              {group.name} (entries {group.firstOrder} to {group.lastOrder},{" "}
+              {group.episodeCount} episodes)
+            </option>
+          ))}
+        </SelectField>
+        <TextField
+          label="Release number of its first entry"
+          description="The rest are numbered on from here, in the group’s order. The preview refuses a part with missing entries, numbers that clash, or episodes Media cannot identify."
+          name="first"
+          type="number"
+          min="1"
+          max="100000"
+          step="1"
+          required
+          requiredMessage="Enter the first release number."
+        />
+        <div>
+          <Button type="submit" variant="primary" busy={preview.isPending}>
+            Preview the numbers
+          </Button>
+        </div>
+      </Form>
+      {preview.error !== null && (
+        <Callout tone="danger">{preview.error.message}</Callout>
+      )}
       {preview.data !== undefined && (
         <NumberingBatchReview
           key={preview.data.previewDigest}
@@ -199,6 +221,6 @@ function GroupInterpretation({
           }}
         />
       )}
-    </div>
+    </>
   );
 }

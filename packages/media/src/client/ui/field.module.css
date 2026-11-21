@@ -1,0 +1,316 @@
+/*
+ * Form fields. A label sits closer to its own control than to the field
+ * above it, controls have a 3:1 boundary in both themes, and nothing here
+ * relies on `accent-color`: checkboxes and radios are drawn, so they look
+ * the same in every browser.
+ */
+@layer components {
+  .field {
+    display: grid;
+    gap: var(--space-1);
+    justify-items: start;
+    min-width: 0;
+    max-width: 36rem;
+  }
+  .field[data-width="short"] .control,
+  .withUnit > input[type="number"] {
+    max-width: 9rem;
+  }
+  .field[data-width="medium"] .control {
+    max-width: 20rem;
+  }
+  .label {
+    padding: 0;
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: var(--leading-normal);
+  }
+  .optional {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .description {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    max-width: 44rem;
+  }
+  .field > .description {
+    margin-bottom: var(--space-1);
+  }
+  .error {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin: var(--space-1) 0 0;
+    color: var(--danger);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: var(--leading-normal);
+  }
+  .error svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+  }
+
+  /* Text inputs, selects, and textareas share one box. Sixteen pixels of
+     type keeps iOS from zooming the page when a control takes focus. */
+  .control {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--field);
+    color: var(--text);
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  .control:focus-visible {
+    outline-offset: 1px;
+  }
+  .control:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .control[aria-invalid="true"] {
+    border-color: var(--danger);
+    box-shadow: inset 0 0 0 1px var(--danger);
+  }
+  .control[type="file"] {
+    padding: 6px;
+    font-size: var(--text-sm);
+  }
+  .control[type="file"]::file-selector-button {
+    margin-inline-end: var(--space-3);
+    padding: 6px var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface-raised);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .textarea {
+    min-height: 5.5rem;
+    padding: var(--space-2) var(--space-3);
+    resize: vertical;
+  }
+
+  .selectWrap {
+    position: relative;
+    width: 100%;
+  }
+  .select {
+    appearance: none;
+    padding-inline-end: var(--space-6);
+    text-overflow: ellipsis;
+  }
+  .selectWrap svg {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: var(--space-3);
+    width: 16px;
+    height: 16px;
+    translate: 0 -50%;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  .field[data-width="short"] .selectWrap {
+    max-width: 9rem;
+  }
+  .field[data-width="medium"] .selectWrap {
+    max-width: 20rem;
+  }
+
+  .withUnit {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+  }
+  .inlineSelect {
+    flex: none;
+    width: 7rem;
+  }
+  .unit {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+  }
+
+  /* Checkboxes and radios: a drawn box and mark. */
+  .checkField {
+    display: grid;
+    gap: var(--space-1);
+    max-width: 44rem;
+  }
+  .checkRow {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+  .check,
+  .radio {
+    appearance: none;
+    flex: none;
+    display: grid;
+    place-content: center;
+    width: 20px;
+    height: 20px;
+    margin: 1px 0 0;
+    border: 1px solid var(--border-strong);
+    background: var(--field);
+    cursor: pointer;
+  }
+  .check {
+    border-radius: 5px;
+  }
+  .radio {
+    border-radius: 50%;
+  }
+  .check::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    background: var(--field);
+    clip-path: polygon(14% 44%, 0 65%, 43% 100%, 100% 20%, 84% 6%, 40% 68%);
+    scale: 0;
+  }
+  .radio::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--field);
+    scale: 0;
+  }
+  .check:checked,
+  .radio:checked {
+    border-color: var(--accent-strong);
+    background: var(--accent-strong);
+  }
+  .check:checked::before,
+  .radio:checked::before {
+    scale: 1;
+  }
+  .check:focus-visible,
+  .radio:focus-visible {
+    outline-offset: 2px;
+  }
+  .check:disabled,
+  .radio:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .check[aria-invalid="true"] {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 1px var(--danger);
+  }
+  .checkText {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .checkLabel {
+    color: var(--text);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+    cursor: pointer;
+  }
+
+  /* A fieldset is a grouping, not a box. */
+  .group {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .groupLegend {
+    padding: 0;
+    margin-bottom: var(--space-1);
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .groupBody {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+    min-width: 0;
+  }
+  .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+  }
+  .choices[data-layout="stack"] {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .choice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    min-height: 40px;
+    padding: 9px var(--space-4) 9px var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--field);
+    font-size: var(--text-md);
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  .choice:has(.radio:checked) {
+    border-color: var(--accent-strong);
+    background: var(--surface-selected);
+    box-shadow: inset 0 0 0 1px var(--accent-strong);
+  }
+  .choice:has(.radio:disabled) {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .choice .radio {
+    margin-top: 0;
+  }
+  .choiceText {
+    display: grid;
+    gap: 2px;
+  }
+  .choiceHelp {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  @media (pointer: coarse) {
+    .control {
+      min-height: 44px;
+    }
+    .check,
+    .radio {
+      width: 24px;
+      height: 24px;
+    }
+    .checkRow {
+      min-height: 44px;
+      padding-block: 10px;
+    }
+    .check {
+      margin-top: 0;
+    }
+    .choice {
+      min-height: 44px;
+      align-items: center;
+    }
+  }
+}

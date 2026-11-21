@@ -543,6 +543,12 @@ layout it is about: `*.desktop.spec.ts` (the sidebar) runs only in `desktop` and
 layout-specific test in one of those files instead of skipping it by viewport;
 the root quality ratchet rejects `test.skip`.
 
+`e2e/browser/manage-forms.spec.ts` and `manage-durations.spec.ts` drive the owner's forms. Because the fixture API refuses writes, each test answers the
+write itself (`answerWrites` in `manage-support.ts`) and asserts the method,
+path, headers, and body the client sent. They prove what would be requested,
+not that anything was saved; a write against a real server is covered by the
+server's own suites.
+
 The suite runs in Woodpecker's browser lane with the other Playwright targets,
 not in the `ci` or `extended` Vitest tiers.
 
@@ -594,8 +600,12 @@ to `/discover?q=`, and Discover reads its search from that parameter.
 
 The client is styled with CSS in five cascade layers, lowest priority first:
 `reset`, `tokens`, `base`, `components`, `pages`. Most of it is global; the
-shell and Manage layout use CSS Modules (`*.module.css`, read through
-`ui/class-names.ts`), whose rules sit in `components` like the shared classes.
+shell, the Manage pages, and the form primitives in `ui/` use CSS Modules
+(`*.module.css`, read through `ui/class-names.ts`), whose rules sit in
+`components` like the shared classes. A CSS Module scopes container names as
+it does class names, so `@container <name>` only matches a container declared
+in the same file; a module that sizes itself against a container declared
+elsewhere uses an unnamed `@container (…)`.
 
 | File                                                     | Layer           | Holds                                                     |
 | -------------------------------------------------------- | --------------- | --------------------------------------------------------- |
@@ -640,6 +650,48 @@ the table reads as neutral.
 
 DM Sans and Manrope are bundled from `@fontsource-variable` and served from
 `/assets`; the client requests nothing from another origin.
+
+### Client forms
+
+The owner's Manage pages are built from the primitives in `src/client/ui`.
+Pages outside Manage still use the shared classes in `styles.css`.
+
+| Module                  | Provides                                                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- |
+| `ui/form.tsx`           | `Form`, `FormFooter`, `FieldRow`, `useSavedNotes`                                                         |
+| `ui/field.tsx`          | `TextField`, `SelectField`, `TextAreaField`, `CheckboxField`, `ChoiceField`, `FieldGroup`, `InlineSelect` |
+| `ui/duration-field.tsx` | `DurationField`: a length of time as an amount and a unit                                                 |
+| `ui/button.tsx`         | `Button` (`primary`, `secondary`, `quiet`, `danger`), `ButtonLink`, `ButtonRow`                           |
+| `ui/confirm-dialog.tsx` | `ConfirmDialog`, a native modal `<dialog>` whose Cancel takes focus                                       |
+| `ui/section.tsx`        | `Section`, `Disclosure`, `DisclosureList`, `SkeletonRows`, `EmptyNote`                                    |
+| `ui/data-list.tsx`      | `DataList` and `DataRow`: rows that stack into cards in a narrow container                                |
+| `ui/feedback.tsx`       | `Callout`, `LoadError`, `Badge`                                                                           |
+
+`Form` owns validation. On submit it reads each control's own constraints
+(`required`, `min`, `pattern`, and so on, worded by `ui/validation.ts`) and the
+form's `validate` function, shows each problem beside its field and in a
+summary, and moves focus to the first one; `onSubmit` runs only when there is
+nothing wrong. A field is also checked when focus leaves it after an edit, and
+its error clears once the value is acceptable. A field reports through `Form`
+by its `name`, or by `data-field` for a control that is not an input.
+
+A length of time is a `DurationField`: a number and a choice of unit, read
+back with `readDuration` from `ui/duration.ts`. The contract's unit stays
+seconds and the conversion is exact both ways. A stored value is shown in the
+largest offered unit that states it as a whole number, and what is typed is
+multiplied out in decimal, so an amount that is not a whole number of seconds
+is refused with a field error instead of being rounded. Each field's units and
+limits are one `DurationRules` object shared by the control and the form's
+reader, such as `DURATION_RULES` in `manage/providers/provider-input.ts`.
+
+A form says where it stands in `FormFooter`: "Unsaved changes" from the first
+edit, then a message naming what was saved, which stays until the next edit.
+A saved row is usually refetched and remounted with its new version, so the
+list above it keeps that message with `useSavedNotes`.
+
+A form that reads its controls by name (`FormData`) keeps the reader in its own
+module, such as `manage/providers/provider-input.ts`, so the request body does
+not depend on the layout.
 
 ### Native subtitle tools
 

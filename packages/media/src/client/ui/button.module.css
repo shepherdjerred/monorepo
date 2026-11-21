@@ -1,0 +1,75 @@
+@layer components {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--surface-raised);
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .button svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+  .button:focus-visible {
+    outline-offset: 2px;
+  }
+  .button:hover:not(:disabled) {
+    background: var(--surface-selected);
+  }
+  /* The base rule shows a wait cursor on every disabled button. Only a
+     button whose own action is running is waiting. */
+  .button:disabled {
+    cursor: not-allowed;
+  }
+  .button[aria-busy="true"] {
+    cursor: wait;
+  }
+
+  .primary {
+    border-color: var(--accent-border);
+    background: var(--accent);
+    color: var(--text-on-accent);
+  }
+  .primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+  .quiet {
+    border-color: transparent;
+    background: transparent;
+    color: var(--text-muted);
+  }
+  .quiet:hover:not(:disabled) {
+    color: var(--text);
+  }
+  .danger {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+  .danger:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--danger) 14%, var(--danger-soft));
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  @media (pointer: coarse) {
+    .button {
+      min-height: 44px;
+    }
+  }
+}
