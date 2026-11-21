@@ -1,12 +1,17 @@
 import {
   applicationsOf,
   forumReleaseOf,
+  kubernetesRecipes,
   siteReleaseOf,
   trmnlPluginsOf,
   workerRolloutOf,
 } from "#shared/model/recipe-view.ts";
 import type { z } from "zod";
-import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import {
+  type KubernetesStep,
+  type RecipeDefinition,
+  RecipeDefinitionSchema,
+} from "#shared/model/recipe-contract.ts";
 import { stepStageKey, subRecipeStageKey } from "#shared/model/stage-keys.ts";
 import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
 import { DeliveryError } from "#domain/error.ts";
@@ -78,28 +83,70 @@ function requireSettled(
   return { finishedAt: operation.finishedAt, identity };
 }
 
+/** Pre-sync Application steps that read live state without mutating external targets. */
+const READ_ONLY_PRE_SYNC_STEPS: ReadonlySet<KubernetesStep["kind"]> = new Set([
+  "players-offline",
+]);
+
+function modelSyncTarget(
+  recipe: Extract<RecipeDefinition, { kind: "kubernetes-application" }>,
+  index?: number,
+): SyncTarget {
+  const qualify = (key: string) =>
+    index === undefined ? key : subRecipeStageKey(index, key);
+  const stage = qualify(stepStageKey("step", "sync"));
+  const applySafetyStage = qualify(stepStageKey("step", "apply-safety"));
+  const readOnlyPreSync = recipe.steps
+    .filter((step) => READ_ONLY_PRE_SYNC_STEPS.has(step.kind))
+    .map((step) => qualify(stepStageKey("step", step.kind)));
+  return {
+    application: recipe.application.name,
+    stage,
+    applySafetyStage,
+    preSyncStages: [applySafetyStage, ...readOnlyPreSync],
+    declaredStages: [
+      ...recipe.steps.map((step) => qualify(stepStageKey("step", step.kind))),
+      ...recipe.oracle.tests.map((test) =>
+        qualify(stepStageKey("test", test.suite)),
+      ),
+    ],
+  };
+}
+
 /**
  * The stage keys of a single-Application recipe: a v1 pipeline's `reconcile`
- * (with no apply-safety stage), or a model recipe's `step-apply-safety` and
- * `step-sync`, prefixed inside a compound recipe (T3).
+ * (with no apply-safety stage), or a model recipe's declared steps, prefixed
+ * inside a compound recipe (T3).
  */
-function singleTargetStages(definition: StoredRecipeDefinition): {
-  stage: string;
-  applySafetyStage: string | null;
-} {
+function singleTargetStages(
+  definition: StoredRecipeDefinition,
+  application: string,
+): SyncTarget {
   const model = RecipeDefinitionSchema.safeParse(definition);
-  if (!model.success) return { stage: "reconcile", applySafetyStage: null };
-  const sync = stepStageKey("step", "sync");
-  const applySafety = stepStageKey("step", "apply-safety");
-  if (model.data.kind !== "compound")
-    return { stage: sync, applySafetyStage: applySafety };
+  if (!model.success) {
+    return {
+      application,
+      stage: "reconcile",
+      applySafetyStage: null,
+      preSyncStages: [],
+      declaredStages: ["reconcile"],
+    };
+  }
+  if (model.data.kind !== "compound") {
+    const recipe = kubernetesRecipes(model.data)[0];
+    if (recipe === undefined)
+      throw new Error(`Expected Application recipe for ${application}`);
+    return modelSyncTarget(recipe);
+  }
   const index = model.data.subRecipes.findIndex(
-    (sub) => sub.definition.kind === "kubernetes-application",
+    (sub) => kubernetesRecipes(sub.definition).length === 1,
   );
-  return {
-    stage: subRecipeStageKey(index, sync),
-    applySafetyStage: subRecipeStageKey(index, applySafety),
-  };
+  const sub = model.data.subRecipes[index];
+  const recipe =
+    sub === undefined ? undefined : kubernetesRecipes(sub.definition)[0];
+  if (recipe === undefined)
+    throw new Error(`Expected Application sub-recipe for ${application}`);
+  return modelSyncTarget(recipe, index);
 }
 
 /**
@@ -110,17 +157,9 @@ function singleTargetStages(definition: StoredRecipeDefinition): {
  */
 function syncTargets(definition: StoredRecipeDefinition): SyncTarget[] | null {
   if (definition.kind === "compound") {
-    const sync = stepStageKey("step", "sync");
-    const applySafety = stepStageKey("step", "apply-safety");
     const applications = definition.subRecipes.flatMap((sub, index) =>
       sub.definition.kind === "kubernetes-application"
-        ? [
-            {
-              application: sub.definition.application.name,
-              stage: subRecipeStageKey(index, sync),
-              applySafetyStage: subRecipeStageKey(index, applySafety),
-            },
-          ]
+        ? [modelSyncTarget(sub.definition, index)]
         : [],
     );
     if (applications.length === definition.subRecipes.length)
@@ -129,7 +168,7 @@ function syncTargets(definition: StoredRecipeDefinition): SyncTarget[] | null {
   const applications = applicationsOf(definition);
   const application = applications[0];
   return application !== undefined && applications.length === 1
-    ? [{ application: application.name, ...singleTargetStages(definition) }]
+    ? [singleTargetStages(definition, application.name)]
     : null;
 }
 

@@ -9,6 +9,8 @@ export type SyncTarget = {
   application: string;
   stage: string;
   applySafetyStage: string | null;
+  preSyncStages: readonly string[];
+  declaredStages: readonly string[];
 };
 
 export type SettledApplicationReadback = {
@@ -61,20 +63,24 @@ const UnsyncedApplicationSchema = ArgoRecoverySchema.extend({
 type UnsyncedApplication = z.infer<typeof UnsyncedApplicationSchema>;
 
 /**
- * Every recorded stage of a model Application deployment must belong to one of
- * its declared Application steps (apply-safety or sync); an unrecognised stage
- * fails closed rather than assuming no external effect occurred (I2).
+ * When any model Application target has not yet recorded its sync stage, every
+ * recorded stage on the deployment must belong to a declared pre-sync step of
+ * an unsynced target (apply-safety or a read-only gate such as players-offline)
+ * or a declared step of a sibling Application whose sync stage is already
+ * recorded. Deployments whose sync stages are all recorded take the existing
+ * synced readback path; an unrecognised stage before sync fails closed rather
+ * than assuming no external effect occurred (I2).
  */
 export function requireKnownModelStages(
   detail: DeploymentDetail,
   targets: readonly SyncTarget[],
 ) {
   if (!targets.some((target) => target.applySafetyStage !== null)) return;
+  const recorded = new Set(detail.stages.map((stage) => stage.key));
+  if (targets.every((target) => recorded.has(target.stage))) return;
   const known = new Set(
     targets.flatMap((target) =>
-      target.applySafetyStage === null
-        ? [target.stage]
-        : [target.applySafetyStage, target.stage],
+      recorded.has(target.stage) ? target.declaredStages : target.preSyncStages,
     ),
   );
   for (const stage of detail.stages) {

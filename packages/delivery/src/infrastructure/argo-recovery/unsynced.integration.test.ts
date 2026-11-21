@@ -3,6 +3,7 @@ import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery, testExecutor, testOperator } from "#testing/seed.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createRecoveryInspector } from "#infrastructure/recovery.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
 import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import { arcadePipeline, publishCiRunner } from "#testing/model-fixture.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
@@ -77,6 +78,85 @@ function priorSyncedApplication() {
       ],
     },
   };
+}
+
+async function checkPlayerGatedRecovery(failedBeforeSync: DeploymentDetail) {
+  const base = recipeFromPipeline(arcadePipeline);
+  if (base.kind !== "kubernetes-application")
+    throw new Error("Expected an Application recipe");
+  const playerGated = RecipeDefinitionSchema.parse({
+    ...base,
+    steps: [
+      { kind: "players-offline", instance: "application:arcade" },
+      ...base.steps,
+      {
+        kind: "minecraft-upgrade",
+        instance: "application:arcade",
+        pointOfNoReturn: true,
+        imageComponent: "image:arcade",
+        releaseMode: "retained-volume-restart",
+      },
+    ],
+    oracle: {
+      ...base.oracle,
+      tests: [{ suite: "smoke", resultPath: "packages/arcade/results.json" }],
+    },
+  });
+  const stage = failedBeforeSync.stages[0];
+  if (stage === undefined) throw new Error("Expected step-apply-safety");
+  const playerGateStage = {
+    ...stage,
+    key: "step-players-offline",
+    operationId: deliveryOperationId(
+      `${failedBeforeSync.deployment.id}:players-offline`,
+    ),
+  };
+  const inspectPrior = createRecoveryInspector({
+    readApplication: async () => priorSyncedApplication(),
+  });
+  await expect(
+    inspectPrior(
+      { ...failedBeforeSync, stages: [playerGateStage, stage] },
+      { reason },
+    ),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  const gatedBeforeSync: DeploymentDetail = {
+    ...failedBeforeSync,
+    pipeline: { ...failedBeforeSync.pipeline, definition: playerGated },
+    stages: [playerGateStage, stage],
+  };
+  expect(
+    await inspectPrior(gatedBeforeSync, {
+      operationId: priorOperationId,
+      reason,
+    }),
+  ).toHaveLength(1);
+  const ownRequestId = deliveryOperationId(failedBeforeSync.deployment.id);
+  const ownOperationId = "77777777-7777-4777-8777-777777777777";
+  const syncedApp = priorSyncedApplication();
+  syncedApp.status.operationState.operation.info = [
+    { name: "ci.sjer.red/request-id", value: ownRequestId },
+    { name: "ci.sjer.red/operation-id", value: ownOperationId },
+  ];
+  const inspectSynced = createRecoveryInspector({
+    readApplication: async () => syncedApp,
+  });
+  const gatedAfterSync: DeploymentDetail = {
+    ...gatedBeforeSync,
+    stages: [
+      playerGateStage,
+      { ...stage, status: "succeeded" },
+      { ...stage, key: "step-sync", operationId: ownRequestId },
+      { ...stage, key: "step-minecraft-upgrade" },
+      { ...stage, key: "test-smoke" },
+    ],
+  };
+  expect(
+    await inspectSynced(gatedAfterSync, {
+      operationId: ownOperationId,
+      reason,
+    }),
+  ).toHaveLength(1);
 }
 
 describe("independent Argo recovery before step-sync", () => {
@@ -191,6 +271,10 @@ describe("independent Argo recovery before step-sync", () => {
         { reason },
       ),
     ).rejects.toMatchObject({ code: "CONFLICT" });
+  });
+
+  test("allows a declared players-offline gate before sync and preserves recovery once sync is recorded", async () => {
+    await checkPlayerGatedRecovery(failedBeforeSync);
   });
 
   test("settles an absent Application before the environment's first accepted release", async () => {
