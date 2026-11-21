@@ -51,6 +51,14 @@ import { desktopWriteAllowed } from "./rate-limit.ts";
  *   (`coach-speech.ts`), and settled at the speech's real length.
  */
 
+/**
+ * How long, in seconds, the connection may sit idle while the answer is
+ * spoken: the route replies only after synthesis, which runs under a
+ * 30-second provider deadline, and Bun's default idle timeout is 10 seconds.
+ * `http/server.ts` applies it to this route alone.
+ */
+export const COACH_SPEECH_IDLE_TIMEOUT_SECONDS = 45;
+
 /** The run, if the calling device started it as a proactive turn. */
 async function proactiveTurn(runId: string, ownerId: string, deviceId: string) {
   const turn = await prisma.scoutCoachTurn.findUnique({

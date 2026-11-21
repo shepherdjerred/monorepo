@@ -28,6 +28,7 @@ import {
 } from "#src/metrics/platform/web.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import { handleScoutClientRoute } from "#src/scout-client/http.ts";
+import { COACH_SPEECH_IDLE_TIMEOUT_SECONDS } from "#src/scout-client/desktop/coach-trigger-speech-route.ts";
 import { SCOUT_DESKTOP_API_ROUTES } from "@scout-for-lol/data";
 import { handleSupportScreenshot } from "#src/support/http.ts";
 import { handleAuthRoutes } from "#src/trpc/auth-web.ts";
@@ -162,6 +163,12 @@ const server = Bun.serve({
   hostname: configuration.enableDevLogin ? "127.0.0.1" : "0.0.0.0",
   async fetch(request, bunServer) {
     const url = new URL(request.url);
+    // Proactive speech replies only once the provider has spoken the whole
+    // answer, so it may stay quiet longer than Bun's default idle timeout;
+    // still bounded.
+    if (url.pathname === SCOUT_DESKTOP_API_ROUTES.coach_triggers_speech.path) {
+      bunServer.timeout(request, COACH_SPEECH_IDLE_TIMEOUT_SECONDS);
+    }
     const response = await withHttpMetrics(request, url, () =>
       dispatch(request, url),
     );
