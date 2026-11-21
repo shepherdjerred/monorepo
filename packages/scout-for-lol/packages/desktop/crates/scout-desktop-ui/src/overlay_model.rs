@@ -7,9 +7,12 @@ use scout_desktop_ipc::OverlayFrame;
 use scout_overlay::geometry::{self, Anchor, GeometryError, HudRegions, Rect, ScreenRect};
 use scout_overlay::{CardKind, CardPriority};
 
-/// The overlay window's size in logical pixels. The card is drawn at its top;
-/// the rest is transparent and lets clicks through like the card does.
-pub const WINDOW_SIZE: (u32, u32) = (360, 280);
+/// The overlay window's size in logical pixels. The card is drawn at its top
+/// and is only as tall as its content; the rest is transparent and lets
+/// clicks through like the card does. The height fits the longest card the
+/// contract allows, expanded (about 620 on macOS); `tests/render_overlay.rs`
+/// renders that card and fails if it reaches the bottom.
+pub const WINDOW_SIZE: (u32, u32) = (360, 660);
 
 /// Lines a collapsed card shows; expanding shows all of them.
 pub const COLLAPSED_LINES: usize = 2;
@@ -92,24 +95,42 @@ impl OverlayCardModel {
     }
 }
 
-/// Where the overlay window goes on a display of `display` logical bounds:
-/// the middle of the left edge, clear of League's default HUD, inside the
-/// safe area.
+/// The size of an ordinary card, which placement keeps clear of the HUD.
+pub const CARD_SIZE: (u32, u32) = (360, 280);
+
+/// Where the overlay window goes on a display of `display` logical bounds.
+///
+/// An ordinary card is placed at the middle of the left edge, clear of
+/// League's default HUD, inside the safe area, and the window extends below
+/// it to [`WINDOW_SIZE`] so a long expanded card still fits. Where the safe
+/// area ends first, the window moves up just enough, and on a display shorter
+/// than the window it fills the safe area's height.
 ///
 /// # Errors
 /// [`GeometryError`] for an empty display.
 pub fn window_bounds(display: Rect) -> Result<Rect, GeometryError> {
-    geometry::place(
-        &ScreenRect {
-            rect: display,
-            // GPUI bounds are already in logical pixels.
-            scale_percent: 100,
-        },
-        WINDOW_SIZE,
+    let screen = ScreenRect {
+        rect: display,
+        // GPUI bounds are already in logical pixels.
+        scale_percent: 100,
+    };
+    let card = geometry::place(
+        &screen,
+        CARD_SIZE,
         Anchor::MiddleLeft,
         &HudRegions::league_default(),
-    )
-    .map(|placement| placement.rect)
+    )?
+    .rect;
+    let safe = geometry::safe_area(&screen)?;
+    let height = i32::try_from(WINDOW_SIZE.1)
+        .unwrap_or(i32::MAX)
+        .min(safe.height);
+    Ok(Rect {
+        x: card.x,
+        y: card.y.min(safe.bottom() - height).max(safe.y),
+        width: card.width,
+        height,
+    })
 }
 
 #[cfg(test)]
@@ -181,10 +202,34 @@ mod tests {
             height: 1080,
         };
         let bounds = window_bounds(display)?;
-        assert_eq!((bounds.width, bounds.height), (360, 280));
+        assert_eq!((bounds.width, bounds.height), (360, 660));
         assert!(display.contains(&bounds));
         assert!(bounds.x < 100, "{bounds:?}");
-        assert!(bounds.y > 300 && bounds.bottom() < 800, "{bounds:?}");
+        // The card at the window's top sits mid-left, as an ordinary card
+        // placed alone would.
+        assert!(bounds.y > 300 && bounds.y < 450, "{bounds:?}");
+        Ok(())
+    }
+
+    #[test]
+    fn a_short_display_moves_the_window_up_or_shrinks_it() -> Result<(), GeometryError> {
+        let short = Rect {
+            x: 0,
+            y: 0,
+            width: 1024,
+            height: 768,
+        };
+        let bounds = window_bounds(short)?;
+        assert_eq!(bounds.height, 660);
+        assert!(short.contains(&bounds), "{bounds:?}");
+        let tiny = Rect {
+            x: 0,
+            y: 0,
+            width: 800,
+            height: 480,
+        };
+        let bounds = window_bounds(tiny)?;
+        assert!(bounds.height < 480 && tiny.contains(&bounds), "{bounds:?}");
         Ok(())
     }
 

@@ -123,6 +123,28 @@ mod render {
         }
     }
 
+    /// The longest card the contract allows, expanded: an 80-character title
+    /// and five 160-character lines, with every hint and the note. It must
+    /// still end above the window's bottom.
+    fn longest() -> (&'static str, OverlayFrame) {
+        let line = "Wide words wrap: ".repeat(10);
+        let title = "Maximum title, eighty characters long ".repeat(3);
+        (
+            "longest",
+            OverlayFrame {
+                card: card(
+                    CardKind::Proactive,
+                    &title[..80],
+                    &[&line[..160]; 5],
+                    CardPriority::High,
+                ),
+                expanded: true,
+                queued: 8,
+                keys: keys(),
+            },
+        )
+    }
+
     /// Every card kind, as the supervisor sends them, with a name for each.
     fn frames() -> Vec<(&'static str, OverlayFrame)> {
         let plan = [
@@ -280,12 +302,16 @@ mod render {
             return Err("the overlay drew something before its first card".into());
         }
         let mut images = Vec::new();
-        for (name, frame) in frames() {
+        for (name, frame) in std::iter::once(longest()).chain(frames()) {
             harness.send(&OverlayCommand::Frame { frame: Some(frame) })?;
             let image = harness.capture()?;
             check(name, &image, clear)?;
+            let last_row = (0..image.height())
+                .rev()
+                .find(|&y| (0..image.width()).any(|x| *image.get_pixel(x, y) != clear))
+                .unwrap_or(0);
             println!(
-                "render_overlay: {name} {}x{}",
+                "render_overlay: {name} {}x{}, card ends at row {last_row}",
                 image.width(),
                 image.height()
             );

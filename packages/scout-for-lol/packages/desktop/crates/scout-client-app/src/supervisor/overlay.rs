@@ -167,6 +167,32 @@ pub(super) fn voice_card(state: VoiceState, turn: Option<&VoiceTurnView>) -> Opt
     })
 }
 
+/// Which spoken turns belong to the game being played. Voice keeps its last
+/// turn across games, so the turn standing when a game's overlay begins is an
+/// earlier game's and is not offered; any turn that differs from it is.
+#[derive(Debug, Default)]
+enum VoiceBaseline {
+    /// No game yet, or the next observation sets the baseline.
+    #[default]
+    Unset,
+    /// The turn as it stood when this game's overlay began.
+    Turn(Option<VoiceTurnView>),
+}
+
+impl VoiceBaseline {
+    /// Whether `turn` happened in this game. The first call of a game sets
+    /// the baseline and admits nothing.
+    fn admit(&mut self, turn: Option<&VoiceTurnView>) -> bool {
+        match self {
+            Self::Unset => {
+                *self = Self::Turn(turn.cloned());
+                false
+            }
+            Self::Turn(baseline) => baseline.as_ref() != turn,
+        }
+    }
+}
+
 /// What the overlay process said or did.
 pub(super) enum OverlayEvent {
     Report(OverlayReport),
@@ -197,6 +223,8 @@ pub(super) struct OverlayHost {
     /// Every card offered this game, by id, so an unchanged card is not
     /// offered again after the player dismissed it or it expired.
     offered: HashMap<String, OverlayCard>,
+    /// The spoken turn this game began with, which is not this game's.
+    voice_baseline: VoiceBaseline,
     /// The card the running overlay draws; a new overlay draws none.
     sent: Option<OverlayFrame>,
 }
@@ -214,6 +242,7 @@ impl OverlayHost {
             down: false,
             keys_bound: false,
             offered: HashMap::new(),
+            voice_baseline: VoiceBaseline::Unset,
             sent: None,
         }
     }
@@ -234,6 +263,7 @@ impl OverlayHost {
             self.playing = false;
             self.stop();
             self.offered.clear();
+            self.voice_baseline = VoiceBaseline::Unset;
             self.down = false;
         }
     }
@@ -248,6 +278,7 @@ impl OverlayHost {
         if !self.playing {
             return;
         }
+        let voice = voice.filter(|(_, turn)| self.voice_baseline.admit(*turn));
         let cards = [
             parts.and_then(coach_card),
             voice.and_then(|(state, turn)| voice_card(state, turn)),
@@ -699,6 +730,25 @@ pub(super) mod tests {
             None
         );
         assert_eq!(voice_card(VoiceState::Thinking, None), None);
+    }
+
+    #[test]
+    fn a_spoken_turn_from_an_earlier_game_is_not_offered_again() {
+        let old = turn(Some("Build Zhonya's."), None);
+        let mut baseline = VoiceBaseline::default();
+        // The game starts while voice still holds the last game's answer.
+        assert!(!baseline.admit(Some(&old)));
+        assert!(!baseline.admit(Some(&old)));
+        // A new question in this game is offered, and so is its answer.
+        let asked = VoiceTurnView {
+            heard: Some("Where is their jungler?".to_owned()),
+            ..old.clone()
+        };
+        assert!(baseline.admit(Some(&asked)));
+        // A game that starts with no turn offers the first one.
+        let mut fresh = VoiceBaseline::default();
+        assert!(!fresh.admit(None));
+        assert!(fresh.admit(Some(&old)));
     }
 
     #[test]

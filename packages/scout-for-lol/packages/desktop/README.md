@@ -424,15 +424,20 @@ game. The overlay sends its `hello`, then `ready` once its window is open and
 click-through, or `unavailable` with a reason and exits, so a window that would
 take the player's clicks never stays on screen. A card is offered once per
 game per content: a dismissed or expired plan is not offered again because the
-coach panel still holds it. `ProactivePolicy::allowing()` is used only when
+coach panel still holds it. Voice keeps its last turn across games, so the
+turn standing when a game's overlay starts is not offered; only a turn that
+changes during the game is. `ProactivePolicy::allowing()` is used only when
 `cfg(scout_proactive_coach)` is set; a stable build passes
 `ProactivePolicy::production()` and has no proactive coach panel to make a
 card from.
 
 **Window.** A GPUI `WindowKind::PopUp` that takes no focus, with no title bar,
-a transparent background, and fixed bounds at the middle of the primary
-display's left edge, clear of League's default HUD (`overlay_model`,
-`scout_overlay::geometry`). It opens without gpui-kit's `Root`, which paints an
+a transparent background, and fixed bounds: an ordinary 360×280 card is
+placed at the middle of the primary display's left edge, clear of League's
+default HUD (`overlay_model`, `scout_overlay::geometry`), and the window
+extends to 660 high below it so the longest card the contract allows still
+fits when expanded. A card is only as tall as its content; the rest of the
+window is transparent and click-through. It opens without gpui-kit's `Root`, which paints an
 opaque background. Interaction is hotkey-only: **F7** dismisses the card,
 **Shift+F7** shows the next one, **Alt+F7** shows or hides the rest of its
 lines. The keys are registered only while the overlay is on screen, so the game
