@@ -427,6 +427,15 @@
       "purpose": "Acquire Media-owned requests using current runtime, storage, and per-item authority.",
       "type": "boolean",
       "default": true,
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Legacy library handoffs activate Media before all captured profile versions can be replaced by the selected guides.",
+          "issue": "AI-605",
+          "enableWhen": "Every legacy library handoff has settled and all imported profile bindings use the verified selected guide versions.",
+          "reviewBy": "2026-12-07"
+        }
+      ],
       "rollouts": [
         {
           "segmentKey": "media-beta",
@@ -5149,6 +5158,14 @@
     {
       "key": "prod",
       "overrides": [
+        {
+          "key": "media-acquisition-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
         {
           "key": "the-storm-promotion-enabled",
           "type": "boolean",
