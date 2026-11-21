@@ -59,7 +59,7 @@ async function fixture() {
   );
   const service = new PrismaPlaybackHistory(
     db,
-    server,
+    { serverMachineId: server },
     () => new Date(),
     ready,
   );

@@ -65,6 +65,11 @@ idempotent interest actions. `POST /api/v1/library/:id/keeping-policy` changes
 owner library policy against the current media and target versions. Opening a
 notification link never changes these states.
 
+Each now-playing and history session carries `media`, the library title it
+belongs to, resolved when the session is read from the Plex item Media holds for
+its rating key. It is null when no such item exists or the reader could not open
+the title page, including while the reader's Plex access is stale.
+
 Calendar dates retain their source date-only precision, including TBA, rather
 than treating UTC midnight as an airing instant. Viewing history uses separate
 playback tables and a dedicated Plex parser; immutable file-serving evidence is
