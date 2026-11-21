@@ -1,24 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  createFlagConfigSource,
-  type FlagConfigSource,
-} from "@shepherdjerred/feature-flags/config-source.ts";
+import { describe, expect, it, vi } from "vitest";
+import { useMockedFlagSource } from "./flag-source.test-support.ts";
 
 vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
   createFlagConfigSource: vi.fn(),
 }));
 import { promotionConfig } from "./promotion.ts";
 
-const source = {
-  get: vi.fn<FlagConfigSource["get"]>(),
-  create: vi.mocked(createFlagConfigSource),
-};
-
-beforeEach(() => {
-  vi.resetAllMocks();
-  source.get.mockResolvedValue(undefined);
-  source.create.mockImplementation(() => ({ name: "flag", get: source.get }));
-});
+const source = useMockedFlagSource();
 
 describe("promotion configuration", () => {
   it("defaults publishing off with an empty target allowlist", async () => {

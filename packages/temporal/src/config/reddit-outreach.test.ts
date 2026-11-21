@@ -1,28 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  createFlagConfigSource,
-  type FlagConfigSource,
-} from "@shepherdjerred/feature-flags/config-source.ts";
+import { describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_REDDIT_OUTREACH_SETTINGS,
   redditOutreachConfig,
 } from "./reddit-outreach.ts";
 import { managedFlagInventory } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import { useMockedFlagSource } from "./flag-source.test-support.ts";
 
 vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
   createFlagConfigSource: vi.fn(),
 }));
 
-const source = {
-  get: vi.fn<FlagConfigSource["get"]>(),
-  create: vi.mocked(createFlagConfigSource),
-};
-
-beforeEach(() => {
-  vi.resetAllMocks();
-  source.get.mockResolvedValue(undefined);
-  source.create.mockImplementation(() => ({ name: "flag", get: source.get }));
-});
+const source = useMockedFlagSource();
 
 describe("Reddit outreach configuration", () => {
   it("defaults on with bounded discovery and ten replies per day", async () => {

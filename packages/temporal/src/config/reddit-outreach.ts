@@ -1,6 +1,6 @@
 import { defineConfig } from "@shepherdjerred/config";
-import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { z } from "zod/v4";
+import { promotionFlagSource } from "./promotion.ts";
 
 export const RedditOutreachSettingsSchema = z.strictObject({
   subreddits: z
@@ -42,7 +42,7 @@ export const DEFAULT_REDDIT_OUTREACH_SETTINGS: RedditOutreachSettings = {
 
 /** Re-evaluated for each sweep and immediately before submitting a reply. */
 export async function redditOutreachConfig() {
-  const availability = { value: true };
+  const flags = promotionFlagSource("the-storm-reddit-outreach-prod");
   const resolver = defineConfig({
     definition: {
       enabled: {
@@ -72,30 +72,16 @@ export async function redditOutreachConfig() {
         names: { flag: "the-storm-reddit-outreach-settings" },
       },
     } as const,
-    sources: {
-      flag: createFlagConfigSource({
-        targetingKey: "the-storm-reddit-outreach-prod",
-        attributes: { environment: "prod" },
-        kinds: { enabled: "boolean", settings: "string" },
-        requireFreshSnapshot: true,
-        onUnavailable: () => {
-          availability.value = false;
-        },
-      }),
-    },
-    hooks: {
-      onSourceError: () => {
-        availability.value = false;
-      },
-    },
+    sources: flags.sources,
+    hooks: flags.hooks,
   });
   const [enabled, settings] = await Promise.all([
     resolver.get("enabled"),
     resolver.get("settings"),
   ]);
   return {
-    enabled: availability.value && enabled.value,
-    available: availability.value,
+    enabled: flags.available && enabled.value,
+    available: flags.available,
     ...settings.value,
     provenance: { enabled: enabled.source, settings: settings.source },
   };

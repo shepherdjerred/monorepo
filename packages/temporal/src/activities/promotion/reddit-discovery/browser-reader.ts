@@ -115,8 +115,6 @@ export function validateRedditFeedPageUrl(
     );
   return url.href;
 }
-export const validateRedditListingUrl = validateRedditFeedPageUrl;
-
 export type RedditPageReader = {
   currentUrl: () => Promise<string>;
   snapshot: (scope: { selector: string; depth?: number }) => Promise<{
