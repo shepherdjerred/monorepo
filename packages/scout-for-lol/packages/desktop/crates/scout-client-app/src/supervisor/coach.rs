@@ -6,6 +6,12 @@
 //! what the League client showed on each tick, and relays what it returns.
 //! Neither turn carries live state; the planner holds the per-select and
 //! per-game counts the server also enforces (4 and 1).
+//!
+//! A turn the player's own question is in the way of is not asked and not
+//! counted: the planner only hears of a turn at the moment it can be sent. The
+//! select that held still stays waiting, so the newest screen goes once the
+//! player's turn ends; a game's plan goes then too, if the game is still
+//! inside its start window.
 
 use std::time::{Duration, Instant};
 
@@ -57,11 +63,13 @@ impl CoachDriver {
         }
     }
 
-    /// One look at the League client. Returns what to hand the chat relay, in
-    /// order.
+    /// One look at the League client. `busy` is whether a turn of the
+    /// player's (typed or spoken) is running, which Scout cannot start another
+    /// beside. Returns what to hand the chat relay, in order.
     pub(super) fn tick(
         &mut self,
         now: Instant,
+        busy: bool,
         phase: &GameflowPhase,
         select: Option<&ChampSelectSnapshot>,
         live: Option<&LiveSnapshot>,
@@ -85,10 +93,10 @@ impl CoachDriver {
             self.game_key = None;
         }
         if selecting {
-            out.extend(self.select_turn(now, select));
+            out.extend(self.select_turn(now, busy, select));
         }
         if *phase == GameflowPhase::InProgress {
-            out.extend(self.plan_turn(live));
+            out.extend(self.plan_turn(busy, live));
         }
         out
     }
@@ -96,6 +104,7 @@ impl CoachDriver {
     fn select_turn(
         &mut self,
         now: Instant,
+        busy: bool,
         select: Option<&ChampSelectSnapshot>,
     ) -> Option<CoachInput> {
         let watch = self.watch.get_or_insert_with(|| Watch {
@@ -115,7 +124,9 @@ impl CoachDriver {
             watch.offered = false;
             return None;
         }
-        if watch.offered || now.duration_since(watch.since) < self.debounce {
+        // Blocked, the screen stays unoffered: the planner has not counted it,
+        // and the latest one goes when the player's turn is over.
+        if watch.offered || busy || now.duration_since(watch.since) < self.debounce {
             return None;
         }
         watch.offered = true;
@@ -124,9 +135,14 @@ impl CoachDriver {
             .map(|turn| CoachInput::Turn(Box::new(turn)))
     }
 
-    fn plan_turn(&mut self, live: Option<&LiveSnapshot>) -> Option<CoachInput> {
+    fn plan_turn(&mut self, busy: bool, live: Option<&LiveSnapshot>) -> Option<CoachInput> {
         let key = self.game_key.get_or_insert_with(|| key("g")).clone();
         let snapshot = live.filter(|snapshot| snapshot.game.game_time_secs <= PLAN_WINDOW_SECS)?;
+        // Asked again on each look until it can be sent, while the game is
+        // still inside the window; past it, it is dropped uncounted.
+        if busy {
+            return None;
+        }
         let pregame = GameContext::pregame(snapshot).ok()?.pregame?;
         self.planner
             .in_progress(&key, &pregame)
@@ -187,16 +203,28 @@ mod tests {
         let mut driver = CoachDriver::new(DEBOUNCE);
         let phase = GameflowPhase::ChampSelect;
         let at = |secs| start + Duration::from_secs(secs);
-        assert_eq!(driver.tick(at(0), &phase, Some(&select(64, 0)), None), []);
+        assert_eq!(
+            driver.tick(at(0), false, &phase, Some(&select(64, 0)), None),
+            []
+        );
         // The player hovers: each change restarts the wait.
-        assert_eq!(driver.tick(at(2), &phase, Some(&select(103, 0)), None), []);
-        assert_eq!(driver.tick(at(4), &phase, Some(&select(103, 0)), None), []);
-        let asked = driver.tick(at(5), &phase, Some(&select(103, 0)), None);
+        assert_eq!(
+            driver.tick(at(2), false, &phase, Some(&select(103, 0)), None),
+            []
+        );
+        assert_eq!(
+            driver.tick(at(4), false, &phase, Some(&select(103, 0)), None),
+            []
+        );
+        let asked = driver.tick(at(5), false, &phase, Some(&select(103, 0)), None);
         assert_eq!(
             asked.first().and_then(initiation),
             Some(AppInitiation::AppChampSelect)
         );
-        assert_eq!(driver.tick(at(9), &phase, Some(&select(103, 0)), None), []);
+        assert_eq!(
+            driver.tick(at(9), false, &phase, Some(&select(103, 0)), None),
+            []
+        );
     }
 
     #[test]
@@ -210,7 +238,7 @@ mod tests {
             // One tick sees the change, the next is past the (zero) wait.
             for _ in 0..2 {
                 asked += driver
-                    .tick(now, &phase, Some(&select(pick, 64)), None)
+                    .tick(now, false, &phase, Some(&select(pick, 64)), None)
                     .iter()
                     .filter(|input| initiation(input).is_some())
                     .count();
@@ -225,8 +253,17 @@ mod tests {
         let now = Instant::now();
         let mut driver = CoachDriver::new(DEBOUNCE);
         // Loading: no frame yet, so nothing to plan from.
-        assert_eq!(driver.tick(now, &GameflowPhase::InProgress, None, None), []);
-        let planned = driver.tick(now, &GameflowPhase::InProgress, None, Some(&game(5)?));
+        assert_eq!(
+            driver.tick(now, false, &GameflowPhase::InProgress, None, None),
+            []
+        );
+        let planned = driver.tick(
+            now,
+            false,
+            &GameflowPhase::InProgress,
+            None,
+            Some(&game(5)?),
+        );
         assert_eq!(
             planned.first().and_then(initiation),
             Some(AppInitiation::AppPregame)
@@ -235,7 +272,13 @@ mod tests {
             assert!(turn.context.live.is_none(), "never live state");
         }
         assert_eq!(
-            driver.tick(now, &GameflowPhase::InProgress, None, Some(&game(9)?)),
+            driver.tick(
+                now,
+                false,
+                &GameflowPhase::InProgress,
+                None,
+                Some(&game(9)?)
+            ),
             []
         );
 
@@ -244,6 +287,7 @@ mod tests {
         assert_eq!(
             late.tick(
                 now,
+                false,
                 &GameflowPhase::InProgress,
                 None,
                 Some(&game(PLAN_WINDOW_SECS + 1)?)
@@ -260,17 +304,35 @@ mod tests {
         let mut driver = CoachDriver::new(DEBOUNCE);
         assert_eq!(
             driver
-                .tick(now, &GameflowPhase::InProgress, None, Some(&game(5)?))
+                .tick(
+                    now,
+                    false,
+                    &GameflowPhase::InProgress,
+                    None,
+                    Some(&game(5)?)
+                )
                 .len(),
             1
         );
-        assert_eq!(driver.tick(now, &GameflowPhase::Reconnect, None, None), []);
         assert_eq!(
-            driver.tick(now, &GameflowPhase::EndOfGame, None, None),
+            driver.tick(now, false, &GameflowPhase::Reconnect, None, None),
+            []
+        );
+        assert_eq!(
+            driver.tick(now, false, &GameflowPhase::EndOfGame, None, None),
             [CoachInput::Clear]
         );
-        assert_eq!(driver.tick(now, &GameflowPhase::None, None, None), []);
-        let again = driver.tick(now, &GameflowPhase::InProgress, None, Some(&game(5)?));
+        assert_eq!(
+            driver.tick(now, false, &GameflowPhase::None, None, None),
+            []
+        );
+        let again = driver.tick(
+            now,
+            false,
+            &GameflowPhase::InProgress,
+            None,
+            Some(&game(5)?),
+        );
         assert_eq!(
             again.first().and_then(initiation),
             Some(AppInitiation::AppPregame)
@@ -286,9 +348,120 @@ mod tests {
         broken.local_cell_id = -1;
         for _ in 0..3 {
             assert_eq!(
-                driver.tick(now, &GameflowPhase::ChampSelect, Some(&broken), None),
+                driver.tick(now, false, &GameflowPhase::ChampSelect, Some(&broken), None),
                 []
             );
         }
+    }
+    fn picked(inputs: &[CoachInput]) -> Vec<u32> {
+        inputs
+            .iter()
+            .filter_map(|input| match input {
+                CoachInput::Turn(turn) => turn.context.champ_select.as_ref(),
+                CoachInput::Clear => None,
+            })
+            .flat_map(|screen| screen.my_team.iter().map(|slot| slot.champion_id))
+            .collect()
+    }
+
+    #[test]
+    fn a_select_turn_blocked_by_the_players_turn_costs_no_budget_and_goes_after_it_coalesced() {
+        let start = Instant::now();
+        let mut driver = CoachDriver::new(Duration::ZERO);
+        let phase = GameflowPhase::ChampSelect;
+        let at = |secs| start + Duration::from_secs(secs);
+        // The first pick is asked for.
+        driver.tick(at(0), false, &phase, Some(&select(1, 64)), None);
+        let first = driver.tick(at(1), false, &phase, Some(&select(1, 64)), None);
+        assert_eq!(picked(&first), [1]);
+        // Five more picks pass while the player's own turn runs: none is
+        // sent, none is counted.
+        for pick in 2..=6_i64 {
+            for step in 0..2 {
+                let now = at(10 + u64::try_from(pick).unwrap_or(0) * 2 + step);
+                assert_eq!(
+                    driver.tick(now, true, &phase, Some(&select(pick, 64)), None),
+                    []
+                );
+            }
+        }
+        // The player's turn ends: only the newest screen is sent, once.
+        let after = driver.tick(at(40), false, &phase, Some(&select(6, 64)), None);
+        assert_eq!(picked(&after), [6]);
+        assert_eq!(
+            driver.tick(at(41), false, &phase, Some(&select(6, 64)), None),
+            []
+        );
+        // The select still has the rest of its four: the deferred ones were
+        // never counted.
+        let mut later = 0;
+        for pick in 7..=12_i64 {
+            let now = at(50 + u64::try_from(pick).unwrap_or(0) * 2);
+            for _ in 0..2 {
+                later += driver
+                    .tick(now, false, &phase, Some(&select(pick, 64)), None)
+                    .len();
+            }
+        }
+        assert_eq!(later, 2, "four sent in all: one, the deferred, and two");
+    }
+
+    #[test]
+    fn a_screen_that_changes_back_while_blocked_is_not_asked_again() {
+        let start = Instant::now();
+        let mut driver = CoachDriver::new(Duration::ZERO);
+        let phase = GameflowPhase::ChampSelect;
+        let at = |secs| start + Duration::from_secs(secs);
+        driver.tick(at(0), false, &phase, Some(&select(1, 64)), None);
+        assert_eq!(
+            picked(&driver.tick(at(1), false, &phase, Some(&select(1, 64)), None)),
+            [1]
+        );
+        driver.tick(at(2), true, &phase, Some(&select(2, 64)), None);
+        driver.tick(at(3), true, &phase, Some(&select(1, 64)), None);
+        driver.tick(at(4), true, &phase, Some(&select(1, 64)), None);
+        assert_eq!(
+            driver.tick(at(5), false, &phase, Some(&select(1, 64)), None),
+            []
+        );
+    }
+
+    #[test]
+    fn the_plan_blocked_by_the_players_turn_goes_after_it_within_the_window()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let now = Instant::now();
+        let mut driver = CoachDriver::new(DEBOUNCE);
+        let phase = GameflowPhase::InProgress;
+        assert_eq!(driver.tick(now, true, &phase, None, Some(&game(5)?)), []);
+        assert_eq!(driver.tick(now, true, &phase, None, Some(&game(30)?)), []);
+        let planned = driver.tick(now, false, &phase, None, Some(&game(40)?));
+        assert_eq!(
+            planned.first().and_then(initiation),
+            Some(AppInitiation::AppPregame)
+        );
+        assert_eq!(driver.tick(now, false, &phase, None, Some(&game(45)?)), []);
+        Ok(())
+    }
+
+    #[test]
+    fn the_plan_blocked_past_the_window_is_dropped_without_counting()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let now = Instant::now();
+        let mut driver = CoachDriver::new(DEBOUNCE);
+        let phase = GameflowPhase::InProgress;
+        assert_eq!(driver.tick(now, true, &phase, None, Some(&game(5)?)), []);
+        let late = game(PLAN_WINDOW_SECS + 1)?;
+        assert_eq!(driver.tick(now, false, &phase, None, Some(&late)), []);
+        // The count is untouched: a new game under the same driver plans.
+        assert_eq!(
+            driver.tick(now, false, &GameflowPhase::None, None, None),
+            [CoachInput::Clear]
+        );
+        let next = driver.tick(now, false, &phase, None, Some(&game(5)?));
+        assert_eq!(
+            next.first().and_then(initiation),
+            Some(AppInitiation::AppPregame)
+        );
+        Ok(())
     }
 }

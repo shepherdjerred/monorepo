@@ -1179,6 +1179,52 @@ async fn a_select_that_holds_still_is_advised_once_and_the_panel_clears_after_th
 }
 
 #[tokio::test]
+async fn a_select_turn_waits_for_the_players_turn_and_goes_when_it_ends() -> TestResult {
+    let DetachedRelay {
+        relay,
+        mut coach,
+        parts,
+        ..
+    } = ChatRelay::detached_coach();
+    let running = scout_desktop_ipc::ChatParts {
+        turn: Some(scout_desktop_ipc::ChatTurn::default()),
+        ..scout_desktop_ipc::ChatParts::default()
+    };
+    parts.send_replace(running);
+    let harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::default(),
+        |supervisor| {
+            supervisor
+                .with_chat(relay)
+                .with_coach_debounce(Duration::from_millis(20))
+        },
+    )?;
+    harness
+        .runtime_state
+        .send_modify(|state| state.champ_select = Some(champ_select_snapshot()));
+    harness.phase.send_replace(GameflowPhase::ChampSelect);
+    // Several refresh ticks pass while the player's own turn runs.
+    tokio::time::sleep(Duration::from_millis(2_500)).await;
+    assert!(coach.try_recv().is_err(), "nothing is started beside it");
+    parts.send_replace(scout_desktop_ipc::ChatParts::default());
+    let CoachInput::Turn(turn) = next_coach(&mut coach).await? else {
+        return Err("the deferred input is a turn".into());
+    };
+    assert_eq!(
+        turn.initiation,
+        scout_client_core::desktop_api::AppInitiation::AppChampSelect
+    );
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[tokio::test]
 async fn a_coach_that_is_off_is_not_asked() -> TestResult {
     let DetachedRelay {
         relay,

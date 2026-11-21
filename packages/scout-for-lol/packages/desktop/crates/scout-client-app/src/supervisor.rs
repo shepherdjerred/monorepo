@@ -26,7 +26,8 @@ use scout_client_runtime::runtime::{
 use scout_desktop_ipc::{
     ChatCommand, ChatParts, CounterReading, DiagnosticsSnapshot, LiveGameSnapshot,
     PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot,
-    VoiceSnapshot, VoiceTurnView, WindowMessage, check_protocol, decode_line, encode_line,
+    VoiceSnapshot, VoiceState, VoiceTurnView, WindowMessage, check_protocol, decode_line,
+    encode_line,
 };
 use scout_explore_client::relay::ChatRelay;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
@@ -433,10 +434,18 @@ impl<C: Collector> Supervisor<C> {
             return;
         };
         let phase = phase.borrow().clone();
+        // Scout cannot start a turn beside one the player has running, typed
+        // or spoken; the coach waits and asks once it is over.
+        let busy = chat.subscribe().borrow().turn.is_some()
+            || self
+                .voice
+                .as_ref()
+                .is_some_and(|voice| voice.snapshot().borrow().state == VoiceState::Thinking);
         let inputs = {
             let runtime = state.borrow();
             coach.tick(
                 Instant::now(),
+                busy,
                 &phase,
                 runtime.champ_select.as_ref(),
                 runtime.live_game.as_ref(),
