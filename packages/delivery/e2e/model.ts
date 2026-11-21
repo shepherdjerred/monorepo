@@ -3,6 +3,7 @@ import type { Delivery } from "#infrastructure/delivery.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { publishCiRunner } from "#testing/model-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
+import type { EvidenceInput } from "#shared/contract.ts";
 import {
   CHANNEL_PROD,
   OPERATOR_PROD,
@@ -167,13 +168,50 @@ async function generation(database: Database, environmentId: string) {
   return env.generation;
 }
 
+/**
+ * What each step records, as the adapters write it: prose, or a JSON object
+ * that is the step's machine receipt. The render step records nothing.
+ */
+const STEP_EVIDENCE: Record<string, EvidenceInput[]> = {
+  "step-render": [],
+  "step-sync": [
+    { kind: "preflight", summary: "Application is owned by this deployment" },
+    {
+      kind: "reconciliation",
+      summary: JSON.stringify({
+        adapter: "kubernetes",
+        step: "sync",
+        application: "arcade",
+        revision: "a".repeat(40),
+        resources: { synced: 12, pruned: 0 },
+        operation: {
+          phase: "Succeeded",
+          startedAt: "2026-01-01T00:00:00.000Z",
+          syncResult: { source: { chart: "arcade", targetRevision: "1.3.0" } },
+        },
+      }),
+    },
+  ],
+  "step-readback": [
+    {
+      kind: "runtime",
+      summary: JSON.stringify({
+        adapter: "kubernetes",
+        step: "readback",
+        health: "Healthy",
+        images: [`docker.io/shepherdjerred/arcade@sha256:${"3".repeat(64)}`],
+      }),
+    },
+  ],
+};
+
 /** Claim, record each step's stage and accept: what the executor reports. */
 async function execute(
   delivery: Delivery,
   deployment: { id: string; versionSetRevisionId: string },
 ) {
   await delivery.claim(deployment.id, testExecutor);
-  for (const step of ["step-render", "step-sync", "step-readback"])
+  for (const [step, evidence] of Object.entries(STEP_EVIDENCE))
     await delivery.stage(
       deployment.id,
       {
@@ -181,7 +219,7 @@ async function execute(
         status: "succeeded",
         operationId: `${deployment.id}/${step}`,
         message: `${step.slice(5)} completed`,
-        evidence: [],
+        evidence,
       },
       testExecutor,
     );
@@ -375,7 +413,18 @@ async function quarantine(
       status: "running",
       operationId: `${deployment.id}/step-sync`,
       message: "ArgoCD sync operation 7 running",
-      evidence: [],
+      evidence: [
+        {
+          kind: "reconciliation",
+          summary: JSON.stringify({
+            adapter: "kubernetes",
+            step: "sync",
+            application: "arcade-beta",
+            operation: 7,
+            phase: "Running",
+          }),
+        },
+      ],
     },
     testExecutor,
   );

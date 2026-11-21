@@ -16,6 +16,7 @@ import {
 } from "#infrastructure/delivery-data.ts";
 import { findIntent } from "#infrastructure/recovery-intents.ts";
 import { releaseTerminalOwnership } from "#infrastructure/terminal-ownership.ts";
+import { recoveryEvidencePrefix } from "#shared/evidence/scope.ts";
 
 /**
  * Settles a pending `argo` recovery intent with independent Application
@@ -72,7 +73,7 @@ export async function settleArgoIntent(
       tx,
       deploymentId,
       [...settledEvidence, { kind: "preflight", summary: reason }],
-      `recovery/${intent.id}`,
+      recoveryEvidencePrefix(intent.id),
     );
     // Settled, the deployment is no longer recovery-required: like finish,
     // it gives up every lock it holds, the platform lock included.

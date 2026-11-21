@@ -5,6 +5,11 @@ const SHORT_LENGTH = 12;
 /** An id of no known shape is cut only past this length. */
 const LONG_LENGTH = 20;
 
+/** Whether an id is a UUID or a digest: a shape nobody reads past its start. */
+export function isOpaqueIdentifier(value: string) {
+  return UUID.test(value) || DIGEST.test(value);
+}
+
 /** The short form of a long id: a UUID's first group, a digest's first 12 hex digits, or a prefix. */
 export function shortIdentifier(value: string) {
   if (UUID.test(value)) return value.slice(0, 8);

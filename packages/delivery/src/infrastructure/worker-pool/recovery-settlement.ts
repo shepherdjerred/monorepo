@@ -16,6 +16,7 @@ import {
 } from "#infrastructure/recovery-intents.ts";
 import { releaseTerminalOwnership } from "#infrastructure/terminal-ownership.ts";
 import { recoveryOwnership, workerIntentView } from "./recovery.ts";
+import { workerRecoveryEvidencePrefix } from "#shared/evidence/scope.ts";
 
 function routeKey(route: {
   namespace: string;
@@ -103,7 +104,7 @@ export async function completeWorkerRecovery(
       tx,
       intent.deploymentId,
       input.evidence,
-      `worker-recovery/${intentId}`,
+      workerRecoveryEvidencePrefix(intentId),
     );
     await tx.deployment.update({
       where: { id: intent.deploymentId },

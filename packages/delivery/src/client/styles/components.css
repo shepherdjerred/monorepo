@@ -345,41 +345,6 @@ button[aria-disabled="true"] {
   position: relative;
   white-space: nowrap;
 }
-.stages {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-left: 2px solid var(--border);
-}
-.stages li {
-  padding: var(--row-pad-y) var(--space-3);
-  position: relative;
-}
-.stages li::before {
-  content: "";
-  position: absolute;
-  left: -6px;
-  top: 12px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--neutral);
-}
-.stages li.stage-succeeded::before {
-  background: var(--succeeded);
-}
-.stages li.stage-failed::before {
-  background: var(--failed);
-}
-.stages li.stage-running::before {
-  background: var(--running);
-}
-.stages li > div {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-}
 .component-list {
   display: grid;
   gap: var(--space-2);

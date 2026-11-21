@@ -274,6 +274,14 @@ test("host-only baseline review distinguishes routed worker identity from full-a
 }) => {
   await openDeployment(page, "temporal/prod", { kind: "adopt-worker" });
   const detail = page.getByRole("main");
+  // A queued deployment folds its frozen inputs; the pool opens on request.
+  await expect(
+    detail.getByRole("region", { name: "Frozen worker pool" }),
+  ).toBeHidden();
+  await detail
+    .getByRole("region", { name: "Frozen inputs" })
+    .getByText("Worker pool", { exact: true })
+    .click();
   await expect(
     detail.getByRole("region", { name: "Frozen worker pool" }),
   ).toContainText("Host-only baseline adoption");

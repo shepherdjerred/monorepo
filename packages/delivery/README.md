@@ -200,12 +200,54 @@ Pages share these components from `src/client/components/`:
 | `Disclosure` | A native `<details>` with an optional count                             |
 | `Identifier` | A UUID or digest in a short form, its full value in `title` and text    |
 | `Revision`   | A set revision as its r-number (`r274`); `revisionLabel` gives the text |
+| `Receipt`    | An evidence summary or step message: prose, or a JSON receipt as facts  |
 
 `GET /api/v1/deployments` returns each deployment with `versionSetRevision`,
 the number of the set revision it deploys, read for the whole page in one
 query. The environment page reads the same field on its recent deployments
 through `EnvironmentPageDetailSchema`. `EnvironmentDetailSchema`, which the
 toolkit parses, is unchanged.
+
+The deployment page reads top-down as what happened at each step. An evidence
+`summary` is either prose or a JSON object that is the producer's machine
+receipt; the evidence contract is unchanged, and the browser reads the string
+(`parseEvidenceSummary` in `src/client/evidence.ts`). A JSON object renders
+through `Receipt`: its `adapter` as the item's label, scalar fields as facts
+under humanised keys, a UUID, digest or long token through `Identifier`, a flat
+object or short list inline, and any deeper value as formatted JSON in a closed
+disclosure. Anything else is text, shown as written. A step message that is
+JSON is read the same way.
+
+An evidence id says what recorded it, and `src/shared/evidence/scope.ts` is the
+one grammar the server writes and reads and the browser groups by:
+
+| Id after `<deployment>/`                         | Recorded by                          |
+| ------------------------------------------------ | ------------------------------------ |
+| `stage/<key>/<entry>`                            | The step with that stage key         |
+| `finish/<entry>`                                 | The executor, with the result        |
+| `monitor/<sequence>/<entry>`, `monitor/alarms/…` | The monitor's observation and alarms |
+| `drift/<entry>`                                  | A drift observation                  |
+| `recovery/<intent>/<entry>`                      | An Argo lock-recovery settlement     |
+| `worker-recovery/…`, `content-recovery/…`        | A worker or content recovery         |
+
+The entry is an offset or a fingerprint and never contains a `/`, so a stage
+key is everything before the last one and a sub-stage keyed `<key>/<name>`
+keeps its own evidence. The "Steps" region lists each step with its status,
+duration, operation id and the evidence that step recorded, folded while the
+step succeeded and open while it failed or is running. The "Evidence" region
+holds what no listed step recorded, under "Reported with the result",
+"Monitor", "Drift", "Recovery", "Steps not listed" and "Other evidence"; an id
+outside the grammar is still evidence and is shown in the last group. "Frozen
+inputs" folds each part away and opens the frozen platform, control-plane and
+worker-pool panels while the deployment awaits approval.
+
+The activity page shows what the common actions recorded: a stage write's
+stage and status, a request's environment, set revision and override reasons,
+a decision's override, a publication's service and source, and a result.
+Consecutive stage writes of one deployment by one actor fold into one entry
+that lists each stage. Folding is presentational and per fetched page: the
+route still pages by audit row, so a run that crosses a page boundary reads as
+one entry on each page.
 
 ## Public contracts
 

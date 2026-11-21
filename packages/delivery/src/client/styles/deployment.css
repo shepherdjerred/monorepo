@@ -1,0 +1,135 @@
+/*
+ * The deployment page's steps and evidence, and the activity trail's stage
+ * runs. Long ids, digests and JSON wrap inside their own box, so neither page
+ * grows wider than the device.
+ */
+
+/* Steps take the room; the evidence no step recorded sits beside them and drops below when narrow. */
+.deployment-record {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--page-gap);
+  align-items: flex-start;
+}
+.deployment-steps {
+  flex: 2 1 32rem;
+}
+.deployment-evidence {
+  flex: 1 1 20rem;
+}
+
+/* The timeline: one marker per step, colored by what the step became. */
+.step-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-inline-start: 2px solid var(--border);
+}
+.step-timeline > .step {
+  position: relative;
+  padding: var(--row-pad-y) 0 var(--row-pad-y) var(--space-3);
+  line-height: var(--leading-snug);
+}
+.step-timeline > .step::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -6px;
+  top: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--neutral);
+}
+.step-timeline > .step-succeeded::before {
+  background: var(--succeeded);
+}
+.step-timeline > .step-failed::before {
+  background: var(--failed);
+}
+.step-timeline > .step-running::before {
+  background: var(--running);
+}
+.step-head,
+.evidence-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-0) var(--space-2);
+  align-items: center;
+}
+.step-key {
+  overflow-wrap: anywhere;
+}
+.step-meta,
+.evidence-meta {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+.evidence-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+}
+.step-message,
+.receipt-text {
+  margin: var(--space-0) 0 0;
+  overflow-wrap: anywhere;
+}
+.step-record {
+  margin-bottom: var(--space-2);
+}
+/* A step's last piece of evidence closes with the step, not with a rule. */
+.step .evidence > li:last-child {
+  border-bottom: 0;
+}
+
+/* A receipt's adapter names it; its fields follow as facts. */
+.evidence-adapter {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+  overflow-wrap: anywhere;
+}
+.receipt .facts {
+  margin: var(--space-1) 0 0;
+}
+/* A sentence or a link among the facts takes a row of its own. */
+.receipt-wide .facts {
+  grid-template-columns: minmax(0, 1fr);
+}
+.receipt-nested {
+  margin: 0;
+}
+/* Formatted JSON wraps where it must, so it never scrolls sideways. */
+.receipt-json {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: visible;
+}
+.receipt-nested:last-child > .receipt-json {
+  margin-bottom: 0;
+}
+
+/* Activity: the entity and what the action recorded share one cell and wrap. */
+.activity-subject {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-0) var(--space-3);
+  align-items: baseline;
+  min-width: 0;
+}
+/* A deployment's stage run reads as one wrapping line of stage and status. */
+.activity .activity-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.activity .activity-stages > li {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: baseline;
+  padding: 0;
+  border: 0;
+}

@@ -10,6 +10,7 @@ import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { evidence } from "#infrastructure/delivery-data.ts";
 import { lock, required, wire } from "#infrastructure/delivery-records.ts";
+import { DRIFT_EVIDENCE_PREFIX } from "#shared/evidence/scope.ts";
 
 /** Accepted deployments whose recipe asks ArgoCD to self-heal the accepted source (T4). */
 export async function selfHealing(this: Delivery) {
@@ -80,7 +81,7 @@ export async function recordDrift(
           summary: JSON.stringify(input),
         },
       ],
-      { prefix: "drift", appendOnly: true },
+      { prefix: DRIFT_EVIDENCE_PREFIX, appendOnly: true },
     );
   });
   return input;

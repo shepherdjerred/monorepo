@@ -11,7 +11,8 @@ import {
   trmnlPluginsOf,
 } from "#shared/model/recipe-view.ts";
 import type { Transaction } from "./delivery-data.ts";
-import { recordedByStage, version } from "./delivery-data.ts";
+import { version } from "./delivery-data.ts";
+import { recordedByStage } from "#shared/evidence/scope.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 
 export function validateTrmnlSelection(

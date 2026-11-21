@@ -23,6 +23,7 @@ import {
   requireControlPlaneOwner,
   previousControlPlane,
 } from "./policy.ts";
+import { stageEvidenceScopeId } from "#shared/evidence/scope.ts";
 
 type Operation = {
   id: string;
@@ -177,7 +178,7 @@ export async function validateControlPlaneSuccess(
           )
         : null;
       return (
-        entry.id.startsWith(`${row.id}/stage/control-plane/`) &&
+        entry.id.startsWith(stageEvidenceScopeId(row.id, "control-plane")) &&
         parsed.success &&
         fingerprint(bound) === fingerprint(expected)
       );
