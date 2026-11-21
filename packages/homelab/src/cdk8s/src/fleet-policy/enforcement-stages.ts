@@ -58,7 +58,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   syncthing: "open",
   tasknotes: "open",
   temporal: "open",
-  tracker: "open",
+  tracker: "enforced",
   "trmnl-dashboard": "enforced",
   "turbo-cache": "open",
   woodpecker: "open",
