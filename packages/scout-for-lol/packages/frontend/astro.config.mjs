@@ -17,6 +17,14 @@ import { ogTemplate } from "./src/lib/og-template.tsx";
 
 const dirname = fileURLToPath(new URL(".", import.meta.url));
 
+// The champion pages render the committed snapshot. A build may be pointed at
+// another file (a test fixture, for rendering proof) without touching it.
+const championMetaSnapshotFile =
+  env.CHAMPION_META_SNAPSHOT_FILE !== undefined &&
+  env.CHAMPION_META_SNAPSHOT_FILE !== ""
+    ? env.CHAMPION_META_SNAPSHOT_FILE
+    : resolve(dirname, "src/data/generated/champion-meta.snapshot.json");
+
 const beaufortBold = readFileSync(
   fileURLToPath(satoriFontUrl("BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf")),
 );
@@ -116,6 +124,7 @@ export default defineConfig({
     },
     resolve: {
       alias: {
+        "#champion-meta-snapshot": championMetaSnapshotFile,
         // Replace resvg with a stub when importing in browser
         "@resvg/resvg-js": resolve(dirname, "src/resvg-stub.ts"),
         // Replace satori with a stub when importing in browser

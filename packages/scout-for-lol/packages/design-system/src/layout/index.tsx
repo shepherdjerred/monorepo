@@ -161,12 +161,34 @@ export function EmptyState({
   );
 }
 
+/** A marketing-site page that is linked only while it has content to show. */
+export type MarketingExtraNavLink = {
+  label: string;
+  href: string;
+  match: "exact" | "prefix";
+};
+
 function MarketingNavLinks(props: {
   currentPath?: string | undefined;
   origins?: ScoutSurfaceOrigins | undefined;
+  extraLinks?: readonly MarketingExtraNavLink[] | undefined;
 }) {
   return (
     <>
+      {props.extraLinks?.map((link) => (
+        <a
+          key={link.href}
+          href={surfaceHref(props.origins?.marketing, link.href)}
+          className="scout-navbar__link"
+          aria-current={
+            isNavLinkActive(props.currentPath, link.href, link.match)
+              ? "page"
+              : undefined
+          }
+        >
+          {link.label}
+        </a>
+      ))}
       {MARKETING_NAV_LINKS.map((link) => (
         <a
           key={link.href}
@@ -250,6 +272,7 @@ export function MarketingHeader(props: {
   getStartedTrackingEvent?: string | undefined;
   getStartedLocation?: string | undefined;
   origins?: ScoutSurfaceOrigins | undefined;
+  extraLinks?: readonly MarketingExtraNavLink[] | undefined;
 }) {
   const Landmark = props.landmark ?? "header";
   return (
@@ -265,6 +288,7 @@ export function MarketingHeader(props: {
           <MarketingNavLinks
             currentPath={props.currentPath}
             origins={props.origins}
+            extraLinks={props.extraLinks}
           />
         </nav>
         <div className="scout-navbar__utility">
@@ -280,6 +304,7 @@ export function MarketingHeader(props: {
               <MarketingNavLinks
                 currentPath={props.currentPath}
                 origins={props.origins}
+                extraLinks={props.extraLinks}
               />
             </nav>
           </MobileNavigation>

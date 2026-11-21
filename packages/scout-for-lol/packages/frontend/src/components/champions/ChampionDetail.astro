@@ -1,0 +1,261 @@
+---
+import {
+  championRoles,
+  evidenceLine,
+  percent,
+  roleLabel,
+  roleSlug,
+  topBuilds,
+  type ChampionEntry,
+  type ChampionSlice,
+} from "#src/lib/champion-meta/snapshot.ts";
+import {
+  itemView,
+  runeName,
+  runeTreeName,
+  spellName,
+} from "#src/components/champions/catalog.ts";
+
+interface Props {
+  champion: ChampionEntry;
+  slice: ChampionSlice;
+}
+
+const { champion, slice } = Astro.props;
+const { context } = slice;
+const roles = championRoles(champion);
+const builds = topBuilds(slice);
+const topRows = <T,>(rows: readonly T[]): T[] => rows.slice(0, 3);
+---
+
+<div class="mx-auto max-w-6xl px-6 py-12 sm:py-16 lg:px-8">
+  <nav aria-label="Breadcrumb" class="text-sm text-scout-subtle">
+    <a class="hover:underline" href="/champions/">
+      Champions
+    </a>
+    <span aria-hidden="true"> / </span>
+    <a class="hover:underline" href={`/champions/${champion.slug}/`}>
+      {champion.name}
+    </a>
+  </nav>
+
+  <header class="mt-4">
+    <h1 class="text-4xl font-extrabold tracking-tight text-scout-ink">
+      {champion.name}
+      <span class="text-scout-subtle">· {roleLabel(context.role)}</span>
+    </h1>
+    <ul class="mt-4 flex flex-wrap gap-2" aria-label="Roles">
+      {roles.map((entry) => (
+        <li>
+          <a
+            href={`/champions/${champion.slug}/${roleSlug(entry.context.role)}/`}
+            aria-current={
+              entry.context.role === context.role ? "page" : undefined
+            }
+            class="inline-block rounded-full border border-scout-border px-3 py-1 text-sm text-scout-ink hover:underline aria-[current=page]:bg-scout-raised aria-[current=page]:font-semibold"
+          >
+            {roleLabel(entry.context.role)}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </header>
+
+  <section
+    aria-labelledby="overview"
+    class="mt-8 rounded-xl border-2 border-scout-border bg-scout-surface p-6"
+  >
+    <h2 id="overview" class="text-xl font-semibold text-scout-ink">
+      Overview
+    </h2>
+    <dl class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div>
+        <dt class="text-sm text-scout-subtle">Tier</dt>
+        <dd class="text-2xl font-bold text-scout-ink">{slice.tier}</dd>
+      </div>
+      <div>
+        <dt class="text-sm text-scout-subtle">Win rate</dt>
+        <dd class="text-2xl font-bold text-scout-ink">
+          {percent(slice.winRate.value)}
+        </dd>
+        <dd class="text-xs text-scout-subtle">
+          {percent(slice.winRate.lower)} to {percent(slice.winRate.upper)}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm text-scout-subtle">Pick rate</dt>
+        <dd class="text-2xl font-bold text-scout-ink">
+          {percent(slice.pickRate.value)}
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm text-scout-subtle">Ban rate</dt>
+        <dd class="text-2xl font-bold text-scout-ink">
+          {percent(slice.banRate.value)}
+        </dd>
+      </div>
+    </dl>
+    <p class="mt-4 text-sm text-scout-subtle" data-evidence>
+      {evidenceLine(slice.sample.games, context)}
+    </p>
+  </section>
+
+  <section aria-labelledby="builds" class="mt-8">
+    <h2 id="builds" class="text-xl font-semibold text-scout-ink">
+      Most played builds
+    </h2>
+    {builds.length === 0 ? (
+      <p class="mt-4 text-scout-subtle">
+        No build for this role has enough games yet.
+      </p>
+    ) : (
+      <ol class="mt-4 grid gap-4 md:grid-cols-3">
+        {builds.map((build, index) => (
+          <li class="rounded-xl border-2 border-scout-border bg-scout-surface p-5">
+            <h3 class="font-semibold text-scout-ink">Build {index + 1}</h3>
+            <ol class="mt-3 space-y-2">
+              {build.itemIds.map((itemId) => {
+                const item = itemView(itemId);
+                return (
+                  <li class="flex items-center gap-3 text-sm text-scout-ink">
+                    <img
+                      src={item.icon}
+                      alt=""
+                      width="32"
+                      height="32"
+                      loading="lazy"
+                      class="rounded"
+                    />
+                    {item.name}
+                  </li>
+                );
+              })}
+            </ol>
+            <p class="mt-3 text-sm font-semibold text-scout-ink">
+              {percent(build.winRate.value)} win rate
+            </p>
+            <p class="mt-1 text-xs text-scout-subtle" data-evidence>
+              {evidenceLine(build.games, context)}
+            </p>
+          </li>
+        ))}
+      </ol>
+    )}
+  </section>
+
+  <div class="mt-8 grid gap-6 md:grid-cols-2">
+    <section
+      aria-labelledby="runes"
+      class="rounded-xl border-2 border-scout-border bg-scout-surface p-5"
+    >
+      <h2 id="runes" class="text-xl font-semibold text-scout-ink">
+        Runes
+      </h2>
+      <ul class="mt-3 space-y-4">
+        {topRows(slice.runes).map((page) => (
+          <li class="text-sm text-scout-ink">
+            <p class="font-semibold">
+              {runeTreeName(page.primaryStyleId)}:{" "}
+              {page.primaryPerkIds.map((id) => runeName(id)).join(", ")}
+            </p>
+            <p>
+              {runeTreeName(page.secondaryStyleId)}:{" "}
+              {page.secondaryPerkIds.map((id) => runeName(id)).join(", ")}
+            </p>
+            <p>{percent(page.winRate.value)} win rate</p>
+            <p class="text-xs text-scout-subtle" data-evidence>
+              {evidenceLine(page.games, context)}
+            </p>
+          </li>
+        ))}
+      </ul>
+      {slice.runes.length === 0 && (
+        <p class="mt-3 text-scout-subtle">No rune page has enough games yet.</p>
+      )}
+    </section>
+
+    <section
+      aria-labelledby="spells"
+      class="rounded-xl border-2 border-scout-border bg-scout-surface p-5"
+    >
+      <h2 id="spells" class="text-xl font-semibold text-scout-ink">
+        Summoner spells
+      </h2>
+      <ul class="mt-3 space-y-4">
+        {topRows(slice.spells).map((pair) => (
+          <li class="text-sm text-scout-ink">
+            <p class="font-semibold">
+              {pair.spellIds.map((id) => spellName(id)).join(" + ")}
+            </p>
+            <p>{percent(pair.winRate.value)} win rate</p>
+            <p class="text-xs text-scout-subtle" data-evidence>
+              {evidenceLine(pair.games, context)}
+            </p>
+          </li>
+        ))}
+      </ul>
+      {slice.spells.length === 0 && (
+        <p class="mt-3 text-scout-subtle">
+          No spell pair has enough games yet.
+        </p>
+      )}
+    </section>
+
+    <section
+      aria-labelledby="skills"
+      class="rounded-xl border-2 border-scout-border bg-scout-surface p-5"
+    >
+      <h2 id="skills" class="text-xl font-semibold text-scout-ink">
+        Skill order
+      </h2>
+      <ul class="mt-3 space-y-4">
+        {topRows(slice.skillOrders).map((skills) => (
+          <li class="text-sm text-scout-ink">
+            <p class="font-semibold">{skills.order.split("").join(" > ")}</p>
+            <p>{percent(skills.winRate.value)} win rate</p>
+            <p class="text-xs text-scout-subtle" data-evidence>
+              {evidenceLine(skills.games, context)}
+            </p>
+          </li>
+        ))}
+      </ul>
+      {slice.skillOrders.length === 0 && (
+        <p class="mt-3 text-scout-subtle">
+          No skill order has enough games yet.
+        </p>
+      )}
+    </section>
+
+    <section
+      aria-labelledby="starting"
+      class="rounded-xl border-2 border-scout-border bg-scout-surface p-5"
+    >
+      <h2 id="starting" class="text-xl font-semibold text-scout-ink">
+        Starting items
+      </h2>
+      <ul class="mt-3 space-y-4">
+        {topRows(slice.startingItems).map((start) => (
+          <li class="text-sm text-scout-ink">
+            <p class="font-semibold">
+              {start.items
+                .map((entry) => {
+                  const { name } = itemView(entry.itemId);
+                  return entry.count > 1 ? `${name} x${entry.count}` : name;
+                })
+                .join(", ")}
+            </p>
+            <p>{percent(start.winRate.value)} win rate</p>
+            <p class="text-xs text-scout-subtle" data-evidence>
+              {evidenceLine(start.games, context)}
+            </p>
+          </li>
+        ))}
+      </ul>
+      {slice.startingItems.length === 0 && (
+        <p class="mt-3 text-scout-subtle">
+          No starting set has enough games yet.
+        </p>
+      )}
+    </section>
+  </div>
+</div>

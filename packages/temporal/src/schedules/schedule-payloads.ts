@@ -16,3 +16,9 @@ export const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
     threshold: 0.95,
   },
 };
+
+export const SCOUT_CHAMPION_META_REFRESH_CONFIG = {
+  // The production API is the canonical source: its answer is what the
+  // published champion pages claim to describe.
+  metaOrigin: "https://scout-for-lol.com",
+};

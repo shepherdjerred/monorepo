@@ -1,0 +1,500 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "buildId": "fixture",
+    "generatedAt": "2026-01-01T00:00:00.000Z",
+    "firstDay": "2026-01-01",
+    "lastDay": "2026-01-07",
+    "minSliceGames": 100
+  },
+  "caveats": ["Test fixture: not real data."],
+  "champions": [
+    {
+      "id": 103,
+      "name": "Ahri",
+      "slug": "ahri",
+      "slices": [
+        {
+          "context": {
+            "patch": "16.3",
+            "queueId": 420,
+            "queue": "ranked_solo",
+            "bracket": "all",
+            "role": "MIDDLE"
+          },
+          "sample": {
+            "games": 1204,
+            "matches": 9000
+          },
+          "winRate": {
+            "value": 0.521,
+            "lower": 0.501,
+            "upper": 0.541
+          },
+          "pickRate": {
+            "value": 0.13377777777777777,
+            "lower": 0.11377777777777777,
+            "upper": 0.15377777777777776
+          },
+          "banRate": {
+            "value": 0.04,
+            "lower": 0.02,
+            "upper": 0.06
+          },
+          "roleShare": {
+            "value": 1,
+            "lower": 0.98,
+            "upper": 1
+          },
+          "tier": "A",
+          "coreItems": [
+            {
+              "itemId": 3089,
+              "games": 300,
+              "wins": 160,
+              "winRate": {
+                "value": 0.5333333333333333,
+                "lower": 0.5133333333333333,
+                "upper": 0.5533333333333333
+              },
+              "share": {
+                "value": 0.24916943521594684,
+                "lower": 0.22916943521594685,
+                "upper": 0.26916943521594683
+              }
+            }
+          ],
+          "buildPaths": [
+            {
+              "itemIds": [6655, 3020, 3089, 3157],
+              "games": 220,
+              "wins": 118,
+              "winRate": {
+                "value": 0.5363636363636364,
+                "lower": 0.5163636363636364,
+                "upper": 0.5563636363636364
+              },
+              "share": {
+                "value": 0.18272425249169436,
+                "lower": 0.16272425249169437,
+                "upper": 0.20272425249169435
+              }
+            },
+            {
+              "itemIds": [3118, 3020, 3089, 3135],
+              "games": 170,
+              "wins": 93,
+              "winRate": {
+                "value": 0.5470588235294118,
+                "lower": 0.5270588235294118,
+                "upper": 0.5670588235294118
+              },
+              "share": {
+                "value": 0.14119601328903655,
+                "lower": 0.12119601328903655,
+                "upper": 0.16119601328903654
+              }
+            },
+            {
+              "itemIds": [6655, 3020, 3116, 3165],
+              "games": 120,
+              "wins": 68,
+              "winRate": {
+                "value": 0.5666666666666667,
+                "lower": 0.5466666666666666,
+                "upper": 0.5866666666666667
+              },
+              "share": {
+                "value": 0.09966777408637874,
+                "lower": 0.07966777408637873,
+                "upper": 0.11966777408637874
+              }
+            }
+          ],
+          "startingItems": [
+            {
+              "items": [
+                {
+                  "itemId": 1056,
+                  "count": 1
+                },
+                {
+                  "itemId": 2003,
+                  "count": 1
+                }
+              ],
+              "games": 200,
+              "wins": 104,
+              "winRate": {
+                "value": 0.52,
+                "lower": 0.5,
+                "upper": 0.54
+              },
+              "share": {
+                "value": 0.16611295681063123,
+                "lower": 0.14611295681063124,
+                "upper": 0.18611295681063122
+              }
+            }
+          ],
+          "runes": [
+            {
+              "primaryStyleId": 8100,
+              "primaryPerkIds": [8112, 8139, 8138, 8135],
+              "secondaryStyleId": 8200,
+              "secondaryPerkIds": [8226, 8236],
+              "games": 250,
+              "wins": 131,
+              "winRate": {
+                "value": 0.524,
+                "lower": 0.504,
+                "upper": 0.544
+              },
+              "share": {
+                "value": 0.20764119601328904,
+                "lower": 0.18764119601328905,
+                "upper": 0.22764119601328903
+              }
+            }
+          ],
+          "spells": [
+            {
+              "spellIds": [4, 14],
+              "games": 280,
+              "wins": 146,
+              "winRate": {
+                "value": 0.5214285714285715,
+                "lower": 0.5014285714285714,
+                "upper": 0.5414285714285715
+              },
+              "share": {
+                "value": 0.23255813953488372,
+                "lower": 0.21255813953488373,
+                "upper": 0.2525581395348837
+              }
+            }
+          ],
+          "skillOrders": [
+            {
+              "order": "QEW",
+              "games": 190,
+              "wins": 99,
+              "winRate": {
+                "value": 0.5210526315789473,
+                "lower": 0.5010526315789473,
+                "upper": 0.5410526315789473
+              },
+              "share": {
+                "value": 0.15780730897009967,
+                "lower": 0.13780730897009968,
+                "upper": 0.17780730897009966
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 145,
+      "name": "Kai'Sa",
+      "slug": "kaisa",
+      "slices": [
+        {
+          "context": {
+            "patch": "16.3",
+            "queueId": 420,
+            "queue": "ranked_solo",
+            "bracket": "all",
+            "role": "BOTTOM"
+          },
+          "sample": {
+            "games": 1500,
+            "matches": 9000
+          },
+          "winRate": {
+            "value": 0.521,
+            "lower": 0.501,
+            "upper": 0.541
+          },
+          "pickRate": {
+            "value": 0.16666666666666666,
+            "lower": 0.14666666666666667,
+            "upper": 0.18666666666666665
+          },
+          "banRate": {
+            "value": 0.04,
+            "lower": 0.02,
+            "upper": 0.06
+          },
+          "roleShare": {
+            "value": 1,
+            "lower": 0.98,
+            "upper": 1
+          },
+          "tier": "S",
+          "coreItems": [
+            {
+              "itemId": 3089,
+              "games": 300,
+              "wins": 160,
+              "winRate": {
+                "value": 0.5333333333333333,
+                "lower": 0.5133333333333333,
+                "upper": 0.5533333333333333
+              },
+              "share": {
+                "value": 0.2,
+                "lower": 0.18000000000000002,
+                "upper": 0.22
+              }
+            }
+          ],
+          "buildPaths": [
+            {
+              "itemIds": [6672, 3031, 3094, 3085],
+              "games": 220,
+              "wins": 118,
+              "winRate": {
+                "value": 0.5363636363636364,
+                "lower": 0.5163636363636364,
+                "upper": 0.5563636363636364
+              },
+              "share": {
+                "value": 0.14666666666666667,
+                "lower": 0.12666666666666668,
+                "upper": 0.16666666666666666
+              }
+            },
+            {
+              "itemIds": [3036, 3031, 3085, 3139],
+              "games": 170,
+              "wins": 93,
+              "winRate": {
+                "value": 0.5470588235294118,
+                "lower": 0.5270588235294118,
+                "upper": 0.5670588235294118
+              },
+              "share": {
+                "value": 0.11333333333333333,
+                "lower": 0.09333333333333332,
+                "upper": 0.13333333333333333
+              }
+            }
+          ],
+          "startingItems": [
+            {
+              "items": [
+                {
+                  "itemId": 1056,
+                  "count": 1
+                },
+                {
+                  "itemId": 2003,
+                  "count": 1
+                }
+              ],
+              "games": 200,
+              "wins": 104,
+              "winRate": {
+                "value": 0.52,
+                "lower": 0.5,
+                "upper": 0.54
+              },
+              "share": {
+                "value": 0.13333333333333333,
+                "lower": 0.11333333333333333,
+                "upper": 0.15333333333333332
+              }
+            }
+          ],
+          "runes": [
+            {
+              "primaryStyleId": 8100,
+              "primaryPerkIds": [8112, 8139, 8138, 8135],
+              "secondaryStyleId": 8200,
+              "secondaryPerkIds": [8226, 8236],
+              "games": 250,
+              "wins": 131,
+              "winRate": {
+                "value": 0.524,
+                "lower": 0.504,
+                "upper": 0.544
+              },
+              "share": {
+                "value": 0.16666666666666666,
+                "lower": 0.14666666666666667,
+                "upper": 0.18666666666666665
+              }
+            }
+          ],
+          "spells": [
+            {
+              "spellIds": [4, 14],
+              "games": 280,
+              "wins": 146,
+              "winRate": {
+                "value": 0.5214285714285715,
+                "lower": 0.5014285714285714,
+                "upper": 0.5414285714285715
+              },
+              "share": {
+                "value": 0.18666666666666668,
+                "lower": 0.16666666666666669,
+                "upper": 0.20666666666666667
+              }
+            }
+          ],
+          "skillOrders": [
+            {
+              "order": "QEW",
+              "games": 190,
+              "wins": 99,
+              "winRate": {
+                "value": 0.5210526315789473,
+                "lower": 0.5010526315789473,
+                "upper": 0.5410526315789473
+              },
+              "share": {
+                "value": 0.12666666666666668,
+                "lower": 0.10666666666666667,
+                "upper": 0.14666666666666667
+              }
+            }
+          ]
+        },
+        {
+          "context": {
+            "patch": "16.3",
+            "queueId": 420,
+            "queue": "ranked_solo",
+            "bracket": "all",
+            "role": "MIDDLE"
+          },
+          "sample": {
+            "games": 160,
+            "matches": 9000
+          },
+          "winRate": {
+            "value": 0.521,
+            "lower": 0.501,
+            "upper": 0.541
+          },
+          "pickRate": {
+            "value": 0.017777777777777778,
+            "lower": 0,
+            "upper": 0.03777777777777778
+          },
+          "banRate": {
+            "value": 0.04,
+            "lower": 0.02,
+            "upper": 0.06
+          },
+          "roleShare": {
+            "value": 1,
+            "lower": 0.98,
+            "upper": 1
+          },
+          "tier": "C",
+          "coreItems": [
+            {
+              "itemId": 3089,
+              "games": 300,
+              "wins": 160,
+              "winRate": {
+                "value": 0.5333333333333333,
+                "lower": 0.5133333333333333,
+                "upper": 0.5533333333333333
+              },
+              "share": {
+                "value": 1.875,
+                "lower": 1.855,
+                "upper": 1
+              }
+            }
+          ],
+          "buildPaths": [],
+          "startingItems": [
+            {
+              "items": [
+                {
+                  "itemId": 1056,
+                  "count": 1
+                },
+                {
+                  "itemId": 2003,
+                  "count": 1
+                }
+              ],
+              "games": 200,
+              "wins": 104,
+              "winRate": {
+                "value": 0.52,
+                "lower": 0.5,
+                "upper": 0.54
+              },
+              "share": {
+                "value": 1.25,
+                "lower": 1.23,
+                "upper": 1
+              }
+            }
+          ],
+          "runes": [
+            {
+              "primaryStyleId": 8100,
+              "primaryPerkIds": [8112, 8139, 8138, 8135],
+              "secondaryStyleId": 8200,
+              "secondaryPerkIds": [8226, 8236],
+              "games": 250,
+              "wins": 131,
+              "winRate": {
+                "value": 0.524,
+                "lower": 0.504,
+                "upper": 0.544
+              },
+              "share": {
+                "value": 1.5625,
+                "lower": 1.5425,
+                "upper": 1
+              }
+            }
+          ],
+          "spells": [
+            {
+              "spellIds": [4, 14],
+              "games": 280,
+              "wins": 146,
+              "winRate": {
+                "value": 0.5214285714285715,
+                "lower": 0.5014285714285714,
+                "upper": 0.5414285714285715
+              },
+              "share": {
+                "value": 1.75,
+                "lower": 1.73,
+                "upper": 1
+              }
+            }
+          ],
+          "skillOrders": [
+            {
+              "order": "QEW",
+              "games": 190,
+              "wins": 99,
+              "winRate": {
+                "value": 0.5210526315789473,
+                "lower": 0.5010526315789473,
+                "upper": 0.5410526315789473
+              },
+              "share": {
+                "value": 1.1875,
+                "lower": 1.1675,
+                "upper": 1
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

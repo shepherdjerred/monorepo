@@ -79,6 +79,11 @@ import { runHomelabCrdImportsRefresh as _runHomelabCrdImportsRefresh } from "./h
 import type { HomelabCrdImportsRefreshResult } from "#activities/homelab/homelab-crd-imports-refresh.ts";
 import { runPokeemeraldDataRefresh as _runPokeemeraldDataRefresh } from "./dpp-pokeemerald-data-refresh.ts";
 import type { PokeemeraldDataRefreshResult } from "#activities/dpp-pokeemerald-data-refresh.ts";
+import { runScoutChampionMetaRefresh as _runScoutChampionMetaRefresh } from "./scout/champion-meta-refresh.ts";
+import type {
+  ChampionMetaRefreshResult,
+  ChampionMetaWorkflowInput,
+} from "#activities/scout/champion-meta-refresh.ts";
 import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout/scout-showcase-refresh.ts";
 import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout/scout-queue-windows.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout/scout-queue-windows.ts";
@@ -282,6 +287,12 @@ export async function runScoutLanePriorsWeeklyRefresh(
   reportTaskQueue?: string,
 ): Promise<LanePriorRefreshResult> {
   return _runScoutLanePriorsWeeklyRefresh(input, reportTaskQueue);
+}
+
+export async function runScoutChampionMetaRefresh(
+  input: ChampionMetaWorkflowInput,
+): Promise<ChampionMetaRefreshResult> {
+  return _runScoutChampionMetaRefresh(input);
 }
 
 export async function runLlmCatalogRefresh(): Promise<LlmCatalogRefreshResult> {

@@ -1,8 +1,11 @@
 ---
 import { SharedNavbar } from "#src/components/shared-navbar.tsx";
+import { championMetaSnapshot } from "#src/components/champions/snapshot.ts";
+import { hasChampions } from "#src/lib/champion-meta/snapshot.ts";
 
 interface Props {
-  activePage?: "home" | "getting-started" | "docs" | "support" | "whatsnew";
+  activePage?:
+    "home" | "getting-started" | "docs" | "support" | "whatsnew" | "champions";
 }
 
 const { activePage } = Astro.props;
@@ -12,8 +15,15 @@ const paths = {
   docs: "/docs/",
   support: "/support",
   whatsnew: "/whatsnew",
+  champions: "/champions/",
 };
 const currentPath = activePage === undefined ? undefined : paths[activePage];
+
+// The Champions page is linked only once a snapshot holds champions, so the
+// navigation never points at an empty page.
+const extraLinks = hasChampions(championMetaSnapshot)
+  ? [{ label: "Champions", href: "/champions/", match: "prefix" as const }]
+  : [];
 ---
 
-<SharedNavbar currentPath={currentPath} client:load />
+<SharedNavbar currentPath={currentPath} extraLinks={extraLinks} client:load />

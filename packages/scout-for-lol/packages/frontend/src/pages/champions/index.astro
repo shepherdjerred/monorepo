@@ -1,0 +1,82 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/layout/Navbar.astro";
+import Footer from "../../components/layout/Footer.astro";
+import { championMetaSnapshot } from "#src/components/champions/snapshot.ts";
+import {
+  championRoles,
+  hasChampions,
+  roleLabel,
+} from "#src/lib/champion-meta/snapshot.ts";
+
+const snapshot = championMetaSnapshot;
+const populated = hasChampions(snapshot);
+---
+
+<Layout
+  title="Champions · Scout for LoL"
+  description="Champion win rates, builds, runes and skill orders from the games Scout has seen, with the sample size shown on every number."
+>
+  <div class="bg-scout-surface">
+    <Navbar activePage="champions" />
+    <main>
+      <div class="mx-auto max-w-6xl px-6 py-16 sm:py-20 lg:px-8">
+        <h1 class="text-4xl font-extrabold tracking-tight text-scout-ink">
+          Champions
+        </h1>
+        {populated ? (
+          <>
+            <p class="mt-4 text-scout-subtle">
+              Every figure states how many games it comes from, and the patch,
+              queue and rank bracket.
+            </p>
+            <ul class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {snapshot.champions.map((champion) => {
+                const [top] = championRoles(champion);
+                return (
+                  <li>
+                    <a
+                      href={`/champions/${champion.slug}/`}
+                      class="block rounded-xl border-2 border-scout-border bg-scout-surface p-4 hover:bg-scout-raised"
+                    >
+                      <span class="font-semibold text-scout-ink">
+                        {champion.name}
+                      </span>
+                      {top !== undefined && (
+                        <span class="block text-sm text-scout-subtle">
+                          {roleLabel(top.context.role)} · tier {top.tier}
+                        </span>
+                      )}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+            {snapshot.caveats.length > 0 && (
+              <ul class="mt-10 list-disc space-y-1 pl-5 text-sm text-scout-subtle">
+                {snapshot.caveats.map((caveat) => (
+                  <li>{caveat}</li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          <section
+            aria-labelledby="empty"
+            class="mt-8 rounded-xl border-2 border-scout-border bg-scout-surface p-8"
+          >
+            <h2 id="empty" class="text-2xl font-semibold text-scout-ink">
+              No champion data yet
+            </h2>
+            <p class="mt-3 text-scout-subtle">
+              Scout publishes champion pages once it has enough games for a
+              champion, role, patch and queue to report honestly. Nothing has
+              met that bar yet, so there is nothing to show here.
+            </p>
+          </section>
+        )}
+      </div>
+    </main>
+    <Footer />
+  </div>
+</Layout>

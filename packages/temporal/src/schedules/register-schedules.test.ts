@@ -5,6 +5,7 @@ import {
   type ScheduleUpdateOptions,
 } from "@temporalio/client";
 import { LanePriorWorkflowInputSchema } from "#activities/lane-prior-refresh.ts";
+import { ChampionMetaWorkflowInputSchema } from "#activities/scout/champion-meta-refresh.ts";
 import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent/agent-task-identifiers.ts";
 import {
   DELETED_SCHEDULE_IDS,
@@ -561,6 +562,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
   "runScoutLanePriorsWeeklyRefresh",
+  // Awaits a single refreshChampionMeta activity (clone + install + paced
+  // meta API reads + PR on drift). No workflow-level sleeps.
+  "runScoutChampionMetaRefresh",
   // Clones the monorepo, runs the deterministic catalog cross-check, opens a
   // PR on drift. No long sleeps of its own — the single refreshLlmCatalog
   // activity carries its own startToCloseTimeout + retry budget.
@@ -699,6 +703,15 @@ describe("durationToMs parser", () => {
 
   test("treats numbers as milliseconds", () => {
     expect(durationToMs(60_000)).toBe(60_000);
+  });
+});
+
+describe("Scout champion-meta schedule config", () => {
+  test("passes a valid meta API origin to its own workflow", () => {
+    const schedule = findScheduleById("scout-champion-meta-weekly-refresh");
+    expect(ChampionMetaWorkflowInputSchema.parse(schedule.args[0])).toEqual({
+      metaOrigin: "https://scout-for-lol.com",
+    });
   });
 });
 

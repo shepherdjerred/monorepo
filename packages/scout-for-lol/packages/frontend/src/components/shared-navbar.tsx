@@ -1,6 +1,7 @@
 import {
   MarketingHeader,
   useNavbarSessionState,
+  type MarketingExtraNavLink,
 } from "@scout-for-lol/design-system/layout";
 import {
   ScoutThemeProvider,
@@ -18,7 +19,10 @@ function captureThemeChange(payload: ScoutThemeChangedPayload): void {
   }
 }
 
-export function SharedNavbar(props: { currentPath?: string | undefined }) {
+export function SharedNavbar(props: {
+  currentPath?: string | undefined;
+  extraLinks?: readonly MarketingExtraNavLink[] | undefined;
+}) {
   const signedIn = useNavbarSessionState();
 
   return (
@@ -29,6 +33,7 @@ export function SharedNavbar(props: { currentPath?: string | undefined }) {
         getStartedTrackingEvent={GET_STARTED_CLICK_EVENT}
         getStartedLocation="navbar"
         origins={{ app: APP_ORIGIN, docs: DOCS_ORIGIN }}
+        extraLinks={props.extraLinks}
       />
     </ScoutThemeProvider>
   );

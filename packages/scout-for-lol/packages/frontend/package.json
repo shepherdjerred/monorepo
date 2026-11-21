@@ -31,6 +31,7 @@
     "format": "prettier --check .",
     "lint": "astro check && eslint src --max-warnings=0 && check-architecture",
     "preview": "astro preview",
+    "refresh-champion-meta": "bun run scripts/refresh-champion-meta.ts",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "typecheck": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
@@ -70,6 +71,7 @@
   },
   "imports": {
     "#architecture": "./architecture.config.ts",
+    "#champion-meta-snapshot": "./src/data/generated/champion-meta.snapshot.json",
     "#src/*": "./src/*"
   }
 }
