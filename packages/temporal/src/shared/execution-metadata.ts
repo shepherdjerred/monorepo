@@ -187,6 +187,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runScoutDataDragonVersionCheck: "scout",
   runScoutDataDragonWeeklyRefresh: "scout",
   runScoutLanePriorsWeeklyRefresh: "scout",
+  runScoutChampionMetaRefresh: "scout",
   runScoutSeasonRefreshWorkflow: "scout",
   runScoutShowcaseRefresh: "scout",
   runScoutQueueWindowsWatch: "scout",

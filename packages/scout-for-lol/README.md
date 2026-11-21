@@ -105,7 +105,18 @@ are one-shot and each command starts a new saved conversation.
 - A local DuckDB Parquet "report lake" derived from S3 powers ScoutQL
   scheduled/user-authored report queries
 - Temporal schedules handle recurring maintenance (queue-window drift
-  detection, marketing showcase refresh, image GC)
+  detection, marketing showcase refresh, image GC, champion-meta snapshot
+  refresh)
+- The public champion pages (`/champions/`, `/champions/<slug>/`,
+  `/champions/<slug>/<role>/`) are static, built from the committed
+  `frontend/src/data/generated/champion-meta.snapshot.json`.
+  `scout-champion-meta-weekly-refresh` regenerates it from the production
+  `/api/meta/v1` API (`bun run refresh-champion-meta --origin <origin> --output
+<absolute path>` in `frontend`) and opens a PR on drift. Minimum samples are
+  the API's; an API with nothing published yields an empty snapshot, which
+  renders "No champion data yet" and hides the Champions navigation link.
+  `CHAMPION_META_SNAPSHOT_FILE` points a build at another snapshot for
+  rendering checks.
 - Scout beta bootstraps deterministic Workflow versioning with a capable stable
   image followed by a distinct credentialless candidate; the backend retains
   its embedded drain poller and all effectful Activity Workers until the

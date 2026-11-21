@@ -10,6 +10,7 @@ import { zfsMaintenanceActivities } from "./homelab/zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon/data-dragon.ts";
 import { lanePriorActivities } from "./lane-prior-refresh.ts";
+import { championMetaActivities } from "./scout/champion-meta-refresh.ts";
 import { scoutSeasonRefreshActivities } from "./scout/scout-season-refresh.ts";
 import { veleroOrphanAuditActivities } from "./homelab/velero-orphan-audit.ts";
 import { outcomeActivities } from "./outcome.ts";
@@ -124,6 +125,7 @@ export const agentChatReceiptWorkerActivities = {
 export const scoutActivities = {
   ...dataDragonActivities,
   ...lanePriorActivities,
+  ...championMetaActivities,
   ...scoutSeasonRefreshActivities,
   ...scoutImageGcActivities,
   ...scoutShowcaseRefreshActivities,

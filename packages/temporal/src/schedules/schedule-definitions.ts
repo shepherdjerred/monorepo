@@ -2,7 +2,10 @@ import { ScheduleOverlapPolicy } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 import { EARLY_SCHEDULES } from "./schedule-definitions-early.ts";
-import { SCOUT_LANE_PRIOR_UPDATE_CONFIG } from "./schedule-payloads.ts";
+import {
+  SCOUT_CHAMPION_META_REFRESH_CONFIG,
+  SCOUT_LANE_PRIOR_UPDATE_CONFIG,
+} from "./schedule-payloads.ts";
 import { SECURITY_SCHEDULES } from "./security-schedule-definitions.ts";
 import {
   schedulesInNamespace,
@@ -172,6 +175,21 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "4 hours",
     memo: "Weekly Scout lane-prior refresh and evaluation",
+  },
+  {
+    id: "scout-champion-meta-weekly-refresh",
+    workflowType: "runScoutChampionMetaRefresh",
+    args: [SCOUT_CHAMPION_META_REFRESH_CONFIG],
+    // Tue 07:00 PT, after the Monday PR jobs and the Saturday data jobs.
+    timing: {
+      kind: "cron",
+      expression: "0 7 * * 2",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "2 hours",
+    memo: "Weekly Scout champion-meta snapshot refresh from the meta API, opens a PR on drift",
   },
   {
     id: "llm-catalog-refresh-weekly",
