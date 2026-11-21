@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import TaskNotesKit
 import Testing
 
@@ -7,6 +8,21 @@ import Testing
 @Suite("Facet iOS Store & Widget Projection")
 @MainActor
 struct FacetMobileTests {
+    @Test("The brand color resolves both appearances on a rendering thread")
+    func brandResolvesOffMainActor() async {
+        let brand = FacetNativeStyle.brand
+        let (light, dark) = await _Concurrency.Task.detached {
+            var environment = EnvironmentValues()
+            environment.colorScheme = .light
+            let light = brand.resolve(in: environment)
+            environment.colorScheme = .dark
+            return (light, brand.resolve(in: environment))
+        }.value
+        #expect(abs(light.red - 0.77) < 0.01)
+        #expect(abs(dark.red - 1) < 0.01)
+        #expect(dark.green > light.green)
+    }
+
     @Test("Quick capture and widget envelope projection work on iOS")
     func quickCaptureAndWidgetProjection() throws {
         let database = try FacetSQLiteDatabase(inMemoryNamed: ":memory:")

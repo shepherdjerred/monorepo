@@ -11,17 +11,19 @@ enum TestApp {
         serverAddress: String = unreachableServer,
         authToken: String = "",
         storageFolder: String = "TaskNotes-UITests-\(UUID().uuidString)",
+        additionalArguments: [String] = [],
         file: StaticString = #filePath,
         line: UInt = #line,
         teardown: (@escaping @Sendable () async -> Void) -> Void
     ) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = [
-            "-\(UITesting.serverAddressDefaultsKey)", serverAddress,
-            "-\(UITesting.authTokenDefaultsKey)", authToken,
-            "-\(UITesting.storageFolderDefaultsKey)", storageFolder,
-            UITesting.flagArgument,
-        ]
+        app.launchArguments =
+            [
+                "-\(UITesting.serverAddressDefaultsKey)", serverAddress,
+                "-\(UITesting.authTokenDefaultsKey)", authToken,
+                "-\(UITesting.storageFolderDefaultsKey)", storageFolder,
+                UITesting.flagArgument,
+            ] + additionalArguments
         app.launch()
         XCTAssertTrue(
             app.wait(for: .runningForeground, timeout: 20),

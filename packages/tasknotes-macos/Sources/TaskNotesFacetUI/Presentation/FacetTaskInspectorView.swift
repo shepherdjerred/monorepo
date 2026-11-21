@@ -3,7 +3,7 @@ import SwiftUI
 import TaskNotesKit
 
 internal struct FacetTaskInspectorView: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.dynamicTypeSize) var dynamicTypeSize
     let task: Task
     let store: FacetStore
     var onClose: (() -> Void)?
@@ -14,9 +14,13 @@ internal struct FacetTaskInspectorView: View {
     @State private var expandedSubtasks = false
     @FocusState private var titleFocused: Bool
     @FocusState private var editingDescription: Bool
-    @State private var showingRecurrenceSheet = false
-    @State private var showingLabels = false
-    @State private var showingSchedule = false
+    @State var showingRecurrenceSheet = false
+    @State var showingLabels = false
+    @State var showingSchedule = false
+    #if os(iOS)
+        private static let previewHeight = PresentationDetent.fraction(0.68)
+        @State private var detailHeight = Self.previewHeight
+    #endif
 
     init(task: Task, store: FacetStore, onClose: (() -> Void)? = nil) {
         self.task = task
@@ -40,8 +44,56 @@ internal struct FacetTaskInspectorView: View {
                 }
                 .padding(22)
             #else
-                stackedContent.padding(20)
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        headerSection
+                        descriptionSection
+                        projectPickerRow
+                        sectionPickerRow
+                        dueDateRow
+                        if dynamicTypeSize.isAccessibilitySize {
+                            priorityPickerRow
+                            labelsButton
+                            recurrenceRow
+                            deadlineControl
+                        } else {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    priorityChip
+                                    labelsButton
+                                    recurrenceRow
+                                    deadlineControl
+                                }
+                                .buttonStyle(.bordered)
+                                .font(.subheadline)
+                            }
+                        }
+                    }
+                    .padding(14)
+                    .background(.background, in: .rect(cornerRadius: 14))
+                    subtasksSection
+                    FacetTaskCommentsView(task: task, store: store)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
             #endif
+        }
+        #if os(iOS)
+            .background(Color(.systemGroupedBackground))
+            .presentationDetents(
+                dynamicTypeSize.isAccessibilitySize ? [.large] : [Self.previewHeight, .large],
+                selection: $detailHeight
+            )
+            .presentationDragIndicator(.visible)
+            .onChange(of: titleFocused || editingMarkdownSource || expandedSubtasks) {
+                if titleFocused || editingMarkdownSource || expandedSubtasks {
+                    detailHeight = .large
+                }
+            }
+        #endif
+        .tint(FacetNativeStyle.brand)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            FacetCommentComposer(task: task, store: store)
         }
         .onDisappear {
             guard store.task(for: task.id) != nil else { return }
@@ -69,10 +121,11 @@ internal struct FacetTaskInspectorView: View {
             FacetRecurrenceEditorSheet(
                 currentRule: task.recurrence_rule,
                 calendar: store.calendar,
-                onApply: { rule in
+                basis: task.recurrence_basis ?? .scheduled,
+                onApply: { rule, basis in
                     store.patchTask(
                         id: task.id,
-                        patch: FacetTaskPatch(recurrenceRule: .set(rule))
+                        patch: FacetTaskPatch(recurrenceBasis: basis, recurrenceRule: .set(rule))
                     )
                 },
                 onClear: {
@@ -102,16 +155,21 @@ internal struct FacetTaskInspectorView: View {
         VStack(alignment: .leading, spacing: 16) {
             headerSection
             descriptionSection
-            DisclosureGroup(isExpanded: $expandedSubtasks) {
-                FacetInspectorSubtasksSection(task: task, store: store)
-            } label: {
-                let children = store.subtasks(of: task.id)
-                Label(
-                    children.isEmpty ? "Add subtasks" : "Subtasks (\(children.count))",
-                    systemImage: "checklist")
-            }
-            .font(.subheadline)
+            subtasksSection
+            FacetTaskCommentsView(task: task, store: store)
         }
+    }
+
+    private var subtasksSection: some View {
+        DisclosureGroup(isExpanded: $expandedSubtasks) {
+            FacetInspectorSubtasksSection(task: task, store: store)
+        } label: {
+            let children = store.subtasks(of: task.id)
+            Label(
+                children.isEmpty ? "Add subtasks" : "Subtasks (\(children.count))",
+                systemImage: "checklist")
+        }
+        .font(.subheadline)
     }
 
     private var taskProperties: some View {
@@ -122,10 +180,13 @@ internal struct FacetTaskInspectorView: View {
             priorityPickerRow
             labelsButton
             recurrenceRow
+            deadlineControl
         }
     }
+}
 
-    private var headerSection: some View {
+extension FacetTaskInspectorView {
+    fileprivate var headerSection: some View {
         HStack(alignment: .top, spacing: 10) {
             Button {
                 store.toggleTaskCompletion(task)
@@ -154,6 +215,7 @@ internal struct FacetTaskInspectorView: View {
                 Button("Save") { commitTitleIfChanged() }
                     .controlSize(.small)
                     .buttonStyle(.borderedProminent)
+                    .tint(FacetNativeStyle.actionFill)
             }
             Menu("More actions", systemImage: "ellipsis") {
                 Button("Delete Task", systemImage: "trash", role: .destructive) {
@@ -167,7 +229,7 @@ internal struct FacetTaskInspectorView: View {
         }
     }
 
-    private var descriptionSection: some View {
+    fileprivate var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             if editingMarkdownSource || !task.description.isEmpty {
                 HStack {
@@ -233,171 +295,5 @@ internal struct FacetTaskInspectorView: View {
     private func commitDescriptionIfChanged() {
         guard descriptionDraft != task.description else { return }
         store.patchTask(id: task.id, patch: FacetTaskPatch(description: descriptionDraft))
-    }
-}
-
-extension FacetTaskInspectorView {
-    private var labelsButton: some View {
-        let names = task.label_ids.compactMap { store.label(for: $0)?.name }
-        return Button {
-            showingLabels = true
-        } label: {
-            Label(names.isEmpty ? "Add label" : names.joined(separator: ", "), systemImage: "tag")
-                .multilineTextAlignment(.leading)
-        }
-        .buttonStyle(.borderless)
-        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.labels)
-    }
-    private var projectPickerRow: some View {
-        propertyRow("Project") {
-            Picker(
-                "Project",
-                selection: Binding(
-                    get: {
-                        task.project_id.isEmpty ? store.inboxProject?.id ?? "" : task.project_id
-                    },
-                    set: { newProjId in
-                        store.patchTask(
-                            id: task.id,
-                            patch: FacetTaskPatch(projectId: newProjId, sectionId: .clear)
-                        )
-                    }
-                )
-            ) {
-                if store.inboxProject == nil { Text("Inbox").tag("") }
-                ForEach(store.activeProjects) { proj in
-                    Text(proj.name).tag(proj.id)
-                }
-            }
-            .labelsHidden()
-            .frame(
-                maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 180,
-                alignment: dynamicTypeSize.isAccessibilitySize ? .leading : .trailing
-            )
-            .accessibilityIdentifier(AccessibilityIdentifier.Inspector.project)
-        }
-    }
-
-    @ViewBuilder
-    private var sectionPickerRow: some View {
-        let availableSections = store.sections(in: task.project_id)
-        if !availableSections.isEmpty {
-            propertyRow("Section") {
-                Picker(
-                    "Section",
-                    selection: Binding(
-                        get: { task.section_id ?? "" },
-                        set: { newSecId in
-                            store.patchTask(
-                                id: task.id,
-                                patch: FacetTaskPatch(
-                                    sectionId: newSecId.isEmpty ? .clear : .set(newSecId)
-                                )
-                            )
-                        }
-                    )
-                ) {
-                    Text("No section").tag("")
-                    ForEach(availableSections) { sec in
-                        Text(sec.name).tag(sec.id)
-                    }
-                }
-                .labelsHidden()
-                .frame(
-                    maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 180,
-                    alignment: dynamicTypeSize.isAccessibilitySize ? .leading : .trailing
-                )
-                .accessibilityIdentifier(AccessibilityIdentifier.Inspector.section)
-            }
-        }
-    }
-
-    private var priorityPickerRow: some View {
-        propertyRow("Priority") {
-            Picker(
-                "Priority",
-                selection: Binding(
-                    get: { task.priority },
-                    set: { newPriority in
-                        store.patchTask(
-                            id: task.id,
-                            patch: FacetTaskPatch(priority: newPriority)
-                        )
-                    }
-                )
-            ) {
-                ForEach(Priority.allCases, id: \.self) { level in
-                    Text(level == .p4 ? "None" : FacetNativeStyle.priorityFullTitle(level)).tag(
-                        level)
-                }
-            }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .accessibilityIdentifier(AccessibilityIdentifier.Inspector.priority)
-        }
-    }
-
-    private var recurrenceRow: some View {
-        Button {
-            showingRecurrenceSheet = true
-        } label: {
-            Label(recurrenceSummary, systemImage: "repeat")
-                .multilineTextAlignment(.leading)
-        }
-        .buttonStyle(.borderless)
-        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceEdit)
-    }
-
-    private var dueDateRow: some View {
-        propertyRow("Date") {
-            Button {
-                showingSchedule = true
-            } label: {
-                Label(scheduleTitle, systemImage: "calendar")
-                    .multilineTextAlignment(.leading)
-            }
-            .buttonStyle(.borderless)
-            .accessibilityIdentifier(AccessibilityIdentifier.Inspector.due)
-            .popover(isPresented: $showingSchedule) {
-                FacetSchedulePopoverView(task: task, store: store) { showingSchedule = false }
-            }
-        }
-    }
-
-    private var scheduleTitle: String {
-        let zone = store.calendar.timeZone
-        if let timestamp = task.due_datetime, let date = ViewerCalendar.parseISO8601(timestamp) {
-            return date.formatted(
-                Date.FormatStyle(date: .abbreviated, time: .shortened, timeZone: zone))
-        }
-        if let civil = task.due_date,
-            let date = ViewerCalendar.date(fromCivil: civil, timeZone: zone)
-        {
-            return date.formatted(
-                Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: zone))
-        }
-        return "Add date"
-    }
-
-    private func propertyRow<Content: View>(_ title: String, @ViewBuilder control: () -> Content)
-        -> some View
-    {
-        let stacked = dynamicTypeSize.isAccessibilitySize
-        let layout =
-            stacked
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4)) : AnyLayout(HStackLayout())
-        return layout {
-            Text(title).font(.subheadline).foregroundStyle(.secondary)
-            if !stacked { Spacer() }
-            control()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var recurrenceSummary: String {
-        guard let rule = task.recurrence_rule, !rule.isEmpty else {
-            return "Add repeat"
-        }
-        return FacetRecurrenceCodec.summary(for: rule)
     }
 }

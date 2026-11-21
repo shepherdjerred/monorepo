@@ -4,10 +4,13 @@ import TaskNotesKit
 
 extension FacetStore {
     internal func workspaceTasks(matching query: String, includeCompleted: Bool) -> [Task] {
-        localStore.tasks.filter { task in
-            !task.is_deleted && (includeCompleted || !task.completed)
+        let inactive = inactiveProjectIDs
+        return localStore.tasks.filter { task in
+            !inactive.contains(task.project_id) && !task.is_deleted
+                && (includeCompleted || !task.completed)
                 && (task.title.localizedStandardContains(query)
-                    || task.description.localizedStandardContains(query))
+                    || task.description.localizedStandardContains(query)
+                    || (task.comments ?? []).contains { $0.body.localizedStandardContains(query) })
         }.sorted(by: Self.sortTasks)
     }
 }
@@ -47,52 +50,66 @@ internal struct FacetWorkspaceSearch: View {
     private var query: String { session.input.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     var body: some View {
-        NavigationStack(path: $path) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
-                    TextField("Search workspace", text: $session.input)
-                        .focused($focused, equals: "query")
-                        .textFieldStyle(.plain)
-                        .onSubmit(openFirstResult)
-                        .accessibilityIdentifier("facet.workspaceSearch.query")
-                    Button("Done") { dismiss() }
-                        .keyboardShortcut(.cancelAction)
-                }
-                Toggle("Include completed tasks", isOn: $session.includeCompleted)
-                    .font(.subheadline)
-                Divider()
-                if !query.isEmpty {
-                    results
+        #if os(macOS)
+            Group {
+                if let id = path.last, let task = store.task(for: id) {
+                    VStack(alignment: .leading) {
+                        Button("Back to Results", systemImage: "chevron.backward") { path = [] }
+                            .keyboardShortcut(.cancelAction)
+                            .padding([.top, .leading])
+                        FacetTaskInspectorView(task: task, store: store, onClose: { path = [] })
+                    }
                 } else {
-                    Spacer()
+                    searchForm
                 }
             }
-            .padding()
-            .navigationDestination(for: String.self) { id in
-                if let task = store.task(for: id) {
-                    FacetTaskInspectorView(task: task, store: store, onClose: { path = [] })
-                        #if os(macOS)
-                            .onExitCommand { path = [] }
-                        #endif
-                } else {
-                    ContentUnavailableView("Task unavailable", systemImage: "tray")
-                }
+            .frame(minWidth: 520, idealWidth: 720, minHeight: 350, idealHeight: 510)
+        #else
+            NavigationStack(path: $path) {
+                searchForm
+                    .navigationDestination(for: String.self) { id in
+                        if let task = store.task(for: id) {
+                            FacetTaskInspectorView(task: task, store: store, onClose: { path = [] })
+                        } else {
+                            ContentUnavailableView("Task unavailable", systemImage: "tray")
+                        }
+                    }
             }
-            .onAppear { if session.selectedResult == nil { focused = "query" } }
-            .onChange(of: query) { session.selectedResult = nil }
-            .onChange(of: path) { previous, current in
-                if !previous.isEmpty, current.isEmpty {
-                    let result = session.selectedResultID(in: store)
-                    focused = result
-                    accessibleResult = result
-                }
+        #endif
+    }
+
+    private var searchForm: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                TextField("Search workspace", text: $session.input)
+                    .focused($focused, equals: "query")
+                    .textFieldStyle(.plain)
+                    .onSubmit(openFirstResult)
+                    .accessibilityIdentifier("facet.workspaceSearch.query")
+                Button("Done") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            Toggle("Include completed tasks", isOn: $session.includeCompleted)
+                .font(.subheadline)
+            Divider()
+            if !query.isEmpty {
+                results
+            } else {
+                Spacer()
             }
         }
-        #if os(macOS)
-            .frame(minWidth: 520, idealWidth: 720, minHeight: 350, idealHeight: 510)
-        #endif
+        .padding()
+        .onAppear { if session.selectedResult == nil { focused = "query" } }
+        .onChange(of: query) { session.selectedResult = nil }
+        .onChange(of: path) { previous, current in
+            if !previous.isEmpty, current.isEmpty {
+                let result = session.selectedResultID(in: store)
+                focused = result
+                accessibleResult = result
+            }
+        }
     }
 
     private var matchingTasks: [Task] {

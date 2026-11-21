@@ -39,8 +39,10 @@ extension FacetStore {
     }
 
     internal var listPresentationTasks: [Task] {
-        guard !completionRows.isEmpty else { return localStore.tasks }
-        return localStore.tasks.map { task in
+        let inactive = inactiveProjectIDs
+        let active = localStore.tasks.filter { !inactive.contains($0.project_id) }
+        guard !completionRows.isEmpty else { return active }
+        return active.map { task in
             guard !task.is_deleted, let row = completionRow(for: task.id), row.holdsPosition else {
                 return task
             }

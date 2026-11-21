@@ -9,7 +9,6 @@ internal struct FacetTaskRowView: View {
     let isSelected: Bool
     let onSelect: () -> Void
 
-    @Environment(\.facetTaskListFocus) private var listFocus
     @State private var hovering = false
     @State private var showingSchedulePopover = false
     @Environment(\.accessibilityReduceMotion) private var reducedMotion
@@ -39,18 +38,15 @@ internal struct FacetTaskRowView: View {
                         onSelect()
                         return .handled
                     }
-                    .onChange(of: store.showsInspector) {
-                        if !store.showsInspector && isSelected {
-                            listFocus?.keyboard.wrappedValue = .title(task.id)
-                        }
-                    }
                 #endif
-            trailingActions
+            #if os(macOS)
+                trailingActions
+            #endif
         }
         .padding(.vertical, 5)
         .padding(.horizontal, 6)
         .background(
-            isSelected ? Color.accentColor.opacity(0.12) : Color.clear,
+            isSelected ? FacetNativeStyle.brand.opacity(0.12) : Color.clear,
             in: .rect(cornerRadius: 8)
         )
         .contentShape(Rectangle())
@@ -154,15 +150,7 @@ internal struct FacetTaskRowView: View {
             .buttonStyle(.borderless)
             .opacity(hovering || isSelected ? 1 : 0)
         #else
-            Menu {
-                rowContextMenu
-            } label: {
-                Image(systemName: "ellipsis")
-                    .foregroundStyle(.secondary)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel("Actions for \(task.title)")
+            EmptyView()
         #endif
     }
 
@@ -229,16 +217,23 @@ extension FacetTaskRowView {
             case .section, .board, .project, .filter, .label: dueDay
             }
         let subtaskList = store.subtasks(of: task.id)
+        let commentCount = FacetTaskCommentsView.count(for: task)
         let taskLabels = task.label_ids.compactMap { store.label(for: $0) }
         let projectObj =
             showProjectBadge ? store.userProjects.first { $0.id == task.project_id } : nil
 
         if dueCivil != nil || task.due_datetime != nil || task.is_recurring || !subtaskList.isEmpty
             || !taskLabels.isEmpty
-            || projectObj != nil
+            || projectObj != nil || commentCount > 0 || task.deadline != nil
         {
             HStack(spacing: 8) {
                 dueMetadataItem(dueCivil: dueCivil)
+                if let deadline = task.deadline {
+                    Label(dueBadgeLabel(for: deadline), systemImage: "flag.checkered")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel("Deadline \(deadline)")
+                }
                 if let raw = task.due_datetime, let instant = ViewerCalendar.parseISO8601(raw) {
                     Text(
                         instant.formatted(
@@ -249,6 +244,13 @@ extension FacetTaskRowView {
                     .font(.caption).foregroundStyle(.secondary)
                 }
                 subtasksMetadataItem(subtaskList: subtaskList)
+                if commentCount > 0 {
+                    Label(String(commentCount), systemImage: "bubble.left")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel(
+                            commentCount == 1 ? "1 comment" : "\(commentCount) comments")
+                }
                 ForEach(taskLabels) { item in
                     Text("@\(item.name)")
                         .font(.caption)
@@ -303,6 +305,11 @@ extension FacetTaskRowView {
     private func dueBadgeLabel(for civil: String) -> String {
         if civil == store.calendar.today { return "Today" }
         if civil == store.calendar.addingDays(1) { return "Tomorrow" }
-        return civil
+        if civil == store.calendar.addingDays(-1) { return "Yesterday" }
+        let zone = store.calendar.timeZone
+        guard let date = ViewerCalendar.date(fromCivil: civil, timeZone: zone) else { return civil }
+        let style = Date.FormatStyle(timeZone: zone).month(.abbreviated).day()
+        return date.formatted(
+            civil.prefix(4) == store.calendar.today.prefix(4) ? style : style.year())
     }
 }

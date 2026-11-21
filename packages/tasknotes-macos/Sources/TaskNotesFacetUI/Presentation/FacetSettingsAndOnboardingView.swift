@@ -53,6 +53,7 @@ public struct FacetSettingsAndOnboardingView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(FacetNativeStyle.actionFill)
                     .disabled(store.isSyncing)
                     .accessibilityIdentifier(AccessibilityIdentifier.settingsConnect)
 

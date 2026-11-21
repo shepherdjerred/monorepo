@@ -148,6 +148,23 @@ internal struct FacetProjectHeaderBar: View {
 
     private func projectOverflowMenu(_ proj: Project) -> some View {
         Menu {
+            Button("Organize Tasks…") { onPresentModal(.organizeTasks(proj.id)) }
+            Picker(
+                "Sort by",
+                selection: Binding(
+                    get: { store.projectSort(proj.id) },
+                    set: { store.projectSorts[proj.id] = $0.rawValue })
+            ) {
+                ForEach(FacetProjectSort.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
+            Picker(
+                "Group by",
+                selection: Binding(
+                    get: { store.projectGrouping(proj.id) },
+                    set: { store.projectGroups[proj.id] = $0.rawValue })
+            ) {
+                ForEach(FacetProjectGrouping.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            }
             Button("Edit Project…") {
                 onPresentModal(.editProject(proj))
             }
@@ -155,6 +172,7 @@ internal struct FacetProjectHeaderBar: View {
                 store.toggleProjectFavorite(proj)
             }
             Divider()
+            Button("Archive Project") { store.archive(proj, archived: true) }
             Button("Delete Project", role: .destructive) {
                 store.deleteProject(id: proj.id)
             }
@@ -173,18 +191,24 @@ internal struct FacetTaskGroupSectionView: View {
     let onSelectTask: (Task) -> Void
     let onPresentModal: (FacetPresentedEntityModal) -> Void
 
+    @State private var expanded = true
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            FacetTaskGroupHeader(group: group, store: store, onPresentModal: onPresentModal)
+            if group.isOverdue {
+                FacetOverdueHeader(store: store, group: group, expanded: $expanded)
+            } else {
+                FacetTaskGroupHeader(group: group, store: store, onPresentModal: onPresentModal)
+            }
 
             Divider()
 
             if group.tasks.isEmpty {
                 Text("No tasks in \(group.title)")
                     .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
                     .padding(.vertical, 4)
-            } else {
+            } else if expanded {
                 LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(group.tasks) { task in
                         FacetTaskRowView(
@@ -194,10 +218,18 @@ internal struct FacetTaskGroupSectionView: View {
                             isSelected: store.selectedTaskId == task.id,
                             onSelect: { onSelectTask(task) }
                         )
+                        .draggable(task.id)
                         Divider()
                     }
                 }
             }
+        }
+        .dropDestination(for: String.self) { ids, _ in
+            guard let day = group.civilDate else { return false }
+            let tasks = ids.compactMap(store.task(for:))
+            guard !tasks.isEmpty else { return false }
+            store.rescheduleGroup(tasks, to: day)
+            return true
         }
     }
 }
@@ -213,9 +245,11 @@ internal struct FacetTaskGroupHeader: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(group.isOverdue ? .red : .primary)
                 .accessibilityAddTraits(.isHeader)
-            Text(group.tasks.count == 1 ? "1 task" : "\(group.tasks.count) tasks")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if !group.tasks.isEmpty {
+                Text(group.tasks.count == 1 ? "1 task" : "\(group.tasks.count) tasks")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             Spacer()
             if group.civilDate != nil || group.sectionId != nil {
                 Button(action: openCapture) {

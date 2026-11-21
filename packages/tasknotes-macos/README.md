@@ -43,7 +43,8 @@ and Xcode:
     labels, filters and completed tasks. The Mac sidebar adds keyboard access to
     capture and workspace search. Search reads local tasks and notes, including
     subtasks, with an option to include completed tasks. Task detail opens over
-    the current list. At larger widths the editor and properties sit side by side.
+    the current list. Use Q to capture when navigating, arrow keys to select a row, Return to open it, and Escape to return. At larger widths the editor and properties sit side by side.
+    Task detail includes dated comments and private attachments. Scheduling supports a separate hard deadline and repeating from either the scheduled date or completion. Project organization includes nested projects, archive and restore, multi-task moves, and persistent list preferences.
 - **`TaskNotesMac`** (`@MainActor`):
   - macOS `FacetMacEnvironment`, non-activating floating `QuickAddPanel` bound to
     `⌃⌥⌘Space` (`KeyboardShortcuts`), menu bar commands (`FacetMacCommands`),

@@ -29,7 +29,6 @@
                     sidebarSectionRow(.today, badge: store.todayCount)
                     sidebarSectionRow(.upcoming, badge: 0)
                 }
-                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("views"))
 
                 if !store.favoriteProjects.isEmpty || !store.favoriteFilters.isEmpty
                     || !store.favoriteLabels.isEmpty
@@ -45,19 +44,19 @@
                             filterRow(filterItem)
                         }
                     }
-                    .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("favorites"))
                 }
 
                 SwiftUI.Section {
                     ForEach(store.userProjects) { proj in
                         projectRow(proj)
+                            .padding(.leading, CGFloat(store.projectPath(proj).count - 1) * 12)
                     }
+                    FacetArchivedProjects(store: store)
                 } header: {
                     sectionHeader("Projects") {
                         onPresentModal(.addProject)
                     }
                 }
-                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("projects"))
 
                 SwiftUI.Section {
                     ForEach(store.activeLabels) { item in
@@ -68,7 +67,6 @@
                         onPresentModal(.addLabel)
                     }
                 }
-                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("labels"))
 
                 SwiftUI.Section {
                     ForEach(store.activeFilters) { filterItem in
@@ -79,7 +77,6 @@
                         onPresentModal(.addFilter)
                     }
                 }
-                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("filters"))
 
                 SwiftUI.Section("Browse") {
                     sidebarSectionRow(.completed, badge: 0)
@@ -90,6 +87,11 @@
                 }
             }
             .listStyle(.sidebar)
+            .onKeyPress(keys: ["q"]) { press in
+                guard press.modifiers.isEmpty else { return .ignored }
+                store.showsCapture = true
+                return .handled
+            }
             .safeAreaInset(edge: .bottom) {
                 sidebarSyncFooter
             }
@@ -110,7 +112,7 @@
                     .padding(.vertical, 5)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
-                        isSelected ? Color.accentColor.opacity(0.16) : Color.clear,
+                        isSelected ? FacetNativeStyle.brand.opacity(0.16) : Color.clear,
                         in: .rect(cornerRadius: 7)
                     )
                     .contentShape(Rectangle())
@@ -124,14 +126,15 @@
                 HStack(spacing: 8) {
                     Image(systemName: section.systemImage)
                         .foregroundStyle(
-                            isSelected ? Color.accentColor : Color(nsColor: .secondaryLabelColor))
+                            isSelected
+                                ? FacetNativeStyle.brand : Color(nsColor: .secondaryLabelColor))
                     Text(section.title)
                         .fontWeight(isSelected ? .semibold : .regular)
                     Spacer()
                     if badge > 0 {
                         Text("\(badge)")
                             .font(.caption.monospacedDigit())
-                            .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                            .foregroundStyle(isSelected ? FacetNativeStyle.brand : .secondary)
                     }
                 }
             }
@@ -152,7 +155,7 @@
                     if count > 0 {
                         Text("\(count)")
                             .font(.caption.monospacedDigit())
-                            .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                            .foregroundStyle(isSelected ? FacetNativeStyle.brand : .secondary)
                     }
                 }
             }
@@ -186,6 +189,7 @@
                 }
             }
             .contextMenu {
+                Button("Edit Label…") { onPresentModal(.editLabel(item)) }
                 Button("Delete Label", role: .destructive) {
                     store.deleteLabel(id: item.id)
                 }
@@ -208,6 +212,7 @@
                 }
             }
             .contextMenu {
+                Button("Edit Filter…") { onPresentModal(.editFilter(filterItem)) }
                 Button("Delete Filter", role: .destructive) {
                     store.deleteFilter(id: filterItem.id)
                 }
@@ -228,8 +233,10 @@
                 .help("Add to \(title)")
             }
         }
+    }
 
-        private var sidebarSyncFooter: some View {
+    extension FacetNativeSidebar {
+        fileprivate var sidebarSyncFooter: some View {
             HStack(spacing: 8) {
                 Circle()
                     .fill(

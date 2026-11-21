@@ -13,6 +13,14 @@ extension FacetStore {
         let task = _Concurrency.Task { @MainActor in
             do {
                 try await localStore.load()
+                #if DEBUG
+                    if isIsolatedLaunch
+                        && CommandLine.arguments.contains("--facet-personal-workspace-fixture")
+                        && localStore.projects.isEmpty && localStore.tasks.isEmpty
+                    {
+                        seedPersonalWorkspaceFixture()
+                    }
+                #endif
             } catch {
                 errorBanner = error.localizedDescription
             }
@@ -48,6 +56,7 @@ extension FacetStore {
         guard let client = makeAPIClient() else { return false }
         do {
             try await localStore.sync(client: client)
+            resolveProjectPreferences()
         } catch {
             return false
         }
@@ -64,6 +73,7 @@ extension FacetStore {
         if !localStore.outbox.isEmpty, let client = makeAPIClient() {
             do {
                 try await localStore.sync(client: client)
+                resolveProjectPreferences()
             } catch {
                 // Retain offline outbox in SQLite so closing never hangs.
             }

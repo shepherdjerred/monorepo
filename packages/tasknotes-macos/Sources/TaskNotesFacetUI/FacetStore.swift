@@ -94,6 +94,9 @@ public final class FacetStore {
     public var searchQuery: String = ""
     public var searchFocusedRequest: Int = 0
     public var showsInspector: Bool = false
+    #if os(iOS)
+        internal var bulkScheduleRequest: FacetBulkScheduleRequest?
+    #endif
     public var showsCapture: Bool = false
     public var showsSettings: Bool = false
     public var upcomingSelectedDate: String?
@@ -111,7 +114,17 @@ public final class FacetStore {
         }
         set { upcomingSelectedDate = calendar.addingDays(newValue) }
     }
-    public var projectLayouts: [String: FacetProjectLayout] = [:]
+    public var projectLayouts: [String: FacetProjectLayout] = [:] {
+        didSet {
+            defaults.set(projectLayouts.mapValues(\.rawValue), forKey: "Facet.projectLayouts")
+        }
+    }
+    internal var projectSorts: [String: String] {
+        didSet { defaults.set(projectSorts, forKey: "Facet.projectSorts") }
+    }
+    internal var projectGroups: [String: String] {
+        didSet { defaults.set(projectGroups, forKey: "Facet.projectGroups") }
+    }
 
     public internal(set) var serverURLString: String
     public internal(set) var hasConfiguredToken: Bool = false
@@ -166,6 +179,12 @@ public final class FacetStore {
         self.tokenStore = tokenStore
         self.serverConfig = serverConfig
         self.defaults = defaults
+        projectSorts = defaults.dictionary(forKey: "Facet.projectSorts") as? [String: String] ?? [:]
+        projectGroups =
+            defaults.dictionary(forKey: "Facet.projectGroups") as? [String: String] ?? [:]
+        let layouts =
+            defaults.dictionary(forKey: "Facet.projectLayouts") as? [String: String] ?? [:]
+        projectLayouts = layouts.compactMapValues(FacetProjectLayout.init(rawValue:))
         self.urlSession = urlSession
         self.calendar = calendar
         self.isIsolatedLaunch = isIsolatedLaunch
@@ -261,6 +280,7 @@ public final class FacetStore {
         guard let client = makeAPIClient() else { return }
         do {
             try await localStore.sync(client: client)
+            resolveProjectPreferences()
         } catch {
             // `localStore.lastError` records the sync failure message.
         }
@@ -276,6 +296,7 @@ public final class FacetStore {
         _Concurrency.Task { @MainActor in
             do {
                 try await localStore.sync(client: client)
+                resolveProjectPreferences()
             } catch {
                 // `localStore.lastError` surfaces the failure.
             }
