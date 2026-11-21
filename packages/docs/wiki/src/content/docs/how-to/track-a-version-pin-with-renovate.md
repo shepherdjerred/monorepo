@@ -6,19 +6,19 @@ sidebar:
 ---
 
 A version pin outside a package manifest is tracked by a hint comment directly
-above it. One custom manager in [`renovate.json`](renovate.json), "Hinted
+above it. One custom manager in [`renovate.json`](https://github.com/shepherdjerred/monorepo/blob/main/renovate.json), "Hinted
 version pins", reads every hint. A check fails the build when a hint is not
 read.
 
 ## 1. Check that the pin needs a hint
 
-| The pin is                                              | Do this                                                               |
-| ------------------------------------------------------- | --------------------------------------------------------------------- |
-| A tool in [`.mise.toml`](.mise.toml)                    | Nothing. Renovate's mise manager tracks it without a hint.            |
-| A `FROM` image in a Dockerfile                          | Nothing. Renovate's Dockerfile manager tracks the tag and digest.     |
-| An image, chart or integration the cluster runs         | Add it to the [version catalog](packages/version-catalog/README.md).  |
-| An OpenTofu provider                                    | Follow [Change an OpenTofu stack](/how-to/change-an-opentofu-stack/). |
-| An `ARG`, `ENV`, shell variable or constant in a script | Continue with step 2.                                                 |
+| The pin is                                                                                | Do this                                                               |
+| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| A tool in [`.mise.toml`](https://github.com/shepherdjerred/monorepo/blob/main/.mise.toml) | Nothing. Renovate's mise manager tracks it without a hint.            |
+| A `FROM` image in a Dockerfile                                                            | Nothing. Renovate's Dockerfile manager tracks the tag and digest.     |
+| An image, chart or integration the cluster runs                                           | Add it to the [version catalog](packages/version-catalog/README.md).  |
+| An OpenTofu provider                                                                      | Follow [Change an OpenTofu stack](/how-to/change-an-opentofu-stack/). |
+| An `ARG`, `ENV`, shell variable or constant in a script                                   | Continue with step 2.                                                 |
 
 Only `dotnet` and `java` carry hints in `.mise.toml`. The mise manager cannot
 resolve either one.
@@ -84,7 +84,7 @@ pin line. Do not repeat the value in the hint.
 
 Dockerfiles and TypeScript files under a `scripts/` directory are covered
 already. For any other file, add its path to the `managerFilePatterns` of the
-"Hinted version pins" manager in [`renovate.json`](renovate.json).
+"Hinted version pins" manager in [`renovate.json`](https://github.com/shepherdjerred/monorepo/blob/main/renovate.json).
 
 ## 4. Group pins that must be equal
 
@@ -106,7 +106,7 @@ names the checksum. Renovate cannot compute it.
    ```
 
 2. Add the pin to the `HINTED_PINS` table in
-   [`scripts/renovate-config.test.ts`](scripts/renovate-config.test.ts) and run
+   [`scripts/renovate-config.test.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/renovate-config.test.ts) and run
    the tests:
 
    ```bash
