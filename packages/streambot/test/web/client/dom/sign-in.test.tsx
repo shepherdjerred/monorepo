@@ -2,10 +2,6 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { MemoryRouter } from "react-router";
 import { App } from "@shepherdjerred/streambot/web/client/app.tsx";
-import {
-  App as ClassicApp,
-  CLASSIC_BASENAME,
-} from "@shepherdjerred/streambot/web/client-classic/app.tsx";
 import { mount, perform, stubFetch } from "./harness.ts";
 
 afterEach(() => {
@@ -52,7 +48,7 @@ test("signing in from a playlist share link keeps its server", async () => {
   expect(href.href).not.toContain("private");
 });
 
-test("signing in from a classic share link keeps its server and playlist", async () => {
+test("signing in from a Discord playlist link keeps its server and playlist", async () => {
   const href = await signInHref(
     `/playlists?guild=100000000000000010&playlist=${PLAYLIST}`,
   );
@@ -68,43 +64,4 @@ test("share-link parameters of the wrong shape are dropped", async () => {
   expect(href.searchParams.get("returnTo")).toBe("/playlists");
   expect(href.href).not.toContain("private");
   expect(href.href).not.toContain("example.com");
-});
-
-/** jsdom lays nothing out, so the classic page's size watcher only needs to exist. */
-class InertResizeObserver {
-  observe(): void {
-    // No layout in jsdom.
-  }
-  unobserve(): void {
-    // No layout in jsdom.
-  }
-  disconnect(): void {
-    // No layout in jsdom.
-  }
-}
-
-test("signing in from the classic remote returns to the classic remote", async () => {
-  vi.stubGlobal("ResizeObserver", InertResizeObserver);
-  const calls = stubFetch();
-  const view = await mount(
-    <MemoryRouter
-      basename={CLASSIC_BASENAME}
-      initialEntries={["/classic/plex"]}
-    >
-      <ClassicApp />
-    </MemoryRouter>,
-  );
-  await perform(() => {
-    for (const call of calls.filter((entry) => entry.url === "/api/me"))
-      call.answer(401, { code: "unauthorized", message: "Sign in." });
-  });
-
-  const link = view.container.querySelector("a.sign-in");
-  const href = new URL(
-    link?.getAttribute("href") ?? "",
-    "https://streambot.test",
-  );
-  expect(href.pathname).toBe("/api/auth/discord/start");
-  expect(href.searchParams.get("returnTo")).toBe("/classic/plex");
-  await view.unmount();
 });
