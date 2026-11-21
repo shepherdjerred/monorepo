@@ -191,7 +191,7 @@ export function RuntimePanel({ environmentId }: { environmentId: string }) {
           <Facts>
             <Fact label="Sync">{runtime.data.data.syncStatus}</Fact>
             <Fact label="Health">{runtime.data.data.healthStatus}</Fact>
-            <Fact label="Revision" mono>
+            <Fact label="Argo revision" mono>
               {runtime.data.data.syncRevision ?? "—"}
             </Fact>
             <Fact label="Last operation">

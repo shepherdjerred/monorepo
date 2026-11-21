@@ -1,6 +1,8 @@
+import { useSyncExternalStore } from "react";
 import { Link } from "@tanstack/react-router";
 import type { GridEnvironment, GridService } from "#shared/hub/hub-contract.ts";
 import {
+  foldHealthy,
   requestStanding,
   serviceStanding,
   standingCounts,
@@ -10,6 +12,7 @@ import {
 import { Revision, revisionLabel } from "./identifier.tsx";
 import { Status, statusLabel } from "./status.tsx";
 import { RelativeTime } from "./time.tsx";
+import { Disclosure } from "./disclosure.tsx";
 
 /** The shared status a standing borrows its glyph and color from. */
 const STATUS_VALUE: Record<ServiceStanding, string> = {
@@ -140,11 +143,64 @@ function Tiles({ services }: { services: GridService[] }) {
   );
 }
 
+/** Where a phone's width begins: the width below which healthy services fold. */
+const NARROW = "(width <= 600px)";
+
+function subscribeNarrow(listener: () => void) {
+  const query = globalThis.matchMedia(NARROW);
+  query.addEventListener("change", listener);
+  return () => {
+    query.removeEventListener("change", listener);
+  };
+}
+
+/** Whether the page is phone-width now; a server render is wide. */
+function useNarrow() {
+  return useSyncExternalStore(
+    subscribeNarrow,
+    () => globalThis.matchMedia(NARROW).matches,
+    () => false,
+  );
+}
+
+/**
+ * A run of tiles. On a phone, services that need nobody fold behind a
+ * closed, counted disclosure after the ones that need someone, so a screen
+ * holds what matters; a wide screen shows every tile. A `whole` run (a
+ * catalog group) folds only when every service in it is healthy, and
+ * otherwise stays open together.
+ */
+function TileRun({
+  services,
+  healthy,
+  narrow,
+  whole = false,
+}: {
+  services: GridService[];
+  healthy: ReadonlySet<string>;
+  narrow: boolean;
+  whole?: boolean;
+}) {
+  if (!narrow) return <Tiles services={services} />;
+  const { open, settled } = foldHealthy(services, healthy, whole);
+  return (
+    <>
+      {open.length > 0 && <Tiles services={open} />}
+      {settled.length > 0 && (
+        <Disclosure summary="Nothing needs attention" count={settled.length}>
+          <Tiles services={settled} />
+        </Disclosure>
+      )}
+    </>
+  );
+}
+
 /**
  * One panel per catalog kind. Services the catalog groups alone come first
  * as plain tiles; each group of several follows under its own heading.
  */
 export function OverviewPanels({ panels }: { panels: KindPanel[] }) {
+  const narrow = useNarrow();
   return (
     <>
       {panels.map((panel) => {
@@ -162,7 +218,13 @@ export function OverviewPanels({ panels }: { panels: KindPanel[] }) {
                 services={panel.services}
               />
             </div>
-            {panel.ungrouped.length > 0 && <Tiles services={panel.ungrouped} />}
+            {panel.ungrouped.length > 0 && (
+              <TileRun
+                services={panel.ungrouped}
+                healthy={panel.healthy}
+                narrow={narrow}
+              />
+            )}
             {panel.groups.map((group) => {
               const id = `overview-group-${group.id}`;
               return (
@@ -178,7 +240,12 @@ export function OverviewPanels({ panels }: { panels: KindPanel[] }) {
                       services={group.services}
                     />
                   </div>
-                  <Tiles services={group.services} />
+                  <TileRun
+                    services={group.services}
+                    healthy={panel.healthy}
+                    narrow={narrow}
+                    whole
+                  />
                 </section>
               );
             })}

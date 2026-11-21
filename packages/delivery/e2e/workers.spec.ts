@@ -129,10 +129,15 @@ for (const scheme of ["light", "dark"] as const) {
       exact: true,
     });
     await pool.locator("summary", { hasText: ARTIFACTS }).click();
+    // The three artifacts share one row; open it, then every build's details.
     for (const host of await pool
       .locator("summary", { hasText: "scout-prod-workflows" })
       .all())
       await host.click();
+    for (const details of await pool
+      .locator("summary", { hasText: "Build details" })
+      .all())
+      await details.click();
     await expect(
       pool.getByRole("term").filter({ hasText: "Image" }),
     ).toHaveCount(5);
@@ -157,9 +162,12 @@ test("retained artifacts with no desired host are collapsed behind their count",
   await expect(pool.getByRole("row")).toHaveCount(3);
   await expect(pool).toContainText("1 · selected");
   await expect(pool).toContainText("1 · retained");
-  const unhosted = pool.getByText("Zero · artifact retained", { exact: true });
-  await expect(unhosted).toHaveCount(3);
-  await expect(unhosted.first()).toBeHidden();
+  // Three artifacts that read the same share one row with their count.
+  const unhosted = pool.getByText("Zero · artifacts retained", {
+    exact: true,
+  });
+  await expect(unhosted).toHaveCount(1);
+  await expect(unhosted).toBeHidden();
   const artifacts = pool.locator("details", {
     has: page.locator("summary", { hasText: ARTIFACTS }),
   });
@@ -168,9 +176,20 @@ test("retained artifacts with no desired host are collapsed behind their count",
     /^Retained artifacts with no desired host\s*3$/u,
   );
   await artifacts.locator("summary").first().click();
-  for (const row of await unhosted.all()) await expect(row).toBeVisible();
-  // Two tables now: each header, two hosted builds and three artifacts.
-  await expect(pool.getByRole("row")).toHaveCount(7);
+  await expect(unhosted).toBeVisible();
+  const shared = pool.getByRole("row").filter({ hasText: "3 builds" });
+  await expect(shared).toHaveCount(1);
+  await shared.locator("summary").first().click();
+  for (const digit of ["c", "d", "e"])
+    await expect(
+      shared.locator(`abbr[title="${digit.repeat(40)}"]`),
+    ).toBeVisible();
+  // No row here offers retirement, so the table has no retirement column.
+  await expect(
+    artifacts.getByRole("columnheader", { name: "Retirement" }),
+  ).toHaveCount(0);
+  // Two tables now: each header, two hosted builds and one shared row.
+  await expect(pool.getByRole("row")).toHaveCount(5);
   // Only a build with a host can be retired, so the artifacts add no button.
   await expect(
     pool.getByRole("button", { name: "Request retirement", exact: true }),

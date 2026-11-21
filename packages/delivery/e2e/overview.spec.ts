@@ -3,6 +3,7 @@ import { HubGridSchema } from "#shared/hub/hub-contract.ts";
 import {
   api,
   expectNoHorizontalOverflow,
+  isPhone,
   requestArcadeDeployment,
 } from "./helpers.ts";
 
@@ -220,6 +221,12 @@ test("each kind is a panel with its counts, and a group of several has its own",
 test("a tile links its service and each environment chip", async ({ page }) => {
   await openOverview(page);
   const scout = tile(page, "Scout for LoL");
+  // A phone folds a service that needs nobody; open it to reach its chips.
+  if (isPhone(page) && !(await scout.isVisible()))
+    await page
+      .getByRole("region", { name: "Products", exact: true })
+      .locator("summary", { hasText: "Nothing needs attention" })
+      .click();
   const chips = scout.getByRole("list", {
     name: "Scout for LoL environments",
   });
@@ -320,21 +327,56 @@ test("the overview filters through the URL", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
-test("tiles fill the width on a desktop and stack on a phone", async ({
+test("tiles fill the width on a desktop and sit two to a row on a phone", async ({
   page,
 }) => {
   await openOverview(page);
+  // Wait for the tiles to settle before measuring them.
+  await expect(
+    page
+      .getByRole("region", { name: "Products", exact: true })
+      .locator(".overview-tile")
+      .first(),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
   const lefts = await page
     .getByRole("region", { name: "Products", exact: true })
     .locator(".overview-tile")
     .evaluateAll((tiles) =>
-      tiles.map((entry) => Math.round(entry.getBoundingClientRect().left)),
+      tiles
+        .filter((entry) => entry.checkVisibility())
+        .map((entry) => Math.round(entry.getBoundingClientRect().left)),
     );
   expect(lefts.length).toBeGreaterThan(3);
   const columns = new Set(lefts).size;
-  const phone = (page.viewportSize()?.width ?? 0) <= 720;
-  if (phone) expect(columns).toBe(1);
+  if (isPhone(page)) expect(columns).toBe(2);
   else expect(columns).toBeGreaterThan(2);
+  await expectNoHorizontalOverflow(page);
+});
+
+test("a phone folds the services that need nobody behind a closed count", async ({
+  page,
+}) => {
+  await openOverview(page);
+  const products = page.getByRole("region", { name: "Products", exact: true });
+  const fold = products.locator("details", {
+    has: page.locator("summary", { hasText: "Nothing needs attention" }),
+  });
+  if (!isPhone(page)) {
+    // A wide screen shows every tile.
+    await expect(
+      page.locator("main details", { hasText: "Nothing needs attention" }),
+    ).toHaveCount(0);
+    return;
+  }
+  await expect(fold).toHaveJSProperty("open", false);
+  await expect(fold.locator("summary")).toHaveText(
+    /^Nothing needs attention\s*\d+$/u,
+  );
+  // What needs a person stays in sight: a service that requires recovery.
+  await expect(tile(page, "Minecraft")).toBeVisible();
+  await fold.locator("summary").click();
+  await expect(fold.locator(".overview-tile").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 

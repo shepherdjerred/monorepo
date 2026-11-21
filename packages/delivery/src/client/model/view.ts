@@ -194,6 +194,66 @@ export function splitCandidates<T extends { deploymentId: string }>(
   };
 }
 
+type Groupable = {
+  deploymentId: string;
+  selection: Pick<
+    Selection,
+    "versionSetRevisionId" | "recipeRevisionId" | "configurationRevisionId"
+  >;
+  eligible: boolean;
+  reason: string | null;
+};
+
+/**
+ * Rollback candidates that restore the same selection with the same verdict,
+ * as one entry. `deploymentId` is the deployment a rollback names: the
+ * accepted one when the group holds it, else the newest. `deployments` keeps
+ * every accepting deployment, newest first, so each stays reachable.
+ */
+export type CandidateGroup<T extends Groupable> = {
+  deploymentId: string;
+  candidate: T;
+  deployments: [T, ...T[]];
+};
+
+/**
+ * Fold rollback candidates (newest first) that would read the same: one
+ * selection, one eligibility and one reason. Each group sits where its
+ * newest candidate does. Restoring any of them restores the same frozen
+ * inputs, so one button per group is enough.
+ */
+export function groupCandidates<T extends Groupable>(
+  candidates: readonly T[],
+  acceptedDeploymentId: string | null | undefined,
+): CandidateGroup<T>[] {
+  const groups = new Map<string, CandidateGroup<T>>();
+  for (const candidate of candidates) {
+    const { selection } = candidate;
+    const key = JSON.stringify([
+      selection.versionSetRevisionId,
+      selection.recipeRevisionId,
+      selection.configurationRevisionId,
+      candidate.eligible,
+      candidate.reason,
+    ]);
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, {
+        deploymentId: candidate.deploymentId,
+        candidate,
+        deployments: [candidate],
+      });
+      continue;
+    }
+    group.deployments.push(candidate);
+    if (candidate.deploymentId === acceptedDeploymentId) {
+      group.deploymentId = candidate.deploymentId;
+      group.candidate = candidate;
+    }
+  }
+  return [...groups.values()];
+}
+
 /** An approval queue item still waits for a human decision, of a release or of a saved plan. */
 export function awaitsDecision(item: ApprovalQueueItem) {
   if (item.awaitingPlanDecision) return true;

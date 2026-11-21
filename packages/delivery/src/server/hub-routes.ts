@@ -20,11 +20,11 @@ import {
   versionTrace,
 } from "#infrastructure/hub/executions.ts";
 import {
-  activityPage,
   buildPage,
   deploymentPage,
   environmentDetail,
 } from "#infrastructure/hub/lists.ts";
+import { activityPage } from "#infrastructure/hub/activity.ts";
 import type { Enrichment } from "#infrastructure/enrichment/enrichment.ts";
 
 type App = Hono<{ Variables: { principal: Principal; requestId: string } }>;

@@ -1,9 +1,4 @@
-import type {
-  Deployment,
-  Environment,
-  Principal,
-  VersionSetRevision,
-} from "#shared/contract.ts";
+import type { Deployment, Environment, Principal } from "#shared/contract.ts";
 import type { ImageCheck } from "#shared/hub/integration-contract.ts";
 import { relativeTime } from "#client/components/time.tsx";
 
@@ -40,17 +35,6 @@ export function messageNotice(status: Deployment["status"]) {
       return "notice info";
     }
   }
-}
-
-export function versionLabel(
-  id: string | null,
-  versions: VersionSetRevision[],
-): string {
-  if (id === null) return "Unknown";
-  const version = versions.find((candidate) => candidate.id === id);
-  return version === undefined
-    ? id
-    : `${version.serviceId} @ ${version.revision.toString()}`;
 }
 
 /**

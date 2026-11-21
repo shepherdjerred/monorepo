@@ -1,0 +1,133 @@
+import {
+  PROBLEM_ACTION_SUFFIXES,
+  type ActivityEntry,
+  type ActivityQuery,
+  type ActivitySubject,
+} from "#shared/hub/hub-contract.ts";
+import { changeDomain } from "#shared/hub/change-contract.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
+import type { Database } from "#infrastructure/database.ts";
+import { decodeCursor, olderThan, page, PAGE_SIZE } from "./cursor.ts";
+import { activityEntry } from "./views.ts";
+
+type AuditRow = Prisma.AuditGetPayload<object>;
+
+const WINDOW_MS = { hour: 3_600_000, day: 86_400_000 } as const;
+
+/** The audit rows an activity query selects, before its cursor. */
+export function activityWhere(
+  query: ActivityQuery,
+  now: Date,
+): Prisma.AuditWhereInput {
+  return {
+    ...(query.actor === undefined ? {} : { actor: query.actor }),
+    ...(query.action === undefined
+      ? {}
+      : { action: { startsWith: query.action } }),
+    ...(query.entityId === undefined ? {} : { entityId: query.entityId }),
+    ...(query.within === undefined
+      ? {}
+      : {
+          occurredAt: {
+            gte: new Date(now.getTime() - WINDOW_MS[query.within]),
+          },
+        }),
+    AND: [
+      query.problems === undefined
+        ? {}
+        : {
+            OR: PROBLEM_ACTION_SUFFIXES.map((suffix) => ({
+              action: { endsWith: suffix },
+            })),
+          },
+      olderThan(decodeCursor(query.cursor), "occurredAt"),
+    ],
+  };
+}
+
+function ids(rows: readonly AuditRow[], domain: string) {
+  return [
+    ...new Set(
+      rows
+        .filter((row) => changeDomain(row.action) === domain)
+        .map((row) => row.entityId),
+    ),
+  ];
+}
+
+/**
+ * The service, environment and set revision number of every deployment,
+ * build and version set a page of audit rows is about: one read per kind for
+ * the whole page, never one per row.
+ */
+async function activitySubjects(
+  database: Database,
+  rows: readonly AuditRow[],
+): Promise<Map<string, ActivitySubject>> {
+  const [deployments, builds, versions] = await Promise.all([
+    database.deployment.findMany({
+      where: { id: { in: ids(rows, "deployment") } },
+      select: {
+        id: true,
+        serviceId: true,
+        environmentId: true,
+        versionSetRevisionId: true,
+      },
+    }),
+    database.build.findMany({
+      where: { id: { in: ids(rows, "build") } },
+      select: { id: true, serviceId: true },
+    }),
+    database.versionSet.findMany({
+      where: { id: { in: ids(rows, "versionSet") } },
+      select: { id: true, serviceId: true, revision: true },
+    }),
+  ]);
+  const deployed = await database.versionSet.findMany({
+    where: {
+      id: { in: deployments.map((row) => row.versionSetRevisionId) },
+    },
+    select: { id: true, revision: true },
+  });
+  const revisionOf = new Map(deployed.map((row) => [row.id, row.revision]));
+  return new Map<string, ActivitySubject>([
+    ...deployments.map((row): [string, ActivitySubject] => [
+      row.id,
+      {
+        serviceId: row.serviceId,
+        environmentId: row.environmentId,
+        revision: revisionOf.get(row.versionSetRevisionId) ?? null,
+      },
+    ]),
+    ...builds.map((row): [string, ActivitySubject] => [
+      row.id,
+      { serviceId: row.serviceId, environmentId: null, revision: null },
+    ]),
+    ...versions.map((row): [string, ActivitySubject] => [
+      row.id,
+      { serviceId: row.serviceId, environmentId: null, revision: row.revision },
+    ]),
+  ]);
+}
+
+/** One page of the audit trail, newest first, each entry with what it is about. */
+export async function activityPage(
+  database: Database,
+  query: ActivityQuery,
+  now = new Date(),
+): Promise<{ items: ActivityEntry[]; nextCursor: string | null }> {
+  const rows = await database.audit.findMany({
+    where: activityWhere(query, now),
+    orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
+    take: PAGE_SIZE + 1,
+  });
+  const selected = page(rows, PAGE_SIZE, (row) => row.occurredAt);
+  const subjects = await activitySubjects(database, selected.items);
+  return {
+    items: selected.items.map((row) => ({
+      ...activityEntry(row),
+      subject: subjects.get(row.entityId) ?? null,
+    })),
+    nextCursor: selected.nextCursor,
+  };
+}

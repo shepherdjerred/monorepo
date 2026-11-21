@@ -3,6 +3,7 @@ import type { ActivityEntry } from "#shared/hub/hub-contract.ts";
 import { renderWithRouter } from "#client/test-router.tsx";
 import { foldActivity, outcomeOf } from "./activity-fold.ts";
 import { ActivityList, isFailure } from "./activity-list.tsx";
+import { actionLabel } from "./activity-labels.ts";
 
 const FIRST = "45cf1828-0f01-4bcd-8dab-592769df488f";
 const SECOND = "3342245c-e1d6-4e4e-99bb-2c542d22b618";
@@ -237,9 +238,83 @@ describe("the activity list", () => {
       render([entry("deployment.claimed", FIRST, {}, "operator@example.com")]),
     );
     expect(row).toMatch(
-      /^<span class="activity-when">.*<\/span><span class="activity-action">deployment\.claimed<\/span><span class="activity-actor">operator@example\.com<\/span><span class="activity-subject">/u,
+      /^<span class="activity-when">.*<\/span><span class="activity-action" title="deployment\.claimed">Deployment started<\/span><span class="activity-actor">operator@example\.com<\/span><span class="activity-subject">/u,
     );
     expect(row).toContain(`aria-label="Deployment ${FIRST}"`);
+  });
+
+  it("shows each row's clock reading beside its age, so rows order by eye", () => {
+    const [row = ""] = rows(render([entry("deployment.claimed", FIRST)]));
+    expect(row).toMatch(
+      /<span class="activity-when"><time dateTime="[^"]+" title="[^"]+"><span class="clock">[^<]*\d{2}:\d{2}:\d{2}<span aria-hidden="true"> · <\/span><\/span>/u,
+    );
+  });
+
+  it("names a deployment's environment and release, and a version set by its number", () => {
+    const named = (subject: ActivityEntry["subject"], action: string) => ({
+      ...entry(action, FIRST),
+      subject,
+      target:
+        action === "versionSet.composed"
+          ? ({ kind: "versionSet", id: FIRST } as const)
+          : ({ kind: "deployment", id: FIRST } as const),
+    });
+    const html = renderWithRouter(
+      <ActivityList
+        entries={[
+          named(
+            {
+              serviceId: "prometheus",
+              environmentId: "prometheus/prod",
+              revision: 274,
+            },
+            "deployment.claimed",
+          ),
+          named(
+            { serviceId: "prometheus", environmentId: null, revision: 8 },
+            "versionSet.composed",
+          ),
+          named(null, "deployment.lease_renewed"),
+        ]}
+        services={[
+          {
+            id: "prometheus",
+            title: "Prometheus stack",
+            environments: [{ id: "prometheus/prod", name: "prod" }],
+          },
+        ]}
+      />,
+    ).replaceAll("<!-- -->", "");
+    const [claimed = "", composed = "", renewed = ""] = rows(html);
+    expect(claimed).toContain(
+      '<span class="activity-where"><span title="prometheus/prod">Prometheus stack prod</span> · <span class="revision">r274</span></span>',
+    );
+    expect(composed).toContain(
+      `href="/versions/${FIRST}"><span class="revision">r8</span></a>`,
+    );
+    expect(composed).toContain(
+      '<span class="activity-where"><span title="prometheus">Prometheus stack</span></span>',
+    );
+    expect(renewed).toContain("Executor checked in");
+    expect(renewed).not.toContain("activity-where");
+  });
+
+  it("folds a burst of verified builds into one counted row that lists each", () => {
+    const html = render([
+      entry("build.verified", "build-1"),
+      entry("build.verified", "build-2"),
+      entry("build.verified", "build-3"),
+      entry("deployment.claimed", FIRST),
+    ]);
+    const [builds = "", claimed = ""] = rows(html);
+    expect(rows(html)).toHaveLength(2);
+    expect(builds).toContain(
+      'Build passed CI<span class="activity-count"> ×3</span>',
+    );
+    expect(builds).toContain('<span class="disclosure-label">3 builds</span>');
+    for (const id of ["build-1", "build-2", "build-3"])
+      expect(builds).toContain(`<span class="mono">${id}</span>`);
+    expect(claimed).toContain("Deployment started");
   });
 
   it("marks failures through the failed status, once", () => {
@@ -250,7 +325,10 @@ describe("the activity list", () => {
     ]) {
       const [row = ""] = rows(render([entry(action, FIRST)]));
       expect(row.split("status-failed")).toHaveLength(2);
-      expect(row).toContain(`<span class="status-label">${action}</span>`);
+      expect(row).toContain(
+        `<span class="status-label">${actionLabel(action)}</span>`,
+      );
+      expect(row).toContain(`title="${action}"`);
     }
     const [plain = ""] = rows(render([entry("deployment.claimed", FIRST)]));
     expect(plain).not.toContain("status-failed");

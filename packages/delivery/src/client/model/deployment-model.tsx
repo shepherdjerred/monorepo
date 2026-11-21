@@ -13,6 +13,7 @@ import {
   DeploymentLink,
   QueryPanel,
   SelectionFacts,
+  deploymentRevisions,
 } from "./selection-facts.tsx";
 import { Fact, Facts } from "#client/components/facts.tsx";
 
@@ -24,7 +25,10 @@ function FrozenSelection({ detail }: { detail: DeploymentDetailV2 }) {
       {deployment.selection === null ? (
         <p className="empty">This deployment froze no selection.</p>
       ) : (
-        <SelectionFacts selection={deployment.selection} />
+        <SelectionFacts
+          selection={deployment.selection}
+          revisions={deploymentRevisions(detail)}
+        />
       )}
       {deployment.restoredDeploymentId !== null && (
         <p>
@@ -67,7 +71,10 @@ function PreviousSelection({ previousId }: { previousId: string | null }) {
           {detail.deployment.selection === null ? (
             <p className="empty">That deployment froze no selection.</p>
           ) : (
-            <SelectionFacts selection={detail.deployment.selection} />
+            <SelectionFacts
+              selection={detail.deployment.selection}
+              revisions={deploymentRevisions(detail)}
+            />
           )}
           <p>
             Accepted by <DeploymentLink id={previousId} />

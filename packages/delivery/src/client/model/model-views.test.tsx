@@ -25,6 +25,7 @@ import { EnvironmentNotice, InFlightSummary } from "./environment-notices.tsx";
 import {
   awaitsDecision,
   firingAlarms,
+  groupCandidates,
   monitorEvidence,
   rebindChanges,
   retryable,
@@ -185,6 +186,48 @@ describe("model view helpers", () => {
     expect(split(undefined)).toEqual(["d1 d2 d3 d4 d5", "d6 d7 d8"]);
     expect(split("d1", 5)).toEqual(["d1 d2 d3 d4 d5", ""]);
   });
+
+  test("groups candidates that restore one selection with one verdict, rolling back to the accepted one", () => {
+    const selection = {
+      versionSetRevisionId: "set-a",
+      recipeRevisionId: "recipe/1",
+      configurationRevisionId: "config/1",
+    };
+    const candidate = (
+      deploymentId: string,
+      set = "set-a",
+      eligible = true,
+    ) => ({
+      deploymentId,
+      selection: { ...selection, versionSetRevisionId: set },
+      eligible,
+      reason: eligible ? null : "Lowers a forward-only key",
+    });
+    const groups = groupCandidates(
+      [
+        candidate("d1"),
+        candidate("d2", "set-b"),
+        candidate("d3"),
+        candidate("d4"),
+        candidate("d5", "set-a", false),
+      ],
+      "d3",
+    );
+    expect(
+      groups.map((group) => [
+        group.deploymentId,
+        group.deployments.map((entry) => entry.deploymentId).join(" "),
+      ]),
+    ).toEqual([
+      ["d3", "d1 d3 d4"],
+      ["d2", "d2"],
+      ["d5", "d5"],
+    ]);
+    expect(
+      groupCandidates([candidate("d1"), candidate("d3")], null)[0]
+        ?.deploymentId,
+    ).toBe("d1");
+  });
 });
 
 /** The revision numbers the environment page loads: the fixture's version sets. */
@@ -226,14 +269,24 @@ function environment(
   );
 }
 
-/** `count` accepted selections, newest first, as `deployment-1` onwards. */
-function manyCandidates(count: number) {
+/**
+ * `count` accepted selections, newest first, as `deployment-1` onwards. Each
+ * is its own configuration revision unless `same`, when every deployment
+ * accepted one selection.
+ */
+function manyCandidates(count: number, same = false) {
   const [template] = fixtures.rollbackCandidates.prod.candidates;
   if (template === undefined) throw new Error("fixture has a candidate");
   return {
     candidates: Array.from({ length: count }, (_, index) => ({
       ...template,
       deploymentId: `deployment-${String(index + 1)}`,
+      selection: same
+        ? template.selection
+        : {
+            ...template.selection,
+            configurationRevisionId: `scout-prod-config/${String(index + 1)}`,
+          },
     })),
   };
 }
@@ -350,6 +403,29 @@ describe("environment model panels", () => {
     expect(older).toContain('<ol class="candidates" start="7">');
   });
 
+  test("one selection accepted many times is one candidate that lists every deployment", () => {
+    const html = environment(true, { candidates: manyCandidates(8, true) });
+    const list = html.slice(html.indexOf('<ol class="candidates"'));
+    expect(list).not.toContain("Older candidates");
+    expect(list.match(/>Roll back to this<\/button>/gu)).toHaveLength(1);
+    expect(list).toContain("Accepted 8 times, last");
+    for (let index = 1; index <= 8; index += 1)
+      expect(list).toContain(`href="/deployments/deployment-${String(index)}"`);
+    // The button rolls back to the newest and is named apart from others.
+    expect(list).toMatch(
+      /aria-label="Roll back to this: [^"]+, deployment deployment-1"/u,
+    );
+  });
+
+  test("every candidate's button has a name of its own", () => {
+    const html = environment(true, { candidates: manyCandidates(8) });
+    const names = [
+      ...html.matchAll(/aria-label="((?:Roll back|Re-assert)[^"]*)"/gu),
+    ].map((match) => match[1]);
+    expect(names).toHaveLength(8);
+    expect(new Set(names).size).toBe(8);
+  });
+
   test("a read-only identity cannot request a rollback or rebind", () => {
     const html = environment(false);
     expect(html).toContain("Your identity has read-only access.");
@@ -402,11 +478,16 @@ describe("deployment model", () => {
         alarmed,
       );
     });
-    expect(html).toContain("scout-for-lol:r41");
+    // Each selection names its release by number and links to its page.
+    expect(html).toContain(
+      `<a href="/versions/scout-for-lol%3Ar41"><span class="revision">r41</span></a>`,
+    );
     expect(html).toContain("Restores the selection accepted by");
     expect(html).toContain("scout-prod-41");
     expect(html).toContain("Previous accepted selection");
-    expect(html).toContain("scout-for-lol:r42");
+    expect(html).toContain(
+      `<a href="/versions/scout-for-lol%3Ar42"><span class="revision">r42</span></a>`,
+    );
     expect(html).toContain("granted");
   });
 

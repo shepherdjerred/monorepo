@@ -140,10 +140,16 @@ export function ConfirmButton({
   disabled = false,
   pending = false,
   describedBy,
+  name,
   check,
   onConfirm,
 }: {
   label: string;
+  /**
+   * The button's accessible name where several share a label: it starts with
+   * the visible label and adds what tells this one apart.
+   */
+  name?: string;
   title: string;
   children: ReactNode;
   confirmLabel: string;
@@ -186,6 +192,7 @@ export function ConfirmButton({
         disabled={disabled}
         aria-disabled={pending ? true : undefined}
         aria-describedby={describedBy}
+        aria-label={name}
         onClick={() => {
           if (!pending && (check?.() ?? true)) ask(id, onConfirm);
         }}

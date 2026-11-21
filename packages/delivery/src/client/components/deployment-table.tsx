@@ -8,6 +8,7 @@ import {
   shortIdentifier,
 } from "./identifier.tsx";
 import { Status, statusLabel } from "./status.tsx";
+import { CatalogName, type CatalogNames } from "./catalog-name.tsx";
 import { RelativeTime, relativeTime, useNow } from "./time.tsx";
 
 /** What a deployment releases, as people say it: `r274`, or the source build's short id. */
@@ -66,15 +67,21 @@ export function DeploymentStatus({
 function Row({
   deployment,
   showEnvironment,
+  names,
 }: {
   deployment: DeploymentListItem;
   showEnvironment: boolean;
+  names: CatalogNames | undefined;
 }) {
   const at = useNow();
   const what = `${deployment.kind} ${releaseLabel(deployment)}`;
-  const name: ReactNode = showEnvironment
-    ? deployment.environmentId
-    : deployment.kind;
+  const environment =
+    names?.environment(deployment.environmentId) ?? deployment.environmentId;
+  const name: ReactNode = showEnvironment ? (
+    <CatalogName name={environment} slug={deployment.environmentId} />
+  ) : (
+    deployment.kind
+  );
   return (
     <tr>
       <th scope="row">
@@ -115,10 +122,13 @@ export function DeploymentTable({
   deployments,
   empty,
   showEnvironment = true,
+  names,
 }: {
   deployments: DeploymentListItem[];
   empty: string;
   showEnvironment?: boolean;
+  /** The catalog's names, so an environment reads as the overview names it. */
+  names?: CatalogNames;
 }) {
   if (deployments.length === 0) return <p className="empty">{empty}</p>;
   return (
@@ -138,6 +148,7 @@ export function DeploymentTable({
               key={deployment.id}
               deployment={deployment}
               showEnvironment={showEnvironment}
+              names={names}
             />
           ))}
         </tbody>

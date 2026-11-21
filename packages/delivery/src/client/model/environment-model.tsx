@@ -13,7 +13,7 @@ import { delivery } from "#client/api.ts";
 import { queries } from "#client/queries.ts";
 import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
-import { Identifier } from "#client/components/identifier.tsx";
+import { Identifier, shortIdentifier } from "#client/components/identifier.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { MonitorPanel } from "./monitor-panel.tsx";
 import {
@@ -22,9 +22,15 @@ import {
   SelectionFacts,
   SetRevision,
   SetRevisionLink,
+  releaseName,
   type RevisionNumbers,
 } from "./selection-facts.tsx";
-import { rebindChanges, splitCandidates } from "./view.ts";
+import {
+  groupCandidates,
+  rebindChanges,
+  splitCandidates,
+  type CandidateGroup,
+} from "./view.ts";
 import type { Blocker } from "./environment-status.ts";
 import { BlockedReason, RequestError } from "./environment-notices.tsx";
 import { Fact, Facts } from "#client/components/facts.tsx";
@@ -193,8 +199,48 @@ function SelectionPanel({
   );
 }
 
+/**
+ * When and by which deployment a selection was accepted. A selection several
+ * deployments accepted names the newest and lists every one behind a count.
+ */
+function CandidateOrigin({
+  deployments,
+}: {
+  deployments: CandidateGroup<RollbackCandidate>["deployments"];
+}) {
+  const [newest] = deployments;
+  if (deployments.length === 1)
+    return (
+      <p className="candidate-origin">
+        Accepted <RelativeTime value={newest.acceptedAt} /> by deployment{" "}
+        <DeploymentLink id={newest.deploymentId} short />
+      </p>
+    );
+  return (
+    <div className="candidate-origin">
+      <Disclosure
+        summary={
+          <>
+            Accepted {deployments.length} times, last{" "}
+            <RelativeTime value={newest.acceptedAt} />
+          </>
+        }
+      >
+        <ul className="candidate-deployments">
+          {deployments.map((entry) => (
+            <li key={entry.deploymentId}>
+              <RelativeTime value={entry.acceptedAt} clock /> by deployment{" "}
+              <DeploymentLink id={entry.deploymentId} short />
+            </li>
+          ))}
+        </ul>
+      </Disclosure>
+    </div>
+  );
+}
+
 function Candidate({
-  candidate,
+  group,
   view,
   environmentId,
   revisions,
@@ -202,7 +248,7 @@ function Candidate({
   pending,
   onRollback,
 }: {
-  candidate: RollbackCandidate;
+  group: CandidateGroup<RollbackCandidate>;
   view: EnvironmentSelection | undefined;
   environmentId: string;
   revisions: RevisionNumbers;
@@ -213,11 +259,14 @@ function Candidate({
 }) {
   const label = useId();
   const reason = useId();
+  const { candidate } = group;
   const { selection } = candidate;
   // The accepted selection is itself a source: restoring it re-asserts its
   // frozen inputs after a failed or drifted target.
   const current = candidate.deploymentId === view?.acceptedDeploymentId;
   const action = current ? "Re-assert this selection" : "Roll back to this";
+  // Every candidate's button reads the same, so its name says which it is.
+  const name = `${action}: ${releaseName(selection.versionSetRevisionId, revisions)}, deployment ${shortIdentifier(candidate.deploymentId)}`;
   return (
     <li className={candidate.eligible ? undefined : "candidate-excluded"}>
       <div className="candidate-heading">
@@ -236,14 +285,12 @@ function Candidate({
               <span className="badge badge-current">Accepted now</span>
             )}
           </p>
-          <p className="candidate-origin">
-            Accepted <RelativeTime value={candidate.acceptedAt} /> by deployment{" "}
-            <DeploymentLink id={candidate.deploymentId} short />
-          </p>
+          <CandidateOrigin deployments={group.deployments} />
         </div>
         {candidate.eligible ? (
           <ConfirmButton
             label={action}
+            name={name}
             title={`Roll back ${environmentId}?`}
             confirmLabel="Request rollback"
             describedBy={refusedId === null ? label : `${label} ${refusedId}`}
@@ -272,6 +319,7 @@ function Candidate({
             type="button"
             className="secondary-button"
             disabled
+            aria-label={name}
             aria-describedby={`${label} ${reason}`}
           >
             {action}
@@ -307,15 +355,15 @@ function RollbackCandidates({
       ? "The binding generation is unavailable, so a rollback cannot be requested."
       : refusal(view, actions);
   const { shown, older } = splitCandidates(
-    candidates,
+    groupCandidates(candidates, view?.acceptedDeploymentId),
     view?.acceptedDeploymentId,
   );
-  const list = (items: RollbackCandidate[], start: number) => (
+  const list = (items: CandidateGroup<RollbackCandidate>[], start: number) => (
     <ol className="candidates" start={start}>
-      {items.map((candidate) => (
+      {items.map((group) => (
         <Candidate
-          key={candidate.deploymentId}
-          candidate={candidate}
+          key={group.deploymentId}
+          group={group}
           view={view}
           environmentId={environmentId}
           revisions={revisions}

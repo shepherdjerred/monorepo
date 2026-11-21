@@ -1,6 +1,5 @@
 import {
   DeploymentListItemSchema,
-  type ActivityQuery,
   type BuildListQuery,
   type DeploymentListItem,
   type DeploymentListQuery,
@@ -17,7 +16,7 @@ import { PipelineRevisionSchema } from "#shared/contract.ts";
 import { releaseKindOf } from "#shared/deployment-request-contract.ts";
 import { required } from "#infrastructure/delivery-records.ts";
 import { decodeCursor, olderThan, page, PAGE_SIZE } from "./cursor.ts";
-import { activityEntry, buildView, serviceSummary } from "./views.ts";
+import { buildView, serviceSummary } from "./views.ts";
 import { version } from "#infrastructure/delivery-data.ts";
 
 /**
@@ -90,26 +89,6 @@ export async function buildPage(database: Database, query: BuildListQuery) {
           left.component.localeCompare(right.component),
         ),
     })),
-    nextCursor: selected.nextCursor,
-  };
-}
-
-export async function activityPage(database: Database, query: ActivityQuery) {
-  const rows = await database.audit.findMany({
-    where: {
-      ...(query.actor === undefined ? {} : { actor: query.actor }),
-      ...(query.action === undefined
-        ? {}
-        : { action: { startsWith: query.action } }),
-      ...(query.entityId === undefined ? {} : { entityId: query.entityId }),
-      ...olderThan(decodeCursor(query.cursor), "occurredAt"),
-    },
-    orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
-    take: PAGE_SIZE + 1,
-  });
-  const selected = page(rows, PAGE_SIZE, (row) => row.occurredAt);
-  return {
-    items: selected.items.map((row) => activityEntry(row)),
     nextCursor: selected.nextCursor,
   };
 }

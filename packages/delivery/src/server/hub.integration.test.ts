@@ -206,6 +206,53 @@ describe("hub pagination", () => {
   });
 });
 
+describe("hub activity", () => {
+  test("names each deployment's service, environment and release, and filters to problems and a window", async () => {
+    const all = ActivityPageSchema.parse(
+      await body("/api/v1/activity?action=deployment."),
+    );
+    const requested = all.items.find(
+      (entry) => entry.action === "deployment.requested",
+    );
+    expect(requested?.subject).toEqual({
+      serviceId: "arcade",
+      environmentId: "arcade/prod",
+      revision: fixture.versionSet.revision,
+    });
+    await delivery.database.$transaction((tx) =>
+      audit(tx, testOperator, {
+        action: "snapshot.restore_failed",
+        entityId: "hub-problem",
+        requestId: "hub-problem",
+      }),
+    );
+    const problems = ActivityPageSchema.parse(
+      await body("/api/v1/activity?problems=only"),
+    );
+    expect(problems.items.map((entry) => entry.action)).toEqual([
+      "snapshot.restore_failed",
+    ]);
+    expect(problems.items[0]?.subject).toBeNull();
+    const recent = ActivityPageSchema.parse(
+      await body("/api/v1/activity?within=hour&action=snapshot.restore"),
+    );
+    expect(recent.items).toHaveLength(1);
+    await delivery.database.audit.updateMany({
+      where: { entityId: "hub-problem" },
+      data: { occurredAt: new Date(Date.now() - 2 * 86_400_000) },
+    });
+    for (const within of ["hour", "day"])
+      expect(
+        ActivityPageSchema.parse(
+          await body(
+            `/api/v1/activity?within=${within}&action=snapshot.restore`,
+          ),
+        ).items,
+      ).toHaveLength(0);
+    expect(await status("/api/v1/activity?within=week")).toBe(400);
+  });
+});
+
 describe("hub integrations", () => {
   test("enrichment reads upstream doubles and caches final answers", async () => {
     const buildId = encodeURIComponent(fixture.publication.buildId);

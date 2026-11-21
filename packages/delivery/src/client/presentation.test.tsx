@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
 import { EnvironmentSchema } from "#shared/contract.ts";
 import { BuildWithArtifactsSchema } from "#shared/hub/hub-contract.ts";
 import { EnvironmentState } from "#client/components/environment-state.tsx";
@@ -9,8 +8,8 @@ import {
   messageNotice,
   observation,
   revisionNumbers,
-  versionLabel,
 } from "./presentation.ts";
+import * as fixtures from "#testing/model-fixtures.ts";
 import { BuildTable } from "./artifacts.tsx";
 import { renderWithRouter } from "./test-router.tsx";
 
@@ -91,7 +90,7 @@ describe("release state presentation", () => {
     },
   );
   test("an old observation renders as a dated claim with no stale marker", () => {
-    const html = renderToStaticMarkup(
+    const html = renderWithRouter(
       <EnvironmentState
         environment={{ ...environment, observedAt: "2026-10-16T00:00:00.000Z" }}
         versions={[]}
@@ -143,7 +142,7 @@ describe("release state presentation", () => {
     ).toBe(summary);
   });
   test("renders desired, observed, and unknown acceptance as separate evidence", () => {
-    const html = renderToStaticMarkup(
+    const html = renderWithRouter(
       <EnvironmentState environment={environment} versions={[]} now={0} />,
     );
     expect(html).toContain("Desired");
@@ -154,6 +153,21 @@ describe("release state presentation", () => {
     expect(html).toContain("Unknown");
     expect(html).toContain("No runtime observation");
   });
+  test("a loaded release reads as its number and links to its page", () => {
+    const [loaded] = fixtures.versionSets;
+    if (loaded === undefined) throw new Error("Expected a version set fixture");
+    const html = renderWithRouter(
+      <EnvironmentState
+        environment={{ ...environment, desiredVersionSetRevisionId: loaded.id }}
+        versions={[loaded]}
+        now={0}
+      />,
+    );
+    expect(html).toContain(
+      `<a href="/versions/${encodeURIComponent(loaded.id)}"><span class="revision">r${String(loaded.revision)}</span></a>`,
+    );
+    expect(html).not.toContain(" @ ");
+  });
   test("a deployment message takes the tone of the outcome it reports", () => {
     expect(messageNotice("succeeded")).toBe("notice success");
     expect(messageNotice("failed")).toBe("notice error");
@@ -161,10 +175,6 @@ describe("release state presentation", () => {
     expect(messageNotice("queued")).toBe("notice info");
     expect(messageNotice("awaiting_approval")).toBe("notice info");
     expect(messageNotice("canceled")).toBe("notice");
-  });
-  test("unknown revision IDs remain visible rather than disappearing", () => {
-    expect(versionLabel("missing:revision", [])).toBe("missing:revision");
-    expect(versionLabel(null, [])).toBe("Unknown");
   });
   test("revision numbers come from the loaded version sets and the recent deployments", () => {
     const numbers = revisionNumbers({

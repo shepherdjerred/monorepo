@@ -39,7 +39,8 @@ async function open(page: Page, environmentId: string) {
   return page.getByRole("main");
 }
 
-const ROLLBACK_BUTTONS = /^(Roll back to this|Re-assert this selection)$/u;
+// Each button is named by its label, then the release and deployment it restores.
+const ROLLBACK_BUTTONS = /^(?:Roll back to this|Re-assert this selection):/u;
 
 test("a locked environment says recovery is required and refuses every request", async ({
   page,

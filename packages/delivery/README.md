@@ -105,7 +105,11 @@ deployments that failed, require recovery or have sat queued with no stage
 started for `QUEUED_ATTENTION_MINUTES` (15), accepted releases a monitor alarm
 fired on, and services whose newest build failed. Each item names what it is
 about (`The deploy of r4 …`) instead of the executor's message. `?q=` and
-`?status=` filter by service name and by an environment's status.
+`?status=` filter by service name and by an environment's status. At 600px
+and narrower the tiles sit two to a row, and the services that need nobody
+(every environment succeeded, or it has none, and no attention item names it)
+fold behind a closed "Nothing needs attention" count; a catalog group folds
+only when all of it is healthy and otherwise stays open.
 
 The pipelines list shows each service's newest CI run (its result and the
 Woodpecker run number, which every service that run built shares) apart from
@@ -167,7 +171,12 @@ while an action failed, is running or awaits approval, with those first. A CI
 workflow's second line names a failed step only when the workflow itself
 failed: Woodpecker also reports a step as failed when it stops a service
 container at the end of a workflow that passed. The rules are pure functions
-in `pipeline-view-model.ts`.
+in `pipeline-view-model.ts`. On the promotion page each environment stage
+carries its `accepted` release, and a line under its heading says what it
+runs, what its newest deployment did with another release, and whether a
+newer release is ready for it and how it arrives ("Running r274 · r293
+canceled · r322 ready · needs approval", or "up to date"); a release that
+waits for a person links to the environment (`environment-standing.ts`).
 
 Filters and pages are search parameters. Forms are native `<form>` elements.
 The Service and Environment filters suggest the catalog the overview shows
@@ -201,9 +210,15 @@ awaiting-approval one reads as in flight, and a running OpenTofu deployment
 whose saved plan waits reads as awaiting plan approval. While either holds,
 the release form, rebind and every rollback are disabled with a reason that
 links that deployment. Forms keep their input after a refusal, tie the
-server's message to the field it concerns and never show its error code. It lists the five newest rollback candidates
-and the accepted one, and collapses the older ones; it lists worker builds
-with a desired host and collapses retained artifacts without one. The
+server's message to the field it concerns and never show its error code. Rollback candidates that restore one
+selection with one verdict share a row that rolls back to the accepted or
+newest of them and lists every deployment that accepted it; each button's
+accessible name adds the release and deployment it restores. It lists the
+five newest of those rows and the accepted one, and collapses the older ones.
+It lists worker builds with a desired host and collapses retained artifacts
+without one; builds whose rows would read the same and offer no action share
+one counted row, and a table where no build can be retired has no retirement
+column. The
 rollback-candidate and worker routes stay unpaged, because the toolkit reads
 the whole lists. A candidate shows its set revision as `r274` when the page
 has loaded that set revision (the service's 50 newest version sets and the
@@ -244,8 +259,9 @@ line heights and weights) and the density tokens: control height, table row
 padding, panel padding and page gap. The other stylesheets take sizes and
 colors from those tokens. The status colors mean a state and nothing else; the
 brand mark, the current page and the primary action use `--accent`. One
-viewport breakpoint, `(width <= 720px)`, is the phone layout, and a coarse
-pointer raises every control to a 44px target.
+viewport breakpoint, `(width <= 720px)`, is the phone layout; the overview
+alone tightens further at `(width <= 600px)`, where its tiles pair up and
+healthy services fold. A coarse pointer raises every control to a 44px target.
 
 Pages share these components from `src/client/components/`:
 
@@ -299,11 +315,30 @@ worker-pool panels while the deployment awaits approval.
 
 The activity page shows what the common actions recorded: a stage write's
 stage and status, a request's environment, set revision and override reasons,
-a decision's override, a publication's service and source, and a result.
-Consecutive stage writes of one deployment by one actor fold into one entry
-that lists each stage. Folding is presentational and per fetched page: the
-route still pages by audit row, so a run that crosses a page boundary reads as
-one entry on each page.
+a decision's override, a publication's service and source, and a result. Each
+known action reads in plain words (`src/client/routes/activity-labels.ts`)
+with its recorded code as the title; an unknown one is shown as recorded. Each
+row shows its clock reading to the second beside its age, so rows a minute
+apart still order by eye. `GET /api/v1/activity` names the service,
+environment and set revision number of every deployment, build and version
+set entry (`subject`, read with one query per kind for the whole page), and
+takes `problems=only` (actions ending in a failure, refusal, lapse or alarm)
+and `within=hour|day`; the page's "Show" and "Time range" filters are those
+search parameters. Consecutive stage writes of one deployment by one actor
+fold into one entry that lists each stage, and a run of one routine build
+record (`build.source_recorded`, `build.verified`, `build.published`) by one
+actor folds into one counted entry. Folding is presentational and per fetched
+page: the route still pages by audit row, so a run that crosses a page
+boundary reads as one entry on each page.
+
+Every moment the app states in absolute terms uses one format
+(`exactTime` in `src/client/components/time.tsx`): the reader's local date and
+a 24-hour clock, to the minute, or to the second where nearby moments are
+ordered. A relative time keeps that exact moment in its title. Wherever a
+person reads a release, it is its set revision number (`r274`); a set revision
+the page has not loaded shows the short form of its id. A service or
+environment is named as the overview names it, with its id as the title; the
+environment page keeps the id as its heading and names it in the eyebrow.
 
 ## Public contracts
 

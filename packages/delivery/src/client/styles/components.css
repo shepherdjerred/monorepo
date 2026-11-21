@@ -292,7 +292,7 @@ button[aria-disabled="true"] {
   border-bottom: 1px solid var(--border-strong);
 }
 .activity-action {
-  font-family: var(--font-mono);
+  font-weight: var(--weight-medium);
   overflow-wrap: anywhere;
 }
 .activity-actor {

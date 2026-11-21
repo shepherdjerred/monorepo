@@ -42,6 +42,10 @@ export const ActivitySearchSchema = z.object({
   actor: lenient(Optional),
   action: lenient(Optional),
   entity: lenient(Optional),
+  /** `only` lists just failures, refusals, lapses and alarms. */
+  problems: lenient(z.literal("only")),
+  /** How far back to look: the last hour or day; absent is any time. */
+  within: lenient(z.enum(["hour", "day"])),
 });
 
 export const EnvironmentSearchSchema = z.object({

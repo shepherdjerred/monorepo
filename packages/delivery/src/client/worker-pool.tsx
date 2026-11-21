@@ -112,19 +112,28 @@ function hostSummary(host: WorkerVersion["host"]) {
 }
 
 /**
- * One worker build as a compact row: its build and digest in short form, its
- * host in one line, and behind that line every identity the row abbreviates.
+ * One worker build as a compact row: its build in short form, its host in
+ * one line, and behind that line every identity the row abbreviates, the
+ * image digest included.
  */
-function WorkerSummary({ worker, id }: { worker: WorkerVersion; id: string }) {
+function WorkerSummary({
+  worker,
+  id,
+  summary = hostSummary(worker.host),
+}: {
+  worker: WorkerVersion;
+  id: string;
+  /** What the disclosure of its identities is labelled; its host line by default. */
+  summary?: string;
+}) {
   return (
     <>
       <span className="worker-build" id={id}>
         <strong>
           <Identifier value={worker.buildId} />
         </strong>
-        <Identifier value={worker.digest} />
       </span>
-      <Disclosure summary={hostSummary(worker.host)}>
+      <Disclosure summary={summary}>
         <div className="worker-provenance">
           <Facts>
             <Fact label="Build" mono>
@@ -161,6 +170,142 @@ function desiredHosts(worker: WorkerVersion, selected: string | undefined) {
   return worker.buildId === selected ? "1 · selected" : "1 · retained";
 }
 
+/** A retirement a build offers: whether it can be pressed now, and the request. */
+type Retirement = { disabled: boolean; pending: boolean; request: () => void };
+
+/** Builds that share one table row. */
+export type WorkerGroup = {
+  key: string;
+  workers: [WorkerVersion, ...WorkerVersion[]];
+};
+
+/**
+ * Worker builds as a table lists them. Builds whose rows would read the same
+ * (one host, one desired-host count, no action of their own) share one row,
+ * placed where the first of them appears. A build that offers an action
+ * keeps a row of its own, so every button stays beside its build.
+ */
+export function groupWorkers(
+  workers: readonly WorkerVersion[],
+  selected: string | undefined,
+  actionable: (worker: WorkerVersion) => boolean,
+): WorkerGroup[] {
+  const groups = new Map<string, WorkerGroup>();
+  for (const worker of workers) {
+    const key = actionable(worker)
+      ? `build:${worker.id}`
+      : `same:${hostSummary(worker.host)}:${desiredHosts(worker, selected)}`;
+    const group = groups.get(key);
+    if (group === undefined) groups.set(key, { key, workers: [worker] });
+    else group.workers.push(worker);
+  }
+  return [...groups.values()];
+}
+
+/** One build inside a shared row: its short build, then its identities. */
+function GroupedWorker({ worker }: { worker: WorkerVersion }) {
+  const build = useId();
+  return (
+    <li>
+      <WorkerSummary worker={worker} id={build} summary="Build details" />
+    </li>
+  );
+}
+
+/** Builds whose rows would read the same, as one row that opens to list each of them. */
+function WorkerGroupRow({
+  workers,
+  selected,
+  column,
+}: {
+  workers: WorkerGroup["workers"];
+  selected: string | undefined;
+  column: boolean;
+}) {
+  const [first] = workers;
+  return (
+    <tr>
+      <td>
+        <span className="worker-build">
+          <strong>{workers.length} builds</strong>
+        </span>
+        <Disclosure summary={hostSummary(first.host)} count={workers.length}>
+          <ul className="worker-group">
+            {workers.map((worker) => (
+              <GroupedWorker key={worker.id} worker={worker} />
+            ))}
+          </ul>
+        </Disclosure>
+      </td>
+      <td>
+        {first.replicas === 0
+          ? "Zero · artifacts retained"
+          : `${desiredHosts(first, selected)} each`}
+      </td>
+      {column && <td />}
+    </tr>
+  );
+}
+
+/**
+ * Worker builds as one table: identical rows grouped, and a retirement
+ * column only when some build in it offers retirement.
+ */
+function WorkerTable({
+  workers,
+  selected,
+  retirementOf,
+}: {
+  workers: readonly WorkerVersion[];
+  selected: string | undefined;
+  /** The retirement a build offers, or null; absent where nothing here can be retired. */
+  retirementOf?: (worker: WorkerVersion) => Retirement | null;
+}) {
+  const retirements = new Map(
+    workers.map((worker) => [worker.id, retirementOf?.(worker) ?? null]),
+  );
+  const column = [...retirements.values()].some((offer) => offer !== null);
+  const groups = groupWorkers(
+    workers,
+    selected,
+    (worker) => (retirements.get(worker.id) ?? null) !== null,
+  );
+  return (
+    <div className="table-scroll">
+      <table className="worker-table">
+        <thead>
+          <tr>
+            <th>Original artifact and fixed host</th>
+            <th>Desired hosts</th>
+            {column && <th>Retirement</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {groups.map(({ key, workers: members }) =>
+            members.length === 1 ? (
+              <WorkerRow
+                key={key}
+                worker={members[0]}
+                selected={selected}
+                retire={
+                  column ? (retirements.get(members[0].id) ?? null) : undefined
+                }
+              />
+            ) : (
+              <WorkerGroupRow
+                key={key}
+                workers={members}
+                selected={selected}
+                column={column}
+              />
+            ),
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function WorkerRow({
   worker,
   selected,
@@ -172,10 +317,7 @@ function WorkerRow({
    * The retirement this row offers; null where its build cannot be retired
    * now, and undefined in a table with no retirement column.
    */
-  retire:
-    | { disabled: boolean; pending: boolean; request: () => void }
-    | null
-    | undefined;
+  retire: Retirement | null | undefined;
 }) {
   const build = useId();
   return (
@@ -278,65 +420,28 @@ export function WorkerPoolPanel({
       {hosted.length === 0 ? (
         <p className="empty">No worker build has a desired host.</p>
       ) : (
-        <div className="table-scroll">
-          <table className="worker-table">
-            <thead>
-              <tr>
-                <th>Original artifact and fixed host</th>
-                <th>Desired hosts</th>
-                <th>Retirement</th>
-              </tr>
-            </thead>
-            <tbody>
-              {hosted.map((worker) => (
-                <WorkerRow
-                  key={worker.id}
-                  worker={worker}
-                  selected={selected}
-                  retire={
-                    permitted &&
-                    selected !== undefined &&
-                    worker.buildId !== selected
-                      ? {
-                          disabled: busy,
-                          pending: retirement.isPending,
-                          request: () => {
-                            retirement.mutate(worker);
-                          },
-                        }
-                      : null
-                  }
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <WorkerTable
+          workers={hosted}
+          selected={selected}
+          retirementOf={(worker) =>
+            permitted && selected !== undefined && worker.buildId !== selected
+              ? {
+                  disabled: busy,
+                  pending: retirement.isPending,
+                  request: () => {
+                    retirement.mutate(worker);
+                  },
+                }
+              : null
+          }
+        />
       )}
       {unhosted.length > 0 && (
         <Disclosure
           summary="Retained artifacts with no desired host"
           count={unhosted.length}
         >
-          <div className="table-scroll">
-            <table className="worker-table">
-              <thead>
-                <tr>
-                  <th>Original artifact and fixed host</th>
-                  <th>Desired hosts</th>
-                </tr>
-              </thead>
-              <tbody>
-                {unhosted.map((worker) => (
-                  <WorkerRow
-                    key={worker.id}
-                    worker={worker}
-                    selected={selected}
-                    retire={undefined}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <WorkerTable workers={unhosted} selected={selected} />
         </Disclosure>
       )}
     </section>

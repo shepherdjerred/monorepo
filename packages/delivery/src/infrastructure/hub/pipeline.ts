@@ -227,7 +227,18 @@ async function environmentStage(
     qualifiedBuildId === null
       ? null
       : await database.build.findUnique({ where: { id: qualifiedBuildId } });
+  const acceptedId = env.acceptedVersionSetRevisionId;
+  const accepted =
+    acceptedId === null
+      ? null
+      : acceptedId === selected?.id
+        ? selected
+        : await database.versionSet.findUnique({ where: { id: acceptedId } });
   return {
+    accepted:
+      accepted === null
+        ? null
+        : { versionSetId: accepted.id, revision: accepted.revision },
     key: `environment:${env.id}`,
     kind: "environment",
     title: env.name,
