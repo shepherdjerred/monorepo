@@ -23,6 +23,13 @@ to finish before calling `bootstrap`. The caller's launchd session can differ
 from that GUI domain, especially over SSH. The GUI login must exist before the
 hook can load its agents.
 
+## Anthropic API access in Fish
+
+On the workstation, run `with-anthropic <command> [args...]` for an external
+tool that needs the Anthropic API key. 1Password resolves the workstation
+credential for that command. Coding-agent wrappers still use subscription
+logins.
+
 ## Agent wrappers
 
 `~/.local/share/agent-bin` holds one POSIX `sh` wrapper per coding-agent CLI:

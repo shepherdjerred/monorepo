@@ -68,6 +68,9 @@ Library/Application Support/eza/theme.yml
 {{- end }}
 
 {{- if ne .profile "workstation" }}
+# The personal Anthropic API credential is scoped to workstation commands.
+.config/fish/anthropic.env.example
+.config/fish/functions/with-anthropic.fish
 # Agent and assistant hosts install only the casks their .chezmoidata
 # allowlist names, so configuration for absent desktop apps stays out.
 .config/contact-profiles
