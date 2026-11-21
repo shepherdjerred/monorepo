@@ -143,8 +143,8 @@ async function keyErrors(
 // the defect. This list deliberately fails closed: adding an entry requires a
 // focused behavioral contract in check-patched-deps.test.ts, rather than a
 // brittle source-text comparison that can mistake formatting for a fix.
-const knownFixedVersions = new Map<string, ReadonlySet<string>>([
-  ["markdown-it", new Set(["15.0.0"])],
+export const knownFixedVersions = new Map<string, ReadonlySet<string>>([
+  ["markdown-it", new Set(["15.0.1", "15.0.3"])],
 ]);
 
 // Bun patches only exactly-keyed versions. Coverage is judged against every
