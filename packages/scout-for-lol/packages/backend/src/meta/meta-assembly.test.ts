@@ -9,7 +9,7 @@ import {
   FIXTURE_ROWS,
   fixtureMetaReader,
 } from "#src/meta/meta-test-fixture.ts";
-import { DEFAULT_META_THRESHOLDS } from "#src/meta/meta-serving.ts";
+import { DEFAULT_META_THRESHOLDS } from "@scout-for-lol/data/meta/meta-serving.ts";
 import { wilsonInterval } from "#src/meta/wilson.ts";
 
 describe("assembleMetaServing", () => {

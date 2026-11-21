@@ -1,5 +1,4 @@
 import { Context } from "@temporalio/activity";
-import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
@@ -37,13 +36,13 @@ import {
   pushOwnedGeneratedCommit,
 } from "#activities/scout/scout-season-refresh-git.ts";
 import { runCommand } from "./data-dragon-shell.ts";
+import { cloneMainForGeneratedRefresh } from "#activities/scout/generated-refresh.ts";
 import {
   branchName,
   dataDragonPrTitle,
   validateVersion,
 } from "#shared/data-dragon-util.ts";
 
-const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
 const MAIN_BRANCH = "main";
 const DATA_DRAGON_VERSION_URL =
@@ -72,23 +71,6 @@ async function fetchJson(url: string): Promise<unknown> {
     );
   }
   return await response.json();
-}
-
-async function writeGitAskpass(tempDir: string): Promise<string> {
-  const path = `${tempDir}/git-askpass.sh`;
-  await Bun.write(
-    path,
-    [
-      "#!/bin/sh",
-      'case "$1" in',
-      '  *Username*) echo "x-access-token" ;;',
-      '  *) echo "$GH_TOKEN" ;;',
-      "esac",
-      "",
-    ].join("\n"),
-  );
-  await runCommand(["chmod", "+x", path], { cwd: tempDir });
-  return path;
 }
 
 async function changedFiles(repoDir: string): Promise<GitStatusEntry[]> {
@@ -276,21 +258,11 @@ export const dataDragonActivities = {
       }
 
       jsonLog("info", "Starting Data Dragon update", input);
-      await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
-      const askpass = await writeGitAskpass(tempDir);
-      const gitEnv = {
-        GH_TOKEN: githubToken,
-        GIT_ASKPASS: askpass,
-        GIT_TERMINAL_PROMPT: "0",
-      };
-
-      await simpleGit().clone(REPO_URL, repoDir, [
-        "--branch",
-        MAIN_BRANCH,
-        "--single-branch",
-        "--depth",
-        "1",
-      ]);
+      const gitEnv = await cloneMainForGeneratedRefresh({
+        tempDir,
+        repoDir,
+        githubToken,
+      });
 
       const branch =
         existingPrState?.headRefName ?? branchName(input.latestVersion);

@@ -1,4 +1,3 @@
-import path from "node:path";
 import { z } from "zod";
 
 /**
@@ -305,8 +304,4 @@ export function championFilePath(championId: number): string {
 
 export function matchupFilePath(championId: number): string {
   return `matchups/${championId.toString()}.json`;
-}
-
-export function metaServingDir(buildDir: string): string {
-  return path.join(buildDir, META_SERVING_DIR);
 }

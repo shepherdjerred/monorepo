@@ -9,7 +9,7 @@ import {
   META_BRACKET_TIERS,
   META_SERVING_DIR,
   type MetaThresholds,
-} from "#src/meta/meta-serving.ts";
+} from "@scout-for-lol/data/meta/meta-serving.ts";
 import {
   META_PARTIALS_TABLE,
   META_PARTIALS_VERSION,

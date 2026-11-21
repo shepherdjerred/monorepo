@@ -2,11 +2,11 @@ import {
   ChampionResponseSchema,
   CHAMPION_META_SNAPSHOT_VERSION,
   EMPTY_CHAMPION_META_SNAPSHOT,
-  MetaManifestResponseSchema,
   championSlug,
   type ChampionEntry,
   type ChampionMetaSnapshot,
 } from "./snapshot.ts";
+import { MetaManifestSchema } from "@scout-for-lol/data/meta/meta-serving.ts";
 
 /**
  * Build the committed snapshot from a deployed meta API. The weekly Temporal
@@ -86,7 +86,7 @@ export async function buildChampionMetaSnapshot(
     "meta_unavailable",
   ]);
   if (manifestResult.status === "missing") return EMPTY_CHAMPION_META_SNAPSHOT;
-  const manifest = MetaManifestResponseSchema.parse(manifestResult.body);
+  const manifest = MetaManifestSchema.parse(manifestResult.body);
   const { defaults } = manifest;
   if (defaults === null || manifest.champions.length === 0) {
     return EMPTY_CHAMPION_META_SNAPSHOT;

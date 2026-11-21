@@ -8,7 +8,7 @@ import {
   type MetaSelection,
 } from "#src/meta/meta-query.ts";
 import type { MetaReader } from "#src/meta/meta-reader.ts";
-import { META_SERVING_VERSION } from "#src/meta/meta-serving.ts";
+import { META_SERVING_VERSION } from "@scout-for-lol/data/meta/meta-serving.ts";
 
 /**
  * The public champion meta API: `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:a/:b}`.

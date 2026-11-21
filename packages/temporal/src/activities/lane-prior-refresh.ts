@@ -1,12 +1,11 @@
 import { Context } from "@temporalio/activity";
-import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
-  fetchGeneratedRemoteBranch,
-  pushOwnedGeneratedCommit,
-  writeGitAskpass,
-} from "./scout/scout-season-refresh-git.ts";
+  changedAllowedFiles,
+  cloneMainForGeneratedRefresh,
+  publishGeneratedRefresh,
+} from "./scout/generated-refresh.ts";
 import {
   LANE_PRIOR_ARTIFACT_PATH,
   LANE_PRIOR_EVAL_REPORT_PATH,
@@ -18,26 +17,12 @@ import {
   revertGeneratedAtOnlyLanePriorChanges,
   updateLanePriors,
 } from "./data-dragon/data-dragon-lane-priors.ts";
-import {
-  createGeneratedPr,
-  ensureGeneratedPrAutoMerge,
-  findOpenGeneratedPrUrl,
-  type OpenPrListItem,
-} from "./data-dragon/data-dragon-pr.ts";
-import {
-  parseGitStatusLine,
-  type GitStatusEntry,
-} from "./data-dragon/data-dragon-diff.ts";
 import { runCommand } from "./data-dragon/data-dragon-shell.ts";
-import { disarmGitHooks, installScoutWorkspace } from "./bot-clone.ts";
+import { installScoutWorkspace } from "./bot-clone.ts";
 import {
   discardFormattingOnlyChanges,
   runScoutGeneratedPreflight,
 } from "./scout/scout-generated-preflight.ts";
-
-const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
-const REPO_SLUG = "shepherdjerred/monorepo";
-const MAIN_BRANCH = "main";
 
 export const LanePriorWorkflowInputSchema = z.strictObject({
   lanePriors: LanePriorUpdateConfigSchema,
@@ -73,73 +58,12 @@ function jsonLog(
   );
 }
 
-function parseChanges(status: string): GitStatusEntry[] {
-  return status
-    .split("\n")
-    .map((line) => parseGitStatusLine(line))
-    .filter((entry) => entry !== undefined);
-}
-
-function lanePriorDisallowedPaths(
-  changes: readonly GitStatusEntry[],
-): string[] {
-  const allowed = new Set([
-    LANE_PRIOR_ARTIFACT_PATH,
-    LANE_PRIOR_EVAL_REPORT_PATH,
-  ]);
-  const disallowed = new Set<string>();
-  for (const change of changes) {
-    if (!allowed.has(change.path)) disallowed.add(change.path);
-    if (
-      change.previousPath !== undefined &&
-      !allowed.has(change.previousPath)
-    ) {
-      disallowed.add(change.previousPath);
-    }
-  }
-  return [...disallowed].toSorted();
-}
-
 async function changedLanePriorFiles(repoDir: string): Promise<string[]> {
-  const status = await runCommand(["git", "status", "--porcelain"], {
-    cwd: repoDir,
-    trimStdout: false,
-  });
-  const changes = parseChanges(status);
-  const disallowed = lanePriorDisallowedPaths(changes);
-  if (disallowed.length > 0) {
-    throw new Error(
-      `Lane-prior refresh changed disallowed paths: ${disallowed.join(", ")}`,
-    );
-  }
-  return changes.map((change) => change.path).toSorted();
-}
-
-function isLanePriorPr(
-  pr: OpenPrListItem,
-  appSlug: string,
-  branch: string,
-): boolean {
-  return (
-    pr.title === lanePriorPrTitle() &&
-    pr.baseRefName === MAIN_BRANCH &&
-    pr.headRefName === branch &&
-    !pr.isCrossRepository &&
-    pr.author.is_bot &&
-    pr.author.login.replace(/^app\//, "").replace(/\[bot\]$/, "") === appSlug
+  return await changedAllowedFiles(
+    repoDir,
+    [LANE_PRIOR_ARTIFACT_PATH, LANE_PRIOR_EVAL_REPORT_PATH],
+    "Lane-prior refresh",
   );
-}
-
-async function findOpenLanePriorPrUrl(
-  branch: string,
-  token: string,
-): Promise<string | undefined> {
-  return await findOpenGeneratedPrUrl({
-    repoSlug: REPO_SLUG,
-    filterArgs: ["--head", branch],
-    token,
-    matches: (pr, appSlug) => isLanePriorPr(pr, appSlug, branch),
-  });
 }
 
 export type LanePriorActivities = typeof lanePriorActivities;
@@ -162,21 +86,11 @@ export const lanePriorActivities = {
     try {
       const tokenResult = await createGitHubAppInstallationToken();
       const githubToken = tokenResult.token;
-      await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
-      const askpass = await writeGitAskpass(tempDir);
-      const gitEnv = {
-        GH_TOKEN: githubToken,
-        GIT_ASKPASS: askpass,
-        GIT_TERMINAL_PROMPT: "0",
-      };
-
-      await simpleGit().clone(REPO_URL, repoDir, [
-        "--branch",
-        MAIN_BRANCH,
-        "--single-branch",
-        "--depth",
-        "1",
-      ]);
+      const gitEnv = await cloneMainForGeneratedRefresh({
+        tempDir,
+        repoDir,
+        githubToken,
+      });
       await installScoutWorkspace(repoDir);
       await updateLanePriors({
         repoDir,
@@ -225,63 +139,6 @@ export const lanePriorActivities = {
         };
       }
       const contentHash = await lanePriorContentHash(repoDir);
-      const branch = lanePriorBranchName(contentHash);
-      const title = lanePriorPrTitle();
-      const existingPrUrl = await findOpenLanePriorPrUrl(branch, githubToken);
-      if (existingPrUrl !== undefined) {
-        const autoMergeConfigured = await ensureGeneratedPrAutoMerge({
-          repoSlug: REPO_SLUG,
-          prUrl: existingPrUrl,
-          token: githubToken,
-          onFailure: (error: unknown) => {
-            jsonLog("warning", "Lane-prior PR auto-merge setup failed", {
-              prUrl: existingPrUrl,
-              error: error instanceof Error ? error.message : String(error),
-            });
-          },
-        });
-        return {
-          changedFiles: files,
-          contentHash,
-          branchName: branch,
-          commitHash: undefined,
-          prUrl: existingPrUrl,
-          outcome: "skipped",
-          reason: "pr-already-open",
-          autoMergeConfigured,
-        };
-      }
-
-      await runCommand(["git", "config", "user.email", "ci@sjer.red"], {
-        cwd: repoDir,
-      });
-      await runCommand(["git", "config", "user.name", "CI Bot"], {
-        cwd: repoDir,
-      });
-      const expectedRemoteSha = await fetchGeneratedRemoteBranch({
-        repoDir,
-        branch,
-        gitEnv,
-      });
-      await runCommand(["git", "checkout", "-B", branch], { cwd: repoDir });
-      await runCommand(
-        [
-          "git",
-          "add",
-          "--",
-          LANE_PRIOR_ARTIFACT_PATH,
-          LANE_PRIOR_EVAL_REPORT_PATH,
-        ],
-        { cwd: repoDir },
-      );
-      await disarmGitHooks(repoDir);
-      await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
-      const commitHash = await pushOwnedGeneratedCommit({
-        repoDir,
-        branch,
-        gitEnv,
-        expectedRemoteSha,
-      });
       const body = [
         "## Why",
         "Keep Scout lane priors aligned with current match observations.",
@@ -296,42 +153,23 @@ export const lanePriorActivities = {
         "## Verification",
         "Ran the lane-prior generator and generated-file preflight. Full CI and automated review must pass before merge. Live report acceptance has not run.",
       ].join("\n");
-      const { url: prUrl, recovered } = await createGeneratedPr(
-        {
-          repoSlug: REPO_SLUG,
-          repoDir,
-          branch,
-          base: MAIN_BRANCH,
-          title,
-          body,
-          token: githubToken,
-        },
-        {
-          findOnHead: async () =>
-            await findOpenLanePriorPrUrl(branch, githubToken),
-        },
-      );
-      const autoMergeConfigured = await ensureGeneratedPrAutoMerge({
-        repoSlug: REPO_SLUG,
-        prUrl,
-        token: githubToken,
-        onFailure: (error: unknown) => {
+      const published = await publishGeneratedRefresh({
+        repoDir,
+        githubToken,
+        gitEnv,
+        branch: lanePriorBranchName(contentHash),
+        title: lanePriorPrTitle(),
+        body,
+        files: [LANE_PRIOR_ARTIFACT_PATH, LANE_PRIOR_EVAL_REPORT_PATH],
+        changedFiles: files,
+        onAutoMergeFailure: (prUrl) => (error: unknown) => {
           jsonLog("warning", "Lane-prior PR auto-merge setup failed", {
             prUrl,
             error: error instanceof Error ? error.message : String(error),
           });
         },
       });
-      return {
-        changedFiles: files,
-        contentHash,
-        branchName: branch,
-        commitHash,
-        prUrl,
-        outcome: recovered ? "skipped" : "success",
-        reason: recovered ? "pr-already-open" : "pr-created",
-        autoMergeConfigured,
-      };
+      return { ...published, contentHash };
     } finally {
       clearInterval(heartbeat);
       await Bun.$`rm -rf ${tempDir}`.quiet();

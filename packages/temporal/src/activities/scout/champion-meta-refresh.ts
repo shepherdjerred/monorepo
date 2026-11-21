@@ -1,37 +1,19 @@
 import { Context } from "@temporalio/activity";
-import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import {
-  fetchGeneratedRemoteBranch,
-  pushOwnedGeneratedCommit,
-  writeGitAskpass,
-} from "./scout-season-refresh-git.ts";
-import {
-  createGeneratedPr,
-  ensureGeneratedPrAutoMerge,
-  findOpenGeneratedPrUrl,
-  type OpenPrListItem,
-} from "#activities/data-dragon/data-dragon-pr.ts";
-import {
-  parseGitStatusLine,
-  type GitStatusEntry,
-} from "#activities/data-dragon/data-dragon-diff.ts";
 import { runCommand } from "#activities/data-dragon/data-dragon-shell.ts";
+import { installScoutWorkspace } from "#activities/bot-clone.ts";
 import {
-  disarmGitHooks,
-  installScoutWorkspace,
-} from "#activities/bot-clone.ts";
+  changedAllowedFiles,
+  cloneMainForGeneratedRefresh,
+  publishGeneratedRefresh,
+} from "./generated-refresh.ts";
 import {
   discardFormattingOnlyChanges,
   runScoutGeneratedPreflight,
 } from "./scout-generated-preflight.ts";
 
-const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
-const REPO_SLUG = "shepherdjerred/monorepo";
-const MAIN_BRANCH = "main";
 const FRONTEND_ROOT = "packages/scout-for-lol/packages/frontend";
-
 /** Repo-root-relative: used for `git add` and the `git status` allowlist. */
 export const CHAMPION_META_SNAPSHOT_PATH = `${FRONTEND_ROOT}/src/data/generated/champion-meta.snapshot.json`;
 
@@ -73,21 +55,6 @@ export async function championMetaContentHash(
   return hasher.digest("hex").slice(0, 12);
 }
 
-/** Paths in `git status` output that are not the snapshot itself. */
-export function championMetaDisallowedPaths(
-  changes: readonly GitStatusEntry[],
-): string[] {
-  const disallowed = new Set<string>();
-  for (const change of changes) {
-    for (const path of [change.path, change.previousPath]) {
-      if (path !== undefined && path !== CHAMPION_META_SNAPSHOT_PATH) {
-        disallowed.add(path);
-      }
-    }
-  }
-  return [...disallowed].toSorted();
-}
-
 function jsonLog(
   level: "info" | "warning" | "error",
   message: string,
@@ -104,48 +71,11 @@ function jsonLog(
 }
 
 async function changedSnapshotFiles(repoDir: string): Promise<string[]> {
-  const status = await runCommand(["git", "status", "--porcelain"], {
-    cwd: repoDir,
-    trimStdout: false,
-  });
-  const changes = status
-    .split("\n")
-    .map((line) => parseGitStatusLine(line))
-    .filter((entry) => entry !== undefined);
-  const disallowed = championMetaDisallowedPaths(changes);
-  if (disallowed.length > 0) {
-    throw new Error(
-      `Champion-meta refresh changed disallowed paths: ${disallowed.join(", ")}`,
-    );
-  }
-  return changes.map((change) => change.path).toSorted();
-}
-
-function isChampionMetaPr(
-  pr: OpenPrListItem,
-  appSlug: string,
-  branch: string,
-): boolean {
-  return (
-    pr.title === championMetaPrTitle() &&
-    pr.baseRefName === MAIN_BRANCH &&
-    pr.headRefName === branch &&
-    !pr.isCrossRepository &&
-    pr.author.is_bot &&
-    pr.author.login.replace(/^app\//, "").replace(/\[bot\]$/, "") === appSlug
+  return await changedAllowedFiles(
+    repoDir,
+    [CHAMPION_META_SNAPSHOT_PATH],
+    "Champion-meta refresh",
   );
-}
-
-async function findOpenChampionMetaPrUrl(
-  branch: string,
-  token: string,
-): Promise<string | undefined> {
-  return await findOpenGeneratedPrUrl({
-    repoSlug: REPO_SLUG,
-    filterArgs: ["--head", branch],
-    token,
-    matches: (pr, appSlug) => isChampionMetaPr(pr, appSlug, branch),
-  });
 }
 
 const SKIPPED_NO_DIFF: ChampionMetaRefreshResult = {
@@ -183,20 +113,11 @@ export const championMetaActivities = {
 
     try {
       const { token: githubToken } = await createGitHubAppInstallationToken();
-      await runCommand(["mkdir", "-p", tempDir], { cwd: "/tmp" });
-      const askpass = await writeGitAskpass(tempDir);
-      const gitEnv = {
-        GH_TOKEN: githubToken,
-        GIT_ASKPASS: askpass,
-        GIT_TERMINAL_PROMPT: "0",
-      };
-      await simpleGit().clone(REPO_URL, repoDir, [
-        "--branch",
-        MAIN_BRANCH,
-        "--single-branch",
-        "--depth",
-        "1",
-      ]);
+      const gitEnv = await cloneMainForGeneratedRefresh({
+        tempDir,
+        repoDir,
+        githubToken,
+      });
       await installScoutWorkspace(repoDir);
 
       // Absolute output path: `bun run --filter` would resolve a relative one
@@ -232,61 +153,6 @@ export const championMetaActivities = {
       if (files.length === 0) return SKIPPED_NO_DIFF;
 
       const contentHash = await championMetaContentHash(repoDir);
-      const branch = championMetaBranchName(contentHash);
-      const title = championMetaPrTitle();
-      const onAutoMergeFailure = (prUrl: string) => (error: unknown) => {
-        jsonLog("warning", "Champion-meta PR auto-merge setup failed", {
-          prUrl,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      };
-
-      const existingPrUrl = await findOpenChampionMetaPrUrl(
-        branch,
-        githubToken,
-      );
-      if (existingPrUrl !== undefined) {
-        const autoMergeConfigured = await ensureGeneratedPrAutoMerge({
-          repoSlug: REPO_SLUG,
-          prUrl: existingPrUrl,
-          token: githubToken,
-          onFailure: onAutoMergeFailure(existingPrUrl),
-        });
-        return {
-          changedFiles: files,
-          contentHash,
-          branchName: branch,
-          commitHash: undefined,
-          prUrl: existingPrUrl,
-          outcome: "skipped",
-          reason: "pr-already-open",
-          autoMergeConfigured,
-        };
-      }
-
-      await runCommand(["git", "config", "user.email", "ci@sjer.red"], {
-        cwd: repoDir,
-      });
-      await runCommand(["git", "config", "user.name", "CI Bot"], {
-        cwd: repoDir,
-      });
-      const expectedRemoteSha = await fetchGeneratedRemoteBranch({
-        repoDir,
-        branch,
-        gitEnv,
-      });
-      await runCommand(["git", "checkout", "-B", branch], { cwd: repoDir });
-      await runCommand(["git", "add", "--", CHAMPION_META_SNAPSHOT_PATH], {
-        cwd: repoDir,
-      });
-      await disarmGitHooks(repoDir);
-      await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
-      const commitHash = await pushOwnedGeneratedCommit({
-        repoDir,
-        branch,
-        gitEnv,
-        expectedRemoteSha,
-      });
       const body = [
         "## Why",
         "Keep the Scout champion pages aligned with the champion meta the Scout API currently serves.",
@@ -300,37 +166,23 @@ export const championMetaActivities = {
         "## Verification",
         "Ran the snapshot generator and generated-file preflight. Full CI and automated review must pass before merge. Live page acceptance has not run.",
       ].join("\n");
-      const { url: prUrl, recovered } = await createGeneratedPr(
-        {
-          repoSlug: REPO_SLUG,
-          repoDir,
-          branch,
-          base: MAIN_BRANCH,
-          title,
-          body,
-          token: githubToken,
-        },
-        {
-          findOnHead: async () =>
-            await findOpenChampionMetaPrUrl(branch, githubToken),
-        },
-      );
-      const autoMergeConfigured = await ensureGeneratedPrAutoMerge({
-        repoSlug: REPO_SLUG,
-        prUrl,
-        token: githubToken,
-        onFailure: onAutoMergeFailure(prUrl),
-      });
-      return {
+      const published = await publishGeneratedRefresh({
+        repoDir,
+        githubToken,
+        gitEnv,
+        branch: championMetaBranchName(contentHash),
+        title: championMetaPrTitle(),
+        body,
+        files: [CHAMPION_META_SNAPSHOT_PATH],
         changedFiles: files,
-        contentHash,
-        branchName: branch,
-        commitHash,
-        prUrl,
-        outcome: recovered ? "skipped" : "success",
-        reason: recovered ? "pr-already-open" : "pr-created",
-        autoMergeConfigured,
-      };
+        onAutoMergeFailure: (prUrl) => (error: unknown) => {
+          jsonLog("warning", "Champion-meta PR auto-merge setup failed", {
+            prUrl,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        },
+      });
+      return { ...published, contentHash };
     } finally {
       clearInterval(heartbeat);
       await Bun.$`rm -rf ${tempDir}`.quiet();

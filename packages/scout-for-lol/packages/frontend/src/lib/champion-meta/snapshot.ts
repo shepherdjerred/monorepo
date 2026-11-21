@@ -1,4 +1,11 @@
 import { z } from "zod";
+import {
+  ChampionMetaFileSchema,
+  ChampionSliceSchema as FullChampionSliceSchema,
+  MetaRoleSchema,
+  type MetaBracket,
+  type MetaRole,
+} from "@scout-for-lol/data/meta/meta-serving.ts";
 
 /**
  * The committed champion-meta snapshot the static champion pages are built
@@ -6,8 +13,8 @@ import { z } from "zod";
  * (`GET /api/meta/v1/{manifest,champions/:id}`, served by the backend's
  * `http/meta-routes.ts`).
  *
- * The API schemas below name only the fields the pages show; unknown fields
- * are dropped on parse, so the API can add data without breaking the refresh.
+ * The response schemas are the API's own, shared through
+ * `@scout-for-lol/data`; the snapshot keeps the slices without item lift.
  * The API already enforces its minimum samples: a slice, build or rune entry
  * that failed the floor is never returned, and nothing here re-derives or
  * relaxes that.
@@ -15,85 +22,15 @@ import { z } from "zod";
 
 export const CHAMPION_META_SNAPSHOT_VERSION = 1;
 
-export const ROLES = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"] as const;
-export const RoleSchema = z.enum(ROLES);
-export type Role = z.infer<typeof RoleSchema>;
+const ROLES = MetaRoleSchema.options;
 
-const BracketSchema = z.enum(["all", "low", "mid", "high", "master_plus"]);
-
-const RateSchema = z.object({
-  value: z.number(),
-  lower: z.number(),
-  upper: z.number(),
-});
-
-const ContextSchema = z.object({
-  patch: z.string(),
-  queueId: z.number().int(),
-  queue: z.string(),
-  bracket: BracketSchema,
-});
-
-const CountedSchema = z.object({
-  games: z.number().int(),
-  wins: z.number().int(),
-  winRate: RateSchema,
-  share: RateSchema,
-});
-
-export const ChampionSliceSchema = z.object({
-  context: ContextSchema.extend({ role: RoleSchema }),
-  sample: z.object({ games: z.number().int(), matches: z.number().int() }),
-  winRate: RateSchema,
-  pickRate: RateSchema,
-  banRate: RateSchema,
-  roleShare: RateSchema,
-  tier: z.enum(["S", "A", "B", "C", "D"]),
-  coreItems: z.array(CountedSchema.extend({ itemId: z.number().int() })),
-  buildPaths: z.array(
-    CountedSchema.extend({ itemIds: z.array(z.number().int()) }),
-  ),
-  startingItems: z.array(
-    CountedSchema.extend({
-      items: z.array(
-        z.object({ itemId: z.number().int(), count: z.number().int() }),
-      ),
-    }),
-  ),
-  runes: z.array(
-    CountedSchema.extend({
-      primaryStyleId: z.number().int(),
-      primaryPerkIds: z.array(z.number().int()),
-      secondaryStyleId: z.number().int(),
-      secondaryPerkIds: z.array(z.number().int()),
-    }),
-  ),
-  spells: z.array(
-    CountedSchema.extend({ spellIds: z.array(z.number().int()) }),
-  ),
-  skillOrders: z.array(CountedSchema.extend({ order: z.string() })),
+/** What the pages show: a served slice without the item-lift tables. */
+export const ChampionSliceSchema = FullChampionSliceSchema.omit({
+  itemLift: true,
 });
 export type ChampionSlice = z.infer<typeof ChampionSliceSchema>;
 
-export const MetaManifestResponseSchema = z.object({
-  buildId: z.string(),
-  generatedAt: z.iso.datetime(),
-  source: z.object({
-    firstDay: z.string(),
-    lastDay: z.string(),
-    days: z.number().int(),
-  }),
-  thresholds: z.object({ minSliceGames: z.number().int() }),
-  /** Null when nothing meets the sample floor. */
-  defaults: ContextSchema.omit({ queue: true }).nullable(),
-  champions: z.array(z.object({ id: z.number().int(), name: z.string() })),
-  caveats: z.array(z.string()),
-});
-
-export const ChampionResponseSchema = z.object({
-  buildId: z.string(),
-  championId: z.number().int(),
-  championName: z.string(),
+export const ChampionResponseSchema = ChampionMetaFileSchema.extend({
   slices: z.array(ChampionSliceSchema),
 });
 
@@ -173,7 +110,7 @@ export function hasChampions(snapshot: ChampionMetaSnapshot): boolean {
   return snapshot.champions.length > 0;
 }
 
-const ROLE_LABELS: Record<Role, string> = {
+const ROLE_LABELS: Record<MetaRole, string> = {
   TOP: "Top",
   JUNGLE: "Jungle",
   MIDDLE: "Mid",
@@ -181,16 +118,16 @@ const ROLE_LABELS: Record<Role, string> = {
   UTILITY: "Support",
 };
 
-export function roleLabel(role: Role): string {
+export function roleLabel(role: MetaRole): string {
   return ROLE_LABELS[role];
 }
 
-export function roleSlug(role: Role): string {
+export function roleSlug(role: MetaRole): string {
   return role.toLowerCase();
 }
 
-export function roleFromSlug(slug: string): Role | undefined {
-  const parsed = RoleSchema.safeParse(slug.toUpperCase());
+export function roleFromSlug(slug: string): MetaRole | undefined {
+  const parsed = MetaRoleSchema.safeParse(slug.toUpperCase());
   return parsed.success ? parsed.data : undefined;
 }
 
@@ -209,7 +146,7 @@ const QUEUE_LABELS: Record<string, string> = {
   normal_draft: "Normal Draft",
 };
 
-const BRACKET_LABELS: Record<z.infer<typeof BracketSchema>, string> = {
+const BRACKET_LABELS: Record<MetaBracket, string> = {
   all: "all ranks",
   low: "Iron to Silver",
   mid: "Gold to Platinum",

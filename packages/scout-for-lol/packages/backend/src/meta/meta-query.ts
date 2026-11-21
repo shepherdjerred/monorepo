@@ -10,7 +10,7 @@ import {
   type MetaManifest,
   type MetaRole,
   type TierFile,
-} from "#src/meta/meta-serving.ts";
+} from "@scout-for-lol/data/meta/meta-serving.ts";
 
 /**
  * The reads behind the public meta API and the Explore meta tools: choosing a
