@@ -13,9 +13,9 @@ beforeEach(() => {
 });
 
 describe("dashboard mail configuration", () => {
-  it("preserves disabled incident mail and semantic mailbox defaults on absence", async () => {
+  it("enables incident mail and semantic mailbox defaults on absence", async () => {
     expect(await alertEmailConfig()).toEqual({
-      EMAIL_ENABLED: "false",
+      EMAIL_ENABLED: "true",
       POSTAL_FROM: OPS_MAILBOXES.alerts.from,
       POSTAL_TO: OPS_MAILBOXES.alerts.to,
       POSTAL_DIGEST_FROM: OPS_MAILBOXES.digests.from,
@@ -56,7 +56,7 @@ describe("dashboard mail configuration", () => {
     try {
       const config = await alertEmailConfig();
       expect(config).toEqual({
-        EMAIL_ENABLED: "false",
+        EMAIL_ENABLED: "true",
         POSTAL_FROM: OPS_MAILBOXES.alerts.from,
         POSTAL_TO: OPS_MAILBOXES.alerts.to,
         POSTAL_DIGEST_FROM: OPS_MAILBOXES.digests.from,

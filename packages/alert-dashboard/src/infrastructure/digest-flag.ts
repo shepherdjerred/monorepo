@@ -5,6 +5,7 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import {
   createFlagMetricsRecorder,
   type FlagMetricsRecorder,
@@ -21,7 +22,7 @@ const DEFINITION = {
   alertEmailEnabled: {
     schema: z.boolean(),
     sources: ["flag", "default"],
-    default: false,
+    default: managedBooleanDefault("alert-dashboard-email-enabled"),
     names: { flag: "alert-dashboard-email-enabled" },
   },
   incidentEmailFrom: {

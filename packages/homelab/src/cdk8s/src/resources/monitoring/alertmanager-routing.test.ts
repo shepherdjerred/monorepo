@@ -461,10 +461,8 @@ describe("rendered Alerts receiver", () => {
     expect(receiver["webhook_configs"]).toBeUndefined();
   });
 
-  it("delivers ordinary alerts to both the ledger and email, while ledger-only omits email", () => {
+  it("delivers ordinary and ledger-only alerts to the Hub webhook only so Hub's outbox is the single email sender", () => {
     const receiver = findReceiverNamed(renderedApps, "alerts");
-    // The ledger must keep receiving everything; email is additive, not a
-    // replacement, or a mail outage silently stops recording alerts.
     expect(receiver["webhook_configs"]).toEqual([
       expect.objectContaining({
         url: expect.stringContaining(
@@ -472,7 +470,7 @@ describe("rendered Alerts receiver", () => {
         ) as unknown,
       }),
     ]);
-    expect(receiver["email_configs"]).toEqual([EXPECTED_EMAIL_CONFIG]);
+    expect(receiver["email_configs"]).toBeUndefined();
 
     const ledgerOnly = findReceiverNamed(renderedApps, "alerts-ledger-only");
     expect(ledgerOnly["webhook_configs"]).toEqual([
