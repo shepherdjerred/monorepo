@@ -85,12 +85,14 @@ export const TAILNET_POLICY = {
     // Tailscale endpoint on TCP 6443. The API server reaches worker kubelets
     // over TCP 10250 for exec, logs, and port-forward streams. Both are
     // required after a worker reports its Tailscale address as InternalIP.
-    // Prometheus (on torvalds) scrapes node-exporter on TCP 9100: the exporter
-    // is hostNetwork and binds the node's Tailscale InternalIP, so any
+    // Prometheus (on torvalds) scrapes node-exporter on TCP 9100 and the
+    // `kube-network-policies` enforcer (`kube-system/kube-flannel`) on TCP 9080:
+    // both run hostNetwork and bind the node's Tailscale InternalIP, so any
     // cross-node scrape is tailnet traffic subject to this ACL. Without 9100
-    // here, every worker joined after torvalds is invisible to node-level
-    // monitoring (verified: liskov's node-exporter timed out for its first
-    // ~18h while kubelet on 10250 scraped fine — NodeExporterDown, 2026-07-26).
+    // and 9080 here, every worker joined after torvalds fails cross-node host
+    // scrapes (verified: liskov's node-exporter timed out for its first ~18h
+    // while kubelet on 10250 scraped fine — NodeExporterDown, 2026-07-26;
+    // liskov's kube-network-policies timed out on 9080 — TargetDown, 2026-11-21).
     // 50000 is Talos apid: the committed talosconfig endpoint is torvalds, so
     // every `talosctl -n <worker>` call is torvalds' apid dialing the worker's
     // apid over the tailnet. Same gap class as 9100 above — without it,
@@ -100,7 +102,13 @@ export const TAILNET_POLICY = {
     {
       action: "accept",
       src: ["tag:k8s"],
-      dst: ["tag:k8s:6443", "tag:k8s:10250", "tag:k8s:9100", "tag:k8s:50000"],
+      dst: [
+        "tag:k8s:6443",
+        "tag:k8s:10250",
+        "tag:k8s:9100",
+        "tag:k8s:9080",
+        "tag:k8s:50000",
+      ],
     },
 
     // A dedicated CI runner tagged tag:ci (none today — CI currently runs on the
@@ -174,10 +182,10 @@ export const TAILNET_POLICY = {
     },
     // CRITICAL: the cluster node + proxies (tag:k8s) MUST reach tailnet ingresses
     // on 443, the control-plane API endpoint on 6443, worker kubelets on 10250,
-    // node-exporter on 9100 (cross-node InternalIP scrapes), and Talos apid on
-    // 50000 (talosctl proxies worker calls through the endpoint node's apid).
-    // A future edit that drops any path fails here before it can break cluster
-    // operations.
+    // node-exporter on 9100 and kube-network-policies on 9080 (cross-node
+    // InternalIP scrapes), and Talos apid on 50000 (talosctl proxies worker
+    // calls through the endpoint node's apid). A future edit that drops any
+    // path fails here before it can break cluster operations.
     {
       src: "tag:k8s",
       accept: [
@@ -185,6 +193,7 @@ export const TAILNET_POLICY = {
         "tag:k8s:6443",
         "tag:k8s:10250",
         "tag:k8s:9100",
+        "tag:k8s:9080",
         "tag:k8s:50000",
       ],
       deny: ["tag:k8s:22"],

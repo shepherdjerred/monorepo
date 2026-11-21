@@ -228,6 +228,17 @@ describe("tailscale", () => {
       src: ["tag:k8s"],
       dst: ["tag:k8s:443"],
     });
+    expect(TAILNET_POLICY.acls).toContainEqual({
+      action: "accept",
+      src: ["tag:k8s"],
+      dst: [
+        "tag:k8s:6443",
+        "tag:k8s:10250",
+        "tag:k8s:9100",
+        "tag:k8s:9080",
+        "tag:k8s:50000",
+      ],
+    });
   });
 });
 

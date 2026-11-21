@@ -137,8 +137,10 @@ export function createTurboCacheDeployment(chart: Chart) {
       },
       resources: {
         cpu: {
+          // Parallel Woodpecker CI pipelines burst concurrent cache uploads and
+          // downloads; 500m left the Node HTTP handler CPU-throttled for hours.
           request: Cpu.millis(100),
-          limit: Cpu.millis(500),
+          limit: Cpu.millis(2000),
         },
         memory: {
           // Uploads are buffered whole (see BODY_LIMIT above) and verify runs
