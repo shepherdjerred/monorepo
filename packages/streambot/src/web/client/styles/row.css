@@ -106,10 +106,27 @@
   font-size: 1.1rem;
 }
 
+/*
+ * A poster fills the card's width and takes its height from the ratio of its kind. The width and
+ * height attributes on the img reserve the same ratio, but the height attribute is a presentational
+ * hint that would pin the box to a fixed height, so block-size is reset to auto.
+ */
 .artwork-poster {
   inline-size: 100%;
-  aspect-ratio: 2 / 3;
+  block-size: auto;
   font-size: 2rem;
+}
+
+.artwork-tall {
+  aspect-ratio: 2 / 3;
+}
+
+.artwork-square {
+  aspect-ratio: 1;
+}
+
+.artwork-wide {
+  aspect-ratio: 16 / 9;
 }
 
 .artwork-logo {

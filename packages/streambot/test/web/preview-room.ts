@@ -89,6 +89,14 @@ export async function seedPreviewRoom(
   });
 }
 
+/** Intrinsic sizes the fixture rotates through: 2:3 portrait, square, 16:9 landscape, and an odd tall one. */
+const POSTER_SIZES: readonly (readonly [number, number])[] = [
+  [200, 300],
+  [300, 300],
+  [320, 180],
+  [240, 400],
+];
+
 const POSTER_TINTS = ["#2f4f46", "#3d5f8f", "#6b4f2f", "#5a3d6b", "#2f5a3d"];
 
 /**
@@ -103,10 +111,15 @@ export const PREVIEW_PLEX_ARTWORK: LibraryArtworkProvider = {
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;");
     const tint = POSTER_TINTS[name.length % POSTER_TINTS.length] ?? "#2f4f46";
+    const [w, h] = POSTER_SIZES[name.length % POSTER_SIZES.length] ?? [
+      200, 300,
+    ];
+    const [width, height] = [String(w), String(h)];
     const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300">` +
-      `<rect width="200" height="300" fill="${tint}"/>` +
-      `<text x="100" y="160" fill="#fff" text-anchor="middle" font-family="sans-serif" font-size="15">${name}</text>` +
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+      `<rect width="${width}" height="${height}" fill="${tint}"/>` +
+      `<rect x="4" y="4" width="${String(w - 8)}" height="${String(h - 8)}" fill="none" stroke="#fff" stroke-width="3"/>` +
+      `<text x="${String(w / 2)}" y="${String(h / 2)}" fill="#fff" text-anchor="middle" font-family="sans-serif" font-size="15">${name}</text>` +
       `</svg>`;
     return Promise.resolve({
       bytes: new TextEncoder().encode(svg),

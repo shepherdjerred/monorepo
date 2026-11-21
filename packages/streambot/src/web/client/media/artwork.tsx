@@ -14,6 +14,25 @@ const GLYPHS: Readonly<Record<MediaItem["kind"], string>> = {
   playlist: "≡",
 };
 
+/**
+ * The box a card gives each kind of media: Plex titles are 2:3 posters, music art is square, and
+ * videos, live events and history entries are 16:9 frames.
+ */
+const POSTER_BOX: Readonly<
+  Record<MediaItem["kind"], { name: string; width: number; height: number }>
+> = {
+  library: { name: "tall", width: 200, height: 300 },
+  series: { name: "tall", width: 200, height: 300 },
+  song: { name: "square", width: 200, height: 200 },
+  album: { name: "square", width: 200, height: 200 },
+  artist: { name: "square", width: 200, height: 200 },
+  playlist: { name: "square", width: 200, height: 200 },
+  video: { name: "wide", width: 320, height: 180 },
+  live: { name: "wide", width: 320, height: 180 },
+  history: { name: "wide", width: 320, height: 180 },
+  link: { name: "wide", width: 320, height: 180 },
+};
+
 function source(item: Pick<MediaItem, "artworkUrl" | "sportsArtwork">): {
   url: string;
   logo: boolean;
@@ -37,7 +56,11 @@ export function Artwork(props: {
 }) {
   const [failed, setFailed] = useState<string | null>(null);
   const picked = source(props.item);
-  const className = "artwork artwork-" + props.shape;
+  const box =
+    props.shape === "thumb"
+      ? { name: "thumb", width: 44, height: 44 }
+      : POSTER_BOX[props.item.kind];
+  const className = "artwork artwork-" + props.shape + " artwork-" + box.name;
   if (picked === null || failed === picked.url)
     return (
       <span className={className + " artwork-empty"} aria-hidden="true">
@@ -49,8 +72,8 @@ export function Artwork(props: {
       className={className + (picked.logo ? " artwork-logo" : "")}
       src={picked.url}
       alt=""
-      width={props.shape === "thumb" ? 44 : 200}
-      height={props.shape === "thumb" ? 44 : 300}
+      width={box.width}
+      height={box.height}
       loading="lazy"
       decoding="async"
       onError={() => {
