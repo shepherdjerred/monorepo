@@ -20,17 +20,20 @@ export function ToolLinks({ links }: { links: ToolLink[] }) {
   );
 }
 
+/** A link to the app's page for a target; `label` names it when its text alone would not. */
 export function TargetLink({
   target,
+  label,
   children,
 }: {
   target: AppTarget;
+  label?: string;
   children: ReactNode;
 }) {
   switch (target.kind) {
     case "build": {
       return (
-        <Link to="/builds/$" params={{ _splat: target.id }}>
+        <Link to="/builds/$" params={{ _splat: target.id }} aria-label={label}>
           {children}
         </Link>
       );
@@ -40,6 +43,7 @@ export function TargetLink({
         <Link
           to="/deployments/$deploymentId"
           params={{ deploymentId: target.id }}
+          aria-label={label}
         >
           {children}
         </Link>
@@ -47,14 +51,22 @@ export function TargetLink({
     }
     case "environment": {
       return (
-        <Link to="/environments/$" params={{ _splat: target.id }}>
+        <Link
+          to="/environments/$"
+          params={{ _splat: target.id }}
+          aria-label={label}
+        >
           {children}
         </Link>
       );
     }
     case "versionSet": {
       return (
-        <Link to="/versions/$versionSetId" params={{ versionSetId: target.id }}>
+        <Link
+          to="/versions/$versionSetId"
+          params={{ versionSetId: target.id }}
+          aria-label={label}
+        >
           {children}
         </Link>
       );

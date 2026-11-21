@@ -67,6 +67,19 @@ function searchText(search: object, name: string) {
   return typeof value === "string" ? value : "";
 }
 
+/** Whether a navigation only moved between pages of the same filtered list. */
+export function pagedOnly(previous: object, next: object) {
+  const names = new Set([...Object.keys(previous), ...Object.keys(next)]);
+  return (
+    searchText(previous, "cursor") !== searchText(next, "cursor") &&
+    [...names].every(
+      (name) =>
+        name === "cursor" ||
+        searchText(previous, name) === searchText(next, name),
+    )
+  );
+}
+
 /**
  * Filter forms are uncontrolled, so their controls keep what was typed. After
  * a navigation that did not come from the form (Back, Forward, a link), each

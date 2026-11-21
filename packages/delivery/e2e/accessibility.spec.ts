@@ -15,6 +15,10 @@ const PAGES = [
   "/approvals",
   "/artifacts",
   "/activity",
+  "/deployments?service=No+such+service",
+  "/artifacts?service=flipt",
+  "/deployments/not-a-uuid",
+  "/commits/zzzz",
 ];
 
 for (const scheme of ["light", "dark"] as const) {

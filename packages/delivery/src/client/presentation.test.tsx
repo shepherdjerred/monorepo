@@ -11,7 +11,7 @@ import {
   revisionNumbers,
   versionLabel,
 } from "./presentation.ts";
-import { BuildCatalog } from "./artifacts.tsx";
+import { BuildTable } from "./artifacts.tsx";
 import { renderWithRouter } from "./test-router.tsx";
 
 const environment = EnvironmentSchema.parse({
@@ -54,7 +54,7 @@ describe("release state presentation", () => {
       links: [],
       artifacts: [],
     });
-    const html = renderWithRouter(<BuildCatalog builds={[build]} />);
+    const html = renderWithRouter(<BuildTable builds={[build]} />);
     expect(html).toContain("failed");
     expect(html).toContain("requires a different backend digest");
     expect(html).toContain("View CI");

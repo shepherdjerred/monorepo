@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ActivityEntry } from "#shared/hub/hub-contract.ts";
 import { renderWithRouter } from "#client/test-router.tsx";
 import { foldActivity, outcomeOf } from "./activity-fold.ts";
-import { ActivityList } from "./activity-list.tsx";
+import { ActivityList, isFailure } from "./activity-list.tsx";
 
 const FIRST = "45cf1828-0f01-4bcd-8dab-592769df488f";
 const SECOND = "3342245c-e1d6-4e4e-99bb-2c542d22b618";
@@ -138,7 +138,7 @@ function render(entries: ActivityEntry[]) {
 /** Each top-level row of the rendered list. */
 function rows(html: string) {
   const list = html.slice(html.indexOf('<ol class="activity">'));
-  return list.split(/<li>(?=<time|<span><time)/u).slice(1);
+  return list.split(/<li>(?=<span class="activity-when">)/u).slice(1);
 }
 
 describe("the activity list", () => {
@@ -148,7 +148,10 @@ describe("the activity list", () => {
       stage(FIRST, "step-render", "succeeded"),
       entry("deployment.claimed", FIRST),
     ]);
-    expect(html).toMatch(/^<ol class="activity"><li>/u);
+    // Labelled columns, then one list item per row.
+    expect(html).toMatch(
+      /^<div class="activity-table"><div class="activity-columns" aria-hidden="true"><span>When<\/span><span>Action<\/span><span>By<\/span><span>About<\/span><\/div><ol class="activity"><li>/u,
+    );
     const [run = "", claimed = ""] = rows(html);
     expect(rows(html)).toHaveLength(2);
     expect(run).toContain('<ol class="activity-stages">');
@@ -227,6 +230,32 @@ describe("the activity list", () => {
     expect(approved).not.toContain("Override");
     expect(requested).toContain("arcade/prod");
     expect(requested).not.toContain("version set");
+  });
+
+  it("puts the actor beside the action and names each link by what it opens", () => {
+    const [row = ""] = rows(
+      render([entry("deployment.claimed", FIRST, {}, "operator@example.com")]),
+    );
+    expect(row).toMatch(
+      /^<span class="activity-when">.*<\/span><span class="activity-action">deployment\.claimed<\/span><span class="activity-actor">operator@example\.com<\/span><span class="activity-subject">/u,
+    );
+    expect(row).toContain(`aria-label="Deployment ${FIRST}"`);
+  });
+
+  it("marks failures through the failed status, once", () => {
+    for (const action of [
+      "deployment.failed",
+      "worker.recovery_failed",
+      "deployment.recovery_required",
+    ]) {
+      const [row = ""] = rows(render([entry(action, FIRST)]));
+      expect(row.split("status-failed")).toHaveLength(2);
+      expect(row).toContain(`<span class="status-label">${action}</span>`);
+    }
+    const [plain = ""] = rows(render([entry("deployment.claimed", FIRST)]));
+    expect(plain).not.toContain("status-failed");
+    expect(isFailure("build.published")).toBe(false);
+    expect(isFailure("platform.recovery_failed")).toBe(true);
   });
 
   it("says so when there is no activity", () => {

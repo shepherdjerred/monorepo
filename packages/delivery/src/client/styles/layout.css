@@ -52,7 +52,7 @@
   color: var(--text);
   text-decoration: none;
   font-weight: var(--weight-medium);
-  /* Contains the count's hidden words, so they scroll with the phone nav. */
+  /* Contains the count's hidden words, so they never widen the page. */
   position: relative;
 }
 .masthead nav a:hover {
@@ -217,17 +217,82 @@ main > :empty {
 .panel > .filters {
   margin-bottom: var(--space-3);
 }
+/* A list page's result line: the count, that none match, or why a filter cannot be used. */
+.result-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.result-summary p {
+  margin: 0;
+}
+.list-panel .pager:not(:empty) {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-2);
+  margin-top: var(--space-2);
+}
+.list-panel h2:focus {
+  outline: none;
+}
+.list-panel h2:focus-visible {
+  outline: 2px solid var(--focus);
+}
+/*
+ * A table of records that, narrower than about 600px, reads as one stacked
+ * block per row: the row header, then each cell under its `data-label`.
+ */
+.stack-table {
+  container-type: inline-size;
+}
+@container (width < 600px) {
+  .stack-table thead {
+    display: none;
+  }
+  .stack-table :is(table, tbody, tr, th, td) {
+    display: block;
+  }
+  .stack-table tr {
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .stack-table :is(th, td) {
+    border: 0;
+    padding: var(--space-1) 0;
+  }
+  .stack-table td {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    column-gap: var(--space-2);
+    justify-items: start;
+  }
+  .stack-table td > * {
+    grid-column: 2;
+  }
+  .stack-table tr:last-child {
+    border-bottom: 0;
+  }
+  .stack-table td::before {
+    content: attr(data-label);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+}
 @media (width <= 720px) {
   .masthead {
     position: static;
   }
+  /* Every destination and the waiting count stay in sight: the links wrap. */
   .masthead nav {
     order: 3;
     width: 100%;
-    overflow-x: auto;
   }
   .masthead nav ul {
-    flex-wrap: nowrap;
+    column-gap: 0;
+  }
+  .masthead nav a {
+    padding-inline: var(--space-2);
   }
   main {
     padding-top: var(--space-3);

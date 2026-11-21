@@ -4,12 +4,12 @@ import {
   createRootRouteWithContext,
   useRouter,
 } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useQuery, type QueryClient } from "@tanstack/react-query";
 import { queries } from "#client/queries.ts";
 import { useFeedStatus, type ChangeFeed } from "#client/change-feed.ts";
 import { ConfirmDialogProvider } from "#client/components/confirm-dialog.tsx";
 import { PageHeader } from "#client/components/page-header.tsx";
-import { errorMessage } from "#client/components/notices.tsx";
 import { DeliveryClientError } from "#shared/client.ts";
 import { awaitsDecision } from "#client/model/view.ts";
 
@@ -114,7 +114,7 @@ function RootLayout() {
 export function NotFound() {
   return (
     <>
-      <PageHeader title="Not found" />
+      <PageHeader title="Not found" takeFocus />
       <p>
         Nothing lives at this address.{" "}
         <Link to="/">Return to the overview</Link>.
@@ -123,25 +123,59 @@ export function NotFound() {
   );
 }
 
-export function RouteError({ error }: { error: Error }) {
+/** A request the server refused as asked; asking again cannot change that. */
+function refused(error: Error) {
+  return (
+    error instanceof DeliveryClientError &&
+    error.status >= 400 &&
+    error.status < 500 &&
+    error.status !== 408 &&
+    error.status !== 429
+  );
+}
+
+/**
+ * A route that failed to load, inside the app's own layout, in the server's
+ * words without its machine code. A request the server refused offers a way
+ * out; anything else may pass on a retry.
+ */
+export function RouteError({
+  error,
+  recovery,
+}: {
+  error: Error;
+  recovery?: ReactNode;
+}) {
   const router = useRouter();
   if (error instanceof DeliveryClientError && error.status === 404)
     return <NotFound />;
+  const final = refused(error);
   return (
     <>
-      <PageHeader title="Something went wrong" />
+      <PageHeader
+        title={final ? "This page cannot be shown" : "Something went wrong"}
+        takeFocus
+      />
       <div className="notice error" role="alert">
-        {errorMessage(error)}
+        {error.message === ""
+          ? "Delivery could not load this page."
+          : error.message}
       </div>
-      <button
-        type="button"
-        className="secondary-button"
-        onClick={() => {
-          void router.invalidate();
-        }}
-      >
-        Try again
-      </button>
+      <p>
+        {final ? (
+          (recovery ?? <Link to="/">Return to the overview</Link>)
+        ) : (
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              void router.invalidate();
+            }}
+          >
+            Try again
+          </button>
+        )}
+      </p>
     </>
   );
 }

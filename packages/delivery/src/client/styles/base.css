@@ -114,6 +114,7 @@ tbody th {
  * the value beside them, so they share a size, a case and a color.
  */
 thead th,
+.activity-columns,
 .facts dt,
 .eyebrow {
   font-size: var(--text-2xs);

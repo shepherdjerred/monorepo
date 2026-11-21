@@ -80,6 +80,13 @@ function Id({ value }: { value: string }) {
   );
 }
 
+const TARGET_NAMES = {
+  build: "Build",
+  deployment: "Deployment",
+  environment: "Environment",
+  versionSet: "Version set",
+} as const;
+
 /** What the entry is about, linked when the app has a page for it. */
 function Entity({ entry }: { entry: ActivityEntry }) {
   return (
@@ -87,7 +94,10 @@ function Entity({ entry }: { entry: ActivityEntry }) {
       {entry.target === null ? (
         <Id value={entry.entityId} />
       ) : (
-        <TargetLink target={entry.target}>
+        <TargetLink
+          target={entry.target}
+          label={`${TARGET_NAMES[entry.target.kind]} ${entry.entityId}`}
+        >
           <Id value={entry.entityId} />
         </TargetLink>
       )}
@@ -95,10 +105,26 @@ function Entity({ entry }: { entry: ActivityEntry }) {
   );
 }
 
+/** Whether an action records something that failed or now needs an operator. */
+export function isFailure(action: string) {
+  return /[._]failed$/u.test(action) || action.endsWith("recovery_required");
+}
+
+/** The action as recorded; a failure carries the failed status beside it. */
+function Action({ action }: { action: string }) {
+  return (
+    <span className="activity-action">
+      {isFailure(action) ? <Status value="failed" label={action} /> : action}
+    </span>
+  );
+}
+
 /** What the common actions recorded beside their entity. */
 function Recorded({ entry }: { entry: ActivityEntry }) {
   const outcome = outcomeOf(entry.action);
-  if (outcome !== null) return <Status value={outcome} />;
+  // A failure already shows its status beside the action.
+  if (outcome !== null)
+    return outcome === "failed" ? null : <Status value={outcome} />;
   switch (entry.action) {
     case "deployment.requested": {
       const requested = RequestedActivitySchema.parse(entry.metadata);
@@ -121,6 +147,7 @@ function Recorded({ entry }: { entry: ActivityEntry }) {
               <Link
                 to="/versions/$versionSetId"
                 params={{ versionSetId: requested.versionSetRevisionId }}
+                aria-label={`Version set ${requested.versionSetRevisionId}`}
               >
                 <Id value={requested.versionSetRevisionId} />
               </Link>
@@ -188,7 +215,7 @@ function StageRun({
     Date.parse(newest.occurredAt) - Date.parse(oldest.occurredAt) >= SPAN_MS;
   return (
     <li>
-      <span>
+      <span className="activity-when">
         <RelativeTime value={newest.occurredAt} />
         {spans && (
           <small className="muted">
@@ -197,7 +224,8 @@ function StageRun({
           </small>
         )}
       </span>
-      <span className="activity-action">{newest.action}</span>
+      <Action action={newest.action} />
+      <span className="activity-actor">{newest.actor}</span>
       <span className="activity-subject">
         <Entity entry={newest} />
         <ol className="activity-stages">
@@ -212,36 +240,49 @@ function StageRun({
           })}
         </ol>
       </span>
-      <span className="muted">{newest.actor}</span>
     </li>
   );
 }
 
+/**
+ * The audit trail, one row per entry or stage run: when, what, who, and what
+ * it was about. The column labels are for sight; each row reads in order.
+ */
 export function ActivityList({ entries }: { entries: ActivityEntry[] }) {
   if (entries.length === 0) return <p className="empty">No activity yet.</p>;
   return (
-    <ol className="activity">
-      {foldActivity(entries).map((row) => {
-        if (row.kind === "stages")
-          return <StageRun key={row.entries[0].id} entries={row.entries} />;
-        const { entry } = row;
-        const catalog =
-          entry.action === "catalog.reconciled"
-            ? CatalogReconcileRecordSchema.parse(entry.metadata)
-            : null;
-        return (
-          <li key={entry.id}>
-            <RelativeTime value={entry.occurredAt} />
-            <span className="activity-action">{entry.action}</span>
-            <span className="activity-subject">
-              <Entity entry={entry} />
-              <Recorded entry={entry} />
-            </span>
-            <span className="muted">{entry.actor}</span>
-            {catalog !== null && <CatalogReconcile result={catalog} />}
-          </li>
-        );
-      })}
-    </ol>
+    <div className="activity-table">
+      <div className="activity-columns" aria-hidden="true">
+        <span>When</span>
+        <span>Action</span>
+        <span>By</span>
+        <span>About</span>
+      </div>
+      <ol className="activity">
+        {foldActivity(entries).map((row) => {
+          if (row.kind === "stages")
+            return <StageRun key={row.entries[0].id} entries={row.entries} />;
+          const { entry } = row;
+          const catalog =
+            entry.action === "catalog.reconciled"
+              ? CatalogReconcileRecordSchema.parse(entry.metadata)
+              : null;
+          return (
+            <li key={entry.id}>
+              <span className="activity-when">
+                <RelativeTime value={entry.occurredAt} />
+              </span>
+              <Action action={entry.action} />
+              <span className="activity-actor">{entry.actor}</span>
+              <span className="activity-subject">
+                <Entity entry={entry} />
+                <Recorded entry={entry} />
+              </span>
+              {catalog !== null && <CatalogReconcile result={catalog} />}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }

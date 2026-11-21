@@ -244,7 +244,8 @@ test("committed changes appear live without a reload", async ({
 test("deployment lists name a release by its revision number", async ({
   page,
 }) => {
-  const revision = /^r\d+$/u;
+  // The link says what it opens; its visible text stays the bare number.
+  const revision = /^Version set r\d+$/u;
   const uuid = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/u;
   await page.goto("/deployments?environment=scout-for-lol%2Fprod");
   const list = page.getByRole("main").getByRole("table");

@@ -1,7 +1,12 @@
 import { createRouter } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import type { ChangeFeed } from "./change-feed.ts";
-import { Route as rootRoute } from "./routes/root.tsx";
+import {
+  NotFound,
+  Pending,
+  RouteError,
+  Route as rootRoute,
+} from "./routes/root.tsx";
 import { Route as overviewRoute } from "./routes/overview.tsx";
 import { pipelineListRoutes } from "./routes/pipelines.tsx";
 import { commitRoutes } from "./routes/commits.tsx";
@@ -12,7 +17,7 @@ import { Route as deploymentRoute } from "./routes/deployment.tsx";
 import { Route as environmentRoute } from "./routes/environment.tsx";
 import { Route as recoveryIntentRoute } from "./routes/recovery-intent.tsx";
 import { listRoutes } from "./routes/lists.tsx";
-import { syncSearchForms } from "./routes/search-schemas.ts";
+import { pagedOnly, syncSearchForms } from "./routes/search-schemas.ts";
 
 const routeTree = rootRoute.addChildren([
   overviewRoute,
@@ -37,6 +42,11 @@ export function createDeliveryRouter(
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     defaultPendingMs: 200,
+    // A child route's failure, absence or wait renders inside the root
+    // layout, so the header, navigation and main landmark stay.
+    defaultErrorComponent: RouteError,
+    defaultNotFoundComponent: NotFound,
+    defaultPendingComponent: Pending,
     scrollRestoration: true,
   });
   let initial = true;
@@ -45,12 +55,26 @@ export function createDeliveryRouter(
       initial = false;
       return;
     }
+    const previous = event.fromLocation?.search ?? {};
     // Synchronously, so a filter changed after this navigation is never
     // overwritten by a late frame.
-    syncSearchForms(event.fromLocation?.search ?? {}, event.toLocation.search);
-    if (event.pathChanged)
+    syncSearchForms(previous, event.toLocation.search);
+    // A new page announces its heading; a new page of a list starts again
+    // at the top of that list.
+    const targets = event.pathChanged
+      ? ["#main-heading"]
+      : pagedOnly(previous, event.toLocation.search)
+        ? ["#list-heading", "#main-heading"]
+        : [];
+    if (targets.length > 0)
       requestAnimationFrame(() => {
-        document.querySelector<HTMLElement>("#main-heading")?.focus();
+        for (const target of targets) {
+          const element = document.querySelector<HTMLElement>(target);
+          if (element !== null) {
+            element.focus();
+            return;
+          }
+        }
       });
   });
   return router;

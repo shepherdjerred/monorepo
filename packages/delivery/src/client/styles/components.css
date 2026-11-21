@@ -265,14 +265,30 @@ button[aria-disabled="true"] {
   color: var(--succeeded);
   margin-inline-start: var(--space-2);
 }
+/* Activity: when, what, who, then what it was about, under one row of labels. */
+.activity-columns,
 .activity li {
   display: grid;
-  grid-template-columns: 7.5rem minmax(10rem, 14rem) minmax(0, 1fr) auto;
+  grid-template-columns: 7.5rem minmax(10rem, 15rem) minmax(6rem, 11rem) minmax(
+      0,
+      1fr
+    );
   gap: var(--space-3);
+}
+.activity li {
   font-size: var(--text-sm);
+}
+.activity-columns {
+  padding-bottom: var(--row-pad-y);
+  border-bottom: 1px solid var(--border-strong);
 }
 .activity-action {
   font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.activity-actor {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 .activity-entity {
   overflow-wrap: anywhere;
@@ -549,9 +565,16 @@ label.checkbox input {
   margin-bottom: var(--space-2);
 }
 @media (width <= 720px) {
+  .activity-columns {
+    display: none;
+  }
+  /* Narrow: the time, then the action with its actor on one line, then the subject. */
   .activity li {
-    grid-template-columns: 1fr;
-    gap: 0;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    gap: 0 var(--space-2);
+  }
+  .activity :is(.activity-when, .activity-subject) {
+    grid-column: 1 / -1;
   }
   .commit-row {
     grid-template-columns: 1fr;
