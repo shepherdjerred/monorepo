@@ -2,12 +2,13 @@ import type { PostHog } from "posthog-js";
 import { ANALYTICS_SITE } from "@shepherdjerred/streambot/web/shared/analytics-site.ts";
 import type { TelemetryEvent } from "./events.ts";
 import { analyticsConfig } from "./posthog-config.ts";
-import { trackingAllowed } from "./privacy.ts";
+import { productionHost, trackingAllowed } from "./privacy.ts";
 
 /**
  * Product analytics for the web remote, backed by PostHog through the managed `j.sjer.red` proxy.
  *
- * The SDK is loaded only for a signed-in viewer whose `/api/me` carries an `analyticsId` (the
+ * The SDK is loaded only on the registered production host, for a signed-in viewer whose
+ * `/api/me` carries an `analyticsId` (the
  * server's usage-analytics flag is on) and whose browser sends neither Do Not Track nor Global
  * Privacy Control; otherwise nothing is downloaded and nothing is sent. The distinct id is that
  * random `analyticsId`, the same one the server's usage events use, never a Discord id.
@@ -63,7 +64,12 @@ async function load(analyticsId: string, queue: Pending[]): Promise<void> {
 
 /** Loads PostHog for this viewer once, when the browser allows it. */
 export function startAnalytics(analyticsId: string): void {
-  if (state.status !== "off" || !browserAllowsTracking()) return;
+  if (
+    state.status !== "off" ||
+    !productionHost(location.host, ANALYTICS_SITE.hostname) ||
+    !browserAllowsTracking()
+  )
+    return;
   const queue: Pending[] = [];
   state = { status: "loading", queue };
   void load(analyticsId, queue);

@@ -29,6 +29,7 @@ import { replayProvider, responses } from "#youtube-music-fixture";
 import {
   PREVIEW_LIBRARY,
   PREVIEW_PLEX_ARTWORK,
+  disablePreviewUsageAnalytics,
   previewSwitch,
   seedPreviewRoom,
   startPreviewTracing,
@@ -85,6 +86,7 @@ class PreviewSpotify extends SpotifyMetadata {
 }
 if (import.meta.main) {
   startPreviewTracing();
+  disablePreviewUsageAnalytics();
   const port = Number(Bun.argv[2] ?? 5188);
   const origin = "http://127.0.0.1:" + String(port);
   const history = new MediaHistoryStore(":memory:");

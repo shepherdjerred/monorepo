@@ -6,6 +6,11 @@ import {
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
+import { AnalyticsIdentityStore } from "@shepherdjerred/streambot/observability/analytics-identity.ts";
+import {
+  createUsageAnalytics,
+  installUsageAnalytics,
+} from "@shepherdjerred/streambot/observability/product-analytics.ts";
 import type { MusicTrack } from "@shepherdjerred/streambot/music/contracts.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { LibraryArtworkProvider } from "@shepherdjerred/streambot/metadata/plex.ts";
@@ -109,6 +114,19 @@ export const PREVIEW_PLEX_ARTWORK: LibraryArtworkProvider = {
     });
   },
 };
+
+/**
+ * Usage capture off, with no destination, so `/api/me` hands the page no analytics id and the
+ * browser never loads a tracker. The fixture already passes no Bugsink DSN.
+ */
+export function disablePreviewUsageAnalytics(): void {
+  installUsageAnalytics(
+    createUsageAnalytics({
+      identities: new AnalyticsIdentityStore(":memory:"),
+      enabled: () => false,
+    }),
+  );
+}
 
 /** Records spans in memory so API responses carry `x-trace-id`, as they do in production. */
 export function startPreviewTracing(): void {

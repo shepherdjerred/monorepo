@@ -12,6 +12,7 @@ import {
   replayAttribute,
   routePattern,
   sanitizeUrl,
+  productionHost,
   trackingAllowed,
 } from "@shepherdjerred/streambot/web/client/telemetry/privacy.ts";
 import {
@@ -316,4 +317,16 @@ test("Do Not Track and Global Privacy Control turn analytics off", () => {
   expect(trackingAllowed({ ...none, doNotTrack: "1" })).toBe(false);
   expect(trackingAllowed({ ...none, windowDoNotTrack: "1" })).toBe(false);
   expect(trackingAllowed({ ...none, globalPrivacyControl: true })).toBe(false);
+});
+
+test("the tracker loads only on the registered production host", () => {
+  expect(productionHost("streambot.sjer.red", "streambot.sjer.red")).toBe(true);
+  for (const host of [
+    "127.0.0.1:5291",
+    "localhost:5187",
+    "streambot.sjer.red:8443",
+    "preview.streambot.sjer.red",
+    "streambot.sjer.red.example.com",
+  ])
+    expect(productionHost(host, "streambot.sjer.red")).toBe(false);
 });

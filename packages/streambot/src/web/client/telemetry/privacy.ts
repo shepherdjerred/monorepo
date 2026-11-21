@@ -158,6 +158,14 @@ export type PrivacySignals = {
   readonly globalPrivacyControl: unknown;
 };
 
+/**
+ * True only on the registered production host. A local, preview or fixture origin never loads the
+ * tracker, whatever `/api/me` says, so a development run cannot reach the production project.
+ */
+export function productionHost(host: string, registeredHost: string): boolean {
+  return host === registeredHost;
+}
+
 /** False when the browser asks not to be tracked by Do Not Track or Global Privacy Control. */
 export function trackingAllowed(signals: PrivacySignals): boolean {
   const dnt = [signals.doNotTrack, signals.windowDoNotTrack].some(
