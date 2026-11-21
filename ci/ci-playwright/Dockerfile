@@ -12,6 +12,11 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git minisign unzip xz-utils util-linux libxml2 \
     && rm -rf /var/lib/apt/lists/*
+# Step pods egress only on TCP 443; see ci/ci-image/Dockerfile.
+RUN --mount=type=bind,source=ci/scripts/apt-https.sh,target=/tmp/apt-https.sh \
+    bash /tmp/apt-https.sh \
+    && apt-get update -qq \
+    && rm -rf /var/lib/apt/lists/*
 
 # Same signed mise bootstrap as ci-base. Only the postgres scope is installed:
 # browser jobs do not need Rust, Java, .NET or their download caches.

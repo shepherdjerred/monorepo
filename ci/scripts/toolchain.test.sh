@@ -83,6 +83,7 @@ if ! awk '
   exit 1
 fi
 bash "${SCRIPT_DIR}/android-sdk.test.sh"
+bash "${SCRIPT_DIR}/apt-https.test.sh"
 
 if ! rg -Fq 'bash ci/scripts/swiftlint/bootstrap.sh' "$TOOLCHAIN" ||
   rg -Fq 'swiftlint-static' "$CI_IMAGE"; then

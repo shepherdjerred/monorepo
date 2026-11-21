@@ -252,21 +252,28 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     ln -sf "$GH_EXECUTABLE" /usr/local/bin/gh
 
     # System tools the tasks shell out to that mise doesn't manage. Baked into
-    # the fresh ci-base; bootstrapped here on a stale image.
+    # the fresh ci-base; bootstrapped here on a stale image. Step pods egress
+    # only on TCP 443, so a stale image's plain-HTTP apt sources are switched
+    # to HTTPS before every fallback update.
+    ci_apt_install() {
+      bash ci/scripts/apt-https.sh
+      apt-get update -qq
+      apt-get install -y -qq --no-install-recommends "$@"
+    }
     if ! command -v rsync >/dev/null; then
-      apt-get update -qq && apt-get install -y -qq --no-install-recommends rsync
+      ci_apt_install rsync
     fi
     # RWF blind-review media tests exercise real encoding and metadata removal.
     # Install both executables on older images before the test manifest runs.
     if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
-      apt-get update -qq && apt-get install -y -qq --no-install-recommends ffmpeg
+      ci_apt_install ffmpeg
     fi
     ffmpeg -version >/dev/null
     ffprobe -version >/dev/null
     # Media exercises real archive extraction and lock-helper process death.
     # Prove both tools on stale images as well as newly baked ci-base images.
     if ! command -v ps >/dev/null; then
-      apt-get update -qq && apt-get install -y -qq --no-install-recommends procps
+      ci_apt_install procps
     fi
     # Media subprocesses intentionally omit mise shims from their credential-free
     # PATH. Expose the exact pinned archive tool on that stable path, as for gh.
@@ -275,7 +282,7 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     ps --version >/dev/null
     7zz i >/dev/null
     if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
-      apt-get update -qq && apt-get install -y -qq --no-install-recommends libxml2
+      ci_apt_install libxml2
     fi
     # Verify capabilities even when the executable exists; stale static builds
     # skip configured rules. The shared producer exports only a private runtime.
