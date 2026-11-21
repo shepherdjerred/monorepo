@@ -45,11 +45,16 @@ export function createTemporalPromotionWorker(
     "temporal-promotion-credential-secret",
     credentials.name,
   );
-  onePasswordSecret(
+  const antiCaptcha = onePasswordSecret(
     chart,
     "temporal-promotion-anti-captcha-1p",
     "xopb2rmxjbgsxcl6vbq6yu2e24",
     { name: "temporal-promotion-anti-captcha" },
+  );
+  const antiCaptchaSecret = Secret.fromSecretName(
+    chart,
+    "temporal-promotion-anti-captcha-secret",
+    antiCaptcha.name,
   );
   const browser = new OnePasswordItem(chart, "temporal-promotion-pinchtab-1p", {
     metadata: { name: "temporal-promotion-pinchtab" },
@@ -107,8 +112,8 @@ export function createTemporalPromotionWorker(
         key: "PINCHTAB_TOKEN",
       }),
       ANTI_CAPTCHA_API_KEY: EnvValue.fromSecretValue({
-        secret: credentialSecret,
-        key: "ANTI_CAPTCHA_API_KEY",
+        secret: antiCaptchaSecret,
+        key: "credential",
       }),
       STORM_PROMOTION_LOGINS: EnvValue.fromSecretValue({
         secret: credentialSecret,

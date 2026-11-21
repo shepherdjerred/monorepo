@@ -44,7 +44,17 @@ const DeploymentSchema = z.object({
         containers: z.array(
           z.object({
             env: z.array(
-              z.object({ name: z.string(), value: z.string().optional() }),
+              z.object({
+                name: z.string(),
+                value: z.string().optional(),
+                valueFrom: z
+                  .object({
+                    secretKeyRef: z
+                      .object({ name: z.string(), key: z.string() })
+                      .optional(),
+                  })
+                  .optional(),
+              }),
             ),
             name: z.string(),
             securityContext: SecurityContextSchema,
@@ -281,9 +291,25 @@ describe("promotion worker authority", () => {
     const container = pod.containers[0];
     if (container === undefined) throw new Error("Promotion container missing");
     const names = container.env.map((variable) => variable.name);
-    expect(names).toContain("ANTI_CAPTCHA_API_KEY");
+    expect(container.env).toContainEqual({
+      name: "ANTI_CAPTCHA_API_KEY",
+      valueFrom: {
+        secretKeyRef: {
+          name: "temporal-promotion-anti-captcha",
+          key: "credential",
+        },
+      },
+    });
     expect(names).toContain("PINCHTAB_TOKEN");
-    expect(names).toContain("STORM_PROMOTION_LOGINS");
+    expect(container.env).toContainEqual({
+      name: "STORM_PROMOTION_LOGINS",
+      valueFrom: {
+        secretKeyRef: {
+          name: "temporal-promotion-credentials",
+          key: "STORM_PROMOTION_LOGINS",
+        },
+      },
+    });
     expect(names).toContain("OPS_INGEST_TOKEN");
     expect(container.env).toContainEqual({
       name: "PROMOTION_DISCORD_SOCKET",
