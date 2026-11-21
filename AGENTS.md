@@ -76,18 +76,15 @@ and feature-flag packages. Load the `feature-flags` skill before changing that
 boundary. For a working feature, its Flipt flag on in the intended live
 environment is part of done unless that skill's default-off exception applies.
 
-Never print, paste, or persist secrets. Use existing 1Password-backed commands.
-Use toolkit for its supported platform commands; it resolves registered
-credentials automatically. Run the command directly before fetching tokens by
-hand. Credential backends and setup belong in `packages/toolkit/README.md`.
-Outside toolkit, wrap `op run`/`op read` for homelab-vault references with
-`scripts/onepassword/with-service-account.sh`; it uses the Keychain service
-account, so commands need no 1Password desktop approval. Start long-lived
-children with `env -u OP_SERVICE_ACCOUNT_TOKEN` so they never hold vault access.
-On macOS, `op whoami` may be false while Desktop-authorized operations work;
-probe with the exact read or `op vault list`. An empty `cf auth list` is normal
-for environment-token authentication; use `cf auth whoami` or a read-only API
-call and distinguish authentication from authorization.
+Never print, paste, or persist secrets; use existing 1Password-backed commands.
+Toolkit resolves registered credentials automatically (`packages/toolkit/README.md`);
+run it directly before fetching tokens by hand. Outside toolkit, wrap homelab-vault
+`op run`/`op read` calls with `scripts/onepassword/with-service-account.sh`
+(Keychain service account, no desktop approval), and start long-lived children
+with `env -u OP_SERVICE_ACCOUNT_TOKEN`. On macOS, `op whoami` can be false while
+Desktop-authorized reads work; probe with the exact read or `op vault list`. An
+empty `cf auth list` is normal for token auth; use `cf auth whoami` or a read
+call and separate authentication from authorization.
 
 ## Homelab ownership and delivery
 
@@ -165,14 +162,16 @@ Feature work uses `toolkit git-spice`; a single PR is a stack of one. Load the
 `monorepo-delivery` skill before branch, stack, PR, or CI-recovery work. Never
 hand-roll a stack rebase or create a feature PR with bare `gh pr create`.
 
-The primary commit and PR body include `Why`, `What`, and `Verification`,
-including live checks not run. Stage explicit paths only. Keep PR metadata based
-on the complete branch diff.
+The primary commit includes `Why`, `What`, and `Verification` (including live
+checks not run); the PR body adds `Demo` from the complete branch diff so a
+reviewer immediately sees what changed. Stage explicit paths only.
 
-Attach the lightest useful visual proof when behavior is visual or interactive;
-pure logic and internal refactors need exact commands instead. Use
-`toolkit pr asset --markdown` and embed its output in the PR body; terminal,
-CLI, and TUI changes record an asciinema cast, shown as an inline GIF.
+Upload PR media with `toolkit pr asset [PR] <file|dir...> --markdown`: show
+**before and after** for UI, sites, docs, and reports (screenshots, flow
+recordings, or `.html`/directory previews), an asciinema `.cast` (inline GIF +
+player) for CLI/TUI, and concrete output for backend/data/infra (payload or
+`cdk8s`/`tofu`/SQL diff, `duckdb -markdown` table, `uplot` chart, or `mermaid`
+diagram — only mechanical non-behavioral chores write `None — <reason>`).
 
 Automated review focuses on P0-P2 correctness, architecture, process, and secret
 hygiene. Mechanical formatting and type errors are covered elsewhere. Before

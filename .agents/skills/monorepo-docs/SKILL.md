@@ -28,5 +28,6 @@ and absolute wiki routes. Link source files that prove system claims. Do not
 copy inventories, flags, commands, or procedures across pages.
 
 Verify with the wiki's typecheck, test, build, and E2E scripts. Inspect changed
-pages at desktop and mobile widths and attach a screenshot to the PR when the
-rendered page changed.
+pages at desktop and mobile widths, and embed **before and after** screenshots
+(or desktop + mobile screenshots / an `.html` preview for new pages) in the PR's
+`## Demo` section via `toolkit pr asset --markdown`.

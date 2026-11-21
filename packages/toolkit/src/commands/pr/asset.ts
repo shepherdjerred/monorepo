@@ -23,14 +23,16 @@ import {
 } from "#lib/s3/cast-gif.ts";
 import { renderCastPlayerHtml } from "#lib/s3/cast-player.ts";
 import { createS3Client, putObject } from "#lib/s3/client.ts";
+import { resolvePrNumber } from "#lib/ci/github.ts";
 
 export type AssetOptions = {
   markdown?: boolean | undefined;
   profile?: string | undefined;
+  resolvePr?: (() => Promise<number>) | undefined;
 };
 
 const USAGE =
-  "Usage: toolkit pr asset <pr-number> <file|dir...> [--markdown] [--profile <name>]";
+  "Usage: toolkit pr asset [pr-number] <file|dir...> [--markdown] [--profile <name>]";
 
 export type PlannedUpload = {
   key: string;
@@ -194,29 +196,69 @@ export async function renderPlannedGifs(
  * leaves a partial set of objects behind on a bad argument or a failed
  * render. A missing or failing `agg` is an error, never a link-only fallback.
  */
+async function resolveAssetTarget(
+  firstArg: string | undefined,
+  rest: string[],
+  resolvePr: () => Promise<number>,
+): Promise<{ pr: number; files: string[] } | null> {
+  if (firstArg === undefined || firstArg.length === 0) {
+    console.error("Error: at least one file or directory is required");
+    console.error(USAGE);
+    process.exitCode = 1;
+    return null;
+  }
+  if (/^[1-9]\d*$/.test(firstArg)) {
+    if (rest.length === 0) {
+      console.error("Error: at least one file or directory is required");
+      console.error(USAGE);
+      process.exitCode = 1;
+      return null;
+    }
+    return { pr: Number(firstArg), files: rest };
+  }
+  if (/^0$|^-\d+$/.test(firstArg)) {
+    console.error("Error: a positive integer PR number is required");
+    console.error(USAGE);
+    process.exitCode = 1;
+    return null;
+  }
+  const files = [firstArg, ...rest];
+  for (const file of files) {
+    try {
+      await stat(file);
+    } catch {
+      console.error(`Error: file or directory not found: ${file}`);
+      process.exitCode = 1;
+      return null;
+    }
+  }
+  try {
+    const pr = await resolvePr();
+    return { pr, files };
+  } catch {
+    console.error(
+      "Error: no open PR found for current branch — create a draft PR first with 'toolkit git-spice branch submit --draft ...', then run 'toolkit pr asset <file|dir...> --markdown'.",
+    );
+    process.exitCode = 1;
+    return null;
+  }
+}
+
 export async function assetCommand(
   prNumber: string | undefined,
   files: string[],
   options: AssetOptions,
   renderCastGif: CastGifRenderer = renderCastGifWithAgg,
 ): Promise<void> {
-  const parsed = Number(prNumber);
-  if (
-    prNumber == null ||
-    prNumber.length === 0 ||
-    !Number.isInteger(parsed) ||
-    parsed <= 0
-  ) {
-    console.error("Error: a positive integer PR number is required");
-    console.error(USAGE);
-    process.exit(1);
+  const target = await resolveAssetTarget(
+    prNumber,
+    files,
+    options.resolvePr ?? (() => resolvePrNumber()),
+  );
+  if (target === null) {
+    return;
   }
-
-  if (files.length === 0) {
-    console.error("Error: at least one file or directory is required");
-    console.error(USAGE);
-    process.exit(1);
-  }
+  const parsed = target.pr;
 
   // Plan every upload (resolving directories and generated player pages)
   // before touching the bucket, so a bad later argument doesn't leave
@@ -225,13 +267,14 @@ export async function assetCommand(
   // validation passes and removed after the uploads.
   const gifDir = path.join(os.tmpdir(), `toolkit-pr-asset-${randomUUID()}`);
   const inputs: PlannedInput[] = [];
-  for (const file of files) {
+  for (const file of target.files) {
     let stats;
     try {
       stats = await stat(file);
     } catch {
       console.error(`Error: file or directory not found: ${file}`);
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     }
 
     if (stats.isFile()) {
@@ -248,12 +291,14 @@ export async function assetCommand(
         console.error(
           `Error: directory '${file}' has no root index.html — demo-site uploads need an entry point to link to`,
         );
-        process.exit(1);
+        process.exitCode = 1;
+        return;
       }
       inputs.push(planDirectory(parsed, file, relativeFiles));
     } else {
       console.error(`Error: not a regular file or directory: ${file}`);
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     }
   }
 
@@ -263,7 +308,8 @@ export async function assetCommand(
     console.error(
       `Error: '${duplicate.first}' and '${duplicate.second}' would collide on the same object key '${duplicate.key}'`,
     );
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   await mkdir(gifDir, { recursive: true });

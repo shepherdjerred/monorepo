@@ -17,40 +17,48 @@ rebase, or create a feature PR with `gh pr create`.
 3. Run the extended test tier for affected workspaces; Woodpecker does not run
    it on pull requests:
    `bunx turbo run test:extended --filter='...[origin/main]' --continue`.
-4. For a browser-visible change, render it and capture the proof now, not after
-   review: prefer `toolkit screenshot <package> [route]` (allocates an isolated
-   free port and cleans up its PinchTab session/tab), or scope an isolated
-   `PINCHTAB_SESSION` for `pinchtab screenshot -o <file>` / `pinchtab record`
-   and close opened tabs (`pinchtab tab close`) when done. A terminal, CLI, or
-   TUI change records an asciinema cast:
-   `asciinema rec --headless --window-size 120x32 --idle-time-limit 2 --return --command '<cmd>' demo.cast`.
-   Other user-visible surfaces use their own tool — a rendered asset or a
-   Discord acceptance message.
+4. Capture `Demo` material so a reviewer skimming the PR immediately sees what
+   changed and that it works (when a prior state exists, capture `before` from
+   `main` first — before editing, from a `main` worktree, or `git stash` — with
+   the same route, viewport, and input as `after`):
+   - **Existing UI / page / layout:** `| Before | After |` table of screenshots
+     (`toolkit screenshot <package> [route]` or isolated `PINCHTAB_SESSION`
+     `pinchtab screenshot -o <file>`, closing tabs when done), plus a short
+     `.mp4`/`.webm` (`pinchtab record`) when an interaction, sheet, form, or
+     transition changed.
+   - **New UI / responsive / static site / report:** key states (populated,
+     empty, error/edge; desktop + mobile when layout matters) or a
+     self-contained `.html` file / static directory (`index.html` at root).
+   - **CLI / TUI / script:** asciinema `.cast`
+     (`asciinema rec --headless --window-size 120x32 --idle-time-limit 2 --return --command '<cmd>' demo.cast`)
+     or concise before/after terminal output.
+   - **Backend / API / data / Temporal / homelab:** concrete observable output —
+     before/after payload/event diff, `duckdb -markdown` query table, `uplot`
+     chart, GitHub `mermaid` / `mmdc` diagram of changed flow/state/topology,
+     `cdk8s`/`tofu`/SQL plan diff excerpt, or a short `.cast`. Never skip `Demo`
+     because no frontend file changed; only purely mechanical chores write
+     `None — <reason>`.
+   - **Other surfaces:** matching rendered asset or Discord acceptance message.
 5. Stage exact paths and run `bunx lefthook run pre-commit`.
 6. Commit as `type(scope): outcome`. The primary commit body has `Why`, `What`,
    and `Verification`.
 7. Inspect the complete branch diff before submission.
 
-Create or update the PR explicitly:
+Create the draft PR, upload `Demo` media, embed it in `## Demo`, then mark
+ready (`Why`, `What`, `Demo`, and `Verification` in the PR body):
 
 ```bash
-toolkit git-spice branch submit --draft --dry-run --title "type(scope): outcome" --body "..."
-toolkit git-spice branch submit --draft --title "type(scope): outcome" --body "..."
-toolkit git-spice stack submit --update-only
-```
-
-Use a draft once the branch has a coherent first commit. Draft pushes run the
-bounded preflight. When the change and focused checks are ready, trigger full
-verification without another commit:
-
-```bash
-toolkit git-spice branch submit --no-draft
+toolkit git-spice branch submit --draft --no-web --title "type(scope): outcome" --body "$(cat /tmp/pr-body.md)"
+toolkit pr asset before.png after.png --profile seaweedfs --markdown
+# Embed printed markdown in ## Demo of /tmp/pr-body.md, then mark ready:
+toolkit git-spice branch submit --no-draft --no-web --body "$(cat /tmp/pr-body.md)"
 toolkit ci wait --json
 ```
 
-A green draft preflight is not merge evidence. Wait for full verification of
-the current head after marking it ready. Keep the final body based on the whole
-branch, not the latest commit.
+Draft pushes run bounded preflight; `toolkit git-spice stack submit --update-only`
+updates an existing stack. A green draft preflight is not merge evidence: wait
+for full verification of the current head after marking it ready, and keep PR
+metadata based on the whole branch, not the latest commit.
 
 ## Prove readiness
 
@@ -98,14 +106,14 @@ branch, not the latest commit.
 - Never change a real gate, skip a test, or suppress an error merely to make a
   PR green.
 
-Attach the proof captured in step 4 with
-`toolkit pr asset <PR> <path> --profile seaweedfs --markdown` and embed the
-printed markdown in the PR body's `Verification` section before marking the PR
-ready. A `.cast` renders as an inline GIF linked to the full player. A change
-with a visual or interactive surface reaches review with that artifact; "the
-diff is small" is not a reason to omit it. Pure logic and internal refactors
-give exact commands instead. State unperformed live or production checks in
-the PR body.
+Upload `Demo` media with `toolkit pr asset [PR] <path...> --profile seaweedfs --markdown`
+(omitting `PR` infers the current branch's open PR) and embed the printed
+markdown in the PR body's `## Demo` section before marking ready. A `.cast`
+renders as an inline GIF linked to the full player; a directory with root
+`index.html` uploads as a static demo site. Every PR reaches review with a
+human-skimmable `## Demo` ("the diff is small" or "no client change" is not a
+reason to omit it; test pass counts stay in `## Verification`, alongside any
+unperformed live or production checks).
 
 Complex work may use several commits inside this one branch. Use multiple
 stacked PRs only when each branch is independently landable and the requested
@@ -124,7 +132,8 @@ finish any that remain in scope rather than listing it:
 
 - every planned change is delivered, and nothing in the plan was deferred;
 - authorized PRs are merged; others are named with their state;
-- the PR body embeds the visual proof, and the final report links it;
+- the PR body includes `## Demo` (before/after for changed UI/sites/docs, cast or
+  concrete output for CLI/backend/infra), and the final report links it;
 - a new feature's flag is on in the intended live environment;
 - Tracker issues for friction, inefficiency, automation candidates, and tech
   debt found along the way are filed or upvoted, and named.

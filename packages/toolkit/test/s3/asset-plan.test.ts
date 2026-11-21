@@ -173,4 +173,34 @@ describe("assetCommand GIF rendering", () => {
       ),
     ).rejects.toThrow("unexpected");
   });
+
+  test("infers the open PR number when the first positional is a file path", async () => {
+    const errors: string[] = [];
+    vi.spyOn(console, "error").mockImplementation((message: unknown) => {
+      errors.push(String(message));
+    });
+    const resolvePr = vi.fn(() => Promise.resolve(42));
+
+    await assetCommand(castPath, [], { markdown: true, resolvePr }, (cast) =>
+      Promise.reject(new CastGifRenderError(cast, "stop before S3")),
+    );
+
+    expect(resolvePr).toHaveBeenCalledTimes(1);
+    expect(process.exitCode).toBe(1);
+    expect(errors[0]).toContain("stop before S3");
+  });
+
+  test("guides the caller to submit a draft PR when branch PR inference fails", async () => {
+    const errors: string[] = [];
+    vi.spyOn(console, "error").mockImplementation((message: unknown) => {
+      errors.push(String(message));
+    });
+
+    await assetCommand(castPath, [], {
+      resolvePr: () => Promise.reject(new Error("no PR")),
+    });
+
+    expect(process.exitCode).toBe(1);
+    expect(errors[0]).toContain("toolkit git-spice branch submit --draft");
+  });
 });

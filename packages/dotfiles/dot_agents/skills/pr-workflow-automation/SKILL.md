@@ -12,8 +12,8 @@ credentials automatically; setup and the separate CI credential path live in
 `packages/toolkit/README.md`.
 
 Create or merge a PR only within the user's authorization. Preserve unrelated
-changes, stage explicit paths, and keep the PR's Why, What, and Verification
-based on the complete branch diff. Respect requested monitoring boundaries;
+changes, stage explicit paths, and keep the PR's `Why`, `What`, `Demo`, and
+`Verification` based on the complete branch diff. Respect requested monitoring boundaries;
 when waiting is requested, use `toolkit ci wait [PR] --json`. Inspect blockers
 with `toolkit ci explain [PR]` and provider feedback with
 `toolkit pr review list [PR] --json`. Follow the delivery skill for repairs
