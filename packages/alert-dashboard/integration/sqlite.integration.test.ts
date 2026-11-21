@@ -931,3 +931,81 @@ describe("SQLite Home Assistant outbox and scoped reads", () => {
     });
   });
 });
+
+describe("SQLite Home Assistant outbox concurrent resolution ordering", () => {
+  it("holds dismiss until an in-flight notify settles and cancels failed notify on a resolved occurrence", async () => {
+    const labels = {
+      alertname: "RoborockFilterDue",
+      category: "household",
+      severity: "warning",
+      service: "roborock",
+    };
+    await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-inflight-chore",
+          status: "firing",
+          labels,
+          annotations: { summary: "Filter replacement due" },
+        }),
+        "2026-08-09T08:00:01Z",
+        false,
+      ),
+    );
+
+    const notifyClaims =
+      await repository.claimPendingHomeAssistantNotifications(
+        nanoseconds("2026-08-09T08:00:05Z"),
+        10,
+        nanoseconds("2026-08-09T08:00:05Z"),
+      );
+    expect(notifyClaims).toHaveLength(1);
+    const notifyClaim = notifyClaims[0];
+    if (notifyClaim === undefined) throw new Error("expected notify claim");
+
+    // Occurrence resolves while notifyClaim is still in-flight
+    await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-inflight-chore",
+          status: "resolved",
+          labels,
+          annotations: { summary: "Filter replacement due" },
+        }),
+        "2026-08-09T08:00:10Z",
+        false,
+      ),
+    );
+
+    // Dismiss must NOT race ahead while notify is still claimed
+    const duringInflight =
+      await repository.claimPendingHomeAssistantNotifications(
+        nanoseconds("2026-08-09T08:00:12Z"),
+        10,
+        nanoseconds("2026-08-09T08:00:12Z"),
+      );
+    expect(duringInflight).toEqual([]);
+
+    // In-flight notify fails -> canceled because occurrence is already resolved
+    await repository.markHomeAssistantFailed({
+      id: notifyClaim.id,
+      sendClaimId: notifyClaim.sendClaimId,
+      failedAtNs: nanoseconds("2026-08-09T08:00:15Z"),
+      nextAttemptAtNs: nanoseconds("2026-08-09T08:00:45Z"),
+      error: "timeout",
+    });
+
+    // Even past nextAttemptAtNs, notify is never retried and dismiss now claims cleanly
+    const afterFailure =
+      await repository.claimPendingHomeAssistantNotifications(
+        nanoseconds("2026-08-09T08:01:00Z"),
+        10,
+        nanoseconds("2026-08-09T08:01:00Z"),
+      );
+    expect(afterFailure).toHaveLength(1);
+    expect(afterFailure[0]?.notification).toEqual({
+      action: "dismiss",
+      notificationId: "hub-house-fp-inflight-chore",
+    });
+  });
+});

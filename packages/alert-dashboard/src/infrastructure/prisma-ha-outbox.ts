@@ -96,6 +96,40 @@ function toNotification(row: {
   throw new Error(`Unknown HomeAssistantOutbox action: ${row.action}`);
 }
 
+async function shouldSkipClaimCandidate(
+  transaction: Prisma.TransactionClient,
+  candidate: {
+    id: string;
+    occurrenceId: string;
+    action: string;
+    occurrence: { lifecycleState: string };
+  },
+  nowNs: bigint,
+): Promise<boolean> {
+  if (
+    candidate.action === "notify" &&
+    candidate.occurrence.lifecycleState === "resolved"
+  ) {
+    await transaction.homeAssistantOutbox.updateMany({
+      where: { id: candidate.id, sentAtNs: null, canceledAtNs: null },
+      data: { canceledAtNs: nowNs, sendingAtNs: null, sendClaimId: null },
+    });
+    return true;
+  }
+  if (candidate.action === "dismiss") {
+    const pendingNotifyCount = await transaction.homeAssistantOutbox.count({
+      where: {
+        occurrenceId: candidate.occurrenceId,
+        action: "notify",
+        sentAtNs: null,
+        canceledAtNs: null,
+      },
+    });
+    return pendingNotifyCount > 0;
+  }
+  return false;
+}
+
 export async function claimPendingHaRows(
   transaction: Prisma.TransactionClient,
   nowNs: bigint,
@@ -114,15 +148,20 @@ export async function claimPendingHaRows(
     take: limit,
     select: {
       id: true,
+      occurrenceId: true,
       action: true,
       notificationId: true,
       title: true,
       message: true,
       attemptCount: true,
+      occurrence: { select: { lifecycleState: true } },
     },
   });
   const claimed: ClaimedHomeAssistantOutboxItem[] = [];
   for (const candidate of candidates) {
+    if (await shouldSkipClaimCandidate(transaction, candidate, nowNs)) {
+      continue;
+    }
     const sendClaimId = crypto.randomUUID();
     const result = await transaction.homeAssistantOutbox.updateMany({
       where: {
@@ -176,6 +215,16 @@ export async function markHaFailedRow(
   transaction: Prisma.TransactionClient,
   input: HomeAssistantSendFailureInput,
 ): Promise<void> {
+  const current = await transaction.homeAssistantOutbox.findUnique({
+    where: { id: input.id },
+    select: {
+      action: true,
+      occurrence: { select: { lifecycleState: true } },
+    },
+  });
+  const cancelResolvedNotify =
+    current?.action === "notify" &&
+    current.occurrence.lifecycleState === "resolved";
   const result = await transaction.homeAssistantOutbox.updateMany({
     where: {
       id: input.id,
@@ -184,7 +233,9 @@ export async function markHaFailedRow(
       canceledAtNs: null,
     },
     data: {
-      nextAttemptAtNs: input.nextAttemptAtNs,
+      ...(cancelResolvedNotify
+        ? { canceledAtNs: input.failedAtNs }
+        : { nextAttemptAtNs: input.nextAttemptAtNs }),
       sendingAtNs: null,
       sendClaimId: null,
       attemptCount: { increment: 1 },

@@ -72,6 +72,7 @@ export class AlertService {
   readonly #previews: PreviewPort;
   readonly #clock: Clock;
   readonly #emailEnabled: boolean;
+  #haDrainTail: Promise<void> = Promise.resolve();
 
   constructor(options: AlertServiceOptions) {
     this.#repository = options.repository;
@@ -235,6 +236,21 @@ export class AlertService {
   }
 
   async drainHomeAssistantOutbox(limit = 10): Promise<number> {
+    if (this.#homeAssistant === null) return 0;
+    const previous = this.#haDrainTail;
+    let release: (() => void) | undefined;
+    this.#haDrainTail = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+    try {
+      return await this.#drainHomeAssistantBatch(limit);
+    } finally {
+      release?.();
+    }
+  }
+
+  async #drainHomeAssistantBatch(limit: number): Promise<number> {
     if (this.#homeAssistant === null) return 0;
     const nowNs = this.#clock.now().epochNanoseconds;
     const items = await this.#repository.claimPendingHomeAssistantNotifications(

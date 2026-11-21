@@ -239,4 +239,88 @@ describe("Home Assistant outbox drain", () => {
       },
     ]);
   });
+
+  it("serializes overlapping drain calls so dismiss cannot race ahead of notify", async () => {
+    const events: string[] = [];
+    let notifyEntered: (() => void) | undefined;
+    const enteredFirstSend = new Promise<void>((resolve) => {
+      notifyEntered = resolve;
+    });
+    let releaseFirstSend: (() => void) | undefined;
+    const firstSendGate = new Promise<void>((resolve) => {
+      releaseFirstSend = resolve;
+    });
+    let batchNumber = 0;
+    const repository: AlertLedgerRepository = {
+      ...readinessOnlyLedger(),
+      claimPendingHomeAssistantNotifications: () => {
+        batchNumber += 1;
+        events.push(`claim-${String(batchNumber)}`);
+        if (batchNumber === 1) {
+          return Promise.resolve([
+            {
+              id: "outbox-notify",
+              sendClaimId: "claim-notify",
+              attemptCount: 0,
+              notification: {
+                action: "notify",
+                notificationId: "hub-house-fp-race",
+                title: "[House] RoborockConsumableDue",
+                message: "Main brush due",
+              },
+            },
+          ]);
+        }
+        return Promise.resolve([
+          {
+            id: "outbox-dismiss",
+            sendClaimId: "claim-dismiss",
+            attemptCount: 0,
+            notification: {
+              action: "dismiss",
+              notificationId: "hub-house-fp-race",
+            },
+          },
+        ]);
+      },
+      markHomeAssistantSent: (value) => {
+        events.push(`sent-${value.id}`);
+        return Promise.resolve();
+      },
+    };
+    const service = new AlertService({
+      repository,
+      alertmanager: { activeAlerts: unexpected },
+      postal: { send: unexpected },
+      homeAssistant: {
+        send: async (notification) => {
+          events.push(`send-${notification.action}`);
+          if (notification.action === "notify") {
+            notifyEntered?.();
+            await firstSendGate;
+          }
+        },
+      },
+      previews: { previews: unexpected, health: unexpected },
+      clock: fixedClock("2026-08-08T18:00:00Z"),
+      emailEnabled: false,
+    });
+
+    const first = service.drainHomeAssistantOutbox();
+    const second = service.drainHomeAssistantOutbox();
+    await enteredFirstSend;
+    expect(events).toEqual(["claim-1", "send-notify"]);
+
+    if (releaseFirstSend === undefined) throw new Error("missing gate");
+    releaseFirstSend();
+    await Promise.all([first, second]);
+    expect(events).toEqual([
+      "claim-1",
+      "send-notify",
+      "sent-outbox-notify",
+      "claim-2",
+      "send-dismiss",
+      "sent-outbox-dismiss",
+    ]);
+  });
 });

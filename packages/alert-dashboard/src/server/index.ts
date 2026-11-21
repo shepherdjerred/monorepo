@@ -162,6 +162,27 @@ const digests = new DigestService({
   clock: systemClock,
 });
 const changes = new ChangeBus();
+const runHomeAssistantWorker = serializedWorker(async () => {
+  try {
+    const processed = await service.drainHomeAssistantOutbox();
+    if (processed > 0) {
+      metrics.increment(
+        "alert_dashboard_homeassistant_attempt_total",
+        {},
+        processed,
+      );
+    }
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        level: "error",
+        message: "homeassistant_worker_failed",
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  }
+});
+
 const app = createApp({
   service,
   changes,
@@ -171,6 +192,9 @@ const app = createApp({
   digests,
   opsIngestToken: config.OPS_INGEST_TOKEN,
   promotionStatusUrl: config.PROMOTION_STATUS_URL,
+  onWebhookIngested: () => {
+    void runHomeAssistantWorker();
+  },
   modules: serverModules,
 });
 const server = Bun.serve({
@@ -191,6 +215,7 @@ console.warn(
 async function reconcile(): Promise<void> {
   try {
     await reconcileAndPublish(service, changes, metrics);
+    await runHomeAssistantWorker();
   } catch (error) {
     console.error(
       JSON.stringify({
@@ -244,27 +269,6 @@ const runEmailWorker = serializedWorker(async () => {
   }
 });
 
-const runHomeAssistantWorker = serializedWorker(async () => {
-  try {
-    const processed = await service.drainHomeAssistantOutbox();
-    if (processed > 0) {
-      metrics.increment(
-        "alert_dashboard_homeassistant_attempt_total",
-        {},
-        processed,
-      );
-    }
-  } catch (error) {
-    console.error(
-      JSON.stringify({
-        level: "error",
-        message: "homeassistant_worker_failed",
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    );
-  }
-});
-
 async function runRetentionWorker(): Promise<void> {
   try {
     await purge();
@@ -286,10 +290,6 @@ const reconciliationTimer = setInterval(
   15_000,
 );
 const emailTimer = setInterval(() => void runEmailWorker(), 5000);
-const homeAssistantTimer = setInterval(
-  () => void runHomeAssistantWorker(),
-  5000,
-);
 const retentionTimer = setInterval(
   () => void runRetentionWorker(),
   60 * 60 * 1000,
@@ -298,7 +298,6 @@ const retentionTimer = setInterval(
 async function shutdown(): Promise<void> {
   clearInterval(reconciliationTimer);
   clearInterval(emailTimer);
-  clearInterval(homeAssistantTimer);
   clearInterval(retentionTimer);
   await server.stop();
   await closeModules(serverModules);
