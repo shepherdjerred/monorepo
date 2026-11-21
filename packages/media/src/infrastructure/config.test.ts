@@ -4,7 +4,7 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
-import { mediaBehaviorConfig } from "./config.ts";
+import { BootstrapSchema, mediaBehaviorConfig } from "./config.ts";
 
 afterEach(async () => {
   await shutdownFeatureFlags();
@@ -96,16 +96,76 @@ test("a resolved false stays authoritative independently of another enabled gate
   expect(await config.get("purgeEnabled")).toMatchObject({ value: false });
 });
 
-test.each(["0", "-1", "366", "not-a-number"])(
-  "present invalid Keep duration %s fails instead of falling back",
-  async (value) => {
+test.each([
+  ["media-keep-days", "keepDays", "0"],
+  ["media-keep-days", "keepDays", "-1"],
+  ["media-keep-days", "keepDays", "366"],
+  ["media-keep-days", "keepDays", "not-a-number"],
+  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", "0"],
+  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", "1048576"],
+  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", "1.5"],
+  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", "unlimited"],
+] as const)(
+  "present invalid %s (%s) value %s fails instead of falling back",
+  async (flag, key, value) => {
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
-      provider: new StaticProvider({ "media-keep-days": value }),
+      provider: new StaticProvider({ [flag]: value }),
     });
-    await expect(
-      mediaBehaviorConfig("production").get("keepDays"),
-    ).rejects.toThrow();
+    await expect(mediaBehaviorConfig("production").get(key)).rejects.toThrow();
+  },
+);
+
+test("the artwork cache cap defaults to 1 GiB and takes a managed value", async () => {
+  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
+  await expect(
+    mediaBehaviorConfig("production").get("artworkCacheMaxBytes"),
+  ).resolves.toEqual({ value: 1_073_741_824, source: "default" });
+  await shutdownFeatureFlags();
+  await initFeatureFlags({
+    environment: { FEATURE_FLAGS_MODE: "disabled" },
+    provider: new StaticProvider({
+      "media-artwork-cache-max-bytes": "3221225472",
+    }),
+  });
+  await expect(
+    mediaBehaviorConfig("production").get("artworkCacheMaxBytes"),
+  ).resolves.toEqual({ value: 3_221_225_472, source: "flag" });
+});
+
+const bootstrapEnvironment = {
+  DATABASE_URL: "postgresql://media@localhost/media",
+  MEDIA_CREDENTIAL_KEY: "key",
+  PLEX_SERVER_MACHINE_ID: "server",
+  PLEX_SERVER_URL: "http://plex:32400",
+  PLEX_OWNER_ACCOUNT_ID: "owner",
+  TMDB_TOKEN: "token",
+  PUBLIC_ORIGIN: "https://media.example.test",
+  TEMPORAL_ADDRESS: "temporal:7233",
+  TEMPORAL_NAMESPACE: "prod",
+};
+
+test("the artwork cache directory defaults to the pod's /tmp and takes a mount path", () => {
+  expect(
+    BootstrapSchema.parse(bootstrapEnvironment).MEDIA_ARTWORK_CACHE_DIR,
+  ).toBe("/tmp/media-artwork");
+  expect(
+    BootstrapSchema.parse({
+      ...bootstrapEnvironment,
+      MEDIA_ARTWORK_CACHE_DIR: "/var/cache/media/artwork",
+    }).MEDIA_ARTWORK_CACHE_DIR,
+  ).toBe("/var/cache/media/artwork");
+});
+
+test.each(["", "artwork", "./artwork"])(
+  "bootstrap refuses the relative artwork cache directory %j instead of defaulting",
+  (directory) => {
+    expect(
+      BootstrapSchema.safeParse({
+        ...bootstrapEnvironment,
+        MEDIA_ARTWORK_CACHE_DIR: directory,
+      }).success,
+    ).toBe(false);
   },
 );
 

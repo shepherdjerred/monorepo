@@ -69,6 +69,7 @@ export const MEDIA_VARIANT_FLAG_KEYS = [
   "media-permitted-movie-section-id",
   "media-permitted-tv-section-id",
   "media-keep-days",
+  "media-artwork-cache-max-bytes",
 ] as const;
 
 export type MediaVariantFlagKey = (typeof MEDIA_VARIANT_FLAG_KEYS)[number];

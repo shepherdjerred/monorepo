@@ -734,6 +734,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "media-artwork-cache-max-bytes",
+      "owner": "media",
+      "namespace": "media",
+      "source": "media",
+      "purpose": "Byte cap of the on-disk artwork cache, read at API start; keep it below what the cache directory's volume may hold.",
+      "type": "variant",
+      "default": "1073741824",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "arcade_enabled",
       "owner": "arcade",
       "namespace": "arcade",

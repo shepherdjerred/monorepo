@@ -17,6 +17,10 @@ import { createDatabase } from "#infrastructure/database.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { PlexPinAuthentication } from "#infrastructure/plex-auth.ts";
 import { TmdbClient } from "#integrations/tmdb.ts";
+import { TmdbImageClient } from "#integrations/tmdb-images.ts";
+import { ArtworkDiskCache } from "#infrastructure/artwork/cache.ts";
+import { ArtworkProxy } from "#infrastructure/artwork/proxy.ts";
+import { ArtworkTelemetry } from "#infrastructure/artwork/telemetry.ts";
 import { createMediaApp } from "./app.ts";
 import { mountMediaClient } from "./static/client.ts";
 import { PrismaNotificationApplication } from "#infrastructure/notification-service.ts";
@@ -72,6 +76,19 @@ const sessionLifetime = await behavior.get("sessionLifetimeMs");
 const keepDays = await behavior.get("keepDays");
 const permittedMovieSectionId = await behavior.get("permittedMovieSectionId");
 const permittedTvSectionId = await behavior.get("permittedTvSectionId");
+const artworkCacheMaxBytes = await behavior.get("artworkCacheMaxBytes");
+const artworkTelemetry = new ArtworkTelemetry((entry) => {
+  console.error(JSON.stringify(entry));
+});
+const artwork = new ArtworkProxy(
+  await ArtworkDiskCache.open(
+    bootstrap.MEDIA_ARTWORK_CACHE_DIR,
+    artworkCacheMaxBytes.value,
+    artworkTelemetry,
+  ),
+  new TmdbImageClient(),
+  artworkTelemetry,
+);
 const cipher = new CredentialCipher(bootstrap.MEDIA_CREDENTIAL_KEY);
 const tmdbCredential =
   bootstrap.TMDB_API_KEY === undefined
@@ -204,6 +221,7 @@ const app = createMediaApp({
       plexAdministration.libraryClient(actor),
     ),
   ),
+  artwork,
   library: new PrismaLibraryApplication(database, {
     serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
     sections: {
@@ -389,7 +407,10 @@ app.get("/readyz", async (c) => {
 });
 app.get("/metrics", async (c) => {
   c.header("Content-Type", "text/plain; version=0.0.4");
-  return c.body(await renderMediaMetrics(database, await capacityEnabled()));
+  return c.body(
+    (await renderMediaMetrics(database, await capacityEnabled())) +
+      artwork.metrics(),
+  );
 });
 async function capacityEnabled() {
   const result = await mediaBehaviorConfig(bootstrap.ENVIRONMENT, true).get(
