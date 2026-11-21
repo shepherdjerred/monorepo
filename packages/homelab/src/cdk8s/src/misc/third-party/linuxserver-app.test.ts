@@ -313,7 +313,7 @@ describe("LinuxServerApp workload", () => {
 describe("LinuxServerApp exposure", () => {
   test("a tailnet host is an Ingress on the Service with a blackbox probe", () => {
     const { identities, of } = render({
-      tailscale: { host: tailnetService("prowlarr") },
+      tailscale: { host: tailnetService("media") },
     });
     expect(identities.at(-1)).toBe(
       "Ingress/media-prowlarr-tailscale-ingress-ingress",
@@ -325,7 +325,7 @@ describe("LinuxServerApp exposure", () => {
       defaultBackend: {
         service: { name: "media-prowlarr-service", port: { number: 9696 } },
       },
-      tls: [{ hosts: ["prowlarr"] }],
+      tls: [{ hosts: ["media"] }],
     });
     expect(getRegisteredBackendProbes()).toMatchObject([
       { namespace: "media", serviceName: "media-prowlarr-service", port: 9696 },
@@ -334,7 +334,7 @@ describe("LinuxServerApp exposure", () => {
 
   test("a proxy class labels the Ingress", () => {
     const { of } = render({
-      tailscale: { host: tailnetService("prowlarr"), proxyClass: "medium" },
+      tailscale: { host: tailnetService("media"), proxyClass: "medium" },
     });
     expect(of("Ingress")[0]?.metadata.labels).toEqual({
       "tailscale.com/proxy-class": "medium",
@@ -343,7 +343,7 @@ describe("LinuxServerApp exposure", () => {
 
   test("policies select the namespace and render last, typed by their directions", () => {
     const { app, identities, of } = render({
-      tailscale: { host: tailnetService("prowlarr") },
+      tailscale: { host: tailnetService("media") },
       policies: [
         { name: "app-ingress-netpol", ingress: [tailscaleIngressRule()] },
         { name: "app-egress-netpol", egress: [dnsEgressRule()] },

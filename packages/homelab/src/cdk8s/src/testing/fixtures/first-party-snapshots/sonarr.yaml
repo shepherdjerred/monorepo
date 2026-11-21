@@ -9,7 +9,7 @@ metadata:
 spec:
   minReadySeconds: 0
   progressDeadlineSeconds: 600
-  replicas: 1
+  replicas: 0
   revisionHistoryLimit: 3
   selector:
     matchLabels:
@@ -113,21 +113,3 @@ spec:
   selector:
     cdk8s.io/metadata.addr: media-sonarr-c83de5a2
   type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: media-sonarr-tailscale-ingress-ingress
-  namespace: media
-  labels:
-    tailscale.com/proxy-class: medium
-spec:
-  defaultBackend:
-    service:
-      name: media-sonarr-service
-      port:
-        number: 8989
-  ingressClassName: tailscale
-  tls:
-    - hosts:
-        - sonarr

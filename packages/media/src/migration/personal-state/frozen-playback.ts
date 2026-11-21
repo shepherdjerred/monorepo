@@ -147,9 +147,12 @@ function readSnapshot(db: Database) {
   const rows = db
     .query(
       `SELECT h.id, h.user_id, m.rating_key, h.started, h.stopped, h.paused_counter,
-      h.view_offset, h.live, h.media_type, h.platform, h.player, h.transcode_decision,
+      h.view_offset, m.live, h.media_type, h.platform, h.player, i.transcode_decision,
       m.duration AS metadata_duration, m.full_title, m.grandparent_title
-      FROM session_history h LEFT JOIN session_history_metadata m ON m.id=h.id ORDER BY h.id`,
+      FROM session_history h
+      LEFT JOIN session_history_metadata m ON m.id=h.id
+      LEFT JOIN session_history_media_info i ON i.id=h.id
+      ORDER BY h.id`,
     )
     .all()
     .map((row) => frozenPlaybackRow(row));

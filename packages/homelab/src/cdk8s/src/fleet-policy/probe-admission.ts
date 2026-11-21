@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { platformModel } from "homelab/src/platform-model.ts";
 import type { BackendProbeDescriptor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { selectorMatches, type Fleet, type FleetService } from "./fleet.ts";
 import {
@@ -59,10 +60,10 @@ type ProbeSource = {
  * Who connects to a probed port: blackbox-exporter always, plus each ingress
  * path that registered it. A Tailscale Ingress is served by a proxy pod the
  * operator labels after the Ingress. The cluster tunnel's cloudflared pods
- * run beside their operator in `cloudflare-operator-system`. They and
- * blackbox-exporter are deployed by upstream charts, so they are known by
- * namespace alone and a policy that narrows them by pod label does not count
- * as admitting them.
+ * run beside their operator in `cloudflare-operator-system`, with the
+ * controller's stable cloudflared/tunnel-name labels. Blackbox-exporter is
+ * identified by namespace; cloudflared can be admitted independently from
+ * its controller with that actual pod identity.
  */
 function probeSources(
   fleet: Fleet,
@@ -95,7 +96,10 @@ function probeSources(
     )
     .map(() => ({
       name: "cloudflare-operator-system" as const,
-      pods: podsLabelled("cloudflare-operator-system"),
+      pods: podsLabelled("cloudflare-operator-system", {
+        "cfargotunnel.com/app": "cloudflared",
+        "cfargotunnel.com/tunnel": platformModel.cloudflareTunnel.name,
+      }),
     }));
   if (tailscale.length === 0 && cloudflare.length === 0)
     throw new Error(

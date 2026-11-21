@@ -29,13 +29,16 @@ function frozenSnapshot() {
     source.run(`CREATE TABLE sessions (id INTEGER);
       CREATE TABLE session_history (
         id INTEGER PRIMARY KEY, user_id INTEGER, started INTEGER, stopped INTEGER,
-        paused_counter INTEGER, view_offset INTEGER, live INTEGER, media_type TEXT,
-        platform TEXT, player TEXT, transcode_decision TEXT);
+        paused_counter INTEGER, view_offset INTEGER, media_type TEXT,
+        platform TEXT, player TEXT);
       CREATE TABLE session_history_metadata (
         id INTEGER PRIMARY KEY, rating_key INTEGER, duration INTEGER,
-        full_title TEXT, grandparent_title TEXT);
-      INSERT INTO session_history VALUES (4,7,1000,1180,30,85000,0,'movie','Infuse','Living room','direct play');
-      INSERT INTO session_history_metadata VALUES (4,99,100000,'Historical source title',NULL);`);
+        full_title TEXT, grandparent_title TEXT, live INTEGER);
+      CREATE TABLE session_history_media_info (
+        id INTEGER PRIMARY KEY, transcode_decision TEXT);
+      INSERT INTO session_history VALUES (4,7,1000,1180,30,85000,'movie','Infuse','Living room');
+      INSERT INTO session_history_metadata VALUES (4,99,100000,'Historical source title',NULL,0);
+      INSERT INTO session_history_media_info VALUES (4,'direct play');`);
     return readFrozenPlaybackBytes(source.serialize());
   } finally {
     source.close();

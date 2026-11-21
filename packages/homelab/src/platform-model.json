@@ -99,7 +99,7 @@
     {
       "hostname": "seerr.sjer.red",
       "namespace": "media",
-      "service": "media-seerr-service"
+      "service": "media-api"
     },
     {
       "hostname": "shuxin-bluemap.sjer.red",
@@ -257,11 +257,6 @@
       "exposure": "ingress"
     },
     {
-      "host": "bazarr",
-      "namespace": "media",
-      "exposure": "ingress"
-    },
-    {
       "host": "bugsink",
       "namespace": "bugsink",
       "exposure": "ingress"
@@ -316,11 +311,6 @@
     {
       "host": "loki",
       "namespace": "loki",
-      "exposure": "ingress"
-    },
-    {
-      "host": "maintainerr",
-      "namespace": "media",
       "exposure": "ingress"
     },
     {
@@ -379,17 +369,7 @@
       "exposure": "ingress"
     },
     {
-      "host": "prowlarr",
-      "namespace": "media",
-      "exposure": "ingress"
-    },
-    {
       "host": "qbittorrent",
-      "namespace": "media",
-      "exposure": "ingress"
-    },
-    {
-      "host": "radarr",
       "namespace": "media",
       "exposure": "ingress"
     },
@@ -414,16 +394,6 @@
       "exposure": "ingress"
     },
     {
-      "host": "seerr",
-      "namespace": "media",
-      "exposure": "ingress"
-    },
-    {
-      "host": "sonarr",
-      "namespace": "media",
-      "exposure": "ingress"
-    },
-    {
       "host": "stash",
       "namespace": "stash",
       "exposure": "ingress"
@@ -441,11 +411,6 @@
     {
       "host": "tasknotes",
       "namespace": "tasknotes",
-      "exposure": "ingress"
-    },
-    {
-      "host": "tautulli",
-      "namespace": "media",
       "exposure": "ingress"
     },
     {

@@ -2004,11 +2004,16 @@ Imported-library household-history holds still require review before cleanup.
 Cleanup policy time is independent of the original SDK, verification, storage,
 writer and SQL deadlines; advancing policy time cannot renew an effect's proof.
 
-Acquisition, source cleanup, quarantine, and permanent purge have separate
-configuration gates, all disabled by default. Each effect still requires current
-ownership, intent, and policy checks. Tests against injected service responses
-establish adapter behavior, not live tracker compatibility or production
-acceptance.
+Before the first legacy handoff, apply the declared production cutover hold on
+`media-acquisition-enabled` and confirm the live `prod/media` evaluation is off.
+The acquisition worker requires a fresh affirmative flag evaluation before
+allowing effects. Keep the hold until every legacy handoff is complete and each
+imported profile has its selected guide version. Then remove the production
+override and its default-off exception and apply the restored declaration.
+Source cleanup, quarantine, and permanent purge default to disabled. Each
+effect still requires current ownership, intent, and policy checks.
+Tests against injected service responses establish adapter behavior, not live
+tracker compatibility or production acceptance.
 
 ## Runtime boundaries
 
@@ -2347,6 +2352,37 @@ the new `through`, then verify the manifest and read the updated version
 before retrying seal.
 Existing session rows are never deduplicated by time or title, and this import
 never changes Plex watched truth.
+
+### Final stopped Seerr capture
+
+After Seerr's writer pod has stopped and its old mount is unpublished, the
+surviving Files role can read `seerr-pvc` at `/migration/seerr/db/db.sqlite3`.
+Confirm the actual PVC/node identity, sole read-only reader and settled WAL
+before capturing. The command does not stop the writer or checkpoint its
+database; a nonempty WAL, corrupt image or changing source fails the capture.
+From the application repository root, supply the original source-instance
+SHA-256 identifier and independently verified source version:
+
+```sh
+bun packages/media/scripts/migration-seerr.ts \
+  --sqlite /migration/seerr/db/db.sqlite3 \
+  --source-instance-id "$MEDIA_SOURCE_INSTANCE_HASH" \
+  --source-version "$MEDIA_SOURCE_VERSION" \
+  --writer-stopped
+```
+
+The wrapper's `snapshot` is the filtered migration capture; `sqliteDigest` hashes
+the original database bytes and `sqliteBytes` records their bounded size
+(at most 256 MiB). `transport: "frozen-sqlite"` identifies this read path.
+`apiComparableDigest` clears only requester binding fields for comparison with
+the final API capture's `requests` endpoint digest; it is diagnostic, not API
+provenance. If they differ, review and upload the genuine frozen snapshot
+through migration administration, then repeat exact-capture requester binding
+review with fresh Plex identity/access. Do not relabel an earlier API capture.
+Source request/status/media/season IDs and Plex IDs remain genuine; a source Plex
+ID alone never proves current Media identity or consent. The reader exports no
+source authentication, configuration, email, session or token contents and
+never modifies the original SQLite image.
 
 ### Legacy subtitle adoption and policy
 
