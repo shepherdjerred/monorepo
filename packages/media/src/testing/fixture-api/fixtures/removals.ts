@@ -85,6 +85,7 @@ export function removalList(persona: Persona): RemovalList {
           id: fixtureId(12, index + 1),
           mediaId: title.id,
           rootMediaId: title.id,
+          rootTitle: title.title,
           artwork: storedArtwork(title),
           state,
           graceUntil: graceDays === null ? null : ahead(graceDays * DAY),

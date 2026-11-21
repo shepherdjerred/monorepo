@@ -49,3 +49,22 @@ export function rootArtwork(
   const root = rootMedia(media);
   return { posterPath: root.posterPath, backdropPath: root.backdropPath };
 }
+
+type NamedNode = ArtworkNode & { id: string; title: string };
+
+/**
+ * How a list row names and shows the movie or series it belongs to, from the
+ * ancestry the row was already read with. A root row names itself.
+ */
+export function rootReference(
+  media: NamedNode & {
+    parent: (NamedNode & { parent: NamedNode | null }) | null;
+  },
+): { rootMediaId: string; rootTitle: string; artwork: Artwork } {
+  const root = rootMedia(media);
+  return {
+    rootMediaId: root.id,
+    rootTitle: root.title,
+    artwork: rootArtwork(media),
+  };
+}
