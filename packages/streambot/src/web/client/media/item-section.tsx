@@ -21,8 +21,10 @@ export function ItemSection<T>(props: {
   aside?: ReactNode;
   headingLevel?: "h1" | "h2";
 }) {
-  const headingId = useId();
+  const generatedId = useId();
   const Heading = props.headingLevel ?? "h2";
+  // A page heading takes the id route changes focus; a section heading gets its own.
+  const headingId = Heading === "h1" ? "page-heading" : generatedId;
   const { load } = props;
   const items = load.status === "done" ? props.items(load.data) : [];
   return (

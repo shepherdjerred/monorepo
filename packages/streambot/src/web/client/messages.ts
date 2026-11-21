@@ -49,6 +49,10 @@ const COPY: Readonly<Record<string, FailureCopy>> = {
     retry: false,
   },
   no_station: { text: "That station already stopped.", retry: false },
+  playlist_changed: {
+    text: "This playlist changed since you opened it. Refresh it, then try again.",
+    retry: false,
+  },
   selection_expired: {
     text: "These results expired. Search again to play this.",
     retry: false,

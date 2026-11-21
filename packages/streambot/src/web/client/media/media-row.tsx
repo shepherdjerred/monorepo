@@ -1,4 +1,9 @@
-import { useRef, type KeyboardEvent } from "react";
+import {
+  useRef,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Link, useNavigate } from "react-router";
 import { Artwork } from "./artwork.tsx";
 import { PlayActions } from "./play-actions.tsx";
@@ -35,11 +40,36 @@ function LiveBadge(props: { item: MediaItem }) {
   return <span className="badge">Time unconfirmed</span>;
 }
 
+/** What sits at the end of a row: its own action, an Open link, or the play buttons. */
+function RowTrailing(props: {
+  item: MediaItem;
+  actions: ReactNode;
+  actionsRef: RefObject<HTMLDivElement | null>;
+}) {
+  const { item } = props;
+  // A custom action renders its own `.row-actions` and `.row-status` children.
+  if (props.actions !== undefined) return props.actions;
+  if (item.actions.length === 0 && item.href !== undefined)
+    return (
+      <Link className="btn btn-ghost row-open" to={item.href}>
+        Open <span className="visually-hidden">{item.title}</span>
+      </Link>
+    );
+  return <PlayActions item={item} actionsRef={props.actionsRef} />;
+}
+
 /**
  * The one row used by every list: search results, Home, and the browse pages. Its buttons are its
  * destinations; Enter presses the only button, or moves to the pair when there are two.
  */
-export function MediaRow(props: { item: MediaItem }) {
+export function MediaRow(props: {
+  item: MediaItem;
+  /**
+   * Replaces the play buttons for rows whose action is not playing (for example Schedule): a
+   * `.row-actions` element and, for its feedback, a `.row-status` element.
+   */
+  actions?: ReactNode;
+}) {
   const { item } = props;
   const actions = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -90,13 +120,7 @@ export function MediaRow(props: { item: MediaItem }) {
           {detail}
         </span>
       </div>
-      {item.actions.length === 0 && item.href !== undefined ? (
-        <Link className="btn btn-ghost row-open" to={item.href}>
-          Open <span className="visually-hidden">{item.title}</span>
-        </Link>
-      ) : (
-        <PlayActions item={item} actionsRef={actions} />
-      )}
+      <RowTrailing item={item} actions={props.actions} actionsRef={actions} />
     </li>
   );
 }

@@ -1,4 +1,6 @@
 import type { WebRoomPlayer } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { useState } from "react";
+import { SaveQueueDialog } from "@shepherdjerred/streambot/web/client/playlists/save-queue-dialog.tsx";
 import { ConfirmButton } from "./confirm-button.tsx";
 import { ControlStatus } from "@shepherdjerred/streambot/web/client/control-status.tsx";
 import { playerTask } from "./player-task.ts";
@@ -90,6 +92,7 @@ export function QueueList(props: { player: WebRoomPlayer }) {
   const remote = useRemote();
   const { player } = props;
   const group = useControlGroup({ shuffle: useControl(), clear: useControl() });
+  const [saving, setSaving] = useState(false);
   const count = player.queue.length;
   return (
     <section className="queue" aria-label="Up next">
@@ -97,6 +100,18 @@ export function QueueList(props: { player: WebRoomPlayer }) {
         <h3 className="queue-heading">
           Up next <span className="muted numeric">({count})</span>
         </h3>
+        {remote.room?.capabilities.playlists === true &&
+          (count > 0 || player.current !== null) && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-small"
+              onClick={() => {
+                setSaving(true);
+              }}
+            >
+              Save as playlist
+            </button>
+          )}
         {count > 1 && (
           <button
             type="button"
@@ -131,6 +146,14 @@ export function QueueList(props: { player: WebRoomPlayer }) {
         )}
       </div>
       <ControlStatus control={group.status} />
+      {saving && (
+        <SaveQueueDialog
+          slot={player.slot}
+          onClose={() => {
+            setSaving(false);
+          }}
+        />
+      )}
       {count === 0 ? (
         <p className="queue-empty">Nothing queued.</p>
       ) : (

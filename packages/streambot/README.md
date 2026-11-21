@@ -301,8 +301,16 @@ For frontend iteration, `bun run web:dev` proxies API requests to that server.
 One Vite build produces two pages. The current remote (`src/web/client/`) owns `/`
 and its routes; it reads the room over `/api/room/events` and searches with
 `/api/search/v2`. The classic remote (`src/web/client-classic/`) is served unchanged
-under `/classic` until it is removed. `webPage()` in `src/web/server/assets.ts` maps
-browser paths to the two pages for both the server and the Vite dev server.
+under `/classic`. `webPage()` in `src/web/server/assets.ts` maps browser paths to
+the two pages for both the server and the Vite dev server.
+
+The client is split by concern: the shell, API layer and shared controls at the top
+of `src/web/client/`, then `search/`, `media/` (the one row, card and play buttons),
+`room/` (room stream, rail, player cards), `pages/` (Home and stations), and one
+directory per browse page (`library/`, `playlists/`, `live/`, `history/`, `music/`).
+Styles are small per-component files in `styles/` on the tokens in `styles/theme.css`.
+Pure logic (command building, reconnect state, position, error wording, search
+groups) lives in `.ts` modules with tests under `test/web/client/`.
 
 `bun run e2e/web-local.ts` serves a credential-free acceptance fixture on
 `http://127.0.0.1:8080`. Its sign-in simulates Discord and its media I/O is simulated;

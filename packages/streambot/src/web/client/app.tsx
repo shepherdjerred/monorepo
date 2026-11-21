@@ -4,13 +4,12 @@ import { MeSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { FailureNotice } from "./failure-notice.tsx";
 import { Header, Legend } from "./header.tsx";
 import { Home } from "./pages/home.tsx";
-import {
-  BrowsePage,
-  HistoryPage,
-  LibraryPage,
-  LivePage,
-  PlaylistsPage,
-} from "./pages/pages.tsx";
+import { HistoryPage } from "./history/history-page.tsx";
+import { LibraryPage } from "./library/library-page.tsx";
+import { LivePage } from "./live/live-page.tsx";
+import { BrowsePage } from "./music/browse-page.tsx";
+import { PlaylistPage } from "./playlists/playlist-page.tsx";
+import { PlaylistsPage } from "./playlists/playlists-page.tsx";
 import { Rail } from "./room/rail.tsx";
 import { RemoteProvider, type Me } from "./remote.tsx";
 import { Results } from "./search/results.tsx";
@@ -85,6 +84,7 @@ function Remote(props: { me: Me }) {
             <Route path="/" element={<SearchOrHome />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/playlists" element={<PlaylistsPage />} />
+            <Route path="/playlists/:id" element={<PlaylistPage />} />
             <Route path="/live" element={<LivePage />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/album/:id" element={<BrowsePage kind="album" />} />
