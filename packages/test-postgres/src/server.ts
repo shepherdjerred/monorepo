@@ -8,6 +8,7 @@ import {
   runCommandSync,
   type RunResult,
 } from "./binaries.ts";
+import { readFileTextSync } from "./read-sync.ts";
 
 export const DEFAULT_SHARED_PG_PORT = 5471;
 export const SHARED_PG_ROLES = [
@@ -71,10 +72,11 @@ function nonEmptyEnv(
 
 function resolveUserBaseDirs(
   env: Readonly<Record<string, string | undefined>>,
+  platform: NodeJS.Platform = process.platform,
 ): { readonly cacheBase?: string; readonly dataBase?: string } {
   const home = nonEmptyEnv(env, "HOME") ?? nonEmptyEnv(env, "USERPROFILE");
   const winAppData =
-    process.platform === "win32" ? nonEmptyEnv(env, "LOCALAPPDATA") : undefined;
+    platform === "win32" ? nonEmptyEnv(env, "LOCALAPPDATA") : undefined;
   const cacheBase =
     nonEmptyEnv(env, "XDG_CACHE_HOME") ??
     winAppData ??
@@ -91,16 +93,21 @@ function resolveUserBaseDirs(
 
 export function managedPostgresDataRoots(
   env: Readonly<Record<string, string | undefined>> = Bun.env,
+  options?: {
+    readonly isRoot?: boolean;
+    readonly platform?: NodeJS.Platform;
+  },
 ): string[] {
   const major = POSTGRES_MAJOR.toString();
-  if (runsAsRoot()) {
+  if (options?.isRoot ?? runsAsRoot()) {
     const temp = tmpdir();
     return [
       path.join(temp, "monorepo-dev-pg", major),
       path.join(temp, "scout-for-lol", "postgres", major),
     ];
   }
-  const { cacheBase, dataBase } = resolveUserBaseDirs(env);
+  const { cacheBase, dataBase } = resolveUserBaseDirs(env, options?.platform);
+  const home = nonEmptyEnv(env, "HOME") ?? nonEmptyEnv(env, "USERPROFILE");
   if (cacheBase === undefined && dataBase === undefined) {
     throw new Error("Neither XDG_DATA_HOME, XDG_CACHE_HOME, nor HOME is set");
   }
@@ -113,6 +120,13 @@ export function managedPostgresDataRoots(
   }
   if (cacheBase !== undefined) {
     candidates.push(path.join(cacheBase, "scout-dev-pg", major));
+  }
+  if (home !== undefined) {
+    candidates.push(
+      path.join(home, ".cache", "monorepo-dev-pg", major),
+      path.join(home, ".local", "share", "scout-for-lol", "postgres", major),
+      path.join(home, ".cache", "scout-dev-pg", major),
+    );
   }
   return [...new Set(candidates)];
 }
@@ -348,7 +362,7 @@ function initializeAndStartCluster(
 
   const versionFile = path.join(dataDir, "PG_VERSION");
   if (Bun.file(versionFile).size > 0) {
-    const stored = new TextDecoder().decode(Bun.mmap(versionFile)).trim();
+    const stored = readFileTextSync(versionFile).trim();
     if (stored !== POSTGRES_MAJOR.toString()) {
       throw new Error(
         `Refusing to start an unreadable or different PostgreSQL major (${stored}) from ${dataDir}`,

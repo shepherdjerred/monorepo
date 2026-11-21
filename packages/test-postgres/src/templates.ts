@@ -6,6 +6,7 @@ import {
   hostProcessProbe,
   ownerCommentSql,
 } from "./owner.ts";
+import { readFileBytesSync } from "./read-sync.ts";
 import {
   databaseUrlFromAdmin,
   ensureSharedPostgres,
@@ -44,7 +45,9 @@ export function computeMigrationHash(options: {
   }
   for (const relativeFile of files) {
     hasher.update(relativeFile);
-    hasher.update(Bun.mmap(path.join(options.migrationsDir, relativeFile)));
+    hasher.update(
+      readFileBytesSync(path.join(options.migrationsDir, relativeFile)),
+    );
   }
   if (options.extraInputs !== undefined) {
     for (const extra of options.extraInputs) {
