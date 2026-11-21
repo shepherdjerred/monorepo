@@ -6,7 +6,7 @@ import {
   artworkContentType,
   hasArtworkSignature,
   type ArtworkSize,
-} from "#shared/household/artwork.ts";
+} from "#shared/artwork/proxy.ts";
 import type { ArtworkTelemetry } from "./telemetry.ts";
 
 /** Never matches `ArtworkFileSchema`, so a reader cannot be handed one. */

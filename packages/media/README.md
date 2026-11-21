@@ -223,7 +223,7 @@ is unreachable.
 | `502`    | `artwork_unavailable`: not cached, and TMDB could not supply the image. |
 
 The allow-list and file pattern live in
-[`src/shared/household/artwork.ts`](src/shared/household/artwork.ts). A success carries
+[`src/shared/artwork/proxy.ts`](src/shared/artwork/proxy.ts). A success carries
 `Cache-Control: private, max-age=31536000, immutable`: `private` so a shared
 cache in front of the origin does not store an image that is only served
 behind a session. Every error keeps the application's `no-store`.

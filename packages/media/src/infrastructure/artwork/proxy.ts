@@ -5,7 +5,7 @@ import {
   artworkContentType,
   type ArtworkContentType,
   type ArtworkSize,
-} from "#shared/household/artwork.ts";
+} from "#shared/artwork/proxy.ts";
 import type { ArtworkDiskCache } from "./cache.ts";
 import type { ArtworkTelemetry } from "./telemetry.ts";
 

@@ -5,7 +5,7 @@ import {
   hasArtworkSignature,
   type ArtworkContentType,
   type ArtworkSize,
-} from "#shared/household/artwork.ts";
+} from "#shared/artwork/proxy.ts";
 import {
   boundedBytes,
   endpoint,
