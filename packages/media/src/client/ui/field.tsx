@@ -107,6 +107,8 @@ type InputProps = FieldChrome &
   Omit<ComponentProps<"input">, "id" | "className"> & {
     /** What the number counts, shown after the control: "seconds", "GiB". */
     unit?: string;
+    /** A second control on the same line, such as a choice of unit. */
+    after?: ReactNode;
     width?: Width;
   };
 
@@ -119,6 +121,7 @@ export function TextField({
   requiredMessage,
   patternMessage,
   unit,
+  after,
   width,
   ...input
 }: InputProps) {
@@ -144,14 +147,17 @@ export function TextField({
       field={field}
       width={width ?? (input.type === "number" ? "short" : "full")}
     >
-      {unit === undefined ? (
+      {unit === undefined && after === undefined ? (
         control
       ) : (
         <div className={cx("withUnit")}>
           {control}
-          <span className={cx("unit")} id={unitId}>
-            {unit}
-          </span>
+          {unit !== undefined && (
+            <span className={cx("unit")} id={unitId}>
+              {unit}
+            </span>
+          )}
+          {after}
         </div>
       )}
     </FieldFrame>
@@ -197,6 +203,35 @@ export function SelectField({
         <ChevronDownIcon aria-hidden="true" />
       </div>
     </FieldFrame>
+  );
+}
+
+/**
+ * A select that sits beside another control and shares its visible label,
+ * such as the unit of a size. `label` names it for assistive technology.
+ */
+export function InlineSelect({
+  label,
+  children,
+  ...select
+}: Omit<ComponentProps<"select">, "id" | "className"> & { label: string }) {
+  const id = useId();
+  return (
+    <div className={cx("inlineSelect")}>
+      <label className="sr-only" htmlFor={id}>
+        {label}
+      </label>
+      <div className={cx("selectWrap")}>
+        <select
+          {...select}
+          className={`${cx("control")} ${cx("select")}`}
+          id={id}
+        >
+          {children}
+        </select>
+        <ChevronDownIcon aria-hidden="true" />
+      </div>
+    </div>
   );
 }
 

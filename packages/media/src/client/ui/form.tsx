@@ -17,14 +17,33 @@ import styles from "./form.module.css";
 const cx = classNames(styles);
 
 type FieldError = { name: string; label: string; message: string };
-type FormState = { errors: readonly FieldError[]; edited: boolean };
+type FormState = {
+  errors: readonly FieldError[];
+  edited: boolean;
+  clear: (name: string) => void;
+};
 
-const FormContext = createContext<FormState>({ errors: [], edited: false });
+const FormContext = createContext<FormState>({
+  errors: [],
+  edited: false,
+  clear: () => {
+    // Outside a form there are no errors to clear.
+  },
+});
 
 /** The error a form holds for the field with this name, if any. */
 export function useFieldError(name: string | undefined): string | undefined {
   const { errors } = useContext(FormContext);
   return errors.find((error) => error.name === name)?.message;
+}
+
+/**
+ * Clears a field's error. For a field the form cannot clear on its own: one
+ * made of two controls, or one that is not an input. An input's own error
+ * clears as the input changes.
+ */
+export function useClearFieldError(): (name: string) => void {
+  return useContext(FormContext).clear;
 }
 
 type Control = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -205,7 +224,7 @@ export function Form({
   }
 
   return (
-    <FormContext value={{ errors, edited }}>
+    <FormContext value={{ errors, edited, clear }}>
       <form
         className={cx("form")}
         ref={form}

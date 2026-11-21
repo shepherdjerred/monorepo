@@ -18,6 +18,14 @@ export async function openManage(page: Page, path: string) {
   ).toHaveCount(0);
 }
 
+/** Opens a row that is closed until asked for, such as a provider. */
+export async function openRow(page: Page, name: string) {
+  await page
+    .locator("summary")
+    .filter({ has: page.getByRole("heading", { name, exact: true }) })
+    .click();
+}
+
 export type Write = {
   method: string;
   path: string;

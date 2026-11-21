@@ -12,7 +12,8 @@
     min-width: 0;
     max-width: 36rem;
   }
-  .field[data-width="short"] .control {
+  .field[data-width="short"] .control,
+  .withUnit > input[type="number"] {
     max-width: 9rem;
   }
   .field[data-width="medium"] .control {
@@ -133,6 +134,10 @@
     align-items: center;
     gap: var(--space-2);
     width: 100%;
+  }
+  .inlineSelect {
+    flex: none;
+    width: 7rem;
   }
   .unit {
     color: var(--text-muted);
