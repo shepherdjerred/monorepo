@@ -23,7 +23,7 @@ import {
   fixtureId,
   pick,
 } from "#testing/fixture-api/support.ts";
-import { storedArtwork } from "./artwork.ts";
+import { mediaReference } from "./artwork.ts";
 import { TITLES, episodeItem, titleItem } from "./titles.ts";
 
 type Session = z.input<typeof PlaybackSessionViewSchema>;
@@ -88,17 +88,12 @@ function playedMedia(
     return null;
   }
   const [firstSeason] = title.seasons;
-  const item =
+  return mediaReference(
+    title,
     firstSeason === undefined
       ? titleItem(title)
-      : episodeItem(title, 1, (sequence % firstSeason) + 1);
-  return {
-    id: item.id,
-    rootMediaId: title.id,
-    kind: item.kind,
-    title: item.title,
-    artwork: storedArtwork(title),
-  };
+      : episodeItem(title, 1, (sequence % firstSeason) + 1),
+  );
 }
 
 const PLATFORMS = [

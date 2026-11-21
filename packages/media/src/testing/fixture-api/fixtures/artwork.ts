@@ -1,4 +1,6 @@
 import type { Artwork } from "#shared/artwork/contract.ts";
+import type { MediaItem } from "#shared/contract.ts";
+import type { MediaReference } from "#shared/household/media-reference.ts";
 import { sha256 } from "#testing/fixture-api/support.ts";
 import type { Title } from "./titles.ts";
 
@@ -58,6 +60,24 @@ export function storedArtwork(title: Title): Artwork {
   return observed(title)
     ? catalogArtwork(title)
     : { posterPath: null, backdropPath: null };
+}
+
+/**
+ * How a row refers to `item`, the title itself or one of its episodes: the
+ * item by its own id, kind and name, under the title as its named root.
+ */
+export function mediaReference(
+  title: Title,
+  item: Pick<MediaItem, "id" | "kind" | "title">,
+): MediaReference {
+  return {
+    id: item.id,
+    rootMediaId: title.id,
+    rootTitle: title.title,
+    kind: item.kind,
+    title: item.title,
+    artwork: storedArtwork(title),
+  };
 }
 
 export function storedOverview(title: Title): string | null {

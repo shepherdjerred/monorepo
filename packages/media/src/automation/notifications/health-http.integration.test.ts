@@ -85,8 +85,10 @@ test("HTTP retries enforce recipient, version and exact health authority; DTO ex
     keepDays: 30,
   }).notifications(f.user);
   expect(items.find((item) => item.id === delivery.id)?.event).toEqual({
+    id: delivery.eventId,
     mediaId: null,
     kind: "owner_health",
+    media: null,
     healthReason: "legacy_writer_authority_revoked",
     healthState: "superseded",
   });

@@ -9,6 +9,7 @@ import { ResolvedProfileSchema } from "#domain/resolved-contract.ts";
 import { ManagedGuideSchema } from "./quality-guide/contract.ts";
 import { ResolvedEvidenceProtocolSchema } from "#domain/resolved-evidence.ts";
 import { ArtworkSchema } from "./artwork/contract.ts";
+import { MediaReferenceSchema } from "./household/media-reference.ts";
 import {
   CatalogLibraryStateSchema,
   LibraryAccessSchema,
@@ -95,8 +96,15 @@ export const NotificationListSchema = z.array(
     acceptedAt: DateTimeSchema.nullable(),
     createdAt: DateTimeSchema,
     event: z.object({
+      // One event is delivered once per channel: rows that share this id are
+      // the same notification.
+      id: z.string(),
       mediaId: z.string().nullable(),
       kind: z.string(),
+      // The item the event is about. Null when the event names no item, the
+      // item no longer exists, or the event was addressed to an owner and the
+      // reader no longer is one.
+      media: MediaReferenceSchema.nullable(),
       healthReason: OwnerHealthReasonSchema.optional(),
       healthState: z.enum(["current", "superseded", "invalid"]).optional(),
       interestRequestId: z.uuid().optional(),

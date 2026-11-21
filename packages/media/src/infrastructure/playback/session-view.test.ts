@@ -60,6 +60,7 @@ describe("playback title links", () => {
         {
           id: "movie",
           rootMediaId: "movie",
+          rootTitle: "Dune",
           kind: "movie",
           title: "Dune",
           artwork: { posterPath: "/movie-poster.jpg", backdropPath: null },
@@ -77,6 +78,7 @@ describe("playback title links", () => {
     expect(links.get("20")).toEqual({
       id: "episode",
       rootMediaId: "series",
+      rootTitle: "Severance",
       kind: "episode",
       title: "Good News About Hell",
       artwork: {

@@ -7,7 +7,8 @@ import type {
 import type { Persona } from "#testing/fixture-api/personas.ts";
 import { requestId } from "./requests.ts";
 import { HOUR, MINUTE, ago, fixtureId } from "#testing/fixture-api/support.ts";
-import { titleNamed } from "./titles.ts";
+import { mediaReference } from "./artwork.ts";
+import { episodeItem, titleItem, titleNamed } from "./titles.ts";
 
 type NotificationList = z.input<typeof NotificationListSchema>;
 type Notification = NotificationList[number];
@@ -16,157 +17,212 @@ type Preferences = z.input<typeof NotificationPreferencesSchema>;
 type OperationList = z.input<typeof OperationListSchema>;
 type OperationStatus = OperationList[number]["status"];
 
-type NotificationSeed = {
-  kind: string;
-  title: string | null;
+type DeliverySeed = {
   channel: string;
   state: string;
   providerStatus?: string;
   failureReason?: string;
   attempts?: number;
-  event?: Partial<NotificationEvent>;
-  ownerOnly?: boolean;
 };
 
-/** Every channel, delivery state, and failure the notifications page renders. */
-const NOTIFICATIONS: readonly NotificationSeed[] = [
+type EventSeed = {
+  kind: string;
+  /** The title the event is about; null for an event about no title. */
+  title: string | null;
+  /** The event is about this episode of the title's first season. */
+  episode?: number;
+  event?: Partial<NotificationEvent>;
+  ownerOnly?: boolean;
+  /** One row per channel the event was delivered on. */
+  deliveries: readonly DeliverySeed[];
+};
+
+/** A title that was deleted after its last event was recorded. */
+const DELETED_TITLE_ID = fixtureId(2, 9999);
+
+/**
+ * Every channel, delivery state, and failure the notifications page renders.
+ * Two events reached their recipient on two channels, two are about an
+ * episode, and some name no title: account email, owner health, and a title
+ * that no longer exists.
+ */
+const EVENTS: readonly EventSeed[] = [
   {
     kind: "removal_warning",
     title: "The Expanse",
-    channel: "in_app",
-    state: "pending",
-    attempts: 0,
+    deliveries: [{ channel: "in_app", state: "pending", attempts: 0 }],
   },
   {
     kind: "media_available",
     title: "Dune: Part Two",
-    channel: "email",
-    state: "accepted",
-    providerStatus: "delivered",
+    deliveries: [
+      { channel: "email", state: "accepted", providerStatus: "delivered" },
+      { channel: "discord", state: "accepted" },
+    ],
   },
   {
     kind: "media_upgraded",
     title: "Dune: Part Two",
-    channel: "discord",
-    state: "accepted",
+    deliveries: [{ channel: "discord", state: "accepted" }],
   },
   {
     kind: "subtitles_ready",
     title: "Parasite",
-    channel: "email",
-    state: "accepted",
-    providerStatus: "sent",
+    deliveries: [
+      { channel: "email", state: "accepted", providerStatus: "sent" },
+    ],
   },
   {
     kind: "interest_check",
     title: "The Bear",
-    channel: "email",
-    state: "sending",
     event: { interestRequestId: requestId(2), interestRevision: 2 },
+    deliveries: [{ channel: "email", state: "sending" }],
   },
   {
     kind: "interest_check",
     title: "Slow Horses",
-    channel: "email",
-    state: "accepted",
-    providerStatus: "bounced",
     event: { interestRequestId: requestId(5), interestRevision: 2 },
+    deliveries: [
+      { channel: "email", state: "accepted", providerStatus: "bounced" },
+    ],
   },
   {
     kind: "acquisition_failed",
     title: "Anora",
-    channel: "email",
-    state: "failed",
-    failureReason: "provider_rejected",
-    attempts: 2,
+    deliveries: [
+      {
+        channel: "email",
+        state: "failed",
+        failureReason: "provider_rejected",
+        attempts: 2,
+      },
+    ],
   },
   {
     kind: "files_quarantined",
     title: "The Holdovers",
-    channel: "discord_shared",
-    state: "accepted",
+    deliveries: [{ channel: "discord_shared", state: "accepted" }],
   },
   {
     kind: "files_purged",
     title: "Moonlight",
-    channel: "email",
-    state: "accepted",
-    providerStatus: "delivered",
+    deliveries: [
+      { channel: "email", state: "accepted", providerStatus: "delivered" },
+    ],
+  },
+  {
+    kind: "files_purged",
+    title: null,
+    event: { mediaId: DELETED_TITLE_ID },
+    deliveries: [
+      { channel: "email", state: "accepted", providerStatus: "delivered" },
+      { channel: "discord", state: "accepted" },
+    ],
   },
   {
     kind: "owner_health",
     title: null,
-    channel: "email",
-    state: "accepted",
-    providerStatus: "delivered",
     event: {
       healthReason: "legacy_writer_authority_revoked",
       healthState: "current",
     },
     ownerOnly: true,
+    deliveries: [
+      { channel: "email", state: "accepted", providerStatus: "delivered" },
+    ],
   },
   {
     kind: "owner_health",
     title: null,
-    channel: "discord",
-    state: "accepted",
     event: {
       healthReason: "media_storage_authority_revoked",
       healthState: "superseded",
     },
     ownerOnly: true,
+    deliveries: [{ channel: "discord", state: "accepted" }],
   },
   {
     kind: "system_intervention",
     title: "Severance",
-    channel: "email",
-    state: "unknown",
     ownerOnly: true,
+    deliveries: [{ channel: "email", state: "unknown" }],
   },
   {
     kind: "media_available",
     title: "Shōgun",
-    channel: "email",
-    state: "failed",
-    failureReason: "authority_changed_before_send",
-    attempts: 3,
+    episode: 4,
+    deliveries: [
+      {
+        channel: "email",
+        state: "failed",
+        failureReason: "authority_changed_before_send",
+        attempts: 3,
+      },
+    ],
   },
   {
     kind: "media_available",
     title: "The Bear",
-    channel: "in_app",
-    state: "accepted",
+    episode: 7,
+    deliveries: [{ channel: "in_app", state: "accepted" }],
   },
   {
     kind: "subtitles_ready",
     title: "Spirited Away",
-    channel: "discord",
-    state: "accepted",
+    deliveries: [{ channel: "discord", state: "accepted" }],
+  },
+  {
+    kind: "email_verification",
+    title: null,
+    deliveries: [
+      { channel: "email", state: "accepted", providerStatus: "delivered" },
+    ],
   },
 ];
 
+/** The item an event is about, and how its row refers to it. */
+function eventMedia(
+  seed: EventSeed,
+): Pick<NotificationEvent, "mediaId" | "media"> {
+  if (seed.title === null) {
+    return { mediaId: null, media: null };
+  }
+  const title = titleNamed(seed.title);
+  const media = mediaReference(
+    title,
+    seed.episode === undefined
+      ? titleItem(title)
+      : episodeItem(title, 1, seed.episode),
+  );
+  return { mediaId: media.id, media };
+}
+
+/** One row per delivery, newest event first; an event's rows share its id. */
 export function notificationList(persona: Persona): NotificationList {
-  return NOTIFICATIONS.filter(
-    (seed) => persona === "owner" || seed.ownerOnly !== true,
-  ).map((seed, index) => {
-    const age = (index * 11 + 2) * HOUR;
-    return {
-      id: fixtureId(14, index + 1),
-      channel: seed.channel,
-      state: seed.state,
-      version: (index % 3) + 1,
-      failureReason: seed.failureReason ?? null,
-      providerStatus: seed.providerStatus ?? null,
-      attempts: seed.attempts ?? 1,
-      acceptedAt: seed.state === "accepted" ? ago(age) : null,
-      createdAt: ago(age + 3 * MINUTE),
-      event: {
-        mediaId: seed.title === null ? null : titleNamed(seed.title).id,
+  return EVENTS.map((seed, index) => ({ seed, index }))
+    .filter(({ seed }) => persona === "owner" || seed.ownerOnly !== true)
+    .flatMap(({ seed, index }) => {
+      const age = (index * 11 + 2) * HOUR;
+      const event = {
+        id: fixtureId(20, index + 1),
+        ...eventMedia(seed),
         kind: seed.kind,
         ...seed.event,
-      },
-    };
-  });
+      };
+      return seed.deliveries.map((delivery) => ({ delivery, age, event }));
+    })
+    .map(({ delivery, age, event }, index) => ({
+      id: fixtureId(14, index + 1),
+      channel: delivery.channel,
+      state: delivery.state,
+      version: (index % 3) + 1,
+      failureReason: delivery.failureReason ?? null,
+      providerStatus: delivery.providerStatus ?? null,
+      attempts: delivery.attempts ?? 1,
+      acceptedAt: delivery.state === "accepted" ? ago(age) : null,
+      createdAt: ago(age + 3 * MINUTE),
+      event,
+    }));
 }
 
 export function notificationPreferences(persona: Persona): Preferences {

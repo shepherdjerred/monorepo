@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { z } from "zod";
 import {
   CatalogSearchSchema,
+  NotificationListSchema,
   ProfileListSchema,
   QualityRulesSchema,
   RemovalListSchema,
@@ -93,6 +94,29 @@ async function readRemovals(persona: Persona) {
     persona,
   });
   return RemovalListSchema.parse(await overTheWire(outcome.body));
+}
+
+async function readNotifications(persona: Persona) {
+  const outcome = routeFixture({
+    method: "GET",
+    url: new URL("http://fixture.invalid/api/v1/notifications"),
+    persona,
+  });
+  return NotificationListSchema.parse(await overTheWire(outcome.body));
+}
+
+/** What the library calls the movie or series a reference names as its root. */
+function rootName(rootMediaId: string): string | undefined {
+  return TITLES.find((title) => title.id === rootMediaId)?.title;
+}
+
+/** How the title page answers a member who follows a row's link. */
+function mediaStatus(id: string): number {
+  return routeFixture({
+    method: "GET",
+    url: new URL(`http://fixture.invalid/api/v1/media/${id}`),
+    persona: "member",
+  }).status;
 }
 
 describe("fixture endpoints", () => {
@@ -314,13 +338,10 @@ describe("fixture volume", () => {
     expect(new Set(linked.map((media) => media.kind))).toEqual(
       new Set(["movie", "episode"]),
     );
-    for (const id of linked.flatMap((media) => [media.id, media.rootMediaId])) {
-      const page = routeFixture({
-        method: "GET",
-        url: new URL(`http://fixture.invalid/api/v1/media/${id}`),
-        persona: "member",
-      });
-      expect(page.status, id).toBe(200);
+    for (const media of linked) {
+      expect(mediaStatus(media.id), media.title).toBe(200);
+      expect(mediaStatus(media.rootMediaId), media.title).toBe(200);
+      expect(media.rootTitle, media.title).toBe(rootName(media.rootMediaId));
     }
   });
 
@@ -338,6 +359,61 @@ describe("fixture volume", () => {
         profile.name,
       ).not.toThrow();
     }
+  });
+});
+
+describe("notification fixtures", () => {
+  it("groups the channels of one notification under its event", async () => {
+    const member = await readNotifications("member");
+    const channels = new Map<string, string[]>();
+    for (const row of member) {
+      channels.set(row.event.id, [
+        ...(channels.get(row.event.id) ?? []),
+        row.channel,
+      ]);
+    }
+    expect(channels.size).toBeLessThan(member.length);
+    expect([...channels.values()]).toContainEqual(["email", "discord"]);
+    for (const id of channels.keys()) {
+      const events = member
+        .filter((row) => row.event.id === id)
+        .map((row) => JSON.stringify(row.event));
+      expect(new Set(events).size, id).toBe(1);
+    }
+  });
+
+  it("names the title an event is about, and nothing for no title or a deleted one", async () => {
+    const member = await readNotifications("member");
+    const named = member.flatMap((row) => row.event.media ?? []);
+    expect(new Set(named.map((media) => media.kind))).toEqual(
+      new Set(["movie", "series", "episode"]),
+    );
+    for (const media of named) {
+      expect(mediaStatus(media.id), media.title).toBe(200);
+      expect(mediaStatus(media.rootMediaId), media.title).toBe(200);
+      expect(media.rootTitle, media.title).toBe(rootName(media.rootMediaId));
+      // A movie or series is its own root; an episode names its series.
+      const root = media.kind !== "episode";
+      expect(media.rootMediaId === media.id, media.title).toBe(root);
+      expect(media.rootTitle === media.title, media.title).toBe(root);
+    }
+    const unnamed = member.filter((row) => row.event.media === null);
+    expect(unnamed.some((row) => row.event.mediaId === null)).toBe(true);
+    // A deleted title keeps its id on the event, and that id opens nothing.
+    const deleted = unnamed.flatMap((row) => row.event.mediaId ?? []);
+    expect(deleted.length).toBeGreaterThan(0);
+    for (const id of deleted) {
+      expect(mediaStatus(id), id).toBe(404);
+    }
+  });
+
+  it("shows an intervention to an owner only", async () => {
+    const member = await readNotifications("member");
+    const owner = await readNotifications("owner");
+    expect(member.map((row) => row.event.kind)).not.toContain(
+      "system_intervention",
+    );
+    expect(owner.map((row) => row.event.kind)).toContain("system_intervention");
   });
 });
 

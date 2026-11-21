@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { QuiescenceEvidenceSchema } from "#shared/legacy-observer.ts";
-import { ArtworkSchema } from "#shared/artwork/contract.ts";
-import { MediaKindSchema } from "#shared/contract.ts";
+import { MediaReferenceSchema } from "#shared/household/media-reference.ts";
 
 export const PlaybackDecisionSchema = z.enum([
   "direct_play",
@@ -15,19 +14,6 @@ export const PlaybackStateSchema = z.enum([
   "buffering",
   "stopped",
 ]);
-/**
- * The library title a play belongs to. `id`, `kind` and `title` are the movie
- * or episode that was played; `rootMediaId` is its movie or series, and
- * `artwork` is that root's.
- */
-export const PlaybackMediaSchema = z.object({
-  id: z.string(),
-  rootMediaId: z.string(),
-  kind: MediaKindSchema,
-  title: z.string(),
-  artwork: ArtworkSchema,
-});
-export type PlaybackMedia = z.infer<typeof PlaybackMediaSchema>;
 export const PlaybackSessionViewSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -46,9 +32,9 @@ export const PlaybackSessionViewSchema = z.object({
   completed: z.boolean(),
   state: PlaybackStateSchema,
   source: z.enum(["plex", "tautulli"]),
-  // Null when the play matches no title Media holds in Plex today, or the
-  // reader may not open that title.
-  media: PlaybackMediaSchema.nullable(),
+  // The movie or episode that was played. Null when the play matches no title
+  // Media holds in Plex today, or the reader may not open that title.
+  media: MediaReferenceSchema.nullable(),
 });
 export const PlaybackHistorySchema = z.object({
   items: z.array(PlaybackSessionViewSchema),
