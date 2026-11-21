@@ -1,7 +1,9 @@
+import { execFile } from "node:child_process";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
 import { Manifest } from "release-please";
 import { LocalGitHub } from "release-please/build/src/local-github.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -11,19 +13,10 @@ import {
   type ReleasePleasePhase,
 } from "./runner.ts";
 
+const execFileAsync = promisify(execFile);
+
 async function git(cwd: string, ...args: string[]): Promise<string> {
-  const child = Bun.spawn(["git", ...args], {
-    cwd,
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, code] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  if (code !== 0) throw new Error(`Fixture git failed: ${stderr}`);
+  const { stdout } = await execFileAsync("git", args, { cwd });
   return stdout.trim();
 }
 
