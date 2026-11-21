@@ -89,7 +89,6 @@ export const MetaManifestResponseSchema = z.object({
   champions: z.array(z.object({ id: z.number().int(), name: z.string() })),
   caveats: z.array(z.string()),
 });
-export type MetaManifestResponse = z.infer<typeof MetaManifestResponseSchema>;
 
 export const ChampionResponseSchema = z.object({
   buildId: z.string(),
