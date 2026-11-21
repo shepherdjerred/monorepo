@@ -76,6 +76,9 @@ async function main(): Promise<void> {
     "-e",
     "FEATURE_FLAGS_MODE=disabled",
     "-e",
+    // No PostHog destination here, so usage capture is switched off explicitly.
+    "USAGE_ANALYTICS_ENABLED=false",
+    "-e",
     "STATE_DIR=/tmp/videos",
     "--entrypoint",
     "sh",
