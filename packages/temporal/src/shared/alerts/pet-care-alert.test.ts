@@ -18,6 +18,7 @@ describe("pet-care Alertmanager alerts", () => {
       alertname: "LitterRobotHomeAssistantProblem",
       severity: "warning",
       service: "pet-care",
+      category: "household",
       entity: "binary_sensor.litter_robot_problem",
     });
     expect(alert.annotations).toMatchObject({

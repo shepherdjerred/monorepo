@@ -290,10 +290,10 @@ async function captureFirstFailureDescription(
 }
 
 describe("buildVisibilityQuery", () => {
-  it("filters to Failed/TimedOut closed after the lookback boundary", () => {
+  it("filters to Failed/TimedOut closed after the lookback boundary and excludes Delivery per-attempt state machines", () => {
     const since = new Date("2026-07-30T17:45:00.000Z");
     expect(buildVisibilityQuery(since)).toBe(
-      'ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "2026-07-30T17:45:00.000Z"',
+      'ExecutionStatus IN ("Failed", "TimedOut") AND WorkflowType NOT IN ("deliveryDeploymentWorkflow", "deliveryWorkerRecoveryWorkflow") AND CloseTime > "2026-07-30T17:45:00.000Z"',
     );
   });
 });
@@ -1430,7 +1430,7 @@ describe("stability-gated early resolution for scheduled failures", () => {
         scheduleRun("s-workflow-2026-07-30T16:25:00Z", "16:30", "FAILED", "s"),
         scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "FAILED", "s"),
       ],
-      expectedEndsAt: [ttlEndsAt("16:30"), ttlEndsAt("14:00")],
+      expectedEndsAt: [ttlEndsAt("16:30")],
     },
     {
       name: "scheduled failure with no subsequent completion stays open",
@@ -1457,10 +1457,10 @@ describe("stability-gated early resolution for scheduled failures", () => {
         scheduleRun("s-workflow-2026-07-30T15:25:00Z", "15:30", "FAILED", "s"),
         scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "TIMED_OUT"),
       ],
-      expectedEndsAt: [NOW.toISOString(), NOW.toISOString()],
+      expectedEndsAt: [NOW.toISOString()],
     },
     {
-      name: "previously recovered failure stays resolved monotonically when a fresh failure occurs >=2h later",
+      name: "fresh failure after an earlier recovery emits only the active newest schedule alert",
       executions: [
         scheduleRun("s-workflow-2026-07-30T17:25:00Z", "17:30", "FAILED", "s"),
         scheduleRun(
@@ -1471,7 +1471,7 @@ describe("stability-gated early resolution for scheduled failures", () => {
         ),
         scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "FAILED", "s"),
       ],
-      expectedEndsAt: [ttlEndsAt("17:30"), NOW.toISOString()],
+      expectedEndsAt: [ttlEndsAt("17:30")],
     },
   ])("$name", async ({ executions, expectedEndsAt }) => {
     const failures = Object.fromEntries(

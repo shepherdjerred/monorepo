@@ -153,11 +153,12 @@ export function shouldResolveScheduledFailureEarly(
 }
 
 /**
- * Pure builder — no I/O. One `AlertmanagerAlert` per failed execution. Labels
- * (including workflowId/runId) are what Alertmanager uses to identify/dedup
- * the alert, so a poller re-observing the same execution across overlapping
- * lookback windows must produce byte-identical labels here, not just a
- * "similar" alert.
+ * Pure builder — no I/O. Recurring schedules collapse onto a stable
+ * `schedule_id` label set (keeping the latest execution's `workflowId`/`runId`
+ * in annotations), while ad-hoc executions retain `workflowId` and `runId` in
+ * `labels` so distinct unscheduled failures remain independent. Every alert
+ * stamps `exported_namespace` alongside `temporalNamespace` so Alertmanager
+ * `inhibit_rules` can join directly against Prometheus series.
  */
 export function buildWorkflowFailureAlert(
   execution: FailedWorkflowExecution,
@@ -165,15 +166,29 @@ export function buildWorkflowFailureAlert(
   now: Date,
   ttlMs: number,
 ): AlertmanagerAlert {
-  const labels: Record<string, string> = {
-    alertname: "TemporalWorkflowFailed",
-    severity: "warning",
-    workflowType: execution.workflowType,
-    taskQueue: execution.taskQueue,
-    workflowId: execution.workflowId,
-    runId: execution.runId,
-    temporalNamespace: execution.temporalNamespace,
-  };
+  const scheduleId =
+    execution.scheduleId ?? scheduleIdFromWorkflowId(execution.workflowId);
+  const labels: Record<string, string> =
+    scheduleId === undefined
+      ? {
+          alertname: "TemporalWorkflowFailed",
+          severity: "warning",
+          workflowType: execution.workflowType,
+          taskQueue: execution.taskQueue,
+          temporalNamespace: execution.temporalNamespace,
+          exported_namespace: execution.temporalNamespace,
+          workflowId: execution.workflowId,
+          runId: execution.runId,
+        }
+      : {
+          alertname: "TemporalWorkflowFailed",
+          severity: "warning",
+          workflowType: execution.workflowType,
+          taskQueue: execution.taskQueue,
+          temporalNamespace: execution.temporalNamespace,
+          exported_namespace: execution.temporalNamespace,
+          schedule_id: scheduleId,
+        };
 
   const summary = `Temporal workflow ${execution.workflowType} failed: ${failure.failureType}: ${truncate(failure.message, MAX_SUMMARY_MESSAGE_CHARS)}`;
 
@@ -226,12 +241,23 @@ export function buildWorkflowFailureAlert(
     ? now.toISOString()
     : new Date(execution.closeTime.getTime() + ttlMs).toISOString();
 
+  const annotations: Record<string, string> =
+    scheduleId === undefined
+      ? { summary, description, message: description }
+      : {
+          summary,
+          description,
+          message: description,
+          workflowId: execution.workflowId,
+          runId: execution.runId,
+        };
+
   return {
     labels,
     // `message` mirrors `description` — the Alertmanager Alerts template
     // in prometheus.ts reads CommonAnnotations.message/description
     // interchangeably depending on the alert source (see xcode-cloud-webhook.ts).
-    annotations: { summary, description, message: description },
+    annotations,
     startsAt,
     endsAt,
     generatorURL: temporalUiExecutionUrl(
