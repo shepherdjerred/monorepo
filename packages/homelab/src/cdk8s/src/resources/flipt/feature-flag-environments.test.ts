@@ -114,13 +114,6 @@ describe("Flipt consumer environments", () => {
       createChart: (app: App) => createBirmelChart(app),
     },
     {
-      name: "Streambot",
-      environment: "prod",
-      namespace: "streambot",
-      count: 1,
-      createChart: (app: App) => createMediaChart(app),
-    },
-    {
       name: "TRMNL dashboard",
       environment: "prod",
       namespace: "trmnl-dashboard",
@@ -160,4 +153,14 @@ describe("Flipt consumer environments", () => {
       }
     },
   );
+
+  test("binds Streambot and the three Media roles to their own prod namespaces", async () => {
+    const consumers = await fliptConsumers(createMediaChart);
+    expect(consumers.toSorted((a, b) => a.name.localeCompare(b.name))).toEqual([
+      { name: "media-media-api", environment: "prod", namespace: "media" },
+      { name: "media-media-files", environment: "prod", namespace: "media" },
+      { name: "media-media-network", environment: "prod", namespace: "media" },
+      { name: "media-streambot", environment: "prod", namespace: "streambot" },
+    ]);
+  });
 });
