@@ -6,6 +6,8 @@ import type { Deployment } from "#shared/contract.ts";
 import { DeliveryClientError } from "#shared/client.ts";
 import type { CreateDeploymentV2Request } from "#shared/model/routes-client.ts";
 import type { EnvironmentDetail } from "#shared/hub/hub-contract.ts";
+import type { EnvironmentSelection } from "#shared/model/contract.ts";
+import { rebindChanges } from "#client/model/view.ts";
 import { delivery } from "./api.ts";
 import { queries } from "./queries.ts";
 import { ErrorNotice } from "#client/components/notices.tsx";
@@ -321,10 +323,16 @@ function describedByFor(
 
 /**
  * What a promotion would take: the source's accepted set revision, as its
- * revision number, and why promoting it changes nothing when this
- * environment already accepted it.
+ * revision number, and why promoting it changes nothing. A promotion freezes
+ * this environment's declared recipe and configuration, so it changes
+ * nothing only when the set revision is already accepted here and the
+ * accepted selection already uses the declared binding. Until the selection
+ * view has loaded that is not known, and the promotion stays available.
  */
-function promotion(detail: EnvironmentDetail) {
+function promotion(
+  detail: EnvironmentDetail,
+  selection: EnvironmentSelection | undefined,
+) {
   const source = detail.sourceEnvironment;
   const promotable = source?.acceptedVersionSetRevisionId ?? null;
   const label = (id: string) => {
@@ -335,7 +343,9 @@ function promotion(detail: EnvironmentDetail) {
   };
   const noop =
     promotable !== null &&
-    promotable === detail.environment.acceptedVersionSetRevisionId
+    selection !== undefined &&
+    promotable === detail.environment.acceptedVersionSetRevisionId &&
+    rebindChanges(selection) === null
       ? `${label(promotable)} is already accepted here, so promoting it from ${source?.id ?? "its source"} would change nothing.`
       : null;
   return { promotable, noop, label };
@@ -364,10 +374,12 @@ export function ReleaseForm({
   // The server reports the declared recipe's stored kind, as admission
   // reads it; the normalised kind would misread a v1 manual recipe.
   const realising = detail.releaseKind;
-  const { promotable, noop, label } = promotion(detail);
-  const [kind, setKind] = useState<Kind>(
-    initialKindFor(initialKind, promotable, noop !== null),
-  );
+  const selection = useQuery(queries.selection(environment.id));
+  const { promotable, noop, label } = promotion(detail, selection.data);
+  // Until the reader chooses, the action follows what is known: a promotion
+  // that would change nothing gives way to a deploy once the selection loads.
+  const [chosen, setKind] = useState<Kind | null>(null);
+  const kind = chosen ?? initialKindFor(initialKind, promotable, noop !== null);
   const [versionId, setVersionId] = useState(initialVersion);
   const [override, setOverride] = useState(false);
   const ids = { error: useId(), reason: useId(), empty: useId() };

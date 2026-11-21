@@ -2,7 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 import { CreateDeploymentV2Schema } from "#shared/deployment-request-contract.ts";
 import { DeploymentPageSchema } from "#shared/hub/hub-contract.ts";
 import { api, confirm, expectNoHorizontalOverflow } from "./helpers.ts";
-import { refuseDeploymentRequest, showIdle } from "./model-environment.ts";
+import {
+  refuseDeploymentRequest,
+  showDeclaredBindingAccepted,
+  showIdle,
+} from "./model-environment.ts";
 
 // Served by e2e/model-server.ts. Arcade production waits on an override
 // approval, Arcade beta is locked by a recovery-required deploy, and the
@@ -123,6 +127,7 @@ test("the release form keeps its choice after a refusal and offers the override 
   await showIdle(page, PROD);
   const main = await open(page, PROD);
   const form = main.getByRole("region", { name: "Request a release" });
+  await form.getByRole("combobox", { name: "Action" }).selectOption("deploy");
   const version = form.getByRole("combobox", { name: "Version set" });
   // A version reads as its revision, its commit and its age, never its id.
   for (const label of await version.locator("option").allTextContents())
@@ -179,6 +184,8 @@ test("the release form shows the hold, folds digests away and refuses a promotio
   await expect(form).toContainText(
     "An alarm fired on the accepted release and the environment is held for an operator.",
   );
+  const action = form.getByRole("combobox", { name: "Action" });
+  await action.selectOption("deploy");
   const version = form.getByRole("combobox", { name: "Version set" });
   const older = await version
     .locator("option", { hasText: /^r2 · / })
@@ -192,14 +199,21 @@ test("the release form shows the hold, folds digests away and refuses a promotio
   const digests = form.locator("details", { hasText: "Digests" });
   await expect(digests.locator("summary")).toHaveText(/^Digests\s*2$/u);
   await expect(digests.getByText(/^sha256:/u).first()).toBeHidden();
-  // Beta's accepted release is already accepted here.
-  await form.getByRole("combobox", { name: "Action" }).selectOption("promote");
+  // Beta's accepted release is already accepted here, but production declares
+  // a newer recipe than it accepted, so promoting still changes something.
+  await action.selectOption("promote");
   const request = form.getByRole("button", { name: "Request deployment" });
+  await expect(request).toBeEnabled();
+  await expectNoHorizontalOverflow(page);
+
+  // Once the accepted selection uses the declared binding, it changes nothing.
+  await showDeclaredBindingAccepted(page, PROD);
+  await open(page, PROD);
+  await action.selectOption("promote");
   await expect(request).toBeDisabled();
   await expect(request).toHaveAccessibleDescription(
     "r3 is already accepted here, so promoting it from arcade/beta would change nothing.",
   );
-  await expectNoHorizontalOverflow(page);
 });
 
 test("a rollback refused by a race names the deployment in the way, without its code", async ({

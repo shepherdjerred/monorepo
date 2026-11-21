@@ -778,6 +778,26 @@ function requestForm(
   );
 }
 
+/** Production's selection view once its accepted selection uses the declared binding. */
+function boundAsDeclared(client: QueryClient) {
+  client.setQueryData(queries.selection(fixtures.PROD).queryKey, {
+    ...fixtures.selections.prod,
+    declared: {
+      ...fixtures.selections.prod.declared,
+      configurationRevisionId:
+        fixtures.selections.prod.accepted?.configurationRevisionId ?? "",
+    },
+  });
+}
+
+/** Production's selection view as seeded: it declares a newer configuration than it accepted. */
+function rebinding(client: QueryClient) {
+  client.setQueryData(
+    queries.selection(fixtures.PROD).queryKey,
+    fixtures.selections.prod,
+  );
+}
+
 describe("the release form invites only a request that can succeed", () => {
   const { prod } = fixtures.environmentDetails;
 
@@ -800,20 +820,34 @@ describe("the release form invites only a request that can succeed", () => {
   });
 
   test("promoting the release already accepted here is disabled with its reason", () => {
-    // Beta and prod both accepted r42.
-    const html = requestForm({ initialKind: "promote" });
+    // Beta and prod both accepted r42, and prod's accepted selection uses its declared binding.
+    const html = requestForm({ initialKind: "promote" }, boundAsDeclared);
     expect(html).toContain(
       "r42 is already accepted here, so promoting it from scout-for-lol/beta would change nothing.",
     );
     expect(html).toMatch(/<button type="submit"[^>]*disabled=""/u);
     // Left to choose, the form starts on a deploy instead.
-    expect(requestForm()).toMatch(
+    expect(requestForm({}, boundAsDeclared)).toMatch(
       /<option value="deploy" selected="">Deploy a version<\/option>/u,
     );
   });
 
+  test("promoting an accepted release under a changed binding stays available", () => {
+    // Prod declares a newer configuration than its accepted selection froze.
+    const html = requestForm({ initialKind: "promote" }, rebinding);
+    expect(html).not.toContain("would change nothing");
+    expect(html).not.toMatch(/<button type="submit"[^>]*disabled=""/u);
+    // Before the selection view loads, nothing is known, so nothing is refused.
+    expect(requestForm({ initialKind: "promote" })).not.toContain(
+      "would change nothing",
+    );
+  });
+
   test("no version yet says so, links the pipeline and disables the request", () => {
-    const html = requestForm({ detail: { ...prod, versionSets: [] } });
+    const html = requestForm({
+      detail: { ...prod, versionSets: [] },
+      initialKind: "deploy",
+    });
     expect(html).toContain(
       "No version of Scout for LoL has been published yet",
     );

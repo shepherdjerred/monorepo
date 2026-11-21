@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { EnvironmentPageDetailSchema } from "#shared/hub/hub-contract.ts";
+import { EnvironmentSelectionSchema } from "#shared/model/contract.ts";
 
 const TERMINAL = new Set(["succeeded", "failed", "canceled"]);
 
@@ -31,6 +32,38 @@ export async function showIdle(page: Page, environmentId: string) {
   return async () => {
     await page.unroute(matches);
   };
+}
+
+/**
+ * Show an environment whose accepted selection already uses its declared
+ * recipe and configuration, so nothing is left for a rebind or a promotion
+ * of the accepted set revision to change. Only the page's read is changed.
+ */
+export async function showDeclaredBindingAccepted(
+  page: Page,
+  environmentId: string,
+) {
+  const path = `/api/v1/environments/${encodeURIComponent(environmentId)}/selection`;
+  await page.route(
+    (url) => url.pathname === path,
+    async (route) => {
+      const response = await route.fetch();
+      const view = EnvironmentSelectionSchema.parse(await response.json());
+      if (view.accepted === null)
+        throw new Error(`${environmentId} has accepted a selection`);
+      await route.fulfill({
+        response,
+        json: {
+          ...view,
+          declared: {
+            ...view.declared,
+            recipeRevisionId: view.accepted.recipeRevisionId,
+            configurationRevisionId: view.accepted.configurationRevisionId,
+          },
+        },
+      });
+    },
+  );
 }
 
 const deploymentsPath = (url: URL) => url.pathname === "/api/v1/deployments";
