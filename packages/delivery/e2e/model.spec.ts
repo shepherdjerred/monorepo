@@ -9,6 +9,7 @@ import {
   confirm,
   expectAccessible,
   expectNoHorizontalOverflow,
+  expectNoViolations,
 } from "./helpers.ts";
 
 // Served by e2e/model-server.ts: Arcade's catalog, releases, monitor, restore
@@ -28,13 +29,15 @@ async function openEnvironment(page: Page) {
  * Capture the next deployment request without sending it, so every spec
  * reads the same seeded record; the server's admission of each kind is
  * covered by its integration tests. The route is in place before the caller
- * acts; the returned function waits for the request.
+ * acts; the returned function waits for the request. With `held`, the
+ * request stays in flight until that promise settles, then fails.
  */
-async function captureDeploymentRequest(page: Page) {
+async function captureDeploymentRequest(page: Page, held?: Promise<unknown>) {
   const { promise, resolve } = Promise.withResolvers<unknown>();
   await page.route("**/api/v1/deployments", async (route) => {
     if (route.request().method() !== "POST") return route.continue();
     resolve(route.request().postDataJSON());
+    await held;
     return route.abort("failed");
   });
   return async () => CreateDeploymentV2Schema.parse(await promise);
@@ -85,25 +88,173 @@ test("an environment with no worker pool compares only its accepted image", asyn
 test("rollback candidates mark the accepted one and exclude a lowered forward-only key", async ({
   page,
 }) => {
+  const seeded = await api(
+    page,
+    `${PROD_API}/rollback-candidates`,
+    RollbackCandidatesSchema,
+  );
+  expect(seeded.candidates).toHaveLength(6);
   await openEnvironment(page);
-  const candidates = page
-    .getByRole("region", { name: "Rollback candidates" })
-    .getByRole("listitem");
-  await expect(candidates).toHaveCount(4);
+  const region = page.getByRole("region", { name: "Rollback candidates" });
+  const candidates = region.getByRole("listitem");
+  // Six accepted selections: the newest five in sight, the oldest collapsed.
+  await expect(candidates).toHaveCount(5);
   await expect(candidates.nth(0)).toContainText("Accepted now");
   await expect(
     candidates.nth(0).getByRole("button", { name: "Re-assert this selection" }),
   ).toBeEnabled();
   const rollback = { name: "Roll back to this" } as const;
   await expect(candidates.nth(1).getByRole("button", rollback)).toBeEnabled();
-  for (const index of [2, 3]) {
+  const excluded =
+    "would lower forwardOnly /helm/parameters/schema.version from 2 to 1";
+  for (const index of [2, 3, 4]) {
     await expect(
       candidates.nth(index).getByRole("button", rollback),
     ).toBeDisabled();
-    await expect(candidates.nth(index)).toContainText(
-      "would lower forwardOnly /helm/parameters/schema.version from 2 to 1",
-    );
+    await expect(candidates.nth(index)).toContainText(excluded);
   }
+  const older = region.locator("details", { hasText: "Older candidates" });
+  await expect(older).toHaveJSProperty("open", false);
+  await expect(older.locator("summary")).toHaveText(/^Older candidates\s*1$/u);
+  await older.locator("summary").click();
+  await expect(candidates).toHaveCount(6);
+  await expect(candidates.nth(5).getByRole("button", rollback)).toBeDisabled();
+  await expect(candidates.nth(5)).toContainText(excluded);
+  await expectNoHorizontalOverflow(page);
+});
+
+test("a rollback candidate reads as its revision number, recipe, configuration and deployment", async ({
+  page,
+}) => {
+  const { candidates } = await api(
+    page,
+    `${PROD_API}/rollback-candidates`,
+    RollbackCandidatesSchema,
+  );
+  const [accepted] = candidates;
+  if (accepted === undefined) throw new Error("seeded candidates");
+  await openEnvironment(page);
+  const first = page
+    .getByRole("region", { name: "Rollback candidates" })
+    .getByRole("listitem")
+    .first();
+  await expect(first).toContainText("recipe arcade/3 · configuration arcade/2");
+  // The deployment id is short in sight and whole in the link's name.
+  const deployment = first.getByRole("link", { name: accepted.deploymentId });
+  await expect(deployment).toHaveAttribute(
+    "href",
+    `/deployments/${accepted.deploymentId}`,
+  );
+  await expect(
+    deployment.getByText(accepted.deploymentId.slice(0, 8), { exact: true }),
+  ).toBeVisible();
+  await first.getByRole("link", { name: "r3", exact: true }).click();
+  await expect(page).toHaveURL(
+    new RegExp(`/versions/${accepted.selection.versionSetRevisionId}$`, "u"),
+  );
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Version set r3" }),
+  ).toBeVisible();
+});
+
+test("the page leads with what runs here, what is in flight and the release action", async ({
+  page,
+}) => {
+  await openEnvironment(page);
+  const main = page.getByRole("main");
+  // The summary ends with the deployment in flight, behind its status glyph.
+  await expect(main.locator(".page-header")).toContainText(
+    /Accepted r3 · Approval required · generation 6 · \Sdeploy r4 awaiting approval/u,
+  );
+  expect(
+    await main.getByRole("heading", { level: 2 }).allTextContents(),
+  ).toEqual([
+    "Request a release",
+    "Release state",
+    "Live runtime",
+    "Selection",
+    "Monitor",
+    "Rollback candidates",
+    "Recent deployments",
+  ]);
+  if ((page.viewportSize()?.width ?? 0) >= 1280) {
+    // On a desktop screen the release action and the release state need no scrolling.
+    await expect(
+      main.getByRole("button", { name: "Request deployment" }),
+    ).toBeInViewport({ ratio: 1 });
+    await expect(
+      main.getByRole("heading", { name: "Release state" }),
+    ).toBeInViewport({ ratio: 1 });
+  }
+  // The deployment in flight is one click from the summary.
+  await main.getByRole("link", { name: "deploy r4 awaiting approval" }).click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: `Deployment to ${PROD}` }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("This deploy asked for an override"),
+  ).toBeVisible();
+});
+
+test("every confirmation asks through the page's one dialog and returns focus to its button", async ({
+  page,
+}) => {
+  await openEnvironment(page);
+  const region = page.getByRole("region", { name: "Rollback candidates" });
+  await region.locator("summary", { hasText: "Older candidates" }).click();
+  // Three buttons here ask before acting; the page holds one dialog for them.
+  await expect(page.locator("dialog")).toHaveCount(1);
+  const rollback = region
+    .getByRole("listitem")
+    .nth(1)
+    .getByRole("button", { name: "Roll back to this" });
+  await rollback.click();
+  const asked = page.getByRole("dialog", { name: `Roll back ${PROD}?` });
+  await expect(asked).toBeVisible();
+  await expect(asked).toContainText("Restores the selection accepted by");
+  const keep = { name: "Keep as is" } as const;
+  await expect(asked.getByRole("button", keep)).toBeFocused();
+  await asked.getByRole("button", keep).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(rollback).toBeFocused();
+  // Another button asks its own question through the same element.
+  const rebind = page
+    .getByRole("region", { name: "Selection", exact: true })
+    .getByRole("button", { name: "Rebind" });
+  await rebind.click();
+  const rebinding = page.getByRole("dialog", { name: `Rebind ${PROD}?` });
+  await expect(rebinding).toBeVisible();
+  await expect(rebinding).not.toContainText("Restores the selection");
+  await expect(rebinding).toContainText("Keeps set revision r3");
+  await expect(page.locator("dialog")).toHaveCount(1);
+  await expect(page.locator("dialog h2")).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(rebind).toBeFocused();
+  // Confirming closes the dialog and returns focus to the button the same
+  // way. The request is held in flight, so the page renders its waiting
+  // state: the button reads as disabled and keeps the focus it was given.
+  await rebind.click();
+  const flight = Promise.withResolvers<unknown>();
+  const sent = await captureDeploymentRequest(page, flight.promise);
+  await confirm(page, "Request rebind");
+  expect(await sent()).toMatchObject({ kind: "rebind" });
+  await expect(rebind).toHaveAttribute("aria-disabled", "true");
+  await expect(rebind).toBeFocused();
+  // A press while it waits asks nothing and sends nothing more.
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  // The request fails: the button is ready again, still focused.
+  flight.resolve(null);
+  await expect(
+    page
+      .getByRole("region", { name: "Selection", exact: true })
+      .getByRole("alert"),
+  ).toBeVisible();
+  await expect(rebind).not.toHaveAttribute("aria-disabled");
+  await expect(rebind).toBeEnabled();
+  await expect(rebind).toBeFocused();
+  await expect(page.locator("dialog")).toHaveCount(1);
 });
 
 test("rolling back to a candidate requests its exact selection", async ({
@@ -129,7 +280,7 @@ test("rolling back to a candidate requests its exact selection", async ({
     environmentId: PROD,
     kind: "rollback",
     selectionDeploymentId: target.deploymentId,
-    expectedGeneration: 4,
+    expectedGeneration: 6,
   });
 });
 
@@ -147,7 +298,7 @@ test("rebind requests only the declared coordinate that moved", async ({
   expect(request).toMatchObject({
     kind: "rebind",
     recipeRevisionId: "arcade/4",
-    expectedGeneration: 4,
+    expectedGeneration: 6,
   });
   expect(request.configurationRevisionId).toBeUndefined();
 });
@@ -171,7 +322,7 @@ test("a deploy can ask for an override approval", async ({ page }) => {
     kind: "deploy",
     versionSetRevisionId: chosen,
     override: true,
-    expectedGeneration: 4,
+    expectedGeneration: 6,
   });
 });
 
@@ -299,7 +450,8 @@ test("approvals show the waiting override, the waiting saved plan and recently d
     page
       .getByRole("region", { name: "Recently decided" })
       .getByText("granted", { exact: true }),
-  ).toHaveCount(4);
+    // Three promotions, two re-assertions and the rebind.
+  ).toHaveCount(6);
   await expect(
     page.getByRole("navigation", { name: "Main" }).getByRole("link", {
       name: /^Approvals\s*, 2 waiting$/u,
@@ -349,5 +501,23 @@ for (const scheme of ["light", "dark"] as const) {
       "/activity?action=catalog.",
     ])
       await expectAccessible(page, path);
+  });
+
+  test(`the collapsed candidates and the open dialog meet WCAG 2.2 AA in ${scheme} mode`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await openEnvironment(page);
+    const region = page.getByRole("region", { name: "Rollback candidates" });
+    await region.locator("summary", { hasText: "Older candidates" }).click();
+    await expect(region.getByRole("listitem")).toHaveCount(6);
+    await expectNoViolations(page, `${ENVIRONMENT} with older candidates`);
+    await region
+      .getByRole("listitem")
+      .nth(1)
+      .getByRole("button", { name: "Roll back to this" })
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expectNoViolations(page, `${ENVIRONMENT} with its dialog open`);
   });
 }

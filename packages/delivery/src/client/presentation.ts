@@ -54,6 +54,33 @@ export function versionLabel(
 }
 
 /**
+ * The revision number of every set revision the environment page has loaded:
+ * the service's newest version sets and the set revisions of the
+ * environment's recent deployments. A set revision in neither is absent, and
+ * the page names it by its id.
+ */
+export function revisionNumbers(detail: {
+  versionSets: readonly { id: string; revision: number }[];
+  deployments: readonly {
+    versionSetRevisionId: string;
+    versionSetRevision: number;
+  }[];
+}): ReadonlyMap<string, number> {
+  return new Map([
+    ...detail.deployments.map(
+      (deployment) =>
+        [
+          deployment.versionSetRevisionId,
+          deployment.versionSetRevision,
+        ] as const,
+    ),
+    ...detail.versionSets.map(
+      (version) => [version.id, version.revision] as const,
+    ),
+  ]);
+}
+
+/**
  * When the environment's observed revision was recorded. Delivery writes it as
  * a deployment finishes and never probes afterwards, so it is a dated claim
  * with no fresh or stale state.

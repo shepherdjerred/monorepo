@@ -134,7 +134,7 @@ export function PlanApproval({
               title="Reject this plan?"
               confirmLabel="Reject and discard plan"
               danger
-              disabled={decide.isPending}
+              pending={decide.isPending}
               onConfirm={() => {
                 submit("rejected");
               }}

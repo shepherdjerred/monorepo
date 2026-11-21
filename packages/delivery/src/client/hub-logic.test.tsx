@@ -14,7 +14,11 @@ import {
 } from "./components/pipeline/pipeline-view-model.ts";
 import { traceStages } from "./components/pipeline/trace-view-model.ts";
 import { Status } from "./components/status.tsx";
-import { ConfirmButton } from "./components/confirm-dialog.tsx";
+import {
+  ConfirmButton,
+  ConfirmDialogProvider,
+  ConfirmQuestion,
+} from "./components/confirm-dialog.tsx";
 import { duration, relativeTime } from "./components/time.tsx";
 import {
   ActivitySearchSchema,
@@ -227,6 +231,40 @@ describe("search params", () => {
   });
 });
 
+/** A confirm button; "Retire" is the dangerous, disabled one and "Rebind" is waiting. */
+function confirmButton(label: string, describedBy?: string) {
+  return (
+    <ConfirmButton
+      label={label}
+      title={`${label} this?`}
+      confirmLabel={`${label} it`}
+      danger={label === "Retire"}
+      disabled={label === "Retire"}
+      pending={label === "Rebind"}
+      {...(describedBy === undefined ? {} : { describedBy })}
+      onConfirm={() => {
+        // Static render only.
+      }}
+    >
+      <p>Body</p>
+    </ConfirmButton>
+  );
+}
+
+/** The dialog's question as static markup. */
+function question(danger: boolean) {
+  return renderToStaticMarkup(
+    <ConfirmQuestion
+      heading="question"
+      title="Cancel this?"
+      confirmLabel="Cancel it"
+      danger={danger}
+    >
+      <p>Body</p>
+    </ConfirmQuestion>,
+  );
+}
+
 describe("presentation", () => {
   it("shows status as glyph and words", () => {
     const html = renderToStaticMarkup(<Status value="awaiting_approval" />);
@@ -234,22 +272,61 @@ describe("presentation", () => {
     expect(html).toContain("awaiting approval");
   });
 
-  it("confirms through a native dialog that defaults to keeping state", () => {
+  it("confirms through one native dialog however many buttons ask", () => {
     const html = renderToStaticMarkup(
-      <ConfirmButton
-        label="Cancel"
-        title="Cancel this?"
-        confirmLabel="Cancel it"
-        onConfirm={() => {
-          // Static render only.
-        }}
-      >
-        <p>Body</p>
-      </ConfirmButton>,
+      <ConfirmDialogProvider>
+        {confirmButton("Cancel", "row-1")}
+        {confirmButton("Retire")}
+        {confirmButton("Rebind")}
+      </ConfirmDialogProvider>,
     );
-    expect(html).toContain("<dialog");
-    expect(html).toContain('method="dialog"');
+    expect(html.match(/<dialog/gu)).toHaveLength(1);
+    // The closed dialog holds only its form; the button that opens it
+    // renders its question there.
+    expect(html).toMatch(/<dialog><form method="dialog"><\/form><\/dialog>$/u);
+    expect(html).not.toContain("Keep as is");
+    expect(html).toContain(
+      '<button type="button" class="secondary-button" aria-describedby="row-1">Cancel</button>',
+    );
+    expect(html).toContain(
+      '<button type="button" class="secondary-button danger" disabled="">Retire</button>',
+    );
+    // A waiting button reads as disabled without being disabled, so it can
+    // keep the focus the closing dialog returned to it.
+    expect(html).toContain(
+      '<button type="button" class="secondary-button" aria-disabled="true">Rebind</button>',
+    );
+  });
+
+  it("a confirm button outside the dialog's provider fails loudly", () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <ConfirmButton
+          label="Cancel"
+          title="Cancel this?"
+          confirmLabel="Cancel it"
+          onConfirm={() => {
+            // Static render only.
+          }}
+        >
+          <p>Body</p>
+        </ConfirmButton>,
+      ),
+    ).toThrow("ConfirmDialogProvider");
+  });
+
+  it("the dialog's question defaults to keeping state", () => {
+    const html = question(false);
+    expect(html).toContain('<h2 id="question">Cancel this?</h2>');
+    expect(html).toContain('<div class="dialog-body"><p>Body</p></div>');
     expect(html).toMatch(/autofocus[^>]*>Keep as is/iu);
+    // "Keep as is" comes first, so it is also the first control in tab order.
+    expect(html).toMatch(
+      /<button value="cancel"[^>]*>Keep as is<\/button><button value="confirm" class="primary-button">Cancel it<\/button>/u,
+    );
+    expect(question(true)).toContain(
+      '<button value="confirm" class="primary-button danger">Cancel it</button>',
+    );
   });
 
   it("formats relative times and durations", () => {

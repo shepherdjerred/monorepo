@@ -7,6 +7,7 @@ import {
 import { useQuery, type QueryClient } from "@tanstack/react-query";
 import { queries } from "#client/queries.ts";
 import { useFeedStatus, type ChangeFeed } from "#client/change-feed.ts";
+import { ConfirmDialogProvider } from "#client/components/confirm-dialog.tsx";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { errorMessage } from "#client/components/notices.tsx";
 import { DeliveryClientError } from "#shared/client.ts";
@@ -102,7 +103,9 @@ function RootLayout() {
         </div>
       </header>
       <main id="main">
-        <Outlet />
+        <ConfirmDialogProvider>
+          <Outlet />
+        </ConfirmDialogProvider>
       </main>
     </div>
   );

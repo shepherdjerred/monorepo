@@ -162,8 +162,14 @@ dialog {
   width: min(480px, calc(100vw - 32px));
   box-shadow: var(--shadow-overlay);
 }
+/* A scroll over the open dialog or its backdrop stays off the page behind. */
+dialog:modal {
+  overscroll-behavior: contain;
+}
 dialog::backdrop {
   background: var(--backdrop);
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 dialog h2 {
   margin-bottom: var(--space-3);

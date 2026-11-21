@@ -263,10 +263,37 @@ async function release(
 }
 
 /**
- * Three releases and a configuration rebind of Arcade: the newest alarmed
- * under a hold policy, earlier ones excluded from rollback by a forward-only
- * schema key, a declared recipe the accepted selection does not use yet, and
- * a non-eligible deploy waiting for an override approval.
+ * Re-assert an accepted selection (D9): a rollback to it, approved and
+ * accepted, which is one more previously accepted selection to restore.
+ */
+async function reassert(
+  delivery: Delivery,
+  database: Database,
+  accepted: { id: string },
+  n: number,
+) {
+  const rollback = await delivery.createDeployment(
+    {
+      requestId: `model/prod/reassert/${String(n)}`,
+      environmentId: MODEL_PROD,
+      expectedGeneration: await generation(database, MODEL_PROD),
+      kind: "rollback",
+      selectionDeploymentId: accepted.id,
+    },
+    testOperator,
+  );
+  await approve(delivery, rollback.id, "Re-asserted after a drifted target");
+  await execute(delivery, rollback);
+  await delivery.observeMonitor(rollback.id, observation(160), testExecutor);
+}
+
+/**
+ * Three releases, two re-assertions of the first and a configuration rebind
+ * of Arcade: six accepted selections, so the environment page collapses the
+ * oldest. The newest is alarmed under a hold policy, the ones before the
+ * rebind are excluded from rollback by a forward-only schema key, the
+ * declared recipe is one the accepted selection does not use yet, and a
+ * non-eligible deploy waits for an override approval.
  */
 export async function seedModelBrowser(delivery: Delivery, database: Database) {
   const base = await catalogDocument();
@@ -282,7 +309,8 @@ export async function seedModelBrowser(delivery: Delivery, database: Database) {
     fourth === undefined
   )
     throw new Error("Four set revisions were composed");
-  await release(delivery, database, first, { requests: 180 });
+  const original = await release(delivery, database, first, { requests: 180 });
+  for (const n of [1, 2]) await reassert(delivery, database, original, n);
   await release(delivery, database, second, { requests: 140 });
   // The catalog moves prod to configuration revision 2; a rebind realises it.
   await delivery.reconcileCatalog(document(base, 2), testOperator);

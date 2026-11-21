@@ -73,6 +73,13 @@ test("select an immutable release, inspect queued execution, and cancel safely",
   ).toBeVisible();
   await expect(main).toContainText("No runtime observation");
   await expect(main).toContainText("Unknown");
+  // Nothing is released here yet, and the release action leads the page.
+  await expect(main.locator(".page-header")).toContainText(
+    "Nothing accepted yet · Deploys automatically · generation 0 · Nothing in flight",
+  );
+  await expect(main.getByRole("region").first()).toHaveAccessibleName(
+    "Request a release",
+  );
   await main
     .getByRole("combobox", { name: "Version set", exact: true })
     .selectOption({ index: 1 });
@@ -87,6 +94,12 @@ test("select an immutable release, inspect queued execution, and cancel safely",
   await main.getByRole("button", { name: "Request cancellation" }).click();
   await confirm(page, "Request cancellation");
   await expect(main.getByText("canceled", { exact: true })).toBeVisible();
+  // The button left with its action done; the focus it held moves to the
+  // page heading instead of falling to the document.
+  await expect(
+    main.getByRole("button", { name: "Request cancellation" }),
+  ).toHaveCount(0);
+  await expect(page.locator("#main-heading")).toBeFocused();
   await page
     .getByRole("navigation", { name: "Main" })
     .getByRole("link", { name: "Artifacts" })

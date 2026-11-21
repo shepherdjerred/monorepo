@@ -172,6 +172,28 @@ export function rebindChanges(view: EnvironmentSelection) {
   return Object.keys(changes).length === 0 ? null : changes;
 }
 
+/** How many rollback candidates the environment page lists before the rest collapse. */
+export const VISIBLE_CANDIDATES = 5;
+
+/**
+ * Rollback candidates as the environment page lists them, newest first: the
+ * first few in sight and the older ones collapsed. The accepted selection
+ * stays in sight wherever it sits, because re-asserting it is what a failed
+ * or drifted target needs.
+ */
+export function splitCandidates<T extends { deploymentId: string }>(
+  candidates: T[],
+  acceptedDeploymentId: string | null | undefined,
+) {
+  const inSight = (candidate: T, index: number) =>
+    index < VISIBLE_CANDIDATES ||
+    candidate.deploymentId === acceptedDeploymentId;
+  return {
+    shown: candidates.filter((candidate, index) => inSight(candidate, index)),
+    older: candidates.filter((candidate, index) => !inSight(candidate, index)),
+  };
+}
+
 /** An approval queue item still waits for a human decision, of a release or of a saved plan. */
 export function awaitsDecision(item: ApprovalQueueItem) {
   if (item.awaitingPlanDecision) return true;
