@@ -167,7 +167,7 @@ final class FacetMobileUITests: XCTestCase {
 }
 
 extension FacetMobileUITests {
-    func testReviewAndReschedulePersonalBacklog() {
+    func testReviewAndReschedulePersonalBacklog() throws {
         let app = launch(additionalArguments: ["--facet-personal-workspace-fixture"])
         let count = app.staticTexts[AccessibilityIdentifier.TaskList.count]
         XCTAssertTrue(count.waitForExistence(timeout: 8))
@@ -194,12 +194,19 @@ extension FacetMobileUITests {
         app.buttons["Undo"].tap()
         XCTAssertTrue(app.buttons["Reschedule"].waitForExistence(timeout: 4))
         app.tabBars.buttons["Upcoming"].tap()
+        XCTAssertTrue(row.isHittable)
         screenshot("Personal Upcoming with backlog", app)
         app.buttons["Next week"].tap()
+        let nextWeek = try XCTUnwrap(Calendar.current.date(byAdding: .day, value: 7, to: .now))
+        let heading = app.staticTexts[
+            nextWeek.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())]
+        XCTAssertTrue(heading.isHittable)
         screenshot("Personal Upcoming with empty dates", app)
         app.tabBars.buttons["Browse"].tap()
         XCTAssertTrue(app.staticTexts["Favorites"].exists || app.staticTexts["FAVORITES"].exists)
         screenshot("Personal Browse with favorite project", app)
+        app.tabBars.buttons["Upcoming"].tap()
+        XCTAssertTrue(heading.isHittable)
     }
 
     func testEditNotesAndAttachLabelFromTaskDetail() {
