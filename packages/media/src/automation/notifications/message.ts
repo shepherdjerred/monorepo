@@ -39,6 +39,7 @@ import { composeMovieInterventionV4 } from "#automation/movie-editions/notificat
 import type { PreparedMovieInterventionV4 } from "#automation/movie-editions/notifications/intervention/authority.ts";
 import { personalTarget } from "./recipient.ts";
 import { composeInterestCheck } from "./interest-check.ts";
+import { retentionWarningText } from "./copy.ts";
 import { householdRetentionState } from "#infrastructure/request-interest/protection.ts";
 
 export const ItemSchema = z.object({
@@ -447,7 +448,14 @@ async function warning(
   return {
     ...target,
     subject: `Media: ${title.slice(0, 160)}`,
-    text: `${title} has no permanent Keep or remaining interested requester. It can leave the library after at least seven days, then stays recoverable for another seven days. Choose Keep watching in My requests to renew your interest${delivery.user.role === "owner" ? ", or Keep indefinitely in Library to keep it permanently" : ""}. Opening this link changes nothing.\n${new URL(delivery.user.role === "owner" ? "/library" : "/requests", context.publicOrigin).toString()}`,
+    text: retentionWarningText({
+      title,
+      owner: delivery.user.role === "owner",
+      link: new URL(
+        delivery.user.role === "owner" ? "/library" : "/requests",
+        context.publicOrigin,
+      ).toString(),
+    }),
   };
 }
 

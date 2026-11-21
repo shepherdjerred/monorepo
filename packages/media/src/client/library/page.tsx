@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from "react-router";
+import { LIBRARY_VIEW_NAMES } from "#shared/household/names.ts";
 import { PageTitle } from "#client/components.tsx";
 import { classNames } from "#client/ui/class-names.ts";
 import { Segmented } from "#client/ui/segmented.tsx";
@@ -8,10 +9,10 @@ import { leavingTitles, useRemovals } from "./removals.ts";
 const cx = classNames(styles);
 
 const SEGMENTS = [
-  { to: "/library", label: "All" },
-  { to: "/library/mine", label: "Mine" },
-  { to: "/library/leaving", label: "Leaving soon" },
-  { to: "/library/removed", label: "Removed" },
+  { to: "/library", label: LIBRARY_VIEW_NAMES.all },
+  { to: "/library/mine", label: LIBRARY_VIEW_NAMES.mine },
+  { to: "/library/leaving", label: LIBRARY_VIEW_NAMES.leaving },
+  { to: "/library/removed", label: LIBRARY_VIEW_NAMES.removed },
 ] as const;
 
 /**

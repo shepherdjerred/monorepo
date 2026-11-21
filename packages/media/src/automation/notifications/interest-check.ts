@@ -1,5 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import { InterestCheckNoticeSchema } from "#shared/household/interests.ts";
+import { interestCheckText } from "./copy.ts";
 import { personalTarget, type Delivery } from "./recipient.ts";
 
 /** A private reminder is bound to one current request interest, never shared. */
@@ -39,12 +40,6 @@ export async function composeInterestCheck(
   return {
     ...target,
     subject: `Still watching ${title}?`,
-    text: [
-      `You have unwatched content available for ${title}.`,
-      "Choose Keep watching within 7 days to continue following it, or Finished or Drop if you are done. Watching also renews your interest.",
-      "If you do not reply, your temporary interest will expire. The title stays while anyone else still wants it. Otherwise it has 7 days in Leaving Soon, followed by 7 days in recoverable quarantine.",
-      "Opening this link does not change your request.",
-      page.toString(),
-    ].join("\n\n"),
+    text: interestCheckText({ title, link: page.toString() }),
   };
 }

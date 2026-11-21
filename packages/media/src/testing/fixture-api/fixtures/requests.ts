@@ -86,6 +86,21 @@ const REQUEST_SEEDS: readonly RequestSeed[] = [
   { sequence: 15, item: root("The Expanse") },
   { sequence: 16, item: root("Dune: Part Two"), languages: ["en"] },
   { sequence: 17, item: root("Anora"), languages: ["en"] },
+  // The other film requests of `movie-requests.ts`: on the server a film
+  // request is a row here like any other, and this row is where a list finds
+  // its title and artwork.
+  { sequence: 18, item: root("Oppenheimer") },
+  { sequence: 19, item: root("Blade Runner") },
+  {
+    sequence: 20,
+    item: root("The Lord of the Rings: The Fellowship of the Ring"),
+    languages: ["en"],
+  },
+  { sequence: 21, item: root("Alien") },
+  { sequence: 22, item: root("The Matrix") },
+  { sequence: 23, item: root("Heat"), active: false },
+  { sequence: 24, item: root("The Social Network") },
+  { sequence: 25, item: root("Arrival"), languages: ["en"] },
 ];
 
 /** The signed-in person's requests, each with the item it asks for. */

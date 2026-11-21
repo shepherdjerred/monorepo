@@ -120,6 +120,18 @@ test("Mine lists each title once, with every action a request has", async ({
   await expect(
     entry(list, "Shōgun").getByText(/Still watching\? Choose Keep watching/u),
   ).toBeVisible();
+  // One main action per entry: answering the check, not the 30-day hold.
+  const shogun = entry(list, "Shōgun");
+  await expect(shogun.locator(".button.primary")).toHaveText("Keep watching");
+  await expect(
+    shogun.getByRole("button", { name: "Keep for 30 days" }),
+  ).toBeVisible();
+  // A film's poster comes from its row in the request list; a title with no
+  // stored artwork gets a marked tile, not an empty one.
+  await expect(entry(list, "Alien").locator("img")).toHaveCount(1);
+  const arrival = entry(list, "Arrival");
+  await expect(arrival.locator("img")).toHaveCount(0);
+  await expect(arrival.locator("svg").first()).toBeVisible();
   // A season's request is under its series, in the member's words.
   await expect(entry(list, "Andor")).toContainText("Season 2");
   await expect(list).not.toContainText(

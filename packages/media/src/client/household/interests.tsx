@@ -8,7 +8,7 @@ import {
 } from "#shared/household/interests.ts";
 import { queryClient, readApi, writeApi } from "#client/api.ts";
 import { dateLabel, ErrorNotice } from "#client/components.tsx";
-import { INTEREST_ACTION_COPY } from "#client/presentation/interest.ts";
+import { INTEREST_ACTION_NAMES } from "#shared/household/names.ts";
 import { RequestInterestProgress } from "./progress.tsx";
 
 type Interest = z.infer<typeof RequestInterestListSchema>["items"][number];
@@ -79,7 +79,7 @@ export function InterestControls({
         change.mutate(action);
       }}
     >
-      {INTEREST_ACTION_COPY[action]}
+      {INTEREST_ACTION_NAMES[action]}
     </button>
   );
   return (
@@ -93,7 +93,7 @@ export function InterestControls({
       {interest.noticeEventId !== null && following && (
         <div className="notice">
           <p>
-            Still watching? Choose {INTEREST_ACTION_COPY.continue} to stay
+            Still watching? Choose {INTEREST_ACTION_NAMES.continue} to stay
             interested.
             {interest.replyBy === null
               ? " The time to answer starts once a reminder has reached you, or when you say you have seen this one."

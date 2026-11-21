@@ -2,7 +2,6 @@ import type { z } from "zod";
 import type {
   InterestStateSchema,
   KeepingPolicySchema,
-  RequestInterestCommandSchema,
 } from "#shared/household/interests.ts";
 import type { LibraryInterestSchema } from "#shared/household/library.ts";
 import type { Copy } from "./copy.ts";
@@ -34,17 +33,6 @@ export const REQUEST_KEEPING_COPY = {
   temporary: "Just for now, while you follow it",
 } as const satisfies Record<z.infer<typeof KeepingPolicySchema>, string>;
 
-type InterestAction = z.infer<typeof RequestInterestCommandSchema>["action"];
-
-/**
- * What each interest command's button says. "Keep watching" is the name the
- * reminder emails use for it, so it keeps that name here.
- */
-export const INTEREST_ACTION_COPY = {
-  continue: "Keep watching",
-  finished: "I have finished it",
-  drop: "Stop following",
-  keep: "Keep for good",
-  temporary: "Keep just for now",
-  notice_viewed: "I have seen this reminder",
-} as const satisfies Record<InterestAction, string>;
+// What each interest command's button says is in
+// `shared/household/names.ts` (`INTEREST_ACTION_NAMES`), not here: the
+// reminder emails name those buttons, so client and server share one table.

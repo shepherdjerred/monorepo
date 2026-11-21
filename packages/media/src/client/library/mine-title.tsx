@@ -138,7 +138,7 @@ function Ask({
         {movie === null &&
           request !== null &&
           request.media.kind !== "movie" && (
-            <RequestProtection user={user} request={request} />
+            <RequestProtection user={user} request={request} quiet />
           )}
       </details>
     </div>
@@ -185,7 +185,7 @@ function Covered({ user, title }: { user: MediaUser; title: MineTitle }) {
                     />
                   </p>
                 </div>
-                <RequestProtection user={user} request={row} />
+                <RequestProtection user={user} request={row} quiet />
               </li>
             ))}
           </ul>

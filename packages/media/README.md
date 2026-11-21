@@ -825,6 +825,14 @@ such a request covers, listed under it on demand. A film whose library details
 the reader may not see is listed without its name or poster. Each list reads its
 rows' default-target views in one batched request.
 
+The names of the Library's views and of the buttons a message tells a person to
+use live in `src/shared/household/names.ts`. The client's labels and the two
+messages that send someone to the Library to act (the "still watching?" check
+and the leaving warning, worded in `src/automation/notifications/copy.ts`) both
+read them from there, so a message cannot name a page or a button that is not
+on screen. Those messages still link to `/requests` and `/library`, which is why
+those addresses must keep working.
+
 Leaving soon groups the pending rows of `GET /removals` by `rootMediaId`
 (`library/removals.ts`). A series losing several episodes gets one "Keep all N
 episodes" action (`library/keep-all.ts`), which sends the existing per-episode
