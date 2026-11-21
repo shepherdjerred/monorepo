@@ -37,7 +37,6 @@ export function createGates(stage: string) {
   const behavior = mediaBehaviorConfig(stage, true);
   const read = async (
     key:
-      | "acquisitionEnabled"
       | "subtitleMaintenanceEnabled"
       | "sourceCleanupEnabled"
       | "quarantineEnabled"
@@ -47,7 +46,13 @@ export function createGates(stage: string) {
     return result.value;
   };
   return {
-    acquisition: () => read("acquisitionEnabled"),
+    async acquisition() {
+      // The current Flipt decision must authorize each acquisition check.
+      const { value, source } = await mediaBehaviorConfig(stage, true).get(
+        "acquisitionEnabled",
+      );
+      return source === "flag" && value;
+    },
     subtitleMaintenance: () => read("subtitleMaintenanceEnabled"),
     sourceCleanup: () => read("sourceCleanupEnabled"),
     quarantine: () => read("quarantineEnabled"),

@@ -2004,11 +2004,14 @@ Imported-library household-history holds still require review before cleanup.
 Cleanup policy time is independent of the original SDK, verification, storage,
 writer and SQL deadlines; advancing policy time cannot renew an effect's proof.
 
-Acquisition defaults to enabled. Before the legacy handoff, explicitly disable
-`media-acquisition-enabled` and confirm its live value. Keep it off until every
-legacy handoff is complete and each imported profile has its selected guide
-version. Source cleanup, quarantine, and permanent purge default to disabled.
-Each effect still requires current ownership, intent, and policy checks.
+Before the first legacy handoff, apply the declared production cutover hold on
+`media-acquisition-enabled` and confirm the live `prod/media` evaluation is off.
+The acquisition worker requires a fresh affirmative flag evaluation before
+allowing effects. Keep the hold until every legacy handoff is complete and each
+imported profile has its selected guide version. Then remove the production
+override and its default-off exception and apply the restored declaration.
+Source cleanup, quarantine, and permanent purge default to disabled. Each
+effect still requires current ownership, intent, and policy checks.
 Tests against injected service responses establish adapter behavior, not live
 tracker compatibility or production acceptance.
 
