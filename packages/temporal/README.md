@@ -1286,9 +1286,12 @@ Ops digest Activity results retain the dashboard's `periodKey`, `status`
 inbox delivery. Histories recorded by older workers contain only `kind` and
 remain replay-compatible; no additional Workflow command is introduced.
 
-The reports worker resolves `temporal-email-recipient` and
+The reports worker maps each `reportType` to its semantic `@sjer.red` sender and
+recipient (`deps@sjer.red`, `ops@sjer.red`, `scout@sjer.red`, or
+`reports@sjer.red`) and resolves `temporal-email-recipient` and
 `temporal-email-sender` through typed configuration for each delivery activity.
-Defaults preserve the existing homelab routing during a flag-provider outage.
+Non-default Flipt values override the per-family mailbox; defaults preserve
+semantic homelab routing during a flag-provider outage.
 Postal credentials stay in 1Password; service endpoints and host routing are
 reviewed homelab bootstrap settings. Workflow histories contain no credentials.
 

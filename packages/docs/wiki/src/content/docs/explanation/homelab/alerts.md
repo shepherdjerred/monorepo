@@ -47,8 +47,18 @@ zero-digest image or silently replacing the working notification path.
 Alertmanager's Postal fallback does not use that HTTP API. It submits mail
 through Postal's inbound SMTP listener and requires STARTTLS with cluster-CA
 validation — see [Postal SMTP TLS](/explanation/homelab/postal-smtp-tls/).
-A dashboard outage can still page once Postal SMTP is healthy; queued
-dashboard opening mail is a separate `EMAIL_ENABLED` switch.
+Both the dashboard outbox and `postal-fallback` send operator alert mail to
+`alerts@sjer.red`, while operational summaries use `digests@sjer.red`. The
+retired `claude@sjer.red` and `dependencies@sjer.red` mailboxes are no longer
+used.
+
+[`prometheus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts)
+mounts `ops-email.tmpl` from
+`packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alertmanager-email-template.ts`
+onto `postal-fallback`. Fallback messages therefore keep the Hub Editorial
+plain-English layout even while Hub is unreachable. A dashboard outage can
+still page once Postal SMTP is healthy; queued dashboard opening mail is a
+separate `EMAIL_ENABLED` switch.
 
 ## SQLite persistence boundary
 

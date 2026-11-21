@@ -75,9 +75,9 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         // design exists to make recoverable — but only if somebody looks.
         alert: "ScoutDurableWorkflowStartStranded",
         annotations: {
-          summary: "A Scout V2 workflow start was never accepted",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has a V2 workflow start request that has gone unaccepted for over 15 minutes. The request is durably recorded and no Workflow is running it. Check the operations console's unaccepted-starts queue and the Temporal supervisor before re-requesting, since adopting the existing request is what prevents a duplicate run.",
+          summary: "Scout background job failed to start",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has a V2 workflow start request unaccepted for over 15 minutes, leaving durably recorded work unstarted. Check the unaccepted-starts queue in the operations console and Temporal supervisor health to adopt the existing request without creating a duplicate run.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -88,15 +88,16 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
       },
       {
         // `conflict` means one fact was recorded twice with two different
-        // claims about it. A plain retry of a committed write answers
-        // `already-applied` and is deliberately not counted here — the
-        // repository excludes `recordedAt` from the comparison precisely so
-        // that ordinary Activity retries stop inflating this signal.
+        // claims about it (the duplicate signal on the V2 acceptance checklist).
+        // A plain retry of a committed write answers `already-applied` and is
+        // deliberately not counted here — the repository excludes `recordedAt`
+        // from the comparison precisely so ordinary Activity retries stop
+        // inflating this signal.
         alert: "ScoutDurableReceiptConflicts",
         annotations: {
           summary: "Scout durable receipts are conflicting",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} recorded a receipt whose evidence disagreed with the receipt already stored for the same match, kind, version and scope. Something wrote two different claims about one fact; the table kept the first. This is the duplicate signal on the V2 acceptance checklist and should be explained before the rollout advances.",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} recorded conflicting durable receipt evidence for the same match, kind, version, and scope, indicating competing writers produced different results while the first receipt was kept. Inspect recent durable receipt rows and workflow histories to find the duplicate writer before advancing rollouts.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -112,9 +113,9 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         // on the first one and keeps paging until an operator resolves it.
         alert: "ScoutDurableUnknownDeliveries",
         annotations: {
-          summary: "Scout has notification intents at the operator dead end",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} is holding notification intents in `unknown-delivery`: the send left and the response never arrived. Nothing will retry these, by design — resolve each one through the operations console, or `toolkit scout ops resolve-unknown` without a browser, after confirming whether the message actually landed.",
+          summary: "Scout notification intents are stuck in unknown delivery",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} holds notification intents whose Discord send response never arrived, and automatic retries are paused to prevent duplicate posts. Check whether each message landed in Discord, then resolve the intents in the operations console or with toolkit scout ops resolve-unknown.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -130,9 +131,9 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         // advancing.
         alert: "ScoutDurableRecoveryBacklogStale",
         annotations: {
-          summary: "A Scout recovery batch has stalled",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has a recovery batch that has been live for over six hours without reaching a terminal state. The batch row is the only record of how far its scan got. Inspect the recovery queue in the operations console before starting a replacement batch.",
+          summary: "Scout durable recovery batch is stalled",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has a recovery batch active for over 6 hours without finishing, leaving backlog recovery stalled at its last scan position. Inspect the batch in the operations console and check its driver workflow before starting a replacement batch.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -147,9 +148,9 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         // green while timelines fell days behind a healthy match flow.
         alert: "ScoutDurableLakeStagingLag",
         annotations: {
-          summary: "Scout's report lake is behind the raw archive",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} archived a {{ $labels.artifact_kind }} artifact over two hours ago that the report lake still has no staging receipt for. The raw archive in S3 is canonical and the lake is rebuildable, so nothing is lost — but Explore and every report query are reading a lake that is missing this work.",
+          summary: "Scout report lake is lagging behind the raw archive",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} archived {{ $labels.artifact_kind }} data over 2 hours ago that has not staged into the report lake, leaving Explore and scheduled report queries incomplete while raw S3 data remains safe. Check lake staging workflows, lake queue workers, and SeaweedFS connectivity.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -169,11 +170,13 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         // out because the queue type is not in the database), so it reads 0
         // on a correct deployment and one is enough to mean a user was not
         // told. Against prod history it counts exactly the outage window.
+        // Note: pre-rename workflow histories record `mintPostmatchNotificationIntentsV2`
+        // inside `scoutMatchProcessingV2Workflow`.
         alert: "ScoutDurablePostmatchIntentsNotMinted",
         annotations: {
-          summary: "Scout finished live matches without minting their reports",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has {{ $value }} live V2 match(es) observed in the last 6 hours whose processing finished at least 15 minutes ago with a subscribed channel owed a report, but no postmatch intent was minted and no report was rendered. Those reports will never be sent. Check `mintPostmatchNotificationIntents` (`mintPostmatchNotificationIntentsV2` in histories recorded before the rename) in recent scoutMatchProcessingWorkflow (or scoutMatchProcessingV2Workflow) histories. After fixing the cause, render the missed reports with scoutSilentPostmatchBackfillWorkflow; the backfill's receipts clear this alert.",
+          summary: "Scout finished live matches without minting reports",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} finished processing {{ $value }} live match(es) in the last 6 hours without minting or rendering owed post-match reports, so subscribed channels will never receive them. Inspect mintPostmatchNotificationIntents in recent scoutMatchProcessingWorkflow histories, then backfill missed reports with scoutSilentPostmatchBackfillWorkflow.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -191,9 +194,9 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         // so the page arrives while most of the queue can still be sent.
         alert: "ScoutDurableReadyIntentsNotDelivered",
         annotations: {
-          summary: "Scout has ready notifications that nothing is sending",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }}'s oldest `ready` notification intent was minted over 30 minutes ago and has not started sending. Nothing is draining the ready queue, so every report in it will expire unsent at its freshness deadline. Check the notification child workflows and the reconciliation sweep's stalled-notification scan.",
+          summary: "Scout ready notifications are not being sent",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has rendered notification intents waiting in the ready queue for over 30 minutes, risking unsent expiry at their freshness deadline. Check notification delivery child workflows and the stalled-notification scan in the reconciliation sweep.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -214,8 +217,8 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         alert: "ScoutDurableObservationLagHigh",
         annotations: {
           summary: "Scout is discovering finished matches late",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }}'s live matches observed in the last two hours were observed a p90 of over 90 minutes after game start, which includes the game's length. Healthy is about 45 minutes. Reports are going out late or past their freshness deadline. Check post-match discovery runs for head-of-line blocking and account cursors that are not advancing.",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} p90 match observation lag exceeds 90 minutes from game start, causing post-match reports to post late or miss their freshness deadline. Check post-match discovery workflows for head-of-line blocking, Riot rate limits, and stalled account cursors.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -235,9 +238,9 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         // it; silence it for the maintenance window rather than raising it.
         alert: "ScoutDurablePostmatchDiscoveryStalled",
         annotations: {
-          summary: "Scout post-match discovery has stopped completing polls",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has not completed a post-match discovery poll for over 30 minutes, so finished matches are not being found or reported. Check the postmatch-discovery Schedule's running Workflow, what it is waiting on (the shared match dispatcher in particular), and BotState's poll status.",
+          summary: "Scout post-match discovery has stalled",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has not completed a post-match discovery poll in over 30 minutes, so finished games are not being detected or reported. Check the postmatch-discovery Temporal schedule, active workflow waits on the shared match dispatcher, and BotState poll status.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -254,9 +257,9 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         // above is blind rather than clear.
         alert: "ScoutDurableSweepMissing",
         annotations: {
-          summary: "No Scout pod is sweeping the durable pipeline metrics",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} is publishing no durable pipeline gauges, so every backlog, intent-state and lake-lag alert is blind rather than green. Exactly one runtime role composes these collectors; check that a pod with the database-sweep capability is scheduled and scraping.",
+          summary: "Scout durable pipeline metrics are missing",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} is publishing no durable pipeline gauges, leaving backlog, intent, and lake-lag alerts blind. Check that the application pod responsible for database metric sweeps is running and being scraped by Prometheus.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -288,9 +291,9 @@ export function getScoutDurableRuleGroup(): PrometheusRuleSpecGroups {
         // up and hide it.
         alert: "ScoutDurableSweepFailing",
         annotations: {
-          summary: "A Scout durable metric sweep is failing its reads",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} is publishing a durable gauge holding the -1 sentinel, which means a sweep ran and could not read the database. The backlog and lag numbers beside it are stale rather than low, so every threshold alert in this group is currently blind. Check the sweeping pod's logs for the failing query.",
+          summary: "Scout durable pipeline metric sweep is failing",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} failed its durable pipeline database metric sweep, leaving backlog and lag threshold alerts blind with stale values. Check the application pod logs and PostgreSQL health for failing metric sweep queries.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

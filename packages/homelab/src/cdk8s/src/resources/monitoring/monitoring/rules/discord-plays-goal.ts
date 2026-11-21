@@ -20,12 +20,13 @@ export function getDiscordPlaysGoalRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           // Check an individual goal's age: overlapping bounded goals can keep
           // the aggregate active count nonzero indefinitely without being stuck.
+          // Hard max_runtime_minutes cap is 30m; >= 40m means timeoutGoal -> claimActive
+          // teardown failed or the Codex child process did not exit.
           labels: { severity: "warning", category: "discord-plays" },
           annotations: {
-            summary:
-              "Pokemon goal has been active longer than the hard runtime cap",
+            summary: "Pokemon goal exceeded its hard runtime cap",
             description: escapePrometheusTemplate(
-              "An active goal is at least 40 minutes old, but max_runtime_minutes is capped at 30 — the timeout/teardown path (timeoutGoal → claimActive) failed or the process is unkillable. Check the Arcade controller's goal-manager logs and the pokemon.goal.run trace in Tempo.",
+              "A Discord Plays Pokemon goal has run for {{ $value | humanizeDuration }} past the 30-minute hard cap, leaving a paid Codex session wedged against the emulator. Check the Arcade controller goal-manager logs and the pokemon.goal.run trace in Tempo.",
             ),
           },
         },
@@ -38,9 +39,8 @@ export function getDiscordPlaysGoalRuleGroups(): PrometheusRuleSpecGroups[] {
           labels: { severity: "warning", category: "discord-plays" },
           annotations: {
             summary: "Pokemon goal is burning tokens with no live stream",
-            description: escapePrometheusTemplate(
-              "A goal Codex process is active but the Go-Live broadcast is down, so the paid run has no audience and nobody can watch or stop it from the voice channel. Either the stream died mid-goal (check the Stream Health dashboard) or a goal outlived its session teardown.",
-            ),
+            description:
+              "A Discord Plays Pokemon goal Codex session is running while the Go-Live broadcast is offline, spending model tokens with no live stream or voice-channel controls. Check the Stream Health dashboard and Arcade controller logs to restore the broadcast or terminate the orphaned goal.",
           },
         },
       ],

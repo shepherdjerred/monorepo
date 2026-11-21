@@ -14,10 +14,10 @@ export function getServiceProbeRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ServiceProbeDown",
           annotations: {
             summary: escapePrometheusTemplate(
-              "[{{ $labels.namespace }}/{{ $labels.service }}] {{ $labels.path }} probe is down",
+              "Health probe {{ $labels.path }} is failing for {{ $labels.service }}",
             ),
             description: escapePrometheusTemplate(
-              "The {{ $labels.path }} probe for {{ $labels.service }} in namespace {{ $labels.namespace }} has been failing for more than 10 minutes.",
+              "The HTTP health probe on {{ $labels.path }} for service {{ $labels.service }} in namespace {{ $labels.namespace }} has failed for over 10 minutes, indicating the service endpoint is down or returning errors. Check pod status, container logs, and ingress or service routing in namespace {{ $labels.namespace }}.",
             ),
           },
           // The minecraft namespaces hibernate at 0 desired replicas
@@ -40,7 +40,7 @@ export function getServiceProbeRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Service probes are not running",
             description:
-              "No probe_success metrics have been collected for the service-probe fleet in the last 10 minutes. The blackbox-exporter or Probe resources may be misconfigured.",
+              "Prometheus has collected no metrics from the service health probe fleet in the last 10 minutes, leaving hosted service endpoint outages undetected. Check prometheus-blackbox-exporter pod health and inspect Probe resources and scrape targets in the monitoring namespace.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'absent(probe_success{job=~"probe-.*"}) == 1',

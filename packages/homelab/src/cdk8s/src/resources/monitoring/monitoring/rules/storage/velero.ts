@@ -41,9 +41,9 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "VeleroTotalPVCSizeExcessive",
           annotations: {
-            summary: "Total Velero-backed PVC data is very large",
-            message: escapePrometheusTemplate(
-              "Velero-backed PVCs use {{ $value | humanize1024 }}B in total, including local snapshots. Large volumes can make Velero backups expensive or slow; review backup exclusions.",
+            summary: "Total Velero-backed PVC data exceeds 2 TiB",
+            description: escapePrometheusTemplate(
+              "Velero-backed PVCs use {{ $value | humanize1024 }}B of ZFS storage cluster-wide (including local snapshots), increasing backup duration and object-storage costs. Review PVC velero.io/backup labels and exclude disposable caches or rebuildable data.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -57,9 +57,11 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "VeleroNamespacePVCSizeExcessive",
           annotations: {
-            summary: "Namespace has large Velero-backed PVC data",
-            message: escapePrometheusTemplate(
-              "Namespace {{ $labels.namespace }} has {{ $value | humanize1024 }}B of ZFS data in Velero-backed PVCs, including local snapshots. Review backup policy and exclusions for this namespace.",
+            summary: escapePrometheusTemplate(
+              "Velero-backed PVC data in {{ $labels.namespace }} exceeds 500 GiB",
+            ),
+            description: escapePrometheusTemplate(
+              "PVCs opted into Velero backups in namespace {{ $labels.namespace }} consume {{ $value | humanize1024 }}B of ZFS storage (including local snapshots), slowing scheduled backups. Review PVCs in {{ $labels.namespace }} and disable backup labels on caches or non-critical volumes.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -79,9 +81,11 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "VeleroBackupResourceFailed",
           annotations: {
-            summary: "Latest terminal Velero backup failed or partially failed",
-            message: escapePrometheusTemplate(
-              "Velero schedule {{ $labels.backup_namespace }}/{{ $labels.schedule }} has a failed or partially failed terminal Backup resource. A running successor does not establish recovery; inspect the Backup CR outcome and wait for a later completed backup.",
+            summary: escapePrometheusTemplate(
+              "Latest completed Velero backup failed for {{ $labels.schedule }}",
+            ),
+            description: escapePrometheusTemplate(
+              "The most recent completed Backup resource for schedule {{ $labels.backup_namespace }}/{{ $labels.schedule }} ended in a Failed or PartiallyFailed state, leaving recent cluster state unprotected until a new run finishes cleanly. Run velero backup describe and velero backup logs on the failed Backup CR to diagnose the error.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -93,9 +97,11 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "VeleroBackupFailed",
           annotations: {
-            summary: "Velero backup has failed",
-            message: escapePrometheusTemplate(
-              "Velero backup {{ $labels.schedule }} has failed",
+            summary: escapePrometheusTemplate(
+              "Velero scheduled backup {{ $labels.schedule }} failed",
+            ),
+            description: escapePrometheusTemplate(
+              "The latest run of Velero schedule {{ $labels.schedule }} did not succeed, so recovery points for covered workloads are stale. Inspect the latest Backup CR and velero pod logs in the velero namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -109,9 +115,11 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "VeleroBackupFailing",
           annotations: {
-            summary: "Velero backup has been failing for extended period",
-            message: escapePrometheusTemplate(
-              "Velero backup {{ $labels.schedule }} has been failing for the last 12h",
+            summary: escapePrometheusTemplate(
+              "Velero backup {{ $labels.schedule }} failing for over 12 hours",
+            ),
+            description: escapePrometheusTemplate(
+              "Velero schedule {{ $labels.schedule }} has had no successful backup for over 12 hours, creating a growing recovery-point gap for cluster state. Investigate Velero controller logs, BackupStorageLocation connectivity, and failing volume snapshots immediately.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -127,9 +135,11 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
         ...VELERO_SCHEDULES.map((scheduleConfig) => ({
           alert: `VeleroNoNew${scheduleConfig.backupType.charAt(0).toUpperCase() + scheduleConfig.backupType.slice(1)}Backup`,
           annotations: {
-            summary: `No new successful ${scheduleConfig.backupType} Velero backup`,
-            message: escapePrometheusTemplate(
-              `Velero backup {{ $labels.schedule }} has not had any successful backups in the last ${scheduleConfig.monitoring.noBackupWindow}`,
+            summary: escapePrometheusTemplate(
+              `No successful ${scheduleConfig.backupType} Velero backup for {{ $labels.schedule }}`,
+            ),
+            description: escapePrometheusTemplate(
+              `Velero schedule {{ $labels.schedule }} has not completed a successful backup within its expected ${scheduleConfig.monitoring.noBackupWindow} window, leaving recovery points outdated. Check the Schedule resource status, Velero pod logs, and BackupStorageLocation availability.`,
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -144,9 +154,11 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroBackupPartialFailures",
           annotations: {
-            summary: "Velero backup experiencing partial failures",
-            message: escapePrometheusTemplate(
-              "Velero backup {{ $labels.schedule }} has {{ $value | humanizePercentage }} partially failed backups",
+            summary: escapePrometheusTemplate(
+              "High partial-failure rate on Velero schedule {{ $labels.schedule }}",
+            ),
+            description: escapePrometheusTemplate(
+              "Over half ({{ $value | humanizePercentage }}) of recent backup attempts for schedule {{ $labels.schedule }} partially failed, meaning some resources or volumes are missing from backups. Run velero backup logs on the affected Backup CRs to identify failing items.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -167,10 +179,9 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroRestoreFailed",
           annotations: {
-            summary: "Velero restore has failed",
-            message: escapePrometheusTemplate(
-              "Velero restore has failed - {{ $value }} failures in the last 15m",
-            ),
+            summary: "Velero restore failed",
+            description:
+              "One or more Velero restore operations failed in the last 15 minutes, leaving target workloads or volumes unrecovered. Inspect the Restore CR status and run velero restore logs to find the failing resource or snapshot.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(velero_restore_failed_total[15m]) > 0",
@@ -183,10 +194,9 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroRestorePartialFailure",
           annotations: {
-            summary: "Velero restore partially failed",
-            message: escapePrometheusTemplate(
-              "Velero restore has partial failures - {{ $value }} partial failures in the last 15m",
-            ),
+            summary: "Velero restore completed with partial failures",
+            description:
+              "One or more Velero restore operations partially failed in the last 15 minutes, leaving some Kubernetes resources or persistent volumes unrestored. Inspect the Restore CR with velero restore describe and velero restore logs to recover missing items.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(velero_restore_partial_failure_total[15m]) > 0",
@@ -200,9 +210,8 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
           alert: "VeleroRestoreValidationFailed",
           annotations: {
             summary: "Velero restore validation failed",
-            message: escapePrometheusTemplate(
-              "Velero restore validation has failed - {{ $value }} validation failures in the last 15m",
-            ),
+            description:
+              "One or more Velero restore requests failed validation in the last 15 minutes and could not start. Inspect the Restore CR status for invalid parameters, missing backups, or unavailable storage locations.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(velero_restore_validation_failed_total[15m]) > 0",
@@ -222,9 +231,8 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
           alert: "VeleroVolumeSnapshotFailed",
           annotations: {
             summary: "Velero volume snapshot failed",
-            message: escapePrometheusTemplate(
-              "Velero volume snapshot has failed - {{ $value }} failures in the last 15m",
-            ),
+            description:
+              "Velero recorded volume snapshot failures in the last 15 minutes, leaving persistent volume data out of recent backups. Check Velero pod logs and ZFS/CSI snapshotter status for the failing volume.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(velero_volume_snapshot_failure_total[15m]) > 0",
@@ -237,10 +245,9 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroCSISnapshotFailed",
           annotations: {
-            summary: "Velero CSI snapshot failed",
-            message: escapePrometheusTemplate(
-              "Velero CSI snapshot has failed - {{ $value }} failures in the last 15m",
-            ),
+            summary: "Velero CSI volume snapshot failed",
+            description:
+              "Velero recorded CSI snapshot failures in the last 15 minutes, preventing persistent volumes from being backed up cleanly. Check VolumeSnapshot CRs, CSI snapshot-controller logs, and OpenEBS ZFS-LocalPV driver health.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(velero_csi_snapshot_failure_total[15m]) > 0",
@@ -253,9 +260,11 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroLargeVolumeBackupFailed",
           annotations: {
-            summary: "Large volume backup attempt failed",
-            message: escapePrometheusTemplate(
-              "Velero backup {{ $labels.schedule }} failed with {{ $value }} volume snapshot errors. This may indicate attempts to backup large volumes that should be excluded.",
+            summary: escapePrometheusTemplate(
+              "Velero backup {{ $labels.schedule }} failed with snapshot and item errors",
+            ),
+            description: escapePrometheusTemplate(
+              "Velero schedule {{ $labels.schedule }} experienced both volume snapshot failures and backup item errors in the last 15 minutes, leaving volume backups incomplete. Inspect the failing Backup CR logs and check whether oversized or transient PVCs need backup exclusions.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -270,9 +279,11 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroBackupDurationExcessive",
           annotations: {
-            summary: "Velero backup taking too long",
-            message: escapePrometheusTemplate(
-              '{{ $value | printf "%.0f" }} Velero {{ $labels.schedule }} backup(s) in the last day took longer than 60 minutes. This may indicate large volumes are being backed up that should be excluded.',
+            summary: escapePrometheusTemplate(
+              "Velero backup {{ $labels.schedule }} took longer than 60 minutes",
+            ),
+            description: escapePrometheusTemplate(
+              '{{ $value | printf "%.0f" }} Velero {{ $labels.schedule }} backup(s) in the last 24 hours took longer than 60 minutes, risking schedule overlap and slow recovery uploads. Check backup logs for slow volume uploads or large PVCs that should be excluded.',
             ),
           },
           // Velero exports the duration only as a histogram. Backups that
@@ -300,8 +311,8 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
           alert: "VeleroBackupValidationFailed",
           annotations: {
             summary: "Velero backup validation failed",
-            message: escapePrometheusTemplate(
-              "Velero backup validation has increased day-over-day - {{ $value }} new validation failures in the last 24h",
+            description: escapePrometheusTemplate(
+              'Velero recorded {{ $value | printf "%.0f" }} backup validation failure(s) in the last 6 hours, preventing scheduled or manual backups from running. Check Backup CR validation errors and BackupStorageLocation status in the velero namespace.',
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -315,10 +326,9 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroBackupWarnings",
           annotations: {
-            summary: "Velero backup has warnings",
-            message: escapePrometheusTemplate(
-              "Velero backup has warnings - {{ $value }} warnings in the last 15m",
-            ),
+            summary: "Velero backups are completing with warnings",
+            description:
+              "Velero backups logged warnings in the last 15 minutes, which may indicate skipped resources, hook issues, or deprecated APIs. Run velero backup describe on recent backups to review the warnings.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(velero_backup_warning_total[15m]) > 0",
@@ -331,9 +341,11 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroBackupItemErrors",
           annotations: {
-            summary: "Velero backup has item errors",
-            message: escapePrometheusTemplate(
-              "Velero backup {{ $labels.schedule }} has {{ $value }} item errors",
+            summary: escapePrometheusTemplate(
+              "Velero backup {{ $labels.schedule }} reported item errors",
+            ),
+            description: escapePrometheusTemplate(
+              'The latest backup for Velero schedule {{ $labels.schedule }} recorded {{ $value | printf "%.0f" }} item error(s), leaving specific cluster resources or volumes unbacked up. Run velero backup logs on the latest Backup CR to inspect the failing items.',
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -347,9 +359,11 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroHighErrorRate",
           annotations: {
-            summary: "High percentage of backup item errors",
-            message: escapePrometheusTemplate(
-              "Velero backup {{ $labels.schedule }} has {{ $value | humanizePercentage }} error rate. Check for large volumes or excluded resources causing failures.",
+            summary: escapePrometheusTemplate(
+              "High item error rate on Velero backup {{ $labels.schedule }}",
+            ),
+            description: escapePrometheusTemplate(
+              "Velero schedule {{ $labels.schedule }} failed to back up {{ $value | humanizePercentage }} of its target items, degrading backup completeness. Inspect Velero backup logs for storage, permission, or volume-snapshot failures.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -369,10 +383,9 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
         {
           alert: "VeleroBackupDeletionFailed",
           annotations: {
-            summary: "Velero backup deletion failed",
-            message: escapePrometheusTemplate(
-              "Velero backup deletion has failed - {{ $value }} deletion failures in the last 30m. This may cause storage exhaustion.",
-            ),
+            summary: "Velero expired-backup deletion is failing",
+            description:
+              "Velero failed to delete one or more expired backups in the last 30 minutes, which can leak object storage and local ZFS snapshots over time. Check DeleteBackupRequest CRs, Velero controller logs, and S3/Backblaze storage permissions.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(velero_backup_deletion_failure_total[30m]) > 0",
@@ -401,9 +414,9 @@ function getVeleroOrphanBackupCrRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "VeleroOrphanBackupCRs",
         annotations: {
-          summary: "Velero orphan ZFSBackup CRs detected",
-          message: escapePrometheusTemplate(
-            "Velero orphan ZFSBackup CRs present: {{ $value }} CR(s) cluster-wide have no matching live Velero Backup CR and are older than 24h. Unpruned CRs bloat etcd; run the CR-prune section of packages/temporal/runbooks/velero-orphan-snapshot-remediation.md.",
+          summary: "Orphaned Velero backup records detected",
+          description: escapePrometheusTemplate(
+            '{{ $value | printf "%.0f" }} ZFSBackup custom resource(s) older than 24 hours have no matching live Velero Backup CR, adding unpruned state to etcd. Run the CR-prune procedure in packages/temporal/runbooks/velero-orphan-snapshot-remediation.md.',
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -417,12 +430,12 @@ function getVeleroOrphanBackupCrRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "VeleroOrphanBackupCRsExcessive",
         annotations: {
-          summary: "Velero orphan ZFSBackup CRs accumulating",
-          message: escapePrometheusTemplate(
-            "Velero orphan ZFSBackup CRs at {{ $value }} cluster-wide (more than ~2 full backup sets of ~48 volumes). A completed prune should return this to 0; investigate why TTL expiry stopped reaping CRs.",
+          summary: "Orphaned Velero backup records are piling up",
+          description: escapePrometheusTemplate(
+            '{{ $value | printf "%.0f" }} orphaned ZFSBackup custom resources have accumulated cluster-wide, straining etcd and API server listings. Prune the orphaned CRs using packages/temporal/runbooks/velero-orphan-snapshot-remediation.md and investigate why TTL expiry stopped reaping them.',
           ),
         },
-        // ~2 full backup sets; the 2026-09 incident reached 1,797.
+        // 100 CRs is ~2 full backup sets (~48 volumes each); the 2026-09 incident reached 1,797.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           "velero_orphan_backup_crs_total > 100",
         ),
@@ -444,9 +457,9 @@ function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "VeleroOrphanLocalSnapshots",
         annotations: {
-          summary: "Velero orphan ZFS snapshots detected",
-          message: escapePrometheusTemplate(
-            "Velero orphan local ZFS snapshots present: {{ $value }} snapshot(s) cluster-wide have no matching live Velero Backup CR. Run packages/temporal/runbooks/velero-orphan-snapshot-remediation.md.",
+          summary: "Orphaned Velero local ZFS snapshots detected",
+          description: escapePrometheusTemplate(
+            '{{ $value | printf "%.0f" }} local ZFS snapshot(s) have no matching live Velero Backup CR, pinning deleted blocks on ZFS pools. Run packages/temporal/runbooks/velero-orphan-snapshot-remediation.md to verify and prune the orphaned snapshots.',
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -460,9 +473,9 @@ function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "VeleroOrphanLocalBytesExcessive",
         annotations: {
-          summary: "Velero orphan ZFS snapshots consuming significant disk",
-          message: escapePrometheusTemplate(
-            "Velero orphan local ZFS snapshots consume {{ $value | humanize1024 }}B cluster-wide. Run the remediation runbook to reclaim space.",
+          summary: "Orphaned Velero ZFS snapshots consuming over 1 GiB",
+          description: escapePrometheusTemplate(
+            "Orphaned local ZFS snapshots left behind by Velero are retaining {{ $value | humanize1024 }}B of pool space cluster-wide. Run packages/temporal/runbooks/velero-orphan-snapshot-remediation.md to reclaim disk space.",
           ),
         },
         // 1 GiB ceiling — anything above this is worth surfacing
@@ -477,13 +490,14 @@ function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "ZFSDatasetSnapshotCountExcessive",
         annotations: {
-          summary: "PVC dataset has excessive Velero-managed snapshot count",
-          message: escapePrometheusTemplate(
-            "Dataset {{ $labels.dataset }} on {{ $labels.node }} has {{ $value }} Velero-managed ZFS snapshots; expected at most ~26 (sum of schedule retention slots). Manual recovery snapshots are excluded. May indicate orphan accumulation; cross-check with velero_orphan_local_snapshots.",
+          summary: "ZFS dataset has too many backup snapshots",
+          description: escapePrometheusTemplate(
+            'ZFS dataset {{ $labels.dataset }} on {{ $labels.node }} has {{ $value | printf "%.0f" }} Velero-managed snapshots, retaining old blocks and risking pool space exhaustion. Check for stalled snapshot deletions or orphaned snapshots and follow packages/temporal/runbooks/velero-orphan-snapshot-remediation.md.',
           ),
         },
-        // Backstop: catches managed accumulation independently of orphan classification.
-        // Threshold is generous — 35 = 26 expected + 35% headroom for transient overlap.
+        // Backstop: catches managed accumulation independently of orphan classification
+        // (manual recovery snapshots are excluded). Expected max is ~26 (sum of schedule
+        // retention slots); 35 adds ~35% headroom for transient overlap.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           "max by (node, dataset) (velero_managed_snapshot_count) > 35",
         ),
@@ -496,10 +510,9 @@ function getVeleroOrphanSnapshotRuleGroup(): PrometheusRuleSpecGroups {
         alert: "VeleroOrphanAuditNotRunning",
         annotations: {
           summary:
-            "velero-orphan-audit workflow has not run successfully recently",
-          message: escapePrometheusTemplate(
-            "The velero-orphan-audit Temporal workflow has not incremented its success counter in 36h+. Detection metrics may be stale. Investigate the workflow in the Temporal UI.",
-          ),
+            "Velero orphan-snapshot audit workflow has not succeeded in 36h",
+          description:
+            "The daily velero-orphan-audit Temporal workflow has not recorded a successful run in over 36 hours, leaving orphan snapshot and ZFSBackup CR metrics stale. Check the schedule and recent workflow executions in the Temporal UI and worker logs.",
         },
         // Workflow runs daily at 03:30 PT; alert if success metrics disappear
         // for 36h. The counter is low-frequency and resets on worker rollouts,

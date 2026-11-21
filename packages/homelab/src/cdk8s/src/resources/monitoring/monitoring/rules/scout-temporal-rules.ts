@@ -19,9 +19,9 @@ export function getScoutTemporalRuleGroup(
       {
         alert: "ScoutTemporalDisconnected",
         annotations: {
-          summary: "Scout's embedded Temporal supervisor is disconnected",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has rejected durable starts because its Temporal supervisor has been disconnected for five minutes. Legacy execution must remain stopped; restore Temporal connectivity.",
+          summary: "Scout Temporal supervisor is disconnected",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has been disconnected from Temporal for over 5 minutes and is rejecting durable workflow starts. Check Temporal frontend health, network policies, and Scout pod logs to restore connectivity.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -33,9 +33,9 @@ export function getScoutTemporalRuleGroup(
       {
         alert: "ScoutTemporalWorkerMissing",
         annotations: {
-          summary: "A Scout Temporal task-queue class lost its worker",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} lacks a fresh worker for its declared {{ $labels.queue_class }} queue owner. For beta Workflow tasks inspect the current and nonzero ramp Worker Deployment builds; candidates and sticky pollers do not satisfy ownership.",
+          summary: "Scout Temporal task queue has no active worker",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has no healthy worker polling the {{ $labels.queue_class }} queue class, stalling queued workflows or activities. Check the owning deployment pods and, for beta workflow tasks, verify current and ramped Worker Deployment builds.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -47,9 +47,9 @@ export function getScoutTemporalRuleGroup(
       {
         alert: "ScoutTemporalWorkflowRoutingUnknown",
         annotations: {
-          summary: "Scout beta Workflow routing evidence is unavailable",
-          message:
-            "The application could not obtain fresh Worker Deployment routing. Inspect Temporal connectivity and the routing collector before interpreting poller health.",
+          summary: "Scout beta Temporal workflow routing is unavailable",
+          description:
+            "Scout beta cannot read fresh Temporal Worker Deployment routing metadata, leaving workflow poller ownership unverified. Check Temporal connectivity and the application pod's routing collector logs.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           SCOUT_WORKFLOW_ROUTING_UNKNOWN,
@@ -60,9 +60,9 @@ export function getScoutTemporalRuleGroup(
       {
         alert: "ScoutTemporalActivityFailing",
         annotations: {
-          summary: "Scout Temporal Activities are failing",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.exported_namespace }} queue {{ $labels.taskqueue }} Activity {{ $labels.activityType }} has failed in the last 30 minutes. Inspect the Workflow history and effect claims before retrying manually.",
+          summary: "Scout Temporal activities are failing",
+          description: escapePrometheusTemplate(
+            "Activity {{ $labels.activityType }} on queue {{ $labels.taskqueue }} in {{ $labels.exported_namespace }} has failed in the last 30 minutes, stalling dependent workflows. Inspect the workflow execution history and effect claims in Temporal before retrying manually.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -74,9 +74,9 @@ export function getScoutTemporalRuleGroup(
       {
         alert: "ScoutTemporalTaskScheduleToStartHigh",
         annotations: {
-          summary: "Scout Temporal tasks are waiting for a Worker",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.exported_namespace }} queue {{ $labels.taskqueue }} task p95 schedule-to-start latency has exceeded ten seconds. Inspect the affected Worker before tuning concurrency.",
+          summary: "Scout Temporal tasks are delayed waiting for workers",
+          description: escapePrometheusTemplate(
+            "Tasks on queue {{ $labels.taskqueue }} in {{ $labels.exported_namespace }} have a p95 schedule-to-start latency above 10 seconds, delaying durable background processing. Check worker pod health, CPU saturation, and poller capacity before adjusting concurrency.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -89,8 +89,8 @@ export function getScoutTemporalRuleGroup(
         alert: "ScoutTemporalDurabilityMetricsUnknown",
         annotations: {
           summary: "Scout Temporal durability metrics are unavailable",
-          message:
-            "Scout could not query report outbox, report delivery, or interactive projection state. Restore the Scout database metric query before relying on the age, drift, and delivery alerts.",
+          description:
+            "Scout cannot query report outbox, report delivery, or product projection state from PostgreSQL, leaving downstream staleness and delivery alerts blind. Check Scout database connectivity and the metric collector logs.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           '(scout_temporal_report_outbox_oldest_timestamp_seconds < 0) or (scout_temporal_stale_product_projections < 0) or (scout_report_delivery_unknown_chunks < 0) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="beta"}) or absent(scout_temporal_report_outbox_oldest_timestamp_seconds{environment="prod"}) or absent(scout_temporal_stale_product_projections{environment="beta"}) or absent(scout_temporal_stale_product_projections{environment="prod"}) or absent(scout_report_delivery_unknown_chunks{environment="beta"}) or absent(scout_report_delivery_unknown_chunks{environment="prod"})',
@@ -101,9 +101,9 @@ export function getScoutTemporalRuleGroup(
       {
         alert: "ScoutTemporalReportOutboxStale",
         annotations: {
-          summary: "Scout's report Schedule outbox is stale",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has an unprocessed report Schedule outbox row older than five minutes. Inspect the singleton reconciler Workflow and Temporal Schedule.",
+          summary: "Scout report schedule outbox is stalled",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has an unprocessed report schedule outbox entry older than 5 minutes, delaying schedule updates in Temporal. Check the singleton report schedule reconciler workflow and its Temporal schedule.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -115,9 +115,9 @@ export function getScoutTemporalRuleGroup(
       {
         alert: "ScoutProductAnnouncementFollowUpStale",
         annotations: {
-          summary: "A delivered Scout announcement needs bookkeeping repair",
-          message:
-            "Discord delivery is confirmed but required product bookkeeping is older than five minutes. Inspect the notification-intent-expiry reconciliation Activity.",
+          summary: "Scout delivered announcement bookkeeping is delayed",
+          description:
+            "A Scout Discord announcement was delivered over 5 minutes ago without completing product database bookkeeping, leaving follow-up state inconsistent. Check the notification-intent-expiry reconciliation activity and database health.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           "scout_product_follow_up_oldest_timestamp_seconds > 0 and (time() - scout_product_follow_up_oldest_timestamp_seconds) > 300",
@@ -129,8 +129,8 @@ export function getScoutTemporalRuleGroup(
         alert: "ScoutProductDurabilityMetricsUnknown",
         annotations: {
           summary: "Scout product durability metrics are unavailable",
-          message:
-            "Restore the database metric sweep before relying on announcement repair alerts.",
+          description:
+            "Scout cannot query product follow-up durability metrics from PostgreSQL, leaving announcement bookkeeping repair alerts blind. Check Scout database connectivity and the metric sweep logs.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           '(scout_product_follow_up_oldest_timestamp_seconds < 0) or absent(scout_product_follow_up_oldest_timestamp_seconds{environment="beta"}) or absent(scout_product_follow_up_oldest_timestamp_seconds{environment="prod"})',
@@ -139,11 +139,12 @@ export function getScoutTemporalRuleGroup(
         labels: { severity: "warning" },
       },
       {
+        // Unknown ownership mismatches are deliberately not auto-deleted by the reconciler.
         alert: "ScoutTemporalReportScheduleDrift",
         annotations: {
-          summary: "Scout report Schedules differ from product state",
-          message:
-            "The report Schedule audit found a missing, drifted, orphaned, or ownership-mismatched Schedule. Unknown ownership mismatches are deliberately not deleted.",
+          summary: "Scout Temporal report schedules have drifted",
+          description:
+            "The Scout report schedule audit detected missing, drifted, orphaned, or ownership-mismatched schedules between PostgreSQL and Temporal, so scheduled reports may miss runs or fire unexpectedly. Check the schedule audit logs and reconcile mismatched schedules.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           "scout_temporal_report_schedule_drift > 0 or scout_temporal_report_schedule_orphans > 0",
@@ -154,9 +155,9 @@ export function getScoutTemporalRuleGroup(
       {
         alert: "ScoutTemporalProductProjectionStale",
         annotations: {
-          summary: "Scout product execution state is stale",
-          message:
-            "An Explore or report-AI projection has remained active beyond its 40-minute execution budget. Temporal remains authoritative; reconcile the product row from Workflow state.",
+          summary: "Scout web query is stuck in running state",
+          description:
+            "An Explore or report-AI execution row has stayed active past its 40-minute budget, leaving the UI stuck in a running state. Check the corresponding Temporal workflow state and reconcile the product database row.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           "scout_temporal_stale_product_projections > 0",
@@ -167,11 +168,11 @@ export function getScoutTemporalRuleGroup(
       {
         alert: "ScoutTemporalProviderAttemptInterrupted",
         annotations: {
-          summary: "Scout salvaged an ambiguous provider attempt",
-          message: escapePrometheusTemplate(
+          summary: "Scout AI provider attempt was interrupted mid-flight",
+          description: escapePrometheusTemplate(
             transition
-              ? "Scout {{ $labels.environment }} interrupted {{ $value }} {{ $labels.kind }} provider attempt(s) rather than risk duplicate model spend. Inspect persisted partial output and the original Worker interruption."
-              : "Scout interrupted {{ $value }} {{ $labels.kind }} provider attempt(s) rather than risk duplicate model spend. Inspect persisted partial output and the original Worker interruption.",
+              ? "Scout {{ $labels.environment }} halted {{ $value }} interrupted {{ $labels.kind }} provider attempt(s) in the last 30 minutes instead of blindly retrying and risking duplicate model spend. Inspect persisted partial output and worker restart or eviction logs."
+              : "Scout halted {{ $value }} interrupted {{ $labels.kind }} provider attempt(s) in the last 30 minutes instead of blindly retrying and risking duplicate model spend. Inspect persisted partial output and worker restart or eviction logs.",
           ),
         },
         // Under transition rendering the alert keeps the environment label, so
@@ -191,9 +192,9 @@ export function getScoutTemporalRuleGroup(
         // report posts twice.
         alert: "ScoutReportDeliveryUnknown",
         annotations: {
-          summary: "Scout report delivery is waiting on an uncertain send",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} holds {{ $value }} report delivery chunk(s) in UNKNOWN: the Discord send left and its answer never arrived. Nothing re-sends these, by design. Confirm whether each message landed, then resolve it through the operations console.",
+          summary: "Scout report delivery has uncertain Discord sends",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} holds {{ $value }} report delivery chunk(s) in UNKNOWN state because the Discord send response never arrived, and automatic retries are paused to avoid duplicate posts. Verify whether each message posted in Discord, then resolve the chunk in the operations console.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

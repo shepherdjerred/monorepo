@@ -1,4 +1,9 @@
-import sanitizeHtml from "sanitize-html";
+import {
+  buildAlertOpeningDocument,
+  buildAlertTruncationDocument,
+} from "@shepherdjerred/ops-model/email/alert-context.ts";
+import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
+import { renderEmailText } from "@shepherdjerred/ops-model/email/render-text.ts";
 import { z } from "zod";
 
 import {
@@ -14,7 +19,10 @@ import {
   type AlertmanagerSnapshotAlert,
 } from "#shared/schema";
 import { ALERTS_PUBLIC_URL } from "#domain/ops-changes";
-import { instantTextToEpochNanoseconds } from "#shared/time";
+import {
+  epochNanosecondsToInstantText,
+  instantTextToEpochNanoseconds,
+} from "#shared/time";
 
 export const AlertOccurrenceRecordSchema = z.object({
   id: AlertOccurrenceIdSchema,
@@ -116,61 +124,43 @@ export function openingEmail(
 ): {
   subject: string;
   htmlBody: string;
+  plainBody: string;
 } {
-  const renderedAlerts = alerts.slice(0, 25);
-  const locallyOmittedAlerts = alerts.length - renderedAlerts.length;
-  const critical = alerts.filter(
-    (alert) => alert.severity === "critical",
-  ).length;
-  const prefix = critical > 0 ? "critical" : "warning";
-  const subject = `[Alerts] ${alerts.length.toString()} ${prefix} alert${alerts.length === 1 ? "" : "s"} opened`;
-  const rows = renderedAlerts
-    .map((alert) => {
-      const namespace =
-        alert.namespace === null
-          ? ""
-          : ` <code>${escapeHtml(alert.namespace)}</code>`;
-      return `<li><strong>${escapeHtml(alert.summary)}</strong>${namespace}<br><code>${escapeHtml(alert.alertname)}</code></li>`;
-    })
-    .join("");
-  const omissionParts = [
-    ...(locallyOmittedAlerts === 0
-      ? []
-      : [
-          `${locallyOmittedAlerts.toString()} additional accepted alert${locallyOmittedAlerts === 1 ? " was" : "s were"} omitted from this email.`,
-        ]),
-    ...(alertmanagerTruncatedAlerts === 0
-      ? []
-      : [
-          `Alertmanager omitted ${alertmanagerTruncatedAlerts.toString()} additional alert${alertmanagerTruncatedAlerts === 1 ? "" : "s"} from this webhook delivery.`,
-        ]),
-  ];
-  const omission =
-    omissionParts.length === 0
-      ? ""
-      : `<p><strong>Omitted:</strong> ${omissionParts.join(" ")}</p>`;
+  const { subject, document } = buildAlertOpeningDocument({
+    alerts: alerts.map((alert) => ({
+      id: alert.id,
+      alertname: alert.alertname,
+      namespace: alert.namespace,
+      severity: alert.severity,
+      summary: alert.summary,
+      openedAtIso: epochNanosecondsToInstantText(alert.openedAtNs),
+      labels: alert.labels,
+      annotations: alert.annotations,
+    })),
+    alertmanagerTruncatedAlerts,
+    hubBaseUrl: ALERTS_PUBLIC_URL,
+  });
   return {
     subject,
-    htmlBody: `<h1>Alerts opened</h1><ul>${rows}</ul>${omission}<p><a href="${ALERTS_PUBLIC_URL}/alerts">Open Alerts</a></p>`,
+    htmlBody: renderEmailHtml(document),
+    plainBody: renderEmailText(document),
   };
 }
 
 export function truncationEmail(truncatedAlerts: number): {
   subject: string;
   htmlBody: string;
+  plainBody: string;
 } {
+  const { subject, document } = buildAlertTruncationDocument(
+    truncatedAlerts,
+    ALERTS_PUBLIC_URL,
+  );
   return {
-    subject: "[Alerts] Alertmanager delivery truncated",
-    htmlBody: `<h1>Alertmanager delivery truncated</h1><p>Alertmanager omitted ${truncatedAlerts.toString()} additional alert${truncatedAlerts === 1 ? "" : "s"} from this webhook delivery.</p><p><a href="${ALERTS_PUBLIC_URL}/alerts">Open Alerts</a></p>`,
+    subject,
+    htmlBody: renderEmailHtml(document),
+    plainBody: renderEmailText(document),
   };
-}
-
-function escapeHtml(value: string): string {
-  return sanitizeHtml(value, {
-    allowedAttributes: {},
-    allowedTags: [],
-    disallowedTagsMode: "escape",
-  });
 }
 
 export function snapshotStartNs(alert: AlertmanagerSnapshotAlert): bigint {

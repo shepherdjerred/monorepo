@@ -55,11 +55,12 @@ describe("Scout Client alert rules", () => {
     }
   });
 
-  test("every rule explains its threshold in its message", () => {
+  test("every rule defines crisp summary and description annotations", () => {
     for (const rule of client.rules ?? []) {
-      expect(rule.annotations?.["message"]).toMatch(
-        /alert above|publishing -1/,
-      );
+      expect(rule.annotations?.["summary"]).toBeDefined();
+      expect(rule.annotations?.["summary"]?.length).toBeLessThanOrEqual(90);
+      expect(rule.annotations?.["description"]).toBeDefined();
+      expect(rule.annotations?.["message"]).toBeUndefined();
     }
   });
 });

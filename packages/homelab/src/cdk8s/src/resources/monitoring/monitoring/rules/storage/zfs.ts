@@ -12,10 +12,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsArcHitRateLow",
           annotations: {
+            summary: "ZFS read cache hit rate is low",
             description: escapePrometheusTemplate(
-              "ZFS ARC hit rate on {{ $labels.instance }} is low: {{ $value | humanizePercentage }} (should be >85%)",
+              'ZFS ARC cache hit rate on {{ $labels.instance }} is {{ $value | printf "%.1f" }}% (below the 85% target), increasing disk read I/O and latency. Check for uncached large sequential scans or workloads exceeding the ARC size cap.',
             ),
-            summary: "ZFS ARC hit rate is low - performance impact expected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "(rate(node_zfs_arc_hits[5m]) / (rate(node_zfs_arc_hits[5m]) + rate(node_zfs_arc_demand_data_misses[5m]) + rate(node_zfs_arc_demand_metadata_misses[5m]))) * 100 < 85",
@@ -26,11 +26,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsArcHitRateCritical",
           annotations: {
+            summary: "ZFS read cache hit rate is critically low",
             description: escapePrometheusTemplate(
-              "ZFS ARC hit rate on {{ $labels.instance }} is critically low: {{ $value | humanizePercentage }} (should be >85%)",
+              'ZFS ARC cache hit rate on {{ $labels.instance }} dropped to {{ $value | printf "%.1f" }}% (below 70%), causing heavy disk read thrashing and degraded storage latency. Inspect memory- or I/O-intensive workloads thrashing the cache and review ARC sizing.',
             ),
-            summary:
-              "ZFS ARC hit rate is critically low - severe performance impact",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "(rate(node_zfs_arc_hits[5m]) / (rate(node_zfs_arc_hits[5m]) + rate(node_zfs_arc_demand_data_misses[5m]) + rate(node_zfs_arc_demand_metadata_misses[5m]))) * 100 < 70",
@@ -43,10 +42,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsArcMetadataHigh",
           annotations: {
+            summary: "ZFS cache metadata is using over 75% of cache",
             description: escapePrometheusTemplate(
-              "ZFS ARC metadata usage on {{ $labels.instance }} is high: {{ $value | humanize }} bytes (>75% of ARC)",
+              "ZFS ARC metadata is consuming {{ $value | humanizePercentage }} of the total ARC target on {{ $labels.instance }}, crowding out cached file data and hurting read performance. Check for excessive snapshot counts or workloads scanning millions of small files.",
             ),
-            summary: "ZFS ARC metadata usage is high",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "(node_zfs_arc_arc_meta_used / node_zfs_arc_c) > 0.75",
@@ -57,10 +56,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsArcEvictionHigh",
           annotations: {
+            summary: "ZFS read cache is thrashing heavily",
             description: escapePrometheusTemplate(
-              "ZFS ARC on {{ $labels.instance }} has sustained extreme eviction churn: {{ $value }}/s",
+              'ZFS ARC on {{ $labels.instance }} is evicting {{ $value | printf "%.0f" }} entries/s, indicating severe cache thrashing that can increase CPU overhead and disk reads. Inspect workloads scanning datasets larger than ARC and check ZfsArcHitRateLow.',
             ),
-            summary: "Sustained extreme ZFS ARC eviction churn",
           },
           // The ARC is deliberately right-sized (16Gi, 2026-07-10) and runs pinned at
           // cap, so steady eviction is normal operation — not memory pressure. Only
@@ -82,10 +81,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsL2ArcIOErrors",
           annotations: {
+            summary: "ZFS secondary cache disk has I/O errors",
             description: escapePrometheusTemplate(
-              "ZFS L2ARC on {{ $labels.instance }} is experiencing IO errors: {{ $value }} errors",
+              'ZFS L2ARC on {{ $labels.instance }} recorded {{ $value | printf "%.0f" }} I/O error(s) in the last hour, degrading cache reads and indicating possible cache-device failure. Check zpool status, SMART health, and kernel logs for the L2ARC device.',
             ),
-            summary: "ZFS L2ARC IO errors detected - check L2ARC device health",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "increase(node_zfs_arc_l2_io_error[1h]) > 0",
@@ -96,11 +95,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsL2ArcWriteErrors",
           annotations: {
+            summary: "ZFS secondary cache disk has write errors",
             description: escapePrometheusTemplate(
-              "ZFS L2ARC on {{ $labels.instance }} has write errors: {{ $value }} errors",
+              'ZFS L2ARC on {{ $labels.instance }} recorded {{ $value | printf "%.0f" }} write error(s) in the last hour, preventing cache population and signaling possible L2ARC device failure. Inspect zpool status and SMART metrics for the L2ARC drive and remove or replace it if faulty.',
             ),
-            summary:
-              "ZFS L2ARC write errors detected - L2ARC device may be failing",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "increase(node_zfs_arc_l2_writes_error[1h]) > 0",
@@ -111,10 +109,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsL2ArcChecksumErrors",
           annotations: {
+            summary: "ZFS secondary cache disk has checksum errors",
             description: escapePrometheusTemplate(
-              "ZFS L2ARC on {{ $labels.instance }} has checksum errors: {{ $value }} errors - data integrity concern",
+              'ZFS L2ARC on {{ $labels.instance }} detected {{ $value | printf "%.0f" }} bad checksum(s) in the last hour, forcing fallback reads from primary pool disks. Check SMART health and cabling on the L2ARC device and replace it if errors persist.',
             ),
-            summary: "ZFS L2ARC checksum errors detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "increase(node_zfs_arc_l2_cksum_bad[1h]) > 0",
@@ -132,10 +130,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsMemoryPressureHigh",
           annotations: {
+            summary: "ZFS cache is under memory pressure",
             description: escapePrometheusTemplate(
-              "ZFS memory pressure on {{ $labels.instance }} is high: throttle count {{ $value }}",
+              'ZFS on {{ $labels.instance }} is throttling operations due to host memory pressure ({{ $value | printf "%.1f" }} throttles/s), increasing storage latency. Check node memory usage, pod memory limits, and ARC size pressure on the host.',
             ),
-            summary: "High ZFS memory pressure detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_zfs_arc_memory_throttle_count[5m]) > 10",
@@ -146,10 +144,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsMemoryReclaim",
           annotations: {
+            summary: "ZFS cache is shrinking to free host memory",
             description: escapePrometheusTemplate(
-              "ZFS on {{ $labels.instance }} is under memory pressure: need_free={{ $value | humanize }} bytes",
+              "ZFS ARC on {{ $labels.instance }} needs to free {{ $value | humanize1024 }}B to satisfy kernel memory demand, shrinking cache capacity and potentially stalling allocations. Inspect top memory-consuming pods on the node and check for OOM or memory leak activity.",
             ),
-            summary: "ZFS memory reclaim active - system under memory pressure",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "node_zfs_arc_arc_need_free > 0",
@@ -160,10 +158,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsAbdPageAllocRetries",
           annotations: {
+            summary: "ZFS buffer memory allocations are retrying",
             description: escapePrometheusTemplate(
-              "ZFS ABD on {{ $labels.instance }} has frequent page allocation retries: {{ $value }}/s - memory pressure indicator",
+              'ZFS scatter-buffer page allocations on {{ $labels.instance }} are retrying {{ $value | printf "%.1f" }} times/s, signaling kernel memory pressure or fragmentation that slows I/O. Check available host RAM and memory-intensive workloads on the node.',
             ),
-            summary: "High ZFS ABD page allocation retries",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_zfs_abd_scatter_page_alloc_retry[5m]) > 50",
@@ -181,10 +179,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsHashCollisionsHigh",
           annotations: {
+            summary: "ZFS cache lookup collisions are high",
             description: escapePrometheusTemplate(
-              "ZFS hash collisions on {{ $labels.instance }} are far above the 30d norm: {{ $value }}/s - may impact performance",
+              'ZFS ARC hash lookups on {{ $labels.instance }} are colliding {{ $value | printf "%.0f" }} times/s, adding CPU overhead to cache lookups. Check workload I/O concurrency and ZFS ARC hash table sizing if storage latency is elevated.',
             ),
-            summary: "High ZFS hash collisions detected",
           },
           // Threshold history: the old 1000/s threshold was routinely exceeded even
           // under the oversized 48Gi ARC (30d: p50 36/s, p95 5.1k/s, max 13.5k/s) —
@@ -200,10 +198,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsHashChainLengthHigh",
           annotations: {
+            summary: "ZFS cache lookup chains are unusually long",
             description: escapePrometheusTemplate(
-              "ZFS hash chain max length on {{ $labels.instance }} is high: {{ $value }} - performance degradation possible",
+              "The longest ZFS ARC hash chain on {{ $labels.instance }} reached {{ $value }} entries, which can slow cache lookups under heavy I/O. Review ZFS module hash-table parameters and check ARC hash collision rates if read latency rises.",
             ),
-            summary: "ZFS hash chain length is high",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "node_zfs_arc_hash_chain_max > 20",
@@ -221,10 +219,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsL2ArcRebuildErrors",
           annotations: {
+            summary: "ZFS secondary cache failed to rebuild",
             description: escapePrometheusTemplate(
-              "ZFS L2ARC rebuild on {{ $labels.instance }} has errors - check L2ARC device health and logs",
+              "ZFS L2ARC metadata rebuild on {{ $labels.instance }} encountered I/O, checksum, or header errors in the last hour, leaving the secondary cache degraded or offline. Check zpool status, kernel logs, and SMART health for the L2ARC device.",
             ),
-            summary: "ZFS L2ARC rebuild errors detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "increase(node_zfs_arc_l2_rebuild_io_errors[1h]) > 0 or increase(node_zfs_arc_l2_rebuild_cksum_lb_errors[1h]) > 0 or increase(node_zfs_arc_l2_rebuild_dh_errors[1h]) > 0",
@@ -235,10 +233,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsL2ArcLowMemoryAborts",
           annotations: {
+            summary: "ZFS secondary cache writes paused due to low RAM",
             description: escapePrometheusTemplate(
-              "ZFS L2ARC on {{ $labels.instance }} is aborting operations due to low memory: {{ $value }} aborts",
+              'ZFS L2ARC on {{ $labels.instance }} aborted {{ $value | printf "%.0f" }} feed cycle(s) in the last hour due to low system memory, preventing secondary cache warm-up. Check host memory pressure and pod RAM usage on the node.',
             ),
-            summary: "ZFS L2ARC low memory aborts detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "increase(node_zfs_arc_l2_abort_lowmem[1h]) > 0",
@@ -249,10 +247,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsEvictSkipHigh",
           annotations: {
+            summary: "ZFS cache evictions are stalling on locks",
             description: escapePrometheusTemplate(
-              "ZFS on {{ $labels.instance }} is skipping evictions frequently: {{ $value }}/s - potential lock contention",
+              'ZFS ARC on {{ $labels.instance }} is skipping {{ $value | printf "%.0f" }} buffer evictions/s due to held locks over the last hour, indicating lock contention under heavy I/O. Check for stalled disk operations or runaway metadata workloads on the node.',
             ),
-            summary: "High ZFS eviction skips - potential lock contention",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_zfs_arc_evict_skip[5m]) > 100",
@@ -263,10 +261,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsL2ArcWriteLockRetries",
           annotations: {
+            summary: "ZFS secondary cache writes are contending on locks",
             description: escapePrometheusTemplate(
-              "ZFS L2ARC on {{ $labels.instance }} has frequent write lock retries: {{ $value }}/s - performance impact",
+              'ZFS L2ARC feed threads on {{ $labels.instance }} are retrying locks {{ $value | printf "%.1f" }} times/s, indicating contention between ARC eviction and L2ARC writes. Check I/O concurrency and L2ARC device latency on the host.',
             ),
-            summary: "High ZFS L2ARC write lock retries",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_zfs_arc_l2_writes_lock_retry[5m]) > 10",
@@ -284,10 +282,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsArcSizeBelowMinimum",
           annotations: {
+            summary: "ZFS read cache shrunk below its minimum size",
             description: escapePrometheusTemplate(
-              "ZFS ARC size on {{ $labels.instance }} is below minimum: {{ $value | humanize }} bytes is less than configured minimum",
+              "ZFS ARC target size on {{ $labels.instance }} shrunk to {{ $value | humanize1024 }}B, below zfs_arc_min, indicating severe host memory exhaustion. Inspect node memory usage immediately and relieve pod memory pressure before OOM kills occur.",
             ),
-            summary: "ZFS ARC size is below configured minimum",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "node_zfs_arc_c < node_zfs_arc_c_min",
@@ -298,10 +296,10 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsSystemMemoryLow",
           annotations: {
+            summary: "Host free memory for ZFS is critically low",
             description: escapePrometheusTemplate(
-              "ZFS reports system free memory on {{ $labels.instance }} is critically low: {{ $value | humanize }} bytes",
+              "ZFS reports only {{ $value | humanize1024 }}B of free system memory above its reserve on {{ $labels.instance }} (below 256 MiB), risking kernel stalls or OOM kills. Check node memory consumers immediately and evict or resize runaway pods.",
             ),
-            summary: "ZFS system free memory is critically low",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "node_zfs_arc_arc_sys_free < 268435456", // Less than 256MB

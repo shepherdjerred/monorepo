@@ -19,6 +19,13 @@ test("Alloy unwind alerts fire on a full table, not on the normal plateau", asyn
 
   const rule = clusterHygieneRule("AlloyUnwindTableFull");
   expect(rule.labels?.["severity"]).toBe("warning");
+  for (const entry of getClusterHygieneRuleGroups().flatMap(
+    (group) => group.rules ?? [],
+  )) {
+    expect(entry.annotations?.["summary"]?.length ?? 0).toBeGreaterThan(0);
+    expect(entry.annotations?.["description"]?.length ?? 0).toBeGreaterThan(0);
+    expect(entry.annotations?.["message"]).toBeUndefined();
+  }
   const labels = 'namespace="alloy",pod="alloy-a"';
   await runPromtoolFixture({
     evaluation_interval: "1m",

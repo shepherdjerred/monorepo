@@ -1,3 +1,4 @@
+import { OPS_MAILBOXES } from "@shepherdjerred/ops-model/email/mailbox.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const flag = vi.hoisted(() => vi.fn());
@@ -12,28 +13,33 @@ beforeEach(() => {
 });
 
 describe("dashboard mail configuration", () => {
-  it("preserves disabled incident mail and existing routing on absence", async () => {
+  it("preserves disabled incident mail and semantic mailbox defaults on absence", async () => {
     expect(await alertEmailConfig()).toEqual({
       EMAIL_ENABLED: "false",
-      POSTAL_FROM: "alerts@sjer.red",
-      POSTAL_TO: "dependencies@sjer.red",
+      POSTAL_FROM: OPS_MAILBOXES.alerts.from,
+      POSTAL_TO: OPS_MAILBOXES.alerts.to,
+      POSTAL_DIGEST_FROM: OPS_MAILBOXES.digests.from,
+      POSTAL_DIGEST_TO: OPS_MAILBOXES.digests.to,
     });
   });
 
-  it("uses false and routing answers without falling through", async () => {
+  it("uses false and separate incident and digest routing answers without falling through", async () => {
+    const answers: Record<string, unknown> = {
+      alertEmailEnabled: false,
+      incidentEmailFrom: "Custom Alerts <incident@example.test>",
+      incidentEmailTo: "incident@example.test",
+      digestEmailFrom: "digest@example.test",
+      digestEmailTo: "digest-inbox@example.test",
+    };
     flag.mockImplementation(({ key }: { key: string }) =>
-      Promise.resolve({
-        value:
-          key !== "alertEmailEnabled" &&
-          (key === "alertEmailFrom"
-            ? "sender@example.test"
-            : "recipient@example.test"),
-      }),
+      Promise.resolve({ value: answers[key] }),
     );
     expect(await alertEmailConfig()).toEqual({
       EMAIL_ENABLED: "false",
-      POSTAL_FROM: "sender@example.test",
-      POSTAL_TO: "recipient@example.test",
+      POSTAL_FROM: "Custom Alerts <incident@example.test>",
+      POSTAL_TO: "incident@example.test",
+      POSTAL_DIGEST_FROM: "digest@example.test",
+      POSTAL_DIGEST_TO: "digest-inbox@example.test",
     });
   });
 
@@ -49,7 +55,13 @@ describe("dashboard mail configuration", () => {
     flag.mockRejectedValue(new Error("unavailable"));
     try {
       const config = await alertEmailConfig();
-      expect(config.EMAIL_ENABLED).toBe("false");
+      expect(config).toEqual({
+        EMAIL_ENABLED: "false",
+        POSTAL_FROM: OPS_MAILBOXES.alerts.from,
+        POSTAL_TO: OPS_MAILBOXES.alerts.to,
+        POSTAL_DIGEST_FROM: OPS_MAILBOXES.digests.from,
+        POSTAL_DIGEST_TO: OPS_MAILBOXES.digests.to,
+      });
       expect(warn).toHaveBeenCalled();
     } finally {
       warn.mockRestore();

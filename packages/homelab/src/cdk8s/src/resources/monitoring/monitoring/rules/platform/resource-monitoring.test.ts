@@ -3,6 +3,8 @@ import {
   CI_NODE_HOSTNAME,
   PROD_NODE_HOSTNAME,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import { getArgoCDRuleGroups } from "./argocd.ts";
+import { getEtcdCustomRuleGroups } from "./etcd-custom.ts";
 import { getResourceMonitoringRuleGroups } from "./resource-monitoring.ts";
 import { getBuildkitdRuleGroups } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/buildkitd.ts";
 import { getFliptRuleGroups } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/flipt.ts";
@@ -332,8 +334,63 @@ describe("feature flag provider readiness alert", () => {
     expect(alert?.expr.value).toBe(
       "(feature_flag_provider_ready == 0) and on (job, instance) feature_flag_provider_info",
     );
-    expect(alert?.annotations?.["message"]).toContain(
-      "retries in the background",
-    );
+    expect(
+      (
+        alert?.annotations?.["description"] ?? alert?.annotations?.["message"]
+      )?.trim().length ?? 0,
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe("platform alert annotation contract", () => {
+  it("defines summary and description without legacy message or bracket prefixes", () => {
+    const groups = [
+      ...getArgoCDRuleGroups(),
+      ...getEtcdCustomRuleGroups(),
+      ...getResourceMonitoringRuleGroups(),
+    ];
+    const alertRules = groups
+      .flatMap((group) => group.rules ?? [])
+      .filter((rule) => rule.alert !== undefined);
+
+    expect(alertRules.length).toBeGreaterThan(0);
+    for (const rule of alertRules) {
+      const summary = rule.annotations?.["summary"];
+      const description = rule.annotations?.["description"];
+      expect(
+        summary?.trim().length ?? 0,
+        `${String(rule.alert)} summary`,
+      ).toBeGreaterThan(0);
+      expect(
+        description?.trim().length ?? 0,
+        `${String(rule.alert)} description`,
+      ).toBeGreaterThan(0);
+      expect(
+        rule.annotations?.["message"],
+        `${String(rule.alert)} message`,
+      ).toBeUndefined();
+      expect(summary?.startsWith("["), `${String(rule.alert)} bracket`).toBe(
+        false,
+      );
+      const unescapedSummary = (summary ?? "")
+        .replaceAll('{{ "{{" }}', "{{")
+        .replaceAll('{{ "}}" }}', "}}");
+      expect(
+        unescapedSummary.length,
+        `${String(rule.alert)} summary length (${unescapedSummary})`,
+      ).toBeLessThanOrEqual(90);
+      // Every Go template directive must be Helm-escaped via {{ "{{" }} / {{ "}}" }}.
+      for (const text of [summary ?? "", description ?? ""]) {
+        const stripped = text
+          .replaceAll('{{ "{{" }}', "")
+          .replaceAll('{{ "}}" }}', "");
+        expect(stripped, `${String(rule.alert)} unescaped {{`).not.toContain(
+          "{{",
+        );
+        expect(stripped, `${String(rule.alert)} unescaped }}`).not.toContain(
+          "}}",
+        );
+      }
+    }
   });
 });

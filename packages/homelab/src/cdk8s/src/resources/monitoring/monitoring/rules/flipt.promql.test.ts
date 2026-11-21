@@ -22,6 +22,11 @@ test("replacement observer OFF wins over old ON and stale observations disappear
   expect(
     rules.find((rule) => rule.alert === "FeatureFlagEvaluationErrors")?.for,
   ).toBe("10m");
+  for (const fliptRule of rules) {
+    expect(fliptRule.annotations?.["summary"]).toMatch(/\S/u);
+    expect(fliptRule.annotations?.["description"]).toMatch(/\S/u);
+    expect(fliptRule.annotations?.["message"]).toBeUndefined();
+  }
   await runPromtoolFixture({
     evaluation_interval: "1m",
     tests: [

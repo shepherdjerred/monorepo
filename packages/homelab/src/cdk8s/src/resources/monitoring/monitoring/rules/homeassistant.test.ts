@@ -407,7 +407,7 @@ describe("Home Assistant pet-care fan-out and feeder battery rules", () => {
     );
     expect(livingRoomBattery?.for).toBe("2h");
     expect(livingRoomBattery?.annotations?.["summary"]).toBe(
-      "Living Room PetLibro feeder backup battery low",
+      "Living Room PetLibro feeder backup battery is low",
     );
     expect(guestRoomBattery?.expr.value).toBe(
       'homeassistant_sensor_battery_percent{entity="sensor.granary_smart_camera_feeder_battery_ac_2"} <= 20',

@@ -375,10 +375,9 @@ export function getWoodpeckerRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "WoodpeckerCIIOTelemetryMissing",
           annotations: {
-            summary:
-              "A running Woodpecker job pod has no attributed parent-cgroup telemetry",
+            summary: "CI job pod is missing disk I/O metrics",
             description: escapePrometheusTemplate(
-              "Woodpecker pod {{ $labels.pod }} has been running for more than one minute without a unique, metadata-attributed pod-parent cgroup sample.",
+              "Running Woodpecker CI pod {{ $labels.pod }} has been active for over 1 minute without attributed pod-level telemetry, leaving per-step CI disk I/O accounting incomplete. Check kube-state-metrics label and annotation allowlists and cAdvisor cgroup metrics on the CI node.",
             ),
           },
           // Select the running cohort from the pod name itself. Requiring
@@ -401,12 +400,17 @@ unless on (namespace, pod)
           },
         },
         {
+          // Conservative cohort guardrail: pods crossing the left 24h boundary
+          // include earlier writes, and completed pods remain until their last
+          // sample ages out, so this is not an exact 24-hour write delta. The
+          // rounded 4 TiB operational guardrail across every CI node is
+          // separate from the reporter's exact fixed-corpus 50% acceptance gate.
           alert: "WoodpeckerCIPodLifetimeWritesSeen24hBudgetExceeded",
           annotations: {
             summary:
-              "Woodpecker pod-lifetime writes seen in 24 hours exceeded the rounded operational budget",
+              "Woodpecker CI 24-hour disk write volume exceeded 4 TiB budget",
             description: escapePrometheusTemplate(
-              "Woodpecker pod/device lifetime maxima seen in the last 24 hours total {{ $value | humanize1024 }}B. Pods crossing the left boundary include earlier writes, and completed pods remain until their last sample ages out. This conservative cohort value is not an exact 24-hour write delta. The rounded 4 TiB operational guardrail across every node running CI is separate from the reporter's exact fixed-corpus 50% acceptance gate.",
+              "Woodpecker CI pods seen in the last 24 hours wrote {{ $value | humanize1024 }}B cumulatively, exceeding the 4 TiB operational SSD wear guardrail. Inspect disk writes by CI step key in Grafana to identify noisy steps or broken caches.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -425,9 +429,10 @@ unless on (namespace, pod)
           // actually connected to the server.
           alert: "WoodpeckerAgentDisconnected",
           annotations: {
-            summary: "Woodpecker agents are running but none is connected",
+            summary:
+              "Woodpecker CI agents are running but disconnected from server",
             description:
-              "The Woodpecker agent Deployment reports available replicas, but the server has reported no connected agent for five minutes. Queued CI workflows will sit unclaimed.",
+              "Woodpecker agent pods are running, but the server has reported zero connected agents for 5 minutes, leaving CI pipelines stuck in queue. Check woodpecker-agent and woodpecker-server logs for gRPC connectivity or authentication errors.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
   sum(kube_deployment_status_replicas_available{
@@ -449,11 +454,13 @@ and on ()
           },
         },
         {
+          // Bun cache GC prunes at 60% usage; crossing 75% means GC is falling
+          // behind or blocked by active job locks.
           alert: "WoodpeckerBunCacheUsageHigh",
           annotations: {
-            summary: "Woodpecker Bun cache is more than 75% full",
+            summary: "Woodpecker Bun cache volume is over 75% full",
             description: escapePrometheusTemplate(
-              "The shared Woodpecker Bun cache PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full. The collector should clear it at 60%; investigate collector health and lock contention.",
+              "Shared Woodpecker Bun cache PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full, risking disk exhaustion during CI installs if growth continues. Check the ci-bun-cache-gc maintenance schedule and inspect for lock contention from long-running CI jobs.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -469,9 +476,9 @@ and on ()
         {
           alert: "WoodpeckerBunCacheUsageCritical",
           annotations: {
-            summary: "Woodpecker Bun cache is more than 90% full",
+            summary: "Woodpecker Bun cache volume is over 90% full",
             description: escapePrometheusTemplate(
-              "The shared Woodpecker Bun cache PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full and approaching install failure.",
+              "Shared Woodpecker Bun cache PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full and about to fail CI dependency installs with out-of-space errors. Run or unblock the ci-bun-cache-gc workflow immediately and inspect ZFS dataset usage on liskov.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -487,10 +494,9 @@ and on ()
         {
           alert: "WoodpeckerWorkspaceClaimLeaked",
           annotations: {
-            summary:
-              "A Woodpecker workspace claim outlived its workflow and the reaper",
+            summary: "Old CI workspace volume was not cleaned up",
             description: escapePrometheusTemplate(
-              "Workspace claim {{ $labels.persistentvolumeclaim }} is older than any workflow can run plus the CI workspace reaper's deadline, so neither Woodpecker nor the reaper deleted it. Check that the ci-workspace-reaper Temporal Schedule is unpaused and succeeding, and whether a pod that is not terminal still mounts the claim. It holds space on the CI node's pool until it is deleted.",
+              "CI workspace PVC {{ $labels.persistentvolumeclaim }} has outlived both the maximum workflow timeout and the reaper grace window, consuming storage on the CI ZFS pool. Check the ci-workspace-reaper Temporal schedule and inspect whether a stuck non-terminal pod still mounts the claim.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
@@ -513,11 +519,15 @@ and on (namespace, persistentvolumeclaim)
           },
         },
         {
+          // A paused schedule, or a restarted worker that has not run it yet,
+          // reports no metric and does not fire this alert;
+          // WoodpeckerWorkspaceClaimLeaked covers any resulting leaked claims.
           alert: "WoodpeckerWorkspaceReaperStale",
           annotations: {
-            summary: "The CI workspace reaper has not succeeded in an hour",
+            summary:
+              "Woodpecker CI workspace reaper has not succeeded in 1 hour",
             description:
-              "runCiWorkspaceReaperWorkflow deletes leaked Woodpecker step pods and workspace claims every 15 minutes on the infra worker, and has not completed successfully in the last hour. Leaks accumulate on the CI node until it recovers. A paused schedule, or a restarted worker that has not run it yet, reports no metric and does not fire this alert; WoodpeckerWorkspaceClaimLeaked covers that case.",
+              "The CI workspace reaper workflow has not completed a successful cleanup run in the last hour, allowing leaked CI pods and workspace PVCs to accumulate disk usage. Check the ci-workspace-reaper schedule in the Temporal UI and inspect the infra worker logs.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `time() - max(kubernetes_maintenance_last_success_timestamp_seconds{maintenance_job="${CI_WORKSPACE_REAP_ACTIVITY}"}) > 3600`,
@@ -532,10 +542,9 @@ and on (namespace, persistentvolumeclaim)
         {
           alert: "WoodpeckerBunCacheCollectorStale",
           annotations: {
-            summary:
-              "Woodpecker Bun cache maintenance activity is missing or has not succeeded",
+            summary: "Woodpecker Bun cache cleanup has stalled",
             description:
-              "The five-minute Woodpecker Bun cache maintenance activity has not completed successfully in the last 20 minutes.",
+              "The Woodpecker Bun cache garbage-collection job has not succeeded in the last 20 minutes, allowing the shared Bun cache volume to fill unchecked. Check the temporal-maintenance-worker deployment in woodpecker-ci and the ci-bun-cache-gc schedule in the Temporal UI.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             MAINTENANCE_STALE_EXPRESSION,
@@ -550,9 +559,9 @@ and on (namespace, persistentvolumeclaim)
         {
           alert: "TurboCacheCleanupStale",
           annotations: {
-            summary: "Turbo cache cleanup has not succeeded in 36 hours",
+            summary: "Turborepo cache cleanup has not succeeded in 36 hours",
             description:
-              "The daily authenticated Turbo cache cleanup has not completed successfully in the last 36 hours.",
+              "The daily Turborepo cache cleanup job has not succeeded in 36 hours, risking unbounded cache storage growth. Check the turbo-cache-clean schedule in the Temporal UI and inspect the temporal-maintenance-worker logs in woodpecker-ci.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             TURBO_CACHE_CLEAN_STALE_EXPRESSION,

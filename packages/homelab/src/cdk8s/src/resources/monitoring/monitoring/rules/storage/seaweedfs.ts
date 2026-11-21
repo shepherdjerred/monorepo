@@ -30,9 +30,9 @@ export function getSeaweedfsRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SeaweedFSVolumeCreationFailing",
           annotations: {
-            summary: "SeaweedFS cannot create new volumes",
-            message: escapePrometheusTemplate(
-              "SeaweedFS volume creation is failing ({{ $value }} failures in 15m). PutObject returns 500 'No writable volumes' — static-site CI deploys will fail. Check volume-slot exhaustion (maxVolumes) or disk on seaweedfs-volume.",
+            summary: "SeaweedFS volume creation is failing",
+            description: escapePrometheusTemplate(
+              'SeaweedFS recorded {{ $value | printf "%.0f" }} volume creation failure(s) in the last 15 minutes, causing object writes that need a new volume to fail with HTTP 500 and breaking static-site CI deploys. Check seaweedfs-master and seaweedfs-volume logs for volume slot exhaustion (maxVolumes) or low disk space.',
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -46,10 +46,9 @@ export function getSeaweedfsRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SeaweedFSVolumeCreationFailingCritical",
           annotations: {
-            summary:
-              "SeaweedFS has been unable to create volumes for 30+ minutes",
-            message: escapePrometheusTemplate(
-              "SeaweedFS volume creation has been failing for 30+ minutes. Object writes are broken (500 'No writable volumes'). Raise maxVolumes / volumeSizeLimitMB or free disk on seaweedfs-volume.",
+            summary: "SeaweedFS unable to create volumes for over 30 minutes",
+            description: escapePrometheusTemplate(
+              'SeaweedFS volume creation has been failing for over 30 minutes ({{ $value | printf "%.0f" }} failure(s) in the last 15m), blocking new object storage writes across the cluster. Expand maxVolumes or volumeSizeLimitMB, or free disk space on the seaweedfs-volume PVC.',
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -68,9 +67,9 @@ export function getSeaweedfsRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SeaweedFSBackupNotRunning",
           annotations: {
-            summary: "SeaweedFS objects are not being copied to Backblaze",
-            message:
-              "The seaweedfs-backup Deployment has no available replica, or filer.backup never attached to the SeaweedFS filer. New and changed objects are not reaching the Backblaze seaweedfs-backups bucket.",
+            summary: "SeaweedFS off-site backup to Backblaze is not running",
+            description:
+              "The seaweedfs-backup deployment has no available replicas or has never attached to the SeaweedFS filer, so new and updated objects are not replicating to Backblaze B2. Check seaweedfs-backup pod status and logs in the seaweedfs namespace.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `absent(${BACKUP_SENT}) or max(${BACKUP_AVAILABLE}) < 1`,
@@ -83,9 +82,9 @@ export function getSeaweedfsRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SeaweedFSBackupLagging",
           annotations: {
-            summary: "SeaweedFS backup to Backblaze is behind",
-            message: escapePrometheusTemplate(
-              "filer.backup is {{ $value | humanizeDuration }} behind the SeaweedFS filer. Recent object changes are not yet in Backblaze. Check the seaweedfs-backup logs for sink errors.",
+            summary: "SeaweedFS off-site backup to Backblaze is lagging",
+            description: escapePrometheusTemplate(
+              "SeaweedFS backup replication is {{ $value | humanizeDuration }} behind the filer, leaving recent object writes unprotected in Backblaze B2. Inspect seaweedfs-backup pod logs for Backblaze B2 connectivity, auth, or rate-limit errors.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -104,9 +103,9 @@ export function getSeaweedfsRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SeaweedFSVolumePVCStorageCritical",
           annotations: {
-            summary: "SeaweedFS volume PVC is nearly full",
-            message: escapePrometheusTemplate(
-              "SeaweedFS volume PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full. Disk is now the governing limit for volume growth — free data (scout-image-gc) or expand the PVC before writes start failing.",
+            summary: "SeaweedFS storage volume is over 95% full",
+            description: escapePrometheusTemplate(
+              "SeaweedFS volume PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full, risking imminent volume creation and object write failures. Prune unneeded objects (for example via scout-image-gc or volume vacuuming) or expand the PVC.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

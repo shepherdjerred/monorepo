@@ -40,13 +40,14 @@ export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "15m",
           labels: { severity: "warning", category: "llm" },
           annotations: {
-            summary: "StormBrain is burning cost far above its own baseline",
-            description: escapePrometheusTemplate(
-              "StormBrain spend is several times its own 24h rate and has cleared the hourly floor, so this is not a quiet service tripping a ratio. Compare the request rate against the cost rate: a flat request rate with rising cost means longer prompts or a model change, not more tickets.",
-            ),
+            summary: "StormBrain LLM spend is spiking above baseline",
+            description:
+              "StormBrain hourly LLM spend exceeds 5x its 24-hour baseline rate, risking runaway API costs. Compare request volume against spend rate in Grafana and inspect logs for retry loops, enlarged prompts, or model changes.",
           },
         },
         {
+          // Service LLM timeout is 60s and the Minecraft plugin waits 65s, so
+          // sustained >30s p95 latency threatens client timeouts next.
           alert: "StormBrainLatencyHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `${LATENCY_P95} > ${STORM_BRAIN_LATENCY_P95_SECONDS.toString()}`,
@@ -54,13 +55,15 @@ export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "15m",
           labels: { severity: "warning", category: "llm" },
           annotations: {
-            summary: "StormBrain p95 latency is degraded",
+            summary: "StormBrain p95 request latency is high",
             description: escapePrometheusTemplate(
-              "StormBrain p95 request latency has been above 30s for 15 minutes. The service LLM timeout is 60s and the plugin waits 65s, so sustained slowness here becomes client timeouts next. Check OpenAI latency and the classify versus triage breakdown before touching timeouts.",
+              "StormBrain p95 request latency is {{ $value | humanizeDuration }}, risking upstream 60s timeouts and stalled ticket classification or moderation. Check OpenAI API status and compare latency across flow labels before adjusting timeouts.",
             ),
           },
         },
         {
+          // Player text stays unpublished while screening runs; failed checks
+          // reject text without recording misconduct strikes.
           alert: "StormContentScreeningSlow",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'histogram_quantile(0.95, sum by (le) (rate(storm_brain_request_duration_seconds_bucket{flow="moderate"}[5m]))) > 3',
@@ -68,13 +71,15 @@ export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "10m",
           labels: { severity: "warning", category: "llm" },
           annotations: {
-            summary: "Player content is waiting on slow screening",
+            summary: "StormBrain player content screening is slow",
             description: escapePrometheusTemplate(
-              "Content-screening p95 exceeds 3 seconds. Player text stays unpublished while screening runs; the game rejects unavailable checks without misconduct strikes. Check the dedicated moderation API and contextual model latency.",
+              "StormBrain content-screening p95 latency is {{ $value | humanizeDuration }}, delaying or blocking player text publication in-game. Check OpenAI moderation API status and contextual model latency.",
             ),
           },
         },
         {
+          // Screening withholds publication without recording a misconduct
+          // strike on failure; ticket triage stays unworked until retried.
           alert: "StormBrainRequestErrors",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'sum(increase(storm_brain_requests_total{outcome=~"error|upstream_error"}[15m])) > 0',
@@ -83,7 +88,7 @@ export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "StormBrain requests are failing",
             description: escapePrometheusTemplate(
-              "At least one StormBrain request failed with an inference or upstream error in the last 15 minutes. Content screening withholds publication and records no misconduct strike on failure; ticket triage remains unworked. Check the flow label, service logs and OpenAI status.",
+              "StormBrain recorded {{ $value | humanize }} inference or upstream request error(s) in the last 15 minutes, blocking content publication and leaving support tickets untriaged. Check failing flow labels, StormBrain service logs, and OpenAI API status.",
             ),
           },
         },
@@ -96,7 +101,7 @@ export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "StormBrain is rejecting plugin requests",
             description: escapePrometheusTemplate(
-              "At least one StormBrain request was rejected as invalid or unauthorized in the last 15 minutes. The service is reachable but the caller is wrong: a plugin and service contract mismatch, or a rotated bearer token that never reached the game server. Do not acknowledge from service health.",
+              "StormBrain rejected {{ $value | humanize }} plugin request(s) as invalid or unauthorized in the last 15 minutes, breaking in-game moderation and ticket requests. Check for a bearer token mismatch on the Minecraft server or a schema mismatch between the plugin and StormBrain.",
             ),
           },
         },
@@ -108,10 +113,9 @@ export function getStormBrainRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "5m",
           labels: { severity: "critical", category: "llm" },
           annotations: {
-            summary: "StormBrain is not scrapeable",
-            description: escapePrometheusTemplate(
-              "Prometheus has been unable to scrape the StormBrain metrics endpoint for 5 minutes. The classify and triage API may also be unavailable; check the deployment, ServiceMonitor, and NetworkPolicy.",
-            ),
+            summary: "StormBrain metrics endpoint is down",
+            description:
+              "Prometheus has been unable to scrape the StormBrain metrics endpoint for 5 minutes, and the moderation and ticket triage API may be unavailable. Check the storm-brain deployment, ServiceMonitor, and NetworkPolicy.",
           },
         },
       ],

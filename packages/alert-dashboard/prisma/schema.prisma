@@ -122,6 +122,7 @@ model EmailOutbox {
   occurrenceIds      Json
   subject            String
   htmlBody           String
+  plainBody          String?
   lastError          String?
 
   @@index([sentAtNs, canceledAtNs, sendingAtNs, nextAttemptAtNs])

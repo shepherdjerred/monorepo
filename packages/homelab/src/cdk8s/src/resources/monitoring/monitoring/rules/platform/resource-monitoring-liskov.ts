@@ -11,11 +11,10 @@ export function getLiskovResourceMonitoringRuleGroups(): PrometheusRuleSpecGroup
         {
           alert: "LiskovMemoryAvailableLow",
           annotations: {
+            summary: `CI node ${CI_NODE_HOSTNAME} has less than 8 GiB of available memory`,
             description: escapePrometheusTemplate(
-              `CI node ${CI_NODE_HOSTNAME} has less than 8GiB of available memory: {{ $value | humanize }} bytes remaining`,
+              `CI node ${CI_NODE_HOSTNAME} is down to {{ $value | humanize1024 }}B of available memory, approaching its kubelet eviction threshold during build bursts. Check concurrent Woodpecker step pods and Kueue memory reservations if pressure persists.`,
             ),
-            summary:
-              "Liskov available memory is below the eviction warning floor",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `node_memory_MemAvailable_bytes{node="${CI_NODE_HOSTNAME}"} < 8589934592`,
@@ -26,10 +25,8 @@ export function getLiskovResourceMonitoringRuleGroups(): PrometheusRuleSpecGroup
         {
           alert: "LiskovMemoryPressure",
           annotations: {
-            description: escapePrometheusTemplate(
-              `CI node ${CI_NODE_HOSTNAME} has less than 4GiB available or Kubernetes reports MemoryPressure`,
-            ),
-            summary: "Critical memory pressure on liskov",
+            summary: `Critical memory pressure on CI node ${CI_NODE_HOSTNAME}`,
+            description: `CI node ${CI_NODE_HOSTNAME} has less than 4 GiB of available memory or Kubernetes is reporting MemoryPressure, risking pod evictions, OOM kills, and failed CI builds. Inspect running Woodpecker step pods and host memory consumers on ${CI_NODE_HOSTNAME} and cancel runaway builds.`,
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `(node_memory_MemAvailable_bytes{node="${CI_NODE_HOSTNAME}"} < 4294967296) or (kube_node_status_condition{node="${CI_NODE_HOSTNAME}", condition="MemoryPressure", status="true"} == 1)`,
@@ -44,10 +41,10 @@ export function getLiskovResourceMonitoringRuleGroups(): PrometheusRuleSpecGroup
         {
           alert: "WoodpeckerKueueWorkloadsWaiting",
           annotations: {
+            summary: "Woodpecker CI workloads stuck waiting for Kueue quota",
             description: escapePrometheusTemplate(
-              "Woodpecker workloads have been waiting for liskov quota admission for more than 30 minutes: {{ $value }} pending workloads",
+              `{{ $value }} Woodpecker workload(s) have waited over 30 minutes for admission in the woodpecker ClusterQueue, stalling CI pipeline progress. Check stuck or long-running build pods on ${CI_NODE_HOSTNAME} and inspect Kueue ClusterQueue and Workload status with kubectl.`,
             ),
-            summary: "Woodpecker workloads are waiting for Kueue capacity",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'kueue_pending_workloads{cluster_queue="woodpecker"} > 0',

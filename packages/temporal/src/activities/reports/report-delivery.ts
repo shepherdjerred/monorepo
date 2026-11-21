@@ -11,13 +11,11 @@ import {
   reportDeliveryTotal,
   reportLastAcceptedTimestampSeconds,
 } from "#observability/metrics-report.ts";
+import { resolvePostalAddressesForReport } from "#config/postal.ts";
 import {
-  resolvePostalAddresses,
   sendPostalEmail,
-} from "#shared/infra/postal.ts";
-import type {
-  PostalSendInput,
-  PostalSendResult,
+  type PostalSendInput,
+  type PostalSendResult,
 } from "#shared/infra/postal.ts";
 import {
   assertReportSendStillOwned,
@@ -264,16 +262,18 @@ export async function deliverReport(
   // single clock the send lease is stamped and aged against.
   const attemptStartedAt = new Date().toISOString();
   const report = ReportEnvelopeV1Schema.parse(rawReport);
-  const store = reportReceiptStore();
-  return deliverReportWithDependencies(
-    report,
-    await activityDeliveryDependencies(store, attemptStartedAt),
+  const deps = await activityDeliveryDependencies(
+    reportReceiptStore(),
+    attemptStartedAt,
+    report.reportType,
   );
+  return deliverReportWithDependencies(report, deps);
 }
 
 async function activityDeliveryDependencies(
   store: ReportReceiptStore,
   attemptStartedAt: string,
+  reportType: string,
 ): Promise<ReportDeliveryDependencies> {
   const info = Context.current().info;
   const execution = info.workflowExecution;
@@ -282,7 +282,7 @@ async function activityDeliveryDependencies(
   }
   return {
     backend: deliveryBackend(store),
-    addresses: await resolvePostalAddresses(),
+    addresses: await resolvePostalAddressesForReport(reportType),
     send: (input) => sendPostalEmail(input),
     now: () => new Date().toISOString(),
     // Per-attempt, so a retry never mistakes a previous attempt's lease for its
@@ -433,11 +433,7 @@ export async function deliverReportWithDependencies(
     // deciding from a stale read — the ownership check above narrows the race
     // but cannot close it, because a takeover can land between checking and
     // writing. Exactly one attempt can own the recorded delivery.
-    const recorded = await dependencies.backend.writeReceipt(
-      receiptKey,
-      receipt,
-    );
-    if (!recorded) {
+    if (!(await dependencies.backend.writeReceipt(receiptKey, receipt))) {
       throw new Error(
         `Report ${report.reportRunId} was recorded by another attempt while this one persisted; this message is a duplicate and its receipt was discarded`,
       );
@@ -508,7 +504,11 @@ async function deliverDailyActivityNotification(
 ): Promise<ReportDeliveryResult | SkippedNotification> {
   const store = reportReceiptStore();
   const info = Context.current().info;
-  const deps = await activityDeliveryDependencies(store, attemptStartedAt);
+  const deps = await activityDeliveryDependencies(
+    store,
+    attemptStartedAt,
+    report.reportType,
+  );
   const backend = deps.backend;
   const result = await deliverDailyNotification(report, {
     ...deps,

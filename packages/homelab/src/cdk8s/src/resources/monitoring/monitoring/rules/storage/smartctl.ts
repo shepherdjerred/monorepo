@@ -37,11 +37,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "SMART health check failed for {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "SSD health check failed",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has failed its SMART health check.",
+              "Drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) failed its SMART overall health self-assessment, indicating imminent hardware failure and risk of data loss. Verify ZFS pool redundancy immediately and replace the drive.",
             ),
           },
         },
@@ -64,11 +62,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "High temperature on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "SATA drive temperature is high",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) is {{ $value }}°C, above the 60°C warning threshold.",
+              "SATA drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) is at {{ $value }}°C, above the 60°C warning threshold, which accelerates drive wear. Check host ambient temperature, fan speeds, and airflow around the drive bay.",
             ),
           },
         },
@@ -85,11 +81,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "Critical temperature on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "SATA drive temperature is critically high",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) is {{ $value }}°C, above the 70°C critical threshold.",
+              "SATA drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) is at {{ $value }}°C, exceeding the 70°C operating limit and risking thermal damage or sudden failure. Restore host cooling immediately and reduce disk I/O load.",
             ),
           },
         },
@@ -106,11 +100,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "Reallocated sectors on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "Drive has reallocated bad sectors",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} reallocated sectors. This may indicate disk degradation.",
+              "Drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} reallocated sector(s), indicating early media degradation. Verify backups and ZFS scrub health and check whether the reallocated sector count continues growing.",
             ),
           },
         },
@@ -125,11 +117,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "High reallocated sector count on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "Drive has a high number of bad sectors",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} reallocated sectors, indicating significant disk degradation.",
+              "Drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} reallocated sectors, indicating significant media degradation and elevated failure risk. Run a ZFS scrub to verify data integrity and schedule a drive replacement.",
             ),
           },
         },
@@ -146,11 +136,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "Pending sectors on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "Drive has unreadable sectors awaiting repair",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} pending sectors waiting for reallocation.",
+              "Drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} unstable sector(s) awaiting reallocation, which can cause read errors. Run a ZFS scrub and check whether pending or uncorrectable sector counts increase.",
             ),
           },
         },
@@ -165,11 +153,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "High pending sector count on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "Drive has critical unreadable sectors",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} pending sectors, indicating potential hardware failure.",
+              "Drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} unstable sectors awaiting reallocation, risking unrecoverable read errors. Verify ZFS pool health and replace the drive promptly.",
             ),
           },
         },
@@ -186,11 +172,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "Uncorrectable errors on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "Drive reported unrecoverable sector errors",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} uncorrectable errors. This indicates serious disk problems.",
+              "Drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) reported {{ $value }} offline uncorrectable sector error(s), risking data corruption or read failures. Check ZFS pool status for checksum or read errors and replace the drive.",
             ),
           },
         },
@@ -207,11 +191,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "UDMA CRC errors on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "SATA drive cable reported data transfer errors",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} UDMA CRC errors. This may indicate cable or interface problems.",
+              "Drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} UDMA CRC communication error(s), which can cause I/O retries or link resets. Replace or reseat the SATA data cable and check the controller port if the error count keeps climbing.",
             ),
           },
         },
@@ -228,11 +210,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "High power cycle count on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "Drive has an unusually high power-cycle count",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} power cycles, which is quite high for typical usage.",
+              "Drive {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has logged {{ $value }} power cycles, which may reflect aggressive power management or unstable power delivery. Check host power-saving settings and PSU/power cable stability.",
             ),
           },
         },
@@ -253,11 +233,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "SSD wear leveling count low on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "SSD remaining wear reserve is below 10%",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) wear leveling count is {{ $value }}, indicating high wear level.",
+              "SSD {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) reports a SMART wear-leveling value of {{ $value }} (below 10% remaining life). Review write-heavy workloads on the drive and plan a replacement.",
             ),
           },
         },
@@ -272,11 +250,9 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "SSD wear leveling critically low on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
-            ),
+            summary: "SSD remaining wear reserve is below 5%",
             description: escapePrometheusTemplate(
-              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) wear leveling count is {{ $value }}, indicating critical wear level.",
+              "SSD {{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) reports a SMART wear-leveling value of {{ $value }} (below 5% remaining life), risking sudden read-only mode or failure. Replace the drive immediately.",
             ),
           },
         },

@@ -65,4 +65,23 @@ describe("AlertDashboardDown", () => {
     // independent email route rather than the webhook they are reporting on.
     expect(stranded.labels?.["alert_dashboard_fallback"]).toBe("true");
   });
+
+  it("defines summary and description annotations instead of message", () => {
+    const rules =
+      getAlertDashboardRuleGroups().find(
+        (candidate) => candidate.name === "alert-dashboard-health",
+      )?.rules ?? [];
+    expect(rules.length).toBeGreaterThan(0);
+    for (const rule of rules) {
+      expect(
+        rule.annotations?.["summary"]?.trim().length ?? 0,
+        rule.alert,
+      ).toBeGreaterThan(0);
+      expect(
+        rule.annotations?.["description"]?.trim().length ?? 0,
+        rule.alert,
+      ).toBeGreaterThan(0);
+      expect(rule.annotations?.["message"], rule.alert).toBeUndefined();
+    }
+  });
 });
