@@ -197,6 +197,12 @@
       "id": "platform-services",
       "title": "Platform services",
       "kind": "platform"
+    },
+    {
+      "id": "flags",
+      "title": "Flags",
+      "kind": "product",
+      "package": "flags"
     }
   ],
   "services": [
@@ -2768,6 +2774,34 @@
         "rootReleaseExclusions": {
           "nfd": "upstream"
         }
+      }
+    },
+    {
+      "id": "flags",
+      "title": "Flags",
+      "package": "flags",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "flags",
+      "components": [
+        {
+          "name": "image:flags",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:flags",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["flags"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "flags": "inactive"
+        },
+        "charts": ["flags"]
       }
     }
   ],

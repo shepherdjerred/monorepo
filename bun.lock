@@ -953,6 +953,31 @@
         "vitest": "5.0.3",
       },
     },
+    "packages/flags": {
+      "name": "@shepherdjerred/flags",
+      "version": "0.1.0",
+      "dependencies": {
+        "@shepherdjerred/feature-flags": "workspace:*",
+        "hono": "^4.12.18",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@tanstack/react-query": "^5.101.2",
+        "@types/bun": "1.4.2",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitejs/plugin-react": "^6.0.1",
+        "@vitest/coverage-istanbul": "5.0.3",
+        "eslint": "^10.7.0",
+        "react": "19.3.0",
+        "react-dom": "19.3.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.0.11",
+        "vitest": "5.0.3",
+      },
+    },
     "packages/glitter": {
       "name": "glitter",
       "version": "0.1.0",
@@ -4733,6 +4758,8 @@
     "@shepherdjerred/facet-protocol": ["@shepherdjerred/facet-protocol@workspace:packages/facet-protocol"],
 
     "@shepherdjerred/feature-flags": ["@shepherdjerred/feature-flags@workspace:packages/feature-flags"],
+
+    "@shepherdjerred/flags": ["@shepherdjerred/flags@workspace:packages/flags"],
 
     "@shepherdjerred/glitter-boys": ["@shepherdjerred/glitter-boys@workspace:packages/glitter-boys"],
 

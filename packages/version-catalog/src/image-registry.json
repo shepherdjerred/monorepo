@@ -11,6 +11,7 @@
     { "name": "ci-base", "visibility": "private" },
     { "name": "ci-playwright", "visibility": "private" },
     { "name": "delivery", "visibility": "private" },
+    { "name": "flags", "visibility": "private" },
     { "name": "glitter-boys-launcher", "visibility": "private" },
     { "name": "golink", "visibility": "private" },
     { "name": "macos-cross-compiler", "visibility": "public" },

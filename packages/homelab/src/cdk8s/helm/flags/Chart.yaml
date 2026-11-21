@@ -1,0 +1,6 @@
+apiVersion: v2
+name: flags
+description: Flags
+type: application
+version: "$version"
+appVersion: "$appVersion"

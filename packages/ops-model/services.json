@@ -848,6 +848,23 @@
       "analyticsSites": [],
       "grafanaDashboards": [],
       "deploy": []
+    },
+    {
+      "id": "flags",
+      "title": "Flags",
+      "kind": "product",
+      "package": "flags",
+      "aliases": [],
+      "namespaces": ["flags"],
+      "argoApps": [],
+      "charts": ["flags"],
+      "rootReleaseExclusions": { "flags": "inactive" },
+      "images": ["flags"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     }
   ]
 }

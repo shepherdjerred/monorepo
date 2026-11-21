@@ -36,6 +36,11 @@ export const TOOLKIT_CONFIG_DEFINITION = {
     sources: ["env", "file", "default"],
     default: "https://tracker.tailnet-1a49.ts.net",
   },
+  flagsUrl: {
+    schema: z.url({ protocol: /^https?$/ }),
+    sources: ["env", "file", "default"],
+    default: "https://flags.tailnet-1a49.ts.net",
+  },
   trackerActorName: {
     schema: z.string().trim().min(1).max(200),
     sources: ["env", "file", "default"],

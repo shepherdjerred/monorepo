@@ -135,9 +135,10 @@ function original(name: string) {
   });
 }
 
-test("all22 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
-  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(22);
-  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(22);
+test("all 23 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
+  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(23);
+  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(23);
+  expect(CANONICAL_IMAGE_TARGETS).toContain("flags");
   expect(CANONICAL_IMAGE_TARGETS).not.toContain("obsidian-headless");
   expect(CANONICAL_IMAGE_TARGETS).toContain("golink");
   expect(imageIdentity("glitter-boys-launcher")).toMatchObject({
