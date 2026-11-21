@@ -34,8 +34,9 @@ pub enum CardTone {
 /// One card, ready to lay out.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OverlayCardModel {
-    /// The small label above the title, by kind.
-    pub badge: &'static str,
+    /// The small label above the title, by kind; none when it would only
+    /// repeat the title.
+    pub badge: Option<&'static str>,
     /// How the badge reads.
     pub tone: CardTone,
     /// The card's title.
@@ -79,11 +80,16 @@ impl OverlayCardModel {
                 frame.queued - 1
             ));
         }
-        if frame.expanded && hidden > 0 {
+        if card.kind == CardKind::ReviewReady {
+            // The supervisor opens the review on this card's expand key.
+            hint.push(format!("{} open", frame.keys.expand));
+        } else if frame.expanded && hidden > 0 {
             hint.push(format!("{} less", frame.keys.expand));
         } else if hidden > 0 {
             hint.push(format!("{} {hidden} more lines", frame.keys.expand));
         }
+        // "Scout noticed" over a card titled "Scout noticed" says nothing new.
+        let badge = (!badge.eq_ignore_ascii_case(card.title.trim())).then_some(badge);
         Self {
             badge,
             tone,
@@ -163,7 +169,7 @@ mod tests {
     #[test]
     fn a_collapsed_card_shows_two_lines_and_offers_the_rest() {
         let model = OverlayCardModel::new(&frame(CardKind::PregamePlan, 4, false, 1));
-        assert_eq!(model.badge, "Game plan");
+        assert_eq!(model.badge, Some("Game plan"));
         assert_eq!(model.lines, ["line 1", "line 2"]);
         assert_eq!(model.hint, "F7 dismiss  \u{b7}  Alt+F7 2 more lines");
     }
@@ -186,11 +192,31 @@ mod tests {
     }
 
     #[test]
+    fn a_review_card_names_the_key_that_opens_it() {
+        let model = OverlayCardModel::new(&frame(CardKind::ReviewReady, 1, false, 1));
+        assert_eq!(model.badge, Some("Review ready"));
+        assert_eq!(model.hint, "F7 dismiss  \u{b7}  Alt+F7 open");
+    }
+
+    #[test]
     fn a_proactive_card_says_the_player_did_not_ask() {
         let model = OverlayCardModel::new(&frame(CardKind::Proactive, 1, false, 1));
-        assert_eq!(model.badge, "Scout noticed");
+        assert_eq!(model.badge, Some("Scout noticed"));
         assert_eq!(model.tone, CardTone::Unprompted);
         assert_eq!(model.note, Some(PROACTIVE_NOTE));
+    }
+
+    #[test]
+    fn a_badge_that_repeats_the_title_is_dropped() {
+        let mut noticed = frame(CardKind::Proactive, 1, false, 1);
+        "Scout noticed".clone_into(&mut noticed.card.title);
+        let model = OverlayCardModel::new(&noticed);
+        assert_eq!(model.badge, None);
+        assert_eq!(
+            model.note,
+            Some(PROACTIVE_NOTE),
+            "who started it still shows"
+        );
     }
 
     #[test]

@@ -47,6 +47,8 @@ pub enum Effect {
     CopyBundle(String),
     /// Bring the window to the front.
     Show,
+    /// Show the chat page and bring the window to the front.
+    ShowChat,
     /// Close the window: Scout is quitting.
     Close,
 }
@@ -103,6 +105,7 @@ impl WindowState {
             }
             SupervisorMessage::DiagnosticsBundle { text } => Effect::CopyBundle(text),
             SupervisorMessage::Show => Effect::Show,
+            SupervisorMessage::ShowChat => Effect::ShowChat,
             SupervisorMessage::Close => Effect::Close,
             chat @ (SupervisorMessage::ChatStatus { .. }
             | SupervisorMessage::ChatConversations { .. }
@@ -288,6 +291,10 @@ mod tests {
         assert_eq!(
             window.receive(&line(&SupervisorMessage::Show)?)?,
             Effect::Show
+        );
+        assert_eq!(
+            window.receive(&line(&SupervisorMessage::ShowChat)?)?,
+            Effect::ShowChat
         );
         assert_eq!(
             window.receive(&line(&SupervisorMessage::Close)?)?,

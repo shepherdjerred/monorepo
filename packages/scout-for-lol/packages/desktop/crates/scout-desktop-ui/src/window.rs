@@ -345,6 +345,12 @@ impl<W: Write + 'static> ScoutWindow<W> {
                     kit::bring_to_front(window);
                     true
                 }
+                Ok(Effect::ShowChat) => {
+                    self.page = PageId::Chat;
+                    kit::bring_to_front(window);
+                    cx.notify();
+                    true
+                }
                 Ok(Effect::Close) => {
                     self.close(window);
                     false
