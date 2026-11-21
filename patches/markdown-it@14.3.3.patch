@@ -1,8 +1,11 @@
+diff --git a/node_modules/typedoc/node_modules/markdown-it/.bun-tag-d3d9168e9f4ac51c b/.bun-tag-d3d9168e9f4ac51c
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/lib/index.mjs b/lib/index.mjs
-index 1857136..90777a3 100644
+index 482bf9eafa9b400b489d3c9eece82f9ed5b8e00c..9caaedbabc9b19c3dc7b9339454e7e6474166ba0 100644
 --- a/lib/index.mjs
 +++ b/lib/index.mjs
-@@ -6,6 +6,6 @@ import Renderer from './renderer.mjs'
+@@ -6,7 +6,7 @@ import Renderer from './renderer.mjs'
  import ParserCore from './parser_core.mjs'
  import ParserBlock from './parser_block.mjs'
  import ParserInline from './parser_inline.mjs'
@@ -10,14 +13,17 @@ index 1857136..90777a3 100644
 +import { LinkifyIt } from 'linkify-it'
  import * as mdurl from 'mdurl'
  import punycode from 'punycode.js'
+ 
 diff --git a/lib/rules_core/linkify.mjs b/lib/rules_core/linkify.mjs
-index 052c3d8..9873626 100644
+index 9257818268c97e3eb3f5a0cc886ed7f446411405..233c1703e7aae3c60df3eb89647880e8bca5a4eb 100644
 --- a/lib/rules_core/linkify.mjs
 +++ b/lib/rules_core/linkify.mjs
-@@ -20,5 +20,5 @@ function linkify(state) {
+@@ -17,7 +17,7 @@ export default function linkify (state) {
+ 
    for (let j = 0, l = blockTokens.length; j < l; j++) {
      if (blockTokens[j].type !== 'inline' ||
 -        !state.md.linkify.pretest(blockTokens[j].content)) {
 +        !state.md.linkify.test(blockTokens[j].content)) {
        continue
      }
+ 
