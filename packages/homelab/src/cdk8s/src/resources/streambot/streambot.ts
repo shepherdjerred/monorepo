@@ -13,6 +13,7 @@ import {
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { FirstPartyWorker } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/worker.ts";
+import { analyticsCaptureDestination } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
@@ -231,6 +232,14 @@ export function createStreambotDeployment(
             ),
             VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
             MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
+            // Public PostHog capture destination for pseudonymous usage events; whether events are
+            // sent is the Flipt flag `streambot-usage-analytics-enabled`.
+            POSTHOG_PROJECT_TOKEN: EnvValue.fromValue(
+              analyticsCaptureDestination().projectToken,
+            ),
+            POSTHOG_API_HOST: EnvValue.fromValue(
+              analyticsCaptureDestination().apiHost,
+            ),
             // Resume state and durable media history live on the persistent volume mounted at /state.
             STATE_DIR: EnvValue.fromValue("/state"),
             // Extracted embedded subtitles are cached on the persistent volume mounted at /subs-cache.

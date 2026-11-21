@@ -20,7 +20,7 @@ const UserSchema = z.object({
   username: z.string(),
 });
 const GuildsSchema = z.array(z.object({ id: z.string().regex(/^\d+$/u) }));
-const COOKIE_NAME = "streambot_session";
+export const COOKIE_NAME = "streambot_session";
 const CSRF_COOKIE = "streambot_csrf";
 const STATE_COOKIE = "streambot_oauth_state";
 

@@ -293,6 +293,22 @@ export const ConfigSchema = z.strictObject({
       repostAfterMessages: z.number().int().nonnegative().default(5),
     })
     .default({ enabled: true, tickMs: 10_000, repostAfterMessages: 5 }),
+  /**
+   * Pseudonymous product-usage events sent to PostHog Cloud. `enabled` mirrors the
+   * `streambot-usage-analytics-enabled` flag; the public project token and host are deployment
+   * bootstrap. Startup fails when the flag is on and the PostHog destination is absent.
+   */
+  analytics: z
+    .strictObject({
+      enabled: z.boolean().default(true),
+      posthog: z
+        .strictObject({
+          projectToken: z.string().regex(/^phc_[A-Za-z0-9]+$/u),
+          apiHost: z.url(),
+        })
+        .optional(),
+    })
+    .default({ enabled: true }),
   /** Leave the voice channel after this many idle seconds. */
   idleTimeoutSeconds: z.number().int().positive().default(300),
   /** Maximum number of items to enqueue when expanding a playlist URL. */

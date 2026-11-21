@@ -2,6 +2,7 @@ import path from "node:path";
 import { createPosterFetcher } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import { PlexArtwork } from "@shepherdjerred/streambot/metadata/plex.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
+import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import {
   scanLibrary,
   type LibraryEntry,
@@ -53,6 +54,13 @@ import {
   webUiEnabled,
   plexPostersEnabled,
 } from "@shepherdjerred/streambot/config/media-features.ts";
+import {
+  createPostHogTransport,
+  createUsageAnalytics,
+  installUsageAnalytics,
+  shutdownUsageAnalytics,
+} from "@shepherdjerred/streambot/observability/product-analytics.ts";
+import { AnalyticsIdentityStore } from "@shepherdjerred/streambot/observability/analytics-identity.ts";
 import { WebCatalog } from "@shepherdjerred/streambot/web/server/catalog.ts";
 import { startWebServer } from "@shepherdjerred/streambot/web/server/start.ts";
 import { PinchtabSportsBrowser } from "@shepherdjerred/streambot/sports/pinchtab.ts";
@@ -62,6 +70,17 @@ import { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-
 import { scheduledPlaybackPorts } from "@shepherdjerred/streambot/session/scheduled-playback.ts";
 import { startScheduleServer } from "@shepherdjerred/streambot/sports/schedule-server.ts";
 import { createSportsResolver } from "@shepherdjerred/streambot/sources/create-sports-resolver.ts";
+
+/** Fails startup when the flag is on but the PostHog destination is missing. */
+function usageAnalyticsTransport(config: Config) {
+  const { enabled, posthog } = config.analytics;
+  if (posthog !== undefined) return createPostHogTransport(posthog);
+  if (enabled)
+    throw new Error(
+      "Usage analytics is enabled but POSTHOG_PROJECT_TOKEN and POSTHOG_API_HOST are not set",
+    );
+  return;
+}
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
@@ -80,6 +99,15 @@ async function main(): Promise<void> {
   // Manual voice spans and correlated logs must be active before model initialization emits its
   // first diagnostics. The OpenAI SDK's own tracing remains explicitly disabled per turn.
   initializeTelemetry(config.observability);
+  installUsageAnalytics(
+    createUsageAnalytics({
+      identities: new AnalyticsIdentityStore(
+        path.join(config.state.dir, "streambot-analytics.sqlite"),
+      ),
+      enabled: () => config.analytics.enabled,
+      transport: usageAnalyticsTransport(config),
+    }),
+  );
   const voiceCaptureManager = new VoiceCaptureManager(config.voice.capture);
   // Fail loud at boot if the patched node-datachannel prebuild is missing its
   // incoming-SSRC routing — otherwise voice receive would be silently broken.
@@ -342,6 +370,7 @@ async function main(): Promise<void> {
     history.close();
     music.loads.close();
     await shutdownDynamicConfig();
+    await shutdownUsageAnalytics();
     await shutdownTelemetry();
     await stopMetricsServer();
     process.exit(0);

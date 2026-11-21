@@ -33,6 +33,14 @@ import {
   webMethod,
   type WebFailure,
 } from "./telemetry.ts";
+import { usageAnalytics } from "@shepherdjerred/streambot/observability/product-analytics.ts";
+import {
+  observeMusicSearch,
+  observeSearch,
+  recordCommandUsage,
+  recordSignIn,
+  runObservedCommand,
+} from "./usage/observation.ts";
 import { ARTWORK_HOSTS } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
 import {
   webFailureDiagnostic,
@@ -103,9 +111,13 @@ export function createWebHandler(deps: {
         user: session.identity,
         guilds: deps.playback.deps.bot.webGuilds(session.identity.guildIds),
         csrfToken: auth.csrfToken(request, session),
+        analyticsId:
+          usageAnalytics().analyticsId(session.identity.userId) ?? null,
       });
     }
-    const musicResponse = await music.handle(request, url, session);
+    const musicResponse = await observeMusicSearch(request, url, session, () =>
+      music.handle(request, url, session),
+    );
     if (musicResponse !== null) return musicResponse;
     if (request.method === "POST" && url.pathname === "/api/subtitles")
       return Response.json(
@@ -134,7 +146,10 @@ export function createWebHandler(deps: {
       try {
         input = await readCommand(request);
         span.setAttribute("streambot.web.action", input.action);
-        return await executeCommand(session, input, request.signal);
+        const command = input;
+        return await runObservedCommand(session, command, () =>
+          executeCommand(session, command, request.signal),
+        );
       } catch (error) {
         failure = classifyWebFailure(error, request.signal);
         throw error;
@@ -147,6 +162,7 @@ export function createWebHandler(deps: {
             ? (input.transport ?? "unspecified")
             : "unspecified";
         webCommandsTotal.inc({ action, transport, outcome });
+        recordCommandUsage(session, { action, outcome, code });
         webCommandDurationSeconds.observe(
           { action },
           (performance.now() - started) / 1000,
@@ -230,14 +246,18 @@ export function createWebHandler(deps: {
         channelId: channel?.id ?? "web",
         userId: session.identity.userId,
       };
-      return Response.json(
-        await deps.playback.deps.catalog.search(
+      return await observeSearch(session, "candidates", async () => {
+        const results = await deps.playback.deps.catalog.search(
           url.searchParams,
           scope,
           session.key + ":" + guildId,
           AbortSignal.any([request.signal, AbortSignal.timeout(30_000)]),
-        ),
-      );
+        );
+        return {
+          response: Response.json(results),
+          hadResults: results.length > 0,
+        };
+      });
     }
     if (url.pathname === "/api/history") {
       if (!(await deps.playback.historyEnabled(session, guildId)))
@@ -295,6 +315,7 @@ export function createWebHandler(deps: {
         response.headers.get("location") === "/?login=cancelled"
           ? "cancelled"
           : "success";
+      if (outcome === "success") recordSignIn(deps.store, response);
       return response;
     } catch (error) {
       if (error instanceof WebError && error.code === "oauth_state")

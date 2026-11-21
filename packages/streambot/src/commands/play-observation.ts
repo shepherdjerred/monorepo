@@ -3,6 +3,8 @@ import {
   playRequestsTotal,
   type TelemetryOutcome,
 } from "@shepherdjerred/streambot/observability/web-metrics.ts";
+import { usageAnalytics } from "@shepherdjerred/streambot/observability/product-analytics.ts";
+import { currentSelectionKind } from "@shepherdjerred/streambot/observability/usage-context.ts";
 import { PlaybackCommandBoundaryError } from "./playback-command-errors.ts";
 import type { PlayInput } from "./playback-input.ts";
 
@@ -18,21 +20,35 @@ function failureOutcome(
   return signal?.aborted === true ? "aborted" : "error";
 }
 
-/** Counts one play request for its entry-point surface, whatever way it ends. */
+/** Counts and records one play request for its entry-point surface, whatever way it ends. */
 export async function observePlay<T>(
-  input: Pick<PlayInput, "surface" | "signal">,
+  input: Pick<PlayInput, "surface" | "signal" | "userId" | "placement">,
   run: () => Promise<T>,
+  options: { readonly batch?: boolean } = {},
 ): Promise<T> {
   const surface = input.surface ?? "other";
+  const record = (outcome: TelemetryOutcome) => {
+    playRequestsTotal.inc({ surface, outcome });
+    const selectionKind = currentSelectionKind();
+    usageAnalytics().capture(input.userId, {
+      event: "streambot_play_requested",
+      properties: {
+        surface,
+        outcome,
+        placement: input.placement,
+        batch: options.batch === true,
+        ...(surface === "web" && selectionKind !== undefined
+          ? { selection_kind: selectionKind }
+          : {}),
+      },
+    });
+  };
   try {
     const result = await run();
-    playRequestsTotal.inc({ surface, outcome: "ok" });
+    record("ok");
     return result;
   } catch (error) {
-    playRequestsTotal.inc({
-      surface,
-      outcome: failureOutcome(error, input.signal),
-    });
+    record(failureOutcome(error, input.signal));
     throw error;
   }
 }

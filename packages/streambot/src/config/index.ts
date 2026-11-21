@@ -163,6 +163,20 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       tickMs: num(env["PLAYER_CARD_TICK_MS"]),
       repostAfterMessages: num(env["PLAYER_CARD_REPOST_AFTER_MESSAGES"]),
     },
+    analytics: {
+      enabled: strictBool(
+        "USAGE_ANALYTICS_ENABLED",
+        env["USAGE_ANALYTICS_ENABLED"],
+      ),
+      posthog:
+        str(env["POSTHOG_PROJECT_TOKEN"]) === undefined &&
+        str(env["POSTHOG_API_HOST"]) === undefined
+          ? undefined
+          : {
+              projectToken: str(env["POSTHOG_PROJECT_TOKEN"]),
+              apiHost: str(env["POSTHOG_API_HOST"]),
+            },
+    },
     idleTimeoutSeconds: num(env["IDLE_TIMEOUT_SECONDS"]),
     ytDlpPath: env["YT_DLP_PATH"],
     ffmpegPath: env["FFMPEG_PATH"],

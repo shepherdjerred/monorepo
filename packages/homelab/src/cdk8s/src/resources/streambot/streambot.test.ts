@@ -226,6 +226,8 @@ describe("streambot deployment (media namespace)", () => {
     const env = new Map(
       (container.env ?? []).map((variable) => [variable.name, variable]),
     );
+    expect(env.get("POSTHOG_PROJECT_TOKEN")?.value).toMatch(/^phc_/u);
+    expect(env.get("POSTHOG_API_HOST")?.value).toBe("https://us.i.posthog.com");
     expect(env.get("TELEMETRY_ENABLED")?.value).toBe("true");
     expect(env.get("TELEMETRY_SERVICE_NAME")?.value).toBe("streambot");
     expect(env.get("OTLP_ENDPOINT")?.value).toBe(
