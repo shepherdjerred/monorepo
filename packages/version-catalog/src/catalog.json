@@ -947,7 +947,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.14.5@sha256:58f0aeeb78d9e5de6ff0fe989fcfaa7ca3df467769780e378a87af8d24806b48",
+      "value": "3.0.3@sha256:2ad6692bf9c5eed7a3c12f606820abd0af3b2b0f081c7d3bf40f2a015fe27a2f",
       "notes": [
         "Self-hosted Turborepo remote cache backing the workspace task graph."
       ]
