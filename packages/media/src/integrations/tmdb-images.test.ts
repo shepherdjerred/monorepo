@@ -123,6 +123,19 @@ describe("TMDB image client", () => {
     expect(error.status).toBe(status);
   });
 
+  test("reports a download that breaks after the headers as unavailable", async () => {
+    const broken = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(jpeg().subarray(0, 8));
+        controller.error(new TypeError("terminated"));
+      },
+    });
+    expect(await failure(respond(broken, "image/jpeg"))).toMatchObject({
+      service: "tmdb-images",
+      kind: "unavailable",
+    });
+  });
+
   test("reports an unreachable or timed-out CDN as unavailable", async () => {
     const error = await failure(() =>
       Promise.reject(new DOMException("timed out", "TimeoutError")),

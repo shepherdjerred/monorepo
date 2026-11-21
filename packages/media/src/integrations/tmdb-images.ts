@@ -18,6 +18,19 @@ const SERVICE = "tmdb-images";
 /** Posters and backdrops at the served widths are tens to hundreds of KB. */
 const MAXIMUM_IMAGE_BYTES = 4 * 1024 * 1024;
 
+/**
+ * The headers can arrive and the connection still drop, or the deadline pass,
+ * while the image downloads. That is the CDN failing, like a refused request.
+ */
+async function body(response: Response): Promise<Uint8Array<ArrayBuffer>> {
+  try {
+    return await boundedBytes(response, MAXIMUM_IMAGE_BYTES, SERVICE);
+  } catch (error) {
+    if (error instanceof IntegrationError) throw error;
+    throw new IntegrationError(SERVICE, "unavailable");
+  }
+}
+
 export type TmdbImage =
   | {
       status: "found";
@@ -56,7 +69,7 @@ export class TmdbImageClient {
       await response.body?.cancel();
       throw new IntegrationError(SERVICE, "invalid-response", response.status);
     }
-    const bytes = await boundedBytes(response, MAXIMUM_IMAGE_BYTES, SERVICE);
+    const bytes = await body(response);
     if (!hasArtworkSignature(expected, bytes))
       throw new IntegrationError(SERVICE, "invalid-response", response.status);
     return { status: "found", bytes, contentType: expected };
