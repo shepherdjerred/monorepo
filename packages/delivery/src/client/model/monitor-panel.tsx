@@ -108,7 +108,7 @@ function Outcome({ status }: { status: MonitorStatus }) {
     );
   if (status.state === "settled" && status.settledAt !== null)
     return (
-      <p className="notice">
+      <p className="notice success">
         Settled <RelativeTime value={status.settledAt} />: every evidence count
         met its threshold with no alarm.
       </p>

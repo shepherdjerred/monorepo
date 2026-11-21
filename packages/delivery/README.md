@@ -47,7 +47,10 @@ explicitly set. The model
 harness reconciles its own catalog and records Arcade's releases, a
 configuration rebind, monitor observations and a quarantined deploy through Delivery's own APIs (`e2e/model.ts`), plus a tofu stack waiting
 at its approve step and archives for an operator-run stack and a channel
-(`e2e/model-plan.ts`), so its pages read the real model routes. Setting
+(`e2e/model-plan.ts`), so its pages read the real model routes. Each harness
+names the images its ArgoCD double reports running (`liveImages`): Scout
+production's accepted and retained worker builds in the release harness,
+Arcade's accepted image in the model harness. Setting
 `DELIVERY_HARNESS_MACHINE_CREDENTIALS` to a JSON array of disposable machine
 credentials lets a client drive the admin and execute routes; the proxy then
 passes their bearer tokens through. `src/testing/model-fixtures.ts` holds
@@ -102,6 +105,22 @@ Finished pipelines and merged commits are cached in `IntegrationSnapshot`
 permanently; running pipelines and unmerged commits are refreshed after a short
 TTL; ArgoCD state is only memoized for seconds. A disabled, unconfigured or
 failing integration degrades its own panel and still links to the tool.
+
+The runtime panel compares each accepted image component with the images
+ArgoCD reports running for the same repository. A worker pool keeps older
+builds running beside the accepted one until each is retired, so a live image
+is explained by the accepted artifact or by a `WorkerVersion` of the
+environment with a desired host. The check passes when the accepted digest is
+running and nothing else is unexplained, and it reports the retained count and
+lists any unexpected image. An environment with no pool passes only when every
+live image is the accepted artifact.
+
+An environment's observed revision is written when a deployment finishes and is
+not probed afterwards, so the page dates it by that deployment and gives it no
+fresh or stale state. The runtime panel is the live read.
+
+A notice is amber when it asks for a decision or flags a risk, red for a
+failure, neutral for plain information and green for a positive outcome.
 
 ## Public contracts
 
@@ -238,7 +257,9 @@ reconciliation and runtime acceptance. Scheduled Velero backups are the only
 backup. Omitted modes are `retained-volume-restart`. Historical rows may still
 say `verified-restore`; that value parses and takes the same retained-volume
 path. Unknown modes fail validation. An image rollback is the same restart and
-does not restore an older world. Reconciliation failures use an ordinary `argo`
+does not restore an older world. The deployment page has no Minecraft panel:
+every recovery intent of such a release, whatever its kind or recorded release
+mode, appears in the generic "Recovery intents" list. Reconciliation failures use an ordinary `argo`
 recovery intent, which requires the same recorded request, native operation
 identity and settled external work before releasing ownership.
 

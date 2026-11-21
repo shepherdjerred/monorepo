@@ -41,7 +41,7 @@ async function startHarness() {
   const forum = await seedBrowserForum(delivery);
   await seedContentRecovery(delivery, forum.id);
   const scout = await workerFixture(delivery, "scout-prod");
-  await scout.acceptedPool();
+  const scoutPool = await scout.acceptedPool();
   const central = await workerFixture(delivery);
   await central.requestedBaseline();
   // The catalog document names the Minecraft chart's acquiring service.
@@ -134,6 +134,14 @@ async function startHarness() {
       scout.environmentId,
       ...platform.environmentIds,
     ],
+    // Scout production runs its accepted build beside one retained worker
+    // build, as its Application's pool does.
+    liveImages: {
+      [scout.host.application]: [
+        scoutPool.workerA.image,
+        scoutPool.workerB.image,
+      ],
+    },
   });
 }
 try {

@@ -124,11 +124,19 @@
   background: var(--surface-sunken);
   font-size: 0.85rem;
 }
+/* The glyph is decorative, so the words stay readable by a screen reader. */
 .action .status-label {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .action > .status {
   align-self: start;
+  /* Contains the hidden label, so it scrolls with the graph. */
+  position: relative;
 }
 .action-body p {
   margin: 0;

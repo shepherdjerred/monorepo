@@ -195,11 +195,22 @@ export function createEnrichment(options: EnrichmentOptions) {
         env.acceptedVersionSetRevisionId === null
           ? null
           : await version(options.database, env.acceptedVersionSetRevisionId);
+      // Worker builds the pool still runs beside the accepted one. A narrow
+      // read: this panel compares digests and validates no worker identity.
+      const workers = await options.database.workerVersion.findMany({
+        where: { environmentId, replicas: { gt: 0 }, retiredAt: null },
+        select: {
+          artifact: {
+            select: { uri: true, digest: true, runtimeDigests: true },
+          },
+        },
+      });
       const data = await readArgoRuntime({
         origin: options.argocd.origin,
         token: options.argocd.token ?? "",
         application: env.application,
         accepted,
+        retained: workers.map((worker) => worker.artifact),
         fetch: transport,
       });
       return {

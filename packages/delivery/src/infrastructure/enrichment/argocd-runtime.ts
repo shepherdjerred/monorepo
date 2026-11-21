@@ -28,13 +28,28 @@ const ArgoApplicationSchema = z.object({
 const iso = (value: string | undefined) =>
   value === undefined ? null : new Date(value).toISOString();
 
+/** An artifact a worker pool keeps running beside the accepted one. */
+export type RetainedImage = {
+  uri: string;
+  digest: string;
+  runtimeDigests: string[];
+};
+
+const runs = (image: string, digests: string[]) =>
+  digests.some((digest) => image.endsWith(`@${digest}`));
+
 /**
  * Compare the image digests a version set selects with the images ArgoCD
  * reports running. A component ArgoCD reports no image for is not compared.
+ *
+ * A worker pool runs older builds beside the accepted one until each is
+ * retired, so a live image matches when the accepted artifact or a retained
+ * worker artifact explains it. The accepted artifact itself must be running.
  */
 export function compareLiveImages(
   selected: VersionSetRevision | null,
   images: string[],
+  retained: RetainedImage[],
 ): ImageCheck[] {
   if (selected === null) return [];
   return Object.values(selected.components)
@@ -44,14 +59,23 @@ export function compareLiveImages(
         image.startsWith(`${artifact.uri}@`),
       );
       if (live.length === 0) return [];
-      const expected = [artifact.digest, ...artifact.runtimeDigests];
+      const accepted = [artifact.digest, ...artifact.runtimeDigests];
+      const kept = retained.flatMap((worker) =>
+        worker.uri === artifact.uri
+          ? [worker.digest, ...worker.runtimeDigests]
+          : [],
+      );
+      const others = live.filter((image) => !runs(image, accepted));
+      const unexpected = others.filter((image) => !runs(image, kept));
       return {
         component: artifact.component,
         expected: artifact.digest,
         live,
-        matches: live.every((image) =>
-          expected.some((digest) => image.endsWith(`@${digest}`)),
-        ),
+        retained: others.length - unexpected.length,
+        unexpected,
+        matches:
+          live.some((image) => runs(image, accepted)) &&
+          unexpected.length === 0,
       };
     });
 }
@@ -61,6 +85,7 @@ export async function readArgoRuntime(options: {
   token: string;
   application: string;
   accepted: VersionSetRevision | null;
+  retained: RetainedImage[];
   fetch: Fetch;
 }): Promise<ArgoRuntime> {
   const application = await fetchJson(
@@ -90,6 +115,6 @@ export async function readArgoRuntime(options: {
     operationFinishedAt: iso(status.operationState?.finishedAt),
     reconciledAt: iso(status.reconciledAt),
     images,
-    imageChecks: compareLiveImages(options.accepted, images),
+    imageChecks: compareLiveImages(options.accepted, images, options.retained),
   };
 }

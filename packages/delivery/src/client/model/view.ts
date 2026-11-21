@@ -16,8 +16,10 @@ const RETRYABLE_KINDS: ReadonlySet<string> = new Set(
 
 /**
  * Whether the deployment page's own panel shows this kind of recovery: the
- * guards of `PlatformRecovery`, `MinecraftRecovery` and `ContentRecovery`.
- * Every other intent, a model recipe's included, stays in the generic list.
+ * guards of `PlatformRecovery` and `ContentRecovery`. Every other intent, a
+ * model recipe's included, stays in the generic list. A Minecraft release
+ * restarts its retained volume in every release mode and has no panel of its
+ * own, so its intents are listed there too.
  */
 export function specializedRecoveryShown(
   detail: Pick<DeploymentDetailV2, "deployment" | "pipeline">,
@@ -31,13 +33,6 @@ export function specializedRecoveryShown(
         detail.deployment.controlPlaneSnapshot !== null
       );
     }
-    case "minecraft": {
-      return (
-        definition.kind === "argocd" &&
-        definition.minecraftUpgrade !== undefined &&
-        definition.minecraftUpgrade.releaseMode !== "retained-volume-restart"
-      );
-    }
     case "content": {
       return (
         definition.kind === "static-site" ||
@@ -48,6 +43,7 @@ export function specializedRecoveryShown(
     }
     case "argo":
     case "worker":
+    case "minecraft":
     case "forum-baseline": {
       return false;
     }

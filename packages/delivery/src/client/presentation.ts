@@ -4,6 +4,8 @@ import type {
   Principal,
   VersionSetRevision,
 } from "#shared/contract.ts";
+import type { ImageCheck } from "#shared/hub/integration-contract.ts";
+import { relativeTime } from "#client/components/time.tsx";
 
 export function canApprove(principal: Principal): boolean {
   return principal.kind === "human" && principal.scopes.includes("approve");
@@ -17,6 +19,29 @@ export function isTerminal(deployment: Deployment): boolean {
   return ["succeeded", "failed", "canceled"].includes(deployment.status);
 }
 
+/**
+ * The executor's message takes the tone of the outcome it reports: a failure,
+ * an acceptance, or progress. A canceled release keeps the attention tone.
+ */
+export function messageNotice(status: Deployment["status"]) {
+  switch (status) {
+    case "failed": {
+      return "notice error";
+    }
+    case "succeeded": {
+      return "notice success";
+    }
+    case "canceled": {
+      return "notice";
+    }
+    case "queued":
+    case "awaiting_approval":
+    case "running": {
+      return "notice info";
+    }
+  }
+}
+
 export function versionLabel(
   id: string | null,
   versions: VersionSetRevision[],
@@ -28,16 +53,37 @@ export function versionLabel(
     : `${version.serviceId} @ ${version.revision.toString()}`;
 }
 
-export function observation(
-  environment: Environment,
-  now = Date.now(),
-): { label: string; fresh: boolean } {
-  if (environment.observedAt === null)
-    return { label: "No runtime observation", fresh: false };
-  const age = Math.max(0, now - Date.parse(environment.observedAt));
-  const minutes = Math.floor(age / 60_000);
-  return {
-    label: `${minutes < 1 ? "Just now" : `${minutes.toString()}m ago`}${age > 300_000 ? " · stale" : ""}`,
-    fresh: age <= 300_000,
-  };
+/**
+ * When the environment's observed revision was recorded. Delivery writes it as
+ * a deployment finishes and never probes afterwards, so it is a dated claim
+ * with no fresh or stale state.
+ */
+export function observation(environment: Environment, now = Date.now()) {
+  return environment.observedAt === null
+    ? "No runtime observation"
+    : `Observed when the last deployment finished · ${relativeTime(environment.observedAt, now)}`;
+}
+
+const counted = (count: number, noun: string) =>
+  `${count.toString()} ${noun}${count === 1 ? "" : "s"}`;
+
+/**
+ * What one image check found, in words. Every live image is the accepted
+ * artifact, a retained worker build or unexpected, so the accepted artifact
+ * runs exactly when some live image is neither of the other two.
+ */
+export function imageCheckSummary(check: ImageCheck) {
+  const acceptedRunning =
+    check.live.length > check.retained + check.unexpected.length;
+  return [
+    acceptedRunning
+      ? "runs the accepted digest"
+      : "does not run the accepted digest",
+    ...(check.unexpected.length > 0
+      ? [counted(check.unexpected.length, "unexpected image")]
+      : []),
+    ...(check.retained > 0
+      ? [counted(check.retained, "retained worker build")]
+      : []),
+  ].join(" · ");
 }

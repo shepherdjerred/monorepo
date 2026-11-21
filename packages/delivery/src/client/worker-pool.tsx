@@ -152,7 +152,7 @@ export function WorkerPoolPanel({
         deployment.
       </p>
       {selected === undefined && (
-        <p className="notice">
+        <p className="notice info">
           Retirement becomes available after acceptance records a frozen worker
           pool.
         </p>

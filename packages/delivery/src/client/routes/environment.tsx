@@ -76,7 +76,7 @@ function EnvironmentPage() {
         onDeployment={open}
       />
       {environment.activeDeploymentId !== null && (
-        <p className="notice">
+        <p className="notice info">
           Active deployment{" "}
           <Link
             to="/deployments/$deploymentId"
