@@ -17,6 +17,7 @@ import {
   otlpEgress,
   seaweedfsEgress,
   prometheusIngressRule,
+  postgresEgress,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { SCOUT_GATEWAY_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { SCOUT_ACTIVITY_WORKER_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
@@ -37,7 +38,7 @@ export type Stage = "prod" | "beta";
  * serves `httpSurface: "admin"`, so only Prometheus needs it) and Discord voice
  * RTP (see {@link discordVoiceRtpEgressRule}).
  */
-function scoutRuntimeEgressRules() {
+function scoutRuntimeEgressRules(stage: Stage) {
   return [
     dnsEgressRule(),
     // OTLP trace gateway (alloy-gateway.alloy-gateway.svc.cluster.local:4318)
@@ -47,7 +48,7 @@ function scoutRuntimeEgressRules() {
     // Flipt evaluation (flipt-flipt-service.flipt.svc.cluster.local:8080)
     fliptEgress(),
     // In-namespace PostgreSQL (scout-<stage>-postgresql:5432)
-    { to: [{ podSelector: {} }], ports: [tcp(5432)] },
+    postgresEgress(`scout-${stage}-postgresql`),
     // Temporal gRPC for the stage-local competition dispatcher and the
     // embedded Scout workers. Restrict both to the server pod and port.
     {
@@ -120,10 +121,11 @@ export function createScoutChart(app: App, stage: Stage) {
   createScoutWorkflowWorker(chart, stage);
 
   // NetworkPolicy: Allow ingress from Prometheus (scrapes scout-backend
-  // metrics on :3000), in-namespace pods, and the shared s3-static-sites
-  // Caddy (reverse-proxies /trpc + /api on scout-for-lol.com to
-  // scout-service-{stage}:3000 cross-namespace). The Cloudflare Tunnel
-  // now terminates at s3-static-sites, not directly at scout-{stage}.
+  // metrics on :3000) and the shared s3-static-sites Caddy (reverse-proxies
+  // /trpc + /api on scout-for-lol.com to scout-service-{stage}:3000
+  // cross-namespace). The Cloudflare Tunnel now terminates at
+  // s3-static-sites, not directly at scout-{stage}, and no pod of the
+  // namespace calls the backend over HTTP.
   new KubeNetworkPolicy(chart, "scout-ingress-netpol", {
     metadata: { name: "scout-ingress-netpol" },
     spec: {
@@ -135,7 +137,6 @@ export function createScoutChart(app: App, stage: Stage) {
         {
           from: [
             nsPeer("prometheus"),
-            { podSelector: {} },
             nsPeer("s3-static-sites"),
             ...(stage === "beta"
               ? [
@@ -162,7 +163,7 @@ export function createScoutChart(app: App, stage: Stage) {
       // Keep the operator-managed PostgreSQL pods outside this policy.
       podSelector: { matchLabels: { app: "scout-backend" } },
       policyTypes: ["Egress"],
-      egress: [...scoutRuntimeEgressRules()],
+      egress: [...scoutRuntimeEgressRules(stage)],
     },
   });
 
@@ -186,7 +187,7 @@ export function createScoutChart(app: App, stage: Stage) {
           prometheusIngressRule([3000]),
         ],
         egress: [
-          ...scoutRuntimeEgressRules(),
+          ...scoutRuntimeEgressRules(stage),
           // This is the pod that runs `/scout join`, so the voice media stream
           // egresses from here.
           ...(stage === "beta" ? [discordVoiceRtpEgressRule()] : []),
@@ -207,7 +208,7 @@ export function createScoutChart(app: App, stage: Stage) {
           prometheusIngressRule([3000]),
           prometheusTemporalMetricsIngressRule(),
         ],
-        egress: scoutRuntimeEgressRules(),
+        egress: scoutRuntimeEgressRules(stage),
       },
     });
   }

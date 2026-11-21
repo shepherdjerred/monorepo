@@ -2,7 +2,10 @@ import type { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import { POSTGRES_CLUSTER_NAME_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
+import {
+  POSTGRES_CLUSTER_NAME_LABEL,
+  POSTGRES_OPERATOR_CLUSTER_LABELS,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 export function createPostgresOperatorNamespace(chart: Chart): void {
@@ -34,9 +37,7 @@ export function createPostgresOperatorApp(chart: Chart) {
     },
     configKubernetes: {
       // Since we have a single-node cluster, reduce resource requirements
-      cluster_labels: {
-        application: "spilo",
-      },
+      cluster_labels: { ...POSTGRES_OPERATOR_CLUSTER_LABELS },
       cluster_name_label: POSTGRES_CLUSTER_NAME_LABEL,
       enable_cross_namespace_secret: true,
       // Single-node cluster: the operator's PDBs (minAvailable=1 on 1-replica

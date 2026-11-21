@@ -7,7 +7,7 @@ import {
   type PolicyType,
 } from "./fleet.ts";
 import {
-  namespaceNamedBy,
+  peerNamespace,
   podsLabelled,
   podsOf,
   policiesAllow,
@@ -17,13 +17,16 @@ import {
 } from "./network-reachability.ts";
 
 /**
- * Cross-namespace reciprocity: a connection one namespace's policy opens is
- * also opened by the policy on its other end.
+ * Reciprocity: a connection one policy opens is also opened by the policy on
+ * its other end, whether that end is in another namespace or in the policy's
+ * own.
  *
  * A connection between two policed pods needs the source's Egress policy and
- * the destination's Ingress policy to both allow it. A rule naming a peer
- * namespace whose own policy does not answer it is either a connection that
- * does not work or a rule that grants nothing.
+ * the destination's Ingress policy to both allow it. A rule naming peers whose
+ * own policy does not answer it is either a connection that does not work or
+ * a rule that grants nothing. Same-namespace peers matter as much as remote
+ * ones: a namespace-wide Ingress policy also binds the namespace's database
+ * pods, and it must admit the app its Egress policy sends there.
  */
 
 /** The pods one side of a rule names, and whether NetworkPolicy binds them. */
@@ -196,8 +199,8 @@ function unreciprocatedRulesOf(
   const rules = type === "Egress" ? policy.egress : policy.ingress;
   return rules.flatMap((rule) =>
     (rule.peers ?? []).flatMap((peer) => {
-      const namespace = namespaceNamedBy(peer);
-      if (namespace === undefined || namespace === policy.namespace) return [];
+      const namespace = peerNamespace(peer, policy.namespace);
+      if (namespace === undefined) return [];
       const selector = peer.podSelector ?? {};
       const peers = partiesNamedBy(fleet, namespace, selector);
       return (rule.ports ?? [undefined])
@@ -211,8 +214,8 @@ function unreciprocatedRulesOf(
 }
 
 /**
- * Rules of one policy type that name another namespace whose policies do not
- * answer them, each once:
+ * Rules of one policy type whose peers' policies do not answer them, each
+ * once:
  *
  * - Egress, as `<namespace>/<policy> -> <peer>:<port>`: the peer's Ingress
  *   policy does not admit the policy's pods on the port.
@@ -220,7 +223,8 @@ function unreciprocatedRulesOf(
  *   policy does not let it reach the policy's pods on the port.
  *
  * `<peer>` is the namespace, followed by the pod selector when the rule has
- * one. A peer bound by no policy of the answering type is the policy-coverage
+ * one. A peer without a namespaceSelector is in the policy's own namespace.
+ * A peer bound by no policy of the answering type is the policy-coverage
  * rules' concern and is not reported here. Rules that select namespaces by
  * anything but their name, and ipBlock peers, name no namespace and are
  * skipped.

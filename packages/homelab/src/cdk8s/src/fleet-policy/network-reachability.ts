@@ -60,6 +60,22 @@ export function namespaceNamedBy(peer: NetworkPolicyPeer): string | undefined {
 }
 
 /**
+ * The one namespace whose pods a rule peer names: the policy's own namespace
+ * for a peer without a namespaceSelector, otherwise the namespace its
+ * selector names by `kubernetes.io/metadata.name`. An ipBlock, and a
+ * namespaceSelector on any other label, name no single namespace.
+ */
+export function peerNamespace(
+  peer: NetworkPolicyPeer,
+  policyNamespace: string,
+): string | undefined {
+  if (peer.ipBlock !== undefined) return undefined;
+  return peer.namespaceSelector === undefined
+    ? policyNamespace
+    : namespaceNamedBy(peer);
+}
+
+/**
  * Whether a rule peer selects the pods. A peer without a namespaceSelector
  * means the policy's own namespace. Namespaces are known here only by name,
  * which is the one namespace label the fleet's policies select on. An ipBlock

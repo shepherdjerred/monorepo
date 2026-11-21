@@ -19,7 +19,6 @@ import {
   externalHttpsEgressRule,
   blackboxProbeIngressRule,
   postgresEgress,
-  postgresOperatorIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 function buildPgUrl(): string {
@@ -54,8 +53,6 @@ export function createTasknotesDeployment(chart: Chart) {
             "TaskNotes requires writable filesystem for server operations",
         },
       },
-      // The pods predate the construct and carry no `app` label.
-      podMetadata: {},
     },
     // The root filesystem is writable
     tmp: false,
@@ -165,24 +162,26 @@ export function createTasknotesDeployment(chart: Chart) {
       probePath: "/api/health",
       hosts: [{ id: "tasknotes-ingress", host: tailnetService("tasknotes") }],
     },
+    // Both policies select the app pods alone. The Spilo pod of
+    // tasknotes-postgresql stays unselected, like the other single-app
+    // clusters: Patroni holds its leader lease through the Kubernetes API,
+    // which an Egress policy written for the app would cut off.
     policies: [
       // Allow ingress from Tailscale (mobile app via Tailscale)
       {
         name: "tasknotes-ingress-netpol",
-        selects: "namespace",
+        selects: "app",
         ingress: [
           tailscaleIngressRule(),
           // Allow blackbox-exporter's in-cluster health probe (http service port
           // only — not every port on the pod)
           blackboxProbeIngressRule(3000),
-          // PostgreSQL operator access to database pods in this namespace
-          postgresOperatorIngressRule(),
         ],
       },
       // Allow egress to DNS, external HTTPS, and PostgreSQL
       {
         name: "tasknotes-egress-netpol",
-        selects: "namespace",
+        selects: "app",
         egress: [
           // DNS
           dnsEgressRule(),

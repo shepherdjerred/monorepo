@@ -20,6 +20,7 @@ import {
 import {
   apiServerRulesOffEndpoint,
   postgresClustersClosedToOperator,
+  postgresClustersWithoutApiServer,
 } from "./platform-peers.ts";
 import {
   egressPodsWithoutDns,
@@ -90,12 +91,12 @@ const RULES: readonly {
     allowlist: PROBE_PORTS_NOT_ADMITTED,
   },
   {
-    name: "every cross-namespace Egress rule is admitted by its peer's Ingress policy",
+    name: "every Egress rule naming a namespace's pods is admitted by their Ingress policy",
     violations: (current) => unreciprocatedRules(current, "Egress"),
     allowlist: UNRECIPROCATED_EGRESS_RULES,
   },
   {
-    name: "every cross-namespace Ingress rule is allowed by its peer's Egress policy",
+    name: "every Ingress rule naming a namespace's pods is allowed by their Egress policy",
     violations: (current) => unreciprocatedRules(current, "Ingress"),
     allowlist: UNRECIPROCATED_INGRESS_RULES,
   },
@@ -112,6 +113,11 @@ const RULES: readonly {
   {
     name: "every policed PostgreSQL cluster admits the postgres-operator",
     violations: postgresClustersClosedToOperator,
+    allowlist: NO_DEBT,
+  },
+  {
+    name: "every PostgreSQL cluster an Egress policy selects can reach the API server",
+    violations: postgresClustersWithoutApiServer,
     allowlist: NO_DEBT,
   },
   {

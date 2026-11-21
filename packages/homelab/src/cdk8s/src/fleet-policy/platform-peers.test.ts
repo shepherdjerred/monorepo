@@ -5,6 +5,7 @@ import { fleetOf, namespacePeer, policy, tcpPort } from "./fleet-fixtures.ts";
 import {
   apiServerRulesOffEndpoint,
   postgresClustersClosedToOperator,
+  postgresClustersWithoutApiServer,
 } from "./platform-peers.ts";
 
 function apiViolations(rule: FleetPolicyRule) {
@@ -96,5 +97,70 @@ describe("postgresClustersClosedToOperator", () => {
         }),
       ]),
     ).toEqual(["media/media-postgresql:5432", "media/media-postgresql:8008"]);
+  });
+});
+
+function apiServerViolations(networkPolicies: readonly FleetNetworkPolicy[]) {
+  return postgresClustersWithoutApiServer(
+    fleetOf({ objects: [CLUSTER], networkPolicies }),
+  );
+}
+
+describe("postgresClustersWithoutApiServer", () => {
+  const DNS_ONLY = {
+    egress: [{ peers: [namespacePeer("kube-system")], ports: [tcpPort(53)] }],
+  };
+  const namespaceWide = policy("media", undefined, DNS_ONLY);
+
+  test("a cluster no Egress policy selects reaches the API server", () => {
+    expect(apiServerViolations([])).toEqual([]);
+  });
+
+  test("a policy that selects the app alone leaves the cluster unpoliced", () => {
+    expect(apiServerViolations([policy("media", "media", DNS_ONLY)])).toEqual(
+      [],
+    );
+  });
+
+  test("a namespace-wide policy without the API server cuts Patroni off", () => {
+    expect(apiServerViolations([namespaceWide])).toEqual([
+      "media/media-postgresql",
+    ]);
+  });
+
+  test("a policy selecting the operator's spilo label binds the cluster", () => {
+    expect(
+      apiServerViolations([
+        {
+          ...namespaceWide,
+          podSelector: { matchLabels: { application: "spilo" } },
+        },
+      ]),
+    ).toEqual(["media/media-postgresql"]);
+  });
+
+  test.each([
+    ["the advertised endpoint", to(`${PROD_NODE_INTERNAL_IP}/32`, 6443)],
+    ["every address", to("0.0.0.0/0", 6443)],
+    ["any peer", { peers: undefined, ports: [tcpPort(6443)] }],
+  ] as const)("a rule opening %s on 6443 passes", (_, rule) => {
+    expect(
+      apiServerViolations([
+        namespaceWide,
+        policy("media", undefined, { egress: [rule] }),
+      ]),
+    ).toEqual([]);
+  });
+
+  test.each([
+    ["the node's LAN address", to("192.168.1.81/32", 6443)],
+    ["another port", to(`${PROD_NODE_INTERNAL_IP}/32`, 443)],
+  ] as const)("a rule opening %s does not", (_, rule) => {
+    expect(
+      apiServerViolations([
+        namespaceWide,
+        policy("media", undefined, { egress: [rule] }),
+      ]),
+    ).toEqual(["media/media-postgresql"]);
   });
 });
