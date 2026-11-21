@@ -116,49 +116,56 @@ test.each([
   },
 );
 
-test("the artwork cache cap defaults to 3 GiB and takes a managed value", async () => {
+test("the artwork cache cap defaults to 1 GiB and takes a managed value", async () => {
   await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
   await expect(
     mediaBehaviorConfig("production").get("artworkCacheMaxBytes"),
-  ).resolves.toEqual({ value: 3_221_225_472, source: "default" });
+  ).resolves.toEqual({ value: 1_073_741_824, source: "default" });
   await shutdownFeatureFlags();
   await initFeatureFlags({
     environment: { FEATURE_FLAGS_MODE: "disabled" },
     provider: new StaticProvider({
-      "media-artwork-cache-max-bytes": "1073741824",
+      "media-artwork-cache-max-bytes": "3221225472",
     }),
   });
   await expect(
     mediaBehaviorConfig("production").get("artworkCacheMaxBytes"),
-  ).resolves.toEqual({ value: 1_073_741_824, source: "flag" });
+  ).resolves.toEqual({ value: 3_221_225_472, source: "flag" });
 });
 
-test.each([undefined, "", "artwork", "./artwork"])(
-  "bootstrap requires an absolute artwork cache directory, not %s",
+const bootstrapEnvironment = {
+  DATABASE_URL: "postgresql://media@localhost/media",
+  MEDIA_CREDENTIAL_KEY: "key",
+  PLEX_SERVER_MACHINE_ID: "server",
+  PLEX_SERVER_URL: "http://plex:32400",
+  PLEX_OWNER_ACCOUNT_ID: "owner",
+  TMDB_TOKEN: "token",
+  PUBLIC_ORIGIN: "https://media.example.test",
+  TEMPORAL_ADDRESS: "temporal:7233",
+  TEMPORAL_NAMESPACE: "prod",
+};
+
+test("the artwork cache directory defaults to the pod's /tmp and takes a mount path", () => {
+  expect(
+    BootstrapSchema.parse(bootstrapEnvironment).MEDIA_ARTWORK_CACHE_DIR,
+  ).toBe("/tmp/media-artwork");
+  expect(
+    BootstrapSchema.parse({
+      ...bootstrapEnvironment,
+      MEDIA_ARTWORK_CACHE_DIR: "/var/cache/media/artwork",
+    }).MEDIA_ARTWORK_CACHE_DIR,
+  ).toBe("/var/cache/media/artwork");
+});
+
+test.each(["", "artwork", "./artwork"])(
+  "bootstrap refuses the relative artwork cache directory %j instead of defaulting",
   (directory) => {
-    const environment = {
-      DATABASE_URL: "postgresql://media@localhost/media",
-      MEDIA_CREDENTIAL_KEY: "key",
-      PLEX_SERVER_MACHINE_ID: "server",
-      PLEX_SERVER_URL: "http://plex:32400",
-      PLEX_OWNER_ACCOUNT_ID: "owner",
-      TMDB_TOKEN: "token",
-      PUBLIC_ORIGIN: "https://media.example.test",
-      TEMPORAL_ADDRESS: "temporal:7233",
-      TEMPORAL_NAMESPACE: "prod",
-    };
     expect(
       BootstrapSchema.safeParse({
-        ...environment,
+        ...bootstrapEnvironment,
         MEDIA_ARTWORK_CACHE_DIR: directory,
       }).success,
     ).toBe(false);
-    expect(
-      BootstrapSchema.parse({
-        ...environment,
-        MEDIA_ARTWORK_CACHE_DIR: "/var/cache/media/artwork",
-      }).MEDIA_ARTWORK_CACHE_DIR,
-    ).toBe("/var/cache/media/artwork");
   },
 );
 

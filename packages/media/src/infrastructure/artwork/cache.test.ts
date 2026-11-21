@@ -27,15 +27,23 @@ async function seed(root: string, names: string[]): Promise<void> {
 }
 
 describe("artwork disk cache", () => {
-  test("refuses a missing directory and a path that is not a directory", async () => {
+  test("creates a missing directory with its parents and leaves it empty", async () => {
+    const root = path.join(await artworkRoot(), "absent", "artwork");
+    const { cache } = await artworkFixture({ root });
+    expect(await listing(root)).toEqual([]);
+    await cache.write("w342", posterName(1), jpeg(40));
+    expect(await listing(path.join(root, "w342"))).toEqual([posterName(1)]);
+  });
+
+  test("refuses a path that is a file and a path that cannot be created", async () => {
     const root = await artworkRoot();
-    await expect(
-      artworkFixture({ root: path.join(root, "absent") }),
-    ).rejects.toThrow("missing or not writable");
     await writeFile(path.join(root, "file"), "x");
     await expect(
       artworkFixture({ root: path.join(root, "file") }),
-    ).rejects.toThrow("missing or not writable");
+    ).rejects.toThrow("cannot be created or is not writable");
+    await expect(
+      artworkFixture({ root: path.join(root, "file", "artwork") }),
+    ).rejects.toThrow("cannot be created or is not writable");
     expect(await listing(root)).toEqual(["file"]);
   });
 

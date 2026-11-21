@@ -208,9 +208,8 @@ access was not verified within the last five minutes, so every `library` is
 ## Artwork route
 
 Browsers never contact TMDB. `GET /api/v1/artwork/:size/:file` serves a TMDB
-image from the Media origin to a signed-in member, and keeps the bytes on a
-persistent volume so the cache survives a deploy and keeps serving while TMDB
-is unreachable.
+image from the Media origin to a signed-in member, and keeps the bytes on disk
+so an image already fetched keeps serving while TMDB is unreachable.
 
 | Part     | Contract                                                                |
 | -------- | ----------------------------------------------------------------------- |
@@ -236,13 +235,16 @@ failures and are never passed through, so the route cannot be used to reach
 another host or to serve other content. A `404` is remembered in memory for ten
 minutes (at most 1024 file names; an entry expires when it is next read).
 
-The cache directory is `MEDIA_ARTWORK_CACHE_DIR`, a required bootstrap
-setting: the API refuses to start when the directory is missing or not
-writable instead of caching somewhere that does not persist. Files are stored
-as `<directory>/<size>/<file>`, written to a temporary file in the same
+The cache directory is the bootstrap setting `MEDIA_ARTWORK_CACHE_DIR`, which
+defaults to `/tmp/media-artwork`. In the cluster that is the API pod's
+`emptyDir`, so the cache starts empty on every deploy and pod restart until
+the deployment mounts a volume and points the variable at it. The API creates
+the directory when it starts and refuses to start when it cannot create or
+write it; it never runs without the cache or moves it elsewhere. Files are
+stored as `<directory>/<size>/<file>`, written to a temporary file in the same
 directory, synced and renamed, and never expire, because a TMDB file name
 always names the same bytes. The cap is the `media-artwork-cache-max-bytes`
-flag (3 GiB by default, read when the API starts); a write that takes the
+flag (1 GiB by default, read when the API starts); a write that takes the
 cache past it evicts the least recently used files. Recency is held in an
 in-memory index built from one directory scan at first use, ordered by file
 modification time, so a hit never writes to disk and a restart falls back to

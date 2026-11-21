@@ -17,7 +17,7 @@ function isMissing(error: unknown): boolean {
 }
 
 /**
- * Artwork bytes on a persistent volume, laid out as `<root>/<size>/<file>`.
+ * Artwork bytes in one directory, laid out as `<root>/<size>/<file>`.
  *
  * TMDB file names are content-addressed, so an entry never expires; the only
  * removal is least-recently-used eviction once the stored bytes pass the cap.
@@ -38,9 +38,9 @@ export class ArtworkDiskCache {
   ) {}
 
   /**
-   * Requires `root` to be an existing, writable directory. The volume is
-   * deployment wiring, so its absence stops the server instead of moving the
-   * cache somewhere that does not survive a restart.
+   * Creates `root` when it is absent, then proves it is a directory this
+   * process can write to. A root that cannot be created or written stops the
+   * server: the cache is never switched off or moved somewhere else.
    */
   static async open(
     root: string,
@@ -49,14 +49,13 @@ export class ArtworkDiskCache {
   ): Promise<ArtworkDiskCache> {
     const probe = path.join(root, `${TEMPORARY_PREFIX}${crypto.randomUUID()}`);
     try {
-      const directory = await stat(root);
-      if (!directory.isDirectory()) throw new Error("Not a directory");
+      await mkdir(root, { recursive: true });
       const handle = await open(probe, "wx");
       await handle.close();
       await rm(probe);
     } catch (error) {
       throw new Error(
-        `Artwork cache directory ${root} is missing or not writable`,
+        `Artwork cache directory ${root} cannot be created or is not writable`,
         { cause: error },
       );
     }
