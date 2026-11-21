@@ -19,8 +19,11 @@ function isMissing(error: unknown): boolean {
 /**
  * Artwork bytes in one directory, laid out as `<root>/<size>/<file>`.
  *
- * TMDB file names are content-addressed, so an entry never expires; the only
- * removal is least-recently-used eviction once the stored bytes pass the cap.
+ * An entry is keyed by size and file name and never expires. TMDB's CDN may
+ * re-encode a file, so two fetches of one name can differ in bytes, but they
+ * are the same picture: a stored copy stays a valid image for its name. The
+ * only removal is least-recently-used eviction once the stored bytes pass the
+ * cap.
  * The index (key to byte length, oldest use first) lives in memory and is
  * built from one directory scan at first use, ordered by modification time
  * because recency is not written to disk: a hit only reorders the index.

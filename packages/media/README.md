@@ -225,7 +225,9 @@ The allow-list and file pattern live in
 [`src/shared/artwork/proxy.ts`](src/shared/artwork/proxy.ts). A success carries
 `Cache-Control: private, max-age=31536000, immutable`: `private` so a shared
 cache in front of the origin does not store an image that is only served
-behind a session. Every error keeps the application's `no-store`.
+behind a session, and `immutable` because a size and file name always name the
+same picture; TMDB gives changed art a new file name. Every error keeps the
+application's `no-store`.
 
 An upstream response is accepted only when it is a `200` of at most 4 MiB whose
 content type is `image/jpeg` or `image/png`, matches the file extension, and
@@ -242,8 +244,10 @@ the deployment mounts a volume and points the variable at it. The API creates
 the directory when it starts and refuses to start when it cannot create or
 write it; it never runs without the cache or moves it elsewhere. Files are
 stored as `<directory>/<size>/<file>`, written to a temporary file in the same
-directory, synced and renamed, and never expire, because a TMDB file name
-always names the same bytes. The cap is the `media-artwork-cache-max-bytes`
+directory, synced and renamed, and never expire. The cache is keyed by size
+and file name, not by content: TMDB's CDN may re-encode a file, so two fetches
+of one name can return different bytes, and a cached copy stays a valid image
+for that name until it is evicted. The cap is the `media-artwork-cache-max-bytes`
 flag (1 GiB by default, read when the API starts); a write that takes the
 cache past it evicts the least recently used files. Recency is held in an
 in-memory index built from one directory scan at first use, ordered by file

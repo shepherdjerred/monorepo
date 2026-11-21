@@ -9,9 +9,11 @@ import {
 import { parseInput } from "#server/validation.ts";
 
 /**
- * A size and file name always name the same bytes, so a browser may keep them
- * for a year. `private` keeps a shared cache in front of the origin from
- * storing an image that is only served to a signed-in member.
+ * A size and file name always name the same picture, and changed art gets a
+ * new file name, so a browser may keep a copy for a year without asking again.
+ * The bytes are not fixed: TMDB's CDN may re-encode a file. `private` keeps a
+ * shared cache in front of the origin from storing an image that is only
+ * served to a signed-in member.
  */
 const ARTWORK_CACHE_CONTROL = "private, max-age=31536000, immutable";
 
