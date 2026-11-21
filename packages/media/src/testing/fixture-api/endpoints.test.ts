@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { ProfileListSchema, QualityRulesSchema } from "#shared/api.ts";
+import {
+  CatalogSearchSchema,
+  ProfileListSchema,
+  QualityRulesSchema,
+} from "#shared/api.ts";
+import { CatalogFeedSchema } from "#shared/catalog/contract.ts";
 import {
   ApiErrorSchema,
   AvailabilitySchema,
@@ -35,6 +40,16 @@ async function readInterests(query: string) {
     persona: "member",
   });
   return { outcome, body: await overTheWire(outcome.body) };
+}
+
+async function readCatalog(path: string) {
+  const outcome = routeFixture({
+    method: "GET",
+    url: new URL(`http://fixture.invalid/api/v1/catalog/${path}`),
+    persona: "member",
+  });
+  const page = CatalogSearchSchema.safeParse(await overTheWire(outcome.body));
+  return { status: outcome.status, results: page.data?.results, page };
 }
 
 describe("fixture endpoints", () => {
@@ -148,6 +163,47 @@ describe("fixture volume", () => {
       .filter((path) => path !== null);
     for (const path of paths) {
       expect(path).toMatch(/^\/[0-9a-f]{27}\.jpg$/u);
+    }
+  });
+
+  it("shows every state a catalog card can be in, pages each feed, and refuses a bad feed or page", async () => {
+    const search = await readCatalog("search?q=the");
+    const cards = (search.results ?? []).map(({ library }) => {
+      if (library === null) return "not in library";
+      if (library.availability === "available") return "available movie";
+      if (library.availability !== null)
+        return library.requested ? "movie on the way" : "movie not available";
+      if (library.episodes === null) return "series, episodes unknown";
+      return library.episodes.available < library.episodes.total
+        ? "series partly available"
+        : "series available";
+    });
+    expect([...new Set(cards)].sort()).toEqual([
+      "available movie",
+      "movie not available",
+      "movie on the way",
+      "not in library",
+      "series available",
+      "series partly available",
+      "series, episodes unknown",
+    ]);
+    for (const feed of CatalogFeedSchema.options) {
+      const first = await readCatalog(`discover?feed=${feed}`);
+      expect(first.results?.length, feed).toBeGreaterThan(0);
+      expect(first.page.data?.totalPages, feed).toBeLessThanOrEqual(5);
+    }
+    const first = await readCatalog("discover?feed=trending");
+    const second = await readCatalog("discover?feed=trending&page=2");
+    expect(second.page.data).toMatchObject({ page: 2 });
+    expect(second.results?.[0]).not.toEqual(first.results?.[0]);
+    for (const path of [
+      "discover",
+      "discover?feed=popular",
+      "discover?feed=trending&page=6",
+      "search?q=the&page=0",
+    ]) {
+      const refused = await readCatalog(path);
+      expect(refused.status, path).toBe(400);
     }
   });
 

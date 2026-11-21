@@ -46,7 +46,10 @@ export function createSystemHttpServer(input: {
   const { db, cipher, serverMachineId } = input;
   const errors: Error[] = [];
   const outbox = createOutboxActivities(db, input.startWorkflow);
-  const catalog = new TmdbCatalogApplication(db, input.tmdb);
+  const catalog = new TmdbCatalogApplication(db, input.tmdb, {
+    serverMachineId,
+    sections: { movie: "1", series: "2" },
+  });
   const plexAdmin = new PrismaPlexAdministration(db, cipher, input.plex, {
     serverUrl: input.plexUrl,
     serverMachineId,

@@ -4,6 +4,10 @@ import type { MediaActor } from "#application/auth.ts";
 import type { CatalogApplication } from "#application/ports.ts";
 import { MediaError } from "#application/errors.ts";
 import { parseInput, readJson } from "#server/validation.ts";
+import {
+  CatalogFeedSchema,
+  CatalogPageSchema,
+} from "#shared/catalog/contract.ts";
 
 const AdoptSchema = z.strictObject({
   kind: z.enum(["movie", "series"]),
@@ -18,13 +22,25 @@ export function registerCatalogRoutes(
   app.get("/api/v1/catalog/search", async (c) =>
     c.json(
       await catalog.search(
+        c.get("actor"),
         parseInput(z.string().min(1).max(200), c.req.query("q")),
+        parseInput(CatalogPageSchema, c.req.query("page")),
+      ),
+    ),
+  );
+  app.get("/api/v1/catalog/discover", async (c) =>
+    c.json(
+      await catalog.discover(
+        c.get("actor"),
+        parseInput(CatalogFeedSchema, c.req.query("feed")),
+        parseInput(CatalogPageSchema, c.req.query("page")),
       ),
     ),
   );
   app.get("/api/v1/catalog/:kind/:id", async (c) =>
     c.json(
       await catalog.details(
+        c.get("actor"),
         parseInput(z.enum(["movie", "series"]), c.req.param("kind")),
         parseInput(z.coerce.number().int().positive(), c.req.param("id")),
       ),

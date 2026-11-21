@@ -17,7 +17,7 @@ import {
   libraryViewPolicy,
 } from "#infrastructure/library/views/policy.ts";
 import { externalAvailableMediaIds } from "#infrastructure/external-library/availability.ts";
-import { PlexAccessSchema } from "#shared/plex-binding/contract.ts";
+import { permittedPlexAccess } from "#infrastructure/library/views/plex-access.ts";
 import { rootArtwork } from "#infrastructure/library/views/artwork.ts";
 
 export type CalendarReadSettings = {
@@ -121,25 +121,7 @@ export class PrismaCalendarApplication {
       const external = await externalAvailableMediaIds(
         tx,
         visible.map((row) => row.mediaId),
-        ["movie", "series"].flatMap((kind) => {
-          const sectionId =
-            kind === "movie"
-              ? this.settings.sections?.movie
-              : this.settings.sections?.series;
-          return sectionId === undefined ||
-            this.settings.serverMachineId === undefined ||
-            reader.user.plexIdentity?.permittedSectionIds.includes(
-              sectionId,
-            ) !== true
-            ? []
-            : [
-                PlexAccessSchema.parse({
-                  serverMachineId: this.settings.serverMachineId,
-                  sectionId,
-                  sectionType: kind === "movie" ? "movie" : "show",
-                }),
-              ];
-        }),
+        permittedPlexAccess(this.settings, reader.user),
       );
       return CalendarPageSchema.parse({
         events: visible

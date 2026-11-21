@@ -14,6 +14,7 @@ import {
   EpisodeGroupSchema,
   normalizeEpisodeGroup,
 } from "./tmdb/catalog.ts";
+import type { CatalogFeed } from "#shared/catalog/contract.ts";
 
 const MovieSchema = z.object({
   id: z.number().int().positive(),
@@ -35,9 +36,12 @@ const SeriesSchema = z.object({
   backdrop_path: z.string().nullable(),
   original_language: z.string(),
 });
-const SearchSchema = z.object({
+const paging = {
   page: z.number().int().positive(),
   total_pages: z.number().int().nonnegative(),
+};
+const SearchSchema = z.object({
+  ...paging,
   results: z.array(
     z.discriminatedUnion("media_type", [
       MovieSchema.extend({ media_type: z.literal("movie") }),
@@ -50,6 +54,63 @@ const SearchSchema = z.object({
     ]),
   ),
 });
+const MovieListSchema = z.object({ ...paging, results: z.array(MovieSchema) });
+const SeriesListSchema = z.object({
+  ...paging,
+  results: z.array(SeriesSchema),
+});
+/** A movie or series as TMDB lists it, labelled the way `search/multi` labels it. */
+export type TmdbTitle =
+  | (z.infer<typeof MovieSchema> & { media_type: "movie" })
+  | (z.infer<typeof SeriesSchema> & { media_type: "tv" });
+type TmdbTitlePage = { page: number; totalPages: number; results: TmdbTitle[] };
+
+function mixedTitles(result: z.infer<typeof SearchSchema>): TmdbTitlePage {
+  return {
+    page: result.page,
+    totalPages: result.total_pages,
+    results: result.results.filter((item) => item.media_type !== "person"),
+  };
+}
+
+function movieTitles(result: z.infer<typeof MovieListSchema>): TmdbTitlePage {
+  return {
+    page: result.page,
+    totalPages: result.total_pages,
+    results: result.results.map((item) => ({ ...item, media_type: "movie" })),
+  };
+}
+
+function seriesTitles(result: z.infer<typeof SeriesListSchema>): TmdbTitlePage {
+  return {
+    page: result.page,
+    totalPages: result.total_pages,
+    results: result.results.map((item) => ({ ...item, media_type: "tv" })),
+  };
+}
+/**
+ * TMDB list endpoints behind each discover feed. Only `trending/all` mixes
+ * movies, series and people and labels each result with `media_type`; the
+ * others return one kind and no label.
+ */
+const feeds = {
+  trending: { path: "trending/all/week", params: {}, media: "mixed" },
+  popular_movies: { path: "movie/popular", params: {}, media: "movie" },
+  popular_series: { path: "tv/popular", params: {}, media: "tv" },
+  upcoming_movies: {
+    path: "movie/upcoming",
+    params: { region: "US" },
+    media: "movie",
+  },
+  on_the_air: { path: "tv/on_the_air", params: {}, media: "tv" },
+} as const satisfies Record<
+  CatalogFeed,
+  {
+    path: string;
+    params: Record<string, string>;
+    media: "mixed" | "movie" | "tv";
+  }
+>;
 const EpisodeSchema = z.object({
   id: z.number().int().positive(),
   name: z.string(),
@@ -72,18 +133,36 @@ export class TmdbClient {
   async search(query: string, page = 1, signal?: AbortSignal) {
     z.string().trim().min(1).max(200).parse(query);
     z.number().int().min(1).max(500).parse(page);
-    const result = SearchSchema.parse(
-      await this.get(
-        "search/multi",
-        { query, page: String(page), include_adult: "false" },
-        signal,
+    return mixedTitles(
+      SearchSchema.parse(
+        await this.get(
+          "search/multi",
+          { query, page: String(page), include_adult: "false" },
+          signal,
+        ),
       ),
     );
-    return {
-      page: result.page,
-      totalPages: result.total_pages,
-      results: result.results.filter((item) => item.media_type !== "person"),
-    };
+  }
+
+  /** One page of a discover feed, in the shape `search` returns. */
+  async list(feed: CatalogFeed, page = 1, signal?: AbortSignal) {
+    z.number().int().min(1).max(500).parse(page);
+    const source = feeds[feed];
+    const wire = await this.get(
+      source.path,
+      { ...source.params, page: String(page) },
+      signal,
+    );
+    const result =
+      source.media === "mixed"
+        ? mixedTitles(SearchSchema.parse(wire))
+        : source.media === "movie"
+          ? movieTitles(MovieListSchema.parse(wire))
+          : seriesTitles(SeriesListSchema.parse(wire));
+    // A list that ignored `page` would otherwise repeat its first page forever.
+    if (result.page !== page)
+      throw new IntegrationError("tmdb", "invalid-response");
+    return result;
   }
 
   async movie(id: number, signal?: AbortSignal) {

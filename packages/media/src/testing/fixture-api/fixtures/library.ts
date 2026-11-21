@@ -7,7 +7,7 @@ import {
 import type { Persona } from "#testing/fixture-api/personas.ts";
 import { pick, versionOf } from "#testing/fixture-api/support.ts";
 import { storedArtwork } from "./artwork.ts";
-import { TITLES } from "./titles.ts";
+import { TITLES, type Title } from "./titles.ts";
 
 type LibraryPage = z.input<typeof LibraryPageSchema>;
 type LibraryItem = LibraryPage["items"][number];
@@ -26,9 +26,18 @@ const PROTECTION = {
   unclassified: "review_required",
 } as const;
 
+/** How the library holds a title; the catalog fixtures agree with it. */
+export function libraryPolicy(title: Title): (typeof POLICIES)[number] {
+  return pick(POLICIES, title.index);
+}
+
+export function libraryInterest(title: Title): (typeof INTERESTS)[number] {
+  return pick(INTERESTS, title.index);
+}
+
 function libraryItems(persona: Persona): LibraryItem[] {
   return TITLES.map((title): LibraryItem => {
-    const policy = pick(POLICIES, title.index);
+    const policy = libraryPolicy(title);
     return {
       id: title.id,
       title: title.title,
@@ -37,7 +46,7 @@ function libraryItems(persona: Persona): LibraryItem[] {
       year: title.index % 17 === 16 ? null : title.year,
       artwork: storedArtwork(title),
       policy,
-      myInterest: pick(INTERESTS, title.index),
+      myInterest: libraryInterest(title),
       availability: title.index % 13 === 12 ? null : title.availability,
       protection: PROTECTION[policy],
       libraryKeeping:

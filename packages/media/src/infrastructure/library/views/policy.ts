@@ -1,3 +1,5 @@
+import type { Prisma } from "#generated/prisma/client.ts";
+
 type Claim = {
   userId: string;
   active: boolean;
@@ -47,6 +49,27 @@ export function libraryViewPolicy(media: LibraryPolicyNode, actorId: string) {
     ),
   };
 }
+
+/** What the actor's own claims on a title amount to; any past claim counts as released. */
+export function libraryInterest(
+  media: { requests: readonly { userId: string }[] },
+  policy: { following: boolean },
+  actorId: string,
+): "following" | "released" | "none" {
+  if (policy.following) return "following";
+  return media.requests.some((claim) => claim.userId === actorId)
+    ? "released"
+    : "none";
+}
+
+/** A title is in the household library while something holds it there. */
+export const libraryMemberWhere = {
+  OR: [
+    { intents: { some: { libraryKeep: true } } },
+    { requests: { some: { active: true, excluded: false } } },
+    { assets: { some: { current: true } } },
+  ],
+} satisfies Prisma.MediaItemWhereInput;
 
 export const libraryPolicyInclude = {
   intents: { where: { edition: "default" } },

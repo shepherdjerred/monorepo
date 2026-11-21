@@ -13,6 +13,14 @@ export const actor: MediaActor = {
   restricted: false,
   version: 0,
 };
+function emptyCatalogPage() {
+  return Promise.resolve({
+    page: 1,
+    totalPages: 0,
+    libraryAccess: "current" as const,
+    results: [],
+  });
+}
 const migrationFixture: MediaAppDependencies["migrationAdmin"] = {
   discover() {
     return Promise.reject(
@@ -438,9 +446,8 @@ export function fixture() {
       },
     },
     catalog: {
-      search() {
-        return Promise.resolve({ page: 1, totalPages: 0, results: [] });
-      },
+      search: emptyCatalogPage,
+      discover: emptyCatalogPage,
       details() {
         return Promise.reject(new MediaError("not_found", "Missing", 404));
       },

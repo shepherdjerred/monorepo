@@ -6,22 +6,27 @@ import {
   LibraryQuerySchema,
   type LibraryQuery,
 } from "#shared/household/library.ts";
-import { PlexAccessSchema } from "#shared/plex-binding/contract.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { repeatableRead } from "#infrastructure/locks.ts";
 import { visibilityReader } from "#infrastructure/visibility/access.ts";
 import { externalAvailableMediaIds } from "#infrastructure/external-library/availability.ts";
 import {
+  libraryInterest,
+  libraryMemberWhere,
   libraryViewInclude,
   libraryViewPolicy,
 } from "#infrastructure/library/views/policy.ts";
-import type { CalendarReadSettings } from "#infrastructure/library/views/calendar.ts";
+import {
+  libraryAvailability,
+  permittedPlexAccess,
+  type LibraryReadSettings,
+} from "#infrastructure/library/views/plex-access.ts";
 import { rootArtwork } from "#infrastructure/library/views/artwork.ts";
 
 export class PrismaLibraryApplication {
   constructor(
     private readonly db: Database,
-    private readonly settings: CalendarReadSettings,
+    private readonly settings: LibraryReadSettings,
   ) {}
 
   list(actor: MediaActor, raw: LibraryQuery) {
@@ -52,13 +57,7 @@ export class PrismaLibraryApplication {
               ? {}
               : { title: { contains: query.query, mode: "insensitive" } },
             after,
-            {
-              OR: [
-                { intents: { some: { libraryKeep: true } } },
-                { requests: { some: { active: true, excluded: false } } },
-                { assets: { some: { current: true } } },
-              ],
-            },
+            libraryMemberWhere,
           ],
         },
         include: libraryViewInclude,
@@ -68,30 +67,12 @@ export class PrismaLibraryApplication {
       const page = rows.slice(0, query.limit);
       const last = page.at(-1);
       const visible = page.filter((media) => reader.visible(media));
-      const access = ["movie", "series"].flatMap((kind) => {
-        const sectionId =
-          kind === "movie"
-            ? this.settings.sections?.movie
-            : this.settings.sections?.series;
-        return sectionId === undefined ||
-          this.settings.serverMachineId === undefined ||
-          reader.user.plexIdentity?.permittedSectionIds.includes(sectionId) !==
-            true
-          ? []
-          : [
-              PlexAccessSchema.parse({
-                serverMachineId: this.settings.serverMachineId,
-                sectionId,
-                sectionType: kind === "movie" ? "movie" : "show",
-              }),
-            ];
-      });
       const external = await externalAvailableMediaIds(
         tx,
         visible
           .filter((media) => media.kind === "movie")
           .map((media) => media.id),
-        access,
+        permittedPlexAccess(this.settings, reader.user),
       );
       return LibraryPageSchema.parse({
         items: visible.map((media) => {
@@ -106,17 +87,8 @@ export class PrismaLibraryApplication {
             year: media.year,
             artwork: rootArtwork(media),
             ...libraryPolicyLabels(policy),
-            myInterest: policy.following
-              ? "following"
-              : media.requests.some((claim) => claim.userId === actor.id)
-                ? "released"
-                : "none",
-            availability:
-              media.kind === "series"
-                ? null
-                : external.has(media.id)
-                  ? "available"
-                  : media.availability,
+            myInterest: libraryInterest(media, policy, actor.id),
+            availability: libraryAvailability(media, external),
             libraryKeeping:
               target !== undefined && reader.owner
                 ? {
