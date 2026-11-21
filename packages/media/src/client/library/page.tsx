@@ -35,14 +35,7 @@ export function LibraryPage({ user }: { user: MediaUser }) {
   const items = library.data?.pages.flatMap((page) => page.items) ?? [];
   return (
     <>
-      <PageTitle
-        eyebrow={
-          user.role === "owner"
-            ? "Your household collection"
-            : "Your shared collection"
-        }
-        title="Library"
-      >
+      <PageTitle title="Library">
         <p>
           Your favorites and temporary requests, with the reason each title
           stays.

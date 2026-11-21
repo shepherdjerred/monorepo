@@ -41,7 +41,6 @@ export function Login() {
           </span>{" "}
           media<span className="brand-dot">.</span>
         </a>
-        <p className="eyebrow">A good night starts here</p>
         <h1>
           Your next watch.
           <br />

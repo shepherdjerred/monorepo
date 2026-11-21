@@ -12,7 +12,7 @@ import {
 } from "#shared/migration.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { readApi, writeApi, queryClient, sessionBoundary } from "./api.ts";
-import { ErrorNotice, Loading } from "./components.tsx";
+import { ErrorNotice, Loading, PageTitle } from "./components.tsx";
 import "./migration.css";
 import { MigrationBundles } from "./migration-bundle.tsx";
 import { MigrationDiscovery } from "./migration-discovery.tsx";
@@ -61,14 +61,12 @@ export function MigrationPage({ user }: { user: MediaUser }) {
   });
   return (
     <section className="migration-page">
-      <header className="page-title">
-        <p className="eyebrow">OWNER WORKSPACE</p>
-        <h1>Bring your library over.</h1>
+      <PageTitle title="Migration">
         <p>
           Review a read-only capture from your existing managers. Every source
           record stays unowned until a separate verified handoff.
         </p>
-      </header>
+      </PageTitle>
       <div className="notice">
         Approval saves your review. It does not pause another manager, adopt
         files, change torrents, or enable automation. Protected entries require

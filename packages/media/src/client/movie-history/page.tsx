@@ -60,7 +60,6 @@ function MovieHistoryReviewPageV3({
   return (
     <>
       <PageTitle
-        eyebrow="Present household intent"
         title={`${title} — ${movieEditionDisplayLabel(scope.edition)}`}
       >
         <p>

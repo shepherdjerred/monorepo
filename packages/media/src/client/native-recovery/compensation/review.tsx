@@ -37,10 +37,7 @@ export function NativeCompensationReview({
       : FinishedNativeCompensationSchema.parse(review.plan);
   return (
     <>
-      <PageTitle
-        eyebrow="Exact interrupted upgrade review"
-        title="Restore reviewed predecessor files"
-      >
+      <PageTitle title="Restore reviewed predecessor files">
         <p>
           Restore the earlier files and their installed subtitles while
           retaining successor bytes. This does not establish whether a successor
@@ -48,7 +45,7 @@ export function NativeCompensationReview({
         </p>
       </PageTitle>
       <p>
-        <Link to="/recovery/native/compensations">
+        <Link to="/manage/recovery/native/compensations">
           All interrupted upgrades
         </Link>{" "}
         · <Link to="/recovery">Household protection</Link>

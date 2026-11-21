@@ -267,7 +267,6 @@ export function NotificationCallback({
   return (
     <>
       <PageTitle
-        eyebrow="Personal updates"
         title={
           channel === "email"
             ? "Verify your email"

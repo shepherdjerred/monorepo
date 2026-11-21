@@ -68,17 +68,14 @@ export function SeriesPackNativeReview({
   );
   return (
     <>
-      <PageTitle
-        eyebrow="Interrupted TV pack review"
-        title="Restore the reviewed earlier TV files"
-      >
+      <PageTitle title="Restore the reviewed earlier TV files">
         <p>
           Review every file in this interrupted upgrade. Restoration preserves
           the earlier subtitles and retains the newer bytes for recovery.
         </p>
       </PageTitle>
       <p>
-        <Link to="/recovery/native/compensations">
+        <Link to="/manage/recovery/native/compensations">
           All interrupted upgrades
         </Link>
         {" · "}

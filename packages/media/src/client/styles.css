@@ -46,22 +46,33 @@
   .skip-link:focus {
     top: 12px;
   }
-  .app-shell {
-    display: flex;
-    min-height: 100vh;
+  /*
+   * The shell's fixed sizes (see `shell/`). They are set here because the
+   * document needs them too: the top bar is sticky and, on a phone, the tab
+   * bar is fixed, so a focused element or an in-page jump must come to rest
+   * clear of both.
+   */
+  :root {
+    --shell-top: 64px;
+    --shell-bottom: 0px;
+    --shell-gutter: var(--space-6);
+    scroll-padding-top: calc(var(--shell-top) + var(--space-3));
+    scroll-padding-bottom: calc(
+      var(--shell-bottom) + env(safe-area-inset-bottom, 0px) + var(--space-3)
+    );
   }
-  .sidebar {
-    width: 240px;
-    flex-shrink: 0;
-    padding: 36px 20px 22px;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border);
-    background: var(--surface-sunken);
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
+  @media (max-width: 760px) {
+    :root {
+      --shell-top: 60px;
+      --shell-bottom: 56px;
+      --shell-gutter: var(--space-4);
+    }
+  }
+  /* A navigation moves focus to the page's heading. */
+  .page-title h1:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 4px;
+    border-radius: 2px;
   }
   .brand {
     display: flex;
@@ -90,134 +101,15 @@
   .brand-dot {
     color: var(--text-accent);
   }
-  .nav-label {
-    margin: 55px 0 var(--space-4) var(--space-4);
-    text-transform: uppercase;
-    font-size: var(--text-xs);
-    letter-spacing: var(--tracking-label);
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-  .sidebar nav {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-  .sidebar nav a {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-control);
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    border-inline-start: 3px solid transparent;
-  }
-  .sidebar nav a span {
-    width: 20px;
-    text-align: center;
-    font-size: var(--text-xl);
-    line-height: 1;
-  }
-  .sidebar nav a:hover {
-    color: var(--text);
-    background: var(--surface);
-  }
-  .sidebar nav a[aria-current="page"] {
-    background: var(--surface-selected);
-    color: var(--text-accent);
-    border-inline-start-color: currentColor;
-  }
-  .sidebar-bottom {
-    margin-top: auto;
-    padding: 22px 6px 0;
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 11px;
-    align-items: center;
-  }
-  .avatar {
-    width: 36px;
-    height: 36px;
-    background: var(--surface-selected);
-    border: 1px solid var(--border-strong);
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    color: var(--text);
-    font-size: var(--text-sm);
-  }
-  .sidebar-bottom strong {
-    display: block;
-    font-size: var(--text-sm);
-    font-weight: 500;
-  }
-  .sidebar-bottom div span {
-    display: block;
-    margin-top: var(--space-1);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-  }
-  .signout {
-    margin-left: auto;
-    border: none;
-    background: none;
-    color: var(--text-muted);
-    padding: 7px;
-    font-size: var(--text-xl);
-  }
-  .main-content {
-    width: min(100%, 1500px);
-    min-width: 0;
-    padding: 0 6% var(--space-5);
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-  }
-  .topline {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border);
-    padding: 28px 0 25px;
-    margin-bottom: var(--space-7);
-    font-size: var(--text-xs);
-    letter-spacing: var(--tracking-label);
-    font-weight: 500;
-    color: var(--text-muted);
-  }
-  .topline-account {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    letter-spacing: 0.02em;
-  }
-  .topline-account i {
-    display: block;
-    width: 6px;
-    height: 6px;
-    background: var(--ok);
-    border-radius: 50%;
-    box-shadow: 0 0 10px color-mix(in srgb, var(--ok) 20%, transparent);
-  }
   .page-title {
     margin-bottom: var(--space-6);
     max-width: 850px;
   }
-  .page-title p:not(.eyebrow) {
+  .page-title p {
     color: var(--text-muted);
     font-size: var(--text-md);
     margin-bottom: 0;
     max-width: 680px;
-  }
-  .eyebrow {
-    color: var(--text-accent);
-    text-transform: uppercase;
-    font-size: var(--text-xs);
-    font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    margin-bottom: 17px;
   }
   .search-form {
     display: flex;
@@ -337,11 +229,6 @@
     font-size: var(--text-sm);
     max-width: 310px;
     margin-bottom: 25px;
-  }
-  .welcome-card .eyebrow {
-    font-size: var(--text-xs);
-    color: var(--art-on-pine-muted);
-    letter-spacing: var(--tracking-label);
   }
   .welcome-card .text-link {
     color: var(--lamp-soft);
@@ -871,15 +758,6 @@
     margin-top: 20px;
     font-size: var(--text-sm);
   }
-  .page-footer {
-    display: flex;
-    justify-content: space-between;
-    color: var(--text-muted);
-    font-size: var(--text-xs);
-    margin-top: auto;
-    padding-top: 65px;
-    gap: 20px;
-  }
   .loading {
     display: flex;
     align-items: center;
@@ -990,13 +868,6 @@
     color: var(--art-cream);
   }
   @media (max-width: 1100px) {
-    .sidebar {
-      width: 205px;
-    }
-    .main-content {
-      padding-left: 4%;
-      padding-right: 4%;
-    }
     .welcome-card {
       padding: 30px;
     }
@@ -1021,17 +892,6 @@
     }
   }
   @media (max-width: 760px) {
-    .app-shell {
-      display: block;
-    }
-    .sidebar {
-      position: relative;
-      width: auto;
-      height: auto;
-      padding: 18px 20px 14px;
-      border-right: none;
-      border-bottom: 1px solid var(--border);
-    }
     .brand {
       font-size: var(--text-xl);
       padding-left: 0;
@@ -1040,47 +900,10 @@
       width: 28px;
       height: 30px;
     }
-    .nav-label {
-      display: none;
-    }
-    .sidebar-bottom {
-      position: absolute;
-      display: flex;
-      top: 18px;
-      right: 20px;
-      border: 0;
-      padding: 0;
-      margin: 0;
-    }
-    .sidebar-bottom .avatar,
-    .sidebar-bottom div {
-      display: none;
-    }
-    .sidebar nav {
-      flex-direction: row;
-      overflow-x: auto;
-      gap: var(--space-2);
-      margin-top: 20px;
-      padding-bottom: 5px;
-    }
-    .sidebar nav a {
-      padding: 10px 13px;
-      white-space: nowrap;
-    }
-    .sidebar nav a span {
-      display: none;
-    }
-    .main-content {
-      padding: 0 20px var(--space-5);
-    }
-    .topline {
-      padding: 20px 0;
-      margin-bottom: 30px;
-    }
     .page-title {
       margin-bottom: var(--space-5);
     }
-    .page-title p:not(.eyebrow) {
+    .page-title p {
       font-size: var(--text-sm);
     }
     .welcome-card {
@@ -1132,11 +955,6 @@
     }
     .panel {
       padding: 22px;
-    }
-    .page-footer {
-      padding-top: 40px;
-      flex-direction: column;
-      gap: var(--space-2);
     }
     .login-screen {
       grid-template-columns: 1fr;

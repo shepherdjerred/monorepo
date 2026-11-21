@@ -106,7 +106,6 @@ export function NativeRecoveryReview({
   return (
     <>
       <PageTitle
-        eyebrow="Exact physical review"
         title={
           quarantined
             ? "Recover quarantined file ownership"
@@ -119,7 +118,7 @@ export function NativeRecoveryReview({
         </p>
       </PageTitle>
       <p>
-        <Link to="/recovery/native">All native recovery reviews</Link>
+        <Link to="/manage/recovery/native">All native recovery reviews</Link>
       </p>
       {result.isPending && <Loading />}
       {result.error !== null && <ErrorNotice error={result.error} />}

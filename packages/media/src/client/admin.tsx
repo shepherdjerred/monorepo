@@ -403,7 +403,7 @@ function SubtitleUploader({
           ) : (
             <>
               Replacement candidate validated; no file has changed.{" "}
-              <Link to="/admin/subtitle-replacements">
+              <Link to="/manage/subtitles/replacements">
                 Prepare its replacement review
               </Link>
               .
@@ -436,7 +436,7 @@ export function ManualSubtitleAdministration({ user }: { user: MediaUser }) {
     <section aria-labelledby="upload-heading">
       <h2 id="upload-heading">Upload subtitles</h2>
       <p>
-        <Link to="/admin/subtitle-replacements">
+        <Link to="/manage/subtitles/replacements">
           Review subtitle replacements
         </Link>
         . Selecting an existing sidecar below creates a candidate for explicit

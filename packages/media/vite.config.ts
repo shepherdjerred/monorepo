@@ -11,7 +11,15 @@ export default defineConfig({
   // function as written, and the browser suite fails when the built
   // stylesheet still contains it.
   css: { transformer: "lightningcss" },
-  build: { outDir: "dist", emptyOutDir: true, sourcemap: true },
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+    sourcemap: true,
+    // One stylesheet for the whole client, although the owner's pages are
+    // separate script chunks: a browser fixes the cascade layer order at the
+    // first `@layer` it reads, and a single sheet always opens with it.
+    cssCodeSplit: false,
+  },
   server: {
     host: "127.0.0.1",
     port: 7358,

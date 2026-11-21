@@ -525,29 +525,84 @@ fails the unit test rather than rendering an error notice in the browser. Add a
 fixture by adding an entry; a new client read with no entry fails the browser
 suite with a `404`.
 
-The browser suite opens every member route and the main owner routes at 1440 and
+The browser suite opens every member route and every Manage page that has a
+fixture at 1440 and
 390 pixels wide, in the light and the dark color scheme. It fails on an error
 notice, a console or uncaught error, a failed API response, a request to any
 other origin, a wrong document title, or a WCAG 2.2 AA violation, color contrast
 included, that `e2e/browser/axe-baseline.ts` does not list. That baseline is
 empty and compared exactly; nothing may be added to it to make a new violation
 pass. Routes the fixture API cannot answer yet are listed in
-`e2e/browser/routes.ts`.
+`e2e/browser/routes.ts`. `e2e/browser/shell.spec.ts` drives the shell itself:
+search, the account panel and theme, focus after a navigation, and every address
+that moved.
+
+A spec runs in both projects, `desktop` and `mobile`, unless its name says which
+layout it is about: `*.desktop.spec.ts` (the sidebar) runs only in `desktop` and
+`*.phone.spec.ts` (the tab bar and its More sheet) only in `mobile`. Put a
+layout-specific test in one of those files instead of skipping it by viewport;
+the root quality ratchet rejects `test.skip`.
 
 The suite runs in Woodpecker's browser lane with the other Playwright targets,
 not in the `ci` or `extended` Vitest tiers.
 
+### Client shell and routes
+
+`src/client/shell/routes.tsx` is the one route table, used by `main.tsx` in a
+browser router and by the session tests in a memory router. Its root element is
+the session gate in `app.tsx`: the sign-in page until a session is known, then
+the shell (`shell/shell.tsx`) around the matched page. The shell is keyed by
+session generation, so a changed principal never keeps a mounted page.
+
+Everyone gets Discover, Library, My requests, Calendar, Watch history, Leaving
+soon, and Removed. Notifications and recovery reviews are reached from the top
+bar and the account panel, because members use both. The owner also gets Manage,
+one page per topic under `/manage`:
+
+| Address                               | Page                                             |
+| ------------------------------------- | ------------------------------------------------ |
+| `/manage/household`                   | Who can make requests                            |
+| `/manage/quality`                     | Living-room guide and quality profiles           |
+| `/manage/subtitles`                   | Subtitle upload                                  |
+| `/manage/subtitles/replacements/:id?` | Subtitle replacement reviews                     |
+| `/manage/plex`                        | Plex identities                                  |
+| `/manage/numbering`                   | Anime absolute numbering                         |
+| `/manage/providers`                   | Providers and seeding policy                     |
+| `/manage/activity`                    | Operations                                       |
+| `/manage/recovery`                    | Links to each recovery job                       |
+| `/manage/recovery/native/:id?`        | Native file recovery, archives, and compensation |
+| `/manage/migration`                   | Migration captures and library import            |
+
+Each Manage page is a lazy route, so its code is a separate chunk that a member
+never downloads; a member who opens a Manage address is sent to `/discover`.
+The whole client still ships one stylesheet (`build.cssCodeSplit` is off),
+because the cascade layer order is fixed by the first `@layer` a browser reads.
+
+Addresses from before Manage existed redirect, keeping their path parameters,
+query string, and fragment: `/` to `/discover`, `/admin` to `/manage/household`,
+`/admin/migration`, `/admin/subtitle-replacements/:id?`, `/recovery/native/:id?`,
+and `/activity` to their pages above. Notification emails, Discord messages, and
+OAuth returns carry client addresses, so a route may move only if its old
+address is added to `movedRoutes` in the route table; `shell/routes.test.tsx`
+lists the addresses the server writes.
+
+After a navigation the shell moves focus to the new page's heading, which is why
+every page renders its heading through `PageTitle`. The top bar's search submits
+to `/discover?q=`, and Discover reads its search from that parameter.
+
 ### Client styles and themes
 
-The client is styled with plain global CSS in five cascade layers, lowest
-priority first: `reset`, `tokens`, `base`, `components`, `pages`.
+The client is styled with CSS in five cascade layers, lowest priority first:
+`reset`, `tokens`, `base`, `components`, `pages`. Most of it is global; the
+shell and Manage layout use CSS Modules (`*.module.css`, read through
+`ui/class-names.ts`), whose rules sit in `components` like the shared classes.
 
 | File                                                     | Layer           | Holds                                                     |
 | -------------------------------------------------------- | --------------- | --------------------------------------------------------- |
 | `src/client/styles/tokens.css`                           | `tokens`        | Every color, type size, radius, shadow, and spacing step. |
 | `src/client/styles/fonts.css`                            | none            | The `@font-face` rules for the self-hosted fonts.         |
 | `src/client/styles/base.css`                             | `reset`, `base` | Element defaults.                                         |
-| `src/client/styles.css`                                  | `components`    | The layer order, the shell, and the shared class rules.   |
+| `src/client/styles.css`                                  | `components`    | The layer order, shell sizes, and the shared class rules. |
 | A feature's own stylesheet, such as `calendar/style.css` | `pages`         | Rules for one page or panel.                              |
 
 A rule in a later layer wins over an earlier one whatever its specificity, so a
@@ -568,6 +623,13 @@ The theme follows the system color scheme. Setting `data-theme="light"` or
 supported switch, because the rewritten tokens follow the `color-scheme`
 declarations in `tokens.css` and not a `color-scheme` set from script. The
 `theme-color` metas in `index.html` repeat the two canvas colors.
+
+The account panel offers System, Light, and Dark. `shell/theme.ts` keeps the
+choice in `localStorage` under `media.theme` (nothing is stored for System),
+applies it from `main.tsx` before the first render, and points both
+`theme-color` metas at the pinned canvas. The page has no inline script, so a
+pinned theme is applied by the module script; if storage is unavailable the
+choice lasts until the page is closed.
 
 Status badges take one of five tones (`ok`, `progress`, `warn`, `danger`,
 `neutral`) from the table in `src/client/status/tone.ts`. `Status` accepts only
@@ -2240,9 +2302,9 @@ interaction.
 An existing owned but quality-unverified sidecar does not satisfy readiness and
 is never silently overwritten by a newly accepted candidate. A canonical-path
 collision ends the install with `subtitle_path_requires_owner_review`. Owners can
-select an installed sidecar in Administration's upload form to create a separate
-validated candidate without queuing installation. At `/admin/subtitle-replacements`,
-select the current subtitle and candidate, prepare the file review, and approve
+select an installed sidecar in the upload form at `/manage/subtitles` to create a
+separate validated candidate without queuing installation. At
+`/manage/subtitles/replacements`, select the current subtitle and candidate, prepare the file review, and approve
 its exact observation and version. Only the same video, destination and subtitle
 format are supported; embedded, unowned, cross-epoch and ambiguous files remain
 protected. The video's version does not change.
@@ -2287,7 +2349,7 @@ filename does not prove ownership, so reconciliation does not automatically adop
 or delete these artifacts. Keep the protection in place while investigating the
 exact journal and files; retrying alone cannot supply missing creation evidence.
 
-Owners can upload and review captures at `/admin/migration`. The API saves
+Owners can upload and review captures at `/manage/migration`. The API saves
 immutable capture records and report evidence. Approval binds capture/report
 hashes, recovery epoch, runtime version, and expected proposal version. It only
 records review: no manager pause, filesystem operation, torrent change, ownership

@@ -65,17 +65,16 @@ export function SubtitleReplacementReview({
   const expired = reviewExpired(review);
   return (
     <>
-      <PageTitle
-        eyebrow="Exact subtitle review"
-        title="Replace an installed subtitle"
-      >
+      <PageTitle title="Replace an installed subtitle">
         <p>
           Replace one owned sidecar at its existing filename. The video remains
           unchanged.
         </p>
       </PageTitle>
       <p>
-        <Link to="/admin/subtitle-replacements">All subtitle replacements</Link>
+        <Link to="/manage/subtitles/replacements">
+          All subtitle replacements
+        </Link>
       </p>
       {result.isPending && <Loading />}
       {result.error !== null && <ErrorNotice error={result.error} />}

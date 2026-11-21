@@ -38,7 +38,7 @@ export function MovieHistoryIndexV3({
       {owner && scope === undefined ? (
         <p>
           Open a movie and select its protected edition to find or prepare its
-          household review. <Link to="/">Find a movie</Link>.
+          household review. <Link to="/discover">Find a movie</Link>.
         </p>
       ) : (
         <>

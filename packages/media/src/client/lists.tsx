@@ -1,17 +1,13 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router";
 import { ownerHealthDescriptions } from "#shared/notification-authority.ts";
 import {
-  CommandResultSchema,
   NotificationListSchema,
-  OperationListSchema,
-  ProfileListSchema,
   RemovalListSchema,
   RequestListSchema,
-  UserListSchema,
 } from "#shared/api.ts";
 import type { MediaUser } from "#shared/contract.ts";
-import { queryClient, readApi, writeApi } from "./api.ts";
+import { readApi } from "./api.ts";
 import {
   dateLabel,
   EmptyState,
@@ -28,18 +24,10 @@ import {
   ListedMediaAction,
   RequestProtection,
 } from "./target-controls/protection.tsx";
-import {
-  ProviderAdministration,
-  ManualSubtitleAdministration,
-} from "./admin.tsx";
 import { NotificationCallback, NotificationSettings } from "./preferences.tsx";
 import { DeliveryActions } from "./notification-actions.tsx";
-import { ProfileEditor } from "./profile-controls.tsx";
-import { PlexProfileAdministration } from "./plex-admin.tsx";
-import { NumberingAdministration } from "./numbering-admin.tsx";
 import { MovieRequests } from "./movie-editions/requests.tsx";
 import { RequestInterests } from "./household/interests.tsx";
-import { QualityGuideAdministration } from "./quality-guide/administration.tsx";
 import { useImportedRequests } from "./personal-migration/source.tsx";
 
 export function RequestsPage({ user }: { user: MediaUser }) {
@@ -51,7 +39,7 @@ export function RequestsPage({ user }: { user: MediaUser }) {
   });
   return (
     <>
-      <PageTitle eyebrow="Your watchlist, in motion" title="My requests">
+      <PageTitle title="My requests">
         <p>
           Everything you’ve asked for, from the first search to movie night.
         </p>
@@ -100,48 +88,6 @@ export function RequestsPage({ user }: { user: MediaUser }) {
   );
 }
 
-export function ActivityPage() {
-  const activity = useQuery({
-    queryKey: ["activity"],
-    queryFn: async () => readApi("/activity", OperationListSchema),
-    refetchInterval: 10_000,
-  });
-  return (
-    <>
-      <PageTitle eyebrow="Behind the scenes" title="Activity">
-        <p>A clear view of what’s happening in your library.</p>
-      </PageTitle>
-      {activity.isPending && <Loading />}
-      {activity.error !== null && <ErrorNotice error={activity.error} />}
-      {activity.data?.length === 0 && (
-        <EmptyState title="All quiet here">
-          New requests, upgrades, and library changes will appear here.
-        </EmptyState>
-      )}
-      <div className="timeline">
-        {activity.data?.map((operation) => (
-          <article className="timeline-item" key={operation.id}>
-            <span className="timeline-dot" aria-hidden="true" />
-            <div className="item-main">
-              <h2>{humanize(operation.kind)}</h2>
-              <p>{dateLabel(operation.updatedAt)}</p>
-              {operation.mediaId !== null && (
-                <Link
-                  className="text-link"
-                  to={`/media/${encodeURIComponent(operation.mediaId)}`}
-                >
-                  View title →
-                </Link>
-              )}
-            </div>
-            <Status value={operation.status} />
-          </article>
-        ))}
-      </div>
-    </>
-  );
-}
-
 export function RemovalsPage({ user }: { user: MediaUser }) {
   const removals = useQuery({
     queryKey: ["removals"],
@@ -150,7 +96,7 @@ export function RemovalsPage({ user }: { user: MediaUser }) {
   });
   return (
     <>
-      <PageTitle eyebrow="Room for something new" title="Leaving soon">
+      <PageTitle title="Leaving soon">
         <p>
           Titles leave when no one is following and no permanent Keep remains.
           You’ll have time to change your mind before Media removes the files.
@@ -214,7 +160,7 @@ export function NotificationsPage({ user }: { user: MediaUser }) {
     return <NotificationCallback user={user} channel="email" />;
   return (
     <>
-      <PageTitle eyebrow="Stay in the loop" title="Notifications">
+      <PageTitle title="Notifications">
         <p>
           New arrivals, subtitle updates, and a little notice before anything
           leaves.
@@ -279,101 +225,6 @@ export function NotificationsPage({ user }: { user: MediaUser }) {
           </article>
         ))}
       </div>
-    </>
-  );
-}
-
-export function AdminPage({ user }: { user: MediaUser }) {
-  const users = useQuery({
-    queryKey: ["users"],
-    queryFn: async () => readApi("/admin/users", UserListSchema),
-  });
-  const profiles = useQuery({
-    queryKey: ["profiles"],
-    queryFn: async () => readApi("/profiles", ProfileListSchema),
-  });
-  const restrict = useMutation({
-    mutationFn: async (input: {
-      id: string;
-      version: number;
-      restricted: boolean;
-    }) =>
-      writeApi({
-        actorId: user.id,
-        path: `/admin/users/${encodeURIComponent(input.id)}`,
-        body: { expectedVersion: input.version, restricted: input.restricted },
-        schema: CommandResultSchema,
-        method: "PATCH",
-      }),
-    onSuccess: async () =>
-      queryClient.invalidateQueries({ queryKey: ["users"] }),
-  });
-  return (
-    <>
-      <PageTitle eyebrow="Library owner" title="Administration">
-        <p>
-          Manage your household’s access and review the library’s quality
-          profiles.
-        </p>
-      </PageTitle>
-      {users.error !== null && <ErrorNotice error={users.error} />}
-      {profiles.error !== null && <ErrorNotice error={profiles.error} />}
-      {restrict.error !== null && <ErrorNotice error={restrict.error} />}
-      <section className="panel">
-        <h2>Household access</h2>
-        {users.isPending && <Loading />}
-        {users.data?.map((person) => (
-          <div className="list-row" key={person.id}>
-            <div>
-              <strong>{person.displayName}</strong>
-              <p className="muted">{humanize(person.role)}</p>
-            </div>
-            <Status
-              value={person.restricted ? "requests_paused" : "requests_enabled"}
-            />
-            {person.role !== "owner" && (
-              <button
-                className="button subtle"
-                disabled={restrict.isPending}
-                onClick={() => {
-                  restrict.mutate({
-                    id: person.id,
-                    version: person.version,
-                    restricted: !person.restricted,
-                  });
-                }}
-              >
-                {person.restricted ? "Enable requests" : "Pause requests"}
-              </button>
-            )}
-          </div>
-        ))}
-      </section>
-      <QualityGuideAdministration user={user} />
-      <section className="panel">
-        <h2>Quality profiles</h2>
-        {profiles.isPending && <Loading />}
-        {profiles.data?.length === 0 && (
-          <p className="muted">No quality profiles have been configured yet.</p>
-        )}
-        {profiles.data?.map((profile) => (
-          <details className="profile-details" key={profile.id}>
-            <summary>
-              {profile.name}
-              <span>Version {profile.version}</span>
-            </summary>
-            <ProfileEditor user={user} profile={profile} />
-          </details>
-        ))}
-      </section>
-      <section className="panel">
-        <h2>Create a quality profile</h2>
-        <ProfileEditor user={user} profile={null} />
-      </section>
-      <ManualSubtitleAdministration user={user} />
-      <PlexProfileAdministration user={user} />
-      <NumberingAdministration user={user} />
-      <ProviderAdministration user={user} />
     </>
   );
 }

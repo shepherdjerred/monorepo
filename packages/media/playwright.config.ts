@@ -52,6 +52,9 @@ export default defineConfig({
       ]
     : "list",
   use: { baseURL, trace: "retain-on-failure" },
+  // A spec named `*.desktop.spec.ts` or `*.phone.spec.ts` tests something
+  // only that layout has (the sidebar, the tab bar) and runs in that project
+  // alone. Every other spec runs in both.
   projects: [
     {
       name: "desktop",
@@ -59,11 +62,13 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         viewport: { width: 1440, height: 900 },
       },
+      testIgnore: /\.phone\.spec\.ts$/u,
     },
     {
       name: "mobile",
       // iPhone 13 is 390 CSS pixels wide.
       use: { ...devices["iPhone 13"], defaultBrowserType: "chromium" },
+      testIgnore: /\.desktop\.spec\.ts$/u,
     },
   ],
   webServer: {

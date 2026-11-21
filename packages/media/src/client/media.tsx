@@ -57,7 +57,7 @@ export function MediaPage({ user }: { user: MediaUser }) {
         <Link className="back-link" to="/requests">
           ← My requests
         </Link>
-        <PageTitle eyebrow="Your request" title="Request protections" />
+        <PageTitle title="Request protections" />
         <ProtectionNotice />
         <ProtectionControls user={user} context={context} />
       </>
@@ -101,10 +101,11 @@ function MediaDetails({
       <Link className="back-link" to="/requests">
         ← My requests
       </Link>
-      <PageTitle
-        eyebrow={`${humanize(media.kind)}${media.year === null ? "" : ` · ${String(media.year)}`}`}
-        title={media.title}
-      >
+      <PageTitle title={media.title}>
+        <p>
+          {humanize(media.kind)}
+          {media.year === null ? "" : `, ${String(media.year)}`}
+        </p>
         <TitleAvailability media={media} />
       </PageTitle>
       {media.catalogState === "pending" && (

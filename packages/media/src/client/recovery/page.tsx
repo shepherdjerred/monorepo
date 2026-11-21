@@ -50,7 +50,7 @@ function RecoveryIndex({ user }: { user: MediaUser }) {
   });
   return (
     <>
-      <PageTitle eyebrow="Household review" title="Recovery protection">
+      <PageTitle title="Recovery protection">
         <p>
           Restored files cannot tell us who requested them or asked to keep them
           after a backup. These titles stay protected until the household states
@@ -91,7 +91,7 @@ function RecoveryIndex({ user }: { user: MediaUser }) {
       {user.role === "owner" && (
         <section className="panel">
           <p>
-            <Link to="/recovery/native">
+            <Link to="/manage/recovery/native">
               Reprove Media-published files after a database restore
             </Link>
           </p>
@@ -169,10 +169,7 @@ function RecoveryReview({ user, id }: { user: MediaUser; id: string }) {
   const review = result.data;
   return (
     <>
-      <PageTitle
-        eyebrow="Present household intent"
-        title="Review protected titles"
-      >
+      <PageTitle title="Review protected titles">
         <p>
           Your declaration stays pending until the owner applies the exact
           household review. To protect something immediately, use its existing

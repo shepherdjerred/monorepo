@@ -6,12 +6,15 @@ import {
   type KnownStatus,
 } from "./status/tone.ts";
 
+/**
+ * A page's header: its heading and, optionally, one line saying what the
+ * page is for. The heading takes focus after a navigation (see
+ * `shell/route-focus.ts`), which is why script can focus it.
+ */
 export function PageTitle({
-  eyebrow,
   title,
   children,
 }: {
-  eyebrow: string;
   title: string;
   children?: ReactNode;
 }) {
@@ -19,8 +22,7 @@ export function PageTitle({
     <header className="page-title">
       {/* One string child: React leaves a title with several text nodes empty. */}
       <title>{`${title} · Media`}</title>
-      <p className="eyebrow">{eyebrow}</p>
-      <h1>{title}</h1>
+      <h1 tabIndex={-1}>{title}</h1>
       {children}
     </header>
   );

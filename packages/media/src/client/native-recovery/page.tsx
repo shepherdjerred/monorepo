@@ -66,15 +66,12 @@ function NativeRecoveryIndex({ user }: { user: MediaUser }) {
     },
     onSuccess: (result) => {
       if (result.nativeRecoveryId !== undefined)
-        void navigate(`/recovery/native/${result.nativeRecoveryId}`);
+        void navigate(`/manage/recovery/native/${result.nativeRecoveryId}`);
     },
   });
   return (
     <>
-      <PageTitle
-        eyebrow="Operator recovery"
-        title="Reprove restored library files"
-      >
+      <PageTitle title="Reprove restored library files">
         <p>
           Recover ownership of files previously published by Media. A separate
           household review protects requests, Keep choices and pins that may be
@@ -84,9 +81,11 @@ function NativeRecoveryIndex({ user }: { user: MediaUser }) {
       <p>
         <Link to="/recovery">Household recovery protection</Link>
         {" · "}
-        <Link to="/recovery/native/archives">Review upgrade archives</Link>
+        <Link to="/manage/recovery/native/archives">
+          Review upgrade archives
+        </Link>
         {" · "}
-        <Link to="/recovery/native/compensations">
+        <Link to="/manage/recovery/native/compensations">
           Review interrupted upgrades
         </Link>
       </p>
@@ -228,7 +227,7 @@ function NativeRecoveryIndex({ user }: { user: MediaUser }) {
             <h2>Prepared reviews</h2>
             {inventory.data.plans.map((plan) => (
               <p key={plan.id}>
-                <Link to={`/recovery/native/${plan.id}`}>
+                <Link to={`/manage/recovery/native/${plan.id}`}>
                   {humanize(plan.state)} ·{" "}
                   {new Date(plan.createdAt).toLocaleString()}
                 </Link>

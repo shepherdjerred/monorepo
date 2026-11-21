@@ -1,11 +1,11 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { renderToString } from "react-dom/server";
-import { MemoryRouter } from "react-router";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { vi } from "vitest";
 import { UserSchema } from "#shared/contract.ts";
 import { RecoveryDetailSchema } from "#shared/recovery.ts";
-import { App } from "./app.tsx";
 import { queryClient, readApi, readSession } from "./api.ts";
+import { routes as clientRoutes } from "./shell/routes.tsx";
 
 export const reviewId = "00000000-0000-4000-8000-000000000001";
 export const privateTitle = "Fictional Owner Private Film";
@@ -131,12 +131,22 @@ export async function captureFailure(promise: Promise<unknown>) {
   throw new Error("Expected the retired operation to reject");
 }
 
+/**
+ * The whole client as the browser mounts it, at a review's address: the
+ * production route table in a memory router, so the session gate, the shell,
+ * and the page are the ones that ship.
+ */
 export function renderSession() {
-  return renderToString(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/recovery/${reviewId}`]}>
-        <App />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+  const router = createMemoryRouter(clientRoutes, {
+    initialEntries: [`/recovery/${reviewId}`],
+  });
+  try {
+    return renderToString(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+  } finally {
+    router.dispose();
+  }
 }

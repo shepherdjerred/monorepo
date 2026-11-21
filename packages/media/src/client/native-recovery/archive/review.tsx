@@ -29,10 +29,7 @@ export function NativeArchiveReview({
 }) {
   return (
     <>
-      <PageTitle
-        eyebrow="Exact physical review"
-        title="Resume archive expiry cleanup"
-      >
+      <PageTitle title="Resume archive expiry cleanup">
         <p>
           Only the explicitly selected old versions can become eligible for
           expiry cleanup. Current playback and unselected archives remain
@@ -40,8 +37,8 @@ export function NativeArchiveReview({
         </p>
       </PageTitle>
       <p>
-        <Link to="/recovery/native/archives">All upgrade archives</Link> ·{" "}
-        <Link to="/recovery">Household protection</Link>
+        <Link to="/manage/recovery/native/archives">All upgrade archives</Link>{" "}
+        · <Link to="/recovery">Household protection</Link>
       </p>
       <button className="button" onClick={onRefresh} disabled={refreshing}>
         {refreshing
