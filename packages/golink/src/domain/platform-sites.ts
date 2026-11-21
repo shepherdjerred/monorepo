@@ -20,12 +20,10 @@ const StaticSiteSchema = z.object({
   aliases: z.array(z.string().min(1)).optional(),
 });
 
-export const PlatformModelSitesSchema = z.object({
+const PlatformModelSitesSchema = z.object({
   publicHostnames: z.array(PublicHostnameSchema).default([]),
   staticSites: z.array(StaticSiteSchema).default([]),
 });
-
-export type PlatformModelSites = z.infer<typeof PlatformModelSitesSchema>;
 
 const ROOT_APEX_SLUGS: Readonly<Record<string, string>> = {
   "sjer.red": "sjer",

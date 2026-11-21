@@ -54,6 +54,34 @@ test.each(["beta", "prod"])(
   },
 );
 
+function assertGloballyEnabledBooleanFlag(
+  namespace: Parameters<typeof materializeManagedNamespaceEnvironment>[2],
+  key: Parameters<typeof managedBooleanDefault>[0],
+  expectedMeta?: Record<string, unknown>,
+): void {
+  for (const environment of ["beta", "prod"] as const) {
+    const flag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      namespace,
+    ).find((candidate) => candidate.key === key);
+    if (flag?.type !== "boolean") {
+      throw new Error(`${key} missing in ${environment}`);
+    }
+    expect(flag).toMatchObject({
+      ...expectedMeta,
+      type: "boolean",
+      default: true,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+    expect(classifyManagedBoolean(flag)).toBe("on");
+    expect(managedBooleanDefault(key, environment)).toBe(true);
+    expect(flag.defaultOffExceptions ?? []).toEqual([]);
+  }
+}
+
 const streambotMusicFlags = [
   "streambot-music-catalog-enabled",
   "streambot-spotify-links-enabled",
@@ -63,25 +91,7 @@ const streambotMusicFlags = [
 test.each(streambotMusicFlags)(
   "enables Streambot music and playlists globally in beta and prod for %s",
   (key) => {
-    for (const environment of ["beta", "prod"]) {
-      const flag = materializeManagedNamespaceEnvironment(
-        managedFlagInventory,
-        environment,
-        "streambot",
-      ).find((candidate) => candidate.key === key);
-      if (flag?.type !== "boolean")
-        throw new Error(`${key} missing in ${environment}`);
-      expect(flag).toMatchObject({
-        type: "boolean",
-        default: true,
-        rollouts: [],
-        rules: [],
-        thresholdRollouts: [],
-      });
-      expect(classifyManagedBoolean(flag)).toBe("on");
-      expect(managedBooleanDefault(key, environment)).toBe(true);
-      expect(flag.defaultOffExceptions ?? []).toEqual([]);
-    }
+    assertGloballyEnabledBooleanFlag("streambot", key);
   },
 );
 
@@ -709,26 +719,10 @@ describe("Golink first-party rollout", () => {
     "golink-writes-enabled",
     "golink-telemetry-enabled",
   ] as const)("enables %s globally in beta and prod", (key) => {
-    for (const environment of ["beta", "prod"]) {
-      const flag = materializeManagedNamespaceEnvironment(
-        managedFlagInventory,
-        environment,
-        "golink",
-      ).find((candidate) => candidate.key === key);
-      if (flag?.type !== "boolean") throw new Error(`${key} missing`);
-      expect(flag).toMatchObject({
-        owner: "golink",
-        namespace: "golink",
-        source: "golink",
-        type: "boolean",
-        default: true,
-        rollouts: [],
-        rules: [],
-        thresholdRollouts: [],
-      });
-      expect(classifyManagedBoolean(flag)).toBe("on");
-      expect(managedBooleanDefault(key, environment)).toBe(true);
-      expect(flag.defaultOffExceptions ?? []).toEqual([]);
-    }
+    assertGloballyEnabledBooleanFlag("golink", key, {
+      owner: "golink",
+      namespace: "golink",
+      source: "golink",
+    });
   });
 });

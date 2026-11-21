@@ -6,6 +6,22 @@ const SERVICE_ACCOUNT_CA_PATH =
   "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
 const DEFAULT_POLL_INTERVAL_MS = 30_000;
 
+const K8sLoadBalancerStatusSchema = z
+  .object({
+    loadBalancer: z
+      .object({
+        ingress: z
+          .array(
+            z.object({
+              hostname: z.string().optional(),
+            }),
+          )
+          .optional(),
+      })
+      .optional(),
+  })
+  .optional();
+
 const K8sIngressListSchema = z.object({
   items: z.array(
     z.object({
@@ -21,21 +37,7 @@ const K8sIngressListSchema = z.object({
             .optional(),
         })
         .optional(),
-      status: z
-        .object({
-          loadBalancer: z
-            .object({
-              ingress: z
-                .array(
-                  z.object({
-                    hostname: z.string().optional(),
-                  }),
-                )
-                .optional(),
-            })
-            .optional(),
-        })
-        .optional(),
+      status: K8sLoadBalancerStatusSchema,
     }),
   ),
 });
@@ -53,21 +55,7 @@ const K8sServiceListSchema = z.object({
           loadBalancerClass: z.string().optional(),
         })
         .optional(),
-      status: z
-        .object({
-          loadBalancer: z
-            .object({
-              ingress: z
-                .array(
-                  z.object({
-                    hostname: z.string().optional(),
-                  }),
-                )
-                .optional(),
-            })
-            .optional(),
-        })
-        .optional(),
+      status: K8sLoadBalancerStatusSchema,
     }),
   ),
 });

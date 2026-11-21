@@ -5,21 +5,13 @@ import { createGolinkChart } from "./golink.ts";
 import { GOLINK_FIRST_PARTY_ACTIVE } from "@shepherdjerred/homelab/cdk8s/src/resources/golink/index.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
+import { podTemplateSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
+import { synthManifests } from "@shepherdjerred/homelab/cdk8s/src/testing/synth-manifests.ts";
 import { KUBERNETES_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
-const image = `docker.io/shepherdjerred/golink@sha256:${"2".repeat(64)}`;
+const PINNED_GOLINK_IMAGE = `docker.io/shepherdjerred/golink@sha256:${"2".repeat(64)}`;
 
-const ManifestSchema = z.object({
-  kind: z.string(),
-  metadata: z.object({
-    name: z.string(),
-    annotations: z.record(z.string(), z.string()).optional(),
-    labels: z.record(z.string(), z.string()).optional(),
-  }),
-  spec: z.unknown(),
-});
-
-const ContainerSchema = z.object({
+const GolinkContainerSchema = z.object({
   name: z.string(),
   image: z.string(),
   command: z.array(z.string()).optional(),
@@ -27,30 +19,55 @@ const ContainerSchema = z.object({
   securityContext: z.unknown(),
 });
 
+const GolinkDeploymentSpecSchema = z.object({
+  template: podTemplateSchema(GolinkContainerSchema).extend({
+    spec: z.object({
+      containers: z.array(GolinkContainerSchema),
+      initContainers: z.array(GolinkContainerSchema),
+    }),
+  }),
+});
+
+function assertGolinkContainerContract(
+  container: z.infer<typeof GolinkContainerSchema>,
+): void {
+  expect(container.image).toBe(PINNED_GOLINK_IMAGE);
+  expect(container.securityContext).toMatchObject({
+    allowPrivilegeEscalation: false,
+    capabilities: { drop: ["ALL"] },
+    readOnlyRootFilesystem: true,
+    runAsNonRoot: true,
+    runAsUser: 1000,
+  });
+  const envNames = container.env.map((entry) => entry.name);
+  const dbUrlPos = envNames.indexOf("DATABASE_URL");
+  expect(dbUrlPos).toBeGreaterThan(envNames.indexOf("DB_USER"));
+  expect(dbUrlPos).toBeGreaterThan(envNames.indexOf("DB_PASSWORD"));
+  for (const entry of container.env) {
+    expect(entry.valueFrom?.secretKeyRef.optional).not.toBe(true);
+  }
+}
+
 beforeEach(resetProbeRegistry);
 
 describe("createGolinkChart", () => {
   test("defaults to inactive in Stage 1 and preserves the upstream tailscale/golink deployment", () => {
     expect(GOLINK_FIRST_PARTY_ACTIVE).toBe(false);
-    const defaultManifests = z
-      .array(ManifestSchema)
-      .parse(createGolinkChart(new App()).toJson());
-    const explicitInactive = z
-      .array(ManifestSchema)
-      .parse(createGolinkChart(new App(), { active: false }).toJson());
+    const defaultChart = synthManifests(createGolinkChart(new App()));
+    const explicitInactive = synthManifests(
+      createGolinkChart(new App(), { active: false }),
+    );
 
-    expect(defaultManifests).toEqual(explicitInactive);
-    expect(defaultManifests.map((resource) => resource.kind)).toEqual([
-      "Deployment",
-      "PersistentVolumeClaim",
-      "OnePasswordItem",
-      "NetworkPolicy",
+    expect(defaultChart.manifests).toEqual(explicitInactive.manifests);
+    expect(defaultChart.identities).toEqual([
+      "Deployment/golink",
+      "PersistentVolumeClaim/golink-pvc",
+      "OnePasswordItem/tailscale-auth-key",
+      "NetworkPolicy/golink-netpol",
     ]);
 
-    const deployment = defaultManifests.find(
-      (resource) => resource.kind === "Deployment",
-    );
-    const spec = z
+    const upstreamDeployment = defaultChart.of("Deployment")[0];
+    const upstreamSpec = z
       .object({
         template: z.object({
           spec: z.object({
@@ -58,104 +75,76 @@ describe("createGolinkChart", () => {
           }),
         }),
       })
-      .parse(deployment?.spec);
-    expect(spec.template.spec.containers[0]?.image).toMatch(
+      .parse(upstreamDeployment?.["spec"]);
+    expect(upstreamSpec.template.spec.containers[0]?.image).toMatch(
       /^ghcr\.io\/tailscale\/golink:/u,
     );
-    expect(
-      defaultManifests.find((resource) => resource.kind === "NetworkPolicy")
-        ?.metadata.name,
-    ).toBe("golink-netpol");
   });
 
   test("renders FirstPartyWebService, PostgreSQL, Deployment, Service, and tight NetworkPolicy when active", () => {
-    const resources = z
-      .array(ManifestSchema)
-      .parse(createGolinkChart(new App(), { active: true, image }).toJson());
-
-    expect(
-      resources.find((resource) => resource.kind === "Namespace")?.metadata
-        .name,
-    ).toBe("golink");
-    expect(
-      resources.find((resource) => resource.kind === "Service")?.metadata.name,
-    ).toBe("golink");
-    expect(
-      resources.find((resource) => resource.kind === "ServiceMonitor")?.metadata
-        .name,
-    ).toBe("golink-service-monitor");
-
-    const database = resources.find(
-      (resource) => resource.kind === "postgresql",
+    const rendered = synthManifests(
+      createGolinkChart(new App(), {
+        active: true,
+        image: PINNED_GOLINK_IMAGE,
+      }),
     );
-    expect(database?.metadata.name).toBe("golink-postgresql");
-    expect(database?.metadata.labels?.["velero.io/backup"]).toBe("enabled");
-    expect(
-      database?.metadata.annotations?.["argocd.argoproj.io/sync-options"],
-    ).toBe("Delete=false");
-    expect(database?.spec).toMatchObject({
+
+    expect(rendered.identities).toContain("Namespace/golink");
+    expect(rendered.identities).toContain("Service/golink");
+    expect(rendered.identities).toContain(
+      "ServiceMonitor/golink-service-monitor",
+    );
+
+    const database = z
+      .object({
+        metadata: z.object({
+          name: z.string(),
+          labels: z.record(z.string(), z.string()),
+          annotations: z.record(z.string(), z.string()),
+        }),
+        spec: z.unknown(),
+      })
+      .parse(rendered.of("postgresql")[0]);
+    expect(database.metadata).toMatchObject({
+      name: "golink-postgresql",
+      labels: { "velero.io/backup": "enabled" },
+      annotations: { "argocd.argoproj.io/sync-options": "Delete=false" },
+    });
+    expect(database.spec).toMatchObject({
+      databases: { golink_db: "golink" },
       postgresql: { version: "18" },
       volume: { size: "32Gi" },
-      databases: { golink_db: "golink" },
     });
 
-    const deployment = resources.find(
-      (resource) => resource.kind === "Deployment",
+    const deploymentSpec = GolinkDeploymentSpecSchema.parse(
+      rendered.of("Deployment")[0]?.["spec"],
     );
-    const spec = z
-      .object({
-        template: z.object({
-          metadata: z.object({ labels: z.record(z.string(), z.string()) }),
-          spec: z.object({
-            containers: z.array(ContainerSchema),
-            initContainers: z.array(ContainerSchema),
-          }),
-        }),
-      })
-      .parse(deployment?.spec);
-    expect(spec.template.metadata.labels["app"]).toBe("golink");
+    expect(deploymentSpec.template.metadata.labels).toMatchObject({
+      app: "golink",
+    });
 
-    for (const item of [
-      ...spec.template.spec.containers,
-      ...spec.template.spec.initContainers,
-    ]) {
-      expect(item.image).toBe(image);
-      expect(item.securityContext).toMatchObject({
-        runAsNonRoot: true,
-        runAsUser: 1000,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        capabilities: { drop: ["ALL"] },
-      });
-      const names = item.env.map((value) => value.name);
-      expect(names.indexOf("DB_USER")).toBeLessThan(
-        names.indexOf("DATABASE_URL"),
-      );
-      expect(names.indexOf("DB_PASSWORD")).toBeLessThan(
-        names.indexOf("DATABASE_URL"),
-      );
-      for (const value of item.env) {
-        if (value.valueFrom !== undefined) {
-          expect(value.valueFrom.secretKeyRef.optional).not.toBe(true);
-        }
-      }
+    const allContainers = [
+      ...deploymentSpec.template.spec.initContainers,
+      ...deploymentSpec.template.spec.containers,
+    ];
+    expect(allContainers).toHaveLength(2);
+    for (const container of allContainers) {
+      assertGolinkContainerContract(container);
     }
 
-    expect(spec.template.spec.initContainers[0]?.command).toEqual([
+    expect(deploymentSpec.template.spec.initContainers[0]?.command).toEqual([
       "bunx",
       "--no-install",
       "prisma",
       "migrate",
       "deploy",
     ]);
-    expect(spec.template.spec.containers[0]?.command).toEqual([
+    expect(deploymentSpec.template.spec.containers[0]?.command).toEqual([
       "bun",
       "src/server/index.ts",
     ]);
 
-    const policy = resources.find(
-      (resource) => resource.kind === "NetworkPolicy",
-    );
+    const policy = rendered.of("NetworkPolicy")[0];
     expect(policy?.metadata.name).toBe("golink-app-netpol");
     const policySpec = z
       .object({
@@ -172,7 +161,7 @@ describe("createGolinkChart", () => {
         ),
         egress: z.array(z.unknown()),
       })
-      .parse(policy?.spec);
+      .parse(policy?.["spec"]);
     expect(policySpec.podSelector.matchLabels).toEqual({ app: "golink" });
     expect(policySpec.ingress).toEqual([
       {
