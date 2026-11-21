@@ -8,7 +8,10 @@ import {
   type PreviewNumberingGroup,
 } from "#shared/acquisition/numbering.ts";
 import { queryClient, writeApi } from "#client/api.ts";
-import { ErrorNotice, Notice } from "#client/components.tsx";
+import { Button, ButtonRow } from "#client/ui/button.tsx";
+import { DataList, DataRow } from "#client/ui/data-list.tsx";
+import { Callout } from "#client/ui/feedback.tsx";
+import { CheckboxField, FieldGroup } from "#client/ui/field.tsx";
 
 export function NumberingBatchReview({
   user,
@@ -50,95 +53,94 @@ export function NumberingBatchReview({
       mapping.requiresOverride && !overrides.includes(mapping.episodeId),
   );
   return (
-    <section className="stack-form">
-      <h4>Review {preview.mappings.length} exact mappings</h4>
-      <p>
-        This saves numbering only. It does not request or download these
-        episodes.
-      </p>
-      {preview.mappings.map((mapping) => (
-        <div className="asset-card" key={mapping.episodeId}>
-          <strong>
-            S{mapping.seasonNumber} E{mapping.episodeNumber}: {mapping.title}
-          </strong>
-          <p>
-            Source order {mapping.rawOrder} → release number{" "}
-            {mapping.absoluteNumber}
-          </p>
-          <p className="helper">
-            TMDB episode {mapping.tmdbEpisodeId}
-            {mapping.previousAbsoluteNumber === null
-              ? " · No existing absolute mapping"
-              : ` · Current release number ${String(mapping.previousAbsoluteNumber)}`}
-          </p>
-          {mapping.requiresOverride && (
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={overrides.includes(mapping.episodeId)}
-                disabled={commit.isSuccess}
-                onChange={(event) => {
-                  setOverrides(
-                    event.target.checked
-                      ? [...overrides, mapping.episodeId]
-                      : overrides.filter((id) => id !== mapping.episodeId),
-                  );
-                }}
-              />
-              Replace this existing mapping after reviewing its evidence.
-            </label>
-          )}
-          {mapping.requiresOverride && (
-            <details>
-              <summary>Existing mapping evidence</summary>
-              <pre>{JSON.stringify(mapping.existingProvenance, null, 2)}</pre>
-            </details>
-          )}
-        </div>
-      ))}
-      <label className="checkbox-label">
-        <input
-          type="checkbox"
-          checked={acknowledged}
-          disabled={commit.isSuccess}
-          onChange={(event) => {
-            setAcknowledged(event.target.checked);
-          }}
-        />
-        I checked each canonical episode and proposed release number.
-      </label>
-      <button
-        className="button button-primary"
-        disabled={
-          unresolved || !acknowledged || commit.isPending || commit.isSuccess
-        }
-        onClick={() => {
-          commit.mutate();
+    <FieldGroup
+      legend={`Review ${String(preview.mappings.length)} numbers`}
+      description="Saving sets these numbers only. It does not request or download any of these episodes."
+    >
+      <DataList label="Numbers to save">
+        {preview.mappings.map((mapping) => (
+          <DataRow
+            key={mapping.episodeId}
+            title={`S${String(mapping.seasonNumber)} E${String(mapping.episodeNumber)}: ${mapping.title}`}
+            detail={
+              <>
+                Entry {mapping.rawOrder} in the group becomes release number{" "}
+                {mapping.absoluteNumber}. TMDB episode {mapping.tmdbEpisodeId}.{" "}
+                {mapping.previousAbsoluteNumber === null
+                  ? "It has no release number now."
+                  : `Its release number now is ${String(mapping.previousAbsoluteNumber)}.`}
+              </>
+            }
+          >
+            {mapping.requiresOverride && (
+              <>
+                <CheckboxField
+                  label="Replace this episode’s current number"
+                  description="Tick this after reading the evidence recorded for the current number."
+                  checked={overrides.includes(mapping.episodeId)}
+                  disabled={commit.isSuccess}
+                  onChange={(event) => {
+                    setOverrides(
+                      event.target.checked
+                        ? [...overrides, mapping.episodeId]
+                        : overrides.filter((id) => id !== mapping.episodeId),
+                    );
+                  }}
+                />
+                <details>
+                  <summary>Evidence for the current number</summary>
+                  <pre>
+                    {JSON.stringify(mapping.existingProvenance, null, 2)}
+                  </pre>
+                </details>
+              </>
+            )}
+          </DataRow>
+        ))}
+      </DataList>
+      <CheckboxField
+        label="I checked each episode against the release number it will get"
+        checked={acknowledged}
+        disabled={commit.isSuccess}
+        onChange={(event) => {
+          setAcknowledged(event.target.checked);
         }}
-      >
-        Save these mappings
-      </button>
-      {commit.error !== null && <ErrorNotice error={commit.error} />}
-      {commit.isSuccess && (
-        <Notice>
-          Mappings saved. Any acquisition using an older mapping must be
-          reviewed again.
-        </Notice>
+      />
+      {commit.error !== null && (
+        <Callout tone="danger">{commit.error.message}</Callout>
       )}
-      {preview.nextOffset !== null && (
-        <button
-          className="button"
-          disabled={!commit.isSuccess}
+      {commit.isSuccess && (
+        <Callout tone="ok">
+          Numbers saved. Any download that was matched with an older number has
+          to be reviewed again.
+        </Callout>
+      )}
+      <ButtonRow>
+        <Button
+          variant="primary"
+          busy={commit.isPending}
+          disabled={unresolved || !acknowledged || commit.isSuccess}
           onClick={() => {
-            if (preview.nextOffset !== null)
-              next({ ...preview.interpretation, offset: preview.nextOffset });
+            commit.mutate();
           }}
         >
-          Review next batch
-        </button>
-      )}
+          Save these numbers
+        </Button>
+        {preview.nextOffset !== null && (
+          <Button
+            disabled={!commit.isSuccess}
+            onClick={() => {
+              if (preview.nextOffset !== null) {
+                next({ ...preview.interpretation, offset: preview.nextOffset });
+              }
+            }}
+          >
+            Review the next batch
+          </Button>
+        )}
+      </ButtonRow>
       <details>
-        <summary>Snapshot evidence</summary>
+        <summary>What this preview was made from</summary>
         <pre>
           {JSON.stringify(
             {
@@ -152,6 +154,6 @@ export function NumberingBatchReview({
           )}
         </pre>
       </details>
-    </section>
+    </FieldGroup>
   );
 }
