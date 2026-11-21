@@ -4,6 +4,7 @@ import {
   type ManualSubtitle,
   type SubtitleTarget,
 } from "#shared/admin.ts";
+import { sessionBoundary } from "./api.ts";
 
 function text(form: FormData, key: string): string {
   const value = form.get(key);
@@ -70,4 +71,16 @@ export async function readSubtitleUpload(
           },
         }),
   });
+}
+
+/** Reads the file and sends it, refusing to continue for anyone but the person who started. */
+export async function submitSubtitleUpload(
+  input: { actorId: string; form: FormData; target: SubtitleTarget },
+  submit: (subtitle: ManualSubtitle) => Promise<unknown>,
+) {
+  const session = sessionBoundary.capture(input.actorId);
+  const subtitle = await readSubtitleUpload(input.form, input.target);
+  session.assertCurrent();
+  await submit(subtitle);
+  session.assertCurrent();
 }

@@ -203,9 +203,16 @@ export function capacityView(): Capacity {
 export function plexProfiles(): PlexProfiles {
   return {
     homeUsers: [
-      { id: "1", title: OWNER.displayName, restricted: false, protected: true },
+      // A Plex Home profile's id is its Plex account id, which is how a
+      // profile is found among the mappings.
       {
-        id: "4",
+        id: OWNER.plexAccountId,
+        title: OWNER.displayName,
+        restricted: false,
+        protected: true,
+      },
+      {
+        id: MEMBER.plexAccountId,
         title: MEMBER.displayName,
         restricted: false,
         protected: false,

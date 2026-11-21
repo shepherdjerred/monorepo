@@ -1,0 +1,72 @@
+@layer components {
+  .dialog {
+    width: min(30rem, calc(100vw - 2 * var(--space-4)));
+    max-height: calc(100vh - 2 * var(--space-4));
+    max-height: calc(100dvh - 2 * var(--space-4));
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: var(--shadow-raised);
+  }
+  /* Scrolling inside the dialog, or over its backdrop, stays there. */
+  .dialog:modal {
+    overscroll-behavior: contain;
+  }
+  .dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    background: var(--scrim);
+  }
+  .content {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-5);
+  }
+  .title {
+    margin: 0;
+    font-size: var(--text-lg);
+  }
+  .body {
+    display: grid;
+    gap: var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    overflow-wrap: anywhere;
+  }
+  .body > * {
+    margin: 0;
+  }
+  .body strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dialog[open] {
+      animation: arrive var(--dur-2) var(--ease-out);
+    }
+    .dialog[open]::backdrop {
+      animation: dim var(--dur-2) var(--ease-out);
+    }
+  }
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      translate: 0 8px;
+    }
+  }
+  @keyframes dim {
+    from {
+      opacity: 0;
+    }
+  }
+}
