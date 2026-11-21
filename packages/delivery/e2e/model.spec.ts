@@ -421,8 +421,8 @@ test("approvals show the waiting override, the waiting saved plan and recently d
 }) => {
   await page.goto("/approvals");
   const waiting = page.getByRole("region", { name: "Waiting for a decision" });
-  // The header, the override, and the Cloudflare stack waiting at its approve step.
-  await expect(waiting.getByRole("row")).toHaveCount(3);
+  // The override, and the Cloudflare stack waiting at its approve step.
+  await expect(waiting.locator("tbody tr")).toHaveCount(2);
   await expect(waiting.getByText("Override", { exact: true })).toBeVisible();
   await expect(
     waiting.getByText("Saved plan awaits decision", { exact: true }),

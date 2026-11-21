@@ -170,6 +170,15 @@ container at the end of a workflow that passed. The rules are pure functions
 in `pipeline-view-model.ts`.
 
 Filters and pages are search parameters. Forms are native `<form>` elements.
+The Service and Environment filters suggest the catalog the overview shows
+and accept an id, a display name ("Scout for LoL") or an unambiguous part of
+one; a submit writes the resolved id to the URL
+(`src/client/routes/catalog-filter.ts`). A value the server would refuse, or
+one that names several services, never reaches the API: the list shows why,
+beside a "Clear filters" link. Every list page keeps one live result line, and
+"Older" and "Newest" move focus to the top of the list. A route that fails to
+load, or names nothing, renders inside the app's layout and takes focus; a
+request the server refused offers a way out instead of "Try again".
 Every confirmation asks through one native `<dialog>` that the root layout
 mounts (`ConfirmDialogProvider`): a `ConfirmButton` renders its own question
 into that dialog while it is open, so a page with forty confirm buttons has one

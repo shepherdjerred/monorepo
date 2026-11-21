@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { DeploymentSchema } from "#shared/contract.ts";
 import {
   DeploymentPageSchema,
@@ -139,4 +139,30 @@ export async function expectNoViolations(page: Page, path: string) {
       nodes: violation.nodes.map((node) => node.target.join(" ")),
     })),
   ).toEqual([]);
+}
+
+/** Whether the page has a phone's width, where tables stack and the nav wraps. */
+export function isPhone(page: Page) {
+  return (page.viewportSize()?.width ?? 0) < 600;
+}
+
+/**
+ * A record table at phone width: each row a stacked block under its labels,
+ * nothing scrolling sideways, and every short id on one line.
+ */
+export async function expectStackedTable(region: Locator) {
+  const table = region.locator(".stack-table").first();
+  await expect(table.locator("thead")).toBeHidden();
+  await expect(
+    table.locator("tbody tr").first().locator("td[data-label='Requested']"),
+  ).toBeVisible();
+  expect(
+    await table.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth,
+    ),
+  ).toBe(true);
+  for (const id of await table.locator(".identifier").all()) {
+    const box = await id.boundingBox();
+    if (box !== null) expect(box.height).toBeLessThan(24);
+  }
 }

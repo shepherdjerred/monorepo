@@ -140,4 +140,51 @@ describe("DeploymentTable", () => {
       renderWithRouter(<DeploymentTable deployments={[]} empty="None yet" />),
     ).toBe('<p class="empty">None yet</p>');
   });
+
+  it("names each link by what it opens, keeping its visible text", () => {
+    const html = renderWithRouter(
+      <DeploymentTable
+        deployments={[{ ...deployment, versionSetRevision: 4 }]}
+        empty="None"
+      />,
+    );
+    expect(html).toContain(
+      `aria-label="Deployment to ${deployment.environmentId}, ${deployment.kind} r4, `,
+    );
+    expect(html).toContain(`>${deployment.environmentId}</a>`);
+    expect(html).toContain('aria-label="Version set r4"');
+    // Narrow, each cell stacks under its label.
+    expect(html).toContain('class="table-scroll stack-table"');
+    expect(html).toContain('data-label="Requested"');
+  });
+
+  it("says a failed deployment needs recovery when its record does", () => {
+    const html = renderWithRouter(
+      <DeploymentTable
+        deployments={[
+          {
+            ...deployment,
+            versionSetRevision: 4,
+            status: "failed",
+            recoveryRequired: true,
+          },
+        ]}
+        empty="None"
+      />,
+    );
+    expect(html).toContain("failed · recovery required");
+  });
+
+  it("omits the environment on a page scoped to one", () => {
+    const html = renderWithRouter(
+      <DeploymentTable
+        deployments={[{ ...deployment, versionSetRevision: 4 }]}
+        empty="None"
+        showEnvironment={false}
+      />,
+    );
+    expect(html).not.toContain(`>${deployment.environmentId}<`);
+    expect(html).toContain('<th scope="col">Kind</th>');
+    expect(html).toContain(`>${deployment.kind}</a>`);
+  });
 });
