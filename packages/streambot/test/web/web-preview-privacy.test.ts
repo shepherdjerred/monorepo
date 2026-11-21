@@ -24,5 +24,5 @@ test("the preview's /api/me carries no analytics id and no Bugsink DSN", async (
   );
   const me = MeSchema.parse(await response.json());
   expect(me.analyticsId).toBeNull();
-  expect(me.bugsinkDsn).toBeNull();
+  expect(me.bugsink).toBeNull();
 });

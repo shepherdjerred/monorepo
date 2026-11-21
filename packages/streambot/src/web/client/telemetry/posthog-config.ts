@@ -21,10 +21,13 @@ export function sanitizeCapture(
 }
 
 /**
- * The PostHog configuration. `mask_all_text` and `mask_all_element_attributes` keep element text,
- * labels and links out of autocapture; replay masks every text node and input and blanks every
- * attribute that is not layout, because the remote renders titles and Discord names as text and in
- * `aria-label`s. Network timing is off (request URLs carry search text); web vitals stay on.
+ * The PostHog configuration. Autocapture, rage clicks, dead clicks and heatmaps are all off:
+ * autocapture records a clicked link's `href` (`attr__href` in `$elements_chain`) whatever the
+ * attribute masking says, and the product events are the explicit ones in `events.ts`. What runs
+ * is page views (captured by hand), page leave, web vitals and session replay. Replay masks every
+ * text node and input and blanks every attribute that is not layout, because the remote renders
+ * titles and Discord names as text and in `aria-label`s. Network timing is off (request URLs carry
+ * search text). `before_send` rewrites every URL, absolute or relative, to a route pattern.
  */
 export function analyticsConfig(
   analyticsId: string,
@@ -39,12 +42,13 @@ export function analyticsConfig(
     // The identity is per host: a `.sjer.red` cookie would join this signed-in person to
     // anonymous visits of every other sjer.red site.
     cross_subdomain_cookie: false,
-    autocapture: true,
+    autocapture: false,
+    rageclick: false,
+    capture_dead_clicks: false,
+    capture_heatmaps: false,
     // Page views are captured by hand with the route pattern; see `pageViewEvent`.
     capture_pageview: false,
     capture_pageleave: true,
-    capture_heatmaps: true,
-    capture_dead_clicks: true,
     capture_performance: { web_vitals: true, network_timing: false },
     capture_exceptions: false,
     respect_dnt: true,

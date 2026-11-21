@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import type { CaptureResult } from "posthog-js";
 import type { ErrorEvent } from "@sentry/react";
+import { WEB_API_ERROR_CODES } from "@shepherdjerred/streambot/web/shared/error-codes.ts";
 import {
+  errorCode,
   errorShownEvent,
   pageViewEvent,
   playButton,
@@ -11,6 +13,8 @@ import {
 import {
   replayAttribute,
   routePattern,
+  sanitizeElementsChain,
+  sanitizeHref,
   sanitizeUrl,
   productionHost,
   trackingAllowed,
@@ -162,6 +166,14 @@ describe("closed event properties", () => {
     ).toBe("another_stream");
   });
 
+  test("failure codes come from the shared API contract plus the client's own", () => {
+    for (const code of WEB_API_ERROR_CODES) expect(errorCode(code)).toBe(code);
+    for (const code of ["no_voice", "network", "bad_response", "queue_changed"])
+      expect(errorCode(code)).toBe(code);
+    for (const code of ["", "aborted", "NOT_FOUND", `not_found ${QUERY}`])
+      expect(errorCode(code)).toBe("other");
+  });
+
   test("unknown failure codes report as other", () => {
     expect(errorShownEvent({ code: "no_voice" }, "row").properties).toEqual({
       code: "no_voice",
@@ -215,6 +227,78 @@ describe("no private value reaches a payload", () => {
     expect(sanitizeCapture(null, SITE)).toBeNull();
   });
 
+  test("autocapture shapes lose link targets, text and labels, and relative URLs lose their query", () => {
+    const chain =
+      `a.row-link.btn:attr__class="row-link btn"attr__href="/album/${ALBUM_ID}?q=${encodeURIComponent(QUERY)}"` +
+      `attr__aria-label="More ways to play ${TITLE}"href="/library?series=${encodeURIComponent(TITLE)}"` +
+      `nth-child="2"nth-of-type="1"text="${TITLE}"attr_id="${USER_ID}";li.row:nth-child="3"nth-of-type="3"`;
+    const capture: CaptureResult = {
+      uuid: "0190a8c4-0000-7000-8000-000000000001",
+      event: "$autocapture",
+      properties: {
+        $current_url: `/library?series=${encodeURIComponent(TITLE)}`,
+        $elements_chain: chain,
+        $elements: [
+          {
+            tag_name: "a",
+            $el_text: TITLE,
+            text: TITLE,
+            attr__href: `/album/${ALBUM_ID}?q=${encodeURIComponent(QUERY)}`,
+            "attr__aria-label": `More ways to play ${TITLE}`,
+            attr_id: USER_ID,
+            attributes: { "attr__aria-label": TITLE },
+            classes: ["row-link"],
+            nth_child: 2,
+          },
+        ],
+        attr__href: `?q=${encodeURIComponent(QUERY)}`,
+        $prev_pageview_pathname: `/playlists/${ALBUM_ID}?sort=${encodeURIComponent(TITLE)}`,
+        $exception_message: `Failed at /api/search/v2?q=${encodeURIComponent(QUERY)} for row`,
+      },
+    };
+    const sanitized = sanitizeCapture(capture, SITE);
+    expectClean(sanitized);
+    expect(sanitized?.properties["$current_url"]).toBe("/library");
+    expect(sanitized?.properties["$elements_chain"]).toBe(
+      'a.row-link.btn:attr__class="row-link btn"attr__href="/album/:id"href="/library"nth-child="2"nth-of-type="1";li.row:nth-child="3"nth-of-type="3"',
+    );
+    expect(sanitized?.properties["$elements"]).toEqual([
+      {
+        tag_name: "a",
+        attr__href: "/album/:id",
+        classes: ["row-link"],
+        nth_child: 2,
+      },
+    ]);
+    expect(sanitized?.properties["attr__href"]).toBe("");
+    expect(sanitized?.properties["$prev_pageview_pathname"]).toBe(
+      "/playlists/:id",
+    );
+    expect(sanitized?.properties["$exception_message"]).toBe(
+      "Failed at /api/search/v2 for row",
+    );
+    expect(sanitizeHref(`?q=${QUERY}`, SITE)).toBe("");
+    expect(sanitizeHref(`#${QUERY}`, SITE)).toBe("");
+    expect(sanitizeHref(`album/${ALBUM_ID}?q=x`, SITE)).toBe(
+      SITE + "/album/:id",
+    );
+    expect(sanitizeHref(MEDIA_URL, SITE)).toBe("https://www.youtube.com");
+    expect(sanitizeElementsChain('button.btn:nth-child="1"', SITE)).toBe(
+      'button.btn:nth-child="1"',
+    );
+  });
+
+  test("autocapture, rage clicks, dead clicks and heatmaps are off; page views stay manual", () => {
+    const config = analyticsConfig(ANALYTICS_ID, SITE);
+    expect(config.autocapture).toBe(false);
+    expect(config.rageclick).toBe(false);
+    expect(config.capture_dead_clicks).toBe(false);
+    expect(config.capture_heatmaps).toBe(false);
+    expect(config.capture_pageview).toBe(false);
+  });
+});
+
+describe("replay and error reports carry no private value", () => {
   test("replay masks text, inputs, labels and recorded addresses", () => {
     const config = analyticsConfig(ANALYTICS_ID, SITE);
     expect(config.session_recording?.maskTextSelector).toBe("*");
@@ -249,8 +333,25 @@ describe("no private value reaches a payload", () => {
     expect(replayAttribute("aria-label", `More ways to play ${TITLE}`)).toBe(
       "",
     );
-    expect(replayAttribute("href", `/album/${ALBUM_ID}`)).toBe("");
+    for (const href of [
+      `/album/${ALBUM_ID}`,
+      `/library?series=${encodeURIComponent(TITLE)}`,
+      `${SITE}/?q=${encodeURIComponent(QUERY)}`,
+      MEDIA_URL,
+    ]) {
+      expect(replayAttribute("href", href)).toBe("");
+      expect(replayAttribute("HREF", href)).toBe("");
+    }
+    expect(replayAttribute("src", MEDIA_URL)).toBe("");
+    expect(replayAttribute("alt", TITLE)).toBe("");
+    expect(replayAttribute("data-key", ALBUM_ID)).toBe("");
     expect(replayAttribute("class", "btn btn-listen")).toBe("btn btn-listen");
+    // rrweb's inlined app stylesheet and layout metadata keep replay rendering.
+    expect(replayAttribute("_cssText", ".btn{color:red}")).toBe(
+      ".btn{color:red}",
+    );
+    expect(replayAttribute("rr_width", "120px")).toBe("120px");
+    expect(replayAttribute("rr_src", MEDIA_URL)).toBe("");
     expectClean([masked, config.bootstrap]);
   });
 

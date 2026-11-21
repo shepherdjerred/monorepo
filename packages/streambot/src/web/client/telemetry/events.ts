@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { WEB_API_ERROR_CODES } from "@shepherdjerred/streambot/web/shared/error-codes.ts";
+import { CLIENT_ERROR_CODES } from "@shepherdjerred/streambot/web/client/messages.ts";
 import type { RowAction } from "@shepherdjerred/streambot/web/shared/search-contracts.ts";
 import type { Placement } from "@shepherdjerred/streambot/web/client/commands.ts";
 import type { MediaItem } from "@shepherdjerred/streambot/web/client/media/row-model.ts";
@@ -104,86 +106,10 @@ export function resultChosenEvent(
 export type FailureSurface = "row" | "rail" | "search" | "page" | "dialog";
 
 /**
- * Failure codes the server and client produce. The server's `code` is a free string in the
- * contract, so anything not listed here reports as `other` rather than as itself.
+ * Every code a shown failure may report: the web API's closed list from the shared contract plus
+ * the client's own. The wire keeps `code` a free string, so anything else reports as `other`.
  */
-const ERROR_CODES = [
-  "aborted",
-  "album_edition",
-  "album_required",
-  "artwork_unavailable",
-  "bad_response",
-  "busy",
-  "catalog_busy",
-  "catalog_unavailable",
-  "channel_changed",
-  "channels_unavailable",
-  "client_aborted",
-  "csrf",
-  "discord_unavailable",
-  "event_ended",
-  "feature_disabled",
-  "guild_changed",
-  "guild_denied",
-  "history_disabled",
-  "history_unavailable",
-  "invalid_channel",
-  "invalid_request",
-  "item_finished",
-  "join_voice",
-  "library_changed",
-  "listen_disabled",
-  "listen_sports",
-  "load_missing",
-  "lol_disabled",
-  "method",
-  "music_query",
-  "music_search_unavailable",
-  "network",
-  "no_session",
-  "no_station",
-  "no_video",
-  "no_voice",
-  "not_found",
-  "not_upcoming",
-  "oauth_state",
-  "playback_changed",
-  "playback_channel_changed",
-  "playback_denied",
-  "playlist_busy",
-  "playlist_changed",
-  "playlist_empty",
-  "playlist_import_link",
-  "playlist_missing",
-  "playlist_name",
-  "playlist_owner",
-  "queue_empty",
-  "rate_limit",
-  "requester_changed",
-  "requester_required",
-  "room_stream_capacity",
-  "room_stream_limit",
-  "scheduling_unavailable",
-  "selection_capacity",
-  "selection_expired",
-  "sign_in",
-  "sports_disabled",
-  "sports_pro_only",
-  "sports_unavailable",
-  "sports_upcoming",
-  "spotify_link",
-  "spotify_metadata",
-  "spotify_unavailable",
-  "station_unavailable",
-  "stream_limit",
-  "subtitle_picker_busy",
-  "subtitles_unavailable",
-  "track_changed",
-  "track_required",
-  "unauthorized",
-  "unavailable",
-] as const;
-const KnownCodeSchema = z.enum(ERROR_CODES);
+const KnownCodeSchema = z.enum([...WEB_API_ERROR_CODES, ...CLIENT_ERROR_CODES]);
 export type ErrorCode = z.infer<typeof KnownCodeSchema> | "other";
 
 export function errorCode(code: string): ErrorCode {

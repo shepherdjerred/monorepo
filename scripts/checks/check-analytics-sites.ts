@@ -399,10 +399,13 @@ const streambotConfig = await Bun.file(`${root}/${streambotConfigPath}`).text();
 for (const requiredSetting of [
   "api_host: ANALYTICS_SITE.proxyHost",
   "asset_host: ANALYTICS_SITE.proxyHost",
-  "autocapture: true",
+  // Autocapture records clicked links' `href` whatever the attribute masking says,
+  // so Streambot sends only its explicit, closed-property events.
+  "autocapture: false",
+  "rageclick: false",
+  "capture_dead_clicks: false",
+  "capture_heatmaps: false",
   "capture_pageleave: true",
-  "capture_heatmaps: true",
-  "capture_dead_clicks: true",
   "capture_performance: { web_vitals: true, network_timing: false }",
   "respect_dnt: true",
   'person_profiles: "always"',

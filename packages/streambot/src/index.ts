@@ -78,7 +78,7 @@ const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
 async function main(): Promise<void> {
   // Initialize before anything else so early failures are captured.
-  const bugsinkDsn = initializeBugsink();
+  const bugsink = initializeBugsink();
   const config = loadConfig();
   await initializeDynamicConfig({
     seed: dynamicConfigSeed(config),
@@ -306,7 +306,7 @@ async function main(): Promise<void> {
       ? undefined
       : await startWebServer({
           bootstrap: config.web,
-          bugsinkDsn,
+          bugsink,
           stateDir: config.state.dir,
           applicationId: () => commandBot.web.webApplicationId(),
           plexPostersEnabled,

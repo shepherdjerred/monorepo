@@ -52,6 +52,11 @@ import {
 } from "./usage/observation.ts";
 import { contentSecurityPolicy } from "./http/csp.ts";
 import {
+  browserBugsink,
+  type BugsinkReporting,
+} from "@shepherdjerred/streambot/observability/bugsink.ts";
+import { ANALYTICS_SITE } from "@shepherdjerred/streambot/web/shared/analytics-site.ts";
+import {
   webFailureDiagnostic,
   webFailureEndpoint,
 } from "./failure-diagnostic.ts";
@@ -76,8 +81,11 @@ async function readCommand(request: Request) {
 
 export function createWebHandler(deps: {
   bootstrap: WebBootstrap;
-  /** Public Bugsink DSN for signed-in browsers and the CSP's connect-src; `null` when off. */
-  bugsinkDsn: string | null;
+  /**
+   * The server's own Bugsink reporting. Browsers get it (and the CSP allows its origin) only when
+   * its DSN is on the public Bugsink host; see `browserBugsink`.
+   */
+  bugsink: BugsinkReporting | null;
   store: WebSessionStore;
   playback: WebPlayback;
   applicationId: () => string;
@@ -99,7 +107,12 @@ export function createWebHandler(deps: {
       (await deps.plexPostersEnabled?.(guildId, userId)) ?? false,
   );
   const search = new WebSearch(deps.playback, music);
-  const csp = contentSecurityPolicy(deps.bugsinkDsn);
+  const bugsink = browserBugsink(deps.bugsink);
+  const csp = contentSecurityPolicy({
+    analytics:
+      new URL(deps.bootstrap.publicOrigin).host === ANALYTICS_SITE.hostname,
+    bugsinkDsn: bugsink?.dsn ?? null,
+  });
   const requests = new Map<
     string,
     { count: number; artwork: number; search: number; resets: number }
@@ -130,7 +143,7 @@ export function createWebHandler(deps: {
         csrfToken: auth.csrfToken(request, session),
         analyticsId:
           usageAnalytics().browserAnalyticsId(session.identity.userId) ?? null,
-        bugsinkDsn: deps.bugsinkDsn,
+        bugsink,
       });
     }
     const roomResponse = await room.handle(request, url, session, () =>

@@ -6,18 +6,23 @@ import { scrubBreadcrumb, scrubErrorEvent } from "./scrub.ts";
 let started = false;
 
 /**
- * Starts browser error reporting with the DSN `/api/me` hands out (the server's own Bugsink
- * project). Called once after sign-in; errors before sign-in are not reported. Independent of the
- * analytics flag and of Do Not Track: an error report carries no identity.
+ * Starts browser error reporting with what `/api/me` hands out: the server's own Bugsink project,
+ * release and environment, so browser and server errors from one deploy group together. Called
+ * once after sign-in; errors before sign-in are not reported. Independent of the analytics flag
+ * and of Do Not Track: an error report carries no identity.
  */
-export function startErrorReporting(dsn: string): void {
+export function startErrorReporting(bugsink: {
+  readonly dsn: string;
+  readonly release: string | null;
+  readonly environment: string;
+}): void {
   if (started) return;
   started = true;
   Sentry.init({
     ...bugsinkBrowserOptions({
-      dsn,
-      release: import.meta.env["VITE_BUGSINK_RELEASE"],
-      environment: import.meta.env.MODE,
+      dsn: bugsink.dsn,
+      release: bugsink.release,
+      environment: bugsink.environment,
     }),
     beforeBreadcrumb: scrubBreadcrumb,
     beforeSend: (event) =>

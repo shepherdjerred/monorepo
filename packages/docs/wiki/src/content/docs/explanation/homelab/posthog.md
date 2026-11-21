@@ -44,6 +44,13 @@ heatmaps, dead
 clicks, web vitals, and session replay with inputs masked. Every site respects
 Do Not Track, so a DNT browser sends nothing at all.
 
+The Streambot web remote is the exception to autocapture. Its links carry
+titles, search text, and catalog ids in their `href`, and PostHog records a
+clicked link's `href` whatever the attribute masking, so the remote turns
+autocapture, heatmaps, and rage and dead clicks off and sends only its own
+closed-vocabulary events, route-pattern page views, and web vitals. It also
+loads the tracker only on its registered production host.
+
 Input masking is not sufficient everywhere. `maskAllInputs` masks form values,
 not arbitrary text nodes, so the sites that render a signed-in identity as
 ordinary text mask every text node instead (`maskTextSelector: "*"`): The Storm

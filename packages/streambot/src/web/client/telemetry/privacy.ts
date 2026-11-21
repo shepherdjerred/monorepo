@@ -61,14 +61,87 @@ export function sanitizeUrl(value: string, siteOrigin: string): string {
     : url.origin;
 }
 
-/** Automatic properties that carry page text: the document title (it holds the search) and link text. */
-const TEXT_PROPERTIES = new Set(["title", "$title", "$el_text"]);
+/** Removes the query string from every URL or path inside free text such as an error message. */
+export function scrubText(text: string): string {
+  return text.replaceAll(
+    /([a-z][a-z0-9+.-]*:\/\/[^\s?#"'<>]*|\/[^\s?#"'<>]*)[?#][^\s"'<>]*/giu,
+    "$1",
+  );
+}
 
-function sanitizeString(key: string, value: string, siteOrigin: string) {
+/**
+ * A link target as analytics may record it, absolute or relative: this site's paths become their
+ * route pattern, a bare query or fragment becomes empty, and another site keeps only its origin.
+ */
+export function sanitizeHref(value: string, siteOrigin: string): string {
   if (ABSOLUTE_URL.test(value)) return sanitizeUrl(value, siteOrigin);
-  return /pathname$/iu.test(key) && value.startsWith("/")
-    ? routePattern(value)
-    : value;
+  if (value.startsWith("/")) return routePattern(value);
+  return value.startsWith("?") || value.startsWith("#")
+    ? ""
+    : sanitizeUrl(new URL(value, siteOrigin + "/").href, siteOrigin);
+}
+
+/**
+ * Automatic properties that carry page text: the document title (it holds the search), link text
+ * and every element attribute but `class` and `href`, since labels name the item.
+ */
+function textProperty(key: string): boolean {
+  return (
+    ["title", "$title", "$el_text"].includes(key) ||
+    (key.startsWith("attr_") && key !== "attr__class" && key !== "attr__href")
+  );
+}
+
+/** One element of `$elements`: its tag, classes, position and sanitized link, nothing else. */
+const ELEMENT_KEYS = new Set([
+  "tag_name",
+  "classes",
+  "attr__class",
+  "attr__href",
+  "href",
+  "nth_child",
+  "nth_of_type",
+  "order",
+]);
+
+/**
+ * `$elements_chain` (`a.row:attr__href="/album/x?q=…"href="…"nth-child="1"text="…"`) keeps only
+ * classes, positions and sanitized links; text, ids and labels are removed.
+ */
+export function sanitizeElementsChain(
+  chain: string,
+  siteOrigin: string,
+): string {
+  return chain.replaceAll(
+    /([\w-]+)="((?:[^"\\]|\\.)*)"/gu,
+    (_match, name: string, value: string) => {
+      switch (name) {
+        case "attr__class":
+        case "nth-child":
+        case "nth-of-type":
+          return `${name}="${value}"`;
+        case "href":
+        case "attr__href":
+          return `${name}="${sanitizeHref(value, siteOrigin)}"`;
+        default:
+          return "";
+      }
+    },
+  );
+}
+
+/**
+ * A string as analytics may record it. URLs and paths anywhere (absolute, `/library?series=…`,
+ * `?q=…`) lose their query and concrete ids; free text loses any embedded query string.
+ */
+function sanitizeString(key: string, value: string, siteOrigin: string) {
+  if (key === "$elements_chain")
+    return sanitizeElementsChain(value, siteOrigin);
+  const whole = !/\s/u.test(value);
+  if (whole && ABSOLUTE_URL.test(value)) return sanitizeUrl(value, siteOrigin);
+  return whole && /^[/?#]/u.test(value)
+    ? sanitizeHref(value, siteOrigin)
+    : scrubText(value);
 }
 
 const ListSchema = z.array(z.unknown());
@@ -82,9 +155,16 @@ function sanitizeValue(
   const list = ListSchema.safeParse(value);
   if (list.success)
     return list.data.map((entry) => sanitizeValue(key, entry, siteOrigin));
-  return typeof value === "object" && value !== null
-    ? sanitizeRecord(Object.fromEntries(Object.entries(value)), siteOrigin)
-    : value;
+  if (typeof value !== "object" || value === null) return value;
+  const record = Object.fromEntries(Object.entries(value));
+  return sanitizeRecord(
+    key === "$elements"
+      ? Object.fromEntries(
+          Object.entries(record).filter(([name]) => ELEMENT_KEYS.has(name)),
+        )
+      : record,
+    siteOrigin,
+  );
 }
 
 /**
@@ -98,7 +178,7 @@ export function sanitizeRecord(
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [rawKey, rawValue] of Object.entries(record)) {
-    if (TEXT_PROPERTIES.has(rawKey)) continue;
+    if (textProperty(rawKey)) continue;
     const key = ABSOLUTE_URL.test(rawKey)
       ? sanitizeUrl(rawKey, siteOrigin)
       : rawKey;
@@ -146,9 +226,33 @@ const LAYOUT_ATTRIBUTES = new Set([
   "aria-modal",
 ]);
 
-/** The replay value of one element attribute: layout attributes as they are, others blanked. */
+/** rrweb's own serialisation: the inlined app stylesheet and its layout metadata. */
+const RRWEB_ATTRIBUTES = new Set([
+  "_csstext",
+  "rr_width",
+  "rr_height",
+  "rr_left",
+  "rr_top",
+  "rr_position",
+  "rr_transform",
+  "rr_display",
+  "rr_scrollleft",
+  "rr_scrolltop",
+  "rr_mediastate",
+  "rr_open_mode",
+]);
+
+/**
+ * The replay value of one element attribute: layout attributes as they are, others blanked — so a
+ * link's `href` is always empty in recorded DOM, in the full snapshot and in later mutations alike.
+ * rrweb also passes its own serialisation through here: an inlined stylesheet (`_cssText`, the
+ * app's own CSS) and its generated `rr_*` layout metadata are kept so replay still renders.
+ */
 export function replayAttribute(name: string, value: string): string {
-  return LAYOUT_ATTRIBUTES.has(name.toLowerCase()) ? value : "";
+  const lower = name.toLowerCase();
+  return LAYOUT_ATTRIBUTES.has(lower) || RRWEB_ATTRIBUTES.has(lower)
+    ? value
+    : "";
 }
 
 /** The browser privacy signals Streambot honours before loading any analytics code. */

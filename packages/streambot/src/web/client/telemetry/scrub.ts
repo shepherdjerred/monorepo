@@ -1,5 +1,5 @@
 import type { Breadcrumb, ErrorEvent } from "@sentry/react";
-import { routePattern, sanitizeUrl } from "./privacy.ts";
+import { routePattern, sanitizeUrl, scrubText } from "./privacy.ts";
 
 /**
  * Browser error reports keep API paths and stack traces but never a query string: search text,
@@ -7,14 +7,6 @@ import { routePattern, sanitizeUrl } from "./privacy.ts";
  * navigation breadcrumbs) become route patterns, as in analytics. Pure functions, so the privacy
  * test can run them on fixture events.
  */
-
-/** Removes the query string from every URL or path inside free text such as an error message. */
-export function scrubText(text: string): string {
-  return text.replaceAll(
-    /([a-z][a-z0-9+.-]*:\/\/[^\s?#"'<>]*|\/[^\s?#"'<>]*)[?#][^\s"'<>]*/giu,
-    "$1",
-  );
-}
 
 function scrubData(
   data: Readonly<Record<string, unknown>>,

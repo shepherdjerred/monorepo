@@ -185,29 +185,40 @@ destination, such as `bun run smoke` or the CI in-image smoke, sets
 
 ### Browser telemetry
 
-The web remote (`src/web/client/telemetry/`) loads `posthog-js` only after
-`/api/me` returns a non-null `analyticsId` and the browser sends neither Do Not
-Track nor Global Privacy Control; otherwise nothing is downloaded or sent. It
-identifies with that `analyticsId`, keeps its cookie on `streambot.sjer.red`
-alone, and talks only to the `j.sjer.red` proxy, whose public identity lives in
+The web remote (`src/web/client/telemetry/`) loads `posthog-js` only on
+`streambot.sjer.red`, after `/api/me` returns a non-null `analyticsId`, and only
+when the browser sends neither Do Not Track nor Global Privacy Control;
+otherwise nothing is downloaded or sent. It identifies with that `analyticsId`,
+keeps its cookie on `streambot.sjer.red` alone, and talks only to the
+`j.sjer.red` proxy, whose public identity lives in
 `src/web/shared/analytics-site.json` (checked against
 `config/analytics-sites.json` by `scripts/checks/check-analytics-sites.ts`).
-Events are `$pageview` (route pattern only, such as `/album/:id`),
-`streambot_result_chosen` (`kind`, `rank_bucket`, `button`) and
-`streambot_error_shown` (`code`, `surface`), plus PostHog autocapture, heatmaps,
-dead clicks and web vitals with text and attributes masked. `before_send`
-rewrites every URL to origin plus route pattern (other sites keep only their
-origin) and drops titles. Session replay masks every text node, input and
-non-layout attribute.
+It sends only explicit events with closed properties: `$pageview` (route
+pattern only, such as `/album/:id`), `streambot_result_chosen` (`kind`,
+`rank_bucket`, `button`) and `streambot_error_shown` (`code` from the shared
+API code list or the client's own, else `other`; `surface`), plus page leave
+and web vitals. Autocapture, rage clicks, dead clicks and heatmaps are off,
+because autocapture records a clicked link's `href` whatever the masking
+settings say. `before_send` rewrites every URL, absolute or relative, to a
+route pattern (other sites keep only their origin) and drops titles, element
+text and labels. Session replay masks every text node and input and blanks
+every attribute but layout ones, so recorded links have an empty `href`.
 
-Browser errors go to the server's own Bugsink project: `/api/me` carries the
-DSN the server initialised with (`bugsinkDsn`, `null` when Bugsink is off), and
-the client starts `@sentry/react` after sign-in, independent of the analytics
+Browser errors go to the server's own Bugsink project. `/api/me` carries
+`bugsink: { dsn, release, environment }`, the values the server itself reports
+under, but only when the DSN is an `https:` URL on the public
+`bugsink.sjer.red` host; an internal or plain-HTTP DSN gives `null`. The client
+starts `@sentry/react` with them after sign-in, independent of the analytics
 flag. Reports drop query strings, map page URLs to route patterns, keep only
 the category of click breadcrumbs, and carry the last API Reference as the
-`reference` tag. The Content-Security-Policy (`src/web/server/http/csp.ts`) allows
-the PostHog proxy for scripts and connections and the DSN's origin for
-connections only when a DSN is configured.
+`reference` tag.
+
+The Content-Security-Policy (`src/web/server/http/csp.ts`) is computed once at
+start. On the production origin it allows scripts only from
+`https://j.sjer.red/static/` and `https://j.sjer.red/array/<project token>/`
+and connections to `https://j.sjer.red`; on any other origin, where the client
+never loads the tracker, it allows neither. The public Bugsink origin is added
+to `connect-src` only when `/api/me` hands out a DSN.
 
 ## Music discovery and playlists
 

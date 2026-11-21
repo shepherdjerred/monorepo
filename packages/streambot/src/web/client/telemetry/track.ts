@@ -17,18 +17,18 @@ import {
 import { capture, startAnalytics } from "./posthog.ts";
 
 /**
- * Starts telemetry once `/api/me` answers — Bugsink when it carries a DSN, PostHog when it carries
- * an `analyticsId` — and records a page view per route pattern. Search text in `?q=` never counts:
+ * Starts telemetry once `/api/me` answers — Bugsink when it carries `bugsink`, PostHog when it
+ * carries an `analyticsId` — and records a page view per route pattern. Search text in `?q=` never counts:
  * typing a search changes the query, not the pathname.
  */
 export function useTelemetry(me: Load<z.infer<typeof MeSchema>>): void {
   const { pathname } = useLocation();
   const data = me.status === "done" ? me.data : null;
-  const dsn = data?.bugsinkDsn ?? null;
+  const bugsink = data?.bugsink ?? null;
   const analyticsId = data?.analyticsId ?? null;
   useEffect(() => {
-    if (dsn !== null) startErrorReporting(dsn);
-  }, [dsn]);
+    if (bugsink !== null) startErrorReporting(bugsink);
+  }, [bugsink]);
   useEffect(() => {
     if (analyticsId === null) return;
     startAnalytics(analyticsId);
