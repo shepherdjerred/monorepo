@@ -1,10 +1,10 @@
-# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
+# syntax=docker/dockerfile:1-labs@sha256:36366b12c1dffb228bb25e9feffb73707b93388f084f4927d2b7686dba29e76a
 # CI toolchain image — baked from the repo's .mise.toml so agents run the
 # EXACT tool versions developers run. Rebuilt every main build via registry
 # cache (near-free when unchanged); the toolchain layers invalidate on
 # .mise.toml changes.
 
-ARG SWIFTLINT_BUILDER_IMAGE=docker.io/library/swift:6.3.2-jammy@sha256:5f846f008aa76859377d4e9dafe2826c74dde99421bbc60ae2b98d0f1daf72cf
+ARG SWIFTLINT_BUILDER_IMAGE=docker.io/library/swift:6.3.3-jammy@sha256:8346ae8fdc6f1dcd4c2b228b9eb7e55ef98743a4abead5765b806b0bcae74de5
 
 # Build against Jammy's older libc. The upstream 0.65.1 Linux executable
 # requires GLIBC_2.38 and cannot execute on our Bookworm image (GLIBC_2.36).
@@ -28,7 +28,7 @@ RUN set -eu; \
     done < /swiftlint-input/runtime-libraries.txt
 RUN python3 /swiftlint-input/producer.py collect-licenses
 
-FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS swiftlint-runtime
+FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc AS swiftlint-runtime
 # hadolint ignore=DL3008
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates libcurl4 libxml2 libstdc++6 libgcc-s1 libatomic1 \
@@ -48,7 +48,7 @@ RUN python3 /swiftlint-input/producer.py export-runtime
 FROM scratch AS swiftlint-export
 COPY --from=swiftlint-runtime /runtime.tar.gz /runtime.tar.gz.sha256 /runtime.manifest.json /
 
-FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS base
+FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc AS base
 
 # Fail-fast shell for every RUN: a failing producer in a pipeline (curl | sh,
 # printf | sha256sum) must fail the build, not be masked by the consumer.
@@ -76,8 +76,8 @@ RUN --mount=type=bind,source=ci/scripts/apt-https.sh,target=/tmp/apt-https.sh \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
-COPY --from=docker:29-cli@sha256:1a4c7cb63513f349bdad01fcc6e0f3f2f67d37b9da86f14dc0d4a0942eecda00 /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker/buildx-bin:0.38.0@sha256:abcf2315937f37bdb52615d1698a4696e3952e88c440a07e7552cbefbc72b1b6 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
+COPY --from=docker:29-cli@sha256:34507eb5069d8be82c95dd3b6987d4250fd5fee49b82e2509b7d7a7030740d6d /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker/buildx-bin:0.39.1@sha256:65035f720fc63f266620394a62edcde2318b3611ceb50b77af984578d011a0d6 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # Full configured SwiftLint, without retaining the compiler toolchain.
 COPY --from=swiftlint-runtime /opt/swiftlint /opt/swiftlint
