@@ -1,12 +1,8 @@
 import { useState } from "react";
-import {
-  ChevronDownIcon,
-  LayoutGridIcon,
-  ListIcon,
-  SearchIcon,
-} from "lucide-react";
+import { LayoutGridIcon, ListIcon, SearchIcon } from "lucide-react";
 import { useLocation } from "react-router";
 import { KEEPING_COPY } from "#client/presentation/keeping.ts";
+import { Choice } from "#client/ui/choice.tsx";
 import { classNames } from "#client/ui/class-names.ts";
 import { Segmented } from "#client/ui/segmented.tsx";
 import styles from "./library.module.css";
@@ -43,49 +39,6 @@ const SORT_OPTIONS = {
   title: "A to Z",
   added: "Recently added",
 } as const satisfies Record<LibraryView["sort"], string>;
-
-/** A native select drawn as a chip; it is marked when it narrows the list. */
-function Choice<Value extends string>({
-  label,
-  value,
-  values,
-  labels,
-  resting,
-  onChange,
-}: {
-  label: string;
-  value: Value;
-  values: readonly Value[];
-  labels: Record<Value, string>;
-  /** The value that leaves the list as it is. */
-  resting: Value;
-  onChange: (value: Value) => void;
-}) {
-  return (
-    <label className={cx("choice")} data-active={value !== resting}>
-      <span className="sr-only">{label}</span>
-      <select
-        value={value}
-        onChange={(event) => {
-          const chosen = values.find(
-            (candidate) => candidate === event.target.value,
-          );
-          if (chosen === undefined) {
-            throw new Error(`${label} has no option ${event.target.value}`);
-          }
-          onChange(chosen);
-        }}
-      >
-        {values.map((option) => (
-          <option key={option} value={option}>
-            {labels[option]}
-          </option>
-        ))}
-      </select>
-      <ChevronDownIcon aria-hidden="true" />
-    </label>
-  );
-}
 
 /**
  * The search field. It keeps its own text so typing never waits on the

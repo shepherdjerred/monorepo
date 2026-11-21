@@ -15,7 +15,13 @@ const rail = classNames(railStyles);
  * page does not jump when it arrives. The blocks are decoration; the one
  * thing announced is `label`, as a status.
  */
-function Loading({ label, children }: { label: string; children: ReactNode }) {
+export function SkeletonStatus({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
   return (
     <div role="status">
       <span className="sr-only">{label}</span>
@@ -33,7 +39,7 @@ export function PosterGridSkeleton({
   count?: number;
 }) {
   return (
-    <Loading label={label}>
+    <SkeletonStatus label={label}>
       <div className={grid("gridFrame")}>
         <div className={grid("grid")}>
           {Array.from({ length: count }, (_, index) => (
@@ -45,7 +51,7 @@ export function PosterGridSkeleton({
           ))}
         </div>
       </div>
-    </Loading>
+    </SkeletonStatus>
   );
 }
 
@@ -61,7 +67,7 @@ export function PosterRailSkeleton({
   count?: number;
 }) {
   return (
-    <Loading label={label}>
+    <SkeletonStatus label={label}>
       <div className={rail("rail")}>
         <div className={`${rail("track")} ${rail("still")}`}>
           {Array.from({ length: count }, (_, index) => (
@@ -75,7 +81,7 @@ export function PosterRailSkeleton({
           ))}
         </div>
       </div>
-    </Loading>
+    </SkeletonStatus>
   );
 }
 
@@ -88,7 +94,7 @@ export function RowsSkeleton({
   count?: number;
 }) {
   return (
-    <Loading label={label}>
+    <SkeletonStatus label={label}>
       <div className={cx("rows")}>
         {Array.from({ length: count }, (_, index) => (
           <div className={cx("row")} key={index}>
@@ -100,6 +106,6 @@ export function RowsSkeleton({
           </div>
         ))}
       </div>
-    </Loading>
+    </SkeletonStatus>
   );
 }

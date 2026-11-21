@@ -1,0 +1,448 @@
+@layer pages {
+  /* Heading on the left, the two layouts on the right; stacked on a phone. */
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+  .header > header {
+    margin-bottom: 0;
+  }
+
+  /* Which month, then what narrows it. */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+  .monthNav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .step {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--text);
+  }
+  .step svg {
+    width: 18px;
+    height: 18px;
+  }
+  .step:hover,
+  .today:hover {
+    background: var(--surface-selected);
+  }
+  .step:focus-visible,
+  .today:focus-visible {
+    outline-offset: 2px;
+  }
+  .monthName {
+    margin: 0 var(--space-2);
+    font-size: var(--text-xl);
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+  }
+  .today {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* Month grid. Its squares follow the grid's own width. */
+  .gridFrame {
+    container-type: inline-size;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .grid {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .grid[aria-busy="true"] {
+    opacity: 0.6;
+  }
+  .grid th {
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    text-align: start;
+  }
+  .cell {
+    /* A table cell's height is the least it will be. */
+    height: 148px;
+    padding: var(--space-2);
+    border-top: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .cell + .cell {
+    border-inline-start: 1px solid var(--border);
+  }
+  .cell[data-outside="true"] {
+    background: var(--surface-sunken);
+  }
+  .cell:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: -3px;
+  }
+  /* The day a link or the date field asked for. */
+  .cell[data-marked="true"] {
+    box-shadow: inset 0 0 0 2px var(--accent-strong);
+  }
+  .cellDate {
+    display: flex;
+    align-items: center;
+    min-height: 26px;
+    margin-bottom: var(--space-1);
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .cell[data-outside="true"] .cellDate {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .cellNumeral {
+    display: inline-grid;
+    place-items: center;
+    min-width: 26px;
+    height: 26px;
+    border-radius: var(--radius-pill);
+  }
+  /* Today is the lamp on the wall calendar. */
+  .cell[data-today="true"] .cellNumeral {
+    background: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-border);
+    color: var(--text-on-accent);
+  }
+  .squares {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .square {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-2);
+    padding: 2px;
+    border-radius: 6px;
+  }
+  .square:hover {
+    background: var(--surface-selected);
+  }
+  .square:focus-visible,
+  .more:focus-visible,
+  .tally:focus-visible {
+    outline-offset: 1px;
+  }
+  .squarePoster,
+  .squareText {
+    min-width: 0;
+  }
+  .squareTitle {
+    overflow: hidden;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .squareDetail {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .squareReady {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    color: var(--ok);
+  }
+  .more {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 2px;
+    border-radius: 4px;
+    color: var(--text-accent);
+    font-size: var(--text-xs);
+    font-weight: 500;
+  }
+  .more:hover {
+    text-decoration: underline;
+  }
+  /* How many, where a square has no room for which: see the narrow rules. */
+  .tally {
+    display: none;
+  }
+  @container (max-width: 640px) {
+    .grid th {
+      padding: var(--space-2) 0;
+      text-align: center;
+    }
+    .cell {
+      height: 68px;
+      padding: var(--space-1) 2px;
+      text-align: center;
+    }
+    .cellDate {
+      justify-content: center;
+    }
+    .cellMonth,
+    .squares,
+    .more {
+      display: none;
+    }
+    .tally {
+      display: inline-grid;
+      place-items: center;
+      min-width: 30px;
+      height: 30px;
+      padding: 0 var(--space-2);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-pill);
+      background: var(--surface-selected);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  /* Agenda: a gutter of dates, and each date's releases beside it. */
+  .agenda,
+  .undated {
+    /* A row's state stays within reach of its title on a wide screen. */
+    max-width: 920px;
+  }
+  .agenda {
+    border-bottom: 1px solid var(--border);
+  }
+  .agenda[aria-busy="true"] {
+    opacity: 0.6;
+  }
+  .day {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--border);
+  }
+  .day[data-marked="true"] {
+    margin-inline: calc(-1 * var(--space-3));
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-card);
+    background: var(--surface-selected);
+    box-shadow: inset 3px 0 0 var(--accent-strong);
+  }
+  .dayHeading {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+    margin: 0;
+    font-family: var(--font-body);
+    letter-spacing: 0;
+    line-height: 1.2;
+  }
+  .dayNumeral {
+    display: inline-grid;
+    place-items: center;
+    min-width: 40px;
+    height: 40px;
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    border-radius: var(--radius-pill);
+  }
+  .day[data-today="true"] .dayNumeral {
+    padding: 0 var(--space-2);
+    background: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-border);
+    color: var(--text-on-accent);
+    font-size: var(--text-xl);
+  }
+  .dayWeekday {
+    padding-inline-start: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .day[data-today="true"] .dayWeekday {
+    display: none;
+  }
+  .todayTag {
+    padding-inline-start: 2px;
+    color: var(--text-accent);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .quietDay,
+  .quietMonth {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .quietDay {
+    align-self: center;
+  }
+  .quietMonth {
+    padding: var(--space-4) 0;
+  }
+
+  /* A release as a row, in the agenda and among the undated. */
+  .releases {
+    container-type: inline-size;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+  .release {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-areas:
+      "poster text"
+      "poster state";
+    align-items: center;
+    gap: var(--space-1) var(--space-4);
+  }
+  .releasePoster {
+    grid-area: poster;
+    align-self: start;
+  }
+  .releaseText {
+    grid-area: text;
+    min-width: 0;
+  }
+  .releaseState {
+    grid-area: state;
+  }
+  .releaseLink {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    border-radius: 2px;
+  }
+  .releaseLink:hover {
+    color: var(--text-accent);
+  }
+  .releaseDetail {
+    margin: 2px 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  @container (min-width: 520px) {
+    .release {
+      grid-template-columns: 44px minmax(0, 1fr) auto;
+      grid-template-areas: "poster text state";
+    }
+    .releasePoster {
+      align-self: center;
+    }
+  }
+
+  /* Releases with no date: their own group, never squeezed onto a day. */
+  .undated {
+    margin-top: var(--space-7);
+  }
+  .undated h2 {
+    margin-bottom: var(--space-2);
+  }
+  .undatedNote {
+    max-width: 640px;
+    margin: 0 0 var(--space-4);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .undated .releases {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+
+  /* Loading blocks, each the size of the thing it stands for. */
+  .skeletonNumeral {
+    width: 40px;
+    height: 40px;
+  }
+  .skeletonPoster {
+    grid-area: poster;
+    width: 44px;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-poster);
+  }
+  .skeletonLine {
+    width: min(60%, 320px);
+    height: 14px;
+    margin-bottom: 6px;
+  }
+  .skeletonShortLine {
+    width: min(35%, 180px);
+    height: 12px;
+  }
+  .skeletonSquare {
+    height: 39px;
+  }
+
+  @media (pointer: coarse) {
+    .step {
+      width: 44px;
+      height: 44px;
+    }
+    .today {
+      min-height: 44px;
+    }
+  }
+  @media (max-width: 760px) {
+    .day {
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: var(--space-3);
+    }
+    .monthName {
+      font-size: var(--text-lg);
+    }
+  }
+}

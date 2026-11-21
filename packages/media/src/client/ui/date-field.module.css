@@ -1,0 +1,48 @@
+@layer components {
+  .field {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-width: 100%;
+    min-height: 38px;
+    padding: 0 6px 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  /* The ring is drawn around the whole chip, not the bare input. */
+  .field:focus-within {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .field input {
+    min-width: 0;
+    min-height: 30px;
+    padding: 0 var(--space-2);
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: none;
+    color: var(--text);
+    font-size: var(--text-sm);
+  }
+  .field input:focus-visible {
+    outline: none;
+  }
+  /* The browser's own "yyyy/mm/dd" reads as a prompt, not as a date. */
+  .field[data-empty="true"] input {
+    color: var(--text-muted);
+  }
+
+  @media (pointer: coarse) {
+    .field {
+      min-height: 44px;
+    }
+    /* Below 16px, iOS zooms the page when a field takes focus. */
+    .field input {
+      font-size: 1rem;
+    }
+  }
+}

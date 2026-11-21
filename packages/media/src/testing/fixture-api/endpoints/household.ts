@@ -195,7 +195,7 @@ const calendar: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/calendar",
     schema: CalendarPageSchema,
-    respond: (request) => calendarPage(request.query),
+    respond: (request) => calendarPage(request.query, request.scenario),
     samples: [
       `/calendar?${CALENDAR_RANGE}&kind=all&status=all`,
       `/calendar?${CALENDAR_RANGE}&kind=episode&status=missing`,

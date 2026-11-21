@@ -1,0 +1,209 @@
+import { useCallback, useRef, useState, type KeyboardEvent } from "react";
+import { Link, type To } from "react-router";
+import { classNames } from "#client/ui/class-names.ts";
+import styles from "./calendar.module.css";
+import {
+  dayLabel,
+  dayOfMonth,
+  firstDay,
+  monthOf,
+  monthShort,
+  monthWeeks,
+  weekdayNames,
+  type CivilDate,
+  type CivilMonth,
+} from "./dates.ts";
+import { releaseCount, squareReleases, type ReleaseDays } from "./events.ts";
+import { keyDestination } from "./grid-keys.ts";
+import { SquareRelease } from "./release.tsx";
+import { dayAnchor } from "./view.ts";
+
+const cx = classNames(styles);
+
+/**
+ * A month as a wall calendar: a grid of days, each listing its releases.
+ *
+ * It is an ARIA grid with one Tab stop. The arrow keys move between days,
+ * Home and End go to the ends of the week, and Page Up and Page Down go a
+ * month back or on; moving past the month's own days opens the month they
+ * belong to. From the day focus is on, Tab walks that day's releases and
+ * then leaves the grid, so a full month is never a hundred Tab stops.
+ *
+ * On a screen too narrow for words in a square, each day shows how many
+ * releases it has, as a link to that day in the agenda.
+ */
+export function MonthGrid({
+  month,
+  today,
+  marked,
+  releases,
+  busy,
+  labelledBy,
+  agendaAddress,
+  onLeave,
+}: {
+  month: CivilMonth;
+  today: CivilDate;
+  /** The day a link or the date field asked for. */
+  marked: CivilDate | null;
+  releases: ReleaseDays;
+  busy: boolean;
+  /** The id of the heading that names the month. */
+  labelledBy: string;
+  /** Where a day's full list is: that day in the agenda. */
+  agendaAddress: (date: CivilDate) => To;
+  /** Opens the month a day outside this one belongs to. */
+  onLeave: (date: CivilDate) => void;
+}) {
+  const weeks = monthWeeks(month);
+  const names = weekdayNames();
+
+  // The day the grid's one Tab stop is on: the day the reader last moved
+  // to, else the day a link asked for, else today, else the 1st.
+  const [chosen, setChosen] = useState<CivilDate | null>(null);
+  const resting =
+    marked !== null && monthOf(marked) === month
+      ? marked
+      : monthOf(today) === month
+        ? today
+        : firstDay(month);
+  const active =
+    chosen !== null && monthOf(chosen) === month ? chosen : resting;
+
+  // A key press asks for focus on a day. Its square takes it once it is the
+  // active one, which for a day in another month is after that month opens.
+  const awaited = useRef<CivilDate | null>(null);
+  const takeFocus = useCallback(
+    (square: HTMLTableCellElement | null) => {
+      if (square === null || awaited.current !== active) return;
+      awaited.current = null;
+      square.focus();
+    },
+    [active],
+  );
+
+  function onKeyDown(event: KeyboardEvent<HTMLTableElement>) {
+    if (
+      event.defaultPrevented ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey
+    ) {
+      return;
+    }
+    // Only from a day itself: a link inside one keeps its own keys.
+    const from = event.target;
+    if (!(from instanceof HTMLTableCellElement)) return;
+    const date = from.dataset["date"];
+    if (date === undefined) return;
+    const destination = keyDestination(event.key, date);
+    if (destination === null) return;
+    event.preventDefault();
+    awaited.current = destination;
+    setChosen(destination);
+    if (monthOf(destination) !== month) onLeave(destination);
+  }
+
+  return (
+    <div className={cx("gridFrame")}>
+      <table
+        className={cx("grid")}
+        role="grid"
+        aria-labelledby={labelledBy}
+        aria-busy={busy}
+        onKeyDown={onKeyDown}
+      >
+        <thead>
+          <tr>
+            {names.map((name) => (
+              <th key={name.long} scope="col" abbr={name.long}>
+                <span aria-hidden="true">{name.short}</span>
+                <span className="sr-only">{name.long}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {weeks.map((week) => (
+            <tr key={week[0]}>
+              {week.map((date) => {
+                const events = releases.days.get(date) ?? [];
+                const { listed, more } = squareReleases(events);
+                const outside = monthOf(date) !== month;
+                const label = dayLabel(date);
+                const reachable = date === active;
+                return (
+                  <td
+                    key={date}
+                    id={dayAnchor(date)}
+                    role="gridcell"
+                    className={cx("cell")}
+                    data-date={date}
+                    data-outside={outside}
+                    data-today={date === today}
+                    data-marked={date === marked}
+                    aria-current={date === today ? "date" : undefined}
+                    aria-label={`${label}${date === today ? ", today" : ""}, ${
+                      events.length === 0
+                        ? "no releases"
+                        : releaseCount(events.length)
+                    }`}
+                    tabIndex={reachable ? 0 : -1}
+                    ref={reachable ? takeFocus : undefined}
+                    onFocus={() => {
+                      setChosen(date);
+                    }}
+                  >
+                    <time className={cx("cellDate")} dateTime={date}>
+                      {outside && dayOfMonth(date) === 1 && (
+                        <span className={cx("cellMonth")}>
+                          {monthShort(date)}{" "}
+                        </span>
+                      )}
+                      <span className={cx("cellNumeral")}>
+                        {dayOfMonth(date)}
+                      </span>
+                    </time>
+                    {events.length > 0 && (
+                      <>
+                        <ul className={cx("squares")}>
+                          {listed.map((event) => (
+                            <li key={event.id}>
+                              <SquareRelease
+                                event={event}
+                                reachable={reachable}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                        {more > 0 && (
+                          <Link
+                            className={cx("more")}
+                            to={agendaAddress(date)}
+                            tabIndex={reachable ? 0 : -1}
+                          >
+                            {String(more)} more
+                            <span className="sr-only"> on {label}</span>
+                          </Link>
+                        )}
+                        <Link
+                          className={cx("tally")}
+                          to={agendaAddress(date)}
+                          tabIndex={reachable ? 0 : -1}
+                          aria-label={`${releaseCount(events.length)} on ${label}`}
+                        >
+                          {events.length}
+                        </Link>
+                      </>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

@@ -1,11 +1,15 @@
 import { expect, type Locator, type Page, type Route } from "@playwright/test";
 import { UNAVAILABLE_FEED } from "#testing/fixture-api/fixtures/catalog.ts";
-import {
-  SCENARIO_COOKIE,
-  type FixtureScenario,
-} from "#testing/fixture-api/scenario.ts";
 import { FEED_COPY } from "#client/presentation/catalog.ts";
-import { address, openAs, settle, test, violationDetails } from "./support.ts";
+import {
+  address,
+  inScenario,
+  openAs,
+  horizontalOverflow,
+  settle,
+  test,
+  violationDetails,
+} from "./support.ts";
 
 /*
  * Discover: the browse rows, search, one whole feed, and the two states the
@@ -29,21 +33,6 @@ const search = (page: Page) =>
   page.getByRole("searchbox", { name: "Search films and series" });
 const results = (page: Page) =>
   page.getByRole("list", { name: "Search results" });
-
-/** Puts the fixture API in a condition for this browser; see `scenario.ts`. */
-async function inScenario(page: Page, scenario: FixtureScenario) {
-  const origin = test.info().project.use.baseURL;
-  if (origin === undefined) throw new Error("The project has no baseURL");
-  await page
-    .context()
-    .addCookies([{ name: SCENARIO_COOKIE, value: scenario, url: origin }]);
-}
-
-async function pageOverflow(page: Page): Promise<number> {
-  return page
-    .locator("html")
-    .evaluate((root) => root.scrollWidth - root.clientWidth);
-}
 
 async function scrolledBy(list: Locator): Promise<number> {
   return list.evaluate((element) => Math.round(element.scrollLeft));
@@ -101,7 +90,7 @@ test.describe("browse rows", () => {
     await expect(page.locator("#main")).not.toContainText(
       /popular_|on_the_air|_movies|unavailable|stale/iu,
     );
-    expect(await pageOverflow(page)).toBe(0);
+    expect(await horizontalOverflow(page)).toBe(0);
   });
 
   test("a row scrolls sideways on its own, snapped to its cards, and never traps the page", async ({
@@ -137,7 +126,7 @@ test.describe("browse rows", () => {
     await expect(cards.nth(9)).toBeFocused();
     await expect.poll(async () => scrolledBy(list)).toBeGreaterThan(0);
     await expect(cards.nth(9)).toBeInViewport();
-    expect(await pageOverflow(page)).toBe(0);
+    expect(await horizontalOverflow(page)).toBe(0);
 
     // A wheel turned over a row scrolls the page, as it does anywhere else.
     await list.scrollIntoViewIfNeeded();
@@ -211,7 +200,7 @@ test.describe("search", () => {
       page.getByRole("button", { name: "Show more titles" }),
     ).toHaveCount(0);
     await expect(page.getByRole("status")).toHaveText("26 titles shown");
-    expect(await pageOverflow(page)).toBe(0);
+    expect(await horizontalOverflow(page)).toBe(0);
 
     await page.getByRole("link", { name: "Clear search" }).click();
     await expect.poll(() => address(page)).toBe("/discover");
@@ -300,7 +289,7 @@ test.describe("one feed", () => {
     await expect(
       page.getByRole("button", { name: "Show more titles" }),
     ).toHaveCount(0);
-    expect(await pageOverflow(page)).toBe(0);
+    expect(await horizontalOverflow(page)).toBe(0);
 
     await page.reload();
     await settle(page);
@@ -346,7 +335,7 @@ for (const scheme of ["light", "dark"] as const) {
         page.getByRole("link", { name: `See all: ${DOWN}` }),
       ).toHaveCount(0);
       expect(await violationDetails(page)).toEqual([]);
-      expect(await pageOverflow(page)).toBe(0);
+      expect(await horizontalOverflow(page)).toBe(0);
 
       const rows = page.locator("#main section");
       const failed = await rows.evaluateAll((sections) =>
@@ -427,7 +416,7 @@ for (const scheme of ["light", "dark"] as const) {
         }),
       ).toHaveAttribute("href", /^\/catalog\/series\/\d+$/u);
       expect(await violationDetails(page)).toEqual([]);
-      expect(await pageOverflow(page)).toBe(0);
+      expect(await horizontalOverflow(page)).toBe(0);
 
       // The same holds for a search and for one whole feed.
       await page.goto("/discover?q=the");

@@ -9,12 +9,15 @@ import { z } from "zod";
  * - `feed-unavailable`: one discover feed answers 502 while the others, and
  *   search, keep working.
  * - `catalog-unavailable`: TMDB is down, so every catalog read answers 502.
+ * - `new-household`: nobody has asked for anything yet, so the calendar has
+ *   no releases on it, dated or not.
  */
 export const FixtureScenarioSchema = z.enum([
   "default",
   "stale-library-access",
   "feed-unavailable",
   "catalog-unavailable",
+  "new-household",
 ]);
 export type FixtureScenario = z.infer<typeof FixtureScenarioSchema>;
 
