@@ -143,7 +143,7 @@ const APPROVE_STEP_KEY = stepStageKey("step", "approve");
  * A running deployment whose approve step is running and whose saved plan
  * has no decision yet (H6).
  */
-const AWAITING_PLAN_DECISION = {
+export const AWAITING_PLAN_DECISION = {
   status: "running",
   AND: [
     { stages: { some: { key: APPROVE_STEP_KEY, status: "running" } } },

@@ -3,19 +3,21 @@ import {
   type CatalogCore,
 } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { ApprovalPolicySchema, LifecycleSchema } from "#shared/contract.ts";
-import {
-  GridEnvironmentStatusSchema,
-  type GridEnvironment,
-  type GridService,
-  type HubGrid,
+import type {
+  GridEnvironment,
+  GridService,
+  HubGrid,
 } from "#shared/hub/hub-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import {
   attentionItems,
+  awaitingDecisions,
+  decisionStatus,
   deploymentSubjects,
   latestBuilds,
   latestDeployments,
+  type AlarmedRelease,
   type AttentionDeployment,
 } from "./attention.ts";
 import { promotionOrder } from "./topology.ts";
@@ -38,23 +40,63 @@ type BuildRow = Pick<
   "id" | "status" | "qualificationReason" | "createdAt"
 >;
 
+/** The newest deployment of an environment, with the set revision it deploys. */
+export type GridDeployment = AttentionDeployment &
+  Pick<Prisma.DeploymentGetPayload<object>, "versionSetRevisionId">;
+
+/** What the grid reads of a deployment that accepted its environment's selection. */
+export type AcceptingDeployment = Pick<
+  Prisma.DeploymentGetPayload<object>,
+  "finishedAt" | "monitorState" | "monitorAlarmedAt"
+>;
+
 /** The rows the grid is built from, each read once for every service. */
 export type GridRecord = {
   services: readonly { id: string; lifecycle: string }[];
   environments: readonly EnvironmentRow[];
   /** The newest deployment of each environment, by environment id. */
-  latest: ReadonlyMap<string, AttentionDeployment>;
+  latest: ReadonlyMap<string, GridDeployment>;
+  /** Deployments awaiting approval or a saved-plan decision, newest first. */
   awaiting: readonly AttentionDeployment[];
   /** The newest build of each service, by service id. */
   builds: ReadonlyMap<string, BuildRow>;
-  /** Revision numbers of the accepted set revisions, by set revision id. */
+  /** Revision numbers of the accepted, newest and awaiting set revisions, by set revision id. */
   revisions: ReadonlyMap<string, number>;
-  /** When each accepting deployment finished, by deployment id. */
-  finished: ReadonlyMap<string, Date | null>;
+  /** Each accepting deployment, by deployment id. */
+  accepting: ReadonlyMap<string, AcceptingDeployment>;
+  /** When the record was read, so a long queue can be told from a short one. */
+  now: Date;
 };
 
 const isActive = (row: { lifecycle: string }) =>
   LifecycleSchema.parse(row.lifecycle) === "active";
+
+function revisionOf(record: GridRecord, setId: string, missing: string) {
+  const revision = record.revisions.get(setId);
+  if (revision === undefined) throw new Error(missing);
+  return revision;
+}
+
+function acceptingOf(record: GridRecord, env: EnvironmentRow) {
+  if (env.acceptedDeploymentId === null) return null;
+  const accepting = record.accepting.get(env.acceptedDeploymentId);
+  if (accepting === undefined)
+    throw new Error(
+      `Environment ${env.id} names an accepting deployment the record does not hold`,
+    );
+  return accepting;
+}
+
+/** When a monitor alarm fired on the release an environment accepted; null when none fired. */
+function alarmedAt(record: GridRecord, env: EnvironmentRow) {
+  const accepting = acceptingOf(record, env);
+  if (accepting?.monitorState !== "alarmed") return null;
+  if (accepting.monitorAlarmedAt === null)
+    throw new Error(
+      `Environment ${env.id}'s alarmed release has no alarm time`,
+    );
+  return accepting.monitorAlarmedAt;
+}
 
 function gridEnvironment(
   env: EnvironmentRow,
@@ -66,25 +108,31 @@ function gridEnvironment(
   const revision =
     env.acceptedVersionSetRevisionId === null
       ? null
-      : record.revisions.get(env.acceptedVersionSetRevisionId);
-  if (revision === undefined)
-    throw new Error(
-      `Environment ${env.id} accepts a set revision the record does not hold`,
-    );
-  const finished =
-    env.acceptedDeploymentId === null
-      ? null
-      : record.finished.get(env.acceptedDeploymentId);
-  if (finished === undefined)
-    throw new Error(
-      `Environment ${env.id} names an accepting deployment the record does not hold`,
-    );
+      : revisionOf(
+          record,
+          env.acceptedVersionSetRevisionId,
+          `Environment ${env.id} accepts a set revision the record does not hold`,
+        );
+  const finished = acceptingOf(record, env)?.finishedAt ?? null;
   return {
     id: env.id,
     name: env.name,
-    status: GridEnvironmentStatusSchema.parse(
-      deployment === undefined ? "not_started" : deployment.status,
-    ),
+    status:
+      deployment === undefined
+        ? "not_started"
+        : decisionStatus(deployment, record.awaiting),
+    request:
+      deployment === undefined || deployment.id === env.acceptedDeploymentId
+        ? null
+        : {
+            deploymentId: deployment.id,
+            revision: revisionOf(
+              record,
+              deployment.versionSetRevisionId,
+              `Deployment ${deployment.id} deploys a set revision the record does not hold`,
+            ),
+          },
+    alarmedAt: alarmedAt(record, env)?.toISOString() ?? null,
     recoveryRequired: deployment?.recoveryRequired ?? false,
     acceptedRevision: revision,
     acceptedAt: finished?.toISOString() ?? null,
@@ -161,6 +209,22 @@ export function buildGrid(
       latest: [...record.latest.values()].filter((deployment) =>
         watched.has(deployment.environmentId),
       ),
+      alarms: environments.flatMap((env): AlarmedRelease[] => {
+        const at = alarmedAt(record, env);
+        if (at === null) return [];
+        if (env.acceptedVersionSetRevisionId === null)
+          throw new Error(
+            `Environment ${env.id} alarmed with nothing accepted`,
+          );
+        return [
+          {
+            environmentId: env.id,
+            serviceId: env.serviceId,
+            versionSetRevisionId: env.acceptedVersionSetRevisionId,
+            alarmedAt: at,
+          },
+        ];
+      }),
       failedBuilds: [...listed].flatMap(([serviceId, serviceTitle]) => {
         const build = record.builds.get(serviceId);
         return build?.status === "failed"
@@ -176,6 +240,8 @@ export function buildGrid(
           : [];
       }),
       subject: deploymentSubjects(record.environments),
+      revisions: record.revisions,
+      now: record.now,
     }),
   };
 }
@@ -191,24 +257,35 @@ export async function hubGrid(database: Database): Promise<HubGrid> {
     database.environment.findMany(),
     latestDeployments(database),
     latestBuilds(database),
-    database.deployment.findMany({
-      where: { status: "awaiting_approval" },
-      orderBy: { createdAt: "desc" },
-    }),
+    awaitingDecisions(database),
   ]);
   const ids = <T>(pick: (env: (typeof environments)[number]) => T | null) =>
     environments.flatMap((env) => {
       const value = pick(env);
       return value === null ? [] : [value];
     });
-  const [accepted, accepting] = await Promise.all([
+  const [sets, accepting] = await Promise.all([
     database.versionSet.findMany({
-      where: { id: { in: ids((env) => env.acceptedVersionSetRevisionId) } },
+      where: {
+        id: {
+          in: [
+            ...ids((env) => env.acceptedVersionSetRevisionId),
+            ...[...latest.values(), ...awaiting].map(
+              (row) => row.versionSetRevisionId,
+            ),
+          ],
+        },
+      },
       select: { id: true, revision: true },
     }),
     database.deployment.findMany({
       where: { id: { in: ids((env) => env.acceptedDeploymentId) } },
-      select: { id: true, finishedAt: true },
+      select: {
+        id: true,
+        finishedAt: true,
+        monitorState: true,
+        monitorAlarmedAt: true,
+      },
     }),
   ]);
   return buildGrid({
@@ -217,7 +294,8 @@ export async function hubGrid(database: Database): Promise<HubGrid> {
     latest,
     awaiting,
     builds,
-    revisions: new Map(accepted.map((row) => [row.id, row.revision])),
-    finished: new Map(accepting.map((row) => [row.id, row.finishedAt])),
+    revisions: new Map(sets.map((row) => [row.id, row.revision])),
+    accepting: new Map(accepting.map((row) => [row.id, row])),
+    now: new Date(),
   });
 }

@@ -24,6 +24,8 @@ function environment(
     id,
     name: id.slice(id.indexOf("/") + 1),
     status: "succeeded",
+    request: null,
+    alarmedAt: null,
     recoveryRequired: false,
     acceptedRevision: 274,
     acceptedAt: "2026-11-01T00:00:00.000Z",
@@ -243,7 +245,7 @@ describe("overview panels markup", () => {
         '<span class="env-name">prod</span>' +
         '<span class="status status-succeeded"><span class="status-glyph" aria-hidden="true">✓</span>' +
         '<span class="status-label">succeeded</span></span>' +
-        '<span class="revision">r274</span>' +
+        '<span class="overview-accepted"><span class="revision">r274</span>' +
         '<span class="visually-hidden"> accepted </span>',
     );
     // Recovery outranks the failed status it was left with.
@@ -254,6 +256,66 @@ describe("overview panels markup", () => {
     // Nothing accepted: no revision and no age to show.
     expect(html).toContain(
       '<span class="status-label">not started</span></span></a>',
+    );
+  });
+
+  it("shows a newer request beside the accepted release, each with its own revision", () => {
+    const chips = renderWithRouter(
+      <OverviewPanels
+        panels={kindPanels(
+          [
+            group("scout", "product", [
+              service("scout", [
+                environment("scout/prod", {
+                  status: "canceled",
+                  request: { deploymentId: "r293", revision: 293 },
+                }),
+              ]),
+            ]),
+          ],
+          [],
+        )}
+      />,
+    );
+    expect(chips).toContain(
+      '<a href="/environments/scout/prod" class="overview-chip overview-chip-request">' +
+        '<span class="env-name">prod</span>' +
+        '<span class="overview-accepted"><span class="revision">r274</span>' +
+        '<span class="visually-hidden"> accepted </span>',
+    );
+    expect(chips).toContain(
+      '<span class="status status-canceled"><span class="status-glyph" aria-hidden="true">⊘</span>' +
+        '<span class="status-label">r293 canceled</span></span></a>',
+    );
+    // The accepted release never borrows the request's status.
+    expect(chips).not.toContain("r274 canceled");
+  });
+
+  it("marks a firing monitor alarm on the accepted release", () => {
+    const alarmed = service("arcade", [
+      environment("arcade/prod", { alarmedAt: "2026-11-02T00:00:00.000Z" }),
+    ]);
+    expect(serviceStanding(alarmed)).toBe("alarmed");
+    expect(
+      serviceStanding(
+        service("arcade", [
+          environment("arcade/prod", {
+            alarmedAt: "2026-11-02T00:00:00.000Z",
+            status: "failed",
+            recoveryRequired: true,
+          }),
+        ]),
+      ),
+    ).toBe("recovery_required");
+    expect(
+      renderWithRouter(
+        <OverviewPanels
+          panels={kindPanels([group("arcade", "product", [alarmed])], [])}
+        />,
+      ),
+    ).toContain(
+      '<span class="status status-alarmed"><span class="status-glyph" aria-hidden="true">!</span>' +
+        '<span class="status-label">alarm firing</span></span>',
     );
   });
 
@@ -283,6 +345,19 @@ describe("attention panel", () => {
     expect(html).toContain(
       '<a href="/deployments/arcade-deployment">arcade prod deployment failed</a>',
     );
+  });
+
+  it("takes the failure tone for a monitor alarm, the waiting tone for a long queue", () => {
+    expect(
+      renderWithRouter(
+        <AttentionPanel items={[{ ...attention("arcade"), kind: "alarm" }]} />,
+      ),
+    ).toContain('class="panel attention attention-failed"');
+    expect(
+      renderWithRouter(
+        <AttentionPanel items={[{ ...attention("birmel"), kind: "queued" }]} />,
+      ),
+    ).toContain('<span class="badge badge-queued">Queued</span>');
   });
 
   it("takes the waiting tone when every item is an approval", () => {

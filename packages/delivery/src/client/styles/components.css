@@ -199,6 +199,15 @@ button[aria-disabled="true"] {
   /* Contains the hidden label, so it scrolls with a scrolling table. */
   position: relative;
 }
+/* A pill whose state needs a person spells it out: a glyph alone cannot tell "needs manual release" from "waiting". */
+.env-pill.env-pill-spelled .status-label {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+}
 .env-name {
   overflow-wrap: anywhere;
 }
@@ -535,6 +544,21 @@ label.checkbox input {
 }
 .commit-row:last-child {
   border-bottom: 0;
+}
+/* The finder's hint takes its own line under the field and turns red when a paste is not a SHA. */
+.commit-find-hint {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.commit-find-error {
+  color: var(--failed);
+  font-weight: var(--weight-semibold);
+}
+.commit-statement,
+.commit-builds {
+  overflow-wrap: anywhere;
 }
 .commit-list + .pager:not(:empty) {
   border-top: 1px solid var(--border);

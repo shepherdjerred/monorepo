@@ -24,7 +24,11 @@ import {
   ActivitySearchSchema,
   DeploymentSearchSchema,
 } from "./routes/search-schemas.ts";
-import { filterPipelines, lastExecuted } from "./routes/pipeline-list-model.ts";
+import {
+  filterPipelines,
+  lastExecuted,
+  stageStatuses,
+} from "./routes/pipeline-list-model.ts";
 
 const build: PipelineStage = {
   key: "build",
@@ -164,14 +168,46 @@ describe("pipeline list", () => {
     );
   });
 
-  it("filters by name and most recent execution status", () => {
-    const pipelines = [pipeline("arcade", execution), pipeline("forum", null)];
+  it("filters by name and by any stage's current status, CI run or environment", () => {
+    const arcade: HubService = {
+      ...pipeline("arcade", execution),
+      latestBuild: {
+        id: "b1",
+        serviceId: "arcade",
+        sourceRevision: "a".repeat(40),
+        sourceKind: "ci",
+        ciUrl: null,
+        status: "verified",
+        qualificationReason: null,
+        platformChanges: null,
+        createdAt: "2026-10-18T10:00:00.000Z",
+        pipelineNumber: 18_050,
+        links: [],
+      },
+      environments: [
+        {
+          id: "arcade/prod",
+          name: "prod",
+          status: "failed",
+          recoveryRequired: true,
+          acceptedRevision: 3,
+          observedAt: null,
+          approvalRequired: false,
+          activeDeploymentId: null,
+        },
+      ],
+    };
+    const pipelines = [arcade, pipeline("forum", null)];
     const ids = (search: Parameters<typeof filterPipelines>[1]) =>
       filterPipelines(pipelines, search).map((entry) => entry.id);
     expect(ids({})).toEqual(["arcade", "forum"]);
     expect(ids({ q: "ARC" })).toEqual(["arcade"]);
-    expect(ids({ status: "running" })).toEqual(["arcade"]);
+    // A passed CI run does not hide a failed environment, nor the reverse.
+    expect(ids({ status: "succeeded" })).toEqual(["arcade"]);
+    expect(ids({ status: "failed" })).toEqual(["arcade"]);
+    expect(ids({ status: "running" })).toEqual([]);
     expect(ids({ status: "not_started" })).toEqual(["forum"]);
+    expect(stageStatuses(arcade)).toEqual(["succeeded", "failed"]);
   });
 });
 

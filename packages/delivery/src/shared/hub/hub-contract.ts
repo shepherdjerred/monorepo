@@ -145,7 +145,10 @@ export type ExecutionTrace = z.infer<typeof ExecutionTraceSchema>;
 export const HubEnvironmentSchema = z.object({
   id: IdentifierSchema,
   name: z.string(),
+  /** The newest deployment's status; one waiting on a saved-plan decision is `awaiting_approval`. */
   status: PipelineStatusSchema,
+  /** The newest deployment failed and locked the environment until an operator recovers it. */
+  recoveryRequired: z.boolean(),
   acceptedRevision: z.number().int().positive().nullable(),
   observedAt: TimestampSchema.nullable(),
   approvalRequired: z.boolean(),
@@ -160,7 +163,21 @@ export const HubServiceSchema = ServiceSummarySchema.extend({
 export type HubService = z.infer<typeof HubServiceSchema>;
 
 export const AttentionSchema = z.object({
-  kind: z.enum(["approval", "failed", "recovery", "build_failed"]),
+  /**
+   * `approval`: a deployment or a saved plan waits for a decision. `failed`:
+   * an environment's newest deployment failed. `recovery`: it failed and
+   * locked the environment. `alarm`: a monitor alarm fired on an accepted
+   * release. `queued`: a deployment has waited too long for its first stage.
+   * `build_failed`: a service's newest build failed qualification.
+   */
+  kind: z.enum([
+    "approval",
+    "failed",
+    "recovery",
+    "alarm",
+    "queued",
+    "build_failed",
+  ]),
   title: z.string(),
   detail: z.string(),
   at: TimestampSchema.nullable(),
@@ -193,7 +210,8 @@ export type HubOverview = z.infer<typeof HubOverviewSchema>;
 
 /**
  * What Delivery last recorded for an environment: the status of its newest
- * deployment, or `not_started` when it has recorded none. This is the
+ * deployment, or `not_started` when it has recorded none. A deployment that
+ * waits on a saved-plan decision is `awaiting_approval`. This is the
  * deployment record, never live runtime health.
  */
 export const GridEnvironmentStatusSchema = z.enum([
@@ -202,10 +220,26 @@ export const GridEnvironmentStatusSchema = z.enum([
 ]);
 export type GridEnvironmentStatus = z.infer<typeof GridEnvironmentStatusSchema>;
 
+/** An environment's newest deployment, when it is not the one that accepted the selection. */
+export const GridRequestSchema = z.object({
+  deploymentId: IdentifierSchema,
+  /** The revision number of the set revision it deploys. */
+  revision: z.number().int().positive(),
+});
+
 export const GridEnvironmentSchema = z.object({
   id: IdentifierSchema,
   name: z.string().min(1),
+  /** The newest deployment's status: `request`'s when there is one, else the accepting deployment's. */
   status: GridEnvironmentStatusSchema,
+  /**
+   * The newest deployment when it differs from the accepting one: in flight,
+   * waiting, or ended without being accepted. Null when the newest
+   * deployment accepted the selection, or there is none.
+   */
+  request: GridRequestSchema.nullable(),
+  /** When a monitor alarm fired on the accepted release; null while none is firing. */
+  alarmedAt: TimestampSchema.nullable(),
   /** The newest deployment left its target quarantined until an operator recovers it. */
   recoveryRequired: z.boolean(),
   /** The accepted set revision's number; null until the environment accepts one. */
@@ -321,16 +355,29 @@ export const ExecutionQuerySchema = z.object({
   cursor: z.string().min(1).optional(),
 });
 
-/** Where one change stands in one environment, from the person's point of view. */
+/**
+ * Where one change stands in one environment, from the person's point of
+ * view. `deploying` means a deployment that would deliver the change (its
+ * set revision or a later one of the same lineage) is queued or running.
+ * Every other unfinished state names why nothing is: `recovery_required` (a
+ * failed deployment locked the environment), `awaiting_approval`, `failed`,
+ * `canceled`, `replaced` (it was deployed, then another release replaced
+ * it), `manual` (it needs a manual promotion or release), `waiting` (the
+ * environment it promotes from does not have it yet) and `not_started` (an
+ * automatic environment that has started no deployment of it).
+ */
 export const CommitEnvironmentStateSchema = z.enum([
   "live",
   "superseded",
   "deploying",
   "awaiting_approval",
+  "recovery_required",
   "failed",
   "canceled",
+  "replaced",
   "manual",
   "waiting",
+  "not_started",
 ]);
 export type CommitEnvironmentState = z.infer<
   typeof CommitEnvironmentStateSchema
@@ -353,6 +400,7 @@ export const CommitVerdictSchema = z.enum([
   "waiting",
   "deploying",
   "awaiting_approval",
+  "recovery_required",
   "failed",
   "deployed",
 ]);
@@ -418,6 +466,18 @@ export const CommitStatusSchema = z.object({
   /** Builds that failed or are still running, whether or not they changed anything. */
   failedBuilds: z.array(BuildViewSchema),
   pendingBuilds: z.array(BuildViewSchema),
+  /**
+   * The most urgent environment of a changed service that does not have the
+   * change, prod first among equals, so a page can say what is stuck and
+   * where. Null when every one has it.
+   */
+  blocker: z
+    .object({
+      service: z.string(),
+      environment: z.string(),
+      state: CommitEnvironmentStateSchema,
+    })
+    .nullable(),
 });
 export type CommitStatus = z.infer<typeof CommitStatusSchema>;
 
@@ -427,19 +487,14 @@ export const CommitSummarySchema = CommitStatusSchema.pick({
   author: true,
   verdict: true,
   seenAt: true,
+  blocker: true,
 }).extend({
   changedCount: z.number().int().nonnegative(),
   liveCount: z.number().int().nonnegative(),
   environments: z.array(CommitEnvironmentGroupSchema.omit({ members: true })),
   buildId: IdentifierSchema,
-  /** The most urgent unfinished service, so the strip can say what is stuck. */
-  blocker: z
-    .object({
-      service: z.string(),
-      environment: z.string().nullable(),
-      state: CommitVerdictSchema,
-    })
-    .nullable(),
+  /** How many services' CI failed for this commit. */
+  failedBuildCount: z.number().int().nonnegative(),
 });
 export type CommitSummary = z.infer<typeof CommitSummarySchema>;
 

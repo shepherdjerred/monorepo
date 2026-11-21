@@ -1,13 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import type { GridEnvironment, GridService } from "#shared/hub/hub-contract.ts";
 import {
-  environmentStanding,
+  requestStanding,
   serviceStanding,
   standingCounts,
   type KindPanel,
   type ServiceStanding,
 } from "#client/routes/overview-model.ts";
-import { Revision } from "./identifier.tsx";
+import { Revision, revisionLabel } from "./identifier.tsx";
 import { Status, statusLabel } from "./status.tsx";
 import { RelativeTime } from "./time.tsx";
 
@@ -16,6 +16,7 @@ const STATUS_VALUE: Record<ServiceStanding, string> = {
   succeeded: "succeeded",
   failed: "failed",
   recovery_required: "failed",
+  alarmed: "alarmed",
   awaiting_approval: "awaiting_approval",
   running: "running",
   queued: "queued",
@@ -47,28 +48,44 @@ function Counts({
 }
 
 /**
- * One environment as a link to its page: name, what Delivery last recorded
- * there, and the accepted revision with its age. The words of a settled chip
- * are hidden from sight only.
+ * One environment as a link to its page: its name, then the accepted release
+ * and when it was accepted, then, only when the newest deployment is a
+ * different one, that deployment's own release and status ("r293
+ * canceled"). One release's number never sits beside another's status. The
+ * words of a settled chip are hidden from sight only.
  */
 function EnvironmentChip({ environment }: { environment: GridEnvironment }) {
-  const standing = environmentStanding(environment);
+  const { request } = environment;
+  const newest = requestStanding(environment);
   return (
     <Link
       to="/environments/$"
       params={{ _splat: environment.id }}
-      className={`overview-chip overview-chip-${standing}`}
+      className={`overview-chip overview-chip-${request === null ? newest : "request"}`}
     >
       <span className="env-name">{environment.name}</span>
-      <Status value={STATUS_VALUE[standing]} label={statusLabel(standing)} />
-      {environment.acceptedRevision !== null && (
-        <Revision revision={environment.acceptedRevision} />
+      {request === null && (
+        <Status value={STATUS_VALUE[newest]} label={statusLabel(newest)} />
       )}
-      {environment.acceptedAt !== null && (
-        <>
-          <span className="visually-hidden"> accepted </span>
-          <RelativeTime value={environment.acceptedAt} />
-        </>
+      {environment.acceptedRevision !== null && (
+        <span className="overview-accepted">
+          <Revision revision={environment.acceptedRevision} />
+          {environment.acceptedAt !== null && (
+            <>
+              <span className="visually-hidden"> accepted </span>
+              <RelativeTime value={environment.acceptedAt} />
+            </>
+          )}
+        </span>
+      )}
+      {environment.alarmedAt !== null && (
+        <Status value="alarmed" label="alarm firing" />
+      )}
+      {request !== null && (
+        <Status
+          value={STATUS_VALUE[newest]}
+          label={`${revisionLabel(request.revision)} ${statusLabel(newest)}`}
+        />
       )}
     </Link>
   );

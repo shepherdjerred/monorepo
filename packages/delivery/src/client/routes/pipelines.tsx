@@ -2,8 +2,9 @@ import { Link, createRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   PipelineStatusSchema,
-  type ExecutionSummary,
+  type BuildView,
   type HubService,
+  type PipelineStatus,
 } from "#shared/hub/hub-contract.ts";
 import { queries } from "#client/queries.ts";
 import { AttentionPanel } from "#client/components/attention-panel.tsx";
@@ -11,38 +12,34 @@ import { PageHeader } from "#client/components/page-header.tsx";
 import { Status, statusLabel } from "#client/components/status.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { ShortSha, ToolLinks } from "#client/components/links.tsx";
-import { filterPipelines, lastExecuted } from "./pipeline-list-model.ts";
+import {
+  ciStatus,
+  filterPipelines,
+  lastExecuted,
+} from "./pipeline-list-model.ts";
 import { PipelineSearchSchema, formSearch } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
-import { revisionLabel } from "#client/components/identifier.tsx";
 
-function ExecutionCell({ execution }: { execution: ExecutionSummary | null }) {
-  if (execution === null) return <Status value="not_started" />;
-  const { build, versionSet } = execution;
+/**
+ * The service's newest CI run: its own result and its Woodpecker pipeline
+ * number, which every service built by that run shares. It says nothing
+ * about the environments; the stages column does.
+ */
+function CiRunCell({ build }: { build: BuildView | null }) {
+  if (build === null) return <span className="muted">No CI run</span>;
   return (
     <span className="execution-cell">
-      <Status value={execution.status} />
-      {build !== null && (
-        <Link to="/builds/$" params={{ _splat: build.id }}>
-          {build.pipelineNumber === null
-            ? "View execution"
-            : `Execution #${String(build.pipelineNumber)}`}
-        </Link>
-      )}
-      {build === null && versionSet !== null && (
-        <Link
-          to="/versions/$versionSetId"
-          params={{ versionSetId: versionSet.id }}
-        >
-          Composed {revisionLabel(versionSet.revision)}
-        </Link>
-      )}
+      <Status value={ciStatus(build)} />
+      <Link to="/builds/$" params={{ _splat: build.id }}>
+        {build.pipelineNumber === null
+          ? "View build"
+          : `CI run #${String(build.pipelineNumber)}`}
+      </Link>
     </span>
   );
 }
 
-function SourceCell({ execution }: { execution: ExecutionSummary | null }) {
-  const build = execution?.build ?? null;
+function SourceCell({ build }: { build: BuildView | null }) {
   if (build === null) return <span className="muted">—</span>;
   const commit = build.links.find((link) => link.kind === "github");
   return commit === undefined ? (
@@ -55,8 +52,19 @@ function SourceCell({ execution }: { execution: ExecutionSummary | null }) {
   );
 }
 
+/** Stage states a glyph says alone; every other one is spelled out. */
+const SETTLED: ReadonlySet<PipelineStatus> = new Set([
+  "succeeded",
+  "not_started",
+]);
+
+/**
+ * Each stage's current state: the newest CI run's build, then each
+ * environment's newest deployment, where a failure that locked the
+ * environment reads "recovery required".
+ */
 function StageStrip({ pipeline }: { pipeline: HubService }) {
-  const build = pipeline.latestExecution?.build ?? null;
+  const build = pipeline.latestBuild;
   return (
     <ol className="environment-strip" aria-label={`${pipeline.title} stages`}>
       {build !== null && (
@@ -66,7 +74,7 @@ function StageStrip({ pipeline }: { pipeline: HubService }) {
             params={{ _splat: build.id }}
             className="env-pill"
           >
-            <Status value={build.status} />
+            <Status value={ciStatus(build)} />
             <span className="env-name">Build</span>
           </Link>
         </li>
@@ -76,9 +84,17 @@ function StageStrip({ pipeline }: { pipeline: HubService }) {
           <Link
             to="/environments/$"
             params={{ _splat: env.id }}
-            className="env-pill"
+            className={
+              SETTLED.has(env.status) && !env.recoveryRequired
+                ? "env-pill"
+                : "env-pill env-pill-spelled"
+            }
           >
-            <Status value={env.status} />
+            {env.recoveryRequired ? (
+              <Status value="failed" label="recovery required" />
+            ) : (
+              <Status value={env.status} />
+            )}
             <span className="env-name">{env.name}</span>
           </Link>
         </li>
@@ -97,11 +113,11 @@ function PipelineRow({ pipeline }: { pipeline: HubService }) {
         </Link>
         <small className="muted">{pipeline.id}</small>
       </th>
-      <td data-label="Most recent execution">
-        <ExecutionCell execution={execution} />
+      <td data-label="Latest CI run">
+        <CiRunCell build={pipeline.latestBuild} />
       </td>
       <td data-label="Source revision">
-        <SourceCell execution={execution} />
+        <SourceCell build={pipeline.latestBuild} />
       </td>
       <td data-label="Stages">
         <StageStrip pipeline={pipeline} />
@@ -127,7 +143,7 @@ function PipelinesPage() {
       <PageHeader
         eyebrow="Homelab CI/CD"
         title="Pipelines"
-        description="Every pipeline from commit to runtime, with its most recent execution."
+        description="Every pipeline from commit to runtime: its newest CI run, and where each environment stands."
         actions={<ToolLinks links={data.tools} />}
       />
       <section className="panel" aria-labelledby="pipelines-heading">
@@ -162,7 +178,7 @@ function PipelinesPage() {
             <input type="search" name="q" defaultValue={search.q ?? ""} />
           </label>
           <label>
-            Most recent execution
+            A stage is
             <select name="status" defaultValue={search.status ?? ""}>
               <option value="">Any status</option>
               {PipelineStatusSchema.options.map((status) => (
@@ -188,7 +204,7 @@ function PipelinesPage() {
               <thead>
                 <tr>
                   <th scope="col">Name</th>
-                  <th scope="col">Most recent execution</th>
+                  <th scope="col">Latest CI run</th>
                   <th scope="col">Source revision</th>
                   <th scope="col">Stages</th>
                   <th scope="col">Last executed</th>

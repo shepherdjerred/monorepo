@@ -6,67 +6,115 @@ import type {
   PipelineStatus,
 } from "#shared/hub/hub-contract.ts";
 
-/** The version set a build produced, as far as liveness is concerned. */
-export type ChangeFacts = { revision: number; lineage: string } | null;
+/** A set revision as far as liveness is concerned. */
+export type SetFacts = { revision: number; lineage: string };
+
+/** The version set a build produced; null for a platform change. */
+export type ChangeFacts = SetFacts | null;
 
 export type EnvironmentFacts = {
   id: string;
   automatic: boolean;
   promotionSourceEnvironmentId: string | null;
   /** The selection the environment has accepted, if any. */
-  accepted: { revision: number; lineage: string } | null;
+  accepted: SetFacts | null;
+  /** Its newest deployment, of any change, failed and locked it for recovery. */
+  locked: boolean;
 };
+
+/** A deployment as the commit rules read it. */
+export type DeploymentFacts = {
+  status: PipelineStatus;
+  recoveryRequired: boolean;
+};
+
+/** Whether a set revision includes a change: the same or a later revision of its lineage. */
+export function carries(change: SetFacts, set: SetFacts) {
+  return set.lineage === change.lineage && set.revision >= change.revision;
+}
+
+const OPEN: ReadonlySet<PipelineStatus> = new Set([
+  "queued",
+  "pending",
+  "running",
+  "awaiting_approval",
+]);
+
+/**
+ * Of the deployments that would deliver a change to one environment, the one
+ * that says what is happening: the newest still queued, running or waiting
+ * for a decision, else the newest that ended.
+ */
+export function decidingDeployment<
+  T extends { createdAt: Date; status: PipelineStatus },
+>(carriers: readonly T[]): T | null {
+  const newestFirst = carriers.toSorted(
+    (left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
+  );
+  return (
+    newestFirst.find((entry) => OPEN.has(entry.status)) ??
+    newestFirst[0] ??
+    null
+  );
+}
 
 /**
  * Where one change stands in one environment. The accepted selection decides
- * liveness: the same or a later revision of the same lineage carries the
- * change. Otherwise the newest deployment aimed at it says what is happening.
+ * liveness. Otherwise `deployment`, the deciding deployment among those that
+ * would deliver the change (see `decidingDeployment`), says what is
+ * happening; with none, the environment's own policy says why nothing is.
+ * A change is `deploying` only while such a deployment is queued or running.
  * `sourceLive` is whether the environment it promotes from already has it.
  */
 export function environmentState(input: {
   change: ChangeFacts;
   environment: EnvironmentFacts;
-  deployment: { status: PipelineStatus; recoveryRequired: boolean } | null;
+  deployment: DeploymentFacts | null;
   sourceLive: boolean;
 }): CommitEnvironmentState {
   const { change, environment, deployment } = input;
   const accepted = environment.accepted;
-  if (
-    change !== null &&
-    accepted !== null &&
-    accepted.lineage === change.lineage &&
-    accepted.revision >= change.revision
-  )
+  if (change !== null && accepted !== null && carries(change, accepted))
     return accepted.revision === change.revision ? "live" : "superseded";
-  if (deployment !== null) {
-    if (deployment.recoveryRequired) return "failed";
-    switch (deployment.status) {
-      case "succeeded": {
-        // A platform change has no selection to compare; success is the proof.
-        return change === null ? "live" : "waiting";
-      }
-      case "failed": {
-        return "failed";
-      }
-      case "running":
-      case "pending":
-      case "queued": {
-        return "deploying";
-      }
-      case "awaiting_approval": {
-        return "awaiting_approval";
-      }
-      case "canceled": {
-        return "canceled";
-      }
-      case "not_started": {
-        return "waiting";
-      }
+  // A platform change has no selection to compare; success is the proof.
+  if (change === null && deployment?.status === "succeeded") return "live";
+  // Nothing deploys to a locked environment until an operator recovers it.
+  if (environment.locked || deployment?.recoveryRequired === true)
+    return "recovery_required";
+  const tried = deployment === null ? null : deploymentState(deployment.status);
+  if (tried !== null) return tried;
+  if (environment.promotionSourceEnvironmentId !== null && !input.sourceLive)
+    return "waiting";
+  return environment.automatic ? "not_started" : "manual";
+}
+
+/** What the deciding deployment's status says, or null when it never started. */
+function deploymentState(
+  status: PipelineStatus,
+): CommitEnvironmentState | null {
+  switch (status) {
+    case "running":
+    case "pending":
+    case "queued": {
+      return "deploying";
+    }
+    case "awaiting_approval": {
+      return "awaiting_approval";
+    }
+    case "failed": {
+      return "failed";
+    }
+    case "canceled": {
+      return "canceled";
+    }
+    // It was accepted once, and the accepted selection no longer carries it.
+    case "succeeded": {
+      return "replaced";
+    }
+    case "not_started": {
+      return null;
     }
   }
-  const promoted = environment.promotionSourceEnvironmentId !== null;
-  if (promoted && !input.sourceLive) return "waiting";
-  return environment.automatic ? "waiting" : "manual";
 }
 
 /** Whether a state means the change is running in that environment. */
@@ -77,6 +125,7 @@ export function isLive(state: CommitEnvironmentState) {
 // Most urgent first: a failure outranks progress, progress outranks idling.
 const VERDICT_PRIORITY: CommitVerdict[] = [
   "build_failed",
+  "recovery_required",
   "failed",
   "awaiting_approval",
   "building",
@@ -98,6 +147,35 @@ export function rollUp(parts: CommitVerdict[]): CommitVerdict {
   );
 }
 
+/** The verdict one environment's state contributes to its service and commit. */
+export function stateVerdict(state: CommitEnvironmentState): CommitVerdict {
+  switch (state) {
+    case "live":
+    case "superseded": {
+      return "deployed";
+    }
+    case "deploying": {
+      return "deploying";
+    }
+    case "awaiting_approval": {
+      return "awaiting_approval";
+    }
+    case "recovery_required": {
+      return "recovery_required";
+    }
+    case "failed": {
+      return "failed";
+    }
+    case "canceled":
+    case "replaced":
+    case "manual":
+    case "waiting":
+    case "not_started": {
+      return "waiting";
+    }
+  }
+}
+
 /** One service's verdict from its build and the state of each environment. */
 export function serviceVerdict(
   buildStatus: PipelineStatus,
@@ -105,49 +183,69 @@ export function serviceVerdict(
 ): CommitVerdict {
   if (buildStatus === "failed") return "build_failed";
   if (buildStatus === "pending") return "building";
-  if (states.length === 0) return "nothing_to_deploy";
-  return rollUp(
-    states.map((state): CommitVerdict => {
-      switch (state) {
-        case "live":
-        case "superseded": {
-          return "deployed";
-        }
-        case "deploying":
-        case "waiting": {
-          return "deploying";
-        }
-        case "awaiting_approval": {
-          return "awaiting_approval";
-        }
-        case "failed": {
-          return "failed";
-        }
-        case "canceled":
-        case "manual": {
-          return "waiting";
-        }
-      }
-    }),
-  );
+  return states.length === 0
+    ? "nothing_to_deploy"
+    : rollUp(states.map((state) => stateVerdict(state)));
 }
 
+/**
+ * Most urgent first, in the verdicts' order, so the first unfinished
+ * environment is the one its commit's verdict came from. Among idle ones, a
+ * cause (a manual release, a cancellation) precedes what waits on it.
+ */
 const STATE_URGENCY: CommitEnvironmentState[] = [
+  "recovery_required",
   "failed",
   "awaiting_approval",
   "deploying",
-  "waiting",
   "manual",
   "canceled",
+  "replaced",
+  "not_started",
+  "waiting",
   "live",
   "superseded",
 ];
+
+export function stateRank(state: CommitEnvironmentState) {
+  return STATE_URGENCY.indexOf(state);
+}
 
 /** The environment that matters most sorts first; the rest by name. */
 function environmentOrder(left: string, right: string) {
   return left === "prod" || right === "prod"
     ? Number(right === "prod") - Number(left === "prod")
     : left.localeCompare(right);
+}
+
+/**
+ * The most urgent environment of any changed service that does not have the
+ * change yet, prod before others of the same urgency; null when every one
+ * has it.
+ */
+export function blockingEnvironment(
+  changed: {
+    service: { title: string };
+    environments: CommitEnvironment[];
+  }[],
+) {
+  const pending = changed.flatMap((entry) =>
+    entry.environments
+      .filter((environment) => !isLive(environment.state))
+      .map((environment) => ({
+        service: entry.service.title,
+        environment: environment.name,
+        state: environment.state,
+      })),
+  );
+  return (
+    pending.toSorted(
+      (left, right) =>
+        stateRank(left.state) - stateRank(right.state) ||
+        environmentOrder(left.environment, right.environment) ||
+        left.service.localeCompare(right.service),
+    )[0] ?? null
+  );
 }
 
 /**
@@ -179,8 +277,7 @@ export function groupByEnvironment(
     .map(([name, members]) => {
       const sorted = members.toSorted(
         (left, right) =>
-          STATE_URGENCY.indexOf(left.state) -
-            STATE_URGENCY.indexOf(right.state) ||
+          stateRank(left.state) - stateRank(right.state) ||
           left.serviceTitle.localeCompare(right.serviceTitle),
       );
       return {

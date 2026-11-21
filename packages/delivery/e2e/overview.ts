@@ -2,6 +2,7 @@ import type { Database } from "#infrastructure/database.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { testOperator } from "#testing/seed.ts";
 import { registerTestService } from "#testing/services.ts";
+import { seedBirmelRelease } from "./commits.ts";
 
 /**
  * Two services only the v2 catalog declares, registered as a reconcile leaves
@@ -32,4 +33,7 @@ export async function seedOverviewGroup(
     },
     testOperator,
   );
+  // Birmel prod: an accepted release, a newer one queued past the attention
+  // threshold, and commits that wait on a manual release.
+  await seedBirmelRelease(delivery, database);
 }

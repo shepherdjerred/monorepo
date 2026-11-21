@@ -7,26 +7,154 @@ import type {
   CommitSummary,
   CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { index } from "#infrastructure/delivery-data.ts";
+import { AWAITING_PLAN_DECISION } from "#infrastructure/selection/views.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { decodeCursor, page, PAGE_SIZE } from "./cursor.ts";
 import { buildStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
-import { latestPerEnvironment } from "./executions.ts";
+import { latestDeployments } from "./attention.ts";
 import {
+  blockingEnvironment,
+  carries,
+  decidingDeployment,
   environmentState,
   groupByEnvironment,
   isLive,
   rollUp,
   serviceVerdict,
   verdictRank,
+  type ChangeFacts,
+  type SetFacts,
 } from "./commit-status.ts";
 
 const SHA = /^[0-9a-f]{7,40}$/iu;
 
 type Read = { status: CommitStatus };
+
+type DeploymentRow = Pick<
+  Prisma.DeploymentGetPayload<object>,
+  | "id"
+  | "environmentId"
+  | "versionSetRevisionId"
+  | "platformSourceBuildId"
+  | "status"
+  | "recoveryRequired"
+  | "createdAt"
+>;
+
+const DEPLOYMENT_FIELDS = {
+  id: true,
+  environmentId: true,
+  versionSetRevisionId: true,
+  platformSourceBuildId: true,
+  status: true,
+  recoveryRequired: true,
+  createdAt: true,
+} as const;
+
+/** Deployments not yet finished: queued, running or waiting for a decision. */
+const OPEN_STATUSES = ["queued", "running", "awaiting_approval"];
+
+/**
+ * What every environment the commits touch holds: its newest deployment of
+ * any change, its unfinished deployments, which of those wait on a saved
+ * plan, and the set revision behind each of them and each accepted
+ * selection. Every read is by set, never per environment.
+ */
+async function environmentRecord(
+  database: Database,
+  environments: readonly {
+    id: string;
+    acceptedVersionSetRevisionId: string | null;
+  }[],
+) {
+  const ids = environments.map((row) => row.id);
+  const [newestAll, open, planned] = await Promise.all([
+    latestDeployments(database),
+    database.deployment.findMany({
+      where: { environmentId: { in: ids }, status: { in: OPEN_STATUSES } },
+      select: DEPLOYMENT_FIELDS,
+    }),
+    database.deployment.findMany({
+      where: { AND: [{ environmentId: { in: ids } }, AWAITING_PLAN_DECISION] },
+      select: { id: true },
+    }),
+  ]);
+  const newest = new Map(
+    ids.flatMap((id) => {
+      const row = newestAll.get(id);
+      return row === undefined ? [] : [[id, row] as const];
+    }),
+  );
+  const sets = await database.versionSet.findMany({
+    where: {
+      id: {
+        in: [
+          ...environments.flatMap((row) =>
+            row.acceptedVersionSetRevisionId === null
+              ? []
+              : [row.acceptedVersionSetRevisionId],
+          ),
+          ...[...newest.values(), ...open].map(
+            (row) => row.versionSetRevisionId,
+          ),
+        ],
+      },
+    },
+    select: { id: true, revision: true, lineage: true },
+  });
+  return {
+    newest,
+    open,
+    awaitingPlan: new Set(planned.map((row) => row.id)),
+    sets: new Map<string, SetFacts>(sets.map((row) => [row.id, row])),
+  };
+}
+
+type EnvironmentRecord = Awaited<ReturnType<typeof environmentRecord>>;
+
+/**
+ * The deployments that would deliver a change to one environment: those of
+ * the change itself, and for a version set the environment's newest and
+ * unfinished deployments of a set revision that includes it.
+ */
+function carriersOf(
+  change: ChangeFacts,
+  environmentId: string,
+  own: readonly DeploymentRow[],
+  record: EnvironmentRecord,
+) {
+  const carriers = new Map(
+    own
+      .filter((row) => row.environmentId === environmentId)
+      .map((row) => [row.id, row]),
+  );
+  if (change !== null) {
+    const newest = record.newest.get(environmentId);
+    for (const row of [
+      ...(newest === undefined ? [] : [newest]),
+      ...record.open.filter((entry) => entry.environmentId === environmentId),
+    ]) {
+      const set = record.sets.get(row.versionSetRevisionId);
+      if (set === undefined)
+        throw new Error(`Deployment ${row.id} names a set revision not read`);
+      if (carries(change, set)) carriers.set(row.id, row);
+    }
+  }
+  return decidingDeployment(
+    [...carriers.values()].map((row) => ({
+      ...row,
+      // A deployment waiting on a saved-plan decision is waiting for approval.
+      status: record.awaitingPlan.has(row.id)
+        ? ("awaiting_approval" as const)
+        : DeploymentStatusSchema.parse(row.status),
+    })),
+  );
+}
 
 /**
  * Where each commit stands. One build exists per service per commit, but only a
@@ -75,15 +203,7 @@ async function readCommits(
           { versionSetRevisionId: { in: versionSets.map((row) => row.id) } },
         ],
       },
-      select: {
-        id: true,
-        environmentId: true,
-        versionSetRevisionId: true,
-        platformSourceBuildId: true,
-        status: true,
-        recoveryRequired: true,
-        createdAt: true,
-      },
+      select: DEPLOYMENT_FIELDS,
     }),
     database.environment.findMany({
       where: { lifecycle: "active", serviceId: { in: serviceIds } },
@@ -97,19 +217,7 @@ async function readCommits(
       },
     }),
   ]);
-  const acceptedSets = await database.versionSet.findMany({
-    where: {
-      id: {
-        in: environments.flatMap((row) =>
-          row.acceptedVersionSetRevisionId === null
-            ? []
-            : [row.acceptedVersionSetRevisionId],
-        ),
-      },
-    },
-    select: { id: true, revision: true, lineage: true },
-  });
-  const acceptedById = new Map(acceptedSets.map((row) => [row.id, row]));
+  const record = await environmentRecord(database, environments);
   const sourceBySha = new Map(
     sourceCommits.map((row) => [row.sourceRevision, row]),
   );
@@ -131,47 +239,37 @@ async function readCommits(
         unchangedCount += 1;
         continue;
       }
-      const newest = new Map(
-        latestPerEnvironment(linked).map((row) => [row.environmentId, row]),
-      );
+      const change: ChangeFacts = versionSet ?? null;
       const candidates = environments.filter(
         (row) =>
           row.serviceId === build.serviceId &&
-          (versionSet !== undefined || newest.has(row.id)),
+          (versionSet !== undefined ||
+            linked.some((entry) => entry.environmentId === row.id)),
       );
       const live = new Set<string>();
       const states: CommitEnvironment[] = promotionOrder(candidates).map(
         (environment) => {
           const accepted =
             environment.acceptedVersionSetRevisionId === null
-              ? undefined
-              : acceptedById.get(environment.acceptedVersionSetRevisionId);
-          const deployment = newest.get(environment.id);
+              ? null
+              : record.sets.get(environment.acceptedVersionSetRevisionId);
+          if (accepted === undefined)
+            throw new Error(
+              `Environment ${environment.id} accepts a set revision not read`,
+            );
+          const deployment = carriersOf(change, environment.id, linked, record);
           const state = environmentState({
-            change:
-              versionSet === undefined
-                ? null
-                : {
-                    revision: versionSet.revision,
-                    lineage: versionSet.lineage,
-                  },
+            change,
             environment: {
               id: environment.id,
               automatic: environment.automatic,
               promotionSourceEnvironmentId:
                 environment.promotionSourceEnvironmentId,
-              accepted:
-                accepted === undefined
-                  ? null
-                  : { revision: accepted.revision, lineage: accepted.lineage },
+              accepted,
+              locked:
+                record.newest.get(environment.id)?.recoveryRequired === true,
             },
-            deployment:
-              deployment === undefined
-                ? null
-                : {
-                    status: DeploymentStatusSchema.parse(deployment.status),
-                    recoveryRequired: deployment.recoveryRequired,
-                  },
+            deployment,
             sourceLive:
               environment.promotionSourceEnvironmentId !== null &&
               live.has(environment.promotionSourceEnvironmentId),
@@ -227,6 +325,7 @@ async function readCommits(
         unchangedCount,
         failedBuilds,
         pendingBuilds,
+        blocker: blockingEnvironment(changed),
       },
     };
   });
@@ -267,13 +366,6 @@ export async function commitStatus(
 function summary(status: CommitStatus, firstSeenAt: Date): CommitSummary {
   if (status.buildId === null)
     throw new Error(`Listed commit ${status.sha} has no build`);
-  const stuck = status.changed.find(
-    (entry) =>
-      entry.verdict !== "deployed" && entry.verdict !== "nothing_to_deploy",
-  );
-  const stuckEnvironment = stuck?.environments.find(
-    (entry) => !isLive(entry.state),
-  );
   return {
     sha: status.sha,
     title: status.title,
@@ -287,14 +379,8 @@ function summary(status: CommitStatus, firstSeenAt: Date): CommitSummary {
     changedCount: status.changed.length,
     liveCount: status.changed.filter((entry) => entry.verdict === "deployed")
       .length,
-    blocker:
-      stuck === undefined
-        ? null
-        : {
-            service: stuck.service.title,
-            environment: stuckEnvironment?.name ?? null,
-            state: stuck.verdict,
-          },
+    failedBuildCount: status.failedBuilds.length,
+    blocker: status.blocker,
   };
 }
 

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { CommitEnvironment } from "#shared/hub/hub-contract.ts";
 import {
+  blockingEnvironment,
+  carries,
+  decidingDeployment,
   environmentState,
   groupByEnvironment,
   rollUp,
@@ -9,13 +12,17 @@ import {
 } from "./commit-status.ts";
 
 const change = { revision: 5, lineage: "lineage-a" };
+const at = (minute: number) => new Date(Date.UTC(2026, 10, 1, 0, minute));
 
-function environment(overrides: Partial<EnvironmentFacts> = {}) {
+function environment(
+  overrides: Partial<EnvironmentFacts> = {},
+): EnvironmentFacts {
   return {
     id: "svc/prod",
     automatic: true,
     promotionSourceEnvironmentId: null,
     accepted: null,
+    locked: false,
     ...overrides,
   };
 }
@@ -40,6 +47,7 @@ describe("environmentState", () => {
         change,
         environment: environment({
           accepted: { revision: 9, lineage: "lineage-a" },
+          locked: true,
         }),
         deployment: { status: "failed", recoveryRequired: false },
         sourceLive: false,
@@ -57,10 +65,10 @@ describe("environmentState", () => {
         deployment: null,
         sourceLive: false,
       }),
-    ).toBe("waiting");
+    ).toBe("not_started");
   });
 
-  it("does not call an older accepted revision live", () => {
+  it("calls a change that was deployed and then replaced by an older release replaced, not deploying", () => {
     expect(
       environmentState({
         change,
@@ -70,7 +78,7 @@ describe("environmentState", () => {
         deployment: { status: "succeeded", recoveryRequired: false },
         sourceLive: false,
       }),
-    ).toBe("waiting");
+    ).toBe("replaced");
   });
 
   it.each([
@@ -91,22 +99,37 @@ describe("environmentState", () => {
     ).toBe(expected);
   });
 
-  it("treats a quarantined deployment as failed", () => {
+  it("calls a deployment that locked the environment recovery required", () => {
     expect(
       environmentState({
         change,
         environment: environment(),
-        deployment: { status: "running", recoveryRequired: true },
+        deployment: { status: "failed", recoveryRequired: true },
         sourceLive: false,
       }),
-    ).toBe("failed");
+    ).toBe("recovery_required");
+  });
+
+  it("is blocked, not deploying, while another change locked the environment", () => {
+    for (const deployment of [
+      null,
+      { status: "queued", recoveryRequired: false } as const,
+    ])
+      expect(
+        environmentState({
+          change,
+          environment: environment({ automatic: false, locked: true }),
+          deployment,
+          sourceLive: true,
+        }),
+      ).toBe("recovery_required");
   });
 
   it("takes a platform change's success as proof it is live", () => {
     expect(
       environmentState({
         change: null,
-        environment: environment(),
+        environment: environment({ locked: true }),
         deployment: { status: "succeeded", recoveryRequired: false },
         sourceLive: false,
       }),
@@ -136,7 +159,7 @@ describe("environmentState", () => {
     ).toBe("manual");
   });
 
-  it("expects an automatic environment to deploy on its own", () => {
+  it("says an automatic environment that never deployed it has not started, not that it is deploying", () => {
     expect(
       environmentState({
         change,
@@ -144,7 +167,25 @@ describe("environmentState", () => {
         deployment: null,
         sourceLive: false,
       }),
-    ).toBe("waiting");
+    ).toBe("not_started");
+  });
+});
+
+describe("deployments that would deliver a change", () => {
+  it("carries a change in the same or a later revision of its lineage", () => {
+    expect(carries(change, { revision: 5, lineage: "lineage-a" })).toBe(true);
+    expect(carries(change, { revision: 8, lineage: "lineage-a" })).toBe(true);
+    expect(carries(change, { revision: 4, lineage: "lineage-a" })).toBe(false);
+    expect(carries(change, { revision: 9, lineage: "lineage-b" })).toBe(false);
+  });
+
+  it("decides by the newest unfinished one, else the newest", () => {
+    const canceled = { id: "c", status: "canceled", createdAt: at(3) } as const;
+    const queued = { id: "q", status: "queued", createdAt: at(2) } as const;
+    const failed = { id: "f", status: "failed", createdAt: at(1) } as const;
+    expect(decidingDeployment([failed, canceled, queued])?.id).toBe("q");
+    expect(decidingDeployment([failed, canceled])?.id).toBe("c");
+    expect(decidingDeployment([])).toBeNull();
   });
 });
 
@@ -158,19 +199,30 @@ describe("serviceVerdict", () => {
     expect(serviceVerdict("succeeded", ["live", "superseded"])).toBe(
       "deployed",
     );
-    expect(serviceVerdict("succeeded", ["live", "waiting"])).toBe("deploying");
+    expect(serviceVerdict("succeeded", ["live", "deploying"])).toBe(
+      "deploying",
+    );
   });
 
-  it("puts a failure ahead of progress and approval ahead of progress", () => {
+  it("never says deploying when nothing is in flight", () => {
+    for (const state of [
+      "waiting",
+      "manual",
+      "canceled",
+      "replaced",
+      "not_started",
+    ] as const)
+      expect(serviceVerdict("succeeded", ["live", state])).toBe("waiting");
+  });
+
+  it("puts recovery ahead of a failure, a failure ahead of progress and approval ahead of progress", () => {
+    expect(
+      serviceVerdict("succeeded", ["failed", "recovery_required", "live"]),
+    ).toBe("recovery_required");
     expect(serviceVerdict("succeeded", ["failed", "deploying"])).toBe("failed");
     expect(serviceVerdict("succeeded", ["awaiting_approval", "live"])).toBe(
       "awaiting_approval",
     );
-  });
-
-  it("reports idle environments as not released", () => {
-    expect(serviceVerdict("succeeded", ["live", "manual"])).toBe("waiting");
-    expect(serviceVerdict("succeeded", ["canceled"])).toBe("waiting");
   });
 
   it("has nothing to deploy when no environment tracks the service", () => {
@@ -200,6 +252,37 @@ function changed(
     })),
   };
 }
+
+describe("blockingEnvironment", () => {
+  it("names the environment the verdict came from, prod before others of the same urgency", () => {
+    expect(
+      blockingEnvironment([
+        changed("arcade", [
+          ["beta", "live"],
+          ["prod", "waiting"],
+        ]),
+        changed("media", [["beta", "manual"]]),
+        changed("scout", [["prod", "manual"]]),
+      ]),
+    ).toEqual({ service: "SCOUT", environment: "prod", state: "manual" });
+    expect(
+      blockingEnvironment([
+        changed("scout", [["prod", "manual"]]),
+        changed("temporal", [["prod", "recovery_required"]]),
+      ]),
+    ).toEqual({
+      service: "TEMPORAL",
+      environment: "prod",
+      state: "recovery_required",
+    });
+  });
+
+  it("is null when every environment has the change", () => {
+    expect(
+      blockingEnvironment([changed("arcade", [["prod", "superseded"]])]),
+    ).toBeNull();
+  });
+});
 
 describe("groupByEnvironment", () => {
   it("answers per environment name, prod first, stragglers before live", () => {
