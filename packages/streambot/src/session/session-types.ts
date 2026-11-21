@@ -137,6 +137,11 @@ export type Session = {
   pendingSubtitleMenu: boolean;
   /** Prevent duplicate playback-run rows during repeated snapshots of one streaming state. */
   historyRunRecorded: boolean;
+  /**
+   * Seek the userbot. A seek dispatches no actor event, so this is also where web viewers of the
+   * room learn the new position; every seek path (commands, chapters, voice) goes through it.
+   */
+  readonly seek: (seconds: number) => Promise<boolean>;
   /** Active continuous Radio / TV station state when enabled for this session. */
   station: PersistedStation | undefined;
   /** Per-session wake/VAD/Realtime lifecycle, absent when the feature is disabled. */

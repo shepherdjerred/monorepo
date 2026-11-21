@@ -116,10 +116,11 @@ export function createSession(
   // A station starts, stops and records its recent items by reassigning `session.station`, which
   // no actor event reports, so the setter is where web viewers of the room learn about it.
   let station = params.station;
+  let voiceChannelId = params.voiceChannelId;
   const notifyRoom = () => {
     options.changes.notify({
       guildId: params.guildId,
-      channelId: session.voiceChannelId,
+      channelId: voiceChannelId,
       userId: null,
     });
   };
@@ -127,7 +128,16 @@ export function createSession(
     ...identity,
     key: keyOf(params.guildId, params.voiceChannelId, params.playbackChannel),
     guildId: params.guildId,
-    voiceChannelId: params.voiceChannelId,
+    // A moved session leaves its old room as well as entering the new one; viewers of the old
+    // room never see a notification that names the new channel.
+    get voiceChannelId() {
+      return voiceChannelId;
+    },
+    set voiceChannelId(value) {
+      notifyRoom();
+      voiceChannelId = value;
+      notifyRoom();
+    },
     statusChannelId: params.statusChannelId,
     entry,
     actor,
@@ -157,6 +167,11 @@ export function createSession(
     set station(value) {
       station = value;
       notifyRoom();
+    },
+    seek: async (seconds) => {
+      const applied = await session.entry.userbot.seek(seconds);
+      if (applied) notifyRoom();
+      return applied;
     },
     voiceAssistant: null,
     teardownHold: new TeardownHold(() => {

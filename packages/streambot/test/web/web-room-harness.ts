@@ -120,7 +120,7 @@ export async function sample(
   name: string,
   labels: Record<string, string> = {},
 ): Promise<number> {
-  const base = name.replace(/_(count|sum)$/u, "");
+  const base = name.replace(/_(?:count|sum)$/u, "");
   const all = await register.getMetricsAsJSON();
   const metric = all.find((candidate) => candidate.name === base);
   return (metric?.values ?? [])

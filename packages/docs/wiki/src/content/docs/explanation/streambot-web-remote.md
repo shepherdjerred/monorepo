@@ -62,6 +62,9 @@ already subscribes to each playback actor, so the same subscription also tells a
 A slot appearing or ending, a station starting or stopping, and the viewer joining, leaving or moving in the
 [gateway handler](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/discord/commands/command-bot.ts)
 reach it too.
+Some changes produce no actor event, so the session reports them itself.
+A successful seek or chapter jump moves the position without one, and a streamer dragged to another channel leaves a room as well as entering one, so both rooms hear about it.
+A stream subscribes before it reads its first snapshot and replays what arrived meanwhile, so a change during the connect is not lost.
 The hub names where something changed and never what, so each stream re-reads the authoritative state and no second copy can disagree with it.
 Streams ignore changes in other rooms and other members' voice moves.
 

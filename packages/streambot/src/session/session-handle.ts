@@ -65,7 +65,7 @@ export function buildSessionHandle(
       ),
     station: () => session.station ?? null,
     setVolume: (percent) => session.entry.userbot.setVolume(percent),
-    seek: (seconds) => session.entry.userbot.seek(seconds),
+    seek: (seconds) => session.seek(seconds),
     assistantUserId: () => session.entry.userbot.assistantUserId(),
     assistantDaveReady: () => session.entry.userbot.assistantDaveReady(),
     startVoiceDebugCapture: (durationSeconds) =>

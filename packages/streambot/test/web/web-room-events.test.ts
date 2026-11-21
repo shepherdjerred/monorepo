@@ -51,6 +51,7 @@ import {
 } from "./web-fixture-room.ts";
 import {
   connectEvents,
+  Events,
   type EventReader,
   getRequest,
   ORIGIN,
@@ -138,6 +139,16 @@ describe("protocol", () => {
 });
 
 describe("pushed updates", () => {
+  test("a change during the first build still produces a second snapshot", async () => {
+    const pending = fixture.handler(getRequest(fixture, "/api/room/events"));
+    // The handler is parked on its first await; the change lands before the stream exists.
+    notifyRoom();
+    const response = await pending;
+    const events = new Events(response, readers);
+    expect(await events.next()).toMatchObject({ id: "1" });
+    expect(await events.next()).toMatchObject({ event: "room", id: "2" });
+  });
+
   test("an actor event in each slot produces a snapshot", async () => {
     const slots = multiSlotRoom(fixture);
     for (const number of [1, 2, 3])

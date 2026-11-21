@@ -178,6 +178,11 @@ class RoomConnection {
         : room.location.guild.id + ":" + room.location.channel.id;
   }
 
+  /** Apply changes that arrived while the first snapshot was being built. */
+  catchUp(changes: readonly RoomChange[]): void {
+    for (const change of changes) this.onChange(change);
+  }
+
   private onChange(change: RoomChange): void {
     if (this.closed || !this.context.viewer.guildIds.has(change.guildId))
       return;
@@ -335,16 +340,25 @@ export class RoomStreams {
     const { session } = input;
     const key = session.key;
     this.reserve(key);
+    // Listen before sampling state: the first build awaits, and a change that lands during it
+    // would otherwise be lost, leaving the stream stale until some unrelated change. The changes
+    // are held until the first snapshot says which room the viewer is in, then replayed.
+    const missed: RoomChange[] = [];
+    const unwatch = this.deps.hub.subscribe((change) => {
+      missed.push(change);
+    });
     let initial: WebRoom;
     try {
       initial = await buildRoom(this.deps.owner, session, input.guildHint);
     } catch (error) {
+      unwatch();
       this.unreserve(key);
       if (error instanceof WebError && error.status < 500)
         webSseClosedTotal.inc({ reason: "unauthorized" });
       throw error;
     }
     if (input.request.signal.aborted) {
+      unwatch();
       this.unreserve(key);
       throw input.request.signal.reason;
     }
@@ -374,6 +388,9 @@ export class RoomStreams {
       },
       initial,
     );
+    // The connection's own subscription is live from here on, so the watcher is redundant.
+    unwatch();
+    connection.catchUp(missed);
     const set = this.connections.get(key) ?? new Set<RoomConnection>();
     set.add(connection);
     this.connections.set(key, set);
