@@ -9,6 +9,9 @@
 # Stages: `cctools` (Apple's ld64 + libtapi, the slow part, cached across
 # tags), `image` (the published toolchain), `smoke` (builds every sample).
 ARG SWIFT_IMAGE=swift:6.4.0-noble@sha256:64bab762bc73a3fda6d9ebc559258bd6d7660c10a705bb25ecacad2f99d066f9
+# The apt.llvm.org suite, so the major only. rustc's bundled LLVM governs it:
+# take a bump only when the pinned Rust needs a newer major.
+# renovate: datasource=github-releases depName=llvm/llvm-project extractVersion=^llvmorg-(?<version>\d+)\.\d+\.\d+$
 ARG LLVM_VERSION=23
 
 # ── Apple's open-source ld64 and cctools, with Apple's libtapi so ld64 reads
@@ -18,7 +21,9 @@ FROM ${SWIFT_IMAGE} AS cctools
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG LLVM_VERSION
 # apple-libtapi (Apple's .tbd stub library) and cctools-port, pinned by commit.
+# renovate: datasource=git-refs depName=apple-libtapi packageName=https://github.com/tpoechtrager/apple-libtapi ref=HEAD
 ARG TBD_LIBRARY_COMMIT=fa9443738c1a18accef4244732ec6d6ee97a8133
+# renovate: datasource=git-refs depName=cctools-port packageName=https://github.com/tpoechtrager/cctools-port ref=HEAD
 ARG CCTOOLS_COMMIT=904de2a71d4da6a9b30d2efaf912a10ddc7d9ddb
 # Unpinned on purpose: Ubuntu drops superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
@@ -47,9 +52,10 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG LLVM_VERSION
 ARG SDK=27
 # Must match the rust pin in the repo's .mise.toml.
+# renovate: datasource=rust-version depName=rust
 ARG RUST_VERSION=1.99.0
 # Not RCODESIGN_*: rcodesign reads every RCODESIGN_ variable as configuration.
-# renovate: datasource=github-releases depName=indygreg/apple-platform-rs
+# renovate: datasource=github-releases depName=indygreg/apple-platform-rs extractVersion=^apple-codesign/(?<version>.*)$
 ARG APPLE_CODESIGN_VERSION=0.29.0
 
 # LLVM matching rustc's (1.99.0 → LLVM 23.1): the Rust static archive carries

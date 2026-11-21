@@ -37,6 +37,15 @@
         // renovate-config.test.ts extracts the OpenTofu provider pins.
         "$TURBO_ROOT$/renovate.json",
         "$TURBO_ROOT$/packages/homelab/src/tofu/provider-versions.json",
+        // renovate-config.test.ts extracts every hinted version pin from its
+        // file; the Dockerfiles under packages/ are listed below.
+        "$TURBO_ROOT$/ci/ci-image/Dockerfile",
+        "$TURBO_ROOT$/ci/ci-playwright/Dockerfile",
+        "$TURBO_ROOT$/packages/tasks-for-obsidian/ios/ci_scripts/**",
+        "$TURBO_ROOT$/packages/dotfiles/dot_local/bin/executable_cf",
+        "$TURBO_ROOT$/packages/fonts/patch-berkeley-mono.py",
+        "$TURBO_ROOT$/packages/toolkit/src/lib/brim/capture/engine.ts",
+        "$TURBO_ROOT$/packages/the-storm/plugin/gradle/libs.versions.toml",
         // checks/service-registration.test.ts reads every place a hosted
         // service is registered.
         "$TURBO_ROOT$/package.json",
@@ -61,6 +70,9 @@
         "$TURBO_ROOT$/packages/version-catalog/src/catalog.json",
         "$TURBO_ROOT$/packages/tasks-for-obsidian/ios/ci_scripts/**",
         "$TURBO_ROOT$/packages/dotfiles/dot_local/bin/executable_cf",
+        "$TURBO_ROOT$/packages/fonts/patch-berkeley-mono.py",
+        "$TURBO_ROOT$/packages/toolkit/src/lib/brim/capture/engine.ts",
+        "$TURBO_ROOT$/packages/the-storm/plugin/gradle/libs.versions.toml",
         "$TURBO_ROOT$/packages/discord-plays-pokemon/Dockerfile",
         "$TURBO_ROOT$/packages/streambot/Dockerfile",
         "$TURBO_ROOT$/packages/homelab/src/talos/liskov/patches/image.yaml",

@@ -3,6 +3,7 @@
 set -euo pipefail
 facet_script_directory="$(cd "$(dirname "$0")" && pwd)"
 facet_repo_root="$(cd "$facet_script_directory/../../../.." && pwd)"
+# renovate: datasource=github-releases depName=jdx/mise
 mise_version="2026.7.13"
 localized_dir="$facet_repo_root/.cache/facet-native-tools/mise"
 export MISE_DATA_DIR="$localized_dir"

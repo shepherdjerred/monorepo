@@ -39,6 +39,7 @@ const turboTasks = [
   "react-version-sync",
   "toolchain-version-sync",
   "mise-lock-sync",
+  "renovate-hints",
   "large-files-scout",
   "large-files-homelab",
   "large-files-packages",
@@ -97,6 +98,13 @@ export const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/feature-flags/src/flipt-resource-payloads.ts",
   "packages/feature-flags/src/flipt-boolean-rollouts.ts",
   "packages/feature-flags/src/managed-flag-inventory.json",
+  // renovate-config.test.ts extracts every hinted version pin from its file.
+  "packages/temporal/Dockerfile",
+  "packages/media/Dockerfile",
+  "packages/delivery/Dockerfile",
+  "packages/fonts/patch-berkeley-mono.py",
+  "packages/toolkit/src/lib/brim/capture/engine.ts",
+  "packages/the-storm/plugin/gradle/libs.versions.toml",
 ] as const;
 
 async function validateBaseWithGit(

@@ -136,7 +136,7 @@ RUN bun /tools/harden-codex-launcher.ts /app/packages/temporal /app/node_modules
 FROM base AS media-regex-build
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Match the repository SDK pin; checksum pins match the upstream SDK artifacts.
-# renovate: datasource=dotnet-sdk depName=dotnet-sdk
+# renovate: datasource=dotnet-version depName=dotnet-sdk
 ARG DOTNET_SDK_VERSION=10.0.303
 ARG DOTNET_SDK_SHA512_AMD64=538df11ceb9d86bdda061bab6ede3d1f6d46bb9ba087ae905643f3d456afe982949d1b952bceb305a5d22d2d6e69cc0e5100216ffcc709aaa86e867f2d9cdf9a
 ARG DOTNET_SDK_SHA512_ARM64=622e059198058ee5f92d7817bdd83885480a979628348f878201cb8dba52d168c1a324f9943a0e7a03ad547d85332aa82f16aced29da599ef02422b5378452de
@@ -187,7 +187,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Pinned operator CLI versions.
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
-# renovate: datasource=github-releases depName=kubernetes/kubectl
+# renovate: datasource=github-releases depName=kubernetes/kubernetes
 ARG KUBECTL_VERSION=v1.37.1
 # renovate: datasource=github-releases depName=github/github-mcp-server
 ARG GITHUB_MCP_SERVER_VERSION=1.3.0
@@ -201,7 +201,7 @@ ARG ARGOCD_CLI_VERSION=v3.4.5
 ARG VELERO_CLI_VERSION=v1.18.2
 # renovate: datasource=github-releases depName=woodpecker-ci/woodpecker
 ARG WOODPECKER_CLI_VERSION=3.18.1
-# renovate: datasource=github-releases depName=temporalio/cli
+# renovate: datasource=github-tags depName=temporalio/cli
 ARG TEMPORAL_CLI_VERSION=1.7.3
 # renovate: datasource=github-releases depName=grafana/gcx
 ARG GCX_VERSION=1.0.0
@@ -210,16 +210,18 @@ ARG UV_VERSION=0.13.0
 # renovate: datasource=github-releases depName=aquasecurity/trivy
 ARG TRIVY_VERSION=0.72.0
 # lychee tags carry a `lychee-v` prefix, so the pinned value is the full tag.
-# renovate: datasource=github-releases depName=lycheeverse/lychee versioning=loose
+# renovate: datasource=github-releases depName=lycheeverse/lychee versioning=regex:^lychee-v(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$
 ARG LYCHEE_VERSION=lychee-v0.24.2
-# renovate: datasource=github-releases depName=Kometa-Team/Kometa
+# Kometa is cloned at this tag and the build fails unless the clone's HEAD is
+# KOMETA_COMMIT, so the tag and its commit move together.
+# renovate: datasource=github-tags depName=Kometa-Team/Kometa extractVersion=^v(?<version>\d+\.\d+\.\d+)$
 ARG KOMETA_VERSION=2.5.1
+ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 # Shared local/CI Postgres pin — keep in lockstep with .mise.toml's
 # "github:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
 # run against the same server binaries here as on dev/CI machines.
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
 ARG POSTGRESQL_BINARIES_VERSION=18.6.0
-ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 
 # --- Base system deps: ca-certificates, curl, git, libxml2, and the pod-local agent firewall ---
 # libxml2 is for the postgresql-binaries `postgres` server below: only that one

@@ -25,6 +25,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     bison ca-certificates curl flex gcc gcc-mingw-w64-x86-64 libc6-dev make patch xz-utils \
     && rm -rf /var/lib/apt/lists/*
+# Stable Wine only (X.0 and X.0.N); development releases are X.1 and up.
+# renovate: datasource=github-tags depName=wine-mirror/wine extractVersion=^wine-(?<version>\d+\.0(?:\.\d+)?)$
 ARG WINE_VERSION=11.0
 ARG WINE_SOURCE_SHA256=c07a6857933c1fc60dff5448d79f39c92481c1e9db5aa628db9d0358446e0701
 RUN curl -fsSL "https://dl.winehq.org/wine/source/${WINE_VERSION}/wine-${WINE_VERSION}.tar.xz" -o /tmp/wine.tar.xz \
@@ -57,6 +59,7 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Must match global.json.
+# renovate: datasource=dotnet-version depName=dotnet-sdk
 ARG DOTNET_SDK_VERSION=10.0.303
 ARG DOTNET_SDK_SHA512_AMD64=538df11ceb9d86bdda061bab6ede3d1f6d46bb9ba087ae905643f3d456afe982949d1b952bceb305a5d22d2d6e69cc0e5100216ffcc709aaa86e867f2d9cdf9a
 ARG DOTNET_SDK_SHA512_ARM64=622e059198058ee5f92d7817bdd83885480a979628348f878201cb8dba52d168c1a324f9943a0e7a03ad547d85332aa82f16aced29da599ef02422b5378452de
@@ -77,6 +80,7 @@ RUN case "${TARGETARCH}" in \
     && dotnet --version | grep -Fx "${DOTNET_SDK_VERSION}"
 
 # Must match the rust pin in the repo's .mise.toml.
+# renovate: datasource=rust-version depName=rust
 ARG RUST_VERSION=1.99.0
 # renovate: datasource=github-tags depName=rust-lang/rustup
 ARG RUSTUP_VERSION=1.29.1
@@ -131,6 +135,7 @@ RUN test "$(dpkg --print-architecture)" = amd64 \
 # WineHQ's archive keeps every build, so the exact version the patched DLLs
 # come from is pinned.
 ARG WINEHQ_ARCHIVE_SIGNER_SHA256=d965d646defe94b3dfba6d5b4406900ac6c81065428bf9d9303ad7a72ee8d1b8
+# renovate: datasource=deb depName=winehq-stable registryUrl=https://dl.winehq.org/wine-builds/ubuntu/?suite=noble&components=main&binaryArch=amd64
 ARG WINEHQ_PACKAGE_VERSION=11.0.0.0~noble-1
 # WineHQ installs its packages with their recommendations.
 # hadolint ignore=DL3015
