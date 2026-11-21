@@ -70,6 +70,8 @@ pub enum ReportingProcess {
     Supervisor,
     /// The relaunchable window child.
     Window,
+    /// The in-game overlay child, alive only during a game.
+    Overlay,
 }
 
 impl ReportingProcess {
@@ -77,6 +79,7 @@ impl ReportingProcess {
         match self {
             Self::Supervisor => "supervisor",
             Self::Window => "window",
+            Self::Overlay => "overlay",
         }
     }
 }

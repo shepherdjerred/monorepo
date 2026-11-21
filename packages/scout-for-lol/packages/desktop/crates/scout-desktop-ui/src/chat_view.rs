@@ -147,6 +147,11 @@ fn conversation(model: ConversationModel, controls: ChatControls<'_>) -> impl In
             )))
         }))
         .children(voice_turn.map(voice_strip))
+        .children(
+            model
+                .overlay_warning
+                .map(|warning| column().px_6().pb_3().child(callout(note_text(warning)))),
+        )
         .children(model.coach.map(|panel| coach_panel(panel, &handler)))
         .child(column().flex_1().min_h_0().child(body))
         .children(

@@ -377,6 +377,8 @@ pub enum LcuEndpoint {
     ReplayPath,
     /// Recent games for the current local summoner.
     MatchHistoryRecent,
+    /// The game's `game.cfg` settings; only `General.WindowMode` is read.
+    GameSettings,
 }
 
 impl LcuEndpoint {
@@ -413,6 +415,7 @@ impl LcuEndpoint {
             Self::MatchHistoryRecent => {
                 "/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=20"
             }
+            Self::GameSettings => "/lol-game-settings/v1/game-settings",
         }
     }
 }

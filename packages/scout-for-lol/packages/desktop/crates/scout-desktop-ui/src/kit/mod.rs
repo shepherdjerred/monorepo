@@ -8,6 +8,7 @@
 
 mod chat;
 mod components;
+mod overlay;
 mod theme;
 mod visuals;
 
@@ -25,6 +26,7 @@ pub use components::{
     ScoutToggle, ScrollLog, Shell, StatusRow, action_row, body_text, callout, error_notice, modal,
     note_text, section_heading,
 };
+pub use overlay::{open_overlay_window, overlay_card, primary_display, stay_in_background};
 
 /// The GPUI types a view names, re-exported so views never import gpui-kit.
 pub mod prelude {
