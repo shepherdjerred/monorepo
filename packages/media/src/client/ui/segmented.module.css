@@ -1,0 +1,59 @@
+@layer components {
+  .segmented {
+    max-width: 100%;
+    /* More segments than a phone is wide scroll inside the control, never
+       the page. */
+    overflow-x: auto;
+    scrollbar-width: none;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+  }
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 3px;
+    display: flex;
+    gap: 2px;
+  }
+  .segment {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 14px;
+    /* The current segment's edge, reserved so marking it moves nothing. In
+       forced colors the fill is gone and this edge is what marks it. */
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .segment svg {
+    width: 16px;
+    height: 16px;
+  }
+  .segment:hover {
+    color: var(--text);
+  }
+  .segment:focus-visible {
+    outline-offset: -1px;
+  }
+  .segment[aria-current] {
+    background: var(--surface-selected);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  .count {
+    color: var(--text-accent);
+    font-variant-numeric: tabular-nums;
+  }
+  @media (pointer: coarse) {
+    .segment {
+      min-height: 40px;
+    }
+  }
+}

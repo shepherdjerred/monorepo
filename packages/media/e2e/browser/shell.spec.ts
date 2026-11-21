@@ -34,7 +34,11 @@ test.describe("navigation", () => {
     page,
   }) => {
     await openAs(page, "member", "/library");
-    await page.locator("#main .media-link").first().click();
+    await page
+      .getByRole("list", { name: "Library titles" })
+      .getByRole("link")
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/media\//u);
     await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
   });

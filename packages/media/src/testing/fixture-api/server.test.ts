@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ApiErrorSchema, UserSchema } from "#shared/contract.ts";
+import {
+  ArtworkSizeSchema,
+  hasArtworkSignature,
+} from "#shared/artwork/proxy.ts";
+import { posterPath } from "./fixtures/artwork.ts";
+import { UNREACHABLE_POSTER_TITLE } from "./fixtures/artwork-image.ts";
 import { PERSONA_COOKIE, createFixtureApi } from "./server.ts";
 
 function harness(defaultPersona: "owner" | "member" = "owner") {
@@ -97,6 +103,42 @@ describe("fixture API server", () => {
     const response = harness().request("/api/v1/library?kind=podcast");
     expect(response.status).toBe(400);
     expect(await errorCode(response)).toBe("invalid_request");
+  });
+
+  it("draws a PNG for every artwork size, the same bytes each time", async () => {
+    const { request } = harness();
+    const file = posterPath("Dune");
+    for (const size of ArtworkSizeSchema.options) {
+      const response = request(`/api/v1/artwork/${size}${file}`);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe("image/png");
+      expect(response.headers.get("cache-control")).toBe(
+        "private, max-age=31536000, immutable",
+      );
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      expect(hasArtworkSignature("image/png", bytes)).toBe(true);
+      const again = request(`/api/v1/artwork/${size}${file}`);
+      expect(new Uint8Array(await again.arrayBuffer())).toEqual(bytes);
+    }
+  });
+
+  it("fails one poster the way an unreachable TMDB does, and refuses what the proxy refuses", async () => {
+    const { request, lines } = harness();
+    const unreachable = request(
+      `/api/v1/artwork/w342${posterPath(UNREACHABLE_POSTER_TITLE)}`,
+    );
+    expect(unreachable.status).toBe(502);
+    expect(await errorCode(unreachable)).toBe("artwork_unavailable");
+    for (const path of [
+      `/api/v1/artwork/original${posterPath("Dune")}`,
+      "/api/v1/artwork/w342/..%2Fsecret.png",
+      "/api/v1/artwork/w342/abcdefgh.svg",
+    ]) {
+      const refused = request(path);
+      expect(refused.status, path).toBe(400);
+      expect(await errorCode(refused)).toBe("invalid_input");
+    }
+    expect(lines).toEqual([]);
   });
 
   it("never lets a response be cached", () => {

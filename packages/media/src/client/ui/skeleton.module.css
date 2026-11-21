@@ -1,0 +1,57 @@
+@layer components {
+  .block {
+    background: var(--surface-selected);
+    border-radius: var(--radius-control);
+  }
+  /* A slow breath, not a sweep; the reset layer stills it for anyone who
+     asked for less motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .block {
+      animation: breathe 1.4s var(--ease-out) infinite alternate;
+    }
+  }
+  @keyframes breathe {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0.45;
+    }
+  }
+
+  .poster {
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-poster);
+    margin-bottom: var(--space-2);
+  }
+  .line {
+    height: 14px;
+    width: 80%;
+    margin-bottom: 6px;
+  }
+  .shortLine {
+    height: 12px;
+    width: 45%;
+  }
+
+  .rows {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .thumb {
+    flex: none;
+    width: 48px;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-poster);
+  }
+  .rowText {
+    flex: 1;
+    min-width: 0;
+    max-width: 420px;
+  }
+}

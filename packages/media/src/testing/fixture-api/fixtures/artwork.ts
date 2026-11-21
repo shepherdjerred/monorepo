@@ -24,13 +24,17 @@ export function synopsis(title: string): string {
   );
 }
 
-/** A size-less TMDB file path: a slash, 27 characters and the extension. */
+/**
+ * A size-less TMDB file path: a slash, 27 characters and the extension. TMDB
+ * serves both JPEG and PNG; the fixtures name PNG files because that is what
+ * the fixture artwork route draws (`artwork-image.ts`).
+ */
 export function posterPath(title: string): string {
-  return `/${sha256(title).slice(0, 27)}.jpg`;
+  return `/${sha256(title).slice(0, 27)}.png`;
 }
 
 export function backdropPath(title: string): string {
-  return `/${sha256(`backdrop:${title}`).slice(0, 27)}.jpg`;
+  return `/${sha256(`backdrop:${title}`).slice(0, 27)}.png`;
 }
 
 /** What TMDB lists for a title. Some have no poster and some no backdrop. */

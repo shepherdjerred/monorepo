@@ -1,0 +1,35 @@
+@layer components {
+  /* Left-aligned with the page it stands in for, not a centred billboard. */
+  .state {
+    max-width: 520px;
+    padding: var(--space-6) 0;
+  }
+  .failed {
+    padding: var(--space-5);
+    border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+    border-radius: var(--radius-card);
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+  .icon {
+    display: block;
+    width: 28px;
+    height: 28px;
+    margin-bottom: var(--space-4);
+    color: var(--text-muted);
+  }
+  .title {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-xl);
+  }
+  .body {
+    margin: 0;
+    color: var(--text-muted);
+  }
+  .failed .body {
+    color: inherit;
+  }
+  .action {
+    margin-top: var(--space-4);
+  }
+}
