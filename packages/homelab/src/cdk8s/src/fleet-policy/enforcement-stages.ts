@@ -40,7 +40,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "minecraft-sjerred": "open",
   "minecraft-tsmc": "open",
   "node-tuning": "open",
-  phoenix: "open",
+  phoenix: "enforced",
   pinchtab: "enforced",
   postal: "open",
   prometheus: "open",
