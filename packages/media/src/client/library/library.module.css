@@ -1,4 +1,17 @@
 @layer pages {
+  /* Heading on the left, the four views on the right; stacked on a phone. */
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+  .header > header {
+    margin-bottom: 0;
+  }
+
   /* Toolbar: search, then what narrows the list, then how it is arranged. */
   .toolbar {
     display: flex;
@@ -187,6 +200,212 @@
     }
   }
 
+  /* Mine, Leaving soon and Removed: one entry per title, poster first. */
+  .intro {
+    max-width: 680px;
+    margin: 0 0 var(--space-5);
+    color: var(--text-muted);
+  }
+  .subject:not(:empty) {
+    margin-bottom: var(--space-5);
+  }
+  .subject label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .subject select {
+    min-height: 38px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--field);
+    color: var(--text);
+    font-size: var(--text-sm);
+  }
+  .entries {
+    container-type: inline-size;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+  .entry {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-areas:
+      "poster body"
+      "poster action";
+    gap: var(--space-3) var(--space-4);
+    align-items: start;
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border);
+    /* Clear of the sticky top bar when a link scrolls an entry into view. */
+    scroll-margin-block: var(--space-6);
+  }
+  /* The entry a reminder's link asked for. */
+  .entry[data-highlighted="true"] {
+    margin-inline: calc(-1 * var(--space-3));
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-card);
+    background: var(--surface-selected);
+    box-shadow: inset 3px 0 0 var(--accent-strong);
+  }
+  .entryPoster {
+    grid-area: poster;
+  }
+  .entryBody {
+    grid-area: body;
+    min-width: 0;
+  }
+  .entryWide {
+    grid-row: 1 / span 2;
+  }
+  .entryAction {
+    grid-area: action;
+    min-width: 0;
+  }
+  .entryTitle {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+  }
+  .entryTitle a {
+    border-radius: 2px;
+  }
+  .entryTitle a:hover {
+    color: var(--text-accent);
+  }
+  .entryState {
+    margin: var(--space-2) 0;
+  }
+  @container (min-width: 720px) {
+    .entry {
+      grid-template-columns: 72px minmax(0, 1fr) minmax(220px, 340px);
+      grid-template-areas: "poster body action";
+      column-gap: var(--space-5);
+    }
+    .entryWide {
+      grid-row: auto;
+      grid-column: 2 / span 2;
+    }
+  }
+
+  /* One thing asked of a title, with its own controls. */
+  .ask {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+  }
+  /* The first ask sits directly under its title. */
+  .entryTitle + .ask,
+  .entryState + .ask {
+    margin-top: var(--space-2);
+    padding-top: 0;
+    border-top: 0;
+  }
+  .askHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .askWhat {
+    margin: 0;
+    font-weight: 500;
+  }
+  /* Everything that can be done about an ask, one step away so the list
+     stays a list. It starts open when the ask is waiting on its reader. */
+  .askControls {
+    margin-top: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--text);
+  }
+  .askControls > summary {
+    display: inline-block;
+    color: var(--text-accent);
+    font-weight: 500;
+    border-radius: 2px;
+  }
+  .askControls > summary::marker {
+    content: "";
+  }
+  .askControls > summary::-webkit-details-marker {
+    display: none;
+  }
+  .askControls > summary:hover {
+    text-decoration: underline;
+  }
+  /* The shared request controls stack; beside a title they sit in a row. */
+  .ask :global(.action-control),
+  .part :global(.action-control) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .ask :global(.action-row),
+  .ask :global(.button-row) {
+    margin: var(--space-3) 0;
+  }
+
+  /* The parts of a series: a summary, then each part with its own action. */
+  .parts {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: start;
+  }
+  .partsSummary {
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+  .partsSummary:empty {
+    display: none;
+  }
+  .partsList {
+    width: 100%;
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+  }
+  .partsList ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .part {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--border);
+    color: var(--text);
+  }
+  .partName {
+    margin: 0;
+    font-weight: 500;
+  }
+  .partNote {
+    margin: 0;
+    max-width: 280px;
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .partNote[data-tone="ok"] {
+    color: var(--ok);
+  }
+  .partNote[data-tone="danger"] {
+    color: var(--danger);
+  }
+
   @media (pointer: coarse) {
     .search,
     .choice select {
@@ -194,7 +413,8 @@
     }
     /* Below 16px, iOS zooms the page when a field takes focus. */
     .search input,
-    .choice select {
+    .choice select,
+    .subject select {
       font-size: 1rem;
     }
   }

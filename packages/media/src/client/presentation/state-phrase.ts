@@ -17,7 +17,7 @@ export function shortDate(value: string, locale?: string): string {
 /** When a title goes, once it has a date; before that, only that it will. */
 export const LEAVING_COPY = {
   warning_pending: () => "Leaving soon",
-  grace_period: (graceUntil, locale) =>
+  grace_period: (graceUntil: string | null, locale?: string) =>
     graceUntil === null
       ? "Leaving soon"
       : `Leaving ${shortDate(graceUntil, locale)}`,

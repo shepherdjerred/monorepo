@@ -23,6 +23,21 @@ function shared(persona: Persona): RouteSpec[] {
   return [
     { label: `${persona} /library`, path: "/library", heading: "Library" },
     {
+      label: `${persona} /library/mine`,
+      path: "/library/mine",
+      heading: "Library",
+    },
+    {
+      label: `${persona} /library/leaving`,
+      path: "/library/leaving",
+      heading: "Library",
+    },
+    {
+      label: `${persona} /library/removed`,
+      path: "/library/removed",
+      heading: "Library",
+    },
+    {
       label: `${persona} /history`,
       path: "/history",
       heading: "Watch history",
@@ -66,28 +81,10 @@ const MEMBER_ROUTES: readonly RouteSpec[] = [
     heading: "What’s your next watch?",
   },
   {
-    label: "member /requests",
-    persona: "member",
-    path: "/requests",
-    heading: "My requests",
-  },
-  {
     label: "member /calendar",
     persona: "member",
     path: "/calendar",
     heading: "Calendar",
-  },
-  {
-    label: "member /removals",
-    persona: "member",
-    path: "/removals",
-    heading: "Leaving soon",
-  },
-  {
-    label: "member /removed",
-    persona: "member",
-    path: "/removed",
-    heading: "Removed titles",
   },
   {
     label: "member /catalog/movie/:id",

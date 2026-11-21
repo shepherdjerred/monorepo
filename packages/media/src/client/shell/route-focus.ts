@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import { NavigationType, useLocation, useNavigationType } from "react-router";
+import { staysOnPage } from "#client/ui/same-page.ts";
 
 /**
  * Focuses the page's heading. A page that is still loading has none yet:
@@ -42,13 +43,18 @@ function focusPageHeading(region: HTMLElement): () => void {
  * carries it to the heading.
  */
 export function useRouteFocus() {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const navigation = useNavigationType();
   const shown = useRef(pathname);
+  const samePage = staysOnPage(location.state as unknown);
   return useCallback(
     (region: HTMLElement | null) => {
       if (region === null || shown.current === pathname) return;
       shown.current = pathname;
+      // A switch between views of one page (the Library's segments) leaves
+      // focus on the control that made it.
+      if (samePage) return;
       if (
         navigation === NavigationType.Replace &&
         document.activeElement !== region
@@ -57,6 +63,6 @@ export function useRouteFocus() {
       }
       return focusPageHeading(region);
     },
-    [pathname, navigation],
+    [pathname, navigation, samePage],
   );
 }

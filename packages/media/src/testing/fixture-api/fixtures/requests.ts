@@ -141,6 +141,20 @@ function interest(
   };
 }
 
+/** The interest of a request for a season or episode, named as the item is. */
+function partInterest(sequence: number, userId: string): InterestView {
+  const seed = REQUEST_SEEDS.find((request) => request.sequence === sequence);
+  const resolved = seed === undefined ? null : resolveMedia(seed.item.id);
+  if (seed === undefined || resolved === null) {
+    throw new Error(`No request fixture ${String(sequence)}`);
+  }
+  return {
+    ...interest(sequence, resolved.title.title, userId),
+    mediaId: seed.item.id,
+    title: seed.item.title,
+  };
+}
+
 /** The request that starts the second interest page. */
 const SECOND_INTEREST_PAGE = requestId(14);
 
@@ -161,10 +175,14 @@ export function interestList(
   return include === "artwork"
     ? {
         ...page,
-        items: page.items.map((item) => ({
-          ...item,
-          artwork: storedArtwork(titleNamed(item.title)),
-        })),
+        items: page.items.map((item) => {
+          // A season's or an episode's interest shows its series' art.
+          const resolved = resolveMedia(item.mediaId);
+          if (resolved === null) {
+            throw new Error(`Interest fixture names no item: ${item.mediaId}`);
+          }
+          return { ...item, artwork: storedArtwork(resolved.title) };
+        }),
       }
     : page;
 }
@@ -177,6 +195,8 @@ function interestPage(cursor: string | null, persona: Persona): InterestList {
         interest(14, "Ted Lasso", mine),
         interest(15, "The Expanse", mine, { keepingPolicy: "keep" }),
         interest(13, "Dark", mine),
+        // A request for a season or an episode names only that item.
+        ...[4, 6, 11].map((sequence) => partInterest(sequence, mine)),
       ],
       nextCursor: null,
     };

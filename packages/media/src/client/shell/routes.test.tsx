@@ -42,8 +42,11 @@ test.each([
   // returns. Each must still resolve to its own page.
   ["/media/abc", "media/:id"],
   ["/catalog/movie/603", "catalog/:kind/:id"],
-  ["/requests?interest=abc", "requests"],
   ["/library", "library"],
+  ["/library/mine?interest=abc", "library/mine"],
+  ["/library/leaving", "library/leaving"],
+  ["/library/removed", "library/removed"],
+  ["/library/no-such-view", "library/*"],
   ["/recovery", "recovery"],
   ["/recovery/00000000-0000-4000-8000-000000000001", "recovery/:id"],
   ["/recovery/movies/abc", "recovery/movies/:id"],
@@ -64,6 +67,11 @@ test.each([
   ["/recovery/native", "recovery/native/:id?"],
   ["/recovery/native/abc", "recovery/native/:id?"],
   ["/activity", "activity"],
+  // The pages the Library's segments replaced. Reminder emails carry
+  // `/requests?interest=<id>`.
+  ["/requests?interest=abc", "requests"],
+  ["/removals", "removals"],
+  ["/removed", "removed"],
   ["/no-such-page", "*"],
   ["/manage/no-such-page", "manage/*"],
 ])("%s is routed to %s", (address, path) => {
@@ -104,11 +112,41 @@ test("the current page is marked in the sidebar and the tab bar, and nowhere els
   expect(current.map((match) => match[1])).toEqual(["/library", "/library"]);
 });
 
-test("a page inside More marks More itself on a phone", () => {
-  expect(renderShell(owner, "/manage/quality")).toMatch(
-    /<button[^>]*aria-current="true"[^>]*>.*?More<\/button>/u,
-  );
-  expect(renderShell(owner, "/library")).not.toContain('aria-current="true"');
+/** Where the sidebar and the tab bar lead, each address once. */
+function links(html: string) {
+  return [
+    ...new Set(
+      [
+        ...html.matchAll(
+          /<a [^>]*class="[^"]*(?:navItem|tab)[^"]*"[^>]*href="([^"]+)"/gu,
+        ),
+      ].map((match) => match[1]),
+    ),
+  ];
+}
+
+test("navigation is Discover, Library, Calendar and History, with Manage for the owner", () => {
+  expect(links(renderShell(member, "/library"))).toEqual([
+    "/discover",
+    "/library",
+    "/calendar",
+    "/history",
+  ]);
+  expect(links(renderShell(owner, "/library"))).toEqual([
+    "/discover",
+    "/library",
+    "/calendar",
+    "/history",
+    "/manage",
+  ]);
+});
+
+test("a segment of the Library keeps Library marked", () => {
+  const html = renderShell(member, "/library/leaving");
+  const current = [
+    ...html.matchAll(/<a aria-current="page"[^>]*href="([^"]+)"/gu),
+  ];
+  expect(current.map((match) => match[1])).toEqual(["/library", "/library"]);
 });
 
 test("recovery reviews are in the account panel for members too, not in navigation", () => {

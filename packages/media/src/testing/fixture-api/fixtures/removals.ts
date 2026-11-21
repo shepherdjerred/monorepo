@@ -14,7 +14,13 @@ import {
   versionOf,
 } from "#testing/fixture-api/support.ts";
 import { storedArtwork } from "./artwork.ts";
-import { episodeId, seasonId, titleNamed, type Title } from "./titles.ts";
+import {
+  episodeId,
+  episodeItem,
+  seasonId,
+  titleNamed,
+  type Title,
+} from "./titles.ts";
 
 type RemovalList = z.input<typeof RemovalListSchema>;
 type HistoryItem = z.input<typeof RemovalHistoryItemSchema>;
@@ -22,25 +28,56 @@ type HistoryPage = z.input<typeof RemovalHistoryPageSchema>;
 
 type RemovalSeed = readonly [
   title: string,
-  state: string,
+  /** One of the three states `GET /api/v1/removals` lists. */
+  state: "warning_pending" | "grace_period" | "quarantined",
   /** Days until the grace period ends; negative once it has passed. */
   graceDays: number | null,
   purgeDays: number | null,
   /** Whether the signed-in member is one of those who asked for the title. */
   asked: "viewer" | "another member",
+  /**
+   * The season whose first episodes are leaving, one removal each, when it
+   * is not the whole title that leaves.
+   */
+  season?: number,
 ];
 
-/** Titles leaving soon, one or more per retention state. */
+/** How many episodes of a seeded season leave, a day apart. */
+const LEAVING_EPISODES = 4;
+
+/**
+ * Titles leaving soon, one or more per state, and one series that is losing
+ * several episodes at once.
+ */
 const REMOVALS: readonly RemovalSeed[] = [
-  ["The Expanse", "grace_period", 3, null, "viewer"],
+  ["The Expanse", "grace_period", 3, null, "viewer", 6],
   ["Mr. Robot", "grace_period", 6, null, "another member"],
   ["Knives Out", "warning_pending", null, null, "another member"],
-  ["Top Gun: Maverick", "notice_pending", null, null, "viewer"],
+  ["Top Gun: Maverick", "warning_pending", null, null, "viewer"],
   ["The Holdovers", "quarantined", -2, 5, "another member"],
   ["Silo", "quarantined", -5, 2, "viewer"],
   ["Get Out", "grace_period", 1, null, "viewer"],
-  ["Cowboy Bebop", "reply_pending", 7, null, "another member"],
+  ["Cowboy Bebop", "grace_period", 7, null, "another member"],
 ];
+
+/** What one seed removes: the title itself, or episodes of one season. */
+function removedItems(
+  title: Title,
+  season: number | undefined,
+): { id: string; title: string; kind: string; days: number }[] {
+  if (season === undefined) {
+    return [{ id: title.id, title: title.title, kind: title.kind, days: 0 }];
+  }
+  return Array.from({ length: LEAVING_EPISODES }, (_, index) => {
+    const episode = episodeItem(title, season, index + 1);
+    return {
+      id: episodeId(title, season, index + 1),
+      title: episode.title,
+      kind: episode.kind,
+      days: index,
+    };
+  });
+}
 
 /**
  * A removal the household can still stop, as the library reports it on the
@@ -71,7 +108,7 @@ export function leavingSoon(title: Title): {
  */
 export function removalList(persona: Persona): RemovalList {
   return REMOVALS.flatMap(
-    ([name, state, graceDays, purgeDays, asked], index) => {
+    ([name, state, graceDays, purgeDays, asked, season], index) => {
       if (
         persona !== "owner" &&
         state === "quarantined" &&
@@ -80,23 +117,22 @@ export function removalList(persona: Persona): RemovalList {
         return [];
       }
       const title = titleNamed(name);
-      return [
-        {
-          id: fixtureId(12, index + 1),
-          mediaId: title.id,
-          rootMediaId: title.id,
-          rootTitle: title.title,
-          artwork: storedArtwork(title),
-          state,
-          graceUntil: graceDays === null ? null : ahead(graceDays * DAY),
-          purgeAfter: purgeDays === null ? null : ahead(purgeDays * DAY),
-          media: {
-            title: title.title,
-            kind: title.kind,
-            version: versionOf(title.id),
-          },
+      return removedItems(title, season).map((item, part) => ({
+        id: fixtureId(12, (index + 1) * 100 + part),
+        mediaId: item.id,
+        rootMediaId: title.id,
+        rootTitle: title.title,
+        artwork: storedArtwork(title),
+        state,
+        graceUntil:
+          graceDays === null ? null : ahead((graceDays + item.days) * DAY),
+        purgeAfter: purgeDays === null ? null : ahead(purgeDays * DAY),
+        media: {
+          title: item.title,
+          kind: item.kind,
+          version: versionOf(item.id),
         },
-      ];
+      }));
     },
   );
 }

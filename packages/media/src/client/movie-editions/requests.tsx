@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import {
@@ -8,14 +6,12 @@ import {
 } from "#shared/movie-editions/lifecycle/public-v4.ts";
 import type { z } from "zod";
 import { readApi } from "#client/api.ts";
-import { ErrorNotice, Loading } from "#client/components.tsx";
 import {
   CommandError,
   commandNeedsReview,
 } from "#client/target-controls/errors.tsx";
 import { MovieListedKeepV4 } from "./listed-keep-v4.tsx";
 import { invalidateMovieRequests } from "./api.ts";
-import { MovieRequestSubject } from "./subject.tsx";
 import { ActivateMovieChoiceV4 } from "./activation-v4.tsx";
 import { movieFulfillmentLabel } from "./presentation.ts";
 import {
@@ -25,96 +21,38 @@ import {
   useMovieProtection,
 } from "./protection-v4.ts";
 
-export function MovieRequests({ user }: { user: MediaUser }) {
-  const [subjectUserId, setSubjectUserId] = useState(user.id);
-  return (
-    <section className="panel">
-      <h2>Movie edition requests</h2>
-      <MovieRequestSubject
-        user={user}
-        subjectUserId={subjectUserId}
-        change={setSubjectUserId}
-      />
-      <MovieRequestPage
-        key={subjectUserId}
-        user={user}
-        subjectUserId={subjectUserId}
-      />
-    </section>
+type MovieRequest = z.infer<typeof MovieEditionRequestViewV4Schema>;
+
+/** One page of a person's film requests; the answer must be that person's. */
+export function readMovieRequests(
+  subjectUserId: string,
+  cursor: string | null,
+) {
+  const params = new URLSearchParams({ subjectUserId });
+  if (cursor !== null) params.set("cursor", cursor);
+  return readApi(
+    `/movie-requests?${params.toString()}`,
+    MovieEditionRequestListV4Schema.refine(
+      (page) => page.subjectUserId === subjectUserId,
+      "Movie requests belong to another profile",
+    ),
+    4,
   );
 }
 
-function MovieRequestPage({
-  user,
-  subjectUserId,
-}: {
-  user: MediaUser;
-  subjectUserId: string;
-}) {
-  const [cursor, setCursor] = useState<string | null>(null);
-  const requests = useQuery({
-    queryKey: ["movie-requests", 4, subjectUserId, cursor],
-    queryFn: async () =>
-      readApi(
-        `/movie-requests?subjectUserId=${encodeURIComponent(subjectUserId)}${cursor === null ? "" : `&cursor=${encodeURIComponent(cursor)}`}`,
-        MovieEditionRequestListV4Schema.refine(
-          (page) => page.subjectUserId === subjectUserId,
-          "Movie requests belong to another profile",
-        ),
-        4,
-      ),
-    refetchInterval: 15_000,
-  });
-  const nextCursor = requests.data?.nextCursor;
-  return (
-    <>
-      {requests.isPending && <Loading />}
-      {requests.error !== null && <ErrorNotice error={requests.error} />}
-      {requests.data?.items.length === 0 && (
-        <p>No movie requests on this page.</p>
-      )}
-      {requests.data?.items.map((request) => (
-        <MovieRequestRow
-          key={request.requestId}
-          user={user}
-          subjectUserId={subjectUserId}
-          request={request}
-        />
-      ))}
-      <div className="button-row">
-        {cursor !== null && (
-          <button
-            className="button"
-            onClick={() => {
-              setCursor(null);
-            }}
-          >
-            First page
-          </button>
-        )}
-        {nextCursor !== null && nextCursor !== undefined && (
-          <button
-            className="button"
-            onClick={() => {
-              setCursor(nextCursor);
-            }}
-          >
-            Next page
-          </button>
-        )}
-      </div>
-    </>
-  );
-}
-
-function MovieRequestRow({
+/**
+ * Where one film request stands and everything its requester can do about
+ * it: start a saved edition choice, cancel, clear the choice, or keep the
+ * edition. The title it belongs to is named by whatever lists it.
+ */
+export function MovieRequestControls({
   user,
   subjectUserId,
   request,
 }: {
   user: MediaUser;
   subjectUserId: string;
-  request: z.infer<typeof MovieEditionRequestViewV4Schema>;
+  request: MovieRequest;
 }) {
   const mutation = useMovieProtection();
   const unresolved = unresolvedMovieProtection(mutation);
@@ -137,78 +75,60 @@ function MovieRequestRow({
     mutation.reset();
   }
   return (
-    <article className="request-row">
-      <div className="item-main">
-        {request.access === "detail" ? (
-          <>
-            <Link to={`/media/${encodeURIComponent(request.scope.mediaId)}`}>
-              {request.title}
-            </Link>
-            <p>
-              {request.fulfillment.status === "pending_choice"
-                ? "Edition not selected"
-                : request.editionLabel}
-              {request.year === null ? "" : ` · ${String(request.year)}`}
-            </p>
-          </>
-        ) : (
-          <>
-            <strong>Your movie request</strong>
-            <p>Request protections only; library details unavailable.</p>
-          </>
+    <>
+      <p role="status">
+        {request.active
+          ? movieFulfillmentLabel(request.fulfillment)
+          : "Request cancelled"}
+      </p>
+      {request.active &&
+        unresolved === null &&
+        request.fulfillment.status === "pending_choice" &&
+        request.access === "detail" && (
+          <Link
+            className="text-link"
+            to={`/media/${encodeURIComponent(request.scope.mediaId)}`}
+          >
+            Choose a movie edition
+          </Link>
         )}
-        <p role="status">
-          {request.active
-            ? movieFulfillmentLabel(request.fulfillment)
-            : "Request cancelled"}
-        </p>
-        {request.active &&
-          unresolved === null &&
-          request.fulfillment.status === "pending_choice" &&
-          request.access === "detail" && (
-            <Link
-              className="text-link"
-              to={`/media/${encodeURIComponent(request.scope.mediaId)}`}
-            >
-              Choose a movie edition
-            </Link>
-          )}
-        <div className="button-row">
-          <SavedMovieChoice
-            user={user}
-            subjectUserId={subjectUserId}
-            request={request}
+      <div className="action-row">
+        <SavedMovieChoice
+          user={user}
+          subjectUserId={subjectUserId}
+          request={request}
+          disabled={disabled}
+        />
+        {request.active && request.canCancel && (
+          <button
+            className="button subtle"
+            type="button"
             disabled={disabled}
-          />
-          {request.active && request.canCancel && (
-            <button
-              className="button subtle"
-              disabled={disabled}
-              onClick={() => {
-                submit("cancel_request");
-              }}
-            >
-              Cancel request
-            </button>
-          )}
-          {request.active && request.canRevokeChoice && (
-            <button
-              className="button subtle"
-              disabled={disabled}
-              onClick={() => {
-                submit("revoke_choice");
-              }}
-            >
-              Clear edition choice, keep request
-            </button>
-          )}
-          {request.active && !disabled && subjectUserId === user.id && (
-            <MovieListedKeepV4 actorId={user.id} scope={request.scope} />
-          )}
-        </div>
-        <ProtectionFeedback mutation={mutation} review={reviewLatest} />
+            onClick={() => {
+              submit("cancel_request");
+            }}
+          >
+            Cancel request
+          </button>
+        )}
+        {request.active && request.canRevokeChoice && (
+          <button
+            className="button subtle"
+            type="button"
+            disabled={disabled}
+            onClick={() => {
+              submit("revoke_choice");
+            }}
+          >
+            Clear edition choice, keep request
+          </button>
+        )}
+        {request.active && !disabled && subjectUserId === user.id && (
+          <MovieListedKeepV4 actorId={user.id} scope={request.scope} />
+        )}
       </div>
-    </article>
+      <ProtectionFeedback mutation={mutation} review={reviewLatest} />
+    </>
   );
 }
 
@@ -220,7 +140,7 @@ function SavedMovieChoice({
 }: {
   user: MediaUser;
   subjectUserId: string;
-  request: z.infer<typeof MovieEditionRequestViewV4Schema>;
+  request: MovieRequest;
   disabled: boolean;
 }) {
   if (
@@ -257,6 +177,7 @@ function ProtectionFeedback({
           </p>
           <button
             className="button subtle"
+            type="button"
             disabled={mutation.isPending}
             onClick={() => {
               mutation.submit(unresolved);

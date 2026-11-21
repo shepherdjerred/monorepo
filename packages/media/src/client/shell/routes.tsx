@@ -6,17 +6,16 @@ import { CalendarPage } from "#client/calendar/page.tsx";
 import { CatalogPage, Discover } from "#client/catalog.tsx";
 import { Loading, Notice, PageTitle } from "#client/components.tsx";
 import { PlaybackHistoryPage } from "#client/household/playback.tsx";
+import { LibraryAll } from "#client/library/all.tsx";
+import { LibraryLeaving } from "#client/library/leaving.tsx";
+import { LibraryMine } from "#client/library/mine.tsx";
 import { LibraryPage } from "#client/library/page.tsx";
-import {
-  NotificationsPage,
-  RemovalsPage,
-  RequestsPage,
-} from "#client/lists.tsx";
+import { LibraryRemoved } from "#client/library/removed.tsx";
+import { NotificationsPage } from "#client/lists.tsx";
 import { MediaPage } from "#client/media.tsx";
 import { MovieHistoryPageV3 } from "#client/movie-history/page.tsx";
 import { NotificationCallback } from "#client/preferences.tsx";
 import { RecoveryPage } from "#client/recovery/page.tsx";
-import { RemovalHistoryPage } from "#client/removal-history/page.tsx";
 import { HOME_PATH, MovedTo, OwnerOnly } from "./redirects.tsx";
 import { useUser } from "./user.ts";
 
@@ -27,10 +26,11 @@ function withUser(page: ComponentType<{ user: MediaUser }>) {
   };
 }
 
-const Library = withUser(LibraryPage);
-const Requests = withUser(RequestsPage);
+const LibraryAllSegment = withUser(LibraryAll);
+const LibraryMineSegment = withUser(LibraryMine);
+const LibraryLeavingSegment = withUser(LibraryLeaving);
+const LibraryRemovedSegment = withUser(LibraryRemoved);
 const PlaybackHistory = withUser(PlaybackHistoryPage);
-const Removals = withUser(RemovalsPage);
 const Catalog = withUser(CatalogPage);
 const Media = withUser(MediaPage);
 const Notifications = withUser(NotificationsPage);
@@ -159,12 +159,29 @@ const manageRoutes: RouteObject[] = [
 ];
 
 /**
- * Addresses from before Manage existed. The server still writes some of
- * them into emails, Discord messages, and OAuth returns, and people have
- * them bookmarked.
+ * The Library and its segments. Each segment has its own address, so it can
+ * be linked and survives a reload; the page around them stays mounted.
+ */
+const libraryRoutes: RouteObject[] = [
+  { index: true, element: <LibraryAllSegment /> },
+  { path: "mine", element: <LibraryMineSegment /> },
+  { path: "leaving", element: <LibraryLeavingSegment /> },
+  { path: "removed", element: <LibraryRemovedSegment /> },
+  { path: "*", element: <Navigate to="/library" replace /> },
+];
+
+/**
+ * Addresses from before Manage and the Library's segments existed. The
+ * server still writes some of them into emails, Discord messages, and OAuth
+ * returns, and people have them bookmarked.
  */
 const movedRoutes: RouteObject[] = [
   { index: true, element: <MovedTo path={HOME_PATH} /> },
+  // `/requests?interest=<id>` is in every "still watching?" reminder; its
+  // query travels with it and Mine marks the request it names.
+  { path: "requests", element: <MovedTo path="/library/mine" /> },
+  { path: "removals", element: <MovedTo path="/library/leaving" /> },
+  { path: "removed", element: <MovedTo path="/library/removed" /> },
   {
     path: "admin",
     element: <MovedTo path="/manage/household" ownerOnly />,
@@ -198,12 +215,13 @@ export const routes: RouteObject[] = [
         errorElement: <RouteError />,
         children: [
           { path: "discover", element: <Discover /> },
-          { path: "library", element: <Library /> },
-          { path: "requests", element: <Requests /> },
+          {
+            path: "library",
+            element: <LibraryPage />,
+            children: libraryRoutes,
+          },
           { path: "calendar", element: <CalendarPage /> },
           { path: "history", element: <PlaybackHistory /> },
-          { path: "removals", element: <Removals /> },
-          { path: "removed", element: <RemovalHistoryPage /> },
           { path: "catalog/:kind/:id", element: <Catalog /> },
           { path: "media/:id", element: <Media /> },
           { path: "notifications", element: <Notifications /> },

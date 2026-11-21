@@ -132,7 +132,7 @@ function DiscoverWelcome() {
           Request something you love. We’ll find it, bring it to Plex, and let
           you know when it’s ready.
         </p>
-        <Link className="text-link" to="/requests">
+        <Link className="text-link" to="/library/mine">
           See your requests <span aria-hidden="true">→</span>
         </Link>
       </div>

@@ -752,10 +752,10 @@ the session gate in `app.tsx`: the sign-in page until a session is known, then
 the shell (`shell/shell.tsx`) around the matched page. The shell is keyed by
 session generation, so a changed principal never keeps a mounted page.
 
-Everyone gets Discover, Library, My requests, Calendar, Watch history, Leaving
-soon, and Removed. Notifications and recovery reviews are reached from the top
-bar and the account panel, because members use both. The owner also gets Manage,
-one page per topic under `/manage`:
+Everyone gets Discover, Library, Calendar, and History, in the sidebar and, on a
+phone, as tabs along the bottom. Notifications and recovery reviews are reached
+from the top bar and the account panel, because members use both. The owner also
+gets Manage (a fifth tab on a phone), one page per topic under `/manage`:
 
 | Address                               | Page                                             |
 | ------------------------------------- | ------------------------------------------------ |
@@ -776,17 +776,33 @@ never downloads; a member who opens a Manage address is sent to `/discover`.
 The whole client still ships one stylesheet (`build.cssCodeSplit` is off),
 because the cascade layer order is fixed by the first `@layer` a browser reads.
 
-Addresses from before Manage existed redirect, keeping their path parameters,
-query string, and fragment: `/` to `/discover`, `/admin` to `/manage/household`,
+The Library is one page with four views, each a route beneath `/library`:
+
+| Address            | View         | Shows                                                                        |
+| ------------------ | ------------ | ---------------------------------------------------------------------------- |
+| `/library`         | All          | Every title the household has, as a poster grid or a compact list.           |
+| `/library/mine`    | Mine         | What the reader asked for, one entry per film or series, with every control. |
+| `/library/leaving` | Leaving soon | What is about to leave, for the whole household, with the 30-day hold.       |
+| `/library/removed` | Removed      | What left and why, with restore for whoever may still use it.                |
+
+Addresses that moved redirect, keeping their path parameters, query string, and
+fragment: `/` to `/discover`; `/admin` to `/manage/household`,
 `/admin/migration`, `/admin/subtitle-replacements/:id?`, `/recovery/native/:id?`,
-and `/activity` to their pages above. Notification emails, Discord messages, and
-OAuth returns carry client addresses, so a route may move only if its old
-address is added to `movedRoutes` in the route table; `shell/routes.test.tsx`
-lists the addresses the server writes.
+and `/activity` to their Manage pages; `/requests` to `/library/mine`,
+`/removals` to `/library/leaving`, and `/removed` to `/library/removed`.
+Notification emails, Discord messages, and OAuth returns carry client addresses,
+so a route may move only if its old address is added to `movedRoutes` in the
+route table; `shell/routes.test.tsx` lists the addresses the server writes.
+`/requests?interest=<request id>`, which every "still watching?" reminder
+carries, lands on Mine with that request's entry scrolled into view, marked, and
+its controls open.
 
 After a navigation the shell moves focus to the new page's heading, which is why
-every page renders its heading through `PageTitle`. The top bar's search submits
-to `/discover?q=`, and Discover reads its search from that parameter.
+every page renders its heading through `PageTitle`. A switch between views of
+one page is the exception: a link that carries the `SAME_PAGE` state
+(`ui/same-page.ts`), as every `Segmented` link does, leaves focus on the control
+and the scroll position where it was. The top bar's search submits to
+`/discover?q=`, and Discover reads its search from that parameter.
 
 ### Library page and client primitives
 
@@ -797,6 +813,26 @@ sort and the layout are query parameters (`q`, `kind`, `keeping`, `status`,
 does not know reads as that setting's default. `view=list` is the compact list,
 which is where the owner switches a title between kept for good and kept just
 for now.
+
+Mine joins three reads by request id (`library/mine-model.ts`): the rows of
+`GET /requests`, which name the title each belongs to (`rootMediaId`,
+`rootTitle`); the reader's request interests, read with `include=artwork`; and
+their film requests. The two paged ones are read to the end first, because a
+join over part of a list would show a request without its controls. A row is
+something a person asked for when it has an interest or a film request of its
+own, or is for the film or series itself; every other row is a season or episode
+such a request covers, listed under it on demand. A film whose library details
+the reader may not see is listed without its name or poster. Each list reads its
+rows' default-target views in one batched request.
+
+Leaving soon groups the pending rows of `GET /removals` by `rootMediaId`
+(`library/removals.ts`). A series losing several episodes gets one "Keep all N
+episodes" action (`library/keep-all.ts`), which sends the existing per-episode
+`keep` command for each in turn and reports every outcome: one failure never
+stops the rest or hides what succeeded, and trying again sends only what failed,
+repeating the same command (and so the same idempotency key) when the earlier
+result is unknown. Rows whose files have already left are not leaving; Removed
+lists them, with the restore action, from the same read.
 
 Shared building blocks live in `src/client/ui/`:
 

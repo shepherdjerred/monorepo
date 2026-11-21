@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import type { z } from "zod";
 import type { MediaUser } from "#shared/contract.ts";
 import {
@@ -8,91 +7,37 @@ import {
   type RequestInterestCommand,
 } from "#shared/household/interests.ts";
 import { queryClient, readApi, writeApi } from "#client/api.ts";
+import { dateLabel, ErrorNotice } from "#client/components.tsx";
+import { INTEREST_ACTION_COPY } from "#client/presentation/interest.ts";
 import { RequestInterestProgress } from "./progress.tsx";
-import { ImportedRequestSource } from "#client/personal-migration/source.tsx";
-import type { ImportedPersonalClaim } from "#shared/personal-migration/contract.ts";
-import {
-  dateLabel,
-  ErrorNotice,
-  Loading,
-  MediaLink,
-  Status,
-} from "#client/components.tsx";
 
 type Interest = z.infer<typeof RequestInterestListSchema>["items"][number];
 
-export function RequestInterests({
-  user,
-  importedClaims,
-}: {
-  user: MediaUser;
-  importedClaims: readonly ImportedPersonalClaim[];
-}) {
-  const [cursor, setCursor] = useState<string | null>(null);
-  const interests = useQuery({
-    queryKey: ["request-interests", user.id, cursor],
-    queryFn: () =>
-      readApi(
-        `/request-interests${cursor === null ? "" : `?cursor=${encodeURIComponent(cursor)}`}`,
-        RequestInterestListSchema,
-      ),
-  });
-  const nextCursor = interests.data?.nextCursor ?? null;
-  return (
-    <section className="panel">
-      <h2>What you’re keeping</h2>
-      <p className="muted">
-        Temporary titles stay while someone is interested. Catching up on an
-        ongoing show keeps you following it. Finished or Drop ends your
-        subscription; it does not change anyone else’s request.
-      </p>
-      {interests.isPending && <Loading />}
-      {interests.error !== null && <ErrorNotice error={interests.error} />}
-      {interests.data?.items.length === 0 && <p>No interests on this page.</p>}
-      {interests.data?.items.map((interest) => (
-        <InterestRow
-          key={interest.requestId}
-          user={user}
-          interest={interest}
-          importedClaim={importedClaims.find(
-            (claim) => claim.requestId === interest.requestId,
-          )}
-        />
-      ))}
-      <div className="action-row">
-        {cursor !== null && (
-          <button
-            className="button subtle"
-            onClick={() => {
-              setCursor(null);
-            }}
-          >
-            First page
-          </button>
-        )}
-        {nextCursor !== null && (
-          <button
-            className="button subtle"
-            onClick={() => {
-              setCursor(nextCursor);
-            }}
-          >
-            More interests
-          </button>
-        )}
-      </div>
-    </section>
+/**
+ * One page of the reader's request interests, with each row's artwork. The
+ * rows are a strict contract, so artwork arrives only because it is asked
+ * for here.
+ */
+export function readInterests(cursor: string | null) {
+  const params = new URLSearchParams({ include: "artwork" });
+  if (cursor !== null) params.set("cursor", cursor);
+  return readApi(
+    `/request-interests?${params.toString()}`,
+    RequestInterestListSchema,
   );
 }
 
-function InterestRow({
+/**
+ * What a person can do about their interest in something they asked for:
+ * answer a "still watching?" check, keep watching, say they are done, and,
+ * for the owner, change how long it is kept.
+ */
+export function InterestControls({
   user,
   interest,
-  importedClaim,
 }: {
   user: MediaUser;
   interest: Interest;
-  importedClaim: ImportedPersonalClaim | undefined;
 }) {
   const change = useMutation({
     mutationFn: (action: RequestInterestCommand["action"]) =>
@@ -112,122 +57,68 @@ function InterestRow({
         schema: RequestInterestResultSchema,
       }),
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["request-interests"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["request-interest-progress"],
-        }),
-        queryClient.invalidateQueries({ queryKey: ["requests"] }),
-        queryClient.invalidateQueries({ queryKey: ["removals"] }),
-        queryClient.invalidateQueries({ queryKey: ["library"] }),
-      ]);
+      await Promise.all(
+        [
+          "request-interests",
+          "request-interest-progress",
+          "requests",
+          "removals",
+          "library",
+        ].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
+      );
     },
   });
   const own = interest.userId === user.id;
   const following = interest.interestState === "following";
+  const act = (action: RequestInterestCommand["action"]) => (
+    <button
+      className={action === "continue" ? "button primary" : "button subtle"}
+      type="button"
+      disabled={change.isPending}
+      onClick={() => {
+        change.mutate(action);
+      }}
+    >
+      {INTEREST_ACTION_COPY[action]}
+    </button>
+  );
   return (
-    <article className="request-row" id={`interest-${interest.requestId}`}>
-      <div className="item-main">
-        <h3>
-          <MediaLink id={interest.mediaId} title={interest.title} />
-        </h3>
-        {importedClaim !== undefined && (
-          <ImportedRequestSource claim={importedClaim} viewerUserId={user.id} />
-        )}
-        <p>
-          {interest.keepingPolicy === "keep"
-            ? "Keep indefinitely"
-            : "Temporary"}
-          {interest.releaseReason === null
-            ? ""
-            : ` · ${interest.releaseReason.replaceAll("_", " ")}`}
+    <>
+      {interest.noticeDeliveryState === "attention" && (
+        <p className="notice">
+          Media could not deliver this reminder to you. Your interest stays
+          protected until a reminder reaches you.
         </p>
-        {interest.noticeDeliveryState === "attention" && (
-          <p className="notice">
-            This reminder needs attention:{" "}
-            {interest.noticeReason?.replaceAll("_", " ")}. Your interest stays
-            protected until a private notice is confirmed.
+      )}
+      {interest.noticeEventId !== null && following && (
+        <div className="notice">
+          <p>
+            Still watching? Choose {INTEREST_ACTION_COPY.continue} to stay
+            interested.
+            {interest.replyBy === null
+              ? " The time to answer starts once a reminder has reached you, or when you say you have seen this one."
+              : ` Answer by ${dateLabel(interest.replyBy)}.`}
           </p>
-        )}
-        {interest.noticeEventId !== null && following && (
-          <div className="notice">
-            <p>
-              Still watching? Choose Keep watching to stay interested.
-              {interest.replyBy === null
-                ? " The reply period begins after a private notice is accepted or you acknowledge this reminder."
-                : ` Reply by ${dateLabel(interest.replyBy)}.`}
-            </p>
-            {own && interest.replyBy === null && (
-              <button
-                className="button subtle"
-                disabled={change.isPending}
-                onClick={() => {
-                  change.mutate("notice_viewed");
-                }}
-              >
-                I have seen this reminder
-              </button>
-            )}
-          </div>
-        )}
-        <RequestInterestProgress
-          actorId={user.id}
-          requestId={interest.requestId}
-          title={interest.title}
-        />
-        <div className="action-row">
-          {own && (
-            <button
-              className="button subtle"
-              disabled={change.isPending}
-              onClick={() => {
-                change.mutate("continue");
-              }}
-            >
-              Keep watching
-            </button>
-          )}
-          {own && following && interest.keepingPolicy === "temporary" && (
-            <>
-              <button
-                className="button subtle"
-                disabled={change.isPending}
-                onClick={() => {
-                  change.mutate("finished");
-                }}
-              >
-                Finished
-              </button>
-              <button
-                className="button subtle"
-                disabled={change.isPending}
-                onClick={() => {
-                  change.mutate("drop");
-                }}
-              >
-                Drop
-              </button>
-            </>
-          )}
-          {user.role === "owner" && (
-            <button
-              className="button subtle"
-              disabled={change.isPending}
-              onClick={() => {
-                change.mutate(
-                  interest.keepingPolicy === "keep" ? "temporary" : "keep",
-                );
-              }}
-            >
-              {interest.keepingPolicy === "keep"
-                ? "Make temporary"
-                : "Keep indefinitely"}
-            </button>
-          )}
+          {own && interest.replyBy === null && act("notice_viewed")}
         </div>
-        {change.error !== null && <ErrorNotice error={change.error} />}
+      )}
+      <RequestInterestProgress
+        actorId={user.id}
+        requestId={interest.requestId}
+        title={interest.title}
+      />
+      <div className="action-row">
+        {own && act("continue")}
+        {own && following && interest.keepingPolicy === "temporary" && (
+          <>
+            {act("finished")}
+            {act("drop")}
+          </>
+        )}
+        {user.role === "owner" &&
+          act(interest.keepingPolicy === "keep" ? "temporary" : "keep")}
       </div>
-      <Status value={interest.interestState} />
-    </article>
+      {change.error !== null && <ErrorNotice error={change.error} />}
+    </>
   );
 }
