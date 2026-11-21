@@ -61,10 +61,10 @@ export function getZfsPvcRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "ZfsPVCStorageHigh",
         annotations: {
+          summary: "ZFS PVC quota usage is above 75%",
           description: escapePrometheusTemplate(
-            "ZFS PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} uses {{ $value | humanizePercentage }} of its quota including snapshot-retained blocks.",
+            "ZFS-backed PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} ({{ $labels.dataset_name }}) is using {{ $value | humanizePercentage }} of its dataset quota including snapshot-retained blocks. Prune stale VolumeSnapshots, clean up application data, or expand the PVC size in cdk8s before writes start failing.",
           ),
-          summary: "ZFS PVC storage usage above 75%",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           excludeBuildkitdCache(`(${zfsPvcUsageExpression}) > 0.75`),
@@ -75,10 +75,10 @@ export function getZfsPvcRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "ZfsPVCStorageCritical",
         annotations: {
+          summary: "ZFS PVC quota usage is critically high (above 90%)",
           description: escapePrometheusTemplate(
-            "ZFS PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} uses {{ $value | humanizePercentage }} of its quota including snapshot-retained blocks.",
+            "ZFS-backed PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} ({{ $labels.dataset_name }}) is using {{ $value | humanizePercentage }} of its dataset quota including snapshot-retained blocks, putting the workload at immediate risk of out-of-space write failures. Delete unneeded VolumeSnapshots or expand the PVC storage request immediately.",
           ),
-          summary: "ZFS PVC storage usage above 90%",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           excludeBuildkitdCache(`(${zfsPvcUsageExpression}) > 0.90`),

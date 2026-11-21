@@ -69,224 +69,224 @@ const SUBJECT_CASES = [
     title: "Agent Task: Inspect production",
     execution: "complete",
     verdict: "clear",
-    expected: "Inspect production: report ready",
+    expected: "Inspect production: Report ready",
   },
   {
     reportType: "agent-task",
     title: "Agent Task: Inspect production",
     execution: "complete",
     verdict: "attention",
-    expected: "Action needed: Inspect production",
+    expected: "Inspect production: Action needed",
   },
   {
     reportType: "agent-task",
     title: "Agent Task: Inspect production",
     execution: "failed",
     verdict: "attention",
-    expected: "Inspect production could not finish",
+    expected: "Inspect production: Could not finish",
   },
   {
     reportType: "agent-task",
     title: "Production audit: Inspect production",
     execution: "complete",
     verdict: "clear",
-    expected: "Inspect production: report ready",
+    expected: "Inspect production: Report ready",
   },
   {
     reportType: "agent-task",
     title: "Agent Task: Inspect production",
     execution: "complete",
     verdict: "pending",
-    expected: "Inspect production could not finish",
+    expected: "Inspect production: Could not finish",
   },
   {
     reportType: "dependency-summary",
     title: "Weekly dependency summary",
     execution: "complete",
     verdict: "clear",
-    expected: "Dependencies are up to date",
+    expected: "Dependencies: Up to date",
   },
   {
     reportType: "dependency-summary",
     title: "Weekly dependency summary",
     execution: "complete",
     verdict: "changed",
-    expected: "Dependency changes found",
+    expected: "Dependencies: Updates available",
   },
   {
     reportType: "dependency-summary",
     title: "Weekly dependency summary",
     execution: "partial",
     verdict: "changed",
-    expected: "Dependency report could not finish",
+    expected: "Dependencies: Check incomplete",
   },
   {
     reportType: "homelab-audit",
     title: "Daily homelab audit",
     execution: "complete",
     verdict: "clear",
-    expected: "Your homelab looks healthy",
+    expected: "Homelab check: All clear",
   },
   {
     reportType: "homelab-audit",
     title: "Daily homelab audit",
     execution: "complete",
     verdict: "attention",
-    expected: "Action needed: homelab issues found",
+    expected: "Homelab check: Issues need review",
   },
   {
     reportType: "homelab-audit",
     title: "Daily homelab audit",
     execution: "failed",
     verdict: "inconclusive",
-    expected: "Homelab check failed",
+    expected: "Homelab check: Run failed",
   },
   {
     reportType: "link-rot-scan",
     title: "Weekly link-rot scan of main",
     execution: "complete",
     verdict: "clear",
-    expected: "No broken links found",
+    expected: "Link check: All links reachable",
   },
   {
     reportType: "link-rot-scan",
     title: "Weekly link-rot scan of main",
     execution: "complete",
     verdict: "attention",
-    expected: "Broken or unreachable links found",
+    expected: "Link check: Broken links found",
   },
   {
     reportType: "link-rot-scan",
     title: "Weekly link-rot scan of main",
     execution: "failed",
     verdict: "inconclusive",
-    expected: "Link check failed",
+    expected: "Link check: Run failed",
   },
   {
     reportType: "main-vuln-scan",
     title: "Weekly Trivy vulnerability scan of main",
     execution: "complete",
     verdict: "clear",
-    expected: "No high-risk vulnerabilities found",
+    expected: "Security scan: No high-risk issues",
   },
   {
     reportType: "main-vuln-scan",
     title: "Weekly Trivy vulnerability scan of main",
     execution: "complete",
     verdict: "attention",
-    expected: "Action needed: vulnerabilities found",
+    expected: "Security scan: Vulnerabilities need review",
   },
   {
     reportType: "main-vuln-scan",
     title: "Weekly Trivy vulnerability scan of main",
     execution: "failed",
     verdict: "inconclusive",
-    expected: "Vulnerability scan failed",
+    expected: "Security scan: Run failed",
   },
   {
     reportType: "scout-data-dragon",
     title: "Scout Data Dragon version-check",
     execution: "complete",
     verdict: "clear",
-    expected: "Scout data is up to date",
+    expected: "Scout update: Patch data up to date",
   },
   {
     reportType: "scout-data-dragon",
     title: "Scout Data Dragon weekly-refresh",
     execution: "complete",
     verdict: "changed",
-    expected: "Scout Data Dragon update created",
+    expected: "Scout update: Data Dragon PR opened",
   },
   {
     reportType: "scout-data-dragon",
     title: "Scout Data Dragon weekly-refresh",
     execution: "partial",
     verdict: "attention",
-    expected: "Scout Data Dragon update needs attention",
+    expected: "Scout update: Data Dragon needs review",
   },
   {
     reportType: "scout-lane-priors",
     title: "Scout lane-prior refresh",
     execution: "complete",
     verdict: "clear",
-    expected: "Scout lane data is up to date",
+    expected: "Scout lane data: Up to date",
   },
   {
     reportType: "scout-lane-priors",
     title: "Scout lane-prior refresh",
     execution: "complete",
     verdict: "changed",
-    expected: "Scout lane-data update created",
+    expected: "Scout lane data: Update PR opened",
   },
   {
     reportType: "scout-lane-priors",
     title: "Scout lane-prior refresh",
     execution: "failed",
     verdict: "inconclusive",
-    expected: "Scout lane-data update failed",
+    expected: "Scout lane data: Update failed",
   },
   {
     reportType: "scout-queue-windows",
     title: "Scout queue windows",
     execution: "complete",
     verdict: "clear",
-    expected: "Scout queue windows are up to date",
+    expected: "Scout queues: Windows up to date",
   },
   {
     reportType: "scout-queue-windows",
     title: "Scout queue windows",
     execution: "complete",
     verdict: "changed",
-    expected: "Scout queue-window changes found",
+    expected: "Scout queues: Window changes detected",
   },
   {
     reportType: "scout-queue-windows",
     title: "Scout queue windows",
     execution: "complete",
     verdict: "attention",
-    expected: "Action needed: Scout queue-window warnings",
+    expected: "Scout queues: Warnings need review",
   },
   {
     reportType: "scout-season-refresh",
     title: "Scout season schedule",
     execution: "complete",
     verdict: "clear",
-    expected: "Scout season dates are up to date",
+    expected: "Scout season: Dates up to date",
   },
   {
     reportType: "scout-season-refresh",
     title: "Scout season schedule",
     execution: "complete",
     verdict: "changed",
-    expected: "Scout season-date update created",
+    expected: "Scout season: Update PR opened",
   },
   {
     reportType: "scout-season-refresh",
     title: "Scout season schedule",
     execution: "failed",
     verdict: "inconclusive",
-    expected: "Scout season-date update failed",
+    expected: "Scout season: Update failed",
   },
   {
     reportType: "tasknotes-canary",
     title: "TaskNotes skipped-files canary",
     execution: "complete",
     verdict: "clear",
-    expected: "TaskNotes looks healthy",
+    expected: "TaskNotes check: All clear",
   },
   {
     reportType: "tasknotes-canary",
     title: "TaskNotes skipped-files canary",
     execution: "complete",
     verdict: "attention",
-    expected: "Action needed: TaskNotes problem found",
+    expected: "TaskNotes check: Issue needs review",
   },
   {
     reportType: "tasknotes-canary",
     title: "TaskNotes skipped-files canary",
     execution: "failed",
     verdict: "inconclusive",
-    expected: "TaskNotes check failed",
+    expected: "TaskNotes check: Run failed",
   },
 ] satisfies SubjectCase[];
 
@@ -317,7 +317,7 @@ describe("ReportEnvelopeV1", () => {
         title: "Future check",
         verdict: "attention",
       }),
-    ).toBe("Action needed: Future check");
+    ).toBe("Future check: Action needed");
   });
 
   test("translates internal states into human status labels", () => {
@@ -442,19 +442,22 @@ describe("ReportEnvelopeV1", () => {
 });
 
 describe("Human report email rendering", () => {
-  test("renders facts first and escapes HTML", () => {
+  test("renders facts first, collapses passed checks, and avoids repeating 'No action is needed'", () => {
     const report = validReport();
     report.headline = "No <unsafe> changes";
     const html = renderReportHtml(report);
     const text = renderReportText(report);
     expect(html).toContain("No &lt;unsafe&gt; changes");
     expect(html).not.toContain("<unsafe>");
+    expect(html).not.toContain("No action is needed");
+    expect(html).toContain("1 checks passed:");
     expect(
       text.startsWith(
-        "Dependencies are up to date\nNo action needed\nNo <unsafe> changes",
+        "Repo Dependencies · No action needed\nDependencies: Up to date\n\nNo <unsafe> changes",
       ),
     ).toBe(true);
-    expect(text).toContain("Passed · Catalog diff");
+    expect(text).not.toContain("No action is needed");
+    expect(text).toContain("1 checks passed: Catalog diff");
     expect(text).not.toContain("git-diff");
   });
 
@@ -519,17 +522,18 @@ describe("Human report email rendering", () => {
     ];
     const html = renderReportHtml(report);
     const text = renderReportText(report);
-    expect(html.indexOf("What you need to do")).toBeLessThan(
-      html.indexOf("What was found"),
-    );
-    expect(html.indexOf("What was found")).toBeLessThan(
-      html.indexOf("What was checked"),
-    );
-    expect(text.indexOf("What you need to do")).toBeLessThan(
-      text.indexOf("What was found"),
-    );
-    expect(text.indexOf("What was found")).toBeLessThan(
-      text.indexOf("What was checked"),
+    expect(html.indexOf("Next step:")).toBeLessThan(html.indexOf("Findings"));
+    expect(html.indexOf("Findings")).toBeLessThan(html.indexOf("Checks"));
+    expect(text.indexOf("Next step:")).toBeLessThan(text.indexOf("Findings"));
+    expect(text.indexOf("Findings")).toBeLessThan(text.indexOf("Checks"));
+
+    report.actions = ["Review the update.", "Re-run verification."];
+    const multiHtml = renderReportHtml(report);
+    const multiText = renderReportText(report);
+    expect(multiHtml).toContain("Next steps");
+    expect(multiHtml).not.toContain("Next step:");
+    expect(multiText).toContain(
+      "Next steps\n- Review the update.\n- Re-run verification.",
     );
   });
 
@@ -545,7 +549,9 @@ describe("Human report email rendering", () => {
     expect(presentation.actions).toEqual([
       "Open the workflow run and review the reported problem.",
     ]);
-    expect(text).toContain("What you need to do");
+    expect(text).toContain(
+      "Next step: Open the workflow run and review the reported problem.",
+    );
     expect(text).not.toContain("No action is needed.");
   });
 
@@ -560,7 +566,9 @@ describe("Human report email rendering", () => {
     expect(presentation.actions).toEqual([
       "Open the workflow run and review the reported issue.",
     ]);
-    expect(text).toContain("What you need to do");
+    expect(text).toContain(
+      "Next step: Open the workflow run and review the reported issue.",
+    );
     expect(text).not.toContain("No action is needed.");
   });
 
@@ -613,8 +621,9 @@ describe("Human report email rendering", () => {
     expect(html).toContain('lang="en"');
     expect(html).toContain('<meta charset="utf-8">');
     expect(html).toContain('name="viewport"');
+    expect(html).toContain('meta name="color-scheme" content="light dark"');
     expect(html).toContain('role="presentation"');
-    expect(html).toContain("max-width:640px");
+    expect(html).toContain("max-width:620px");
     expect(html).not.toContain("<script");
   });
 

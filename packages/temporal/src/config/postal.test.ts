@@ -4,7 +4,10 @@ const flag = vi.hoisted(() => vi.fn());
 vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
   createFlagConfigSource: () => ({ name: "flag", get: flag }),
 }));
-import { postalAddressesConfig } from "./postal.ts";
+import {
+  postalAddressesConfig,
+  resolvePostalAddressesForReport,
+} from "./postal.ts";
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -16,6 +19,89 @@ describe("report mail routing", () => {
     expect(await postalAddressesConfig()).toEqual({
       recipient: "dependencies@sjer.red",
       sender: "deps@sjer.red",
+    });
+  });
+
+  test("accepts display-name sender mailboxes from flags", async () => {
+    flag.mockImplementation(({ key }: { key: string }) =>
+      Promise.resolve(
+        key === "sender"
+          ? { value: "Homelab Audit <ops@sjer.red>" }
+          : { value: "ops@sjer.red" },
+      ),
+    );
+    expect(await postalAddressesConfig()).toEqual({
+      recipient: "ops@sjer.red",
+      sender: "Homelab Audit <ops@sjer.red>",
+    });
+  });
+
+  test("maps report families to semantic @sjer.red mailboxes by default", async () => {
+    await expect(
+      resolvePostalAddressesForReport("dependency-summary"),
+    ).resolves.toEqual({
+      recipient: "deps@sjer.red",
+      sender: "Repo Dependencies <deps@sjer.red>",
+    });
+    await expect(
+      resolvePostalAddressesForReport("homelab-audit"),
+    ).resolves.toEqual({
+      recipient: "ops@sjer.red",
+      sender: "Homelab Audit <ops@sjer.red>",
+    });
+    await expect(
+      resolvePostalAddressesForReport("tasknotes-canary"),
+    ).resolves.toEqual({
+      recipient: "ops@sjer.red",
+      sender: "Homelab Audit <ops@sjer.red>",
+    });
+    await expect(
+      resolvePostalAddressesForReport("scout-data-dragon"),
+    ).resolves.toEqual({
+      recipient: "scout@sjer.red",
+      sender: "Scout Automation <scout@sjer.red>",
+    });
+    await expect(
+      resolvePostalAddressesForReport("main-vuln-scan"),
+    ).resolves.toEqual({
+      recipient: "reports@sjer.red",
+      sender: "Temporal Reports <reports@sjer.red>",
+    });
+    await expect(
+      resolvePostalAddressesForReport("agent-task"),
+    ).resolves.toEqual({
+      recipient: "reports@sjer.red",
+      sender: "Temporal Reports <reports@sjer.red>",
+    });
+  });
+
+  test("honors explicit non-default Flipt overrides per field", async () => {
+    flag.mockImplementation(({ key }: { key: string }) =>
+      Promise.resolve(
+        key === "recipient"
+          ? { value: "override@sjer.red" }
+          : { value: "deps@sjer.red" },
+      ),
+    );
+    await expect(
+      resolvePostalAddressesForReport("homelab-audit"),
+    ).resolves.toEqual({
+      recipient: "override@sjer.red",
+      sender: "Homelab Audit <ops@sjer.red>",
+    });
+
+    flag.mockImplementation(({ key }: { key: string }) =>
+      Promise.resolve(
+        key === "sender"
+          ? { value: "Custom Sender <custom@sjer.red>" }
+          : { value: "dependencies@sjer.red" },
+      ),
+    );
+    await expect(
+      resolvePostalAddressesForReport("scout-lane-priors"),
+    ).resolves.toEqual({
+      recipient: "scout@sjer.red",
+      sender: "Custom Sender <custom@sjer.red>",
     });
   });
 

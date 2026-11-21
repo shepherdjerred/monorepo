@@ -68,6 +68,7 @@ export type PendingEmail = {
   messageId: string;
   subject: string;
   htmlBody: string;
+  plainBody?: string;
   attemptCount: number;
 };
 
@@ -128,7 +129,7 @@ export type PostalMessage = {
   messageId: string;
   subject: string;
   htmlBody: string;
-  /** Plain-text alternative; digests send one, alert openings do not. */
+  /** Plain-text alternative sent alongside the HTML body. */
   plainBody?: string;
   /** Postal tag; defaults to the alert-opening tag. */
   tag?: string;

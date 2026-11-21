@@ -578,6 +578,7 @@ describe("SQLite queries and outbox", () => {
       10,
     );
     expect(pending).toHaveLength(2);
+    expect(pending[0]?.plainBody).toContain("Disk is full");
     const claimed = await repository.claimPendingEmails(
       nanoseconds("2026-08-08T20:00:00Z"),
       1,
@@ -586,6 +587,7 @@ describe("SQLite queries and outbox", () => {
     expect(claimed).toHaveLength(1);
     const claimedEmail = claimed[0];
     if (claimedEmail === undefined) throw new Error("expected pending email");
+    expect(claimedEmail.plainBody).toContain("Disk is full");
     const pendingStatus = await repository.systemStatus(
       true,
       nanoseconds("2026-08-08T20:00:00Z"),

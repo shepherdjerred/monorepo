@@ -413,6 +413,10 @@ export type AlertDashboardBooleanFlagKey =
 export const ALERT_DASHBOARD_VARIANT_FLAG_KEYS = [
   "alert-dashboard-email-from",
   "alert-dashboard-email-to",
+  "alert-dashboard-incident-email-from",
+  "alert-dashboard-incident-email-to",
+  "alert-dashboard-digest-email-from",
+  "alert-dashboard-digest-email-to",
 ] as const;
 
 export type AlertDashboardVariantFlagKey =

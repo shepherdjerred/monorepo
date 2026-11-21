@@ -24,13 +24,15 @@ import {
   createMonitoringAuthGateways,
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+import { ALERTMANAGER_EMAIL_TEMPLATE_HELM_ESCAPED } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alertmanager-email-template.ts";
+import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 const ALERT_DASHBOARD_SERVICE_URL =
   "http://alert-dashboard-alert-dashboard-service.alert-dashboard.svc.cluster.local:7341";
 const ALERTMANAGER_GLOBAL = {
   resolve_timeout: "5m",
-  smtp_from: "alerts@sjer.red",
+  smtp_from: "Hub Alerts <alerts@sjer.red>",
   smtp_auth_username: "alertmanager",
   smtp_auth_password_file:
     "/etc/alertmanager/secrets/alertmanager-postal-smtp/SMTP_PASSWORD",
@@ -42,7 +44,12 @@ const ALERTMANAGER_GLOBAL = {
 const OPERATOR_EMAIL_CONFIGS = [
   {
     send_resolved: false,
-    to: "claude@sjer.red",
+    to: "alerts@sjer.red",
+    headers: {
+      Subject: escapePrometheusTemplate('{{ template "ops.email.subject" . }}'),
+    },
+    html: escapePrometheusTemplate('{{ template "ops.email.html" . }}'),
+    text: escapePrometheusTemplate('{{ template "ops.email.text" . }}'),
   },
 ];
 
@@ -206,6 +213,9 @@ export async function createPrometheusApp(chart: Chart) {
     },
     alertmanager: {
       service: { targetPort: ALERTMANAGER_GATEWAY_PORT },
+      templateFiles: {
+        "ops-email.tmpl": ALERTMANAGER_EMAIL_TEMPLATE_HELM_ESCAPED,
+      },
       alertmanagerSpec: {
         listenLocal: true,
         externalUrl: tailnetService("alertmanager").origin,

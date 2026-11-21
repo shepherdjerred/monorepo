@@ -1,5 +1,8 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { reportMailboxForType } from "@shepherdjerred/ops-model/email/mailbox.ts";
+import { escapeHtml } from "@shepherdjerred/ops-model/email/primitives.ts";
+import { reportSubject } from "#shared/reports/report-presentation.ts";
 import {
   renderReportHtml,
   renderReportText,
@@ -176,25 +179,36 @@ function previewReport(
 }
 
 function galleryHtml(
-  entries: readonly { name: string; subject: string }[],
+  entries: readonly {
+    name: string;
+    subject: string;
+    from: string;
+    to: string;
+  }[],
 ): string {
   return [
     "<!doctype html>",
     '<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Temporal email previews</title></head>',
-    "<body style=\"margin:0;padding:24px;background:#111827;color:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;\">",
-    '<main style="max-width:1120px;margin:0 auto;"><h1>Temporal email previews</h1><p>Deterministic fixtures for every human-facing report type.</p>',
+    "<body style=\"margin:0;padding:24px;background:#0f1311;color:#edf2ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;\">",
+    '<main style="max-width:1120px;margin:0 auto;"><h1>Temporal email previews</h1><p>Deterministic Hub Editorial fixtures and semantic @sjer.red routing for every human-facing report type.</p>',
     ...entries.map(
       (entry) =>
-        `<section style="margin:32px 0;"><h2 style="font-size:18px;">${entry.subject}</h2><iframe title="${entry.subject}" src="./${entry.name}.html" style="display:block;width:100%;height:850px;border:1px solid #374151;border-radius:12px;background:white;"></iframe><p><a style="color:#93c5fd;" href="./${entry.name}.txt">Plain-text version</a></p></section>`,
+        `<section style="margin:32px 0;"><h2 style="margin:0 0 4px;font-size:18px;">${escapeHtml(entry.subject)}</h2><p style="margin:0 0 10px;font-size:13px;color:#9eaaa3;"><strong>From:</strong> <code>${escapeHtml(entry.from)}</code> &middot; <strong>To:</strong> <code>${escapeHtml(entry.to)}</code></p><iframe title="${escapeHtml(entry.subject)}" src="./${escapeHtml(entry.name)}.html" style="display:block;width:100%;height:780px;border:1px solid #2d3531;border-radius:12px;background:white;"></iframe><p><a style="color:#4cc393;" href="./${escapeHtml(entry.name)}.txt">Plain-text version</a></p></section>`,
     ),
     "</main></body></html>",
   ].join("");
 }
 
 await mkdir(OUTPUT_DIRECTORY, { recursive: true });
-const galleryEntries: { name: string; subject: string }[] = [];
+const galleryEntries: {
+  name: string;
+  subject: string;
+  from: string;
+  to: string;
+}[] = [];
 for (const [index, definition] of PREVIEWS.entries()) {
   const report = previewReport(definition, index);
+  const mailbox = reportMailboxForType(definition.reportType);
   await Bun.write(
     path.join(OUTPUT_DIRECTORY, `${definition.reportType}.html`),
     renderReportHtml(report),
@@ -205,7 +219,9 @@ for (const [index, definition] of PREVIEWS.entries()) {
   );
   galleryEntries.push({
     name: definition.reportType,
-    subject: renderReportText(report).split("\n", 1)[0] ?? definition.title,
+    subject: reportSubject(report),
+    from: mailbox.from,
+    to: mailbox.to,
   });
 }
 await Bun.write(

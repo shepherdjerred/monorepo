@@ -33,8 +33,8 @@ export function getScoutMonitorDrillRuleGroups(
         {
           alert: SCOUT_MONITOR_DRILL_ALERT,
           annotations: {
-            summary: `Delivery monitor drill for Scout ${drill}`,
-            message: `A cutover drill: the Scout ${drill} monitor should report this alarm (beta holds, prod rolls back). Turn the drill off with a reviewed change once observed.`,
+            summary: `Delivery monitor drill is active for Scout ${drill}`,
+            description: `A synthetic cutover drill alarm is firing for Scout ${drill} so Delivery holds beta or rolls back prod without a real service fault. Disable scoutMonitorDrill() in a reviewed PR once the expected Delivery response is verified.`,
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString("vector(1)"),
           labels: { environment: drill, severity: "warning" },

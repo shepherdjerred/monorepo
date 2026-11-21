@@ -1,42 +1,54 @@
-import sanitizeHtml from "sanitize-html";
+import {
+  formatPacificTimestamp,
+  safeHttpUrl,
+  type EmailActionLink,
+  type EmailCheckItem,
+  type EmailDetailRow,
+  type EmailDocument,
+  type EmailItemCard,
+  type EmailSection,
+  type EmailTone,
+} from "@shepherdjerred/ops-model/email/primitives.ts";
+import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
+import { renderEmailText } from "@shepherdjerred/ops-model/email/render-text.ts";
 import {
   presentReport,
+  type ReportEmailPresentation,
   type ReportPresentationTone,
 } from "./report-presentation.ts";
 import { ReportEnvelopeV1Schema, type ReportEnvelopeV1 } from "./report.ts";
 
-const ESCAPE_TEXT_OPTIONS: sanitizeHtml.IOptions = {
-  allowedTags: [],
-  allowedAttributes: {},
-  disallowedTagsMode: "escape",
-};
-
-const REPORT_TIME_FORMAT = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-  timeZone: "America/Los_Angeles",
-  timeZoneName: "short",
-});
-
-type TechnicalDetail = {
-  label: string;
-  value: string;
-  url?: string;
-};
-
-function escapeHtml(value: string): string {
-  return sanitizeHtml(value, ESCAPE_TEXT_OPTIONS);
+function mapPresentationTone(tone: ReportPresentationTone): EmailTone {
+  switch (tone) {
+    case "ok":
+      return "ok";
+    case "review":
+      return "warning";
+    case "incomplete":
+      return "critical";
+  }
 }
 
-function normalizedHttpUrl(url: string): string {
-  return new URL(url).href;
-}
-
-function reportLink(url: string, label: string): string {
-  return `<a href="${escapeHtml(normalizedHttpUrl(url))}" style="color:#1d4ed8;text-decoration:underline;">${escapeHtml(label)}</a>`;
+function reportEyebrow(reportType: string): string {
+  switch (reportType) {
+    case "homelab-audit":
+      return "Homelab Check";
+    case "dependency-summary":
+      return "Repo Dependencies";
+    case "scout-data-dragon":
+    case "scout-lane-priors":
+    case "scout-queue-windows":
+    case "scout-season-refresh":
+      return "Scout Automation";
+    case "main-vuln-scan":
+      return "Security Scan";
+    case "link-rot-scan":
+      return "Link Check";
+    case "tasknotes-canary":
+      return "TaskNotes Check";
+    default:
+      return "Temporal Report";
+  }
 }
 
 function evidenceUrls(
@@ -49,257 +61,217 @@ function evidenceUrls(
   return [
     ...new Set(
       receiptIds.flatMap((id) => {
-        const url = evidence.get(id)?.url;
-        return url === undefined ? [] : [url];
+        const href = safeHttpUrl(evidence.get(id)?.url);
+        return href === null ? [] : [href];
       }),
     ),
   ];
 }
 
-function sourceLinksHtml(urls: readonly string[]): string {
-  if (urls.length === 0) return "";
-  return `<div style="margin-top:6px;font-size:13px;">${urls
-    .map((url, index) =>
-      reportLink(
-        url,
-        urls.length === 1 ? "View source" : `View source ${String(index + 1)}`,
-      ),
-    )
-    .join(" · ")}</div>`;
+function sourceActionLinks(urls: readonly string[]): EmailActionLink[] {
+  return urls.map((url, index) => ({
+    label:
+      urls.length === 1 ? "View source" : `View source ${String(index + 1)}`,
+    url,
+  }));
 }
 
-function sourceLinksText(urls: readonly string[]): string[] {
-  return urls.map((url, index) =>
-    urls.length === 1
-      ? `  View source: ${url}`
-      : `  View source ${String(index + 1)}: ${url}`,
-  );
-}
-
-function toneColors(tone: ReportPresentationTone): {
-  background: string;
-  border: string;
-  text: string;
-} {
-  switch (tone) {
-    case "ok":
-      return { background: "#ecfdf3", border: "#16a34a", text: "#166534" };
-    case "review":
-      return { background: "#fff7ed", border: "#ea580c", text: "#9a3412" };
-    case "incomplete":
-      return { background: "#fef2f2", border: "#dc2626", text: "#991b1b" };
-  }
-}
-
-function severityLabel(
+function mapFindingSeverity(
   severity: ReportEnvelopeV1["findings"][number]["severity"],
-): string {
+): { tone: EmailTone; badge: string } {
   switch (severity) {
     case "critical":
-      return "Critical";
+      return { tone: "critical", badge: "Critical" };
     case "warning":
-      return "Warning";
+      return { tone: "warning", badge: "Warning" };
     case "info":
-      return "Note";
+      return { tone: "info", badge: "Note" };
   }
 }
 
-function checkColor(status: "Passed" | "Problem" | "Not checked"): string {
-  switch (status) {
-    case "Passed":
-      return "#166534";
-    case "Problem":
-      return "#991b1b";
-    case "Not checked":
-      return "#6b7280";
-  }
+function buildFindingCards(
+  report: ReportEnvelopeV1,
+  presentation: ReportEmailPresentation,
+): EmailItemCard[] {
+  return presentation.findings.map((finding) => {
+    const { tone, badge } = mapFindingSeverity(finding.severity);
+    const links = sourceActionLinks(
+      evidenceUrls(report, finding.evidenceReceiptIds),
+    );
+    return {
+      tone,
+      badge,
+      ...(finding.section === undefined ? {} : { kicker: finding.section }),
+      title: finding.summary,
+      ...(finding.detail === undefined ? {} : { body: finding.detail }),
+      ...(links.length === 0 ? {} : { links }),
+    };
+  });
 }
 
-function formatReportTime(value: string): string {
-  const parts = REPORT_TIME_FORMAT.formatToParts(new Date(value));
-  const part = (type: Intl.DateTimeFormatPartTypes): string => {
-    const match = parts.find((candidate) => candidate.type === type);
-    if (match === undefined) {
-      throw new Error(`missing date-time part: ${type}`);
+function buildChecksSection(
+  report: ReportEnvelopeV1,
+  presentation: ReportEmailPresentation,
+): Extract<EmailSection, { kind: "checks" }> {
+  const attentionChecks: EmailCheckItem[] = [];
+  const passedLabels: string[] = [];
+
+  for (const check of presentation.checks) {
+    if (check.status === "Passed") {
+      passedLabels.push(check.label);
+      continue;
     }
-    return match.value;
+    const links = sourceActionLinks(
+      evidenceUrls(report, check.evidenceReceiptIds),
+    );
+    attentionChecks.push({
+      status: check.status === "Problem" ? "problem" : "skipped",
+      label: check.label,
+      summary: check.summary,
+      ...(links.length === 0 ? {} : { links }),
+    });
+  }
+
+  return {
+    kind: "checks",
+    heading: "Checks",
+    attentionChecks,
+    passedLabels,
   };
-  return `${part("month")} ${part("day")}, ${part("year")} at ${part("hour")}:${part("minute")} ${part("dayPeriod")} ${part("timeZoneName")}`;
 }
 
-function technicalDetails(report: ReportEnvelopeV1): TechnicalDetail[] {
+function resolvePrimaryAction(
+  report: ReportEnvelopeV1,
+): EmailActionLink | undefined {
+  const temporalHref = safeHttpUrl(report.provenance.temporalUrl);
+  if (temporalHref !== null) {
+    return { label: "View workflow run", url: temporalHref };
+  }
+  for (const receipt of report.evidence) {
+    const href = safeHttpUrl(receipt.url);
+    if (href !== null) {
+      return { label: "View source", url: href };
+    }
+  }
+  return undefined;
+}
+
+function buildTechnicalDetails(report: ReportEnvelopeV1): EmailDetailRow[] {
+  const temporalHref = safeHttpUrl(report.provenance.temporalUrl);
   return [
-    { label: "Completed", value: formatReportTime(report.completedAt) },
+    {
+      label: "Completed",
+      value: formatPacificTimestamp(report.completedAt),
+      mono: false,
+    },
     ...(report.provenance.source === undefined
       ? []
-      : [{ label: "Source", value: report.provenance.source }]),
+      : [
+          {
+            label: "Source",
+            value: report.provenance.source,
+            mono: false,
+          },
+        ]),
     ...(report.provenance.windowStart === undefined ||
     report.provenance.windowEnd === undefined
       ? []
       : [
           {
             label: "Window",
-            value: `${formatReportTime(report.provenance.windowStart)} to ${formatReportTime(report.provenance.windowEnd)}`,
+            value: `${formatPacificTimestamp(report.provenance.windowStart)} – ${formatPacificTimestamp(report.provenance.windowEnd)}`,
+            mono: false,
           },
         ]),
     ...(report.provenance.repoSha === undefined
       ? []
       : [
           {
-            label: "Repository",
+            label: "Commit",
             value: report.provenance.repoSha.slice(0, 12),
+            mono: true,
           },
         ]),
-    ...(report.provenance.temporalUrl === undefined
+    ...(temporalHref === null
       ? []
       : [
           {
-            label: "Temporal",
+            label: "Workflow",
             value: "View workflow run",
-            url: report.provenance.temporalUrl,
+            url: temporalHref,
           },
         ]),
   ];
 }
 
-function actionHtml(actions: readonly string[]): string {
-  return actions.length === 0
-    ? `<div style="margin:24px 0;padding:16px 18px;border-radius:10px;background:#f3f4f6;"><strong style="color:#111827;">No action is needed.</strong></div>`
-    : `<div style="margin:24px 0;padding:18px;border:1px solid #fdba74;border-radius:10px;background:#fff7ed;"><h2 style="margin:0 0 10px;font-size:18px;line-height:1.3;color:#9a3412;">What you need to do</h2><ul style="margin:0;padding-left:22px;color:#431407;">${actions.map((action) => `<li style="margin:6px 0;">${escapeHtml(action)}</li>`).join("")}</ul></div>`;
-}
-
-function findingsHtml(report: ReportEnvelopeV1): string {
-  const presentation = presentReport(report);
-  if (presentation.findings.length === 0) return "";
-  return `<section style="margin-top:28px;"><h2 style="margin:0 0 12px;font-size:19px;color:#111827;">What was found</h2><ul style="margin:0;padding:0;list-style:none;">${presentation.findings
-    .map((finding) => {
-      const section =
-        finding.section === undefined
-          ? ""
-          : `<div style="margin-bottom:4px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;">${escapeHtml(finding.section)}</div>`;
-      const detail =
-        finding.detail === undefined
-          ? ""
-          : `<div style="margin-top:5px;color:#4b5563;">${escapeHtml(finding.detail)}</div>`;
-      return `<li style="margin:0 0 12px;padding:14px 16px;border:1px solid #e5e7eb;border-radius:9px;background:#ffffff;">${section}<div><strong>${escapeHtml(severityLabel(finding.severity))}:</strong> ${escapeHtml(finding.summary)}</div>${detail}${sourceLinksHtml(evidenceUrls(report, finding.evidenceReceiptIds))}</li>`;
-    })
-    .join("")}</ul></section>`;
-}
-
-function synthesisHtml(synthesis: string | undefined): string {
-  return synthesis === undefined
-    ? ""
-    : `<section style="margin-top:28px;"><h2 style="margin:0 0 8px;font-size:19px;color:#111827;">Additional context</h2><p style="margin:0;color:#374151;">${escapeHtml(synthesis)}</p></section>`;
-}
-
-function checksHtml(report: ReportEnvelopeV1): string {
-  const checks = presentReport(report)
-    .checks.map(
-      (check) =>
-        `<li style="margin:0 0 12px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;"><div><strong style="color:${checkColor(check.status)};">${escapeHtml(check.status)}</strong> &middot; <strong>${escapeHtml(check.label)}</strong></div><div style="margin-top:4px;color:#4b5563;">${escapeHtml(check.summary)}</div>${sourceLinksHtml(evidenceUrls(report, check.evidenceReceiptIds))}</li>`,
-    )
-    .join("");
-  return `<section style="margin-top:30px;"><h2 style="margin:0 0 12px;font-size:19px;color:#111827;">What was checked</h2><ul style="margin:0;padding:0;list-style:none;">${checks}</ul></section>`;
-}
-
-function limitationsHtml(limitations: readonly string[]): string {
-  return limitations.length === 0
-    ? ""
-    : `<section style="margin-top:24px;"><h2 style="margin:0 0 8px;font-size:17px;color:#374151;">What may be missing</h2><ul style="margin:0;padding-left:22px;color:#4b5563;">${limitations.map((limitation) => `<li style="margin:5px 0;">${escapeHtml(limitation)}</li>`).join("")}</ul></section>`;
-}
-
-function detailsHtml(report: ReportEnvelopeV1): string {
-  const rows = technicalDetails(report)
-    .map((detail) => {
-      const value =
-        detail.url === undefined
-          ? escapeHtml(detail.value)
-          : reportLink(detail.url, detail.value);
-      return `<tr><th scope="row" style="padding:3px 14px 3px 0;text-align:left;vertical-align:top;font-size:12px;color:#6b7280;">${escapeHtml(detail.label)}</th><td style="padding:3px 0;font-size:12px;color:#6b7280;">${value}</td></tr>`;
-    })
-    .join("");
-  return `<footer style="margin-top:30px;padding-top:18px;border-top:1px solid #e5e7eb;"><table role="presentation" style="border-collapse:collapse;">${rows}</table></footer>`;
-}
-
-export function renderReportHtml(rawReport: ReportEnvelopeV1): string {
+export function buildReportEmailDocument(
+  rawReport: ReportEnvelopeV1,
+): EmailDocument {
   const report = ReportEnvelopeV1Schema.parse(rawReport);
   const presentation = presentReport(report);
-  const colors = toneColors(presentation.tone);
-  return [
-    "<!doctype html>",
-    '<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;line-height:1.5;">',
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background:#f3f4f6;"><tr><td align="center" style="padding:24px 12px;">',
-    '<table role="presentation" width="640" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;border-collapse:collapse;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;"><tr><td style="padding:28px;">',
-    `<div style="display:inline-block;margin-bottom:14px;padding:5px 10px;border:1px solid ${colors.border};border-radius:999px;background:${colors.background};color:${colors.text};font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;">${escapeHtml(presentation.statusLabel)}</div>`,
-    `<h1 style="margin:0 0 10px;font-size:26px;line-height:1.2;color:#111827;">${escapeHtml(presentation.heading)}</h1>`,
-    `<p style="margin:0;font-size:17px;line-height:1.55;color:#374151;">${escapeHtml(presentation.summary)}</p>`,
-    actionHtml(presentation.actions),
-    findingsHtml(report),
-    synthesisHtml(presentation.synthesis),
-    limitationsHtml(presentation.limitations),
-    checksHtml(report),
-    detailsHtml(report),
-    "</td></tr></table>",
-    "</td></tr></table>",
-    "</body></html>",
-  ].join("");
-}
-
-function findingsText(report: ReportEnvelopeV1): string[] {
-  const findings = presentReport(report).findings;
-  if (findings.length === 0) return [];
-  return [
-    "",
-    "What was found",
-    ...findings.flatMap((finding) => [
-      `- ${severityLabel(finding.severity)}${finding.section === undefined ? "" : ` · ${finding.section}`}: ${finding.summary}${finding.detail === undefined ? "" : ` — ${finding.detail}`}`,
-      ...sourceLinksText(evidenceUrls(report, finding.evidenceReceiptIds)),
-    ]),
-  ];
-}
-
-function checksText(report: ReportEnvelopeV1): string[] {
-  return [
-    "",
-    "What was checked",
-    ...presentReport(report).checks.flatMap((check) => [
-      `- ${check.status} · ${check.label}: ${check.summary}`,
-      ...sourceLinksText(evidenceUrls(report, check.evidenceReceiptIds)),
-    ]),
-  ];
-}
-
-export function renderReportText(rawReport: ReportEnvelopeV1): string {
-  const report = ReportEnvelopeV1Schema.parse(rawReport);
-  const presentation = presentReport(report);
-  const lines = [
-    presentation.subject,
-    presentation.statusLabel,
-    presentation.summary,
-    "",
-    presentation.actions.length === 0
-      ? "No action is needed."
-      : "What you need to do",
-    ...(presentation.actions.length === 0
+  const findingCards = buildFindingCards(report, presentation);
+  const sections: EmailSection[] = [
+    ...(findingCards.length === 0
       ? []
-      : presentation.actions.map((action) => `- ${action}`)),
-    ...findingsText(report),
+      : [
+          {
+            kind: "items" as const,
+            heading: "Findings",
+            items: findingCards,
+          },
+        ]),
     ...(presentation.synthesis === undefined
       ? []
-      : ["", "Additional context", presentation.synthesis]),
+      : [
+          {
+            kind: "prose" as const,
+            heading: "Notes",
+            paragraphs: [presentation.synthesis],
+          },
+        ]),
     ...(presentation.limitations.length === 0
       ? []
       : [
-          "",
-          "What may be missing",
-          ...presentation.limitations.map((limitation) => `- ${limitation}`),
+          {
+            kind: "prose" as const,
+            heading: "Not covered",
+            bullets: presentation.limitations,
+          },
         ]),
-    ...checksText(report),
-    "",
-    "Details",
-    ...technicalDetails(report).map(
-      (detail) => `- ${detail.label}: ${detail.url ?? detail.value}`,
-    ),
+    buildChecksSection(report, presentation),
   ];
-  return `${lines.join("\n")}\n`;
+
+  const primaryAction = resolvePrimaryAction(report);
+  const singleAction =
+    presentation.actions.length === 1 ? presentation.actions[0] : undefined;
+
+  return {
+    eyebrow: reportEyebrow(report.reportType),
+    tone: mapPresentationTone(presentation.tone),
+    badge: presentation.statusLabel,
+    preheader: presentation.summary,
+    heading: presentation.heading,
+    lead: presentation.summary,
+    ...(singleAction === undefined ? {} : { nextStep: singleAction }),
+    ...(presentation.actions.length > 1
+      ? {
+          callout: {
+            tone: "warning",
+            title: "Next steps",
+            bullets: presentation.actions,
+          },
+        }
+      : {}),
+    sections,
+    ...(primaryAction === undefined ? {} : { primaryAction }),
+    details: buildTechnicalDetails(report),
+  };
+}
+
+export function renderReportHtml(rawReport: ReportEnvelopeV1): string {
+  return renderEmailHtml(buildReportEmailDocument(rawReport));
+}
+
+export function renderReportText(rawReport: ReportEnvelopeV1): string {
+  return renderEmailText(buildReportEmailDocument(rawReport));
 }

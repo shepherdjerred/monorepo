@@ -11,8 +11,8 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "PostalWebDown",
           annotations: {
             summary: "Postal web UI is down",
-            message: escapePrometheusTemplate(
-              "Postal web deployment has {{ $value }} available replicas (expected 1). Web UI is unavailable.",
+            description: escapePrometheusTemplate(
+              "The postal-postal-web deployment in namespace postal has {{ $value }} available replicas (expected 1), making the Postal management web UI unreachable. Check pod status, events, and container logs in the postal namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -27,8 +27,8 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "PostalSMTPDown",
           annotations: {
             summary: "Postal SMTP server is down",
-            message: escapePrometheusTemplate(
-              "Postal SMTP deployment has {{ $value }} available replicas (expected 1). Inbound email reception is unavailable.",
+            description: escapePrometheusTemplate(
+              "The postal-postal-smtp deployment in namespace postal has {{ $value }} available replicas (expected 1), stopping inbound SMTP email reception. Check SMTP pod status, events, and container logs in the postal namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -42,9 +42,9 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PostalWorkerDown",
           annotations: {
-            summary: "Postal worker is down",
-            message: escapePrometheusTemplate(
-              "Postal worker deployment has {{ $value }} available replicas (expected 1). Email delivery processing is stopped.",
+            summary: "Postal email delivery worker is down",
+            description: escapePrometheusTemplate(
+              "The postal-postal-worker deployment in namespace postal has {{ $value }} available replicas (expected 1), halting queued email delivery processing. Check worker pod status, events, and container logs in the postal namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -64,8 +64,8 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "PostalQueueLatencyHigh",
           annotations: {
             summary: "Postal message queue latency is high",
-            message: escapePrometheusTemplate(
-              "Postal message queue latency p99 is {{ $value | humanizeDuration }}. Email delivery may be delayed.",
+            description: escapePrometheusTemplate(
+              "Postal p99 message queue latency is {{ $value | humanizeDuration }}, delaying email delivery. Check Postal worker logs, MariaDB health, and outbound SMTP relay responsiveness.",
             ),
           },
           // postal_message_queue_latency is a histogram; alert on high p99 latency
@@ -80,9 +80,9 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PostalQueueLatencyCritical",
           annotations: {
-            summary: "Postal message queue latency critically high",
-            message: escapePrometheusTemplate(
-              "Postal message queue latency p99 is {{ $value | humanizeDuration }}. Email delivery is severely impacted.",
+            summary: "Postal message queue latency is critically high",
+            description: escapePrometheusTemplate(
+              "Postal p99 message queue latency has reached {{ $value | humanizeDuration }}, severely delaying queued emails. Inspect Postal worker pods, queue backlog, and downstream mail delivery errors immediately.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -101,9 +101,9 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PostalWorkerErrorsHigh",
           annotations: {
-            summary: "High rate of Postal worker errors",
-            message: escapePrometheusTemplate(
-              "Postal worker has {{ $value }} errors in the last 15 minutes. Check worker logs for details.",
+            summary: "Postal worker error rate is elevated",
+            description: escapePrometheusTemplate(
+              "Postal workers logged {{ $value | humanize }} errors in the last 15 minutes, which may delay or bounce queued emails. Check postal-postal-worker container logs in the postal namespace for failure details.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -117,9 +117,9 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PostalWorkerErrorsCritical",
           annotations: {
-            summary: "Critical rate of Postal worker errors",
-            message: escapePrometheusTemplate(
-              "Postal worker has {{ $value }} errors in the last 15 minutes. Email processing may be failing.",
+            summary: "Postal worker error rate is critical",
+            description: escapePrometheusTemplate(
+              "Postal workers logged {{ $value | humanize }} errors in the last 15 minutes, indicating email processing is actively failing. Inspect postal-postal-worker logs, MariaDB connectivity, and message queue state in the postal namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -147,9 +147,9 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PostalPodRestarting",
           annotations: {
-            summary: "Postal pod is restarting frequently",
-            message: escapePrometheusTemplate(
-              "Postal pod {{ $labels.pod }} has restarted {{ $value }} times in the last hour.",
+            summary: "Postal mail service is restarting repeatedly",
+            description: escapePrometheusTemplate(
+              "Postal pod {{ $labels.pod }} has restarted {{ $value | humanize }} times in the last hour, risking intermittent web, SMTP, or delivery outages. Inspect previous container logs and pod events in the postal namespace for crashes or OOM kills.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -163,9 +163,9 @@ export function getPostalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PostalMariaDBDown",
           annotations: {
-            summary: "Postal MariaDB is down",
-            message: escapePrometheusTemplate(
-              "Postal MariaDB StatefulSet has {{ $value }} ready replicas. Database is unavailable.",
+            summary: "Postal MariaDB database is down",
+            description: escapePrometheusTemplate(
+              "The postal-mariadb StatefulSet in namespace postal has {{ $value }} ready replicas (expected 1), leaving Postal unable to store or process mail. Check the postal-mariadb pod status, PVC health, and container logs.",
             ),
           },
           // MariaDB is deployed via Bitnami Helm chart as a StatefulSet named postal-mariadb

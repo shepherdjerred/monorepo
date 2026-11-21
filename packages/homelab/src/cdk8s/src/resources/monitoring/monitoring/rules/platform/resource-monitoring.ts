@@ -23,10 +23,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "HighCPUUsageSustained",
           annotations: {
+            summary: "Node CPU usage has stayed above 75% for over 24 hours",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has sustained high CPU usage: {{ $value | humanize }}% for over 1 day",
+              "Node {{ $labels.instance }} has sustained {{ $value | humanize }}% CPU usage for more than 24 hours, leaving reduced headroom for bursts and rescheduling. Identify top CPU-consuming pods on the node and check for runaway loops or under-provisioned workloads.",
             ),
-            summary: "Sustained high CPU usage detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${NOT_CI_NODE}}[5m])) * 100)) > 75`,
@@ -37,10 +37,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "VeryHighCPUUsage",
           annotations: {
+            summary: "Node CPU usage is above 80%",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has very high CPU usage: {{ $value | humanizePercentage }}",
+              "Node {{ $labels.instance }} has been running at {{ $value | humanize }}% CPU for 15 minutes, risking CPU throttling and degraded latency for hosted services. Inspect top CPU pods on the node and throttle, scale back, or reschedule heavy workloads.",
             ),
-            summary: "Very high CPU usage detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${NOT_CI_NODE}}[5m])) * 100)) > 80`,
@@ -57,10 +57,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "HighMemoryPressure",
           annotations: {
+            summary: "Node memory usage is above 90%",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has high memory pressure: {{ $value | humanizePercentage }} memory usage with low available memory",
+              "Node {{ $labels.instance }} is using {{ $value | humanizePercentage }} of total memory, leaving little headroom before kubelet eviction or OOM kills occur. Check top memory-consuming pods on the node and investigate unexpected growth or oversized workloads.",
             ),
-            summary: "High memory pressure detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9",
@@ -71,10 +71,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "LowMemoryAvailable",
           annotations: {
+            summary: "Node has less than 1 GiB of available memory",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has very low available memory: {{ $value | humanize }} bytes remaining",
+              "Node {{ $labels.instance }} is down to {{ $value | humanize1024 }}B of available memory, putting pods and system daemons at immediate risk of OOM kills. Inspect memory-heavy pods and recent OOM events on the node and shed or restart offending workloads.",
             ),
-            summary: "Very low memory available",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "node_memory_MemAvailable_bytes < 1073741824", // Less than 1GB
@@ -85,10 +85,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "MemoryLeakSuspected",
           annotations: {
+            summary: "Node non-ARC memory grew by over 8 GiB in 24 hours",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} shows potential memory leak: consistent memory growth over 24 hours",
+              "Non-ZFS-ARC memory usage on {{ $labels.instance }} has grown by {{ $value | humanize1024 }}B compared to 24 hours ago and stayed elevated for 4 hours, indicating a possible memory leak. Compare per-container working-set memory growth in Grafana to find the leaking pod or host process.",
             ),
-            summary: "Potential memory leak detected",
           },
           // 8GB increase over 24h, excluding ZFS ARC cache.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -111,10 +111,11 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "HighNetworkTransmit",
           annotations: {
+            summary:
+              "Sustained network egress above 100 MiB/s on node interface",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} interface {{ $labels.device }} has high sustained transmit rate: {{ $value | humanize }} bytes/s for over 1 hour",
+              "Interface {{ $labels.device }} on {{ $labels.instance }} has transmitted {{ $value | humanize1024 }}B/s for over an hour, which may saturate link bandwidth or indicate unexpected data transfer. Check per-pod network egress metrics in Grafana to identify the source workload.",
             ),
-            summary: "High network transmit rate sustained",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'rate(node_network_transmit_bytes_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]) > 104857600', // 100MB/s
@@ -125,10 +126,11 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "HighNetworkReceive",
           annotations: {
+            summary:
+              "Sustained network ingress above 100 MiB/s on node interface",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} interface {{ $labels.device }} has high sustained receive rate: {{ $value | humanize }} bytes/s for over 1 hour",
+              "Interface {{ $labels.device }} on {{ $labels.instance }} has received {{ $value | humanize1024 }}B/s for over an hour, which may saturate link capacity or reflect an unexpected download loop. Check per-pod network ingress metrics in Grafana to identify the receiving workload.",
             ),
-            summary: "High network receive rate sustained",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'rate(node_network_receive_bytes_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]) > 104857600', // 100MB/s
@@ -139,10 +141,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "UnusualNetworkActivity",
           annotations: {
+            summary: "Sharp spike in node network egress rate",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has unusual network activity: {{ $value }} times higher than normal",
+              "Interface {{ $labels.device }} on {{ $labels.instance }} is transmitting {{ $value | humanize1024 }}B/s, more than 10x its 1-hour baseline for at least 10 minutes. Inspect active pods and recent network connections on the node to verify whether the spike is expected.",
             ),
-            summary: "Unusual network activity detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'rate(node_network_transmit_bytes_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]) > 10 * rate(node_network_transmit_bytes_total{device!~"lo|veth.*|docker.*|br-.*"}[1h])',
@@ -159,10 +161,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PVCStorageHigh",
           annotations: {
+            summary: "PVC storage usage is above 90%",
             description: escapePrometheusTemplate(
-              "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full",
+              "PersistentVolumeClaim {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full, risking write failures when capacity runs out. Prune unneeded data in the volume or increase the PVC storage request in cdk8s.",
             ),
-            summary: "PVC storage usage above 90%",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "(kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes) > 0.9",
@@ -173,10 +175,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PVCProjectedFullWithin60Days",
           annotations: {
+            summary: "PVC is projected to fill within 60 days",
             description: escapePrometheusTemplate(
-              "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is projected to fill within 60 days at its positive seven-day growth rate.",
+              "PersistentVolumeClaim {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is projected to run out of space in roughly {{ $value | humanizeDuration }} based on its 7-day growth trend. Review data retention for the workload or plan a PVC capacity increase in cdk8s.",
             ),
-            summary: "PVC projected to fill within 60 days",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             pvcProjectedFullExpression(60),
@@ -187,10 +189,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PVCProjectedFullWithin14Days",
           annotations: {
+            summary: "PVC is projected to fill within 14 days",
             description: escapePrometheusTemplate(
-              "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is projected to fill within 14 days at its positive seven-day growth rate.",
+              "PersistentVolumeClaim {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is projected to exhaust free space in roughly {{ $value | humanizeDuration }} based on its 7-day growth rate, risking imminent write failures. Reclaim space inside the volume or expand the PVC storage request promptly.",
             ),
-            summary: "PVC projected to fill within 14 days",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             pvcProjectedFullExpression(14),
@@ -201,10 +203,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "HighDiskUsage",
           annotations: {
+            summary: "Node filesystem usage is above 85%",
             description: escapePrometheusTemplate(
-              "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} is {{ $value | humanizePercentage }} full",
+              "Filesystem {{ $labels.mountpoint }} on {{ $labels.instance }} is {{ $value | humanizePercentage }} full, risking disk-pressure pod evictions or host write failures. Check image caches, logs, and local storage consumers on the node and reclaim space.",
             ),
-            summary: "High disk usage detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             '(1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs"} / node_filesystem_size_bytes)) > 0.85',
@@ -215,10 +217,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "HighDiskWriteActivity",
           annotations: {
+            summary: "Sustained SSD write rate above 50 MiB/s",
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} on {{ $labels.instance }} has high write activity: {{ $value | humanize }} bytes/s (potential SSD wear concern)",
+              "SSD {{ $labels.device }} on {{ $labels.instance }} has sustained {{ $value | humanize1024 }}B/s of writes for 30 minutes, accelerating drive wear and competing for disk I/O. Identify write-heavy pods or host processes in Grafana and tune logging, caching, or checkpoint intervals.",
             ),
-            summary: "High disk write activity detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `max by (instance, device) (rate(node_disk_written_bytes_total{${NOT_CI_NODE}}[5m])) > 52428800 and on (instance, device) node_disk_info{rotational="0",${NOT_CI_NODE}}`, // 50MB/s, SSD only
@@ -229,11 +231,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SustainedDiskWriteActivity",
           annotations: {
+            summary: "SSD wrote more than 1 TiB in the last 24 hours",
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} on {{ $labels.instance }} wrote {{ $value | humanize }} bytes in the last 24 hours (SSD wear concern)",
+              "SSD {{ $labels.device }} on {{ $labels.instance }} has written {{ $value | humanize1024 }}B over the past 24 hours, accelerating NVMe endurance wear. Inspect per-pod disk write metrics to find and curb excessive write amplification or runaway jobs.",
             ),
-            summary:
-              "Sustained disk write activity detected - SSD wear concern",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `increase(max by (instance, device) (node_disk_written_bytes_total{${NOT_CI_NODE}})[24h:5m]) > 1024^4 and on (instance, device) node_disk_info{rotational="0",${NOT_CI_NODE}}`, // > 1 TiB/day, SSD only
@@ -244,10 +245,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "DiskIOUtilizationHigh",
           annotations: {
+            summary: "Disk I/O utilization is above 80%",
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} on {{ $labels.instance }} has high IO utilization: {{ $value | humanizePercentage }}",
+              "Disk {{ $labels.device }} on {{ $labels.instance }} has been busy {{ $value | humanizePercentage }} of the time for 15 minutes, which can stall storage-backed workloads and database latency. Check node I/O wait and per-pod disk throughput in Grafana to isolate the contending workload.",
             ),
-            summary: "High disk IO utilization",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_disk_io_time_seconds_total[5m]) > 0.8",
@@ -273,10 +274,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "HighContextSwitches",
           annotations: {
+            summary: "Node context-switch rate is unusually high",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has high context switches: {{ $value }}/s (potential malicious activity)",
+              "Node {{ $labels.instance }} has sustained {{ $value | humanize }} context switches/s for 30 minutes, wasting CPU on scheduler overhead and signaling possible spin loops or abnormal workload behavior. Inspect pod CPU throttling, thread counts, and top active processes on the node.",
             ),
-            summary: "High context switches detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_context_switches_total[5m]) > 500000",
@@ -287,10 +288,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "UnusualFileDescriptorUsage",
           annotations: {
+            summary: "Node open file descriptors exceed 80% of kernel limit",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has unusual file descriptor usage: {{ $value }} open FDs",
+              "Node {{ $labels.instance }} has {{ $value | humanize }} allocated file descriptors (over 80% of its kernel maximum), risking socket and file-open failures across all pods on the host. Identify pods leaking sockets or file handles and restart or fix the offending service.",
             ),
-            summary: "Unusual file descriptor usage",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "node_filefd_allocated > 0.8 * node_filefd_maximum",
@@ -301,10 +302,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SuspiciousNetworkConnections",
           annotations: {
+            summary: "High network interface error rate on node",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has suspicious network activity: {{ $value }} network errors in short time",
+              "Interface {{ $labels.device }} on {{ $labels.instance }} recorded {{ $value | humanize }} network packet errors in 10 minutes, degrading connectivity and causing retransmits. Check link status, NIC driver logs, cabling, or abnormal traffic patterns on the node.",
             ),
-            summary: "Suspicious network connections detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "increase(node_network_receive_errs_total[10m]) > 100 or increase(node_network_transmit_errs_total[10m]) > 100",
@@ -315,10 +316,11 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "UnusualSystemLoad",
           annotations: {
+            summary:
+              "Node 15-minute load average exceeds twice CPU thread count",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} has unusual system load: {{ $value }} (much higher than CPU count)",
+              "Node {{ $labels.instance }} has a 15-minute load average of {{ $value | humanize }}, more than twice its CPU thread count, indicating sustained CPU or uninterruptible I/O contention. Check CPU saturation, disk I/O stalls, and runnable or D-state tasks on the node.",
             ),
-            summary: "Unusual system load detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'node_load15 > 2 * count by (instance) (node_cpu_seconds_total{mode="idle"})',
@@ -327,26 +329,22 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
           labels: { severity: "warning" },
         },
         // 2026-07 CI-freeze hardening: UnusualSystemLoad above (node_load15,
-        // 15m `for:`) is too slow to catch this failure mode — the worst
-        // observed ramp went from load=5 to load=1300 in under 8 minutes.
-        // node_load1 reacts fast enough to give real lead time before the
-        // kernel scheduler locks up. Threshold (8x core count = load1 > 256
-        // on this 32-thread node) sits well above legitimate heavy-CI peaks
-        // (CPU% maxed ~93% during past healthy heavy bursts, not multiples of
-        // thread count) and well below the catastrophic range actually
-        // observed — a reasoned starting point, backtest before finalizing.
-        // See the original investigation
-        // and the original investigation.
+        // 15m `for:`) is too slow to catch the ramp pattern that preceded
+        // every 2026-07 kernel hard-lockup freeze — the worst observed ramp
+        // went from load=5 to load=1300 in under 8 minutes. node_load1 reacts
+        // fast enough to give real lead time before the kernel scheduler locks
+        // up. Threshold (8x core count = load1 > 256 on this 32-thread node)
+        // sits well above legitimate heavy-CI peaks (CPU% maxed ~93% during
+        // past healthy heavy bursts, not multiples of thread count) and well
+        // below the catastrophic range actually observed.
         {
           alert: "CriticalSystemLoad",
           annotations: {
-            description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} node_load1 is {{ $value }}, far above CPU thread count. " +
-                "This pattern preceded every 2026-07 kernel hard-lockup freeze. Consider killing " +
-                "in-flight Woodpecker builds now — kubectl/talosctl may stop responding within minutes.",
-            ),
             summary:
-              "Node load1 critically high — imminent scheduler lockup risk",
+              "Node 1-minute load is critically high — imminent lockup risk",
+            description: escapePrometheusTemplate(
+              "Node {{ $labels.instance }} has a 1-minute load average of {{ $value | humanize }} (over 8x its CPU thread count), risking an imminent kernel scheduler lockup where kubectl and talosctl stop responding. Cancel in-flight Woodpecker builds or shed runaway workloads on the node immediately.",
+            ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'node_load1 > 8 * count by (instance) (node_cpu_seconds_total{mode="idle"})',
@@ -357,10 +355,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PotentialCryptoMining",
           annotations: {
+            summary: "Potential crypto-mining activity detected on node",
             description: escapePrometheusTemplate(
-              "Node {{ $labels.instance }} shows potential crypto mining activity: sustained high CPU with unusual network patterns",
+              "Node {{ $labels.instance }} has sustained over 90% CPU usage ({{ $value | humanize }}%) alongside more than 1 MiB/s of network egress for 30 minutes, matching unauthorized compute or crypto-mining behavior. Audit running containers, recent deployments, and outbound connections on the node immediately.",
             ),
-            summary: "Potential crypto mining activity detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             // Non-CI nodes: any sustained high CPU + egress is suspicious. The
@@ -379,10 +377,10 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
           // job presence is attacker-controlled and cannot be an exemption.
           alert: "PotentialCryptoMiningCiNode",
           annotations: {
+            summary: "Potential crypto-mining activity on CI node",
             description: escapePrometheusTemplate(
-              "CI node {{ $labels.instance }} shows potential crypto mining activity: sustained high CPU with unusual network egress",
+              "CI node {{ $labels.instance }} has sustained over 90% CPU usage ({{ $value | humanize }}%) with more than 1 MiB/s of network egress for 30 minutes, which can indicate a compromised CI pipeline step. Inspect active Woodpecker builds, container processes, and outbound network destinations immediately.",
             ),
-            summary: "Potential crypto mining activity on the CI node",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `(100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle", ${CI_NODE_ONLY}}[5m])) * 100)) > 90 and sum by (instance) (rate(node_network_transmit_bytes_total{${CI_NODE_ONLY}}[5m])) > 1048576`,
@@ -404,10 +402,10 @@ function getTemperatureRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "HighCPUTemperature",
         annotations: {
+          summary: "CPU temperature is above 80°C",
           description: escapePrometheusTemplate(
-            "CPU temperature on {{ $labels.instance }} is high: {{ $value }}°C (chip: {{ $labels.chip }})",
+            "CPU sensor {{ $labels.chip }} on {{ $labels.instance }} has been at {{ $value | humanize }}°C for 10 minutes, risking thermal throttling under sustained load. Check ambient cooling, fan speeds, heatsink airflow, and heavy CPU workloads on the host.",
           ),
-          summary: "High CPU temperature detected",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           'node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 80',
@@ -418,10 +416,10 @@ function getTemperatureRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "CriticalCPUTemperature",
         annotations: {
+          summary: "CPU temperature is critically high (above 90°C)",
           description: escapePrometheusTemplate(
-            "CPU temperature on {{ $labels.instance }} is critical: {{ $value }}°C (chip: {{ $labels.chip }})",
+            "CPU sensor {{ $labels.chip }} on {{ $labels.instance }} has reached {{ $value | humanize }}°C for 5 minutes, risking severe thermal throttling or emergency hardware shutdown. Shed CPU-intensive workloads immediately and inspect physical cooling and fans on the host.",
           ),
-          summary: "Critical CPU temperature detected",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           'node_hwmon_temp_celsius{chip=~".*coretemp.*"} > 90',
@@ -438,10 +436,10 @@ function getTemperatureRuleGroup(): PrometheusRuleSpecGroups {
         // toward it, so warn only on sustained 90+ and page at 94+.
         alert: "HighCPUTemperatureAmd",
         annotations: {
+          summary: "AMD CPU temperature is above 90°C",
           description: escapePrometheusTemplate(
-            "AMD CPU temperature on {{ $labels.instance }} is high: {{ $value }}°C (chip: {{ $labels.chip }})",
+            "AMD CPU sensor {{ $labels.chip }} on {{ $labels.instance }} has stayed at {{ $value | humanize }}°C for 15 minutes, approaching its 95°C thermal ceiling. Verify chassis airflow and CPU cooler performance and check whether sustained heavy builds are saturating the host.",
           ),
-          summary: "High AMD CPU temperature detected",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           'node_hwmon_temp_celsius * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{chip_name=~".*k10temp.*"} > 90',
@@ -452,10 +450,10 @@ function getTemperatureRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "CriticalCPUTemperatureAmd",
         annotations: {
+          summary: "AMD CPU temperature is critically high (above 94°C)",
           description: escapePrometheusTemplate(
-            "AMD CPU temperature on {{ $labels.instance }} is critical: {{ $value }}°C (chip: {{ $labels.chip }})",
+            "AMD CPU sensor {{ $labels.chip }} on {{ $labels.instance }} has stayed at {{ $value | humanize }}°C for 5 minutes, right at its thermal throttling limit and risking a hardware protection trip. Cancel heavy compute jobs on the host immediately and check cooler mounting, pump or fan operation, and airflow.",
           ),
-          summary: "Critical AMD CPU temperature detected",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           'node_hwmon_temp_celsius * on (chip, instance) group_left(chip_name) node_hwmon_chip_names{chip_name=~".*k10temp.*"} > 94',
@@ -466,10 +464,10 @@ function getTemperatureRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "HighSystemTemperature",
         annotations: {
+          summary: "Host hardware sensor temperature is above 85°C",
           description: escapePrometheusTemplate(
-            "System temperature on {{ $labels.instance }} is high: {{ $value }}°C (sensor: {{ $labels.sensor }})",
+            "Hardware sensor {{ $labels.chip }}/{{ $labels.sensor }} on {{ $labels.instance }} has reported {{ $value | humanize }}°C for 15 minutes, risking component throttling or premature hardware wear. Inspect host cooling, enclosure airflow, and workload heat generation.",
           ),
-          summary: "High system temperature detected",
         },
         // Raised threshold from 75°C to 85°C to reduce noise - 75°C is normal for many components under load.
         // k10temp sensors are excluded: Ryzen boosts Tctl toward its 95°C

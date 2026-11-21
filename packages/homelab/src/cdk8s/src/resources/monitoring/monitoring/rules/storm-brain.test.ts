@@ -63,3 +63,16 @@ test("target down watches the declared service metrics endpoint", () => {
     'namespace="storm-brain",service="storm-brain-storm-brain-service",endpoint="metrics"',
   );
 });
+
+test("every StormBrain alert defines summary and description annotations", () => {
+  const rules = getStormBrainRuleGroups().flatMap((group) => group.rules ?? []);
+  for (const rule of rules) {
+    expect(rule.annotations?.["summary"], rule.alert).toBeDefined();
+    expect(
+      rule.annotations?.["summary"]?.length,
+      rule.alert,
+    ).toBeLessThanOrEqual(90);
+    expect(rule.annotations?.["description"], rule.alert).toBeDefined();
+    expect(rule.annotations?.["message"], rule.alert).toBeUndefined();
+  }
+});

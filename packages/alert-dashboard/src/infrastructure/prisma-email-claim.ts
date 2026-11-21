@@ -29,6 +29,7 @@ export async function claimPendingEmailRows(
       messageId: true,
       subject: true,
       htmlBody: true,
+      plainBody: true,
       attemptCount: true,
     },
   });
@@ -45,7 +46,14 @@ export async function claimPendingEmailRows(
       },
       data: { sendingAtNs, sendClaimId },
     });
-    if (result.count === 1) claimed.push({ ...candidate, sendClaimId });
+    if (result.count === 1) {
+      const { plainBody, ...rest } = candidate;
+      claimed.push({
+        ...rest,
+        ...(plainBody === null ? {} : { plainBody }),
+        sendClaimId,
+      });
+    }
   }
   return claimed;
 }

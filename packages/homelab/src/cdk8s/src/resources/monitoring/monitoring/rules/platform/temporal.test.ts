@@ -345,7 +345,7 @@ describe("Temporal domain poller scoping", () => {
       'sum(glitter_corpus_inventory_scope_changes{change=~"removed|scope-decision-changed"}) > 0',
     );
     expect(glitterRule?.annotations?.["description"]).toContain(
-      "removed or newly excluded/changed-scope channels/threads",
+      "removed or newly excluded channels or threads",
     );
 
     await runPromtoolFixture({

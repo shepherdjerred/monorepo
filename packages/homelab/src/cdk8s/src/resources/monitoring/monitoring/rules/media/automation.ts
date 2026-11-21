@@ -14,9 +14,9 @@ export function getMediaRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "1m",
           labels: { severity: "warning", category: "media" },
           annotations: {
-            summary: "Media commands are waiting for Temporal",
+            summary: "Media outbox commands are delayed waiting for Temporal",
             description:
-              "The oldest committed media command has waited more than five minutes. Inspect the media network worker and outbox dispatch schedule; keep the durable commands for retry.",
+              "Committed media automation commands have waited in the outbox for more than 5 minutes without being dispatched, delaying media requests and notifications. Check the Temporal media-network worker health and the outbox dispatch schedule, leaving queued outbox rows intact for retry.",
           },
         },
         {
@@ -29,7 +29,7 @@ export function getMediaRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Media watch evidence is stale or incomplete",
             description:
-              "At least one active requester lacks recent current watch evidence for available media. Cleanup must remain protected. Inspect Plex access and the watch reconciliation schedule.",
+              "Active media requesters are missing watch-history evidence from the last 15 minutes, blocking automated library cleanup so unwatched media is not deleted prematurely. Check Plex connectivity and the Temporal watch-evidence reconciliation schedule.",
           },
         },
         {
@@ -40,9 +40,9 @@ export function getMediaRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "15m",
           labels: { severity: "warning", category: "media" },
           annotations: {
-            summary: "Media operations need reconciliation",
+            summary: "Media operations are awaiting manual reconciliation",
             description:
-              "Media has operations awaiting reconciliation or intervention. Review their recorded outcome before retrying external writes, sending notifications again, or changing cleanup gates.",
+              "One or more media automation operations have been awaiting reconciliation for over 15 minutes, leaving downstream downloads, notifications, or cleanup gates paused. Inspect the pending operations and verify their recorded external state before retrying writes or clearing gates.",
           },
         },
       ],

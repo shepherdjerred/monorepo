@@ -20,13 +20,13 @@ export function getScoutClientRuleGroup(): PrometheusRuleSpecGroups {
       {
         // Quarantine is the server refusing client evidence it cannot trust or
         // attribute. A few per day is normal (an app version not yet verified);
-        // a fifth of an hour's observations, with at least 20 of them, means
-        // a rollout is dropping evidence.
+        // >20% of an hour's observations with at least 20 events (sustained 30m)
+        // means a rollout is dropping evidence.
         alert: "ScoutClientQuarantineRateHigh",
         annotations: {
           summary: "Scout Client observations are being quarantined",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} quarantined {{ $value | humanizePercentage }} of Scout Client observations over the last hour (alert above 20% with at least 20 observations). Break the rate down by the quarantine_reason label on scout_client_observations_total; a single reason is usually an unverified app version, an unresolved player alias or a clock problem.",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} quarantined {{ $value | humanizePercentage }} of Scout Client observations over the last hour, dropping client-captured match evidence. Inspect client observations by quarantine_reason to check for an unverified app version, unresolved player alias, or client clock skew.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -38,12 +38,13 @@ export function getScoutClientRuleGroup(): PrometheusRuleSpecGroups {
       {
         // Alias lookups ask Riot who a League-client UUID is. Errors (not 404s,
         // which are counted as not_found) mean client data silently stops
-        // joining to Riot data. Five failures and 30% of lookups, sustained.
+        // joining to Riot data. Fires above 30% over 30m with >= 5 failures,
+        // sustained for 15m.
         alert: "ScoutClientAliasErrorRateHigh",
         annotations: {
           summary: "Scout Client identity alias lookups are failing",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} failed {{ $value | humanizePercentage }} of League-client identity lookups over the last 30 minutes (alert above 30% with at least 5 failures). Players whose lookup failed do not join to Riot data until a later observation retries; check Riot account-v1 errors and the alias backlog gauge.",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} failed {{ $value | humanizePercentage }} of League-client identity alias lookups over the last 30 minutes, preventing client observations from joining to Riot player data. Check Riot account-v1 API errors and the client alias backlog.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -54,15 +55,15 @@ export function getScoutClientRuleGroup(): PrometheusRuleSpecGroups {
       },
       {
         // Spectator gives Scout most prematches, and the client only needs to
-        // supply one for games Spectator misses. Over a 24-hour window, more
-        // than half of client-observed games lacking a prematch, with at least
-        // ten games, says the client's prematch is needed and absent. The
-        // sweep_failed series (-1) is excluded so it never counts as a game.
+        // supply one for games Spectator misses. Over a 24-hour window, >50% of
+        // client-observed games lacking a prematch with >= 10 games (sustained 1h)
+        // says the client's prematch is needed and absent. The sweep_failed
+        // series (-1) is excluded so it never counts as a game.
         alert: "ScoutClientGamesWithoutPrematchHigh",
         annotations: {
-          summary: "Most client-observed games have no prematch",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} archived no prematch for {{ $value | humanizePercentage }} of the games a Scout Client watched start in the last day (alert above 50% with at least 10 games). Spectator is not covering the games the client sees; look at which game_kind drives it.",
+          summary: "Most Scout Client games are missing prematch capture",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} archived no prematch data for {{ $value | humanizePercentage }} of games observed by Scout Clients in the last 24 hours, degrading prematch loading screens and analysis. Inspect missing prematches by game_kind and check Spectator polling and client prematch uploads.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -73,15 +74,15 @@ export function getScoutClientRuleGroup(): PrometheusRuleSpecGroups {
       },
       {
         // The reconciliation Activity re-checks accepted post-game and Clash
-        // evidence every few minutes, so a row still unreconciled after an hour
-        // is stuck (a binding that never commits, a payload that no longer
-        // validates), not queued. The gauge ignores rows younger than five
-        // minutes and quarantined rows, which never complete.
+        // evidence every five minutes, so a row still unreconciled after >1h
+        // (sustained 30m) is stuck (a binding that never commits, a payload that
+        // no longer validates), not queued. The gauge ignores rows younger than
+        // five minutes and quarantined rows, which never complete.
         alert: "ScoutClientReconciliationBacklogStale",
         annotations: {
           summary: "Scout Client evidence reconciliation is stuck",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }} has accepted Scout Client evidence that has waited {{ $value | humanizeDuration }} for reconciliation (alert above one hour, sustained 30 minutes). Reconciliation retries every five minutes, so this row is stuck rather than queued; see scout_client_reconciliation_backlog for how many.",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} has accepted Scout Client evidence waiting {{ $value | humanizeDuration }} for reconciliation despite 5-minute retries, leaving post-game or Clash data uncommitted. Check the client reconciliation backlog depth and inspect client reconciliation activity logs for validation or binding failures.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -96,9 +97,9 @@ export function getScoutClientRuleGroup(): PrometheusRuleSpecGroups {
         // series is not masked by a healthy one.
         alert: "ScoutClientCaptureSweepFailing",
         annotations: {
-          summary: "Scout Client backlog gauges cannot be measured",
-          message: escapePrometheusTemplate(
-            "Scout {{ $labels.environment }}'s Scout Client backlog sweep is publishing -1, which means its database reads failed and the alias backlog, reconciliation backlog and active-device gauges hold no measurement. Treat the reconciliation alert as blind until this clears.",
+          summary: "Scout Client backlog metric sweep is failing",
+          description: escapePrometheusTemplate(
+            "Scout {{ $labels.environment }} failed its Scout Client backlog database sweep, leaving alias backlog, reconciliation lag, and active-device alerts blind. Check the application pod logs and PostgreSQL health for failing client metric queries.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

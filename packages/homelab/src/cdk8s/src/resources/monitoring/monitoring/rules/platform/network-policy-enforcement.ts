@@ -88,7 +88,7 @@ export function getNetworkPolicyEnforcementRuleGroups(): PrometheusRuleSpecGroup
             summary: "The NetworkPolicy enforcer restarted",
             description: escapePrometheusTemplate(
               "kube-network-policies in {{ $labels.pod }} on {{ $labels.node }} restarted " +
-                "{{ $value }} time(s) in 15 minutes. Traffic passed unenforced while it was " +
+                "{{ $value | humanize }} time(s) in 15 minutes, allowing traffic to pass unenforced while it was " +
                 "down. Read the previous container log with `kubectl -n kube-system logs " +
                 "{{ $labels.pod }} -c kube-network-policies --previous`.",
             ),

@@ -5,6 +5,7 @@ import type {
   AlertLedgerRepository,
   AlertmanagerPort,
   IngestWebhookInput,
+  PostalMessage,
   PostalPort,
   PreviewPort,
 } from "#application/ports";
@@ -99,5 +100,59 @@ describe("webhook evidence", () => {
       true,
     );
     expect(ingested.payload).not.toHaveProperty("futureTopLevelField");
+  });
+
+  it("forwards plainBody from claimed outbox rows to Postal", async () => {
+    const sent: PostalMessage[] = [];
+    const markedSent: string[] = [];
+    const repository: AlertLedgerRepository = {
+      ingestWebhook: unexpected,
+      reconcileSnapshot: unexpected,
+      recordSnapshotFailure: unexpected,
+      listAlerts: unexpected,
+      getAlert: unexpected,
+      listEvents: unexpected,
+      summary: unexpected,
+      checkDatabase: unexpected,
+      systemStatus: unexpected,
+      pendingEmails: unexpected,
+      claimPendingEmails: () =>
+        Promise.resolve([
+          {
+            id: "outbox-1",
+            sendClaimId: "claim-1",
+            messageId: "<alerts-1@sjer.red>",
+            subject: "Critical: Storage disk full",
+            htmlBody: "<!DOCTYPE html><p>Disk full</p>",
+            plainBody: "Storage · Critical\nDisk full\n",
+            attemptCount: 0,
+          },
+        ]),
+      markEmailSent: (input) => {
+        markedSent.push(input.id);
+        return Promise.resolve();
+      },
+      markEmailFailed: unexpected,
+      purgeExpiredRecords: unexpected,
+      disconnect: unexpected,
+    };
+    const service = new AlertService({
+      repository,
+      alertmanager: { activeAlerts: unexpected },
+      postal: {
+        send: (message) => {
+          sent.push(message);
+          return Promise.resolve();
+        },
+      },
+      previews: { previews: unexpected, health: unexpected },
+      clock: fixedClock("2026-08-08T18:00:01Z"),
+      emailEnabled: true,
+    });
+
+    expect(await service.drainEmailOutbox()).toBe(1);
+    expect(markedSent).toEqual(["outbox-1"]);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.plainBody).toBe("Storage · Critical\nDisk full\n");
   });
 });

@@ -1,3 +1,4 @@
+import { MailboxAddressSchema } from "@shepherdjerred/ops-model/email/mailbox.ts";
 import { z } from "zod";
 
 import type { PostalMessage, PostalPort } from "#application/ports";
@@ -23,7 +24,7 @@ export class PostalClient implements PostalPort {
     this.#options = {
       ...options,
       host: z.url().parse(options.host).replace(/\/$/u, ""),
-      from: z.email().parse(options.from),
+      from: MailboxAddressSchema.parse(options.from),
       to: z.email().parse(options.to),
     };
   }

@@ -23,7 +23,7 @@ export function getGlitterLauncherReleaseRuleGroups(
           labels: { severity: "warning", component: "glitter-boys-launcher" },
           annotations: {
             summary: "Glitter Boys update metadata expires within 14 days",
-            description: `Release ${release.version} expires at ${new Date(release.expires * 1000).toISOString()}. Run release:refresh-manifest on the Windows signing PC, then commit published-release.json and deploy the monitoring chart.`,
+            description: `Glitter Boys launcher release ${release.version} metadata expires at ${new Date(release.expires * 1000).toISOString()}, after which installed launchers will reject update checks. Run release:refresh-manifest on the Windows signing PC, commit published-release.json, and deploy monitoring.`,
           },
         },
         {
@@ -32,10 +32,8 @@ export function getGlitterLauncherReleaseRuleGroups(
           for: "15m",
           labels: { severity: "critical", component: "glitter-boys-launcher" },
           annotations: {
-            summary:
-              "Glitter Boys update metadata is expired or expires within three days",
-            description:
-              "Renew with release:refresh-manifest from the Windows signing PC. Installed launchers reject expired metadata. Commit the verified publication record and deploy monitoring after renewal.",
+            summary: "Glitter Boys update metadata is expired or expiring soon",
+            description: `Glitter Boys launcher release ${release.version} metadata expires at ${new Date(release.expires * 1000).toISOString()} (under 3 days or already expired), causing installed launchers to reject update checks once expired. Run release:refresh-manifest on the Windows signing PC immediately, commit published-release.json, and deploy monitoring.`,
           },
         },
       ],
