@@ -8,6 +8,7 @@ import {
   type ExploreQuotaSnapshot,
   type ExploreRunObserveRequest,
   type ExploreStreamEvent,
+  withoutUnknownEffort,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { authenticateExploreRequest } from "#src/explore/http/http-auth.ts";
@@ -234,6 +235,25 @@ async function handleSharedTranscript(
     return jsonError("Not found.", 404, corsHeaders);
   }
   const shared = redactSharedExploreTranscript(transcript);
+  return Response.json(
+    shapeSharedTranscript(shared, url.searchParams.get("cards")),
+    {
+      status: 200,
+      headers: { "Cache-Control": "no-store", ...corsHeaders },
+    },
+  );
+}
+
+/**
+ * The anonymous wire shape for one reader generation, named by `?cards=`.
+ * `cards=4` readers parse `low` reasoning effort; every older reader (and a
+ * bare request) parses effort strictly as `high`, so an answer written at
+ * another effort reaches them without its provenance.
+ */
+export function shapeSharedTranscript(
+  shared: ReturnType<typeof redactSharedExploreTranscript>,
+  cardsVersion: string | null,
+) {
   // Keep the anonymous endpoint on its pre-origin wire shape. A cached SPA
   // bundle parses this response strictly and would reject a newly added key;
   // current clients default an absent origin to `legacy`.
@@ -245,7 +265,9 @@ async function handleSharedTranscript(
   // is dropped here rather than emptied.
   const compatibleShared = {
     ...shared,
-    messages: shared.messages.map((message) => {
+    messages: shared.messages.map((original) => {
+      const message =
+        cardsVersion === "4" ? original : withoutUnknownEffort(original);
       // Shared transcripts never carry images (they are served only to their
       // owner), so the key is dropped for the same pre-deploy-bundle reason.
       const {
@@ -253,7 +275,7 @@ async function handleSharedTranscript(
         attachments: _attachments,
         ...rest
       } = message;
-      if (url.searchParams.get("cards") === "3") return rest;
+      if (cardsVersion === "3" || cardsVersion === "4") return rest;
       const {
         generation: _generation,
         inlineEntities: _entities,
@@ -277,29 +299,23 @@ async function handleSharedTranscript(
       updatedAt: shared.conversation.updatedAt,
     },
   };
-  const cardsVersion = url.searchParams.get("cards");
-  const payload =
-    cardsVersion === "2" || cardsVersion === "3"
-      ? compatibleShared
-      : {
-          ...compatibleShared,
-          messages: compatibleShared.messages.map((message) => {
-            if (cardsVersion === "1") {
-              const { loadoutCards: _loadoutCards, ...legacyMessage } = message;
-              return legacyMessage;
-            }
-            const {
-              matchCards: _matchCards,
-              loadoutCards: _loadoutCards,
-              ...messageWithoutCards
-            } = message;
-            return messageWithoutCards;
-          }),
-        };
-  return Response.json(payload, {
-    status: 200,
-    headers: { "Cache-Control": "no-store", ...corsHeaders },
-  });
+  return cardsVersion === "2" || cardsVersion === "3" || cardsVersion === "4"
+    ? compatibleShared
+    : {
+        ...compatibleShared,
+        messages: compatibleShared.messages.map((message) => {
+          if (cardsVersion === "1") {
+            const { loadoutCards: _loadoutCards, ...legacyMessage } = message;
+            return legacyMessage;
+          }
+          const {
+            matchCards: _matchCards,
+            loadoutCards: _loadoutCards,
+            ...messageWithoutCards
+          } = message;
+          return messageWithoutCards;
+        }),
+      };
 }
 
 type ParsedRequestBody =
