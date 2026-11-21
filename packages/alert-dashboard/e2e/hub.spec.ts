@@ -17,7 +17,7 @@ test("the palette opens from the keyboard and the sidebar, and closes on Escape"
   await expect(input).toBeFocused();
   await expect(
     palette.getByRole("group", { name: "Pages" }).getByRole("option"),
-  ).toHaveCount(11);
+  ).toHaveCount(10);
   await expect(
     palette.getByRole("option", { name: "Open Tracker" }),
   ).toBeVisible();
@@ -49,7 +49,7 @@ test("the palette filters pages and navigates with the keyboard", async ({
   await expect(reopened.getByRole("combobox")).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(
-    reopened.getByRole("option", { name: "Go to Overview" }),
+    reopened.getByRole("option", { name: "Go to Services" }),
   ).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("ArrowUp");

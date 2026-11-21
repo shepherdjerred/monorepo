@@ -15,6 +15,7 @@ import { lazy } from "react";
 
 import { coreCommands, coreSearch } from "./core-palette.ts";
 import { CORE_MODULE_ID, type ClientModule } from "./platform/module.ts";
+import { OverviewRedirect } from "./redirects.tsx";
 
 // Each page is its own chunk so the uPlot and ops-model code only loads on the
 // pages that render it.
@@ -27,13 +28,9 @@ const HomePage = lazy(async () => {
   const module = await import("./home-page.tsx");
   return { default: module.HomePage };
 });
-const OpsHomeSummary = lazy(async () => {
-  const module = await import("./ops/home-summary.tsx");
-  return { default: module.OpsHomeSummary };
-});
-const OverviewPage = lazy(async () => {
-  const module = await import("./ops/overview-page.tsx");
-  return { default: module.OverviewPage };
+const OpsHomeOverview = lazy(async () => {
+  const module = await import("./ops/home-overview.tsx");
+  return { default: module.OpsHomeOverview };
 });
 const ServicesPage = lazy(async () => {
   const module = await import("./ops/services-page.tsx");
@@ -89,7 +86,8 @@ export const coreModule: ClientModule = {
   routes: [
     { path: "promotion", page: PromotionPage },
     { path: "", page: HomePage },
-    { path: "overview", page: OverviewPage },
+    // Home absorbed the Overview page; its URL still resolves.
+    { path: "overview", page: OverviewRedirect },
     { path: "services", page: ServicesPage },
     { path: "services/:id", page: ServicePage },
     { path: "delivery", page: DeliveryPage },
@@ -104,7 +102,6 @@ export const coreModule: ClientModule = {
   // Entries without a `group` sit under the module title, "Ops".
   nav: [
     { label: "Home", icon: HouseIcon, path: "" },
-    { label: "Overview", icon: GaugeIcon, path: "overview" },
     { label: "Services", icon: BoxesIcon, path: "services" },
     // "Flow", not "Delivery": Delivery is the separate release app.
     { label: "Flow", icon: GitPullRequestIcon, path: "delivery" },
@@ -129,5 +126,5 @@ export const coreModule: ClientModule = {
   ],
   commands: coreCommands,
   search: coreSearch,
-  homeCards: [{ id: "summary", card: OpsHomeSummary }],
+  homeCards: [{ id: "overview", card: OpsHomeOverview }],
 };

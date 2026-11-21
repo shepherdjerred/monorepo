@@ -1,22 +1,24 @@
 import { expect, test } from "@playwright/test";
 
-test("home summarizes status, alerts, what waits on me, and Tracker triage", async ({
+test("home answers what is wrong, where, and what waits on me", async ({
   page,
 }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("Home · Hub");
-  await expect(
-    page.getByRole("region", { name: "Overall status" }),
-  ).toContainText("7 areas need attention");
+  const banner = page.getByRole("region", { name: "Overall status" });
+  await expect(banner).toContainText("7 areas need attention");
+  await expect(banner).toContainText("Error");
 
   const glance = page.getByRole("list", { name: "At a glance" });
   const firing = glance.getByRole("link", { name: /Firing alerts/u });
   await expect(firing).toContainText("3");
   await expect(firing).toContainText("in 1 group · 1 critical");
   await expect(firing).toHaveAttribute("href", "/alerts");
-  await expect(
-    glance.getByRole("link", { name: /Waiting on you/u }),
-  ).toContainText("4");
+  // Severity is a badge with a word, not only the tile's border colour.
+  await expect(firing).toContainText("Error");
+  const waitingTile = glance.getByRole("link", { name: /Waiting on you/u });
+  await expect(waitingTile).toContainText("4");
+  await expect(waitingTile).toHaveAttribute("href", "/?show=waiting");
   const triage = glance.getByRole("link", { name: /Tracker triage/u });
   await expect(triage).toContainText("2");
   await expect(triage).toHaveAttribute(
@@ -24,44 +26,66 @@ test("home summarizes status, alerts, what waits on me, and Tracker triage", asy
     "https://tracker.tailnet-1a49.ts.net",
   );
 
-  const firingList = page.locator("section", {
-    has: page.getByRole("heading", { name: /Firing alert groups/u }),
-  });
   await expect(
-    firingList.getByRole("heading", { name: /Firing alert groups/u }),
-  ).toContainText("1");
-  await expect(firingList.locator(".signal").first()).toContainText(
+    page.getByRole("region", { name: "Areas" }).locator(".section-card"),
+  ).toHaveCount(9);
+
+  const attention = page.getByRole("region", { name: "Needs attention" });
+  const all = attention.getByRole("radio", { name: /^All/u });
+  const waiting = attention.getByRole("radio", { name: /^Waiting on you/u });
+  await expect(all).toHaveAttribute("aria-checked", "true");
+  await expect(waiting).toContainText("4");
+  await expect(attention.locator(".signal").first()).toContainText(
     "Velero backup is 41 hours old",
   );
-  const waiting = page.locator("section", {
-    has: page.getByRole("heading", { name: /Waiting on you/u }),
-  });
-  await expect(waiting.locator(".signal")).toHaveCount(4);
-  await waiting.getByRole("link", { name: "Overview" }).click();
-  await expect(page).toHaveURL(/\/overview$/u);
-  await expect(page).toHaveTitle("Overview · Hub");
+  await waiting.click();
+  await expect(waiting).toHaveAttribute("aria-checked", "true");
+  await expect(attention.locator(".signal")).toHaveCount(4);
+  await expect(page).toHaveURL(/\/\?show=waiting$/u);
+  await all.click();
+  await expect(all).toHaveAttribute("aria-checked", "true");
+  await expect(page).toHaveURL(/\/$/u);
 });
 
-test("home launches the app's pages, the other apps, and the tools", async ({
+test("the waiting tile filters the attention panel and brings it into view", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1280, height: 600 });
+  await page.goto("/");
+  const attention = page.getByRole("region", { name: "Needs attention" });
+  const heading = attention.getByRole("heading", { name: "Needs attention" });
+  await expect(heading).not.toBeInViewport();
+  await page
+    .getByRole("list", { name: "At a glance" })
+    .getByRole("link", { name: /Waiting on you/u })
+    .click();
+  await expect(page).toHaveURL(/\/\?show=waiting$/u);
+  await expect(
+    attention.getByRole("radio", { name: /^Waiting on you/u }),
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(attention.locator(".signal")).toHaveCount(4);
+  await expect(heading).toBeInViewport();
+});
+
+test("home lists what is new since the last visit and marks all seen", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const fresh = page.getByRole("region", { name: /New since last visit/u });
+  await expect(fresh.locator(".signal").first()).toBeVisible();
+  await page.getByRole("button", { name: "Mark all seen" }).click();
+  await expect(fresh).toContainText("Nothing new since you last marked");
+  await page.reload();
+  await expect(fresh).toContainText("Nothing new since you last marked");
+});
+
+test("home launches the other apps and the tools", async ({ page }) => {
   await page.goto("/");
   const launcher = page.locator("section", {
     has: page.getByRole("heading", { name: "Launcher" }),
   });
-  const pages = launcher.getByRole("list", { name: "Pages" });
-  await expect(pages.getByRole("link")).toHaveText([
-    "Overview",
-    "Services",
-    "Flow",
-    "AI",
-    "Maintenance",
-    "Review",
-    "Active alerts",
-    "History",
-    "System",
-    "Promotion",
-  ]);
+  // The app's own pages are in the sidebar, not repeated here.
+  await expect(launcher.getByRole("list")).toHaveCount(2);
   await expect(
     launcher.getByRole("list", { name: "Apps" }).getByRole("link", {
       name: "Delivery",
@@ -81,37 +105,21 @@ test("home launches the app's pages, the other apps, and the tools", async ({
   await expect(page).toHaveTitle("Delivery · Hub");
 });
 
-test("overview ranks attention, lists what waits on me, and marks all seen", async ({
+test("/overview redirects to / and keeps the query string", async ({
   page,
 }) => {
   await page.goto("/overview");
-  await expect(page).toHaveTitle("Overview · Hub");
-  const banner = page.getByRole("region", { name: "Overall status" });
-  await expect(banner).toContainText("7 areas need attention");
-  await expect(banner).toContainText("Error");
+  await expect(page).toHaveURL(/\/$/u);
+  await expect(page).toHaveTitle("Home · Hub");
+  await expect(page.locator("main h1")).toHaveText("Home");
 
-  const attention = page.locator("section", {
-    has: page.getByRole("heading", { name: /Needs attention/u }),
-  });
-  await expect(attention.locator(".signal").first()).toContainText(
-    "Velero backup is 41 hours old",
-  );
-  const waiting = page.locator("section", {
-    has: page.getByRole("heading", { name: /Waiting on you/u }),
-  });
-  await expect(waiting.locator(".signal")).toHaveCount(4);
+  await page.goto("/overview?show=waiting");
+  await expect(page).toHaveURL(/\/\?show=waiting$/u);
   await expect(
-    page.getByRole("region", { name: "Areas" }).locator(".section-card"),
-  ).toHaveCount(9);
-
-  const fresh = page.locator("section", {
-    has: page.getByRole("heading", { name: /New since last visit/u }),
-  });
-  await expect(fresh.locator(".signal").first()).toBeVisible();
-  await page.getByRole("button", { name: "Mark all seen" }).click();
-  await expect(fresh).toContainText("Nothing new since you last marked");
-  await page.reload();
-  await expect(fresh).toContainText("Nothing new since you last marked");
+    page
+      .getByRole("region", { name: "Needs attention" })
+      .getByRole("radio", { name: /^Waiting on you/u }),
+  ).toHaveAttribute("aria-checked", "true");
 });
 
 test("service detail joins signals, the change timeline, and drill-down links", async ({
@@ -168,7 +176,8 @@ test("the ops layout fits a phone without horizontal scrolling", async ({
   await page.setViewportSize({ width: 375, height: 812 });
   for (const path of [
     "/",
-    "/overview",
+    "/delivery",
+    "/maintenance",
     "/services/scout-for-lol",
     "/ai",
     "/review",

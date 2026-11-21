@@ -14,13 +14,19 @@ The design starts from seven recurring questions, not from the data sources:
 
 | Question                                             | Where it is answered                                         |
 | ---------------------------------------------------- | ------------------------------------------------------------ |
-| Is anything wrong right now?                         | Overall status, section cards, attention list                |
+| Is anything wrong right now?                         | Home: overall status, area cards, "Needs attention" list     |
 | Something broke — what changed, and where?           | Service detail with its change timeline and drill-down links |
-| What is in flight, and what is waiting on me?        | Delivery section and the "waiting on you" list               |
+| What is in flight, and what is waiting on me?        | Delivery section and the "Waiting on you" filter on Home     |
 | Which subscription should I use, and am I on budget? | AI section: quota windows, spend, projection                 |
 | What is rotting?                                     | Maintenance section                                          |
 | Are my sites up and used?                            | Sites & product section                                      |
 | How did the week go?                                 | Review page and the weekly digest                            |
+
+In Hub these answers start on one page. Home shows the overall status, a card
+for each section, and a single "Needs attention" list. That list holds every
+signal at attention severity or waiting on Jerred, and a filter narrows it to
+the ones that wait on him. It is a filter and not a second list because the
+two overlap: a failed restore both needs attention and waits on him.
 
 Grafana remains the place to drill in. The overview links into Explore and the
 existing dashboards rather than embedding panels.
@@ -78,7 +84,8 @@ allowlisted in `packages/ops-model/src/signals/signal-groups.ts` collapse. Every
 Alertmanager alert shares the kind `alert`, so alerts never hide behind a
 group, and a new kind stays visible row by row until someone adds it. The
 web pages, the digest email, and `toolkit ops summary` all group the same way.
-Each web list then shows its ten worst entries and expands in place.
+Each web list then shows only its worst entries, ten or fewer, and expands in
+place.
 
 ## Why a scheduled snapshot, not live queries
 
