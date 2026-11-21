@@ -376,7 +376,12 @@ DNSConfig is a singleton - you must not create more than one.
 NB: if you want cluster workloads to be able to refer to Tailscale Ingress
 using its MagicDNS name, you must also annotate the Ingress resource with
 tailscale.com/experimental-forward-cluster-traffic-via-ingress annotation to
-ensure that the proxy created for the Ingress listens on its Pod IP address.
+ensure that the proxy created for the Ingress is available via its Pod IP
+address. The annotation installs rules that DNAT traffic sent to the proxy's
+Pod IP to its Tailscale IP, and allows the Serve listener on that Tailscale IP
+to accept packets arriving through the Pod interface. Traffic accepted via this
+path does not traverse the Tailscale tunnel and is not affected by tailnet
+ACLs. Restrict access using Kubernetes network policy.
  *
  * @schema DNSConfig
  */
@@ -454,7 +459,12 @@ export class DnsConfig extends ApiObject {
  * NB: if you want cluster workloads to be able to refer to Tailscale Ingress
  * using its MagicDNS name, you must also annotate the Ingress resource with
  * tailscale.com/experimental-forward-cluster-traffic-via-ingress annotation to
- * ensure that the proxy created for the Ingress listens on its Pod IP address.
+ * ensure that the proxy created for the Ingress is available via its Pod IP
+ * address. The annotation installs rules that DNAT traffic sent to the proxy's
+ * Pod IP to its Tailscale IP, and allows the Serve listener on that Tailscale IP
+ * to accept packets arriving through the Pod interface. Traffic accepted via this
+ * path does not traverse the Tailscale tunnel and is not affected by tailnet
+ * ACLs. Restrict access using Kubernetes network policy.
  *
  * @schema DNSConfig
  */
@@ -658,6 +668,14 @@ export interface DnsConfigSpecNameserverPod {
   readonly affinity?: DnsConfigSpecNameserverPodAffinity;
 
   /**
+   * Nameserver Pod's image pull Secrets.
+   * https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#PodSpec
+   *
+   * @schema DnsConfigSpecNameserverPod#imagePullSecrets
+   */
+  readonly imagePullSecrets?: DnsConfigSpecNameserverPodImagePullSecrets[];
+
+  /**
    * If specified, applies node selector rules to the pods deployed by the DNSConfig resource.
    *
    * @schema DnsConfigSpecNameserverPod#nodeSelector
@@ -684,6 +702,9 @@ export function toJson_DnsConfigSpecNameserverPod(
   }
   const result = {
     affinity: toJson_DnsConfigSpecNameserverPodAffinity(obj.affinity),
+    imagePullSecrets: obj.imagePullSecrets?.map((y) =>
+      toJson_DnsConfigSpecNameserverPodImagePullSecrets(y),
+    ),
     nodeSelector:
       obj.nodeSelector === undefined
         ? undefined
@@ -796,6 +817,46 @@ export function toJson_DnsConfigSpecNameserverPodAffinity(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * LocalObjectReference contains enough information to let you locate the
+ * referenced object inside the same namespace.
+ *
+ * @schema DnsConfigSpecNameserverPodImagePullSecrets
+ */
+export interface DnsConfigSpecNameserverPodImagePullSecrets {
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema DnsConfigSpecNameserverPodImagePullSecrets#name
+   */
+  readonly name?: string;
+}
+
+/**
+ * Converts an object of type 'DnsConfigSpecNameserverPodImagePullSecrets' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_DnsConfigSpecNameserverPodImagePullSecrets(
+  obj: DnsConfigSpecNameserverPodImagePullSecrets | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * The pod this Toleration is attached to tolerates any taint that matches
  * the triple <key,value,effect> using the matching operator <operator>.
  *
@@ -820,9 +881,10 @@ export interface DnsConfigSpecNameserverPodTolerations {
 
   /**
    * Operator represents a key's relationship to the value.
-   * Valid operators are Exists and Equal. Defaults to Equal.
+   * Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.
    * Exists is equivalent to wildcard for value, so that a pod can
    * tolerate all taints of a particular category.
+   * Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
    *
    * @default Equal.
    * @schema DnsConfigSpecNameserverPodTolerations#operator
@@ -3053,7 +3115,7 @@ export interface PeerRelayProps {
   /**
    * @schema PeerRelay#metadata
    */
-  readonly metadata: ApiObjectMetadata;
+  readonly metadata?: ApiObjectMetadata;
 
   /**
    * Spec describes the desired state of the PeerRelay.
@@ -3152,6 +3214,20 @@ export interface PeerRelaySpec {
   readonly service?: PeerRelaySpecService;
 
   /**
+   * StaticEndpoints is an optional list of address:port pairs on which every replica of this PeerRelay is
+   * reachable from outside the cluster, for example the public side of a NAT or firewall in front of the
+   * cluster. These supplement the endpoints discovered from each replica's LoadBalancer Service: they are
+   * added to every replica's entries in status.endpoints and advertised to peers alongside them. If an entry
+   * names an address a replica's load balancer already provides, the entry's port takes precedence for that
+   * address. Each address may appear at most once across all entries.
+   * Entries take the form accepted by Go's net/netip.ParseAddrPort, e.g. 203.0.113.1:41641. IPv6
+   * addresses must be enclosed in brackets, e.g. [2001:db8::1]:41641.
+   *
+   * @schema PeerRelaySpec#staticEndpoints
+   */
+  readonly staticEndpoints?: string[];
+
+  /**
    * Tags that the Tailscale node will be tagged with.
    * Defaults to [tag:k8s].
    * To autoapprove the device defined by a PeerRelay,
@@ -3193,6 +3269,7 @@ export function toJson_PeerRelaySpec(
     proxyClass: obj.proxyClass,
     replicas: obj.replicas,
     service: toJson_PeerRelaySpecService(obj.service),
+    staticEndpoints: obj.staticEndpoints?.map((y) => y),
     tags: obj.tags?.map((y) => y),
     tailnet: obj.tailnet,
   };
@@ -3286,6 +3363,17 @@ export interface PeerRelaySpecService {
    * @schema PeerRelaySpecService#annotations
    */
   readonly annotations?: { [key: string]: string };
+
+  /**
+   * Port is the UDP port each peer relay replica listens on and that its LoadBalancer Service exposes
+   * externally. The two are always equal: the relay advertises address:port to peers, so the load balancer
+   * must forward without rewriting the port. Changing the port on an existing PeerRelay briefly interrupts
+   * relay traffic while the load balancer updates. Defaults to 41641.
+   *
+   * @default 41641.
+   * @schema PeerRelaySpecService#port
+   */
+  readonly port?: number;
 }
 
 /**
@@ -3306,6 +3394,7 @@ export function toJson_PeerRelaySpecService(
             (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
             {},
           ),
+    port: obj.port,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -4376,11 +4465,8 @@ export interface ProxyClassSpecStatefulSetPodSecurityContext {
    * Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes
    * whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their
    * CSIDriver instance. Other volumes are always re-labelled recursively.
-   * "MountOption" value is allowed only when SELinuxMount feature gate is enabled.
    *
-   * If not specified and SELinuxMount feature gate is enabled, "MountOption" is used.
-   * If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes
-   * and "Recursive" for all other volumes.
+   * If not specified, "MountOption" is used.
    *
    * This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
    *
@@ -4771,9 +4857,10 @@ export interface ProxyClassSpecStatefulSetPodTolerations {
 
   /**
    * Operator represents a key's relationship to the value.
-   * Valid operators are Exists and Equal. Defaults to Equal.
+   * Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.
    * Exists is equivalent to wildcard for value, so that a pod can
    * tolerate all taints of a particular category.
+   * Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
    *
    * @default Equal.
    * @schema ProxyClassSpecStatefulSetPodTolerations#operator
@@ -5823,7 +5910,6 @@ export interface ProxyClassSpecStatefulSetPodTailscaleContainerSecurityContext {
    * procMount denotes the type of proc mount to use for the containers.
    * The default value is Default which uses the container runtime defaults for
    * readonly paths and masked paths.
-   * This requires the ProcMountType feature flag to be enabled.
    * Note that this field cannot be set when spec.os.name is windows.
    *
    * @schema ProxyClassSpecStatefulSetPodTailscaleContainerSecurityContext#procMount
@@ -6215,7 +6301,6 @@ export interface ProxyClassSpecStatefulSetPodTailscaleInitContainerSecurityConte
    * procMount denotes the type of proc mount to use for the containers.
    * The default value is Default which uses the container runtime defaults for
    * readonly paths and masked paths.
-   * This requires the ProcMountType feature flag to be enabled.
    * Note that this field cannot be set when spec.os.name is windows.
    *
    * @schema ProxyClassSpecStatefulSetPodTailscaleInitContainerSecurityContext#procMount
@@ -9534,7 +9619,7 @@ export interface ProxyGroupPolicyProps {
   /**
    * @schema ProxyGroupPolicy#metadata
    */
-  readonly metadata: ApiObjectMetadata;
+  readonly metadata?: ApiObjectMetadata;
 
   /**
    * Spec describes the desired state of the ProxyGroupPolicy.
@@ -10396,11 +10481,8 @@ export interface RecorderSpecStatefulSetPodSecurityContext {
    * Eligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes
    * whose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their
    * CSIDriver instance. Other volumes are always re-labelled recursively.
-   * "MountOption" value is allowed only when SELinuxMount feature gate is enabled.
    *
-   * If not specified and SELinuxMount feature gate is enabled, "MountOption" is used.
-   * If not specified and SELinuxMount feature gate is disabled, "MountOption" is used for ReadWriteOncePod volumes
-   * and "Recursive" for all other volumes.
+   * If not specified, "MountOption" is used.
    *
    * This field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.
    *
@@ -10612,9 +10694,10 @@ export interface RecorderSpecStatefulSetPodTolerations {
 
   /**
    * Operator represents a key's relationship to the value.
-   * Valid operators are Exists and Equal. Defaults to Equal.
+   * Valid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.
    * Exists is equivalent to wildcard for value, so that a pod can
    * tolerate all taints of a particular category.
+   * Lt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).
    *
    * @default Equal.
    * @schema RecorderSpecStatefulSetPodTolerations#operator
@@ -11102,7 +11185,6 @@ export interface RecorderSpecStatefulSetPodContainerSecurityContext {
    * procMount denotes the type of proc mount to use for the containers.
    * The default value is Default which uses the container runtime defaults for
    * readonly paths and masked paths.
-   * This requires the ProcMountType feature flag to be enabled.
    * Note that this field cannot be set when spec.os.name is windows.
    *
    * @schema RecorderSpecStatefulSetPodContainerSecurityContext#procMount
@@ -13913,7 +13995,7 @@ export interface TailnetProps {
   /**
    * @schema Tailnet#metadata
    */
-  readonly metadata: ApiObjectMetadata;
+  readonly metadata?: ApiObjectMetadata;
 
   /**
    * Spec describes the desired state of the Tailnet.

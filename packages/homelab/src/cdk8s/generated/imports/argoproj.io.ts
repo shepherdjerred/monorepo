@@ -1432,6 +1432,17 @@ export function toJson_ApplicationOperationSyncSyncStrategy(
  */
 export interface ApplicationSpecSourceDirectory {
   /**
+   * DisableExtensionFilter controls whether the built-in file-extension filter is skipped during
+   * manifest generation. When false (the default), only files with a .yaml, .yml, .json, or
+   * .jsonnet extension are considered as potential manifests. Set it to true to disable the filter
+   * so that files with custom extensions (e.g. *.yaml.sealed) can be matched by the include/exclude
+   * glob patterns instead.
+   *
+   * @schema ApplicationSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * Exclude contains a glob pattern to match paths against that should be explicitly excluded from being used during manifest generation
    *
    * @schema ApplicationSpecSourceDirectory#exclude
@@ -1471,6 +1482,7 @@ export function toJson_ApplicationSpecSourceDirectory(
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet: toJson_ApplicationSpecSourceDirectoryJsonnet(obj.jsonnet),
@@ -2060,6 +2072,17 @@ export function toJson_ApplicationSpecSourceHydratorSyncSource(
  */
 export interface ApplicationSpecSourcesDirectory {
   /**
+   * DisableExtensionFilter controls whether the built-in file-extension filter is skipped during
+   * manifest generation. When false (the default), only files with a .yaml, .yml, .json, or
+   * .jsonnet extension are considered as potential manifests. Set it to true to disable the filter
+   * so that files with custom extensions (e.g. *.yaml.sealed) can be matched by the include/exclude
+   * glob patterns instead.
+   *
+   * @schema ApplicationSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * Exclude contains a glob pattern to match paths against that should be explicitly excluded from being used during manifest generation
    *
    * @schema ApplicationSpecSourcesDirectory#exclude
@@ -2099,6 +2122,7 @@ export function toJson_ApplicationSpecSourcesDirectory(
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet: toJson_ApplicationSpecSourcesDirectoryJsonnet(obj.jsonnet),
@@ -2671,6 +2695,17 @@ export function toJson_ApplicationSpecSyncPolicyRetry(
  */
 export interface ApplicationOperationSyncSourceDirectory {
   /**
+   * DisableExtensionFilter controls whether the built-in file-extension filter is skipped during
+   * manifest generation. When false (the default), only files with a .yaml, .yml, .json, or
+   * .jsonnet extension are considered as potential manifests. Set it to true to disable the filter
+   * so that files with custom extensions (e.g. *.yaml.sealed) can be matched by the include/exclude
+   * glob patterns instead.
+   *
+   * @schema ApplicationOperationSyncSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * Exclude contains a glob pattern to match paths against that should be explicitly excluded from being used during manifest generation
    *
    * @schema ApplicationOperationSyncSourceDirectory#exclude
@@ -2710,6 +2745,7 @@ export function toJson_ApplicationOperationSyncSourceDirectory(
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet: toJson_ApplicationOperationSyncSourceDirectoryJsonnet(obj.jsonnet),
@@ -3121,6 +3157,17 @@ export function toJson_ApplicationOperationSyncSourcePlugin(
  */
 export interface ApplicationOperationSyncSourcesDirectory {
   /**
+   * DisableExtensionFilter controls whether the built-in file-extension filter is skipped during
+   * manifest generation. When false (the default), only files with a .yaml, .yml, .json, or
+   * .jsonnet extension are considered as potential manifests. Set it to true to disable the filter
+   * so that files with custom extensions (e.g. *.yaml.sealed) can be matched by the include/exclude
+   * glob patterns instead.
+   *
+   * @schema ApplicationOperationSyncSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * Exclude contains a glob pattern to match paths against that should be explicitly excluded from being used during manifest generation
    *
    * @schema ApplicationOperationSyncSourcesDirectory#exclude
@@ -3160,6 +3207,7 @@ export function toJson_ApplicationOperationSyncSourcesDirectory(
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet: toJson_ApplicationOperationSyncSourcesDirectoryJsonnet(
@@ -4000,6 +4048,17 @@ export function toJson_ApplicationSpecSourcePluginParameters(
  */
 export interface ApplicationSpecSourceHydratorDrySourceDirectory {
   /**
+   * DisableExtensionFilter controls whether the built-in file-extension filter is skipped during
+   * manifest generation. When false (the default), only files with a .yaml, .yml, .json, or
+   * .jsonnet extension are considered as potential manifests. Set it to true to disable the filter
+   * so that files with custom extensions (e.g. *.yaml.sealed) can be matched by the include/exclude
+   * glob patterns instead.
+   *
+   * @schema ApplicationSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * Exclude contains a glob pattern to match paths against that should be explicitly excluded from being used during manifest generation
    *
    * @schema ApplicationSpecSourceHydratorDrySourceDirectory#exclude
@@ -4039,6 +4098,7 @@ export function toJson_ApplicationSpecSourceHydratorDrySourceDirectory(
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet: toJson_ApplicationSpecSourceHydratorDrySourceDirectoryJsonnet(
@@ -7010,6 +7070,11 @@ export interface ApplicationSetSpecGenerators {
   readonly merge?: ApplicationSetSpecGeneratorsMerge;
 
   /**
+   * @schema ApplicationSetSpecGenerators#oci
+   */
+  readonly oci?: ApplicationSetSpecGeneratorsOci;
+
+  /**
    * @schema ApplicationSetSpecGenerators#plugin
    */
   readonly plugin?: ApplicationSetSpecGeneratorsPlugin;
@@ -7050,6 +7115,7 @@ export function toJson_ApplicationSetSpecGenerators(
     list: toJson_ApplicationSetSpecGeneratorsList(obj.list),
     matrix: toJson_ApplicationSetSpecGeneratorsMatrix(obj.matrix),
     merge: toJson_ApplicationSetSpecGeneratorsMerge(obj.merge),
+    oci: toJson_ApplicationSetSpecGeneratorsOci(obj.oci),
     plugin: toJson_ApplicationSetSpecGeneratorsPlugin(obj.plugin),
     pullRequest: toJson_ApplicationSetSpecGeneratorsPullRequest(
       obj.pullRequest,
@@ -7593,6 +7659,89 @@ export function toJson_ApplicationSetSpecGeneratorsMerge(
     ),
     mergeKeys: obj.mergeKeys?.map((y) => y),
     template: toJson_ApplicationSetSpecGeneratorsMergeTemplate(obj.template),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOci
+ */
+export interface ApplicationSetSpecGeneratorsOci {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOci#directories
+   */
+  readonly directories?: ApplicationSetSpecGeneratorsOciDirectories[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOci#files
+   */
+  readonly files?: ApplicationSetSpecGeneratorsOciFiles[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOci#pathParamPrefix
+   */
+  readonly pathParamPrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOci#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOci#requeueAfterSeconds
+   */
+  readonly requeueAfterSeconds?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOci#revision
+   */
+  readonly revision: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOci#template
+   */
+  readonly template?: ApplicationSetSpecGeneratorsOciTemplate;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOci#values
+   */
+  readonly values?: { [key: string]: string };
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOci' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOci(
+  obj: ApplicationSetSpecGeneratorsOci | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    directories: obj.directories?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciDirectories(y),
+    ),
+    files: obj.files?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciFiles(y),
+    ),
+    pathParamPrefix: obj.pathParamPrefix,
+    repoURL: obj.repoUrl,
+    requeueAfterSeconds: obj.requeueAfterSeconds,
+    revision: obj.revision,
+    template: toJson_ApplicationSetSpecGeneratorsOciTemplate(obj.template),
+    values:
+      obj.values === undefined
+        ? undefined
+        : Object.entries(obj.values).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -8497,6 +8646,11 @@ export interface ApplicationSetSpecGeneratorsMatrixGenerators {
   readonly merge?: any;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGenerators#oci
+   */
+  readonly oci?: ApplicationSetSpecGeneratorsMatrixGeneratorsOci;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGenerators#plugin
    */
   readonly plugin?: ApplicationSetSpecGeneratorsMatrixGeneratorsPlugin;
@@ -8539,6 +8693,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGenerators(
     list: toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsList(obj.list),
     matrix: obj.matrix,
     merge: obj.merge,
+    oci: toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOci(obj.oci),
     plugin: toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPlugin(
       obj.plugin,
     ),
@@ -8634,6 +8789,11 @@ export interface ApplicationSetSpecGeneratorsMergeGenerators {
   readonly merge?: any;
 
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGenerators#oci
+   */
+  readonly oci?: ApplicationSetSpecGeneratorsMergeGeneratorsOci;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGenerators#plugin
    */
   readonly plugin?: ApplicationSetSpecGeneratorsMergeGeneratorsPlugin;
@@ -8676,6 +8836,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGenerators(
     list: toJson_ApplicationSetSpecGeneratorsMergeGeneratorsList(obj.list),
     matrix: obj.matrix,
     merge: obj.merge,
+    oci: toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOci(obj.oci),
     plugin: toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPlugin(
       obj.plugin,
     ),
@@ -8727,6 +8888,119 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplate(
       obj.metadata,
     ),
     spec: toJson_ApplicationSetSpecGeneratorsMergeTemplateSpec(obj.spec),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciDirectories
+ */
+export interface ApplicationSetSpecGeneratorsOciDirectories {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciDirectories#exclude
+   */
+  readonly exclude?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciDirectories#path
+   */
+  readonly path: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciDirectories' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciDirectories(
+  obj: ApplicationSetSpecGeneratorsOciDirectories | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exclude: obj.exclude,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciFiles
+ */
+export interface ApplicationSetSpecGeneratorsOciFiles {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciFiles#exclude
+   */
+  readonly exclude?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciFiles#path
+   */
+  readonly path: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciFiles' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciFiles(
+  obj: ApplicationSetSpecGeneratorsOciFiles | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exclude: obj.exclude,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplate
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplate {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplate#metadata
+   */
+  readonly metadata: ApplicationSetSpecGeneratorsOciTemplateMetadata;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplate#spec
+   */
+  readonly spec: ApplicationSetSpecGeneratorsOciTemplateSpec;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplate' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplate(
+  obj: ApplicationSetSpecGeneratorsOciTemplate | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    metadata: toJson_ApplicationSetSpecGeneratorsOciTemplateMetadata(
+      obj.metadata,
+    ),
+    spec: toJson_ApplicationSetSpecGeneratorsOciTemplateSpec(obj.spec),
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -11398,6 +11672,91 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsList(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOci
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOci {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOci#directories
+   */
+  readonly directories?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciDirectories[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOci#files
+   */
+  readonly files?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciFiles[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOci#pathParamPrefix
+   */
+  readonly pathParamPrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOci#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOci#requeueAfterSeconds
+   */
+  readonly requeueAfterSeconds?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOci#revision
+   */
+  readonly revision: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOci#template
+   */
+  readonly template?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplate;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOci#values
+   */
+  readonly values?: { [key: string]: string };
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOci' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOci(
+  obj: ApplicationSetSpecGeneratorsMatrixGeneratorsOci | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    directories: obj.directories?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciDirectories(y),
+    ),
+    files: obj.files?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciFiles(y),
+    ),
+    pathParamPrefix: obj.pathParamPrefix,
+    repoURL: obj.repoUrl,
+    requeueAfterSeconds: obj.requeueAfterSeconds,
+    revision: obj.revision,
+    template: toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplate(
+      obj.template,
+    ),
+    values:
+      obj.values === undefined
+        ? undefined
+        : Object.entries(obj.values).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPlugin
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPlugin {
@@ -12188,6 +12547,91 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsList(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOci
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOci {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOci#directories
+   */
+  readonly directories?: ApplicationSetSpecGeneratorsMergeGeneratorsOciDirectories[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOci#files
+   */
+  readonly files?: ApplicationSetSpecGeneratorsMergeGeneratorsOciFiles[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOci#pathParamPrefix
+   */
+  readonly pathParamPrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOci#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOci#requeueAfterSeconds
+   */
+  readonly requeueAfterSeconds?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOci#revision
+   */
+  readonly revision: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOci#template
+   */
+  readonly template?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplate;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOci#values
+   */
+  readonly values?: { [key: string]: string };
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOci' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOci(
+  obj: ApplicationSetSpecGeneratorsMergeGeneratorsOci | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    directories: obj.directories?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciDirectories(y),
+    ),
+    files: obj.files?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciFiles(y),
+    ),
+    pathParamPrefix: obj.pathParamPrefix,
+    repoURL: obj.repoUrl,
+    requeueAfterSeconds: obj.requeueAfterSeconds,
+    revision: obj.revision,
+    template: toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplate(
+      obj.template,
+    ),
+    values:
+      obj.values === undefined
+        ? undefined
+        : Object.entries(obj.values).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPlugin
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPlugin {
@@ -12696,6 +13140,167 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpec(
       toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSources(y),
     ),
     syncPolicy: toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSyncPolicy(
+      obj.syncPolicy,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateMetadata
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateMetadata {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateMetadata#annotations
+   */
+  readonly annotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateMetadata#finalizers
+   */
+  readonly finalizers?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateMetadata#labels
+   */
+  readonly labels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateMetadata#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateMetadata#namespace
+   */
+  readonly namespace?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateMetadata' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateMetadata(
+  obj: ApplicationSetSpecGeneratorsOciTemplateMetadata | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotations:
+      obj.annotations === undefined
+        ? undefined
+        : Object.entries(obj.annotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    finalizers: obj.finalizers?.map((y) => y),
+    labels:
+      obj.labels === undefined
+        ? undefined
+        : Object.entries(obj.labels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    namespace: obj.namespace,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpec
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpec {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpec#destination
+   */
+  readonly destination: ApplicationSetSpecGeneratorsOciTemplateSpecDestination;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpec#ignoreDifferences
+   */
+  readonly ignoreDifferences?: ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpec#info
+   */
+  readonly info?: ApplicationSetSpecGeneratorsOciTemplateSpecInfo[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpec#project
+   */
+  readonly project: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpec#revisionHistoryLimit
+   */
+  readonly revisionHistoryLimit?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpec#source
+   */
+  readonly source?: ApplicationSetSpecGeneratorsOciTemplateSpecSource;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpec#sourceHydrator
+   */
+  readonly sourceHydrator?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpec#sources
+   */
+  readonly sources?: ApplicationSetSpecGeneratorsOciTemplateSpecSources[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpec#syncPolicy
+   */
+  readonly syncPolicy?: ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpec(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    destination: toJson_ApplicationSetSpecGeneratorsOciTemplateSpecDestination(
+      obj.destination,
+    ),
+    ignoreDifferences: obj.ignoreDifferences?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences(y),
+    ),
+    info: obj.info?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecInfo(y),
+    ),
+    project: obj.project,
+    revisionHistoryLimit: obj.revisionHistoryLimit,
+    source: toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSource(
+      obj.source,
+    ),
+    sourceHydrator:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator(
+        obj.sourceHydrator,
+      ),
+    sources: obj.sources?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSources(y),
+    ),
+    syncPolicy: toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy(
       obj.syncPolicy,
     ),
   };
@@ -14014,6 +14619,11 @@ export class ApplicationSetSpecStrategyRollingSyncStepsMaxUpdate {
  */
 export interface ApplicationSetSpecTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -14045,6 +14655,7 @@ export function toJson_ApplicationSetSpecTemplateSpecSourceDirectory(
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet: toJson_ApplicationSetSpecTemplateSpecSourceDirectoryJsonnet(
@@ -14531,6 +15142,11 @@ export function toJson_ApplicationSetSpecTemplateSpecSourceHydratorSyncSource(
  */
 export interface ApplicationSetSpecTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -14562,6 +15178,7 @@ export function toJson_ApplicationSetSpecTemplateSpecSourcesDirectory(
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet: toJson_ApplicationSetSpecTemplateSpecSourcesDirectoryJsonnet(
@@ -17233,6 +17850,122 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplate(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciDirectories
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciDirectories {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciDirectories#exclude
+   */
+  readonly exclude?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciDirectories#path
+   */
+  readonly path: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciDirectories' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciDirectories(
+  obj: ApplicationSetSpecGeneratorsMatrixGeneratorsOciDirectories | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exclude: obj.exclude,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciFiles
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciFiles {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciFiles#exclude
+   */
+  readonly exclude?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciFiles#path
+   */
+  readonly path: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciFiles' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciFiles(
+  obj: ApplicationSetSpecGeneratorsMatrixGeneratorsOciFiles | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exclude: obj.exclude,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplate
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplate {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplate#metadata
+   */
+  readonly metadata: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplate#spec
+   */
+  readonly spec: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplate' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplate(
+  obj: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplate | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    metadata:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata(
+        obj.metadata,
+      ),
+    spec: toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec(
+      obj.spec,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginConfigMapRef
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginConfigMapRef {
@@ -19252,6 +19985,122 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplate(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciDirectories
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciDirectories {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciDirectories#exclude
+   */
+  readonly exclude?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciDirectories#path
+   */
+  readonly path: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciDirectories' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciDirectories(
+  obj: ApplicationSetSpecGeneratorsMergeGeneratorsOciDirectories | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exclude: obj.exclude,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciFiles
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciFiles {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciFiles#exclude
+   */
+  readonly exclude?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciFiles#path
+   */
+  readonly path: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciFiles' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciFiles(
+  obj: ApplicationSetSpecGeneratorsMergeGeneratorsOciFiles | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    exclude: obj.exclude,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplate
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplate {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplate#metadata
+   */
+  readonly metadata: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplate#spec
+   */
+  readonly spec: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplate' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplate(
+  obj: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplate | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    metadata:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata(
+        obj.metadata,
+      ),
+    spec: toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec(
+      obj.spec,
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginConfigMapRef
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginConfigMapRef {
@@ -20912,6 +21761,464 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSyncPolicy(
         obj.managedNamespaceMetadata,
       ),
     retry: toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSyncPolicyRetry(
+      obj.retry,
+    ),
+    syncOptions: obj.syncOptions?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecDestination
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecDestination {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecDestination#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecDestination#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecDestination#server
+   */
+  readonly server?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecDestination' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecDestination(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecDestination | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    namespace: obj.namespace,
+    server: obj.server,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences#jqPathExpressions
+   */
+  readonly jqPathExpressions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences#jsonPointers
+   */
+  readonly jsonPointers?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences#kind
+   */
+  readonly kind: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences#managedFieldsManagers
+   */
+  readonly managedFieldsManagers?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences#namespace
+   */
+  readonly namespace?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecIgnoreDifferences | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    group: obj.group,
+    jqPathExpressions: obj.jqPathExpressions?.map((y) => y),
+    jsonPointers: obj.jsonPointers?.map((y) => y),
+    kind: obj.kind,
+    managedFieldsManagers: obj.managedFieldsManagers?.map((y) => y),
+    name: obj.name,
+    namespace: obj.namespace,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecInfo
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecInfo {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecInfo#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecInfo#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecInfo' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecInfo(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecInfo | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSource {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#chart
+   */
+  readonly chart?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#directory
+   */
+  readonly directory?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#helm
+   */
+  readonly helm?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#kustomize
+   */
+  readonly kustomize?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#plugin
+   */
+  readonly plugin?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#ref
+   */
+  readonly ref?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSource#targetRevision
+   */
+  readonly targetRevision?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSource' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSource(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSource | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    chart: obj.chart,
+    directory:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory(
+        obj.directory,
+      ),
+    helm: toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm(
+      obj.helm,
+    ),
+    kustomize:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize(
+        obj.kustomize,
+      ),
+    name: obj.name,
+    path: obj.path,
+    plugin: toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin(
+      obj.plugin,
+    ),
+    ref: obj.ref,
+    repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
+    targetRevision: obj.targetRevision,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator#drySource
+   */
+  readonly drySource: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator#hydrateTo
+   */
+  readonly hydrateTo?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorHydrateTo;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator#syncSource
+   */
+  readonly syncSource: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydrator | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    drySource:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource(
+        obj.drySource,
+      ),
+    hydrateTo:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorHydrateTo(
+        obj.hydrateTo,
+      ),
+    syncSource:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource(
+        obj.syncSource,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSources {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#chart
+   */
+  readonly chart?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#directory
+   */
+  readonly directory?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#helm
+   */
+  readonly helm?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#kustomize
+   */
+  readonly kustomize?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#plugin
+   */
+  readonly plugin?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#ref
+   */
+  readonly ref?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSources#targetRevision
+   */
+  readonly targetRevision?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSources' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSources(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSources | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    chart: obj.chart,
+    directory:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory(
+        obj.directory,
+      ),
+    helm: toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm(
+      obj.helm,
+    ),
+    kustomize:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize(
+        obj.kustomize,
+      ),
+    name: obj.name,
+    path: obj.path,
+    plugin: toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin(
+      obj.plugin,
+    ),
+    ref: obj.ref,
+    repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
+    targetRevision: obj.targetRevision,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy#automated
+   */
+  readonly automated?: ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy#managedNamespaceMetadata
+   */
+  readonly managedNamespaceMetadata?: ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy#retry
+   */
+  readonly retry?: ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy#syncOptions
+   */
+  readonly syncOptions?: string[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicy | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    automated:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated(
+        obj.automated,
+      ),
+    managedNamespaceMetadata:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata(
+        obj.managedNamespaceMetadata,
+      ),
+    retry: toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry(
       obj.retry,
     ),
     syncOptions: obj.syncOptions?.map((y) => y),
@@ -22869,6 +24176,11 @@ export function toJson_ApplicationSetSpecTemplateSpecSourcePluginParameters(
  */
 export interface ApplicationSetSpecTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -22901,6 +24213,7 @@ export function toJson_ApplicationSetSpecTemplateSpecSourceHydratorDrySourceDire
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -23604,6 +24917,11 @@ export function toJson_ApplicationSetSpecTemplateSpecSyncPolicyRetryBackoff(
  */
 export interface ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -23637,6 +24955,7 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -24149,6 +25468,11 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
  */
 export interface ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -24182,6 +25506,7 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -24686,6 +26011,11 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
  */
 export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -24718,6 +26048,7 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourceDir
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -25223,6 +26554,11 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHyd
  */
 export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -25256,6 +26592,7 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourcesDi
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -25756,6 +27093,11 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSyncPolic
  */
 export interface ApplicationSetSpecGeneratorsGitTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -25787,6 +27129,7 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSourceDirector
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -26289,6 +27632,11 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSourceHydrator
  */
 export interface ApplicationSetSpecGeneratorsGitTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -26320,6 +27668,7 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSourcesDirecto
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -26813,6 +28162,11 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSyncPolicyRetr
  */
 export interface ApplicationSetSpecGeneratorsListTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -26844,6 +28198,7 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSourceDirecto
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -27348,6 +28703,11 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSourceHydrato
  */
 export interface ApplicationSetSpecGeneratorsListTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -27379,6 +28739,7 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSourcesDirect
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -28635,6 +29996,175 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
     ),
     syncPolicy:
       toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSyncPolicy(
+        obj.syncPolicy,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata#annotations
+   */
+  readonly annotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata#finalizers
+   */
+  readonly finalizers?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata#labels
+   */
+  readonly labels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata#namespace
+   */
+  readonly namespace?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata(
+  obj:
+    ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateMetadata | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotations:
+      obj.annotations === undefined
+        ? undefined
+        : Object.entries(obj.annotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    finalizers: obj.finalizers?.map((y) => y),
+    labels:
+      obj.labels === undefined
+        ? undefined
+        : Object.entries(obj.labels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    namespace: obj.namespace,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec#destination
+   */
+  readonly destination: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec#ignoreDifferences
+   */
+  readonly ignoreDifferences?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec#info
+   */
+  readonly info?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecInfo[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec#project
+   */
+  readonly project: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec#revisionHistoryLimit
+   */
+  readonly revisionHistoryLimit?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec#source
+   */
+  readonly source?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec#sourceHydrator
+   */
+  readonly sourceHydrator?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec#sources
+   */
+  readonly sources?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec#syncPolicy
+   */
+  readonly syncPolicy?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec(
+  obj: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    destination:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination(
+        obj.destination,
+      ),
+    ignoreDifferences: obj.ignoreDifferences?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences(
+        y,
+      ),
+    ),
+    info: obj.info?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecInfo(y),
+    ),
+    project: obj.project,
+    revisionHistoryLimit: obj.revisionHistoryLimit,
+    source:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource(
+        obj.source,
+      ),
+    sourceHydrator:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator(
+        obj.sourceHydrator,
+      ),
+    sources: obj.sources?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources(
+        y,
+      ),
+    ),
+    syncPolicy:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy(
         obj.syncPolicy,
       ),
   };
@@ -29952,6 +31482,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
  */
 export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -29984,6 +31519,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceDirec
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -30489,6 +32025,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceHydra
  */
 export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -30521,6 +32062,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesDire
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -31776,6 +33318,175 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
     ),
     syncPolicy:
       toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSyncPolicy(
+        obj.syncPolicy,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata#annotations
+   */
+  readonly annotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata#finalizers
+   */
+  readonly finalizers?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata#labels
+   */
+  readonly labels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata#namespace
+   */
+  readonly namespace?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata(
+  obj:
+    ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateMetadata | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotations:
+      obj.annotations === undefined
+        ? undefined
+        : Object.entries(obj.annotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    finalizers: obj.finalizers?.map((y) => y),
+    labels:
+      obj.labels === undefined
+        ? undefined
+        : Object.entries(obj.labels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    namespace: obj.namespace,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec#destination
+   */
+  readonly destination: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec#ignoreDifferences
+   */
+  readonly ignoreDifferences?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec#info
+   */
+  readonly info?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecInfo[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec#project
+   */
+  readonly project: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec#revisionHistoryLimit
+   */
+  readonly revisionHistoryLimit?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec#source
+   */
+  readonly source?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec#sourceHydrator
+   */
+  readonly sourceHydrator?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec#sources
+   */
+  readonly sources?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec#syncPolicy
+   */
+  readonly syncPolicy?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec(
+  obj: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpec | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    destination:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination(
+        obj.destination,
+      ),
+    ignoreDifferences: obj.ignoreDifferences?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences(
+        y,
+      ),
+    ),
+    info: obj.info?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecInfo(y),
+    ),
+    project: obj.project,
+    revisionHistoryLimit: obj.revisionHistoryLimit,
+    source:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource(
+        obj.source,
+      ),
+    sourceHydrator:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator(
+        obj.sourceHydrator,
+      ),
+    sources: obj.sources?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources(
+        y,
+      ),
+    ),
+    syncPolicy:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy(
         obj.syncPolicy,
       ),
   };
@@ -33093,6 +34804,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
  */
 export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -33124,6 +34840,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourceDirect
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -33628,6 +35345,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydrat
  */
 export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -33660,6 +35382,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesDirec
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -34151,9 +35874,1083 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSyncPolicyRe
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory#exclude
+   */
+  readonly exclude?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory#include
+   */
+  readonly include?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory#jsonnet
+   */
+  readonly jsonnet?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory#recurse
+   */
+  readonly recurse?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectory | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
+    exclude: obj.exclude,
+    include: obj.include,
+    jsonnet:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet(
+        obj.jsonnet,
+      ),
+    recurse: obj.recurse,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#fileParameters
+   */
+  readonly fileParameters?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmFileParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#ignoreMissingValueFiles
+   */
+  readonly ignoreMissingValueFiles?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#passCredentials
+   */
+  readonly passCredentials?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#releaseName
+   */
+  readonly releaseName?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#skipCrds
+   */
+  readonly skipCrds?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#skipSchemaValidation
+   */
+  readonly skipSchemaValidation?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#skipTests
+   */
+  readonly skipTests?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#valueFiles
+   */
+  readonly valueFiles?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#values
+   */
+  readonly values?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#valuesObject
+   */
+  readonly valuesObject?: any;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelm | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    fileParameters: obj.fileParameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmFileParameters(
+        y,
+      ),
+    ),
+    ignoreMissingValueFiles: obj.ignoreMissingValueFiles,
+    kubeVersion: obj.kubeVersion,
+    namespace: obj.namespace,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters(y),
+    ),
+    passCredentials: obj.passCredentials,
+    releaseName: obj.releaseName,
+    skipCrds: obj.skipCrds,
+    skipSchemaValidation: obj.skipSchemaValidation,
+    skipTests: obj.skipTests,
+    valueFiles: obj.valueFiles?.map((y) => y),
+    values: obj.values,
+    valuesObject: obj.valuesObject,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#commonAnnotations
+   */
+  readonly commonAnnotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#commonAnnotationsEnvsubst
+   */
+  readonly commonAnnotationsEnvsubst?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#commonLabels
+   */
+  readonly commonLabels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#components
+   */
+  readonly components?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#forceCommonAnnotations
+   */
+  readonly forceCommonAnnotations?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#forceCommonLabels
+   */
+  readonly forceCommonLabels?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#ignoreMissingComponents
+   */
+  readonly ignoreMissingComponents?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#images
+   */
+  readonly images?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#labelIncludeTemplates
+   */
+  readonly labelIncludeTemplates?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#labelWithoutSelector
+   */
+  readonly labelWithoutSelector?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#namePrefix
+   */
+  readonly namePrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#nameSuffix
+   */
+  readonly nameSuffix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#patches
+   */
+  readonly patches?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#replicas
+   */
+  readonly replicas?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicas[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomize | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    commonAnnotations:
+      obj.commonAnnotations === undefined
+        ? undefined
+        : Object.entries(obj.commonAnnotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    commonAnnotationsEnvsubst: obj.commonAnnotationsEnvsubst,
+    commonLabels:
+      obj.commonLabels === undefined
+        ? undefined
+        : Object.entries(obj.commonLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    components: obj.components?.map((y) => y),
+    forceCommonAnnotations: obj.forceCommonAnnotations,
+    forceCommonLabels: obj.forceCommonLabels,
+    ignoreMissingComponents: obj.ignoreMissingComponents,
+    images: obj.images?.map((y) => y),
+    kubeVersion: obj.kubeVersion,
+    labelIncludeTemplates: obj.labelIncludeTemplates,
+    labelWithoutSelector: obj.labelWithoutSelector,
+    namePrefix: obj.namePrefix,
+    nameSuffix: obj.nameSuffix,
+    namespace: obj.namespace,
+    patches: obj.patches?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches(
+        y,
+      ),
+    ),
+    replicas: obj.replicas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicas(
+        y,
+      ),
+    ),
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin#env
+   */
+  readonly env?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginEnv[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourcePlugin | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    env: obj.env?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginEnv(y),
+    ),
+    name: obj.name,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource#directory
+   */
+  readonly directory?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource#helm
+   */
+  readonly helm?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource#kustomize
+   */
+  readonly kustomize?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource#path
+   */
+  readonly path: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource#plugin
+   */
+  readonly plugin?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource#targetRevision
+   */
+  readonly targetRevision: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySource
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    directory:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory(
+        obj.directory,
+      ),
+    helm: toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm(
+      obj.helm,
+    ),
+    kustomize:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize(
+        obj.kustomize,
+      ),
+    path: obj.path,
+    plugin:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin(
+        obj.plugin,
+      ),
+    repoURL: obj.repoUrl,
+    targetRevision: obj.targetRevision,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorHydrateTo
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorHydrateTo {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorHydrateTo#targetBranch
+   */
+  readonly targetBranch: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorHydrateTo' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorHydrateTo(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorHydrateTo
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    targetBranch: obj.targetBranch,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource#path
+   */
+  readonly path: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource#targetBranch
+   */
+  readonly targetBranch: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorSyncSource
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    path: obj.path,
+    repoURL: obj.repoUrl,
+    targetBranch: obj.targetBranch,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory#exclude
+   */
+  readonly exclude?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory#include
+   */
+  readonly include?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory#jsonnet
+   */
+  readonly jsonnet?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory#recurse
+   */
+  readonly recurse?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectory | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
+    exclude: obj.exclude,
+    include: obj.include,
+    jsonnet:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet(
+        obj.jsonnet,
+      ),
+    recurse: obj.recurse,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#fileParameters
+   */
+  readonly fileParameters?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmFileParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#ignoreMissingValueFiles
+   */
+  readonly ignoreMissingValueFiles?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#passCredentials
+   */
+  readonly passCredentials?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#releaseName
+   */
+  readonly releaseName?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#skipCrds
+   */
+  readonly skipCrds?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#skipSchemaValidation
+   */
+  readonly skipSchemaValidation?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#skipTests
+   */
+  readonly skipTests?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#valueFiles
+   */
+  readonly valueFiles?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#values
+   */
+  readonly values?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#valuesObject
+   */
+  readonly valuesObject?: any;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelm | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    fileParameters: obj.fileParameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmFileParameters(
+        y,
+      ),
+    ),
+    ignoreMissingValueFiles: obj.ignoreMissingValueFiles,
+    kubeVersion: obj.kubeVersion,
+    namespace: obj.namespace,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters(
+        y,
+      ),
+    ),
+    passCredentials: obj.passCredentials,
+    releaseName: obj.releaseName,
+    skipCrds: obj.skipCrds,
+    skipSchemaValidation: obj.skipSchemaValidation,
+    skipTests: obj.skipTests,
+    valueFiles: obj.valueFiles?.map((y) => y),
+    values: obj.values,
+    valuesObject: obj.valuesObject,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#commonAnnotations
+   */
+  readonly commonAnnotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#commonAnnotationsEnvsubst
+   */
+  readonly commonAnnotationsEnvsubst?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#commonLabels
+   */
+  readonly commonLabels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#components
+   */
+  readonly components?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#forceCommonAnnotations
+   */
+  readonly forceCommonAnnotations?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#forceCommonLabels
+   */
+  readonly forceCommonLabels?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#ignoreMissingComponents
+   */
+  readonly ignoreMissingComponents?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#images
+   */
+  readonly images?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#labelIncludeTemplates
+   */
+  readonly labelIncludeTemplates?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#labelWithoutSelector
+   */
+  readonly labelWithoutSelector?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#namePrefix
+   */
+  readonly namePrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#nameSuffix
+   */
+  readonly nameSuffix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#patches
+   */
+  readonly patches?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#replicas
+   */
+  readonly replicas?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicas[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomize | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    commonAnnotations:
+      obj.commonAnnotations === undefined
+        ? undefined
+        : Object.entries(obj.commonAnnotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    commonAnnotationsEnvsubst: obj.commonAnnotationsEnvsubst,
+    commonLabels:
+      obj.commonLabels === undefined
+        ? undefined
+        : Object.entries(obj.commonLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    components: obj.components?.map((y) => y),
+    forceCommonAnnotations: obj.forceCommonAnnotations,
+    forceCommonLabels: obj.forceCommonLabels,
+    ignoreMissingComponents: obj.ignoreMissingComponents,
+    images: obj.images?.map((y) => y),
+    kubeVersion: obj.kubeVersion,
+    labelIncludeTemplates: obj.labelIncludeTemplates,
+    labelWithoutSelector: obj.labelWithoutSelector,
+    namePrefix: obj.namePrefix,
+    nameSuffix: obj.nameSuffix,
+    namespace: obj.namespace,
+    patches: obj.patches?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches(
+        y,
+      ),
+    ),
+    replicas: obj.replicas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicas(
+        y,
+      ),
+    ),
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin#env
+   */
+  readonly env?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginEnv[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPlugin | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    env: obj.env?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginEnv(y),
+    ),
+    name: obj.name,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated#allowEmpty
+   */
+  readonly allowEmpty?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated#enabled
+   */
+  readonly enabled?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated#prune
+   */
+  readonly prune?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated#selfHeal
+   */
+  readonly selfHeal?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated(
+  obj:
+    ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyAutomated | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    allowEmpty: obj.allowEmpty,
+    enabled: obj.enabled,
+    prune: obj.prune,
+    selfHeal: obj.selfHeal,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata#annotations
+   */
+  readonly annotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata#labels
+   */
+  readonly labels?: { [key: string]: string };
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotations:
+      obj.annotations === undefined
+        ? undefined
+        : Object.entries(obj.annotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    labels:
+      obj.labels === undefined
+        ? undefined
+        : Object.entries(obj.labels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry#backoff
+   */
+  readonly backoff?: ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry#limit
+   */
+  readonly limit?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry#refresh
+   */
+  readonly refresh?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetry | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    backoff:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff(
+        obj.backoff,
+      ),
+    limit: obj.limit,
+    refresh: obj.refresh,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectory
  */
 export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
   /**
    * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectory#exclude
    */
@@ -34187,6 +36984,7 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirec
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -34692,6 +37490,11 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourceHydra
  */
 export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -34724,6 +37527,7 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourcesDire
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -35220,6 +38024,11 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSyncPolicyR
  */
 export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -35253,6 +38062,7 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -35763,6 +38573,11 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
  */
 export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -35796,6 +38611,7 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -36299,6 +39115,11 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSyncPo
  */
 export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -36332,6 +39153,7 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -36842,6 +39664,11 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
  */
 export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -36875,6 +39702,7 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -38389,6 +41217,11 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
  */
 export interface ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -38422,6 +41255,7 @@ export function toJson_ApplicationSetSpecGeneratorsClusterDecisionResourceTempla
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -39484,6 +42318,11 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourcePlu
  */
 export interface ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -39517,6 +42356,7 @@ export function toJson_ApplicationSetSpecGeneratorsClustersTemplateSpecSourceHyd
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -40577,6 +43417,11 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSourcePluginPa
  */
 export interface ApplicationSetSpecGeneratorsGitTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsGitTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -40610,6 +43455,7 @@ export function toJson_ApplicationSetSpecGeneratorsGitTemplateSpecSourceHydrator
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -41669,6 +44515,11 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSourcePluginP
  */
 export interface ApplicationSetSpecGeneratorsListTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsListTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -41702,6 +44553,7 @@ export function toJson_ApplicationSetSpecGeneratorsListTemplateSpecSourceHydrato
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -44326,6 +47178,480 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination#server
+   */
+  readonly server?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecDestination
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    namespace: obj.namespace,
+    server: obj.server,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences#jqPathExpressions
+   */
+  readonly jqPathExpressions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences#jsonPointers
+   */
+  readonly jsonPointers?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences#kind
+   */
+  readonly kind: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences#managedFieldsManagers
+   */
+  readonly managedFieldsManagers?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences#namespace
+   */
+  readonly namespace?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecIgnoreDifferences
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    group: obj.group,
+    jqPathExpressions: obj.jqPathExpressions?.map((y) => y),
+    jsonPointers: obj.jsonPointers?.map((y) => y),
+    kind: obj.kind,
+    managedFieldsManagers: obj.managedFieldsManagers?.map((y) => y),
+    name: obj.name,
+    namespace: obj.namespace,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecInfo
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecInfo {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecInfo#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecInfo#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecInfo' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecInfo(
+  obj:
+    ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecInfo | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#chart
+   */
+  readonly chart?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#directory
+   */
+  readonly directory?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#helm
+   */
+  readonly helm?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#kustomize
+   */
+  readonly kustomize?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#plugin
+   */
+  readonly plugin?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#ref
+   */
+  readonly ref?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource#targetRevision
+   */
+  readonly targetRevision?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSource
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    chart: obj.chart,
+    directory:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory(
+        obj.directory,
+      ),
+    helm: toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm(
+      obj.helm,
+    ),
+    kustomize:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize(
+        obj.kustomize,
+      ),
+    name: obj.name,
+    path: obj.path,
+    plugin:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin(
+        obj.plugin,
+      ),
+    ref: obj.ref,
+    repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
+    targetRevision: obj.targetRevision,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator#drySource
+   */
+  readonly drySource: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator#hydrateTo
+   */
+  readonly hydrateTo?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorHydrateTo;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator#syncSource
+   */
+  readonly syncSource: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydrator
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    drySource:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource(
+        obj.drySource,
+      ),
+    hydrateTo:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorHydrateTo(
+        obj.hydrateTo,
+      ),
+    syncSource:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource(
+        obj.syncSource,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#chart
+   */
+  readonly chart?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#directory
+   */
+  readonly directory?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#helm
+   */
+  readonly helm?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#kustomize
+   */
+  readonly kustomize?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#plugin
+   */
+  readonly plugin?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#ref
+   */
+  readonly ref?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources#targetRevision
+   */
+  readonly targetRevision?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSources
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    chart: obj.chart,
+    directory:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory(
+        obj.directory,
+      ),
+    helm: toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm(
+      obj.helm,
+    ),
+    kustomize:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize(
+        obj.kustomize,
+      ),
+    name: obj.name,
+    path: obj.path,
+    plugin:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin(
+        obj.plugin,
+      ),
+    ref: obj.ref,
+    repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
+    targetRevision: obj.targetRevision,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy#automated
+   */
+  readonly automated?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy#managedNamespaceMetadata
+   */
+  readonly managedNamespaceMetadata?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy#retry
+   */
+  readonly retry?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy#syncOptions
+   */
+  readonly syncOptions?: string[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicy
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    automated:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated(
+        obj.automated,
+      ),
+    managedNamespaceMetadata:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata(
+        obj.managedNamespaceMetadata,
+      ),
+    retry:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry(
+        obj.retry,
+      ),
+    syncOptions: obj.syncOptions?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecDestination
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecDestination {
@@ -46320,6 +49646,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcePlugi
  */
 export interface ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -46353,6 +49684,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixTemplateSpecSourceHydra
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -48977,6 +52309,480 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination#server
+   */
+  readonly server?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecDestination
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    namespace: obj.namespace,
+    server: obj.server,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences#jqPathExpressions
+   */
+  readonly jqPathExpressions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences#jsonPointers
+   */
+  readonly jsonPointers?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences#kind
+   */
+  readonly kind: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences#managedFieldsManagers
+   */
+  readonly managedFieldsManagers?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences#namespace
+   */
+  readonly namespace?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecIgnoreDifferences
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    group: obj.group,
+    jqPathExpressions: obj.jqPathExpressions?.map((y) => y),
+    jsonPointers: obj.jsonPointers?.map((y) => y),
+    kind: obj.kind,
+    managedFieldsManagers: obj.managedFieldsManagers?.map((y) => y),
+    name: obj.name,
+    namespace: obj.namespace,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecInfo
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecInfo {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecInfo#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecInfo#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecInfo' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecInfo(
+  obj:
+    ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecInfo | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#chart
+   */
+  readonly chart?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#directory
+   */
+  readonly directory?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#helm
+   */
+  readonly helm?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#kustomize
+   */
+  readonly kustomize?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#plugin
+   */
+  readonly plugin?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#ref
+   */
+  readonly ref?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource#targetRevision
+   */
+  readonly targetRevision?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSource
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    chart: obj.chart,
+    directory:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory(
+        obj.directory,
+      ),
+    helm: toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm(
+      obj.helm,
+    ),
+    kustomize:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize(
+        obj.kustomize,
+      ),
+    name: obj.name,
+    path: obj.path,
+    plugin:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin(
+        obj.plugin,
+      ),
+    ref: obj.ref,
+    repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
+    targetRevision: obj.targetRevision,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator#drySource
+   */
+  readonly drySource: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator#hydrateTo
+   */
+  readonly hydrateTo?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorHydrateTo;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator#syncSource
+   */
+  readonly syncSource: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydrator
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    drySource:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource(
+        obj.drySource,
+      ),
+    hydrateTo:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorHydrateTo(
+        obj.hydrateTo,
+      ),
+    syncSource:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource(
+        obj.syncSource,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#chart
+   */
+  readonly chart?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#directory
+   */
+  readonly directory?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#helm
+   */
+  readonly helm?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#kustomize
+   */
+  readonly kustomize?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#plugin
+   */
+  readonly plugin?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#ref
+   */
+  readonly ref?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#tagPrefix
+   */
+  readonly tagPrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources#targetRevision
+   */
+  readonly targetRevision?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSources
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    chart: obj.chart,
+    directory:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory(
+        obj.directory,
+      ),
+    helm: toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm(
+      obj.helm,
+    ),
+    kustomize:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize(
+        obj.kustomize,
+      ),
+    name: obj.name,
+    path: obj.path,
+    plugin:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin(
+        obj.plugin,
+      ),
+    ref: obj.ref,
+    repoURL: obj.repoUrl,
+    tagPrefix: obj.tagPrefix,
+    targetRevision: obj.targetRevision,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy#automated
+   */
+  readonly automated?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy#managedNamespaceMetadata
+   */
+  readonly managedNamespaceMetadata?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy#retry
+   */
+  readonly retry?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy#syncOptions
+   */
+  readonly syncOptions?: string[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicy
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    automated:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated(
+        obj.automated,
+      ),
+    managedNamespaceMetadata:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata(
+        obj.managedNamespaceMetadata,
+      ),
+    retry:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry(
+        obj.retry,
+      ),
+    syncOptions: obj.syncOptions?.map((y) => y),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecDestination
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecDestination {
@@ -50970,6 +54776,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourcePlugin
  */
 export interface ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -51003,6 +54814,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydrat
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -51729,6 +55541,1103 @@ export function toJson_ApplicationSetSpecGeneratorsMergeTemplateSpecSyncPolicyRe
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet#extVars
+   */
+  readonly extVars?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet#libs
+   */
+  readonly libs?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet#tlas
+   */
+  readonly tlas?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    extVars: obj.extVars?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars(
+        y,
+      ),
+    ),
+    libs: obj.libs?.map((y) => y),
+    tlas: obj.tlas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmFileParameters
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmFileParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmFileParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmFileParameters#path
+   */
+  readonly path?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmFileParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmFileParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmFileParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters#forceString
+   */
+  readonly forceString?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters#value
+   */
+  readonly value?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters(
+  obj:
+    ApplicationSetSpecGeneratorsOciTemplateSpecSourceHelmParameters | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    forceString: obj.forceString,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches#options
+   */
+  readonly options?: { [key: string]: boolean };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches#patch
+   */
+  readonly patch?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches#target
+   */
+  readonly target?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatches
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    options:
+      obj.options === undefined
+        ? undefined
+        : Object.entries(obj.options).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    patch: obj.patch,
+    path: obj.path,
+    target:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget(
+        obj.target,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicas
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicas#count
+   */
+  readonly count: ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicasCount;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicas#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicas(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    count: obj.count?.value,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginEnv
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginEnv {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginEnv#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginEnv(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginEnv | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters#array
+   */
+  readonly array?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters#map
+   */
+  readonly map?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters#string
+   */
+  readonly string?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcePluginParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    array: obj.array?.map((y) => y),
+    map:
+      obj.map === undefined
+        ? undefined
+        : Object.entries(obj.map).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    string: obj.string,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#exclude
+   */
+  readonly exclude?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#include
+   */
+  readonly include?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#jsonnet
+   */
+  readonly jsonnet?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#recurse
+   */
+  readonly recurse?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
+    exclude: obj.exclude,
+    include: obj.include,
+    jsonnet:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet(
+        obj.jsonnet,
+      ),
+    recurse: obj.recurse,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#fileParameters
+   */
+  readonly fileParameters?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#ignoreMissingValueFiles
+   */
+  readonly ignoreMissingValueFiles?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#passCredentials
+   */
+  readonly passCredentials?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#releaseName
+   */
+  readonly releaseName?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#skipCrds
+   */
+  readonly skipCrds?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#skipSchemaValidation
+   */
+  readonly skipSchemaValidation?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#skipTests
+   */
+  readonly skipTests?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#valueFiles
+   */
+  readonly valueFiles?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#values
+   */
+  readonly values?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#valuesObject
+   */
+  readonly valuesObject?: any;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    fileParameters: obj.fileParameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters(
+        y,
+      ),
+    ),
+    ignoreMissingValueFiles: obj.ignoreMissingValueFiles,
+    kubeVersion: obj.kubeVersion,
+    namespace: obj.namespace,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters(
+        y,
+      ),
+    ),
+    passCredentials: obj.passCredentials,
+    releaseName: obj.releaseName,
+    skipCrds: obj.skipCrds,
+    skipSchemaValidation: obj.skipSchemaValidation,
+    skipTests: obj.skipTests,
+    valueFiles: obj.valueFiles?.map((y) => y),
+    values: obj.values,
+    valuesObject: obj.valuesObject,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#commonAnnotations
+   */
+  readonly commonAnnotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#commonAnnotationsEnvsubst
+   */
+  readonly commonAnnotationsEnvsubst?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#commonLabels
+   */
+  readonly commonLabels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#components
+   */
+  readonly components?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#forceCommonAnnotations
+   */
+  readonly forceCommonAnnotations?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#forceCommonLabels
+   */
+  readonly forceCommonLabels?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#ignoreMissingComponents
+   */
+  readonly ignoreMissingComponents?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#images
+   */
+  readonly images?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#labelIncludeTemplates
+   */
+  readonly labelIncludeTemplates?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#labelWithoutSelector
+   */
+  readonly labelWithoutSelector?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#namePrefix
+   */
+  readonly namePrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#nameSuffix
+   */
+  readonly nameSuffix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#patches
+   */
+  readonly patches?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#replicas
+   */
+  readonly replicas?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    commonAnnotations:
+      obj.commonAnnotations === undefined
+        ? undefined
+        : Object.entries(obj.commonAnnotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    commonAnnotationsEnvsubst: obj.commonAnnotationsEnvsubst,
+    commonLabels:
+      obj.commonLabels === undefined
+        ? undefined
+        : Object.entries(obj.commonLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    components: obj.components?.map((y) => y),
+    forceCommonAnnotations: obj.forceCommonAnnotations,
+    forceCommonLabels: obj.forceCommonLabels,
+    ignoreMissingComponents: obj.ignoreMissingComponents,
+    images: obj.images?.map((y) => y),
+    kubeVersion: obj.kubeVersion,
+    labelIncludeTemplates: obj.labelIncludeTemplates,
+    labelWithoutSelector: obj.labelWithoutSelector,
+    namePrefix: obj.namePrefix,
+    nameSuffix: obj.nameSuffix,
+    namespace: obj.namespace,
+    patches: obj.patches?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches(
+        y,
+      ),
+    ),
+    replicas: obj.replicas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas(
+        y,
+      ),
+    ),
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin#env
+   */
+  readonly env?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    env: obj.env?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv(
+        y,
+      ),
+    ),
+    name: obj.name,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet#extVars
+   */
+  readonly extVars?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet#libs
+   */
+  readonly libs?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet#tlas
+   */
+  readonly tlas?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    extVars: obj.extVars?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars(
+        y,
+      ),
+    ),
+    libs: obj.libs?.map((y) => y),
+    tlas: obj.tlas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmFileParameters
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmFileParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmFileParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmFileParameters#path
+   */
+  readonly path?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmFileParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmFileParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmFileParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters#forceString
+   */
+  readonly forceString?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters#value
+   */
+  readonly value?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcesHelmParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    forceString: obj.forceString,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches#options
+   */
+  readonly options?: { [key: string]: boolean };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches#patch
+   */
+  readonly patch?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches#target
+   */
+  readonly target?: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatches
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    options:
+      obj.options === undefined
+        ? undefined
+        : Object.entries(obj.options).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    patch: obj.patch,
+    path: obj.path,
+    target:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget(
+        obj.target,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicas
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicas#count
+   */
+  readonly count: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicas#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicas(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    count: obj.count?.value,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginEnv
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginEnv {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginEnv#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginEnv(
+  obj: ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginEnv | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters#array
+   */
+  readonly array?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters#map
+   */
+  readonly map?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters#string
+   */
+  readonly string?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcesPluginParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    array: obj.array?.map((y) => y),
+    map:
+      obj.map === undefined
+        ? undefined
+        : Object.entries(obj.map).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    string: obj.string,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff#duration
+   */
+  readonly duration?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff#factor
+   */
+  readonly factor?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff#maxDuration
+   */
+  readonly maxDuration?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSyncPolicyRetryBackoff
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    duration: obj.duration,
+    factor: obj.factor,
+    maxDuration: obj.maxDuration,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectoryJsonnet
  */
 export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourceDirectoryJsonnet {
@@ -52064,6 +56973,11 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourcePlugi
  */
 export interface ApplicationSetSpecGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -52097,6 +57011,7 @@ export function toJson_ApplicationSetSpecGeneratorsPluginTemplateSpecSourceHydra
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -53159,6 +58074,11 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
  */
 export interface ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsPullRequestTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -53192,6 +58112,7 @@ export function toJson_ApplicationSetSpecGeneratorsPullRequestTemplateSpecSource
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -54255,6 +59176,11 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
  */
 export interface ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsScmProviderTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -54288,6 +59214,7 @@ export function toJson_ApplicationSetSpecGeneratorsScmProviderTemplateSpecSource
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -57967,6 +62894,11 @@ export class ApplicationSetSpecGeneratorsListTemplateSpecSourcesKustomizeReplica
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -58000,6 +62932,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -58512,6 +63445,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -58545,6 +63483,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -59049,6 +63988,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -59082,6 +64026,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -59594,6 +64539,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -59627,6 +64577,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -60131,6 +65082,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -60164,6 +65120,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -60676,6 +65633,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -60709,6 +65671,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -61213,6 +66176,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -61246,6 +66214,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -61758,6 +66727,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -61791,6 +66765,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -62291,9 +67266,1108 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory#exclude
+   */
+  readonly exclude?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory#include
+   */
+  readonly include?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory#jsonnet
+   */
+  readonly jsonnet?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory#recurse
+   */
+  readonly recurse?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectory
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
+    exclude: obj.exclude,
+    include: obj.include,
+    jsonnet:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet(
+        obj.jsonnet,
+      ),
+    recurse: obj.recurse,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#fileParameters
+   */
+  readonly fileParameters?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmFileParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#ignoreMissingValueFiles
+   */
+  readonly ignoreMissingValueFiles?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#passCredentials
+   */
+  readonly passCredentials?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#releaseName
+   */
+  readonly releaseName?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#skipCrds
+   */
+  readonly skipCrds?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#skipSchemaValidation
+   */
+  readonly skipSchemaValidation?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#skipTests
+   */
+  readonly skipTests?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#valueFiles
+   */
+  readonly valueFiles?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#values
+   */
+  readonly values?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#valuesObject
+   */
+  readonly valuesObject?: any;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelm
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    fileParameters: obj.fileParameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmFileParameters(
+        y,
+      ),
+    ),
+    ignoreMissingValueFiles: obj.ignoreMissingValueFiles,
+    kubeVersion: obj.kubeVersion,
+    namespace: obj.namespace,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters(
+        y,
+      ),
+    ),
+    passCredentials: obj.passCredentials,
+    releaseName: obj.releaseName,
+    skipCrds: obj.skipCrds,
+    skipSchemaValidation: obj.skipSchemaValidation,
+    skipTests: obj.skipTests,
+    valueFiles: obj.valueFiles?.map((y) => y),
+    values: obj.values,
+    valuesObject: obj.valuesObject,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#commonAnnotations
+   */
+  readonly commonAnnotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#commonAnnotationsEnvsubst
+   */
+  readonly commonAnnotationsEnvsubst?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#commonLabels
+   */
+  readonly commonLabels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#components
+   */
+  readonly components?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#forceCommonAnnotations
+   */
+  readonly forceCommonAnnotations?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#forceCommonLabels
+   */
+  readonly forceCommonLabels?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#ignoreMissingComponents
+   */
+  readonly ignoreMissingComponents?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#images
+   */
+  readonly images?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#labelIncludeTemplates
+   */
+  readonly labelIncludeTemplates?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#labelWithoutSelector
+   */
+  readonly labelWithoutSelector?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#namePrefix
+   */
+  readonly namePrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#nameSuffix
+   */
+  readonly nameSuffix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#patches
+   */
+  readonly patches?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#replicas
+   */
+  readonly replicas?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicas[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomize
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    commonAnnotations:
+      obj.commonAnnotations === undefined
+        ? undefined
+        : Object.entries(obj.commonAnnotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    commonAnnotationsEnvsubst: obj.commonAnnotationsEnvsubst,
+    commonLabels:
+      obj.commonLabels === undefined
+        ? undefined
+        : Object.entries(obj.commonLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    components: obj.components?.map((y) => y),
+    forceCommonAnnotations: obj.forceCommonAnnotations,
+    forceCommonLabels: obj.forceCommonLabels,
+    ignoreMissingComponents: obj.ignoreMissingComponents,
+    images: obj.images?.map((y) => y),
+    kubeVersion: obj.kubeVersion,
+    labelIncludeTemplates: obj.labelIncludeTemplates,
+    labelWithoutSelector: obj.labelWithoutSelector,
+    namePrefix: obj.namePrefix,
+    nameSuffix: obj.nameSuffix,
+    namespace: obj.namespace,
+    patches: obj.patches?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches(
+        y,
+      ),
+    ),
+    replicas: obj.replicas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicas(
+        y,
+      ),
+    ),
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin#env
+   */
+  readonly env?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginEnv[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePlugin
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    env: obj.env?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginEnv(
+        y,
+      ),
+    ),
+    name: obj.name,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource#directory
+   */
+  readonly directory?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource#helm
+   */
+  readonly helm?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource#kustomize
+   */
+  readonly kustomize?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource#path
+   */
+  readonly path: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource#plugin
+   */
+  readonly plugin?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource#targetRevision
+   */
+  readonly targetRevision: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySource
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    directory:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory(
+        obj.directory,
+      ),
+    helm: toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm(
+      obj.helm,
+    ),
+    kustomize:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize(
+        obj.kustomize,
+      ),
+    path: obj.path,
+    plugin:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin(
+        obj.plugin,
+      ),
+    repoURL: obj.repoUrl,
+    targetRevision: obj.targetRevision,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorHydrateTo
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorHydrateTo {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorHydrateTo#targetBranch
+   */
+  readonly targetBranch: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorHydrateTo' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorHydrateTo(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorHydrateTo
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    targetBranch: obj.targetBranch,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource#path
+   */
+  readonly path: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource#targetBranch
+   */
+  readonly targetBranch: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorSyncSource
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    path: obj.path,
+    repoURL: obj.repoUrl,
+    targetBranch: obj.targetBranch,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory#exclude
+   */
+  readonly exclude?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory#include
+   */
+  readonly include?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory#jsonnet
+   */
+  readonly jsonnet?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory#recurse
+   */
+  readonly recurse?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectory
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
+    exclude: obj.exclude,
+    include: obj.include,
+    jsonnet:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet(
+        obj.jsonnet,
+      ),
+    recurse: obj.recurse,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#fileParameters
+   */
+  readonly fileParameters?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmFileParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#ignoreMissingValueFiles
+   */
+  readonly ignoreMissingValueFiles?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#passCredentials
+   */
+  readonly passCredentials?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#releaseName
+   */
+  readonly releaseName?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#skipCrds
+   */
+  readonly skipCrds?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#skipSchemaValidation
+   */
+  readonly skipSchemaValidation?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#skipTests
+   */
+  readonly skipTests?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#valueFiles
+   */
+  readonly valueFiles?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#values
+   */
+  readonly values?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#valuesObject
+   */
+  readonly valuesObject?: any;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelm
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    fileParameters: obj.fileParameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmFileParameters(
+        y,
+      ),
+    ),
+    ignoreMissingValueFiles: obj.ignoreMissingValueFiles,
+    kubeVersion: obj.kubeVersion,
+    namespace: obj.namespace,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters(
+        y,
+      ),
+    ),
+    passCredentials: obj.passCredentials,
+    releaseName: obj.releaseName,
+    skipCrds: obj.skipCrds,
+    skipSchemaValidation: obj.skipSchemaValidation,
+    skipTests: obj.skipTests,
+    valueFiles: obj.valueFiles?.map((y) => y),
+    values: obj.values,
+    valuesObject: obj.valuesObject,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#commonAnnotations
+   */
+  readonly commonAnnotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#commonAnnotationsEnvsubst
+   */
+  readonly commonAnnotationsEnvsubst?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#commonLabels
+   */
+  readonly commonLabels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#components
+   */
+  readonly components?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#forceCommonAnnotations
+   */
+  readonly forceCommonAnnotations?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#forceCommonLabels
+   */
+  readonly forceCommonLabels?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#ignoreMissingComponents
+   */
+  readonly ignoreMissingComponents?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#images
+   */
+  readonly images?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#labelIncludeTemplates
+   */
+  readonly labelIncludeTemplates?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#labelWithoutSelector
+   */
+  readonly labelWithoutSelector?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#namePrefix
+   */
+  readonly namePrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#nameSuffix
+   */
+  readonly nameSuffix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#patches
+   */
+  readonly patches?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#replicas
+   */
+  readonly replicas?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicas[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomize
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    commonAnnotations:
+      obj.commonAnnotations === undefined
+        ? undefined
+        : Object.entries(obj.commonAnnotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    commonAnnotationsEnvsubst: obj.commonAnnotationsEnvsubst,
+    commonLabels:
+      obj.commonLabels === undefined
+        ? undefined
+        : Object.entries(obj.commonLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    components: obj.components?.map((y) => y),
+    forceCommonAnnotations: obj.forceCommonAnnotations,
+    forceCommonLabels: obj.forceCommonLabels,
+    ignoreMissingComponents: obj.ignoreMissingComponents,
+    images: obj.images?.map((y) => y),
+    kubeVersion: obj.kubeVersion,
+    labelIncludeTemplates: obj.labelIncludeTemplates,
+    labelWithoutSelector: obj.labelWithoutSelector,
+    namePrefix: obj.namePrefix,
+    nameSuffix: obj.nameSuffix,
+    namespace: obj.namespace,
+    patches: obj.patches?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches(
+        y,
+      ),
+    ),
+    replicas: obj.replicas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicas(
+        y,
+      ),
+    ),
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin#env
+   */
+  readonly env?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginEnv[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPlugin
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    env: obj.env?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginEnv(
+        y,
+      ),
+    ),
+    name: obj.name,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated#allowEmpty
+   */
+  readonly allowEmpty?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated#enabled
+   */
+  readonly enabled?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated#prune
+   */
+  readonly prune?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated#selfHeal
+   */
+  readonly selfHeal?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyAutomated
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    allowEmpty: obj.allowEmpty,
+    enabled: obj.enabled,
+    prune: obj.prune,
+    selfHeal: obj.selfHeal,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata#annotations
+   */
+  readonly annotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata#labels
+   */
+  readonly labels?: { [key: string]: string };
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotations:
+      obj.annotations === undefined
+        ? undefined
+        : Object.entries(obj.annotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    labels:
+      obj.labels === undefined
+        ? undefined
+        : Object.entries(obj.labels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry#backoff
+   */
+  readonly backoff?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry#limit
+   */
+  readonly limit?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry#refresh
+   */
+  readonly refresh?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetry
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    backoff:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff(
+        obj.backoff,
+      ),
+    limit: obj.limit,
+    refresh: obj.refresh,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceDirectory
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
   /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceDirectory#exclude
    */
@@ -62328,6 +68402,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -62840,6 +68915,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -62873,6 +68953,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -63377,6 +69458,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -63410,6 +69496,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -63922,6 +70009,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -63955,6 +70047,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -64459,6 +70552,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -64492,6 +70590,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -65004,6 +71103,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -65037,6 +71141,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -66233,6 +72338,11 @@ export class ApplicationSetSpecGeneratorsMatrixTemplateSpecSourcesKustomizeRepli
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -66266,6 +72376,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -66778,6 +72889,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -66811,6 +72927,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -67315,6 +73432,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -67348,6 +73470,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -67860,6 +73983,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -67893,6 +74021,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -68397,6 +74526,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -68430,6 +74564,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -68942,6 +75077,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -68975,6 +75115,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -69479,6 +75620,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -69512,6 +75658,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -70024,6 +76171,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -70057,6 +76209,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -70557,9 +76710,1108 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory#exclude
+   */
+  readonly exclude?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory#include
+   */
+  readonly include?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory#jsonnet
+   */
+  readonly jsonnet?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory#recurse
+   */
+  readonly recurse?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectory
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
+    exclude: obj.exclude,
+    include: obj.include,
+    jsonnet:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet(
+        obj.jsonnet,
+      ),
+    recurse: obj.recurse,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#fileParameters
+   */
+  readonly fileParameters?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmFileParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#ignoreMissingValueFiles
+   */
+  readonly ignoreMissingValueFiles?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#passCredentials
+   */
+  readonly passCredentials?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#releaseName
+   */
+  readonly releaseName?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#skipCrds
+   */
+  readonly skipCrds?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#skipSchemaValidation
+   */
+  readonly skipSchemaValidation?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#skipTests
+   */
+  readonly skipTests?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#valueFiles
+   */
+  readonly valueFiles?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#values
+   */
+  readonly values?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#valuesObject
+   */
+  readonly valuesObject?: any;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelm
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    fileParameters: obj.fileParameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmFileParameters(
+        y,
+      ),
+    ),
+    ignoreMissingValueFiles: obj.ignoreMissingValueFiles,
+    kubeVersion: obj.kubeVersion,
+    namespace: obj.namespace,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters(
+        y,
+      ),
+    ),
+    passCredentials: obj.passCredentials,
+    releaseName: obj.releaseName,
+    skipCrds: obj.skipCrds,
+    skipSchemaValidation: obj.skipSchemaValidation,
+    skipTests: obj.skipTests,
+    valueFiles: obj.valueFiles?.map((y) => y),
+    values: obj.values,
+    valuesObject: obj.valuesObject,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#commonAnnotations
+   */
+  readonly commonAnnotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#commonAnnotationsEnvsubst
+   */
+  readonly commonAnnotationsEnvsubst?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#commonLabels
+   */
+  readonly commonLabels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#components
+   */
+  readonly components?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#forceCommonAnnotations
+   */
+  readonly forceCommonAnnotations?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#forceCommonLabels
+   */
+  readonly forceCommonLabels?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#ignoreMissingComponents
+   */
+  readonly ignoreMissingComponents?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#images
+   */
+  readonly images?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#labelIncludeTemplates
+   */
+  readonly labelIncludeTemplates?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#labelWithoutSelector
+   */
+  readonly labelWithoutSelector?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#namePrefix
+   */
+  readonly namePrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#nameSuffix
+   */
+  readonly nameSuffix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#patches
+   */
+  readonly patches?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#replicas
+   */
+  readonly replicas?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicas[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomize
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    commonAnnotations:
+      obj.commonAnnotations === undefined
+        ? undefined
+        : Object.entries(obj.commonAnnotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    commonAnnotationsEnvsubst: obj.commonAnnotationsEnvsubst,
+    commonLabels:
+      obj.commonLabels === undefined
+        ? undefined
+        : Object.entries(obj.commonLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    components: obj.components?.map((y) => y),
+    forceCommonAnnotations: obj.forceCommonAnnotations,
+    forceCommonLabels: obj.forceCommonLabels,
+    ignoreMissingComponents: obj.ignoreMissingComponents,
+    images: obj.images?.map((y) => y),
+    kubeVersion: obj.kubeVersion,
+    labelIncludeTemplates: obj.labelIncludeTemplates,
+    labelWithoutSelector: obj.labelWithoutSelector,
+    namePrefix: obj.namePrefix,
+    nameSuffix: obj.nameSuffix,
+    namespace: obj.namespace,
+    patches: obj.patches?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches(
+        y,
+      ),
+    ),
+    replicas: obj.replicas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicas(
+        y,
+      ),
+    ),
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin#env
+   */
+  readonly env?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginEnv[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePlugin
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    env: obj.env?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginEnv(
+        y,
+      ),
+    ),
+    name: obj.name,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource#directory
+   */
+  readonly directory?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource#helm
+   */
+  readonly helm?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource#kustomize
+   */
+  readonly kustomize?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource#path
+   */
+  readonly path: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource#plugin
+   */
+  readonly plugin?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource#repoURL
+   */
+  readonly repoUrl: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource#targetRevision
+   */
+  readonly targetRevision: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySource
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    directory:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory(
+        obj.directory,
+      ),
+    helm: toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm(
+      obj.helm,
+    ),
+    kustomize:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize(
+        obj.kustomize,
+      ),
+    path: obj.path,
+    plugin:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin(
+        obj.plugin,
+      ),
+    repoURL: obj.repoUrl,
+    targetRevision: obj.targetRevision,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorHydrateTo
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorHydrateTo {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorHydrateTo#targetBranch
+   */
+  readonly targetBranch: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorHydrateTo' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorHydrateTo(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorHydrateTo
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    targetBranch: obj.targetBranch,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource#path
+   */
+  readonly path: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource#repoURL
+   */
+  readonly repoUrl?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource#targetBranch
+   */
+  readonly targetBranch: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorSyncSource
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    path: obj.path,
+    repoURL: obj.repoUrl,
+    targetBranch: obj.targetBranch,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory#exclude
+   */
+  readonly exclude?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory#include
+   */
+  readonly include?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory#jsonnet
+   */
+  readonly jsonnet?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory#recurse
+   */
+  readonly recurse?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectory
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
+    exclude: obj.exclude,
+    include: obj.include,
+    jsonnet:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet(
+        obj.jsonnet,
+      ),
+    recurse: obj.recurse,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#fileParameters
+   */
+  readonly fileParameters?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmFileParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#ignoreMissingValueFiles
+   */
+  readonly ignoreMissingValueFiles?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#passCredentials
+   */
+  readonly passCredentials?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#releaseName
+   */
+  readonly releaseName?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#skipCrds
+   */
+  readonly skipCrds?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#skipSchemaValidation
+   */
+  readonly skipSchemaValidation?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#skipTests
+   */
+  readonly skipTests?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#valueFiles
+   */
+  readonly valueFiles?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#values
+   */
+  readonly values?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#valuesObject
+   */
+  readonly valuesObject?: any;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelm
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    fileParameters: obj.fileParameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmFileParameters(
+        y,
+      ),
+    ),
+    ignoreMissingValueFiles: obj.ignoreMissingValueFiles,
+    kubeVersion: obj.kubeVersion,
+    namespace: obj.namespace,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters(
+        y,
+      ),
+    ),
+    passCredentials: obj.passCredentials,
+    releaseName: obj.releaseName,
+    skipCrds: obj.skipCrds,
+    skipSchemaValidation: obj.skipSchemaValidation,
+    skipTests: obj.skipTests,
+    valueFiles: obj.valueFiles?.map((y) => y),
+    values: obj.values,
+    valuesObject: obj.valuesObject,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#commonAnnotations
+   */
+  readonly commonAnnotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#commonAnnotationsEnvsubst
+   */
+  readonly commonAnnotationsEnvsubst?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#commonLabels
+   */
+  readonly commonLabels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#components
+   */
+  readonly components?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#forceCommonAnnotations
+   */
+  readonly forceCommonAnnotations?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#forceCommonLabels
+   */
+  readonly forceCommonLabels?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#ignoreMissingComponents
+   */
+  readonly ignoreMissingComponents?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#images
+   */
+  readonly images?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#labelIncludeTemplates
+   */
+  readonly labelIncludeTemplates?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#labelWithoutSelector
+   */
+  readonly labelWithoutSelector?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#namePrefix
+   */
+  readonly namePrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#nameSuffix
+   */
+  readonly nameSuffix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#patches
+   */
+  readonly patches?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#replicas
+   */
+  readonly replicas?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicas[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomize
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    commonAnnotations:
+      obj.commonAnnotations === undefined
+        ? undefined
+        : Object.entries(obj.commonAnnotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    commonAnnotationsEnvsubst: obj.commonAnnotationsEnvsubst,
+    commonLabels:
+      obj.commonLabels === undefined
+        ? undefined
+        : Object.entries(obj.commonLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    components: obj.components?.map((y) => y),
+    forceCommonAnnotations: obj.forceCommonAnnotations,
+    forceCommonLabels: obj.forceCommonLabels,
+    ignoreMissingComponents: obj.ignoreMissingComponents,
+    images: obj.images?.map((y) => y),
+    kubeVersion: obj.kubeVersion,
+    labelIncludeTemplates: obj.labelIncludeTemplates,
+    labelWithoutSelector: obj.labelWithoutSelector,
+    namePrefix: obj.namePrefix,
+    nameSuffix: obj.nameSuffix,
+    namespace: obj.namespace,
+    patches: obj.patches?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches(
+        y,
+      ),
+    ),
+    replicas: obj.replicas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicas(
+        y,
+      ),
+    ),
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin#env
+   */
+  readonly env?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginEnv[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPlugin
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    env: obj.env?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginEnv(
+        y,
+      ),
+    ),
+    name: obj.name,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated#allowEmpty
+   */
+  readonly allowEmpty?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated#enabled
+   */
+  readonly enabled?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated#prune
+   */
+  readonly prune?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated#selfHeal
+   */
+  readonly selfHeal?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyAutomated
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    allowEmpty: obj.allowEmpty,
+    enabled: obj.enabled,
+    prune: obj.prune,
+    selfHeal: obj.selfHeal,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata#annotations
+   */
+  readonly annotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata#labels
+   */
+  readonly labels?: { [key: string]: string };
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyManagedNamespaceMetadata
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotations:
+      obj.annotations === undefined
+        ? undefined
+        : Object.entries(obj.annotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    labels:
+      obj.labels === undefined
+        ? undefined
+        : Object.entries(obj.labels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry#backoff
+   */
+  readonly backoff?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry#limit
+   */
+  readonly limit?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry#refresh
+   */
+  readonly refresh?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetry
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    backoff:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff(
+        obj.backoff,
+      ),
+    limit: obj.limit,
+    refresh: obj.refresh,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceDirectory
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
   /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceDirectory#exclude
    */
@@ -70594,6 +77846,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -71106,6 +78359,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -71139,6 +78397,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -71643,6 +78902,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -71676,6 +78940,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -72188,6 +79453,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -72221,6 +79491,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -72725,6 +79996,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -72758,6 +80034,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -73270,6 +80547,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourcesDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourcesDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourcesDirectory#exclude
    */
   readonly exclude?: string;
@@ -73303,6 +80585,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -74488,6 +81771,698 @@ export class ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomizeReplic
     value: string,
   ): ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomizeReplicasCount {
     return new ApplicationSetSpecGeneratorsMergeTemplateSpecSourcesKustomizeReplicasCount(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#annotationSelector
+   */
+  readonly annotationSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#kind
+   */
+  readonly kind?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#labelSelector
+   */
+  readonly labelSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizePatchesTarget
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotationSelector: obj.annotationSelector,
+    group: obj.group,
+    kind: obj.kind,
+    labelSelector: obj.labelSelector,
+    name: obj.name,
+    namespace: obj.namespace,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicasCount
+ */
+export class ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicasCount {
+  public static fromNumber(
+    value: number,
+  ): ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsOciTemplateSpecSourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet#extVars
+   */
+  readonly extVars?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet#libs
+   */
+  readonly libs?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet#tlas
+   */
+  readonly tlas?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    extVars: obj.extVars?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars(
+        y,
+      ),
+    ),
+    libs: obj.libs?.map((y) => y),
+    tlas: obj.tlas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters#path
+   */
+  readonly path?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters#forceString
+   */
+  readonly forceString?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters#value
+   */
+  readonly value?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    forceString: obj.forceString,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#options
+   */
+  readonly options?: { [key: string]: boolean };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#patch
+   */
+  readonly patch?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#target
+   */
+  readonly target?: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    options:
+      obj.options === undefined
+        ? undefined
+        : Object.entries(obj.options).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    patch: obj.patch,
+    path: obj.path,
+    target:
+      toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget(
+        obj.target,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas#count
+   */
+  readonly count: ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    count: obj.count?.value,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#array
+   */
+  readonly array?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#map
+   */
+  readonly map?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#string
+   */
+  readonly string?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    array: obj.array?.map((y) => y),
+    map:
+      obj.map === undefined
+        ? undefined
+        : Object.entries(obj.map).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    string: obj.string,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#annotationSelector
+   */
+  readonly annotationSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#kind
+   */
+  readonly kind?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#labelSelector
+   */
+  readonly labelSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotationSelector: obj.annotationSelector,
+    group: obj.group,
+    kind: obj.kind,
+    labelSelector: obj.labelSelector,
+    name: obj.name,
+    namespace: obj.namespace,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount
+ */
+export class ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount {
+  public static fromNumber(
+    value: number,
+  ): ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount(
       value,
     );
   }
@@ -77627,6 +85602,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -77660,6 +85640,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClusterDecisi
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -78723,6 +86704,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -78756,6 +86742,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsClustersTempl
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -79819,6 +87806,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -79852,6 +87844,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsGitTemplateSp
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -80915,6 +88908,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -80948,6 +88946,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -81675,6 +89674,1108 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateS
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet#extVars
+   */
+  readonly extVars?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet#libs
+   */
+  readonly libs?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet#tlas
+   */
+  readonly tlas?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    extVars: obj.extVars?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars(
+        y,
+      ),
+    ),
+    libs: obj.libs?.map((y) => y),
+    tlas: obj.tlas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmFileParameters
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmFileParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmFileParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmFileParameters#path
+   */
+  readonly path?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmFileParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmFileParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmFileParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters#forceString
+   */
+  readonly forceString?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters#value
+   */
+  readonly value?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHelmParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    forceString: obj.forceString,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches#options
+   */
+  readonly options?: { [key: string]: boolean };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches#patch
+   */
+  readonly patch?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches#target
+   */
+  readonly target?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatches
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    options:
+      obj.options === undefined
+        ? undefined
+        : Object.entries(obj.options).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    patch: obj.patch,
+    path: obj.path,
+    target:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget(
+        obj.target,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicas
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicas#count
+   */
+  readonly count: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicasCount;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicas#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicas(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    count: obj.count?.value,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginEnv
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginEnv {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginEnv#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginEnv(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginEnv
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters#array
+   */
+  readonly array?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters#map
+   */
+  readonly map?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters#string
+   */
+  readonly string?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcePluginParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    array: obj.array?.map((y) => y),
+    map:
+      obj.map === undefined
+        ? undefined
+        : Object.entries(obj.map).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    string: obj.string,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#exclude
+   */
+  readonly exclude?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#include
+   */
+  readonly include?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#jsonnet
+   */
+  readonly jsonnet?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#recurse
+   */
+  readonly recurse?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
+    exclude: obj.exclude,
+    include: obj.include,
+    jsonnet:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet(
+        obj.jsonnet,
+      ),
+    recurse: obj.recurse,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#fileParameters
+   */
+  readonly fileParameters?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#ignoreMissingValueFiles
+   */
+  readonly ignoreMissingValueFiles?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#passCredentials
+   */
+  readonly passCredentials?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#releaseName
+   */
+  readonly releaseName?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#skipCrds
+   */
+  readonly skipCrds?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#skipSchemaValidation
+   */
+  readonly skipSchemaValidation?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#skipTests
+   */
+  readonly skipTests?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#valueFiles
+   */
+  readonly valueFiles?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#values
+   */
+  readonly values?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#valuesObject
+   */
+  readonly valuesObject?: any;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    fileParameters: obj.fileParameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters(
+        y,
+      ),
+    ),
+    ignoreMissingValueFiles: obj.ignoreMissingValueFiles,
+    kubeVersion: obj.kubeVersion,
+    namespace: obj.namespace,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters(
+        y,
+      ),
+    ),
+    passCredentials: obj.passCredentials,
+    releaseName: obj.releaseName,
+    skipCrds: obj.skipCrds,
+    skipSchemaValidation: obj.skipSchemaValidation,
+    skipTests: obj.skipTests,
+    valueFiles: obj.valueFiles?.map((y) => y),
+    values: obj.values,
+    valuesObject: obj.valuesObject,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#commonAnnotations
+   */
+  readonly commonAnnotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#commonAnnotationsEnvsubst
+   */
+  readonly commonAnnotationsEnvsubst?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#commonLabels
+   */
+  readonly commonLabels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#components
+   */
+  readonly components?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#forceCommonAnnotations
+   */
+  readonly forceCommonAnnotations?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#forceCommonLabels
+   */
+  readonly forceCommonLabels?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#ignoreMissingComponents
+   */
+  readonly ignoreMissingComponents?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#images
+   */
+  readonly images?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#labelIncludeTemplates
+   */
+  readonly labelIncludeTemplates?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#labelWithoutSelector
+   */
+  readonly labelWithoutSelector?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#namePrefix
+   */
+  readonly namePrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#nameSuffix
+   */
+  readonly nameSuffix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#patches
+   */
+  readonly patches?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#replicas
+   */
+  readonly replicas?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    commonAnnotations:
+      obj.commonAnnotations === undefined
+        ? undefined
+        : Object.entries(obj.commonAnnotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    commonAnnotationsEnvsubst: obj.commonAnnotationsEnvsubst,
+    commonLabels:
+      obj.commonLabels === undefined
+        ? undefined
+        : Object.entries(obj.commonLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    components: obj.components?.map((y) => y),
+    forceCommonAnnotations: obj.forceCommonAnnotations,
+    forceCommonLabels: obj.forceCommonLabels,
+    ignoreMissingComponents: obj.ignoreMissingComponents,
+    images: obj.images?.map((y) => y),
+    kubeVersion: obj.kubeVersion,
+    labelIncludeTemplates: obj.labelIncludeTemplates,
+    labelWithoutSelector: obj.labelWithoutSelector,
+    namePrefix: obj.namePrefix,
+    nameSuffix: obj.nameSuffix,
+    namespace: obj.namespace,
+    patches: obj.patches?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches(
+        y,
+      ),
+    ),
+    replicas: obj.replicas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas(
+        y,
+      ),
+    ),
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin#env
+   */
+  readonly env?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    env: obj.env?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv(
+        y,
+      ),
+    ),
+    name: obj.name,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet#extVars
+   */
+  readonly extVars?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet#libs
+   */
+  readonly libs?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet#tlas
+   */
+  readonly tlas?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    extVars: obj.extVars?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars(
+        y,
+      ),
+    ),
+    libs: obj.libs?.map((y) => y),
+    tlas: obj.tlas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmFileParameters
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmFileParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmFileParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmFileParameters#path
+   */
+  readonly path?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmFileParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmFileParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmFileParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters#forceString
+   */
+  readonly forceString?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters#value
+   */
+  readonly value?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesHelmParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    forceString: obj.forceString,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches#options
+   */
+  readonly options?: { [key: string]: boolean };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches#patch
+   */
+  readonly patch?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches#target
+   */
+  readonly target?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatches
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    options:
+      obj.options === undefined
+        ? undefined
+        : Object.entries(obj.options).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    patch: obj.patch,
+    path: obj.path,
+    target:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget(
+        obj.target,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicas
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicas#count
+   */
+  readonly count: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicas#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicas(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    count: obj.count?.value,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginEnv
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginEnv {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginEnv#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginEnv(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginEnv
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters#array
+   */
+  readonly array?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters#map
+   */
+  readonly map?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters#string
+   */
+  readonly string?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesPluginParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    array: obj.array?.map((y) => y),
+    map:
+      obj.map === undefined
+        ? undefined
+        : Object.entries(obj.map).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    string: obj.string,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff#duration
+   */
+  readonly duration?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff#factor
+   */
+  readonly factor?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff#maxDuration
+   */
+  readonly maxDuration?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSyncPolicyRetryBackoff
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    duration: obj.duration,
+    factor: obj.factor,
+    maxDuration: obj.maxDuration,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceDirectoryJsonnet
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceDirectoryJsonnet {
@@ -82011,6 +91112,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -82044,6 +91150,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplat
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -83107,6 +92214,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -83140,6 +92252,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsPullRequestTe
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -84203,6 +93316,11 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -84236,6 +93354,7 @@ export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsScmProviderTe
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -85479,6 +94598,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisionResourceTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -85512,6 +94636,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClusterDecisio
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -86575,6 +95700,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsClustersTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -86608,6 +95738,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsClustersTempla
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -87671,6 +96802,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -87704,6 +96840,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsGitTemplateSpe
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -88767,6 +97904,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -88800,6 +97942,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -89527,6 +98670,1108 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSp
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet#extVars
+   */
+  readonly extVars?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet#libs
+   */
+  readonly libs?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet#tlas
+   */
+  readonly tlas?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    extVars: obj.extVars?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars(
+        y,
+      ),
+    ),
+    libs: obj.libs?.map((y) => y),
+    tlas: obj.tlas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmFileParameters
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmFileParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmFileParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmFileParameters#path
+   */
+  readonly path?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmFileParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmFileParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmFileParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters#forceString
+   */
+  readonly forceString?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters#value
+   */
+  readonly value?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHelmParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    forceString: obj.forceString,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches#options
+   */
+  readonly options?: { [key: string]: boolean };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches#patch
+   */
+  readonly patch?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches#target
+   */
+  readonly target?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatches
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    options:
+      obj.options === undefined
+        ? undefined
+        : Object.entries(obj.options).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    patch: obj.patch,
+    path: obj.path,
+    target:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget(
+        obj.target,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicas
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicas#count
+   */
+  readonly count: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicasCount;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicas#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicas(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    count: obj.count?.value,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginEnv
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginEnv {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginEnv#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginEnv(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginEnv
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters#array
+   */
+  readonly array?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters#map
+   */
+  readonly map?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters#string
+   */
+  readonly string?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcePluginParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    array: obj.array?.map((y) => y),
+    map:
+      obj.map === undefined
+        ? undefined
+        : Object.entries(obj.map).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    string: obj.string,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#exclude
+   */
+  readonly exclude?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#include
+   */
+  readonly include?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#jsonnet
+   */
+  readonly jsonnet?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory#recurse
+   */
+  readonly recurse?: boolean;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectory
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
+    exclude: obj.exclude,
+    include: obj.include,
+    jsonnet:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet(
+        obj.jsonnet,
+      ),
+    recurse: obj.recurse,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#fileParameters
+   */
+  readonly fileParameters?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#ignoreMissingValueFiles
+   */
+  readonly ignoreMissingValueFiles?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#passCredentials
+   */
+  readonly passCredentials?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#releaseName
+   */
+  readonly releaseName?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#skipCrds
+   */
+  readonly skipCrds?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#skipSchemaValidation
+   */
+  readonly skipSchemaValidation?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#skipTests
+   */
+  readonly skipTests?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#valueFiles
+   */
+  readonly valueFiles?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#values
+   */
+  readonly values?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#valuesObject
+   */
+  readonly valuesObject?: any;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelm
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    fileParameters: obj.fileParameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters(
+        y,
+      ),
+    ),
+    ignoreMissingValueFiles: obj.ignoreMissingValueFiles,
+    kubeVersion: obj.kubeVersion,
+    namespace: obj.namespace,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters(
+        y,
+      ),
+    ),
+    passCredentials: obj.passCredentials,
+    releaseName: obj.releaseName,
+    skipCrds: obj.skipCrds,
+    skipSchemaValidation: obj.skipSchemaValidation,
+    skipTests: obj.skipTests,
+    valueFiles: obj.valueFiles?.map((y) => y),
+    values: obj.values,
+    valuesObject: obj.valuesObject,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#apiVersions
+   */
+  readonly apiVersions?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#commonAnnotations
+   */
+  readonly commonAnnotations?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#commonAnnotationsEnvsubst
+   */
+  readonly commonAnnotationsEnvsubst?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#commonLabels
+   */
+  readonly commonLabels?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#components
+   */
+  readonly components?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#forceCommonAnnotations
+   */
+  readonly forceCommonAnnotations?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#forceCommonLabels
+   */
+  readonly forceCommonLabels?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#ignoreMissingComponents
+   */
+  readonly ignoreMissingComponents?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#images
+   */
+  readonly images?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#kubeVersion
+   */
+  readonly kubeVersion?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#labelIncludeTemplates
+   */
+  readonly labelIncludeTemplates?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#labelWithoutSelector
+   */
+  readonly labelWithoutSelector?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#namePrefix
+   */
+  readonly namePrefix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#nameSuffix
+   */
+  readonly nameSuffix?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#patches
+   */
+  readonly patches?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#replicas
+   */
+  readonly replicas?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomize
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    apiVersions: obj.apiVersions?.map((y) => y),
+    commonAnnotations:
+      obj.commonAnnotations === undefined
+        ? undefined
+        : Object.entries(obj.commonAnnotations).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    commonAnnotationsEnvsubst: obj.commonAnnotationsEnvsubst,
+    commonLabels:
+      obj.commonLabels === undefined
+        ? undefined
+        : Object.entries(obj.commonLabels).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    components: obj.components?.map((y) => y),
+    forceCommonAnnotations: obj.forceCommonAnnotations,
+    forceCommonLabels: obj.forceCommonLabels,
+    ignoreMissingComponents: obj.ignoreMissingComponents,
+    images: obj.images?.map((y) => y),
+    kubeVersion: obj.kubeVersion,
+    labelIncludeTemplates: obj.labelIncludeTemplates,
+    labelWithoutSelector: obj.labelWithoutSelector,
+    namePrefix: obj.namePrefix,
+    nameSuffix: obj.nameSuffix,
+    namespace: obj.namespace,
+    patches: obj.patches?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches(
+        y,
+      ),
+    ),
+    replicas: obj.replicas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas(
+        y,
+      ),
+    ),
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin#env
+   */
+  readonly env?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin#parameters
+   */
+  readonly parameters?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePlugin
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    env: obj.env?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv(
+        y,
+      ),
+    ),
+    name: obj.name,
+    parameters: obj.parameters?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet#extVars
+   */
+  readonly extVars?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet#libs
+   */
+  readonly libs?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet#tlas
+   */
+  readonly tlas?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    extVars: obj.extVars?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars(
+        y,
+      ),
+    ),
+    libs: obj.libs?.map((y) => y),
+    tlas: obj.tlas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmFileParameters
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmFileParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmFileParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmFileParameters#path
+   */
+  readonly path?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmFileParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmFileParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmFileParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters#forceString
+   */
+  readonly forceString?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters#value
+   */
+  readonly value?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesHelmParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    forceString: obj.forceString,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches#options
+   */
+  readonly options?: { [key: string]: boolean };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches#patch
+   */
+  readonly patch?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches#target
+   */
+  readonly target?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatches
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    options:
+      obj.options === undefined
+        ? undefined
+        : Object.entries(obj.options).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    patch: obj.patch,
+    path: obj.path,
+    target:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget(
+        obj.target,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicas
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicas#count
+   */
+  readonly count: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicas#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicas(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    count: obj.count?.value,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginEnv
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginEnv {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginEnv#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginEnv(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginEnv
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters#array
+   */
+  readonly array?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters#map
+   */
+  readonly map?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters#string
+   */
+  readonly string?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesPluginParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    array: obj.array?.map((y) => y),
+    map:
+      obj.map === undefined
+        ? undefined
+        : Object.entries(obj.map).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    string: obj.string,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff#duration
+   */
+  readonly duration?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff#factor
+   */
+  readonly factor?: number;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff#maxDuration
+   */
+  readonly maxDuration?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSyncPolicyRetryBackoff
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    duration: obj.duration,
+    factor: obj.factor,
+    maxDuration: obj.maxDuration,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
  * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceDirectoryJsonnet
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceDirectoryJsonnet {
@@ -89863,6 +100108,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -89896,6 +100146,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplate
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -90959,6 +101210,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -90992,6 +101248,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsPullRequestTem
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -92055,6 +102312,11 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceHydratorDrySourceDirectory {
   /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceHydratorDrySourceDirectory#disableExtensionFilter
+   */
+  readonly disableExtensionFilter?: boolean;
+
+  /**
    * @schema ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTemplateSpecSourceHydratorDrySourceDirectory#exclude
    */
   readonly exclude?: string;
@@ -92088,6 +102350,7 @@ export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsScmProviderTem
     return undefined;
   }
   const result = {
+    disableExtensionFilter: obj.disableExtensionFilter,
     exclude: obj.exclude,
     include: obj.include,
     jsonnet:
@@ -92988,6 +103251,186 @@ export class ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydratorDrySourc
     value: string,
   ): ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
     return new ApplicationSetSpecGeneratorsMergeTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget
+ */
+export interface ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget {
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#annotationSelector
+   */
+  readonly annotationSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#kind
+   */
+  readonly kind?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#labelSelector
+   */
+  readonly labelSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget(
+  obj:
+    | ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotationSelector: obj.annotationSelector,
+    group: obj.group,
+    kind: obj.kind,
+    labelSelector: obj.labelSelector,
+    name: obj.name,
+    namespace: obj.namespace,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount
+ */
+export class ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
+  public static fromNumber(
+    value: number,
+  ): ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount(
       value,
     );
   }
@@ -96296,6 +106739,698 @@ export class ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSources
     value: string,
   ): ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourcesKustomizeReplicasCount {
     return new ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourcesKustomizeReplicasCount(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#annotationSelector
+   */
+  readonly annotationSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#kind
+   */
+  readonly kind?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#labelSelector
+   */
+  readonly labelSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizePatchesTarget
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotationSelector: obj.annotationSelector,
+    group: obj.group,
+    kind: obj.kind,
+    labelSelector: obj.labelSelector,
+    name: obj.name,
+    namespace: obj.namespace,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicasCount
+ */
+export class ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicasCount {
+  public static fromNumber(
+    value: number,
+  ): ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet#extVars
+   */
+  readonly extVars?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet#libs
+   */
+  readonly libs?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet#tlas
+   */
+  readonly tlas?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    extVars: obj.extVars?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars(
+        y,
+      ),
+    ),
+    libs: obj.libs?.map((y) => y),
+    tlas: obj.tlas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters#path
+   */
+  readonly path?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters#forceString
+   */
+  readonly forceString?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters#value
+   */
+  readonly value?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    forceString: obj.forceString,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#options
+   */
+  readonly options?: { [key: string]: boolean };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#patch
+   */
+  readonly patch?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#target
+   */
+  readonly target?: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    options:
+      obj.options === undefined
+        ? undefined
+        : Object.entries(obj.options).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    patch: obj.patch,
+    path: obj.path,
+    target:
+      toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget(
+        obj.target,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas#count
+   */
+  readonly count: ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    count: obj.count?.value,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#array
+   */
+  readonly array?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#map
+   */
+  readonly map?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#string
+   */
+  readonly string?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    array: obj.array?.map((y) => y),
+    map:
+      obj.map === undefined
+        ? undefined
+        : Object.entries(obj.map).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    string: obj.string,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#annotationSelector
+   */
+  readonly annotationSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#kind
+   */
+  readonly kind?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#labelSelector
+   */
+  readonly labelSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotationSelector: obj.annotationSelector,
+    group: obj.group,
+    kind: obj.kind,
+    labelSelector: obj.labelSelector,
+    name: obj.name,
+    namespace: obj.namespace,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount
+ */
+export class ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount {
+  public static fromNumber(
+    value: number,
+  ): ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount(
       value,
     );
   }
@@ -101147,6 +112282,698 @@ export class ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourcesK
 }
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetExtVars
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceDirectoryJsonnetTlas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#annotationSelector
+   */
+  readonly annotationSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#kind
+   */
+  readonly kind?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#labelSelector
+   */
+  readonly labelSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizePatchesTarget
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotationSelector: obj.annotationSelector,
+    group: obj.group,
+    kind: obj.kind,
+    labelSelector: obj.labelSelector,
+    name: obj.name,
+    namespace: obj.namespace,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicasCount
+ */
+export class ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicasCount {
+  public static fromNumber(
+    value: number,
+  ): ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet#extVars
+   */
+  readonly extVars?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet#libs
+   */
+  readonly libs?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet#tlas
+   */
+  readonly tlas?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas[];
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnet
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    extVars: obj.extVars?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars(
+        y,
+      ),
+    ),
+    libs: obj.libs?.map((y) => y),
+    tlas: obj.tlas?.map((y) =>
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas(
+        y,
+      ),
+    ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters#path
+   */
+  readonly path?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmFileParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    path: obj.path,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters#forceString
+   */
+  readonly forceString?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters#value
+   */
+  readonly value?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceHelmParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    forceString: obj.forceString,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#options
+   */
+  readonly options?: { [key: string]: boolean };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#patch
+   */
+  readonly patch?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#path
+   */
+  readonly path?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches#target
+   */
+  readonly target?: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatches
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    options:
+      obj.options === undefined
+        ? undefined
+        : Object.entries(obj.options).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    patch: obj.patch,
+    path: obj.path,
+    target:
+      toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget(
+        obj.target,
+      ),
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas#count
+   */
+  readonly count: ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas#name
+   */
+  readonly name: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    count: obj.count?.value,
+    name: obj.name,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginEnv
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#array
+   */
+  readonly array?: string[];
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#map
+   */
+  readonly map?: { [key: string]: string };
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters#string
+   */
+  readonly string?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourcePluginParameters
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    array: obj.array?.map((y) => y),
+    map:
+      obj.map === undefined
+        ? undefined
+        : Object.entries(obj.map).reduce(
+            (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+            {},
+          ),
+    name: obj.name,
+    string: obj.string,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetExtVars
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesDirectoryJsonnetTlas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#annotationSelector
+   */
+  readonly annotationSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#kind
+   */
+  readonly kind?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#labelSelector
+   */
+  readonly labelSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizePatchesTarget
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotationSelector: obj.annotationSelector,
+    group: obj.group,
+    kind: obj.kind,
+    labelSelector: obj.labelSelector,
+    name: obj.name,
+    namespace: obj.namespace,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount
+ */
+export class ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount {
+  public static fromNumber(
+    value: number,
+  ): ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourcesKustomizeReplicasCount(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
  * @schema ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceDirectoryJsonnetExtVars
  */
 export interface ApplicationSetSpecGeneratorsMergeGeneratorsPluginTemplateSpecSourceDirectoryJsonnetExtVars {
@@ -103943,6 +115770,186 @@ export class ApplicationSetSpecGeneratorsMatrixGeneratorsListTemplateSpecSourceH
 }
 
 /**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget
+ */
+export interface ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#annotationSelector
+   */
+  readonly annotationSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#kind
+   */
+  readonly kind?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#labelSelector
+   */
+  readonly labelSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget(
+  obj:
+    | ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotationSelector: obj.annotationSelector,
+    group: obj.group,
+    kind: obj.kind,
+    labelSelector: obj.labelSelector,
+    name: obj.name,
+    namespace: obj.namespace,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount
+ */
+export class ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
+  public static fromNumber(
+    value: number,
+  ): ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMatrixGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
  * @schema ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars
  */
 export interface ApplicationSetSpecGeneratorsMatrixGeneratorsPluginTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars {
@@ -105196,6 +117203,186 @@ export class ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceHy
     value: string,
   ): ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
     return new ApplicationSetSpecGeneratorsMergeGeneratorsListTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  private constructor(public readonly value: number | string) {}
+}
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetExtVars
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas#code
+   */
+  readonly code?: boolean;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas#name
+   */
+  readonly name: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceDirectoryJsonnetTlas
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    code: obj.code,
+    name: obj.name,
+    value: obj.value,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget
+ */
+export interface ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget {
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#annotationSelector
+   */
+  readonly annotationSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#group
+   */
+  readonly group?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#kind
+   */
+  readonly kind?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#labelSelector
+   */
+  readonly labelSelector?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#name
+   */
+  readonly name?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#namespace
+   */
+  readonly namespace?: string;
+
+  /**
+   * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget#version
+   */
+  readonly version?: string;
+}
+
+/**
+ * Converts an object of type 'ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget(
+  obj:
+    | ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizePatchesTarget
+    | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    annotationSelector: obj.annotationSelector,
+    group: obj.group,
+    kind: obj.kind,
+    labelSelector: obj.labelSelector,
+    name: obj.name,
+    namespace: obj.namespace,
+    version: obj.version,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * @schema ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount
+ */
+export class ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
+  public static fromNumber(
+    value: number,
+  ): ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount(
+      value,
+    );
+  }
+  public static fromString(
+    value: string,
+  ): ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount {
+    return new ApplicationSetSpecGeneratorsMergeGeneratorsOciTemplateSpecSourceHydratorDrySourceKustomizeReplicasCount(
       value,
     );
   }
@@ -106482,7 +118669,7 @@ export function toJson_AppProjectSpecSourceIntegrity(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
- * SyncWindow contains the kind, time, duration and attributes that are used to assign the syncWindows to apps
+ * InlineSyncWindow contains the kind, time, duration and attributes that are used to assign the syncWindows to apps
  *
  * @schema AppProjectSpecSyncWindows
  */
