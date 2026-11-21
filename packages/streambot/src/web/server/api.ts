@@ -129,7 +129,7 @@ export function createWebHandler(deps: {
         guilds: deps.playback.deps.bot.webGuilds(session.identity.guildIds),
         csrfToken: auth.csrfToken(request, session),
         analyticsId:
-          usageAnalytics().analyticsId(session.identity.userId) ?? null,
+          usageAnalytics().browserAnalyticsId(session.identity.userId) ?? null,
         bugsinkDsn: deps.bugsinkDsn,
       });
     }
