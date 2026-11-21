@@ -3,10 +3,6 @@ import {
   extractEmailAddress,
 } from "@shepherdjerred/ops-model/email/mailbox.ts";
 import { z } from "zod/v4";
-import {
-  postalAddressesConfig,
-  resolvePostalAddressesForReport,
-} from "#config/postal.ts";
 
 const PostalEnvelopeSchema = z.object({
   status: z.string(),
@@ -143,16 +139,4 @@ export async function sendPostalEmail(
     subject: input.subject,
     tag: input.tag,
   };
-}
-
-/**
- * Resolve routing through typed flags at the activity boundary.
- */
-export function resolvePostalAddresses(reportType?: string): Promise<{
-  recipient: string;
-  sender: string;
-}> {
-  return reportType === undefined
-    ? postalAddressesConfig()
-    : resolvePostalAddressesForReport(reportType);
 }
