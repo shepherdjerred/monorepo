@@ -24,6 +24,7 @@ import {
   ListedMediaAction,
   RequestProtection,
 } from "./target-controls/protection.tsx";
+import { ListedTargets } from "./target-controls/listed.tsx";
 import { NotificationCallback, NotificationSettings } from "./preferences.tsx";
 import { DeliveryActions } from "./notification-actions.tsx";
 import { MovieRequests } from "./movie-editions/requests.tsx";
@@ -37,6 +38,8 @@ export function RequestsPage({ user }: { user: MediaUser }) {
     queryFn: async () => readApi("/requests", RequestListSchema),
     refetchInterval: 15_000,
   });
+  const listed =
+    requests.data?.filter((request) => request.media.kind !== "movie") ?? [];
   return (
     <>
       <PageTitle title="My requests">
@@ -49,10 +52,9 @@ export function RequestsPage({ user }: { user: MediaUser }) {
       {imported.error !== null && <ErrorNotice error={imported.error} />}
       <RequestInterests user={user} importedClaims={imported.data ?? []} />
       <MovieRequests user={user} />
-      <div className="item-list">
-        {requests.data
-          ?.filter((request) => request.media.kind !== "movie")
-          .map((request) => (
+      <ListedTargets mediaIds={listed.map((request) => request.mediaId)}>
+        <div className="item-list">
+          {listed.map((request) => (
             <article className="request-row" key={request.id}>
               <div className="item-symbol" aria-hidden="true">
                 {request.media.kind === "movie" ? "◈" : "▤"}
@@ -83,7 +85,8 @@ export function RequestsPage({ user }: { user: MediaUser }) {
               <RequestProtection user={user} request={request} />
             </article>
           ))}
-      </div>
+        </div>
+      </ListedTargets>
     </>
   );
 }
@@ -117,35 +120,39 @@ export function RemovalsPage({ user }: { user: MediaUser }) {
           love.
         </EmptyState>
       )}
-      <div className="item-list">
-        {removals.data?.map((removal) => (
-          <article className="request-row" key={removal.id}>
-            <div className="item-symbol" aria-hidden="true">
-              ◷
-            </div>
-            <div className="item-main">
-              <MediaLink id={removal.mediaId} title={removal.media.title} />
-              <p>
-                {removal.state === "quarantined"
-                  ? "Recoverable until"
-                  : "Removal scheduled"}
-                :{" "}
-                {dateLabel(
-                  removal.state === "quarantined"
-                    ? removal.purgeAfter
-                    : removal.graceUntil,
-                )}
-              </p>
-            </div>
-            <WireStatus value={removal.state} />
-            <ListedMediaAction
-              user={user}
-              mediaId={removal.mediaId}
-              action={removal.state === "quarantined" ? "restore" : "keep"}
-            />
-          </article>
-        ))}
-      </div>
+      <ListedTargets
+        mediaIds={removals.data?.map((removal) => removal.mediaId) ?? []}
+      >
+        <div className="item-list">
+          {removals.data?.map((removal) => (
+            <article className="request-row" key={removal.id}>
+              <div className="item-symbol" aria-hidden="true">
+                ◷
+              </div>
+              <div className="item-main">
+                <MediaLink id={removal.mediaId} title={removal.media.title} />
+                <p>
+                  {removal.state === "quarantined"
+                    ? "Recoverable until"
+                    : "Removal scheduled"}
+                  :{" "}
+                  {dateLabel(
+                    removal.state === "quarantined"
+                      ? removal.purgeAfter
+                      : removal.graceUntil,
+                  )}
+                </p>
+              </div>
+              <WireStatus value={removal.state} />
+              <ListedMediaAction
+                user={user}
+                mediaId={removal.mediaId}
+                action={removal.state === "quarantined" ? "restore" : "keep"}
+              />
+            </article>
+          ))}
+        </div>
+      </ListedTargets>
     </>
   );
 }

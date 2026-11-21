@@ -4,6 +4,7 @@ import {
   DefaultCommandV2Schema,
   DefaultCommandResultV2Schema,
 } from "#shared/editions/commands.ts";
+import { DefaultTargetBatchSchema } from "#shared/editions/target-batch.ts";
 import { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
 import { createMediaApp, type MediaAppDependencies } from "#server/app.ts";
 
@@ -28,6 +29,19 @@ export async function verifyDefaultCommandsHttp(
       access: "detail",
       expected: { mediaVersion: 0, targetVersion: null },
       target: null,
+    });
+    const unknown = crypto.randomUUID();
+    const batch = await app.request(
+      `/api/v2/targets/default?ids=${f.media.id},${unknown},${f.media.id}`,
+      { headers },
+    );
+    expect(batch.status).toBe(200);
+    expect(DefaultTargetBatchSchema.parse(await batch.json())).toEqual({
+      schemaVersion: 2,
+      items: [
+        { status: "ok", view: context },
+        { status: "unavailable", mediaId: unknown, code: "media_not_found" },
+      ],
     });
     expect(await db.mediaIntent.count({ where: { mediaId: f.media.id } })).toBe(
       0,

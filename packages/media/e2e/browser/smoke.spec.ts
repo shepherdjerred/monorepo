@@ -1,65 +1,19 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { expect, type Page } from "@playwright/test";
-import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
 import { KNOWN_VIOLATIONS } from "./axe-baseline.ts";
 import { ROUTES, type RouteCase } from "./routes.ts";
 import {
   accessibilityViolations,
   canvasColor,
   computedForm,
+  open,
   test,
+  watchForFailures,
 } from "./support.ts";
 
 const SCHEMES = ["light", "dark"] as const;
 const DIST_ASSETS = path.resolve(import.meta.dir, "../../dist/assets");
-
-/**
- * Everything a page can do wrong without failing an assertion on its text.
- * Content-Security-Policy violations are watched for every test, by the
- * suite's own `test` (`support.ts`).
- */
-function watchForFailures(page: Page, origin: string): string[] {
-  const failures: string[] = [];
-  // The client is self-contained: fonts, styles, and scripts all come from
-  // its own origin.
-  page.on("request", (request) => {
-    const url = new URL(request.url());
-    if (url.protocol.startsWith("http") && url.origin !== origin) {
-      failures.push(`third-party request: ${request.url()}`);
-    }
-  });
-  page.on("console", (message) => {
-    if (message.type() === "error") {
-      failures.push(`console error: ${message.text()}`);
-    }
-  });
-  page.on("pageerror", (error) => {
-    failures.push(`uncaught error: ${error.message}`);
-  });
-  page.on("response", (response) => {
-    const { pathname } = new URL(response.url());
-    if (pathname.startsWith("/api/") && response.status() >= 400) {
-      failures.push(`HTTP ${String(response.status())} from ${pathname}`);
-    }
-  });
-  return failures;
-}
-
-async function open(page: Page, route: RouteCase, origin: string) {
-  await page
-    .context()
-    .addCookies([{ name: PERSONA_COOKIE, value: route.persona, url: origin }]);
-  await page.goto(route.path);
-  await expect(
-    page.getByRole("heading", { level: 1, name: route.heading, exact: true }),
-  ).toBeVisible();
-  // Secondary panels load after the heading; wait for all of them.
-  await page.waitForLoadState("networkidle");
-  await expect(
-    page.getByRole("status").filter({ hasText: "Loading" }),
-  ).toHaveCount(0);
-}
 
 function knownRules(route: RouteCase): string[] {
   return KNOWN_VIOLATIONS.filter((known) => known.routes.includes(route.label))

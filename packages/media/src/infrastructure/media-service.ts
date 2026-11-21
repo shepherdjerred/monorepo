@@ -33,7 +33,10 @@ import { readRemovalList } from "./library/views/removal-list.ts";
 import { projectExternalRequests } from "./external-library/availability.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
 import { InterestCheckNoticeSchema } from "#shared/household/interests.ts";
-import { readDefaultCommandContext } from "./editions/command-context.ts";
+import {
+  readDefaultCommandContext,
+  readDefaultCommandContexts,
+} from "./editions/command-context.ts";
 import { repeatableRead } from "./locks.ts";
 import {
   readMovieEditionContext,
@@ -162,6 +165,15 @@ export class PrismaMediaApplication
   getDefaultCommandContext(actor: MediaActor, mediaId: string) {
     return repeatableRead(this.db, (tx) =>
       readDefaultCommandContext(tx, actor, mediaId, {
+        serverMachineId: this.settings.serverMachineId,
+        sections: this.visibilitySections,
+      }),
+    );
+  }
+
+  getDefaultCommandContexts(actor: MediaActor, mediaIds: readonly string[]) {
+    return repeatableRead(this.db, (tx) =>
+      readDefaultCommandContexts(tx, actor, mediaIds, {
         serverMachineId: this.settings.serverMachineId,
         sections: this.visibilitySections,
       }),

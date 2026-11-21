@@ -4,6 +4,7 @@ import type { MediaActor } from "#application/auth.ts";
 import type { MediaApplication } from "#application/ports.ts";
 import { MediaError } from "#application/errors.ts";
 import { DefaultCommandV2Schema } from "#shared/editions/commands.ts";
+import { DefaultTargetBatchIdsSchema } from "#shared/editions/target-batch.ts";
 import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
 import { parseInput, readJson } from "#server/validation.ts";
 
@@ -23,6 +24,15 @@ export function registerEditionCommandRoutes(
       await media.getDefaultCommandContext(
         c.get("actor"),
         parseInput(z.uuid(), c.req.param("id")),
+      ),
+    ),
+  );
+  // A read of many titles is still a GET: only writes dispatch the outbox.
+  app.get("/api/v2/targets/default", async (c) =>
+    c.json(
+      await media.getDefaultCommandContexts(
+        c.get("actor"),
+        parseInput(DefaultTargetBatchIdsSchema, c.req.query("ids")),
       ),
     ),
   );

@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { MediaDetailSchema } from "#shared/api.ts";
 import type { Availability, MediaItem } from "#shared/contract.ts";
+import type { DefaultTargetBatchSchema } from "#shared/editions/target-batch.ts";
 import type { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
 import { storedArtwork, storedOverview } from "./artwork.ts";
 import {
@@ -24,13 +25,19 @@ import {
   derivedId,
   fixtureId,
 } from "#testing/fixture-api/support.ts";
-import { FEATURED, titleNamed, type ResolvedMedia } from "./titles.ts";
+import {
+  FEATURED,
+  resolveMedia,
+  titleNamed,
+  type ResolvedMedia,
+} from "./titles.ts";
 import { assetId, mediaVisibility } from "./visibility.ts";
 
 type MediaDetail = z.input<typeof MediaDetailSchema>;
 type DetailAsset = MediaDetail["assets"][number];
 type DetailSubtitle = DetailAsset["asset"]["subtitles"][number];
 type DefaultTarget = z.input<typeof DefaultTargetViewSchema>;
+type DefaultTargetBatch = z.input<typeof DefaultTargetBatchSchema>;
 
 function subtitle(
   item: MediaItem,
@@ -394,5 +401,21 @@ export function defaultTarget(
       availability: item.availability,
       lineage: "resolved",
     },
+  };
+}
+
+/** The same controls for a list of titles; an unknown id is reported, not dropped. */
+export function defaultTargetBatch(
+  mediaIds: readonly string[],
+  persona: Persona,
+): DefaultTargetBatch {
+  return {
+    schemaVersion: 2,
+    items: mediaIds.map((mediaId) => {
+      const resolved = resolveMedia(mediaId);
+      return resolved === null
+        ? { status: "unavailable", mediaId, code: "media_not_found" }
+        : { status: "ok", view: defaultTarget(resolved, persona) };
+    }),
   };
 }

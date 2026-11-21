@@ -2,7 +2,7 @@ import type { DefaultTargetView } from "#shared/editions/target-view.ts";
 import type { MediaUser } from "#shared/contract.ts";
 import { MediaActionButton } from "#client/media-actions.tsx";
 import { ErrorNotice, Notice } from "#client/components.tsx";
-import { useTarget } from "./api.ts";
+import { useListedTarget } from "./listed.tsx";
 import { useTargetCommand } from "./mutation.ts";
 import { CommandError, commandNeedsReview } from "./errors.tsx";
 
@@ -45,7 +45,7 @@ export function RequestProtection({
   user: MediaUser;
   request: { id: string; mediaId: string; version: number; active: boolean };
 }) {
-  const target = useTarget(request.mediaId);
+  const target = useListedTarget(request.mediaId);
   const cancel = useTargetCommand(user.id);
   if (target.error !== null) return <ErrorNotice error={target.error} />;
   if (target.data === undefined)
@@ -110,7 +110,7 @@ export function ListedMediaAction({
   mediaId: string;
   action: "keep" | "restore";
 }) {
-  const target = useTarget(mediaId);
+  const target = useListedTarget(mediaId);
   if (target.error !== null) return <ErrorNotice error={target.error} />;
   if (target.data === undefined)
     return <span className="helper">Loading controls…</span>;
