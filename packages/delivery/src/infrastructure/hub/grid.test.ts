@@ -2,8 +2,13 @@ import { describe, expect, it } from "vitest";
 import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { HubGridSchema } from "#shared/hub/hub-contract.ts";
 import { index } from "#infrastructure/delivery-data.ts";
-import type { AttentionDeployment } from "./attention.ts";
-import { buildGrid, type GridRecord } from "./grid.ts";
+import { QUEUED_ATTENTION_MINUTES } from "./attention.ts";
+import {
+  buildGrid,
+  type AcceptingDeployment,
+  type GridDeployment,
+  type GridRecord,
+} from "./grid.ts";
 import { servicePlacement } from "./views.ts";
 
 type Environment = GridRecord["environments"][number];
@@ -34,22 +39,31 @@ function environment(
 function deployment(
   id: string,
   environmentId: string,
-  overrides: Partial<AttentionDeployment> = {},
-): AttentionDeployment {
+  overrides: Partial<GridDeployment> = {},
+): GridDeployment {
   return {
     id,
     environmentId,
     serviceId: environmentId.slice(0, environmentId.indexOf("/")),
+    versionSetRevisionId: "set-275",
     kind: "deploy",
     requestedBy: "operator@example.com",
     message: null,
     status: "succeeded",
     recoveryRequired: false,
     createdAt: at(0),
+    startedAt: at(0),
     finishedAt: at(1),
     ...overrides,
   };
 }
+
+/** An accepting deployment no monitor alarm fired on. */
+const accepted = (finishedAt: Date) => ({
+  finishedAt,
+  monitorState: "settled",
+  monitorAlarmedAt: null,
+});
 
 function record(overrides: Partial<GridRecord> = {}): GridRecord {
   return {
@@ -58,14 +72,32 @@ function record(overrides: Partial<GridRecord> = {}): GridRecord {
     latest: new Map(),
     awaiting: [],
     builds: new Map(),
-    revisions: new Map(),
-    finished: new Map(),
+    revisions: new Map([["set-275", 275]]),
+    accepting: new Map(),
+    now: at(10),
     ...overrides,
   };
 }
 
 const active = (...ids: string[]) =>
   ids.map((id) => ({ id, lifecycle: "active" }));
+
+/** Arcade prod whose newest deployment accepted r275, as `accepting` describes it. */
+function acceptedArcade(accepting: AcceptingDeployment) {
+  return buildGrid(
+    record({
+      services: active("arcade"),
+      environments: [
+        environment("arcade/prod", {
+          acceptedVersionSetRevisionId: "set-275",
+          acceptedDeploymentId: "accepted",
+        }),
+      ],
+      latest: new Map([["arcade/prod", deployment("accepted", "arcade/prod")]]),
+      accepting: new Map([["accepted", accepting]]),
+    }),
+  );
+}
 
 describe("overview grid layout", () => {
   it("groups services by catalog group in catalog order, by title within a group", () => {
@@ -129,6 +161,8 @@ describe("overview grid layout", () => {
                 id: "flipt/prod",
                 name: "prod",
                 status: "not_started",
+                request: null,
+                alarmedAt: null,
                 recoveryRequired: false,
                 acceptedRevision: null,
                 acceptedAt: null,
@@ -256,6 +290,8 @@ describe("overview grid record", () => {
         id: "arcade/prod",
         name: "prod",
         status: "not_started",
+        request: null,
+        alarmedAt: null,
         recoveryRequired: false,
         acceptedRevision: null,
         acceptedAt: null,
@@ -286,14 +322,19 @@ describe("overview grid record", () => {
             }),
           ],
         ]),
-        revisions: new Map([["set-274", 274]]),
-        finished: new Map([["accepted", at(5)]]),
+        revisions: new Map([
+          ["set-274", 274],
+          ["set-275", 275],
+        ]),
+        accepting: new Map([["accepted", accepted(at(5))]]),
       }),
     );
     expect(grid.groups[0]?.services[0]?.environments[0]).toEqual({
       id: "arcade/prod",
       name: "prod",
       status: "failed",
+      request: { deploymentId: "stuck", revision: 275 },
+      alarmedAt: null,
       recoveryRequired: true,
       acceptedRevision: 274,
       acceptedAt: at(5).toISOString(),
@@ -301,6 +342,108 @@ describe("overview grid record", () => {
       activeDeploymentId: "stuck",
       promotesFrom: null,
     });
+  });
+
+  it("pairs a status with its own release: no request when the newest deployment is the accepted one", () => {
+    const grid = acceptedArcade(accepted(at(1)));
+    expect(grid.groups[0]?.services[0]?.environments[0]).toMatchObject({
+      status: "succeeded",
+      request: null,
+      acceptedRevision: 275,
+    });
+  });
+
+  it("calls a deployment waiting on a saved plan awaiting approval, not running", () => {
+    const planning = deployment("plan", "arcade/prod", {
+      status: "running",
+      finishedAt: null,
+    });
+    const grid = buildGrid(
+      record({
+        services: active("arcade"),
+        environments: [environment("arcade/prod")],
+        latest: new Map([["arcade/prod", planning]]),
+        awaiting: [planning],
+      }),
+    );
+    expect(grid.groups[0]?.services[0]?.environments[0]).toMatchObject({
+      status: "awaiting_approval",
+      request: { deploymentId: "plan", revision: 275 },
+    });
+    expect(grid.attention).toMatchObject([
+      {
+        kind: "approval",
+        title: "Arcade prod awaits plan approval",
+        detail:
+          "The saved plan for the deploy of r275, requested by operator@example.com.",
+        target: { kind: "deployment", id: "plan" },
+      },
+    ]);
+  });
+
+  it("marks an environment whose accepted release a monitor alarm fired on", () => {
+    const grid = acceptedArcade({
+      finishedAt: at(1),
+      monitorState: "alarmed",
+      monitorAlarmedAt: at(2),
+    });
+    expect(grid.groups[0]?.services[0]?.environments[0]?.alarmedAt).toBe(
+      at(2).toISOString(),
+    );
+    expect(grid.attention).toEqual([
+      {
+        kind: "alarm",
+        title: "Arcade prod monitor alarm",
+        detail:
+          "A monitor alarm fired on the accepted release r275. It stays live until a rollback or a new release replaces it.",
+        at: at(2).toISOString(),
+        target: { kind: "environment", id: "arcade/prod" },
+        serviceId: "arcade",
+      },
+    ]);
+  });
+});
+
+/** The attention of Birmel prod with its newest deployment queued this many minutes ago. */
+function queued(minutes: number, startedAt: Date | null = null) {
+  return buildGrid(
+    record({
+      services: active("birmel"),
+      environments: [environment("birmel/prod")],
+      latest: new Map([
+        [
+          "birmel/prod",
+          deployment("waiting", "birmel/prod", {
+            status: "queued",
+            createdAt: new Date(at(10).getTime() - minutes * 60_000),
+            startedAt,
+            finishedAt: null,
+          }),
+        ],
+      ]),
+    }),
+  ).attention;
+}
+
+describe("overview grid queued attention", () => {
+  it(`flags a deployment queued ${String(QUEUED_ATTENTION_MINUTES)} minutes or more with no stage started`, () => {
+    expect(queued(50)).toEqual([
+      {
+        kind: "queued",
+        title: "Birmel prod deployment is still queued",
+        detail:
+          "The deploy of r275 has started no stage since it was requested, more than 15 minutes ago.",
+        at: new Date(at(10).getTime() - 50 * 60_000).toISOString(),
+        target: { kind: "deployment", id: "waiting" },
+        serviceId: "birmel",
+      },
+    ]);
+    expect(queued(QUEUED_ATTENTION_MINUTES)).toHaveLength(1);
+  });
+
+  it("leaves a short queue alone, and one whose first stage has started", () => {
+    expect(queued(QUEUED_ATTENTION_MINUTES - 1)).toEqual([]);
+    expect(queued(50, at(9))).toEqual([]);
   });
 });
 
@@ -345,6 +488,8 @@ describe("overview grid attention", () => {
             deployment("stuck", "flipt/prod", {
               status: "failed",
               recoveryRequired: true,
+              message:
+                "External operation may still be active; inspect its recorded identity before releasing ownership",
               finishedAt: at(6),
             }),
           ],
@@ -391,16 +536,19 @@ describe("overview grid attention", () => {
         "outside-the-catalog",
       ],
     ]);
+    // The executor's boilerplate is on the deployment page; the item says why once.
     expect(grid.attention[0]).toMatchObject({
-      detail: "The target lock is quarantined",
+      detail: "The deploy of r275 failed and left the environment locked.",
       target: { kind: "deployment", id: "stuck" },
     });
     expect(grid.attention[1]).toMatchObject({
-      detail: "promote requested by operator@example.com",
+      detail: "The promote of r275, requested by operator@example.com.",
       at: at(4).toISOString(),
     });
     expect(grid.attention[2]?.detail).toBe("CI did not pass");
-    expect(grid.attention[3]?.detail).toBe("Sync timed out");
+    expect(grid.attention[3]?.detail).toBe(
+      "The deploy of r275 failed: Sync timed out",
+    );
   });
 });
 

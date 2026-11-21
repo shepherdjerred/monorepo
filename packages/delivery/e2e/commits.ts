@@ -1,10 +1,11 @@
+import type { Database } from "#infrastructure/database.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { testExecutor, testPublisher } from "#testing/seed.ts";
+import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 
 // Commit history for the browser harness. Publication, qualification and
 // source capture all go through Delivery's own operations.
 
-/** A service no other seed touches, so its history changes no other page's newest state. */
+/** A service no other seed deploys, so its history changes no other page's newest state. */
 const SERVICE = "birmel";
 const FIRST_PIPELINE = 301;
 
@@ -98,6 +99,157 @@ const HISTORY: {
 const revision = (position: number) =>
   `${position.toString(16).padStart(2, "0")}${"c0ffee".repeat(7)}`.slice(0, 40);
 
+/** The full sha of the history commit at a position, oldest first. */
+export const historySha = (position: number) => revision(position + 1);
+
+/**
+ * Birmel ships a new image every fourth commit. Its prod environment, which
+ * needs a manual release, accepted the third, has the fourth queued with no
+ * stage started, and has never been asked for the fifth.
+ */
+export const ACCEPTED_POSITION = 8;
+export const QUEUED_POSITION = 12;
+export const UNRELEASED_POSITION = 16;
+/** How long ago the fourth was queued: past the overview's attention threshold. */
+export const QUEUED_MINUTES = 50;
+/**
+ * A commit whose CI failed for one service while Birmel's change from it is
+ * live through the newer accepted release.
+ */
+export const PARTIAL_FAILURE_POSITION = 4;
+export const PARTIAL_FAILURE_REASON = `archive:arcade-client requires exact image:arcade digest sha256:${"c".repeat(64)}`;
+
+/** Arcade's build of the same commit, failed in qualification with a raw reason. */
+async function failAnotherService(
+  delivery: Delivery,
+  sourceRevision: string,
+  pipelineNumber: number,
+) {
+  const build = await delivery.publish(
+    {
+      requestId: `history/partial/arcade`,
+      serviceId: "arcade",
+      sourceRevision,
+      ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(pipelineNumber)}`,
+      verifiedAt: new Date().toISOString(),
+      artifacts: [
+        {
+          id: "history/partial/arcade-image",
+          component: "server",
+          kind: "image",
+          uri: "docker.io/shepherdjerred/arcade",
+          version: "0.9.0",
+          digest: `sha256:${"d".repeat(64)}`,
+        },
+      ],
+    },
+    testPublisher,
+    { repositoryId: 1, pipelineNumber },
+  );
+  await delivery.qualify(
+    build.buildId,
+    "failed",
+    testExecutor,
+    PARTIAL_FAILURE_REASON,
+  );
+}
+
+/**
+ * Give Birmel a prod environment and record where its history stands there:
+ * the release of `ACCEPTED_POSITION` accepted, the one of `QUEUED_POSITION`
+ * queued `QUEUED_MINUTES` ago with no stage started, and nothing asked for
+ * `UNRELEASED_POSITION`. The environment is not enabled for dispatch, so the
+ * queued deployment stays queued. Deployments are written as records,
+ * dated in the past, so they sort behind every other seed's.
+ */
+export async function seedBirmelRelease(
+  delivery: Delivery,
+  database: Database,
+) {
+  await delivery.registerPipeline(
+    "birmel/1",
+    { kind: "manual", reason: "Browser fixture: Birmel releases by hand" },
+    testOperator,
+  );
+  const environment = await delivery.registerEnvironment(
+    {
+      id: "birmel/prod",
+      serviceId: SERVICE,
+      name: "prod",
+      pipelineRevisionId: "birmel/1",
+      configurationRevision: "birmel/config/1",
+      configuration: {},
+      automatic: false,
+    },
+    testOperator,
+  );
+  const row = await database.environment.findUniqueOrThrow({
+    where: { id: environment.id },
+  });
+  const [sets, builds] = await Promise.all([
+    database.versionSet.findMany({ where: { serviceId: SERVICE } }),
+    database.build.findMany({
+      where: { serviceId: SERVICE },
+      select: { id: true, sourceRevision: true },
+    }),
+  ]);
+  const setOf = (position: number) => {
+    const build = builds.find(
+      (entry) => entry.sourceRevision === historySha(position),
+    );
+    const set = sets.find((entry) => entry.qualifiedBuildId === build?.id);
+    if (set === undefined)
+      throw new Error(`Birmel's commit ${String(position)} composed no set`);
+    return set;
+  };
+  const now = Date.now();
+  const record = (
+    id: string,
+    position: number,
+    status: string,
+    minutesAgo: number,
+  ) =>
+    database.deployment.create({
+      data: {
+        id,
+        requestId: `history/${id}`,
+        environmentId: row.id,
+        serviceId: SERVICE,
+        versionSetRevisionId: setOf(position).id,
+        pipelineRevisionId: row.pipelineRevisionId,
+        configurationId: row.declaredConfigurationId,
+        catalogRevision: "test-catalog",
+        expectedGeneration: row.generation,
+        kind: "deploy",
+        status,
+        requestedBy: testOperator.id,
+        createdAt: new Date(now - minutesAgo * 60_000),
+        ...(status === "succeeded"
+          ? {
+              startedAt: new Date(now - (minutesAgo - 1) * 60_000),
+              finishedAt: new Date(now - (minutesAgo - 2) * 60_000),
+            }
+          : {}),
+      },
+    });
+  const accepted = await record(
+    "birmel-accepted",
+    ACCEPTED_POSITION,
+    "succeeded",
+    180,
+  );
+  await database.environment.update({
+    where: { id: row.id },
+    data: {
+      acceptedVersionSetRevisionId: accepted.versionSetRevisionId,
+      acceptedDeploymentId: accepted.id,
+    },
+  });
+  await record("birmel-queued", QUEUED_POSITION, "queued", QUEUED_MINUTES);
+  // Nothing was asked for the newest set.
+  setOf(UNRELEASED_POSITION);
+}
+
 /**
  * Publish enough older commits that the commit list pages. Call this before
  * every other seed, so these are the oldest commits and builds the harness has
@@ -145,6 +297,8 @@ export async function seedCommitHistory(delivery: Delivery) {
       commit.outcome ?? "verified",
       testExecutor,
     );
+    if (position === PARTIAL_FAILURE_POSITION)
+      await failAnotherService(delivery, sourceRevision, pipelineNumber);
     if (commit.title !== null)
       await delivery.recordSourceCommit({
         sourceRevision,

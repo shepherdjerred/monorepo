@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, createRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type {
@@ -20,82 +21,17 @@ import { CursorSearchSchema } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
 import { revisionLabel } from "#client/components/identifier.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
-
-// Each verdict borrows the pipeline status it resembles and keeps its own
-// words, so one `Status` draws the same glyph, green, red and amber everywhere
-// in the hub.
-const VERDICT: Record<
-  CommitVerdict,
-  { status: string; label: string; sentence: string }
-> = {
-  deployed: {
-    status: "succeeded",
-    label: "Deployed",
-    sentence: "Live in every environment that tracks it.",
-  },
-  deploying: {
-    status: "running",
-    label: "Deploying",
-    sentence: "On its way: some environments do not have it yet.",
-  },
-  awaiting_approval: {
-    status: "awaiting_approval",
-    label: "Needs approval",
-    sentence: "A deployment is waiting for someone to approve it.",
-  },
-  failed: {
-    status: "failed",
-    label: "Deploy failed",
-    sentence: "A deployment of this commit failed.",
-  },
-  build_failed: {
-    status: "failed",
-    label: "CI failed",
-    sentence: "CI failed, so nothing from this commit was published.",
-  },
-  building: {
-    status: "running",
-    label: "CI running",
-    sentence: "CI has not finished, so nothing is deployed yet.",
-  },
-  waiting: {
-    status: "pending",
-    label: "Not released",
-    sentence:
-      "Nothing is in flight: an environment needs a manual release, or its deployment was canceled.",
-  },
-  nothing_to_deploy: {
-    status: "not_started",
-    label: "Nothing to deploy",
-    sentence: "This commit changed nothing that Delivery deploys.",
-  },
-  unknown: {
-    status: "unknown",
-    label: "Not seen yet",
-    sentence:
-      "Delivery has not heard of this commit. CI may not have published it yet.",
-  },
-};
+import {
+  ENVIRONMENT,
+  VERDICT,
+  commitStatement,
+  parseSha,
+  rowNotes,
+  unchangedLine,
+} from "./commit-model.ts";
 
 const isLiveState = (state: CommitEnvironmentState) =>
   state === "live" || state === "superseded";
-
-const ENVIRONMENT: Record<
-  CommitEnvironmentState,
-  { status: string; label: string }
-> = {
-  live: { status: "succeeded", label: "live" },
-  superseded: { status: "succeeded", label: "live (newer)" },
-  deploying: { status: "running", label: "deploying" },
-  awaiting_approval: {
-    status: "awaiting_approval",
-    label: "needs approval",
-  },
-  failed: { status: "failed", label: "failed" },
-  canceled: { status: "canceled", label: "canceled" },
-  manual: { status: "pending", label: "needs release" },
-  waiting: { status: "pending", label: "waiting" },
-};
 
 function Verdict({ value }: { value: CommitVerdict }) {
   const verdict = VERDICT[value];
@@ -110,6 +46,10 @@ function EnvironmentChip({
   label: string;
 }) {
   const state = ENVIRONMENT[entry.state];
+  // Where the change is not live, the words say why; a glyph alone cannot.
+  const className = isLiveState(entry.state)
+    ? "env-pill"
+    : "env-pill env-pill-spelled";
   const content = (
     <>
       <Status value={state.status} label={state.label} />
@@ -120,7 +60,7 @@ function EnvironmentChip({
     <Link
       to="/environments/$"
       params={{ _splat: entry.environmentId }}
-      className="env-pill"
+      className={className}
     >
       {content}
     </Link>
@@ -128,7 +68,7 @@ function EnvironmentChip({
     <Link
       to="/deployments/$deploymentId"
       params={{ deploymentId: entry.deploymentId }}
-      className="env-pill"
+      className={className}
     >
       {content}
     </Link>
@@ -159,14 +99,6 @@ function Tally({
 }
 
 function CommitRow({ commit }: { commit: CommitSummary }) {
-  const blocker =
-    commit.blocker === null
-      ? null
-      : `${commit.blocker.service}${
-          commit.blocker.environment === null
-            ? ""
-            : ` / ${commit.blocker.environment}`
-        }: ${VERDICT[commit.blocker.state].label.toLowerCase()}`;
   return (
     <li className="commit-row">
       <Verdict value={commit.verdict} />
@@ -196,7 +128,11 @@ function CommitRow({ commit }: { commit: CommitSummary }) {
             )}
           </span>
         )}
-        {blocker !== null && <span className="muted">{blocker}</span>}
+        {rowNotes(commit).map((note) => (
+          <span key={note} className="muted commit-note">
+            {note}
+          </span>
+        ))}
       </span>
       <span className="commit-meta">
         {commit.author !== null && (
@@ -208,10 +144,70 @@ function CommitRow({ commit }: { commit: CommitSummary }) {
   );
 }
 
+const SHA_HINT = "Paste 7 to 40 hex digits of a commit, such as 0f18e58.";
+
+/**
+ * Finds a commit by a pasted SHA. Surrounding spaces are dropped; anything
+ * that is not 7 to 40 hex digits is answered with a hint beside the field
+ * instead of the browser's generic pattern message.
+ */
+function FindCommit() {
+  const navigate = useNavigate({ from: "/commits" });
+  const [invalid, setInvalid] = useState(false);
+  return (
+    <section className="panel" aria-labelledby="find-heading">
+      <h2 id="find-heading">Find a commit</h2>
+      <form
+        className="filters"
+        role="search"
+        aria-label="Find a commit"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          const value = new FormData(event.currentTarget).get("sha");
+          const sha = typeof value === "string" ? parseSha(value) : null;
+          setInvalid(sha === null);
+          if (sha !== null)
+            void navigate({ to: "/commits/$sha", params: { sha } });
+        }}
+      >
+        <label>
+          Commit SHA
+          <input
+            type="search"
+            name="sha"
+            placeholder="7 or more hex digits"
+            spellCheck={false}
+            autoComplete="off"
+            aria-invalid={invalid}
+            aria-describedby="sha-hint"
+            onInput={() => {
+              setInvalid(false);
+            }}
+          />
+        </label>
+        <button type="submit" className="secondary-button">
+          Find
+        </button>
+        <p
+          id="sha-hint"
+          className={
+            invalid ? "commit-find-hint commit-find-error" : "commit-find-hint"
+          }
+          aria-live="polite"
+        >
+          {invalid
+            ? `That is not a commit SHA. ${SHA_HINT}`
+            : "A full SHA or its first 7 digits; spaces around it are ignored."}
+        </p>
+      </form>
+    </section>
+  );
+}
+
 function CommitsPage() {
   const search = commitsRoute.useSearch();
   const { data } = useSuspenseQuery(queries.commits(search.cursor));
-  const navigate = useNavigate({ from: commitsRoute.fullPath });
   return (
     <>
       <PageHeader
@@ -219,38 +215,7 @@ function CommitsPage() {
         title="Commits"
         description="Is it deployed? The newest commits, and where each one stands."
       />
-      <section className="panel" aria-labelledby="find-heading">
-        <h2 id="find-heading">Find a commit</h2>
-        <form
-          className="filters"
-          role="search"
-          aria-label="Find a commit"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const sha = new FormData(event.currentTarget).get("sha");
-            if (typeof sha === "string" && sha.trim() !== "")
-              void navigate({
-                to: "/commits/$sha",
-                params: { sha: sha.trim() },
-              });
-          }}
-        >
-          <label>
-            Commit SHA
-            <input
-              type="search"
-              name="sha"
-              placeholder="7 or more hex digits"
-              pattern="[0-9a-fA-F]{7,40}"
-              spellCheck={false}
-              autoComplete="off"
-            />
-          </label>
-          <button type="submit" className="secondary-button">
-            Find
-          </button>
-        </form>
-      </section>
+      <FindCommit />
       <section className="panel" aria-labelledby="recent-heading">
         <h2 id="recent-heading">Recent commits</h2>
         {data.items.length === 0 ? (
@@ -306,16 +271,20 @@ function ServiceRow({ entry }: { entry: CommitService }) {
 
 function BuildList({
   title,
+  intro,
   builds,
 }: {
   title: string;
+  /** One plain sentence before the recorded reasons. */
+  intro: string;
   builds: CommitStatus["failedBuilds"];
 }) {
   if (builds.length === 0) return null;
   return (
     <section className="panel" aria-label={title}>
       <h2>{title}</h2>
-      <ul>
+      <p>{intro}</p>
+      <ul className="commit-builds">
         {builds.map((build) => (
           <li key={build.id}>
             <Link to="/builds/$" params={{ _splat: build.id }}>
@@ -342,7 +311,8 @@ function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
       <h3 id={`env-${group.name}-heading`}>
         {group.name} <Verdict value={group.verdict} />{" "}
         <span className="muted">
-          {group.liveCount} of {group.total} services live
+          {group.liveCount} of {group.total}{" "}
+          {group.total === 1 ? "service" : "services"} live
         </span>
       </h3>
       {pending.length > 0 && (
@@ -372,10 +342,6 @@ function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
 function CommitPage() {
   const { sha } = commitRoute.useParams();
   const { data } = useSuspenseQuery(queries.commit(sha));
-  const verdict = VERDICT[data.verdict];
-  const live = data.changed.filter(
-    (entry) => entry.verdict === "deployed",
-  ).length;
   return (
     <>
       <PageHeader
@@ -389,17 +355,24 @@ function CommitPage() {
             {data.author !== null && (
               <span className="commit-byline">by {data.author}</span>
             )}
-            <Verdict value={data.verdict} /> {verdict.sentence}
-            {data.changed.length > 0 &&
-              ` ${String(live)} of ${String(data.changed.length)} changed services are live.`}
+            <Verdict value={data.verdict} />{" "}
+            <span className="commit-statement">{commitStatement(data)}</span>
           </>
         }
       />
       {data.buildId !== null && (
         <SourcePanel buildId={data.buildId} sha={data.sha} />
       )}
-      <BuildList title="CI failed" builds={data.failedBuilds} />
-      <BuildList title="CI still running" builds={data.pendingBuilds} />
+      <BuildList
+        title="CI failed"
+        intro="These services' builds failed CI or qualification, so Delivery published nothing from them. Each line quotes the reason Delivery recorded."
+        builds={data.failedBuilds}
+      />
+      <BuildList
+        title="CI still running"
+        intro="CI has not finished for these services, so nothing from them is published yet."
+        builds={data.pendingBuilds}
+      />
       {data.environments.length > 0 && (
         <section aria-labelledby="by-environment-heading">
           <h2 id="by-environment-heading">By environment</h2>
@@ -432,9 +405,7 @@ function CommitPage() {
         </section>
       )}
       {data.unchangedCount > 0 && (
-        <p className="muted">
-          {data.unchangedCount} other services built with nothing to deploy.
-        </p>
+        <p className="muted">{unchangedLine(data.unchangedCount)}</p>
       )}
     </>
   );

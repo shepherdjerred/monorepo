@@ -65,7 +65,7 @@ test("the commit list answers per environment", async ({ page }) => {
     page.getByRole("heading", { level: 2, name: "By environment" }),
   ).toBeVisible();
   await expect(page.getByRole("region", { name: /^prod/u })).toContainText(
-    "services live",
+    /services? live/u,
   );
   await page.goBack();
   const search = page.getByRole("search", { name: "Find a commit" });
@@ -133,7 +133,7 @@ test("the pipelines list filters through the URL", async ({ page }) => {
     table.getByRole("row").filter({
       has: page.getByRole("link", { name: "Arcade", exact: true }),
     }),
-  ).toContainText("Execution #1");
+  ).toContainText("CI run #1");
   const filters = page.getByRole("search", { name: "Filter pipelines" });
   await filters.getByLabel("Name").fill("arcade");
   await filters.getByRole("button", { name: "Filter" }).click();

@@ -1,11 +1,21 @@
 import { z } from "zod";
+import { DeploymentStatusSchema } from "#shared/contract.ts";
 import type { Attention } from "#shared/hub/hub-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
+import { AWAITING_PLAN_DECISION } from "#infrastructure/selection/views.ts";
 import { servicePlacement } from "./views.ts";
 
 type DeploymentRow = Prisma.DeploymentGetPayload<object>;
 const IdRowsSchema = z.array(z.object({ id: z.string() }));
+
+/**
+ * How long a deployment may sit queued with no stage started before it needs
+ * attention. Dispatch normally claims a queued deployment within a minute;
+ * one still queued after this long is stuck behind something.
+ */
+export const QUEUED_ATTENTION_MINUTES = 15;
+const MINUTE = 60_000;
 
 /** What an attention item reads from a deployment. */
 export type AttentionDeployment = Pick<
@@ -13,12 +23,14 @@ export type AttentionDeployment = Pick<
   | "id"
   | "environmentId"
   | "serviceId"
+  | "versionSetRevisionId"
   | "kind"
   | "requestedBy"
   | "message"
   | "status"
   | "recoveryRequired"
   | "createdAt"
+  | "startedAt"
   | "finishedAt"
 >;
 
@@ -29,6 +41,15 @@ export type FailedBuild = {
   serviceTitle: string;
   reason: string | null;
   at: string;
+};
+
+/** An environment whose accepted release a monitor alarm fired on. */
+export type AlarmedRelease = {
+  environmentId: string;
+  serviceId: string;
+  /** The accepted set revision the alarm fired on. */
+  versionSetRevisionId: string;
+  alarmedAt: Date;
 };
 
 /** The newest deployment of every environment, by environment id. */
@@ -43,6 +64,38 @@ export async function latestDeployments(database: Database) {
     where: { id: { in: rows.map((row) => row.id) } },
   });
   return new Map(deployments.map((row) => [row.environmentId, row]));
+}
+
+/**
+ * Deployments waiting for a person's decision, newest first: those awaiting
+ * approval, and running ones whose saved plan waits for approval, as the
+ * approvals page lists them.
+ */
+export function awaitingDecisions(database: Database) {
+  return database.deployment.findMany({
+    where: { OR: [{ status: "awaiting_approval" }, AWAITING_PLAN_DECISION] },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+/** Whether a deployment `awaitingDecisions` returned waits on a saved plan rather than an approval. */
+function waitsOnPlan(deployment: { status: string }) {
+  return deployment.status === "running";
+}
+
+/**
+ * The status a page shows for a deployment: one waiting on a saved-plan
+ * decision is awaiting approval, whatever its executor's status.
+ */
+export function decisionStatus(
+  deployment: { id: string; status: string },
+  awaiting: readonly { id: string; status: string }[],
+) {
+  return awaiting.some(
+    (entry) => entry.id === deployment.id && waitsOnPlan(entry),
+  )
+    ? "awaiting_approval"
+    : DeploymentStatusSchema.parse(deployment.status);
 }
 
 /** The newest build of every service, by service id. */
@@ -80,47 +133,111 @@ export function deploymentSubjects(
   };
 }
 
+/** A set revision's number as people say it, from the record's map; a missing one is a broken read. */
+function revisionLabel(revisions: ReadonlyMap<string, number>, setId: string) {
+  const revision = revisions.get(setId);
+  if (revision === undefined)
+    throw new Error(
+      `Attention names set revision ${setId} the read did not hold`,
+    );
+  return `r${String(revision)}`;
+}
+
+/** One environment's newest deployment as an item, when it needs someone. */
+function deploymentItem(
+  deployment: AttentionDeployment,
+  subject: string,
+  input: { revisions: ReadonlyMap<string, number>; now: Date },
+): Attention | null {
+  const target = { kind: "deployment", id: deployment.id } as const;
+  const at = deployment.finishedAt?.toISOString() ?? null;
+  // "The deploy of r274": what this item is about, so no two read alike.
+  const what = `The ${deployment.kind} of ${revisionLabel(input.revisions, deployment.versionSetRevisionId)}`;
+  if (deployment.recoveryRequired)
+    return {
+      kind: "recovery",
+      title: `${subject} requires recovery`,
+      detail: `${what} failed and left the environment locked.`,
+      at,
+      target,
+      serviceId: deployment.serviceId,
+    };
+  if (deployment.status === "failed")
+    return {
+      kind: "failed",
+      title: `${subject} deployment failed`,
+      detail:
+        deployment.message === null
+          ? `${what} failed.`
+          : `${what} failed: ${deployment.message}`,
+      at,
+      target,
+      serviceId: deployment.serviceId,
+    };
+  const waited = input.now.getTime() - deployment.createdAt.getTime();
+  if (
+    deployment.status === "queued" &&
+    deployment.startedAt === null &&
+    waited >= QUEUED_ATTENTION_MINUTES * MINUTE
+  )
+    return {
+      kind: "queued",
+      title: `${subject} deployment is still queued`,
+      detail: `${what} has started no stage since it was requested, more than ${String(QUEUED_ATTENTION_MINUTES)} minutes ago.`,
+      at: deployment.createdAt.toISOString(),
+      target,
+      serviceId: deployment.serviceId,
+    };
+  return null;
+}
+
 /**
- * What someone has to act on, newest first: deployments awaiting approval,
- * environments whose newest deployment failed or requires recovery, and
- * services whose newest build failed qualification.
+ * What someone has to act on, newest first: deployments and saved plans
+ * awaiting a decision; environments whose newest deployment failed, requires
+ * recovery, or has sat queued longer than `QUEUED_ATTENTION_MINUTES`;
+ * environments whose accepted release a monitor alarm fired on; and services
+ * whose newest build failed qualification. Each item says its reason once.
  */
 export function attentionItems(input: {
   awaiting: readonly AttentionDeployment[];
   /** The newest deployment of each environment under watch. */
   latest: Iterable<AttentionDeployment>;
+  alarms: readonly AlarmedRelease[];
   failedBuilds: readonly FailedBuild[];
-  subject: (deployment: AttentionDeployment) => string;
+  subject: (deployment: { serviceId: string; environmentId: string }) => string;
+  /** Revision numbers of every set revision these deployments and alarms name, by id. */
+  revisions: ReadonlyMap<string, number>;
+  now: Date;
 }): Attention[] {
-  const { subject } = input;
-  const items: Attention[] = input.awaiting.map((deployment) => ({
-    kind: "approval",
-    title: `${subject(deployment)} awaits approval`,
-    detail: `${deployment.kind} requested by ${deployment.requestedBy}`,
-    at: deployment.createdAt.toISOString(),
-    target: { kind: "deployment", id: deployment.id },
-    serviceId: deployment.serviceId,
-  }));
+  const { subject, revisions } = input;
+  const items: Attention[] = input.awaiting.map((deployment) => {
+    const what = `${deployment.kind} of ${revisionLabel(revisions, deployment.versionSetRevisionId)}`;
+    return {
+      kind: "approval",
+      title: waitsOnPlan(deployment)
+        ? `${subject(deployment)} awaits plan approval`
+        : `${subject(deployment)} awaits approval`,
+      detail: waitsOnPlan(deployment)
+        ? `The saved plan for the ${what}, requested by ${deployment.requestedBy}.`
+        : `The ${what}, requested by ${deployment.requestedBy}.`,
+      at: deployment.createdAt.toISOString(),
+      target: { kind: "deployment", id: deployment.id },
+      serviceId: deployment.serviceId,
+    };
+  });
   for (const deployment of input.latest) {
-    if (deployment.recoveryRequired)
-      items.push({
-        kind: "recovery",
-        title: `${subject(deployment)} requires recovery`,
-        detail: deployment.message ?? "The target lock is quarantined",
-        at: deployment.finishedAt?.toISOString() ?? null,
-        target: { kind: "deployment", id: deployment.id },
-        serviceId: deployment.serviceId,
-      });
-    else if (deployment.status === "failed")
-      items.push({
-        kind: "failed",
-        title: `${subject(deployment)} deployment failed`,
-        detail: deployment.message ?? deployment.kind,
-        at: deployment.finishedAt?.toISOString() ?? null,
-        target: { kind: "deployment", id: deployment.id },
-        serviceId: deployment.serviceId,
-      });
+    const item = deploymentItem(deployment, subject(deployment), input);
+    if (item !== null) items.push(item);
   }
+  for (const alarm of input.alarms)
+    items.push({
+      kind: "alarm",
+      title: `${subject(alarm)} monitor alarm`,
+      detail: `A monitor alarm fired on the accepted release ${revisionLabel(revisions, alarm.versionSetRevisionId)}. It stays live until a rollback or a new release replaces it.`,
+      at: alarm.alarmedAt.toISOString(),
+      target: { kind: "environment", id: alarm.environmentId },
+      serviceId: alarm.serviceId,
+    });
   for (const build of input.failedBuilds)
     items.push({
       kind: "build_failed",

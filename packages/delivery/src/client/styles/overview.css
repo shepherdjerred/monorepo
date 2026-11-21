@@ -88,7 +88,8 @@
   border-inline-start: 3px solid transparent;
 }
 .overview-standing-failed,
-.overview-standing-recovery_required {
+.overview-standing-recovery_required,
+.overview-standing-alarmed {
   border-inline-start-color: var(--failed);
 }
 .overview-standing-awaiting_approval,
@@ -170,4 +171,16 @@
 }
 .overview-chip time {
   color: var(--text-muted);
+}
+/* The accepted release and its age read as one fact, apart from a newer request's status. */
+.overview-accepted {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-1);
+}
+/* A deployment that waits too long for its first stage is a wait, not a failure. */
+.badge-queued {
+  background: var(--waiting-soft);
+  color: var(--waiting);
 }

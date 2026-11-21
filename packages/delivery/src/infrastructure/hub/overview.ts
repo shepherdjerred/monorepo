@@ -1,4 +1,3 @@
-import { DeploymentStatusSchema } from "#shared/contract.ts";
 import type { HubOverview, HubService } from "#shared/hub/hub-contract.ts";
 import type { Database } from "#infrastructure/database.ts";
 import {
@@ -7,6 +6,8 @@ import {
 } from "#infrastructure/delivery-data.ts";
 import {
   attentionItems,
+  awaitingDecisions,
+  decisionStatus,
   deploymentSubjects,
   latestBuilds,
   latestDeployments,
@@ -18,34 +19,49 @@ import { activityEntry, buildView, serviceSummary } from "./views.ts";
 
 /** Every delivered service with its newest build and environment states. */
 export async function hubOverview(database: Database): Promise<HubOverview> {
-  const [environmentRows, latest, builds, awaiting, audit] = await Promise.all([
-    database.environment.findMany({ orderBy: { id: "asc" } }),
-    latestDeployments(database),
-    latestBuilds(database),
-    database.deployment.findMany({
-      where: { status: "awaiting_approval" },
-      orderBy: { createdAt: "desc" },
-    }),
-    database.audit.findMany({
-      orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
-      take: 12,
-    }),
-  ]);
+  const [environmentRows, latest, builds, awaiting, alarmed, audit] =
+    await Promise.all([
+      database.environment.findMany({ orderBy: { id: "asc" } }),
+      latestDeployments(database),
+      latestBuilds(database),
+      awaitingDecisions(database),
+      // An accepted release a monitor alarm fired on.
+      database.deployment.findMany({
+        where: { monitorState: "alarmed", acceptedBy: { some: {} } },
+        select: {
+          environmentId: true,
+          serviceId: true,
+          versionSetRevisionId: true,
+          monitorAlarmedAt: true,
+        },
+      }),
+      database.audit.findMany({
+        orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
+        take: 12,
+      }),
+    ]);
   const environments = await Promise.all(
     environmentRows.map((row) => readEnvironment(database, row.id)),
   );
-  const accepted = await database.versionSet.findMany({
+  // The accepted set revisions, and those the attention items name.
+  const sets = await database.versionSet.findMany({
     where: {
       id: {
-        in: environments.flatMap((env) =>
-          env.acceptedVersionSetRevisionId === null
-            ? []
-            : [env.acceptedVersionSetRevisionId],
-        ),
+        in: [
+          ...environments.flatMap((env) =>
+            env.acceptedVersionSetRevisionId === null
+              ? []
+              : [env.acceptedVersionSetRevisionId],
+          ),
+          ...[...latest.values(), ...awaiting].map(
+            (row) => row.versionSetRevisionId,
+          ),
+        ],
       },
     },
+    select: { id: true, revision: true },
   });
-  const revisions = new Map(accepted.map((row) => [row.id, row.revision]));
+  const revisions = new Map(sets.map((row) => [row.id, row.revision]));
   const serviceIds = [
     ...new Set([...environments.map((env) => env.serviceId), ...builds.keys()]),
   ].filter((id) => index.byId(id)?.id === id);
@@ -74,7 +90,8 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
             status:
               deployment === undefined
                 ? "not_started"
-                : DeploymentStatusSchema.parse(deployment.status),
+                : decisionStatus(deployment, awaiting),
+            recoveryRequired: deployment?.recoveryRequired ?? false,
             acceptedRevision:
               env.acceptedVersionSetRevisionId === null
                 ? null
@@ -92,6 +109,13 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
     attention: attentionItems({
       awaiting,
       latest: latest.values(),
+      alarms: alarmed.map((row) => {
+        if (row.monitorAlarmedAt === null)
+          throw new Error(
+            `${row.environmentId}'s alarmed release has no alarm time`,
+          );
+        return { ...row, alarmedAt: row.monitorAlarmedAt };
+      }),
       failedBuilds: services.flatMap((service) =>
         service.latestBuild?.status === "failed"
           ? [
@@ -106,6 +130,8 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
           : [],
       ),
       subject: deploymentSubjects(environments),
+      revisions,
+      now: new Date(),
     }),
     activity: audit.map((row) => activityEntry(row)),
     tools: toolLinks(),

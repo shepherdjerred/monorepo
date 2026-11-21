@@ -86,7 +86,7 @@ test("attention comes first and names the service and environment", async ({
   await expect(stuck).toBeVisible();
   await expect(
     tile(page, "Minecraft").getByRole("link", {
-      name: /^tsmc recovery required/u,
+      name: /^tsmc .*recovery required/u,
     }),
   ).toHaveAttribute("href", "/environments/minecraft/tsmc");
   // Attention precedes every panel of services in the page.
@@ -106,6 +106,59 @@ test("attention comes first and names the service and environment", async ({
       name: "Deployment to minecraft/tsmc",
     }),
   ).toBeVisible();
+});
+
+test("a chip shows the accepted release apart from a newer request, each with its own status", async ({
+  page,
+}) => {
+  await openOverview(page);
+  const grid = await api(page, "/api/v1/hub/grid", HubGridSchema);
+  const birmel = grid.groups
+    .flatMap((group) => group.services)
+    .find((service) => service.id === "birmel")?.environments[0];
+  if (birmel?.request === null || birmel?.request === undefined)
+    throw new Error("Birmel prod's queued request fixture required");
+  const accepted = `r${String(birmel.acceptedRevision)}`;
+  const queued = `r${String(birmel.request.revision)}`;
+  expect(accepted).not.toBe(queued);
+  const chip = tile(page, "Birmel").getByRole("link", { name: /^prod / });
+  // The accepted release and its age, then the newer request's own number and status.
+  await expect(chip).toHaveAccessibleName(
+    new RegExp(`^prod ${accepted} accepted .+ ${queued} queued$`, "u"),
+  );
+  await expect(chip).not.toContainText(`${accepted} queued`);
+
+  // A deployment queued past the threshold with no stage started needs someone.
+  const attention = page.getByRole("region", { name: "Needs attention" });
+  const item = attention
+    .getByRole("listitem")
+    .filter({ hasText: "Birmel prod deployment is still queued" });
+  await expect(item).toContainText(
+    `The deploy of ${queued} has started no stage since it was requested, more than 15 minutes ago.`,
+  );
+  await expect(
+    item.getByRole("link", { name: "Birmel prod deployment is still queued" }),
+  ).toHaveAttribute("href", "/deployments/birmel-queued");
+  await expectNoHorizontalOverflow(page);
+});
+
+test("each attention item says what failed instead of the executor boilerplate", async ({
+  page,
+}) => {
+  await openOverview(page);
+  const items = page
+    .getByRole("region", { name: "Needs attention" })
+    .getByRole("listitem");
+  const details = await items.locator(".muted").allTextContents();
+  expect(details.length).toBeGreaterThan(1);
+  // Each recovery says what failed, not the executor's shared boilerplate.
+  for (const detail of details) {
+    expect(detail).not.toContain("External operation may still be active");
+    expect(detail).toMatch(/\S/u);
+  }
+  await expect(
+    items.filter({ hasText: "Minecraft tsmc requires recovery" }),
+  ).toContainText(/The \S+ of r\d+ failed and left the environment locked\./u);
 });
 
 test("each kind is a panel with its counts, and a group of several has its own", async ({
@@ -172,7 +225,7 @@ test("a tile links its service and each environment chip", async ({ page }) => {
   });
   // Name, status words, accepted revision and when it was accepted.
   const prod = chips.getByRole("link", {
-    name: /^prod \S.* r\d+ accepted \S/u,
+    name: /^prod .*\br\d+ accepted \S/u,
   });
   await expect(prod).toHaveAttribute(
     "href",

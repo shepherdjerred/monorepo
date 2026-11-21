@@ -7,8 +7,12 @@ import type {
 } from "#shared/hub/hub-contract.ts";
 import type { PipelineSearch } from "./search-schemas.ts";
 
-/** How one environment stands in Delivery's record: recovery outranks the status it was left with. */
-export type Standing = GridEnvironmentStatus | "recovery_required";
+/**
+ * How one environment stands in Delivery's record: recovery outranks the
+ * status its newest deployment was left with, and a firing monitor alarm on
+ * the accepted release outranks any wait.
+ */
+export type Standing = GridEnvironmentStatus | "recovery_required" | "alarmed";
 /** How a whole service stands: its most urgent environment, or that it has none. */
 export type ServiceStanding = Standing | "no_environments";
 
@@ -16,6 +20,7 @@ export type ServiceStanding = Standing | "no_environments";
 const URGENCY: Standing[] = [
   "recovery_required",
   "failed",
+  "alarmed",
   "awaiting_approval",
   "running",
   "queued",
@@ -24,10 +29,19 @@ const URGENCY: Standing[] = [
   "succeeded",
 ];
 
-export function environmentStanding(environment: GridEnvironment): Standing {
+/** The newest deployment's standing alone: recovery outranks the status it was left with. */
+export function requestStanding(
+  environment: Pick<GridEnvironment, "status" | "recoveryRequired">,
+): Standing {
   return environment.recoveryRequired
     ? "recovery_required"
     : environment.status;
+}
+
+export function environmentStanding(environment: GridEnvironment): Standing {
+  const request = requestStanding(environment);
+  if (request === "recovery_required" || request === "failed") return request;
+  return environment.alarmedAt === null ? request : "alarmed";
 }
 
 export function serviceStanding(service: GridService): ServiceStanding {

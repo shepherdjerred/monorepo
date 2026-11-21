@@ -87,29 +87,49 @@ every service whose lifecycle is `active` and that the server's catalog
 declares, under its catalog group, including services only the v2 catalog
 names. The page shows one panel per catalog kind; a group of several services
 keeps its own heading, and a group of one is just that service. Each
-environment carries the status of its newest deployment (`not_started` when
-Delivery has recorded none), whether that deployment requires recovery, and
-the accepted set revision with the time its deployment finished. That is
+environment carries the accepted set revision with the time its deployment
+finished, and, only when the newest deployment is a different one, that
+request's own revision beside its status (`r274 · 2 days ago`, then `r293
+canceled`): one release's number never sits beside another's status. The
+status is the newest deployment's (`not_started` when Delivery has recorded
+none), with a deployment waiting on a saved-plan decision counted as awaiting
+approval; the environment also carries whether that deployment requires
+recovery and when a monitor alarm fired on the accepted release. That is
 Delivery's deployment record, not runtime health: the route never asks ArgoCD,
 and live state stays on the environment page's runtime panel. It issues nine
 statements however many services it lists and traces no execution, because
 every change event refetches it. Its attention items are the ones `GET /hub`
 computes (`src/infrastructure/hub/attention.ts`), limited to active
-environments. `?q=` and `?status=` filter by service name and by an
-environment's status.
+environments: deployments and saved plans awaiting a decision, newest
+deployments that failed, require recovery or have sat queued with no stage
+started for `QUEUED_ATTENTION_MINUTES` (15), accepted releases a monitor alarm
+fired on, and services whose newest build failed. Each item names what it is
+about (`The deploy of r4 …`) instead of the executor's message. `?q=` and
+`?status=` filter by service name and by an environment's status.
+
+The pipelines list shows each service's newest CI run (its result and the
+Woodpecker run number, which every service that run built shares) apart from
+its stages, where an environment locked by a failed deployment reads
+"recovery required". Its status filter matches a pipeline with any stage in
+that status.
 
 A commit has one build per service, but only a build that produced a version
 set (or a platform deployment) changed anything. `GET /api/v1/commits` and
 `GET /api/v1/commits/:sha` (a full sha or an unambiguous prefix of at least
 seven digits) answer "is it deployed?" from those rows alone. An environment
 has the change when its accepted selection is the same or a later revision of
-the same lineage; otherwise the newest deployment aimed at it says what is
-happening. A commit's verdict is the most urgent of its services, then of its
-builds: CI failed, deploy failed, needs approval, CI running, deploying, not
-released, deployed. The response also regroups the same rows by environment name, `prod` first,
-so a commit that touches many services still answers "is it in prod?" as one
-count with its stragglers named. The pure rules live in
-`src/infrastructure/hub/commit-status.ts`.
+the same lineage. Otherwise the deployments that would deliver it, of its set
+revision or a later one of the lineage, decide: it is `deploying` only while
+one is queued or running. With none in flight it names why: recovery required
+(the environment's newest deployment locked it), awaiting approval, failed,
+canceled, replaced, waiting for the environment it promotes from, not started
+(automatic) or needs a manual release. A commit's verdict is the most urgent
+of its services, then of its builds: CI failed, recovery required, failed,
+needs approval, CI running, deploying, not released, deployed; its `blocker`
+names the environment that verdict came from. The response also regroups the
+same rows by environment name, `prod` first, so a commit that touches many
+services still answers "is it in prod?" as one count with its stragglers
+named. The pure rules live in `src/infrastructure/hub/commit-status.ts`.
 
 Both responses carry the commit's `title` and `author`. Qualification already
 reads each build's exact Woodpecker pipeline and proves it the main push of
