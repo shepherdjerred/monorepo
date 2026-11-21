@@ -190,26 +190,14 @@ impl LiveClient {
     /// `https` origin on a loopback host, and [`LcuError::BuildClient`] when
     /// the local HTTP client cannot be constructed.
     pub fn with_base_url(base_url: &str) -> Result<Self, LcuError> {
-        let parsed = url::Url::parse(base_url).map_err(|_| LcuError::NotLoopback)?;
-        let loopback = match parsed.host() {
-            Some(url::Host::Ipv4(address)) => address.is_loopback(),
-            Some(url::Host::Ipv6(address)) => address.is_loopback(),
-            Some(url::Host::Domain(domain)) => domain == "localhost",
-            None => false,
-        };
-        if !loopback || !matches!(parsed.scheme(), "http" | "https") {
-            return Err(LcuError::NotLoopback);
-        }
+        let base_url = loopback_origin(base_url)?;
         let http = Client::builder()
             .danger_accept_invalid_certs(true)
             .connect_timeout(Duration::from_millis(500))
             .timeout(Duration::from_secs(2))
             .build()
             .map_err(LcuError::BuildClient)?;
-        Ok(Self {
-            http,
-            base_url: base_url.trim_end_matches('/').to_owned(),
-        })
+        Ok(Self { http, base_url })
     }
 
     /// Read one allowlisted Live Client resource when the game process is
@@ -253,6 +241,22 @@ impl LiveClient {
     }
 }
 
+/// `base_url` without a trailing slash, when it is an `http` or `https` origin
+/// on a loopback host.
+fn loopback_origin(base_url: &str) -> Result<String, LcuError> {
+    let parsed = url::Url::parse(base_url).map_err(|_| LcuError::NotLoopback)?;
+    let loopback = match parsed.host() {
+        Some(url::Host::Ipv4(address)) => address.is_loopback(),
+        Some(url::Host::Ipv6(address)) => address.is_loopback(),
+        Some(url::Host::Domain(domain)) => domain == "localhost",
+        None => false,
+    };
+    if !loopback || !matches!(parsed.scheme(), "http" | "https") {
+        return Err(LcuError::NotLoopback);
+    }
+    Ok(base_url.trim_end_matches('/').to_owned())
+}
+
 impl LcuClient {
     /// Connect to a lockfile-derived loopback endpoint.
     ///
@@ -275,6 +279,21 @@ impl LcuClient {
                 lockfile.port
             ),
             authorization: lockfile.authorization(),
+        })
+    }
+
+    /// Connect to a mock League client on another loopback origin, for tests.
+    /// It is sent `lockfile`'s credential exactly as the real client would be.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`LcuError::NotLoopback`] unless `base_url` is an `http` or
+    /// `https` origin on a loopback host, and [`LcuError::BuildClient`] when
+    /// the local HTTP client cannot be constructed.
+    pub fn with_base_url(base_url: &str, lockfile: &LeagueLockfile) -> Result<Self, LcuError> {
+        Ok(Self {
+            base_url: loopback_origin(base_url)?,
+            ..Self::new(lockfile)?
         })
     }
 
@@ -555,7 +574,7 @@ pub enum LcuError {
     #[error("local League request returned {0}")]
     Status(StatusCode),
     /// A Live Client base URL was not a loopback origin.
-    #[error("the Live Client address must be a loopback origin")]
+    #[error("a local League address must be a loopback origin")]
     NotLoopback,
 }
 

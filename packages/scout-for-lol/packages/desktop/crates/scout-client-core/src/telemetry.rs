@@ -23,6 +23,11 @@ use crate::settings::SendGate;
 /// Where the backend accepts events.
 pub const USAGE_EVENTS_PATH: &str = "/api/scout-client/v1/desktop/events";
 
+/// How many events the backend accepts from one device in a one-minute
+/// window before it answers 429 (`maxEventsPerDevicePerMinute` in the
+/// contract). The relay paces itself to half of this.
+pub const SERVER_EVENTS_PER_MINUTE: u32 = 30;
+
 /// The longest app version the contract admits.
 const APP_VERSION_MAX_BYTES: usize = 64;
 
@@ -233,7 +238,13 @@ pub enum UsageOutcome {
     Sent,
     /// The user has turned usage data off; nothing left this machine.
     Suppressed,
-    /// The backend or network refused it. Events are not retried: telemetry
+    /// The backend asked this device to slow down. The event was not
+    /// accepted and may be sent again after `retry_after`, when given.
+    RateLimited {
+        /// The server's `Retry-After`.
+        retry_after: Option<std::time::Duration>,
+    },
+    /// The backend or network refused it. These are not retried: telemetry
     /// is best-effort and must never queue behind or block collection.
     Failed(BackendError),
 }
@@ -272,6 +283,9 @@ impl UsageReporter {
         let body = UsageEventBody::new(event, self.platform, &self.app_version);
         match backend.send_usage_event(credential, &body).await {
             Ok(()) => UsageOutcome::Sent,
+            Err(BackendError::RateLimited { retry_after }) => {
+                UsageOutcome::RateLimited { retry_after }
+            }
             Err(error) => UsageOutcome::Failed(error),
         }
     }
@@ -289,8 +303,8 @@ mod tests {
     use uuid::Uuid;
 
     use super::{
-        Platform, USAGE_EVENTS_PATH, UsageEvent, UsageEventBody, UsageOutcome, UsageReporter,
-        WindowCrashCause, WindowCrashOutcome,
+        Platform, SERVER_EVENTS_PER_MINUTE, USAGE_EVENTS_PATH, UsageEvent, UsageEventBody,
+        UsageOutcome, UsageReporter, WindowCrashCause, WindowCrashOutcome,
     };
     use crate::backend::ScoutBackendClient;
     use crate::credentials::DeviceCredential;
@@ -338,6 +352,10 @@ mod tests {
     fn the_rust_enums_match_the_shared_contract() -> Result<(), Box<dyn std::error::Error>> {
         let contract = json(CONTRACT)?;
         assert_eq!(contract["path"], USAGE_EVENTS_PATH);
+        assert_eq!(
+            contract["maxEventsPerDevicePerMinute"],
+            SERVER_EVENTS_PER_MINUTE
+        );
         let names = |value: &Value| -> Vec<String> {
             value.as_array().map_or_default(|items| {
                 items

@@ -36,7 +36,8 @@ pub fn available(text: &str, required: bool) -> AvailableUpdate {
 #[derive(Default)]
 pub struct FakeUpdater {
     offer: Mutex<Option<AvailableUpdate>>,
-    fail_check: Mutex<bool>,
+    /// The status every check fails with, when it fails.
+    fail_check: Mutex<Option<u16>>,
     pub checks: AtomicU32,
     pub downloads: AtomicU32,
     installs: Mutex<Vec<(Version, bool)>>,
@@ -51,10 +52,19 @@ impl FakeUpdater {
     }
 
     pub fn failing_checks(&self) {
+        self.failing_with(503);
+    }
+
+    /// The channel has no manifest: nothing has been published on it.
+    pub fn unpublished(&self) {
+        self.failing_with(404);
+    }
+
+    fn failing_with(&self, status: u16) {
         *self
             .fail_check
             .lock()
-            .unwrap_or_else(PoisonError::into_inner) = true;
+            .unwrap_or_else(PoisonError::into_inner) = Some(status);
     }
 
     pub fn checks(&self) -> u32 {
@@ -81,12 +91,12 @@ impl Updater for FakeUpdater {
         self.checks.fetch_add(1, Ordering::SeqCst);
         // A real updater awaits the network; yield like one.
         tokio::task::yield_now().await;
-        if *self
+        if let Some(status) = *self
             .fail_check
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
         {
-            return Err(UpdateError::Status(503));
+            return Err(UpdateError::Status(status));
         }
         Ok(self
             .offer

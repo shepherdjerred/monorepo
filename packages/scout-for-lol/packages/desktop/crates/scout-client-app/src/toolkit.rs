@@ -4,7 +4,8 @@
 //! supervisor launches before any configuration or flag client exists, and
 //! both windows render the same IPC state and send the same commands. So it
 //! is an environment variable or a command-line flag, not a feature flag.
-//! The egui window stays the default until the gpui window replaces it.
+//! The gpui window is the default wherever the build contains it (Windows and
+//! macOS); `--ui=egui` remains an explicit fallback until egui is deleted.
 
 /// The environment variable that selects the window toolkit.
 pub const UI_ENVIRONMENT: &str = "SCOUT_DESKTOP_UI";
@@ -12,13 +13,29 @@ pub const UI_ENVIRONMENT: &str = "SCOUT_DESKTOP_UI";
 const UI_FLAG: &str = "--ui=";
 
 /// The toolkit the window process renders with.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WindowToolkit {
-    /// The egui window (`scout-client-app/src/ui.rs`).
-    #[default]
+    /// The egui window (`scout-client-app/src/ui.rs`): the fallback, and the
+    /// only window on Linux.
     Egui,
     /// The gpui-kit window (`scout-desktop-ui`), on Windows and macOS.
     Gpui,
+}
+
+impl Default for WindowToolkit {
+    /// The gpui window wherever this build contains it, otherwise egui.
+    ///
+    /// Every launch path starts the supervisor without `--ui=`: start at
+    /// login, the installer's shortcuts, the updater's relaunch, and a user
+    /// opening the app. So this default is what a user sees; the supervisor
+    /// then hands its choice to every window it starts or relaunches.
+    fn default() -> Self {
+        if scout_desktop_ui::AVAILABLE {
+            Self::Gpui
+        } else {
+            Self::Egui
+        }
+    }
 }
 
 impl WindowToolkit {
@@ -80,17 +97,32 @@ mod tests {
         values.iter().map(|&value| value.to_owned()).collect()
     }
 
+    /// What a launch without `--ui=` opens: start at login passes only
+    /// `--background --server=…`, and the installer's shortcuts and the
+    /// updater's relaunch pass nothing.
+    const DEFAULT: WindowToolkit = if cfg!(any(windows, target_os = "macos")) {
+        WindowToolkit::Gpui
+    } else {
+        WindowToolkit::Egui
+    };
+
     #[test]
-    fn egui_stays_the_default() {
-        assert_eq!(WindowToolkit::select(&[], None), Ok(WindowToolkit::Egui));
+    fn gpui_is_the_default_wherever_it_is_built() {
+        assert_eq!(WindowToolkit::default(), DEFAULT);
+        assert_eq!(WindowToolkit::select(&[], None), Ok(DEFAULT));
+        assert_eq!(WindowToolkit::select(&[], Some("")), Ok(DEFAULT));
         assert_eq!(
-            WindowToolkit::select(&[], Some("")),
-            Ok(WindowToolkit::Egui)
+            WindowToolkit::select(
+                &arguments(&["--background", "--server=https://scout.invalid"]),
+                None
+            ),
+            Ok(DEFAULT)
         );
+        assert!(DEFAULT.available());
     }
 
     #[test]
-    fn the_environment_or_the_flag_selects_gpui() {
+    fn the_environment_or_the_flag_selects_either_toolkit() {
         assert_eq!(
             WindowToolkit::select(&[], Some("gpui")),
             Ok(WindowToolkit::Gpui)
@@ -98,6 +130,14 @@ mod tests {
         assert_eq!(
             WindowToolkit::select(&arguments(&["--background", "--ui=gpui"]), None),
             Ok(WindowToolkit::Gpui)
+        );
+        assert_eq!(
+            WindowToolkit::select(&[], Some("egui")),
+            Ok(WindowToolkit::Egui)
+        );
+        assert_eq!(
+            WindowToolkit::select(&arguments(&["--ui=egui"]), None),
+            Ok(WindowToolkit::Egui)
         );
     }
 

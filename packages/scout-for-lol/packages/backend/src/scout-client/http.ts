@@ -253,7 +253,9 @@ async function handleDesktopEvent(
   const result = acceptDesktopEvent(device, await boundedJson(request));
   if (result.status === 202) return jsonResponse({ accepted: true }, 202);
   const response = jsonResponse({ error: result.error }, result.status);
-  if (result.status === 429) response.headers.set("Retry-After", "60");
+  if (result.status === 429) {
+    response.headers.set("Retry-After", result.retryAfterSeconds.toString());
+  }
   return response;
 }
 

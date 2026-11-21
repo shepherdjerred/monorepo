@@ -29,6 +29,8 @@ mod collector;
 mod gameflow;
 mod history;
 mod live_game;
+#[cfg(test)]
+mod mock_lcu;
 mod observe;
 mod pairing;
 mod paths;

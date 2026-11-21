@@ -1,7 +1,7 @@
 {
   "name": "@scout-for-lol/desktop",
   "private": true,
-  "description": "Pure-Rust desktop observer for Scout, with egui and gpui-kit windows",
+  "description": "Pure-Rust desktop observer for Scout, with a gpui-kit window and an egui fallback",
   "scripts": {
     "build": "mise exec -- cargo build --workspace --all-targets --locked",
     "typecheck": "mise exec -- cargo check --workspace --all-targets --all-features --locked",

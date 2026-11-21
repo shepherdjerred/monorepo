@@ -11,6 +11,13 @@ import { z } from "zod";
  */
 export const SCOUT_DESKTOP_EVENTS_PATH = "/api/scout-client/v1/desktop/events";
 
+/**
+ * Events the backend accepts from one device per one-minute window before it
+ * answers 429 with a `Retry-After`. The desktop relay paces itself to half of
+ * this and holds a refused event until `Retry-After` has passed.
+ */
+export const SCOUT_DESKTOP_EVENTS_PER_DEVICE_PER_MINUTE = 30;
+
 /** Semantic version with optional pre-release; bounded and path-free. */
 const AppVersionSchema = z
   .string()

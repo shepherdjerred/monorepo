@@ -42,6 +42,9 @@ struct Shared {
     staged: Mutex<Option<StagedUpdate>>,
     trigger: Notify,
     upgrade_required: AtomicBool,
+    /// Whether "nothing is published" has been logged since the channel last
+    /// answered otherwise; a channel with no release yet is said once.
+    unpublished_logged: AtomicBool,
     idle_since: Mutex<Option<Instant>>,
     config: UpdateConfig,
     diagnostics: Arc<Diagnostics>,
@@ -111,6 +114,7 @@ impl UpdateService {
             staged: Mutex::new(None),
             trigger: Notify::new(),
             upgrade_required: AtomicBool::new(false),
+            unpublished_logged: AtomicBool::new(false),
             idle_since: Mutex::new(None),
             config,
             diagnostics,
@@ -232,7 +236,23 @@ async fn cycle<U: Updater>(updater: &U, shared: &Shared, current: &Version) {
     shared.set(UpdateStatus::Checking, None, previous.required);
     let update = match updater.check(current).await {
         Ok(update) => update,
+        // The channel has no manifest yet: nothing has been released on it,
+        // which is the normal state before a first publication, not a fault.
+        Err(UpdateError::Status(404)) => {
+            shared.staged().take();
+            shared.set(UpdateStatus::UpToDate, None, false);
+            if !shared.unpublished_logged.swap(true, Ordering::SeqCst) {
+                shared.record(
+                    "update_check",
+                    DiagnosticLevel::Info,
+                    DiagnosticOutcome::Skipped,
+                    "no release is published on this channel yet",
+                );
+            }
+            return;
+        }
         Err(error) => {
+            shared.unpublished_logged.store(false, Ordering::SeqCst);
             shared.record(
                 "update_check",
                 DiagnosticLevel::Warn,
@@ -243,6 +263,7 @@ async fn cycle<U: Updater>(updater: &U, shared: &Shared, current: &Version) {
             return;
         }
     };
+    shared.unpublished_logged.store(false, Ordering::SeqCst);
     // The updater never offers a release at or below the running version; a
     // misbehaving one is held to the same rule here.
     let Some(update) = update.filter(|update| update.version > *current) else {
@@ -317,7 +338,7 @@ mod tests {
     use std::sync::Arc;
     use std::time::{Duration, Instant};
 
-    use scout_client_core::diagnostics::Diagnostics;
+    use scout_client_core::diagnostics::{DiagnosticLevel, DiagnosticOutcome, Diagnostics};
     use scout_client_runtime::runtime::GameflowPhase;
     use scout_desktop_ipc::{UpdateSnapshot, UpdateStatus};
 
@@ -410,6 +431,39 @@ mod tests {
         updater.failing_checks();
         let handle = start(&updater, PROMPT, "0.1.0");
         until(&handle, |status| status.status == UpdateStatus::Failed).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn an_unpublished_channel_is_up_to_date_and_said_once() -> TestResult {
+        let updater = FakeUpdater::offering(None);
+        updater.unpublished();
+        let diagnostics = Arc::new(Diagnostics::in_memory());
+        let handle = UpdateService::start(
+            Arc::clone(&updater),
+            UpdateConfig {
+                first_check_delay: Duration::ZERO,
+                check_interval: Duration::from_millis(5),
+                idle_install_after: Duration::from_mins(10),
+            },
+            version("0.1.0"),
+            Arc::clone(&diagnostics),
+        );
+        until(&handle, |status| status.status == UpdateStatus::UpToDate).await?;
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while updater.checks() < 4 {
+            assert!(Instant::now() < deadline, "the updater stopped checking");
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+        let checks: Vec<_> = diagnostics
+            .events()
+            .into_iter()
+            .filter(|event| event.operation == "update_check")
+            .collect();
+        assert_eq!(checks.len(), 1, "{checks:?}");
+        assert_eq!(checks[0].level, DiagnosticLevel::Info);
+        assert_eq!(checks[0].outcome, DiagnosticOutcome::Skipped);
+        assert_eq!(handle.snapshot().status, UpdateStatus::UpToDate);
         Ok(())
     }
 
