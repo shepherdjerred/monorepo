@@ -430,6 +430,11 @@ describe("subtitle provider boundaries", () => {
   });
 });
 
+const quotaReply = (calls: string[], quota: number) => async (url: URL) => {
+  calls.push(url.pathname);
+  return Response.json({ status: 0, user: { quota } });
+};
+
 describe("ASSRT request pacing", () => {
   it("counts the quota request and spaces authenticated search and detail", async () => {
     const calls: string[] = [];
@@ -482,11 +487,7 @@ describe("ASSRT request pacing", () => {
 
   it("defers early when the quota slot cannot fit and aborts a pending metadata wait", async () => {
     const calls: string[] = [];
-    const reply = (quota: number) => (url: URL) => {
-      calls.push(url.pathname);
-      return Promise.resolve(Response.json({ status: 0, user: { quota } }));
-    };
-    const lowBudget = new AssrtProvider("fixture-token", reply(5));
+    const lowBudget = new AssrtProvider("fixture-token", quotaReply(calls, 5));
     await expect(lowBudget.paceLookup(11_999)).resolves.toBe(12);
     await expect(lowBudget.search("Fixture")).rejects.toMatchObject({
       kind: "rate-limited",
@@ -494,7 +495,7 @@ describe("ASSRT request pacing", () => {
     });
 
     const controller = new AbortController();
-    const cancelled = new AssrtProvider("fixture-token", reply(1));
+    const cancelled = new AssrtProvider("fixture-token", quotaReply(calls, 1));
     await expect(
       cancelled.paceLookup(105_000, {
         observed: { wall: Date.now(), monotonic: performance.now() },
@@ -509,10 +510,7 @@ describe("ASSRT request pacing", () => {
 
   it("clips ASSRT to the earlier authority deadline instead of the full invocation", async () => {
     const calls: string[] = [];
-    const provider = new AssrtProvider("fixture-token", async (url) => {
-      calls.push(url.pathname);
-      return Response.json({ status: 0, user: { quota: 5 } });
-    });
+    const provider = new AssrtProvider("fixture-token", quotaReply(calls, 5));
     const wall = Date.now();
     await provider.paceLookup(105_000, {
       observed: { wall, monotonic: performance.now() },
@@ -528,10 +526,7 @@ describe("ASSRT request pacing", () => {
 
   it("charges previous provider time even when the wall clock moves backwards", async () => {
     const calls: string[] = [];
-    const provider = new AssrtProvider("fixture-token", async (url) => {
-      calls.push(url.pathname);
-      return Response.json({ status: 0, user: { quota: 5 } });
-    });
+    const provider = new AssrtProvider("fixture-token", quotaReply(calls, 5));
     const wall = Date.now();
     const clock = vi.spyOn(Date, "now").mockReturnValue(wall - 20_000);
     try {
