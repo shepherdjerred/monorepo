@@ -91,7 +91,7 @@ const START_REFUSAL_CODES = {
 
 const MESSAGE_MAX_LENGTH = 500;
 
-function startRefusalResponse(refusal: ExploreStartRefusal): Response {
+export function startRefusalResponse(refusal: ExploreStartRefusal): Response {
   const message =
     refusal.message.length <= MESSAGE_MAX_LENGTH
       ? refusal.message

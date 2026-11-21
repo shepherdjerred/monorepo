@@ -4,12 +4,20 @@ import type {
   ScoutDesktopVoiceTrigger,
   ScoutDesktopVoiceWakeVerification,
 } from "@scout-for-lol/data";
+import { resolveEnvironment, type Environment } from "#src/configuration.ts";
 import type { Db } from "#src/database/index.ts";
-import type {
-  CoachContextProjection,
-  CoachPolicyFlags,
-  CoachTurnInitiation,
+import {
+  COACH_PROACTIVE_INITIATION,
+  type CoachContextProjection,
+  type CoachPolicyFlags,
+  type CoachTurnInitiation,
 } from "./context-policy.ts";
+import { proactiveRefusedIn } from "./proactive-policy.ts";
+import {
+  admitProactiveTrigger,
+  prismaReceiptStore,
+  type ProactiveTriggerRecord,
+} from "./proactive-triggers.ts";
 
 /**
  * How a spoken turn proved the player asked: what started the recording, and
@@ -39,7 +47,41 @@ export type CoachTurnRecord = {
   readonly projection: CoachContextProjection;
   readonly flags: CoachPolicyFlags;
   readonly voice?: CoachVoiceProof | undefined;
+  /**
+   * The trigger a proactive turn admits; present exactly when the initiation
+   * is `app_proactive`.
+   */
+  readonly trigger?: ProactiveTriggerRecord;
 };
+
+/**
+ * The trigger and game a proactive turn admits, or null for any other turn.
+ * Checked before anything is written. The route refuses production first, so
+ * a proactive record reaching here in production is a broken contract: no
+ * proactive turn may start there whatever the caller says.
+ */
+export function proactiveTriggerOf(
+  record: CoachTurnRecord,
+  environment: Environment,
+): {
+  readonly gameKey: string;
+  readonly trigger: ProactiveTriggerRecord;
+} | null {
+  const proactive = record.initiation === COACH_PROACTIVE_INITIATION;
+  if (proactive !== (record.trigger !== undefined)) {
+    throw new Error(
+      "A coach turn carries a trigger exactly when it is a proactive turn.",
+    );
+  }
+  if (record.trigger === undefined) return null;
+  if (proactiveRefusedIn(environment)) {
+    throw new Error("A proactive coach turn never starts in production.");
+  }
+  if (record.gameKey === null) {
+    throw new Error("A proactive coach turn names its game.");
+  }
+  return { gameKey: record.gameKey, trigger: record.trigger };
+}
 
 /**
  * Record one turn that carried a game context or was spoken: who sent it from
@@ -49,17 +91,34 @@ export type CoachTurnRecord = {
  * nor the transcript reaches this table.
  *
  * Pass the transaction that reserves the run, so a turn is never started
- * without its row.
+ * without its row. A proactive turn first admits its trigger receipt
+ * (`coach/proactive-triggers.ts`), which throws `ProactiveTriggerRefusedError`
+ * for a duplicate, a full game or a trigger too soon, rolling the run back.
  */
 export async function recordCoachTurn(
-  client: Pick<Db, "scoutCoachTurn">,
+  client: Pick<
+    Db,
+    "scoutCoachTurn" | "scoutCoachTriggerReceipt" | "$executeRaw"
+  >,
   input: {
     readonly ownerId: DiscordAccountId;
     readonly run: ExploreActiveRun;
     readonly record: CoachTurnRecord;
+    readonly now?: Date;
   },
 ): Promise<void> {
   const { record } = input;
+  const trigger = proactiveTriggerOf(record, resolveEnvironment());
+  if (trigger !== null) {
+    await admitProactiveTrigger(prismaReceiptStore(client), {
+      ownerId: input.ownerId,
+      deviceId: record.deviceId,
+      gameKey: trigger.gameKey,
+      trigger: trigger.trigger,
+      runId: input.run.runId,
+      now: input.now ?? new Date(),
+    });
+  }
   await client.scoutCoachTurn.create({
     data: {
       ownerId: input.ownerId,

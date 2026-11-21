@@ -15,8 +15,14 @@
 //!
 //! [`recording`] keeps snapshots on this device. [`upload`] queues a finished
 //! game's recording as a `live_game_recording` observation.
+//!
+//! `detectors` (beta profile only) finds the scoreboard changes a proactive
+//! coach turn may be asked for. Riot's published policy prohibits unprompted
+//! alerts from live game state, so a stable build does not compile it.
 
 pub mod champ_select;
+#[cfg(scout_proactive_coach)]
+pub mod detectors;
 pub mod gameflow;
 pub mod model;
 pub mod recording;
@@ -24,3 +30,16 @@ pub mod session;
 pub mod snapshot;
 pub mod source;
 pub mod upload;
+
+#[cfg(test)]
+mod tests {
+    use crate::profile::ReleaseProfile;
+
+    #[test]
+    fn proactive_detectors_compile_only_into_the_beta_profile() {
+        assert_eq!(
+            cfg!(scout_proactive_coach),
+            ReleaseProfile::compiled().channel == "beta"
+        );
+    }
+}

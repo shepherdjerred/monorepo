@@ -128,7 +128,7 @@ describe("the Explore scenario corpus", () => {
             ...turn,
             gameContext: {
               ...turn?.gameContext,
-              initiation: "app_proactive",
+              initiation: "app_made_up",
             },
           },
         ],

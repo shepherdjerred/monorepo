@@ -2708,6 +2708,27 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_coach_proactive",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Beta-only proactive coach turns: Scout Desktop's beta build asks for a turn when a deterministic scoreboard detector fires (coach/triggers). Evaluated per device owner beside scout_desktop_coach and scout_coach_live_answers. Production refuses the route and hard-disables this flag in code whatever Flipt answers, because Riot's published policy prohibits unprompted alerts from live game state.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": [],
+      "defaultOffExceptions": [
+        {
+          "environment": "prod",
+          "reason": "Riot's published policy prohibits unprompted alerts from live game state, so proactive coach turns are beta-only and the backend hard-disables them in production in code.",
+          "issue": "AI-558",
+          "enableWhen": "Riot's published policy permits app-initiated coaching from live game state; then the production hard-disable is removed in code and the flag turned on.",
+          "reviewBy": "2027-02-19"
+        }
+      ]
+    },
+    {
       "key": "scout-consumer-player-profiles-enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -4653,6 +4674,14 @@
         },
         {
           "key": "scout-explore-model-picker-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout_coach_proactive",
           "type": "boolean",
           "default": true,
           "rollouts": [],

@@ -7,6 +7,10 @@ import {
   REVIEW_TURN_QUESTION,
 } from "#src/coach/app-turns.ts";
 import {
+  PROACTIVE_QUESTION_PREFIX,
+  isProactiveTriggerQuestion,
+} from "#src/coach/proactive-triggers.ts";
+import {
   projectGameContext,
   type CoachContextProjection,
 } from "#src/coach/context-policy.ts";
@@ -56,6 +60,16 @@ export function scenarioCoachQuestion(
 ): string {
   const { initiation } = gameContext;
   if (initiation === "player_typed" || initiation === "player_voice") {
+    return question;
+  }
+  // A proactive turn's question is worded from the trigger's evidence, so
+  // the case quotes it; it must still carry the marker the agent keys on.
+  if (initiation === "app_proactive") {
+    if (!isProactiveTriggerQuestion(question)) {
+      throw new Error(
+        `An app_proactive turn asks "${PROACTIVE_QUESTION_PREFIX} ...", not "${question}".`,
+      );
+    }
     return question;
   }
   // App turns are worded for the client routes. The post-game review is

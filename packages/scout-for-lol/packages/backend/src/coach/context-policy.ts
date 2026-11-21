@@ -29,8 +29,9 @@ import { z } from "zod";
  * Riot's published policy approves pre-game, champion-select options and
  * post-game review, prohibits unprompted alerts from live state, and does not
  * address answering a question the player asked from scoreboard-visible
- * state. So live state reaches the agent only when the player asked, and only
- * while the kill switch is on.
+ * state. So live state reaches the agent when the player asked, while the
+ * kill switch is on, and otherwise only on a beta-only proactive turn that
+ * `coach/proactive-policy.ts` admitted, which it never does in production.
  *
  * Pure: the caller resolves the flags and proves the initiation.
  */
@@ -54,15 +55,22 @@ import { z } from "zod";
  * - `app_postgame`: the server started the post-game review once the game's
  *   recording and resolved match were stored (`COACH_SERVER_INITIATIONS`; no
  *   client route can start it). Carries only `postgame`.
+ * - `app_proactive`: Scout Desktop's beta build asked for a turn because a
+ *   scoreboard detector fired (`coach/triggers`). Carries only `live`, and
+ *   only with `proactiveEnabled`, which `coach/proactive-policy.ts` grants
+ *   outside production alone.
  *
- * None of the app initiations is player-initiated, so neither ever carries `live`:
- * the gate withholds it, and the app route refuses a request that names it.
+ * Only `app_proactive` among the app initiations carries `live`, and only when
+ * the proactive policy admits it: the gate withholds `live` from every other
+ * app initiation, and the app route refuses a request that names it.
  */
+export const COACH_PROACTIVE_INITIATION = "app_proactive";
 export const CoachTurnInitiationSchema = z.enum([
   "player_typed",
   "player_voice",
   ...COACH_APP_INITIATIONS,
   ...COACH_SERVER_INITIATIONS,
+  COACH_PROACTIVE_INITIATION,
 ]);
 export type CoachTurnInitiation = z.infer<typeof CoachTurnInitiationSchema>;
 
@@ -74,12 +82,19 @@ export type CoachPolicyFlags = {
   readonly coachEnabled: boolean;
   /** `scout_coach_live_answers`, the Riot kill switch for live state. */
   readonly liveAnswersEnabled: boolean;
+  /**
+   * Whether `coach/proactive-policy.ts` admitted a proactive turn: never in
+   * production, otherwise `scout_coach_proactive`. Absent is off, so no
+   * caller that predates proactive turns can let one through.
+   */
+  readonly proactiveEnabled?: boolean;
 };
 
 export type CoachWithheldReason =
   | "coach_disabled"
   | "not_player_initiated"
   | "section_outside_initiation"
+  | "proactive_disabled"
   | "live_answers_disabled";
 
 export type CoachContextProjection = {
@@ -102,6 +117,7 @@ export type CoachContextResult =
 const INITIATION_SECTION = {
   ...COACH_APP_INITIATION_SECTION,
   ...COACH_SERVER_INITIATION_SECTION,
+  [COACH_PROACTIVE_INITIATION]: "live",
 } as const satisfies Record<
   Exclude<CoachTurnInitiation, "player_typed" | "player_voice">,
   CoachContextSection
@@ -128,7 +144,11 @@ function liveWithheldReason(
   initiation: CoachTurnInitiation,
   flags: CoachPolicyFlags,
 ): CoachWithheldReason | null {
-  if (!PLAYER_INITIATIONS.has(initiation)) return "not_player_initiated";
+  if (initiation === COACH_PROACTIVE_INITIATION) {
+    if (flags.proactiveEnabled !== true) return "proactive_disabled";
+  } else if (!PLAYER_INITIATIONS.has(initiation)) {
+    return "not_player_initiated";
+  }
   return flags.liveAnswersEnabled ? null : "live_answers_disabled";
 }
 

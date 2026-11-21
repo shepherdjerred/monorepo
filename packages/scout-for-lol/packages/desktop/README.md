@@ -1057,6 +1057,7 @@ stays in memory on the device to time the game start.
 | Microphone audio while listening (`scout-voice`)             | No                         | Never: listening for "hey scout" runs on this computer, and audio that is not a question is dropped as it arrives                                                                     | Never sent                       |
 | A spoken question                                            | Yes, to the Scout API      | Only as a finished utterance: one WAV per question, after "hey scout" or while push-to-talk is held, sent to `coach/voice/turns` once you stop speaking; the microphone never streams | Voice consent, mute              |
 | Spoken answers                                               | No, they arrive            | Played on this computer as they stream in; nothing is kept                                                                                                                            | Voice consent                    |
+| Proactive coach triggers (`live::detectors`, beta only)      | No                         | Not sent yet: nothing wires the detectors to the server                                                                                                                               | Never sent                       |
 
 The live game snapshot reaches Scout only as a chat question's game context.
 While a game is live the composer shows **Using your live game**, on until you
@@ -1087,6 +1088,18 @@ as chips; picking one sends the same follow-up turn as a transcript chip. The
 panel comes down when the game ends. When Scout answers `feature_disabled`
 (`scout_desktop_coach` is off for your account), the relay stops starting turns,
 shows nothing and asks again after the next refresh.
+
+The beta build also carries proactive coach detectors (`live::detectors` in
+`scout-client-core`): deterministic rules over two consecutive live snapshots
+that notice an enemy completing a legendary item, an enemy getting fed, the
+enemy team's damage type shifting, the enemy team stacking healing while you
+hold no anti-heal, and a streak of deaths without a takedown. They read only
+scoreboard fields (champion, kills, deaths, assists, items) and item facts from
+Data Dragon's `item.json`. Riot's policy prohibits unprompted alerts from live
+game state, so the stable build does not compile them (`build.rs` sets
+`cfg(scout_proactive_coach)` for the beta profile only), and the server's
+`coach/triggers` route refuses every request in production. Nothing sends what
+they find yet.
 
 ## Diagnostics
 

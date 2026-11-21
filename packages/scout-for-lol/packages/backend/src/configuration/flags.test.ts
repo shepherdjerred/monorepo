@@ -28,6 +28,7 @@ const PRODUCTION_DENIED_FLAGS = [
   "dare_notifications_enabled",
   "duels_enabled",
   "voice_assistant_enabled",
+  "scout_coach_proactive",
 ] as const;
 
 /** Off in production by Flipt's managed state, not by a code-level denial. */
@@ -94,6 +95,7 @@ describe("production hard-disable policy", () => {
         dare_notifications_enabled: true,
         duels_enabled: true,
         voice_assistant_enabled: true,
+        scout_coach_proactive: true,
       }),
     });
 

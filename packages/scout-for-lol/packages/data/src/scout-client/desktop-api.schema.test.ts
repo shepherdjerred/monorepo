@@ -26,8 +26,15 @@ import startAppFixture from "./desktop-fixtures/explore-runs-start-app.json" wit
 import coachGetFixture from "./desktop-fixtures/explore-conversations-get-coach.json" with { type: "json" };
 import startActionsFixture from "./desktop-fixtures/explore-runs-start-actions.json" with { type: "json" };
 import voiceTurnFixture from "./desktop-fixtures/coach-voice-turns.json" with { type: "json" };
+import coachTriggersFixture from "./desktop-fixtures/coach-triggers.json" with { type: "json" };
 import { ScoutClientCreatePairingSchema } from "./protocol.schema.ts";
 import { ScoutDesktopAppTurnRequestSchema } from "./coach-context.schema.ts";
+import {
+  COACH_TRIGGER_KINDS,
+  CoachTriggerSchema,
+  ScoutDesktopCoachTriggerRequestSchema,
+  ScoutDesktopCoachTriggerResponseSchema,
+} from "./coach-trigger.schema.ts";
 import {
   ExploreActiveRunSchema,
   ExploreRunObserveRequestSchema,
@@ -210,6 +217,11 @@ const ROUTE_SCHEMAS: Record<
     response: ScoutDesktopCoachReviewResponseSchema,
     fixture: coachReviewFixture,
   },
+  coach_triggers: {
+    request: ScoutDesktopCoachTriggerRequestSchema,
+    response: ScoutDesktopCoachTriggerResponseSchema,
+    fixture: coachTriggersFixture,
+  },
 };
 
 const routeNames = ScoutDesktopApiRouteSchema.options;
@@ -345,6 +357,25 @@ describe("Scout desktop API contract", () => {
         messages: [coachGetFixture.response.messages[0], older],
       }).messages[1]?.coachOptions,
     ).toBeNull();
+  });
+
+  test("coach triggers: one golden trigger per kind, a duplicate answer, and nothing a player wrote", () => {
+    const kinds = coachTriggersFixture.triggers.map(
+      (trigger) => CoachTriggerSchema.parse(trigger).kind,
+    );
+    expect(kinds).toEqual([...COACH_TRIGGER_KINDS]);
+    expect(
+      ScoutDesktopCoachTriggerResponseSchema.parse(
+        coachTriggersFixture.duplicateResponse,
+      ),
+    ).toEqual({ status: "duplicate" });
+    // The body has no field a player could type into.
+    expect(Object.keys(ScoutDesktopCoachTriggerRequestSchema.shape)).toEqual([
+      "conversationId",
+      "gameKey",
+      "trigger",
+      "snapshot",
+    ]);
   });
 
   test("the model list is the web picker's list, and a model outside it is refused", () => {

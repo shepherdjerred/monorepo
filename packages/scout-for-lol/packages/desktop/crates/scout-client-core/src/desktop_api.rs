@@ -21,16 +21,18 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::coach_context::GameContext;
+use crate::coach_context::{GameContext, LiveContext};
 
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 9;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 10;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
 /// Path of the route that starts a turn Scout asks for itself.
 pub const EXPLORE_RUNS_START_APP_PATH: &str = "/api/scout-client/v1/explore/runs/start-app";
+/// Path of the beta-only route that asks for a proactive coach turn.
+pub const COACH_TRIGGERS_PATH: &str = "/api/scout-client/v1/coach/triggers";
 /// Path of the route that stops a running turn.
 pub const EXPLORE_RUNS_STOP_PATH: &str = "/api/scout-client/v1/explore/runs/stop";
 /// Path of the route that lists the owner's running turns.
@@ -457,14 +459,7 @@ impl TryFrom<RawAppTurnRequest> for AppTurnRequest {
     type Error = String;
 
     fn try_from(raw: RawAppTurnRequest) -> Result<Self, String> {
-        let key_ok = (1..=64).contains(&raw.game_key.len())
-            && raw
-                .game_key
-                .bytes()
-                .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-');
-        if !key_ok {
-            return Err("gameKey is 1 to 64 letters, digits, _ or -".to_owned());
-        }
+        check_game_key(&raw.game_key)?;
         raw.game_context
             .validate()
             .map_err(|error| error.to_string())?;
@@ -492,6 +487,172 @@ impl TryFrom<RawAppTurnRequest> for AppTurnRequest {
             game_context: raw.game_context,
         })
     }
+}
+
+/// A game key: 1 to 64 letters, digits, `_` or `-`.
+fn check_game_key(key: &str) -> Result<(), String> {
+    let ok = (1..=64).contains(&key.len())
+        && key
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-');
+    if ok {
+        Ok(())
+    } else {
+        Err("gameKey is 1 to 64 letters, digits, _ or -".to_owned())
+    }
+}
+
+/// Which damage type an enemy team's completed damage items lean on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DamageProfile {
+    /// Mostly physical damage items.
+    Physical,
+    /// Mostly magic damage items.
+    Magic,
+    /// Neither dominates.
+    Mixed,
+}
+
+/// What a proactive detector saw between two consecutive live snapshots,
+/// with the scoreboard values that show it. Nothing here is free text: every
+/// name is one the snapshot's scoreboard carries, and the server checks it
+/// against the snapshot the request sends with it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(
+    tag = "kind",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum CoachTrigger {
+    /// An enemy completed a legendary item.
+    EnemyItemSpike {
+        /// The enemy's champion.
+        champion: String,
+        /// The item completed.
+        item_id: u32,
+        /// Its scoreboard name.
+        item_name: String,
+        /// Completed items the enemy now holds, this one included.
+        completed_items: u8,
+    },
+    /// An enemy crossed the fed threshold on kills against deaths.
+    EnemyFed {
+        /// The enemy's champion.
+        champion: String,
+        /// Kills.
+        kills: u32,
+        /// Deaths.
+        deaths: u32,
+        /// Assists.
+        assists: u32,
+    },
+    /// The enemy team's dominant damage type changed.
+    DamageProfileShift {
+        /// The profile before.
+        from: DamageProfile,
+        /// The profile now.
+        to: DamageProfile,
+        /// Completed physical damage items across the enemy team.
+        physical_items: u8,
+        /// Completed magic damage items across the enemy team.
+        magic_items: u8,
+    },
+    /// The enemy team holds several completed healing items and the player
+    /// holds no anti-heal item.
+    HealingThreat {
+        /// Completed healing items across the enemy team.
+        healing_items: u8,
+    },
+    /// The player died several times without a kill or assist.
+    DeathStreak {
+        /// The player's deaths this game.
+        deaths: u32,
+        /// Deaths since the player's last takedown.
+        deaths_without_takedown: u8,
+    },
+}
+
+impl CoachTrigger {
+    /// Every trigger kind, by its wire name, in contract order.
+    pub const KINDS: [&'static str; 5] = [
+        "enemy_item_spike",
+        "enemy_fed",
+        "damage_profile_shift",
+        "healing_threat",
+        "death_streak",
+    ];
+
+    /// This trigger's wire name.
+    #[must_use]
+    pub const fn kind(&self) -> &'static str {
+        match self {
+            Self::EnemyItemSpike { .. } => Self::KINDS[0],
+            Self::EnemyFed { .. } => Self::KINDS[1],
+            Self::DamageProfileShift { .. } => Self::KINDS[2],
+            Self::HealingThreat { .. } => Self::KINDS[3],
+            Self::DeathStreak { .. } => Self::KINDS[4],
+        }
+    }
+}
+
+/// Request to `coach/triggers`: a proactive coach turn the beta build asks
+/// for. It has no question (the server words it) and carries the live
+/// snapshot the detector fired on. The server refuses it in production.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(
+    rename_all = "camelCase",
+    deny_unknown_fields,
+    try_from = "RawCoachTriggerRequest"
+)]
+pub struct CoachTriggerRequest {
+    /// The conversation to continue, or none to start a new one.
+    pub conversation_id: Option<Uuid>,
+    /// This game, which the server's per-game cap and dedupe count by.
+    pub game_key: String,
+    /// What the detector saw.
+    pub trigger: CoachTrigger,
+    /// The live snapshot it saw it in.
+    pub snapshot: LiveContext,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct RawCoachTriggerRequest {
+    conversation_id: Option<Uuid>,
+    game_key: String,
+    trigger: CoachTrigger,
+    snapshot: LiveContext,
+}
+
+impl TryFrom<RawCoachTriggerRequest> for CoachTriggerRequest {
+    type Error = String;
+
+    fn try_from(raw: RawCoachTriggerRequest) -> Result<Self, String> {
+        check_game_key(&raw.game_key)?;
+        raw.snapshot.validate().map_err(|error| error.to_string())?;
+        Ok(Self {
+            conversation_id: raw.conversation_id,
+            game_key: raw.game_key,
+            trigger: raw.trigger,
+            snapshot: raw.snapshot,
+        })
+    }
+}
+
+/// Response from `coach/triggers`. Spacing and the per-game cap answer the
+/// `rate_limited` refusal instead.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "status", rename_all = "snake_case", deny_unknown_fields)]
+pub enum CoachTriggerResponse {
+    /// A new turn, observed like any run.
+    Started {
+        /// The run.
+        run: ActiveRun,
+    },
+    /// The server already admitted this event for this game; nothing started.
+    Duplicate,
 }
 
 /// A turn the server is answering: the answer to `runs/start`, and each entry
@@ -836,7 +997,8 @@ mod tests {
 
     use super::{
         ActiveRun, AppInitiation, AppTurnRequest, AssetsResponse, AttachmentDiscardRequest,
-        COACH_REVIEWS_GET_PATH, COACH_VOICE_TURNS_PATH, CoachReviewRequest, CoachReviewResponse,
+        COACH_REVIEWS_GET_PATH, COACH_TRIGGERS_PATH, COACH_VOICE_TURNS_PATH, CoachReviewRequest,
+        CoachReviewResponse, CoachTrigger, CoachTriggerRequest, CoachTriggerResponse,
         ConversationGetRequest, ConversationListResponse, DESKTOP_CONTRACT_HEADER,
         DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError,
         DeviceScope, EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH,
@@ -909,6 +1071,8 @@ mod tests {
         include_str!("../../../../data/src/scout-client/desktop-fixtures/coach-voice-turns.json");
     const COACH_REVIEWS_GET: &str =
         include_str!("../../../../data/src/scout-client/desktop-fixtures/coach-reviews-get.json");
+    const COACH_TRIGGERS: &str =
+        include_str!("../../../../data/src/scout-client/desktop-fixtures/coach-triggers.json");
     const START_ACTIONS: &str = include_str!(
         "../../../../data/src/scout-client/desktop-fixtures/explore-runs-start-actions.json"
     );
@@ -967,6 +1131,7 @@ mod tests {
             BTreeMap::from([
                 ("coach_voice_turns", COACH_VOICE_TURNS_PATH),
                 ("coach_reviews_get", COACH_REVIEWS_GET_PATH),
+                ("coach_triggers", COACH_TRIGGERS_PATH),
                 ("device_scope_requests", DEVICE_SCOPE_REQUESTS_PATH),
                 ("explore_assets", EXPLORE_ASSETS_PATH),
                 (
@@ -1054,6 +1219,7 @@ mod tests {
             ATTACHMENTS_DISCARD,
             VOICE_TURNS,
             COACH_REVIEWS_GET,
+            COACH_TRIGGERS,
         ] {
             let fixture: Value = serde_json::from_str(fixture)?;
             named.push(fixture["route"].as_str().ok_or("route name")?.to_owned());
@@ -1100,6 +1266,28 @@ mod tests {
         assert_eq!(
             serde_json::to_value(AppInitiation::AppPregame)?,
             "app_pregame"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn coach_triggers_fixture_parses_strictly() -> TestResult {
+        check_route::<CoachTriggerRequest, CoachTriggerResponse>(COACH_TRIGGERS, "coach_triggers")
+    }
+
+    #[test]
+    fn every_trigger_kind_has_a_golden_body_and_a_duplicate_is_an_answer() -> TestResult {
+        let fixture: Value = serde_json::from_str(COACH_TRIGGERS)?;
+        let mut kinds = Vec::new();
+        for trigger in fixture["triggers"].as_array().ok_or("triggers")? {
+            let typed: CoachTrigger = serde_json::from_value(trigger.clone())?;
+            assert_eq!(&serde_json::to_value(&typed)?, trigger);
+            kinds.push(typed.kind());
+        }
+        assert_eq!(kinds, CoachTrigger::KINDS);
+        assert_eq!(
+            serde_json::from_value::<CoachTriggerResponse>(fixture["duplicateResponse"].clone())?,
+            CoachTriggerResponse::Duplicate
         );
         Ok(())
     }
