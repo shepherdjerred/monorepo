@@ -119,12 +119,24 @@ describe("environmentStanding", () => {
       newest: 5,
       status: "failed",
     });
+    // Delivery does not retry a failed or canceled release on its own, so the
+    // line must not promise it will, even on an automatic transition.
     expect(environmentStanding(failed, [versionStage(5)])).toEqual({
       facts: ["Running r4", "r5 failed"],
       ready: {
-        text: "r5 ready · deploys automatically",
-        waitsForPerson: false,
+        text: "r5 will not deploy again on its own · retry or release by hand",
+        waitsForPerson: true,
       },
+    });
+    const canceled = environment({
+      id: "app/prod",
+      accepted: 4,
+      newest: 5,
+      status: "canceled",
+    });
+    expect(environmentStanding(canceled, [versionStage(5)])?.ready).toEqual({
+      text: "r5 will not deploy again on its own · retry or release by hand",
+      waitsForPerson: true,
     });
   });
 

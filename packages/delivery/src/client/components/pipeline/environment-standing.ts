@@ -97,9 +97,21 @@ export function environmentStanding(
       facts: running === null ? facts : [...facts, "up to date"],
       ready: null,
     };
-  // A deployment of that release under way already says where it stands.
-  if (next === newest && outcome !== "failed" && outcome !== "canceled")
-    return { facts, ready: null };
+  if (next === newest) {
+    // A deployment of that release under way already says where it stands.
+    if (outcome !== "failed" && outcome !== "canceled")
+      return { facts, ready: null };
+    // After a failure or a cancellation Delivery does not deploy that same
+    // release again on its own, whatever the transition says, so it waits for
+    // a person to retry it or release it by hand.
+    return {
+      facts,
+      ready: {
+        text: `${revisionLabel(next)} will not deploy again on its own · retry or release by hand`,
+        waitsForPerson: true,
+      },
+    };
+  }
   const how = arrival(stage.transition);
   return {
     facts,
