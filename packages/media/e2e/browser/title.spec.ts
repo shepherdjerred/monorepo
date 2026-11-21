@@ -66,8 +66,10 @@ test.describe("a film the household has", () => {
     await expect(following).toHaveAttribute("aria-expanded", "false");
     await following.click();
     await expect(
-      main.getByRole("button", { name: /^Stop following/u }),
+      main.getByRole("button", { name: /^Cancel request/u }),
     ).toBeVisible();
+    // "Stop following" names another command; this page does not offer it.
+    await expect(main.getByText("Stop following")).toHaveCount(0);
     await expect(
       main.getByRole("button", { name: /^Request another version/u }),
     ).toBeVisible();
@@ -116,7 +118,10 @@ test.describe("a film the household has", () => {
     await open(page, "owner", mediaPath(movie.id));
     const main = page.getByRole("main");
     await expect(main.getByText("You, Sam")).toBeVisible();
-    await expect(main.getByText("Kept for good")).toBeVisible();
+    // The owner's pin goes by its own name; keeping for good is the
+    // library's policy, which this page cannot read.
+    await expect(main.getByText("Pinned, so it never leaves")).toBeVisible();
+    await expect(main.getByText(/for good/iu)).toHaveCount(0);
     await expect(main).not.toContainText(SYSTEM_VOCABULARY);
     // The owner's tools are not part of the page until they are opened.
     expect(manageCode).toEqual([]);
@@ -188,7 +193,7 @@ test.describe("a film the household has", () => {
       .getByRole("button", { name: "Actions for Final cut" })
       .click();
     await expect(
-      finalCut.getByRole("button", { name: /^Stop following/u }),
+      finalCut.getByRole("button", { name: /^Cancel request/u }),
     ).toBeVisible();
     expect(await violationDetails(page)).toEqual([]);
   });

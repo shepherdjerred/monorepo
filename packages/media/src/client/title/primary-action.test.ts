@@ -4,6 +4,7 @@ import {
   UserRoleSchema,
   type Availability,
 } from "#shared/contract.ts";
+import { COMMAND_COPY } from "./copy.ts";
 import {
   MENU_ACTIONS,
   PRIMARY_ACTIONS,
@@ -17,12 +18,12 @@ const NOTHING: TitleFacts = {
   availability: null,
   role: "member",
   following: false,
-  canStopFollowing: false,
+  canCancel: false,
   leavingSoon: false,
-  kept: false,
+  pinned: false,
   mayHold: false,
-  mayKeep: false,
-  mayStopKeeping: false,
+  mayPin: false,
+  mayUnpin: false,
   mayRestore: false,
   mayRequestAgain: false,
 };
@@ -31,7 +32,7 @@ const NOTHING: TitleFacts = {
 const OWNER: Partial<TitleFacts> = {
   role: "owner",
   mayHold: true,
-  mayKeep: true,
+  mayPin: true,
   mayRequestAgain: true,
 };
 
@@ -50,8 +51,8 @@ const BY_AVAILABILITY = {
   downloading: { stranger: "request", follower: "following", owner: "request" },
   validating: { stranger: "request", follower: "following", owner: "request" },
   importing: { stranger: "request", follower: "following", owner: "request" },
-  // Only a title the household can already watch is worth keeping for good.
-  available: { stranger: "request", follower: "following", owner: "keep" },
+  // Only a title the household can already watch is worth holding.
+  available: { stranger: "request", follower: "following", owner: "hold" },
   // Whoever asked for a removed title, and the owner, can bring it back.
   quarantined: { stranger: "request", follower: "restore", owner: "restore" },
   removed: { stranger: "request", follower: "following", owner: "request" },
@@ -69,7 +70,7 @@ describe("the primary action of a title", () => {
       primary({
         availability,
         following: true,
-        canStopFollowing: true,
+        canCancel: true,
         mayHold: true,
         mayRestore: gone,
       }),
@@ -97,51 +98,54 @@ describe("the primary action of a title", () => {
     // Anyone may hold a title that is leaving soon, follower or not.
     expect(primary(leaving)).toBe("hold");
     expect(primary({ ...leaving, following: true })).toBe("hold");
-    expect(primary({ ...leaving, ...OWNER, kept: true })).toBe("hold");
     // Without the permission it is not offered at all.
     expect(primary({ ...leaving, mayHold: false })).toBe("request");
   });
 
-  it("the owner who keeps a title for good is told so, and how to stop", () => {
-    const kept = {
-      ...NOTHING,
-      ...OWNER,
-      availability: "available",
-      kept: true,
-      mayStopKeeping: true,
-    } as const;
-    expect(titleActions(kept)).toEqual({
-      primary: "kept",
-      // Nothing to hold for 30 days: it is already kept for good.
-      menu: ["request", "stop_keeping"],
+  it("the owner's pin is a menu item under its own name, never the main action", () => {
+    const owner = { ...NOTHING, ...OWNER, availability: "available" } as const;
+    expect(titleActions(owner)).toEqual({
+      primary: "hold",
+      menu: ["request", "pin"],
     });
-    // Following says more about the reader than keeping does.
+    // A pinned title cannot leave: nothing to hold, and the pin can come off.
+    expect(titleActions({ ...owner, pinned: true, mayUnpin: true })).toEqual({
+      primary: "request",
+      menu: ["unpin"],
+    });
     expect(
-      titleActions({ ...kept, following: true, canStopFollowing: true }),
-    ).toEqual({
-      primary: "following",
-      menu: ["request", "stop_keeping", "stop_following"],
-    });
+      titleActions({
+        ...owner,
+        pinned: true,
+        mayUnpin: true,
+        leavingSoon: true,
+      }).primary,
+    ).toBe("request");
+    // A pin is never called keeping for good: that is the library's policy.
+    expect(COMMAND_COPY.pin.label).toBe("Pin so it never leaves");
+    expect(COMMAND_COPY.unpin.label).toBe("Remove pin");
+    for (const copy of Object.values(COMMAND_COPY)) {
+      expect(`${copy.label} ${copy.done}`).not.toMatch(/for good/iu);
+    }
   });
 
-  it("following a title offers the way to stop, and nothing it may not do", () => {
+  it("following a title offers cancelling the request, and nothing it may not do", () => {
     expect(
       titleActions({
         ...NOTHING,
         availability: "downloading",
         following: true,
-        canStopFollowing: true,
+        canCancel: true,
         mayHold: true,
       }),
-    ).toEqual({ primary: "following", menu: ["hold", "stop_following"] });
-    // A request that cannot be withdrawn leaves nothing behind the button.
+    ).toEqual({ primary: "following", menu: ["hold", "cancel_request"] });
+    // A request that cannot be cancelled leaves nothing behind the button.
     expect(
-      titleActions({
-        ...NOTHING,
-        availability: "available",
-        following: true,
-      }),
+      titleActions({ ...NOTHING, availability: "available", following: true }),
     ).toEqual({ primary: "following", menu: [] });
+    // "Stop following" names another command, which this page cannot send.
+    expect(COMMAND_COPY.cancel_request.label).toBe("Cancel request");
+    expect(COMMAND_COPY.cancel_request.done).toBe("Request cancelled.");
   });
 
   it("a film can always be asked for again, in another version", () => {
@@ -150,10 +154,10 @@ describe("the primary action of a title", () => {
         ...NOTHING,
         availability: "available",
         following: true,
-        canStopFollowing: true,
+        canCancel: true,
         mayRequestAgain: true,
       }).menu,
-    ).toEqual(["request", "stop_following"]);
+    ).toEqual(["request", "cancel_request"]);
   });
 });
 
@@ -161,12 +165,12 @@ describe("the primary action of a title", () => {
 function everyState(): TitleFacts[] {
   const flags = [
     "following",
-    "canStopFollowing",
+    "canCancel",
     "leavingSoon",
-    "kept",
+    "pinned",
     "mayHold",
-    "mayKeep",
-    "mayStopKeeping",
+    "mayPin",
+    "mayUnpin",
     "mayRestore",
     "mayRequestAgain",
   ] as const;
@@ -204,18 +208,17 @@ describe("every state a title can be in", () => {
       const { primary: first, menu } = titleActions(facts);
       const offered = [first, ...menu];
       if (!facts.mayHold) expect(offered).not.toContain("hold");
-      if (!facts.mayKeep) expect(offered).not.toContain("keep");
+      if (!facts.mayPin) expect(offered).not.toContain("pin");
       if (!facts.mayRestore || facts.availability !== "quarantined") {
         expect(offered).not.toContain("restore");
       }
-      if (!facts.kept || !facts.mayStopKeeping) {
-        expect(offered).not.toContain("stop_keeping");
+      if (!facts.pinned || !facts.mayUnpin) {
+        expect(offered).not.toContain("unpin");
       }
-      if (!facts.following || !facts.canStopFollowing) {
-        expect(offered).not.toContain("stop_following");
+      if (!facts.following || !facts.canCancel) {
+        expect(offered).not.toContain("cancel_request");
       }
       if (!facts.following) expect(first).not.toBe("following");
-      if (!facts.kept) expect(first).not.toBe("kept");
     }
   });
 

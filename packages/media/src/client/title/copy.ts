@@ -29,23 +29,28 @@ export const COMMAND_COPY = {
     done: "Kept for 30 days.",
     started: "Kept for 30 days.",
   },
-  keep: {
-    label: "Keep for good",
-    detail: "It stays even when nobody follows it.",
-    done: "Kept for good.",
-    started: "Kept for good.",
+  // The owner's own hold with no end. It is not the library's keeping
+  // policy ("Keep for good" in the Library), so it is never called that.
+  pin: {
+    label: "Pin so it never leaves",
+    detail: "Nothing removes it until you take the pin off.",
+    done: "Pinned.",
+    started: "Pinned.",
   },
-  stop_keeping: {
-    label: "Stop keeping for good",
-    detail: "It then stays only while someone follows it.",
-    done: "Stopped keeping it for good.",
-    started: "Stopped keeping it for good.",
+  unpin: {
+    label: "Remove pin",
+    detail: "It can leave again once nobody follows it.",
+    done: "Pin removed.",
+    started: "Pin removed.",
   },
-  stop_following: {
-    label: "Stop following",
-    detail: "Ends your request. Nobody else’s changes.",
-    done: "Stopped following.",
-    started: "Stopped following.",
+  // Not "Stop following": that names letting an interest go, which keeps
+  // the request. This withdraws the request itself.
+  cancel_request: {
+    label: "Cancel request",
+    detail:
+      "Withdraws your request for this title. Nobody else’s request changes.",
+    done: "Request cancelled.",
+    started: "Request cancelled.",
   },
   restore: {
     label: "Restore",

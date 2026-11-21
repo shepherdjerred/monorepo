@@ -68,11 +68,11 @@ describe("where a reader stands with a series", () => {
   it("a member who follows it can stop, and hold it", async () => {
     const { facts, context, user } = await television("Severance", "member");
     expect(facts.following).toBe(true);
-    expect(facts.canStopFollowing).toBe(true);
+    expect(facts.canCancel).toBe(true);
     expect(cancellableRequest(context, user)?.active).toBe(true);
     expect(titleActions(facts)).toEqual({
       primary: "following",
-      menu: ["hold", "stop_following"],
+      menu: ["hold", "cancel_request"],
     });
   });
 
@@ -81,19 +81,19 @@ describe("where a reader stands with a series", () => {
     expect(titleActions(facts)).toEqual({ primary: "request", menu: [] });
   });
 
-  it("the owner can keep a series the household can watch", async () => {
+  it("the owner can hold a series the household can watch, or pin it", async () => {
     const { facts } = await television("Succession", "owner");
     expect(titleActions(facts)).toEqual({
-      primary: "keep",
-      menu: ["request", "hold"],
+      primary: "hold",
+      menu: ["request", "pin"],
     });
   });
 
-  it("the owner who keeps one for good is told so", async () => {
+  it("the owner who pinned one can take the pin off", async () => {
     const { facts } = await television("Breaking Bad", "owner");
     expect(titleActions(facts)).toEqual({
-      primary: "kept",
-      menu: ["request", "stop_keeping"],
+      primary: "request",
+      menu: ["unpin"],
     });
   });
 
@@ -122,7 +122,7 @@ describe("where a reader stands with a film", () => {
     const { facts } = await film(FEATURED.movie.title, "member");
     expect(titleActions(facts)).toEqual({
       primary: "following",
-      menu: ["request", "hold", "stop_following"],
+      menu: ["request", "hold", "cancel_request"],
     });
   });
 
@@ -131,13 +131,16 @@ describe("where a reader stands with a film", () => {
     expect(titleActions(facts)).toEqual({ primary: "request", menu: [] });
   });
 
-  it("the owner can keep a film, or is told it is kept", async () => {
+  it("the owner can hold or pin a film, and take a pin off", async () => {
     const free = await film("Interstellar", "owner");
-    expect(titleActions(free.facts).primary).toBe("keep");
-    const kept = await film("Dune", "owner");
-    expect(titleActions(kept.facts)).toEqual({
-      primary: "kept",
-      menu: ["request", "stop_keeping"],
+    expect(titleActions(free.facts)).toEqual({
+      primary: "hold",
+      menu: ["request", "pin"],
+    });
+    const pinned = await film("Dune", "owner");
+    expect(titleActions(pinned.facts)).toEqual({
+      primary: "request",
+      menu: ["unpin"],
     });
   });
 
@@ -244,11 +247,11 @@ describe("in your household", () => {
     ).toMatch(/^It can be restored until /u);
   });
 
-  it("says the owner keeps a title for good", async () => {
+  it("says the owner pinned a title, in the pin's own words", async () => {
     const { media, user } = await television("Breaking Bad", "owner");
     expect(householdFacts(media, user, null, "en-US")).toContainEqual({
       term: "Keeping",
-      detail: "Kept for good",
+      detail: "Pinned, so it never leaves",
     });
   });
 });

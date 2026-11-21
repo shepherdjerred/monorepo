@@ -93,7 +93,7 @@ function requestLine(request: OwnRequest): string | null {
 function holdLine(version: MovieTargetContextV4): string | null {
   const hold = version.ownHold;
   if (hold === null) return null;
-  if (hold.isPin) return "You keep it for good.";
+  if (hold.isPin) return "You pinned it, so it never leaves.";
   return hold.until === null
     ? "You are keeping it for now."
     : `You keep it until ${fullDate(hold.until)}.`;

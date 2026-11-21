@@ -64,11 +64,11 @@ function confirmation(
 
 const TELEVISION_ACTIONS = {
   hold: "keep",
-  keep: "pin",
-  stop_keeping: "unpin",
+  pin: "pin",
+  unpin: "unpin",
   restore: "restore",
 } as const satisfies Record<
-  Exclude<TitleCommand, "stop_following">,
+  Exclude<TitleCommand, "cancel_request">,
   DefaultCommandV2["command"]["action"]
 >;
 
@@ -77,12 +77,12 @@ function televisionCommand(
   context: DefaultTargetView,
   user: MediaUser,
 ): DefaultCommandV2["command"] {
-  if (command !== "stop_following") {
+  if (command !== "cancel_request") {
     return { action: TELEVISION_ACTIONS[command] };
   }
   const request = cancellableRequest(context, user);
   if (request === undefined) {
-    throw new Error("There is no request of yours to stop following");
+    throw new Error("There is no request of yours to cancel");
   }
   return {
     action: "cancel_request",
@@ -145,8 +145,8 @@ export function useTelevisionRunner(
 
 const VERSION_ACTIONS = {
   hold: "keep",
-  keep: "pin",
-  stop_keeping: "unpin",
+  pin: "pin",
+  unpin: "unpin",
   restore: "restore",
 } as const;
 
@@ -186,7 +186,7 @@ function useVersionLifecycle(user: MediaUser, version: MovieTargetContextV4) {
   };
   return {
     part,
-    submit: (command: Exclude<TitleCommand, "stop_following">) => {
+    submit: (command: Exclude<TitleCommand, "cancel_request">) => {
       mutation.submit(version, { action: VERSION_ACTIONS[command] });
     },
   };
@@ -225,7 +225,7 @@ function useVersionStop(user: MediaUser, version: MovieTargetContextV4) {
     submit: () => {
       const request = cancellableVersionRequest(version);
       if (request === undefined) {
-        throw new Error("There is no request of yours to stop following");
+        throw new Error("There is no request of yours to cancel");
       }
       mutation.submit(
         movieProtectionSubmission({
@@ -257,11 +257,11 @@ export function useVersionRunner(
   const lifecycle = useVersionLifecycle(user, version);
   const stop = useVersionStop(user, version);
   const [last, setLast] = useState<TitleCommand | null>(null);
-  const { finished } = last === "stop_following" ? stop.part : lifecycle.part;
+  const { finished } = last === "cancel_request" ? stop.part : lifecycle.part;
   return {
     run: (command) => {
       setLast(command);
-      if (command === "stop_following") stop.submit();
+      if (command === "cancel_request") stop.submit();
       else lifecycle.submit(command);
     },
     busy: lifecycle.part.busy || stop.part.busy,

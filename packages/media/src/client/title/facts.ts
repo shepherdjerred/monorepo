@@ -34,7 +34,7 @@ export function leavingOf(
 type OwnRequest = DefaultTargetView["ownRequests"][number];
 
 /**
- * The reader's request that "Stop following" withdraws. The owner may cancel
+ * The reader's request that "Cancel request" withdraws. The owner may cancel
  * through the title's own permission; a member only a request that says so.
  */
 export function cancellableRequest(
@@ -63,12 +63,12 @@ export function televisionFacts(
     availability: media.availability,
     role: user.role,
     following,
-    canStopFollowing: cancellableRequest(context, user) !== undefined,
+    canCancel: cancellableRequest(context, user) !== undefined,
     leavingSoon: leavingOf(media)?.kind === "leaving",
-    kept: media.holds.some((hold) => hold.isPin && hold.userId === user.id),
+    pinned: media.holds.some((hold) => hold.isPin && hold.userId === user.id),
     mayHold: allowed.includes("keep"),
-    mayKeep: allowed.includes("pin"),
-    mayStopKeeping: allowed.includes("unpin"),
+    mayPin: allowed.includes("pin"),
+    mayUnpin: allowed.includes("unpin"),
     // Bringing files back is for whoever asked for the title, or the owner.
     mayRestore:
       media.availability === "quarantined" && (owner || following || asked),
@@ -102,12 +102,12 @@ export function versionFacts(
         : media.availability,
     role: user.role,
     following: version.ownRequests.some((request) => request.active),
-    canStopFollowing: cancellableVersionRequest(version) !== undefined,
+    canCancel: cancellableVersionRequest(version) !== undefined,
     leavingSoon: standard && leavingOf(media)?.kind === "leaving",
-    kept: version.ownHold?.isPin === true,
+    pinned: version.ownHold?.isPin === true,
     mayHold: protective.includes("keep"),
-    mayKeep: protective.includes("pin"),
-    mayStopKeeping: protective.includes("unpin"),
+    mayPin: protective.includes("pin"),
+    mayUnpin: protective.includes("unpin"),
     mayRestore:
       version.access === "detail" && version.allowedActions.includes("restore"),
     // A film can always be asked for in another version.

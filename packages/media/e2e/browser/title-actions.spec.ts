@@ -28,16 +28,17 @@ test.describe("the primary action follows the title's state", () => {
       action: "Request",
     },
     {
-      name: "the owner can keep a film the household can watch",
+      name: "the owner can hold a film the household can watch",
       persona: "owner",
       path: mediaPath(titleNamed("Interstellar").id),
-      action: "Keep for good",
+      action: "Keep for 30 days",
     },
     {
-      name: "the owner is told a film is kept for good",
+      // A pinned film cannot leave, so there is nothing to hold.
+      name: "the owner can ask for a film they have pinned",
       persona: "owner",
       path: mediaPath(titleNamed("Dune").id),
-      action: "Kept for good",
+      action: "Request",
     },
     {
       name: "a member can hold a film that is leaving soon",
@@ -64,10 +65,10 @@ test.describe("the primary action follows the title's state", () => {
       action: "Request",
     },
     {
-      name: "the owner can keep a series",
+      name: "the owner can hold a series",
       persona: "owner",
       path: mediaPath(titleNamed("Succession").id),
-      action: "Keep for good",
+      action: "Keep for 30 days",
     },
     {
       name: "a member can hold a series that is leaving soon",
@@ -90,11 +91,10 @@ test.describe("the primary action follows the title's state", () => {
       await expect(
         actions.getByRole("button", { name: action, exact: true }),
       ).toBeVisible();
-      // Exactly one button carries the accent: the primary action. A standing
-      // ("Following", "Kept for good") has none.
+      // Exactly one button carries the accent: the primary action. The
+      // standing "Following" has none.
       const accented = actions.locator("button.primary");
-      const standing = action === "Following" || action === "Kept for good";
-      await expect(accented).toHaveCount(standing ? 0 : 1);
+      await expect(accented).toHaveCount(action === "Following" ? 0 : 1);
       expect(await overflow(page)).toBe(0);
     });
   }
@@ -153,9 +153,9 @@ test.describe("the primary action follows the title's state", () => {
       });
     });
     await page.getByRole("button", { name: "Following" }).click();
-    await page.getByRole("button", { name: /^Stop following/u }).click();
+    await page.getByRole("button", { name: /^Cancel request/u }).click();
     // The confirmation uses the button's own word.
-    await expect(page.getByText("Stopped following.")).toBeVisible();
+    await expect(page.getByText("Request cancelled.")).toBeVisible();
     const [command] = z.array(DefaultCommandV2Schema).length(1).parse(sent);
     expect(command).toMatchObject({
       scope: { mediaId: series.id, edition: "default" },

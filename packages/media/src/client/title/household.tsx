@@ -55,7 +55,10 @@ function keeping(
   user: MediaUser,
   locale?: string,
 ): string | null {
-  if (media.holds.some((hold) => hold.isPin)) return "Kept for good";
+  // A pin is the owner's own hold, not the library's keeping policy.
+  if (media.holds.some((hold) => hold.isPin)) {
+    return "Pinned, so it never leaves";
+  }
   const until = media.holds
     .flatMap((hold) => (hold.until === null ? [] : [hold.until]))
     .sort((left, right) => right.localeCompare(left))[0];

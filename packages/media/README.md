@@ -974,14 +974,13 @@ and one primary action chosen from where the reader stands with the title.
 `primary-action.ts` is that choice as a pure function of facts the reads report
 (`facts.ts`); it invents no permission:
 
-| The reader's standing                                    | Primary action              |
-| -------------------------------------------------------- | --------------------------- |
-| The files are removed and the reader may bring them back | Restore                     |
-| A removal is under way and the reader may hold the title | Keep for 30 days            |
-| The reader has a standing request                        | Following, which opens Stop |
-| The owner holds the title for good                       | Kept for good               |
-| The owner, on a title the household can already watch    | Keep for good               |
-| Anything else                                            | Request                     |
+| The reader's standing                                    | Primary action                  |
+| -------------------------------------------------------- | ------------------------------- |
+| The files are removed and the reader may bring them back | Restore                         |
+| A removal is under way and the reader may hold the title | Keep for 30 days                |
+| The reader has a standing request                        | Following, which opens the menu |
+| The owner, on a title the household can already watch    | Keep for 30 days                |
+| Anything else                                            | Request                         |
 
 Everything else the reader may do is in the menu beside it. A series, season or
 episode is acted on through the default-target read and its commands
@@ -996,7 +995,11 @@ Below the hero: who follows the title and what keeps it, a series' seasons
 closed "Files and subtitles". The title read gives the owner every follower's
 name and a member only their own request, so a member is told about themselves.
 The read does not carry the library's keeping policy, so "Keeping" reports the
-holds it does carry.
+holds it does carry and the page does not offer "Keep for good", which is that
+policy's name in the Library. The owner's pin is a different thing and is in the
+menu under its own name ("Pin so it never leaves", "Remove pin"). Withdrawing a
+request is "Cancel request"; "Stop following" names letting an interest go, which
+needs the interest's revision and so is offered only in the Library's Mine view.
 
 The owner gets a second view, `?view=manage`, holding the operator panels the
 page has always had (acquisition and seeding, edition controls, quality profile,

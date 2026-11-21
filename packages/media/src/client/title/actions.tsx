@@ -10,26 +10,17 @@ import { COMMAND_COPY, type TitleCommand } from "./copy.ts";
 import {
   titleActions,
   type MenuAction,
-  type PrimaryAction,
   type TitleFacts,
 } from "./primary-action.ts";
 import styles from "./title.module.css";
 
 const cx = classNames(styles);
 
-/** A standing the reader already has, as the button that opens the way out. */
-const STANDING_COPY = {
-  following: "Following",
-  kept: "Kept for good",
-} as const satisfies Partial<Record<PrimaryAction, string>>;
-
 /** The commands among a title's actions, the primary one first. */
 function offeredCommands(facts: TitleFacts): TitleCommand[] {
   const { primary, menu } = titleActions(facts);
   return [
-    ...(primary === "hold" || primary === "keep" || primary === "restore"
-      ? [primary]
-      : []),
+    ...(primary === "hold" || primary === "restore" ? [primary] : []),
     ...menu.filter((action) => action !== "request"),
   ];
 }
@@ -60,9 +51,9 @@ function menuItems(
  * What the reader can do with a title: one main action chosen from where
  * they stand with it, and the rest behind a menu.
  *
- * When the reader already follows the title, or keeps it for good, the main
- * control says so and opens the way to stop. Asking for the title opens the
- * request sheet.
+ * When the reader already follows the title, the main control says so and
+ * opens the menu, where the request can be cancelled. Asking for the title
+ * opens the request sheet.
  */
 export function TitleActionBar({
   user,
@@ -93,12 +84,8 @@ export function TitleActionBar({
   return (
     <div className={cx("actions")}>
       <div className={cx("actionRow")}>
-        {primary === "following" || primary === "kept" ? (
-          <Standing
-            label={STANDING_COPY[primary]}
-            items={items}
-            disabled={runner.busy}
-          />
+        {primary === "following" ? (
+          <Standing label="Following" items={items} disabled={runner.busy} />
         ) : (
           <>
             <button
