@@ -1414,7 +1414,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:7834187596ad56fd5a81436114e0b0b9dd54c91bb43946d1f7145b2be5f9c3d2",
+      "value": "4.54.3@sha256:7834187596ad56fd5a81436114e0b0b9dd54c91bb43946d1f7145b2be5f9c3d2",
       "notes": [
         "Alpine-based image bundling yq + busybox coreutils (sh/find/cmp/diff/cp);",
         "used by the Minecraft config-drift init container for semantic YAML/JSON",
