@@ -223,11 +223,29 @@ test("the overview filters through the URL", async ({ page }) => {
   );
   await expect(tiles).toHaveCount(0);
 
+  // A submit keeps focus on its button; the form is not remounted.
+  await expect(filters.getByRole("button", { name: "Filter" })).toBeFocused();
+
+  // The controls follow the URL through history, not what was last chosen.
   await page.goBack();
   await expect(page).toHaveURL(/\/\?q=flipt$/u);
   await expect(tiles).toHaveCount(1);
+  await expect(filters.getByLabel("Service")).toHaveValue("flipt");
+  await expect(filters.getByLabel("Newest deployment")).toHaveValue("");
   await page.goBack();
+  await expect(filters.getByLabel("Service")).toHaveValue("");
   await expect(tiles).toHaveCount(total);
+  await page.goForward();
+  await expect(page).toHaveURL(/\/\?q=flipt$/u);
+  await expect(filters.getByLabel("Service")).toHaveValue("flipt");
+  await expect(tiles).toHaveCount(1);
+  await page.goForward();
+  await expect(page).toHaveURL(/\/\?q=flipt&status=succeeded$/u);
+  await expect(filters.getByLabel("Service")).toHaveValue("flipt");
+  await expect(filters.getByLabel("Newest deployment")).toHaveValue(
+    "succeeded",
+  );
+  await expect(tiles).toHaveCount(0);
 
   // A deep link carries the filter, and a status alone filters too.
   await openOverview(page, "?status=not_started");

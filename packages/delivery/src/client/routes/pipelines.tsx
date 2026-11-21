@@ -147,6 +147,7 @@ function PipelinesPage() {
           className="filters"
           role="search"
           aria-label="Filter pipelines"
+          data-search-form
           onSubmit={(event) => {
             event.preventDefault();
             void navigate({

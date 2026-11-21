@@ -33,6 +33,7 @@ function OverviewPage() {
           className="filters"
           role="search"
           aria-label="Filter services"
+          data-search-form
           onSubmit={(event) => {
             event.preventDefault();
             void navigate({

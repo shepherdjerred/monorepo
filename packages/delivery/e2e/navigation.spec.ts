@@ -140,9 +140,18 @@ test("the pipelines list filters through the URL", async ({ page }) => {
   await expect(page).toHaveURL(/\/pipelines\?q=arcade$/u);
   const rows = table.locator("tbody tr");
   await expect(rows).toHaveCount(1);
+  // A submit keeps focus on its button; the form is not remounted.
+  await expect(filters.getByRole("button", { name: "Filter" })).toBeFocused();
   await page.goBack();
   await expect(page).toHaveURL(/\/pipelines$/u);
   await expect(rows).not.toHaveCount(1);
+  // The control follows the URL through history, not what was last typed.
+  await expect(filters.getByLabel("Name")).toHaveValue("");
+  await expect(rows).not.toHaveCount(1);
+  await page.goForward();
+  await expect(page).toHaveURL(/\/pipelines\?q=arcade$/u);
+  await expect(filters.getByLabel("Name")).toHaveValue("arcade");
+  await expect(rows).toHaveCount(1);
 });
 
 test("links keep history: back and forward restore each page", async ({

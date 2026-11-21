@@ -59,3 +59,25 @@ export function formSearch(form: HTMLFormElement) {
       values[key] = value.trim();
   return values;
 }
+
+/**
+ * Filter forms are uncontrolled, so their controls keep what was typed. After
+ * a navigation that did not come from the form (Back, Forward, a link), each
+ * form marked `data-search-form` shows the search the URL now carries. The
+ * forms are never remounted, so a submit keeps focus where it was.
+ */
+export function syncSearchForms(search: object) {
+  const values = new Map<string, unknown>(Object.entries(search));
+  for (const form of document.querySelectorAll<HTMLFormElement>(
+    "form[data-search-form]",
+  ))
+    for (const control of form.elements)
+      if (
+        (control instanceof HTMLInputElement ||
+          control instanceof HTMLSelectElement) &&
+        control.name !== ""
+      ) {
+        const value = values.get(control.name);
+        control.value = typeof value === "string" ? value : "";
+      }
+}
