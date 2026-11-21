@@ -2,9 +2,10 @@ name: npm Publish Gateway
 
 on:
   push:
+    # webring production releases are published from frozen delivery-artifacts
+    # tarballs by the Delivery webring/latest channel, never rebuilt from tags.
     tags:
       - "astro-opengraph-images-v[0-9]*"
-      - "webring-v[0-9]*"
       - "helm-types-v[0-9]*"
       - "home-assistant-v[0-9]*"
   workflow_dispatch:
@@ -27,6 +28,14 @@ on:
         description: "Optional dev suffix number (appends -dev.<n> to package.json version)"
         required: false
         type: string
+      source_ref:
+        description: "Published git ref or commit SHA on origin to checkout (defaults to workflow ref)"
+        required: false
+        type: string
+      source_sha:
+        description: "Expected 40-char commit SHA after checkout"
+        required: false
+        type: string
       dry_run:
         description: "Dry run: build without publishing to npm registry"
         required: false
@@ -44,6 +53,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha || inputs.source_ref || github.ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -62,17 +73,27 @@ jobs:
       - name: Resolve target package and options
         id: resolve
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PACKAGE_DIR: ${{ inputs.package_dir }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_DEV_SUFFIX: ${{ inputs.dev_suffix }}
+          INPUT_SOURCE_SHA: ${{ inputs.source_sha }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "push" ]; then
+          CHECKED_OUT_SHA="$(git rev-parse HEAD)"
+          if [ -n "${INPUT_SOURCE_SHA}" ] && [ "${CHECKED_OUT_SHA}" != "${INPUT_SOURCE_SHA}" ]; then
+            echo "ERROR: Checked-out commit (${CHECKED_OUT_SHA}) does not match expected source_sha (${INPUT_SOURCE_SHA})" >&2
+            exit 1
+          fi
+
+          if [ "${EVENT_NAME}" = "push" ]; then
             TAG_NAME="${GITHUB_REF_NAME}"
             echo "Triggered by release tag: ${TAG_NAME}"
             case "${TAG_NAME}" in
               astro-opengraph-images-v*)
                 PKG_DIR="packages/astro-opengraph-images"
-                ;;
-              webring-v*)
-                PKG_DIR="packages/webring"
                 ;;
               helm-types-v*)
                 PKG_DIR="packages/homelab/src/helm-types"
@@ -89,10 +110,25 @@ jobs:
             DEV_SUFFIX=""
             DRY_RUN="false"
           else
-            PKG_DIR="${{ github.event.inputs.package_dir }}"
-            NPM_TAG="${{ github.event.inputs.tag }}"
-            DEV_SUFFIX="${{ github.event.inputs.dev_suffix }}"
-            DRY_RUN="${{ github.event.inputs.dry_run }}"
+            PKG_DIR="${INPUT_PACKAGE_DIR}"
+            NPM_TAG="${INPUT_TAG}"
+            DEV_SUFFIX="${INPUT_DEV_SUFFIX}"
+            DRY_RUN="${INPUT_DRY_RUN}"
+          fi
+
+          if [ "${NPM_TAG}" != "latest" ] && [ "${NPM_TAG}" != "dev" ]; then
+            echo "ERROR: tag must be 'latest' or 'dev', got '${NPM_TAG}'" >&2
+            exit 1
+          fi
+
+          if [ -n "${DEV_SUFFIX}" ] && ! [[ "${DEV_SUFFIX}" =~ ^[0-9A-Za-z.-]+$ ]]; then
+            echo "ERROR: Invalid dev_suffix '${DEV_SUFFIX}'" >&2
+            exit 1
+          fi
+
+          if [ "${PKG_DIR}" = "packages/webring" ] && { [ "${NPM_TAG}" != "dev" ] || [ -z "${DEV_SUFFIX}" ]; }; then
+            echo "ERROR: packages/webring production releases are owned by the Delivery webring/latest channel; npm-publish.yml only accepts ephemeral dev releases (tag=dev with dev_suffix)." >&2
+            exit 1
           fi
 
           PKG_NAME=$(jq -r '.name // empty' "${PKG_DIR}/package.json")
@@ -110,30 +146,39 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Install dependencies
+        env:
+          PKG_NAME: ${{ steps.resolve.outputs.pkg_name }}
         run: |
-          bun install --frozen-lockfile --filter "${{ steps.resolve.outputs.pkg_name }}"
+          bun install --frozen-lockfile --filter "${PKG_NAME}"
 
       - name: Apply ephemeral dev version
         if: steps.resolve.outputs.dev_suffix != ''
         shell: bash
+        env:
+          PKG_DIR: ${{ steps.resolve.outputs.pkg_dir }}
+          DEV_SUFFIX: ${{ steps.resolve.outputs.dev_suffix }}
         run: |
-          PKG_JSON="${{ steps.resolve.outputs.pkg_dir }}/package.json"
+          PKG_JSON="${PKG_DIR}/package.json"
           BASE_VERSION=$(jq -r '.version // "0.0.0"' "$PKG_JSON")
-          DEV_VERSION="${BASE_VERSION}-dev.${{ steps.resolve.outputs.dev_suffix }}"
+          DEV_VERSION="${BASE_VERSION}-dev.${DEV_SUFFIX}"
           echo "Bumping version: ${BASE_VERSION} -> ${DEV_VERSION}"
-          jq ".version = \"${DEV_VERSION}\"" "$PKG_JSON" > "${PKG_JSON}.tmp" && mv "${PKG_JSON}.tmp" "$PKG_JSON"
+          jq --arg v "${DEV_VERSION}" '.version = $v' "$PKG_JSON" > "${PKG_JSON}.tmp" && mv "${PKG_JSON}.tmp" "$PKG_JSON"
 
       - name: Build package
+        env:
+          PKG_DIR: ${{ steps.resolve.outputs.pkg_dir }}
         run: |
-          bun --no-install run --cwd "${{ steps.resolve.outputs.pkg_dir }}" build
+          bun --no-install run --cwd "${PKG_DIR}" build
 
       - name: Check if version already published
         id: check_published
         shell: bash
+        env:
+          PKG_DIR: ${{ steps.resolve.outputs.pkg_dir }}
+          PKG_NAME: ${{ steps.resolve.outputs.pkg_name }}
         run: |
-          PKG_JSON="${{ steps.resolve.outputs.pkg_dir }}/package.json"
+          PKG_JSON="${PKG_DIR}/package.json"
           TARGET_VERSION=$(jq -r '.version' "$PKG_JSON")
-          PKG_NAME="${{ steps.resolve.outputs.pkg_name }}"
           echo "Checking if ${PKG_NAME}@${TARGET_VERSION} already exists on npm registry..."
           if npm view "${PKG_NAME}@${TARGET_VERSION}" version >/dev/null 2>&1; then
             echo "already_published=true" >> "$GITHUB_OUTPUT"
@@ -145,8 +190,11 @@ jobs:
       - name: Publish to npm (Trusted Publishing with Provenance)
         if: steps.resolve.outputs.dry_run != 'true' && steps.check_published.outputs.already_published != 'true'
         shell: bash
+        env:
+          PKG_DIR: ${{ steps.resolve.outputs.pkg_dir }}
+          NPM_TAG: ${{ steps.resolve.outputs.tag }}
         run: |
-          npm publish "${{ steps.resolve.outputs.pkg_dir }}" \
-            --tag "${{ steps.resolve.outputs.tag }}" \
+          npm publish "${PKG_DIR}" \
+            --tag "${NPM_TAG}" \
             --access public \
             --provenance

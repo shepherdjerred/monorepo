@@ -21,15 +21,15 @@
  * manual rewrite is needed here.
  */
 
-import path from "node:path";
-import { z } from "zod";
 import { run, requireEnv } from "../lib/run.ts";
 import { isCi } from "../lib/ci/ci-environment.ts";
 import { asRecord } from "../lib/json.ts";
 import { runMain } from "../lib/transient.ts";
-import { setupGitAuth } from "../lib/github-auth.ts";
-
-const repoRoot = path.resolve(import.meta.dir, "../..");
+import {
+  assertNotDeliveryChannelRelease,
+  dispatchToGitHubActions,
+  normalizePackageDir,
+} from "./npm-publish-dispatch.ts";
 
 // ---------------------------------------------------------------------------
 // npm token 2FA-bypass preflight (ported faithfully from publishNpmHelper)
@@ -243,89 +243,8 @@ function defaultExpiryWarner(message: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// CLI & Dispatch
+// CLI & Local Publish
 // ---------------------------------------------------------------------------
-
-export function normalizePackageDir(
-  pkgDir: string,
-  baseDir: string = process.cwd(),
-  root: string = repoRoot,
-): string {
-  const absolute = path.resolve(baseDir, pkgDir);
-  const relative = path.relative(root, absolute);
-  return relative;
-}
-
-export function buildWorkflowDispatchArgs(options: {
-  packageDir: string;
-  tag: string;
-  devSuffix?: string;
-  dryRun?: boolean;
-}): string[] {
-  const args = [
-    "workflow",
-    "run",
-    "npm-publish.yml",
-    "-F",
-    `package_dir=${options.packageDir}`,
-    "-F",
-    `tag=${options.tag}`,
-  ];
-  if (options.devSuffix !== undefined && options.devSuffix !== "") {
-    args.push("-F", `dev_suffix=${options.devSuffix}`);
-  }
-  if (options.dryRun === true) {
-    args.push("-F", "dry_run=true");
-  }
-  return args;
-}
-
-const GitHubAppEnvSchema = z.object({
-  GITHUB_APP_ID: z.string().min(1),
-  GITHUB_APP_INSTALLATION_ID: z.string().min(1),
-  GITHUB_APP_PRIVATE_KEY: z.string().min(1),
-});
-
-export async function dispatchToGitHubActions(
-  options: {
-    packageDir: string;
-    tag: string;
-    devSuffix: string;
-    dryRun: boolean;
-  },
-  env: Record<string, string | undefined> = Bun.env,
-): Promise<void> {
-  const repoRelativeDir = normalizePackageDir(options.packageDir);
-  const args = buildWorkflowDispatchArgs({
-    packageDir: repoRelativeDir,
-    tag: options.tag,
-    devSuffix: options.devSuffix,
-    dryRun: options.dryRun,
-  });
-
-  let extraEnv: Record<string, string> = {};
-  let cleanup: (() => Promise<void>) | undefined;
-
-  const appAuth = GitHubAppEnvSchema.safeParse(env);
-  if (appAuth.success) {
-    const gitAuth = await setupGitAuth(repoRoot);
-    extraEnv = gitAuth.env;
-    cleanup = gitAuth.cleanup;
-  }
-
-  try {
-    console.log(
-      `+++ dispatching GitHub Actions workflow (npm-publish.yml) for ${repoRelativeDir}`,
-    );
-    await run(["gh", ...args], { env: extraEnv });
-    console.log(
-      `OK: Dispatched npm-publish.yml for ${repoRelativeDir} (--tag ${options.tag}).\n` +
-        `Monitor progress with: gh run list --workflow=npm-publish.yml`,
-    );
-  } finally {
-    if (cleanup !== undefined) await cleanup();
-  }
-}
 
 function usage(): never {
   console.error(
@@ -451,6 +370,11 @@ async function main(): Promise<void> {
     typeof pkgJson["version"] === "string" ? pkgJson["version"] : "0.0.0";
 
   console.log(`--- Publish ${pkgName} (${pkgDir}) --tag ${tag}`);
+  assertNotDeliveryChannelRelease({
+    packageDir: normalizePackageDir(pkgDir),
+    tag,
+    devSuffix,
+  });
 
   if (dispatch) {
     await dispatchToGitHubActions({
