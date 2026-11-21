@@ -87,14 +87,7 @@ function MediaDetails({
   context: Extract<DefaultTargetView, { access: "detail" }>;
   refresh: () => void;
 }) {
-  const profiles = useQuery({
-    queryKey: ["profiles"],
-    queryFn: async () => readApi("/profiles", ProfileListSchema),
-  });
   const paired = media.version === context.expected.mediaVersion;
-  const profile = profiles.data?.find(
-    (candidate) => candidate.id === media.intent?.profileId,
-  );
   const claimed = media.requests.some((request) => request.userId === user.id);
   return (
     <>
@@ -135,29 +128,7 @@ function MediaDetails({
               ? "Unmarked edition in your library"
               : "In your library"}
           </h2>
-          <dl className="facts">
-            <div>
-              <dt>Availability</dt>
-              <dd>{humanize(media.availability)}</dd>
-            </div>
-            <div>
-              <dt>Upgrade monitoring</dt>
-              <dd>{media.intent?.monitoring === true ? "Active" : "Paused"}</dd>
-            </div>
-            <div>
-              <dt>Quality profile</dt>
-              <dd>{profile?.name ?? "Not assigned"}</dd>
-            </div>
-            <div>
-              <dt>Requested by</dt>
-              <dd>
-                {media.requests
-                  .map((request) => request.user.displayName)
-                  .join(", ") || "No active requesters"}
-              </dd>
-            </div>
-          </dl>
-          {profiles.error !== null && <ErrorNotice error={profiles.error} />}
+          <TitleFacts user={user} media={media} />
           {media.kind !== "movie" && (
             <MediaControls
               key={`controls:${media.id}`}
@@ -189,7 +160,8 @@ function MediaDetails({
       </div>
       <MediaChildren media={media} />
       <History media={media} />
-      {media.kind !== "movie" && (
+      {/* Release decisions are owner data; the server answers a member with none. */}
+      {media.kind !== "movie" && user.role === "owner" && (
         <div inert={!paired}>
           <ReleaseCandidates
             key={media.id}
@@ -199,6 +171,49 @@ function MediaDetails({
           />
         </div>
       )}
+    </>
+  );
+}
+
+function TitleFacts({ user, media }: { user: MediaUser; media: MediaDetail }) {
+  // The server tells only an unrestricted owner which profile is assigned.
+  // Anyone else would read a withheld profile as "Not assigned".
+  const operator = user.role === "owner" && !user.restricted;
+  const profiles = useQuery({
+    queryKey: ["profiles"],
+    enabled: operator,
+    queryFn: async () => readApi("/profiles", ProfileListSchema),
+  });
+  const profile = profiles.data?.find(
+    (candidate) => candidate.id === media.intent?.profileId,
+  );
+  return (
+    <>
+      <dl className="facts">
+        <div>
+          <dt>Availability</dt>
+          <dd>{humanize(media.availability)}</dd>
+        </div>
+        <div>
+          <dt>Upgrade monitoring</dt>
+          <dd>{media.intent?.monitoring === true ? "Active" : "Paused"}</dd>
+        </div>
+        {operator && (
+          <div>
+            <dt>Quality profile</dt>
+            <dd>{profile?.name ?? "Not assigned"}</dd>
+          </div>
+        )}
+        <div>
+          <dt>Requested by</dt>
+          <dd>
+            {media.requests
+              .map((request) => request.user.displayName)
+              .join(", ") || "No active requesters"}
+          </dd>
+        </div>
+      </dl>
+      {profiles.error !== null && <ErrorNotice error={profiles.error} />}
     </>
   );
 }

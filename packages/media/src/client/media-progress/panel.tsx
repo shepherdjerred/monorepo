@@ -105,6 +105,12 @@ export function TorrentProgress({
   number: number;
 }) {
   const fresh = torrent.freshness === "fresh";
+  // A member's title page receives neither figure; "Not observed" would then
+  // describe a withheld value as a missing one.
+  const accounting =
+    torrent.diagnostics !== null ||
+    torrent.ratio !== null ||
+    torrent.seededSeconds !== null;
   const ratio =
     torrent.ratio === null
       ? "Not observed"
@@ -138,20 +144,22 @@ export function TorrentProgress({
           ? ""
           : ` · ${dateLabel(torrent.observedAt)}`}
       </p>
-      <dl className="download-facts">
-        <div>
-          <dt>Share ratio</dt>
-          <dd>{ratio}</dd>
-        </div>
-        <div>
-          <dt>Actual seeded time</dt>
-          <dd>
-            {torrent.seededSeconds === null
-              ? "Not observed"
-              : seededDuration(torrent.seededSeconds)}
-          </dd>
-        </div>
-      </dl>
+      {accounting && (
+        <dl className="download-facts">
+          <div>
+            <dt>Share ratio</dt>
+            <dd>{ratio}</dd>
+          </div>
+          <div>
+            <dt>Actual seeded time</dt>
+            <dd>
+              {torrent.seededSeconds === null
+                ? "Not observed"
+                : seededDuration(torrent.seededSeconds)}
+            </dd>
+          </div>
+        </dl>
+      )}
       {torrent.progress === 1 && torrent.state !== "removed" && (
         <p className="helper">
           Download completion and seeding are separate from verified playback.

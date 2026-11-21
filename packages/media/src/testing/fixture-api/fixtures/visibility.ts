@@ -341,6 +341,7 @@ export function mediaVisibility(
 ): MediaVisibility {
   const { item, title } = resolved;
   const collection = item.kind === "series" || item.kind === "season";
+  const { attempts, torrents } = progress(resolved, persona);
   return {
     movieRequests:
       item.kind === "movie"
@@ -353,7 +354,12 @@ export function mediaVisibility(
     playback: collection
       ? collectionPlayback(resolved)
       : titlePlayback(resolved),
-    ...progress(resolved, persona),
+    attempts,
+    // The server sends seeding diagnostics to the owner alone, on every title.
+    torrents:
+      persona === "owner"
+        ? torrents
+        : torrents.map((download) => ({ ...download, diagnostics: null })),
     historyTruncated: title === FEATURED.movie,
   };
 }

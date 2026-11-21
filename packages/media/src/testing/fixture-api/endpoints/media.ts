@@ -1,3 +1,4 @@
+import { memberDetail } from "#infrastructure/visibility/member-detail.ts";
 import { MediaDetailSchema, ReleaseListSchema } from "#shared/api.ts";
 import { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
 import { MovieHistoryPendingV3Schema } from "#shared/movie-editions/history-review-views-v3.ts";
@@ -73,7 +74,14 @@ export const MEDIA_ENDPOINTS: readonly FixtureEndpoint[] = [
     schema: MediaDetailSchema,
     respond: (request) => {
       const resolved = resolveMedia(request.param("id"));
-      return resolved === null ? null : mediaDetail(resolved, request.persona);
+      if (resolved === null) {
+        return null;
+      }
+      const detail = mediaDetail(resolved, request.persona);
+      // Anyone but the owner reads the server's own member projection.
+      return request.persona === "owner"
+        ? detail
+        : memberDetail(MediaDetailSchema.parse(detail));
     },
     samples: MEDIA_IDS.map((id) => `/media/${id}`),
   }),
@@ -82,7 +90,11 @@ export const MEDIA_ENDPOINTS: readonly FixtureEndpoint[] = [
     schema: ReleaseListSchema,
     respond: (request) => {
       const resolved = resolveMedia(request.param("id"));
-      return resolved === null ? null : releaseList(resolved);
+      if (resolved === null) {
+        return null;
+      }
+      // Release candidates are owner data; a member's read succeeds, empty.
+      return request.persona === "owner" ? releaseList(resolved) : [];
     },
     samples: MEDIA_IDS.map((id) => `/media/${id}/releases`),
   }),

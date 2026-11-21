@@ -22,9 +22,8 @@ test("current direct and root-covered co-requesters see shared progress; exclusi
       data: { userId: joined.id, mediaId: f.media.id },
     });
     const direct = await f.app.getMedia(joined, f.media.id);
-    expect(direct.visibility.attempts.map((row) => row.id)).toEqual([
-      f.attempt.id,
-    ]);
+    // A member follows the shared download; its acquisition history is the owner's.
+    expect(direct.visibility.attempts).toEqual([]);
     expect(direct.visibility.torrents.map((row) => row.id)).toEqual([
       f.torrent.id,
     ]);
@@ -37,7 +36,7 @@ test("current direct and root-covered co-requesters see shared progress; exclusi
       data: { direct: false },
     });
     const covered = await f.app.getMedia(joined, f.media.id);
-    expect(covered.visibility.attempts).toHaveLength(1);
+    expect(covered.visibility.torrents).toHaveLength(1);
     const current = await f.db.mediaRequest.findUniqueOrThrow({
       where: { id: request.id },
     });
@@ -62,7 +61,7 @@ test("current direct and root-covered co-requesters see shared progress; exclusi
     });
     expect(renewedRoot.id).toBe(root.id);
     const renewed = await f.app.getMedia(joined, f.media.id);
-    expect(renewed.visibility.attempts).toHaveLength(1);
+    expect(renewed.visibility.torrents).toHaveLength(1);
     await f.app.cancelRequest(
       joined,
       crypto.randomUUID(),
@@ -80,7 +79,7 @@ test("persisted progress precedes assets; legacy playback labels and cancelled s
   const downloading = await f.app.getMedia(f.member, f.media.id);
   expect(downloading.visibility).toMatchObject({
     playback: { playable: false, upgradeInProgress: false },
-    attempts: [{ id: f.attempt.id }],
+    attempts: [],
     torrents: [{ progress: 0.4, freshness: "fresh", diagnostics: null }],
   });
   await f.publish();
@@ -196,6 +195,97 @@ test("current role and exact section govern all detail diagnostics and household
   await expect(f.app.getMedia(f.owner, f.media.id)).rejects.toMatchObject({
     code: "plex_library_access_required",
   });
+});
+
+test("a member's detail withholds acquisition history, seeding figures, the assigned profile and subtitle policies; the owner's keeps them", async () => {
+  const f = await visibilityFixture(h.database());
+  const profile = await f.db.qualityProfile.create({
+    data: {
+      name: "Member projection profile",
+      rules: {
+        qualities: ["WEB-1080p"],
+        rejectedCodecs: [],
+        requiredAudioLanguages: [],
+        minimumBytes: 1,
+        maximumBytes: 10_000_000,
+        minimumScore: 0,
+        tagScores: {},
+        cutoffQuality: "WEB-1080p",
+        cutoffScore: 0,
+      },
+    },
+  });
+  await f.db.mediaIntent.update({
+    where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
+    data: { profileId: profile.id },
+  });
+  const policy = await f.db.mediaSubtitlePolicyVersion.create({
+    data: {
+      mediaId: f.media.id,
+      version: 0,
+      actorId: f.owner.id,
+      recoveryEpoch: f.runtime.recoveryEpoch,
+      source: { fixture: "member projection" },
+      rules: { schemaVersion: 1, targets: [], protectedReasons: [] },
+    },
+  });
+  const owner = await f.app.getMedia(f.owner, f.media.id);
+  expect(owner.intent).toMatchObject({
+    profileId: profile.id,
+    monitoring: true,
+  });
+  expect(owner.subtitlePolicies.map((row) => row.id)).toEqual([policy.id]);
+  expect(owner.visibility.attempts.map((row) => row.id)).toEqual([
+    f.attempt.id,
+  ]);
+  expect(owner.visibility.torrents).toMatchObject([
+    {
+      id: f.torrent.id,
+      state: "downloading",
+      freshness: "fresh",
+      progress: 0.4,
+      ratio: { kind: "finite", value: 0.2 },
+      seededSeconds: 0,
+      diagnostics: { providerId: "knaben" },
+    },
+  ]);
+  expect(owner.visibility.torrents[0]?.observedAt).toEqual(expect.any(String));
+  const member = await f.app.getMedia(f.member, f.media.id);
+  expect(member.intent).toEqual({ ...owner.intent, profileId: null });
+  expect(member.subtitlePolicies).toEqual([]);
+  expect(member.visibility.attempts).toEqual([]);
+  expect(member.visibility.torrents).toEqual([
+    {
+      id: f.torrent.id,
+      state: "downloading",
+      freshness: "fresh",
+      progress: 0.4,
+      observedAt: null,
+      ratio: null,
+      seededSeconds: null,
+      diagnostics: null,
+    },
+  ]);
+  expect(member.visibility.playback).toEqual(owner.visibility.playback);
+  expect(JSON.stringify(member)).not.toContain(profile.id);
+  expect(JSON.stringify(member)).not.toContain(policy.id);
+  expect(JSON.stringify(member)).not.toContain(f.attempt.id);
+  // The stored role decides, not the role a signed-in session still carries.
+  // A former owner follows the download only through a request of their own.
+  await f.db.mediaRequest.create({
+    data: { mediaId: f.media.id, userId: f.owner.id },
+  });
+  await f.db.mediaUser.update({
+    where: { id: f.owner.id },
+    data: { role: "member" },
+  });
+  const demoted = await f.app.getMedia(f.owner, f.media.id);
+  expect(demoted.intent?.profileId).toBeNull();
+  expect(demoted.subtitlePolicies).toEqual([]);
+  expect(demoted.visibility.attempts).toEqual([]);
+  expect(demoted.visibility.torrents).toMatchObject([
+    { observedAt: null, ratio: null, seededSeconds: null, diagnostics: null },
+  ]);
 });
 
 test("shared torrent deduplicates visible collection work and never reveals hidden sibling metadata", async () => {

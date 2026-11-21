@@ -609,8 +609,14 @@ test("Discord account linking binds state to the authenticated user", async () =
   ).rejects.toMatchObject({ code: "discord_state_invalid" });
 });
 
-test("release responses strip private download and provider details", async () => {
-  const { actor, media } = await fixture();
+test("release responses strip private download and provider details and reach only the owner", async () => {
+  const { actor, media } = await fixture("owner");
+  const { actor: member } = await fixture();
+  // A request names its default target, so the requester needs a real one.
+  await createTestDefaultTarget(cluster.database, media.id);
+  await cluster.database.mediaRequest.create({
+    data: { userId: member.id, mediaId: media.id },
+  });
   await cluster.database.releaseCandidate.create({
     data: {
       providerId: "private",
@@ -641,4 +647,22 @@ test("release responses strip private download and provider details", async () =
   expect(releases).toHaveLength(1);
   expect(JSON.stringify(releases)).not.toContain("sensitive-fixture");
   expect(JSON.stringify(releases)).not.toContain("downloadUrl");
+  expect(releases[0]).toMatchObject({
+    providerId: "private",
+    title: "Example release",
+  });
+  // A requester's open title page still calls this read: empty, not refused.
+  expect(await app.releases(member, media.id)).toEqual([]);
+  // The stored role decides, not the role a signed-in session still carries.
+  expect(await app.releases({ ...member, role: "owner" }, media.id)).toEqual(
+    [],
+  );
+  await cluster.database.mediaUser.update({
+    where: { id: actor.id },
+    data: { role: "member" },
+  });
+  expect(await app.releases(actor, media.id)).toEqual([]);
+  await expect(app.releases(member, crypto.randomUUID())).rejects.toMatchObject(
+    { code: "media_not_found" },
+  );
 });

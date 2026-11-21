@@ -297,6 +297,41 @@ test("a member projection has basic accounting without owner policy or cleanup d
   expect(html).not.toContain("source cleanup");
 });
 
+test("a member title page shows download progress without withheld seeding figures or acquisition history", () => {
+  const value = fixture();
+  const torrent = firstTorrent(value);
+  torrent.progress = 0.427;
+  torrent.state = "downloading";
+  torrent.diagnostics = null;
+  torrent.ratio = null;
+  torrent.seededSeconds = null;
+  torrent.observedAt = null;
+  const html = renderToStaticMarkup(<MediaProgress visibility={value} />);
+  expect(html).toContain("Download progress");
+  expect(html).toContain("42%");
+  expect(html).toContain("Recent observation");
+  expect(html).not.toContain("Share ratio");
+  expect(html).not.toContain("Actual seeded time");
+  expect(html).not.toContain("Not observed");
+  expect(html).not.toContain("Latest acquisition record");
+  expect(html).not.toContain("Acquisition history");
+  expect(html).not.toContain("undefined");
+});
+
+test("an owner still reads unobserved seeding figures as not observed", () => {
+  const value = fixture();
+  const torrent = firstTorrent(value);
+  torrent.freshness = "missing";
+  torrent.progress = null;
+  torrent.ratio = null;
+  torrent.seededSeconds = null;
+  torrent.observedAt = null;
+  const html = renderToStaticMarkup(<MediaProgress visibility={value} />);
+  expect(html).toContain("Share ratio");
+  expect(html).toContain("Actual seeded time");
+  expect(html).toContain("Not observed");
+});
+
 test("unknown and unverified policies stay protected; private AND and OR remain distinct", () => {
   const diagnostics = firstTorrent(fixture()).diagnostics;
   if (diagnostics === null) throw new Error("Missing diagnostic fixture");

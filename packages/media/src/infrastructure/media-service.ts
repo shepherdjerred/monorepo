@@ -424,17 +424,21 @@ export class PrismaMediaApplication
   }
 
   async releases(actor: MediaActor, mediaId: string) {
-    await this.db.$transaction(async (tx) => {
+    const current = await this.db.$transaction(async (tx) => {
       await lockCanonicalMedia(tx, [mediaId]);
       await lockExistingDefaultTargets(tx, [mediaId]);
       await lockEffectiveRequests(tx, [mediaId]);
       await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
-      await authorizeRenewal(tx, actor, {
+      return authorizeRenewal(tx, actor, {
         mediaId,
         action: "retry",
         ...this.settings,
       });
     });
+    // Release titles, provider ids, evaluations and resolved evidence are
+    // operator data. A requester keeps a successful, empty read rather than a
+    // refusal, which an open member page would render as an error.
+    if (current.role !== "owner") return [];
     return ReleaseListSchema.parse(
       await this.db.releaseCandidate.findMany({
         where: {
