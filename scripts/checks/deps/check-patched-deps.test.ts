@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 
 import {
   collectErrors,
+  knownFixedVersions,
   packagesSection,
   resolvedVersionsByName,
 } from "./check-patched-deps.ts";
@@ -127,7 +128,7 @@ describe("collectErrors against the real repo", () => {
     const lock = `{
   "packages": {
     "markdown-it": ["markdown-it@10.0.0", "", {}, "sha512-a"],
-    "other/markdown-it": ["markdown-it@15.0.0", "", {}, "sha512-b"],
+    "other/markdown-it": ["markdown-it@15.0.1", "", {}, "sha512-b"],
   },
 }`;
     await Bun.write(`${dir}/package.json`, JSON.stringify(manifest));
@@ -145,21 +146,41 @@ describe("collectErrors against the real repo", () => {
     }
   });
 
-  test("markdown-it 15 links URLs with linkify-it 6", () => {
-    const result = Bun.spawnSync(
-      [
-        "bun",
-        "--no-install",
-        "-e",
-        'import MarkdownIt from "markdown-it"; console.log(new MarkdownIt({ linkify: true }).render("https://example.com"));',
-      ],
-      { cwd: `${REPO_ROOT}/packages/sjer.red` },
-    );
-    expect(result.exitCode).toBe(0);
-    expect(new TextDecoder().decode(result.stdout)).toContain(
-      '<a href="https://example.com">https://example.com</a>',
-    );
-  });
+  // Every known-fixed markdown-it release must link URLs with the
+  // overridden linkify-it 6 without the patch. Each version is imported from
+  // its own isolated-store directory so the contract covers the exact
+  // release that the allowlist exempts, not only the one a workspace links.
+  test.each([...(knownFixedVersions.get("markdown-it") ?? [])])(
+    "markdown-it %s links URLs with linkify-it 6",
+    (version) => {
+      const store = `${REPO_ROOT}/node_modules/.bun`;
+      const entry = [
+        ...new Bun.Glob(`markdown-it@${version}*`).scanSync({
+          cwd: store,
+          onlyFiles: false,
+        }),
+      ].find(
+        (name) =>
+          name === `markdown-it@${version}` ||
+          name.startsWith(`markdown-it@${version}+`),
+      );
+      expect(entry).toBeDefined();
+      const moduleDir = `${store}/${entry ?? ""}/node_modules/markdown-it`;
+      const result = Bun.spawnSync(
+        [
+          "bun",
+          "--no-install",
+          "-e",
+          `const { default: MarkdownIt } = await import(${JSON.stringify(moduleDir)}); console.log(new MarkdownIt({ linkify: true }).render("https://example.com"));`,
+        ],
+        { cwd: REPO_ROOT },
+      );
+      expect(result.exitCode).toBe(0);
+      expect(new TextDecoder().decode(result.stdout)).toContain(
+        '<a href="https://example.com">https://example.com</a>',
+      );
+    },
+  );
 
   test("the live repo passes", async () => {
     expect(await collectErrors(REPO_ROOT)).toEqual([]);

@@ -8,7 +8,18 @@ import {
 } from "#src/discord/commands/definitions.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { ApplicationIntegrationType, InteractionContextType } from "discord.js";
+import type { RESTPostAPIApplicationCommandsJSONBody } from "discord.js";
 import { afterEach, describe, expect, test, vi } from "vitest";
+
+// Context-menu command bodies carry no `options`; only chat-input commands
+// such as /scout do, so narrow before reading the subcommand names.
+function optionNames(
+  command: RESTPostAPIApplicationCommandsJSONBody | undefined,
+): string[] | undefined {
+  return command !== undefined && "options" in command
+    ? command.options?.map((option) => option.name)
+    : undefined;
+}
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -52,7 +63,7 @@ describe("registered Discord commands", () => {
       }),
     );
     // Voice is beta-only: the production global /scout never carries it.
-    expect(scout?.options?.map((option) => option.name)).toEqual(["ask"]);
+    expect(optionNames(scout)).toEqual(["ask"]);
   });
 
   test("keeps beta-only commands out of the global surface", () => {
@@ -143,7 +154,7 @@ describe("guild /scout payload merge", () => {
     const scout = guildScopedCommandGroups
       .flatMap((group) => group.payload)
       .find((command) => command.name === "scout");
-    const names = scout?.options?.map((option) => option.name);
+    const names = optionNames(scout);
     expect(names).toEqual(["ask", "join", "leave"]);
   });
 
@@ -168,9 +179,7 @@ describe("guild /scout payload merge", () => {
     const exploreScout = exploreOnly.find(
       (command) => command.name === "scout",
     );
-    expect(exploreScout?.options?.map((option) => option.name)).toEqual([
-      "ask",
-    ]);
+    expect(optionNames(exploreScout)).toEqual(["ask"]);
 
     // Voice-flag guild (also Explore-allowlisted? not here): join/leave only.
     const voiceGuild = listGuildsWithFlagEnabled("voice_assistant_enabled")[0];
@@ -179,21 +188,14 @@ describe("guild /scout payload merge", () => {
     }
     const voiceOnly = await guildCommandPayload(voiceGuild);
     const voiceScout = voiceOnly.find((command) => command.name === "scout");
-    expect(voiceScout?.options?.map((option) => option.name)).toEqual([
-      "join",
-      "leave",
-    ]);
+    expect(optionNames(voiceScout)).toEqual(["join", "leave"]);
 
     // Both gates on: the full merge, ask first.
     vi.stubEnv("EXPLORE_GUILD_ALLOWLIST", voiceGuild);
     resetConfigurationForTests();
     const merged = await guildCommandPayload(voiceGuild);
     const mergedScout = merged.find((command) => command.name === "scout");
-    expect(mergedScout?.options?.map((option) => option.name)).toEqual([
-      "ask",
-      "join",
-      "leave",
-    ]);
+    expect(optionNames(mergedScout)).toEqual(["ask", "join", "leave"]);
 
     // Neither gate: no /scout registration at all.
     vi.stubEnv("EXPLORE_GUILD_ALLOWLIST", "");
