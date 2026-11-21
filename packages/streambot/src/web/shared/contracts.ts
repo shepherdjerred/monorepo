@@ -131,6 +131,10 @@ const commandBase = {
   channelId: z.string().regex(/^\d+$/u),
   revision: z.string().nullable(),
   playbackChannel: z.number().int().positive().nullable().default(null),
+  // Ignored: accepted only so a page loaded before these were dropped keeps working until reload.
+  selectionVersion: z.string().nullable().optional(),
+  slotRevisions: z.record(z.string(), z.string().nullable()).optional(),
+  targeting: z.literal("explicit").optional(),
 };
 /** Listen is voice audio everyone in the channel hears; Watch is a Go Live stream. */
 export const TransportSchema = z.enum(["listen", "watch"]);
