@@ -3,8 +3,10 @@ import type { ApiErrorSchema } from "#shared/contract.ts";
 import type { FixtureEndpoint, FixtureRequest } from "./endpoint.ts";
 import { FIXTURE_ENDPOINTS } from "./endpoints.ts";
 import { personaUser, type Persona } from "./personas.ts";
+import { FixtureFailure, type FixtureScenario } from "./scenario.ts";
 
 type ApiError = z.infer<typeof ApiErrorSchema>;
+type FailureStatus = 400 | 403 | 404 | 501 | 502;
 
 /** A served fixture, or the typed error body the real API would send. */
 export type FixtureOutcome =
@@ -14,7 +16,7 @@ export type FixtureOutcome =
       request: FixtureRequest;
       body: unknown;
     }
-  | { status: 400 | 403 | 404 | 501; body: ApiError };
+  | { status: FailureStatus; body: ApiError };
 
 type CompiledEndpoint = {
   endpoint: FixtureEndpoint;
@@ -51,17 +53,25 @@ const COMPILED: readonly CompiledEndpoint[] = FIXTURE_ENDPOINTS.map(
 );
 
 function failure(
-  status: 400 | 403 | 404 | 501,
+  status: FailureStatus,
   code: string,
   message: string,
 ): FixtureOutcome {
   return { status, body: { error: { code, message } } };
 }
 
+type RouteInput = {
+  method: string;
+  url: URL;
+  persona: Persona;
+  /** Everything working, unless the browser chose otherwise. */
+  scenario?: FixtureScenario;
+};
+
 function requestFor(
   compiled: CompiledEndpoint,
   match: RegExpExecArray,
-  input: { url: URL; persona: Persona },
+  input: RouteInput,
 ): FixtureRequest {
   const parameters = new Map(
     compiled.names.map((name, index) => [
@@ -71,6 +81,7 @@ function requestFor(
   );
   return {
     persona: input.persona,
+    scenario: input.scenario ?? "default",
     user: personaUser(input.persona),
     query: input.url.searchParams,
     param: (name) => {
@@ -99,6 +110,10 @@ function respond(
     if (error instanceof z.ZodError) {
       return failure(400, "invalid_request", z.prettifyError(error));
     }
+    // An error the real API sends on purpose, which a scenario asked for.
+    if (error instanceof FixtureFailure) {
+      return failure(error.status, error.code, error.message);
+    }
     throw error;
   }
 }
@@ -108,11 +123,7 @@ function respond(
  * fixture API holds no state, so a write gets a typed 501 instead of a
  * response that pretends something changed.
  */
-export function routeFixture(input: {
-  method: string;
-  url: URL;
-  persona: Persona;
-}): FixtureOutcome {
+export function routeFixture(input: RouteInput): FixtureOutcome {
   if (input.method !== "GET") {
     return failure(
       501,

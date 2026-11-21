@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { UNREACHABLE_POSTER_TITLE } from "#testing/fixture-api/fixtures/artwork-image.ts";
-import { openAs, test, violationDetails } from "./support.ts";
+import { openAs, settle, test, violationDetails } from "./support.ts";
 
 /*
  * The Library's All segment: the poster grid, its filters, and the compact
@@ -8,13 +8,6 @@ import { openAs, test, violationDetails } from "./support.ts";
  */
 
 const grid = (page: Page) => page.getByRole("list", { name: "Library titles" });
-
-async function settle(page: Page) {
-  await page.waitForLoadState("networkidle");
-  await expect(
-    page.getByRole("status").filter({ hasText: "Loading" }),
-  ).toHaveCount(0);
-}
 
 /** How many columns the grid has laid its cards out in. */
 async function columns(page: Page): Promise<number> {

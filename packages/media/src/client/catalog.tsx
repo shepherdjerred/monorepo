@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { z } from "zod";
-import { CatalogDetailSchema, CatalogSearchSchema } from "#shared/api.ts";
+import { CatalogDetailSchema } from "#shared/api.ts";
 import type { CatalogDetail } from "#shared/api.ts";
 import { LanguageSchema } from "#shared/contract.ts";
 import type { DefaultTargetView } from "#shared/editions/target-view.ts";
@@ -16,140 +16,6 @@ import { ApiError, queryClient, readApi, writeApi } from "./api.ts";
 import { EmptyState, ErrorNotice, Loading, PageTitle } from "./components.tsx";
 
 const AdoptResultSchema = z.object({ mediaId: z.string() });
-
-export function Discover() {
-  // The search is the address's `q`, so a result list can be linked to and
-  // survives a reload. The shell's search field navigates here with it.
-  const [params, setParams] = useSearchParams();
-  const search = params.get("q")?.trim() ?? "";
-  const [text, setText] = useState(search);
-  // A search that arrives from outside this form replaces what was typed.
-  const [shown, setShown] = useState(search);
-  if (shown !== search) {
-    setShown(search);
-    setText(search);
-  }
-  const results = useQuery({
-    queryKey: ["catalog", search],
-    enabled: search.length > 0,
-    queryFn: async () =>
-      readApi(
-        `/catalog/search?q=${encodeURIComponent(search)}`,
-        CatalogSearchSchema,
-      ),
-  });
-  return (
-    <>
-      <PageTitle title="What’s your next watch?">
-        <p>Find a film, follow a series, and we’ll take it from here.</p>
-      </PageTitle>
-      <form
-        className="search-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setParams({ q: text.trim() });
-        }}
-      >
-        <span className="search-icon" aria-hidden="true">
-          ⌕
-        </span>
-        <label className="sr-only" htmlFor="catalog-search">
-          Search movies and series
-        </label>
-        <input
-          id="catalog-search"
-          type="search"
-          value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-          }}
-          placeholder="Search movies, series, and anime…"
-          maxLength={200}
-          required
-        />
-        <button
-          className="button primary"
-          type="submit"
-          disabled={text.trim().length === 0 || results.isFetching}
-        >
-          {results.isFetching ? "Searching…" : "Search"}
-        </button>
-      </form>
-      {search.length === 0 ? (
-        <DiscoverWelcome />
-      ) : (
-        <>
-          <div className="section-heading">
-            <h2>Results for “{search}”</h2>
-            <span>Movies & series</span>
-          </div>
-          {results.isPending && <Loading />}
-          {results.error !== null && <ErrorNotice error={results.error} />}
-          {results.data?.results.length === 0 && (
-            <EmptyState title="No matches this time">
-              Try another title or its original-language name.
-            </EmptyState>
-          )}
-          <div className="catalog-grid">
-            {results.data?.results.map((item) => (
-              <Link
-                className="catalog-card"
-                key={`${item.kind}-${String(item.externalId)}`}
-                to={`/catalog/${item.kind}/${String(item.externalId)}`}
-              >
-                <div className={`catalog-art art-${item.kind}`}>
-                  <span>{item.kind === "movie" ? "FILM" : "SERIES"}</span>
-                  <strong aria-hidden="true">{item.title.slice(0, 1)}</strong>
-                  <i aria-hidden="true">↗</i>
-                </div>
-                <div className="card-body">
-                  <h3>{item.title}</h3>
-                  <p>
-                    {item.date.slice(0, 4)}
-                    <span>·</span>
-                    {item.originalLanguage.toUpperCase()}
-                  </p>
-                  <p className="card-overview">{item.overview}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </>
-      )}
-    </>
-  );
-}
-
-function DiscoverWelcome() {
-  return (
-    <section className="welcome-card">
-      <div>
-        <h2>
-          A little less searching.
-          <br />A lot more watching.
-        </h2>
-        <p>
-          Request something you love. We’ll find it, bring it to Plex, and let
-          you know when it’s ready.
-        </p>
-        <Link className="text-link" to="/library/mine">
-          See your requests <span aria-hidden="true">→</span>
-        </Link>
-      </div>
-      <div className="welcome-illustration" aria-hidden="true">
-        <div className="mini-cover cover-back">SERIES</div>
-        <div className="mini-cover cover-front">
-          YOUR
-          <br />
-          NEXT
-          <br />
-          <em>FAVORITE.</em>
-        </div>
-        <span className="spark">✦</span>
-      </div>
-    </section>
-  );
-}
 
 export function CatalogPage({ user }: { user: MediaUser }) {
   const { kind, id } = useParams();

@@ -3,8 +3,9 @@ import { Navigate, useRouteError, type RouteObject } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { App } from "#client/app.tsx";
 import { CalendarPage } from "#client/calendar/page.tsx";
-import { CatalogPage, Discover } from "#client/catalog.tsx";
+import { CatalogPage } from "#client/catalog.tsx";
 import { Loading, Notice, PageTitle } from "#client/components.tsx";
+import { DiscoverFeedPage, DiscoverPage } from "#client/discover/page.tsx";
 import { PlaybackHistoryPage } from "#client/household/playback.tsx";
 import { LibraryAll } from "#client/library/all.tsx";
 import { LibraryLeaving } from "#client/library/leaving.tsx";
@@ -214,7 +215,8 @@ export const routes: RouteObject[] = [
         // Pathless, so an error replaces the page and leaves the shell.
         errorElement: <RouteError />,
         children: [
-          { path: "discover", element: <Discover /> },
+          { path: "discover", element: <DiscoverPage /> },
+          { path: "discover/:feed", element: <DiscoverFeedPage /> },
           {
             path: "library",
             element: <LibraryPage />,

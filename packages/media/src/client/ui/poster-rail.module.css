@@ -1,0 +1,114 @@
+@layer components {
+  /*
+   * A row of posters that scrolls sideways. `--rail-card` is the width of
+   * one card, and with it the height of the row: `poster-card.tsx` tells the
+   * browser the same widths in `RAIL_SIZES`. On a phone a card is as narrow
+   * as one in the three-column grid, so it carries its state the same way,
+   * as a band along the foot of the poster (`poster-card.module.css`).
+   */
+  .rail {
+    --rail-card: 124px;
+    --rail-gap: var(--space-3);
+    /* Room for a card's focus ring, which the scroller would clip. */
+    --rail-ring: 8px;
+    position: relative;
+  }
+  @media (min-width: 761px) {
+    .rail {
+      --rail-card: 168px;
+      --rail-gap: var(--space-4);
+    }
+  }
+
+  /*
+   * The track runs through the page's gutters to the edge of the column, so
+   * a card leaves by the edge of the screen and not at an invisible line.
+   * Its padding puts the first card back on the page's margin, and the snap
+   * points keep to that margin.
+   */
+  .track {
+    list-style: none;
+    display: flex;
+    gap: var(--rail-gap);
+    margin: calc(-1 * var(--rail-ring)) calc(-1 * var(--shell-gutter));
+    padding: var(--rail-ring) var(--shell-gutter);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--shell-gutter);
+    /* A quick second tap opens a card instead of zooming the page. */
+    touch-action: manipulation;
+    /* The cut-off card at the edge says there is more; a bar under each of
+       five rows would only repeat it. Newly available: where it is not
+       understood the row keeps the browser's scroll bar. */
+    scrollbar-width: none;
+  }
+  .track::-webkit-scrollbar {
+    display: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .track {
+      scroll-behavior: smooth;
+    }
+  }
+  .track > * {
+    flex: none;
+    width: var(--rail-card);
+    scroll-snap-align: start;
+  }
+  /* Loading blocks do not scroll: nothing in them could take focus. */
+  .still {
+    overflow-x: hidden;
+  }
+
+  /* The poster, the gap under it, and the text block of a card in a rail. */
+  .standIn {
+    min-height: calc(
+      var(--rail-card) * 1.5 + var(--space-2) + 2 * 1.3 * var(--text-md) + 2 *
+        (1.4 * var(--text-sm) + 2px)
+    );
+  }
+
+  /*
+   * Back and forward sit on the row's two edges, level with the middle of
+   * the posters. They are for a mouse: a finger swipes the row, so a touch
+   * screen does not get them.
+   */
+  .step {
+    position: absolute;
+    z-index: 1;
+    inset-block-start: calc(var(--rail-card) * 0.75);
+    display: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: var(--shadow-raised);
+    translate: 0 -50%;
+    cursor: pointer;
+  }
+  .step svg {
+    width: 20px;
+    height: 20px;
+  }
+  .step:hover {
+    background: var(--surface-selected);
+  }
+  .step:disabled {
+    visibility: hidden;
+  }
+  .back {
+    inset-inline-start: calc(var(--shell-gutter) / -2);
+  }
+  .forward {
+    inset-inline-end: calc(var(--shell-gutter) / -2);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .step {
+      display: grid;
+    }
+  }
+}

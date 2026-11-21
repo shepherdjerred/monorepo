@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { RemovalListSchema } from "#shared/api.ts";
 import { requestId } from "#testing/fixture-api/fixtures/requests.ts";
-import { openAs, test, violationDetails } from "./support.ts";
+import { address, openAs, settle, test, violationDetails } from "./support.ts";
 
 /*
  * The Library's Mine, Leaving soon and Removed views, the addresses they
@@ -10,18 +10,6 @@ import { openAs, test, violationDetails } from "./support.ts";
 
 const views = (page: Page) =>
   page.getByRole("navigation", { name: "Library views" });
-
-async function settle(page: Page) {
-  await page.waitForLoadState("networkidle");
-  await expect(
-    page.getByRole("status").filter({ hasText: "Loading" }),
-  ).toHaveCount(0);
-}
-
-function address(page: Page): string {
-  const url = new URL(page.url());
-  return `${url.pathname}${url.search}`;
-}
 
 /** The entry of a list whose heading is exactly `name`. */
 function entry(list: Locator, name: string): Locator {

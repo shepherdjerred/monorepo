@@ -71,11 +71,41 @@
     letter-spacing: 0;
     overflow-wrap: anywhere;
   }
-  .detail {
+  .detail,
+  .note {
     margin: 2px 0 0;
     color: var(--text-muted);
     font-size: var(--text-sm);
     line-height: 1.4;
+  }
+  /* What the reader has to do with the title, so it reads as theirs. */
+  .note {
+    color: var(--text-accent);
+    font-weight: 500;
+  }
+
+  /* In a rail every card takes the same room: two lines of title, a line of
+     detail and a line of note, used or not. `PosterRailSkeleton` reserves
+     the same block, so a row is the same height before and after it loads. */
+  .text {
+    min-width: 0;
+  }
+  .inRail .text,
+  .railText {
+    height: calc(2 * 1.3 * var(--text-md) + 2 * (1.4 * var(--text-sm) + 2px));
+    overflow: hidden;
+  }
+  .inRail .title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .inRail .detail,
+  .inRail .note {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   /* The phrase sits on the art, so it carries its own opaque fill. */
@@ -102,14 +132,14 @@
      three words fit on one line. The narrowest card of every wider grid
      (128px, at four columns) keeps the pill. */
   @container (max-width: 126px) {
-    .onArt {
+    .onArt:not([data-invites="true"]) {
       inset-block: auto 0;
       inset-inline: 0;
       max-width: none;
       padding: 4px 6px;
       border-radius: 0 0 var(--radius-poster) var(--radius-poster);
     }
-    .onArt::before {
+    .onArt:not([data-invites="true"])::before {
       display: none;
     }
   }
@@ -137,5 +167,23 @@
   .state[data-tone="danger"] {
     background: var(--danger-soft);
     color: var(--danger);
+  }
+  /* An offer, not a state: the page's own surface, and a plus for the dot.
+     It is one short word, so it stays a pill in the corner at every width. */
+  .state[data-invites="true"] {
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 16%, transparent);
+  }
+  .state[data-invites="true"]::before {
+    align-self: center;
+    width: 8px;
+    height: 8px;
+    border-radius: 0;
+    color: var(--accent-strong);
+    background:
+      linear-gradient(currentcolor, currentcolor) center / 100% 2px no-repeat,
+      linear-gradient(currentcolor, currentcolor) center / 2px 100% no-repeat;
+    transform: none;
   }
 }

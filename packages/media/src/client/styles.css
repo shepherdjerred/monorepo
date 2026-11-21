@@ -111,30 +111,6 @@
     margin-bottom: 0;
     max-width: 680px;
   }
-  .search-form {
-    display: flex;
-    gap: var(--space-3);
-    align-items: center;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    padding: 10px 10px 10px 20px;
-    border-radius: var(--radius-card);
-    margin-bottom: 36px;
-  }
-  .search-icon {
-    font-size: var(--text-2xl);
-    line-height: 1;
-    color: var(--text-muted);
-  }
-  .search-form input {
-    min-width: 0;
-    flex: 1;
-    background: none;
-    border: none;
-    color: var(--text);
-    font-size: var(--text-md);
-    padding: var(--space-3) var(--space-1);
-  }
   .button {
     display: inline-flex;
     justify-content: center;
@@ -200,92 +176,6 @@
   .text-link:hover {
     text-decoration: underline;
   }
-  /* The welcome card is a spruce set piece in both themes. */
-  .welcome-card {
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    background: linear-gradient(
-      110deg,
-      var(--art-pine-700) 0%,
-      var(--art-pine-800) 65%,
-      var(--art-pine-600)
-    );
-    border: 1px solid var(--art-pine-edge);
-    border-radius: var(--radius-card);
-    color: var(--art-on-pine);
-    padding: 46px;
-    min-height: 330px;
-    overflow: hidden;
-  }
-  .welcome-card h2 {
-    font-size: var(--text-2xl);
-    line-height: 1.4;
-    font-weight: 500;
-    letter-spacing: -0.04em;
-    margin: 15px 0;
-  }
-  .welcome-card p {
-    color: var(--art-on-pine-muted);
-    font-size: var(--text-sm);
-    max-width: 310px;
-    margin-bottom: 25px;
-  }
-  .welcome-card .text-link {
-    color: var(--lamp-soft);
-  }
-  .welcome-illustration {
-    position: relative;
-    min-height: 240px;
-  }
-  .mini-cover {
-    position: absolute;
-    width: 155px;
-    height: 225px;
-    border-radius: var(--radius-poster);
-    box-shadow: 8px 16px 28px var(--art-shadow);
-    padding: 25px 20px;
-    font-size: var(--text-2xl);
-    line-height: 1.15;
-    font-family: var(--font-display);
-    font-weight: 800;
-    letter-spacing: -0.035em;
-  }
-  .cover-back {
-    left: 28%;
-    top: -5px;
-    transform: rotate(13deg);
-    background: repeating-linear-gradient(
-      45deg,
-      var(--art-moss-500) 0,
-      var(--art-moss-500) 15px,
-      var(--art-moss-400) 15px,
-      var(--art-moss-400) 30px
-    );
-    color: var(--art-cream);
-    font-size: var(--text-sm);
-    padding-top: 180px;
-  }
-  .cover-front {
-    left: 9%;
-    top: 20px;
-    transform: rotate(-10deg);
-    color: var(--art-pine-900);
-    background: var(--art-tan);
-    border: 5px solid var(--art-tan-light);
-  }
-  .cover-front em {
-    font-family: var(--font-serif);
-    font-weight: normal;
-    font-size: var(--text-xl);
-  }
-  /* Drawn glyphs below are sized as artwork, not as text. */
-  .spark {
-    position: absolute;
-    right: 2%;
-    top: 0;
-    color: var(--art-tan);
-    font-size: 4.375rem;
-  }
   .section-heading {
     display: flex;
     gap: var(--space-4);
@@ -300,91 +190,6 @@
   .section-heading > span {
     color: var(--text-muted);
     font-size: var(--text-xs);
-  }
-  .catalog-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 22px;
-  }
-  .catalog-card {
-    overflow: hidden;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-card);
-    background: var(--surface);
-    transition:
-      border-color var(--dur-2),
-      transform var(--dur-2);
-  }
-  .catalog-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--border-strong);
-  }
-  /* Letter tiles stand in for posters, so they keep their own colors. The
-     lightest stop of each gradient still carries the small label at 4.5:1. */
-  .catalog-art {
-    min-height: 180px;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(
-      150deg,
-      var(--art-moss-500),
-      var(--art-pine-600)
-    );
-    color: var(--art-on-pine);
-  }
-  .art-series {
-    background: linear-gradient(
-      150deg,
-      var(--art-clay-500),
-      var(--art-pine-600)
-    );
-  }
-  .catalog-art > span {
-    position: absolute;
-    top: 18px;
-    left: 18px;
-    font-size: var(--text-xs);
-    letter-spacing: var(--tracking-label);
-  }
-  .catalog-art > strong {
-    font-family: var(--font-serif);
-    font-weight: normal;
-    font-size: 5.9375rem;
-    color: var(--art-cream);
-  }
-  .catalog-art > i {
-    position: absolute;
-    bottom: var(--space-4);
-    right: var(--space-4);
-    border: 1px solid color-mix(in srgb, var(--art-cream) 45%, transparent);
-    width: 27px;
-    height: 27px;
-    border-radius: 50%;
-    text-align: center;
-    font-style: normal;
-  }
-  .card-body {
-    padding: 18px;
-  }
-  .card-body h3 {
-    margin-bottom: 5px;
-  }
-  .card-body p {
-    color: var(--text-muted);
-    font-size: var(--text-xs);
-    margin-bottom: 0;
-  }
-  .card-body p span {
-    padding: 0 var(--space-2);
-  }
-  .card-body .card-overview {
-    margin-top: var(--space-3);
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
   .notice {
     background: var(--neutral-soft);
@@ -868,21 +673,6 @@
     color: var(--art-cream);
   }
   @media (max-width: 1100px) {
-    .welcome-card {
-      padding: 30px;
-    }
-    .mini-cover {
-      width: 130px;
-      height: 195px;
-      font-size: var(--text-xl);
-    }
-    .cover-back {
-      font-size: var(--text-sm);
-      padding-top: 150px;
-    }
-    .catalog-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
     .request-row,
     .list-item {
       flex-wrap: wrap;
@@ -905,42 +695,6 @@
     }
     .page-title p {
       font-size: var(--text-sm);
-    }
-    .welcome-card {
-      padding: 28px;
-      grid-template-columns: 1fr;
-      min-height: 0;
-    }
-    .welcome-illustration {
-      display: none;
-    }
-    .welcome-card p {
-      max-width: none;
-    }
-    .catalog-grid {
-      gap: 14px;
-    }
-    .catalog-art {
-      min-height: 145px;
-    }
-    .card-body {
-      padding: 14px;
-    }
-    .card-body h3 {
-      font-size: var(--text-sm);
-    }
-    .search-form {
-      padding-left: var(--space-3);
-      gap: 7px;
-    }
-    .search-icon {
-      font-size: var(--text-xl);
-    }
-    .search-form input {
-      font-size: var(--text-sm);
-    }
-    .search-form .button {
-      padding: 11px var(--space-3);
     }
     .request-row,
     .list-item {

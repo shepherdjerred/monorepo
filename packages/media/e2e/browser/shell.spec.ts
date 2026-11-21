@@ -50,7 +50,7 @@ test.describe("navigation", () => {
     await page.goto("/manage/quality");
     await expect(page).toHaveURL(/\/discover$/u);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "What’s your next watch?",
+      "Discover",
     );
   });
 });
@@ -61,28 +61,47 @@ test.describe("top bar", () => {
     const search = page.getByRole("searchbox", {
       name: "Search films and series",
     });
+    // Away from Discover nothing happens until the search is sent.
     await search.fill("the");
+    await expect(page).toHaveURL(/\/library$/u);
     await search.press("Enter");
     await expect(page).toHaveURL(/\/discover\?q=the$/u);
     await expect(
       page.getByRole("heading", { name: "Results for “the”" }),
     ).toBeVisible();
-    // The page's own form shows the same search, and it survives a reload.
-    const own = page.getByRole("searchbox", {
-      name: "Search movies and series",
-    });
-    await expect(own).toHaveValue("the");
+    // The field is the only one on the page, and it keeps the search.
+    await expect(page.getByRole("searchbox")).toHaveCount(1);
+    await expect(search).toHaveValue("the");
     await page.reload();
     await expect(
       page.getByRole("heading", { name: "Results for “the”" }),
     ).toBeVisible();
     await expect(search).toHaveValue("the");
 
-    // Searching from the page's own form updates the address too.
-    await own.fill("no-such-title");
-    await own.press("Enter");
+    // Sent again from Discover, a search replaces the one before it.
+    await search.fill("no-such-title");
+    await search.press("Enter");
     await expect(page).toHaveURL(/\/discover\?q=no-such-title$/u);
     await expect(search).toHaveValue("no-such-title");
+    await page.goBack();
+    await expect(page).toHaveURL(/\/library$/u);
+    await expect(search).toHaveValue("");
+  });
+
+  test("a search typed on one page does not follow the reader to another", async ({
+    page,
+  }) => {
+    await openAs(page, "member", "/discover");
+    const search = page.getByRole("searchbox", {
+      name: "Search films and series",
+    });
+    // Typed, then left before the pause that would have searched.
+    await search.pressSequentially("dune", { delay: 0 });
+    await page.getByRole("link", { name: "Notifications" }).click();
+    await expect(page).toHaveURL(/\/notifications$/u);
+    await expect(search).toHaveValue("");
+    await page.waitForLoadState("networkidle");
+    await expect(page).toHaveURL(/\/notifications$/u);
   });
 
   test("the bell opens notifications", async ({ page }) => {

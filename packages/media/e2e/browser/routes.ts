@@ -78,7 +78,19 @@ const MEMBER_ROUTES: readonly RouteSpec[] = [
     label: "member /discover",
     persona: "member",
     path: "/discover",
-    heading: "What’s your next watch?",
+    heading: "Discover",
+  },
+  {
+    label: "member /discover?q=",
+    persona: "member",
+    path: "/discover?q=the",
+    heading: "Discover",
+  },
+  {
+    label: "member /discover/:feed",
+    persona: "member",
+    path: "/discover/popular-films",
+    heading: "Popular films",
   },
   {
     label: "member /calendar",

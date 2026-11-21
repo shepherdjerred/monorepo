@@ -14,21 +14,31 @@ const cx = classNames(styles);
  */
 const GRID_SIZES = "(min-width: 761px) 160px, 30vw";
 
+/** The rendered width of a poster in a rail (`poster-rail.module.css`). */
+const RAIL_SIZES = "(min-width: 761px) 168px, 124px";
+
 /** One phrase about a title, on its tone's fill. */
 export function StatePill({
   state,
   onArt = false,
+  invites = false,
   id,
 }: {
   state: Copy;
   /** Pinned to the corner of the poster it sits on. */
   onArt?: boolean;
+  /**
+   * The phrase offers something to do instead of reporting where the title
+   * stands, so it is drawn apart from the tones, with a plus for the dot.
+   */
+  invites?: boolean;
   id?: string;
 }) {
   return (
     <span
       className={onArt ? `${cx("state")} ${cx("onArt")}` : cx("state")}
       data-tone={state.tone}
+      data-invites={invites ? "true" : undefined}
       id={id}
     >
       {state.label}
@@ -42,38 +52,79 @@ export function StatePill({
  * other control. The link is named title first, then state and detail, which
  * is the order a list of links should be heard in, not the order they are
  * drawn in.
+ *
+ * `state` is null when nothing is known about the title, which is not the
+ * same as any state. `note` is a second line of detail for the cards that
+ * have something more to say. In a `rail` every card takes the same room
+ * whatever its text, so a row of them never changes height.
  */
 export function PosterCard({
   to,
   title,
   detail,
+  note = null,
   posterPath,
   state,
+  invites = false,
+  headingLevel = 2,
+  layout = "grid",
 }: {
   to: To;
   title: string;
   detail: string;
+  note?: string | null;
   posterPath: string | null;
-  state: Copy;
+  state: Copy | null;
+  /** See `StatePill`. */
+  invites?: boolean;
+  /** One below the heading of the list the card is in. */
+  headingLevel?: 2 | 3;
+  layout?: "grid" | "rail";
 }) {
   const id = useId();
+  const Heading = headingLevel === 2 ? "h2" : "h3";
+  const inRail = layout === "rail";
+  const named = [
+    `${id}-title`,
+    ...(state === null ? [] : [`${id}-state`]),
+    `${id}-detail`,
+    ...(note === null ? [] : [`${id}-note`]),
+  ];
   return (
     <article>
       <Link
-        className={cx("card")}
+        className={inRail ? `${cx("card")} ${cx("inRail")}` : cx("card")}
         to={to}
-        aria-labelledby={`${id}-title ${id}-state ${id}-detail`}
+        aria-labelledby={named.join(" ")}
       >
         <div className={cx("art")}>
-          <Poster path={posterPath} title={title} sizes={GRID_SIZES} />
-          <StatePill state={state} onArt id={`${id}-state`} />
+          <Poster
+            path={posterPath}
+            title={title}
+            sizes={inRail ? RAIL_SIZES : GRID_SIZES}
+          />
+          {state !== null && (
+            <StatePill
+              state={state}
+              invites={invites}
+              onArt
+              id={`${id}-state`}
+            />
+          )}
         </div>
-        <h2 className={cx("title")} id={`${id}-title`}>
-          {title}
-        </h2>
-        <p className={cx("detail")} id={`${id}-detail`}>
-          {detail}
-        </p>
+        <div className={cx("text")}>
+          <Heading className={cx("title")} id={`${id}-title`}>
+            {title}
+          </Heading>
+          <p className={cx("detail")} id={`${id}-detail`}>
+            {detail}
+          </p>
+          {note !== null && (
+            <p className={cx("note")} id={`${id}-note`}>
+              {note}
+            </p>
+          )}
+        </div>
       </Link>
     </article>
   );

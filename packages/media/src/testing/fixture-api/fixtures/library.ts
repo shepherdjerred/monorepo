@@ -65,7 +65,7 @@ export function libraryInterest(title: Title): (typeof INTERESTS)[number] {
  * A series the household plays from a Plex library Media does not manage: its
  * episode count is unknown to a list, which the API reports as null.
  */
-const EXTERNALLY_HELD = titleNamed("The Wire");
+export const EXTERNALLY_HELD = titleNamed("The Wire");
 
 /** Episodes Media holds of a series, from the state its fixture title is in. */
 export function libraryEpisodes(title: Title): LibraryItem["episodes"] {

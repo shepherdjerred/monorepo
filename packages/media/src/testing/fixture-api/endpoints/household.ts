@@ -87,7 +87,7 @@ const catalog: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/catalog/search",
     schema: CatalogSearchSchema,
-    respond: (request) => catalogSearch(request.query),
+    respond: (request) => catalogSearch(request.query, request.scenario),
     samples: [
       "/catalog/search?q=the",
       "/catalog/search?q=the&page=2",
@@ -97,7 +97,7 @@ const catalog: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/catalog/discover",
     schema: CatalogSearchSchema,
-    respond: (request) => catalogDiscover(request.query),
+    respond: (request) => catalogDiscover(request.query, request.scenario),
     samples: [
       ...CatalogFeedSchema.options.map(
         (feed) => `/catalog/discover?feed=${feed}`,
@@ -110,7 +110,11 @@ const catalog: readonly FixtureEndpoint[] = [
     path: "/catalog/:kind/:id",
     schema: CatalogDetailSchema,
     respond: (request) =>
-      catalogDetail(request.param("kind"), Number(request.param("id"))),
+      catalogDetail(
+        request.param("kind"),
+        Number(request.param("id")),
+        request.scenario,
+      ),
     samples: [
       `/catalog/movie/${String(FEATURED.movie.tmdbId)}`,
       `/catalog/series/${String(FEATURED.series.tmdbId)}`,
