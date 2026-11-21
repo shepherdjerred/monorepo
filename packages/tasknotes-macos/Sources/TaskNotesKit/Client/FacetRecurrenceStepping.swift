@@ -23,7 +23,8 @@ extension FacetRecurrenceCodec {
         guard
             let candidate = nextLocalOccurrence(
                 parsed, original: original, timed: dueDatetime != nil,
-                completion: CompletionContext(basis: basis, timestamp: completedAt), timeZone: timeZone)
+                completion: CompletionContext(basis: basis, timestamp: completedAt),
+                timeZone: timeZone)
         else { return .ended }
 
         if case .until(let untilRaw) = parsed.end,
