@@ -30,15 +30,23 @@ pub fn plutonium_directory() -> Result<PathBuf> {
         })
 }
 
-fn process_running(names: &[&str]) -> bool {
+/// The host's process or system table could not be read.
+fn host_unreadable(error: sysinfo::Error) -> Error {
+    Error::Invalid(format!(
+        "This computer's process list is unavailable: {error}"
+    ))
+}
+
+fn process_running(names: &[&str]) -> Result<bool> {
     let system = sysinfo::System::new_with_specifics(
         sysinfo::RefreshKind::nothing().with_processes(sysinfo::ProcessRefreshKind::nothing()),
-    );
-    system.processes().values().any(|process| {
+    )
+    .map_err(host_unreadable)?;
+    Ok(system.processes().values().any(|process| {
         names
             .iter()
             .any(|name| process.name().eq_ignore_ascii_case(name))
-    })
+    }))
 }
 
 const PLUTONIUM_PROCESSES: &[&str] = &[
@@ -55,7 +63,7 @@ fn game_processes(game: Game) -> &'static [&'static str] {
     }
 }
 
-pub fn game_running(game: Game) -> bool {
+pub fn game_running(game: Game) -> Result<bool> {
     process_running(game_processes(game))
 }
 
@@ -83,7 +91,7 @@ fn wait_for_game(
 /// Update only the selected game's path, preserving every unrelated field.
 /// Never derive Debug, log, or return the contents of Plutonium's config.
 fn ensure_plutonium_closed() -> Result<()> {
-    if process_running(PLUTONIUM_PROCESSES) {
+    if process_running(PLUTONIUM_PROCESSES)? {
         return Err(Error::ActionRequired {
             title: "Close Plutonium to finish setup",
             next_step: "Close Plutonium and its games, then choose Try again. Your game folder only needs to be set up once.",
@@ -201,14 +209,15 @@ pub fn wait_success(child: &mut Child, cancel: &Cancellation, label: &str) -> Re
 }
 
 /// Processes whose executable or working directory is inside `directory`.
-fn processes_using(directory: &Path) -> Vec<(u32, String)> {
+fn processes_using(directory: &Path) -> Result<Vec<(u32, String)>> {
     let system = sysinfo::System::new_with_specifics(
         sysinfo::RefreshKind::nothing().with_processes(
             sysinfo::ProcessRefreshKind::nothing()
                 .with_exe(sysinfo::UpdateKind::Always)
                 .with_cwd(sysinfo::UpdateKind::Always),
         ),
-    );
+    )
+    .map_err(host_unreadable)?;
     // Process paths come back as plain `C:\...\` while library paths may be verbatim
     // (`\\?\C:\...`); compare normalized, case-insensitive text.
     fn normalize(path: &Path) -> String {
@@ -226,14 +235,14 @@ fn processes_using(directory: &Path) -> Vec<(u32, String)> {
                     .is_some_and(|rest| rest.starts_with('\\'))
         })
     };
-    system
+    Ok(system
         .processes()
         .iter()
         .filter(|(pid, process)| {
             pid.as_u32() != std::process::id() && (inside(process.exe()) || inside(process.cwd()))
         })
         .map(|(pid, process)| (pid.as_u32(), process.name().to_string_lossy().into_owned()))
-        .collect()
+        .collect())
 }
 
 /// Wait until no process is running from, or working inside, `directory`.
@@ -250,7 +259,7 @@ pub fn wait_for_directory_release(
     let mut reported = false;
     loop {
         cancel.check()?;
-        let holders = processes_using(directory);
+        let holders = processes_using(directory)?;
         if holders.is_empty() {
             if reported {
                 tracing::info!(directory = %directory.display(), "folder released");
@@ -284,7 +293,7 @@ pub fn play(
             "The launcher supports Windows x64. macOS has a separate setup guide.".into(),
         ));
     }
-    if game_running(game) {
+    if game_running(game)? {
         return Err(Error::ActionRequired {
             title: "Your game launcher is already open",
             next_step: "Switch to its window, or close it and choose Try again.",
@@ -397,7 +406,7 @@ mod tests {
             .stdout(Stdio::null())
             .spawn()?;
         let deadline = Instant::now() + Duration::from_secs(5);
-        while processes_using(&staged).is_empty() && Instant::now() < deadline {
+        while processes_using(&staged)?.is_empty() && Instant::now() < deadline {
             std::thread::sleep(Duration::from_millis(20));
         }
         let held = std::fs::rename(&staged, root.path().join("moved"));

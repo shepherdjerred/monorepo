@@ -31,7 +31,7 @@ installMode = "currentUser"
 installer-icon = "../../assets/icon.ico"
 
 [build-dependencies]
-winresource = "0.1.23"
+winresource = "0.1.34"
 
 [dependencies]
 eframe.workspace = true

@@ -44,9 +44,8 @@ impl Launcher {
         );
         // The quiet information action keeps destructive operations away from Play.
         let response = details_ui.add(egui::Button::new("").frame(false).min_size(details.size()));
-        response.widget_info(|| {
-            egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Game details")
-        });
+        response
+            .widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Game details"));
         icons::draw(
             ui.painter(),
             Icon::Info,

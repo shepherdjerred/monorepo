@@ -499,7 +499,7 @@ fn personal(path: &Path) -> bool {
         || name.ends_with(".ini")
 }
 pub fn uninstall(catalog: &Catalog, library: &Path, game: Game, keep_saves: bool) -> Result<()> {
-    if launch::game_running(game) {
+    if launch::game_running(game)? {
         return Err(Error::ActionRequired {
             title: "Close your game first",
             next_step: "Close the game and its launcher, then try uninstalling again.",
@@ -546,7 +546,7 @@ pub fn uninstall(catalog: &Catalog, library: &Path, game: Game, keep_saves: bool
 fn finish_removal(library: &Path, tomb: &Path) -> Result<()> {
     owned(library, tomb)?;
     let removal = removal(tomb)?;
-    if launch::game_running(removal.game) {
+    if launch::game_running(removal.game)? {
         return Err(Error::Invalid(
             "Close the game and its launcher before cleaning up".into(),
         ));

@@ -7,7 +7,7 @@ impl Launcher {
     ) -> Option<egui::Rect> {
         let dialog = self.dialog?;
         let mut close = false;
-        let response = egui::Modal::new(egui::Id::new("launcher-dialog")).show(context, |ui| {
+        let response = egui::Modal::new(egui::Id::unique("launcher-dialog")).show(context, |ui| {
             ui.set_width(480.0_f32.min(context.content_rect().width() - 64.0));
             ui.spacing_mut().item_spacing.y = 8.0;
             match dialog {

@@ -382,7 +382,8 @@ fn log_startup(data: &Path) {
         sysinfo::RefreshKind::nothing()
             .with_memory(sysinfo::MemoryRefreshKind::nothing().with_ram())
             .with_cpu(sysinfo::CpuRefreshKind::nothing()),
-    );
+    )
+    .ok();
     let free = |path: &Path| {
         path.ancestors()
             .find(|p| p.exists())
@@ -396,11 +397,13 @@ fn log_startup(data: &Path) {
         install_root = ?std::env::var_os("GLITTER_BOYS_INSTALL_ROOT"),
         data = %data.display(),
         data_free_bytes = free(data),
-        os = sysinfo::System::long_os_version(),
-        kernel = sysinfo::System::kernel_long_version(),
-        cpu = system.cpus().first().map(|c| c.brand().to_owned()),
-        cpus = system.cpus().len(),
-        memory_bytes = system.total_memory(),
+        os = sysinfo::System::long_os_version().ok(),
+        kernel = sysinfo::System::kernel_long_version().ok(),
+        cpu = system
+            .as_ref()
+            .and_then(|s| s.cpus().first().map(|c| c.brand().to_owned())),
+        cpus = system.as_ref().map(|s| s.cpus().len()),
+        memory_bytes = system.as_ref().map(sysinfo::System::total_memory),
         "launcher started"
     );
 }
