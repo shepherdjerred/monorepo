@@ -4,8 +4,9 @@ import { memberDetail } from "./member-detail.ts";
 
 function ownerDetail(): MediaDetail {
   const torrentId = crypto.randomUUID();
+  const id = crypto.randomUUID();
   return MediaDetailSchema.parse({
-    id: crypto.randomUUID(),
+    id,
     kind: "movie",
     title: "Projected movie",
     year: 2020,
@@ -14,6 +15,13 @@ function ownerDetail(): MediaDetail {
     episodeNumber: null,
     availability: "downloading",
     version: 4,
+    rootMediaId: id,
+    artwork: {
+      posterPath: "/aBcDeFgH1234.jpg",
+      backdropPath: "/hGfEdCbA4321.jpg",
+    },
+    overview: "A movie a member may read about.",
+    catalog: { kind: "movie", externalId: 603 },
     visibility: {
       movieRequests: [],
       playback: {
