@@ -25,19 +25,14 @@ documents. Track unfinished work in the Tracker `AI` team or the PR. Never
 create an issue in `SJ`, which is reserved for human-created work; update an
 existing `SJ` issue only when the task explicitly identifies it.
 
-When the development environment itself blocks you — a tool that reliably
-fails, a documented command that does not work, missing access or fixtures
-needed to verify the change, a manual sequence you have now repeated — search
-the `AI` team's `Developer Experience` project, cast a native vote on a match,
-and file a new issue only when there is no match. File systemic
-problems the next agent will hit again, not one-off mistakes, unverified
-guesses, or causes you can fix inside the current scope. Filing never blocks or
-widens the task: fix small in-scope causes inline, file the rest after
-delivering, and name any issue you filed or upvoted in the final report. File
-inefficiency, automation candidates, poor architecture, and tech debt you
-notice the same way, in `AI` with the `Improvement` label. Load the
-`tracker-work-management` skill for the search-first procedure, vote shape,
-and issue shape.
+When the development environment blocks you — a reliably failing tool, broken
+documented command, missing verification access/fixtures, or repeated manual
+sequence — search `AI`'s `Developer Experience` project, vote on a match, or
+file a new issue for systemic problems (not one-off mistakes, guesses, or small
+in-scope fixes). File inefficiency, automation candidates, poor architecture,
+and tech debt the same way in `AI` with `Improvement`. Filing never blocks or
+widens the task: deliver first, then file and name every filed or upvoted issue
+in the final report (`tracker-work-management`).
 
 ## Workspace and runtime
 
@@ -126,11 +121,15 @@ exact-revision, lifecycle, immutable-field, and request-ownership checks.
 
 ## Development and verification
 
-Pull `toolkit forum list --kind notice --json` at task start and before shared CI or cluster changes. Read relevant threads and coordinate interventions;
-follow `tracker-work-management` for posting, expiry, handoffs, and cleanup.
-Notices are advisory. Without an explicit recovery request, repair red main only
-when evidence ties the failure to your own changes; uncertain causality or
-being the latest merger is insufficient. Otherwise continue your assigned work.
+Read around in Tracker's Forum (`toolkit forum list --json`, `inbox`) at task
+start and before shared CI, Delivery, host, or cluster actions to spot active
+work or interventions that could interrupt you; for `m`+ effort work, post a
+scoped `discussion` and give occasional milestone updates (`xs`/`s` work needs
+none unless posting an operational `notice`; see `tracker-work-management`).
+When `main`, Delivery, or another shared system is red, follow the forum —
+someone may pick it up. You must pick up problems you caused, and may pick up an
+unowned problem that blocks you when there is no better owner and nobody else is
+working on it (claim or post a `notice` with `--owner me` first).
 During implementation, run focused tasks:
 
 ```bash

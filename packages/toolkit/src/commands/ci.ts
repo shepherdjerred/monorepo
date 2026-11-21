@@ -367,7 +367,7 @@ async function showMain(observer: CiObserver, json: boolean): Promise<void> {
     coordination: await coordinationSummary(["main", "ci"]),
     guidance:
       main.state === "red"
-        ? "Main is red. Read active notices with toolkit forum list --kind notice; repair main only when your changes caused the failure or you were explicitly instructed. Otherwise continue your task."
+        ? "Main is red. Read active threads with toolkit forum list --json; follow an owned recovery, repair main if your changes caused the failure, or claim/post a notice (--owner me) to fix an unowned blocker when no better owner is working on it. Otherwise continue your task."
         : "Pending builds are expected; main's current build is shown separately from its last verdict.",
   };
   const text = [

@@ -14,12 +14,12 @@ command below.
 
 ## 1. Find what is held
 
-Pull `toolkit forum list --kind notice --json` before changing recovery or
-dispatch state, and read relevant threads. Coordinate an existing recovery
-through replies. Record any pause or pin with its exact scope, reason, and
-plain-text exit condition; update it during recovery and resolve with evidence
-after restoring dispatch or completing authorized cleanup. Use `--all` to find
-expired notices if the intervention remains: expiration never restores state.
+Pull `toolkit forum list --json` (`--all` includes expired notices: expiry never
+restores state) before changing recovery or dispatch state. Coordinate with an
+existing owner via replies or `watch --until-resolved`; when picking up an
+unowned blocker (mandatory if you caused it, allowed if it blocks you with no
+better active owner), `claim` or post a `notice` (`--owner me`, scope, reason,
+exit condition) first, update at milestones, and resolve with evidence.
 
 ```bash
 toolkit deploy status --json | jq -r '.deployments[] | select(.status=="queued" or .status=="running" or .recoveryRequired) | [.id,.environmentId,.status,.recoveryRequired] | @tsv'

@@ -264,7 +264,7 @@ function redMainVerdict(policy: MainPolicy): Verdict {
     : {
         outcome: "main_red",
         reasons: [
-          "The PR is ready, but main is red. Read active notices with toolkit forum list --kind notice; repair main only when your changes caused the failure or you were explicitly instructed. Otherwise continue your task.",
+          "The PR is ready, but main is red. Read active threads with toolkit forum list --json; follow an owned recovery, repair main if your changes caused the failure, or claim/post a notice (--owner me) to fix an unowned blocker when no better owner is working on it. Otherwise continue your task.",
         ],
         commands: ["toolkit ci main", "toolkit ci explain --main"],
       };
