@@ -95,6 +95,29 @@ function occurrences(haystack: string, needle: string): number {
   return haystack.split(needle).length - 1;
 }
 
+function clearDigestReport(window: {
+  kind: "daily" | "weekly";
+  periodKey: string;
+  periodStart: string;
+  periodEnd: string;
+}) {
+  return DigestReportSchema.parse({
+    ...window,
+    status: {
+      severity: "ok",
+      summary: "All monitored areas are healthy",
+      stale: false,
+      snapshotGeneratedAt: "2026-11-20T15:29:00Z",
+    },
+    attention: [],
+    needsMe: [],
+    newSinceLast: [],
+    changes: [],
+    incidents: { opened: 0, resolved: 0, medianMinutesToResolve: null },
+    trends: [],
+  });
+}
+
 describe("digest email", () => {
   it("escapes upstream text and links in HTML", () => {
     const email = renderDigestEmail(weeklyAttentionReport);
@@ -129,23 +152,11 @@ describe("digest email", () => {
 
   it("formats clear and action-needed daily and weekly subjects without ISO week slugs", () => {
     const dailyClear = renderDigestEmail(
-      DigestReportSchema.parse({
+      clearDigestReport({
         kind: "daily",
         periodKey: "2026-11-20",
         periodStart: "2026-11-19T15:30:00Z",
         periodEnd: "2026-11-20T15:30:00Z",
-        status: {
-          severity: "ok",
-          summary: "All monitored areas are healthy",
-          stale: false,
-          snapshotGeneratedAt: "2026-11-20T15:29:00Z",
-        },
-        attention: [],
-        needsMe: [],
-        newSinceLast: [],
-        changes: [],
-        incidents: { opened: 0, resolved: 0, medianMinutesToResolve: null },
-        trends: [],
       }),
     );
     expect(dailyClear.subject).toBe("Daily digest: All clear (Nov 20)");
@@ -153,23 +164,11 @@ describe("digest email", () => {
     expect(dailyClear.plainBody).not.toContain("New since last digest");
 
     const weeklyClear = renderDigestEmail(
-      DigestReportSchema.parse({
+      clearDigestReport({
         kind: "weekly",
         periodKey: "2026-W47",
         periodStart: "2026-11-13T15:30:00Z",
         periodEnd: "2026-11-20T15:30:00Z",
-        status: {
-          severity: "ok",
-          summary: "All monitored areas are healthy",
-          stale: false,
-          snapshotGeneratedAt: "2026-11-20T15:29:00Z",
-        },
-        attention: [],
-        needsMe: [],
-        newSinceLast: [],
-        changes: [],
-        incidents: { opened: 0, resolved: 0, medianMinutesToResolve: null },
-        trends: [],
       }),
     );
     expect(weeklyClear.subject).toBe("Weekly review: All clear (Nov 13–20)");
