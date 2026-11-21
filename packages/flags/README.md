@@ -29,10 +29,12 @@ and `diff`. `apply` and `retire` take `expectedRevision` and change nothing
 when it does not match, including later flags in that request.
 `create-missing` inserts absent keys and leaves an existing body as it is.
 
-Startup copies each deployment's managed inventory document once. A document
-already stored is left alone. Namespace and environment pairs that no
-deployment reads, including the unused beta copies, are reported and not
-imported.
+Startup copies each deployment once. When `FLAGS_FLIPT_URL` is set, that copy
+is the Flipt document the deployment's pods read, and a percentage rollout,
+variant rule, or other unsupported construct stops the process. Without that
+variable, startup copies the managed inventory document. A document already
+stored is left alone. Namespace and environment pairs that no deployment
+reads, including the unused beta copies, are reported and not imported.
 
 ## Operator
 
