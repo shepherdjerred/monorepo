@@ -15,20 +15,26 @@ const server = Bun.serve({
   fetch: (request) => serveWebAsset(new URL(request.url), assets),
 });
 try {
-  const page = await fetch(server.url);
-  if (page.status !== 200) throw new Error("Web HTML must return HTTP 200");
-  const html = await page.text();
-  const scriptPath = /src="([^"]+)"/u.exec(html)?.[1];
-  if (scriptPath === undefined)
-    throw new Error("Web entrypoint must reference its JavaScript bundle");
-  const script = await fetch(new URL(scriptPath, server.url));
-  const scriptBody = await script.text();
-  if (script.status !== 200 || scriptBody.length < 100)
-    throw new Error(
-      "Web JavaScript must return HTTP 200 and contain its bundle",
-    );
+  // The current remote at `/` and the classic remote at `/classic` each load their own bundle.
+  for (const page of ["/", "/classic"]) {
+    const response = await fetch(new URL(page, server.url));
+    if (response.status !== 200)
+      throw new Error("Web HTML for " + page + " must return HTTP 200");
+    const html = await response.text();
+    const scriptPath = /src="([^"]+)"/u.exec(html)?.[1];
+    if (scriptPath === undefined)
+      throw new Error(page + " must reference its JavaScript bundle");
+    const script = await fetch(new URL(scriptPath, server.url));
+    const scriptBody = await script.text();
+    if (script.status !== 200 || scriptBody.length < 100)
+      throw new Error(
+        "Web JavaScript for " +
+          page +
+          " must return HTTP 200 and contain its bundle",
+      );
+  }
   console.log(
-    "Web image smoke passed: HTML and JavaScript return HTTP 200; local fixtures excluded.",
+    "Web image smoke passed: both remotes return HTML and JavaScript with HTTP 200; local fixtures excluded.",
   );
 } finally {
   await server.stop(true);

@@ -1,0 +1,112 @@
+/* Playlist pages: forms, the page header, and the items' status and video picker. */
+.playlist-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-2) var(--space-3);
+  padding-inline: var(--space-2);
+}
+
+.playlist-form .field {
+  min-inline-size: min(100%, 14rem);
+}
+
+.playlist-form .playlist-field-wide {
+  flex: 1 1 20rem;
+}
+
+.playlist-form-status {
+  flex-basis: 100%;
+}
+
+.playlist-hint {
+  padding-inline: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.playlist-back {
+  justify-self: start;
+  font-size: var(--text-sm);
+}
+
+.playlist-head {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The play buttons sit in this header, not in a row's named areas. */
+.playlist-head > .row-actions,
+.playlist-head > .row-status {
+  grid-area: auto;
+}
+
+.playlist-head > .row-status {
+  grid-column: 1 / -1;
+}
+
+.playlist-title {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.playlist-paging {
+  justify-content: center;
+}
+
+/* The edit status and video picker of an item sit under the row, beside its text. */
+.entry-extra {
+  grid-column: 2 / -1;
+  min-inline-size: 0;
+}
+
+.add-playing {
+  display: grid;
+  justify-items: end;
+}
+
+.add-playing > .btn {
+  max-inline-size: min(100%, 20rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-picker {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.match-list {
+  display: grid;
+  inline-size: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match-choice {
+  display: grid;
+  justify-items: start;
+  inline-size: 100%;
+  padding-block: var(--space-1);
+  text-align: start;
+  white-space: normal;
+}
+
+@media (max-width: 640px) {
+  .playlist-head {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .playlist-head > .row-actions {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

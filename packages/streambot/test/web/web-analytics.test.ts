@@ -276,6 +276,9 @@ test("distinct ids are stable UUIDs per user and contain no Discord or content d
 
   const me = MeSchema.parse(await json(get("/api/me")));
   expect(me.analyticsId).toBe(mine[0]?.distinctId);
+  // With capture switched off the browser gets no id, so it loads no tracker.
+  enabled = false;
+  expect(MeSchema.parse(await json(get("/api/me"))).analyticsId).toBeNull();
 
   const haystack = JSON.stringify(sent);
   for (const value of PRIVATE) expect(haystack).not.toContain(value);

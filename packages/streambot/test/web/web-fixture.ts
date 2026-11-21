@@ -25,6 +25,7 @@ import { createFixtureSlot } from "./web-fixture-slot.ts";
 import { WebCatalog } from "@shepherdjerred/streambot/web/server/catalog.ts";
 import { WebPlayback } from "@shepherdjerred/streambot/web/server/playback.ts";
 import { createWebHandler } from "@shepherdjerred/streambot/web/server/api.ts";
+import type { BugsinkReporting } from "@shepherdjerred/streambot/observability/bugsink.ts";
 import { WebSessionStore } from "@shepherdjerred/streambot/web/server/session-store.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
@@ -108,6 +109,13 @@ function resolved(source: Source): ResolvedSource {
   };
 }
 
+/** Bugsink is off unless a test opts in with fake reporting. */
+function fixtureBugsink(options: {
+  bugsink?: BugsinkReporting;
+}): BugsinkReporting | null {
+  return options.bugsink ?? null;
+}
+
 /** Real actor, command service, catalog and auth; only Discord/media I/O is simulated. */
 export function webFixture(
   origin = "http://127.0.0.1:8080",
@@ -142,6 +150,7 @@ export function webFixture(
     schedules?: LolPlaybackSchedules;
     lol?: boolean;
     username?: string;
+    bugsink?: BugsinkReporting;
   } = {},
 ) {
   const library = options.library ?? LIBRARY;
@@ -346,6 +355,7 @@ export function webFixture(
       clientSecret: "fixture-only",
       port: 8080,
     },
+    bugsink: fixtureBugsink(options),
     store,
     playback,
     assetsDir,

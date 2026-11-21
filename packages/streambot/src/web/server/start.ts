@@ -4,6 +4,7 @@ import { WebSessionStore } from "./session-store.ts";
 import { WebPlayback } from "./playback.ts";
 import type { WebPlaybackDeps } from "./playback-deps.ts";
 import { createWebHandler } from "./api.ts";
+import type { BugsinkReporting } from "@shepherdjerred/streambot/observability/bugsink.ts";
 
 export function serveWebHandler(
   port: number,
@@ -22,19 +23,22 @@ export function serveWebHandler(
 
 export async function startWebServer(deps: {
   bootstrap: WebBootstrap;
+  /** The server's own Bugsink reporting; `null` when Bugsink is off. */
+  bugsink: BugsinkReporting | null;
   stateDir: string;
   playback: WebPlaybackDeps;
   applicationId: () => string;
   plexPostersEnabled?: (guildId: string, userId: string) => Promise<boolean>;
 }) {
   const assetsDir = path.resolve(import.meta.dirname, "../../..", "dist/web");
-  if (!(await Bun.file(path.join(assetsDir, "index.html")).exists()))
+  if (!(await Bun.file(path.join(assetsDir, "client/index.html")).exists()))
     throw new Error("Streambot web assets are missing. Run bun run build.");
   const store = new WebSessionStore(
     path.join(deps.stateDir, "streambot-web.sqlite"),
   );
   const handler = createWebHandler({
     bootstrap: deps.bootstrap,
+    bugsink: deps.bugsink,
     store,
     playback: new WebPlayback(deps.playback),
     applicationId: deps.applicationId,

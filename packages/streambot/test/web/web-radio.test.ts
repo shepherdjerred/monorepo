@@ -20,8 +20,8 @@ import {
   createVoiceDecisionsRuntime,
 } from "@shepherdjerred/streambot/voice/voice-command-router.ts";
 import { DryRunVoiceCommandPort } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
-import { playerCommand } from "@shepherdjerred/streambot/web/client/api.ts";
-import { formatStationBadge } from "@shepherdjerred/streambot/web/client/station/station-label.ts";
+import { playerCommand } from "@shepherdjerred/streambot/web/client-classic/api.ts";
+import { formatStationBadge } from "@shepherdjerred/streambot/web/client-classic/station/station-label.ts";
 import { SnapshotSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { CuratedStationItem } from "@shepherdjerred/streambot/station/station-types.ts";
 import {

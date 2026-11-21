@@ -2,8 +2,8 @@ import { afterEach, expect, test, vi } from "vitest";
 import { CHANNEL, GUILD, USER, webFixture } from "./web-fixture.ts";
 import { harness, number } from "#numbered-fixture";
 import { SnapshotSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
-import { playerCommand } from "@shepherdjerred/streambot/web/client/api.ts";
-import { resolveChannelDeepLink } from "@shepherdjerred/streambot/web/client/route-state.ts";
+import { playerCommand } from "@shepherdjerred/streambot/web/client-classic/api.ts";
+import { resolveChannelDeepLink } from "@shepherdjerred/streambot/web/client-classic/route-state.ts";
 
 let fixture: ReturnType<typeof webFixture>;
 async function status(request: Request) {

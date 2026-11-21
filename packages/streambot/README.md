@@ -174,7 +174,7 @@ covered by the play event), `streambot_web_signed_in`,
 random UUID minted per Discord user and stored only in
 `$STATE_DIR/streambot-analytics.sqlite`; the mapping never leaves the process,
 and no Discord id, name, guild, channel, title, query or URL is ever sent.
-`/api/me` exposes the same UUID as `analyticsId` for a later browser tracker.
+`/api/me` exposes the same UUID as `analyticsId` for the browser tracker.
 Captures are counted in `streambot_analytics_events_total{event,outcome}`
 (`captured|dropped|disabled|failed`), never block or alter a request, and are
 flushed on graceful shutdown. The public project token and host come from
@@ -182,6 +182,44 @@ flushed on graceful shutdown. The public project token and host come from
 startup fails when the flag is on and they are absent. A run with no PostHog
 destination, such as `bun run smoke` or the CI in-image smoke, sets
 `USAGE_ANALYTICS_ENABLED=false`.
+
+### Browser telemetry
+
+The web remote (`src/web/client/telemetry/`) loads `posthog-js` only on
+`streambot.sjer.red`, after `/api/me` returns a non-null `analyticsId`, and only
+when the browser sends neither Do Not Track nor Global Privacy Control;
+otherwise nothing is downloaded or sent. It identifies with that `analyticsId`,
+keeps its cookie on `streambot.sjer.red` alone, and talks only to the
+`j.sjer.red` proxy, whose public identity lives in
+`src/web/shared/analytics-site.json` (checked against
+`config/analytics-sites.json` by `scripts/checks/check-analytics-sites.ts`).
+It sends only explicit events with closed properties: `$pageview` (route
+pattern only, such as `/album/:id`), `streambot_result_chosen` (`kind`,
+`rank_bucket`, `offered` — which of Listen and Watch the row showed — and
+`button`) and `streambot_error_shown` (`code` from the shared
+API code list or the client's own, else `other`; `surface`), plus page leave
+and web vitals. Autocapture, rage clicks, dead clicks and heatmaps are off,
+because autocapture records a clicked link's `href` whatever the masking
+settings say. `before_send` rewrites every URL, absolute or relative, to a
+route pattern (other sites keep only their origin) and drops titles, element
+text and labels. Session replay masks every text node and input and blanks
+every attribute but layout ones, so recorded links have an empty `href`.
+
+Browser errors go to the server's own Bugsink project. `/api/me` carries
+`bugsink: { dsn, release, environment }`, the values the server itself reports
+under, but only when the DSN is an `https:` URL on the public
+`bugsink.sjer.red` host; an internal or plain-HTTP DSN gives `null`. The client
+starts `@sentry/react` with them after sign-in, independent of the analytics
+flag. Reports drop query strings, map page URLs to route patterns, keep only
+the category of click breadcrumbs, and carry the last API Reference as the
+`reference` tag.
+
+The Content-Security-Policy (`src/web/server/http/csp.ts`) is computed once at
+start. On the production origin it allows scripts only from
+`https://j.sjer.red/static/` and `https://j.sjer.red/array/<project token>/`
+and connections to `https://j.sjer.red`; on any other origin, where the client
+never loads the tracker, it allows neither. The public Bugsink origin is added
+to `connect-src` only when `/api/me` hands out a DSN.
 
 ## Music discovery and playlists
 
@@ -298,6 +336,20 @@ Run `bun run build` before starting a process with web credentials. The producti
 server serves `dist/web` on the credential bootstrap port, separate from metrics.
 For frontend iteration, `bun run web:dev` proxies API requests to that server.
 
+One Vite build produces two pages. The current remote (`src/web/client/`) owns `/`
+and its routes; it reads the room over `/api/room/events` and searches with
+`/api/search/v2`. The classic remote (`src/web/client-classic/`) is served unchanged
+under `/classic`. `webPage()` in `src/web/server/assets.ts` maps browser paths to
+the two pages for both the server and the Vite dev server.
+
+The client is split by concern: the shell, API layer and shared controls at the top
+of `src/web/client/`, then `search/`, `media/` (the one row, card and play buttons),
+`room/` (room stream, rail, player cards), `pages/` (Home and stations), and one
+directory per browse page (`library/`, `playlists/`, `live/`, `history/`, `music/`).
+Styles are small per-component files in `styles/` on the tokens in `styles/theme.css`.
+Pure logic (command building, reconnect state, position, error wording, search
+groups) lives in `.ts` modules with tests under `test/web/client/`.
+
 `bun run e2e/web-local.ts` serves a credential-free acceptance fixture on
 `http://127.0.0.1:8080`. Its sign-in simulates Discord and its media I/O is simulated;
 the routes, session storage, command service, and playback actor are real. This
@@ -308,6 +360,11 @@ The expanded browsing fixture is `bun run test/web/preview.ts` on port 5188 afte
 `bun run build`; it includes simulated OAuth, music browsing, private/server
 playlists, sports artwork, history, and attribution. An optional port argument
 (for example, `bun run test/web/preview.ts 5189`) isolates concurrent worktrees.
+The preview's room has a Listening and a Watching player with queues, and responses
+carry `x-trace-id`. Two preview-only switches change state an open page then
+receives over the room stream: `/preview/voice?in=0` (or `1`) leaves or rejoins the
+voice channel, and `/preview/listen?enabled=0` (or `1`) turns Listen off so an
+already-rendered Listen button shows the server's `listen_disabled` error.
 
 The room endpoints are `GET /api/room` (the viewer's location from Discord voice state,
 the shared servers, one player per occupied slot, capacity — including `numbered`, false for

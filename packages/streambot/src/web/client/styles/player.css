@@ -1,0 +1,260 @@
+.rail {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.rail-note {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--tint);
+  font-size: var(--text-sm);
+}
+
+/* A player card. The top edge carries its destination color. */
+.player {
+  --tone: var(--border);
+  --tone-soft: var(--tint);
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-block-start: 3px solid var(--tone);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.player-listen {
+  --tone: var(--listen);
+  --tone-soft: var(--listen-soft);
+}
+
+.player-watch {
+  --tone: var(--watch);
+  --tone-soft: var(--watch-soft);
+}
+
+.player-empty {
+  gap: var(--space-2);
+}
+
+.player-heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.player-listen .player-heading,
+.player-watch .player-heading {
+  color: var(--tone);
+}
+
+.player-place {
+  overflow: hidden;
+  color: var(--muted);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-idle {
+  color: var(--muted);
+}
+
+.now {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.now-text {
+  display: grid;
+  min-inline-size: 0;
+  font-size: var(--text-sm);
+}
+
+.now > .artwork {
+  inline-size: 40px;
+  block-size: 40px;
+}
+
+.now-title {
+  overflow: hidden;
+  font-size: var(--text-md);
+  font-weight: 650;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.now-detail {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.station {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--tone-soft);
+  font-size: var(--text-sm);
+}
+
+.station-status {
+  flex-basis: 100%;
+}
+
+.timeline {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.timeline-status {
+  grid-column: 1 / -1;
+}
+
+.timeline-live {
+  color: var(--error);
+  font-weight: 650;
+}
+
+/* One row: transport, volume, repeat, subtitles. */
+.controls {
+  display: grid;
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.volume {
+  display: flex;
+  flex: 1 1 5rem;
+  align-items: center;
+  min-inline-size: 5rem;
+  padding-inline: var(--space-2);
+}
+
+.btn-mode {
+  inline-size: auto;
+  min-inline-size: var(--control);
+  padding-inline: var(--space-2);
+}
+
+.btn-mark {
+  font-size: var(--text-xs);
+}
+
+.confirm {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+/* Native range input, recolored to its card's destination (see the slider guide). */
+.slider {
+  --track: var(--border);
+  inline-size: 100%;
+  block-size: 24px;
+  margin: 0;
+  background: transparent;
+  accent-color: var(--tone);
+  cursor: pointer;
+}
+
+/* Queue */
+.queue {
+  display: grid;
+  gap: var(--space-1);
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}
+
+.queue-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.queue-heading {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.queue-empty {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* About three entries show; a longer queue scrolls inside its own card. */
+.queue-items {
+  display: grid;
+  max-block-size: 7.6rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.queue-item {
+  display: grid;
+  grid-template-columns: 1.5em minmax(0, 1fr) auto;
+  grid-template-areas:
+    "number text actions"
+    ". status status";
+  align-items: center;
+  gap: 0 var(--space-2);
+  padding: 2px 0;
+  font-size: var(--text-sm);
+}
+
+.queue-item[aria-busy="true"] {
+  opacity: 0.6;
+}
+
+.queue-number {
+  grid-area: number;
+  color: var(--muted);
+  text-align: end;
+}
+
+.queue-text {
+  grid-area: text;
+  display: grid;
+  min-inline-size: 0;
+}
+
+.queue-title,
+.queue-detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-detail {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.queue-actions {
+  grid-area: actions;
+  display: flex;
+}
+
+.queue-status {
+  grid-area: status;
+}

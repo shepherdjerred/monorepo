@@ -140,6 +140,50 @@ They expire and are bound to the viewer, source, and revision.
 Choosing one restarts playback at the current position.
 The browser receives opaque references rather than local paths or ffmpeg inputs.
 
+## The page is one search box and a rail
+
+The remote is organized around what the viewer wants to do, not around which backend answers.
+A page organized by provider makes the viewer know where something lives before they can find it.
+The [browser client](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/web/client)
+has one search input in the header. It asks every result group at once (library, songs, albums and artists, videos, live games, history), each as its own request, so a slow or failing provider delays only its own group.
+A pasted link becomes one row. An empty search is the home page: recent plays, today's games, playlists, and library posters.
+
+Every row is drawn by one component, and its buttons are exactly the actions the server listed for it.
+The server already knows what each viewer may do with each item, so the page never guesses and never offers a button that will be refused.
+A song offers Listen; a film or a live game offers Watch; a video or a link offers both side by side, with no default.
+When that destination is already playing, the same button queues, and the row says where the item went.
+
+The right-hand rail is the room as the server sees it: one card per player, each with its own controls and queue.
+It renders the latest snapshot from the room stream and nothing else, so two open tabs cannot disagree.
+Between snapshots the playback position advances locally from the sample time the server sent, which keeps the clock moving without a request per second.
+
+## Feedback stays beside the control
+
+A busy flag shared by the whole page turns one slow request into a frozen remote, and a toast far from the button does not say which click failed.
+Each control in the client therefore owns its pending state and reports beside itself.
+A failure names its specific cause, offers Retry only when trying again can help, and shows a short reference: the first eight characters of the request's trace id.
+That reference is the link between what the viewer saw and the trace an operator opens, without the viewer sending anything identifying.
+Destructive controls such as Stop and Clear ask once more in place before acting.
+
+The previous client is served unchanged at `/classic`.
+Both are pages of one build, and
+[the asset router](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/assets.ts)
+decides which page owns a path, for the server and the development server alike.
+
+## The browser reports shapes, not content
+
+Everything the remote displays is personal: titles, searches, Discord names and channels.
+So the browser reports only the shape of what happened.
+A page view is the route pattern, such as `/album/:id`, never the path or the query.
+A chosen result is its kind, a rank bucket, and which button was pressed; a shown error is its code and where it appeared.
+The client's `telemetry/` module in the
+[browser client](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/web/client)
+builds those payloads from closed vocabularies and rewrites every URL PostHog would record to its route pattern, and a unit test runs them against identifying fixture text.
+Nothing loads until the server hands the page its random analytics id, and nothing loads at all under Do Not Track or Global Privacy Control.
+Session replay masks every text node and every non-layout attribute, because the labels name the item; see [PostHog](/explanation/homelab/posthog/) for the shared privacy rules.
+
+Browser errors go to the same Bugsink project as the server, tagged with the last request reference, so one reference finds both the trace and the error.
+
 ## Discovery shares media metadata
 
 Library, queue, and player images use TMDB posters with the existing server-side credential.
@@ -148,7 +192,7 @@ does not delay browsing or playback. YouTube search results carry their provider
 Only supported public image CDNs can reach the browser; local paths and credentials stay on the server.
 TMDB attribution appears in the remote's artwork credits.
 
-The Live sports tab combines StreamEast, TVSportsLive, and official LoL Esports listings.
+The Live page combines StreamEast, TVSportsLive, and official LoL Esports listings.
 Its event selections are short-lived and bound to the viewer.
 Upcoming games remain visible but cannot be queued. Live selections enter the shared
 playback service, which checks the sports gate and resolves the provider's stream.
@@ -215,7 +259,7 @@ Library, video, live and history groups are separate requests, so they keep answ
 
 The remaining facts about the music surface are unchanged.
 The [web recording picker](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/music.ts)
-still lets listeners correct a MusicBrainz or Spotify song's video.
+still lets a playlist's owner correct a MusicBrainz or Spotify song's video.
 Saved sources retain catalog identity alongside the selected video, so [voice recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/voice-recovery.ts)
 can resolve a fresh audio URL. The [artwork resolver](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/artwork.ts)
 keeps album artwork with saved playlists, queues, recovery, and player cards.

@@ -74,6 +74,11 @@
       "key": "wiki",
       "hostname": "wiki.sjer.red",
       "sessionReplay": true
+    },
+    {
+      "key": "streambot",
+      "hostname": "streambot.sjer.red",
+      "sessionReplay": true
     }
   ]
 }

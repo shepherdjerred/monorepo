@@ -84,6 +84,7 @@ COPY --exclude=packages/streambot/test/fixtures/voice-corpus \
   packages/discord-video-stream \
   packages/voice-assistant \
   packages/llm-models \
+  packages/bugsink-config \
   ./
 RUN cd packages/discord-stream-lifecycle && bun run build \
  && cd /app/packages/discord-video-stream && bun run build \

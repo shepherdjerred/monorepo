@@ -50,7 +50,12 @@ import {
   recordSignIn,
   runObservedCommand,
 } from "./usage/observation.ts";
-import { ARTWORK_HOSTS } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
+import { contentSecurityPolicy } from "./http/csp.ts";
+import {
+  browserBugsink,
+  type BugsinkReporting,
+} from "@shepherdjerred/streambot/observability/bugsink.ts";
+import { ANALYTICS_SITE } from "@shepherdjerred/streambot/web/shared/analytics-site.ts";
 import {
   webFailureDiagnostic,
   webFailureEndpoint,
@@ -76,6 +81,11 @@ async function readCommand(request: Request) {
 
 export function createWebHandler(deps: {
   bootstrap: WebBootstrap;
+  /**
+   * The server's own Bugsink reporting. Browsers get it (and the CSP allows its origin) only when
+   * its DSN is on the public Bugsink host; see `browserBugsink`.
+   */
+  bugsink: BugsinkReporting | null;
   store: WebSessionStore;
   playback: WebPlayback;
   applicationId: () => string;
@@ -97,6 +107,12 @@ export function createWebHandler(deps: {
       (await deps.plexPostersEnabled?.(guildId, userId)) ?? false,
   );
   const search = new WebSearch(deps.playback, music);
+  const bugsink = browserBugsink(deps.bugsink);
+  const csp = contentSecurityPolicy({
+    analytics:
+      new URL(deps.bootstrap.publicOrigin).host === ANALYTICS_SITE.hostname,
+    bugsinkDsn: bugsink?.dsn ?? null,
+  });
   const requests = new Map<
     string,
     { count: number; artwork: number; search: number; resets: number }
@@ -126,7 +142,8 @@ export function createWebHandler(deps: {
         guilds: deps.playback.deps.bot.webGuilds(session.identity.guildIds),
         csrfToken: auth.csrfToken(request, session),
         analyticsId:
-          usageAnalytics().analyticsId(session.identity.userId) ?? null,
+          usageAnalytics().browserAnalyticsId(session.identity.userId) ?? null,
+        bugsink,
       });
     }
     const roomResponse = await room.handle(request, url, session, () =>
@@ -392,12 +409,7 @@ export function createWebHandler(deps: {
     }
     response.headers.set("x-content-type-options", "nosniff");
     response.headers.set("referrer-policy", "same-origin");
-    response.headers.set(
-      "content-security-policy",
-      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' " +
-        ARTWORK_HOSTS.map((host) => "https://" + host).join(" ") +
-        "; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-    );
+    response.headers.set("content-security-policy", csp);
     if (
       new URL(request.url).pathname.startsWith("/api/") &&
       !response.headers.has("cache-control")

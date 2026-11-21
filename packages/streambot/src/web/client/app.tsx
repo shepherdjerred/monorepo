@@ -1,338 +1,156 @@
-import { useRemote } from "./use-remote.ts";
-import { MediaList } from "./media-list.tsx";
-import { Player, Queue } from "./player.tsx";
-import { useEffect, useRef } from "react";
-import { Link, Navigate, useLocation } from "react-router";
-import { usePageNavigation } from "./page-navigation.ts";
+import { useEffect, useState } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router";
+import { MeSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { FailureNotice } from "./failure-notice.tsx";
+import { Header, Legend } from "./header.tsx";
+import { Home } from "./pages/home.tsx";
+import { HistoryPage } from "./history/history-page.tsx";
+import { LibraryPage } from "./library/library-page.tsx";
+import { LivePage } from "./live/live-page.tsx";
+import { BrowsePage } from "./music/browse-page.tsx";
+import { PlaylistPage } from "./playlists/playlist-page.tsx";
+import { PlaylistsPage } from "./playlists/playlists-page.tsx";
+import { Rail } from "./room/rail.tsx";
+import { RemoteProvider, type Me } from "./remote.tsx";
+import { Results } from "./search/results.tsx";
+import { useQuery } from "./search/search-box.tsx";
+import { useLoad } from "./use-load.ts";
+import { useTelemetry } from "./telemetry/track.ts";
+import { useRoom } from "./room/use-room.ts";
+import "./styles/shell.css";
 
-type Remote = ReturnType<typeof useRemote>;
+const TITLES: Readonly<Record<string, string>> = {
+  "/library": "Library",
+  "/playlists": "Playlists",
+  "/live": "Live games",
+  "/history": "History",
+  // Detail routes name their kind; the item's own title stays out of the tab title.
+  "/playlists/": "Playlist",
+  "/album/": "Album",
+  "/artist/": "Artist",
+};
 
-export function App() {
-  const remote = useRemote();
-  const { me, snapshot } = remote;
-  const location = useLocation();
-  usePageNavigation();
-  if (location.pathname === "/")
-    return <Navigate replace to={"/plex" + location.search} />;
-  return (
-    <div className="app-shell">
-      <header className="masthead">
-        <Link className="brand" to="/plex" aria-label="Streambot home">
-          <span className="brand-icon" aria-hidden="true">
-            ▷
-          </span>
-          <span>
-            streambot<span className="brand-dot">.</span>
-          </span>
-        </Link>
-        <span className="masthead-tag">GOOD MEDIA. GOOD COMPANY.</span>
-        {me !== null && (
-          <div className="account">
-            <span>{me.user.username}</span>
-            <button
-              onClick={() => {
-                void remote.logout();
-              }}
-            >
-              Sign out
-            </button>
-          </div>
-        )}
-      </header>
-      {remote.loading ? (
-        <main className="loading-screen">
-          <p>Connecting to Streambot…</p>
-        </main>
-      ) : me === null ? (
-        <main className="welcome panel">
-          <div className="welcome-copy">
-            <p className="eyebrow">YOUR DISCORD MEDIA REMOTE</p>
-            <h1>
-              Press play.
-              <br />
-              Bring everyone.
-            </h1>
-            <p>
-              Movies from your library. Music from across the web.
-              <br />
-              One little remote for your whole voice channel.
-            </p>
-            <a
-              className="primary sign-in"
-              href={
-                "/api/auth/discord/start?" +
-                new URLSearchParams({
-                  returnTo: location.pathname + location.search + location.hash,
-                }).toString()
-              }
-            >
-              Continue with Discord <span aria-hidden="true">↗</span>
-            </a>
-            <p className="welcome-note">
-              Join your voice channel, pick a title, and settle in.
-            </p>
-          </div>
-          <div className="welcome-art" aria-hidden="true">
-            <div className="art-ring ring-one"></div>
-            <div className="art-ring ring-two"></div>
-            <div className="art-play">▶</div>
-            <span className="art-caption">PLAY SOMETHING TOGETHER</span>
-          </div>
-        </main>
-      ) : (
-        <>
-          <ContextBar remote={remote} />
-          {me.guilds.length === 0 ? (
-            <div className="panel empty">
-              <h2>No shared servers</h2>
-              <p>
-                Streambot needs to be installed in a server you belong to. Sign
-                in again after joining a new server.
-              </p>
-            </div>
-          ) : (
-            <main className="main-grid">
-              <MediaList
-                csrfToken={me.csrfToken}
-                snapshot={snapshot}
-                guildId={remote.guildId}
-                canPlay={
-                  snapshot?.channel !== undefined && snapshot.channel !== null
-                }
-                busy={remote.busy}
-                advanced={snapshot?.advancedControls === true}
-                sportsEnabled={snapshot?.sportsEnabled === true}
-                historyEnabled={snapshot?.historyEnabled}
-                actionLabel={(selection, preferredChannel) => {
-                  if (snapshot === null) return "Play";
-                  if (
-                    preferredChannel === undefined &&
-                    snapshot.selectionMode === "auto" &&
-                    (selection.kind === "candidate" ||
-                      selection.kind === "url" ||
-                      selection.kind === "history")
-                  )
-                    return "Play";
-                  const number =
-                    snapshot.selectionMode === "auto"
-                      ? (preferredChannel ?? 2)
-                      : snapshot.selectedPlaybackChannel;
-                  const occupied =
-                    number === null
-                      ? snapshot.current !== null || snapshot.queue.length > 0
-                      : snapshot.playbackChannels.find(
-                          (slot) => slot.number === number,
-                        )?.occupied === true;
-                  return occupied ? "Queue" : "Play";
-                }}
-                play={(selection, placement) => {
-                  void remote.send({ action: "play", selection, placement });
-                }}
-                send={(action) => {
-                  void remote.send(action);
-                }}
-              />
-              {snapshot !== null && (
-                <Queue
-                  guildId={remote.guildId}
-                  csrfToken={me.csrfToken}
-                  snapshot={snapshot}
-                  busy={remote.busy}
-                  send={(action) => {
-                    void remote.send(action);
-                  }}
-                  subtitles={() => {
-                    void remote.openSubtitles();
-                  }}
-                />
-              )}
-            </main>
-          )}
-          {snapshot !== null && (
-            <Player
-              snapshot={snapshot}
-              busy={remote.busy}
-              send={(action) => {
-                void remote.send(action);
-              }}
-              subtitles={() => {
-                void remote.openSubtitles();
-              }}
-            />
-          )}
-        </>
-      )}
-      <Feedback remote={remote} />
-      {remote.tracks !== null && <SubtitlePicker remote={remote} />}
-      <footer className="site-footer">
-        <span>STREAMBOT</span>
-        <span>Made for the shared screen.</span>
-        <details className="credits">
-          <summary>Artwork credits</summary>
-          <div>
-            <a
-              href="https://www.themoviedb.org"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <img src="/tmdb.svg" alt="TMDB" width="92" height="40" />
-            </a>
-            <p>
-              This product uses the TMDB API but is not endorsed or certified by
-              TMDB.
-            </p>
-            <p>Video thumbnails are provided by YouTube.</p>
-          </div>
-        </details>
-        <span className="footer-mark">↗</span>
-      </footer>
-    </div>
-  );
+/** The title key for a path: the path itself, or its first segment for a detail route. */
+function titleKey(pathname: string): string {
+  const slash = pathname.indexOf("/", 1);
+  return slash === -1 ? pathname : pathname.slice(0, slash + 1);
 }
 
-function ContextBar({ remote }: { remote: Remote }) {
-  const channel = remote.snapshot?.channel;
-  return (
-    <section className="context-bar" aria-label="Discord playback destination">
-      <div className="context-field">
-        <label htmlFor="streambot-server-select">Server</label>
-        <select
-          id="streambot-server-select"
-          name="guild"
-          value={remote.guildId}
-          onChange={(event) => {
-            remote.setGuildId(event.target.value);
-          }}
-        >
-          {remote.me?.guilds.map((guild) => (
-            <option key={guild.id} value={guild.id}>
-              {guild.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {remote.snapshot?.playbackChannel != null && (
-        <div className="context-field">
-          <label htmlFor="streambot-channel-select">Streambot channel</label>
-          <select
-            id="streambot-channel-select"
-            name="channel"
-            value={
-              remote.snapshot.selectionMode === "auto"
-                ? "auto"
-                : (remote.snapshot.selectedPlaybackChannel ??
-                  remote.snapshot.playbackChannel)
-            }
-            disabled={remote.busy}
-            onChange={(event) => {
-              void remote.send({
-                action: "select",
-                number:
-                  event.target.value === "auto"
-                    ? null
-                    : Number(event.target.value),
-              });
-            }}
-          >
-            {remote.snapshot.automaticRoutingEnabled && (
-              <option value="auto">
-                {`Auto · viewing ${String(remote.snapshot.playbackChannel)} (music 1, video 2)`}
-              </option>
-            )}
-            {remote.snapshot.playbackChannels.map((slot) => (
-              <option key={slot.number} value={slot.number}>
-                {`${slot.label} · ${slot.occupied ? "Playing" : "Idle"}`}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-      <div className="channel-status">
-        <span
-          aria-hidden="true"
-          className={
-            channel === undefined || channel === null
-              ? "status-dot inactive"
-              : "status-dot"
-          }
-        ></span>
-        {channel?.name ?? "Join a Discord voice channel to play"}
-      </div>
-      <span className="context-note">Playback stays in Discord</span>
-    </section>
-  );
-}
-
-function Feedback({ remote }: { remote: Remote }) {
-  if (remote.error === "" && remote.notice === "" && !remote.loadingPlaylist)
-    return null;
-  return (
-    <div
-      className={remote.error === "" ? "toast" : "toast toast-error"}
-      role={remote.error === "" ? "status" : "alert"}
-    >
-      <span>
-        {remote.error === ""
-          ? remote.loadingPlaylist
-            ? (remote.queueLoad?.message ?? "Loading playlist…")
-            : remote.notice
-          : remote.error}
-      </span>
-      {remote.loadingPlaylist && (
-        <button
-          onClick={() => {
-            void remote.cancelLoad();
-          }}
-        >
-          Cancel loading
-        </button>
-      )}
-      <button aria-label="Dismiss notification" onClick={remote.clearFeedback}>
-        ×
-      </button>
-    </div>
-  );
-}
-
-function SubtitlePicker({ remote }: { remote: Remote }) {
-  const dialog = useRef<HTMLDialogElement>(null);
+function usePageTitle(query: string) {
+  const { pathname } = useLocation();
   useEffect(() => {
-    dialog.current?.showModal();
-  }, []);
+    const name =
+      query === ""
+        ? (TITLES[titleKey(pathname)] ?? "Home")
+        : "Search: " + query;
+    document.title = name + " · Streambot";
+  }, [pathname, query]);
+}
+
+function SignIn() {
+  const { pathname } = useLocation();
+  // Only the path: the query can hold search text, and `returnTo` travels to Discord in the
+  // OAuth `state`.
+  const href =
+    "/api/auth/discord/start?" +
+    new URLSearchParams({ returnTo: pathname }).toString();
   return (
-    <dialog
-      ref={dialog}
-      className="subtitle-dialog panel"
-      aria-labelledby="subtitle-heading"
-      onClose={() => {
-        remote.setTracks(null);
-      }}
-    >
-      <div className="queue-heading">
-        <h2 id="subtitle-heading">Choose subtitles</h2>
-        <button
-          aria-label="Close subtitle picker"
-          onClick={() => {
-            dialog.current?.close();
-          }}
-        >
-          ×
-        </button>
-      </div>
-      <p className="muted">Playback restarts at the current position.</p>
-      {remote.tracks?.tracks.map((track) => (
-        <button
-          className="track-option"
-          key={track.token}
-          disabled={remote.busy}
-          onClick={() => {
-            void remote.send({ action: "subtitles", token: track.token });
-          }}
-        >
-          {track.label}
-          <span aria-hidden="true">→</span>
-        </button>
-      ))}
-    </dialog>
+    <main className="welcome">
+      <h1 className="page-heading">Streambot</h1>
+      <p>
+        Play music and video in your Discord voice channel. Listen puts audio in
+        the channel for everyone; Watch starts a stream people open.
+      </p>
+      <a className="btn btn-watch" href={href}>
+        Sign in with Discord
+      </a>
+    </main>
   );
+}
+
+function SearchOrHome() {
+  const [query] = useQuery();
+  return query.trim() === "" ? <Home /> : <Results query={query} />;
+}
+
+function Remote(props: { me: Me }) {
+  const [guildHint, setGuildHint] = useState<string | null>(null);
+  const room = useRoom(guildHint, true);
+  const [query] = useQuery();
+  usePageTitle(query);
+  return (
+    <RemoteProvider
+      me={props.me}
+      view={room.view}
+      connection={room.connection}
+      chooseGuild={setGuildHint}
+      reconnect={room.reconnect}
+    >
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
+      <Header />
+      <div className="layout">
+        <main id="main" className="content" tabIndex={-1}>
+          <Legend />
+          <Routes>
+            <Route path="/" element={<SearchOrHome />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/playlists" element={<PlaylistsPage />} />
+            <Route path="/playlists/:id" element={<PlaylistPage />} />
+            <Route path="/live" element={<LivePage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/album/:id" element={<BrowsePage kind="album" />} />
+            <Route path="/artist/:id" element={<BrowsePage kind="artist" />} />
+            <Route path="*" element={<Navigate replace to="/" />} />
+          </Routes>
+        </main>
+        <Rail />
+      </div>
+      <footer className="footer">
+        <a href="/classic">Classic remote</a>
+        <span className="footer-credit">
+          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
+            <img src="/tmdb.svg" alt="TMDB" width="46" height="20" />
+          </a>
+          This product uses the TMDB API but is not endorsed or certified by
+          TMDB. Video thumbnails are provided by YouTube.
+        </span>
+      </footer>
+    </RemoteProvider>
+  );
+}
+
+/** Sign-in gate, then the remote: header, the current page, and the now-playing rail. */
+export function App() {
+  const me = useLoad("/api/me", MeSchema);
+  useTelemetry(me.state);
+  if (me.state.status === "loading")
+    return (
+      <main className="welcome" aria-busy="true">
+        <p className="muted">Connecting to Streambot…</p>
+      </main>
+    );
+  if (me.state.status === "failed")
+    return me.state.failure.status === 401 ? (
+      <SignIn />
+    ) : (
+      <main className="welcome">
+        <h1 className="page-heading">Streambot</h1>
+        <p className="status">
+          <FailureNotice failure={me.state.failure} onRetry={me.retry} />
+        </p>
+      </main>
+    );
+  if (me.state.data.guilds.length === 0)
+    return (
+      <main className="welcome">
+        <h1 className="page-heading">No shared servers</h1>
+        <p>
+          Streambot needs to be in a Discord server you belong to. Sign in again
+          after it joins one.
+        </p>
+      </main>
+    );
+  return <Remote me={me.state.data} />;
 }

@@ -1,0 +1,93 @@
+/* Filters and paging shared by the Library, Live, and History pages. */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  padding-inline: var(--space-2);
+}
+
+.filter-text {
+  display: flex;
+  flex: 1 1 16rem;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.filter-field {
+  display: grid;
+  flex: 1;
+  gap: var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.filter-field input,
+.filter-field select {
+  min-block-size: var(--control);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--text);
+}
+
+.filter-bar > .filter-field {
+  flex: 0 1 12rem;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-inline: var(--space-2);
+}
+
+.pager-off {
+  padding: 0 var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  opacity: 0.5;
+}
+
+.section-note {
+  padding-inline: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.album-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-inline: var(--space-2);
+}
+
+/* Album and artist art is square and fixed in size; the text column takes the rest. */
+.album-head > .artwork {
+  flex: none;
+  inline-size: 144px;
+  block-size: 144px;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.album-head-text {
+  display: grid;
+  flex: 1;
+  justify-items: start;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+/* The heading block stacks; the row's named areas would otherwise add implicit columns. */
+.album-head-text .section-head {
+  padding-inline: 0;
+}
+
+.album-head-text .row-actions,
+.album-head-text .row-status {
+  grid-area: auto;
+  justify-self: start;
+}

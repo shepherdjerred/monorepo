@@ -98,6 +98,11 @@ export type UsageAnalytics = {
   capture: (userId: string, event: UsageEvent) => void;
   /** The pseudonymous id for a Discord user, minted on first use; `undefined` when it cannot be. */
   analyticsId: (userId: string) => string | undefined;
+  /**
+   * The id the browser may identify with: the same pseudonymous id, but only while usage capture is
+   * enabled and has a destination. `undefined` tells the web client to load no tracker at all.
+   */
+  browserAnalyticsId: (userId: string) => string | undefined;
   shutdown: () => Promise<void>;
 };
 
@@ -112,14 +117,20 @@ export type UsageAnalyticsOptions = {
 export function createUsageAnalytics(
   options: UsageAnalyticsOptions,
 ): UsageAnalytics {
+  const analyticsId = (userId: string): string | undefined => {
+    try {
+      return options.identities.idFor(userId);
+    } catch {
+      log.warn("analytics identity lookup failed");
+      return;
+    }
+  };
   return {
-    analyticsId(userId) {
-      try {
-        return options.identities.idFor(userId);
-      } catch {
-        log.warn("analytics identity lookup failed");
-        return;
-      }
+    analyticsId,
+    browserAnalyticsId(userId) {
+      return options.transport === undefined || !options.enabled()
+        ? undefined
+        : analyticsId(userId);
     },
     capture(userId, event) {
       try {
