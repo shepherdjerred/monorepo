@@ -2180,6 +2180,12 @@ provenance, timing and Simplified Chinese checks still apply. Unresolved importe
 policy semantics remain protected even when a provider supports the individual
 flags.
 
+For SubHD, save the PinchTab base URL and token with the persistent browser
+`profileId` in the owner provider API. Media reuses the running instance for
+that profile or starts it when needed. Existing `instanceId` credentials can
+still target an operator-managed instance. Browser challenges require human
+interaction.
+
 An existing owned but quality-unverified sidecar does not satisfy readiness and
 is never silently overwritten by a newly accepted candidate. A canonical-path
 collision ends the install with `subtitle_path_requires_owner_review`. Owners can
