@@ -1,0 +1,110 @@
+@layer components {
+  /* Rows of a name and its score. */
+  .scores {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    max-width: 36rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .scoresLegend {
+    padding: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .scoresHelp {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .scoresHelp code {
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+  }
+  .scoresEmpty {
+    margin: 0;
+    padding: var(--space-3);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .scoreHead,
+  .scoreRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 7.5rem 36px;
+    gap: var(--space-2);
+    align-items: start;
+  }
+  .scoreHead {
+    margin-top: var(--space-1);
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .scoreList {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .scoreRow > button {
+    margin-top: 2px;
+  }
+
+  /* A fieldset that only groups, so that it can disable what it holds. */
+  .plain {
+    display: grid;
+    gap: var(--space-5);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .advanced {
+    color: inherit;
+    font-size: inherit;
+  }
+  .advanced > summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    color: var(--text-accent);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    gap: var(--space-1);
+    list-style: none;
+  }
+  .advanced > summary::-webkit-details-marker {
+    display: none;
+  }
+  .advanced > summary svg {
+    width: 16px;
+    height: 16px;
+    transition: rotate var(--dur-2) var(--ease-out);
+  }
+  .advanced[open] > summary svg {
+    rotate: 90deg;
+  }
+  .advancedBody {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  @media (pointer: coarse) {
+    .scoreHead,
+    .scoreRow {
+      grid-template-columns: minmax(0, 1fr) 6.5rem 44px;
+    }
+    .advanced > summary {
+      min-height: 44px;
+    }
+  }
+}

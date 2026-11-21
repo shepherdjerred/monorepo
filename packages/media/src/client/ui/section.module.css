@@ -22,6 +22,12 @@
     font-size: var(--text-xl);
     letter-spacing: -0.03em;
   }
+  /* A heading for one part of a section, such as a form within it. */
+  .section > h3 {
+    margin: var(--space-2) 0 calc(-1 * var(--space-2));
+    font-size: var(--text-lg);
+    letter-spacing: -0.02em;
+  }
   .description {
     max-width: 44rem;
     color: var(--text-muted);
@@ -31,6 +37,7 @@
     margin-bottom: 0;
   }
   .description a,
+  .panel > p a,
   .empty a {
     color: var(--text-accent);
     font-weight: 500;
@@ -94,6 +101,11 @@
   }
   .panel {
     padding: var(--space-2) 0 var(--space-5);
+  }
+  .panel > p {
+    max-width: 44rem;
+    margin: 0;
+    color: var(--text-muted);
   }
 
   .skeleton {

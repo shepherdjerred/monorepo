@@ -59,6 +59,11 @@
   .danger:hover:not(:disabled) {
     background: color-mix(in srgb, var(--danger) 14%, var(--danger-soft));
   }
+  .iconOnly {
+    width: 36px;
+    min-height: 36px;
+    padding: 0;
+  }
 
   .row {
     display: flex;
@@ -70,6 +75,9 @@
   @media (pointer: coarse) {
     .button {
       min-height: 44px;
+    }
+    .iconOnly {
+      width: 44px;
     }
   }
 }

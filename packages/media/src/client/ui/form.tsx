@@ -129,6 +129,7 @@ export function Form({
   validate,
   onSubmit,
   onEdit,
+  dirty,
 }: {
   children: ReactNode;
   /** The id of the heading that names this form. */
@@ -138,6 +139,8 @@ export function Form({
   onSubmit: (form: HTMLFormElement) => void;
   /** Called on the first edit after a submit. */
   onEdit?: () => void;
+  /** For a form that keeps its own state: whether it differs from what was loaded. */
+  dirty?: boolean;
 }) {
   const form = useRef<HTMLFormElement>(null);
   const touched = useRef(new Set<string>());
@@ -224,7 +227,7 @@ export function Form({
   }
 
   return (
-    <FormContext value={{ errors, edited, clear }}>
+    <FormContext value={{ errors, edited: dirty ?? edited, clear }}>
       <form
         className={cx("form")}
         ref={form}
@@ -291,6 +294,7 @@ export function FormFooter({
   pending,
   saved,
   error,
+  note,
 }: {
   submitLabel: string;
   pendingLabel: string;
@@ -299,6 +303,8 @@ export function FormFooter({
   saved?: ReactNode;
   /** Why the last attempt was refused. */
   error?: Error | null;
+  /** What submitting will do, in a line under the button. */
+  note?: ReactNode;
 }) {
   const { edited } = useContext(FormContext);
   // A change that was refused is still unsaved.
@@ -328,6 +334,7 @@ export function FormFooter({
           )}
         </p>
       </div>
+      {note !== undefined && <p className={cx("footerNote")}>{note}</p>}
     </div>
   );
 }
