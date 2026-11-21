@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-14T23:30:53.873Z",
-  "server": "https://argocd.tailnet-1a49.ts.net",
-  "argocdVersion": "v3.4.5",
+  "generatedAt": "2026-11-21T12:52:57.155Z",
+  "server": "https://argocd.sjer.red",
+  "argocdVersion": "v3.6.2",
   "cases": [
     {
       "name": "resource-absent-from-application",
