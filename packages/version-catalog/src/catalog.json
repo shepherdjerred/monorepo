@@ -256,7 +256,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2026.10.1-java25@sha256:d12aed7e35981dfe259b60fbfee77d23a19b5898a7a31dca298d18b47b7b5776",
+      "value": "2026.11.0-java25@sha256:8d5080d8dcd0a2629c2e4f248678373a337a40537ad6ef2857c7dbcda6e3eadd",
       "notes": [
         "java25 variant: Paper 26.2 (pinned below) requires Java 25+; the java21",
         "image crashes every server at startup (\"Minecraft 26.1 and newer requires",
@@ -276,7 +276,7 @@
         "versioning": "docker",
         "packageName": "itzg/minecraft-server"
       },
-      "value": "2026.9.1-java8@sha256:aea37afb200728b004c41cbdc1b79e088955f32d22f5dac7f44cd94e5eaac0fe",
+      "value": "2026.11.0-java8@sha256:91c8edad666c51ce0148022931dac327c973e6d8084cddb0e9090e2c60622f9c",
       "notes": [
         "Java 8 variant for the Forge 1.12.2 RLCraft server; keep separate from",
         "the Java 25 Paper image used by the other Minecraft servers."
@@ -353,7 +353,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.7.0@sha256:6660787a99b2e58203539583663c973b48979fc00ff2cb78dc0ea17429e1f6ef"
+      "value": "3.0.2@sha256:45117ba8439e2337a92ffe38a451a4dafc0be771754d05d88cdf102419d09646"
     },
     {
       "name": "qdm12/gluetun",
@@ -636,7 +636,7 @@
         "registryUrl": "https://itzg.github.io/minecraft-server-charts",
         "versioning": "semver"
       },
-      "value": "5.3.1",
+      "value": "5.4.0",
       "component": true
     },
     {
@@ -662,7 +662,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.55.0@sha256:0e89cb4e8e1e73f9ccec4211fab5c6b8336bd2768b82b7cca25c6290ed5a2f4a",
+      "value": "1.56.5@sha256:e2f002006d617b2df898c9beec963baa212c685aae1df83de5a13ebf5b5966c9",
       "component": true
     },
     {
@@ -947,7 +947,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.14.5@sha256:58f0aeeb78d9e5de6ff0fe989fcfaa7ca3df467769780e378a87af8d24806b48",
+      "value": "3.0.3@sha256:2ad6692bf9c5eed7a3c12f606820abd0af3b2b0f081c7d3bf40f2a015fe27a2f",
       "notes": [
         "Self-hosted Turborepo remote cache backing the workspace task graph."
       ]
