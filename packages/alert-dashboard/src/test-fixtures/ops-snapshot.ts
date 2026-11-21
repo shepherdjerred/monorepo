@@ -194,7 +194,27 @@ function signals(now: Temporal.Instant): SignalInput[] {
       title: "ZFS pool tank is 71% full",
     },
     ...quotaSignals(now),
+    ...toolUsageSignals(),
   ];
+}
+
+/** Mac-side usage priced at API rates, one signal per tool. */
+function toolUsageSignals(): SignalInput[] {
+  const tools = [
+    ["codex", 48.5],
+    ["claude-code", 212.4],
+    ["cursor", 9.75],
+  ] as const;
+  return tools.map(([source, monthToDateUsd]) => ({
+    id: `ai:tool-cost:${source}`,
+    source: "ai",
+    section: "ai",
+    kind: "tool-usage",
+    severity: "ok",
+    needsMe: false,
+    title: `${source}: $${monthToDateUsd.toFixed(2)} API-equivalent this month`,
+    attributes: { source, monthToDateUsd },
+  }));
 }
 
 function quotaSignals(now: Temporal.Instant): SignalInput[] {

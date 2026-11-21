@@ -348,7 +348,7 @@ test("AI page shows quota windows, spend against budget, and charts", async ({
   await expect(page).toHaveTitle("AI · Hub");
   await expect(page.getByRole("meter")).toHaveCount(5);
   await expect(
-    page.getByRole("meter", { name: "claude 7d quota used" }),
+    page.getByRole("meter", { name: "Claude 7d Weekly quota used" }),
   ).toHaveAttribute("aria-valuenow", "84");
   await expect(page.getByText("$86.40")).toBeVisible();
   await expect(page.getByText(/Projected month end \$112\.10/u)).toBeVisible();
@@ -362,6 +362,79 @@ test("AI page shows quota windows, spend against budget, and charts", async ({
   );
   await page.getByRole("radio", { name: "7d" }).click();
   await expect(page).toHaveURL(/range=7d/u);
+});
+
+test("AI page explains its status, groups quota by provider and ranks tools", async ({
+  page,
+}) => {
+  await page.goto("/ai");
+  // The verdict sits with the section summary that explains it.
+  const status = page.locator(".page-status");
+  await expect(status).toContainText("Warning");
+  await expect(status).toContainText("1 issue · Metrics need attention");
+
+  const quota = page.getByRole("table", { name: /^Subscription quota/u });
+  await expect(quota.getByRole("columnheader")).toHaveText([
+    "Provider",
+    "Window",
+    "Used",
+    "Resets",
+  ]);
+  // One row group per provider, after the one for the column headings.
+  await expect(quota.locator("tbody")).toHaveCount(2);
+  await expect(quota.getByRole("rowgroup")).toHaveCount(3);
+  for (const provider of ["Claude", "Codex"])
+    await expect(
+      quota.getByRole("rowheader", { name: provider, exact: true }),
+    ).toHaveAttribute("rowspan", "2");
+  await expect(quota.locator(".quota-label")).toHaveText([
+    "5h · Session",
+    "7d · Weekly",
+    "5h · Session",
+    "7d · Weekly",
+  ]);
+  const weekly = quota.getByRole("row").filter({
+    has: page.getByRole("meter", { name: "Claude 7d Weekly quota used" }),
+  });
+  // Severity is the signal's, as a class for the colour and a word beside it.
+  await expect(weekly).toHaveClass(/\bquota-warning\b/u);
+  await expect(weekly).toContainText("84%");
+  await expect(weekly).toContainText("warning");
+  await expect(weekly).toContainText(/resets in \dd/u);
+  await expect(
+    quota.getByRole("row").filter({
+      has: page.getByRole("meter", { name: "Codex 5h Session quota used" }),
+    }),
+  ).toHaveClass(/\bquota-ok\b/u);
+
+  const tools = page.getByRole("table", { name: "Usage by tool" });
+  await expect(tools.getByRole("columnheader")).toHaveText([
+    "Tool",
+    "API-equivalent this month",
+  ]);
+  // Highest spend first, whatever order the snapshot lists them in.
+  await expect(tools.locator("tbody th")).toHaveText([
+    "Claude Code",
+    "Codex",
+    "Cursor",
+  ]);
+  await expect(tools.locator("tbody td")).toHaveText([
+    "$212.40",
+    "$48.50",
+    "$9.75",
+  ]);
+  await expect(tools.locator("tfoot th")).toHaveText("Total");
+  await expect(tools.locator("tfoot td")).toHaveText("$270.65");
+  // A tool's usage is a table row now, not a signal with an OK badge.
+  await expect(page.locator(".signal")).toHaveCount(0);
+
+  // On a phone each window is two lines, and it is still a table.
+  await page.setViewportSize({ width: 375, height: 812 });
+  await expect(quota.getByRole("columnheader")).toHaveCount(4);
+  await expect(quota.getByRole("row")).toHaveCount(5);
+  const window = await weekly.locator(".quota-window").boundingBox();
+  const meter = await weekly.getByRole("meter").boundingBox();
+  expect(meter?.y).toBeGreaterThan((window?.y ?? 0) + (window?.height ?? 0));
 });
 
 test("the ops layout fits a phone without horizontal scrolling", async ({
