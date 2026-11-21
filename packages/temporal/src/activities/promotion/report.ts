@@ -3,6 +3,7 @@ import { Context } from "@temporalio/activity";
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 import type { PromotionState } from "#shared/promotion/model.ts";
 import type { promotionAiAccounting } from "@shepherdjerred/ops-model/promotion/ai-allocation.ts";
+import type { SweepSummary } from "./reddit-outreach/sweep-audit.ts";
 
 export function promotionAlertFingerprint(
   state: PromotionState,
@@ -97,4 +98,56 @@ export function promotionReport(
       source: "The Storm promotion ledger and solver reservations",
     },
   });
+}
+
+export function includeRedditOutreachReport(
+  report: ReturnType<typeof promotionReport>,
+  day: string,
+  sweeps: readonly SweepSummary[],
+) {
+  const latest = sweeps.at(-1);
+  if (latest === undefined) return report;
+  const inspected = sweeps.reduce((sum, sweep) => sum + sweep.inspected, 0);
+  const assessed = sweeps.reduce((sum, sweep) => sum + sweep.assessed, 0);
+  const cached = sweeps.reduce((sum, sweep) => sum + sweep.cached, 0);
+  const replies = sweeps.flatMap((sweep) => sweep.replies);
+  const failures = sweeps.flatMap((sweep) => sweep.failures);
+  const accountHolds = [
+    ...new Set(
+      sweeps
+        .map((sweep) => sweep.stopReason)
+        .filter((reason) => reason === "logged-out" || reason === "challenge"),
+    ),
+  ];
+  const blocked =
+    accountHolds.length > 0 ||
+    failures.length > 0 ||
+    replies.some((reply) => reply.status === "blocked");
+  const accountSummary =
+    accountHolds.length === 0
+      ? ""
+      : ` Reddit account requires operator restoration (${accountHolds.join(", ")}).`;
+  report.checks.push({
+    id: "reddit-outreach",
+    label: `Reddit outreach (${day} Pacific)`,
+    required: true,
+    status: blocked ? "failed" : "passed",
+    summary: `${String(inspected)} inspected, ${String(assessed)} assessed, ${String(cached)} cached, ${String(replies.length)} reply outcomes.${accountSummary}`,
+    evidenceReceiptIds: ["reddit-outreach"],
+  });
+  report.evidence.push({
+    id: "reddit-outreach",
+    source: "Durable Reddit outreach sweep ledger",
+    observedAt: latest.completedAt,
+    status: "success",
+    excerpt: JSON.stringify({
+      accountHolds,
+      blockers: failures.slice(-4),
+      replies: replies
+        .filter((reply) => reply.receiptUrl !== undefined)
+        .map(({ postId, receiptUrl }) => ({ postId, receiptUrl })),
+    }).slice(0, 2000),
+  });
+  if (blocked) report.verdict = "attention";
+  return report;
 }

@@ -31,7 +31,11 @@ import { readRedditSweepDay } from "./reddit-outreach/sweep-audit.ts";
 import { reconcileRedditOutreachReply } from "./reddit-outreach/reconcile.ts";
 import type { PromotionTaskResult } from "./publication/task-contract.ts";
 import { promotionManifest, promotionTarget } from "./manifest.ts";
-import { promotionAlertFingerprint, promotionReport } from "./report.ts";
+import {
+  includeRedditOutreachReport,
+  promotionAlertFingerprint,
+  promotionReport,
+} from "./report.ts";
 import { recordPromotionExecutionHealth } from "./control/execution-health.ts";
 import { PromotionBudgetStop, promotionSpendDay } from "./control/budget.ts";
 import { promotionWindow } from "#shared/promotion/cadence.ts";
@@ -434,37 +438,7 @@ async function collectPromotionDailyReport() {
   );
   const day = promotionSpendDay(new Date(Date.now() - 86_400_000));
   const sweeps = await readRedditSweepDay(promotionStore(), day);
-  const latest = sweeps.at(-1);
-  if (latest === undefined) return report;
-  const inspected = sweeps.reduce((sum, sweep) => sum + sweep.inspected, 0);
-  const assessed = sweeps.reduce((sum, sweep) => sum + sweep.assessed, 0);
-  const cached = sweeps.reduce((sum, sweep) => sum + sweep.cached, 0);
-  const replies = sweeps.flatMap((sweep) => sweep.replies);
-  const blocked =
-    sweeps.some((sweep) => sweep.failures.length > 0) ||
-    replies.some((reply) => reply.status === "blocked");
-  report.checks.push({
-    id: "reddit-outreach",
-    label: `Reddit outreach (${day} Pacific)`,
-    required: true,
-    status: blocked ? "failed" : "passed",
-    summary: `${String(inspected)} inspected, ${String(assessed)} assessed, ${String(cached)} cached, ${String(replies.length)} reply outcomes.`,
-    evidenceReceiptIds: ["reddit-outreach"],
-  });
-  report.evidence.push({
-    id: "reddit-outreach",
-    source: "Durable Reddit outreach sweep ledger",
-    observedAt: latest.completedAt,
-    status: "success",
-    excerpt: JSON.stringify({
-      replies: replies
-        .filter((reply) => reply.receiptUrl !== undefined)
-        .map(({ postId, receiptUrl }) => ({ postId, receiptUrl })),
-      blockers: sweeps.flatMap((sweep) => sweep.failures).slice(-4),
-    }).slice(0, 2000),
-  });
-  if (blocked) report.verdict = "attention";
-  return report;
+  return includeRedditOutreachReport(report, day, sweeps);
 }
 
 export const promotionControlActivities = {
