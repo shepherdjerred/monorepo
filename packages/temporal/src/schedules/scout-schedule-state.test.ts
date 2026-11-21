@@ -54,19 +54,16 @@ describe("declared beta Scout schedule activation", () => {
   });
 });
 
-describe("declared beta Scout schedules created paused", () => {
-  for (const schedule of SCOUT_SCHEDULES.filter(
-    (candidate) =>
-      candidate.namespace === "beta" &&
-      candidate.initialPauseNote !== undefined,
-  )) {
-    test(`${schedule.id} stays paused through reconciliation`, () => {
-      const created = buildScheduleState(schedule, {});
-      expect(created).toEqual({
-        paused: true,
-        note: schedule.initialPauseNote,
-      });
-      expect(buildScheduleState(schedule, {}, created)).toEqual(created);
+describe("beta participant crawl schedule", () => {
+  test("reconciliation clears the created pause", () => {
+    const schedule = SCOUT_SCHEDULES.find(
+      (candidate) => candidate.id === "scout-beta-participant-crawl",
+    );
+    if (schedule === undefined) throw new Error("no beta crawl schedule");
+    const created = buildScheduleState(schedule, {});
+    expect(created.paused).toBe(true);
+    expect(buildScheduleState(schedule, {}, created)).toEqual({
+      paused: false,
     });
-  }
+  });
 });

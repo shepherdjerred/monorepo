@@ -37,14 +37,15 @@ describe("Scout participant crawl schedule", () => {
     },
   );
 
-  test.each(["beta", "prod"] as const)(
-    "is created paused on %s until the enablement PR",
-    (stage) => {
-      const schedule = crawlSchedule(stage);
-      expect(schedule.initialPauseNote).toBeDefined();
-      expect(schedule.retiredPauseNotes ?? []).not.toContain(
-        schedule.initialPauseNote,
-      );
-    },
-  );
+  test.each(["beta", "prod"] as const)("is created paused on %s", (stage) => {
+    expect(crawlSchedule(stage).initialPauseNote ?? "").not.toBe("");
+  });
+
+  test("reconciliation clears the crawl pause on beta only", () => {
+    const beta = crawlSchedule("beta");
+    const prod = crawlSchedule("prod");
+    const note = beta.initialPauseNote;
+    expect(beta.retiredPauseNotes).toContain(note);
+    expect(prod.retiredPauseNotes ?? []).not.toContain(prod.initialPauseNote);
+  });
 });

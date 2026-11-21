@@ -21,14 +21,16 @@ const CATCHUP_LIVE = "1 minute";
 const INITIAL_PAUSE_NOTE =
   "Paused until the matching Scout Temporal feature family is enabled and legacy work is drained";
 
+const CRAWL_PAUSE_NOTE =
+  "Paused until the Scout beta worker bundle exports scoutParticipantCrawlWorkflow and the crawl is enabled";
+
+// The crawl's pause is retired on beta only: its worker bundle is live and the
+// crawl flag is on. Production keeps it paused.
 const BETA_RETIRED_PAUSE_NOTES = [
+  CRAWL_PAUSE_NOTE,
   INITIAL_PAUSE_NOTE,
   "Paused until the matching Scout Temporal feature family is enabled",
 ];
-
-// Not in BETA_RETIRED_PAUSE_NOTES: reconciliation must not clear this pause.
-const CRAWL_PAUSE_NOTE =
-  "Paused until the Scout beta worker bundle exports scoutParticipantCrawlWorkflow and the crawl is enabled";
 
 type ScoutInterval =
   | "20 seconds"
@@ -143,8 +145,8 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       // The participant crawl ships dark. Schedules deploy with the central
       // worker, independently of the Scout images, so nothing orders this
       // schedule's first tick after the routed beta bundle exports the
-      // workflow. It is created paused in both stages; the enablement PR
-      // unpauses beta once that bundle is live.
+      // workflow. It is created paused in both stages; reconciliation clears
+      // the pause on beta, where that bundle is live and the crawl is enabled.
       pauseNote: CRAWL_PAUSE_NOTE,
       name: "participant-crawl",
       workflowType: SCOUT_WORKFLOW_NAMES.participantCrawl,
