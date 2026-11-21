@@ -1,5 +1,5 @@
 import { needsMeSignals } from "@shepherdjerred/ops-model/assemble.ts";
-import { actionableSignals } from "@shepherdjerred/ops-model/signal-groups.ts";
+import { actionableSignals } from "@shepherdjerred/ops-model/signals/signal-groups.ts";
 import type { SnapshotResponse } from "@shepherdjerred/ops-model/snapshot.ts";
 
 import {
