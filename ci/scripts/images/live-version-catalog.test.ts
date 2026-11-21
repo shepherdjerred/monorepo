@@ -287,5 +287,5 @@ test("after the window's catalog flip, retained images are looked up under their
   expect(imageIdentity("golink", publicationOwners("v2")).serviceId).toBe(
     "golink",
   );
-  expect(imageIdentity("golink").serviceId).toBe("self-hosted-apps");
+  expect(imageIdentity("golink").serviceId).toBe("golink");
 });

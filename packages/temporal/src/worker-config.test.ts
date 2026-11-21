@@ -249,11 +249,6 @@ describe("Temporal worker role contracts", () => {
       expect(concurrency.get(serialRole)).toBe(1);
     }
   });
-
-  it("dispatches GoLink cluster reads only through infra", () => {
-    expect(activityNamesFor("infra")).toContain("listTailscaleIngresses");
-    expect(activityNamesFor("repo")).not.toContain("listTailscaleIngresses");
-  });
 });
 
 describe("Ops activity isolation", () => {

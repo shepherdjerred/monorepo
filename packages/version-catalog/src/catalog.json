@@ -432,16 +432,16 @@
       "value": "2026.11.1@sha256:e613aadbc2d9511785d2e67a86b0c8ac18dd63a3f9af0d06faf04cbfdcb35f2d"
     },
     {
-      "name": "tailscale/golink",
+      "name": "tailscale/tailscale",
       "category": "upstream",
       "artifactType": "image",
       "management": {
-        "managed": false
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
       },
-      "value": "main@sha256:dc62e0d38bd2633d3090e6ca1de327471c376afe0457d397c4f111e5a98d8a88",
-      "notes": [
-        "not managed by renovate (upstream tailscale/golink ships a rolling `main` tag)"
-      ]
+      "value": "v1.102.4@sha256:2667499ed87ae29218f292556ba062918402dd5e92e93637af14867e4df12dd3"
     },
     {
       "name": "home-assistant/home-assistant",

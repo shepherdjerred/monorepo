@@ -62,6 +62,7 @@ const CLUSTER_SCOPED_APPLICATIONS: ReadonlySet<string> = new Set([
   "cloudflare-tunnel",
   "delivery",
   "delivery-control-plane",
+  "golink",
   "mc-sandbox",
   "temporal",
   // Baseline and data-layer charts introduced with the Delivery v2 cutover.

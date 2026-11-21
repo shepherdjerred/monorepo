@@ -36,7 +36,6 @@ export const runWoodpeckerLogRetention = (
 ) => _runWoodpeckerLogRetention(input);
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
 import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
-import { syncGolinks as _syncGolinks } from "./homelab/golink-sync.ts";
 import {
   goodMorningGetUp as _goodMorningGetUp,
   goodMorningPreheat as _goodMorningPreheat,
@@ -219,10 +218,6 @@ export async function generateDependencySummary(
 
 export async function runDnsAudit(): Promise<void> {
   return _runDnsAudit();
-}
-
-export async function syncGolinks(): Promise<void> {
-  return _syncGolinks();
 }
 
 export const goodMorningPreheat = (): Promise<void> => _goodMorningPreheat();

@@ -834,6 +834,7 @@ test("terminates workflows for schedules being removed", async () => {
     'WorkflowType = "runSeaweedFsBackupRetentionAndGcWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "backupStormForumWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runVeleroR2OrphanAuditWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "syncGolinks" AND ExecutionStatus = "Running"',
   ]);
 });
 

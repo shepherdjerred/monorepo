@@ -71,6 +71,13 @@
       "package": "tracker"
     },
     {
+      "id": "golink",
+      "title": "Golink",
+      "kind": "product",
+      "package": "golink",
+      "aliases": ["go"]
+    },
+    {
       "id": "storm-forum",
       "title": "The Storm forum",
       "kind": "product",
@@ -1353,11 +1360,11 @@
     },
     {
       "id": "golink",
-      "title": "golink",
-      "package": "homelab",
+      "title": "Golink",
+      "package": "golink",
       "lifecycle": "active",
       "selfHosted": false,
-      "group": "self-hosted-apps",
+      "group": "golink",
       "components": [
         {
           "name": "image:golink",
@@ -1369,9 +1376,18 @@
         }
       ],
       "ops": {
-        "kind": "workload",
+        "kind": "product",
         "namespaces": ["golink"],
         "argoApps": ["golink"]
+      },
+      "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/golink",
+            "argoApp": "golink"
+          }
+        ]
       }
     },
     {
@@ -3140,7 +3156,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "golink/prod/1",
+      "recipeRevisionId": "golink/prod/2",
       "configurationRevisionId": "golink/prod/1"
     },
     {
@@ -3189,7 +3205,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/8"
+      "configurationRevisionId": "argocd/prod/9"
     },
     {
       "id": "chartmuseum/prod",
@@ -4172,6 +4188,16 @@
     {
       "dependent": "golink/prod",
       "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "golink/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "golink/prod",
+      "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },
     {
@@ -5566,7 +5592,8 @@
       "scout-prod": "scout-for-lol/prod",
       "storm-forum": "storm-forum/prod",
       "minecraft-tsmc": "minecraft/tsmc",
-      "glitter-boys-launcher": "glitter-boys-launcher/prod"
+      "glitter-boys-launcher": "glitter-boys-launcher/prod",
+      "golink": "golink/prod"
     },
     "platformDeliveryDelegated": true
   }

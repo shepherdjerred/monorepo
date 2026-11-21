@@ -28,8 +28,7 @@ function urlToString(input: string | URL | Request): string {
 /**
  * Replace `globalThis.fetch` with a mock that records the call's url, body,
  * and headers in a typed shape so test assertions don't widen through
- * `any` / `as unknown as` to inspect mock.calls. Mirrors the pattern from
- * `golink-sync.test.ts` (Object.assign onto a typed handler).
+ * `any` / `as unknown as` to inspect mock.calls.
  */
 type FetchResponseSpec =
   | { kind: "json"; body: unknown; status?: number }

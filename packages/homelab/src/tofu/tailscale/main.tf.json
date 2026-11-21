@@ -36,12 +36,7 @@
           ],
           "src": ["tag:k8s"]
         },
-        { "action": "accept", "dst": ["tag:k8s:443"], "src": ["tag:ci"] },
-        {
-          "action": "accept",
-          "dst": ["tag:k8s-operator:443"],
-          "src": ["tag:k8s"]
-        }
+        { "action": "accept", "dst": ["tag:k8s:443"], "src": ["tag:ci"] }
       ],
       "autoApprovers": { "exitNode": [], "routes": {} },
       "groups": {},
@@ -93,11 +88,6 @@
           "accept": ["tag:k8s:443"],
           "deny": ["tag:server:22", "tag:k8s:22"],
           "src": "tag:ci"
-        },
-        {
-          "accept": ["tag:k8s-operator:443"],
-          "deny": ["tag:k8s-operator:22"],
-          "src": "tag:k8s"
         }
       ]
     }

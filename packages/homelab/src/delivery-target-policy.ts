@@ -13,6 +13,7 @@ export const ORDINARY_DELIVERY_ENVIRONMENTS: Readonly<Record<string, string>> =
     birmel: "birmel/prod",
     tasknotes: "tasknotes-server/prod",
     tracker: "tracker/prod",
+    golink: "golink/prod",
     delivery: "delivery/prod",
     "trmnl-dashboard": "trmnl-dashboard/prod",
     "alert-dashboard": "ops-dashboard/prod",

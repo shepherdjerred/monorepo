@@ -6,6 +6,7 @@
       "runner": "vitest",
       "args": [
         "src/domain",
+        "src/infrastructure",
         "src/server/app.test.ts",
         "--testTimeout",
         "30000",

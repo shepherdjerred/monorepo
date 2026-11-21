@@ -22,7 +22,6 @@ export const ZFS_NVME_UNCOMPRESSED_CLAIMS: ReadonlySet<string> = new Set([
   "flipt/flipt-data",
   "freshrss/freshrss-data",
   "freshrss/freshrss-extensions",
-  "golink/golink-pvc",
   "home/eufy-security-ws-pvc",
   "home/homeassistant-pvc",
   "home/scrypted-pvc",

@@ -34,7 +34,6 @@ import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resourc
 import {
   createTemporalWorkerMaintenanceRbac,
   createTemporalStormRbac,
-  createTemporalWorkerIngressReaderRbac,
   createTemporalWorkerServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-rbac.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
@@ -172,7 +171,6 @@ export function createTemporalWorkerDeployment(
     },
   );
 
-  createTemporalWorkerIngressReaderRbac(chart, [infraServiceAccount]);
   createTemporalWorkerMaintenanceRbac(chart, [infraServiceAccount]);
   createTemporalStormRbac(chart, infraServiceAccount);
 

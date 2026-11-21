@@ -285,7 +285,13 @@
     "namespace": "golink",
     "name": "golink-pvc",
     "backup": "enabled",
-    "reason": "Golink application state"
+    "reason": "Retained legacy upstream golink SQLite state (rollback safety)"
+  },
+  {
+    "namespace": "golink",
+    "name": "pgdata-golink-postgresql-0",
+    "backup": "enabled",
+    "reason": "Golink PostgreSQL manual links and click statistics"
   },
   {
     "namespace": "home",

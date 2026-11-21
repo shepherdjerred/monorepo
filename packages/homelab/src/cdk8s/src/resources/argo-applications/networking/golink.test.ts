@@ -8,21 +8,13 @@ const GolinkApplicationSchema = z.object({
   kind: z.literal("Application"),
   metadata: z.object({ name: z.literal("golink") }),
   spec: z.object({
-    ignoreDifferences: z.array(
-      z.object({
-        group: z.literal(""),
-        kind: z.literal("PersistentVolumeClaim"),
-        name: z.literal("golink-pvc"),
-        namespace: z.literal("golink"),
-        jsonPointers: z.array(z.string()),
-      }),
-    ),
+    destination: z.object({ namespace: z.literal("golink") }),
     syncPolicy: z.object({ syncOptions: z.array(z.string()) }),
   }),
 });
 
 describe("Golink Argo CD application", () => {
-  it("preserves the Kubernetes-assigned PVC volume name", () => {
+  it("synthesizes the first-party golink Application", () => {
     const app = new App();
     const chart = new Chart(app, "test");
     createGolinkApp(chart);
@@ -33,17 +25,10 @@ describe("Golink Argo CD application", () => {
       throw new Error("Golink Application was not synthesized");
     }
 
-    expect(manifest.data.spec.ignoreDifferences).toEqual([
-      {
-        group: "",
-        kind: "PersistentVolumeClaim",
-        name: "golink-pvc",
-        namespace: "golink",
-        jsonPointers: ["/spec/volumeName"],
-      },
+    expect(manifest.data.spec.destination.namespace).toBe("golink");
+    expect(manifest.data.spec.syncPolicy.syncOptions).toEqual([
+      "CreateNamespace=true",
+      "ApplyOutOfSyncOnly=true",
     ]);
-    expect(manifest.data.spec.syncPolicy.syncOptions).toContain(
-      "RespectIgnoreDifferences=true",
-    );
   });
 });

@@ -291,7 +291,7 @@
       "host": "go",
       "namespace": "golink",
       "exposure": "tsnet",
-      "tags": ["tag:k8s-operator"]
+      "tags": ["tag:k8s"]
     },
     {
       "host": "gradle-build-cache",

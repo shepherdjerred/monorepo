@@ -153,7 +153,6 @@ Only corpus capture and context-refresh are scheduled.
 | ci-workspace-reaper             | every 15 min (paused) | deterministic | leaked CI pods and workspace claims deleted             |
 | ci-extended-verify-nightly      | daily 02:00           | deterministic | manual `verify-extended` pipeline on main; fails on red |
 | dns-audit                       | daily 06:00           | deterministic | logs                                                    |
-| golink-sync                     | daily 05:00           | deterministic | golink reconcile                                        |
 | temporal-failure-watch          | every 5 min           | deterministic | durable alert occurrence                                |
 | report-freshness-monitor        | every 15 min          | deterministic | metrics + durable alert                                 |
 | TaskNotes canary                | Mon 09:00             | deterministic | heartbeat email                                         |

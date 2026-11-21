@@ -205,7 +205,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "freshrss/freshrss/main",
   "gickup/gickup/main",
   "glitter-boys-launcher/glitter-boys-launcher-service/glitter-boys-launcher",
-  "golink/golink/main",
   "gradle-build-cache/gradle-build-cache/gradle-build-cache",
   "gradle-build-cache/gradle-build-cache/prepare",
   "home/home-eufy-security-ws/main",
