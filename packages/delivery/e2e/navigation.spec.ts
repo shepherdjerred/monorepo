@@ -65,7 +65,7 @@ test("the commit list answers per environment", async ({ page }) => {
     page.getByRole("heading", { level: 2, name: "By environment" }),
   ).toBeVisible();
   await expect(page.getByRole("region", { name: /^prod/u })).toContainText(
-    "services live",
+    /services? live/u,
   );
   await page.goBack();
   const search = page.getByRole("search", { name: "Find a commit" });

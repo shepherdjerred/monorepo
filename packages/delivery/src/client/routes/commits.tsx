@@ -311,7 +311,8 @@ function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
       <h3 id={`env-${group.name}-heading`}>
         {group.name} <Verdict value={group.verdict} />{" "}
         <span className="muted">
-          {group.liveCount} of {group.total} services live
+          {group.liveCount} of {group.total}{" "}
+          {group.total === 1 ? "service" : "services"} live
         </span>
       </h3>
       {pending.length > 0 && (
