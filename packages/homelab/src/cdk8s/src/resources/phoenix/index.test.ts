@@ -82,6 +82,9 @@ test("runs with auth, the operator-managed database, and no in-cluster agent too
   const env = new Map(container.env.map((entry) => [entry.name, entry]));
 
   expect(env.get("PHOENIX_ENABLE_AUTH")?.value).toBe("true");
+  // Phoenix 21+ binds loopback unless told otherwise.
+  expect(env.get("PHOENIX_HOST")?.value).toBe("0.0.0.0");
+  expect(env.get("PHOENIX_DISABLE_MODEL_COST_AUTO_UPDATE")?.value).toBe("true");
   for (const key of [
     "PHOENIX_SECRET",
     "PHOENIX_ADMIN_SECRET",
