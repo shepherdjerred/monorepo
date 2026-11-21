@@ -9,7 +9,7 @@ import {
   groupSignals,
   SIGNAL_GROUP_KINDS,
   type SignalEntry,
-} from "@shepherdjerred/ops-model/signal-groups.ts";
+} from "@shepherdjerred/ops-model/signals/signal-groups.ts";
 import { SOURCE_IDS, type Signal } from "@shepherdjerred/ops-model/snapshot.ts";
 
 const BASE: Signal = {

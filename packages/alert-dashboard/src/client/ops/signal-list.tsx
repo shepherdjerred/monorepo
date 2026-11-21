@@ -1,7 +1,7 @@
 import {
   groupSignals,
   type SignalGroup,
-} from "@shepherdjerred/ops-model/signal-groups.ts";
+} from "@shepherdjerred/ops-model/signals/signal-groups.ts";
 import type { Signal } from "@shepherdjerred/ops-model/snapshot.ts";
 import { ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "lucide-react";
 import { useId, useState } from "react";

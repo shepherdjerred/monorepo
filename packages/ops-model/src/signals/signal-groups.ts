@@ -1,6 +1,14 @@
-import { allSignals } from "./assemble.ts";
-import { isAttention, worstSeverity, type Severity } from "./severity.ts";
-import type { SectionId, Signal, Snapshot } from "./snapshot.ts";
+import { allSignals } from "@shepherdjerred/ops-model/assemble.ts";
+import {
+  isAttention,
+  worstSeverity,
+  type Severity,
+} from "@shepherdjerred/ops-model/severity.ts";
+import type {
+  SectionId,
+  Signal,
+  Snapshot,
+} from "@shepherdjerred/ops-model/snapshot.ts";
 
 /**
  * Signal kinds that may collapse into one row, mapped to their plural label.

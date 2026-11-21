@@ -15,7 +15,7 @@ import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import {
   groupSignals,
   type SignalEntry,
-} from "@shepherdjerred/ops-model/signal-groups.ts";
+} from "@shepherdjerred/ops-model/signals/signal-groups.ts";
 import { fetchOpsSnapshot } from "#lib/ops.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
 import { coordinationSummary, formatCoordination } from "#lib/forum.ts";

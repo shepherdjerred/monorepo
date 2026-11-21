@@ -3,7 +3,7 @@ import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import {
   groupSignals,
   type SignalEntry,
-} from "@shepherdjerred/ops-model/signal-groups.ts";
+} from "@shepherdjerred/ops-model/signals/signal-groups.ts";
 import type { Signal } from "@shepherdjerred/ops-model/snapshot.ts";
 
 import { ALERTS_PUBLIC_URL } from "#domain/ops-changes";
