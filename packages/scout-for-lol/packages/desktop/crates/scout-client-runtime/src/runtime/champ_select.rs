@@ -1,6 +1,8 @@
 //! Champion-select state in the collector: read the select's allowlisted
 //! projection while gameflow is `ChampSelect` and publish it on the runtime
-//! snapshot, where the supervisor's coach reads it.
+//! snapshot, where the supervisor's coach reads it. The game's window mode is
+//! read alongside it, so the supervisor can warn during the select that
+//! exclusive fullscreen will hide the in-game overlay.
 //!
 //! The projection has no identity field (see
 //! `scout_client_core::live::champ_select`), so nothing the League client
@@ -11,6 +13,7 @@ use scout_client_core::diagnostics::{
 };
 use scout_client_core::lcu::{LcuClient, LcuError, discover_lockfile};
 use scout_client_core::live::champ_select::ChampSelectSnapshot;
+use scout_client_core::live::game_settings::GameWindowMode;
 use scout_client_core::live::gameflow::GameflowPhase;
 use scout_client_core::live::source::{LcuSource, SourceError};
 
@@ -35,6 +38,13 @@ impl LcuSource for LockfileLcu {
             None => Ok(None),
         }
     }
+
+    async fn game_window_mode(&self) -> Result<Option<GameWindowMode>, SourceError> {
+        match client()? {
+            Some(client) => client.game_window_mode().await,
+            None => Ok(None),
+        }
+    }
 }
 
 fn client() -> Result<Option<LcuClient>, SourceError> {
@@ -49,6 +59,7 @@ fn client() -> Result<Option<LcuClient>, SourceError> {
 pub(super) struct ChampSelectWatcher<S = LockfileLcu> {
     source: S,
     last_problem: Option<String>,
+    last_settings_problem: Option<String>,
 }
 
 impl Default for ChampSelectWatcher<LockfileLcu> {
@@ -62,21 +73,27 @@ impl<S: LcuSource> ChampSelectWatcher<S> {
         Self {
             source,
             last_problem: None,
+            last_settings_problem: None,
         }
     }
 
-    /// Publish the select while the phase is `ChampSelect`, and clear it the
-    /// moment the phase leaves it.
+    /// Publish the select and the game's window mode while the phase is
+    /// `ChampSelect`, and clear both the moment the phase leaves it.
     pub(super) async fn tick(&mut self, state: &StateHub, diagnostics: &Diagnostics) {
         if state.current_phase() != GameflowPhase::ChampSelect {
             update_state(state, |snapshot| {
                 if snapshot.champ_select.is_some() {
                     snapshot.champ_select = None;
                 }
+                if snapshot.game_window_mode.is_some() {
+                    snapshot.game_window_mode = None;
+                }
             });
             self.last_problem = None;
+            self.last_settings_problem = None;
             return;
         }
+        self.read_window_mode(state, diagnostics).await;
         match self.source.champ_select().await {
             Ok(select) => {
                 self.last_problem = None;
@@ -103,6 +120,38 @@ impl<S: LcuSource> ChampSelectWatcher<S> {
             }
         }
     }
+
+    /// Read the game's window mode. A failure is recorded once and leaves the
+    /// last mode out, so no warning is shown on a guess.
+    async fn read_window_mode(&mut self, state: &StateHub, diagnostics: &Diagnostics) {
+        let mode = match self.source.game_window_mode().await {
+            Ok(mode) => {
+                self.last_settings_problem = None;
+                mode
+            }
+            Err(error) => {
+                let problem = error.to_string();
+                if self.last_settings_problem.as_deref() != Some(&problem) {
+                    diagnostics.record(
+                        DiagnosticEvent::new(
+                            DiagnosticLevel::Warn,
+                            DiagnosticCategory::Lcu,
+                            "game_settings_poll",
+                            DiagnosticOutcome::Failed,
+                        )
+                        .with_detail(&problem),
+                    );
+                    self.last_settings_problem = Some(problem);
+                }
+                None
+            }
+        };
+        update_state(state, |snapshot| {
+            if snapshot.game_window_mode != mode {
+                snapshot.game_window_mode = mode;
+            }
+        });
+    }
 }
 
 #[cfg(test)]
@@ -111,6 +160,7 @@ mod tests {
 
     use scout_client_core::diagnostics::Diagnostics;
     use scout_client_core::live::champ_select::{self, ChampSelectSnapshot};
+    use scout_client_core::live::game_settings::GameWindowMode;
     use scout_client_core::live::gameflow::GameflowPhase;
     use scout_client_core::live::source::{ReplayFrame, ReplaySource};
 
@@ -164,6 +214,46 @@ mod tests {
             set_phase(&state, "InProgress");
             watcher.tick(&state, &diagnostics).await;
             assert!(state.subscribe().borrow().champ_select.is_none());
+            Ok::<(), Box<dyn std::error::Error>>(())
+        })
+        .await?
+    }
+
+    #[tokio::test]
+    async fn the_window_mode_is_published_during_the_select_only()
+    -> Result<(), Box<dyn std::error::Error>> {
+        tokio::time::timeout(Duration::from_secs(5), async {
+            let source = ReplaySource::new(vec![
+                ReplayFrame {
+                    phase: GameflowPhase::ChampSelect,
+                    live: None,
+                    champ_select: Some(select()?),
+                },
+                ReplayFrame {
+                    phase: GameflowPhase::InProgress,
+                    live: None,
+                    champ_select: None,
+                },
+            ])
+            .with_window_mode(GameWindowMode::Fullscreen);
+            let state = StateHub::default();
+            let diagnostics = Diagnostics::in_memory();
+            let mut watcher = ChampSelectWatcher::new(source);
+
+            set_phase(&state, "Lobby");
+            watcher.tick(&state, &diagnostics).await;
+            assert_eq!(state.subscribe().borrow().game_window_mode, None);
+
+            set_phase(&state, "ChampSelect");
+            watcher.tick(&state, &diagnostics).await;
+            assert_eq!(
+                state.subscribe().borrow().game_window_mode,
+                Some(GameWindowMode::Fullscreen)
+            );
+
+            set_phase(&state, "InProgress");
+            watcher.tick(&state, &diagnostics).await;
+            assert_eq!(state.subscribe().borrow().game_window_mode, None);
             Ok::<(), Box<dyn std::error::Error>>(())
         })
         .await?

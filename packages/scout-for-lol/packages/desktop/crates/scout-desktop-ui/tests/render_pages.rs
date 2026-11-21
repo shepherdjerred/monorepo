@@ -44,10 +44,10 @@ mod render {
     };
     use scout_desktop_ipc::{
         ChatAvailability, ChatCoach, ChatCoachKind, ChatCommand, ChatImage, ChatParts, ChatStatus,
-        CounterReading, DiagnosticsSnapshot, GameflowPhase, LiveGameSnapshot, PROTOCOL_VERSION,
-        PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot, UpdateStatus,
-        VoiceCommand, VoiceConsent, VoiceSettings, VoiceSnapshot, VoiceState, VoiceTurnView,
-        WindowMessage, decode_line, encode_line,
+        CounterReading, DiagnosticsSnapshot, GameflowPhase, LiveGameSnapshot, OverlayWarning,
+        PROTOCOL_VERSION, PrivacySnapshot, StateSnapshot, SupervisorMessage, UpdateSnapshot,
+        UpdateStatus, VoiceCommand, VoiceConsent, VoiceSettings, VoiceSnapshot, VoiceState,
+        VoiceTurnView, WindowMessage, decode_line, encode_line,
     };
     use scout_desktop_ui::BuildInfo;
     use scout_desktop_ui::preview::{Incoming, Outbound, ScoutWindow, prepare};
@@ -108,6 +108,7 @@ mod render {
             pending_observations: 4,
             last_upload_at: Some("2026-11-11T10:00:00Z".to_owned()),
             last_error: Some("Scout API unavailable: connection refused".to_owned()),
+            overlay_warning: None,
             diagnostics: DiagnosticsSnapshot {
                 log_folder_available: true,
                 counters: vec![
@@ -740,6 +741,7 @@ mod render {
         {
             return Err(format!("the panel's first option sent {sent:?}").into());
         }
+        fullscreen_warning(harness)?;
 
         if let Some(transcript) = parts.transcript.as_mut() {
             for message in &mut transcript.messages {
@@ -756,6 +758,22 @@ mod render {
         harness.chat(parts.clone())?;
         harness.capture("chat-coach-pregame")?;
         proactive_panel(harness, parts)
+    }
+
+    /// League set to exclusive fullscreen during champion select: the chat
+    /// page says the overlay cannot draw over the game, above the coach panel.
+    fn fullscreen_warning(harness: &mut Harness) -> Result<(), Error> {
+        harness.receive(&SupervisorMessage::State {
+            state: StateSnapshot {
+                overlay_warning: Some(OverlayWarning::ExclusiveFullscreen),
+                ..sample_state()
+            },
+        })?;
+        harness.capture("chat-overlay-fullscreen-warning")?;
+        harness.receive(&SupervisorMessage::State {
+            state: sample_state(),
+        })?;
+        Ok(())
     }
 
     /// Beta profile only: something Scout noticed on the scoreboard and

@@ -5,13 +5,15 @@
 
 //! Scout Client native entry point.
 //!
-//! One executable, two processes. Started normally it is the supervisor: it
+//! One executable, three processes. Started normally it is the supervisor: it
 //! owns the instance lock and the collector, never touches the GPU, and runs
 //! the window as a child (`--window`) that it relaunches when it crashes.
 //! The window renders with egui unless `SCOUT_DESKTOP_UI=gpui` or `--ui=gpui`
 //! selects the gpui-kit window (`scout-desktop-ui`). With the gpui window, the
 //! supervisor also runs chat and, on Windows and macOS, voice: it owns the
-//! microphone and the global keys, and the window only shows them.
+//! microphone and the global keys, and the window only shows them. On Windows
+//! and macOS it also runs the in-game overlay as a second child (`--overlay`)
+//! while a game is in progress.
 
 #[cfg_attr(
     not(any(target_os = "windows", target_os = "macos")),
@@ -59,6 +61,8 @@ use crate::voice::VoiceInputs;
 
 /// The argument that makes this executable the window process.
 const WINDOW_ARGUMENT: &str = "--window";
+/// The argument that makes this executable the in-game overlay process.
+const OVERLAY_ARGUMENT: &str = "--overlay";
 
 fn backend_origin(arguments: &[String]) -> String {
     arguments
@@ -113,6 +117,12 @@ fn install_panic_hook(diagnostics: Arc<Diagnostics>) {
 fn main() -> ExitCode {
     install_logging();
     let arguments = std::env::args().skip(1).collect::<Vec<_>>();
+    if arguments
+        .iter()
+        .any(|argument| argument == OVERLAY_ARGUMENT)
+    {
+        return run_overlay(&arguments);
+    }
     let environment = std::env::var(UI_ENVIRONMENT).ok();
     let toolkit = match WindowToolkit::select(&arguments, environment.as_deref()) {
         Ok(toolkit) if toolkit.available() => toolkit,
@@ -164,6 +174,21 @@ fn run_window(toolkit: WindowToolkit, arguments: &[String]) -> ExitCode {
     }
 }
 
+/// Run as the in-game overlay. It reports its own panics like the window.
+fn run_overlay(arguments: &[String]) -> ExitCode {
+    let gates = scout_client_runtime::runtime::load_privacy_gates();
+    let _reporting = start_error_reporting(
+        reporting_environment(&backend_origin(arguments)),
+        ReportingProcess::Overlay,
+        gates.error_reports,
+    );
+    #[cfg(any(windows, target_os = "macos"))]
+    return scout_desktop_ui::run_overlay();
+    // The supervisor starts the overlay only where the build contains it.
+    #[cfg(not(any(windows, target_os = "macos")))]
+    return ExitCode::from(2);
+}
+
 /// Run as the supervisor: own the instance lock and the collector, and run the
 /// window as a child process.
 fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
@@ -198,15 +223,18 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
     let runtime = ClientRuntime::start(backend_origin(arguments));
     install_panic_hook(Arc::clone(runtime.diagnostics()));
     tracing::info!(?toolkit, "Scout Client window toolkit");
+    // Both children label their error reports beta or production.
+    let server = format!("--server={}", backend_origin(arguments));
     let launcher = WindowLauncher::new(
-        executable,
+        executable.clone(),
         vec![
             WINDOW_ARGUMENT.to_owned(),
             toolkit.argument().to_owned(),
-            // The window labels its error reports beta or production.
-            format!("--server={}", backend_origin(arguments)),
+            server.clone(),
         ],
     );
+    let overlay_launcher =
+        WindowLauncher::new(executable, vec![OVERLAY_ARGUMENT.to_owned(), server]);
     let origin = backend_origin(arguments);
     let (control, control_receiver) = mpsc::unbounded_channel();
     let (hotkey_events, hotkey_receiver) = mpsc::unbounded_channel();
@@ -245,8 +273,11 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
                             Some(updates) => supervisor.with_updates(updates),
                             None => supervisor,
                         };
+                    // The overlay's cards come from chat and voice, which
+                    // only the gpui window's supervisor runs.
                     let supervisor = if toolkit == WindowToolkit::Gpui {
                         with_chat_and_voice(supervisor, origin, tray.hotkeys, voice_inputs)
+                            .with_overlay(overlay_launcher, tray.overlay_keys)
                     } else {
                         supervisor
                     };

@@ -23,6 +23,7 @@ use std::collections::BTreeMap;
 
 mod chat;
 mod chat_visuals;
+mod overlay;
 mod voice;
 
 pub use chat::{
@@ -35,12 +36,13 @@ pub use chat_visuals::{
     ChatIcon, ChatImage, ChatLoadoutCard, ChatMatchCard, ChatMatchPlayer, ChatMatchTeam, ChatTable,
     ChatTableLayout, ChatVisual, ChatVisuals,
 };
+pub use overlay::{OverlayCommand, OverlayFrame, OverlayKeys, OverlayReport};
 pub use voice::{
     VoiceCommand, VoiceConsent, VoiceSettings, VoiceSnapshot, VoiceState, VoiceTurnView,
 };
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 13;
+pub const PROTOCOL_VERSION: u32 = 14;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -210,8 +212,34 @@ pub struct StateSnapshot {
     pub last_upload_at: Option<String>,
     /// Last typed boundary error.
     pub last_error: Option<String>,
+    /// Why the in-game overlay will not show in the coming game, during
+    /// champion select. Only set on a build with the overlay.
+    pub overlay_warning: Option<OverlayWarning>,
     /// What the Diagnostics page shows.
     pub diagnostics: DiagnosticsSnapshot,
+}
+
+/// Why the in-game overlay will not show in the coming game.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OverlayWarning {
+    /// League is set to exclusive fullscreen, which no other window can draw
+    /// over.
+    ExclusiveFullscreen,
+}
+
+impl OverlayWarning {
+    /// What the main window says.
+    #[must_use]
+    pub const fn message(self) -> &'static str {
+        match self {
+            Self::ExclusiveFullscreen => {
+                "League is set to Fullscreen, so Scout's in-game overlay can't draw over the game. \
+                 Choose Borderless or Windowed in League's Video settings to see cards in game; \
+                 they still appear here."
+            }
+        }
+    }
 }
 
 /// The window's view of the game in progress: the local player's line and the
@@ -616,6 +644,7 @@ mod tests {
             pending_observations: 4,
             last_upload_at: Some("2026-11-11T10:00:00Z".to_owned()),
             last_error: Some("League unavailable\nReplay capture: relay".to_owned()),
+            overlay_warning: Some(super::OverlayWarning::ExclusiveFullscreen),
             diagnostics: DiagnosticsSnapshot {
                 log_folder_available: true,
                 counters: vec![CounterReading {
@@ -715,7 +744,7 @@ mod tests {
         };
         assert_eq!(live.summary(), "Ahri, level 10, 4/2/7, 87 CS, 7:01");
         assert_eq!(
-            PROTOCOL_VERSION, 13,
+            PROTOCOL_VERSION, 14,
             "a new message or field bumps the protocol"
         );
     }
@@ -988,6 +1017,82 @@ mod tests {
             assert!(decode_line::<WindowMessage>(line).is_err(), "{line}");
         }
         Ok(())
+    }
+
+    fn overlay_frame() -> super::OverlayFrame {
+        super::OverlayFrame {
+            card: scout_overlay::OverlayCard {
+                id: "plan-1".to_owned(),
+                kind: scout_overlay::CardKind::PregamePlan,
+                title: "Your game plan".to_owned(),
+                lines: vec!["Farm bot side".to_owned(), "Ward river at 3:00".to_owned()],
+                priority: scout_overlay::CardPriority::Normal,
+                ttl_secs: 120,
+            },
+            expanded: false,
+            queued: 2,
+            keys: super::OverlayKeys {
+                dismiss: "F7".to_owned(),
+                next: "Shift+F7".to_owned(),
+                expand: "Alt+F7".to_owned(),
+            },
+        }
+    }
+
+    #[test]
+    fn overlay_messages_round_trip_with_a_fixed_wire_shape() -> Result<(), super::CodecError> {
+        use super::{OverlayCommand, OverlayReport};
+        let commands = [
+            OverlayCommand::Hello {
+                protocol: PROTOCOL_VERSION,
+            },
+            OverlayCommand::Frame {
+                frame: Some(overlay_frame()),
+            },
+            OverlayCommand::Frame { frame: None },
+            OverlayCommand::Close,
+        ];
+        for command in commands {
+            let line = encode_line(&command)?;
+            assert_eq!(line.matches('\n').count(), 1);
+            assert_eq!(decode_line::<OverlayCommand>(&line)?, command);
+        }
+        let reports = [
+            OverlayReport::Hello {
+                protocol: PROTOCOL_VERSION,
+            },
+            OverlayReport::Ready,
+            OverlayReport::Unavailable {
+                reason: "no click-through".to_owned(),
+            },
+        ];
+        for report in reports {
+            let line = encode_line(&report)?;
+            assert_eq!(decode_line::<OverlayReport>(&line)?, report);
+        }
+        let frame = encode_line(&OverlayCommand::Frame {
+            frame: Some(overlay_frame()),
+        })?;
+        assert!(frame.starts_with(
+            r#"{"type":"frame","frame":{"card":{"id":"plan-1","kind":"pregame_plan","#
+        ));
+        assert!(frame.contains(r#""ttlSecs":120"#), "{frame}");
+        Ok(())
+    }
+
+    #[test]
+    fn the_overlay_link_refuses_what_it_does_not_name() {
+        use super::{OverlayCommand, OverlayReport};
+        // The overlay takes no input, so it has no way to send a command.
+        assert!(decode_line::<OverlayReport>(r#"{"type":"quit"}"#).is_err());
+        assert!(
+            decode_line::<OverlayReport>(r#"{"type":"unavailable","reason":"x","code":1}"#)
+                .is_err()
+        );
+        assert!(decode_line::<OverlayCommand>(r#"{"type":"show"}"#).is_err());
+        // A card the contract refuses never reaches the window.
+        let unknown_kind = r#"{"type":"frame","frame":{"card":{"id":"a","kind":"ad","title":"t","lines":["l"],"priority":"low","ttlSecs":1},"expanded":false,"queued":1,"keys":{"dismiss":"F7","next":"Shift+F7","expand":"Alt+F7"}}}"#;
+        assert!(decode_line::<OverlayCommand>(unknown_kind).is_err());
     }
 
     #[test]
