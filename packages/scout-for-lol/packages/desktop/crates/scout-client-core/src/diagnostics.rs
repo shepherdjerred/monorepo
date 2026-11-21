@@ -566,8 +566,7 @@ impl Diagnostics {
     pub fn events(&self) -> Vec<DiagnosticEvent> {
         self.events
             .read()
-            .map(|events| events.iter().cloned().collect())
-            .unwrap_or_default()
+            .map_or_default(|events| events.iter().cloned().collect())
     }
 
     /// The most recent events, newest first, for the Diagnostics page.
@@ -575,8 +574,7 @@ impl Diagnostics {
     pub fn recent(&self, limit: usize) -> Vec<DiagnosticEvent> {
         self.events
             .read()
-            .map(|events| events.iter().rev().take(limit).cloned().collect())
-            .unwrap_or_default()
+            .map_or_default(|events| events.iter().rev().take(limit).cloned().collect())
     }
 
     /// A shareable snapshot: counters, then every retained event as JSONL.

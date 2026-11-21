@@ -56,7 +56,7 @@
     "@playwright/test": "1.64.0",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@shepherdjerred/test-postgres": "workspace:*",
-    "@types/bun": "1.4.2",
+    "@types/bun": "1.4.5",
     "@types/pg": "8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@types/bun": "1.4.2",
+    "@types/bun": "1.4.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/node": "^26.1.1",

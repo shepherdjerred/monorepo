@@ -34,7 +34,6 @@ const LINK_BROKEN: u8 = 3;
 /// `on_error_reports` is told the user's "Send error reports" choice each time
 /// the supervisor's snapshot arrives, so an opt-out reaches this process's own
 /// error reporter without a restart.
-#[must_use]
 pub fn run(build: BuildInfo, on_error_reports: impl Fn(bool) + 'static) -> ExitCode {
     let outbound = Outbound::new(std::io::stdout());
     if !outbound.hello() {

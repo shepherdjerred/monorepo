@@ -48,7 +48,7 @@ fi
 # Stale images without mise (the Playwright image) bootstrap the same release
 # ci-base pins, so both read mise.lock's format identically.
 # renovate: datasource=github-releases depName=jdx/mise
-MISE_BOOTSTRAP_VERSION="v2026.10.6"
+MISE_BOOTSTRAP_VERSION="v2026.11.11"
 # An image baked before the pin carries an older mise that rejects the
 # lockfile's format, so replace any mise older than the pin, not only a missing
 # one. The bootstrap targets ~/.local/bin, which the PATH below puts first.
@@ -65,8 +65,8 @@ mise_current() {
 # means the bootstrap neither depends on GitHub serving that manifest nor runs
 # an unpinned installer script. Asset names carry the version, so a version
 # bump without new checksums fails scripts/checks/deps/check-mise-lock-sync.ts.
-MISE_BOOTSTRAP_SHA256="63b7d112411240a3c5a8cf381d3916997de7515483eb678f08920d5c77923dc4  mise-v2026.10.6-linux-x64-musl.tar.gz
-760b274537301cf78828254b133182ea38af27df2c0606766dc650f5c0618df0  mise-v2026.10.6-linux-arm64-musl.tar.gz"
+MISE_BOOTSTRAP_SHA256="4760a05d70f8fcc2176f935705060c709bafde86e98b01a836ccd68129ccbc3d  mise-v2026.11.11-linux-x64-musl.tar.gz
+06231a655ae71c6641230f563ab45c344fbea56a19ff5e8377603f536df6088e  mise-v2026.11.11-linux-arm64-musl.tar.gz"
 install_bootstrap_mise() {
   case "$(uname -m)" in
     x86_64 | amd64) mise_arch=x64 ;;
@@ -109,6 +109,13 @@ export PATH="/opt/mise/shims:$HOME/.local/bin:$HOME/.local/share/mise/shims:$PAT
 # the same 5,000/hr bucket as every other CI and agent GitHub read. Locked mode
 # fails on a tool the lockfile does not cover rather than resolving it.
 export MISE_LOCKED=1
+# mise's dotnet backend otherwise installs every SDK into one shared root under
+# MISE_DATA_DIR and records each version as a symlink to it. A stale image's
+# runtime install then leaves that symlink in the shared install claim while
+# the SDK stays in the installing pod's image layer, so later pods see the
+# version as installed without its SDK. Isolated installs keep each SDK inside
+# its own install directory, which lives in the claim.
+export MISE_DOTNET_ISOLATED=1
 # Downloads and provenance checks can still reach GitHub; unauthenticated calls
 # share the cluster egress IP's 60/hr limit, which CI exhausts immediately.
 # Scope the download-only identity to mise itself instead of exporting a
@@ -232,6 +239,13 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     if ! mise_ci where node; then
       mise_ci install --yes --force node
       mise_ci where node
+    fi
+    # A record written before isolated installs can still point at another
+    # pod's shared .NET root; reinstall when the pinned SDK is absent.
+    dotnet_version=$(mise_ci current dotnet)
+    if [ ! -d "$(mise_ci where dotnet)/sdk/$dotnet_version" ]; then
+      mise_ci install --yes --force dotnet
+      test -d "$(mise_ci where dotnet)/sdk/$dotnet_version"
     fi
     expose_postgres_tools
     # Runtime installs can add a tool without creating its executable shim on a

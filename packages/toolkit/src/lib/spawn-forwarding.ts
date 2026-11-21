@@ -16,8 +16,12 @@ export type ForwardingSpawnOptions = {
   readonly extraFiles?: readonly string[];
 };
 
-/** Exit status a shell would report for a child killed by `signal`. */
-export function signalExitCode(signal: string): number {
+/**
+ * Exit status a shell would report for a child killed by `signal`. Bun reports
+ * a signal without a name, such as a Linux real-time signal, as its number.
+ */
+export function signalExitCode(signal: string | number): number {
+  if (typeof signal === "number") return 128 + signal;
   const number = Object.entries(constants.signals).find(
     ([name]) => name === signal,
   )?.[1];

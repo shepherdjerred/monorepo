@@ -54,7 +54,7 @@ export async function compileProgram(options: {
     ]);
     if (child.signalCode !== null) {
       throw new BuildProgramError(
-        `Build program timed out after ${(options.timeoutMs ?? 30_000).toString()} ms (killed with ${child.signalCode})`,
+        `Build program timed out after ${(options.timeoutMs ?? 30_000).toString()} ms (killed with ${String(child.signalCode)})`,
       );
     }
     if (exitCode !== 0) {

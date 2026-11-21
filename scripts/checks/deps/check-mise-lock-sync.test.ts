@@ -74,6 +74,31 @@ describe("lockViolations", () => {
     ]);
   });
 
+  test("requires only the platforms an os-restricted tool installs on", () => {
+    const macosOnly = {
+      version: "2.48.0",
+      backend: "aqua:o/gen",
+      "platforms.macos-arm64": artifact,
+    };
+    expect(
+      lockViolations(
+        { tools: { "aqua:o/gen": { version: "2.48.0", os: ["macos"] } } },
+        lock({ "aqua:o/gen": [macosOnly] }),
+      ),
+    ).toEqual([]);
+    expect(
+      lockViolations(
+        { tools: { "aqua:o/gen": "2.48.0" } },
+        lock({ "aqua:o/gen": [macosOnly] }),
+      ),
+    ).toEqual([
+      {
+        file: "mise.lock",
+        message: "aqua:o/gen@2.48.0 has no artifact for linux-x64",
+      },
+    ]);
+  });
+
   test("reports entries for tools no longer configured", () => {
     expect(
       lockViolations(

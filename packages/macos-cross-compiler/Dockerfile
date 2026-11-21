@@ -53,7 +53,7 @@ ARG LLVM_VERSION
 ARG SDK=27
 # Must match the rust pin in the repo's .mise.toml.
 # renovate: datasource=rust-version depName=rust
-ARG RUST_VERSION=1.99.0
+ARG RUST_VERSION=1.100.0
 # Not RCODESIGN_*: rcodesign reads every RCODESIGN_ variable as configuration.
 # renovate: datasource=github-releases depName=indygreg/apple-platform-rs extractVersion=^apple-codesign/(?<version>.*)$
 ARG APPLE_CODESIGN_VERSION=0.29.0

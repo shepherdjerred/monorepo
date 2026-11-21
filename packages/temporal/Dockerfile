@@ -137,9 +137,9 @@ FROM base AS media-regex-build
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Match the repository SDK pin; checksum pins match the upstream SDK artifacts.
 # renovate: datasource=dotnet-version depName=dotnet-sdk
-ARG DOTNET_SDK_VERSION=10.0.303
-ARG DOTNET_SDK_SHA512_AMD64=538df11ceb9d86bdda061bab6ede3d1f6d46bb9ba087ae905643f3d456afe982949d1b952bceb305a5d22d2d6e69cc0e5100216ffcc709aaa86e867f2d9cdf9a
-ARG DOTNET_SDK_SHA512_ARM64=622e059198058ee5f92d7817bdd83885480a979628348f878201cb8dba52d168c1a324f9943a0e7a03ad547d85332aa82f16aced29da599ef02422b5378452de
+ARG DOTNET_SDK_VERSION=10.0.404
+ARG DOTNET_SDK_SHA512_AMD64=577d0eb17fec33d029104c5c63a1ab0accc3e28776274abef2218dbac5af18d2109b5406d26b31d76f5c245215e3ba0926a94c20246c672c41847c9e1eb1dc50
+ARG DOTNET_SDK_SHA512_ARM64=3533a3869da219cac45c567aadac3d8e96cdf1c6a04fe1c1d5fdeefea5d45af8424488f0144730d11b4a751f7ad546fb11e4c2b2725cd8401efee726711f8f11
 ENV DOTNET_ROOT=/opt/dotnet \
     DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     DOTNET_NOLOGO=1 \
@@ -186,29 +186,29 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Pinned operator CLI versions.
 # renovate: datasource=github-releases depName=cli/cli
-ARG GH_CLI_VERSION=2.96.0
+ARG GH_CLI_VERSION=2.105.0
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 ARG KUBECTL_VERSION=v1.37.1
 # renovate: datasource=github-releases depName=github/github-mcp-server
-ARG GITHUB_MCP_SERVER_VERSION=1.3.0
+ARG GITHUB_MCP_SERVER_VERSION=2.2.0
 # renovate: datasource=github-releases depName=siderolabs/talos
 ARG TALOSCTL_VERSION=v1.14.6
 # renovate: datasource=github-releases depName=opentofu/opentofu
-ARG TOFU_VERSION=1.13.1
+ARG TOFU_VERSION=1.13.9
 # renovate: datasource=github-releases depName=argoproj/argo-cd
-ARG ARGOCD_CLI_VERSION=v3.4.5
+ARG ARGOCD_CLI_VERSION=v3.6.2
 # renovate: datasource=github-releases depName=vmware-tanzu/velero
-ARG VELERO_CLI_VERSION=v1.18.2
+ARG VELERO_CLI_VERSION=v1.18.4
 # renovate: datasource=github-releases depName=woodpecker-ci/woodpecker
-ARG WOODPECKER_CLI_VERSION=3.18.1
+ARG WOODPECKER_CLI_VERSION=3.20.1
 # renovate: datasource=github-tags depName=temporalio/cli
-ARG TEMPORAL_CLI_VERSION=1.7.3
+ARG TEMPORAL_CLI_VERSION=1.10.1
 # renovate: datasource=github-releases depName=grafana/gcx
-ARG GCX_VERSION=1.0.0
+ARG GCX_VERSION=1.8.0
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.13.0
+ARG UV_VERSION=0.13.9
 # renovate: datasource=github-releases depName=aquasecurity/trivy
-ARG TRIVY_VERSION=0.72.0
+ARG TRIVY_VERSION=0.76.2
 # lychee tags carry a `lychee-v` prefix, so the pinned value is the full tag.
 # renovate: datasource=github-releases depName=lycheeverse/lychee versioning=regex:^lychee-v(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)$
 ARG LYCHEE_VERSION=lychee-v0.24.2
@@ -221,7 +221,7 @@ ARG KOMETA_COMMIT=1ec206b4c9dd0e9f9ea7b9e7a4e2e56b349e68d0
 # "github:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
 # run against the same server binaries here as on dev/CI machines.
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
-ARG POSTGRESQL_BINARIES_VERSION=18.6.0
+ARG POSTGRESQL_BINARIES_VERSION=18.7.0
 
 # --- Base system deps: ca-certificates, curl, git, libxml2, and the pod-local agent firewall ---
 # libxml2 is for the postgresql-binaries `postgres` server below: only that one

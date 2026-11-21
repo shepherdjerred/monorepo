@@ -60,7 +60,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl libxml2 && rm -rf /var/lib/apt/lists/*
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
-ARG POSTGRESQL_BINARIES_VERSION=18.6.0
+ARG POSTGRESQL_BINARIES_VERSION=18.7.0
 RUN set -eu; \
     arch="$(dpkg --print-architecture)"; \
     case "$arch" in amd64) pgarch=x86_64 ;; arm64) pgarch=aarch64 ;; *) exit 1 ;; esac; \

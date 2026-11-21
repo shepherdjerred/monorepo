@@ -952,9 +952,7 @@ impl ChatScreen {
             composer: composer(parts, ui, open_transcript.is_some()),
             reconnecting: status.reconnecting,
             notice: status.notice.clone(),
-            header: open_transcript
-                .map(|transcript| header(transcript, !turn_running))
-                .unwrap_or_default(),
+            header: open_transcript.map_or_default(|transcript| header(transcript, !turn_running)),
             share_url: open_transcript.and_then(|transcript| transcript.share_url.clone()),
         }))
     }
