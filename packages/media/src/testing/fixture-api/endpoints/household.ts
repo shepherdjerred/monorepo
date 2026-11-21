@@ -135,6 +135,7 @@ const requests: readonly FixtureEndpoint[] = [
     samples: [
       "/request-interests",
       `/request-interests?cursor=${requestId(14)}`,
+      "/request-interests?include=artwork",
     ],
   }),
   endpoint({

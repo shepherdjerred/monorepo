@@ -205,14 +205,93 @@ test("former requesters retain their own completed removal history without house
   expect(unrelatedHistory.items).toEqual([]);
 });
 
-test("calendar episodes retain their followed series identity with or without an intermediate season", async () => {
+test("library, calendar and removal history rows carry their title's artwork, and none before it is observed", async () => {
+  const db = harness.database();
+  const f = await harness.fixture("artwork", { chooseMovieEdition: false });
+  const actor = { ...f.user, role: "member" as const };
+  const title = `Artwork fixture ${crypto.randomUUID()}`;
+  const art = {
+    posterPath: "/artwork-poster.jpg",
+    backdropPath: "/artwork-backdrop.jpg",
+  };
+  await db.mediaItem.update({
+    where: { id: f.media.id },
+    data: { title, ...art },
+  });
+  await db.mediaReleaseDate.create({
+    data: {
+      id: crypto.randomUUID(),
+      mediaId: f.media.id,
+      region: "US",
+      kind: "digital",
+      date: "2026-11-20",
+      precision: "day",
+      observedAt: new Date(),
+    },
+  });
+  const decision = await db.retentionDecision.create({
+    data: {
+      mediaId: f.media.id,
+      generation: 1,
+      state: "purged",
+      evidence: { recoveryEpoch: 0 },
+      quarantinedAt: new Date("2026-11-01T00:00:00Z"),
+      manifest: { assets: [] },
+    },
+  });
+  const library = new PrismaLibraryApplication(db, settings);
+  const calendar = new PrismaCalendarApplication(db, settings);
+  const history = new PrismaRemovalHistoryApplication(db, settings);
+  const read = async () => {
+    const libraryPage = await library.list(
+      actor,
+      LibraryQuerySchema.parse({ query: title }),
+    );
+    const calendarPage = await calendar.list(
+      actor,
+      CalendarQuerySchema.parse({ from: "2026-11-01", to: "2026-11-30" }),
+    );
+    const historyPage = await history.list(
+      actor,
+      RemovalHistoryQuerySchema.parse({}),
+    );
+    return {
+      library: libraryPage.items,
+      event: calendarPage.events.find((row) => row.mediaId === f.media.id),
+      removal: historyPage.items.find((row) => row.id === decision.id),
+    };
+  };
+  const observed = await read();
+  expect(observed.library).toMatchObject([{ id: f.media.id, artwork: art }]);
+  expect(observed.event).toMatchObject({
+    rootMediaId: f.media.id,
+    artwork: art,
+  });
+  expect(observed.removal).toMatchObject({
+    mediaId: f.media.id,
+    rootMediaId: f.media.id,
+    artwork: art,
+  });
+  const none = { posterPath: null, backdropPath: null };
+  await db.mediaItem.update({ where: { id: f.media.id }, data: none });
+  const unobserved = await read();
+  expect(unobserved.library).toMatchObject([{ artwork: none }]);
+  expect(unobserved.event).toMatchObject({ artwork: none });
+  expect(unobserved.removal).toMatchObject({ artwork: none });
+});
+
+test("calendar and removal history episodes retain their followed series identity and artwork with or without an intermediate season", async () => {
   const db = harness.database();
   const f = await harness.fixture("calendar", {
     chooseMovieEdition: false,
     kind: "episode",
   });
+  const art = {
+    posterPath: "/followed-poster.jpg",
+    backdropPath: "/followed-backdrop.jpg",
+  };
   const series = await db.mediaItem.create({
-    data: { kind: "series", title: "Followed series" },
+    data: { kind: "series", title: "Followed series", ...art },
   });
   const season = await db.mediaItem.create({
     data: {
@@ -262,5 +341,30 @@ test("calendar episodes retain their followed series identity with or without an
   for (const mediaId of [f.media.id, nested.id])
     expect(
       page.events.find((event) => event.mediaId === mediaId),
-    ).toMatchObject({ rootMediaId: series.id, seriesTitle: series.title });
+    ).toMatchObject({
+      rootMediaId: series.id,
+      seriesTitle: series.title,
+      artwork: art,
+    });
+  // The fixture episode sits directly under the series and has its own request.
+  const decision = await db.retentionDecision.create({
+    data: {
+      mediaId: f.media.id,
+      generation: 1,
+      state: "purged",
+      evidence: { recoveryEpoch: 0 },
+      quarantinedAt: new Date("2026-11-01T00:00:00Z"),
+      manifest: { assets: [] },
+    },
+  });
+  const removals = await new PrismaRemovalHistoryApplication(db, settings).list(
+    { ...f.user, role: "member" },
+    RemovalHistoryQuerySchema.parse({}),
+  );
+  expect(removals.items.find((row) => row.id === decision.id)).toMatchObject({
+    mediaId: f.media.id,
+    kind: "episode",
+    rootMediaId: series.id,
+    artwork: art,
+  });
 });

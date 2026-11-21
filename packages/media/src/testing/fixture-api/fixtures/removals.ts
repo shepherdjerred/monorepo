@@ -12,6 +12,7 @@ import {
   fixtureId,
   versionOf,
 } from "#testing/fixture-api/support.ts";
+import { storedArtwork } from "./artwork.ts";
 import { episodeId, seasonId, titleNamed, type Title } from "./titles.ts";
 
 type RemovalList = z.input<typeof RemovalListSchema>;
@@ -44,6 +45,8 @@ export function removalList(): RemovalList {
     return {
       id: fixtureId(12, index + 1),
       mediaId: title.id,
+      rootMediaId: title.id,
+      artwork: storedArtwork(title),
       state,
       graceUntil: graceDays === null ? null : ahead(graceDays * DAY),
       purgeAfter: purgeDays === null ? null : ahead(purgeDays * DAY),
@@ -213,10 +216,28 @@ const HISTORY_EPISODE = 4;
 
 type Subject = Pick<
   HistoryItem,
-  "mediaId" | "title" | "seriesTitle" | "seasonNumber" | "episodeNumber"
+  | "mediaId"
+  | "rootMediaId"
+  | "artwork"
+  | "title"
+  | "seriesTitle"
+  | "seasonNumber"
+  | "episodeNumber"
 >;
 
+/** A removed season or episode keeps its series as its root and for its art. */
 function subject(title: Title, kind: HistoryItem["kind"]): Subject {
+  return {
+    ...removed(title, kind),
+    rootMediaId: title.id,
+    artwork: storedArtwork(title),
+  };
+}
+
+function removed(
+  title: Title,
+  kind: HistoryItem["kind"],
+): Omit<Subject, "rootMediaId" | "artwork"> {
   switch (kind) {
     case "movie":
     case "series":

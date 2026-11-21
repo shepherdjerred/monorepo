@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AvailabilitySchema } from "#shared/contract.ts";
+import { ArtworkSchema } from "#shared/artwork/contract.ts";
 
 export const LibraryCursorSchema = z.object({
   title: z.string().max(1000),
@@ -33,6 +34,7 @@ export const LibraryPageSchema = z.object({
         title: z.string(),
         kind: z.enum(["movie", "series"]),
         year: z.int().nullable(),
+        artwork: ArtworkSchema,
         policy: z.enum(["keep", "temporary", "unclassified"]),
         myInterest: z.enum(["following", "released", "none"]),
         availability: AvailabilitySchema.nullable(),

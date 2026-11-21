@@ -15,6 +15,10 @@ import {
   visibilityReader,
 } from "#infrastructure/visibility/access.ts";
 import type { CalendarReadSettings } from "#infrastructure/library/views/calendar.ts";
+import {
+  rootArtwork,
+  rootMedia,
+} from "#infrastructure/library/views/artwork.ts";
 
 const PublicReasonSchema = z.object({
   ownerOverride: z.unknown().optional(),
@@ -128,6 +132,8 @@ export class PrismaRemovalHistoryApplication {
             return {
               id: row.id,
               mediaId: row.mediaId,
+              rootMediaId: rootMedia(row.media).id,
+              artwork: rootArtwork(row.media),
               title: row.media.title,
               kind: row.media.kind,
               edition: row.edition,

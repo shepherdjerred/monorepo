@@ -8,6 +8,7 @@ import { OwnerHealthReasonSchema } from "./notification-authority.ts";
 import { ResolvedProfileSchema } from "#domain/resolved-contract.ts";
 import { ManagedGuideSchema } from "./quality-guide/contract.ts";
 import { ResolvedEvidenceProtocolSchema } from "#domain/resolved-evidence.ts";
+import { ArtworkSchema } from "./artwork/contract.ts";
 import {
   MediaItemSchema,
   RequestSchema,
@@ -36,7 +37,11 @@ export const CommandResultSchema = z.object({
   restricted: z.boolean().optional(),
 });
 export const RequestListSchema = z.array(
-  RequestSchema.extend({ media: MediaItemSchema }),
+  RequestSchema.extend({
+    media: MediaItemSchema,
+    rootMediaId: z.string(),
+    artwork: ArtworkSchema,
+  }),
 );
 export const OperationListSchema = z.array(
   z.object({
@@ -53,6 +58,8 @@ export const RemovalListSchema = z.array(
   z.object({
     id: z.string(),
     mediaId: z.string(),
+    rootMediaId: z.string(),
+    artwork: ArtworkSchema,
     state: z.string(),
     graceUntil: DateTimeSchema.nullable(),
     purgeAfter: DateTimeSchema.nullable(),
@@ -94,6 +101,17 @@ export const ProfileListSchema = z.array(
 );
 export const UserListSchema = z.array(UserSchema);
 export const MediaDetailSchema = MediaItemSchema.extend({
+  // The movie or series this row belongs to: its art and synopsis, and the
+  // TMDB identity of its catalog page (null when it has none).
+  rootMediaId: z.string(),
+  artwork: ArtworkSchema,
+  overview: z.string().nullable(),
+  catalog: z
+    .object({
+      kind: z.enum(["movie", "series"]),
+      externalId: z.number().int(),
+    })
+    .nullable(),
   visibility: MediaVisibilitySchema,
   subtitlePolicies: z
     .array(
@@ -188,6 +206,7 @@ export const CatalogItemSchema = z.object({
   overview: z.string(),
   date: z.string(),
   posterPath: z.string().nullable(),
+  backdropPath: z.string().nullable(),
   originalLanguage: z.string(),
 });
 export const CatalogSearchSchema = z.object({

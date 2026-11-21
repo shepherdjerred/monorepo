@@ -16,6 +16,7 @@ import {
   libraryViewPolicy,
 } from "#infrastructure/library/views/policy.ts";
 import type { CalendarReadSettings } from "#infrastructure/library/views/calendar.ts";
+import { rootArtwork } from "#infrastructure/library/views/artwork.ts";
 
 export class PrismaLibraryApplication {
   constructor(
@@ -103,6 +104,7 @@ export class PrismaLibraryApplication {
             title: media.title,
             kind: media.kind,
             year: media.year,
+            artwork: rootArtwork(media),
             ...libraryPolicyLabels(policy),
             myInterest: policy.following
               ? "following"

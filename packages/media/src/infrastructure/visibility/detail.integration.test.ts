@@ -447,6 +447,91 @@ test("reads are read-only; evaluation CAS refuses stale observation, policy and 
   );
 });
 
+test("detail carries its root title's artwork, synopsis and catalog identity; a season and an episode inherit the series'", async () => {
+  const f = await visibilityFixture(h.database());
+  await f.db.mediaItem.update({
+    where: { id: f.media.id },
+    data: {
+      posterPath: "/movie-poster.jpg",
+      backdropPath: "/movie-backdrop.jpg",
+      overview: "A movie synopsis.",
+    },
+  });
+  expect(await f.app.getMedia(f.member, f.media.id)).toMatchObject({
+    id: f.media.id,
+    rootMediaId: f.media.id,
+    artwork: {
+      posterPath: "/movie-poster.jpg",
+      backdropPath: "/movie-backdrop.jpg",
+    },
+    overview: "A movie synopsis.",
+    catalog: { kind: "movie", externalId: f.media.tmdbId },
+  });
+  const tmdbId =
+    (z.int().parse(crypto.getRandomValues(new Uint32Array(1))[0]) %
+      1_000_000_000) +
+    1;
+  const series = await f.db.mediaItem.create({
+    data: {
+      kind: "series",
+      title: "Artwork series",
+      tmdbId,
+      externalIds: { plexSectionId: "2" },
+      posterPath: "/series-poster.jpg",
+      overview: "A series synopsis.",
+    },
+  });
+  const season = await f.db.mediaItem.create({
+    data: {
+      kind: "season",
+      title: "Artwork season",
+      parentId: series.id,
+      seasonNumber: 1,
+    },
+  });
+  // Seasons and episodes store none of this; a stray value must never win.
+  const episode = await f.db.mediaItem.create({
+    data: {
+      kind: "episode",
+      title: "Artwork episode",
+      parentId: season.id,
+      seasonNumber: 1,
+      episodeNumber: 1,
+      tmdbId,
+      posterPath: "/episode-still.jpg",
+      backdropPath: "/episode-still.jpg",
+      overview: "An episode synopsis.",
+    },
+  });
+  const app = new PrismaMediaApplication(f.db, {
+    keepDays: 30,
+    serverMachineId: "visibility-fixture",
+    visibilitySections: { movie: "1", series: "2" },
+  });
+  const inherited = {
+    rootMediaId: series.id,
+    artwork: { posterPath: "/series-poster.jpg", backdropPath: null },
+    overview: "A series synopsis.",
+    catalog: { kind: "series", externalId: tmdbId },
+  };
+  for (const media of [series, season, episode])
+    expect(await app.getMedia(f.member, media.id)).toMatchObject({
+      id: media.id,
+      ...inherited,
+    });
+  // A title TMDB does not know, or whose artwork is not observed yet, has neither.
+  await f.db.mediaItem.update({
+    where: { id: series.id },
+    data: { tmdbId: null, posterPath: null, overview: null },
+  });
+  expect(await app.getMedia(f.member, episode.id)).toMatchObject({
+    rootMediaId: series.id,
+    artwork: { posterPath: null, backdropPath: null },
+    overview: null,
+    catalog: null,
+  });
+});
+
 test("unmapped episode inherits its actual series library, never an unrelated permitted library", async () => {
   const f = await visibilityFixture(h.database());
   const series = await f.db.mediaItem.create({

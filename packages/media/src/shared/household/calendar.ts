@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DateTimeSchema } from "#shared/api.ts";
 import { AvailabilitySchema } from "#shared/contract.ts";
+import { ArtworkSchema } from "#shared/artwork/contract.ts";
 
 /** Calendar dates are civil dates, never instants in the viewer's timezone. */
 export const CalendarDateSchema = z.iso.date();
@@ -71,6 +72,7 @@ export const CalendarEventSchema = z.object({
   id: z.string(),
   mediaId: z.string(),
   rootMediaId: z.string(),
+  artwork: ArtworkSchema,
   title: z.string(),
   seriesTitle: z.string().nullable(),
   seasonNumber: z.int().nonnegative().nullable(),
@@ -113,6 +115,8 @@ export type RemovalHistoryQuery = z.infer<typeof RemovalHistoryQuerySchema>;
 export const RemovalHistoryItemSchema = z.object({
   id: z.string(),
   mediaId: z.string(),
+  rootMediaId: z.string(),
+  artwork: ArtworkSchema,
   title: z.string(),
   kind: z.enum(["movie", "series", "season", "episode"]),
   edition: z.string(),

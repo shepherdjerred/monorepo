@@ -8,11 +8,21 @@ import type {
   MediaRequest,
 } from "#generated/prisma/client.ts";
 import { currentInterestNotice } from "./notice-identity.ts";
+import {
+  artworkAncestrySelect,
+  rootArtwork,
+} from "#infrastructure/library/views/artwork.ts";
 
+/**
+ * `include.artwork` is the caller's explicit opt-in. The row contract is
+ * strict, so an unrequested field would be rejected by a browser tab on an
+ * earlier client.
+ */
 export async function listRequestInterests(
   db: Database,
   actor: MediaActor,
   cursor: string | null,
+  include?: { artwork: boolean },
 ) {
   const currentActor = await db.mediaUser.findUnique({
     where: { id: actor.id },
@@ -27,7 +37,7 @@ export async function listRequestInterests(
         : { userId: currentActor.id }),
       ...(cursor === null ? {} : { id: { gt: cursor } }),
     },
-    include: { media: { select: { title: true } } },
+    include: { media: { select: { title: true, ...artworkAncestrySelect } } },
     orderBy: { id: "asc" },
     take: 50,
   });
@@ -80,6 +90,9 @@ export async function listRequestInterests(
           ? undefined
           : eventById.get(request.interestNoticeEventId),
       ),
+      ...(include?.artwork === true
+        ? { artwork: rootArtwork(request.media) }
+        : {}),
     })),
     nextCursor: requests.length === 50 ? (requests.at(-1)?.id ?? null) : null,
   });

@@ -181,7 +181,8 @@ const app = createMediaApp({
   auth,
   media,
   requestInterests: {
-    list: (actor, cursor) => listRequestInterests(database, actor, cursor),
+    list: (actor, cursor, include) =>
+      listRequestInterests(database, actor, cursor, include),
     progress: (actor, requestId) =>
       getRequestInterestProgress(database, actor, requestId),
     execute: (actor, key, input) =>

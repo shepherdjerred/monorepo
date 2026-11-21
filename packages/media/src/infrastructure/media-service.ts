@@ -15,7 +15,6 @@ import type { Database } from "./database.ts";
 import {
   RequestListSchema,
   OperationListSchema,
-  RemovalListSchema,
   NotificationListSchema,
   ProfileListSchema,
   UserListSchema,
@@ -28,8 +27,9 @@ import {
   type VisibilitySections,
 } from "./visibility/access.ts";
 import { readMediaDetail } from "./visibility/media-detail.ts";
+import { rootArtwork, rootMedia } from "./library/views/artwork.ts";
+import { readRemovalList } from "./library/views/removal-list.ts";
 import { projectExternalRequests } from "./external-library/availability.ts";
-import { effectiveRequestWhere } from "./request-claims.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
 import { InterestCheckNoticeSchema } from "#shared/household/interests.ts";
 import { readDefaultCommandContext } from "./editions/command-context.ts";
@@ -202,11 +202,16 @@ export class PrismaMediaApplication
         orderBy: { updatedAt: "desc" },
         take: 200,
       });
+      const projected = await projectExternalRequests(tx, actor, requests, {
+        access,
+        serverMachineId: this.settings.serverMachineId,
+      });
       return RequestListSchema.parse(
-        await projectExternalRequests(tx, actor, requests, {
-          access,
-          serverMachineId: this.settings.serverMachineId,
-        }),
+        projected.map((request) => ({
+          ...request,
+          rootMediaId: rootMedia(request.media).id,
+          artwork: rootArtwork(request.media),
+        })),
       );
     });
   }
@@ -293,34 +298,8 @@ export class PrismaMediaApplication
     );
   }
 
-  async removals(actor: MediaActor) {
-    return RemovalListSchema.parse(
-      await this.db.retentionDecision.findMany({
-        where: {
-          edition: "default",
-          state: { in: ["warning_pending", "grace_period", "quarantined"] },
-          ...(actor.role === "owner"
-            ? {}
-            : {
-                media: {
-                  requests: {
-                    some: { userId: actor.id, ...effectiveRequestWhere },
-                  },
-                },
-              }),
-        },
-        select: {
-          id: true,
-          mediaId: true,
-          state: true,
-          graceUntil: true,
-          purgeAfter: true,
-          media: { select: { title: true, kind: true, version: true } },
-        },
-        orderBy: { updatedAt: "desc" },
-        take: 100,
-      }),
-    );
+  removals(actor: MediaActor) {
+    return readRemovalList(this.db, actor);
   }
 
   async notifications(actor: MediaActor) {

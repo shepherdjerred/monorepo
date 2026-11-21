@@ -23,6 +23,10 @@ import {
 import { mediaVisibility } from "./detail.ts";
 import { memberDetail } from "./member-detail.ts";
 import { externalAvailableMediaIds } from "#infrastructure/external-library/availability.ts";
+import {
+  rootArtwork,
+  rootMedia,
+} from "#infrastructure/library/views/artwork.ts";
 import type { MediaVisibility } from "#shared/visibility/detail.ts";
 import {
   hasPendingSeriesPackPublicationV1,
@@ -164,6 +168,7 @@ export function readMediaDetail(
       assetIds: item.assets.map((coverage) => coverage.asset.id),
     });
     const children = item.children.filter((child) => reader.visible(child));
+    const root = rootMedia(item);
     const externalPermitted =
       reader.user.plexIdentity?.permittedSectionIds.includes(
         plexAccess.sectionId,
@@ -197,6 +202,10 @@ export function readMediaDetail(
       })),
       visibility: scopedExternalVisibility(visibility, externalPermitted),
       subtitlePolicies: policies,
+      rootMediaId: root.id,
+      artwork: rootArtwork(item),
+      overview: root.overview,
+      catalog: catalogPage(root),
       assets: item.assets.map((coverage) => ({
         ...coverage,
         asset: {
@@ -249,6 +258,14 @@ function scopedExternalVisibility(
       },
     },
   };
+}
+
+/** The TMDB page of a movie or series. A season or episode stored without its series has none. */
+function catalogPage(root: Pick<MediaItem, "kind" | "tmdbId">) {
+  return (root.kind === "movie" || root.kind === "series") &&
+    root.tmdbId !== null
+    ? { kind: root.kind, externalId: root.tmdbId }
+    : null;
 }
 
 function pendingSubtitleStatus(

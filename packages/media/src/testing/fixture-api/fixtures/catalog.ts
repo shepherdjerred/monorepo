@@ -4,37 +4,16 @@ import type {
   CatalogItemSchema,
   CatalogSearchSchema,
 } from "#shared/api.ts";
-import { sha256 } from "#testing/fixture-api/support.ts";
+import {
+  backdropPath,
+  catalogArtwork,
+  posterPath,
+  synopsis,
+} from "./artwork.ts";
 import { TITLES } from "./titles.ts";
 
 type CatalogItem = z.input<typeof CatalogItemSchema>;
 type CatalogEntry = { item: CatalogItem; seasons: readonly number[] };
-
-const OVERVIEWS = new Map<string, string>([
-  [
-    "Dune: Part Two",
-    "Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the universe, he endeavors to prevent a terrible future.",
-  ],
-  [
-    "Severance",
-    "Mark leads a team of office workers whose memories have been surgically divided between their work and personal lives. When a mysterious colleague appears outside of work, it begins a journey to discover the truth about their jobs.",
-  ],
-  [
-    "Anora",
-    "A young sex worker from Brooklyn gets her chance at a Cinderella story when she meets and impulsively marries the son of an oligarch.",
-  ],
-]);
-
-function overview(title: string): string {
-  return (
-    OVERVIEWS.get(title) ??
-    `${title} — a household favourite. A story of ambition, loyalty and consequence that rewards a second watch.`
-  );
-}
-
-function posterPath(title: string): string {
-  return `/${sha256(title).slice(0, 27)}.jpg`;
-}
 
 type OutsideLibrarySeed = readonly [
   title: string,
@@ -76,10 +55,10 @@ const CATALOG: readonly CatalogEntry[] = [
       externalId: title.tmdbId,
       kind: title.kind,
       title: title.title,
-      overview: overview(title.title),
+      overview: synopsis(title.title),
       date: `${String(title.year)}-${twoDigits((title.index % 12) + 1)}-${twoDigits(((title.index * 7) % 27) + 1)}`,
       // Some provider entries have no artwork; pages must render without it.
-      posterPath: title.index % 9 === 4 ? null : posterPath(title.title),
+      ...catalogArtwork(title),
       originalLanguage: title.language,
     },
     seasons: title.seasons,
@@ -89,9 +68,10 @@ const CATALOG: readonly CatalogEntry[] = [
       externalId,
       kind,
       title,
-      overview: overview(title),
+      overview: synopsis(title),
       date,
       posterPath: posterPath(title),
+      backdropPath: backdropPath(title),
       originalLanguage: "en",
     },
     seasons,

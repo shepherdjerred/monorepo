@@ -6,6 +6,7 @@ import {
   type CalendarPageSchema,
 } from "#shared/household/calendar.ts";
 import { DAY, HOUR, NOW, ago } from "#testing/fixture-api/support.ts";
+import { storedArtwork } from "./artwork.ts";
 import { AIRING_EPISODES, episodeId, titleNamed } from "./titles.ts";
 
 type CalendarEvent = z.input<typeof CalendarEventSchema>;
@@ -29,6 +30,7 @@ function episodeEvents(): CalendarEvent[] {
       id: `air:${id}`,
       mediaId: id,
       rootMediaId: airing.title.id,
+      artwork: storedArtwork(airing.title),
       title: airing.name,
       seriesTitle: airing.title.title,
       seasonNumber: airing.season,
@@ -71,6 +73,7 @@ function movieEvents(): CalendarEvent[] {
       id: `release:${title.id}:${kind}`,
       mediaId: title.id,
       rootMediaId: title.id,
+      artwork: storedArtwork(title),
       title: title.title,
       seriesTitle: null,
       seasonNumber: null,
