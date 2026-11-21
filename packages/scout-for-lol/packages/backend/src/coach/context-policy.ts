@@ -135,7 +135,7 @@ function withheldReason(
   // a typed or spoken question carries any.
   return initiation !== "player_typed" &&
     initiation !== "player_voice" &&
-INITIATION_SECTION[initiation] !== section
+    INITIATION_SECTION[initiation] !== section
     ? "section_outside_initiation"
     : null;
 }

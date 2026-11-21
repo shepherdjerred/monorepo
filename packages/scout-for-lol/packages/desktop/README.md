@@ -1057,7 +1057,7 @@ stays in memory on the device to time the game start.
 | Microphone audio while listening (`scout-voice`)             | No                         | Never: listening for "hey scout" runs on this computer, and audio that is not a question is dropped as it arrives                                                                     | Never sent                       |
 | A spoken question                                            | Yes, to the Scout API      | Only as a finished utterance: one WAV per question, after "hey scout" or while push-to-talk is held, sent to `coach/voice/turns` once you stop speaking; the microphone never streams | Voice consent, mute              |
 | Spoken answers                                               | No, they arrive            | Played on this computer as they stream in; nothing is kept                                                                                                                            | Voice consent                    |
-| Proactive coach triggers (`live::detectors`, beta only) | No | Not sent yet: nothing wires the detectors to the server | Never sent |
+| Proactive coach triggers (`live::detectors`, beta only)      | No                         | Not sent yet: nothing wires the detectors to the server                                                                                                                               | Never sent                       |
 
 The live game snapshot reaches Scout only as a chat question's game context.
 While a game is live the composer shows **Using your live game**, on until you
