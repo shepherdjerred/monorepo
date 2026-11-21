@@ -1323,7 +1323,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    */
   serviceMonitor?: KubeprometheusstackHelmValuesAlertmanagerServiceMonitor;
   /**
-   * @default {...} (62 keys)
+   * @default {...} (63 keys)
    */
   alertmanagerSpec?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec;
   /**
@@ -2284,6 +2284,16 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
    */
   alertmanagerConfiguration?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAlertmanagerConfiguration;
   /**
+   * Defines how the operator handles AlertmanagerConfig resources that reference the
+   * Alertmanager container's filesystem rather than a secret key, such as a Telegram receiver
+   * using botTokenFile. Anyone able to create an AlertmanagerConfig could otherwise read files
+   * out of the container. One of AllowAll, FromAlertmanagerConfigMatcherStrategy or DenyAll.
+   * Leave empty to use the operator's own default.
+   *
+   * @default ""
+   */
+  alertmanagerConfigFileSystemMode?: string;
+  /**
    * Defines the strategy used by AlertmanagerConfig objects to match alerts. eg:
    *
    * @default {}
@@ -2562,7 +2572,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.34.2"
+   * @default "v0.35.0"
    */
   tag?: string;
   /**
@@ -5407,8 +5417,12 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
   strategy?: KubeprometheusstackHelmValuesPrometheusOperatorStrategy;
   /**
    * Prometheus-Operator v0.39.0 and later support TLS natively.
+   * The certificate comes from the Secret created either by the admission webhook patch job
+   * (admissionWebhooks.enabled and admissionWebhooks.patch.enabled) or by cert-manager
+   * (admissionWebhooks.certManager.enabled). With neither of those, the chart fails the render
+   * rather than leave the operator pod in ContainerCreating waiting for a Secret nothing creates.
    *
-   * @default {"enabled":true,"tlsMinVersion":"VersionTLS13","internalPort":10250}
+   * @default {...} (4 keys)
    */
   tls?: KubeprometheusstackHelmValuesPrometheusOperatorTls;
   /**
@@ -5653,6 +5667,17 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorTls = {
    * @default true
    */
   enabled?: boolean;
+  /**
+   * Name of a secret you manage yourself holding the operator's TLS material. It is always read
+   * as a kubernetes.io/tls secret, so the keys must be tls.crt, tls.key and ca.crt, whatever the
+   * admission webhook settings are. Leave empty to use the secret created by the admission
+   * webhook patch job or by cert-manager, which is read under whichever keys created it.
+   * Required when neither of those creates it, since the chart cannot otherwise know the
+   * certificate exists.
+   *
+   * @default ""
+   */
+  secretName?: string;
   /**
    * Value must match version names from https://pkg.go.dev/crypto/tls#pkg-constants
    *
@@ -7195,7 +7220,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    */
   serviceMonitor?: KubeprometheusstackHelmValuesPrometheusServiceMonitor;
   /**
-   * @default {...} (140 keys)
+   * @default {...} (141 keys)
    */
   prometheusSpec?: KubeprometheusstackHelmValuesPrometheusPrometheusSpec;
   additionalRulesForClusterRole?: unknown[];
@@ -8475,6 +8500,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    * @default false
    */
   enableRemoteWriteReceiver?: boolean;
+  extraScrapeMetrics?: unknown;
   /**
    * Name of the external label used to denote replica name
    *
@@ -10753,6 +10779,7 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.alertmanagerSpec.secrets"?: string;
   "alertmanager.alertmanagerSpec.automountServiceAccountToken"?: string;
   "alertmanager.alertmanagerSpec.configMaps"?: string;
+  "alertmanager.alertmanagerSpec.alertmanagerConfigFileSystemMode"?: string;
   "alertmanager.alertmanagerSpec.additionalArgs"?: string;
   "alertmanager.alertmanagerSpec.logFormat"?: string;
   "alertmanager.alertmanagerSpec.logLevel"?: string;
@@ -11143,6 +11170,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheusOperator.fullnameOverride"?: string;
   "prometheusOperator.revisionHistoryLimit"?: string;
   "prometheusOperator.tls.enabled"?: string;
+  "prometheusOperator.tls.secretName"?: string;
   "prometheusOperator.tls.tlsMinVersion"?: string;
   "prometheusOperator.tls.internalPort"?: string;
   "prometheusOperator.livenessProbe.enabled"?: string;
@@ -11496,6 +11524,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.prometheusSpec.disableAlerting"?: string;
   "prometheus.prometheusSpec.alertingEndpoints"?: string;
   "prometheus.prometheusSpec.enableRemoteWriteReceiver"?: string;
+  "prometheus.prometheusSpec.extraScrapeMetrics"?: string;
   "prometheus.prometheusSpec.replicaExternalLabelName"?: string;
   "prometheus.prometheusSpec.replicaExternalLabelNameClear"?: string;
   "prometheus.prometheusSpec.prometheusExternalLabelName"?: string;
