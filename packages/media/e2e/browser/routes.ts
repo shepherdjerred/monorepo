@@ -56,7 +56,7 @@ function shared(persona: Persona): RouteSpec[] {
     {
       label: `${persona} /history`,
       path: "/history",
-      heading: "Watch history",
+      heading: "History",
     },
     {
       label: `${persona} /notifications`,

@@ -11,20 +11,29 @@ const cx = classNames(styles);
  * `YYYY-MM-DD`, or null for no day. `onChange` is given the same, or an empty
  * string when the field names no day: a browser reports a half-typed date as
  * empty.
+ *
+ * `narrows` is for a date that filters the list the chip sits above: once
+ * chosen, the chip is marked the way an active `Choice` is.
  */
 export function DateField({
   label,
   name,
   value,
+  narrows = false,
   onChange,
 }: {
   label: string;
   name: string;
   value: string | null;
+  narrows?: boolean;
   onChange: (value: string) => void;
 }) {
   return (
-    <label className={cx("field")} data-empty={value === null}>
+    <label
+      className={cx("field")}
+      data-empty={value === null}
+      data-active={narrows && value !== null}
+    >
       <span>{label}</span>
       <input
         type="date"

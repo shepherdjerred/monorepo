@@ -9,8 +9,9 @@ import { z } from "zod";
  * - `feed-unavailable`: one discover feed answers 502 while the others, and
  *   search, keep working.
  * - `catalog-unavailable`: TMDB is down, so every catalog read answers 502.
- * - `new-household`: nobody has asked for anything yet, so the calendar has
- *   no releases on it, dated or not.
+ * - `new-household`: nobody has asked for or watched anything yet, so the
+ *   calendar has no releases on it, dated or not, nothing is playing, and
+ *   the watch history is empty.
  */
 export const FixtureScenarioSchema = z.enum([
   "default",

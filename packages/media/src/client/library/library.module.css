@@ -23,37 +23,6 @@
   .search {
     flex: 1 1 220px;
     max-width: 320px;
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 38px;
-    padding: 0 var(--space-3);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-pill);
-    background: var(--field);
-    color: var(--text-muted);
-  }
-  .search:focus-within {
-    outline: 3px solid var(--focus);
-    outline-offset: 2px;
-  }
-  .search svg {
-    flex: none;
-    width: 16px;
-    height: 16px;
-  }
-  .search input {
-    flex: 1;
-    min-width: 0;
-    height: 36px;
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--text);
-    font-size: var(--text-sm);
-  }
-  .search input:focus-visible {
-    outline: none;
   }
   .choices,
   .arrange {
@@ -368,11 +337,7 @@
   }
 
   @media (pointer: coarse) {
-    .search {
-      min-height: 44px;
-    }
     /* Below 16px, iOS zooms the page when a field takes focus. */
-    .search input,
     .subject select {
       font-size: 1rem;
     }

@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { LayoutGridIcon, ListIcon, SearchIcon } from "lucide-react";
-import { useLocation } from "react-router";
+import { LayoutGridIcon, ListIcon } from "lucide-react";
 import { KEEPING_COPY } from "#client/presentation/keeping.ts";
 import { Choice } from "#client/ui/choice.tsx";
 import { classNames } from "#client/ui/class-names.ts";
+import { SearchField } from "#client/ui/search-field.tsx";
 import { Segmented } from "#client/ui/segmented.tsx";
 import styles from "./library.module.css";
 import {
@@ -40,44 +39,6 @@ const SORT_OPTIONS = {
   added: "Recently added",
 } as const satisfies Record<LibraryView["sort"], string>;
 
-/**
- * The search field. It keeps its own text so typing never waits on the
- * address, and takes the address's text again whenever something else
- * changes it (Back, a cleared filter).
- */
-function TitleSearch({
-  query,
-  onChange,
-}: {
-  query: string;
-  onChange: (query: string) => void;
-}) {
-  const [text, setText] = useState(query);
-  const { key } = useLocation();
-  const [syncedTo, setSyncedTo] = useState(key);
-  if (syncedTo !== key) {
-    setSyncedTo(key);
-    if (text.trim() !== query) setText(query);
-  }
-  return (
-    <label className={cx("search")}>
-      <SearchIcon aria-hidden="true" />
-      <span className="sr-only">Search the library by title</span>
-      <input
-        type="search"
-        placeholder="Search the library"
-        value={text}
-        maxLength={QUERY_LIMIT}
-        enterKeyHint="search"
-        onChange={(event) => {
-          setText(event.target.value);
-          onChange(event.target.value.trim());
-        }}
-      />
-    </label>
-  );
-}
-
 /** Search, the three filters, the sort, and the grid or list choice. */
 export function LibraryToolbar({
   view,
@@ -88,12 +49,17 @@ export function LibraryToolbar({
 }) {
   return (
     <div className={cx("toolbar")}>
-      <TitleSearch
-        query={view.query}
-        onChange={(query) => {
-          onChange({ ...view, query });
-        }}
-      />
+      <div className={cx("search")}>
+        <SearchField
+          label="Search the library by title"
+          placeholder="Search the library"
+          query={view.query}
+          limit={QUERY_LIMIT}
+          onChange={(query) => {
+            onChange({ ...view, query });
+          }}
+        />
+      </div>
       <div className={cx("choices")} role="group" aria-label="Filters">
         <Choice
           label="Films or series"
