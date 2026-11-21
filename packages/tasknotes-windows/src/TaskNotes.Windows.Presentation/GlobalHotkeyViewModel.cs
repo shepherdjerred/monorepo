@@ -37,8 +37,7 @@ namespace TaskNotes.Windows.Presentation
         public void Register(string binding)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            IGlobalHotkeyRegistrar registrar =
-                _registrar
+            IGlobalHotkeyRegistrar registrar = _registrar
                 ?? throw new InvalidOperationException("Attach the global hotkey registrar first.");
             Binding = binding.Trim();
             try

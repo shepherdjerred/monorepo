@@ -48,29 +48,26 @@ public sealed partial class MainWindow
                 content.CommitTokens();
                 dialog.IsPrimaryButtonEnabled = false;
                 dialog.IsSecondaryButtonEnabled = false;
-                _uiOperations.Run(
-                    "submit-capture-dialog",
-                    async () =>
+                _uiOperations.Run("submit-capture-dialog", async () =>
+                {
+                    bool saved = false;
+                    try
                     {
-                        bool saved = false;
-                        try
-                        {
-                            _ = await RunUiOperationAsync(async () =>
-                                saved = await _quickAdd.SaveAsync(another)
-                            );
-                        }
-                        finally
-                        {
-                            dialog.IsPrimaryButtonEnabled = _quickAdd.CanSubmit;
-                            dialog.IsSecondaryButtonEnabled = _quickAdd.CanSubmit;
-                            deferral?.Complete();
-                        }
-                        if (saved && !another && _quickAdd.CanDismissAfterSave)
-                            dialog.Hide();
-                        else
-                            content.FocusInput();
+                        _ = await RunUiOperationAsync(async () =>
+                            saved = await _quickAdd.SaveAsync(another)
+                        );
                     }
-                );
+                    finally
+                    {
+                        dialog.IsPrimaryButtonEnabled = _quickAdd.CanSubmit;
+                        dialog.IsSecondaryButtonEnabled = _quickAdd.CanSubmit;
+                        deferral?.Complete();
+                    }
+                    if (saved && !another && _quickAdd.CanDismissAfterSave)
+                        dialog.Hide();
+                    else
+                        content.FocusInput();
+                });
             }
 
             dialog.PrimaryButtonClick += (_, args) => Submit(false, args);

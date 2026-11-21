@@ -55,8 +55,7 @@ internal sealed record StandaloneAcceptanceDescriptor(
         string json = reader.ReadToEnd();
         var schema = new FacetSchema(schemaJson);
         schema.Validate(json, "descriptor");
-        var value =
-            JsonSerializer.Deserialize<StandaloneAcceptanceDescriptor>(json)
+        var value = JsonSerializer.Deserialize<StandaloneAcceptanceDescriptor>(json)
             ?? throw new InvalidDataException("The acceptance descriptor is empty.");
         if (
             value.RunId != runId

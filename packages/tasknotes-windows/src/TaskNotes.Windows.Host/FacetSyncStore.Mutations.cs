@@ -467,8 +467,7 @@ public sealed partial class FacetSyncStore
             async () =>
             {
                 ProtocolTask existing = RequireProtocolTask(taskId);
-                double order =
-                    childOrder
+                double order = childOrder
                     ?? (
                         _snapshot.Tasks.Count == 0 ? 1 : _snapshot.Tasks.Max(t => t.ChildOrder) + 1
                     );
@@ -1221,8 +1220,7 @@ public sealed partial class FacetSyncStore
     {
         if (input.Projects.Count == 0)
         {
-            string inboxId =
-                _snapshot.Projects.FirstOrDefault(p => !p.IsDeleted && p.IsInbox)?.Id
+            string inboxId = _snapshot.Projects.FirstOrDefault(p => !p.IsDeleted && p.IsInbox)?.Id
                 ?? string.Empty;
             return inboxId.Length > 0 && inboxId != existing.ProjectId ? inboxId : null;
         }

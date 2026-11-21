@@ -78,8 +78,8 @@ internal sealed partial class OwnedPackageLifetime : IAsyncDisposable
 
     private unsafe Process RequireProcess()
     {
-        Process process =
-            _process ?? throw new InvalidOperationException("No package process is owned.");
+        Process process = _process
+            ?? throw new InvalidOperationException("No package process is owned.");
         if (
             process.HasExited
             || process.StartTime.ToUniversalTime() != _created
