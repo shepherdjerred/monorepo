@@ -163,6 +163,13 @@ pub enum Control {
     /// Show the window, starting it if it is not running.
     OpenWindow,
     /// An overlay key was pressed.
+    #[cfg_attr(
+        not(any(target_os = "windows", target_os = "macos", test)),
+        expect(
+            dead_code,
+            reason = "only the Windows and macOS hotkey registrar sends overlay keys; Linux has no overlay"
+        )
+    )]
     OverlayKey(OverlayKey),
     /// Quit Scout.
     Quit,
