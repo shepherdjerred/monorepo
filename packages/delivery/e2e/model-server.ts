@@ -39,6 +39,8 @@ try {
       arcade: [MODEL_ACCEPTED_IMAGE],
       "arcade-beta": [MODEL_ACCEPTED_IMAGE],
     },
+    // Arcade's newest build ran every monorepo CI lane, as production's do.
+    ciRuns: { 104: "monorepo" },
     // Optional disposable machine tokens, so toolkit verbs can be run
     // against this harness; none are accepted unless the variable is set.
     machineCredentials: z

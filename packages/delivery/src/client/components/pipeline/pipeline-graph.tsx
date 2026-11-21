@@ -3,7 +3,9 @@ import { StageCard, TransitionMarker } from "./stage-card.tsx";
 
 /**
  * The pipeline as an ordered list: stages read in order by assistive
- * technology, scroll horizontally on wide screens and stack on narrow ones.
+ * technology, share the width on wide screens and stack on narrow ones. The
+ * region scrolls, and takes keyboard focus to do it, only when a pipeline has
+ * more stages than the width holds.
  */
 export function PipelineGraph({
   label,

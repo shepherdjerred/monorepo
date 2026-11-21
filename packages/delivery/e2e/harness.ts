@@ -6,6 +6,7 @@ import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import {
   fixtureEnrichment,
   type FixtureLiveImages,
+  type FixtureRuns,
 } from "#testing/enrichment-fixture.ts";
 import type { MachineCredentialSchema } from "#infrastructure/config.ts";
 import type { z } from "zod";
@@ -25,6 +26,8 @@ export async function serveHarness(options: {
   enabledEnvironments: string[];
   /** The images the ArgoCD double reports running, by Application name. */
   liveImages?: FixtureLiveImages;
+  /** The run the Woodpecker double reports for a pipeline number. */
+  ciRuns?: FixtureRuns;
   /** Machine tokens the app accepts, so a CLI can drive admin and execute routes. */
   machineCredentials?: z.infer<typeof MachineCredentialSchema>[];
 }) {
@@ -36,7 +39,11 @@ export async function serveHarness(options: {
     // Every row is persisted through genuine publication, intent and evidence APIs.
     delivery: options.delivery,
     changeFeed,
-    enrichment: fixtureEnrichment(cluster.database, options.liveImages),
+    enrichment: fixtureEnrichment(
+      cluster.database,
+      options.liveImages,
+      options.ciRuns,
+    ),
     ciOrigin: "https://woodpecker.sjer.red",
     ciRepositoryId: 1,
     qualifyBuild: () => Promise.resolve("verified"),
