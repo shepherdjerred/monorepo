@@ -4,6 +4,7 @@ import {
   type CoachTrigger,
   type CoachTriggerKind,
   type DiscordAccountId,
+  getItemInfo,
 } from "@scout-for-lol/data";
 import type { Db } from "#src/database/index.ts";
 
@@ -39,6 +40,35 @@ export function triggerWindowKey(trigger: CoachTrigger): string {
     case "death_streak":
       return trigger.deaths.toString();
   }
+}
+
+type SnapshotPlayer = CoachLiveContext["participants"][number];
+
+/**
+ * The same facts the detector reads from Data Dragon: life steal or omnivamp
+ * heals, and Grievous Wounds is the anti-heal. The client counts completed
+ * items only, so the scoreboard must show at least that many healing items.
+ */
+function healingEvidenceIssue(
+  claimed: number,
+  self: SnapshotPlayer,
+  enemies: readonly SnapshotPlayer[],
+): string | null {
+  const healing = enemies
+    .flatMap((player) => player.items)
+    .filter((item) =>
+      (getItemInfo(item.itemId)?.tags ?? []).some(
+        (tag) => tag === "LifeSteal" || tag === "SpellVamp",
+      ),
+    ).length;
+  if (healing < claimed) {
+    return "the enemy team holds fewer healing items than claimed";
+  }
+  return self.items.some((item) =>
+    (getItemInfo(item.itemId)?.description ?? "").includes("Wounds"),
+  )
+    ? "the player already holds an anti-heal item"
+    : null;
 }
 
 /**
@@ -84,7 +114,7 @@ export function triggerEvidenceIssue(
         ? "a shift names two different profiles"
         : null;
     case "healing_threat":
-      return null;
+      return healingEvidenceIssue(trigger.healingItems, self, enemies);
     case "death_streak":
       if (self.deaths !== trigger.deaths) {
         return "the player's deaths do not match";

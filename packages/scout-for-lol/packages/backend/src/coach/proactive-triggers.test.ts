@@ -38,6 +38,25 @@ const spike = SpikeSchema.parse(fixture.triggers[0]);
 const fed = FedSchema.parse(fixture.triggers[1]);
 const shift = ShiftSchema.parse(fixture.triggers[2]);
 const streak = StreakSchema.parse(fixture.triggers[4]);
+const healing = CoachTriggerSchema.options[3].parse(fixture.triggers[3]);
+
+/** The snapshot with one side's items replaced. */
+const withItems = (team: "enemy" | "self", itemIds: number[]) => ({
+  ...snapshot,
+  participants: snapshot.participants.map((player) => {
+    const target = team === "self" ? player.isSelf : player.team !== "order";
+    return target
+      ? {
+          ...player,
+          items: itemIds.map((itemId) => ({
+            itemId,
+            name: "Item",
+            count: 1,
+          })),
+        }
+      : player;
+  }),
+});
 
 type Receipt = {
   readonly ownerId: DiscordAccountId;
@@ -253,11 +272,26 @@ describe("trigger evidence", () => {
     ["a shift to the profile it came from", { ...shift, to: "mixed" }],
     ["a death count that is not the player's", { ...streak, deaths: 9 }],
     [
+      "more healing items than the enemy holds",
+      { ...healing, healingItems: 3 },
+    ],
+    [
       "a streak longer than the player's deaths",
       { ...streak, deathsWithoutTakedown: 5 },
     ],
   ])("refuses %s", (_reason, trigger) => {
     expect(triggerEvidenceIssue(trigger, snapshot)).not.toBe(null);
+  });
+
+  test("a healing threat needs enemy healing items and no anti-heal on the player", () => {
+    // No enemy holds a healing item.
+    expect(triggerEvidenceIssue(healing, withItems("enemy", [3111]))).not.toBe(
+      null,
+    );
+    // The player holds Bramble Vest, an anti-heal component.
+    expect(triggerEvidenceIssue(healing, withItems("self", [3076]))).not.toBe(
+      null,
+    );
   });
 
   test("a snapshot without the local player matches no evidence", () => {

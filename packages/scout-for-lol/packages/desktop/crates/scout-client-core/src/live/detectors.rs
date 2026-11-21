@@ -28,6 +28,12 @@ use crate::desktop_api::{CoachTrigger, DamageProfile};
 
 /// Gold at or above which a final item counts as completed (legendary).
 pub const LEGENDARY_MIN_GOLD: u32 = 2_000;
+
+/// Completed items a player only ever holds by transforming another one:
+/// Seraph's Embrace (from Archangel's Staff), Muramana (from Manamune) and
+/// Fimbulwinter (from Winter's Approach). Data Dragon lists them as not
+/// purchasable, so without this a transform would erase a completed item.
+const TRANSFORMED_FINAL_ITEMS: [u32; 3] = [3040, 3042, 3121];
 /// Item spikes worth a note: an enemy's first, second and third completed item.
 pub const ITEM_SPIKE_MAX_COMPLETED: u8 = 3;
 /// Fed: at least this many kills ...
@@ -57,7 +63,7 @@ pub enum DamageClass {
 /// What a detector needs to know about one item.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct ItemFacts {
-    /// A purchasable final item of at least [`LEGENDARY_MIN_GOLD`].
+    /// A purchasable (or transformed, see [`TRANSFORMED_FINAL_ITEMS`]) final item of at least [`LEGENDARY_MIN_GOLD`].
     pub completed: bool,
     /// The damage it adds, if any.
     pub damage: Option<DamageClass>,
@@ -102,12 +108,12 @@ struct DataDragonGold {
 }
 
 impl DataDragonItem {
-    fn facts(&self) -> ItemFacts {
+    fn facts(&self, id: u32) -> ItemFacts {
         let tagged = |names: &[&str]| self.tags.iter().any(|tag| names.contains(&tag.as_str()));
         let physical = tagged(&["Damage", "CriticalStrike", "ArmorPenetration"]);
         let magic = tagged(&["SpellDamage"]);
         ItemFacts {
-            completed: self.gold.purchasable
+            completed: (self.gold.purchasable || TRANSFORMED_FINAL_ITEMS.contains(&id))
                 && self.into.is_empty()
                 && self.gold.total >= LEGENDARY_MIN_GOLD,
             damage: match (physical, magic) {
@@ -150,7 +156,7 @@ impl ItemCatalog {
             let id = key
                 .parse::<u32>()
                 .map_err(|_| CatalogError::ItemId(key.clone()))?;
-            items.insert(id, item.facts());
+            items.insert(id, item.facts(id));
         }
         Ok(Self { items })
     }
@@ -894,6 +900,13 @@ mod tests {
         let bramble = catalog.facts(3076);
         assert!(bramble.anti_heal && !bramble.completed, "Bramble Vest");
         assert!(!catalog.facts(1001).completed, "Boots");
+        for (id, name) in [
+            (3040, "Seraph's Embrace"),
+            (3042, "Muramana"),
+            (3121, "Fimbulwinter"),
+        ] {
+            assert!(catalog.facts(id).completed, "{name} stays completed");
+        }
         assert_eq!(catalog.facts(424_242), ItemFacts::default());
         Ok(())
     }
