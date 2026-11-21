@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   CanonicalMatchRecordSchema,
   participantKindOf,
+  type CanonicalMatchRecord,
   type RawMatch,
   RawTimelineSchema,
   type RawTimeline,
@@ -34,22 +35,45 @@ const DocumentsSchema = z.object({
 });
 
 /**
- * Review keys on participant numbers and reads the timeline, and an
- * end-of-game record has neither. It is refused by name, as a stored game
- * that cannot be reviewed, rather than failing to parse.
+ * The timeline review keys on participant numbers and reads the timeline,
+ * and an end-of-game record has neither. `review_match` sends such a record
+ * to `summarizeEndOfGameMatch` before it gets here; reaching this path with
+ * one is refused by name, rather than failing to parse.
  */
 const END_OF_GAME_REVIEW_REFUSAL = {
   ok: false as const,
   message:
-    "Scout recorded this game from the League client's end-of-game screen, without participant numbers or a timeline, so it cannot be reviewed.",
+    "Scout recorded this game from the League client's end-of-game screen, without participant numbers or a timeline, so it has no timeline review; call review_match with participantId null for its end-of-game review.",
 };
 
-/** A stored match document of either coverage; `null` for an end-of-game record. */
-function reviewableMatch(document: unknown, matchId: RiotMatchId) {
+function matchRecord(document: unknown, matchId: RiotMatchId) {
   const record = CanonicalMatchRecordSchema.parse(document);
   if (record.match.metadata.matchId !== matchId)
     throw new Error("Raw match identity differs from the selected game.");
+  return record;
+}
+
+/** A stored match document of either coverage; `null` for an end-of-game record. */
+function reviewableMatch(document: unknown, matchId: RiotMatchId) {
+  const record = matchRecord(document, matchId);
   return record.coverage === "complete" ? record.match : null;
+}
+
+/**
+ * The stored match document for a game, with its coverage, or null when the
+ * dataset holds none. An end-of-game record is reviewed by
+ * `summarizeEndOfGameMatch` instead of the timeline review below.
+ */
+export function storedMatchRecord(
+  data: unknown,
+  matchId: RiotMatchId,
+): CanonicalMatchRecord | null {
+  const rawMatch = DocumentsSchema.parse(data).documents.find(
+    (d) => d.matchId === matchId && d.kind === "match",
+  );
+  return rawMatch === undefined
+    ? null
+    : matchRecord(rawMatch.document, matchId);
 }
 
 function roster(match: RawMatch) {
@@ -235,9 +259,18 @@ export function reviewedMatchFacts(
     (d) => d.matchId === matchId && d.kind === "match",
   );
   if (rawMatch === undefined) return { puuid: null, cardSupported: false };
-  const match = reviewableMatch(rawMatch.document, matchId);
-  // An end-of-game record is refused for review, so it has no card either.
-  if (match === null) return { puuid: null, cardSupported: false };
+  const record = matchRecord(rawMatch.document, matchId);
+  // An end-of-game record has a match card (the lake holds its rows) but no
+  // loadout card, which keys its build path on participant numbers.
+  if (record.coverage === "end_of_game")
+    return {
+      puuid: null,
+      cardSupported: isExploreMatchSnapshotSupported(
+        record.match.info.queueId,
+        record.match.info.gameMode,
+      ),
+    };
+  const match = record.match;
   const target =
     participantId === null
       ? undefined

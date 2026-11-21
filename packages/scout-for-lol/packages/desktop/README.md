@@ -1099,8 +1099,10 @@ key or path, never a value). The refusal also names the refused `observationId`,
 client treats it as terminal for that one entry: it removes it from the outbox,
 records the reason beside the game in `recordings.sqlite3`
 (`upload_refused_reason`), writes a diagnostics warning, and the observations
-behind it go out on the next tick. A refused recording is never queued again. The post-game review that reads recordings does
-not exist yet.
+behind it go out on the next tick. A refused recording is never queued again. The post-game review
+(`scoutCoachReviewWorkflow`, described in the backend README) is what reads
+recordings: a game Scout knows only from its end-of-game screen is reviewed
+from its end-of-game stats plus the owner's own recording.
 
 **The live frame no longer carries the game.** The `live_game_frame`
 observation the client sends once per game now carries only

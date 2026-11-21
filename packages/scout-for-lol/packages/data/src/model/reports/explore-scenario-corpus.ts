@@ -57,6 +57,12 @@ export const ExploreScenarioAccountSelectorSchema = z.discriminatedUnion(
         champion: NameSchema.optional(),
         /** Only accounts with at least one stored match timeline. */
         withTimeline: z.boolean().default(false),
+        /**
+         * Only accounts whose latest game is an end-of-game record: a game
+         * Scout knows only from the League client's end-of-game screen, with
+         * no timeline (League Classic without match history).
+         */
+        latestEndOfGame: z.boolean().default(false),
         minGames: z.number().int().min(1).max(500).default(1),
       })
       .strict(),
