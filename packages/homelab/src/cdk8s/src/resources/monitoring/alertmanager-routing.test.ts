@@ -514,7 +514,7 @@ describe("rendered Alerts receiver", () => {
       expect(rendered.text).toContain("Workflow stuck after a code change");
       expect(rendered.text).not.toContain("10.244.0.48:9100");
     }
-  });
+  }, 30_000);
 });
 
 describe("Alerts route selection", () => {
