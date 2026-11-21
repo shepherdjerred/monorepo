@@ -7,6 +7,7 @@ import {
 } from "@playwright/test";
 import type { Persona } from "#testing/fixture-api/personas.ts";
 import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
+import type { RouteCase } from "./routes.ts";
 
 const POLICY_TAG = "content-security-policy:";
 
@@ -79,6 +80,54 @@ export async function openAs(page: Page, persona: Persona, path: string) {
     .addCookies([{ name: PERSONA_COOKIE, value: persona, url: origin }]);
   await page.goto(path);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+}
+
+/**
+ * Everything a page can do wrong without failing an assertion on its text.
+ * Content-Security-Policy violations are watched for every test, by the
+ * suite's own `test` above.
+ */
+export function watchForFailures(page: Page, origin: string): string[] {
+  const failures: string[] = [];
+  // The client is self-contained: fonts, styles, and scripts all come from
+  // its own origin.
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.protocol.startsWith("http") && url.origin !== origin) {
+      failures.push(`third-party request: ${request.url()}`);
+    }
+  });
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      failures.push(`console error: ${message.text()}`);
+    }
+  });
+  page.on("pageerror", (error) => {
+    failures.push(`uncaught error: ${error.message}`);
+  });
+  page.on("response", (response) => {
+    const { pathname } = new URL(response.url());
+    if (pathname.startsWith("/api/") && response.status() >= 400) {
+      failures.push(`HTTP ${String(response.status())} from ${pathname}`);
+    }
+  });
+  return failures;
+}
+
+/** Sign in as the route's persona and wait until the page has settled. */
+export async function open(page: Page, route: RouteCase, origin: string) {
+  await page
+    .context()
+    .addCookies([{ name: PERSONA_COOKIE, value: route.persona, url: origin }]);
+  await page.goto(route.path);
+  await expect(
+    page.getByRole("heading", { level: 1, name: route.heading, exact: true }),
+  ).toBeVisible();
+  // Secondary panels load after the heading; wait for all of them.
+  await page.waitForLoadState("networkidle");
+  await expect(
+    page.getByRole("status").filter({ hasText: "Loading" }),
+  ).toHaveCount(0);
 }
 
 /** The computed background of the page canvas, as the browser serializes it. */

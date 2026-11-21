@@ -199,6 +199,7 @@ function mediaFixture() {
     cancelMovieEditionRequest: unavailableSubtitleReplacement,
     revokeMovieEditionChoice: unavailableSubtitleReplacement,
     getDefaultCommandContext: unavailableSubtitleReplacement,
+    getDefaultCommandContexts: unavailableSubtitleReplacement,
     executeDefaultCommand: unavailableSubtitleReplacement,
     identityPreview: unavailableSubtitleReplacement,
     createRequest,

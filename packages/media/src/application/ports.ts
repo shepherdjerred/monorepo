@@ -5,6 +5,7 @@ import type {
   DefaultCommandResultV2,
 } from "#shared/editions/commands.ts";
 import type { DefaultTargetView } from "#shared/editions/target-view.ts";
+import type { DefaultTargetBatch } from "#shared/editions/target-batch.ts";
 import type {
   CommandResult,
   RequestList,
@@ -64,6 +65,11 @@ export type MediaApplication = {
     actor: MediaActor,
     mediaId: string,
   ) => Promise<DefaultTargetView>;
+  /** Every view from one snapshot; one item per distinct id, in request order. */
+  getDefaultCommandContexts: (
+    actor: MediaActor,
+    mediaIds: readonly string[],
+  ) => Promise<DefaultTargetBatch>;
   executeDefaultCommand: (
     actor: MediaActor,
     key: string,

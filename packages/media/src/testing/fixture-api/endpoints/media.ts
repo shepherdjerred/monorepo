@@ -1,5 +1,11 @@
 import { memberDetail } from "#infrastructure/visibility/member-detail.ts";
 import { MediaDetailSchema, ReleaseListSchema } from "#shared/api.ts";
+import {
+  DEFAULT_TARGET_BATCH_LIMIT,
+  DefaultTargetBatchIdsSchema,
+  DefaultTargetBatchSchema,
+  batchAnswers,
+} from "#shared/editions/target-batch.ts";
 import { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
 import { MovieHistoryPendingV3Schema } from "#shared/movie-editions/history-review-views-v3.ts";
 import {
@@ -16,6 +22,7 @@ import {
 } from "#testing/fixture-api/endpoint.ts";
 import {
   defaultTarget,
+  defaultTargetBatch,
   mediaDetail,
 } from "#testing/fixture-api/fixtures/media-detail.ts";
 import {
@@ -50,7 +57,14 @@ function subjectOf(request: FixtureRequest): string {
   return request.query.get("subjectUserId") ?? request.user.id;
 }
 
+/** A rejected `ids` query is the caller's error: the router answers it 400. */
+function batchIds(request: FixtureRequest): string[] {
+  return DefaultTargetBatchIdsSchema.parse(request.query.get("ids"));
+}
+
 const MOVIES = TITLES.filter((title) => title.kind === "movie");
+/** Shaped like a title's id; no fixture title has it. */
+const UNKNOWN_MEDIA_ID = "00000002-0000-4000-8000-00000000ffff";
 
 /** Every title, plus seasons and episodes in each state a page can show. */
 const MEDIA_IDS: readonly string[] = [
@@ -109,6 +123,21 @@ export const MEDIA_ENDPOINTS: readonly FixtureEndpoint[] = [
         : defaultTarget(resolved, request.persona);
     },
     samples: MEDIA_IDS.map((id) => `/media/${id}/targets/default`),
+  }),
+  endpoint({
+    version: 2,
+    path: "/targets/default",
+    schema: DefaultTargetBatchSchema,
+    respond: (request) =>
+      defaultTargetBatch(batchIds(request), request.persona),
+    belongsToRequest: (batch, request) =>
+      batchAnswers(batch, batchIds(request)),
+    samples: [
+      `/targets/default?ids=${MEDIA_IDS.slice(0, DEFAULT_TARGET_BATCH_LIMIT).join(",")}`,
+      `/targets/default?ids=${MEDIA_IDS.slice(DEFAULT_TARGET_BATCH_LIMIT).join(",")}`,
+      // A repeated title and one the library does not hold.
+      `/targets/default?ids=${[FEATURED.movie.id, UNKNOWN_MEDIA_ID, FEATURED.movie.id].join(",")}`,
+    ],
   }),
   endpoint({
     version: 4,

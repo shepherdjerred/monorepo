@@ -2033,6 +2033,19 @@ requests. New commits recheck current role and claims under locks; acquisition
 keeps its existing permission, epoch, quality, and cut checks. Orphan lineage
 stays unresolved, and protective actions do not renew its automation authority.
 
+List pages read the same context for many titles at once.
+`GET /api/v2/targets/default?ids=<id>,<id>` takes up to 50 comma-separated media
+IDs and returns `{schemaVersion: 2, items}` with one item per distinct ID, in
+request order. An item is `{status: "ok", view}`, where `view` is exactly the
+single read's response, or `{status: "unavailable", mediaId, code}`, where
+`code` is the `media_not_found` or `forbidden` the single read fails with for
+that title. One unavailable title never fails the batch. An empty list, a
+malformed ID, or more than 50 IDs is a `400`. Every view comes from one
+repeatable-read snapshot and a fixed number of queries, and the single read is
+the batch read of one ID, so the two cannot disagree. In the browser, a list
+makes one batch request per 50 titles and writes each view to the cache key the
+title page reads; a row outside a list reads its own title.
+
 A release acquisition and a torrent's seeding obligation have independent
 lifetimes. Library availability does not authorize source deletion. Quality
 profiles have immutable version snapshots, and the database permits only one

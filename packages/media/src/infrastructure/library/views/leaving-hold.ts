@@ -12,16 +12,21 @@ export type LeavingHoldSettings = {
   sections?: Partial<VisibilitySections> | undefined;
 };
 
-/** Whether this exact movie or episode has a removal that can still be stopped. */
-export async function isLeavingSoon(
+/**
+ * Which of these exact movies and episodes have a removal that can still be
+ * stopped, in one query however many are asked about. The command check and
+ * the context read both ask here, so what a member is offered and what they
+ * may do cannot drift apart.
+ */
+export async function leavingSoonIds(
   tx: Prisma.TransactionClient,
-  mediaId: string,
-): Promise<boolean> {
-  return (
-    (await tx.retentionDecision.count({
-      where: { ...leavingSoonDecisionWhere, mediaId },
-    })) > 0
-  );
+  mediaIds: readonly string[],
+): Promise<Set<string>> {
+  const decisions = await tx.retentionDecision.findMany({
+    where: { ...leavingSoonDecisionWhere, mediaId: { in: [...mediaIds] } },
+    select: { mediaId: true },
+  });
+  return new Set(decisions.map((decision) => decision.mediaId));
 }
 
 /**
@@ -51,9 +56,7 @@ export async function mayHoldLeavingTitle(
     where: { id: mediaId },
     include: visibilityAncestry,
   });
-  return (
-    media !== null &&
-    reader.visible(media) &&
-    (await isLeavingSoon(tx, mediaId))
-  );
+  if (media === null || !reader.visible(media)) return false;
+  const leaving = await leavingSoonIds(tx, [mediaId]);
+  return leaving.has(mediaId);
 }
