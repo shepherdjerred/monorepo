@@ -751,12 +751,55 @@ describe("Retained worker routing, coverage and runtime", () => {
       verifyWorkerPoolPods([stale, pod(CURRENT)], snapshot()),
     ).toThrow("outside the frozen original image pool");
   });
-  it("requires retired Pods to disappear after scale-zero, including terminating Pods", () => {
+});
+
+describe("Retired worker Pod tombstones", () => {
+  it("ignores Succeeded and Failed tomb Pods on retired workers while rejecting Running, Pending, Unknown, and terminating Pods", () => {
     const selected = snapshot();
     selected.versions[0]!.replicas = 0;
     expect(() => verifyWorkerPoolPods([pod(CURRENT)], selected)).not.toThrow();
-    expect(() =>
-      verifyWorkerPoolPods([pod(OLD), pod(CURRENT)], selected),
-    ).toThrow("still has Pods");
+
+    for (const terminalPhase of ["Succeeded", "Failed"] as const) {
+      const tombPod = {
+        ...pod(OLD),
+        status: {
+          phase: terminalPhase,
+          containerStatuses: [
+            {
+              name: "host",
+              ready: false,
+              imageID: `containerd://sha256:${"c".repeat(64)}`,
+              state: {},
+            },
+          ],
+        },
+      };
+      expect(() =>
+        verifyWorkerPoolPods([tombPod, pod(CURRENT)], selected),
+      ).not.toThrow();
+    }
+
+    for (const nonTerminalPod of [
+      pod(OLD),
+      {
+        ...pod(OLD),
+        metadata: {
+          ...pod(OLD).metadata,
+          deletionTimestamp: "2026-10-17T20:00:00.000Z",
+        },
+      },
+      {
+        ...pod(OLD),
+        status: { phase: "Pending", containerStatuses: [] },
+      },
+      {
+        ...pod(OLD),
+        status: { phase: "Unknown", containerStatuses: [] },
+      },
+    ]) {
+      expect(() =>
+        verifyWorkerPoolPods([nonTerminalPod, pod(CURRENT)], selected),
+      ).toThrow("Retired worker still has Pods, including terminating Pods");
+    }
   });
 });

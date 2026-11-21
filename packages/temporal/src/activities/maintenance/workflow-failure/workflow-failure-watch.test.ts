@@ -1459,6 +1459,20 @@ describe("stability-gated early resolution for scheduled failures", () => {
       ],
       expectedEndsAt: [NOW.toISOString(), NOW.toISOString()],
     },
+    {
+      name: "previously recovered failure stays resolved monotonically when a fresh failure occurs >=2h later",
+      executions: [
+        scheduleRun("s-workflow-2026-07-30T17:25:00Z", "17:30", "FAILED", "s"),
+        scheduleRun(
+          "s-workflow-2026-07-30T14:05:00Z",
+          "14:10",
+          "COMPLETED",
+          "s",
+        ),
+        scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "FAILED", "s"),
+      ],
+      expectedEndsAt: [ttlEndsAt("17:30"), NOW.toISOString()],
+    },
   ])("$name", async ({ executions, expectedEndsAt }) => {
     const failures = Object.fromEntries(
       executions

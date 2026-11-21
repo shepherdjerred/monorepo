@@ -205,8 +205,8 @@ describe("stability-gated early resolution", () => {
         workflowId: "ad-hoc-migration-42",
         closeTime,
         scheduleRecovery: {
-          newestFailureCloseTime: closeTime,
-          newestCompletedCloseTime: new Date("2026-07-30T15:00:00.000Z"),
+          windowStartCloseTime: closeTime,
+          completedCloseTime: new Date("2026-07-30T15:00:00.000Z"),
         },
       }),
       makeFailure(),
@@ -219,20 +219,22 @@ describe("stability-gated early resolution", () => {
     );
   });
 
-  it("keeps intermittent scheduled failures (<2h since latest failure) open even if a newer run completed", () => {
-    const closeTime = new Date("2026-07-30T14:00:00.000Z");
-    const latestFailure = new Date("2026-07-30T16:30:00.000Z");
+  it("keeps intermittent scheduled failures (<2h before next failure) open even if a run completed in between", () => {
+    const closeTime = new Date("2026-11-20T09:00:00.000Z");
+    const nextFailure = new Date("2026-11-20T10:30:00.000Z");
+    const laterPollNow = new Date("2026-11-20T12:00:00.000Z");
     const alert = buildWorkflowFailureAlert(
       makeExecution({
         scheduleId: "golink-sync",
         closeTime,
         scheduleRecovery: {
-          newestFailureCloseTime: latestFailure,
-          newestCompletedCloseTime: new Date("2026-07-30T17:00:00.000Z"),
+          windowStartCloseTime: closeTime,
+          nextFailureCloseTime: nextFailure,
+          completedCloseTime: new Date("2026-11-20T09:01:00.000Z"),
         },
       }),
       makeFailure(),
-      NOW,
+      laterPollNow,
       TTL_MS,
     );
 
@@ -241,14 +243,14 @@ describe("stability-gated early resolution", () => {
     );
   });
 
-  it("keeps scheduled failures open when no subsequent completed run exists after the newest failure", () => {
+  it("keeps scheduled failures open when no completed run exists strictly inside (windowStart, nextFailure)", () => {
     const closeTime = new Date("2026-07-30T14:00:00.000Z");
     const withoutCompletion = buildWorkflowFailureAlert(
       makeExecution({
         scheduleId: "golink-sync",
         closeTime,
         scheduleRecovery: {
-          newestFailureCloseTime: closeTime,
+          windowStartCloseTime: closeTime,
         },
       }),
       makeFailure(),
@@ -260,8 +262,22 @@ describe("stability-gated early resolution", () => {
         scheduleId: "golink-sync",
         closeTime,
         scheduleRecovery: {
-          newestFailureCloseTime: closeTime,
-          newestCompletedCloseTime: new Date("2026-07-30T13:30:00.000Z"),
+          windowStartCloseTime: closeTime,
+          completedCloseTime: new Date("2026-07-30T13:30:00.000Z"),
+        },
+      }),
+      makeFailure(),
+      NOW,
+      TTL_MS,
+    );
+    const completionAfterNextFailure = buildWorkflowFailureAlert(
+      makeExecution({
+        scheduleId: "golink-sync",
+        closeTime,
+        scheduleRecovery: {
+          windowStartCloseTime: closeTime,
+          nextFailureCloseTime: new Date("2026-07-30T16:30:00.000Z"),
+          completedCloseTime: new Date("2026-07-30T17:00:00.000Z"),
         },
       }),
       makeFailure(),
@@ -272,17 +288,18 @@ describe("stability-gated early resolution", () => {
     const expectedEndsAt = new Date(closeTime.getTime() + TTL_MS).toISOString();
     expect(withoutCompletion.endsAt).toBe(expectedEndsAt);
     expect(staleCompletion.endsAt).toBe(expectedEndsAt);
+    expect(completionAfterNextFailure.endsAt).toBe(expectedEndsAt);
   });
 
-  it("emits endsAt = now when a scheduled workflow completed after the newest failure and stayed failure-free for >=2h", () => {
+  it("emits endsAt = now when a scheduled workflow completed after the failure and stayed failure-free for >=2h", () => {
     const closeTime = new Date("2026-07-30T16:00:00.000Z");
     const byScheduleId = buildWorkflowFailureAlert(
       makeExecution({
         scheduleId: "golink-sync",
         closeTime,
         scheduleRecovery: {
-          newestFailureCloseTime: closeTime,
-          newestCompletedCloseTime: new Date("2026-07-30T17:00:00.000Z"),
+          windowStartCloseTime: closeTime,
+          completedCloseTime: new Date("2026-07-30T17:00:00.000Z"),
         },
       }),
       makeFailure(),
@@ -294,8 +311,8 @@ describe("stability-gated early resolution", () => {
         workflowId: "golink-sync-workflow-2026-07-30T15:55:00.000Z",
         closeTime,
         scheduleRecovery: {
-          newestFailureCloseTime: closeTime,
-          newestCompletedCloseTime: new Date("2026-07-30T17:00:00.000Z"),
+          windowStartCloseTime: closeTime,
+          completedCloseTime: new Date("2026-07-30T17:00:00.000Z"),
         },
       }),
       makeFailure(),
@@ -305,5 +322,65 @@ describe("stability-gated early resolution", () => {
 
     expect(byScheduleId.endsAt).toBe(NOW.toISOString());
     expect(byWorkflowPrefix.endsAt).toBe(NOW.toISOString());
+  });
+
+  it("never resurrects an already-resolved failure when a new failure occurs >=2h later inside the 24h lookback", () => {
+    const oldFailureClose = new Date("2026-11-20T09:00:00.000Z");
+    const completedClose = new Date("2026-11-20T09:01:00.000Z");
+    const pollAt1100 = new Date("2026-11-20T11:00:00.000Z");
+    const newFailureClose = new Date("2026-11-21T02:38:00.000Z");
+    const pollAt0240 = new Date("2026-11-21T02:40:00.000Z");
+
+    const beforeNewFailure = buildWorkflowFailureAlert(
+      makeExecution({
+        workflowId: "delivery-dispatch-workflow-2026-11-20T09:00:00Z",
+        runId: "01a1f82f",
+        scheduleId: "delivery-dispatch",
+        closeTime: oldFailureClose,
+        scheduleRecovery: {
+          windowStartCloseTime: oldFailureClose,
+          completedCloseTime: completedClose,
+        },
+      }),
+      makeFailure(),
+      pollAt1100,
+      TTL_MS,
+    );
+    const afterNewFailure = buildWorkflowFailureAlert(
+      makeExecution({
+        workflowId: "delivery-dispatch-workflow-2026-11-20T09:00:00Z",
+        runId: "01a1f82f",
+        scheduleId: "delivery-dispatch",
+        closeTime: oldFailureClose,
+        scheduleRecovery: {
+          windowStartCloseTime: oldFailureClose,
+          nextFailureCloseTime: newFailureClose,
+          completedCloseTime: completedClose,
+        },
+      }),
+      makeFailure(),
+      pollAt0240,
+      TTL_MS,
+    );
+    const newFailureAlert = buildWorkflowFailureAlert(
+      makeExecution({
+        workflowId: "delivery-dispatch-workflow-2026-11-21T02:38:00Z",
+        runId: "01a1fbf7",
+        scheduleId: "delivery-dispatch",
+        closeTime: newFailureClose,
+        scheduleRecovery: {
+          windowStartCloseTime: newFailureClose,
+        },
+      }),
+      makeFailure(),
+      pollAt0240,
+      TTL_MS,
+    );
+
+    expect(beforeNewFailure.endsAt).toBe(pollAt1100.toISOString());
+    expect(afterNewFailure.endsAt).toBe(pollAt0240.toISOString());
+    expect(newFailureAlert.endsAt).toBe(
+      new Date(newFailureClose.getTime() + TTL_MS).toISOString(),
+    );
   });
 });

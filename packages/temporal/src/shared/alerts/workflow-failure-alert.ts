@@ -14,8 +14,23 @@ const SCHEDULE_TIMESTAMP_SUFFIX_PATTERN =
 const SCHEDULE_WORKFLOW_INFIX = "-workflow";
 
 export type WorkflowFailureScheduleRecovery = {
-  readonly newestFailureCloseTime: Date;
-  readonly newestCompletedCloseTime?: Date;
+  /**
+   * Close time of the failure that begins the candidate post-failure recovery
+   * window (`>= execution.closeTime`). Defaults to `execution.closeTime`.
+   */
+  readonly windowStartCloseTime?: Date;
+  /**
+   * Earliest observed failure in this schedule / `(workflowType, taskQueue)`
+   * slice with `closeTime > windowStartCloseTime`, or `undefined` when no later
+   * failure occurred.
+   */
+  readonly nextFailureCloseTime?: Date;
+  /**
+   * Close time of a `Completed` execution of the schedule in
+   * `(windowStartCloseTime, nextFailureCloseTime)` (or `> windowStartCloseTime`
+   * when `nextFailureCloseTime` is `undefined`).
+   */
+  readonly completedCloseTime?: Date;
 };
 
 export type FailedWorkflowExecution = {
@@ -89,11 +104,19 @@ export function scheduleIdFromWorkflowId(
 }
 
 /**
- * Conservative stability gate for resolving past scheduled workflow failures
+ * Monotonic stability gate for resolving past scheduled workflow failures
  * before the 24h TTL expires:
  *   a) execution belongs to a recurring schedule,
- *   b) a newer execution of that schedule completed strictly after the newest failure,
- *   c) at least 2h have elapsed since the newest failure with zero failures in the window.
+ *   b) a post-failure window `(windowStart, windowEnd]` (`windowStart >= closeTime`,
+ *      `windowEnd = nextFailureCloseTime ?? now`) spans at least `stabilityWindowMs`
+ *      with zero failures inside `(windowStart, windowEnd)`,
+ *   c) at least one `Completed` execution of that schedule closed strictly after
+ *      `windowStart` (and strictly before `nextFailureCloseTime` when present).
+ *
+ * Because a later failure after an already-qualified `>= 2h` recovery window only
+ * caps `windowEnd` at `nextFailureCloseTime` (`>= windowStart + 2h`), an execution
+ * that has earned early resolution stays resolved on later polls instead of
+ * resurrecting inside the 24h visibility lookback.
  */
 export function shouldResolveScheduledFailureEarly(
   execution: Pick<
@@ -106,18 +129,27 @@ export function shouldResolveScheduledFailureEarly(
 ): boolean {
   const scheduleId =
     execution.scheduleId ?? scheduleIdFromWorkflowId(execution.workflowId);
-  if (scheduleId === undefined || recovery === undefined) {
+  if (scheduleId === undefined || recovery?.completedCloseTime === undefined) {
     return false;
   }
-  const newestFailureMs = Math.max(
-    execution.closeTime.getTime(),
-    recovery.newestFailureCloseTime.getTime(),
+  const executionCloseMs = execution.closeTime.getTime();
+  const windowStartMs = Math.max(
+    executionCloseMs,
+    recovery.windowStartCloseTime?.getTime() ?? executionCloseMs,
   );
-  return (
-    recovery.newestCompletedCloseTime !== undefined &&
-    recovery.newestCompletedCloseTime.getTime() > newestFailureMs &&
-    now.getTime() - newestFailureMs >= stabilityWindowMs
-  );
+  const nextFailureMs = recovery.nextFailureCloseTime?.getTime();
+  if (nextFailureMs !== undefined && nextFailureMs <= windowStartMs) {
+    return false;
+  }
+  const completedMs = recovery.completedCloseTime.getTime();
+  const completedInWindow =
+    completedMs > windowStartMs &&
+    (nextFailureMs === undefined || completedMs < nextFailureMs);
+  if (!completedInWindow) {
+    return false;
+  }
+  const windowEndMs = nextFailureMs ?? now.getTime();
+  return windowEndMs - windowStartMs >= stabilityWindowMs;
 }
 
 /**
