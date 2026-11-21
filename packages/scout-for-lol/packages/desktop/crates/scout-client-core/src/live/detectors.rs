@@ -5,9 +5,10 @@
 //! Riot's published policy prohibits unprompted alerts from live game state,
 //! so this module is compiled only into the beta release profile
 //! (`cfg(scout_proactive_coach)`, set by `build.rs`), and the server refuses
-//! `coach/triggers` in production whatever its flags say. Nothing sends what
-//! these detectors find yet; a later change wires them to the supervisor
-//! behind `scout_coach_proactive`.
+//! `coach/triggers` in production whatever its flags say. The supervisor feeds
+//! them each new frame of a game (`scout-client-app`'s
+//! `supervisor/proactive.rs`) and the chat relay sends what they find, until
+//! Scout's answer says to stop.
 //!
 //! Every rule reads only scoreboard fields of the allowlisted snapshot: team,
 //! champion, kills, deaths, assists and items. None reads a cooldown, a timer,

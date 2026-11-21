@@ -150,6 +150,11 @@ pub enum ChatCoachKind {
     ChampSelect,
     /// The plan for the game that just began.
     Pregame,
+    /// Something Scout noticed on the scoreboard and raised on its own: the
+    /// player did not ask. Exists only in the beta profile, because Riot's
+    /// published policy prohibits unprompted alerts from live game state.
+    #[cfg(scout_proactive_coach)]
+    Proactive,
 }
 
 /// The coach panel: the answer Scout gave for champion select or the start of

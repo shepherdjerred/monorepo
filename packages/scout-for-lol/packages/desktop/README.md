@@ -1043,23 +1043,25 @@ stays in memory on the device to time the game start.
 
 ### What leaves this device, and when
 
-| Data                                                         | Leaves the device?         | When                                                                                                                                                                                  | Controlled by                    |
-| ------------------------------------------------------------ | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| Live game snapshot (`allgamedata` projection)                | Only with a question       | When you send a typed question during a game with **Using your live game** on, or ask one aloud during a game                                                                         | The composer chip; voice consent |
-| Live game recordings (`recordings.sqlite3`)                  | Yes, to the Scout API      | Once, after the game ends, while paired; kept locally 20 games or 30 days                                                                                                             | Disconnect the device            |
-| Live game in-progress marker (`live_game_frame` observation) | Yes, to the Scout API      | Once per game, while paired; carries no game data (`{"inProgress": true}`)                                                                                                            | Disconnect the device            |
-| Match, lobby, profile and Clash observations                 | Yes, to the Scout API      | While paired, from the outbox                                                                                                                                                         | Disconnect the device            |
-| Replay files                                                 | Yes, to the Scout API      | After a game, while paired                                                                                                                                                            | Disconnect the device            |
-| Explore chat questions                                       | Yes, to the Scout API      | When you send one                                                                                                                                                                     | Not sending                      |
-| Error reports                                                | Yes, to Bugsink, scrubbed  | On an error or crash                                                                                                                                                                  | **Send error reports**           |
-| Usage events                                                 | Yes, through the Scout API | On a product event                                                                                                                                                                    | **Send usage data**              |
-| Champion select (`live::champ_select` projection)            | Yes, to the Scout API      | While you are in champion select: champion IDs and bans only, never a summoner or Riot ID, when a pick or ban settles, or with a question you type                                    | Scout Coach off for your account |
-| Microphone audio while listening (`scout-voice`)             | No                         | Never: listening for "hey scout" runs on this computer, and audio that is not a question is dropped as it arrives                                                                     | Never sent                       |
-| A spoken question                                            | Yes, to the Scout API      | Only as a finished utterance: one WAV per question, after "hey scout" or while push-to-talk is held, sent to `coach/voice/turns` once you stop speaking; the microphone never streams | Voice consent, mute              |
-| Spoken answers                                               | No, they arrive            | Played on this computer as they stream in; nothing is kept                                                                                                                            | Voice consent                    |
-| Proactive coach triggers (`live::detectors`, beta only)      | No                         | Not sent yet: nothing wires the detectors to the server                                                                                                                               | Never sent                       |
+| Data                                                         | Leaves the device?         | When                                                                                                                                                                                                                                                                                                     | Controlled by                                                                 |
+| ------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Live game snapshot (`allgamedata` projection)                | Only with a question       | When you send a typed question during a game with **Using your live game** on, or ask one aloud during a game; in the beta build, also with a proactive coach trigger                                                                                                                                    | The composer chip; voice consent                                              |
+| Live game recordings (`recordings.sqlite3`)                  | Yes, to the Scout API      | Once, after the game ends, while paired; kept locally 20 games or 30 days                                                                                                                                                                                                                                | Disconnect the device                                                         |
+| Live game in-progress marker (`live_game_frame` observation) | Yes, to the Scout API      | Once per game, while paired; carries no game data (`{"inProgress": true}`)                                                                                                                                                                                                                               | Disconnect the device                                                         |
+| Match, lobby, profile and Clash observations                 | Yes, to the Scout API      | While paired, from the outbox                                                                                                                                                                                                                                                                            | Disconnect the device                                                         |
+| Replay files                                                 | Yes, to the Scout API      | After a game, while paired                                                                                                                                                                                                                                                                               | Disconnect the device                                                         |
+| Explore chat questions                                       | Yes, to the Scout API      | When you send one                                                                                                                                                                                                                                                                                        | Not sending                                                                   |
+| Error reports                                                | Yes, to Bugsink, scrubbed  | On an error or crash                                                                                                                                                                                                                                                                                     | **Send error reports**                                                        |
+| Usage events                                                 | Yes, through the Scout API | On a product event                                                                                                                                                                                                                                                                                       | **Send usage data**                                                           |
+| Champion select (`live::champ_select` projection)            | Yes, to the Scout API      | While you are in champion select: champion IDs and bans only, never a summoner or Riot ID, when a pick or ban settles, or with a question you type                                                                                                                                                       | Scout Coach off for your account                                              |
+| Microphone audio while listening (`scout-voice`)             | No                         | Never: listening for "hey scout" runs on this computer, and audio that is not a question is dropped as it arrives                                                                                                                                                                                        | Never sent                                                                    |
+| A spoken question                                            | Yes, to the Scout API      | Only as a finished utterance: one WAV per question, after "hey scout" or while push-to-talk is held, sent to `coach/voice/turns` once you stop speaking; the microphone never streams                                                                                                                    | Voice consent, mute                                                           |
+| Spoken answers                                               | No, they arrive            | Played on this computer as they stream in; nothing is kept                                                                                                                                                                                                                                               | Voice consent                                                                 |
+| Proactive coach trigger (beta build only)                    | Yes, to the Scout API      | During a game, when a detector fires: the trigger kind, its scoreboard evidence (champion names, K/D/A, item ids and names, item counts) and the same allowlisted live snapshot a question carries, to `coach/triggers`; never text, never in a stable build, at most one per 90 seconds and 10 per game | Scout Coach and proactive coaching on for your account; refused in production |
+| Data Dragon `item.json` (beta build only)                    | No, it arrives             | Downloaded once per Data Dragon version from `ddragon.leagueoflegends.com` into the picture cache, for the detectors                                                                                                                                                                                     | Not applicable                                                                |
 
-The live game snapshot reaches Scout only as a chat question's game context.
+The live game snapshot reaches Scout only as a chat question's game context
+(and, in the beta build, as a proactive trigger's snapshot, below).
 While a game is live the composer shows **Using your live game**, on until you
 turn it off. The window sends only whether to use it; the supervisor attaches
 its own latest allowlisted snapshot, projected to
@@ -1098,8 +1100,36 @@ scoreboard fields (champion, kills, deaths, assists, items) and item facts from
 Data Dragon's `item.json`. Riot's policy prohibits unprompted alerts from live
 game state, so the stable build does not compile them (`build.rs` sets
 `cfg(scout_proactive_coach)` for the beta profile only), and the server's
-`coach/triggers` route refuses every request in production. Nothing sends what
-they find yet.
+`coach/triggers` route refuses every request in production.
+
+In the beta build the supervisor feeds each new frame of an `InProgress` game
+to the detectors (`supervisor/proactive.rs`), with the item facts the relay
+loads from Data Dragon's `item.json` at Scout's version. When one fires, it
+hands the chat relay one `proactive` turn: the trigger kind, its evidence and
+the frame, under the game's key. The supervisor keeps its own copy of the
+server's limits so it never spams Scout (one request per 90 seconds, 10 per
+game, each trigger once), drops a detection that arrives while a turn is
+running instead of queueing it, and records each request as a
+`proactive_coach_trigger` diagnostic. The relay posts it to `coach/triggers`
+through `ExploreClient::start_coach_trigger`. Scout is the authority: every
+answer but a started turn stops proactive turns for that game (spacing, the cap,
+a duplicate, an invalid snapshot), and `feature_disabled` stops them until the
+next refresh. Only a request that never got an answer leaves the next detection
+free to ask. No server response reports the proactive flag ahead of time, so the
+route's own answer is the runtime gate, as it is for voice and the champion-select
+coach.
+
+The answer lands in the game's coach conversation as its own turn, with the
+question the server words ("Scout noticed …"). The coach panel shows it as a
+bordered **Scout noticed** card that says Scout raised it on its own. The card
+holds the answer to that question alone, never the answer to a question the
+player asks afterwards. A turn Scout did not start puts the player's
+conversation back and says nothing. The stable build has none of this: the
+sender, the relay's handling, the IPC panel kind (`ChatCoachKind::Proactive`,
+IPC protocol 12) and the card are all behind the same cfg, and
+`crates/scout-client-app/tests/proactive_boundary.rs` reads the built binary
+to check that only a beta build contains the sender, the detectors and the
+request path. CI runs the workspace tests and Clippy in both profiles.
 
 ## Diagnostics
 

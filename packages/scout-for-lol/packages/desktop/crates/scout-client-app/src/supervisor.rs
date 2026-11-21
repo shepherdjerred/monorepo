@@ -51,6 +51,11 @@ const REFRESH: Duration = Duration::from_secs(1);
 const WRITE_TIMEOUT: Duration = Duration::from_secs(5);
 /// How long a quitting window gets to close itself before it is killed.
 const CLOSE_TIMEOUT: Duration = Duration::from_secs(5);
+/// The diagnostic operation recorded when the proactive coach asks Scout for
+/// a turn. Beta profile only; `tests/proactive_boundary.rs` reads the built
+/// binary for it.
+#[cfg(scout_proactive_coach)]
+const PROACTIVE_TRIGGER_OPERATION: &str = "proactive_coach_trigger";
 
 /// The quick crashes in a row, counting the one that just happened.
 #[must_use]
@@ -441,19 +446,66 @@ impl<C: Collector> Supervisor<C> {
                 .voice
                 .as_ref()
                 .is_some_and(|voice| voice.snapshot().borrow().state == VoiceState::Thinking);
-        let inputs = {
+        let now = Instant::now();
+        #[cfg_attr(not(scout_proactive_coach), expect(unused_mut))]
+        let mut inputs = {
             let runtime = state.borrow();
             coach.tick(
-                Instant::now(),
+                now,
                 busy,
                 &phase,
                 runtime.champ_select.as_ref(),
                 runtime.live_game.as_ref(),
             )
         };
+        #[cfg(scout_proactive_coach)]
+        {
+            // A turn the coach is starting this tick counts as busy, so the
+            // two never race for the conversation.
+            let starting = inputs
+                .iter()
+                .any(|input| matches!(input, scout_explore_client::app_turns::CoachInput::Turn(_)));
+            let runtime = state.borrow();
+            inputs.extend(self.proactive_turn(
+                coach,
+                chat,
+                now,
+                busy || starting,
+                &phase,
+                runtime.live_game.as_ref(),
+            ));
+        }
         for input in inputs {
             chat.coach(input);
         }
+    }
+
+    /// The proactive turn this frame asks for, if any. Beta profile only.
+    #[cfg(scout_proactive_coach)]
+    fn proactive_turn(
+        &self,
+        coach: &mut CoachDriver,
+        chat: &ChatRelay,
+        now: Instant,
+        busy: bool,
+        phase: &GameflowPhase,
+        live: Option<&scout_client_core::live::snapshot::LiveSnapshot>,
+    ) -> Option<scout_explore_client::app_turns::CoachInput> {
+        use scout_explore_client::app_turns::CoachInput;
+        let catalog = chat.item_catalog()?;
+        let input = coach.proactive_tick(now, busy, phase, live, &catalog)?;
+        if let CoachInput::Trigger(turn) = &input {
+            self.record(
+                DiagnosticEvent::new(
+                    DiagnosticLevel::Info,
+                    DiagnosticCategory::Runtime,
+                    PROACTIVE_TRIGGER_OPERATION,
+                    DiagnosticOutcome::Succeeded,
+                )
+                .with_detail(turn.trigger.kind()),
+            );
+        }
+        Some(input)
     }
 
     /// A command from the window. A question whose composer chip asks for
@@ -1057,5 +1109,7 @@ fn window_crash_event(outcome: DiagnosticOutcome, detail: String) -> DiagnosticE
 }
 
 mod coach;
+#[cfg(scout_proactive_coach)]
+mod proactive;
 #[cfg(test)]
 mod tests;

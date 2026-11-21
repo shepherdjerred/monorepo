@@ -2,9 +2,12 @@
 
 use std::error::Error;
 
+#[path = "../../build-support/proactive_coach.rs"]
+mod proactive_coach;
+
 fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=../../assets/icon.ico");
-    println!("cargo:rerun-if-env-changed=SCOUT_DESKTOP_PROFILE");
+    proactive_coach::emit()?;
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
         return Ok(());
     }

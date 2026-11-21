@@ -22,7 +22,7 @@ pub use chat::{
 };
 pub use components::{
     ButtonStyle, Handler, KeyValueTable, MicPill, MonoLine, NavItem, NavSection, Page, ScoutButton,
-    ScoutToggle, ScrollLog, Shell, StatusRow, action_row, body_text, error_notice, modal,
+    ScoutToggle, ScrollLog, Shell, StatusRow, action_row, body_text, callout, error_notice, modal,
     note_text, section_heading,
 };
 

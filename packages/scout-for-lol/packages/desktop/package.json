@@ -5,9 +5,9 @@
   "scripts": {
     "build": "mise exec -- cargo build --workspace --all-targets --locked",
     "typecheck": "mise exec -- cargo check --workspace --all-targets --all-features --locked",
-    "test": "mise exec -- cargo test --workspace --all-features --locked && bun --no-install --bun vitest --config ../../../../vitest.config.ts run scripts",
+    "test": "mise exec -- cargo test --workspace --all-features --locked && SCOUT_DESKTOP_PROFILE=stable mise exec -- cargo test --workspace --all-features --locked && bun --no-install --bun vitest --config ../../../../vitest.config.ts run scripts",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "lint": "mise exec -- cargo fmt --all -- --check && mise exec -- cargo clippy --workspace --all-targets --all-features --locked -- -D warnings",
+    "lint": "mise exec -- cargo fmt --all -- --check && mise exec -- cargo clippy --workspace --all-targets --all-features --locked -- -D warnings && SCOUT_DESKTOP_PROFILE=stable mise exec -- cargo clippy --workspace --all-targets --all-features --locked -- -D warnings",
     "format": "mise exec -- cargo fmt --all -- --check",
     "format:write": "mise exec -- cargo fmt --all",
     "icons": "bun scripts/build-icons.ts",

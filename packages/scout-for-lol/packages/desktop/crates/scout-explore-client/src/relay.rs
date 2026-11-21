@@ -11,6 +11,12 @@
 //! credential, one at a time so a long conversation stays inside the
 //! device's render budget, and card art from Data Dragon, a few at a time.
 //! The window reads the cached files; it never fetches anything itself.
+//!
+//! In the beta profile it also asks Scout for the proactive turns the
+//! supervisor's detectors find (`coach/triggers`), through a
+//! [`crate::proactive::TriggerGate`] that stops them when Scout says so, and
+//! loads Data Dragon's `item.json` for those detectors. A stable build has
+//! none of this.
 
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -35,12 +41,20 @@ use crate::asset_cache::{AssetCache, DEFAULT_CAPACITY_BYTES};
 use crate::authored::PlayerAuthored;
 use crate::client::ExploreClient;
 use crate::contract::Route;
+#[cfg(scout_proactive_coach)]
+use crate::data_dragon::item_list_url;
 use crate::data_dragon::{DATA_DRAGON_HOST, DataDragon, champion_list_url, rune_list_url};
 use crate::error::{ExploreClientError, Recovery};
 use crate::model::{Attachment, Transcript};
+#[cfg(scout_proactive_coach)]
+use crate::proactive::{ProactiveTurn, TriggerGate, TriggerVerdict};
 use crate::session::{AttachJob, ChatSession, UploadFailure, load_image};
 use crate::stream::{StreamEnd, StreamOptions, StreamSignal};
 use crate::visuals::ImageSource;
+#[cfg(scout_proactive_coach)]
+use scout_client_core::desktop_api::CoachTriggerResponse;
+#[cfg(scout_proactive_coach)]
+use scout_client_core::live::detectors::ItemCatalog;
 
 /// How long one Data Dragon download may take.
 const ART_TIMEOUT: Duration = Duration::from_secs(15);
@@ -201,6 +215,9 @@ pub struct ChatRelay {
     /// by the next refresh.
     coach_enabled: Arc<AtomicBool>,
     parts: watch::Receiver<ChatParts>,
+    /// Data Dragon's item facts, once loaded, for the proactive detectors.
+    #[cfg(scout_proactive_coach)]
+    items: watch::Receiver<Option<Arc<ItemCatalog>>>,
 }
 
 /// What a relay with nothing behind it hands the test that drives it.
@@ -215,6 +232,9 @@ pub struct DetachedRelay {
     pub parts: watch::Sender<ChatParts>,
     /// What the relay would set when Scout says the coach is off.
     pub coach_enabled: Arc<AtomicBool>,
+    /// Publishes the item facts the proactive detectors read.
+    #[cfg(scout_proactive_coach)]
+    pub items: watch::Sender<Option<Arc<ItemCatalog>>>,
 }
 
 impl ChatRelay {
@@ -229,16 +249,22 @@ impl ChatRelay {
             commands,
             coach,
             parts,
+            #[cfg(scout_proactive_coach)]
+            items,
             ..
         } = Self::detached_coach();
         let enabled = Arc::clone(&relay.coach_enabled);
         tokio::spawn(run(
+            Channels {
+                commands,
+                coach,
+                coach_enabled: enabled,
+                parts,
+                #[cfg(scout_proactive_coach)]
+                items,
+            },
             origin,
             cache_directory,
-            commands,
-            coach,
-            enabled,
-            parts,
         ));
         relay
     }
@@ -267,17 +293,23 @@ impl ChatRelay {
         let (coach, coach_receiver) = mpsc::unbounded_channel();
         let (parts, watcher) = watch::channel(ChatParts::default());
         let coach_enabled = Arc::new(AtomicBool::new(true));
+        #[cfg(scout_proactive_coach)]
+        let (items, items_watcher) = watch::channel(None);
         DetachedRelay {
             relay: Self {
                 commands,
                 coach,
                 coach_enabled: Arc::clone(&coach_enabled),
                 parts: watcher,
+                #[cfg(scout_proactive_coach)]
+                items: items_watcher,
             },
             commands: receiver,
             coach: coach_receiver,
             parts,
             coach_enabled,
+            #[cfg(scout_proactive_coach)]
+            items,
         }
     }
 
@@ -326,6 +358,14 @@ impl ChatRelay {
     #[must_use]
     pub fn subscribe(&self) -> watch::Receiver<ChatParts> {
         self.parts.clone()
+    }
+
+    /// Data Dragon's item facts for the proactive detectors, once Scout has
+    /// named its version and `item.json` loaded. Beta profile only.
+    #[cfg(scout_proactive_coach)]
+    #[must_use]
+    pub fn item_catalog(&self) -> Option<Arc<ItemCatalog>> {
+        self.items.borrow().clone()
     }
 
     /// Whether Scout refused this build as too old for chat.
@@ -388,6 +428,12 @@ enum Answer {
     Settled(Result<Transcript, ExploreClientError>),
     Failed(ExploreClientError),
     Art(Result<DataDragon, String>),
+    /// `item.json` for the proactive detectors.
+    #[cfg(scout_proactive_coach)]
+    Items(Result<ItemCatalog, String>),
+    /// `coach/triggers` answered for a turn of this game.
+    #[cfg(scout_proactive_coach)]
+    Triggered(String, Result<CoachTriggerResponse, ExploreClientError>),
     Picture {
         key: String,
         fetched: Result<PathBuf, String>,
@@ -404,16 +450,32 @@ struct Relay {
     pictures: Arc<Pictures>,
     /// Picture keys already asked for, so each is fetched once.
     requested: HashSet<String>,
+    /// Whether Scout still takes proactive turns.
+    #[cfg(scout_proactive_coach)]
+    gate: TriggerGate,
+    #[cfg(scout_proactive_coach)]
+    items: watch::Sender<Option<Arc<ItemCatalog>>>,
 }
 
-async fn run(
-    origin: String,
-    cache_directory: PathBuf,
-    mut commands: mpsc::UnboundedReceiver<RelayCommand>,
-    mut coach: mpsc::UnboundedReceiver<CoachInput>,
+/// The relay task's ends of its channels.
+struct Channels {
+    commands: mpsc::UnboundedReceiver<RelayCommand>,
+    coach: mpsc::UnboundedReceiver<CoachInput>,
     coach_enabled: Arc<AtomicBool>,
     parts: watch::Sender<ChatParts>,
-) {
+    #[cfg(scout_proactive_coach)]
+    items: watch::Sender<Option<Arc<ItemCatalog>>>,
+}
+
+async fn run(channels: Channels, origin: String, cache_directory: PathBuf) {
+    let Channels {
+        mut commands,
+        mut coach,
+        coach_enabled,
+        parts,
+        #[cfg(scout_proactive_coach)]
+        items,
+    } = channels;
     let (answers, mut answered) = mpsc::unbounded_channel();
     let session = ChatSession::with_web_origin(&origin);
     let mut relay = Relay {
@@ -425,6 +487,10 @@ async fn run(
         coach_enabled,
         pictures: Arc::new(Pictures::open(cache_directory)),
         requested: HashSet::new(),
+        #[cfg(scout_proactive_coach)]
+        gate: TriggerGate::new(),
+        #[cfg(scout_proactive_coach)]
+        items,
     };
     loop {
         tokio::select! {
@@ -463,6 +529,8 @@ impl Relay {
                 // Pairing, a new window or a retry: ask whether the coach is
                 // on again.
                 self.coach_enabled.store(true, Ordering::Relaxed);
+                #[cfg(scout_proactive_coach)]
+                self.gate.refresh();
                 self.refresh();
             }
             ChatCommand::Open { conversation_id } => {
@@ -597,7 +665,71 @@ impl Relay {
                 };
                 self.start_app(client, request);
             }
+            #[cfg(scout_proactive_coach)]
+            CoachInput::Trigger(turn) => self.trigger(&turn),
         }
+    }
+
+    /// Ask Scout for the proactive turn a detector found, unless the coach is
+    /// off or Scout has stopped proactive turns for this game.
+    #[cfg(scout_proactive_coach)]
+    fn trigger(&mut self, turn: &ProactiveTurn) {
+        if !self.coach_enabled.load(Ordering::Relaxed) || !self.gate.admits(&turn.game_key) {
+            return;
+        }
+        let Some(client) = self.client.clone() else {
+            return;
+        };
+        let Some(request) = self.session.begin_proactive_turn(turn) else {
+            return;
+        };
+        let answers = self.answers.clone();
+        let game_key = turn.game_key.clone();
+        tokio::spawn(async move {
+            let result = client.start_coach_trigger(&request).await;
+            let _ = answers.send(Answer::Triggered(game_key, result));
+        });
+    }
+
+    /// Scout's answer to a proactive turn.
+    #[cfg(scout_proactive_coach)]
+    fn triggered(
+        &mut self,
+        game_key: &str,
+        result: Result<CoachTriggerResponse, ExploreClientError>,
+    ) {
+        let verdict = TriggerVerdict::of(&result);
+        self.gate.settle(game_key, &verdict);
+        if let TriggerVerdict::Started(run) = verdict {
+            let run_id = run.run_id;
+            self.session.started(run);
+            self.follow_run(run_id);
+        } else {
+            self.session
+                .proactive_turn_not_started(result.err().as_ref());
+        }
+    }
+
+    /// Load `item.json` at the version Scout names, through the picture
+    /// cache, for the proactive detectors.
+    #[cfg(scout_proactive_coach)]
+    fn load_items(&self, client: &ExploreClient) {
+        let client = client.clone();
+        let pictures = Arc::clone(&self.pictures);
+        let answers = self.answers.clone();
+        tokio::spawn(async move {
+            let loaded = async {
+                let version = client
+                    .assets()
+                    .await
+                    .map_err(|error| error.to_string())?
+                    .data_dragon_version;
+                let path = pictures.art(&item_list_url(&version)).await?;
+                let json = std::fs::read_to_string(path).map_err(|error| error.to_string())?;
+                ItemCatalog::from_data_dragon(&json).map_err(|error| error.to_string())
+            };
+            let _ = answers.send(Answer::Items(loaded.await));
+        });
     }
 
     fn start_app(&self, client: ExploreClient, request: AppTurnRequest) {
@@ -720,6 +852,10 @@ impl Relay {
         match answer {
             Answer::Client(Ok(client)) => {
                 self.load_art(&client);
+                #[cfg(scout_proactive_coach)]
+                if self.items.borrow().is_none() {
+                    self.load_items(&client);
+                }
                 self.client = Some(client);
                 self.list();
                 self.models();
@@ -800,6 +936,18 @@ impl Relay {
             // the next refresh tries again.
             Answer::Art(Ok(art)) => self.session.art_loaded(art),
             Answer::Art(Err(_)) => {}
+            #[cfg(scout_proactive_coach)]
+            Answer::Items(Ok(catalog)) => {
+                self.items.send_replace(Some(Arc::new(catalog)));
+            }
+            // Without item facts the detectors do not run; the next refresh
+            // tries again.
+            #[cfg(scout_proactive_coach)]
+            Answer::Items(Err(error)) => {
+                tracing::warn!(%error, "could not load Data Dragon item facts");
+            }
+            #[cfg(scout_proactive_coach)]
+            Answer::Triggered(game_key, result) => self.triggered(&game_key, result),
             Answer::Picture { key, fetched } => {
                 let image = match fetched {
                     Ok(path) => ChatImage::Ready {

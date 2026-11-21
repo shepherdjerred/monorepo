@@ -2,12 +2,15 @@
 //! language-neutral tokens, and fails the build when a token the window uses
 //! is missing or malformed.
 
+#[path = "../../build-support/proactive_coach.rs"]
+mod proactive_coach;
 #[path = "src/token_source.rs"]
 mod token_source;
 
 use std::{env, error::Error, fs, path::PathBuf};
 
 fn main() -> Result<(), Box<dyn Error>> {
+    proactive_coach::emit()?;
     let manifest_dir =
         PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").ok_or("CARGO_MANIFEST_DIR is not set")?);
     let tokens = manifest_dir.join("../../../design-system/tokens");

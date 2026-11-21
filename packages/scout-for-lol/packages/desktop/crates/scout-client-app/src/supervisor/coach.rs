@@ -12,6 +12,11 @@
 //! select that held still stays waiting, so the newest screen goes once the
 //! player's turn ends; a game's plan goes then too, if the game is still
 //! inside its start window.
+//!
+//! The beta profile adds a third moment, Scout's own: the proactive driver
+//! ([`super::proactive`]) watches the game's frames and asks for a turn when
+//! the scoreboard changes in a way worth a note. It shares the game's key with
+//! the plan. A stable build does not compile it.
 
 use std::time::{Duration, Instant};
 
@@ -50,6 +55,8 @@ pub(super) struct CoachDriver {
     watch: Option<Watch>,
     game_key: Option<String>,
     showing: bool,
+    #[cfg(scout_proactive_coach)]
+    proactive: super::proactive::ProactiveDriver,
 }
 
 impl CoachDriver {
@@ -60,6 +67,8 @@ impl CoachDriver {
             watch: None,
             game_key: None,
             showing: false,
+            #[cfg(scout_proactive_coach)]
+            proactive: super::proactive::ProactiveDriver::default(),
         }
     }
 
@@ -91,6 +100,8 @@ impl CoachDriver {
         }
         if !playing {
             self.game_key = None;
+            #[cfg(scout_proactive_coach)]
+            self.proactive.end_game();
         }
         if selecting {
             out.extend(self.select_turn(now, busy, select));
@@ -99,6 +110,27 @@ impl CoachDriver {
             out.extend(self.plan_turn(busy, live));
         }
         out
+    }
+
+    /// One look at the game for the proactive coach. Beta profile only.
+    /// Runs while the game is `InProgress` and its plan has a key, with the
+    /// item facts Scout's Data Dragon version names.
+    #[cfg(scout_proactive_coach)]
+    pub(super) fn proactive_tick(
+        &mut self,
+        now: Instant,
+        busy: bool,
+        phase: &GameflowPhase,
+        live: Option<&LiveSnapshot>,
+        catalog: &scout_client_core::live::detectors::ItemCatalog,
+    ) -> Option<CoachInput> {
+        if *phase != GameflowPhase::InProgress {
+            return None;
+        }
+        let key = self.game_key.as_deref()?;
+        self.proactive
+            .observe(now, busy, key, live?, catalog)
+            .map(|turn| CoachInput::Trigger(Box::new(turn)))
     }
 
     fn select_turn(
@@ -194,6 +226,8 @@ mod tests {
         match input {
             CoachInput::Turn(turn) => Some(turn.initiation),
             CoachInput::Clear => None,
+            #[cfg(scout_proactive_coach)]
+            CoachInput::Trigger(_) => None,
         }
     }
 
@@ -359,6 +393,8 @@ mod tests {
             .filter_map(|input| match input {
                 CoachInput::Turn(turn) => turn.context.champ_select.as_ref(),
                 CoachInput::Clear => None,
+                #[cfg(scout_proactive_coach)]
+                CoachInput::Trigger(_) => None,
             })
             .flat_map(|screen| screen.my_team.iter().map(|slot| slot.champion_id))
             .collect()
