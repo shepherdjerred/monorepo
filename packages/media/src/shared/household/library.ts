@@ -97,6 +97,26 @@ export const LeavingSoonSchema = z.object({
   state: z.enum(["warning_pending", "grace_period"]),
   graceUntil: z.iso.datetime().nullable(),
 });
+/**
+ * How long the household keeps a title. `keep`: its library Keep or someone's
+ * keeping request holds it indefinitely. `temporary`: it stays while someone
+ * follows it. `unclassified`: neither, so it is due a review.
+ */
+export const LibraryPolicySchema = z.enum([
+  "keep",
+  "temporary",
+  "unclassified",
+]);
+/**
+ * What the owner's keeping switch sends to `POST /library/:id/keeping-policy`:
+ * the title's version, and its default edition's target version and current
+ * choice. Only a current, unrestricted owner reads it.
+ */
+export const LibraryKeepingSchema = z.object({
+  mediaVersion: z.int().nonnegative(),
+  targetVersion: z.int().nonnegative(),
+  keepingPolicy: z.enum(["keep", "temporary"]),
+});
 export const LibraryPageSchema = z.object({
   items: z
     .array(
@@ -106,7 +126,7 @@ export const LibraryPageSchema = z.object({
         kind: z.enum(["movie", "series"]),
         year: z.int().nullable(),
         artwork: ArtworkSchema,
-        policy: z.enum(["keep", "temporary", "unclassified"]),
+        policy: LibraryPolicySchema,
         myInterest: LibraryInterestSchema,
         /** A movie's lifecycle state. Always null for a series; read `episodes`. */
         availability: AvailabilitySchema.nullable(),
@@ -138,13 +158,7 @@ export const LibraryPageSchema = z.object({
           "temporary_interest",
           "review_required",
         ]),
-        libraryKeeping: z
-          .object({
-            mediaVersion: z.int().nonnegative(),
-            targetVersion: z.int().nonnegative(),
-            keepingPolicy: z.enum(["keep", "temporary"]),
-          })
-          .nullable(),
+        libraryKeeping: LibraryKeepingSchema.nullable(),
       }),
     )
     .max(50),

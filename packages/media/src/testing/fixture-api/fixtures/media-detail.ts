@@ -16,7 +16,8 @@ import {
   type Persona,
 } from "#testing/fixture-api/personas.ts";
 import { PROFILE_IDS } from "./profiles.ts";
-import { requestList } from "./requests.ts";
+import { libraryKeeping, libraryPolicy } from "./library.ts";
+import { requestInterest, requestList } from "./requests.ts";
 import {
   DAY,
   HOUR,
@@ -266,25 +267,49 @@ function requesters(
 ): MediaDetail["requests"] {
   const { item, title } = resolved;
   const user = personaUser(persona);
-  const own = requestList(persona)
-    .filter((request) => request.mediaId === item.id && request.active)
+  const standing = requestList(persona).filter((request) => request.active);
+  const own = standing
+    .filter((request) => request.mediaId === item.id)
     .map((request) => ({
       id: request.id,
       userId: request.userId,
       subtitleLanguages: request.subtitleLanguages,
       version: request.version,
       user: { displayName: user.displayName },
+      ...requestInterest(request.id, persona),
     }));
-  // The featured titles are also wanted by another household member.
-  return title === FEATURED.movie || title === FEATURED.series
+  if (item.id !== title.id) {
+    // A request for the whole series reaches each of its seasons and episodes
+    // as a row with no interest of its own: that stays on the series' request.
+    const series = standing.find((request) => request.mediaId === title.id);
+    return series === undefined || own.length > 0
+      ? own
+      : [
+          {
+            id: derivedId(23, item.id, 1),
+            userId: series.userId,
+            subtitleLanguages: series.subtitleLanguages,
+            version: 1,
+            user: { displayName: user.displayName },
+            interestRevision: null,
+            interestState: null,
+          },
+        ];
+  }
+  // The featured titles are also wanted by another household member, whose
+  // request only the owner reads: a member sees their own.
+  const shared = fixtureId(5, 900 + title.index);
+  return persona === "owner" &&
+    (title === FEATURED.movie || title === FEATURED.series)
     ? [
         ...own,
         {
-          id: fixtureId(5, 900 + title.index),
+          id: shared,
           userId: SAM.id,
           subtitleLanguages: ["en"],
           version: 1,
           user: { displayName: SAM.displayName },
+          ...requestInterest(shared, persona),
         },
       ]
     : own;
@@ -305,6 +330,9 @@ export function mediaDetail(
     artwork: storedArtwork(title),
     overview: storedOverview(title),
     catalog: { kind: title.kind, externalId: title.tmdbId },
+    // A season or episode page reports its series' keeping, as the library does.
+    policy: libraryPolicy(title),
+    libraryKeeping: libraryKeeping(title, persona),
     visibility: mediaVisibility(resolved, persona),
     subtitlePolicies: featured
       ? [

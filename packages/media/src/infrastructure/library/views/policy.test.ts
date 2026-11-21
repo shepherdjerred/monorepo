@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import {
   libraryInterest,
+  libraryKeepingView,
   libraryViewPolicy,
   type LibraryPolicyNode,
 } from "#infrastructure/library/views/policy.ts";
@@ -98,6 +99,82 @@ test("the household is following a title while anyone's request stands, and each
       "member",
     ),
   ).toBe("none");
+});
+function title(keep: boolean, following: boolean) {
+  return {
+    id: "movie",
+    version: 6,
+    intents: [
+      {
+        edition: "default",
+        libraryKeep: keep,
+        libraryPolicyExplicit: false,
+        version: 3,
+      },
+    ],
+    requests: following
+      ? [
+          {
+            userId: "requester",
+            active: true,
+            excluded: false,
+            keepingPolicy: "temporary" as const,
+            interestState: "following",
+          },
+        ]
+      : [],
+  };
+}
+test("a title's keeping names its policy for everyone and its switch for the owner alone", () => {
+  const owner = { actorId: "owner", owner: true };
+  const member = { actorId: "requester", owner: false };
+  const versions = { mediaVersion: 6, targetVersion: 3 };
+  expect(libraryKeepingView(title(true, true), owner)).toMatchObject({
+    policy: "keep",
+    protection: "keep_indefinitely",
+    libraryKeeping: { ...versions, keepingPolicy: "keep" },
+  });
+  expect(libraryKeepingView(title(false, true), owner)).toMatchObject({
+    policy: "temporary",
+    protection: "temporary_interest",
+    libraryKeeping: { ...versions, keepingPolicy: "temporary" },
+  });
+  expect(libraryKeepingView(title(false, false), owner)).toMatchObject({
+    policy: "unclassified",
+    protection: "review_required",
+    libraryKeeping: { ...versions, keepingPolicy: "temporary" },
+  });
+  for (const [keep, following, policy] of [
+    [true, true, "keep"],
+    [false, true, "temporary"],
+    [false, false, "unclassified"],
+  ] as const)
+    expect(libraryKeepingView(title(keep, following), member)).toMatchObject({
+      policy,
+      libraryKeeping: null,
+    });
+  expect(libraryKeepingView(title(false, true), member).claims).toEqual({
+    kept: false,
+    following: true,
+    householdFollowing: true,
+  });
+  // The switch is the default edition's; a title without one has none.
+  expect(
+    libraryKeepingView(
+      {
+        ...title(true, false),
+        intents: [
+          {
+            edition: "directors-cut",
+            libraryKeep: true,
+            libraryPolicyExplicit: true,
+            version: 9,
+          },
+        ],
+      },
+      owner,
+    ),
+  ).toMatchObject({ policy: "unclassified", libraryKeeping: null });
 });
 test("a whole-series explicit Keep remains visible beneath a temporary leaf policy", () => {
   const series = node("series", true, true);

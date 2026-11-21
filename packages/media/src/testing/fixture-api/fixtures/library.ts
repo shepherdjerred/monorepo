@@ -39,6 +39,21 @@ export function libraryPolicy(title: Title): (typeof POLICIES)[number] {
   return pick(POLICIES, title.index);
 }
 
+/** The owner's keeping switch for a title; the title page reads the same one. */
+export function libraryKeeping(
+  title: Title,
+  persona: Persona,
+): LibraryItem["libraryKeeping"] {
+  const policy = libraryPolicy(title);
+  return persona === "owner" && policy !== "unclassified"
+    ? {
+        mediaVersion: versionOf(title.id),
+        targetVersion: (title.index % 4) + 1,
+        keepingPolicy: policy,
+      }
+    : null;
+}
+
 export function libraryInterest(title: Title): (typeof INTERESTS)[number] {
   return pick(INTERESTS, title.index);
 }
@@ -114,14 +129,7 @@ function libraryItems(persona: Persona): (LibraryItem & { title: string })[] {
       addedAt: addedAt(title),
       leavingSoon: leavingSoon(title),
       protection: PROTECTION[policy],
-      libraryKeeping:
-        persona === "owner" && policy !== "unclassified"
-          ? {
-              mediaVersion: versionOf(title.id),
-              targetVersion: (title.index % 4) + 1,
-              keepingPolicy: policy,
-            }
-          : null,
+      libraryKeeping: libraryKeeping(title, persona),
     };
   });
 }

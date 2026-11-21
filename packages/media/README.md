@@ -1162,11 +1162,37 @@ Anyone but a current, unrestricted owner reads a member projection
 (`infrastructure/visibility/member-detail.ts`) of that response. A member keeps
 each related download's state, progress and freshness, and loses how the title
 was acquired: the acquisition attempts, each download's ratio, seeded time and
-observation time, the assigned quality profile and the subtitle policies. Every
-withheld field takes a value its contract already allowed (an empty list or
-`null`), so the response keeps its shape. `GET /api/v1/media/:id/releases`
-applies the same line: it authorizes a requester as before and then returns
-release candidates only to an owner, and an empty list to anyone else.
+observation time, the assigned quality profile, the subtitle policies and the
+owner's keeping switch. Every withheld field takes a value its contract already
+allowed (an empty list or `null`), so the response keeps its shape.
+`GET /api/v1/media/:id/releases` applies the same line: it authorizes a
+requester as before and then returns release candidates only to an owner, and
+an empty list to anyone else.
+
+The response also says how long the household keeps the title, so a title page
+can offer what the Library offers:
+
+| Field            | Meaning                                                                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `policy`         | `keep`, `temporary` or `unclassified`, exactly as the root title's item on `GET /api/v1/library` reports it.                           |
+| `libraryKeeping` | `{ mediaVersion, targetVersion, keepingPolicy }` for the root title's default edition, for a current, unrestricted owner; else `null`. |
+
+Both describe the root title: a season or episode reports its series', and the
+versions are the series'. `libraryKeeping` is what
+`POST /api/v1/library/:id/keeping-policy` expects, sent with `rootMediaId` as
+the title. The list and this read share one derivation
+(`infrastructure/library/views/policy.ts`). A title the list would not show the
+reader (one held by no library Keep, standing request or current file, or one in
+a Plex library the reader may not open) reports `unclassified` and `null`: a
+title that leaves the library takes its switch with it.
+
+Each entry of `requests` carries `interestRevision` and `interestState`, named
+as `GET /api/v1/request-interests` names them, beside the request's `version`.
+Together they are what `POST /api/v1/request-interests/:id/commands` expects,
+so a title page can stop following without a second read. Both are `null` for a
+request with no interest of its own: a row that a series or season request
+spread onto an episode, whose interest is managed on that original request. A
+member still reads only their own requests.
 
 `GET /api/v4/media/:id/movie-editions/:edition` applies that projection to its
 `progress`: a requester of the edition keeps each download's state, progress and

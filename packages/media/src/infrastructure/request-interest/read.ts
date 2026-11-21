@@ -14,6 +14,23 @@ import {
 } from "#infrastructure/library/views/artwork.ts";
 
 /**
+ * A request's interest as another read may carry it beside the request. Only a
+ * direct request has one: `GET /request-interests` lists no other, and an
+ * interest command refuses a row that a series or season request spread onto
+ * an episode, whose interest is managed on that original request.
+ */
+export function requestOwnInterest(
+  request: Pick<MediaRequest, "direct" | "interestRevision" | "interestState">,
+) {
+  return request.direct
+    ? {
+        interestRevision: request.interestRevision,
+        interestState: request.interestState,
+      }
+    : { interestRevision: null, interestState: null };
+}
+
+/**
  * `include.artwork` is the caller's explicit opt-in. The row contract is
  * strict, so an unrequested field would be rejected by a browser tab on an
  * earlier client.

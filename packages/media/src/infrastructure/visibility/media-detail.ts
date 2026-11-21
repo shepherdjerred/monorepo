@@ -27,6 +27,8 @@ import {
   rootArtwork,
   rootMedia,
 } from "#infrastructure/library/views/artwork.ts";
+import { readTitleKeeping } from "#infrastructure/library/views/title-keeping.ts";
+import { requestOwnInterest } from "#infrastructure/request-interest/read.ts";
 import type { MediaVisibility } from "#shared/visibility/detail.ts";
 import {
   hasPendingSeriesPackPublicationV1,
@@ -81,6 +83,9 @@ export function readMediaDetail(
             subtitleLanguages: true,
             version: true,
             user: { select: { displayName: true } },
+            direct: true,
+            interestRevision: true,
+            interestState: true,
           },
         },
         holds: {
@@ -192,6 +197,11 @@ export function readMediaDetail(
       visible: reader.visible,
     });
     const household = await defaultHouseholdCaptionRequirements(tx, item);
+    const keeping = await readTitleKeeping(tx, root, {
+      actorId: actor.id,
+      owner: reader.owner,
+      visible: reader.visible,
+    });
     const detail = MediaDetailSchema.parse({
       ...item,
       availability: external.has(item.id) ? "available" : item.availability,
@@ -206,6 +216,13 @@ export function readMediaDetail(
       artwork: rootArtwork(item),
       overview: root.overview,
       catalog: catalogPage(root),
+      ...keeping,
+      requests: item.requests.map(
+        ({ direct, interestRevision, interestState, ...request }) => ({
+          ...request,
+          ...requestOwnInterest({ direct, interestRevision, interestState }),
+        }),
+      ),
       assets: item.assets.map((coverage) => ({
         ...coverage,
         asset: {

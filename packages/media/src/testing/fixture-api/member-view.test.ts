@@ -5,8 +5,11 @@ import {
   ProfileListSchema,
   ReleaseListSchema,
 } from "#shared/api.ts";
+import { RequestInterestListSchema } from "#shared/household/interests.ts";
+import { LibraryPageSchema } from "#shared/household/library.ts";
 import { MovieTargetContextV4Schema } from "#shared/movie-editions/lifecycle/public-v4.ts";
-import { FEATURED } from "./fixtures/titles.ts";
+import { FEATURED, episodeId, seasonId } from "./fixtures/titles.ts";
+import { MEMBER } from "./personas.ts";
 import type { Persona } from "./personas.ts";
 import { routeFixture } from "./router.ts";
 
@@ -156,4 +159,98 @@ describe("what a member reads, as the server projects it", () => {
     });
     expect(refused.status).toBe(403);
   });
+});
+
+describe("what a title page reads about keeping and following", () => {
+  it.each(["owner", "member"] as const)(
+    "%s: a title page reports the keeping its library item reports, a season and an episode their series'",
+    async (persona) => {
+      const library = LibraryPageSchema.parse(
+        await read("/library?limit=50", persona),
+      );
+      const policies = new Set<string>();
+      for (const item of library.items) {
+        const detail = MediaDetailSchema.parse(
+          await read(`/media/${item.id}`, persona),
+        );
+        expect(detail.policy).toBe(item.policy);
+        expect(detail.libraryKeeping).toEqual(item.libraryKeeping);
+        policies.add(item.policy);
+      }
+      expect([...policies].sort()).toEqual([
+        "keep",
+        "temporary",
+        "unclassified",
+      ]);
+      expect(library.items.some((item) => item.libraryKeeping !== null)).toBe(
+        persona === "owner",
+      );
+      const series = MediaDetailSchema.parse(
+        await read(`/media/${FEATURED.series.id}`, persona),
+      );
+      for (const id of [
+        seasonId(FEATURED.series, 1),
+        episodeId(FEATURED.series, 1, 3),
+      ]) {
+        const part = MediaDetailSchema.parse(
+          await read(`/media/${id}`, persona),
+        );
+        expect(part.rootMediaId).toBe(FEATURED.series.id);
+        expect(part.policy).toBe(series.policy);
+        expect(part.libraryKeeping).toEqual(series.libraryKeeping);
+      }
+    },
+  );
+
+  it("each request carries the interest the interests read reports, and a spread row carries none", async () => {
+    const interests = RequestInterestListSchema.parse(
+      await read("/request-interests", "member"),
+    );
+    // The first interests page: every request on it that a title page lists.
+    const states = new Set<string>();
+    for (const interest of interests.items) {
+      const detail = MediaDetailSchema.parse(
+        await read(`/media/${interest.mediaId}`, "member"),
+      );
+      const request = detail.requests.find(
+        (entry) => entry.id === interest.requestId,
+      );
+      if (request === undefined) continue;
+      expect(request).toMatchObject({
+        version: interest.version,
+        interestRevision: interest.interestRevision,
+        interestState: interest.interestState,
+      });
+      states.add(interest.interestState);
+    }
+    expect([...states].sort()).toEqual(["dropped", "expired", "following"]);
+    const episode = MediaDetailSchema.parse(
+      await read(`/media/${episodeId(FEATURED.series, 1, 3)}`, "member"),
+    );
+    expect(episode.requests).toEqual([
+      expect.objectContaining({
+        userId: MEMBER.id,
+        interestRevision: null,
+        interestState: null,
+      }),
+    ]);
+  });
+
+  it.each(TITLES)(
+    "$name: a member reads only their own requests",
+    async ({ id }) => {
+      const owner = MediaDetailSchema.parse(
+        await read(`/media/${id}`, "owner"),
+      );
+      const member = MediaDetailSchema.parse(
+        await read(`/media/${id}`, "member"),
+      );
+      expect(
+        member.requests.every((request) => request.userId === MEMBER.id),
+      ).toBe(true);
+      expect(owner.requests.length).toBeGreaterThanOrEqual(
+        member.requests.length,
+      );
+    },
+  );
 });
