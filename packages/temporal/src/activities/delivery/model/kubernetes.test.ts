@@ -8,19 +8,29 @@ import type * as Activity from "@temporalio/activity";
 import type * as ArgoClient from "#lib/delivery/argo-client.ts";
 import type * as Argocd from "#activities/delivery/argocd.ts";
 import type * as Stages from "./stages.ts";
+import {
+  MEDIA_INGRESS_PRUNE_FLAG,
+  MEDIA_INGRESS_PRUNE_INFO,
+  mediaIngressSourceHash,
+  type MediaIngressPruning,
+} from "homelab/scripts/argocd/argocd-media-ingress-prunes.ts";
 
 const calls = vi.hoisted(() => {
   const events: string[] = [];
   const reads: unknown[] = [];
   const updates: unknown[] = [];
   const stages: { key: string; status: string; receipt: unknown }[] = [];
+  const argoResponses = new Map<string, unknown[]>();
+  const credentialDecision: { credentialPrune: boolean | MediaIngressPruning } =
+    { credentialPrune: false };
   return {
     events,
     reads,
     updates,
     stages,
+    argoResponses,
     prune: false,
-    credentialPrune: false,
+    ...credentialDecision,
     credentialFailure: false,
     lapsed: false,
     refuse: false,
@@ -71,7 +81,12 @@ vi.mock("#activities/delivery/argocd.ts", async (importOriginal) => {
   const original = await importOriginal<typeof Argocd>();
   return {
     ...original,
-    argoRequest: () => Promise.resolve(null),
+    argoRequest: (path: string) => {
+      const replies = calls.argoResponses.get(path);
+      if (replies === undefined) return Promise.resolve(null);
+      calls.events.push(path);
+      return Promise.resolve(replies.shift());
+    },
     runGuardedArgoCommand: (args: string[]) => {
       calls.events.push(args.join(" "));
       return calls.refuse && args[0] === "assert-apply-safe"
@@ -151,11 +166,135 @@ afterEach(() => {
   calls.prune = false;
   calls.credentialPrune = false;
   calls.credentialFailure = false;
+  calls.argoResponses.clear();
   calls.lapsed = false;
   calls.updates = [];
   calls.stages = [];
   calls.refuse = false;
   calls.failRestore = false;
+});
+
+function mediaRetirementFixture() {
+  const initial = fixture();
+  const current = {
+    ...initial.current,
+    deployment: {
+      ...initial.current.deployment,
+      environmentId: "streambot/prod",
+    },
+  };
+  const recipe = {
+    ...initial.recipe,
+    application: {
+      ...initial.recipe.application,
+      name: "media",
+      destination: {
+        ...initial.recipe.application.destination,
+        namespace: "media",
+      },
+      source: { ...initial.recipe.application.source, chart: "media" },
+    },
+    steps: initial.recipe.steps.filter(({ kind }) => kind !== "forum-bundle"),
+  };
+  const before = argoApplication(current, recipe, false);
+  const after = argoApplication(current, recipe, true);
+  const state = after.status.operationState;
+  if (state === undefined) throw new Error("Synced fixture lost its operation");
+  const ingress: MediaIngressPruning["resources"][number] = {
+    group: "networking.k8s.io",
+    kind: "Ingress",
+    namespace: "media",
+    name: "media-bazarr-tailscale-ingress-ingress",
+    uid: "uid-bazarr",
+  };
+  const proof: MediaIngressPruning = {
+    applicationUid: after.metadata.uid,
+    sourceHash: mediaIngressSourceHash(after.spec.source),
+    resources: [ingress],
+  };
+  state.operation.info.push({
+    name: MEDIA_INGRESS_PRUNE_INFO,
+    value: JSON.stringify(proof),
+  });
+  return {
+    current,
+    recipe,
+    before,
+    after,
+    operation: state.operation,
+    proof,
+    ingress,
+  };
+}
+
+describe("Media ingress retirement", () => {
+  test("passes the reviewed candidates to guarded sync and verifies actual absence", async () => {
+    const f = mediaRetirementFixture();
+    calls.credentialPrune = f.proof;
+    calls.reads = [f.before, f.after];
+    calls.argoResponses.set("media?refresh=hard", [f.after]);
+    calls.argoResponses.set("media/managed-resources", [{ items: [] }]);
+    await sync(f.current, f.recipe, "step-sync");
+    expect(
+      calls.events.find((event) => event.startsWith("sync-managed")),
+    ).toContain(`${MEDIA_INGRESS_PRUNE_FLAG} ${JSON.stringify(f.proof)}`);
+    expect(calls.events.slice(-3)).toEqual([
+      "media?refresh=hard",
+      "media/managed-resources",
+      "step-sync succeeded",
+    ]);
+  });
+
+  test("a resumed Media sync polls through lingering ingress finalizers without starting another sync", async () => {
+    const f = mediaRetirementFixture();
+    const sleep = vi.spyOn(Bun, "sleep").mockResolvedValue();
+    try {
+      const pending = {
+        ...f.after,
+        status: {
+          ...f.after.status,
+          sync: {
+            status: "OutOfSync",
+            revision: f.after.spec.source.targetRevision,
+          },
+          resources: [
+            { ...f.ingress, status: "OutOfSync", requiresPruning: true },
+          ],
+        },
+      };
+      calls.reads = [
+        { ...f.before, operation: f.operation },
+        pending,
+        f.after,
+        f.after,
+      ];
+      calls.argoResponses.set("media?refresh=hard", [f.after, f.after]);
+      calls.argoResponses.set("media/managed-resources", [
+        {
+          items: [
+            {
+              ...f.ingress,
+              liveState: JSON.stringify({
+                metadata: { deletionTimestamp: "2026-11-21T14:00:00Z" },
+              }),
+            },
+          ],
+        },
+        { items: [] },
+      ]);
+      await sync(f.current, f.recipe, "step-sync");
+      expect(
+        calls.events.filter((event) => event.startsWith("sync-managed")),
+      ).toEqual([]);
+      expect(
+        calls.events.filter((event) => event === "media/managed-resources"),
+      ).toHaveLength(2);
+      expect(sleep).toHaveBeenCalledTimes(2);
+      expect(calls.events.at(-1)).toBe("step-sync succeeded");
+    } finally {
+      sleep.mockRestore();
+    }
+  });
 });
 
 describe("Kubernetes steps of a forum release", () => {

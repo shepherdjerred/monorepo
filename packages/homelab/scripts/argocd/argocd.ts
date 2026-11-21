@@ -85,6 +85,16 @@ import {
   type ManagedResource,
 } from "./argocd-apply-safety.ts";
 import { withIgnoredDifferencesApplied } from "./argocd-ignored-differences.ts";
+import { DELIVERY_ENVIRONMENT_ANNOTATION } from "#delivery-ownership";
+import {
+  assertMediaIngressPruneInventory,
+  MEDIA_INGRESS_PRUNE_FLAG,
+  MEDIA_INGRESS_PRUNE_INFO,
+  mediaIngressPruneInfo,
+  mediaIngressSourceHash,
+  parseMediaIngressPruning,
+  type MediaIngressPruning,
+} from "./argocd-media-ingress-prunes.ts";
 import {
   renderedTargetState,
   resourceIdentity,
@@ -586,6 +596,7 @@ async function assertApplySafe(
   appName: string,
   token: string,
   revision: string | undefined,
+  expectedMediaPrunes?: MediaIngressPruning,
 ): Promise<void> {
   // The hard refresh is the price of a trustworthy answer, not an oversight.
   // `managed-resources` is served from Argo's cached comparison, which the
@@ -614,19 +625,59 @@ async function assertApplySafe(
     );
   }
   const managed = ManagedResourcesSchema.parse(await response.json()).items;
+  const scoped =
+    revision === undefined
+      ? managed
+      : await revisionScopedResources(appName, revision, token, managed);
   const findings = analyzeApplySafety(
-    withIgnoredDifferencesApplied(
-      revision === undefined
-        ? managed
-        : await revisionScopedResources(appName, revision, token, managed),
-      application,
-    ),
+    withIgnoredDifferencesApplied(scoped, application),
   );
   if (findings.length > 0) {
     throw new Error(
       `Refusing ${appName} sync because the read-only apply-safety preflight found:\n${findings.map((finding) => `- ${finding}`).join("\n")}`,
     );
   }
+  if (expectedMediaPrunes !== undefined) {
+    const current = MediaIngressPruneApplication.parse(application);
+    if (current.metadata.uid !== expectedMediaPrunes.applicationUid)
+      throw new Error("Media ingress prune Application changed before sync");
+    assertMediaIngressPruneInventory(
+      expectedMediaPrunes,
+      current.spec.source,
+      scoped,
+    );
+  }
+}
+
+const MediaIngressPruneApplication = z.object({
+  metadata: z.object({
+    name: z.literal("media"),
+    uid: z.string().min(1),
+    annotations: z.object({
+      [DELIVERY_ENVIRONMENT_ANNOTATION]: z.literal("streambot/prod"),
+    }),
+  }),
+  spec: z.object({
+    source: ApplicationSourceSchema,
+    destination: z.object({ namespace: z.literal("media") }),
+  }),
+});
+const MediaPruneOperationInfo = z.object({
+  operation: z.object({
+    info: z.array(z.object({ name: z.string(), value: z.string() })),
+  }),
+});
+
+function assertOwnedMediaPruneInfo(
+  application: unknown,
+  expected: MediaIngressPruning | undefined,
+) {
+  if (expected === undefined) return;
+  const { operation } = MediaPruneOperationInfo.parse(application);
+  if (mediaIngressPruneInfo(operation.info) !== JSON.stringify(expected))
+    throw new Error(
+      "Owned Argo operation has a different Media ingress prune scope",
+    );
 }
 
 function renderedResourceIdentity(manifestSource: string): string {
@@ -910,6 +961,43 @@ function assertActiveFinalRootPrune(
   ) {
     throw new Error("Active apps operation is not the marked final root prune");
   }
+}
+
+function completedMediaIngressPrune(
+  application: Record<string, unknown>,
+  baseline: OperationObservation,
+  options: {
+    revision: string;
+    requestId: string;
+    expected?: MediaIngressPruning | undefined;
+  },
+): boolean {
+  if (baseline.hasLiveOperation || baseline.requestId !== options.requestId)
+    return false;
+  const { operation } = MediaPruneOperationInfo.parse(baseline.state);
+  const raw = mediaIngressPruneInfo(operation.info);
+  if (raw === undefined) return false;
+  const proof = parseMediaIngressPruning(raw);
+  const current = MediaIngressPruneApplication.parse(application);
+  const result = z
+    .object({ revision: z.string() })
+    .safeParse(baseline.state["syncResult"]);
+  if (
+    baseline.phase !== "Succeeded" ||
+    baseline.operationId === null ||
+    !result.success ||
+    result.data.revision !== options.revision ||
+    current.spec.source.targetRevision !== options.revision ||
+    current.metadata.uid !== proof.applicationUid ||
+    mediaIngressSourceHash(current.spec.source) !== proof.sourceHash ||
+    (options.expected !== undefined &&
+      JSON.stringify(options.expected) !== JSON.stringify(proof))
+  ) {
+    throw new Error(
+      "Owned Media ingress prune does not match its completed scope",
+    );
+  }
+  return true;
 }
 
 function requestedOperationReleasePhase(
@@ -1879,6 +1967,7 @@ async function assertRootPruneSafe(
  */
 type SyncOptions = {
   prune: boolean;
+  expectedMediaPrunes?: MediaIngressPruning;
   requestId?: string;
   releasePhase?: ReleasePhase;
   terminateAfterApplied?: boolean;
@@ -2079,6 +2168,19 @@ async function sync(
     baseline = observeOperation(baselineApplication);
     assertMatchingRevision(baseline, requestId, options.revision, appName);
     assertMatchingLiveRevision(baseline, requestId, options.revision, appName);
+    if (
+      appName === "media" &&
+      options.requestId !== undefined &&
+      options.revision !== undefined &&
+      completedMediaIngressPrune(baselineApplication, baseline, {
+        requestId,
+        revision: options.revision,
+        expected: options.expectedMediaPrunes,
+      })
+    ) {
+      console.log(`sync operation already finished: ${appName}`);
+      return;
+    }
     if (baseline.hasLiveOperation) {
       if (
         !liveOperationMatches(
@@ -2102,6 +2204,10 @@ async function sync(
           `Refusing to adopt the active ${appName} operation for request ${requestId}; it applies ${mismatch}`,
         );
       }
+      assertOwnedMediaPruneInfo(
+        baselineApplication,
+        options.expectedMediaPrunes,
+      );
       if (options.recoverActiveRootPrune === true) {
         expectedResourceIdentities =
           appsPruneRecoveryIdentitiesFrom(baselineApplication);
@@ -2150,6 +2256,13 @@ async function sync(
   }
 
   if (!adopted) {
+    if (options.expectedMediaPrunes !== undefined)
+      await assertApplySafe(
+        appName,
+        token,
+        options.revision,
+        options.expectedMediaPrunes,
+      );
     const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
     const res = await fetch(url, {
       method: "POST",
@@ -2171,6 +2284,14 @@ async function sync(
                 {
                   name: RELEASE_PHASE_INFO_NAME,
                   value: options.releasePhase,
+                },
+              ]),
+          ...(options.expectedMediaPrunes === undefined
+            ? []
+            : [
+                {
+                  name: MEDIA_INGRESS_PRUNE_INFO,
+                  value: JSON.stringify(options.expectedMediaPrunes),
                 },
               ]),
           ...(appName === "apps" &&
@@ -2204,6 +2325,7 @@ async function sync(
       );
     }
     const responseBody: unknown = await res.json();
+    assertOwnedMediaPruneInfo(responseBody, options.expectedMediaPrunes);
     const responseRequestId = requestedOperationRequestId(responseBody);
     if (responseRequestId !== requestId) {
       throw new Error(
@@ -3822,7 +3944,8 @@ function usage(): never {
     "Usage:\n" +
       "  bun packages/homelab/scripts/argocd/argocd.ts sync-managed <app> " +
       "[--revision <v>] [--prune] [--terminate-after-applied] " +
-      "[--request-id <uuid>] [--delivery-selection <recovery.json>] [--timeout <s>] [--dry-run]\n" +
+      "[--request-id <uuid>] [--delivery-selection <recovery.json>] " +
+      "[--expected-media-ingress-prunes <json>] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd/argocd.ts release-root apps <expected.json> " +
       "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd/argocd.ts assert-apply-safe <app> " +
@@ -3856,6 +3979,32 @@ function flag(argv: string[], name: string): string | undefined {
     usage();
   }
   return v;
+}
+
+function mediaIngressPruningOption(
+  argv: string[],
+  scope: {
+    app: string;
+    revision: string | undefined;
+    requestId: string | undefined;
+    recoveryFile: string | undefined;
+  },
+): MediaIngressPruning | undefined {
+  const raw = flag(argv, MEDIA_INGRESS_PRUNE_FLAG.slice(2));
+  if (raw === undefined) return undefined;
+  if (
+    scope.app !== "media" ||
+    !argv.includes("--prune") ||
+    argv.includes("--terminate-after-applied") ||
+    scope.recoveryFile !== undefined ||
+    scope.requestId === undefined ||
+    !BuildRevisionSchema.safeParse(scope.revision).success
+  ) {
+    throw new Error(
+      "Media ingress pruning requires a full owned Media sync at an exact revision",
+    );
+  }
+  return parseMediaIngressPruning(raw);
 }
 
 async function main(): Promise<void> {
@@ -3903,6 +4052,12 @@ async function main(): Promise<void> {
           ? undefined
           : SyncRequestIdSchema.parse(requestId);
       const recoveryFile = flag(argv, "delivery-selection");
+      const expectedMediaPrunes = mediaIngressPruningOption(argv, {
+        app,
+        revision,
+        requestId,
+        recoveryFile,
+      });
       if (recoveryFile !== undefined) {
         if (
           revision === undefined ||
@@ -3925,13 +4080,14 @@ async function main(): Promise<void> {
           },
         );
       }
-      if (!dryRun) {
+      if (!dryRun && expectedMediaPrunes === undefined) {
         await assertApplySafe(app, requireEnv("ARGOCD_TOKEN"), revision);
       }
       await sync(app, timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S, dryRun, {
         prune: argv.includes("--prune"),
         waitForCompletion: true,
         terminateAfterApplied,
+        ...(expectedMediaPrunes === undefined ? {} : { expectedMediaPrunes }),
         ...(revision === undefined ? {} : { revision }),
         ...(exactRequestId === undefined ? {} : { requestId: exactRequestId }),
       });

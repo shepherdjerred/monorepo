@@ -12,6 +12,11 @@ import type {
   EvidenceInput,
 } from "@shepherdjerred/delivery/contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
+import { ManagedResourcesSchema } from "homelab/scripts/argocd/argocd-apply-safety.ts";
+import {
+  hasLiveLegacyMediaIngresses,
+  MEDIA_INGRESS_PRUNE_FLAG,
+} from "homelab/scripts/argocd/argocd-media-ingress-prunes.ts";
 import { verifyOciChart } from "./oci-chart.ts";
 import {
   createArgoApplication,
@@ -323,13 +328,48 @@ async function waitForReadback(
     if (incarnation !== undefined && incarnation !== progress.uid)
       throw new Error("Application incarnation changed while waiting");
     incarnation = progress.uid;
-    if (progress.settled) return progress;
+    if (progress.settled) {
+      if (progress.mediaIngressRetirement !== true) return progress;
+      const clean = await settledMediaIngressRetirement(
+        rendered,
+        requestId,
+        progress,
+      );
+      if (clean !== null) return clean;
+    }
     Context.current().heartbeat({ requestId, attempt });
     await Bun.sleep(READBACK_INTERVAL_MS);
   }
   throw new Error(
     `Timed out waiting for ${rendered.name} to settle Synced and Healthy`,
   );
+}
+
+async function settledMediaIngressRetirement(
+  rendered: RenderedApplication,
+  requestId: string,
+  previous: Extract<ReturnType<typeof applicationProgress>, { settled: true }>,
+) {
+  const app = encodeURIComponent(rendered.name);
+  const refreshed = applicationProgress(
+    await argoRequest(`${app}?refresh=hard`),
+    rendered,
+    requestId,
+  );
+  if (refreshed.uid !== previous.uid)
+    throw new Error("Application incarnation changed while waiting");
+  if (!refreshed.settled) return null;
+  if (
+    refreshed.operationId !== previous.operationId ||
+    refreshed.mediaIngressRetirement !== true
+  )
+    throw new Error(
+      "Owned Media ingress prune operation changed while waiting",
+    );
+  const managed = ManagedResourcesSchema.parse(
+    await argoRequest(`${app}/managed-resources`),
+  ).items;
+  return hasLiveLegacyMediaIngresses(managed) ? null : refreshed;
 }
 
 /**
@@ -388,16 +428,23 @@ async function syncOwned(
     minecraftSyncFence(current, recipe);
     // A forum release replaces the prior release's terminal migration Job;
     // a worker release removes the hosts earlier retirements scaled to zero.
+    const applicationPrune = (await forumSyncPrune(
+      current,
+      recipe,
+      argoRequest,
+    ))
+      ? true
+      : await credentialSyncPrunes(
+          {
+            ...rendered,
+            namespace: rendered.body.spec.destination.namespace,
+          },
+          argoRequest,
+        );
     const prune =
-      (await forumSyncPrune(current, recipe, argoRequest)) ||
-      (await credentialSyncPrunes(
-        {
-          ...rendered,
-          namespace: rendered.body.spec.destination.namespace,
-        },
-        argoRequest,
-      )) ||
-      (await workerSyncPrunes(current, rendered, argoRequest));
+      applicationPrune === false
+        ? await workerSyncPrunes(current, rendered, argoRequest)
+        : applicationPrune;
     await runGuardedArgoCommand(
       [
         "sync-managed",
@@ -406,7 +453,10 @@ async function syncOwned(
         rendered.revision,
         "--request-id",
         requestId,
-        ...(prune ? ["--prune"] : []),
+        ...(prune === false ? [] : ["--prune"]),
+        ...(typeof prune === "boolean"
+          ? []
+          : [MEDIA_INGRESS_PRUNE_FLAG, JSON.stringify(prune)]),
         "--timeout",
         "1200",
       ],

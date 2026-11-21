@@ -4,6 +4,11 @@ import { ArgoResourceSchema } from "./argocd-proof.ts";
 import { collectAuditConsumption } from "homelab/src/cdk8s/scripts/onepassword/audit-consumption.ts";
 import { requireRenderedSource } from "./model/application-proof.ts";
 import type { RenderedApplication } from "./model/application.ts";
+import { proveMediaIngressPrunes } from "./media-ingress-prune.ts";
+import {
+  mediaIngressSourceHash,
+  type MediaIngressPruning,
+} from "homelab/scripts/argocd/argocd-media-ingress-prunes.ts";
 import {
   ManagedResourcesSchema,
   parseObject,
@@ -196,11 +201,63 @@ function renderedInventory(manifests: readonly string[]) {
   return { desired, targets };
 }
 
-/** Retire only the three reviewed credential bindings, through an owned sync. */
+type ArgoRead = (path: string) => Promise<unknown>;
+
+async function readNativeResource(
+  app: string,
+  resource: ManagedResource,
+  version: string,
+  read: ArgoRead,
+): Promise<unknown> {
+  const query = new URLSearchParams({
+    namespace: resource.namespace ?? "",
+    resourceName: resource.name,
+    group: resource.group ?? "",
+    version,
+    kind: resource.kind,
+  });
+  const { manifest } = z
+    .object({ manifest: z.string() })
+    .parse(await read(`${app}/resource?${query.toString()}`));
+  return JSON.parse(manifest) as unknown;
+}
+
+async function assertCredentialPrunes(input: {
+  app: string;
+  scope: Scope;
+  namespace: string | undefined;
+  desired: readonly unknown[];
+  obsolete: readonly ManagedResource[];
+  read: ArgoRead;
+}) {
+  const { app, scope, namespace, desired, obsolete, read } = input;
+  const consumers = new Map<string, Set<string>>();
+  collectAuditConsumption(desired, consumers);
+  if (consumers.has(scope.retired))
+    throw new Error("Frozen chart still consumes the retired credential");
+  assertCanonicalBindings(desired, scope, namespace);
+  const seen = new Set<string>();
+  for (const resource of obsolete) {
+    if (
+      resource.group !== "onepassword.com" ||
+      resource.kind !== "OnePasswordItem" ||
+      resource.namespace !== scope.bindingNamespace ||
+      resource.name !== scope.retired
+    )
+      throw new Error("Credential sync refuses unrelated or storage pruning");
+    assertOwnedBinding(
+      await readNativeResource(app, resource, "v1", read),
+      parseObject(resource.liveState, resource, "liveState"),
+      { resource, application: app, item: scope.item, seen },
+    );
+  }
+}
+
+/** Authorize only the reviewed credential or Media ingress retirements. */
 export async function credentialSyncPrunes(
   selection: Selection,
-  read: (path: string) => Promise<unknown>,
-): Promise<boolean> {
+  read: ArgoRead,
+): Promise<boolean | MediaIngressPruning> {
   const scope = SCOPES[selection.name];
   if (scope === undefined) return false;
   if (
@@ -245,42 +302,49 @@ export async function credentialSyncPrunes(
         undefined,
   );
   if (obsolete.length === 0) return false;
-  const consumers = new Map<string, Set<string>>();
-  collectAuditConsumption(desired, consumers);
-  if (consumers.has(scope.retired))
-    throw new Error("Frozen chart still consumes the retired credential");
-  assertCanonicalBindings(desired, scope, selection.namespace);
-  const seen = new Set<string>();
-  for (const resource of obsolete) {
-    if (
-      resource.group !== "onepassword.com" ||
-      resource.kind !== "OnePasswordItem" ||
-      resource.namespace !== scope.bindingNamespace ||
-      resource.name !== scope.retired
-    )
-      throw new Error("Credential sync refuses unrelated or storage pruning");
-    const query = new URLSearchParams({
-      namespace: scope.bindingNamespace,
-      resourceName: scope.retired,
-      group: "onepassword.com",
-      version: "v1",
-      kind: "OnePasswordItem",
+  const mediaIngressRetirement =
+    selection.name === "media" &&
+    obsolete.some(({ kind }) => kind === "Ingress");
+  let mediaIngressPrunes: MediaIngressPruning | undefined;
+  if (mediaIngressRetirement) {
+    assertIdleMediaApplication(frozen);
+    const resources = await proveMediaIngressPrunes({
+      desired,
+      obsolete,
+      readNative: (resource) => readNativeResource(app, resource, "v1", read),
     });
-    const result = z
-      .object({ manifest: z.string() })
-      .parse(await read(`${app}/resource?${query.toString()}`));
-    assertOwnedBinding(
-      JSON.parse(result.manifest),
-      parseObject(resource.liveState, resource, "liveState"),
-      { resource, application: selection.name, item: scope.item, seen },
-    );
+    mediaIngressPrunes = {
+      applicationUid: frozen.metadata.uid,
+      sourceHash: mediaIngressSourceHash(selection.source),
+      resources,
+    };
+  } else {
+    await assertCredentialPrunes({
+      app,
+      scope,
+      namespace: selection.namespace,
+      desired,
+      obsolete,
+      read,
+    });
   }
   const after = await read(app);
   const settled = requireRenderedSource(after, selection);
+  if (mediaIngressRetirement) assertIdleMediaApplication(settled);
   if (
     settled.metadata.uid !== frozen.metadata.uid ||
     canonicalJson(settled.spec) !== canonicalJson(frozen.spec)
   )
     throw new Error("Credential source or Application changed before sync");
-  return true;
+  return mediaIngressPrunes ?? true;
+}
+
+function assertIdleMediaApplication(
+  app: ReturnType<typeof requireRenderedSource>,
+) {
+  const phase = app.status.operationState?.phase;
+  if (phase === "Running" || phase === "Terminating" || app.operation != null)
+    throw new Error(
+      "Media ingress pruning requires a settled Application operation",
+    );
 }

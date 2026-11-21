@@ -2,8 +2,14 @@ import { z } from "zod";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { DELIVERY_ENVIRONMENT_ANNOTATION } from "@shepherdjerred/delivery/model-contract";
 import type { RenderedApplication } from "./application.ts";
+import {
+  mediaIngressPruneInfo,
+  mediaIngressSourceHash,
+  parseMediaIngressPruning,
+} from "homelab/scripts/argocd/argocd-media-ingress-prunes.ts";
 
 const InfoSchema = z.array(z.object({ name: z.string(), value: z.string() }));
+const PendingOperation = z.object({ info: InfoSchema });
 const ObservedSchema = z.object({
   metadata: z.object({
     name: z.string(),
@@ -58,11 +64,48 @@ export type ApplicationProgress =
       revision: string;
       /** OutOfSync resources that are only waiting to be pruned. Never pruned here. */
       prunePending: readonly string[];
+      mediaIngressRetirement?: true;
     };
 
 function requestOf(info: z.infer<typeof InfoSchema>, name: string) {
   const entries = info.filter((entry) => entry.name === name);
   return entries.length === 1 ? (entries[0]?.value ?? null) : null;
+}
+
+function isMediaIngressRetirement(
+  info: z.infer<typeof InfoSchema>,
+  desired: RenderedApplication,
+  applicationUid: string,
+): boolean {
+  const raw = mediaIngressPruneInfo(info);
+  if (raw === undefined) return false;
+  const proof = parseMediaIngressPruning(raw);
+  if (
+    desired.name !== "media" ||
+    desired.environmentId !== "streambot/prod" ||
+    proof.applicationUid !== applicationUid ||
+    proof.sourceHash !== mediaIngressSourceHash(desired.source)
+  ) {
+    throw new Error(
+      "Owned operation does not match the frozen Media ingress prune scope",
+    );
+  }
+  return true;
+}
+
+function pendingMediaIngressRetirement(
+  operation: unknown,
+  desired: RenderedApplication,
+  requestId: string,
+  applicationUid: string,
+): boolean {
+  if (desired.name !== "media") return false;
+  const pending = PendingOperation.safeParse(operation);
+  return (
+    pending.success &&
+    requestOf(pending.data.info, "ci.sjer.red/request-id") === requestId &&
+    isMediaIngressRetirement(pending.data.info, desired, applicationUid)
+  );
 }
 
 /**
@@ -124,6 +167,19 @@ function prunePendingResources(
     : drifting.map((resource) => resourceIdentity(resource));
 }
 
+function settledPrunePending(
+  observed: ReturnType<typeof requireRenderedSource>,
+  mediaIngressRetirement: boolean,
+): readonly string[] | null {
+  const syncStatus = observed.status.sync?.status;
+  if (mediaIngressRetirement)
+    return syncStatus === "Synced" && observed.operation == null ? [] : null;
+  if (syncStatus === "Synced") return [];
+  return syncStatus === "OutOfSync"
+    ? prunePendingResources(observed.status.resources)
+    : null;
+}
+
 /**
  * Readback of the owned Application (A2): it is Delivery's for this
  * environment, carries exactly the rendered source, and its last operation
@@ -142,7 +198,16 @@ export function applicationProgress(
     state === undefined ||
     requestOf(state.operation.info, "ci.sjer.red/request-id") !== requestId
   )
-    return { settled: false, uid: observed.metadata.uid, requested: false };
+    return {
+      settled: false,
+      uid: observed.metadata.uid,
+      requested: pendingMediaIngressRetirement(
+        observed.operation,
+        desired,
+        requestId,
+        observed.metadata.uid,
+      ),
+    };
   if (state.phase === "Failed" || state.phase === "Error")
     throw new Error(
       `Owned sync of ${desired.name} ended ${state.phase}: ${state.message ?? "no message"}`,
@@ -151,13 +216,12 @@ export function applicationProgress(
     state.operation.info,
     "ci.sjer.red/operation-id",
   );
-  const syncStatus = observed.status.sync?.status;
-  const prunePending =
-    syncStatus === "Synced"
-      ? []
-      : syncStatus === "OutOfSync"
-        ? prunePendingResources(observed.status.resources)
-        : null;
+  const mediaIngressRetirement = isMediaIngressRetirement(
+    state.operation.info,
+    desired,
+    observed.metadata.uid,
+  );
+  const prunePending = settledPrunePending(observed, mediaIngressRetirement);
   if (
     operationId === null ||
     prunePending === null ||
@@ -179,5 +243,6 @@ export function applicationProgress(
     operationId,
     revision: desired.revision,
     prunePending,
+    ...(mediaIngressRetirement ? { mediaIngressRetirement: true } : {}),
   };
 }
