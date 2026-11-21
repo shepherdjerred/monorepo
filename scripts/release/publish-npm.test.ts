@@ -448,3 +448,13 @@ describe("parseArgs", () => {
     expect(parsed.devSuffix).toBe("3");
   });
 });
+
+describe("npm-publish.yml workflow contract", () => {
+  test("prefixes package directories with ./ so npm never parses two-segment paths as github: shorthand", async () => {
+    const workflow = await Bun.file(
+      new URL("../../.github/workflows/npm-publish.yml", import.meta.url),
+    ).text();
+    expect(workflow).toContain('npm publish "./${PKG_DIR}"');
+    expect(workflow).not.toContain('npm publish "${PKG_DIR}"');
+  });
+});
