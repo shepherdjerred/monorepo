@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
 
 import {
   collectErrors,
@@ -7,7 +8,10 @@ import {
   resolvedVersionsByName,
 } from "./check-patched-deps.ts";
 
-const REPO_ROOT = new URL("../../..", import.meta.url).pathname;
+const REPO_ROOT = fileURLToPath(new URL("../../..", import.meta.url)).replace(
+  /[\\/]+$/u,
+  "",
+);
 
 describe("packagesSection", () => {
   test("excludes the patchedDependencies echo", () => {

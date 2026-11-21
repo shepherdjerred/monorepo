@@ -122,10 +122,13 @@ describe("shared PostgreSQL template & empty database harness", () => {
   });
 
   test("sweeps dead-owner databases across prefixes while keeping live-owner databases", async () => {
-    const sleeper = Bun.spawn(["sleep", "120"], {
-      stdout: "ignore",
-      stderr: "ignore",
-    });
+    const sleeper = Bun.spawn(
+      [process.execPath, "-e", "setTimeout(() => {}, 120_000)"],
+      {
+        stdout: "ignore",
+        stderr: "ignore",
+      },
+    );
     const processStart = hostProcessProbe.startTime(sleeper.pid);
     if (processStart === undefined) {
       sleeper.kill();

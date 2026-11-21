@@ -13,6 +13,7 @@
  */
 import { readdir } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 /**
  * Slice the top-level "packages" object out of bun.lock. A raw substring
@@ -313,7 +314,10 @@ export async function collectErrors(root: string): Promise<string[]> {
 }
 
 if (import.meta.main) {
-  const root = new URL("../../..", import.meta.url).pathname;
+  const root = fileURLToPath(new URL("../../..", import.meta.url)).replace(
+    /[\\/]+$/u,
+    "",
+  );
   const errors = await collectErrors(root);
   if (errors.length > 0) {
     console.error("check-patched-deps: FAIL");

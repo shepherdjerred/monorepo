@@ -65,70 +65,75 @@ index 118c7bf577f623b6ec64cb576621c4cb3e3aac75..f665af9bd494ed97665430fbc43f93ee
    },
    "scripts": {
 -    "install": "pkg-prebuilds-verify ./binding-options.js || (npm install --ignore-scripts --production=false && npm run compile)",
-+    "install": "sh cmake/overlay-patched-prebuild.sh && (pkg-prebuilds-verify ./binding-options.js || (npm install --ignore-scripts --production=false && npm run compile))",
++    "install": "bun cmake/overlay-patched-prebuild.mjs && (pkg-prebuilds-verify ./binding-options.js || (npm install --ignore-scripts --production=false && npm run compile))",
      "rebuild": "pkg-prebuilds-verify ./binding-options.js || cmake-js rebuild",
      "install:nice": "npm run clean && npm install --ignore-scripts --production=false && cmake-js configure --CDUSE_NICE=1 && cmake-js build",
      "install:gnu": "npm run clean && npm install --ignore-scripts --production=false && cmake-js configure --CDUSE_GNUTLS=1 && cmake-js build",
-diff --git a/cmake/overlay-patched-prebuild.sh b/cmake/overlay-patched-prebuild.sh
+diff --git a/cmake/overlay-patched-prebuild.mjs b/cmake/overlay-patched-prebuild.mjs
 new file mode 100644
-index 0000000000000000000000000000000000000000..a36e92fd0379e20b47e221d94116edc2fce51f1f
+index 0000000000000000000000000000000000000000..c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6c6
 --- /dev/null
-+++ b/cmake/overlay-patched-prebuild.sh
-@@ -0,0 +1,54 @@
-+#!/usr/bin/env sh
-+# Overlay the repo's vendored PATCHED prebuild onto the registry tarball's
-+# UNPATCHED one, so the loaded binary contains PeerConnection::registerIncomingSsrc
-+# (Discord voice receive). Runs as node-datachannel's install script on every
-+# fresh extract — including `bun install --filter` in image builds — and needs no
-+# compiler or JS runtime (pure sh + cp). For a platform we vendor a patched
-+# prebuild for, a missing file is a HARD ERROR: we never silently ship the
-+# unpatched binary. Other platforms fall through to normal prebuild resolution.
-+set -eu
++++ b/cmake/overlay-patched-prebuild.mjs
+@@ -0,0 +1,59 @@
++#!/usr/bin/env bun
++// Overlay the repo's vendored PATCHED prebuild onto the registry tarball's
++// UNPATCHED one, so the loaded binary contains PeerConnection::registerIncomingSsrc
++// (Discord voice receive). Runs as node-datachannel's install script on every
++// fresh extract — including `bun install --filter` in image builds and Windows
++// worktrees where POSIX `sh` is not on PATH. For a platform we vendor a patched
++// prebuild for, a missing file is a HARD ERROR: we never silently ship the
++// unpatched binary. Other platforms fall through to normal prebuild resolution.
++import { copyFileSync, existsSync, mkdirSync } from "node:fs";
++import path from "node:path";
++import { fileURLToPath } from "node:url";
 +
-+os=$(uname -s)
-+arch=$(uname -m)
-+case "$os" in
-+  Darwin) osk=darwin ;;
-+  Linux) osk=linux ;;
-+  *) exit 0 ;;
-+esac
-+case "$arch" in
-+  arm64 | aarch64) archk=arm64 ;;
-+  x86_64 | amd64) archk=x64 ;;
-+  *) exit 0 ;;
-+esac
-+key="${osk}-${archk}"
++const key = `${process.platform}-${process.arch}`;
++const vendoredPlatforms = new Set(["darwin-arm64", "linux-x64"]);
++if (!vendoredPlatforms.has(key)) {
++  process.exit(0);
++}
 +
-+# Only these platforms have a vendored patched prebuild.
-+case "$key" in
-+  darwin-arm64 | linux-x64) : ;;
-+  *) exit 0 ;;
-+esac
++const scriptDir = path.dirname(fileURLToPath(import.meta.url));
++const pkgDir = path.dirname(scriptDir);
++const destDir = path.join(pkgDir, "prebuilds", `node_datachannel-${key}`);
++const dest = path.join(destDir, "node-napi-v8.node");
 +
-+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-+pkg_dir=$(dirname -- "$script_dir")
-+dest_dir="$pkg_dir/prebuilds/node_datachannel-${key}"
-+dest="$dest_dir/node-napi-v8.node"
++// Locate the repo root by walking up until bun.lock (the unique repo marker).
++let root = pkgDir;
++while (true) {
++  if (existsSync(path.join(root, "bun.lock"))) {
++    break;
++  }
++  const parent = path.dirname(root);
++  if (parent === root) {
++    break;
++  }
++  root = parent;
++}
 +
-+# Locate the repo root by walking up until bun.lock (the unique repo marker).
-+root="$pkg_dir"
-+while [ "$root" != "/" ]; do
-+  if [ -f "$root/bun.lock" ]; then
-+    break
-+  fi
-+  root=$(dirname -- "$root")
-+done
++const src = path.join(
++  root,
++  "packages",
++  "discord-video-stream",
++  "prebuilds-patched",
++  `node_datachannel-${key}`,
++  "node-napi-v8.node",
++);
++if (!existsSync(src)) {
++  console.error(
++    `[overlay-patched-prebuild] ERROR: vendored patched prebuild missing for ${key}: ${src}`,
++  );
++  console.error(
++    "[overlay-patched-prebuild] refusing to ship the unpatched binary (voice receive would be silently broken)",
++  );
++  process.exit(1);
++}
 +
-+src="$root/packages/discord-video-stream/prebuilds-patched/node_datachannel-${key}/node-napi-v8.node"
-+if [ ! -f "$src" ]; then
-+  echo "[overlay-patched-prebuild] ERROR: vendored patched prebuild missing for ${key}: ${src}" >&2
-+  echo "[overlay-patched-prebuild] refusing to ship the unpatched binary (voice receive would be silently broken)" >&2
-+  exit 1
-+fi
-+
-+mkdir -p "$dest_dir"
-+cp "$src" "$dest"
-+echo "[overlay-patched-prebuild] installed patched prebuild for ${key} from ${src}"
++mkdirSync(destDir, { recursive: true });
++copyFileSync(src, dest);
++console.log(
++  `[overlay-patched-prebuild] installed patched prebuild for ${key} from ${src}`,
++);
 diff --git a/cmake/patch-libdatachannel.sh b/cmake/patch-libdatachannel.sh
 new file mode 100644
 index 0000000000000000000000000000000000000000..065a89105cf7eb9b22d4badd67d61eff7a85921b
