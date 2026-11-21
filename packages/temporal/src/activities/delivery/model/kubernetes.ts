@@ -141,10 +141,10 @@ function readCandidateApplication(rendered: RenderedApplication) {
 /** Create when absent; otherwise replace the whole body under CAS and ownership (T2). */
 async function writeBody(
   rendered: RenderedApplication,
-  onPriorRead?: (absent: boolean) => void,
+  onPriorRead?: (prior: unknown) => void,
 ): Promise<"created" | "updated"> {
   const current = await readCandidateApplication(rendered);
-  onPriorRead?.(current === null);
+  onPriorRead?.(current);
   if (current === null) {
     await createArgoApplication(rendered.body, { signal: effectSignal() });
     return "created";
@@ -256,14 +256,15 @@ async function settleRefusedApplySafety(
 
 /**
  * When `writeBody` itself failed before any sync, read back the Application:
- * if it was absent beforehand and is still absent, or its `spec.source` still
- * canonically matches the latest `status.history` entry with no active
- * operation, no candidate body landed and the stage can settle failed.
+ * if it was absent beforehand and is still absent, or its full body matches
+ * `prior` and its `spec.source` still canonically matches the latest
+ * `status.history` entry with no active operation, no candidate body landed.
  */
 async function proveUnwrittenBody(
   rendered: RenderedApplication,
-  priorAbsent: boolean | undefined,
+  priorRead: { read: false } | { read: true; value: unknown },
 ): Promise<string | null> {
+  if (!priorRead.read) return null;
   let raw: unknown;
   try {
     raw = await readCandidateApplication(rendered);
@@ -271,23 +272,27 @@ async function proveUnwrittenBody(
     return null;
   }
   if (raw === null)
-    return priorAbsent === true ? "the Application was never created" : null;
-  const historyId = unchangedArgoHistoryId(raw, rendered.name);
+    return priorRead.value === null
+      ? "the Application was never created"
+      : null;
+  const historyId = unchangedArgoHistoryId(raw, priorRead.value, rendered.name);
   return historyId === null
     ? null
-    : `spec.source still matches the source Argo last synced (history ${historyId.toString()})`;
+    : `Application body is unchanged and spec.source matches history ${historyId.toString()}`;
 }
 
 async function writeBodyOrRefuse(
   step: ApplySafetyStep,
 ): Promise<"created" | "updated"> {
-  let priorAbsent: boolean | undefined;
+  let priorRead: { read: false } | { read: true; value: unknown } = {
+    read: false,
+  };
   try {
-    return await writeBody(step.rendered, (absent) => {
-      priorAbsent = absent;
+    return await writeBody(step.rendered, (value) => {
+      priorRead = { read: true, value };
     });
   } catch (error) {
-    const unchanged = await proveUnwrittenBody(step.rendered, priorAbsent);
+    const unchanged = await proveUnwrittenBody(step.rendered, priorRead);
     if (unchanged === null) throw error;
     return await settleRefusedApplySafety(step, unchanged, error);
   }

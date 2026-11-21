@@ -224,10 +224,12 @@ const SyncedHistoryEntrySchema = z.object({
 });
 export const SyncedArgoHistorySchema = z
   .object({
-    metadata: z.object({
-      name: z.string().min(1).optional(),
-      resourceVersion: z.string().min(1),
-    }),
+    metadata: z
+      .object({
+        name: z.string().min(1).optional(),
+        resourceVersion: z.string().min(1),
+      })
+      .loose(),
     operation: z.null().optional(),
     spec: z
       .object({ source: z.record(z.string(), z.unknown()).optional() })
@@ -241,6 +243,15 @@ export const SyncedArgoHistorySchema = z
       .optional(),
   })
   .loose();
+
+function bodySnapshot(parsed: z.infer<typeof SyncedArgoHistorySchema>) {
+  const {
+    resourceVersion: _resourceVersion,
+    managedFields: _managedFields,
+    ...metadata
+  } = parsed.metadata;
+  return { metadata, spec: parsed.spec };
+}
 
 export function latestArgoSyncedHistory(
   history: readonly z.infer<typeof SyncedHistoryEntrySchema>[] | undefined,
@@ -257,22 +268,32 @@ export function latestArgoSyncedHistory(
 
 /**
  * Returns the latest `status.history` entry ID when `raw` is a quiescent
- * Application named `name` whose `spec.source` still canonically matches that
- * latest synced entry; otherwise returns `null`.
+ * Application named `name` whose full body (`metadata` and `spec`, ignoring
+ * server `resourceVersion`/`managedFields`) matches `prior` and whose
+ * `spec.source` still canonically matches that latest synced entry.
  */
 export function unchangedArgoHistoryId(
   raw: unknown,
+  prior: unknown,
   name: string,
 ): number | null {
   const parsed = SyncedArgoHistorySchema.safeParse(raw);
-  if (!parsed.success || parsed.data.metadata.name !== name) return null;
+  const previous = SyncedArgoHistorySchema.safeParse(prior);
+  if (
+    !parsed.success ||
+    !previous.success ||
+    parsed.data.metadata.name !== name
+  )
+    return null;
   const phase = parsed.data.status?.operationState?.phase ?? "";
   const latest = latestArgoSyncedHistory(parsed.data.status?.history);
   const source = parsed.data.spec?.source;
   if (
     latest === null ||
     source === undefined ||
-    ["Running", "Terminating"].includes(phase)
+    ["Running", "Terminating"].includes(phase) ||
+    canonicalJson(bodySnapshot(parsed.data)) !==
+      canonicalJson(bodySnapshot(previous.data))
   )
     return null;
   return canonicalJson(source) === canonicalJson(latest.source)

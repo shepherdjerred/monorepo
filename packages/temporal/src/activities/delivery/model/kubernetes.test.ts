@@ -595,17 +595,48 @@ describe("a failed apply-safety body write (AI-423)", () => {
     ]);
   });
 
-  test("retains recovery ownership when writeBody fails and readback observes mutated spec.source, unsettled operation, or vanished Application", async () => {
+  test("retains recovery ownership when writeBody fails and readback observes mutated spec, metadata, unsettled operation, or vanished Application", async () => {
     const { current, recipe } = fixture();
+    const priorWithSelfHeal = {
+      ...existingApplication(),
+      metadata: {
+        ...existingApplication().metadata,
+        annotations: {
+          "delivery.shepherdjerred.com/environment": "forum/prod",
+        },
+      },
+      spec: {
+        ...existingApplication().spec,
+        syncPolicy: {
+          automated: { enabled: true, selfHeal: true, prune: false },
+        },
+      },
+    };
     for (const afterRead of [
       {
-        ...existingApplication(),
+        ...priorWithSelfHeal,
         spec: { source: { chart: "storm-forum", targetRevision: "1.0.1" } },
       },
       {
-        ...existingApplication(),
+        // Same synced source, but full-body PUT replaced syncPolicy (disabled selfHeal).
+        ...priorWithSelfHeal,
+        metadata: { ...priorWithSelfHeal.metadata, resourceVersion: "8" },
+        spec: {
+          ...priorWithSelfHeal.spec,
+          syncPolicy: { automated: { enabled: false } },
+        },
+      },
+      {
+        ...priorWithSelfHeal,
+        metadata: {
+          ...priorWithSelfHeal.metadata,
+          annotations: { "argocd.argoproj.io/sync-options": "Prune=false" },
+        },
+      },
+      {
+        ...priorWithSelfHeal,
         status: {
-          ...existingApplication().status,
+          ...priorWithSelfHeal.status,
           operationState: { phase: "Running" },
         },
       },
@@ -613,7 +644,7 @@ describe("a failed apply-safety body write (AI-423)", () => {
     ]) {
       calls.stages = [];
       calls.failUpdate = true;
-      calls.reads = [existingApplication(), afterRead];
+      calls.reads = [priorWithSelfHeal, afterRead];
       const error = await refusal(
         applySafety(current, recipe, "step-apply-safety"),
       );
