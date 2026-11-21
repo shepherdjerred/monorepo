@@ -114,6 +114,19 @@ function deploymentFilters(search: Search, services: CatalogService[]) {
 }
 
 /** A failed read of a list keeps the page and offers to start again. */
+/**
+ * The page of results a list shows. A disabled query still returns whatever
+ * is cached under its key, and a filter that could not be resolved shares
+ * the unfiltered list's key, so its problem is shown alone: no rows and no
+ * paging from another filter.
+ */
+function resolvedPage<Page>(
+  data: Page | undefined,
+  problems: readonly unknown[],
+) {
+  return problems.length === 0 ? data : undefined;
+}
+
 function listError(to: "/deployments" | "/artifacts" | "/activity") {
   return function ListError({ error }: { error: Error }) {
     return (
@@ -138,7 +151,8 @@ function DeploymentsPage() {
     ...queries.deployments(filters.query),
     enabled: filters.problems.length === 0,
   });
-  const items = data?.items ?? [];
+  const shown = resolvedPage(data, filters.problems);
+  const items = shown?.items ?? [];
   return (
     <>
       <PageHeader
@@ -207,7 +221,7 @@ function DeploymentsPage() {
         <OlderLink
           to="/deployments"
           search={search}
-          cursor={data?.nextCursor ?? null}
+          cursor={shown?.nextCursor ?? null}
         />
       </ListPanel>
     </>
@@ -288,7 +302,8 @@ function ArtifactsPage() {
     ...queries.builds(filters.query),
     enabled: filters.problems.length === 0,
   });
-  const items = data?.items ?? [];
+  const shown = resolvedPage(data, filters.problems);
+  const items = shown?.items ?? [];
   return (
     <>
       <PageHeader
@@ -346,7 +361,7 @@ function ArtifactsPage() {
         <OlderLink
           to="/artifacts"
           search={search}
-          cursor={data?.nextCursor ?? null}
+          cursor={shown?.nextCursor ?? null}
         />
       </ListPanel>
     </>
@@ -394,7 +409,8 @@ function ActivityPage() {
     ...queries.activity(filters.query),
     enabled: filters.problems.length === 0,
   });
-  const items = data?.items ?? [];
+  const shown = resolvedPage(data, filters.problems);
+  const items = shown?.items ?? [];
   return (
     <>
       <PageHeader
@@ -449,7 +465,7 @@ function ActivityPage() {
         <OlderLink
           to="/activity"
           search={search}
-          cursor={data?.nextCursor ?? null}
+          cursor={shown?.nextCursor ?? null}
         />
       </ListPanel>
     </>

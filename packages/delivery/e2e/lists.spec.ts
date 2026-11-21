@@ -66,6 +66,19 @@ test("a filter the server would refuse explains itself inside the page", async (
   await main.getByRole("link", { name: "Clear filters" }).click();
   await expect(page).toHaveURL(/\/deployments$/u);
   await expect(main.getByRole("table")).toBeVisible();
+
+  // With the unfiltered list already loaded, a filter that cannot be
+  // resolved still shows no rows and no paging from it.
+  const filter = page.getByRole("search", { name: "Filter deployments" });
+  await filter.getByLabel("Service").fill("No such service");
+  await filter.getByRole("button", { name: "Filter" }).click();
+  await expect(main.getByRole("status")).toHaveText(
+    "No service is named “No such service”. Choose one from the list.",
+  );
+  await expect(main.getByRole("table")).toHaveCount(0);
+  await expect(main.getByRole("link", { name: "Older" })).toHaveCount(0);
+  await main.getByRole("link", { name: "Clear filters" }).click();
+  await expect(main.getByRole("table")).toBeVisible();
   await expect(
     page
       .getByRole("search", { name: "Filter deployments" })
