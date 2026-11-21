@@ -320,6 +320,10 @@ export const HistoryPageSchema = z.strictObject({
       endedAt: z.number().int().nonnegative().nullable(),
       outcome: z.string().nullable(),
       replayAvailable: z.boolean(),
+      /** The replay buttons, decided as for a search row of the same kind; empty when not replayable. */
+      actions: z.array(TransportSchema),
+      /** Further replay choices for the item's overflow menu; absent when there are none. */
+      menuActions: z.array(TransportSchema).min(1).optional(),
     }),
   ),
 });

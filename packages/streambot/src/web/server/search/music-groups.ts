@@ -15,7 +15,7 @@ import { GROUP_LIMIT, type SearchContext, type SearchDeps } from "./context.ts";
 import {
   albumRow,
   artistRow,
-  bothActions,
+  songActions,
   joined,
   pastedUrl,
   songRow,
@@ -111,7 +111,7 @@ export async function albumPage(
               guildId,
               tracks.map((track) => musicSource(track)),
             ),
-            actions: bothActions("listen", context.listen),
+            ...songActions(context.listen),
           },
         }),
     rows,

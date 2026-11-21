@@ -77,9 +77,13 @@ export const BrowsePageSchema = z.strictObject({
     subtitle: z.string().optional(),
     artworkUrl: ArtworkUrlSchema.optional(),
   }),
-  /** Albums only: queues every track in order as one play request. */
+  /** Albums only: queues every track in order as one play request. Actions follow song rows. */
   play: z
-    .strictObject({ id: z.string().min(1), actions: z.array(RowActionSchema) })
+    .strictObject({
+      id: z.string().min(1),
+      actions: z.array(RowActionSchema),
+      menuActions: z.array(RowActionSchema).min(1).optional(),
+    })
     .optional(),
   rows: z.array(RowSchema),
 });

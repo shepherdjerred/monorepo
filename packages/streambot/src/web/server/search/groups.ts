@@ -166,7 +166,7 @@ export async function historyGroup(
       ...(item.sportsArtwork === undefined
         ? {}
         : { sportsArtwork: item.sportsArtwork }),
-      actions: historyActions({
+      ...historyActions({
         provider: item.provider,
         source,
         replayAvailable: item.replayAvailable,

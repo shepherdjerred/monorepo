@@ -198,15 +198,22 @@ and never part of CI or the image build.
 `GET /api/search/v2?guildId=&kind=&q=` returns one result group per request
 (`songs`, `albums`, `artists`, `library`, `videos`, `live`, `history`) as typed
 rows with a selection token and the actions (`listen`, `watch`) the viewer may
-take, so the client loads groups independently. A song offers `listen` with `watch`
-in `menuActions` (its overflow menu); without music over voice it offers `watch` alone. `GET /api/search/v2/suggest`
+take, so the client loads groups independently. A song, and an album's whole-album `play`,
+offers `listen` with `watch` in `menuActions` (its overflow menu); without music over voice
+it offers `watch` alone. `/api/history` items carry the same `actions`/`menuActions` as the
+history search row for that item (empty when it cannot be replayed). `GET /api/search/v2/suggest`
 returns up to eight typeahead strings, and `GET /api/music/v2/album` and
 `/artist` return a header and rows. These draw on their own per-session budget
 (600 requests per minute) instead of the 120 that protect commands. A provider
 failure returns 503 `music_search_unavailable` for that group only. The older
 `/api/search`, `/api/music/*`, `/api/sports`, `/api/library`, and `/api/history`
-endpoints are unchanged. Metrics are `streambot_web_search_*` and
+endpoints are otherwise unchanged. Metrics are `streambot_web_search_*` and
 `streambot_music_provider_*`; none label a query, title, or id.
+
+Every error `code` the web API can return is listed in `WEB_API_ERROR_CODES`
+(`src/web/shared/error-codes.ts`); `WebError` only accepts a listed code and
+`test/web/web-error-codes.test.ts` holds `MusicError` to the same list. The wire
+`ErrorSchema.code` stays a plain string so an older client parses a newer code.
 
 `/music search`, `/music artist`, and `/music album` browse the MusicBrainz
 catalog without consuming a streaming account. The Music page adds edition

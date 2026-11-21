@@ -13,7 +13,10 @@ import {
   webSearchTotal,
 } from "@shepherdjerred/streambot/observability/web-metrics.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import { RoomSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import {
+  HistoryPageSchema,
+  RoomSchema,
+} from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { getRequest } from "./web-room-harness.ts";
 import { CommandResultSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import {
@@ -263,6 +266,24 @@ test("live rows offer Watch only while the event can be played", async () => {
   expect(FIXTURE_EVENTS.length).toBeGreaterThan(0);
 });
 
+function buttons(row: Pick<Row, "actions" | "menuActions"> | undefined) {
+  return { actions: row?.actions, menuActions: row?.menuActions };
+}
+
+/** A track is a song, other YouTube media offers both, library media only plays as video. */
+function expectedReplayButtons(listen: boolean) {
+  return {
+    Arrival: { actions: ["watch"], menuActions: undefined },
+    "Khruangbin Tiny Desk": {
+      actions: listen ? ["watch", "listen"] : ["watch"],
+      menuActions: undefined,
+    },
+    "Daft Punk — Get Lucky": listen
+      ? { actions: ["listen"], menuActions: ["watch"] }
+      : { actions: ["watch"], menuActions: undefined },
+  };
+}
+
 test("history rows follow how the item was recorded", async () => {
   const f = start();
   record({
@@ -296,16 +317,20 @@ test("history rows follow how the item was recorded", async () => {
       music: track,
     },
   });
-  const result = await rows(f, "history", "");
-  expect(onlyRow(result.items, "Arrival").actions).toEqual(["watch"]);
-  expect(onlyRow(result.items, "Khruangbin Tiny Desk").actions).toEqual([
-    "watch",
-    "listen",
-  ]);
-  expect(onlyRow(result.items, "Daft Punk — Get Lucky").actions).toEqual([
-    "listen",
-    "watch",
-  ]);
+  for (const listen of [true, false]) {
+    f.setMusicOverVoice(listen);
+    const result = await rows(f, "history", "");
+    const response = await request("/api/history", f);
+    const page = HistoryPageSchema.parse(await response.json());
+    for (const [title, want] of Object.entries(expectedReplayButtons(listen))) {
+      // The search row and the `/api/history` item get their buttons from the same rule.
+      expect(buttons(onlyRow(result.items, title)), title).toEqual(want);
+      expect(
+        buttons(page.items.find((item) => item.title === title)),
+        title,
+      ).toEqual(want);
+    }
+  }
   expect(await items(f, "history", "arrival")).toHaveLength(1);
 });
 
@@ -494,9 +519,19 @@ test("an album page lists its tracks and plays whole as one request", async () =
     expect(row.actions).toEqual(["listen"]);
     expect(row.menuActions).toEqual(["watch"]);
   }
-  expect(page.play?.actions).toEqual(["listen", "watch"]);
+  expect(page.play?.actions).toEqual(["listen"]);
+  expect(page.play?.menuActions).toEqual(["watch"]);
   if (page.play === undefined)
     throw new Error("Expected a whole-album selection");
+  f.setMusicOverVoice(false);
+  const withoutListen = await request(
+    "/api/music/v2/album?" + new URLSearchParams({ id: ALBUM_ID }).toString(),
+    f,
+  );
+  const watchOnly = BrowsePageSchema.parse(await withoutListen.json()).play;
+  expect(watchOnly?.actions).toEqual(["watch"]);
+  expect(watchOnly).not.toHaveProperty("menuActions");
+  f.setMusicOverVoice(true);
   const played = await f.handler(
     f.command({
       action: "play",
