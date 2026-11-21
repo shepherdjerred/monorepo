@@ -20,4 +20,4 @@ We're rebuilding from a quiet starting point and looking for our first regular p
 - Bedrock address: `mc.ts-mc.net:30004`
 
 Check the website for supported versions, player guides, rules, and current status:
-[The Storm](https://public.ts-mc.net/the-storm/)
+[The Storm](https://join.ts-mc.net/)

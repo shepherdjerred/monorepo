@@ -9,6 +9,13 @@ destinations, across projects. Each page is an _item_.
 | `the-storm` | `https://public.ts-mc.net/the-storm/`       | Pinterest ad destination for The Storm           |
 | `the-storm` | `https://public.ts-mc.net/the-storm/about/` | Server details for visitors from community posts |
 
+`https://join.ts-mc.net/` is the about page's own address and the link for
+community posts. The static-site origin serves the page there with HTTP 200,
+not a redirect: `join.ts-mc.net` is an alias of this site in
+`packages/homelab/src/platform-model.json`, and
+`packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts` maps its
+`/` to `/the-storm/about/`. The page's canonical URL is the join address.
+
 The root lists the items and is not indexed. `404.astro` covers unknown paths.
 
 ## Adding an item
@@ -53,7 +60,9 @@ copied, and one `custom` `storm_discord_clicked`. The about page does not load
 the advertiser tag.
 
 Both pages report `page_key: "the-storm"`. Tell them apart in PostHog by path,
-or by `placement`: every about-page value starts with `about-`.
+or by `placement`: every about-page value starts with `about-`. Visits to
+`https://join.ts-mc.net/` carry that host and the path `/`, with any campaign
+parameters, and the same `site_key`.
 
 Ad destination URLs use
 `https://public.ts-mc.net/the-storm/?utm_source=pinterest&utm_medium=paid&utm_campaign=the-storm&utm_content=<two-digit-pin-number>`.
