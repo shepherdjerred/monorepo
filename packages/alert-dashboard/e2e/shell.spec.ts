@@ -47,7 +47,7 @@ test("the sidebar lists every page under its group", async ({ page }) => {
             - /url: /services
         - listitem:
           - link "Flow":
-            - /url: /delivery
+            - /url: /flow
         - listitem:
           - link "AI":
             - /url: /ai

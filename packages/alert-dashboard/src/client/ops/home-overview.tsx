@@ -6,13 +6,13 @@ import type {
 import { AttentionPanel } from "./attention-panel.tsx";
 import { GlanceTiles } from "./glance-tiles.tsx";
 import { NewSinceLastVisit } from "./new-since-last-visit.tsx";
-import { SectionCard, SnapshotBlock, StatusBanner } from "./ops-ui.tsx";
+import { SectionCard, SnapshotBlock, SnapshotStatusBanner } from "./ops-ui.tsx";
 
 /** Where each section's card links for its detail. */
 const SECTION_PAGES: Partial<Record<SectionId, string>> = {
   alerts: "/alerts",
-  delivery: "/delivery",
-  work: "/delivery",
+  delivery: "/flow",
+  work: "/flow",
   ai: "/ai",
   maintenance: "/maintenance",
   errors: "/maintenance",
@@ -34,7 +34,7 @@ function Overview({
   const newIds = new Set(snapshot.newSignalIds);
   return (
     <>
-      <StatusBanner snapshot={snapshot} />
+      <SnapshotStatusBanner snapshot={snapshot} />
       <GlanceTiles snapshot={snapshot} />
       <h2 className="block-heading">Areas</h2>
       <section className="section-grid" aria-label="Areas">

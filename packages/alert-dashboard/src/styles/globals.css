@@ -1025,14 +1025,25 @@ tbody tr:hover {
   padding-bottom: 6px;
 }
 .panel-heading h2,
+.panel-heading h3,
 .section-card h2,
+.section-summary h2,
 .metadata h2 {
   font-weight: 650;
+}
+/* A panel under a block heading is one level down and looks the same. */
+.panel-heading h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .metadata h2 {
   margin-bottom: 14px;
 }
-.panel-heading h2 {
+.panel-heading h2,
+.panel-heading h3 {
   min-width: 0;
 }
 .panel-heading .button {
@@ -1251,16 +1262,20 @@ tbody tr:hover {
   border-radius: 10px;
   background: var(--panel);
 }
-.section-card.section-ok {
+.section-card.section-ok,
+.section-summary.section-ok {
   border-top-color: var(--status-good);
 }
-.section-card.section-info {
+.section-card.section-info,
+.section-summary.section-info {
   border-top-color: var(--status-info);
 }
-.section-card.section-warning {
+.section-card.section-warning,
+.section-summary.section-warning {
   border-top-color: var(--status-warning);
 }
-.section-card.section-error {
+.section-card.section-error,
+.section-summary.section-error {
   border-top-color: var(--status-critical);
 }
 .section-card header {
@@ -1286,6 +1301,7 @@ tbody tr:hover {
   padding: 0 18px 12px;
 }
 .section-card .metric-row,
+.section-summary .metric-row,
 .stack > .metric-row,
 .incident-panel .metric-row {
   padding: 0;
@@ -1297,10 +1313,11 @@ tbody tr:hover {
   gap: 6px;
 }
 .section-card .metric {
+  --metric-pad: 8px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 7px 8px;
+  padding-block: 7px;
 }
 .section-card .metric span {
   font-size: 0.7rem;
@@ -1314,8 +1331,9 @@ tbody tr:hover {
   padding: 0 18px 16px;
 }
 .metric {
+  --metric-pad: 10px;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 8px var(--metric-pad);
   border-radius: 8px;
   background: var(--panel-2);
   border: 1px solid var(--line-soft);
@@ -1332,11 +1350,96 @@ tbody tr:hover {
   font-size: 1.2rem;
   font-weight: 650;
 }
-.section-columns {
+/* A metric that needs attention: a bar in the status colour, and an icon in
+   the corner (named for screen readers) so the tile does not depend on the
+   colour. The bar is a border, which forced-colors mode keeps; the padding
+   gives back its width. The icon sits beside the label, which may wrap,
+   rather than the value, which may not. */
+.metric-warning,
+.metric-error,
+.metric-unknown {
+  position: relative;
+  border-left: 3px solid var(--status-unknown);
+  padding-left: calc(var(--metric-pad) - 2px);
+}
+.metric-warning > span:first-child,
+.metric-error > span:first-child,
+.metric-unknown > span:first-child {
+  padding-right: 1.05rem;
+}
+.metric-warning {
+  border-left-color: var(--status-warning);
+}
+.metric-error {
+  border-left-color: var(--status-critical);
+}
+.metric-flag {
+  position: absolute;
+  top: 8px;
+  right: calc(var(--metric-pad) - 2px);
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--sev-unknown-ink);
+}
+.metric-warning .metric-flag {
+  color: var(--sev-warning-ink);
+}
+.metric-error .metric-flag {
+  color: var(--sev-error-ink);
+}
+/* One section at a glance, full width: the title, summary and verdict on
+   one line and every metric on the next, on columns the cards share. */
+.summary-stack {
+  display: grid;
+  gap: 10px;
+}
+.section-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title summary sev"
+    "metrics metrics metrics";
+  align-items: baseline;
+  gap: 10px 14px;
+  min-width: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--status-unknown);
+  border-radius: 10px;
+  background: var(--panel);
+}
+.section-summary h2 {
+  grid-area: title;
+}
+.section-summary > p {
+  grid-area: summary;
+  margin: 0;
+  font-size: 0.88rem;
+}
+.section-summary > .sev {
+  grid-area: sev;
+  align-self: center;
+}
+.section-summary .metric-row {
+  grid-area: metrics;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+}
+/* The values share a baseline when one label wraps and its neighbour does not. */
+.section-summary .metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+/* Two columns of panels that each stack on their own. */
+.signal-columns,
+.review-lists {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   align-items: start;
+}
+.signal-columns > :only-child {
+  grid-column: 1 / -1;
 }
 .charts-heading {
   display: flex;
@@ -1563,6 +1666,41 @@ tbody tr:hover {
   align-items: start;
   margin-bottom: 18px;
 }
+/* The trend table beside the incident tiles, which stack to its height. The
+   daily review has no trends, and its incident panel takes the row. */
+.review-grid {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: stretch;
+  margin-bottom: 0;
+}
+.review-grid > :only-child {
+  grid-column: 1 / -1;
+}
+.incident-panel {
+  display: flex;
+  flex-direction: column;
+}
+.incident-panel:not(:only-child) .metric-row {
+  flex: 1;
+  grid-template-columns: 1fr;
+  grid-auto-rows: 1fr;
+}
+.incident-panel:not(:only-child) .metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.incident-panel:not(:only-child) .metric strong {
+  font-size: 1.5rem;
+}
+/* Holds about the top block's height while the report loads, so the charts
+   under it barely move when it lands. The weekly block has the trend table. */
+.review-lead[aria-busy="true"] {
+  min-height: 250px;
+}
+.review-lead-weekly[aria-busy="true"] {
+  min-height: 590px;
+}
 .drill-links {
   display: flex;
   flex-wrap: wrap;
@@ -1693,11 +1831,51 @@ tbody tr:hover {
 }
 @container content (max-width: 900px) {
   .service-layout,
-  .section-columns,
+  .signal-columns,
+  .review-lists,
   .chart-grid,
   .ai-grid,
   .review-grid {
     grid-template-columns: 1fr;
+  }
+  .incident-panel:not(:only-child) .metric-row {
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    grid-auto-rows: auto;
+  }
+  .incident-panel:not(:only-child) .metric strong {
+    font-size: 1.2rem;
+  }
+  .review-lead-weekly[aria-busy="true"] {
+    min-height: 740px;
+  }
+}
+/* A narrower column fits seven tiles across only at the size of Home's, so a
+   section's metrics still make one row instead of leaving one tile over. */
+@container content (min-width: 601px) and (max-width: 1000px) {
+  .section-summary .metric-row {
+    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+    gap: 6px;
+  }
+  .section-summary .metric {
+    --metric-pad: 8px;
+    padding-block: 7px;
+  }
+  .section-summary .metric span {
+    font-size: 0.7rem;
+  }
+  .section-summary .metric strong {
+    font-size: 1.05rem;
+  }
+}
+/* The summary drops under its title; the verdict stays beside the title. */
+@container content (max-width: 720px) {
+  .section-summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title sev"
+      "summary summary"
+      "metrics metrics";
+    gap: 8px 12px;
   }
 }
 @media (max-width: 600px) {
@@ -1716,6 +1894,19 @@ tbody tr:hover {
   }
   .section-card p {
     display: none;
+  }
+  /* Two tiles across; an odd one out takes the full row, as above. */
+  .section-summary .metric-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .section-summary .metric-row > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  .review-lead[aria-busy="true"] {
+    min-height: 430px;
+  }
+  .review-lead-weekly[aria-busy="true"] {
+    min-height: 1190px;
   }
   .status-banner {
     align-items: flex-start;

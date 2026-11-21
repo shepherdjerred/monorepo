@@ -9,7 +9,7 @@ import {
 } from "@shepherdjerred/ops-model/digest.ts";
 
 import { reviewQuery } from "./ops-api.ts";
-import { ChangeTimeline, PageHeading, SeverityBadge } from "./ops-ui.tsx";
+import { ChangeTimeline, PageHeading, StatusBanner } from "./ops-ui.tsx";
 import { SignalList } from "./signal-list.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
@@ -43,117 +43,139 @@ function TrendRow({ trend }: { readonly trend: Trend }): React.JSX.Element {
   );
 }
 
-function ReviewBody({
+/** Trends compare whole weeks, so only the weekly report carries them. */
+function TrendPanel({
+  trends,
+}: {
+  readonly trends: readonly Trend[];
+}): React.JSX.Element {
+  return (
+    <section className="panel" aria-labelledby="trends-heading">
+      <header className="panel-heading">
+        <h2 id="trends-heading">Compared with the previous week</h2>
+      </header>
+      <div className="table-scroll">
+        <table className="trend-table">
+          <thead>
+            <tr>
+              <th scope="col">Measure</th>
+              <th scope="col" className="num">
+                This week
+              </th>
+              <th scope="col" className="num">
+                Previous
+              </th>
+              <th scope="col" className="num">
+                Change
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {trends.map((trend) => (
+              <TrendRow key={trend.id} trend={trend} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function IncidentPanel({
+  incidents,
+}: {
+  readonly incidents: DigestReport["incidents"];
+}): React.JSX.Element {
+  return (
+    <section
+      className="panel incident-panel"
+      aria-labelledby="incident-heading"
+    >
+      <header className="panel-heading">
+        <h2 id="incident-heading">Incidents</h2>
+      </header>
+      <div className="metric-row">
+        <div className="metric">
+          <span>Opened</span>
+          <strong>{incidents.opened}</strong>
+        </div>
+        <div className="metric">
+          <span>Resolved</span>
+          <strong>{incidents.resolved}</strong>
+        </div>
+        <div className="metric">
+          <span>Median to resolve</span>
+          <strong>
+            {incidents.medianMinutesToResolve === null
+              ? "—"
+              : `${String(Math.round(incidents.medianMinutesToResolve))}m`}
+          </strong>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** The verdict for the period, then its numbers. */
+function ReviewLead({
   report,
 }: {
   readonly report: DigestReport;
 }): React.JSX.Element {
-  const { incidents } = report;
   return (
     <>
-      <section
-        className={`status-banner status-${report.status.severity}`}
-        aria-label="Status"
+      <StatusBanner
+        severity={report.status.severity}
+        summary={report.status.summary}
+        label="Status"
       >
-        <SeverityBadge severity={report.status.severity} large />
-        <div>
-          <p className="status-summary">{report.status.summary}</p>
-          <p className="status-meta">
-            {formatInstant(report.periodStart)} –{" "}
-            {formatInstant(report.periodEnd)}
-          </p>
-        </div>
-      </section>
+        {formatInstant(report.periodStart)} – {formatInstant(report.periodEnd)}
+      </StatusBanner>
       <div className="review-grid">
         {report.trends.length === 0 ? null : (
-          <section className="panel" aria-labelledby="trends-heading">
-            <header className="panel-heading">
-              <h2 id="trends-heading">Compared with the previous week</h2>
-            </header>
-            <div className="table-scroll">
-              <table className="trend-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Measure</th>
-                    <th scope="col" className="num">
-                      This week
-                    </th>
-                    <th scope="col" className="num">
-                      Previous
-                    </th>
-                    <th scope="col" className="num">
-                      Change
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.trends.map((trend) => (
-                    <TrendRow key={trend.id} trend={trend} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          <TrendPanel trends={report.trends} />
         )}
-        <div className="stack">
-          <section
-            className="panel incident-panel"
-            aria-labelledby="incident-heading"
-          >
-            <header className="panel-heading">
-              <h2 id="incident-heading">Incidents</h2>
-            </header>
-            <div className="metric-row">
-              <div className="metric">
-                <span>Opened</span>
-                <strong>{incidents.opened}</strong>
-              </div>
-              <div className="metric">
-                <span>Resolved</span>
-                <strong>{incidents.resolved}</strong>
-              </div>
-              <div className="metric">
-                <span>Median to resolve</span>
-                <strong>
-                  {incidents.medianMinutesToResolve === null
-                    ? "—"
-                    : `${String(Math.round(incidents.medianMinutesToResolve))}m`}
-                </strong>
-              </div>
-            </div>
-          </section>
-          <section className="panel list-panel" aria-labelledby="review-new">
-            <header className="panel-heading">
-              <h2 id="review-new">
-                {report.kind === "daily"
-                  ? "New since the last digest"
-                  : "New this period"}
-              </h2>
-            </header>
-            <SignalList
-              signals={report.newSinceLast}
-              empty="Nothing new."
-              cap={10}
-            />
-          </section>
-        </div>
+        <IncidentPanel incidents={report.incidents} />
       </div>
-      <div className="chart-grid">
-        <SeriesChart preset="prs-merged" range="90d" />
-        <SeriesChart preset="alerts-firing" range="30d" />
-        <SeriesChart preset="ai-cost-by-source" range="30d" />
-        <SeriesChart preset="bugsink-unresolved" range="90d" />
-      </div>
-      <section className="panel list-panel" aria-labelledby="review-changes">
-        <header className="panel-heading">
-          <h2 id="review-changes">Changes</h2>
-        </header>
-        <ChangeTimeline changes={report.changes.slice(0, 50)} />
-      </section>
     </>
   );
 }
 
+/** The lists that take reading: what is new, beside what changed. */
+function ReviewLists({
+  report,
+}: {
+  readonly report: DigestReport;
+}): React.JSX.Element {
+  return (
+    <div className="review-lists">
+      <section className="panel list-panel" aria-labelledby="review-new">
+        <header className="panel-heading">
+          <h2 id="review-new">
+            {report.kind === "daily"
+              ? "New since the last digest"
+              : "New this period"}{" "}
+            <span className="count">{report.newSinceLast.length}</span>
+          </h2>
+        </header>
+        <SignalList signals={report.newSinceLast} empty="Nothing new." />
+      </section>
+      <section className="panel list-panel" aria-labelledby="review-changes">
+        <header className="panel-heading">
+          <h2 id="review-changes">Changes</h2>
+        </header>
+        <ChangeTimeline changes={report.changes} />
+      </section>
+    </div>
+  );
+}
+
+/**
+ * The report fills the top and the bottom of the page; the charts between
+ * them read Prometheus on their own, so they are not held behind it. The top
+ * block keeps its height while the report loads, so the charts do not jump
+ * when it lands.
+ */
 export function ReviewPage(): React.JSX.Element {
   const [params, setParams] = useSearchParams();
   const parsed = DigestKindSchema.safeParse(params.get("kind"));
@@ -179,19 +201,39 @@ export function ReviewPage(): React.JSX.Element {
           ))}
         </div>
       </PageHeading>
+      <div
+        className={`review-lead review-lead-${kind}`}
+        aria-busy={report.status === "loading"}
+      >
+        <LoadingBlock
+          values={{ report }}
+          fallback={<div className="loading-state">Loading review…</div>}
+          renderError={() => (
+            <div className="error-state">The review is unavailable.</div>
+          )}
+        >
+          {({ report: value }, meta) => (
+            <>
+              <StaleNotice errors={meta.errors} />
+              <ReviewLead report={value} />
+            </>
+          )}
+        </LoadingBlock>
+      </div>
+      <h2 className="block-heading">Trends</h2>
+      <div className="chart-grid">
+        <SeriesChart preset="prs-merged" range="90d" />
+        <SeriesChart preset="alerts-firing" range="30d" />
+        <SeriesChart preset="ai-cost-by-source" range="30d" />
+        <SeriesChart preset="bugsink-unresolved" range="90d" />
+      </div>
+      {/* The top block already reports loading and failure. */}
       <LoadingBlock
         values={{ report }}
-        fallback={<div className="loading-state">Loading review…</div>}
-        renderError={() => (
-          <div className="error-state">The review is unavailable.</div>
-        )}
+        fallback={null}
+        renderError={() => null}
       >
-        {({ report: value }, meta) => (
-          <>
-            <StaleNotice errors={meta.errors} />
-            <ReviewBody report={value} />
-          </>
-        )}
+        {({ report: value }) => <ReviewLists report={value} />}
       </LoadingBlock>
     </main>
   );

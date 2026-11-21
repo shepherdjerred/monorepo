@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { SignalList } from "./signal-list.tsx";
+import { SignalList, estimatedListLines } from "./signal-list.tsx";
 
 function signals(
   count: number,
@@ -116,5 +116,42 @@ describe("SignalList", () => {
     const html = render(signals(30, "alert"), { cap: 30 });
     expect(rows(html)).toBe(30);
     expect(html).not.toContain("signal-group");
+  });
+});
+
+describe("estimatedListLines", () => {
+  it("counts an empty list as its one line", () => {
+    expect(estimatedListLines([])).toBe(1);
+  });
+
+  it("gives a row its padding and title, and more for what else it shows", () => {
+    const [plain] = signals(1, "alert");
+    if (plain === undefined) throw new Error("no signal");
+    expect(estimatedListLines([plain])).toBe(2);
+    expect(
+      estimatedListLines([{ ...plain, since: "2026-08-01T00:00:00.000Z" }]),
+    ).toBe(3);
+    expect(
+      estimatedListLines([
+        { ...plain, title: "t".repeat(80), detail: "d".repeat(120) },
+      ]),
+    ).toBe(1 + 3 + 3);
+  });
+
+  it("counts a collapsed group as one short row", () => {
+    const restores = signals(10, "restore-failure", {
+      source: "maintenance",
+      section: "maintenance",
+      detail: "d".repeat(120),
+    });
+    expect(estimatedListLines(restores)).toBe(2);
+  });
+
+  it("stops at the cap and leaves room for the toggle", () => {
+    const list = signals(30, "alert");
+    expect(estimatedListLines(list)).toBe(10 * 2 + 2);
+    expect(estimatedListLines(list, 5)).toBe(5 * 2 + 2);
+    // Twelve fit within the slack, so all twelve show and there is no toggle.
+    expect(estimatedListLines(signals(12, "alert"))).toBe(12 * 2);
   });
 });
