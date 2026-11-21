@@ -1,4 +1,3 @@
-import { serveStatic } from "hono/bun";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
@@ -19,6 +18,7 @@ import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { PlexPinAuthentication } from "#infrastructure/plex-auth.ts";
 import { TmdbClient } from "#integrations/tmdb.ts";
 import { createMediaApp } from "./app.ts";
+import { mountMediaClient } from "./static/client.ts";
 import { PrismaNotificationApplication } from "#infrastructure/notification-service.ts";
 import { PrismaAdminApplication } from "#infrastructure/admin-service.ts";
 import { PrismaPlexAdministration } from "#infrastructure/plex-admin.ts";
@@ -372,7 +372,6 @@ const app = createMediaApp({
     );
   },
 });
-app.get("/assets/*", serveStatic({ root: "./dist" }));
 app.get("/readyz", async (c) => {
   try {
     await database.$queryRaw`SELECT 1`;
@@ -391,13 +390,7 @@ async function capacityEnabled() {
   );
   return result.value;
 }
-app.get("*", async (c, next) => {
-  return c.req.path === "/api" ||
-    c.req.path.startsWith("/api/") ||
-    c.req.path.startsWith("/assets/")
-    ? next()
-    : serveStatic({ path: "./dist/index.html" })(c, next);
-});
+mountMediaClient(app, "./dist");
 const server = Bun.serve({
   hostname: bootstrap.HOST,
   port: bootstrap.PORT,
