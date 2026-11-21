@@ -133,6 +133,22 @@ describe("buildChampionMetaSnapshot", () => {
     expect(snapshot.champions).toHaveLength(1);
   });
 
+  test("rejects a champion served from a different build than the manifest", async () => {
+    const query = "patch=16.3&queue=420&bracket=all";
+    await expect(
+      buildChampionMetaSnapshot({
+        origin: ORIGIN,
+        fetch: serve({
+          "/api/meta/v1/manifest": () =>
+            json({ ...MANIFEST, champions: [{ id: 103, name: "Ahri" }] }),
+          [`/api/meta/v1/champions/103?${query}`]: () =>
+            json({ ...championBody(103), buildId: "build-2" }),
+        }),
+        sleep: noSleep,
+      }),
+    ).rejects.toThrow(/build changed/u);
+  });
+
   test("fails loudly on an unexpected API answer", async () => {
     await expect(
       buildChampionMetaSnapshot({

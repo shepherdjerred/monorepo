@@ -110,6 +110,13 @@ export async function buildChampionMetaSnapshot(
     // A champion with no slice in this context failed the API's sample floor.
     if (result.status === "missing") continue;
     const parsed = ChampionResponseSchema.parse(result.body);
+    // A lake build published mid-refresh would mix statistics from two builds
+    // under one build's attribution. Fail so the workflow retries.
+    if (parsed.buildId !== manifest.buildId) {
+      throw new Error(
+        `Meta build changed during refresh: manifest ${manifest.buildId}, champion ${listed.id.toString()} ${parsed.buildId}`,
+      );
+    }
     if (parsed.slices.length === 0) continue;
     champions.push({
       id: parsed.championId,
