@@ -184,6 +184,7 @@ const grafanaDashboards = [
   "static-site-probes-dashboard",
   "streambot-dashboard",
   "streambot-voice-dashboard",
+  "streambot-web-dashboard",
   "tasknotes-dashboard",
   "temporal-dashboard",
   "velero-dashboard",

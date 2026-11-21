@@ -215,3 +215,195 @@ describe("Streambot voice alerts", () => {
     expect(serialized).not.toContain("last_packet_timestamp_seconds >");
   });
 });
+
+function expressionOf(alert: string): string {
+  const expression = requireRule(alert).expr.value;
+  if (typeof expression !== "string") {
+    throw new TypeError(`Missing expression for ${alert}`);
+  }
+  return expression;
+}
+
+type Series = { series: string; values: string };
+
+/** One promtool case: does the alert expression select anything at `evalTime`. */
+function firing(
+  alert: string,
+  series: readonly Series[],
+  evalTime: string,
+  fires: boolean,
+) {
+  return {
+    interval: "1m",
+    input_series: series,
+    promql_expr_test: [
+      {
+        expr: `count(${expressionOf(alert)})`,
+        eval_time: evalTime,
+        exp_samples: fires ? [{ labels: "{}", value: 1 }] : [],
+      },
+    ],
+  };
+}
+
+const providerCalls = (
+  outcome: string,
+  values: string,
+  operation = "search_song",
+): Series => ({
+  series: `streambot_music_provider_requests_total{namespace="media",provider="youtube-music",operation="${operation}",outcome="${outcome}"}`,
+  values,
+});
+
+const requests = (labels: string, values: string): Series => ({
+  series: `streambot_web_requests_total{namespace="media",route="/api/room",${labels}}`,
+  values,
+});
+
+describe("Streambot web remote alerts", () => {
+  test("StreambotWebServerErrors needs both a 5% ratio and 50 requests", async () => {
+    expect(requireRule("StreambotWebServerErrors").for).toBe("5m");
+    const ok = requests('status_class="2xx",code="ok"', "0+10x30");
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        // One failure per minute against ten successes: 9% of 165 requests.
+        firing(
+          "StreambotWebServerErrors",
+          [ok, requests('status_class="5xx",code="other"', "0+1x30")],
+          "20m",
+          true,
+        ),
+        // `unavailable` failures count even when the status class is not 5xx.
+        firing(
+          "StreambotWebServerErrors",
+          [ok, requests('status_class="4xx",code="unavailable"', "0+1x30")],
+          "20m",
+          true,
+        ),
+        // One failed request out of three, inside the evaluation window, is 33% but far below the volume floor.
+        firing(
+          "StreambotWebServerErrors",
+          [
+            requests('status_class="2xx",code="ok"', "0x7 1 2 2x22"),
+            requests('status_class="5xx",code="other"', "0x7 0 1 1x22"),
+          ],
+          "20m",
+          false,
+        ),
+        // Healthy volume with a failure rate under 5%.
+        firing(
+          "StreambotWebServerErrors",
+          [ok, requests('status_class="5xx",code="other"', "0+0.2x30")],
+          "20m",
+          false,
+        ),
+        // Client aborts neither count as failures nor dilute the denominator.
+        firing(
+          "StreambotWebServerErrors",
+          [
+            ok,
+            requests('status_class="aborted",code="client_aborted"', "0+5x30"),
+          ],
+          "20m",
+          false,
+        ),
+      ],
+    });
+  });
+
+  test("StreambotWebTimeToPlaybackSlow needs a slow p95 and ten starts per transport", async () => {
+    expect(requireRule("StreambotWebTimeToPlaybackSlow").for).toBe("10m");
+    const metric = "streambot_web_time_to_playback_seconds";
+    const histogram = (
+      transport: string,
+      slow: string,
+      fast: string,
+    ): Series[] => {
+      const labels = `namespace="media",transport="${transport}"`;
+      return [
+        { series: `${metric}_bucket{${labels},le="20"}`, values: fast },
+        { series: `${metric}_bucket{${labels},le="30"}`, values: slow },
+        { series: `${metric}_bucket{${labels},le="+Inf"}`, values: slow },
+        { series: `${metric}_count{${labels}}`, values: slow },
+      ];
+    };
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        // 40 starts, every one between 20 and 30 seconds.
+        firing(
+          "StreambotWebTimeToPlaybackSlow",
+          histogram("watch", "0+1x40", "0+0x40"),
+          "35m",
+          true,
+        ),
+        // Three slow starts are not enough volume.
+        firing(
+          "StreambotWebTimeToPlaybackSlow",
+          histogram("listen", "0x7 3 3x32", "0+0x40"),
+          "35m",
+          false,
+        ),
+        // Fast starts: every observation lands in the 20 second bucket.
+        firing(
+          "StreambotWebTimeToPlaybackSlow",
+          histogram("watch", "0+1x40", "0+1x40"),
+          "35m",
+          false,
+        ),
+      ],
+    });
+  });
+
+  test("StreambotMusicSearchProviderFailing needs a majority of failed calls and 20 calls", async () => {
+    expect(requireRule("StreambotMusicSearchProviderFailing").for).toBe("10m");
+    const calls = providerCalls;
+    const alert = "StreambotMusicSearchProviderFailing";
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        firing(
+          alert,
+          [calls("error", "0+1x40"), calls("ok", "0+0x40")],
+          "35m",
+          true,
+        ),
+        firing(
+          alert,
+          [calls("unavailable", "0+1x40"), calls("ok", "0+0x40")],
+          "35m",
+          true,
+        ),
+        // One failed call on a quiet evening.
+        firing(
+          alert,
+          [calls("error", "0x7 0 1 1x32"), calls("ok", "0+0x40")],
+          "35m",
+          false,
+        ),
+        // High volume with mostly healthy calls.
+        firing(
+          alert,
+          [calls("error", "0+0.2x40"), calls("ok", "0+2x40")],
+          "35m",
+          false,
+        ),
+        // Calls cancelled by the viewer leaving are aborts, not provider failures.
+        firing(
+          alert,
+          [calls("aborted", "0+1x40"), calls("ok", "0+0.5x40")],
+          "35m",
+          false,
+        ),
+        // Parser drift is counted elsewhere and never feeds this ratio.
+        firing(
+          alert,
+          [calls("error", "0+1x40", "parser"), calls("ok", "0+0x40")],
+          "35m",
+          false,
+        ),
+      ],
+    });
+  });
+});

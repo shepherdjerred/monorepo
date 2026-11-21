@@ -87,11 +87,22 @@ const IMPORTS: Record<string, string> = {
 const CREATED = [
   "posthog_dashboard.scout_feature_usage",
   "posthog_dashboard.storm_product_metrics",
+  "posthog_dashboard.streambot_usage",
   "posthog_insight.scout_creation_usage_weekly",
   "posthog_insight.scout_discord_commands_by_name",
   "posthog_insight.scout_progression_actions_weekly",
   "posthog_insight.scout_voice_questions_by_outcome",
   "posthog_insight.storm_product_metrics",
+  "posthog_insight.streambot_commands_by_action",
+  "posthog_insight.streambot_playlist_actions",
+  "posthog_insight.streambot_plays_by_placement",
+  "posthog_insight.streambot_plays_by_selection_kind",
+  "posthog_insight.streambot_plays_by_surface",
+  "posthog_insight.streambot_search_to_play",
+  "posthog_insight.streambot_sign_ins",
+  "posthog_insight.streambot_station_starts_by_kind",
+  "posthog_insight.streambot_station_starts_by_scope",
+  "posthog_insight.streambot_weekly_active_users",
 ];
 
 describe("posthog", () => {
@@ -300,6 +311,37 @@ describe("posthog", () => {
       session_recording_opt_in: true,
       test_account_filters:
         '${jsonencode([{"key" = "id", "operator" = "not_in", "type" = "cohort", "value" = posthog_cohort.internal_test_users.id}])}',
+    });
+  });
+});
+
+describe("posthog Streambot usage dashboard", () => {
+  test("puts every insight on its dashboard and queries only its own events", async () => {
+    const { resource, locals } = await posthog();
+    const insights = resource["posthog_insight"] ?? {};
+    const queries = locals["insight_queries"] ?? {};
+    const streambot = Object.keys(insights).filter((name) =>
+      name.startsWith("streambot_"),
+    );
+    expect(streambot).toHaveLength(10);
+    for (const name of streambot) {
+      expect(insights[name]?.["dashboard_ids"], name).toEqual([
+        "${tonumber(posthog_dashboard.streambot_usage.id)}",
+      ]);
+      const events: string[] = [];
+      JSON.stringify(queries[name], (key, value: unknown) => {
+        if (key === "event" && typeof value === "string") events.push(value);
+        return value;
+      });
+      for (const event of events) {
+        expect(event, name).toMatch(/^streambot_[a-z_]+$/);
+      }
+    }
+    expect(queries["streambot_weekly_active_users"]).toMatchObject({
+      source: {
+        series: [{ event: null, math: "dau" }],
+        properties: [{ key: "app", value: ["streambot"] }],
+      },
     });
   });
 });

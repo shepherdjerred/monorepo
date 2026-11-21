@@ -11,16 +11,26 @@ export const FEATURE_USAGE_DASHBOARD = {
     "Which Scout features are actually used: progression actions, creation/usage events, Discord commands by name and subcommand, and voice questions.",
 } as const;
 
-type WeeklyTrend = {
-  /** Events charted as one series each. */
-  readonly events: readonly string[];
+export type WeeklyTrend = {
+  /** Events charted as one series each; `null` is every event. */
+  readonly events: readonly (string | null)[];
   readonly display: "ActionsLineGraph" | "ActionsStackedBar";
   /** Event property the single series is broken down by. */
   readonly breakdown?: string;
+  /** Aggregation of every series; PostHog's default is a raw event count. */
+  readonly math?: "total" | "dau";
+  /** Exact-match event property filters applied to every series. */
+  readonly where?: Readonly<Record<string, string>>;
 };
 
-/** A 90-day weekly trends query over raw event counts. */
-function weeklyTrend({ events, display, breakdown }: WeeklyTrend) {
+/** A 90-day weekly trends query; raw event counts unless `math` says otherwise. */
+export function weeklyTrend({
+  events,
+  display,
+  breakdown,
+  math,
+  where = {},
+}: WeeklyTrend) {
   return {
     kind: "InsightVizNode",
     source: {
@@ -35,11 +45,17 @@ function weeklyTrend({ events, display, breakdown }: WeeklyTrend) {
       filterTestAccounts: false,
       interval: "week",
       kind: "TrendsQuery",
-      properties: [],
+      properties: Object.entries(where).map(([key, value]) => ({
+        key,
+        operator: "exact",
+        type: "event",
+        value: [value],
+      })),
       series: events.map((event) => ({
         event,
         kind: "EventsNode",
-        name: event,
+        ...(math === undefined ? {} : { math }),
+        name: event ?? "All events",
       })),
       trendsFilter: {
         aggregationAxisFormat: "numeric",

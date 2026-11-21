@@ -22,6 +22,10 @@ import {
   FEATURE_USAGE_INSIGHTS,
 } from "#src/stacks/posthog/feature-usage.ts";
 import {
+  STREAMBOT_USAGE_DASHBOARD,
+  STREAMBOT_USAGE_INSIGHTS,
+} from "#src/stacks/posthog/streambot-usage.ts";
+import {
   STORM_DASHBOARD,
   STORM_METRICS,
 } from "#src/stacks/posthog/storm-product-metrics.ts";
@@ -354,6 +358,12 @@ export class PosthogStack extends HomelabStack {
             insight.query,
           ]),
         ),
+        ...Object.fromEntries(
+          Object.entries(STREAMBOT_USAGE_INSIGHTS).map(([id, insight]) => [
+            id,
+            insight.query,
+          ]),
+        ),
       }),
     );
     for (const [id, insight] of Object.entries(ADOPTED.insights)) {
@@ -369,14 +379,26 @@ export class PosthogStack extends HomelabStack {
   }
 
   private addFeatureUsage(): void {
-    const dashboard = new Dashboard(this, FEATURE_USAGE_DASHBOARD.id, {
+    this.addInsightDashboard(FEATURE_USAGE_DASHBOARD, FEATURE_USAGE_INSIGHTS);
+    this.addInsightDashboard(
+      STREAMBOT_USAGE_DASHBOARD,
+      STREAMBOT_USAGE_INSIGHTS,
+    );
+  }
+
+  /** A dashboard and the insights on it, each query read from `insight_queries`. */
+  private addInsightDashboard(
+    config: { id: string; name: string; description: string },
+    insights: Record<string, { name: string; description: string }>,
+  ): void {
+    const dashboard = new Dashboard(this, config.id, {
       deleted: false,
-      description: FEATURE_USAGE_DASHBOARD.description,
-      name: FEATURE_USAGE_DASHBOARD.name,
+      description: config.description,
+      name: config.name,
       pinned: false,
       projectId: PROJECT_ID,
     });
-    for (const [id, insight] of Object.entries(FEATURE_USAGE_INSIGHTS)) {
+    for (const [id, insight] of Object.entries(insights)) {
       new Insight(this, id, {
         dashboardIds: [Fn.tonumber(dashboard.id)],
         deleted: false,
