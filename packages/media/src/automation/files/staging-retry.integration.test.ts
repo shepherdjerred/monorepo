@@ -2,6 +2,7 @@ import { access, lstat, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
+import { testPublicationExecution } from "#testing/publication-execution.ts";
 import { seasonPublicationFixture } from "#automation/publication-proof/season-fixture.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
@@ -25,14 +26,15 @@ test("a fresh TV staging invocation retains the whole original plan and acknowle
   const probe = vi.fn(inspect);
   f.context.inspect = probe;
   const originalCheckpoint = f.context.checkpoint;
-  const at = Date.now();
+  const stagingExecution = testPublicationExecution();
+  f.context.publicationExecution = () => stagingExecution;
   const clock = vi.spyOn(Date, "now");
   let expired = false;
   f.context.checkpoint = async (phase) => {
     await originalCheckpoint(phase);
     if (phase === "staging-prepared" && !expired) {
       expired = true;
-      clock.mockReturnValue(at + 60_001);
+      clock.mockReturnValue(stagingExecution.observed.wall + 60_001);
     }
   };
   const activities = createMediaFileActivities(f.context);
@@ -42,6 +44,7 @@ test("a fresh TV staging invocation retains the whole original plan and acknowle
   });
   expect(expired).toBe(true);
   clock.mockRestore();
+  f.context.publicationExecution = testPublicationExecution;
   const retained = await db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: acquired.attempt.id },
   });
@@ -96,7 +99,8 @@ test("a fresh TV staging invocation retains the whole original plan and acknowle
   expect(JSON.parse(await readFile(journal, "utf8"))).not.toHaveProperty(
     "preparedPartial",
   );
-  const publicationAt = Date.now();
+  const publicationExecution = testPublicationExecution();
+  f.context.publicationExecution = () => publicationExecution;
   const publicationClock = vi.spyOn(Date, "now");
   let publishedPrefix = false;
   f.context.checkpoint = async (phase) => {
@@ -106,7 +110,9 @@ test("a fresh TV staging invocation retains the whole original plan and acknowle
       !publishedPrefix
     ) {
       publishedPrefix = true;
-      publicationClock.mockReturnValue(publicationAt + 60_001);
+      publicationClock.mockReturnValue(
+        publicationExecution.observed.wall + 60_001,
+      );
     }
   };
   expect(await activities.promoteMediaFiles(acquired.input)).toEqual({
@@ -115,6 +121,7 @@ test("a fresh TV staging invocation retains the whole original plan and acknowle
   });
   expect(publishedPrefix).toBe(true);
   publicationClock.mockRestore();
+  f.context.publicationExecution = testPublicationExecution;
   const recorded = await db.mediaPublicationTransition.findUniqueOrThrow({
     where: { attemptId: acquired.attempt.id },
   });

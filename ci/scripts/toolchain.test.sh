@@ -66,6 +66,12 @@ if ! rg -wq 'libxml2' "$CI_IMAGE" ||
   exit 1
 fi
 
+if ! rg -wq 'libicu72' "$CI_IMAGE" ||
+  ! rg -Fq "libicuuc.so." "$TOOLCHAIN"; then
+  echo "CI toolchain must provide libicu for culture-sensitive .NET RegexOracle execution" >&2
+  exit 1
+fi
+
 if ! rg -Fq 'COPY ci/scripts/android-sdk.sh' "$CI_IMAGE" ||
   ! rg -Fq '"${TARGETARCH}" = amd64' "$CI_IMAGE" ||
   ! rg -Fq 'bash ci/scripts/android-sdk.sh' "$TOOLCHAIN"; then

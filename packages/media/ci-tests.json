@@ -15,6 +15,12 @@
       ]
     },
     {
+      "runner": "command",
+      "name": "native-tools",
+      "tier": "extended",
+      "command": ["bun", "run", "scripts/ensure-native-tools.ts"]
+    },
+    {
       "runner": "vitest",
       "name": "integration",
       "tier": "extended",

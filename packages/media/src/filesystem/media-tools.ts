@@ -1,5 +1,17 @@
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
+
+const GENERATED_NATIVE_BIN = fileURLToPath(
+  new URL("../../generated/native-tools/bin", import.meta.url),
+);
+const MEDIA_TOOL_PATH = [
+  GENERATED_NATIVE_BIN,
+  "/usr/local/bin",
+  "/usr/bin",
+  "/bin",
+  "/opt/homebrew/bin",
+].join(":");
 
 type MediaTool =
   "ffprobe" | "ffmpeg" | "7zz" | "media-subtitle-analysis" | "ffsubsync";
@@ -34,7 +46,7 @@ export const runMediaTool: RunMediaTool = async (tool, args, options) => {
     const child = spawn(tool, [...args], {
       detached: group,
       stdio: ["ignore", "pipe", "ignore"],
-      env: { PATH: "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin" },
+      env: { PATH: MEDIA_TOOL_PATH },
     });
     const chunks: Buffer[] = [];
     let length = 0;

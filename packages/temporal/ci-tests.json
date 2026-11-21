@@ -32,6 +32,12 @@
       ]
     },
     {
+      "runner": "command",
+      "name": "media-native-tools",
+      "tier": "extended",
+      "command": ["bun", "run", "../media/scripts/ensure-native-tools.ts"]
+    },
+    {
       "runner": "vitest",
       "name": "integration",
       "tier": "extended",
