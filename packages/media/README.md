@@ -2075,6 +2075,14 @@ keys for obsolete source requests. Preview is read-only and repeatable. It
 includes source monitoring masks, subtitle policies, exact claim dispositions,
 and a hash of the captures, bindings, catalog, requests and library state.
 
+To apply reviewed Seerr requests while other claimants are unresolved, first
+preview the full capture, then preview again with `selectedSeerrRequests`
+containing 1–100 exact `{ captureId, provenanceKey }` pairs from that review.
+Pass the same selection and its new hash to apply. A scoped receipt accounts
+only those reviewed requests. Omitted rows remain in the complete capture and
+unresolved requests retain their existing protections. `historyOnly` entries
+must belong to the selected requests when applying a scoped review.
+
 `POST /api/v1/admin/migration/personal/apply` takes the same selection,
 `previewHash`, `acknowledgeExistingLibraryKeep: true`, and
 `acknowledgeTemporaryFollowingClaims: true`, with an `Idempotency-Key` header.

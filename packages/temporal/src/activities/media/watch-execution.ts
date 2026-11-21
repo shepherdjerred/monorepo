@@ -3,6 +3,7 @@ import { CancelledFailure } from "@temporalio/common";
 
 /** Invoked inside each observation, never captured by the cached runtime. */
 export function watchExecution(context = Context.current()) {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
   const info = context.info;
   const required = [
     info.currentAttemptScheduledTimestampMs,
@@ -17,7 +18,7 @@ export function watchExecution(context = Context.current()) {
     info.scheduledTimestampMs + info.scheduleToCloseTimeoutMs,
   );
   const monotonicDeadline =
-    performance.now() + Math.max(0, wallDeadline - Date.now());
+    observed.monotonic + Math.max(0, wallDeadline - observed.wall);
   const assertActive = () => {
     if (context.cancellationSignal.aborted)
       throw new CancelledFailure("Watch observation cancelled");
@@ -29,6 +30,7 @@ export function watchExecution(context = Context.current()) {
   };
   return {
     signal: context.cancellationSignal,
+    deadline: { observed, expiresAtMs: wallDeadline },
     assertActive,
     checkpoint: () => {
       assertActive();

@@ -2,6 +2,10 @@ export type WatchExecution = {
   signal: AbortSignal;
   assertActive: () => void;
   checkpoint: () => Promise<void>;
+  deadline?: {
+    observed: { wall: number; monotonic: number };
+    expiresAtMs: number;
+  };
 };
 
 export function assertWatchActive(execution: WatchExecution): void {

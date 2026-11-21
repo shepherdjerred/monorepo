@@ -11,6 +11,18 @@ export const ReconcilePersonalMigrationSchema = z.strictObject({
   after: PersonalMigrationCursorSchema.nullable(),
 });
 
+const SeerrRequestReferenceSchema = z.strictObject({
+  captureId: z.uuid(),
+  provenanceKey: EvidenceHashSchema,
+});
+
+export function seerrRequestReferenceKey({
+  captureId,
+  provenanceKey,
+}: z.infer<typeof SeerrRequestReferenceSchema>) {
+  return `${captureId}:${provenanceKey}`;
+}
+
 export const PersonalMigrationInputSchema = z.strictObject({
   captureIds: z
     .array(z.uuid())
@@ -33,6 +45,17 @@ export const PersonalMigrationInputSchema = z.strictObject({
     .array(EvidenceHashSchema)
     .max(1000)
     .refine((ids) => new Set(ids).size === ids.length),
+  selectedSeerrRequests: z
+    .array(SeerrRequestReferenceSchema)
+    .min(1)
+    .max(100)
+    .refine(
+      (items) =>
+        new Set(items.map((item) => seerrRequestReferenceKey(item))).size ===
+        items.length,
+      "Select each exact Seerr request only once",
+    )
+    .optional(),
 });
 export const ApplyPersonalMigrationSchema = PersonalMigrationInputSchema.extend(
   {

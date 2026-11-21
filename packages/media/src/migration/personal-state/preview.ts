@@ -1,9 +1,11 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
-import type {
-  PersonalMigrationInputSchema,
-  PersonalMigrationClaim,
+import {
+  seerrRequestReferenceKey,
+  type PersonalMigrationInputSchema,
+  type PersonalMigrationClaim,
 } from "#shared/personal-migration/contract.ts";
+import { MediaError } from "#application/errors.ts";
 import { validateCapture } from "#migration/capture/capture-validation.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { migrationTargets } from "#migration/catalog-targets.ts";
@@ -15,6 +17,49 @@ import {
 } from "#infrastructure/recovery/legacy-claims/bindings.ts";
 import { personalClaims, type PersonalClaimBinding } from "./claims.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+
+function reviewedSeerrClaims(
+  claims: PersonalMigrationClaim[],
+  input: z.infer<typeof PersonalMigrationInputSchema>,
+) {
+  const selection = input.selectedSeerrRequests;
+  const keys = new Set(
+    selection?.map((reference) => seerrRequestReferenceKey(reference)),
+  );
+  const reviewed =
+    selection === undefined
+      ? claims
+      : claims.filter((claim) => keys.has(seerrRequestReferenceKey(claim)));
+  if (selection !== undefined && reviewed.length !== keys.size)
+    throw new MediaError(
+      "invalid_input",
+      "An exact Seerr request is unavailable in the selected captures",
+      400,
+    );
+  if (
+    input.historyOnly.some(
+      (key) => !reviewed.some((claim) => claim.provenanceKey === key),
+    )
+  ) {
+    if (selection === undefined)
+      throw new Error(
+        "History-only approval does not belong to the selected captures",
+      );
+    throw new MediaError(
+      "invalid_input",
+      "History-only approval does not belong to the selected Seerr requests",
+      400,
+    );
+  }
+  if (selection === undefined) return { claims };
+  return {
+    claims: reviewed,
+    selectedSeerrRequests: reviewed.map(({ captureId, provenanceKey }) => ({
+      captureId,
+      provenanceKey,
+    })),
+  };
+}
 
 export async function previewPersonalMigration(
   tx: Prisma.TransactionClient,
@@ -156,14 +201,7 @@ export async function previewPersonalMigration(
     })),
     bindings,
   };
-  if (
-    input.historyOnly.some(
-      (key) => !claims.some((claim) => claim.provenanceKey === key),
-    )
-  )
-    throw new Error(
-      "History-only approval does not belong to the selected captures",
-    );
+  const review = reviewedSeerrClaims(claims, input);
   const preview = {
     schemaVersion: 1,
     captures: captures.map((row) => ({
@@ -171,7 +209,7 @@ export async function previewPersonalMigration(
       captureHash: row.manifestHash,
       sourceKind: row.sourceKind,
     })),
-    claims,
+    ...review,
     library,
     stateHash: snapshotHash(nativeJson(state)),
     monitoring: parsed.flatMap(({ row, capture }) =>
@@ -184,7 +222,7 @@ export async function previewPersonalMigration(
         .filter((record) => record.kind === "subtitle_preference")
         .map((record) => ({ captureId: row.id, record })),
     ),
-    blocked: claims.some((claim) => claim.disposition === "blocked"),
+    blocked: review.claims.some((claim) => claim.disposition === "blocked"),
     libraryKeepingPolicy: "keep",
     importedClaimKeepingPolicy: "temporary",
     importedClaimInterest: "following",

@@ -42,7 +42,7 @@ test("an ordinary language-only request queues ASSRT and installs proven Simplif
     where: { id: f.request.id },
     data: { subtitleLanguages: ["zh-Hans"] },
   });
-  const { transport, calls } = await harness.assrt(f.db);
+  const { transport, calls } = await harness.assrt(f.db, "mixed");
   expect(await f.queue()).toBe(1);
   const operation = await f.db.operation.findFirstOrThrow({
     where: { kind: "acquire_subtitles", targetId: f.asset.id },
@@ -88,7 +88,14 @@ test("an ordinary language-only request queues ASSRT and installs proven Simplif
   expect(
     subtitleTargetsReady(await currentSubtitleWork(f.db, f.asset.id, 0), 0),
   ).toBe(true);
-  expect(calls).toContain("/fixture");
+  expect(calls).toEqual([
+    "/v1/user/quota",
+    "/v1/sub/search",
+    "/v1/sub/detail",
+    "/v1/sub/detail",
+    "/v1/sub/detail",
+    "/fixture",
+  ]);
   await f.db.mediaSubtitlePolicyVersion.create({
     data: {
       mediaId: f.media.id,

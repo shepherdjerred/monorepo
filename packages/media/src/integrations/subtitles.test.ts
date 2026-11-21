@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { OpenSubtitlesProvider, AssrtProvider } from "./subtitle-providers.ts";
 import {
   chineseScriptEvidence,
@@ -289,6 +289,59 @@ describe("subtitle provider boundaries", () => {
     ]);
   });
 
+  it("ASSRT accepts numeric and decimal-string file IDs and verifies detail identity", async () => {
+    const calls: string[] = [];
+    const provider = new AssrtProvider("fixture-token", async (url) => {
+      calls.push(url.pathname);
+      if (url.pathname === "/v1/sub/search") {
+        expect(url.searchParams.get("is_file")).toBe("1");
+        expect(url.searchParams.get("cnt")).toBe("15");
+        return Response.json({
+          status: 0,
+          sub: { subs: [{ id: 41 }, { fileid: "42" }, { fileid: 43 }] },
+        });
+      }
+      expect(url.pathname).toBe("/v1/sub/detail");
+      expect(url.searchParams.get("id")).toBe("42");
+      return Response.json({ status: 0, sub: { subs: [{ id: 43 }] } });
+    });
+    const results = await provider.search("Fixture");
+    expect(results).toEqual([{ id: 41 }, { fileid: 42 }, { fileid: 43 }]);
+    const raw = results[1];
+    if (raw === undefined || !("fileid" in raw))
+      throw new Error("Missing raw ASSRT search record");
+    await expect(
+      provider.downloadMember(raw.fileid, "Fixture.srt"),
+    ).rejects.toMatchObject({ kind: "invalid-response" });
+    expect(calls).toEqual(["/v1/sub/search", "/v1/sub/detail"]);
+  });
+
+  it("ASSRT rejects malformed and unsafe raw file IDs during search", async () => {
+    for (const fileid of [
+      true,
+      0,
+      -42,
+      4.2,
+      Number.MAX_SAFE_INTEGER + 1,
+      "",
+      " 42",
+      "42\n",
+      "+42",
+      "4e2",
+      "4.2",
+      "0x2a",
+      "9007199254740992",
+    ]) {
+      const provider = new AssrtProvider("fixture-token", async (url) => {
+        expect(url.pathname).toBe("/v1/sub/search");
+        return Response.json({ status: 0, sub: { subs: [{ fileid }] } });
+      });
+      await expect(provider.search("Fixture")).rejects.toMatchObject({
+        kind: "invalid-response",
+      });
+    }
+  });
+
   it("ASSRT keeps auth out of URLs and selects one exact pack member", async () => {
     const provider = new AssrtProvider("fixture-token", async (url, init) => {
       expect(url.search).not.toContain("token");
@@ -375,4 +428,190 @@ describe("subtitle provider boundaries", () => {
       "interaction-required",
     );
   });
+});
+
+const quotaReply = (calls: string[], quota: number) => async (url: URL) => {
+  calls.push(url.pathname);
+  return Response.json({ status: 0, user: { quota } });
+};
+
+describe("ASSRT request pacing", () => {
+  it("counts the quota request and spaces authenticated search and detail", async () => {
+    const calls: string[] = [];
+    let previousMetadataAt: number | undefined;
+    const provider = new AssrtProvider("fixture-token", async (url, init) => {
+      calls.push(url.pathname);
+      const token = new Headers(init.headers).get("authorization");
+      if (url.hostname !== "api.assrt.net") {
+        expect(token).toBeNull();
+        return new Response("caption");
+      }
+      expect(token).toBe("Bearer fixture-token");
+      const now = performance.now();
+      if (previousMetadataAt !== undefined)
+        expect(now - previousMetadataAt).toBeGreaterThanOrEqual(1000);
+      previousMetadataAt = now;
+      if (url.pathname === "/v1/user/quota")
+        return Response.json({ status: 0, user: { quota: 60 } });
+      if (url.pathname === "/v1/sub/search")
+        return Response.json({ status: 0, sub: { subs: [{ fileid: "42" }] } });
+      expect(url.pathname).toBe("/v1/sub/detail");
+      return Response.json({
+        status: 0,
+        sub: {
+          subs: [
+            {
+              id: 42,
+              filelist: [
+                {
+                  f: "fixture.srt",
+                  url: "https://file0.assrt.net/fixture",
+                },
+              ],
+            },
+          ],
+        },
+      });
+    });
+    await expect(provider.paceLookup(105_000)).resolves.toBe(1);
+    await expect(provider.search("Fixture")).resolves.toEqual([{ fileid: 42 }]);
+    const download = await provider.downloadMember(42, "fixture.srt");
+    expect(new TextDecoder().decode(download)).toBe("caption");
+    expect(calls).toEqual([
+      "/v1/user/quota",
+      "/v1/sub/search",
+      "/v1/sub/detail",
+      "/fixture",
+    ]);
+  });
+
+  it("defers early when the quota slot cannot fit and aborts a pending metadata wait", async () => {
+    const calls: string[] = [];
+    const lowBudget = new AssrtProvider("fixture-token", quotaReply(calls, 5));
+    await expect(lowBudget.paceLookup(11_999)).resolves.toBe(12);
+    await expect(lowBudget.search("Fixture")).rejects.toMatchObject({
+      kind: "rate-limited",
+      retryAfterSeconds: 12,
+    });
+
+    const controller = new AbortController();
+    const cancelled = new AssrtProvider("fixture-token", quotaReply(calls, 1));
+    await expect(
+      cancelled.paceLookup(105_000, {
+        observed: { wall: Date.now(), monotonic: performance.now() },
+        signal: controller.signal,
+      }),
+    ).resolves.toBe(60);
+    const search = cancelled.search("Fixture");
+    controller.abort();
+    await expect(search).rejects.toMatchObject({ kind: "unavailable" });
+    expect(calls).toEqual(["/v1/user/quota", "/v1/user/quota"]);
+  });
+
+  it("clips ASSRT to the earlier authority deadline instead of the full invocation", async () => {
+    const calls: string[] = [];
+    const provider = new AssrtProvider("fixture-token", quotaReply(calls, 5));
+    const wall = Date.now();
+    await provider.paceLookup(105_000, {
+      observed: { wall, monotonic: performance.now() },
+      expiresAtMs: wall + 16_000,
+      signal: new AbortController().signal,
+    });
+    await expect(provider.search("Fixture")).rejects.toMatchObject({
+      kind: "rate-limited",
+      retryAfterSeconds: 12,
+    });
+    expect(calls).toEqual(["/v1/user/quota"]);
+  });
+
+  it("charges previous provider time even when the wall clock moves backwards", async () => {
+    const calls: string[] = [];
+    const provider = new AssrtProvider("fixture-token", quotaReply(calls, 5));
+    const wall = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(wall - 20_000);
+    try {
+      await provider.paceLookup(105_000, {
+        observed: {
+          wall: wall - 100_000,
+          monotonic: performance.now() - 100_000,
+        },
+        expiresAtMs: wall + 120_000,
+        signal: new AbortController().signal,
+      });
+      await expect(provider.search("Fixture")).rejects.toMatchObject({
+        kind: "rate-limited",
+      });
+      expect(calls).toEqual(["/v1/user/quota"]);
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it("leaves the download outcome unknown if authority aborts the second detail call", async () => {
+    const calls: string[] = [];
+    const controller = new AbortController();
+    const provider = new AssrtProvider("fixture-token", async (url) => {
+      calls.push(url.pathname);
+      if (url.pathname === "/v1/user/quota")
+        return Response.json({ status: 0, user: { quota: 60 } });
+      expect(url.pathname).toBe("/v1/sub/detail");
+      if (calls.length === 3) {
+        controller.abort();
+        throw new DOMException("Fixture cancellation", "AbortError");
+      }
+      return Response.json({ status: 0, sub: { subs: [{ id: 42 }] } });
+    });
+    await provider.paceLookup(105_000, {
+      observed: { wall: Date.now(), monotonic: performance.now() },
+      signal: controller.signal,
+    });
+    await expect(provider.detail(42)).resolves.toMatchObject({ id: 42 });
+    await expect(
+      provider.downloadMember(42, "Fixture.srt"),
+    ).rejects.toMatchObject({ kind: "outcome-unknown" });
+    expect(calls).toEqual([
+      "/v1/user/quota",
+      "/v1/sub/detail",
+      "/v1/sub/detail",
+    ]);
+  });
+
+  it("only treats a status-less HTTP transport timeout as unknown after the download claim", async () => {
+    const provider = new AssrtProvider("fixture-token", async () => {
+      throw new DOMException("Fixture HTTP deadline", "TimeoutError");
+    });
+    await expect(provider.detail(42)).rejects.toMatchObject({
+      kind: "unavailable",
+    });
+    await expect(
+      provider.downloadMember(42, "Fixture.srt"),
+    ).rejects.toMatchObject({ kind: "outcome-unknown" });
+
+    const rejected = new AssrtProvider("fixture-token", async () =>
+      Response.json({}, { status: 503 }),
+    );
+    await expect(
+      rejected.downloadMember(42, "Fixture.srt"),
+    ).rejects.toMatchObject({ kind: "unavailable", status: 503 });
+  });
+
+  it.each([
+    { id: 43, kind: "invalid-response" },
+    { id: 42, kind: "conflict" },
+  ])(
+    "preserves definitive $kind during concurrent cancellation",
+    async ({ id, kind }) => {
+      const controller = new AbortController();
+      const calls: string[] = [];
+      const provider = new AssrtProvider("fixture-token", async (url) => {
+        calls.push(url.pathname);
+        controller.abort();
+        return Response.json({ status: 0, sub: { subs: [{ id }] } });
+      });
+      await expect(
+        provider.downloadMember(42, "Fixture.srt", controller.signal),
+      ).rejects.toMatchObject({ kind });
+      expect(calls).toEqual(["/v1/sub/detail"]);
+    },
+  );
 });

@@ -1,4 +1,6 @@
+import { setTimeout as delay } from "node:timers/promises";
 import { z } from "zod";
+import type { AssrtLookupInvocation } from "#domain/subtitle-maintenance/provider.ts";
 import {
   endpoint,
   IntegrationError,
@@ -195,8 +197,9 @@ export class OpenSubtitlesProvider {
   }
 }
 
+const AssrtSubtitleIdSchema = z.int().positive();
 const AssrtSubtitleSchema = z.object({
-  id: z.number().int().positive(),
+  id: AssrtSubtitleIdSchema,
   videoname: z.string().optional(),
   native_name: z.union([z.string(), z.array(z.string())]).optional(),
   title: z.string().optional(),
@@ -214,11 +217,116 @@ const AssrtSubtitleSchema = z.object({
     .optional(),
 });
 
+function assrtLookupDeadline(
+  maximumMs: number,
+  now: number,
+  invocation: AssrtLookupInvocation,
+): number {
+  const { observed, expiresAtMs } = invocation;
+  // Keep the earlier authority window and reserve time for fallback or persistence.
+  const wallDeadline = Math.min(
+    observed.wall + maximumMs,
+    (expiresAtMs ?? Infinity) - 5000,
+  );
+  return Math.min(
+    observed.monotonic + (wallDeadline - observed.wall),
+    now + (wallDeadline - Date.now()),
+  );
+}
+
 export class AssrtProvider {
+  private pacing?: {
+    intervalSeconds: number;
+    nextRequestAtMs: number;
+    deadlineMs: number;
+    signal: AbortSignal;
+  };
+
   constructor(
     private readonly token: string,
     private readonly transport: FetchTransport = fetch,
   ) {}
+
+  /** Each production lookup starts with the quota GET, which also consumes a request. */
+  async paceLookup(
+    maximumMs: number,
+    invocation?: AssrtLookupInvocation,
+  ): Promise<number> {
+    const now = performance.now();
+    const deadlineMs =
+      invocation === undefined
+        ? now + maximumMs
+        : assrtLookupDeadline(maximumMs, now, invocation);
+    const timeoutMs = Math.floor(deadlineMs - now);
+    const signal = invocation?.signal;
+    if (
+      !Number.isSafeInteger(timeoutMs) ||
+      timeoutMs <= 0 ||
+      signal?.aborted === true
+    )
+      throw new IntegrationError("assrt", "unavailable");
+    const timeout = AbortSignal.timeout(timeoutMs);
+    const lookupSignal =
+      signal === undefined ? timeout : AbortSignal.any([signal, timeout]);
+    const data = await this.get("user/quota", {}, lookupSignal);
+    const response = z
+      .object({
+        status: z.literal(0),
+        user: z.object({ quota: z.int().positive() }),
+      })
+      .safeParse(data);
+    if (!response.success)
+      throw new IntegrationError("assrt", "invalid-response");
+    const intervalSeconds = Math.ceil(60 / response.data.user.quota);
+    this.pacing = {
+      intervalSeconds,
+      nextRequestAtMs: performance.now() + intervalSeconds * 1000,
+      deadlineMs,
+      signal: lookupSignal,
+    };
+    return intervalSeconds;
+  }
+
+  /** Reserve time for the next metadata GET before journaling a download. */
+  async waitForMetadataSlot(signal?: AbortSignal): Promise<void> {
+    const pacing = this.pacing;
+    if (pacing === undefined) return;
+    const lookupSignal = this.lookupSignal(signal);
+    for (;;) {
+      const now = performance.now();
+      if (lookupSignal?.aborted === true || now >= pacing.deadlineMs)
+        throw new IntegrationError("assrt", "unavailable");
+      const waitMs = Math.ceil(pacing.nextRequestAtMs - now);
+      if (waitMs <= 0) return;
+      if (now + waitMs >= pacing.deadlineMs)
+        throw new IntegrationError(
+          "assrt",
+          "rate-limited",
+          undefined,
+          pacing.intervalSeconds,
+        );
+      try {
+        await delay(waitMs, undefined, { signal: lookupSignal });
+      } catch {
+        throw new IntegrationError("assrt", "unavailable");
+      }
+    }
+  }
+
+  private lookupSignal(signal?: AbortSignal): AbortSignal | undefined {
+    const pacing = this.pacing;
+    if (pacing === undefined) return signal;
+    return signal === undefined
+      ? pacing.signal
+      : AbortSignal.any([signal, pacing.signal]);
+  }
+
+  private lookupExpired(signal: AbortSignal | undefined): boolean {
+    return (
+      signal?.aborted === true ||
+      (this.pacing !== undefined && performance.now() >= this.pacing.deadlineMs)
+    );
+  }
 
   async search(query: string, offset = 0, signal?: AbortSignal) {
     z.string().trim().min(3).max(200).parse(query);
@@ -228,7 +336,7 @@ export class AssrtProvider {
       { q: query, pos: String(offset), cnt: "15", is_file: "1" },
       signal,
     );
-    return z
+    const response = z
       .object({
         status: z.literal(0),
         sub: z.object({
@@ -236,25 +344,38 @@ export class AssrtProvider {
             z.union([
               AssrtSubtitleSchema,
               z.object({
-                fileid: z.number().int().positive(),
+                fileid: z.union([
+                  AssrtSubtitleIdSchema,
+                  z
+                    .string()
+                    .regex(/^\d+$/u)
+                    .transform(Number)
+                    .pipe(AssrtSubtitleIdSchema),
+                ]),
                 filename: z.string().optional(),
               }),
             ]),
           ),
         }),
       })
-      .parse(data).sub.subs;
+      .safeParse(data);
+    if (!response.success)
+      throw new IntegrationError("assrt", "invalid-response");
+    return response.data.sub.subs;
   }
 
   async detail(id: number, signal?: AbortSignal) {
-    z.number().int().positive().parse(id);
+    AssrtSubtitleIdSchema.parse(id);
     const data = await this.get("sub/detail", { id: String(id) }, signal);
-    const parsed = z
+    const response = z
       .object({
         status: z.literal(0),
         sub: z.object({ subs: z.array(AssrtSubtitleSchema).length(1) }),
       })
-      .parse(data).sub.subs[0];
+      .safeParse(data);
+    if (!response.success)
+      throw new IntegrationError("assrt", "invalid-response");
+    const parsed = response.data.sub.subs[0];
     if (parsed?.id !== id)
       throw new IntegrationError("assrt", "invalid-response");
     return parsed;
@@ -266,26 +387,53 @@ export class AssrtProvider {
     filename: string,
     signal?: AbortSignal,
   ): Promise<Uint8Array<ArrayBuffer>> {
-    const detail = await this.detail(id, signal);
-    const members =
-      detail.filelist?.filter((file) => file.f === filename) ?? [];
-    const member = members[0];
-    const link =
-      member !== undefined && members.length === 1
-        ? member.url
-        : detail.filename === filename && detail.filelist?.length === 0
-          ? detail.url
-          : undefined;
-    if (link === undefined) throw new IntegrationError("assrt", "conflict");
-    const url = allowedSubtitleUrl(link, [
-      "file0.assrt.net",
-      "file1.assrt.net",
-      "file.assrt.net",
-    ]);
-    const response = await request(this.transport, "assrt", url, {
-      ...(signal === undefined ? {} : { signal }),
-    });
-    return await boundedBytes(response, 8 * 1024 * 1024, "assrt");
+    const lookupSignal = this.lookupSignal(signal);
+    try {
+      if (this.lookupExpired(lookupSignal))
+        throw new IntegrationError("assrt", "outcome-unknown");
+      const detail = await this.detail(id, signal);
+      const members =
+        detail.filelist?.filter((file) => file.f === filename) ?? [];
+      const member = members[0];
+      const link =
+        member !== undefined && members.length === 1
+          ? member.url
+          : detail.filename === filename && detail.filelist?.length === 0
+            ? detail.url
+            : undefined;
+      if (link === undefined) throw new IntegrationError("assrt", "conflict");
+      const url = allowedSubtitleUrl(link, [
+        "file0.assrt.net",
+        "file1.assrt.net",
+        "file.assrt.net",
+      ]);
+      if (this.lookupExpired(lookupSignal))
+        throw new IntegrationError("assrt", "outcome-unknown");
+      const response = await request(this.transport, "assrt", url, {
+        ...(lookupSignal === undefined ? {} : { signal: lookupSignal }),
+      });
+      const bytes = await boundedBytes(response, 8 * 1024 * 1024, "assrt");
+      if (this.lookupExpired(lookupSignal))
+        throw new IntegrationError("assrt", "outcome-unknown");
+      return bytes;
+    } catch (error) {
+      return this.throwDownloadFailure(error, lookupSignal);
+    }
+  }
+
+  private throwDownloadFailure(error: unknown, signal?: AbortSignal): never {
+    const failure = error instanceof IntegrationError ? error : undefined;
+    // A known HTTP or matching failure remains definitive even if cancellation arrives.
+    const definitive =
+      failure?.status !== undefined ||
+      failure?.kind === "conflict" ||
+      failure?.kind === "invalid-response";
+    if (
+      !definitive &&
+      (failure?.kind === "unavailable" || this.lookupExpired(signal))
+    )
+      throw new IntegrationError("assrt", "outcome-unknown");
+    throw error;
   }
 
   private async get(
@@ -293,16 +441,33 @@ export class AssrtProvider {
     parameters: Record<string, string>,
     signal?: AbortSignal,
   ): Promise<unknown> {
+    await this.waitForMetadataSlot(signal);
     const url = endpoint("https://api.assrt.net/v1", path);
     url.search = new URLSearchParams(parameters).toString();
-    const response = await request(this.transport, "assrt", url, {
-      headers: {
-        Authorization: `Bearer ${this.token}`,
-        Accept: "application/json",
-      },
-      ...(signal === undefined ? {} : { signal }),
-    });
-    return await json(response, "assrt");
+    const lookupSignal = this.lookupSignal(signal);
+    try {
+      const response = await request(this.transport, "assrt", url, {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          Accept: "application/json",
+        },
+        ...(lookupSignal === undefined ? {} : { signal: lookupSignal }),
+      });
+      return await json(response, "assrt");
+    } catch (error) {
+      if (
+        error instanceof IntegrationError &&
+        error.kind === "invalid-response" &&
+        this.lookupExpired(lookupSignal)
+      )
+        throw new IntegrationError("assrt", "unavailable");
+      throw error;
+    } finally {
+      const pacing = this.pacing;
+      if (pacing !== undefined)
+        pacing.nextRequestAtMs =
+          performance.now() + pacing.intervalSeconds * 1000;
+    }
   }
 }
 
