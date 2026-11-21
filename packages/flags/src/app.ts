@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { serveStatic } from "hono/bun";
+import { serveStatic } from "@hono/bun";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
 import { flagDeployments } from "@shepherdjerred/feature-flags/deployments.ts";
