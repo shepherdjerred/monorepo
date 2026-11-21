@@ -56,15 +56,26 @@ function episodeNumbers(
 }
 
 /**
+ * Whether an episode has a name of its own. Until one is announced the
+ * catalog calls it by its number ("Episode 10"), which says nothing the
+ * number beside it has not said.
+ */
+function hasOwnName(title: string, episode: number): boolean {
+  return title.trim().toLowerCase() !== `episode ${String(episode)}`;
+}
+
+/**
  * What a release is, in a sentence's worth: which episode, or which kind of
  * film release.
  */
 export function releaseDetail(event: CalendarEvent): string {
   if (event.kind !== "episode") return RELEASE_KIND_COPY[event.kind].label;
   const numbers = episodeNumbers(event);
-  return numbers === null
-    ? event.title
-    : `Season ${String(numbers.season)}, episode ${String(numbers.episode)}: ${event.title}`;
+  if (numbers === null) return event.title;
+  const which = `Season ${String(numbers.season)}, episode ${String(numbers.episode)}`;
+  return hasOwnName(event.title, numbers.episode)
+    ? `${which}: ${event.title}`
+    : which;
 }
 
 /** The same in the room a calendar square has: "S2 E7", or the kind. */

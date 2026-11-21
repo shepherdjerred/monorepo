@@ -134,7 +134,18 @@ test("a release with no date keeps its own group and is put on no day", () => {
 test("a release is named by its series or its own title, and says what it is", () => {
   const aired = episode("e", "Severance", [2, 7], "2026-11-12");
   expect(releaseTitle(aired)).toBe("Severance");
-  expect(releaseDetail(aired)).toBe("Season 2, episode 7: Episode 7");
+  // Named only by its number so far: the number is said once.
+  expect(releaseDetail(aired)).toBe("Season 2, episode 7");
+  expect(releaseDetail({ ...aired, title: " episode 7 " })).toBe(
+    "Season 2, episode 7",
+  );
+  expect(releaseDetail({ ...aired, title: "Chikhai Bardo" })).toBe(
+    "Season 2, episode 7: Chikhai Bardo",
+  );
+  // Another episode's number is a name of its own, however odd.
+  expect(releaseDetail({ ...aired, title: "Episode 8" })).toBe(
+    "Season 2, episode 7: Episode 8",
+  );
   expect(releaseShortDetail(aired)).toBe("S2 E7");
   // An episode the catalog has not numbered still has its name.
   const unnumbered = { ...aired, seasonNumber: null, episodeNumber: null };
