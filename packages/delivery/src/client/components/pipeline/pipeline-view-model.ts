@@ -8,6 +8,7 @@ import type {
   CiRunIntegration,
   CiWorkflow,
 } from "#shared/hub/integration-contract.ts";
+import { parseEvidenceSummary } from "#client/evidence.ts";
 
 const PRIORITY: PipelineStatus[] = [
   "failed",
@@ -107,6 +108,17 @@ export function stageSummary(stage: PipelineStage) {
 }
 
 /** A stage lists up to this many actions; a longer list collapses behind its summary. */
+/**
+ * The line under an action's title. A step reports prose or a machine receipt;
+ * a card has room for the prose, and the deployment the title links to shows
+ * the receipt as readable facts.
+ */
+export function actionDetail(action: PipelineAction): string | null {
+  if (action.detail === null) return null;
+  const message = parseEvidenceSummary(action.detail);
+  return message.kind === "text" ? message.text : null;
+}
+
 export const INLINE_ACTION_LIMIT = 5;
 
 /** The states that open a collapsed list, in the order they lead it. */

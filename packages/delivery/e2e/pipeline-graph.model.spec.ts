@@ -128,3 +128,15 @@ for (const scheme of ["light", "dark"] as const) {
     await expectAccessible(page, "/pipelines/arcade");
   });
 }
+
+test("a stage card leaves a step's machine receipt to the deployment page", async ({
+  page,
+}) => {
+  // The plan step reports the native job it started as a JSON receipt.
+  await page.goto("/pipelines/tofu-cloudflare");
+  const graph = page.getByRole("region", {
+    name: "OpenTofu cloudflare stack promotion",
+  });
+  await expect(graph.getByRole("link", { name: "step-plan" })).toBeVisible();
+  await expect(graph).not.toContainText('{"');
+});

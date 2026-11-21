@@ -60,14 +60,22 @@ export function formSearch(form: HTMLFormElement) {
   return values;
 }
 
+function searchText(search: object, name: string) {
+  const value: unknown = new Map<string, unknown>(Object.entries(search)).get(
+    name,
+  );
+  return typeof value === "string" ? value : "";
+}
+
 /**
  * Filter forms are uncontrolled, so their controls keep what was typed. After
  * a navigation that did not come from the form (Back, Forward, a link), each
- * form marked `data-search-form` shows the search the URL now carries. The
- * forms are never remounted, so a submit keeps focus where it was.
+ * form marked `data-search-form` shows the search the URL now carries. A
+ * control that no longer shows the previous URL's value holds an edit the
+ * reader has not submitted yet, and keeps it. The forms are never remounted,
+ * so a submit keeps focus where it was.
  */
-export function syncSearchForms(search: object) {
-  const values = new Map<string, unknown>(Object.entries(search));
+export function syncSearchForms(previous: object, next: object) {
   for (const form of document.querySelectorAll<HTMLFormElement>(
     "form[data-search-form]",
   ))
@@ -75,9 +83,8 @@ export function syncSearchForms(search: object) {
       if (
         (control instanceof HTMLInputElement ||
           control instanceof HTMLSelectElement) &&
-        control.name !== ""
-      ) {
-        const value = values.get(control.name);
-        control.value = typeof value === "string" ? value : "";
-      }
+        control.name !== "" &&
+        control.value === searchText(previous, control.name)
+      )
+        control.value = searchText(next, control.name);
 }

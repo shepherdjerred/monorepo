@@ -45,11 +45,13 @@ export function createDeliveryRouter(
       initial = false;
       return;
     }
-    requestAnimationFrame(() => {
-      syncSearchForms(router.state.location.search);
-      if (event.pathChanged)
+    // Synchronously, so a filter changed after this navigation is never
+    // overwritten by a late frame.
+    syncSearchForms(event.fromLocation?.search ?? {}, event.toLocation.search);
+    if (event.pathChanged)
+      requestAnimationFrame(() => {
         document.querySelector<HTMLElement>("#main-heading")?.focus();
-    });
+      });
   });
   return router;
 }
