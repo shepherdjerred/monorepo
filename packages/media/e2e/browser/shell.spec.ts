@@ -1,8 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import {
   canvasColor,
   computedForm,
   openAs,
+  test,
   violationDetails,
 } from "./support.ts";
 

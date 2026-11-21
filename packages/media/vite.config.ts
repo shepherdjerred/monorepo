@@ -19,6 +19,26 @@ export default defineConfig({
     // separate script chunks: a browser fixes the cascade layer order at the
     // first `@layer` it reads, and a single sheet always opens with it.
     cssCodeSplit: false,
+    // Every asset is its own file, however small: the Content-Security-Policy
+    // (`src/server/static/security-headers.ts`) allows no `data:` URL.
+    assetsInlineLimit: 0,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              // zod and the module that configures it are one chunk, which
+              // every chunk that builds a schema imports. A chunk runs after
+              // the chunks it imports, so without this group the entry
+              // chunk's configuration would run after the shared chunks had
+              // already built their schemas (see `src/client/startup/zod.ts`).
+              name: "zod",
+              test: /\/node_modules\/zod\/|\/src\/client\/startup\/zod\.ts$/u,
+            },
+          ],
+        },
+      },
+    },
   },
   server: {
     host: "127.0.0.1",

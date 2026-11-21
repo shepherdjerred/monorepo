@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
 import { KNOWN_VIOLATIONS } from "./axe-baseline.ts";
 import { ROUTES, type RouteCase } from "./routes.ts";
@@ -8,12 +8,17 @@ import {
   accessibilityViolations,
   canvasColor,
   computedForm,
+  test,
 } from "./support.ts";
 
 const SCHEMES = ["light", "dark"] as const;
 const DIST_ASSETS = path.resolve(import.meta.dir, "../../dist/assets");
 
-/** Everything a page can do wrong without failing an assertion on its text. */
+/**
+ * Everything a page can do wrong without failing an assertion on its text.
+ * Content-Security-Policy violations are watched for every test, by the
+ * suite's own `test` (`support.ts`).
+ */
 function watchForFailures(page: Page, origin: string): string[] {
   const failures: string[] = [];
   // The client is self-contained: fonts, styles, and scripts all come from

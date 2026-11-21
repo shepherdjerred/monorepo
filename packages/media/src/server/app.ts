@@ -37,7 +37,7 @@ import {
   type NativeRecoveryAdministration,
 } from "./native-recovery-routes.ts";
 import { deleteCookie, setCookie } from "hono/cookie";
-import { secureHeaders } from "hono/secure-headers";
+import { mediaSecurityHeaders } from "./static/security-headers.ts";
 import { registerAdminRoutes, type AdminApplication } from "./admin-routes.ts";
 import { registerPlexRoutes, type PlexAdministration } from "./plex-routes.ts";
 import {
@@ -147,7 +147,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     sameSite: "Lax",
     path: "/",
   } satisfies Parameters<typeof setCookie>[3];
-  app.use(secureHeaders());
+  app.use(mediaSecurityHeaders());
   app.use(mediaRequestBodyLimit);
   app.use(async (c, next) => {
     const id = crypto.randomUUID();
