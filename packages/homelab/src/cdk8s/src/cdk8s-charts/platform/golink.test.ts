@@ -105,7 +105,7 @@ describe("createGolinkChart", () => {
     expect(database.spec).toMatchObject({
       databases: { golink_db: "golink" },
       postgresql: { version: "18" },
-      volume: { size: "32Gi" },
+      volume: { size: "32Gi", storageClass: "zfs-ssd-lz4" },
     });
 
     const deploymentSpec = GolinkDeploymentSpecSchema.parse(

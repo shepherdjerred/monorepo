@@ -12,12 +12,15 @@ import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resou
 // enumeration name, which is NOT stable across reboots or slot changes. The
 // stable serial + model live only on the nvme_device_info metric, so join it in
 // via group_left: every alert then carries `serial` and `model` and identifies
-// the physical drive instead of an enumeration slot. The join is evaluated per
-// scrape, so it always reflects the current device->serial mapping even when the
-// enumeration order flips. nvme_device_info has value 1, so the multiplication
-// leaves the alert's `$value` unchanged.
+// the physical drive instead of an enumeration slot. `pod` is required in the
+// join key because `node-exporter` uses `hostNetwork`: across a reboot that
+// swaps `nvme0n1` <-> `nvme1n1`, pre- and post-reboot pods share `(device,
+// instance)` inside Prometheus's 5m staleness window and fail `many-to-many`
+// without `pod`, while `bySerial` still aggregates `max by (node, instance,
+// serial, model)` into one continuous series per drive. nvme_device_info has
+// value 1, so the multiplication leaves the alert's `$value` unchanged.
 function withNvmeIdentity(expr: string): string {
-  return `(${expr}) * on(device, instance) group_left(serial, model) nvme_device_info`;
+  return `(${expr}) * on(device, instance, pod) group_left(serial, model) nvme_device_info`;
 }
 
 // Rate and trend rules look back days, across reboots that can swap device
@@ -156,16 +159,21 @@ function getNvmeWriteBudgetRuleGroup(): PrometheusRuleSpecGroups {
     interval: "5m",
     rules: [
       // Physical bytes the host wrote to each drive: what wears the flash.
+      // `nvme_data_units_written_total` is a non-volatile SMART firmware counter
+      // that never resets to 0, whereas consumer SSDs without power-loss
+      // protection can step backward slightly after an unsafe shutdown, causing
+      // `increase()` to hallucinate a lifetime-TBW reset. `clamp_min(delta(...), 0)`
+      // measures the true net physical writes without phantom reset spikes.
       {
         record: NVME_DRIVE_WRITTEN_BYTES_24H,
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `increase(${bySerial("nvme_data_units_written_total")}[24h:5m]) * ${String(NVME_DATA_UNIT_BYTES)}`,
+          `clamp_min(delta(${bySerial("nvme_data_units_written_total")}[24h:5m]), 0) * ${String(NVME_DATA_UNIT_BYTES)}`,
         ),
       },
       {
         record: NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D,
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `increase(${bySerial("nvme_data_units_written_total")}[7d:1h]) * ${String(NVME_DATA_UNIT_BYTES)} / 7`,
+          `clamp_min(delta(${bySerial("nvme_data_units_written_total")}[7d:1h]), 0) * ${String(NVME_DATA_UNIT_BYTES)} / 7`,
         ),
       },
       {

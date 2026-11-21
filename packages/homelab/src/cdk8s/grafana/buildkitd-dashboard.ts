@@ -6,9 +6,9 @@ import {
 } from "./shared/dashboard-panels.ts";
 
 // PromQL-side constants so the chart shows the designed bounds from
-// resources/buildkitd.ts: GC keeps 240 GiB of the 300 GiB cache volume, and
+// resources/buildkitd.ts: GC keeps 480 GiB of the 600 GiB cache volume, and
 // the container memory limit is 32 GiB.
-const GC_KEEP_BYTES_EXPR = "vector(240 * 1024 * 1024 * 1024)";
+const GC_KEEP_BYTES_EXPR = "vector(480 * 1024 * 1024 * 1024)";
 const MEMORY_LIMIT_BYTES_EXPR = "vector(32 * 1024 * 1024 * 1024)";
 
 /**
@@ -100,7 +100,7 @@ export function createBuildkitdDashboard() {
         },
         {
           query: GC_KEEP_BYTES_EXPR,
-          legend: "GC floor (240Gi)",
+          legend: "GC floor (480Gi)",
         },
         {
           query: `kubelet_volume_stats_capacity_bytes{namespace="buildkitd", persistentvolumeclaim=~"buildkitd-cache.*"}`,
