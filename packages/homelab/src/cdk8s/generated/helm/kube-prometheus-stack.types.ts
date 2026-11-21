@@ -1273,7 +1273,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    * Be aware that this is an early beta of this feature,
    * kube-prometheus-stack does not guarantee this works and is subject to change.
    * Being BETA this can/will change in the future without notice, do not use unless you want to take that risk
-   * [[ref]](https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io%2fv1alpha2)
+   * [[ref]](https://gateway-api.sigs.k8s.io/reference/api-spec/main/spec/#gatewaynetworkingk8siov1alpha2)
    *
    * @default {...} (7 keys)
    */
@@ -1319,7 +1319,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    * Settings affecting alertmanagerSpec
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#alertmanagerspec
    *
-   * @default {...} (16 keys)
+   * @default {...} (17 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesAlertmanagerServiceMonitor;
   /**
@@ -2147,6 +2147,13 @@ export type KubeprometheusstackHelmValuesAlertmanagerServiceMonitor = {
    */
   additionalLabels?: KubeprometheusstackHelmValuesAlertmanagerServiceMonitorAdditionalLabels;
   /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
+  /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
    * @default 0
@@ -2555,7 +2562,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.34.1"
+   * @default "v0.34.2"
    */
   tag?: string;
   /**
@@ -3264,7 +3271,7 @@ export type KubeprometheusstackHelmValuesKubeApiServer = {
    */
   tlsConfig?: KubeprometheusstackHelmValuesKubeApiServerTlsConfig;
   /**
-   * @default {...} (15 keys)
+   * @default {...} (16 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeApiServerServiceMonitor;
   /**
@@ -3335,6 +3342,13 @@ export type KubeprometheusstackHelmValuesKubeApiServerServiceMonitor = {
    * @default {"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}
    */
   authorization?: KubeprometheusstackHelmValuesKubeApiServerServiceMonitorAuthorization;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -3469,7 +3483,7 @@ export type KubeprometheusstackHelmValuesKubelet = {
    */
   jobNameOverride?: string;
   /**
-   * @default {...} (31 keys)
+   * @default {...} (32 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeletServiceMonitor;
 };
@@ -3517,6 +3531,13 @@ export type KubeprometheusstackHelmValuesKubeletServiceMonitor = {
    * @default true
    */
   trackTimestampsStaleness?: boolean;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -3804,7 +3825,7 @@ export type KubeprometheusstackHelmValuesKubeControllerManager = {
    */
   service?: KubeprometheusstackHelmValuesKubeControllerManagerService;
   /**
-   * @default {...} (18 keys)
+   * @default {...} (19 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitor;
 };
@@ -3846,6 +3867,13 @@ export type KubeprometheusstackHelmValuesKubeControllerManagerServiceMonitor = {
    * @default ""
    */
   interval?: string;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -4003,7 +4031,7 @@ export type KubeprometheusstackHelmValuesCoreDns = {
    */
   service?: KubeprometheusstackHelmValuesCoreDnsService;
   /**
-   * @default {...} (16 keys)
+   * @default {...} (17 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesCoreDnsServiceMonitor;
 };
@@ -4050,6 +4078,13 @@ export type KubeprometheusstackHelmValuesCoreDnsServiceMonitor = {
    * @default ""
    */
   interval?: string;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -4159,7 +4194,7 @@ export type KubeprometheusstackHelmValuesKubeDns = {
    */
   service?: KubeprometheusstackHelmValuesKubeDnsService;
   /**
-   * @default {...} (16 keys)
+   * @default {...} (17 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeDnsServiceMonitor;
 };
@@ -4220,6 +4255,13 @@ export type KubeprometheusstackHelmValuesKubeDnsServiceMonitor = {
    * @default ""
    */
   interval?: string;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -4333,7 +4375,7 @@ export type KubeprometheusstackHelmValuesKubeEtcd = {
    */
   service?: KubeprometheusstackHelmValuesKubeEtcdService;
   /**
-   * @default {...} (18 keys)
+   * @default {...} (19 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeEtcdServiceMonitor;
 };
@@ -4380,6 +4422,13 @@ export type KubeprometheusstackHelmValuesKubeEtcdServiceMonitor = {
    * @default ""
    */
   interval?: string;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -4528,7 +4577,7 @@ export type KubeprometheusstackHelmValuesKubeScheduler = {
    */
   service?: KubeprometheusstackHelmValuesKubeSchedulerService;
   /**
-   * @default {...} (19 keys)
+   * @default {...} (20 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeSchedulerServiceMonitor;
 };
@@ -4569,6 +4618,13 @@ export type KubeprometheusstackHelmValuesKubeSchedulerServiceMonitor = {
    * @default ""
    */
   interval?: string;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -4760,7 +4816,7 @@ export type KubeprometheusstackHelmValuesKubeProxy = {
    */
   service?: KubeprometheusstackHelmValuesKubeProxyService;
   /**
-   * @default {...} (18 keys)
+   * @default {...} (19 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesKubeProxyServiceMonitor;
 };
@@ -4807,6 +4863,13 @@ export type KubeprometheusstackHelmValuesKubeProxyServiceMonitor = {
    * @default ""
    */
   interval?: string;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -5461,7 +5524,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
    * - --labels="cluster=talos-cluster"
    * Create a servicemonitor for the operator
    *
-   * @default {...} (11 keys)
+   * @default {...} (12 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesPrometheusOperatorServiceMonitor;
   /**
@@ -5565,7 +5628,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
   secretFieldSelector?: string;
   /**
    * Feature gates to enable/disable operator features, rendered as --feature-gates=<key>=<value>.
-   * See https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/feature-gates.md
+   * See https://prometheus-operator.dev/docs/platform/operator/ (`-feature-gates`)
    * Example:
    * featureGates:
    * StatusForConfigurationResources: true
@@ -5720,7 +5783,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooks = {
    */
   deployment?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeployment;
   /**
-   * @default {...} (12 keys)
+   * @default {...} (13 keys)
    */
   patch?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatch;
   /**
@@ -6263,6 +6326,18 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     image?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchImage;
     /**
+     * Type of the secret created by the certgen job. Requires kube-webhook-certgen 1.11.0 or newer.
+     * kubernetes.io/tls stores the certificates as ca.crt, tls.crt and tls.key. An existing Opaque secret is
+     * deleted and recreated as kubernetes.io/tls with the same certificates, keeping the legacy ca, cert and key entries.
+     * Set to "" to keep the previous Opaque secret with ca, cert and key, e.g. when using an older certgen image.
+     * Without cert-manager and the certgen job, the chart reads ca, cert and key from the <fullname>-admission secret.
+     * A secret created by this job as kubernetes.io/tls only contains ca.crt, tls.crt and tls.key, so replace it
+     * before disabling the job or the admission webhooks while prometheusOperator.tls.enabled is true.
+     *
+     * @default "kubernetes.io/tls"
+     */
+    secretType?: string;
+    /**
      * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
      */
     resources?: {
@@ -6330,7 +6405,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     repository?: string;
     /**
-     * @default "1.8.9"
+     * @default "1.11.1"
      */
     tag?: string;
     /**
@@ -6682,7 +6757,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorPodDisruptionBudget =
 export type KubeprometheusstackHelmValuesPrometheusOperatorKubeletService = {
   /**
    * If true, the operator will create and maintain a service for scraping kubelets
-   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/helm/prometheus-operator/README.md
+   * ref: https://prometheus-operator.dev/docs/platform/operator/ (`-kubelet-service`)
    *
    * @default true
    */
@@ -6722,6 +6797,13 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorServiceMonitor = {
    * @default ""
    */
   interval?: string;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -6948,7 +7030,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorThanosImage = {
    */
   repository?: string;
   /**
-   * @default "v0.42.4"
+   * @default "v0.42.5"
    */
   tag?: string;
   /**
@@ -6980,11 +7062,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    */
   annotations?: KubeprometheusstackHelmValuesPrometheusAnnotations;
   /**
-   * Name of the PodMonitor to create
-   * Additional labels to set used for the PodMonitorSelector. Together with standard labels from
-   * the chart
-   * Pod label for use in assembling a job name of the form <label value>-<port>
-   * If no label is specified, the pod endpoint name is used.
+   * Additional labels for Prometheus
    *
    * @default {}
    */
@@ -6999,6 +7077,22 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    * @default {...} (5 keys)
    */
   serviceAccount?: KubeprometheusstackHelmValuesPrometheusServiceAccount;
+  /**
+   * Scrape class for the control-plane ServiceMonitors (kubelet, kubeApiServer, kubeControllerManager,
+   * kubeScheduler, kubeEtcd, kubeProxy, coreDns and kubeDns), as an alternative to the Secret above.
+   * When enabled, the class is appended to `prometheusSpec.scrapeClasses` and each control-plane
+   * ServiceMonitor selects it in place of its `serviceMonitor.authorization`. A ServiceMonitor whose `serviceMonitor.scrapeClass` names a
+   * different class keeps its own `authorization`.
+   * The default authorization reads the Prometheus pod's projected service account token, which the
+   * kubelet rotates, so no long-lived token is needed; set `serviceAccount.createTokenSecret` to false
+   * once every control-plane component uses this class.
+   * Only applies to this chart's Prometheus (`prometheus.enabled`). Other scrapers that read these
+   * ServiceMonitors, such as Grafana Alloy, do not support scrape classes and still need the Secret.
+   * ref: https://prometheus-operator.dev/docs/developer/scrapeclass/
+   *
+   * @default {"enabled":false,"name":"kube-prometheus-stack-control-plane","authorization":{"type":"Bearer","credentialsFile":"/var/run/secrets/kubernetes.io/serviceaccount/token"}}
+   */
+  controlPlaneScrapeClass?: KubeprometheusstackHelmValuesPrometheusControlPlaneScrapeClass;
   /**
    * Service for thanos service discovery on sidecar
    * Enable this can make Thanos Query can use
@@ -7074,7 +7168,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    * Be aware that this is an early beta of this feature,
    * kube-prometheus-stack does not guarantee this works and is subject to change.
    * Being BETA this can/will change in the future without notice, do not use unless you want to take that risk
-   * [[ref]](https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io%2fv1alpha2)
+   * [[ref]](https://gateway-api.sigs.k8s.io/reference/api-spec/main/spec/#gatewaynetworkingk8siov1alpha2)
    *
    * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostnames":[],"parentRefs":[],"httpsRedirect":false,"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"filters":[],"timeouts":{},"sessionPersistence":{},"additionalRules":[]}}
    */
@@ -7097,7 +7191,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    * Settings affecting prometheusSpec
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#prometheusspec
    *
-   * @default {...} (14 keys)
+   * @default {...} (15 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesPrometheusServiceMonitor;
   /**
@@ -7105,8 +7199,8 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    */
   prometheusSpec?: KubeprometheusstackHelmValuesPrometheusPrometheusSpec;
   additionalRulesForClusterRole?: unknown[];
-  additionalServiceMonitors?: unknown[];
-  additionalPodMonitors?: unknown[];
+  additionalServiceMonitors?: unknown;
+  additionalPodMonitors?: unknown;
 };
 
 export type KubeprometheusstackHelmValuesPrometheusAnnotations = {
@@ -7158,7 +7252,8 @@ export type KubeprometheusstackHelmValuesPrometheusServiceAccount = {
    * The control-plane ServiceMonitors reference it by default, because ServiceMonitors can only
    * authenticate through a Secret and Kubernetes no longer creates one automatically.
    * The resulting token is long-lived and does not expire; disable this and set the
-   * `authorization` values of the control-plane components if you manage the credential yourself.
+   * `authorization` values of the control-plane components if you manage the credential yourself,
+   * or enable `prometheus.controlPlaneScrapeClass` below to use the pod's projected token instead.
    * Only rendered together with the service account, so it requires `prometheus.enabled` and
    * `create` above. Leaving a control-plane component on the default `authorization` while the
    * Secret is not rendered is a rendering error rather than a silently broken ServiceMonitor.
@@ -7176,6 +7271,33 @@ export type KubeprometheusstackHelmValuesPrometheusServiceAccountAnnotations = {
    */
   [key: string]: unknown;
 };
+
+export type KubeprometheusstackHelmValuesPrometheusControlPlaneScrapeClass = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * @default "kube-prometheus-stack-control-plane"
+   */
+  name?: string;
+  /**
+   * @default {"type":"Bearer","credentialsFile":"/var/run/secrets/kubernetes.io/serviceaccount/token"}
+   */
+  authorization?: KubeprometheusstackHelmValuesPrometheusControlPlaneScrapeClassAuthorization;
+};
+
+export type KubeprometheusstackHelmValuesPrometheusControlPlaneScrapeClassAuthorization =
+  {
+    /**
+     * @default "Bearer"
+     */
+    type?: string;
+    /**
+     * @default "/var/run/secrets/kubernetes.io/serviceaccount/t..."
+     */
+    credentialsFile?: string;
+  };
 
 export type KubeprometheusstackHelmValuesPrometheusThanosService = {
   /**
@@ -8123,6 +8245,13 @@ export type KubeprometheusstackHelmValuesPrometheusServiceMonitor = {
    */
   additionalLabels?: KubeprometheusstackHelmValuesPrometheusServiceMonitorAdditionalLabels;
   /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
+  /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
    * @default 0
@@ -9027,7 +9156,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v3.15.0-distroless"
+   * @default "v3.16.0-distroless"
    */
   tag?: string;
   /**
@@ -9211,7 +9340,7 @@ export type KubeprometheusstackHelmValuesThanosRuler = {
    * Be aware that this is an early beta of this feature,
    * kube-prometheus-stack does not guarantee this works and is subject to change.
    * Being BETA this can/will change in the future without notice, do not use unless you want to take that risk
-   * [[ref]](https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io%2fv1alpha2)
+   * [[ref]](https://gateway-api.sigs.k8s.io/reference/api-spec/main/spec/#gatewaynetworkingk8siov1alpha2)
    *
    * @default {...} (7 keys)
    */
@@ -9231,7 +9360,7 @@ export type KubeprometheusstackHelmValuesThanosRuler = {
    * Settings affecting thanosRulerpec
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#thanosrulerspec
    *
-   * @default {...} (15 keys)
+   * @default {...} (16 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesThanosRulerServiceMonitor;
   /**
@@ -9548,6 +9677,13 @@ export type KubeprometheusstackHelmValuesThanosRulerServiceMonitor = {
    * @default {}
    */
   additionalLabels?: KubeprometheusstackHelmValuesThanosRulerServiceMonitorAdditionalLabels;
+  /**
+   * ScrapeClass to use for this ServiceMonitor, as defined in prometheus.prometheusSpec.scrapeClasses.
+   * If not set, the default scrape class (if any) is used.
+   *
+   * @default ""
+   */
+  scrapeClass?: string;
   /**
    * SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
    *
@@ -9965,7 +10101,7 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.42.4"
+   * @default "v0.42.5"
    */
   tag?: string;
   /**
@@ -10322,13 +10458,13 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Component scraping coreDns. Use either this or kubeDns
    *
-   * @default {"enabled":true,"service":{"enabled":true,"port":9153,"targetPort":9153,"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"enabled":true,"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","port":"http-metrics","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"additionalLabels":{},"targetLabels":[],"authorization":{"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}}}
+   * @default {"enabled":true,"service":{"enabled":true,"port":9153,"targetPort":9153,"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"enabled":true,"interval":"","scrapeClass":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","port":"http-metrics","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"additionalLabels":{},"targetLabels":[],"authorization":{"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}}}
    */
   coreDns?: KubeprometheusstackHelmValuesCoreDns;
   /**
    * Component scraping kubeDns. Use either this or coreDns
    *
-   * @default {"enabled":false,"service":{"dnsmasq":{"port":10054,"targetPort":10054},"skydns":{"port":10055,"targetPort":10055},"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"interval":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"dnsmasqMetricRelabelings":[],"dnsmasqRelabelings":[],"additionalLabels":{},"targetLabels":[],"authorization":{"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}}}
+   * @default {"enabled":false,"service":{"dnsmasq":{"port":10054,"targetPort":10054},"skydns":{"port":10055,"targetPort":10055},"ipDualStack":{"enabled":false,"ipFamilies":["IPv6","IPv4"],"ipFamilyPolicy":"PreferDualStack"}},"serviceMonitor":{"interval":"","scrapeClass":"","sampleLimit":0,"targetLimit":0,"labelLimit":0,"labelNameLengthLimit":0,"labelValueLengthLimit":0,"proxyUrl":"","jobLabel":"jobLabel","selector":{},"metricRelabelings":[],"relabelings":[],"dnsmasqMetricRelabelings":[],"dnsmasqRelabelings":[],"additionalLabels":{},"targetLabels":[],"authorization":{"type":"Bearer","credentials":{"name":"{{ include \"kube-prometheus-stack.prometheus.tokenSecretName\" . }}","key":"token"}}}}
    */
   kubeDns?: KubeprometheusstackHelmValuesKubeDns;
   /**
@@ -10382,7 +10518,7 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Deploy a Prometheus instance
    *
-   * @default {...} (24 keys)
+   * @default {...} (25 keys)
    */
   prometheus?: KubeprometheusstackHelmValuesPrometheus;
   /**
@@ -10594,6 +10730,7 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.servicePerReplica.type"?: string;
   "alertmanager.serviceMonitor.selfMonitor"?: string;
   "alertmanager.serviceMonitor.interval"?: string;
+  "alertmanager.serviceMonitor.scrapeClass"?: string;
   "alertmanager.serviceMonitor.sampleLimit"?: string;
   "alertmanager.serviceMonitor.targetLimit"?: string;
   "alertmanager.serviceMonitor.labelLimit"?: string;
@@ -10730,6 +10867,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeApiServer.serviceMonitor.authorization.type"?: string;
   "kubeApiServer.serviceMonitor.authorization.credentials.name"?: string;
   "kubeApiServer.serviceMonitor.authorization.credentials.key"?: string;
+  "kubeApiServer.serviceMonitor.scrapeClass"?: string;
   "kubeApiServer.serviceMonitor.sampleLimit"?: string;
   "kubeApiServer.serviceMonitor.targetLimit"?: string;
   "kubeApiServer.serviceMonitor.labelLimit"?: string;
@@ -10755,6 +10893,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubelet.serviceMonitor.honorLabels"?: string;
   "kubelet.serviceMonitor.honorTimestamps"?: string;
   "kubelet.serviceMonitor.trackTimestampsStaleness"?: string;
+  "kubelet.serviceMonitor.scrapeClass"?: string;
   "kubelet.serviceMonitor.sampleLimit"?: string;
   "kubelet.serviceMonitor.targetLimit"?: string;
   "kubelet.serviceMonitor.labelLimit"?: string;
@@ -10805,6 +10944,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeControllerManager.service.ipDualStack.ipFamilyPolicy"?: string;
   "kubeControllerManager.serviceMonitor.enabled"?: string;
   "kubeControllerManager.serviceMonitor.interval"?: string;
+  "kubeControllerManager.serviceMonitor.scrapeClass"?: string;
   "kubeControllerManager.serviceMonitor.sampleLimit"?: string;
   "kubeControllerManager.serviceMonitor.targetLimit"?: string;
   "kubeControllerManager.serviceMonitor.labelLimit"?: string;
@@ -10832,6 +10972,7 @@ export type KubeprometheusstackHelmParameters = {
   "coreDns.service.ipDualStack.ipFamilyPolicy"?: string;
   "coreDns.serviceMonitor.enabled"?: string;
   "coreDns.serviceMonitor.interval"?: string;
+  "coreDns.serviceMonitor.scrapeClass"?: string;
   "coreDns.serviceMonitor.sampleLimit"?: string;
   "coreDns.serviceMonitor.targetLimit"?: string;
   "coreDns.serviceMonitor.labelLimit"?: string;
@@ -10855,6 +10996,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeDns.service.ipDualStack.ipFamilies"?: string;
   "kubeDns.service.ipDualStack.ipFamilyPolicy"?: string;
   "kubeDns.serviceMonitor.interval"?: string;
+  "kubeDns.serviceMonitor.scrapeClass"?: string;
   "kubeDns.serviceMonitor.sampleLimit"?: string;
   "kubeDns.serviceMonitor.targetLimit"?: string;
   "kubeDns.serviceMonitor.labelLimit"?: string;
@@ -10880,6 +11022,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeEtcd.service.ipDualStack.ipFamilyPolicy"?: string;
   "kubeEtcd.serviceMonitor.enabled"?: string;
   "kubeEtcd.serviceMonitor.interval"?: string;
+  "kubeEtcd.serviceMonitor.scrapeClass"?: string;
   "kubeEtcd.serviceMonitor.sampleLimit"?: string;
   "kubeEtcd.serviceMonitor.targetLimit"?: string;
   "kubeEtcd.serviceMonitor.labelLimit"?: string;
@@ -10907,6 +11050,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeScheduler.service.ipDualStack.ipFamilyPolicy"?: string;
   "kubeScheduler.serviceMonitor.enabled"?: string;
   "kubeScheduler.serviceMonitor.interval"?: string;
+  "kubeScheduler.serviceMonitor.scrapeClass"?: string;
   "kubeScheduler.serviceMonitor.sampleLimit"?: string;
   "kubeScheduler.serviceMonitor.targetLimit"?: string;
   "kubeScheduler.serviceMonitor.labelLimit"?: string;
@@ -10940,6 +11084,7 @@ export type KubeprometheusstackHelmParameters = {
   "kubeProxy.service.ipDualStack.ipFamilyPolicy"?: string;
   "kubeProxy.serviceMonitor.enabled"?: string;
   "kubeProxy.serviceMonitor.interval"?: string;
+  "kubeProxy.serviceMonitor.scrapeClass"?: string;
   "kubeProxy.serviceMonitor.sampleLimit"?: string;
   "kubeProxy.serviceMonitor.targetLimit"?: string;
   "kubeProxy.serviceMonitor.labelLimit"?: string;
@@ -11079,6 +11224,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheusOperator.admissionWebhooks.patch.image.tag"?: string;
   "prometheusOperator.admissionWebhooks.patch.image.sha"?: string;
   "prometheusOperator.admissionWebhooks.patch.image.pullPolicy"?: string;
+  "prometheusOperator.admissionWebhooks.patch.secretType"?: string;
   "prometheusOperator.admissionWebhooks.patch.resources"?: string;
   "prometheusOperator.admissionWebhooks.patch.priorityClassName"?: string;
   "prometheusOperator.admissionWebhooks.patch.ttlSecondsAfterFinished"?: string;
@@ -11137,6 +11283,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheusOperator.extraArgs"?: string;
   "prometheusOperator.serviceMonitor.selfMonitor"?: string;
   "prometheusOperator.serviceMonitor.interval"?: string;
+  "prometheusOperator.serviceMonitor.scrapeClass"?: string;
   "prometheusOperator.serviceMonitor.sampleLimit"?: string;
   "prometheusOperator.serviceMonitor.targetLimit"?: string;
   "prometheusOperator.serviceMonitor.labelLimit"?: string;
@@ -11194,6 +11341,10 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.serviceAccount.name"?: string;
   "prometheus.serviceAccount.automountServiceAccountToken"?: string;
   "prometheus.serviceAccount.createTokenSecret"?: string;
+  "prometheus.controlPlaneScrapeClass.enabled"?: string;
+  "prometheus.controlPlaneScrapeClass.name"?: string;
+  "prometheus.controlPlaneScrapeClass.authorization.type"?: string;
+  "prometheus.controlPlaneScrapeClass.authorization.credentialsFile"?: string;
   "prometheus.thanosService.enabled"?: string;
   "prometheus.thanosService.externalTrafficPolicy"?: string;
   "prometheus.thanosService.type"?: string;
@@ -11306,6 +11457,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.routePerReplica.main.additionalRules"?: string;
   "prometheus.serviceMonitor.selfMonitor"?: string;
   "prometheus.serviceMonitor.interval"?: string;
+  "prometheus.serviceMonitor.scrapeClass"?: string;
   "prometheus.serviceMonitor.sampleLimit"?: string;
   "prometheus.serviceMonitor.targetLimit"?: string;
   "prometheus.serviceMonitor.labelLimit"?: string;
@@ -11473,6 +11625,7 @@ export type KubeprometheusstackHelmParameters = {
   "thanosRuler.service.type"?: string;
   "thanosRuler.serviceMonitor.selfMonitor"?: string;
   "thanosRuler.serviceMonitor.interval"?: string;
+  "thanosRuler.serviceMonitor.scrapeClass"?: string;
   "thanosRuler.serviceMonitor.sampleLimit"?: string;
   "thanosRuler.serviceMonitor.targetLimit"?: string;
   "thanosRuler.serviceMonitor.labelLimit"?: string;

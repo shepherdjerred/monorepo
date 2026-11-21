@@ -1158,7 +1158,7 @@ export type LokiHelmValuesEnterprise = {
   /**
    * Default version of GEL to deploy
    *
-   * @default "3.6.12"
+   * @default "3.6.20"
    */
   version?: string;
   cluster_name?: unknown;
@@ -1256,7 +1256,7 @@ export type LokiHelmValuesEnterpriseImage = {
   /**
    * Docker image tag
    *
-   * @default "3.6.12"
+   * @default "3.6.20"
    */
   tag?: string;
   digest?: unknown;
@@ -8591,14 +8591,14 @@ export type LokiHelmValuesMinio = {
   enabled?: boolean;
   /**
    * Override the upstream MinIO, Inc. images with the Pigsty (pgsty) community
-   * fork to mitigate the unresolved CVE in the abandoned MinIO images.
-   * See https://github.com/pgsty/minio for details.
+   * fork (renamed from "minio" to "silo") to mitigate the unresolved CVE in
+   * the abandoned MinIO images. See https://github.com/pgsty/silo for details.
    *
-   * @default {"repository":"docker.io/pgsty/minio","tag":"RELEASE.2026-03-14T12-00-00Z","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"docker.io/pgsty/silo","tag":"RELEASE.2026-09-03T13-18-01Z","pullPolicy":"IfNotPresent"}
    */
   image?: LokiHelmValuesMinioImage;
   /**
-   * @default {"repository":"docker.io/pgsty/mc","tag":"RELEASE.2026-03-13T08-57-32Z","pullPolicy":"IfNotPresent"}
+   * @default {"repository":"docker.io/pgsty/mc","tag":"RELEASE.2026-09-13T00-00-00Z","pullPolicy":"IfNotPresent"}
    */
   mcImage?: LokiHelmValuesMinioMcImage;
   /**
@@ -8641,11 +8641,11 @@ export type LokiHelmValuesMinio = {
 
 export type LokiHelmValuesMinioImage = {
   /**
-   * @default "docker.io/pgsty/minio"
+   * @default "docker.io/pgsty/silo"
    */
   repository?: string;
   /**
-   * @default "RELEASE.2026-03-14T12-00-00Z"
+   * @default "RELEASE.2026-09-03T13-18-01Z"
    */
   tag?: string;
   /**
@@ -8660,7 +8660,7 @@ export type LokiHelmValuesMinioMcImage = {
    */
   repository?: string;
   /**
-   * @default "RELEASE.2026-03-13T08-57-32Z"
+   * @default "RELEASE.2026-09-13T00-00-00Z"
    */
   tag?: string;
   /**

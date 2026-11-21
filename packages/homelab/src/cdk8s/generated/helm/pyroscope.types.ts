@@ -26,6 +26,8 @@ export type PyroscopeHelmValuesPyroscope = {
    */
   image?: PyroscopeHelmValuesPyroscopeImage;
   /**
+   * Additional command-line arguments. Set these under pyroscope.extraArgs, not pyroscope.resources.
+   *
    * @default {"log.level":"debug"}
    */
   extraArgs?: PyroscopeHelmValuesPyroscopeExtraArgs;
@@ -112,10 +114,6 @@ export type PyroscopeHelmValuesPyroscope = {
    * choice for the user. This also increases chances charts run on environments with little
    * resources, such as Minikube. If you do want to specify resources, uncomment the following
    * lines, adjust them as necessary, and remove the curly braces after 'resources'.
-   * Note that if memory consumption is higher than you would like, you can decrease the interval
-   * that profiles are written into blocks by setting `pyroscopedb.max-block-duration` in the `extraArgs`
-   * stanza. By default, it is set to 3h - override it, for example, as below:
-   * ```
    */
   resources?: {
     requests?: Record<string, string | number>;
