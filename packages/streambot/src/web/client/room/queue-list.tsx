@@ -1,4 +1,5 @@
 import type { WebRoomPlayer } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { ConfirmButton } from "./confirm-button.tsx";
 import { ControlStatus } from "@shepherdjerred/streambot/web/client/control-status.tsx";
 import { playerTask } from "./player-task.ts";
 import { formatTime } from "./position.ts";
@@ -113,12 +114,12 @@ export function QueueList(props: { player: WebRoomPlayer }) {
           </button>
         )}
         {count > 0 && (
-          <button
-            type="button"
+          <ConfirmButton
+            label="Clear the queue"
+            confirm="Clear"
             className="btn btn-ghost btn-small"
-            aria-busy={group.controls.clear.pending}
-            disabled={group.controls.clear.pending}
-            onClick={() => {
+            pending={group.controls.clear.pending}
+            onConfirm={() => {
               group.start(
                 "clear",
                 playerTask(remote, player.slot, { action: "clear" }),
@@ -126,7 +127,7 @@ export function QueueList(props: { player: WebRoomPlayer }) {
             }}
           >
             Clear
-          </button>
+          </ConfirmButton>
         )}
       </div>
       <ControlStatus control={group.status} />

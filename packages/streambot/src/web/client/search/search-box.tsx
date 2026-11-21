@@ -131,8 +131,10 @@ export function SearchBox() {
         choose(picked);
       }
     } else if (event.key === "Escape") {
-      if (shown.length > 0) setOpen(false);
-      else choose("");
+      // Escape only closes the suggestion list. It never discards a typed query (a search
+      // input would otherwise clear itself); the field's clear button does that.
+      event.preventDefault();
+      setOpen(false);
     }
   };
 

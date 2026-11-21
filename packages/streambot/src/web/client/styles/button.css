@@ -64,6 +64,13 @@
   background: var(--watch);
 }
 
+.btn-danger,
+.btn-danger:hover {
+  border-color: var(--error);
+  background: var(--error-bg);
+  color: var(--error);
+}
+
 .btn-ghost {
   border-color: transparent;
   background: transparent;

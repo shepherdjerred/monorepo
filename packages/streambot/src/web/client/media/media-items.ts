@@ -70,6 +70,7 @@ export function playlistItem(
       playlist.owned ? undefined : "Shared",
     ]),
     actions: playlist.count === 0 ? [] : actions,
+    href: "/playlists/" + encodeURIComponent(playlist.id),
     selection: {
       kind: "playlist",
       id: playlist.id,

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ConfirmButton } from "./confirm-button.tsx";
 import type { WebRoomPlayer } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { ControlStatus } from "@shepherdjerred/streambot/web/client/control-status.tsx";
 import { playerTask } from "./player-task.ts";
@@ -101,18 +102,51 @@ export function Timeline(props: { player: WebRoomPlayer }) {
   );
 }
 
-/** Pause or resume (when the server allows it), skip and stop. */
-export function Transport(props: { player: WebRoomPlayer }) {
+const LOOP_NEXT = { off: "track", track: "queue", queue: "off" } as const;
+const LOOP_LABEL = {
+  off: "Repeat is off",
+  track: "Repeating this item",
+  queue: "Repeating the queue",
+};
+const LOOP_MARK = { off: "", track: "1", queue: "all" };
+
+function loopMode(value: string): keyof typeof LOOP_NEXT {
+  return value === "track" || value === "queue" ? value : "off";
+}
+
+type ControlKey = "pause" | "skip" | "stop" | "volume" | "loop";
+
+/**
+ * One dense row per card: pause or resume (when the server allows it), skip, stop (confirmed in
+ * place), volume, repeat, and subtitles for videos. Each control keeps its own pending state; the
+ * row reports on one shared line.
+ */
+export function PlayerControls(props: {
+  player: WebRoomPlayer;
+  onSubtitles: () => void;
+}) {
   const remote = useRemote();
   const { player } = props;
-  const group = useControlGroup({
+  const group = useControlGroup<ControlKey>({
     pause: useControl(),
     skip: useControl(),
     stop: useControl(),
+    volume: useControl(),
+    loop: useControl(),
+  });
+  const [draft, setDraft] = useSettledValue(player.positionAt, (percent) => {
+    group.start(
+      "volume",
+      playerTask(remote, player.slot, { action: "volume", percent }),
+    );
   });
   const canPause = remote.room?.capabilities.pause === true;
-  const button = (
-    key: "pause" | "skip" | "stop",
+  const idle = player.current === null;
+  const volume = draft ?? player.volume;
+  const loop = loopMode(player.loop);
+  const video = player.current?.mediaKind === "video";
+  const icon = (
+    key: "pause" | "skip",
     label: string,
     glyph: string,
     action: Parameters<typeof playerTask>[2],
@@ -123,7 +157,7 @@ export function Transport(props: { player: WebRoomPlayer }) {
       aria-label={label}
       title={label}
       aria-busy={group.controls[key].pending}
-      disabled={group.controls[key].pending || player.current === null}
+      disabled={idle || group.controls[key].pending}
       onClick={() => {
         group.start(key, playerTask(remote, player.slot, action));
       }}
@@ -132,105 +166,78 @@ export function Transport(props: { player: WebRoomPlayer }) {
     </button>
   );
   return (
-    <div className="transport">
-      <div className="btn-row">
+    <div className="controls">
+      <div className="controls-row">
         {canPause &&
           (player.paused
-            ? button("pause", "Resume", "▶", { action: "resume" })
-            : button("pause", "Pause", "❚❚", { action: "pause" }))}
-        {button("skip", "Skip to the next item", "⏭", { action: "skip" })}
-        {button("stop", "Stop and clear this player", "■", { action: "stop" })}
-      </div>
-      <ControlStatus control={group.status} />
-    </div>
-  );
-}
-
-const LOOP_NEXT = { off: "track", track: "queue", queue: "off" } as const;
-const LOOP_LABEL = {
-  off: "Repeat off",
-  track: "Repeat this",
-  queue: "Repeat queue",
-};
-
-function loopMode(value: string): keyof typeof LOOP_NEXT {
-  return value === "track" || value === "queue" ? value : "off";
-}
-
-/** Transport (passed in) beside repeat and subtitles, then volume. */
-export function PlayerOptions(props: {
-  player: WebRoomPlayer;
-  onSubtitles: () => void;
-  children: ReactNode;
-}) {
-  const remote = useRemote();
-  const { player } = props;
-  const group = useControlGroup({ volume: useControl(), loop: useControl() });
-  const [draft, setDraft] = useSettledValue(player.positionAt, (percent) => {
-    group.start(
-      "volume",
-      playerTask(remote, player.slot, { action: "volume", percent }),
-    );
-  });
-  const volume = draft ?? player.volume;
-  const loop = loopMode(player.loop);
-  const video = player.current?.mediaKind === "video";
-  return (
-    <div className="options">
-      <div className="options-row">
-        {props.children}
-        <div className="btn-row">
+            ? icon("pause", "Resume", "▶", { action: "resume" })
+            : icon("pause", "Pause", "❚❚", { action: "pause" }))}
+        {icon("skip", "Skip to the next item", "⏭", { action: "skip" })}
+        <ConfirmButton
+          label="Stop and clear this player"
+          confirm="Stop"
+          className="btn btn-icon"
+          pending={group.controls.stop.pending}
+          onConfirm={() => {
+            group.start(
+              "stop",
+              playerTask(remote, player.slot, { action: "stop" }),
+            );
+          }}
+        >
+          <span aria-hidden="true">■</span>
+        </ConfirmButton>
+        <label className="volume" title={"Volume " + String(volume) + "%"}>
+          <span className="visually-hidden">Volume</span>
+          <input
+            type="range"
+            className="slider"
+            min={0}
+            max={200}
+            step={5}
+            value={volume}
+            aria-valuetext={String(volume) + "%"}
+            onChange={(event) => {
+              setDraft(Number(event.target.value));
+            }}
+          />
+        </label>
+        <button
+          type="button"
+          className="btn btn-icon btn-mode"
+          aria-label={LOOP_LABEL[loop] + ". Change repeat"}
+          title={LOOP_LABEL[loop]}
+          aria-pressed={loop !== "off"}
+          aria-busy={group.controls.loop.pending}
+          disabled={group.controls.loop.pending}
+          onClick={() => {
+            group.start(
+              "loop",
+              playerTask(remote, player.slot, {
+                action: "loop",
+                mode: LOOP_NEXT[loop],
+              }),
+            );
+          }}
+        >
+          <span aria-hidden="true">↻</span>
+          <span className="btn-mark" aria-hidden="true">
+            {LOOP_MARK[loop]}
+          </span>
+        </button>
+        {player.transport === "watch" && video && (
           <button
             type="button"
-            className="btn btn-small"
-            aria-pressed={loop !== "off"}
-            aria-busy={group.controls.loop.pending}
-            disabled={group.controls.loop.pending}
-            onClick={() => {
-              group.start(
-                "loop",
-                playerTask(remote, player.slot, {
-                  action: "loop",
-                  mode: LOOP_NEXT[loop],
-                }),
-              );
-            }}
+            className="btn btn-icon"
+            aria-label="Subtitles"
+            title="Subtitles"
+            onClick={props.onSubtitles}
           >
-            {LOOP_LABEL[loop]}
+            <span aria-hidden="true">CC</span>
           </button>
-          {player.transport === "watch" && video && (
-            <button
-              type="button"
-              className="btn btn-small"
-              onClick={props.onSubtitles}
-            >
-              Subtitles
-            </button>
-          )}
-        </div>
+        )}
       </div>
-      <label className="volume">
-        <span className="visually-hidden">Volume</span>
-        <span aria-hidden="true" className="muted">
-          Vol
-        </span>
-        <input
-          type="range"
-          className="slider"
-          min={0}
-          max={200}
-          step={5}
-          value={volume}
-          aria-valuetext={String(volume) + "%"}
-          onChange={(event) => {
-            setDraft(Number(event.target.value));
-          }}
-        />
-        <span className="numeric volume-value" aria-hidden="true">
-          {volume}%
-        </span>
-      </label>
-      <ControlStatus className="options-status" control={group.status} />
+      <ControlStatus control={group.status} />
     </div>
   );
 }

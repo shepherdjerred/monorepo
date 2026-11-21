@@ -140,6 +140,36 @@ They expire and are bound to the viewer, source, and revision.
 Choosing one restarts playback at the current position.
 The browser receives opaque references rather than local paths or ffmpeg inputs.
 
+## The page is one search box and a rail
+
+The remote is organized around what the viewer wants to do, not around which backend answers.
+A page organized by provider makes the viewer know where something lives before they can find it.
+The [browser client](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/web/client)
+has one search input in the header. It asks every result group at once (library, songs, albums and artists, videos, live games, history), each as its own request, so a slow or failing provider delays only its own group.
+A pasted link becomes one row. An empty search is the home page: recent plays, today's games, playlists, and library posters.
+
+Every row is drawn by one component, and its buttons are exactly the actions the server listed for it.
+The server already knows what each viewer may do with each item, so the page never guesses and never offers a button that will be refused.
+A song offers Listen; a film or a live game offers Watch; a video or a link offers both side by side, with no default.
+When that destination is already playing, the same button queues, and the row says where the item went.
+
+The right-hand rail is the room as the server sees it: one card per player, each with its own controls and queue.
+It renders the latest snapshot from the room stream and nothing else, so two open tabs cannot disagree.
+Between snapshots the playback position advances locally from the sample time the server sent, which keeps the clock moving without a request per second.
+
+## Feedback stays beside the control
+
+A busy flag shared by the whole page turns one slow request into a frozen remote, and a toast far from the button does not say which click failed.
+Each control in the client therefore owns its pending state and reports beside itself.
+A failure names its specific cause, offers Retry only when trying again can help, and shows a short reference: the first eight characters of the request's trace id.
+That reference is the link between what the viewer saw and the trace an operator opens, without the viewer sending anything identifying.
+Destructive controls such as Stop and Clear ask once more in place before acting.
+
+The previous client is served unchanged at `/classic`.
+Both are pages of one build, and
+[the asset router](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/assets.ts)
+decides which page owns a path, for the server and the development server alike.
+
 ## Discovery shares media metadata
 
 Library, queue, and player images use TMDB posters with the existing server-side credential.

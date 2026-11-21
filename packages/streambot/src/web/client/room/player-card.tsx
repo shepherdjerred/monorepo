@@ -2,7 +2,7 @@ import { useId, useState } from "react";
 import type { WebRoomPlayer } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { Artwork } from "@shepherdjerred/streambot/web/client/media/artwork.tsx";
 import { ControlStatus } from "@shepherdjerred/streambot/web/client/control-status.tsx";
-import { PlayerOptions, Timeline, Transport } from "./player-controls.tsx";
+import { PlayerControls, Timeline } from "./player-controls.tsx";
 import { stationTask } from "./player-task.ts";
 import { QueueList } from "./queue-list.tsx";
 import { useRemote } from "@shepherdjerred/streambot/web/client/remote.tsx";
@@ -114,20 +114,20 @@ export function PlayerCard(props: {
           <div className="now-text">
             <span className="now-title">{current.title}</span>
             {current.requester !== undefined && (
-              <span className="muted">Added by {current.requester.name}</span>
+              <span className="now-detail">
+                Added by {current.requester.name}
+              </span>
             )}
           </div>
         </div>
       )}
       {current !== null && <Timeline player={player} />}
-      <PlayerOptions
+      <PlayerControls
         player={player}
         onSubtitles={() => {
           setSubtitles(true);
         }}
-      >
-        <Transport player={player} />
-      </PlayerOptions>
+      />
       <QueueList player={player} />
       {subtitles && (
         <SubtitlesDialog
