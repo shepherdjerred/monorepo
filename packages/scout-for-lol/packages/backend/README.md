@@ -2656,7 +2656,7 @@ stored per UTC day.
     outlives its match.
   - **Roll-up.** `meta/meta-rollup.ts` sums the partials of a build's retained
     days into `<build>/meta/v1/` — `manifest.json`, `tiers/<patch>/<queue>/<bracket>.json`,
-    `champions/<id>.json`, `matchups/<id>.json` (schema in `meta/meta-serving.ts`).
+    `champions/<id>.json`, `matchups/<id>.json` (schema in `@scout-for-lol/data` `meta/meta-serving.ts`).
     It runs inside the nightly rebuild after the erasure step, and again in a
     fold build whose erasure rewrote a day, so the JSON is published by the
     same `CURRENT` flip as the partials it was summed from. It replaces

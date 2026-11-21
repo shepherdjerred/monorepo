@@ -5,13 +5,13 @@ import {
   matchupFilePath,
   MatchupFileSchema,
   MetaManifestSchema,
-  metaServingDir,
+  META_SERVING_DIR,
   TierFileSchema,
   type ChampionMetaFile,
   type MatchupFile,
   type MetaManifest,
   type TierFile,
-} from "#src/meta/meta-serving.ts";
+} from "@scout-for-lol/data/meta/meta-serving.ts";
 
 /**
  * The one reader of the champion meta serving JSON, shared by the public meta
@@ -46,7 +46,7 @@ export function createLakeMetaReader(
   ): Promise<T | undefined> {
     const buildDir = await resolveBuildDir();
     if (buildDir === undefined) return undefined;
-    const file = Bun.file(path.join(metaServingDir(buildDir), relativePath));
+    const file = Bun.file(path.join(buildDir, META_SERVING_DIR, relativePath));
     try {
       return parse(await file.json());
     } catch (error) {

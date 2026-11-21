@@ -20,7 +20,7 @@ import {
   type MetaTierGrade,
   type TierEntry,
   type TierFile,
-} from "#src/meta/meta-serving.ts";
+} from "@scout-for-lol/data/meta/meta-serving.ts";
 import {
   entriesOf,
   type RollupRow,

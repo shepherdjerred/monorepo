@@ -61,7 +61,8 @@
                 "value": 0.24916943521594684,
                 "lower": 0.22916943521594685,
                 "upper": 0.26916943521594683
-              }
+              },
+              "denominator": "slice_games"
             }
           ],
           "buildPaths": [
@@ -78,7 +79,8 @@
                 "value": 0.18272425249169436,
                 "lower": 0.16272425249169437,
                 "upper": 0.20272425249169435
-              }
+              },
+              "denominator": "games_with_timeline"
             },
             {
               "itemIds": [3118, 3020, 3089, 3135],
@@ -93,7 +95,8 @@
                 "value": 0.14119601328903655,
                 "lower": 0.12119601328903655,
                 "upper": 0.16119601328903654
-              }
+              },
+              "denominator": "games_with_timeline"
             },
             {
               "itemIds": [6655, 3020, 3116, 3165],
@@ -108,7 +111,8 @@
                 "value": 0.09966777408637874,
                 "lower": 0.07966777408637873,
                 "upper": 0.11966777408637874
-              }
+              },
+              "denominator": "games_with_timeline"
             }
           ],
           "startingItems": [
@@ -134,7 +138,8 @@
                 "value": 0.16611295681063123,
                 "lower": 0.14611295681063124,
                 "upper": 0.18611295681063122
-              }
+              },
+              "denominator": "games_with_timeline"
             }
           ],
           "runes": [
@@ -154,7 +159,8 @@
                 "value": 0.20764119601328904,
                 "lower": 0.18764119601328905,
                 "upper": 0.22764119601328903
-              }
+              },
+              "denominator": "games_with_runes"
             }
           ],
           "spells": [
@@ -171,7 +177,8 @@
                 "value": 0.23255813953488372,
                 "lower": 0.21255813953488373,
                 "upper": 0.2525581395348837
-              }
+              },
+              "denominator": "slice_games"
             }
           ],
           "skillOrders": [
@@ -188,7 +195,8 @@
                 "value": 0.15780730897009967,
                 "lower": 0.13780730897009968,
                 "upper": 0.17780730897009966
-              }
+              },
+              "denominator": "games_with_timeline"
             }
           ]
         }
@@ -246,7 +254,8 @@
                 "value": 0.2,
                 "lower": 0.18000000000000002,
                 "upper": 0.22
-              }
+              },
+              "denominator": "slice_games"
             }
           ],
           "buildPaths": [
@@ -263,7 +272,8 @@
                 "value": 0.14666666666666667,
                 "lower": 0.12666666666666668,
                 "upper": 0.16666666666666666
-              }
+              },
+              "denominator": "games_with_timeline"
             },
             {
               "itemIds": [3036, 3031, 3085, 3139],
@@ -278,7 +288,8 @@
                 "value": 0.11333333333333333,
                 "lower": 0.09333333333333332,
                 "upper": 0.13333333333333333
-              }
+              },
+              "denominator": "games_with_timeline"
             }
           ],
           "startingItems": [
@@ -304,7 +315,8 @@
                 "value": 0.13333333333333333,
                 "lower": 0.11333333333333333,
                 "upper": 0.15333333333333332
-              }
+              },
+              "denominator": "games_with_timeline"
             }
           ],
           "runes": [
@@ -324,7 +336,8 @@
                 "value": 0.16666666666666666,
                 "lower": 0.14666666666666667,
                 "upper": 0.18666666666666665
-              }
+              },
+              "denominator": "games_with_runes"
             }
           ],
           "spells": [
@@ -341,7 +354,8 @@
                 "value": 0.18666666666666668,
                 "lower": 0.16666666666666669,
                 "upper": 0.20666666666666667
-              }
+              },
+              "denominator": "slice_games"
             }
           ],
           "skillOrders": [
@@ -358,7 +372,8 @@
                 "value": 0.12666666666666668,
                 "lower": 0.10666666666666667,
                 "upper": 0.14666666666666667
-              }
+              },
+              "denominator": "games_with_timeline"
             }
           ]
         },
@@ -409,7 +424,8 @@
                 "value": 1.875,
                 "lower": 1.855,
                 "upper": 1
-              }
+              },
+              "denominator": "slice_games"
             }
           ],
           "buildPaths": [],
@@ -436,7 +452,8 @@
                 "value": 1.25,
                 "lower": 1.23,
                 "upper": 1
-              }
+              },
+              "denominator": "games_with_timeline"
             }
           ],
           "runes": [
@@ -456,7 +473,8 @@
                 "value": 1.5625,
                 "lower": 1.5425,
                 "upper": 1
-              }
+              },
+              "denominator": "games_with_runes"
             }
           ],
           "spells": [
@@ -473,7 +491,8 @@
                 "value": 1.75,
                 "lower": 1.73,
                 "upper": 1
-              }
+              },
+              "denominator": "slice_games"
             }
           ],
           "skillOrders": [
@@ -490,7 +509,8 @@
                 "value": 1.1875,
                 "lower": 1.1675,
                 "upper": 1
-              }
+              },
+              "denominator": "games_with_timeline"
             }
           ]
         }

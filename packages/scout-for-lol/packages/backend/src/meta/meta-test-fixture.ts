@@ -1,7 +1,7 @@
 import { assembleMetaServing } from "#src/meta/meta-assemble.ts";
 import type { RollupRow } from "#src/meta/meta-entries.ts";
 import type { MetaReader } from "#src/meta/meta-reader.ts";
-import { DEFAULT_META_THRESHOLDS } from "#src/meta/meta-serving.ts";
+import { DEFAULT_META_THRESHOLDS } from "@scout-for-lol/data/meta/meta-serving.ts";
 
 /**
  * A small hand-written meta for database-free route and tool tests: three

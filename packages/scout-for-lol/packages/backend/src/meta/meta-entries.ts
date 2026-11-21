@@ -1,6 +1,6 @@
 import { ENEMY_TRAITS } from "#src/report-lake/crawl/meta-partials.ts";
 import type { MetaPartialKind } from "#src/report-lake/crawl/meta-partials.ts";
-import type { ChampionSlice } from "#src/meta/meta-serving.ts";
+import type { ChampionSlice } from "@scout-for-lol/data/meta/meta-serving.ts";
 import { wilsonInterval } from "#src/meta/wilson.ts";
 
 /**

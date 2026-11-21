@@ -10,7 +10,10 @@ import {
   type MetaSelection,
 } from "#src/meta/meta-query.ts";
 import type { MetaReader } from "#src/meta/meta-reader.ts";
-import type { ChampionSlice, MetaContext } from "#src/meta/meta-serving.ts";
+import type {
+  ChampionSlice,
+  MetaContext,
+} from "@scout-for-lol/data/meta/meta-serving.ts";
 import type { RateInterval } from "#src/meta/wilson.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 

@@ -33,6 +33,7 @@ export const layers = [
   "example",
   "lane-priors",
   "league",
+  "meta",
   "model/arena",
   "model/dares",
   "model/competitions",

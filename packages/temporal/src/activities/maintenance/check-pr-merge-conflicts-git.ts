@@ -1,4 +1,5 @@
 import { runCommand } from "#activities/data-dragon/data-dragon-shell.ts";
+import { writeGitAskpass } from "#activities/scout/scout-season-refresh-git.ts";
 
 /**
  * Parse the stdout of `git merge-tree --write-tree --merge-base=... main pr`
@@ -16,29 +17,6 @@ export function parseConflictPaths(stdout: string): string[] {
     }
   }
   return [...set].toSorted();
-}
-
-/**
- * Same GIT_ASKPASS pattern as `data-dragon.ts`: writes a tiny shell script
- * that emits the literal `x-access-token` as the git Username and `$GH_TOKEN`
- * as the password. The AGENTS.md rule bans putting `x-access-token` in URLs;
- * the askpass form is what that rule actually points toward.
- */
-async function writeGitAskpass(tempDir: string): Promise<string> {
-  const path = `${tempDir}/git-askpass.sh`;
-  await Bun.write(
-    path,
-    [
-      "#!/bin/sh",
-      'case "$1" in',
-      '  *Username*) echo "x-access-token" ;;',
-      '  *) echo "$GH_TOKEN" ;;',
-      "esac",
-      "",
-    ].join("\n"),
-  );
-  await runCommand(["chmod", "+x", path], { cwd: tempDir });
-  return path;
 }
 
 export async function defaultPrepareWorkDir(input: {

@@ -2324,10 +2324,6 @@
       "clones": 1,
       "tokens": 112
     },
-    "packages/scout-for-lol/packages/backend/src/meta/meta-serving.ts|packages/scout-for-lol/packages/frontend/src/lib/champion-meta/snapshot.ts": {
-      "clones": 2,
-      "tokens": 150
-    },
     "packages/scout-for-lol/packages/backend/src/observability/tracing.ts|packages/temporal/src/observability/tracing.ts": {
       "clones": 2,
       "tokens": 202
@@ -2512,22 +2508,6 @@
       "clones": 1,
       "tokens": 90
     },
-    "packages/temporal/src/activities/data-dragon/data-dragon.ts|packages/temporal/src/activities/lane-prior-refresh.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
-    "packages/temporal/src/activities/data-dragon/data-dragon.ts|packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts": {
-      "clones": 1,
-      "tokens": 76
-    },
-    "packages/temporal/src/activities/data-dragon/data-dragon.ts|packages/temporal/src/activities/scout/champion-meta-refresh.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
-    "packages/temporal/src/activities/data-dragon/data-dragon.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
     "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts": {
       "clones": 1,
       "tokens": 73
@@ -2543,14 +2523,6 @@
     "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
       "tokens": 116
-    },
-    "packages/temporal/src/activities/lane-prior-refresh.ts|packages/temporal/src/activities/scout/champion-meta-refresh.ts": {
-      "clones": 2,
-      "tokens": 201
-    },
-    "packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
-      "clones": 1,
-      "tokens": 72
     },
     "packages/temporal/src/activities/maintenance/deps-summary/deps-summary.ts|packages/version-catalog/src/index.ts": {
       "clones": 1,
