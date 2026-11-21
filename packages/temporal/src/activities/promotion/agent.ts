@@ -85,6 +85,14 @@ type PromotionAgentInput = {
   readEmailCode?: PromotionEmailCodeReader;
   recordUsage?: (usage: AgentTurnUsage) => Promise<void>;
   generationStarting?: () => void;
+  /** Runtime-only assignment from the Reddit request assessor, never a provider tool. */
+  replyAssignment?: {
+    content: string;
+    enabled: () => Promise<boolean>;
+    beforeMutation: () => Promise<void>;
+    signal?: AbortSignal | undefined;
+    beforeRedditNavigation?: (() => Promise<void>) | undefined;
+  };
   local?: {
     config: Awaited<ReturnType<typeof promotionConfig>>;
     enabled: () => Promise<boolean>;
@@ -95,6 +103,21 @@ type PromotionAgentInput = {
   };
 };
 function assertAgentInput(input: PromotionAgentInput) {
+  if (
+    (input.target.action === "reply") !==
+    (input.replyAssignment !== undefined)
+  )
+    throw new Error(
+      "Reply actions require an explicit assessed Reddit reply assignment",
+    );
+  if (
+    input.replyAssignment !== undefined &&
+    (input.target.account !== "reddit" ||
+      !input.target.id.startsWith("reddit-outreach-"))
+  )
+    throw new Error(
+      "Reply assignments are restricted to Reddit outreach targets",
+    );
   if (
     input.readEmailCode !== undefined &&
     input.mode !== "preview" &&
@@ -116,7 +139,25 @@ function executionOutcome(result: PromotionTaskResult) {
 async function agentConfiguration(input: PromotionAgentInput) {
   return input.local?.config ?? (await promotionConfig());
 }
+
+async function assignmentContent(input: PromotionAgentInput) {
+  return (
+    input.replyAssignment?.content ?? (await promotionContent(input.target))
+  );
+}
+
+function assignmentMutationGuard(input: PromotionAgentInput) {
+  return input.replyAssignment === undefined
+    ? {}
+    : {
+        beforeMutation: input.replyAssignment.beforeMutation,
+        replyText: input.replyAssignment.content,
+        beforeRedditNavigation: input.replyAssignment.beforeRedditNavigation,
+      };
+}
 async function publishingEnabled(input: PromotionAgentInput) {
+  if (input.replyAssignment !== undefined)
+    return await input.replyAssignment.enabled();
   if (input.scheduled === true) {
     const state = await readPromotionState(input.store, input.target.id);
     const others = {
@@ -132,6 +173,11 @@ async function publishingEnabled(input: PromotionAgentInput) {
   const latest = await promotionConfig();
   return latest.enabled && latest.enabledTargets.includes(input.target.id);
 }
+function replyAssignmentSignals(input: PromotionAgentInput) {
+  const signal = input.replyAssignment?.signal;
+  return signal === undefined ? [] : [signal];
+}
+
 export async function runPromotionAgent(input: PromotionAgentInput) {
   assertAgentInput(input);
   const context = Context.current();
@@ -144,6 +190,7 @@ export async function runPromotionAgent(input: PromotionAgentInput) {
     completion.signal,
     context.cancellationSignal,
     AbortSignal.timeout(config.timeoutMinutes * 60_000),
+    ...replyAssignmentSignals(input),
   ]);
   const workdir = await mkdtemp(path.join(tmpdir(), "storm-promotion-"));
   const socket = path.join(
@@ -168,6 +215,7 @@ export async function runPromotionAgent(input: PromotionAgentInput) {
       redact.push(value);
     },
     enabled: () => publishingEnabled(input),
+    ...assignmentMutationGuard(input),
     heartbeat: () => {
       context.heartbeat({ targetId: input.target.id });
     },
@@ -238,7 +286,7 @@ export async function runPromotionAgent(input: PromotionAgentInput) {
   try {
     await chmod(socket, 0o660);
     if (uid !== undefined) await chown(socket, 0, uid);
-    const content = await promotionContent(input.target);
+    const content = await assignmentContent(input);
     const previous = await input.store.read(
       `context/${input.target.id}.json`,
       PromotionTaskResultSchema,

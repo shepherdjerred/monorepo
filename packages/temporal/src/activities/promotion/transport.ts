@@ -5,6 +5,12 @@ import type {
   PromotionTarget,
 } from "#shared/promotion/model.ts";
 import type { PromotionStore } from "./store.ts";
+import {
+  assertRedditPromotionAccountAvailable,
+  readRedditPromotionAccount,
+  recordRedditAccountFailure,
+  recordRedditAccountSuccess,
+} from "./reddit-outreach/ownership.ts";
 import { PromotionBrowser } from "./browser.ts";
 import { approvedDiscordCopy } from "./publication/approved-copy.ts";
 import { ensurePromotionDiscord } from "./discord-session.ts";
@@ -41,6 +47,9 @@ export function promotionTransport(input: {
   maxSteps: number;
   monthlySolverUsd: number;
   enabled: () => Promise<boolean>;
+  beforeMutation?: () => Promise<void>;
+  beforeRedditNavigation?: (() => Promise<void>) | undefined;
+  replyText?: string;
   heartbeat: () => void;
   registerSecret?: (value: string) => void;
   readEmailCode?: PromotionEmailCodeReader;
@@ -65,6 +74,26 @@ export function promotionTransport(input: {
           promotionRequiredEnv("PINCHTAB_TOKEN"),
           {
             signal: input.signal,
+            ...(input.target.account === "reddit"
+              ? {
+                  beforeRedditNavigation: async () => {
+                    assertRedditPromotionAccountAvailable(
+                      await readRedditPromotionAccount(input.store),
+                    );
+                    await input.beforeRedditNavigation?.();
+                  },
+                  redditAccount: {
+                    failure: async (
+                      failure: Parameters<typeof recordRedditAccountFailure>[1],
+                    ) => {
+                      await recordRedditAccountFailure(input.store, failure);
+                    },
+                    success: async () => {
+                      await recordRedditAccountSuccess(input.store);
+                    },
+                  },
+                }
+              : {}),
             ...(input.browserProfile === undefined
               ? {}
               : { profile: input.browserProfile }),
@@ -75,6 +104,13 @@ export function promotionTransport(input: {
   let expectedReceipt: PromotionTaskResult["receipt"] = null;
   const journal = new PromotionTaskJournal({
     ...input,
+    enabled: async () => {
+      if (input.target.account === "reddit")
+        assertRedditPromotionAccountAvailable(
+          await readRedditPromotionAccount(input.store),
+        );
+      return await input.enabled();
+    },
     now: Date.now,
     capture: async () => {
       if (browser === undefined) {
@@ -95,6 +131,7 @@ export function promotionTransport(input: {
           signal: input.signal,
           saveEvidence: save,
           expectedQuote: expectedReceipt.quote,
+          beforeRedditNavigation: input.beforeRedditNavigation,
         });
       }
       const page = await browser.receiptSnapshot();

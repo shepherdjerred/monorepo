@@ -167,7 +167,12 @@ function harness(
 
 it("stops and deletes its anonymous profile after successful verification, preserving the signed-in profile", async () => {
   const test = harness({ stopLag: 2 });
-  const receipt = await capturePublicRedditReceipt(test.input);
+  const beforeRedditNavigation = vi.fn(() => Promise.resolve());
+  const receipt = await capturePublicRedditReceipt({
+    ...test.input,
+    beforeRedditNavigation,
+  });
+  expect(beforeRedditNavigation).toHaveBeenCalledTimes(1);
   expect(receipt).toMatchObject({
     url: receiptUrl,
     screenshotKey: "fixture.png",

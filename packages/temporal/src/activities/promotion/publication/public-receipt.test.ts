@@ -9,6 +9,15 @@ describe("public Reddit receipt URLs", () => {
       ),
     ).toBe("https://www.reddit.com/r/MinecraftServer/comments/abc/title/");
   });
+  it("uses the public comment route for an old Reddit comment permalink", () => {
+    expect(
+      publicRedditReceiptUrl(
+        "https://old.reddit.com/r/MinecraftServer/comments/abc/title/def/?context=3",
+      ),
+    ).toBe(
+      "https://www.reddit.com/r/MinecraftServer/comments/abc/comment/def/",
+    );
+  });
   it("removes transient challenge parameters from the captured canonical URL", () => {
     expect(
       publicRedditReceiptUrl(

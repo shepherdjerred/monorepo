@@ -932,7 +932,7 @@ describe("runtime.decide validation and error handling", () => {
                 message: `Invalid key ${secretKey} on /v1/decisions`,
               },
             },
-            { status: 429 },
+            { status: 429, headers: { "retry-after": "120" } },
           ),
         ),
     });
@@ -955,6 +955,7 @@ describe("runtime.decide validation and error handling", () => {
     }
     expect(caughtHttp.kind).toBe("http");
     expect(caughtHttp.status).toBe(429);
+    expect(caughtHttp.retryAfter).toBe("120");
     expect(caughtHttp.message).toContain("HTTP 429");
     expect(caughtHttp.message).not.toContain(secretKey);
 
@@ -996,7 +997,13 @@ describe("runtime.decide validation and error handling", () => {
       service: "decisions-errors",
       appName: "Decisions Errors",
       fetch: () =>
-        Promise.resolve(Response.json({ model: "gpt-6-luna", answers: "bad" })),
+        Promise.resolve(
+          Response.json({
+            model: "gpt-6-luna",
+            answers: "bad",
+            usage: { input_tokens: 30, output_tokens: 0, total_tokens: 30 },
+          }),
+        ),
     });
     await expect(
       parseRuntime.decide({
@@ -1008,6 +1015,7 @@ describe("runtime.decide validation and error handling", () => {
     ).rejects.toMatchObject({
       name: "DecisionApiError",
       kind: "parse",
+      usage: { input_tokens: 30, output_tokens: 0, total_tokens: 30 },
     });
 
     const abortController = new AbortController();

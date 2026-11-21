@@ -1,5 +1,26 @@
 import { z } from "zod/v4";
 
+export type PromotionBrowserOptions = {
+  signal: AbortSignal;
+  profile?: string;
+  temporaryProfile?: true;
+  captureChallenges?: false;
+  beforeRedditNavigation?: () => Promise<void>;
+  redditAccount?: {
+    failure: (failure: {
+      kind: "rate-limit" | "challenge" | "logged-out";
+      retryAt: string | null;
+    }) => Promise<void>;
+    success: () => Promise<void>;
+  };
+};
+
+export const BrowserIdentifierSchema = z.object({
+  id: z.string().optional(),
+  instanceId: z.string().optional(),
+  tabId: z.string().optional(),
+});
+
 const ProfileName = z.object({ name: z.string() });
 export const ProfilesSchema = z.union([
   z.array(ProfileName),

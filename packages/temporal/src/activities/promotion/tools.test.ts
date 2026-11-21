@@ -1,6 +1,42 @@
 import { describe, expect, it, vi } from "vitest";
 import { harness } from "./tool-test-support.ts";
 
+describe("Reddit reply composer", () => {
+  it("sends only the assigned content and refuses a second click even after successful transport", async () => {
+    const text = "hi! here's our survival server :) https://join.ts-mc.net/";
+    const test = await harness(false, false, 80, { replyText: text });
+    test.control.mockResolvedValueOnce({ ref: "e1", role: "textbox" });
+    await expect(
+      test.handle({
+        endpoint: "action",
+        body: { kind: "fill", ref: "e1", text: "unassigned text" },
+      }),
+    ).rejects.toThrow("assigned top-level Reddit reply");
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "fill", ref: "e1", text },
+    });
+    const click = { endpoint: "action", body: { kind: "click", ref: "e3" } };
+    await expect(test.handle(click)).rejects.toThrow(
+      "assigned top-level Reddit reply",
+    );
+    test.control.mockResolvedValueOnce({
+      ref: "e3",
+      role: "button",
+      name: "save",
+    });
+    await test.handle(click);
+    await expect(test.handle(click)).rejects.toThrow("already dispatched");
+    expect(test.action.mock.calls.map(([action]) => action)).toEqual([
+      { kind: "fill", selector: ".commentarea > form.usertext textarea", text },
+      {
+        kind: "click",
+        selector: ".commentarea > form.usertext button[type=submit]",
+      },
+    ]);
+  });
+});
+
 describe("native pointer preflight", () => {
   it("rejects a model-supplied humanization override before native actions", async () => {
     const test = await harness(false);

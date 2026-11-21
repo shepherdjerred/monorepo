@@ -4220,6 +4220,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-reddit-outreach-enabled",
+      "owner": "the-storm",
+      "namespace": "temporal",
+      "source": "the-storm-reddit-outreach",
+      "purpose": "Reply to relevant recent Minecraft server requests using the production outreach identity.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-reddit-outreach-settings",
+      "owner": "the-storm",
+      "namespace": "temporal",
+      "source": "the-storm-reddit-outreach",
+      "purpose": "Validated Reddit outreach communities, post age and discovery bounds, and sweep and daily reply limits.",
+      "type": "variant",
+      "default": "{\"subreddits\":[\"MinecraftServer\",\"MinecraftServerFinder\",\"MinecraftSMPs\",\"MinecraftServers\"],\"maxPostAgeHours\":24,\"maxPostsPerSweep\":1500,\"maxListingPagesPerSweep\":12,\"maxThreadReadsPerSweep\":20,\"maxRedditNavigationsPerSweep\":60,\"maxRepliesPerSweep\":10,\"maxRepliesPerDay\":10}",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-rwf-recording-archive-enabled",
       "owner": "the-storm",
       "namespace": "temporal",

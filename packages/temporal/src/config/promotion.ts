@@ -2,8 +2,30 @@ import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { z } from "zod/v4";
 
+export function promotionFlagSource(targetingKey: string) {
+  let available = true;
+  const onUnavailable = () => {
+    available = false;
+  };
+  return {
+    sources: {
+      flag: createFlagConfigSource({
+        targetingKey,
+        attributes: { environment: "prod" },
+        kinds: { enabled: "boolean", settings: "string" },
+        requireFreshSnapshot: true,
+        onUnavailable,
+      }),
+    },
+    hooks: { onSourceError: onUnavailable },
+    get available() {
+      return available;
+    },
+  };
+}
+
 export async function promotionConfig() {
-  const availability = { value: true };
+  const flags = promotionFlagSource("the-storm-promotion-prod");
   const resolver = defineConfig({
     definition: {
       enabled: {
@@ -49,30 +71,16 @@ export async function promotionConfig() {
         names: { flag: "the-storm-promotion-settings" },
       },
     } as const,
-    sources: {
-      flag: createFlagConfigSource({
-        targetingKey: "the-storm-promotion-prod",
-        attributes: { environment: "prod" },
-        kinds: { enabled: "boolean", settings: "string" },
-        requireFreshSnapshot: true,
-        onUnavailable: () => {
-          availability.value = false;
-        },
-      }),
-    },
-    hooks: {
-      onSourceError: () => {
-        availability.value = false;
-      },
-    },
+    sources: flags.sources,
+    hooks: flags.hooks,
   });
   const [enabled, settings] = await Promise.all([
     resolver.value("enabled"),
     resolver.value("settings"),
   ]);
   return {
-    enabled: availability.value && enabled,
+    enabled: flags.available && enabled,
     ...settings,
-    available: availability.value,
+    available: flags.available,
   };
 }

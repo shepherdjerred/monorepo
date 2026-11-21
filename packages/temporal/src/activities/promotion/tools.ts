@@ -116,6 +116,55 @@ function navigationMutation(address: URL): boolean {
   );
 }
 
+const REPLY_FORM = ".commentarea > form.usertext";
+
+async function redditReplyAction(input: {
+  browser: PromotionBrowser;
+  journal: PromotionTaskJournal;
+  body: z.infer<typeof ActionSchema>;
+  reply: { text: string; filled: boolean; dispatched: boolean };
+}) {
+  const { browser, journal, body, reply } = input;
+  if (reply.dispatched) throw new Error("Reddit reply was already dispatched");
+  if (body.ref === undefined || body.credential !== undefined)
+    throw new Error("Reddit replies require a native composer control");
+  const control = await browser.accessibleControl(body.ref);
+  await browser.assertRedditReplyThread();
+  if (
+    body.kind === "fill" &&
+    control.role === "textbox" &&
+    body.text === reply.text
+  ) {
+    await browser.snapshot({ selector: REPLY_FORM });
+    await journal.beforeMutation({ key: "reply", text: reply.text });
+    const result = await browser.action({
+      kind: "fill",
+      selector: `${REPLY_FORM} textarea`,
+      text: reply.text,
+    });
+    reply.filled = true;
+    return result;
+  }
+  if (
+    body.kind !== "click" ||
+    control.role !== "button" ||
+    control.name?.toLowerCase() !== "save" ||
+    !reply.filled
+  )
+    throw new Error(
+      "Only the assigned top-level Reddit reply can be submitted",
+    );
+  await browser.snapshot({ selector: REPLY_FORM });
+  await journal.beforeMutation();
+  // Any dispatched click may have succeeded, even if the tool returns an error.
+  reply.dispatched = true;
+  journal.mutationFailed();
+  return await browser.action({
+    kind: "click",
+    selector: `${REPLY_FORM} button[type=submit]`,
+  });
+}
+
 /** Native browser actions; there are no site-specific sequences or selectors. */
 export function createPromotionToolHandler(input: {
   browser: PromotionBrowser;
@@ -134,12 +183,21 @@ export function createPromotionToolHandler(input: {
   heartbeat: () => void;
   registerSecret?: (value: string) => void;
   readEmailCode?: PromotionEmailCodeReader;
+  replyText?: string;
 }) {
   const startedAt = Date.now();
   let queue: Promise<unknown> = Promise.resolve();
   let toolCalls = 0;
   const authentication = new PromotionAuthentication(input.browser);
   const captcha = new PromotionCaptchaSession();
+  const reply =
+    input.replyText === undefined
+      ? undefined
+      : {
+          text: input.replyText,
+          filled: false,
+          dispatched: false,
+        };
 
   async function credentialAction(body: z.infer<typeof ActionSchema>) {
     if (
@@ -211,6 +269,13 @@ export function createPromotionToolHandler(input: {
   }
 
   async function action(body: z.infer<typeof ActionSchema>) {
+    if (reply !== undefined)
+      return await redditReplyAction({
+        browser: input.browser,
+        journal: input.journal,
+        body,
+        reply,
+      });
     if (body.kind === "click" && body.ref !== undefined)
       await assertEnabledControl(body.ref);
     if (body.credential !== undefined) return await credentialAction(body);
@@ -333,10 +398,14 @@ export function createPromotionToolHandler(input: {
   async function navigate(url: string) {
     const address = new URL(url);
     const mutation = navigationMutation(address);
+    if (reply !== undefined && mutation)
+      throw new Error("Reddit reply navigation cannot mutate the site");
     if (mutation) await input.journal.beforeMutation();
     authentication.navigated();
     try {
-      return await input.browser.open(url);
+      const opened = await input.browser.open(url);
+      if (reply !== undefined) reply.filled = false;
+      return opened;
     } catch (error: unknown) {
       if (mutation) input.journal.mutationFailed();
       throw error;

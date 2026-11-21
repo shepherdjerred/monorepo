@@ -20,12 +20,14 @@ import { z } from "zod";
 import {
   DecisionRequestSchema,
   DecisionWireResponseSchema,
+  DecisionWireUsageSchema,
   type DecisionAnswer,
   type DecisionAnswerSchema,
   type DecisionRequest,
   type DecisionResult,
   type DecisionResultUsage,
   type DecisionWireResponse,
+  type DecisionWireUsage,
 } from "./decision-schemas.ts";
 import { logLlmCallFailure, logLlmResponse, stableModelId } from "./logging.ts";
 import { recordTokenUsageMetrics } from "./metrics.ts";
@@ -44,12 +46,16 @@ export type DecisionErrorKind = "http" | "transport" | "parse" | "aborted";
 export class DecisionApiError extends Error {
   readonly kind: DecisionErrorKind;
   readonly status?: number | undefined;
+  readonly retryAfter?: string | undefined;
+  readonly usage?: DecisionWireUsage | undefined;
 
   constructor(
     message: string,
     options: {
       readonly kind: DecisionErrorKind;
       readonly status?: number | undefined;
+      readonly retryAfter?: string | undefined;
+      readonly usage?: DecisionWireUsage | undefined;
       readonly cause?: unknown;
     },
   ) {
@@ -60,6 +66,8 @@ export class DecisionApiError extends Error {
     this.name = "DecisionApiError";
     this.kind = options.kind;
     this.status = options.status;
+    this.retryAfter = options.retryAfter;
+    this.usage = options.usage;
   }
 }
 
@@ -211,7 +219,11 @@ async function sendDecisionRequest(input: {
     const suffix = detail === "" ? "" : `: ${detail}`;
     throw new DecisionApiError(
       `OpenAI Decisions API returned HTTP ${String(response.status)}${suffix}`,
-      { kind: "http", status: response.status },
+      {
+        kind: "http",
+        status: response.status,
+        retryAfter: response.headers.get("retry-after") ?? undefined,
+      },
     );
   }
 
@@ -227,9 +239,16 @@ async function sendDecisionRequest(input: {
 
   const parsed = DecisionWireResponseSchema.safeParse(rawJson);
   if (!parsed.success) {
+    const usage = z
+      .object({ usage: DecisionWireUsageSchema })
+      .safeParse(rawJson).data?.usage;
     throw new DecisionApiError(
       "OpenAI Decisions API returned an invalid response payload",
-      { kind: "parse", cause: parsed.error },
+      {
+        kind: "parse",
+        cause: parsed.error,
+        usage,
+      },
     );
   }
 

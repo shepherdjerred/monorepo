@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
-import { assertPromotionTaskReceipt } from "./task-receipt.ts";
+import {
+  assertPromotionTaskReceipt,
+  type RedditCommentReceipt,
+} from "./task-receipt.ts";
 import {
   assertPromotionUrl,
   promotionDispatchAt,
@@ -53,12 +56,14 @@ export class PromotionTaskJournal {
       mode: PromotionRunInput["mode"];
       store: PromotionStore;
       enabled: () => Promise<boolean>;
+      beforeMutation?: () => Promise<void>;
       now: () => number;
       capture: () => Promise<{
         url: string;
         text: string;
         screenshotKey: string;
         publishedAt?: string | null;
+        redditComment?: RedditCommentReceipt;
       }>;
     },
   ) {}
@@ -122,6 +127,7 @@ export class PromotionTaskJournal {
         "Previous browser mutation is uncertain; inspect instead of writing again",
       );
     if (!(await enabled())) throw new Error("Promotion publishing is disabled");
+    await this.input.beforeMutation?.();
     if (field !== undefined) this.fields.set(field.key, field.text);
     const content = [...this.fields.values()].join("\n");
     const contentHash = createHash("sha256").update(content).digest("hex");

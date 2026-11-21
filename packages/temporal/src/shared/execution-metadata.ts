@@ -166,6 +166,8 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   agentTaskWorkflow: "agent",
   // TASK_QUEUES.PROMOTION / PROMOTION_CONTROL, with report delivery as a dependency.
   runStormPromotion: "agent",
+  runStormRedditOutreach: "agent",
+  reconcileStormRedditReply: "agent",
   manageStormPromotion: "agent",
   dispatchStormPromotion: "agent",
   reportStormPromotion: "agent",
