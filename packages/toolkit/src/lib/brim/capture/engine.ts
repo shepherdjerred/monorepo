@@ -14,7 +14,7 @@ import type { BrimCapturePaths } from "./paths.ts";
  * `uv tool upgrade` or `brew upgrade`. `uv` itself comes from the Brewfile.
  */
 // renovate: datasource=pypi depName=mitmproxy
-export const MITMPROXY_VERSION = "12.2.1";
+export const MITMPROXY_VERSION = "12.3.1";
 /** mitmproxy 12 needs Python 3.12+; pinning keeps uv from picking a newer one. */
 export const CAPTURE_PYTHON_VERSION = "3.13";
 

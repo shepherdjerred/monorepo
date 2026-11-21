@@ -2,7 +2,7 @@
 
 Run from packages/toolkit (CI runs exactly this; versions match engine.ts):
 
-    uvx --python 3.13 --with mitmproxy==12.2.1 --with jsonschema==4.25.1 pytest==8.4.2 capture
+    uvx --python 3.13 --with mitmproxy==12.3.1 --with jsonschema==4.26.0 pytest==9.2.0 capture
 """
 
 from __future__ import annotations

@@ -117,7 +117,7 @@ inference was seen. To verify one on a logged-in Mac:
    a certificate error in the CLI instead.
 
    ```bash
-   uvx --from mitmproxy==12.2.1 mitmdump --listen-host 127.0.0.1 \
+   uvx --from mitmproxy==12.3.1 mitmdump --listen-host 127.0.0.1 \
      --listen-port 47821 --set confdir=$HOME/.toolkit/brim-capture/mitmproxy \
      --set upstream_cert=false --set flow_detail=1
    ```
