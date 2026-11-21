@@ -144,12 +144,6 @@ describe("First-party Flags consumer deployments", () => {
       createChart: (app: App) => createBirmelChart(app),
     },
     {
-      name: "Streambot",
-      deployment: "streambot/prod",
-      count: 1,
-      createChart: (app: App) => createMediaChart(app),
-    },
-    {
       name: "TRMNL dashboard",
       deployment: "trmnl-dashboard/prod",
       count: 1,
@@ -282,5 +276,37 @@ describe("First-party Flags consumer deployments", () => {
     expect([...selected].sort()).toEqual(
       flagDeployments.map((deployment) => deployment.id).sort(),
     );
+  });
+
+  test("binds Streambot and the three Media roles to their own Flags deployments", async () => {
+    const consumers = await flagsConsumers((app) =>
+      createMediaChart(app, "docker.io/shepherdjerred/media:delivery-recipe"),
+    );
+    expect(consumers.toSorted((a, b) => a.name.localeCompare(b.name))).toEqual([
+      {
+        name: "media-media-api",
+        mode: "flags",
+        deployment: "media/prod",
+        url: FLAGS_EVALUATION_URL,
+      },
+      {
+        name: "media-media-files",
+        mode: "flags",
+        deployment: "media/prod",
+        url: FLAGS_EVALUATION_URL,
+      },
+      {
+        name: "media-media-network",
+        mode: "flags",
+        deployment: "media/prod",
+        url: FLAGS_EVALUATION_URL,
+      },
+      {
+        name: "media-streambot",
+        mode: "flags",
+        deployment: "streambot/prod",
+        url: FLAGS_EVALUATION_URL,
+      },
+    ]);
   });
 });

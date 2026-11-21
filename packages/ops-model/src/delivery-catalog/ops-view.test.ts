@@ -42,7 +42,7 @@ describe("catalog core", () => {
         .filter((service) => service.lifecycle === "retired")
         .map((service) => service.id)
         .toSorted(),
-    ).toEqual(["minecraft-shuxin", "minecraft-sjerred"]);
+    ).toEqual(["minecraft-shuxin", "minecraft-sjerred", "tofu-arr"]);
     expect(
       CATALOG_CORE.environments
         .filter((environment) => environment.approvalPolicy === "required")
