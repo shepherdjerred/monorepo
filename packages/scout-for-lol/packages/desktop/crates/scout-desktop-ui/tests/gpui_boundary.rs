@@ -154,6 +154,7 @@ fn native_window_bindings_stay_in_the_ui_crate_on_their_platform()
     // The overlay's click-through (`src/native/`) is the only code that names
     // a platform window. Each binding is gated to its own platform.
     const NATIVE: &[(&str, &[&str])] = &[
+        ("objc2", &["cfg(target_os = \"macos\")"]),
         ("objc2-app-kit", &["cfg(target_os = \"macos\")"]),
         ("winsafe", &["cfg(windows)"]),
         (

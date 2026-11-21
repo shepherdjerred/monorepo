@@ -443,16 +443,25 @@ workspace that may use `unsafe` (`tests/unsafe_boundary.rs` reads every Rust
 file and fails otherwise). Each platform turns GPUI's raw window handle into
 its own window type there:
 
-- macOS: `NSWindow.setIgnoresMouseEvents(true)` through `objc2-app-kit`. GPUI's
-  pop-up is already a non-activating panel at the pop-up window level, on
-  every Space and beside fullscreen apps.
+- macOS: `NSWindow.setIgnoresMouseEvents(true)` through `objc2-app-kit`, no
+  window shadow, and the window moved to a subclass that answers NO to
+  `canBecomeKeyWindow` and `canBecomeMainWindow` (GPUI's classes answer YES).
+  GPUI's pop-up is already a non-activating panel at the pop-up window level,
+  on every Space and beside fullscreen apps, and the overlay runs as an
+  accessory app, with no Dock icon.
 - Windows: `WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_NOACTIVATE` added to
   GPUI's `WS_EX_TOOLWINDOW | WS_EX_TOPMOST`, `SetLayeredWindowAttributes`
   (opaque; the transparent background is GPUI's), and
   `SetWindowPos(HWND_TOPMOST)`, through `winsafe`.
 
-The overlay checks the result and reports `unavailable` when the platform did
-not keep it. This has run on macOS over other apps. **It has not run over
+The overlay reads the result back, logs it (`ignoresMouseEvents=true
+level=101 canBecomeKey=false …` on macOS), and reports `unavailable` when the
+platform did not keep it. `tests/render_overlay.rs` draws every card kind
+offscreen through the overlay's own root view, fed the supervisor's IPC lines.
+`cargo test -p scout-client-app overlay_on_screen -- --ignored --nocapture`
+runs the real supervisor and overlay on a display with a mock gameflow. On
+macOS this has run over another app's window, which received clicks made on
+the card. **It has not run over
 League on Windows**: the Windows path type-checks
 (`cargo clippy --target x86_64-pc-windows-msvc -p scout-desktop-ui`), and its
 behaviour over a borderless game is the owner's hardware acceptance. The

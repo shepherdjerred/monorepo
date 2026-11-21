@@ -14,7 +14,7 @@
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use winsafe::{self as w, co};
 
-pub(super) fn make_click_through(window: &impl HasWindowHandle) -> Result<(), String> {
+pub(super) fn make_click_through(window: &impl HasWindowHandle) -> Result<String, String> {
     let handle = window
         .window_handle()
         .map_err(|error| format!("the overlay has no window handle: {error}"))?;
@@ -48,7 +48,10 @@ pub(super) fn make_click_through(window: &impl HasWindowHandle) -> Result<(), St
     .into_iter()
     .all(|style| kept.has(style))
     {
-        Ok(())
+        Ok(format!(
+            "extended styles {:#010x} (layered, transparent, no-activate, topmost)",
+            kept.raw()
+        ))
     } else {
         Err("Windows did not keep the overlay's click-through styles".to_owned())
     }

@@ -77,7 +77,7 @@ pub fn run_overlay() -> ExitCode {
             Ok(bounds) => bounds,
             Err(error) => unavailable(format!("no place for the overlay: {error}")),
         };
-        let click_through: Rc<RefCell<Option<Result<(), String>>>> = Rc::default();
+        let click_through: Rc<RefCell<Option<Result<String, String>>>> = Rc::default();
         let applied = Rc::clone(&click_through);
         let opened = kit::open_overlay_window(cx, bounds, move |window, cx| {
             *applied.borrow_mut() = Some(native::make_click_through(window));
@@ -87,7 +87,10 @@ pub fn run_overlay() -> ExitCode {
             unavailable(format!("could not open the overlay window: {error}"));
         }
         match click_through.borrow_mut().take() {
-            Some(Ok(())) => {
+            Some(Ok(probe)) => {
+                // What the platform reports back about the window, for the
+                // log: proof the styles held, not just that they were asked.
+                eprintln!("Scout overlay: {probe}");
                 if !report(&OverlayReport::Ready) {
                     broken("the supervisor stopped listening");
                 }
@@ -99,15 +102,17 @@ pub fn run_overlay() -> ExitCode {
     ExitCode::SUCCESS
 }
 
-/// The overlay's root view: the current card, or nothing.
-struct OverlayWindow {
+/// The overlay's root view: the current card, or nothing. The offscreen render
+/// test drives it with the same IPC lines the supervisor sends.
+pub struct OverlayWindow {
     greeted: bool,
     frame: Option<OverlayFrame>,
     _listener: Task<()>,
 }
 
 impl OverlayWindow {
-    fn new(
+    /// A view that draws what arrives on `receiver`.
+    pub fn new(
         window: &mut Window,
         cx: &mut Context<Self>,
         receiver: async_channel::Receiver<Incoming>,

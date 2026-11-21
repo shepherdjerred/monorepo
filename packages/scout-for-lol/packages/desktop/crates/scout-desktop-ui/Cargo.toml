@@ -24,8 +24,11 @@ gpui-kit.workspace = true
 # version GPUI implements `HasWindowHandle` with.
 raw-window-handle = "0.6.2"
 
-# Click-through on macOS: `NSWindow.ignoresMouseEvents`. The versions GPUI's
-# macOS platform already links.
+# Click-through on macOS: `NSWindow.ignoresMouseEvents`, and a window class
+# that cannot become key. The versions GPUI's macOS platform already links.
+[target.'cfg(target_os = "macos")'.dependencies.objc2]
+version = "0.6.4"
+
 [target.'cfg(target_os = "macos")'.dependencies.objc2-app-kit]
 version = "0.3.2"
 default-features = false
@@ -66,6 +69,10 @@ gpui-platform = { workspace = true, features = ["runtime_shaders", "test-support
 
 [[test]]
 name = "render_pages"
+harness = false
+
+[[test]]
+name = "render_overlay"
 harness = false
 
 [lints]

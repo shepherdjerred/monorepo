@@ -17,12 +17,13 @@ mod macos;
 #[cfg(windows)]
 mod windows;
 
-/// Make `window` click-through and topmost.
+/// Make `window` click-through, topmost, and unable to take focus. Returns
+/// what the platform reports back about the window, for the log.
 ///
 /// # Errors
 /// What the platform refused, safe to record. The caller must not show a
 /// window this failed for: it would take the player's clicks.
-pub fn make_click_through(window: &impl HasWindowHandle) -> Result<(), String> {
+pub fn make_click_through(window: &impl HasWindowHandle) -> Result<String, String> {
     #[cfg(target_os = "macos")]
     return macos::make_click_through(window);
     #[cfg(windows)]
