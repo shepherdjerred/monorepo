@@ -52,7 +52,7 @@ test("PR health retains pending publication and keeps work moving when main is r
   expect(report.overallStatus).toBe("PENDING");
   expect(report.nextSteps.join(" ")).toContain("keep working");
   expect(report.nextSteps.join(" ")).toContain(
-    "repair main only when your changes caused the failure or you were explicitly instructed",
+    "repair main if your changes caused the failure, or claim/post a notice (--owner me) to fix an unowned blocker",
   );
   expect(report.nextSteps.join(" ")).not.toContain("fix hard failures");
 });

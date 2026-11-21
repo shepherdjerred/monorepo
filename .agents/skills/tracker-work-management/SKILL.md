@@ -1,6 +1,6 @@
 ---
 name: tracker-work-management
-description: Read or manage this repository's Tracker issues, projects, triage, and follow-up work through toolkit tracker, including developer-experience friction and improvement reports. Use when work must be found, recorded, updated, linked to a branch, or when broken tooling, inefficiency, automation candidates, poor architecture, or tech debt should be filed.
+description: Read or manage this repository's Tracker issues, projects, triage, follow-up work, and cross-agent Forum coordination through toolkit tracker and toolkit forum, including developer-experience friction and improvement reports. Use when coordinating workstreams or shared blockers in Tracker Forum, when work must be found, recorded, updated, or linked to a branch, or when broken tooling, inefficiency, automation candidates, poor architecture, or tech debt should be filed.
 ---
 
 # Tracker work management
@@ -9,15 +9,19 @@ Tracker owns plans, TODOs, review queues, and unfinished follow-ups. Repository
 documents must not become a parallel work-tracking system.
 
 Tracker's Forum holds shared coordination and engineering threads (`FM-<N>`
-short IDs, accepted everywhere alongside UUIDs), separate from issues. Pull
-`toolkit forum list --kind notice --json` at task start and before shared
-interventions, and check `toolkit forum inbox --json` when resuming subscribed
-threads. Choose the matching kind:
+short IDs, accepted everywhere alongside UUIDs), separate from issues. Read
+around at task start and before shared actions (`toolkit forum list --json`,
+`toolkit forum inbox --json`, or `--scope <tag>`) even on `xs`/`s` work so you
+see concurrent workstreams and interventions that could interrupt you:
 
-- `notice`: active operational interventions; requires `--condition` and
-  supports `--expires-at` plus advisory ownership (`--owner me`, `claim`,
-  `handoff --to <KEY|me|none> [--note ...]`).
-- `discussion`: open-ended engineering synthesis and discoveries.
+- `notice`: shared operational state, contended host/cluster resources (e.g.
+  shared test PostgreSQL), and active red-`main` / Delivery recovery; requires
+  `--condition` and supports `--expires-at` plus advisory ownership (`--owner me`,
+  `claim`, `handoff --to <KEY|me|none> [--note ...]`).
+- `discussion`: `m`+ effort (`m`, `l`, `xl`) workstreams — state touched scopes
+  or packages up front, post occasional milestone updates so other agents can
+  communicate, and `resolve` when done (`xs`/`s` work needs none) — plus
+  open-ended engineering synthesis.
 - `question`: Q&A threads settled with `toolkit forum accept <FM-N> <REPLY_ID>`.
 - `decision`: durable architectural or operational choices (`pin` key ones).
 
@@ -25,13 +29,15 @@ Keep actionable work in Tracker issues: link existing issues with `--issue` /
 `forum link <FM-N> <ISSUE>`, or convert a thread or `--reply` into a linked `AI`
 issue with `toolkit forum promote <FM-N> [--reply <UUID>]`.
 
-When waiting on an active notice or forum event, block on one SSE stream with
-`toolkit forum watch <FM-N> --until-resolved` (or `--once` / `--timeout-sec N`)
-rather than polling `forum view` in `sleep` loops. When an old notice is
-relevant, inspect its condition and live evidence (`--all` includes expired
-notices, since expiration never undoes an intervention); any session may
-resolve a verified condition with an evidence note. Notices are advisory and
-do not enforce locks.
+When `main`, Delivery, CI, or another shared system is red, inspect failure
+evidence and active forum threads first; follow an owned recovery via one SSE
+stream (`toolkit forum watch <FM-N> --until-resolved`, or `--once` /
+`--timeout-sec N`) rather than polling `forum view` in `sleep` loops. You must
+pick up problems your changes caused, and may pick up an unowned problem you did
+not cause when it blocks you, there is no better active owner (such as the
+causal author), and nobody else is working on it — `claim <FM-N>` or `post
+--kind notice --owner me` before acting. Inspect old notices with `--all` (expiry
+never undoes an intervention) and `resolve` verified conditions with evidence.
 
 Start by inspecting identity and existing work:
 
