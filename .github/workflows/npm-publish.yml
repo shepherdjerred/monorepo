@@ -64,7 +64,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
 
       - name: Ensure modern npm CLI
@@ -194,7 +194,7 @@ jobs:
           PKG_DIR: ${{ steps.resolve.outputs.pkg_dir }}
           NPM_TAG: ${{ steps.resolve.outputs.tag }}
         run: |
-          npm publish "${PKG_DIR}" \
+          npm publish "./${PKG_DIR}" \
             --tag "${NPM_TAG}" \
             --access public \
             --provenance
