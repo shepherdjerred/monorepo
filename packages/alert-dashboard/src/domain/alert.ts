@@ -120,6 +120,22 @@ export function shouldSkipLedgerAlert(input: {
 }
 
 /**
+ * Routine `warning` household chores notify Home Assistant without sending
+ * incident emails, while `critical` household faults and all Ops
+ * `warning`/`critical` alerts remain eligible for `EmailOutbox`.
+ */
+export function isEligibleEmailAlert(
+  status: "firing" | "resolved",
+  labels: Readonly<Record<string, string>>,
+): boolean {
+  const severity = severityFromLabels(labels);
+  if (status !== "firing") return false;
+  return labels["category"] === "household"
+    ? severity === "critical"
+    : severity === "critical" || severity === "warning";
+}
+
+/**
  * Household chores at warning or critical notify Home Assistant once per
  * occurrence, except `service="pet-care"` which Temporal's `pet-care-alerts`
  * workflow already delivers directly to Home Assistant.

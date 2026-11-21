@@ -6,6 +6,11 @@ import type {
   HomeAssistantSendSuccessInput,
 } from "#application/ports";
 import { houseNotificationId, houseNotificationPayload } from "#domain/alert";
+import {
+  claimableOutboxRowWhere,
+  claimedSendWhere,
+  sentOutboxUpdateData,
+} from "#infrastructure/prisma-email-claim";
 import { OutboxIdSchema } from "#shared/schema";
 import { epochNanosecondsToInstantText } from "#shared/time";
 
@@ -164,13 +169,7 @@ export async function claimPendingHaRows(
     }
     const sendClaimId = crypto.randomUUID();
     const result = await transaction.homeAssistantOutbox.updateMany({
-      where: {
-        id: candidate.id,
-        sentAtNs: null,
-        canceledAtNs: null,
-        nextAttemptAtNs: { lte: nowNs },
-        OR: [{ sendingAtNs: null }, { sendingAtNs: { lte: reclaimBeforeNs } }],
-      },
+      where: claimableOutboxRowWhere(candidate.id, nowNs, reclaimBeforeNs),
       data: { sendingAtNs, sendClaimId },
     });
     if (result.count === 1) {
@@ -190,19 +189,8 @@ export async function markHaSentRow(
   input: HomeAssistantSendSuccessInput,
 ): Promise<void> {
   const result = await transaction.homeAssistantOutbox.updateMany({
-    where: {
-      id: input.id,
-      sendClaimId: input.sendClaimId,
-      sentAtNs: null,
-      canceledAtNs: null,
-    },
-    data: {
-      sentAtNs: input.sentAtNs,
-      sendingAtNs: null,
-      sendClaimId: null,
-      attemptCount: { increment: 1 },
-      lastError: null,
-    },
+    where: claimedSendWhere(input.id, input.sendClaimId),
+    data: sentOutboxUpdateData(input.sentAtNs),
   });
   if (result.count !== 1) {
     throw new Error(
@@ -226,12 +214,7 @@ export async function markHaFailedRow(
     current?.action === "notify" &&
     current.occurrence.lifecycleState === "resolved";
   const result = await transaction.homeAssistantOutbox.updateMany({
-    where: {
-      id: input.id,
-      sendClaimId: input.sendClaimId,
-      sentAtNs: null,
-      canceledAtNs: null,
-    },
+    where: claimedSendWhere(input.id, input.sendClaimId),
     data: {
       ...(cancelResolvedNotify
         ? { canceledAtNs: input.failedAtNs }

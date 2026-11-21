@@ -4,9 +4,9 @@ import {
 } from "#generated/prisma/client/index.js";
 import {
   eventId,
+  isEligibleEmailAlert,
   isEligibleHouseAlert,
   occurrenceId,
-  severityFromLabels,
   shouldSkipLedgerAlert,
   type AlertOccurrenceRecord,
 } from "#domain/alert";
@@ -42,11 +42,7 @@ function resolvedAt(alert: WebhookAlert): bigint | null {
 }
 
 function isEligible(alert: WebhookAlert): boolean {
-  const severity = severityFromLabels(alert.labels);
-  return (
-    alert.status === "firing" &&
-    (severity === "critical" || severity === "warning")
-  );
+  return isEligibleEmailAlert(alert.status, alert.labels);
 }
 
 async function createOccurrence(input: {

@@ -11,33 +11,45 @@ type RecordedCall = {
   body: unknown;
 };
 
+function createRecordingClient(
+  baseUrl = "http://homeassistant.home.svc:8123",
+): {
+  client: HomeAssistantClient;
+  calls: RecordedCall[];
+} {
+  const calls: RecordedCall[] = [];
+  const client = new HomeAssistantClient({
+    baseUrl,
+    token: "ha-secret-token",
+    fetch: (input, init) => {
+      const headers = new Headers(init?.headers);
+      calls.push({
+        url:
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.href
+              : input.url,
+        method: init?.method,
+        authorization: headers.get("authorization"),
+        contentType: headers.get("content-type"),
+        hasAbortSignal: init?.signal instanceof AbortSignal,
+        body:
+          typeof init?.body === "string"
+            ? (JSON.parse(init.body) as unknown)
+            : null,
+      });
+      return Promise.resolve(new Response("[]", { status: 200 }));
+    },
+  });
+  return { client, calls };
+}
+
 describe("HomeAssistantClient", () => {
   it("creates a persistent notification and pushes to iPhone on notify", async () => {
-    const calls: RecordedCall[] = [];
-    const client = new HomeAssistantClient({
-      baseUrl: "http://homeassistant.home.svc:8123/",
-      token: "ha-secret-token",
-      fetch: (input, init) => {
-        const headers = new Headers(init?.headers);
-        calls.push({
-          url:
-            typeof input === "string"
-              ? input
-              : input instanceof URL
-                ? input.href
-                : input.url,
-          method: init?.method,
-          authorization: headers.get("authorization"),
-          contentType: headers.get("content-type"),
-          hasAbortSignal: init?.signal instanceof AbortSignal,
-          body:
-            typeof init?.body === "string"
-              ? (JSON.parse(init.body) as unknown)
-              : null,
-        });
-        return Promise.resolve(new Response("[]", { status: 200 }));
-      },
-    });
+    const { client, calls } = createRecordingClient(
+      "http://homeassistant.home.svc:8123/",
+    );
 
     await client.send({
       action: "notify",
@@ -78,31 +90,7 @@ describe("HomeAssistantClient", () => {
   });
 
   it("dismisses only the persistent notification on dismiss", async () => {
-    const calls: RecordedCall[] = [];
-    const client = new HomeAssistantClient({
-      baseUrl: "http://homeassistant.home.svc:8123",
-      token: "ha-secret-token",
-      fetch: (input, init) => {
-        const headers = new Headers(init?.headers);
-        calls.push({
-          url:
-            typeof input === "string"
-              ? input
-              : input instanceof URL
-                ? input.href
-                : input.url,
-          method: init?.method,
-          authorization: headers.get("authorization"),
-          contentType: headers.get("content-type"),
-          hasAbortSignal: init?.signal instanceof AbortSignal,
-          body:
-            typeof init?.body === "string"
-              ? (JSON.parse(init.body) as unknown)
-              : null,
-        });
-        return Promise.resolve(new Response("[]", { status: 200 }));
-      },
-    });
+    const { client, calls } = createRecordingClient();
 
     await client.send({
       action: "dismiss",

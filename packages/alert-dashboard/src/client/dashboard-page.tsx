@@ -15,6 +15,9 @@ import {
   LifecycleStateSchema,
   SeveritySchema,
   SuppressionStateSchema,
+  type AlertScope,
+  type AlertView,
+  type Summary,
 } from "#shared/schema";
 
 function suppressionFromParam(raw: string | null): string | undefined {
@@ -26,11 +29,11 @@ function suppressionSelectValue(raw: string | null): string {
   return raw === null || raw === "none" ? "" : raw;
 }
 
-function alertInput(params: URLSearchParams) {
+function scopedAlertInput(params: URLSearchParams, scope: AlertScope) {
   const search = params.get("q");
   return AlertListInputSchema.safeParse({
     limit: 100,
-    scope: "ops",
+    scope,
     severity: params.get("severity") ?? undefined,
     suppressionState: suppressionFromParam(params.get("suppression")),
     lifecycleState: params.get("state") ?? "open",
@@ -49,10 +52,6 @@ function withUpdatedParam(
   return next;
 }
 
-function searchParam(search: string): string {
-  return new URLSearchParams(search).get("q") ?? "";
-}
-
 function subscribeToBrowserHistory(onChange: () => void): () => void {
   globalThis.addEventListener("popstate", onChange);
   return () => {
@@ -68,18 +67,22 @@ function emptySearch(): string {
   return "";
 }
 
-function AlertSearch({
+export function SearchBox({
   initialValue,
+  srLabel,
+  placeholder,
   onCommit,
 }: {
-  initialValue: string;
-  onCommit: (value: string) => void;
+  readonly initialValue: string;
+  readonly srLabel: string;
+  readonly placeholder: string;
+  readonly onCommit: (value: string) => void;
 }): React.JSX.Element {
   const [draft, setDraft] = useState<string | null>(null);
   return (
     <label className="search">
-      <SearchIcon />
-      <span className="sr-only">Search alerts</span>
+      <SearchIcon aria-hidden="true" />
+      <span className="sr-only">{srLabel}</span>
       <Input
         value={draft ?? initialValue}
         onChange={(event) => {
@@ -91,104 +94,87 @@ function AlertSearch({
             onCommit(event.currentTarget.value);
           }
         }}
-        placeholder="Search name, summary, fingerprint…"
+        placeholder={placeholder}
       />
     </label>
   );
 }
 
-export function DashboardPage(): React.JSX.Element {
-  const trpc = useTRPC();
-  const [params, setParams] = useSearchParams();
-  const locationSearch = useSyncExternalStore(
-    subscribeToBrowserHistory,
-    browserSearch,
-    emptySearch,
-  );
-  const searchValue = searchParam(locationSearch);
-  const input = alertInput(params);
-  const summary = useQuery(trpc.summary.get.queryOptions({ scope: "ops" }));
-  const alerts = useInfiniteQuery(
-    trpc.alerts.list.infiniteQueryOptions(
-      input.success ? input.data : skipToken,
-      {
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
-      },
-    ),
-  );
-  // The page renders its shell immediately and fills values in as they arrive,
-  // so the two dependencies stay separate for display. They are joined only to
-  // decide the one thing that is genuinely shared: whether the page can be
-  // shown at all. A dependency that failed but still holds cached data is
-  // `degraded`, not `error`, so a failed refresh no longer blanks the page.
-  const summaryValue = Loaded.fromQuery(summary, ["summary"]);
-  const alertsValue = Loaded.fromQuery(alerts, ["alerts"]);
-  const page = Loaded.all({ summary: summaryValue, alerts: alertsValue });
-  const summaryData = Loaded.getOrElse(summaryValue, undefined);
-  const alertItems = Loaded.getOrElse(
-    Loaded.map(alertsValue, (data) =>
-      data.pages.flatMap((entry) => entry.items),
-    ),
-    [],
-  );
-  const update = (key: string, value: string): void => {
-    setParams(withUpdatedParam(params, key, value), {
-      flushSync: true,
-      replace: false,
-    });
-  };
-  if (page.status === "error")
-    return (
-      <main>
-        <div className="error-state">
-          Could not load alerts.{" "}
-          <Button
-            onClick={() =>
-              void Promise.all([summary.refetch(), alerts.refetch()])
-            }
-          >
-            Retry
-          </Button>
-        </div>
-      </main>
-    );
+export function SuppressionSelect({
+  params,
+  update,
+}: {
+  readonly params: URLSearchParams;
+  readonly update: (key: string, value: string) => void;
+}): React.JSX.Element {
   return (
-    <main>
-      <title>Active alerts · Hub</title>
-      <StaleNotice errors={page.status === "degraded" ? page.errors : []} />
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">Alertmanager ledger</p>
-          <h1>Active alerts</h1>
-          <p>Last reconciled {age(summaryData?.lastReconciledAt ?? null)}</p>
-        </div>
-        <Button
-          aria-label="Refresh alerts"
-          onClick={() =>
-            void Promise.all([summary.refetch(), alerts.refetch()])
-          }
-        >
-          <RefreshCwIcon /> Refresh
-        </Button>
-      </div>
-      <section className="summary-grid" aria-label="Alert summary">
-        {[
-          ["Open", summaryData?.open],
-          ["Critical", summaryData?.critical],
-          ["Warning", summaryData?.warning],
-          ["Silenced", summaryData?.silenced],
-          ["Inhibited", summaryData?.inhibited],
-        ].map(([label, value = "—"]) => (
-          <div className="summary-card" key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-          </div>
+    <select
+      value={suppressionSelectValue(params.get("suppression"))}
+      onChange={(event) => {
+        update("suppression", event.currentTarget.value);
+      }}
+    >
+      <option value="">Active (unsuppressed)</option>
+      <option value="all">All</option>
+      {SuppressionStateSchema.options
+        .filter((value) => value !== "none")
+        .map((value) => (
+          <option key={value} value={value}>
+            {value}
+          </option>
         ))}
-      </section>
-      <section className="panel">
-        <div className="filters">
-          <AlertSearch
+    </select>
+  );
+}
+
+export type ScopedAlertPageProps = {
+  readonly scope: "ops" | "house";
+  readonly documentTitle: string;
+  readonly eyebrow: string;
+  readonly heading: string;
+  readonly errorText: string;
+  readonly refreshAriaLabel: string;
+  readonly headerActionsPrefix?: React.ReactNode;
+  readonly summaryAriaLabel: string;
+  readonly summaryGridClassName?: string;
+  readonly summaryCards: (
+    summary: Summary | undefined,
+  ) => readonly (readonly [string, number | undefined])[];
+  readonly renderFilterPrefix: (
+    params: URLSearchParams,
+    searchValue: string,
+    update: (key: string, value: string) => void,
+  ) => React.JSX.Element;
+  readonly loadingText: string;
+  readonly loadMoreText: string;
+  readonly loadingMoreText: string;
+  readonly invalidFiltersText: string;
+  readonly renderTable: (items: readonly AlertView[]) => React.JSX.Element;
+};
+
+export function DashboardPage(): React.JSX.Element {
+  return (
+    <ScopedAlertPage
+      scope="ops"
+      documentTitle="Active alerts · Hub"
+      eyebrow="Alertmanager ledger"
+      heading="Active alerts"
+      errorText="Could not load alerts."
+      refreshAriaLabel="Refresh alerts"
+      summaryAriaLabel="Alert summary"
+      summaryCards={(summary) => [
+        ["Open", summary?.open],
+        ["Critical", summary?.critical],
+        ["Warning", summary?.warning],
+        ["Silenced", summary?.silenced],
+        ["Inhibited", summary?.inhibited],
+      ]}
+      renderFilterPrefix={(params, searchValue, update) => (
+        <>
+          <SearchBox
             initialValue={searchValue}
+            srLabel="Search alerts"
+            placeholder="Search name, summary, fingerprint…"
             onCommit={(value) => {
               update("q", value);
             }}
@@ -209,23 +195,118 @@ export function DashboardPage(): React.JSX.Element {
           </label>
           <label>
             Suppression
-            <select
-              value={suppressionSelectValue(params.get("suppression"))}
-              onChange={(event) => {
-                update("suppression", event.currentTarget.value);
-              }}
-            >
-              <option value="">Active (unsuppressed)</option>
-              <option value="all">All</option>
-              {SuppressionStateSchema.options
-                .filter((value) => value !== "none")
-                .map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-            </select>
+            <SuppressionSelect params={params} update={update} />
           </label>
+        </>
+      )}
+      loadingText="Loading alerts…"
+      loadMoreText="Load more alerts"
+      loadingMoreText="Loading more alerts…"
+      invalidFiltersText="Invalid active alert filters."
+      renderTable={(items) => (
+        <AlertTable
+          alerts={items}
+          empty="All clear — no operational alerts match these filters."
+        />
+      )}
+    />
+  );
+}
+
+export function ScopedAlertPage(
+  props: ScopedAlertPageProps,
+): React.JSX.Element {
+  const { invalidFiltersText, loadMoreText, loadingMoreText } = props;
+  const trpc = useTRPC();
+  const [params, setParams] = useSearchParams();
+  const locationSearch = useSyncExternalStore(
+    subscribeToBrowserHistory,
+    browserSearch,
+    emptySearch,
+  );
+  const searchValue = new URLSearchParams(locationSearch).get("q") ?? "";
+  const input = scopedAlertInput(params, props.scope);
+  const summary = useQuery(
+    trpc.summary.get.queryOptions({ scope: props.scope }),
+  );
+  const alerts = useInfiniteQuery(
+    trpc.alerts.list.infiniteQueryOptions(
+      input.success ? input.data : skipToken,
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
+    ),
+  );
+  // The page renders its shell immediately and fills values in as they arrive,
+  // so the two dependencies stay separate for display. A dependency that failed
+  // but still holds cached data is `degraded`, not `error`, so a failed refresh
+  // never blanks the page.
+  const summaryValue = Loaded.fromQuery(summary, ["summary"]);
+  const alertsValue = Loaded.fromQuery(alerts, ["alerts"]);
+  const page = Loaded.all({ summary: summaryValue, alerts: alertsValue });
+  const summaryData = Loaded.getOrElse(summaryValue, undefined);
+  const items = Loaded.getOrElse(
+    Loaded.map(alertsValue, (data) =>
+      data.pages.flatMap((entry) => entry.items),
+    ),
+    [],
+  );
+  const update = (key: string, value: string): void => {
+    setParams(withUpdatedParam(params, key, value), {
+      flushSync: true,
+      replace: false,
+    });
+  };
+  const refetchAll = (): void => {
+    void Promise.all([summary.refetch(), alerts.refetch()]);
+  };
+  if (page.status === "error") {
+    return (
+      <main>
+        <div className="error-state">
+          {props.errorText} <Button onClick={refetchAll}>Retry</Button>
+        </div>
+      </main>
+    );
+  }
+  const refreshButton = (
+    <Button aria-label={props.refreshAriaLabel} onClick={refetchAll}>
+      <RefreshCwIcon aria-hidden="true" /> Refresh
+    </Button>
+  );
+  return (
+    <main>
+      <title>{props.documentTitle}</title>
+      <StaleNotice errors={page.status === "degraded" ? page.errors : []} />
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">{props.eyebrow}</p>
+          <h1>{props.heading}</h1>
+          <p>Last reconciled {age(summaryData?.lastReconciledAt ?? null)}</p>
+        </div>
+        {props.headerActionsPrefix === undefined ? (
+          refreshButton
+        ) : (
+          <div className="heading-actions">
+            {props.headerActionsPrefix}
+            {refreshButton}
+          </div>
+        )}
+      </div>
+      <section
+        className={props.summaryGridClassName ?? "summary-grid"}
+        aria-label={props.summaryAriaLabel}
+      >
+        {props.summaryCards(summaryData).map(([label, value = "—"]) => (
+          <div className="summary-card" key={label}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </section>
+      <section className="panel">
+        <div className="filters">
+          {props.renderFilterPrefix(params, searchValue, update)}
           <label>
             State
             <select
@@ -242,13 +323,10 @@ export function DashboardPage(): React.JSX.Element {
         </div>
         {input.success ? (
           alertsValue.status === "loading" ? (
-            <div className="loading-state">Loading alerts…</div>
+            <div className="loading-state">{props.loadingText}</div>
           ) : (
             <>
-              <AlertTable
-                alerts={alertItems}
-                empty="All clear — no operational alerts match these filters."
-              />
+              {props.renderTable(items)}
               {alerts.hasNextPage ? (
                 <div className="history-pagination">
                   <Button
@@ -258,16 +336,14 @@ export function DashboardPage(): React.JSX.Element {
                     }}
                     type="button"
                   >
-                    {alerts.isFetchingNextPage
-                      ? "Loading more alerts…"
-                      : "Load more alerts"}
+                    {alerts.isFetchingNextPage ? loadingMoreText : loadMoreText}
                   </Button>
                 </div>
               ) : null}
             </>
           )
         ) : (
-          <div className="error-state">Invalid active alert filters.</div>
+          <div className="error-state">{invalidFiltersText}</div>
         )}
       </section>
     </main>

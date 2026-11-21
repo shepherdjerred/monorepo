@@ -6,7 +6,11 @@ import type { IngestWebhookInput } from "#application/ports";
 import { AsyncMutex } from "#infrastructure/async-mutex";
 import { PrismaOpsRepository } from "#infrastructure/prisma-ops-repository";
 import { createPrismaRepository } from "#infrastructure/prisma-repository";
-import { AlertmanagerWebhookSchema, JsonObjectSchema } from "#shared/schema";
+import {
+  AlertmanagerWebhookSchema,
+  JsonObjectSchema,
+  type AlertmanagerSnapshotAlert,
+} from "#shared/schema";
 import { InstantTextSchema, instantTextToEpochNanoseconds } from "#shared/time";
 
 const DatabaseUrlSchema = z.url().startsWith("file:");
@@ -133,4 +137,25 @@ export function input(
     rawExpiresAtNs: receivedAtNs + 1_000_000_000n,
     emailEnabled,
   };
+}
+
+export async function reconcileSnapshotAbsence(
+  alert: AlertmanagerSnapshotAlert,
+  startNs: bigint,
+): Promise<void> {
+  const minute = 60_000_000_000n;
+  const missingGraceNs = 5n * minute;
+  for (const [offsetNs, alerts] of [
+    [0n, [alert]],
+    [minute, []],
+    [7n * minute, []],
+  ] as const) {
+    const atNs = startNs + offsetNs;
+    await repository.reconcileSnapshot({
+      alerts,
+      startedAtNs: atNs,
+      completedAtNs: atNs,
+      missingGraceNs,
+    });
+  }
 }

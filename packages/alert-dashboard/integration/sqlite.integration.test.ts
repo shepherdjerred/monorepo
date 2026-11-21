@@ -11,6 +11,7 @@ import {
   input,
   nanoseconds,
   prisma,
+  reconcileSnapshotAbsence,
   repository,
   resetDatabase,
   temporalFailureWebhook,
@@ -460,7 +461,11 @@ describe("SQLite snapshot reconciliation", () => {
       fingerprint: "fingerprint-snapshot",
       startsAt: "2026-08-08T18:00:00Z",
       generatorURL: "",
-      labels: { alertname: "SnapshotOnly", severity: "warning" },
+      labels: {
+        alertname: "SnapshotOnly",
+        namespace: "ops",
+        severity: "warning",
+      },
       status: { inhibitedBy: [], silencedBy: [], state: "active" },
     });
     const minute = 60_000_000_000n;
@@ -763,7 +768,7 @@ describe("SQLite Home Assistant outbox and scoped reads", () => {
       service: "roborock",
       vacuum: "Downstairs Roborock",
     };
-    await repository.ingestWebhook(
+    const roborockIngest = await repository.ingestWebhook(
       input(
         customWebhook({
           fingerprint: "fp-roborock",
@@ -772,9 +777,10 @@ describe("SQLite Home Assistant outbox and scoped reads", () => {
           annotations: { summary: "Main brush needs replacement" },
         }),
         "2026-08-08T18:00:01Z",
-        false,
+        true,
       ),
     );
+    expect(roborockIngest.emailQueued).toBe(false);
     await repository.ingestWebhook(
       input(
         customWebhook({
@@ -784,10 +790,10 @@ describe("SQLite Home Assistant outbox and scoped reads", () => {
           annotations: { summary: "Main brush needs replacement" },
         }),
         "2026-08-09T06:00:01Z",
-        false,
+        true,
       ),
     );
-    await repository.ingestWebhook(
+    const petCareIngest = await repository.ingestWebhook(
       input(
         customWebhook({
           fingerprint: "fp-pet-care",
@@ -800,9 +806,10 @@ describe("SQLite Home Assistant outbox and scoped reads", () => {
           },
         }),
         "2026-08-08T18:00:02Z",
-        false,
+        true,
       ),
     );
+    expect(petCareIngest.emailQueued).toBe(true);
     await repository.ingestWebhook(
       input(webhook("fp-ops-alert", "firing"), "2026-08-08T18:00:03Z", false),
     );
@@ -880,39 +887,22 @@ describe("SQLite Home Assistant outbox and scoped reads", () => {
 
   it("cancels unsent HA notify and queues dismiss when snapshot reconciles resolution", async () => {
     const start = nanoseconds("2026-08-09T07:00:00Z");
-    const minute = 60_000_000_000n;
-    await repository.reconcileSnapshot({
-      alerts: [
-        AlertmanagerSnapshotAlertSchema.parse({
-          annotations: { description: "Replace HEPA filter soon" },
-          endsAt: "0001-01-01T00:00:00Z",
-          fingerprint: "fp-snap-chore",
-          startsAt: "2026-08-09T07:00:00Z",
-          labels: {
-            alertname: "AirPurifierFilterDue",
-            category: "household",
-            severity: "warning",
-            service: "air-purifier",
-          },
-          status: { inhibitedBy: [], silencedBy: [], state: "active" },
-        }),
-      ],
-      startedAtNs: start,
-      completedAtNs: start,
-      missingGraceNs: 5n * minute,
-    });
-    await repository.reconcileSnapshot({
-      alerts: [],
-      startedAtNs: start + minute,
-      completedAtNs: start + minute,
-      missingGraceNs: 5n * minute,
-    });
-    await repository.reconcileSnapshot({
-      alerts: [],
-      startedAtNs: start + 7n * minute,
-      completedAtNs: start + 7n * minute,
-      missingGraceNs: 5n * minute,
-    });
+    await reconcileSnapshotAbsence(
+      AlertmanagerSnapshotAlertSchema.parse({
+        annotations: { description: "Replace HEPA filter soon" },
+        endsAt: "0001-01-01T00:00:00Z",
+        fingerprint: "fp-snap-chore",
+        startsAt: "2026-08-09T07:00:00Z",
+        labels: {
+          alertname: "AirPurifierFilterDue",
+          category: "household",
+          severity: "warning",
+          service: "air-purifier",
+        },
+        status: { inhibitedBy: [], silencedBy: [], state: "active" },
+      }),
+      start,
+    );
 
     const snapRows = await prisma.homeAssistantOutbox.findMany({
       where: { notificationId: "hub-house-fp-snap-chore" },
