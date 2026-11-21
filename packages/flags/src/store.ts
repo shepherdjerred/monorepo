@@ -50,6 +50,16 @@ function duplicateKey(
   return undefined;
 }
 
+function revisionFailure(
+  result:
+    | { readonly kind: "unknown" }
+    | { readonly kind: "conflict"; readonly document: DeploymentDocument },
+): { readonly ok: false; readonly failure: ApplyFailure } {
+  return result.kind === "unknown"
+    ? { ok: false, failure: { kind: "unknown-deployment" } }
+    : { ok: false, failure: { kind: "conflict", document: result.document } };
+}
+
 function parseFlag(body: string, key: string): FlagValue {
   const parsed = FlagValueSchema.safeParse(JSON.parse(body));
   if (!parsed.success) {
@@ -176,35 +186,19 @@ export class FlagStore {
       `INSERT INTO flag (deployment_id, key, body) VALUES (?, ?, ?)
        ON CONFLICT (deployment_id, key) DO UPDATE SET body = excluded.body`,
     );
-    const bump = this.db.query(
-      "UPDATE deployment SET revision = revision + 1 WHERE id = ? AND revision = ?",
-    );
     const write = this.db.transaction(() => {
-      const current = this.document(id);
-      if (current === undefined) return { kind: "unknown" as const };
-      if (current.revision !== expectedRevision) {
-        return { kind: "conflict" as const, document: current };
-      }
+      const gate = this.gateRevision(id, expectedRevision);
+      if (gate.kind !== "current") return gate;
       for (const flag of flags) {
         upsert.run(id, flag.key, JSON.stringify(flag));
       }
-      const updated = bump.run(id, expectedRevision);
-      if (updated.changes !== 1) {
-        throw new Error(`deployment ${id} revision changed during apply`);
-      }
+      this.bumpRevision(id, expectedRevision, "apply");
       return { kind: "written" as const, revision: expectedRevision + 1 };
     });
     const result = write();
-    if (result.kind === "unknown") {
-      return { ok: false, failure: { kind: "unknown-deployment" } };
-    }
-    if (result.kind === "conflict") {
-      return {
-        ok: false,
-        failure: { kind: "conflict", document: result.document },
-      };
-    }
-    return { ok: true, revision: result.revision };
+    return result.kind === "written"
+      ? { ok: true, revision: result.revision }
+      : revisionFailure(result);
   }
 
   /**
@@ -280,39 +274,53 @@ export class FlagStore {
     const remove = this.db.query(
       "DELETE FROM flag WHERE deployment_id = ? AND key = ?",
     );
-    const bump = this.db.query(
-      "UPDATE deployment SET revision = revision + 1 WHERE id = ? AND revision = ?",
-    );
     const write = this.db.transaction(() => {
-      const current = this.document(id);
-      if (current === undefined) return { kind: "unknown" as const };
-      if (current.revision !== expectedRevision) {
-        return { kind: "conflict" as const, document: current };
-      }
-      const present = new Set(current.flags.map((flag) => flag.key));
+      const gate = this.gateRevision(id, expectedRevision);
+      if (gate.kind !== "current") return gate;
+      const present = new Set(gate.document.flags.map((flag) => flag.key));
       const missing = keys.filter((key) => !present.has(key));
       if (missing.length > 0)
         return { kind: "missing" as const, keys: missing };
       for (const key of keys) remove.run(id, key);
-      const updated = bump.run(id, expectedRevision);
-      if (updated.changes !== 1) {
-        throw new Error(`deployment ${id} revision changed during retire`);
-      }
+      this.bumpRevision(id, expectedRevision, "retire");
       return { kind: "retired" as const, revision: expectedRevision + 1 };
     });
     const result = write();
-    if (result.kind === "unknown") {
-      return { ok: false, failure: { kind: "unknown-deployment" } };
+    if (result.kind === "missing") {
+      return { ok: false, failure: { kind: "missing", keys: result.keys } };
     }
-    if (result.kind === "conflict") {
-      return {
-        ok: false,
-        failure: { kind: "conflict", document: result.document },
-      };
+    return result.kind === "retired"
+      ? { ok: true, revision: result.revision }
+      : revisionFailure(result);
+  }
+
+  private gateRevision(
+    id: string,
+    expectedRevision: number,
+  ):
+    | { readonly kind: "unknown" }
+    | { readonly kind: "conflict"; readonly document: DeploymentDocument }
+    | { readonly kind: "current"; readonly document: DeploymentDocument } {
+    const current = this.document(id);
+    if (current === undefined) return { kind: "unknown" };
+    return current.revision === expectedRevision
+      ? { kind: "current", document: current }
+      : { kind: "conflict", document: current };
+  }
+
+  private bumpRevision(
+    id: string,
+    expectedRevision: number,
+    action: "apply" | "retire",
+  ): void {
+    const updated = this.db
+      .query(
+        "UPDATE deployment SET revision = revision + 1 WHERE id = ? AND revision = ?",
+      )
+      .run(id, expectedRevision);
+    if (updated.changes !== 1) {
+      throw new Error(`deployment ${id} revision changed during ${action}`);
     }
-    return result.kind === "missing"
-      ? { ok: false, failure: { kind: "missing", keys: result.keys } }
-      : { ok: true, revision: result.revision };
   }
 
   evaluate(id: string, key: string, context: Readonly<Record<string, string>>) {
