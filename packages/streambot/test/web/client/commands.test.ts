@@ -120,6 +120,8 @@ describe("row to command", () => {
       guildId: "10",
       channelId: "20",
     });
+    for (const ignored of ["selectionVersion", "slotRevisions", "targeting"])
+      expect(command).not.toHaveProperty(ignored);
   });
 
   test("Start another stream targets the free extra slot with Watch", () => {
