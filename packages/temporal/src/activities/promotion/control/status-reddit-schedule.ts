@@ -30,11 +30,20 @@ export type NativeRedditOutreachSchedule = {
   executions: NativeExecution[];
 };
 
-type ExecutionRef = { workflowId: string; runId: string; startTime: Date };
+type ExecutionRef = { workflowId: string; runId: string; startTime?: Date };
+
+function unavailableSchedule(error: unknown): Schedule {
+  return {
+    state: error instanceof ScheduleNotFoundError ? "missing" : "unavailable",
+    lastRunAt: null,
+    nextRunAt: null,
+  };
+}
 
 export async function readRedditOutreachSchedule(
   oldestDay: string,
   auditedOccurrences: ReadonlySet<string>,
+  unauditedReplyRuns: ReadonlySet<string>,
 ): Promise<NativeRedditOutreachSchedule> {
   const deadline = Date.now() + 4000;
   const signal = AbortSignal.timeout(4000);
@@ -45,50 +54,61 @@ export async function readRedditOutreachSchedule(
     });
     return await client.connection.withDeadline(deadline, () =>
       client.connection.withAbortSignal(signal, async () => {
-        const description = await client.schedule
-          .getHandle(SCHEDULE_ID)
-          .describe();
-        const paused = description.state.paused;
-        const executions = await readNativeExecutions(
-          client,
-          description,
-          oldestDay,
+        const { schedule, description } = await readScheduleSnapshot(client);
+        const recent =
+          description === undefined
+            ? []
+            : await readRecentExecutionRefs(client, description, oldestDay);
+        const refs = selectExecutionRefs(
+          recent,
           auditedOccurrences,
+          unauditedReplyRuns,
+        );
+        const executions = await Promise.all(
+          refs.map((ref) => readNativeExecution(client, ref)),
         );
         return {
-          schedule: {
-            state: paused ? "paused" : "active",
-            lastRunAt:
-              description.info.recentActions.at(-1)?.takenAt.toISOString() ??
-              null,
-            nextRunAt: paused
-              ? null
-              : (description.info.nextActionTimes[0]?.toISOString() ?? null),
-          },
-          executions,
+          schedule,
+          executions: executions.filter((execution) => execution !== undefined),
         };
       }),
     );
   } catch (error) {
     return {
-      schedule: {
-        state:
-          error instanceof ScheduleNotFoundError ? "missing" : "unavailable",
-        lastRunAt: null,
-        nextRunAt: null,
-      },
+      schedule: unavailableSchedule(error),
       executions: [],
     };
   }
 }
 
-async function readNativeExecutions(
+async function readScheduleSnapshot(
+  client: Client,
+): Promise<{ schedule: Schedule; description?: ScheduleDescription }> {
+  try {
+    const description = await client.schedule.getHandle(SCHEDULE_ID).describe();
+    const paused = description.state.paused;
+    return {
+      schedule: {
+        state: paused ? "paused" : "active",
+        lastRunAt:
+          description.info.recentActions.at(-1)?.takenAt.toISOString() ?? null,
+        nextRunAt: paused
+          ? null
+          : (description.info.nextActionTimes[0]?.toISOString() ?? null),
+      },
+      description,
+    };
+  } catch (error) {
+    return { schedule: unavailableSchedule(error) };
+  }
+}
+
+async function readRecentExecutionRefs(
   client: Client,
   description: ScheduleDescription,
   oldestDay: string,
-  auditedOccurrences: ReadonlySet<string>,
 ) {
-  const actions = new Map<string, ExecutionRef>();
+  const actions = new Map<string, Required<ExecutionRef>>();
   for (const item of description.info.recentActions) {
     const { workflowId, firstExecutionRunId } = item.action.workflow;
     actions.set(workflowId, {
@@ -112,20 +132,40 @@ async function readNativeExecutions(
   } catch {
     // The directly described recent actions remain useful if visibility is down.
   }
-  const newest = [...actions.values()]
-    // A sweep starting just before Pacific midnight can finish on the next day.
-    .filter(
-      ({ startTime }) => startTime.toISOString() >= `${oldestDay}T00:00:00`,
-    )
-    .sort((left, right) => right.startTime.getTime() - left.startTime.getTime())
-    .slice(0, REDDIT_OUTREACH_RUN_LIMIT);
-  return await Promise.all(
-    newest.flatMap((item) =>
-      auditedOccurrences.has(`${item.workflowId}/${item.runId}`)
-        ? []
-        : [readNativeExecution(client, item)],
-    ),
+  return (
+    [...actions.values()]
+      // A sweep starting just before Pacific midnight can finish on the next day.
+      .filter(
+        ({ startTime }) => startTime.toISOString() >= `${oldestDay}T00:00:00`,
+      )
+      .sort(
+        (left, right) => right.startTime.getTime() - left.startTime.getTime(),
+      )
+      .slice(0, REDDIT_OUTREACH_RUN_LIMIT)
   );
+}
+
+function selectExecutionRefs(
+  recent: ExecutionRef[],
+  auditedOccurrences: ReadonlySet<string>,
+  unauditedReplyRuns: ReadonlySet<string>,
+) {
+  const refs = new Map<string, ExecutionRef>();
+  for (const ref of recent) {
+    const id = `${ref.workflowId}/${ref.runId}`;
+    if (!auditedOccurrences.has(id)) refs.set(id, ref);
+  }
+  // Reservations bound extra lookups. A reply-bearing sweep can still matter for
+  // today's totals after its unaudited Workflow leaves the recent run window.
+  for (const id of unauditedReplyRuns) {
+    const separator = id.lastIndexOf("/");
+    if (refs.has(id) || separator <= 0 || separator === id.length - 1) continue;
+    refs.set(id, {
+      workflowId: id.slice(0, separator),
+      runId: id.slice(separator + 1),
+    });
+  }
+  return [...refs.values()];
 }
 
 function executionStatus(
@@ -152,7 +192,7 @@ function executionStatus(
 async function readNativeExecution(
   client: Client,
   ref: ExecutionRef,
-): Promise<NativeExecution> {
+): Promise<NativeExecution | undefined> {
   try {
     const description = await client.workflow
       .getHandle(ref.workflowId, ref.runId)
@@ -171,6 +211,7 @@ async function readNativeExecution(
       status: executionStatus(description.status.name),
     };
   } catch (error) {
+    if (ref.startTime === undefined) return undefined;
     return {
       id: `${ref.workflowId}/${ref.runId}`,
       at: ref.startTime.toISOString(),

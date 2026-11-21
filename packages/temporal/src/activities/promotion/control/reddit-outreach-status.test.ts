@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { RedditOutreachOverviewSchema } from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 import { memoryPromotionStore } from "#activities/promotion/test-support.ts";
+import type { PromotionStore } from "#activities/promotion/store.ts";
 import {
   claimRedditReply,
   finishRedditReply,
@@ -12,7 +13,10 @@ import {
   type SweepSummary,
 } from "#activities/promotion/reddit-outreach/sweep-audit.ts";
 import { readRedditOutreachOverview } from "./reddit-outreach-status.ts";
-import type { NativeRedditOutreachSchedule } from "./status-reddit-schedule.ts";
+import type {
+  NativeRedditOutreachSchedule,
+  readRedditOutreachSchedule,
+} from "./status-reddit-schedule.ts";
 
 const settings = vi.hoisted(() => ({
   promotion: vi.fn(),
@@ -35,7 +39,9 @@ const schedule: NativeRedditOutreachSchedule = {
   },
   executions: [],
 };
-const readSchedule = vi.fn(() => Promise.resolve(schedule));
+const readSchedule = vi.fn<typeof readRedditOutreachSchedule>(() =>
+  Promise.resolve(schedule),
+);
 
 function sweep(
   occurrenceId: string,
@@ -116,12 +122,13 @@ it("reports a quiet production day and independently reflects disabled publishin
   });
 });
 
-it("projects the original reply, redacts sensitive content and deduplicates reconciliation across Pacific days", async () => {
-  const store = memoryPromotionStore();
-  const postId = "abc123";
-  const occurrence = "the-storm-reddit-outreach-first/run";
+async function claimFixture(
+  store: PromotionStore,
+  postId: string,
+  occurrence: string,
+  startedAt: Date,
+) {
   const occurrenceId = `${occurrence}/reply/${postId}`;
-  const startedAt = new Date("2026-11-01T07:15:00Z");
   expect(
     await reserveRedditReplyAllowance(store, postId, 10, startedAt),
   ).not.toBeNull();
@@ -144,6 +151,15 @@ it("projects the original reply, redacts sensitive content and deduplicates reco
     replyText: "Internal invite text",
     relevanceReason: "Internal model notes",
   });
+  return occurrenceId;
+}
+
+it("projects the original reply, redacts sensitive content and deduplicates reconciliation across Pacific days", async () => {
+  const store = memoryPromotionStore();
+  const postId = "abc123";
+  const occurrence = "the-storm-reddit-outreach-first/run";
+  const startedAt = new Date("2026-11-01T07:15:00Z");
+  const occurrenceId = await claimFixture(store, postId, occurrence, startedAt);
   const finish = (
     status: "uncertain" | "verified",
     receiptUrl: string | null,
@@ -197,6 +213,7 @@ it("projects the original reply, redacts sensitive content and deduplicates reco
   expect(readSchedule).toHaveBeenCalledWith(
     "2026-10-31",
     new Set([occurrence, "another/run", "older/run"]),
+    new Set(),
   );
   expect(uncertain).toMatchObject({
     today: {
@@ -247,6 +264,66 @@ it("projects the original reply, redacts sensitive content and deduplicates reco
         unresolvedReplies: 0,
       },
     ],
+  });
+});
+
+it("counts verified and unresolved replies for an unaudited sweep outside the 12 displayed rows", async () => {
+  const store = memoryPromotionStore();
+  const missingSweep = "older/outside-recent-window/run";
+  const start = new Date("2026-11-01T07:15:00Z");
+  const postId = "verified1";
+  const occurrenceId = await claimFixture(store, postId, missingSweep, start);
+  await finishRedditReply(store, {
+    postId,
+    occurrenceId,
+    status: "verified",
+    receiptUrl: `https://www.reddit.com/r/MinecraftServer/comments/${postId}/title/xyz987/`,
+    completedAt,
+    summary: "Verified fixture reply",
+  });
+  await claimFixture(store, "uncertain1", missingSweep, start);
+
+  for (let index = 1; index <= 12; index++) {
+    await recordSweep(
+      store,
+      sweep(`newer-${String(index)}/run`, {
+        completedAt: new Date(
+          Date.parse(completedAt) + index * 900_000,
+        ).toISOString(),
+      }),
+    );
+  }
+  readSchedule.mockImplementationOnce(
+    async (_oldestDay, _audited, unauditedReplyRuns) => {
+      await Promise.resolve();
+      return {
+        ...schedule,
+        executions: unauditedReplyRuns.has(missingSweep)
+          ? [
+              {
+                id: missingSweep,
+                at: completedAt,
+                completedAt,
+                elapsedMs: 240_000,
+                status: "failed",
+              },
+            ]
+          : [],
+      };
+    },
+  );
+  const data = RedditOutreachOverviewSchema.parse(
+    await readRedditOutreachOverview(store, now, readSchedule),
+  );
+  expect(data.status).toBe("available");
+  if (data.status !== "available")
+    throw new Error("Expected outreach fixture to load");
+  expect(data.runs).toHaveLength(12);
+  expect(data.runs.map(({ id }) => id)).not.toContain(missingSweep);
+  expect(data.today).toMatchObject({
+    verifiedReplies: 1,
+    unresolvedReplies: 1,
+    remainingSlots: 8,
   });
 });
 

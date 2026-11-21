@@ -78,6 +78,7 @@ it("reads the production schedule and describes only workflows without audited o
   const observed = await readRedditOutreachSchedule(
     "2026-10-31",
     new Set(["audited/run"]),
+    new Set(["missing-audit/run", "earlier/manual/run"]),
   );
   expect(temporal.client).toHaveBeenCalledWith("prod", {
     connectTimeout: 4000,
@@ -90,6 +91,7 @@ it("reads the production schedule and describes only workflows without audited o
   expect(temporal.workflow.mock.calls).toEqual([
     ["missing-audit", "run"],
     ["older-run", "run"],
+    ["earlier/manual", "run"],
   ]);
   expect(observed).toEqual({
     schedule: {
@@ -112,6 +114,13 @@ it("reads the production schedule and describes only workflows without audited o
         completedAt: null,
         elapsedMs: null,
       },
+      {
+        id: "earlier/manual/run",
+        status: "failed",
+        at: closeTime.toISOString(),
+        completedAt: closeTime.toISOString(),
+        elapsedMs: 76_000,
+      },
     ],
   });
 });
@@ -130,7 +139,11 @@ it("keeps paused state and recent actions when visibility is unavailable, and di
   temporal.describeRun.mockRejectedValueOnce(
     new WorkflowNotFoundError("private workflow error", "missing-run", "run"),
   );
-  const paused = await readRedditOutreachSchedule("2026-10-31", new Set());
+  const paused = await readRedditOutreachSchedule(
+    "2026-10-31",
+    new Set(),
+    new Set(),
+  );
   expect(paused).toMatchObject({
     schedule: { state: "paused", nextRunAt: null },
     executions: [{ id: "missing-run/run", status: "missing" }],
@@ -138,8 +151,25 @@ it("keeps paused state and recent actions when visibility is unavailable, and di
   temporal.describeSchedule.mockRejectedValueOnce(
     new ScheduleNotFoundError("private schedule error", scheduleId),
   );
-  expect(await readRedditOutreachSchedule("2026-10-31", new Set())).toEqual({
+  temporal.describeRun.mockResolvedValueOnce({
+    runId: "run",
+    startTime,
+    closeTime,
+    status: { name: "FAILED" },
+  });
+  const missing = await readRedditOutreachSchedule(
+    "2026-10-31",
+    new Set(),
+    new Set(["earlier/run"]),
+  );
+  expect(missing).toMatchObject({
     schedule: { state: "missing", lastRunAt: null, nextRunAt: null },
-    executions: [],
+    executions: [
+      {
+        id: "earlier/run",
+        status: "failed",
+        completedAt: closeTime.toISOString(),
+      },
+    ],
   });
 });

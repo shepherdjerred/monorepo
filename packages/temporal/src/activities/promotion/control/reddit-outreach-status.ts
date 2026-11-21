@@ -59,7 +59,16 @@ export async function readRedditOutreachOverview(
       .filter((audit) => !audit.preview)
       .map((audit) => [audit.occurrenceId, audit]),
   );
-  const native = await readSchedule(yesterday, new Set(audits.keys()));
+  const { replyRecords, unauditedReplyRuns } = await readReservationClaims(
+    store,
+    reservations.flat(),
+    audits,
+  );
+  const native = await readSchedule(
+    yesterday,
+    new Set(audits.keys()),
+    unauditedReplyRuns,
+  );
   // An individual audit write can succeed before indexing that Pacific day.
   const recovered = await Promise.all(
     native.executions.map(async (execution) => ({
@@ -73,11 +82,9 @@ export async function readRedditOutreachOverview(
     }
   }
 
-  const replies = await readReplyObservations(
-    store,
-    audits,
-    reservations.flat(),
-  );
+  const verifiedAudits = verifiedAuditReceipts(audits);
+  await readReplyRecords(store, replyRecords, verifiedAudits.keys());
+  const replies = projectReplyObservations(verifiedAudits, replyRecords);
   const recorded = [...audits.values()].map((audit) =>
     projectAudit(audit, replies.get(audit.occurrenceId)),
   );
@@ -214,21 +221,44 @@ function projectAudit(
   };
 }
 
-async function readReplyObservations(
+async function readReservationClaims(
   store: PromotionStore,
-  audits: ReadonlyMap<string, SweepSummary>,
   reservations: string[],
+  audits: ReadonlyMap<string, SweepSummary>,
 ) {
-  const verified = verifiedAuditReceipts(audits);
-  const postIds = new Set([...reservations, ...verified.keys()]);
-  const records = await Promise.all(
-    [...postIds].map(async (postId) => ({
-      postId,
-      record: await readRedditReplyRecord(store, postId),
-    })),
+  const replyRecords = new Map<string, RedditReplyRecord | undefined>();
+  await readReplyRecords(store, replyRecords, reservations);
+  const unauditedReplyRuns = new Set<string>();
+  for (const [postId, record] of replyRecords) {
+    const reply =
+      record === undefined ? undefined : projectReplyRecord(postId, record);
+    if (reply !== undefined && !audits.has(reply.id))
+      unauditedReplyRuns.add(reply.id);
+  }
+  return { replyRecords, unauditedReplyRuns };
+}
+
+async function readReplyRecords(
+  store: PromotionStore,
+  records: Map<string, RedditReplyRecord | undefined>,
+  postIds: Iterable<string>,
+) {
+  const unread = [...new Set(postIds)].filter((postId) => !records.has(postId));
+  const observations = await Promise.all(
+    unread.map(
+      async (postId) =>
+        [postId, await readRedditReplyRecord(store, postId)] as const,
+    ),
   );
+  for (const [postId, record] of observations) records.set(postId, record);
+}
+
+function projectReplyObservations(
+  verified: ReadonlyMap<string, { id: string; receipt: string }>,
+  records: ReadonlyMap<string, RedditReplyRecord | undefined>,
+) {
   const replies = new Map<string, ReplyObservations>();
-  for (const { postId, record } of records) {
+  for (const [postId, record] of records) {
     const result =
       record === undefined
         ? verified.get(postId)
