@@ -277,6 +277,9 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
       apt-get update -qq && apt-get install -y -qq --no-install-recommends libxml2
     fi
+    if ! ldconfig -p | grep -Fq 'libicuuc.so.'; then
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends libicu-dev
+    fi
     # Verify capabilities even when the executable exists; stale static builds
     # skip configured rules. The shared producer exports only a private runtime.
     bash ci/scripts/swiftlint/bootstrap.sh

@@ -10,6 +10,9 @@ import {
 import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
+import { grantTestLease } from "#testing/authority.ts";
+import { testPublicationExecution } from "#testing/publication-execution.ts";
+import { fixtureStorageAuthority } from "./fixtures/storage.ts";
 import {
   personalSeasonFixture,
   changePersonalSeasonAuthority,
@@ -116,6 +119,8 @@ async function fixture(count = 10) {
 
 test("one ordinary ten-file owner acquisition stages 4/4/2 across original invocation clocks and publishes the unchanged plan once", async () => {
   const f = await fixture();
+  await grantTestLease(f.db);
+  await fixtureStorageAuthority(f.db, f.files.roots.library);
   let wall = Date.now();
   const firstObserved = wall;
   vi.spyOn(Date, "now").mockImplementation(() => wall);
@@ -349,11 +354,12 @@ test("the opt-in planning call cannot extend its original deadline or start a vi
   const f = await fixture(),
     originalProbe = f.files.context.inspect;
   if (originalProbe === undefined) throw new Error("Original probe missing");
-  const at = Date.now();
+  const execution = testPublicationExecution();
+  f.files.context.publicationExecution = () => execution;
   const clock = vi.spyOn(Date, "now");
   f.files.context.inspect = async (filename) => {
     const result = await originalProbe(filename);
-    clock.mockReturnValue(at + 60_001);
+    clock.mockReturnValue(execution.observed.wall + 60_001);
     return result;
   };
   expect(await f.call(null)).toEqual({
@@ -404,18 +410,21 @@ test("ordinary batch hints cannot adopt an unacknowledged torn partial or ignore
 test("a genuine prepared ACK with changed native ctime remains protected instead of being rewritten by a later batch", async () => {
   const f = await fixture();
   await f.call(null);
-  const at = Date.now(),
+  const execution = testPublicationExecution(),
     clock = vi.spyOn(Date, "now"),
     checkpoint = f.files.context.checkpoint;
+  f.files.context.publicationExecution = () => execution;
   f.files.context.checkpoint = async (phase) => {
     await checkpoint(phase);
-    if (phase === "staging-prepared") clock.mockReturnValue(at + 60_001);
+    if (phase === "staging-prepared")
+      clock.mockReturnValue(execution.observed.wall + 60_001);
   };
   expect(await f.call(0)).toEqual({
     status: "blocked",
     reason: "publication_authority_expired",
   });
   clock.mockRestore();
+  f.files.context.publicationExecution = testPublicationExecution;
   f.files.context.checkpoint = checkpoint;
   const plan = await f.plan(),
     first = plan[0];

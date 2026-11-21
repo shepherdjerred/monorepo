@@ -61,7 +61,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git minisign unzip xz-utils zstd python3 ripgrep rsync \
-    build-essential pkg-config libssl-dev libxml2 libcurl4 libatomic1 \
+    build-essential pkg-config libssl-dev libxml2 libicu72 libcurl4 libatomic1 \
     libtinfo6 libedit2 libsqlite3-0 libz3-4 util-linux ffmpeg procps \
     && flock --version \
     && ffmpeg -version && ffprobe -version \

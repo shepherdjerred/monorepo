@@ -20,10 +20,23 @@ export async function fixtureStorageAuthority(
       expiresAt: new Date(observedAt.getTime() + 120_000),
       revokedAt: null,
     };
-    await db.mediaStorageAuthority.upsert({
+    const existing = await db.mediaStorageAuthority.findUnique({
       where: { rootPath: `/data/${kind}` },
-      create: { rootPath: `/data/${kind}`, ...evidence },
-      update: {},
     });
+    if (existing === null) {
+      await db.mediaStorageAuthority.create({
+        data: { rootPath: `/data/${kind}`, ...evidence },
+      });
+    } else if (
+      typeof existing.evidence === "object" &&
+      existing.evidence !== null &&
+      !Array.isArray(existing.evidence) &&
+      existing.evidence["source"] === "synthetic-file-fixture"
+    ) {
+      await db.mediaStorageAuthority.update({
+        where: { rootPath: `/data/${kind}` },
+        data: evidence,
+      });
+    }
   }
 }

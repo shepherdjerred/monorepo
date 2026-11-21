@@ -1,8 +1,14 @@
 import { z } from "zod";
 import { spawn } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import protocol from "./regex-protocol.schema.json" with { type: "json" };
 import { RegexObservationsSchema } from "./regex-evidence.ts";
 import { readRegexSchema } from "./regex-schema.ts";
+
+const GENERATED_NATIVE_BIN = fileURLToPath(
+  new URL("../../generated/native-tools/bin", import.meta.url),
+);
 
 const requestValidator = z.fromJSONSchema(
   readRegexSchema(protocol.$defs.request),
@@ -33,10 +39,15 @@ function execute(
   input: string,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
+    const inheritedPath = process.env["PATH"];
+    const searchPath =
+      inheritedPath === undefined || inheritedPath === ""
+        ? GENERATED_NATIVE_BIN
+        : `${GENERATED_NATIVE_BIN}${path.delimiter}${inheritedPath}`;
     const child = spawn(executable, args, {
       stdio: ["pipe", "pipe", "pipe"],
       env: {
-        PATH: process.env["PATH"],
+        PATH: searchPath,
         DOTNET_NOLOGO: "1",
         LANG: "en_US.UTF-8",
       },
