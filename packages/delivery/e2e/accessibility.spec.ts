@@ -4,6 +4,8 @@ import { DeploymentSchema } from "#shared/contract.ts";
 import { api, expectAccessible } from "./helpers.ts";
 
 const PAGES = [
+  "/",
+  "/?q=flipt",
   "/pipelines",
   "/pipelines/scout-for-lol",
   "/pipelines/arcade/executions",

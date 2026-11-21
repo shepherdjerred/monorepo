@@ -9,6 +9,7 @@ import {
   EnvironmentPageDetailSchema,
   ExecutionPageSchema,
   ExecutionTraceSchema,
+  HubGridSchema,
   HubOverviewSchema,
   ServicePipelineSchema,
 } from "#shared/hub/hub-contract.ts";
@@ -35,6 +36,7 @@ export function createHubClient(options: RequestOptions) {
   const request = createRequester(options);
   return {
     hub: () => request("/hub", HubOverviewSchema),
+    grid: () => request("/hub/grid", HubGridSchema),
     commits: (cursor?: string) =>
       request(`/commits${query({ cursor })}`, CommitListSchema),
     commit: (sha: string) =>

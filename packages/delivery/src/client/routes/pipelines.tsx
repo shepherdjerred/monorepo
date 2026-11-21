@@ -1,53 +1,20 @@
-import {
-  Link,
-  Navigate,
-  createRoute,
-  useNavigate,
-} from "@tanstack/react-router";
+import { Link, createRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   PipelineStatusSchema,
-  type Attention,
   type ExecutionSummary,
   type HubService,
 } from "#shared/hub/hub-contract.ts";
 import { queries } from "#client/queries.ts";
+import { AttentionPanel } from "#client/components/attention-panel.tsx";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { Status, statusLabel } from "#client/components/status.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
-import { ShortSha, TargetLink, ToolLinks } from "#client/components/links.tsx";
+import { ShortSha, ToolLinks } from "#client/components/links.tsx";
 import { filterPipelines, lastExecuted } from "./pipeline-list-model.ts";
 import { PipelineSearchSchema, formSearch } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
 import { revisionLabel } from "#client/components/identifier.tsx";
-
-const ATTENTION: Record<Attention["kind"], string> = {
-  approval: "Approval",
-  failed: "Failed",
-  recovery: "Recovery",
-  build_failed: "Build",
-};
-
-function AttentionPanel({ items }: { items: Attention[] }) {
-  if (items.length === 0) return null;
-  return (
-    <section className="panel attention" aria-labelledby="attention-heading">
-      <h2 id="attention-heading">Needs attention</h2>
-      <ul>
-        {items.map((item) => (
-          <li key={`${item.kind}:${item.target.id}`}>
-            <span className={`badge badge-${item.kind}`}>
-              {ATTENTION[item.kind]}
-            </span>
-            <TargetLink target={item.target}>{item.title}</TargetLink>
-            <span className="muted">{item.detail}</span>
-            {item.at !== null && <RelativeTime value={item.at} />}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
 
 function ExecutionCell({ execution }: { execution: ExecutionSummary | null }) {
   if (execution === null) return <Status value="not_started" />;
@@ -180,6 +147,7 @@ function PipelinesPage() {
           className="filters"
           role="search"
           aria-label="Filter pipelines"
+          data-search-form
           onSubmit={(event) => {
             event.preventDefault();
             void navigate({
@@ -249,10 +217,4 @@ const pipelinesRoute = createRoute({
   component: PipelinesPage,
 });
 
-const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/",
-  component: () => <Navigate to="/commits" replace />,
-});
-
-export const pipelineListRoutes = [indexRoute, pipelinesRoute];
+export const pipelineListRoutes = [pipelinesRoute];

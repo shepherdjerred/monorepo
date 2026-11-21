@@ -1,0 +1,173 @@
+/*
+ * The overview: every active service as a tile, in one panel per catalog
+ * kind. Tiles flow in an auto-fill grid, so a hundred services take a few
+ * screens on a desktop and one column on a phone, with no table and no
+ * sideways scroll.
+ */
+
+/* What needs a person comes first and is edged in the tone of its worst item. */
+.attention-failed,
+.attention-waiting {
+  border-inline-start-width: 4px;
+}
+.attention-failed {
+  border-color: var(--failed);
+}
+.attention-waiting {
+  border-color: var(--waiting);
+}
+.attention .section-heading {
+  margin-bottom: 0;
+}
+.attention-count {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--space-2) var(--space-4);
+}
+.overview-total {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-kind .section-heading {
+  align-items: center;
+}
+.overview-counts,
+.overview-tiles,
+.overview-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.overview-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+/* A catalog group of several services: a labelled run of tiles in its panel. */
+.overview-group {
+  margin-top: var(--space-4);
+}
+.overview-group .section-heading {
+  margin-bottom: var(--space-1);
+}
+/* A group title labels the tiles under it, as a column header labels its cells. */
+.overview-group h3 {
+  margin: 0;
+  font-size: var(--text-2xs);
+  line-height: var(--leading-snug);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+/* Every run of tiles in a panel shares one track size, so their columns line up. */
+.overview-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-2);
+}
+
+/* One service: its name, then where it runs. */
+.overview-tile {
+  min-width: 0;
+  padding: var(--row-pad-y) var(--space-2) var(--space-2);
+  border-radius: var(--radius-small);
+  background: var(--surface-sunken);
+  /* The edge carries the standing without moving the content. */
+  border-inline-start: 3px solid transparent;
+}
+.overview-standing-failed,
+.overview-standing-recovery_required {
+  border-inline-start-color: var(--failed);
+}
+.overview-standing-awaiting_approval,
+.overview-standing-queued {
+  border-inline-start-color: var(--waiting);
+}
+.overview-standing-running {
+  border-inline-start-color: var(--running);
+}
+/* A tile's title is its own line, never a link inside prose, so its color and weight mark it. */
+.overview-service {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.overview-service:hover {
+  text-decoration: underline;
+}
+.overview-none {
+  margin: 0;
+  min-height: var(--target-min);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: var(--target-min);
+}
+.overview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.overview-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.overview-arrow {
+  color: var(--text-muted);
+}
+/* An environment as a link: name, standing, accepted revision and its age. */
+.overview-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-1);
+  min-height: var(--target-min);
+  min-width: 0;
+  padding: 1px var(--row-pad-y);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  text-decoration: none;
+}
+.overview-chip:hover {
+  border-color: var(--border-strong);
+}
+.overview-chip .env-name {
+  font-weight: var(--weight-semibold);
+}
+.overview-chip .status {
+  padding: 0 var(--space-1);
+  /* Contains the hidden words of a settled chip. */
+  position: relative;
+}
+/* A check says "succeeded" at a glance; the words stay for assistive technology. */
+.overview-chip-succeeded .status-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.overview-chip time {
+  color: var(--text-muted);
+}

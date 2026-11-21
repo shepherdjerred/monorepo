@@ -2,6 +2,7 @@ import { createRouter } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 import type { ChangeFeed } from "./change-feed.ts";
 import { Route as rootRoute } from "./routes/root.tsx";
+import { Route as overviewRoute } from "./routes/overview.tsx";
 import { pipelineListRoutes } from "./routes/pipelines.tsx";
 import { commitRoutes } from "./routes/commits.tsx";
 import { serviceTree } from "./routes/service.tsx";
@@ -11,8 +12,10 @@ import { Route as deploymentRoute } from "./routes/deployment.tsx";
 import { Route as environmentRoute } from "./routes/environment.tsx";
 import { Route as recoveryIntentRoute } from "./routes/recovery-intent.tsx";
 import { listRoutes } from "./routes/lists.tsx";
+import { syncSearchForms } from "./routes/search-schemas.ts";
 
 const routeTree = rootRoute.addChildren([
+  overviewRoute,
   ...pipelineListRoutes,
   ...commitRoutes,
   serviceTree,
@@ -42,9 +45,10 @@ export function createDeliveryRouter(
       initial = false;
       return;
     }
-    if (!event.pathChanged) return;
     requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>("#main-heading")?.focus();
+      syncSearchForms(router.state.location.search);
+      if (event.pathChanged)
+        document.querySelector<HTMLElement>("#main-heading")?.focus();
     });
   });
   return router;

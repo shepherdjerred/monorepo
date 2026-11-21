@@ -165,6 +165,8 @@ export const AttentionSchema = z.object({
   detail: z.string(),
   at: TimestampSchema.nullable(),
   target: AppTargetSchema,
+  /** The service the item is about, so a page can mark where it sits. */
+  serviceId: IdentifierSchema,
 });
 export type Attention = z.infer<typeof AttentionSchema>;
 
@@ -188,6 +190,61 @@ export const HubOverviewSchema = z.object({
   tools: z.array(LinkSchema),
 });
 export type HubOverview = z.infer<typeof HubOverviewSchema>;
+
+/**
+ * What Delivery last recorded for an environment: the status of its newest
+ * deployment, or `not_started` when it has recorded none. This is the
+ * deployment record, never live runtime health.
+ */
+export const GridEnvironmentStatusSchema = z.enum([
+  ...DeploymentStatusSchema.options,
+  "not_started",
+]);
+export type GridEnvironmentStatus = z.infer<typeof GridEnvironmentStatusSchema>;
+
+export const GridEnvironmentSchema = z.object({
+  id: IdentifierSchema,
+  name: z.string().min(1),
+  status: GridEnvironmentStatusSchema,
+  /** The newest deployment left its target quarantined until an operator recovers it. */
+  recoveryRequired: z.boolean(),
+  /** The accepted set revision's number; null until the environment accepts one. */
+  acceptedRevision: z.number().int().positive().nullable(),
+  /** When the accepting deployment finished; null when no deployment accepted the selection. */
+  acceptedAt: TimestampSchema.nullable(),
+  approvalRequired: z.boolean(),
+  activeDeploymentId: IdentifierSchema.nullable(),
+  /** The environment listed beside this one that it promotes from; null for a first stage. */
+  promotesFrom: IdentifierSchema.nullable(),
+});
+export type GridEnvironment = z.infer<typeof GridEnvironmentSchema>;
+
+/** An active service; `environments` is empty when it has no active environment. */
+export const GridServiceSchema = z.object({
+  id: IdentifierSchema,
+  title: z.string().min(1),
+  /** Active environments, promotion sources before their targets. */
+  environments: z.array(GridEnvironmentSchema),
+});
+export type GridService = z.infer<typeof GridServiceSchema>;
+
+export const GridGroupSchema = z.object({
+  id: IdentifierSchema,
+  title: z.string().min(1),
+  kind: ServiceSummarySchema.shape.kind,
+  services: z.array(GridServiceSchema).min(1),
+});
+export type GridGroup = z.infer<typeof GridGroupSchema>;
+
+/**
+ * Every active service by catalog group, in catalog order, with what Delivery
+ * last recorded for each of its environments.
+ */
+export const HubGridSchema = z.object({
+  groups: z.array(GridGroupSchema),
+  attention: z.array(AttentionSchema),
+});
+export type HubGrid = z.infer<typeof HubGridSchema>;
 
 export const EnvironmentDetailSchema = z.object({
   environment: EnvironmentSchema,

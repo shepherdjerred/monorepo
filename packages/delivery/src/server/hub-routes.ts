@@ -11,6 +11,7 @@ import {
 import type { Principal } from "#shared/contract.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { hubOverview } from "#infrastructure/hub/overview.ts";
+import { hubGrid } from "#infrastructure/hub/grid.ts";
 import { servicePipeline } from "#infrastructure/hub/pipeline.ts";
 import { commitPage, commitStatus } from "#infrastructure/hub/commits.ts";
 import {
@@ -31,6 +32,7 @@ type App = Hono<{ Variables: { principal: Principal; requestId: string } }>;
 /** Browser hub reads. Registered before the parameterized legacy routes. */
 export function registerHubRoutes(app: App, database: Database) {
   app.get("/api/v1/hub", async (c) => c.json(await hubOverview(database)));
+  app.get("/api/v1/hub/grid", async (c) => c.json(await hubGrid(database)));
   app.get("/api/v1/commits", async (c) =>
     c.json(
       await commitPage(database, CommitListQuerySchema.parse(c.req.query())),

@@ -2,8 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { audit } from "#infrastructure/delivery-records.ts";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery, testExecutor, testOperator } from "#testing/seed.ts";
-import { fixtureEnrichment } from "#testing/enrichment-fixture.ts";
-import { readChangeFeed } from "#testing/http-app.ts";
+import { createHubTestApp, readChangeFeed } from "#testing/http-app.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import {
@@ -23,13 +22,12 @@ import {
   CiRunIntegrationSchema,
   SourceChangeIntegrationSchema,
 } from "#shared/hub/integration-contract.ts";
-import { createApp } from "./app.ts";
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let delivery: Delivery;
 let fixture: Awaited<ReturnType<typeof seedDelivery>>;
 let feed: ReturnType<typeof createChangeListener>;
-let app: ReturnType<typeof createApp>;
+let app: ReturnType<typeof createHubTestApp>;
 const headers = { "tailscale-user-login": testOperator.id };
 
 async function status(path: string) {
@@ -60,23 +58,7 @@ beforeAll(async () => {
   fixture = await seedDelivery(delivery);
   feed = createChangeListener(cluster.url);
   await feed.start();
-  app = createApp({
-    delivery,
-    changeFeed: feed,
-    enrichment: fixtureEnrichment(cluster.database),
-    ciOrigin: "https://woodpecker.sjer.red",
-    ciRepositoryId: 1,
-    qualifyBuild: () => Promise.resolve("verified"),
-    peerAddress: () => "127.0.0.1",
-    config: {
-      publicOrigin: "http://delivery.test",
-      machineCredentials: [],
-      writesEnabled: () => Promise.resolve(true),
-      enabledEnvironments: () => Promise.resolve(["arcade/prod"]),
-      operatorLogins: () => Promise.resolve([testOperator.id]),
-      trustedProxyAddresses: () => Promise.resolve(["127.0.0.1"]),
-    },
-  });
+  app = createHubTestApp(delivery, feed);
   const deployment = await delivery.createDeployment(
     {
       requestId: "hub-deploy",

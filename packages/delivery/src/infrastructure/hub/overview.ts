@@ -1,93 +1,20 @@
-import { z } from "zod";
 import { DeploymentStatusSchema } from "#shared/contract.ts";
-import type {
-  Attention,
-  HubOverview,
-  HubService,
-} from "#shared/hub/hub-contract.ts";
-import type { Prisma } from "#generated/prisma/client.ts";
+import type { HubOverview, HubService } from "#shared/hub/hub-contract.ts";
 import type { Database } from "#infrastructure/database.ts";
 import {
   environment as readEnvironment,
   index,
 } from "#infrastructure/delivery-data.ts";
+import {
+  attentionItems,
+  deploymentSubjects,
+  latestBuilds,
+  latestDeployments,
+} from "./attention.ts";
 import { toolLinks } from "./links.ts";
 import { latestExecution } from "./executions.ts";
 import { promotionOrder } from "./topology.ts";
 import { activityEntry, buildView, serviceSummary } from "./views.ts";
-
-type DeploymentRow = Prisma.DeploymentGetPayload<object>;
-const IdRowsSchema = z.array(z.object({ id: z.string() }));
-
-async function latestDeployments(database: Database) {
-  const rows = IdRowsSchema.parse(
-    await database.$queryRaw`
-    SELECT DISTINCT ON ("environmentId") "id" FROM "Deployment"
-    ORDER BY "environmentId", "createdAt" DESC, "id" DESC
-  `,
-  );
-  const deployments = await database.deployment.findMany({
-    where: { id: { in: rows.map((row) => row.id) } },
-  });
-  return new Map(deployments.map((row) => [row.environmentId, row]));
-}
-
-async function latestBuilds(database: Database) {
-  const rows = IdRowsSchema.parse(
-    await database.$queryRaw`
-    SELECT DISTINCT ON ("serviceId") "id" FROM "Build"
-    ORDER BY "serviceId", "createdAt" DESC, "id" DESC
-  `,
-  );
-  const builds = await database.build.findMany({
-    where: { id: { in: rows.map((row) => row.id) } },
-  });
-  return new Map(builds.map((row) => [row.serviceId, row]));
-}
-
-function attention(
-  services: HubService[],
-  latest: Map<string, DeploymentRow>,
-  awaiting: DeploymentRow[],
-): Attention[] {
-  const items: Attention[] = awaiting.map((deployment) => ({
-    kind: "approval",
-    title: `${deployment.environmentId} awaits approval`,
-    detail: `${deployment.kind} requested by ${deployment.requestedBy}`,
-    at: deployment.createdAt.toISOString(),
-    target: { kind: "deployment", id: deployment.id },
-  }));
-  for (const deployment of latest.values()) {
-    if (deployment.recoveryRequired)
-      items.push({
-        kind: "recovery",
-        title: `${deployment.environmentId} requires recovery`,
-        detail: deployment.message ?? "The target lock is quarantined",
-        at: deployment.finishedAt?.toISOString() ?? null,
-        target: { kind: "deployment", id: deployment.id },
-      });
-    else if (deployment.status === "failed")
-      items.push({
-        kind: "failed",
-        title: `${deployment.environmentId} deployment failed`,
-        detail: deployment.message ?? deployment.kind,
-        at: deployment.finishedAt?.toISOString() ?? null,
-        target: { kind: "deployment", id: deployment.id },
-      });
-  }
-  for (const service of services)
-    if (service.latestBuild?.status === "failed")
-      items.push({
-        kind: "build_failed",
-        title: `${service.title} build failed qualification`,
-        detail: service.latestBuild.qualificationReason ?? "CI did not pass",
-        at: service.latestBuild.createdAt,
-        target: { kind: "build", id: service.latestBuild.id },
-      });
-  return items.toSorted((left, right) =>
-    (right.at ?? "").localeCompare(left.at ?? ""),
-  );
-}
 
 /** Every delivered service with its newest build and environment states. */
 export async function hubOverview(database: Database): Promise<HubOverview> {
@@ -162,7 +89,24 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
     .toSorted((left, right) => left.title.localeCompare(right.title));
   return {
     services,
-    attention: attention(services, latest, awaiting),
+    attention: attentionItems({
+      awaiting,
+      latest: latest.values(),
+      failedBuilds: services.flatMap((service) =>
+        service.latestBuild?.status === "failed"
+          ? [
+              {
+                id: service.latestBuild.id,
+                serviceId: service.id,
+                serviceTitle: service.title,
+                reason: service.latestBuild.qualificationReason,
+                at: service.latestBuild.createdAt,
+              },
+            ]
+          : [],
+      ),
+      subject: deploymentSubjects(environments),
+    }),
     activity: audit.map((row) => activityEntry(row)),
     tools: toolLinks(),
   };

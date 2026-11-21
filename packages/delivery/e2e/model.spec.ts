@@ -339,6 +339,7 @@ for (const scheme of ["light", "dark"] as const) {
       EnvironmentSelectionSchema,
     );
     for (const path of [
+      "/",
       ENVIRONMENT,
       `/deployments/${z.string().parse(view.acceptedDeploymentId)}`,
       `/deployments/${await quarantined(page)}`,

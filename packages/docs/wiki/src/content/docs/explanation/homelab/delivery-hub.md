@@ -66,7 +66,7 @@ arrive the same way.
 Events are not replayed. A browser that reconnects refetches what it shows
 instead, which is simpler than storing a durable event log.
 
-## A browser application, not a dashboard
+## A browser application that opens on the record
 
 Every page has a
 [URL](https://github.com/shepherdjerred/monorepo/blob/6a9c4be858a1f28db96cd1aa9e608af85c4273fb/packages/delivery/src/client/router.tsx).
@@ -74,6 +74,34 @@ Links are real anchors, filters and pages are search parameters, and forms are
 native. Back, forward, new tabs, bookmarks and shared links therefore behave as
 they do on any website. Approvals use the browser's form validation.
 Cancellations and retirements confirm through a native modal dialog.
+
+The home page is an overview of every active service and where it runs. It
+answers one question before any other: does anything need a person? Waiting
+approvals, failed deployments and required recoveries are [read from the
+record](https://github.com/shepherdjerred/monorepo/blob/e78ed9e2d360ecaae482f2820fa41d021ba94a97/packages/delivery/src/infrastructure/hub/overview.ts)
+and listed first. Below them, each service is a tile with one chip per
+environment, in promotion order.
+
+A chip states what Delivery last recorded for that environment. It shows the
+outcome of the newest deployment and the revision the environment accepted. It
+is not live health. A green chip means the last deployment succeeded, not that
+the workload is running now.
+
+That limit is deliberate. Asking ArgoCD about every environment on each load
+would make the home page as slow and as fragile as its slowest integration.
+Live sync, health and images stay on an environment's own page, which asks
+about one environment at a time. The overview is refetched on every change
+notification, so it reads the record by set and traces no execution.
+
+The overview is not a matrix of services against environments. In the
+[catalog](https://github.com/shepherdjerred/monorepo/blob/e78ed9e2d360ecaae482f2820fa41d021ba94a97/packages/ops-model/catalog-document.json),
+almost every service has a single `prod` environment. A matrix would be one
+full column beside several empty ones. A tile carries only the environments its
+service has.
+
+Tiles sit in one panel per catalog kind: products, workloads and platform. Most
+catalog groups hold one service, so a panel per group would repeat each name. A
+group of several services keeps its own heading inside its kind.
 
 ## Related
 

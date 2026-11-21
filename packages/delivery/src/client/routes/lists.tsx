@@ -45,6 +45,7 @@ function DeploymentsPage() {
         className="filters"
         role="search"
         aria-label="Filter deployments"
+        data-search-form
         onSubmit={(event) => {
           event.preventDefault();
           void navigate({
@@ -145,6 +146,7 @@ function ArtifactsPage() {
         className="filters"
         role="search"
         aria-label="Filter builds"
+        data-search-form
         onSubmit={(event) => {
           event.preventDefault();
           void navigate({
@@ -213,6 +215,7 @@ function ActivityPage() {
         className="filters"
         role="search"
         aria-label="Filter activity"
+        data-search-form
         onSubmit={(event) => {
           event.preventDefault();
           void navigate({
