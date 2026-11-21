@@ -119,18 +119,27 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 58 included and 50 excluded PVCs, including the separate BlueMap cache", () => {
+it("excludes Media's artwork cache from Velero; the API refetches it from TMDB", () => {
+  expect(
+    getPvcBackupLabels(getPvcBackupPolicy("media", "media-artwork-cache")),
+  ).toEqual({
+    "velero.io/backup": "disabled",
+    "velero.io/exclude-from-backup": "true",
+  });
+});
+
+it("classifies 58 included and 51 excluded PVCs, including the separate BlueMap cache", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(108);
-  expect(new Set(keys).size).toBe(108);
+  expect(keys).toHaveLength(109);
+  expect(new Set(keys).size).toBe(109);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
   ).toHaveLength(58);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-  ).toHaveLength(50);
+  ).toHaveLength(51);
   expect(
     getPvcBackupPolicy("minecraft-tsmc", "minecraft-tsmc-bluemap").backup,
   ).toBe("disabled");
