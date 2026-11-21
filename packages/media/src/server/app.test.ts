@@ -34,6 +34,9 @@ test("public Media keeps canonical Origin and CSRF authority while the old owner
   expect(alias.headers.get("Location")).toBe(
     "https://seerr.sjer.red/requests?view=mine",
   );
+  expect(alias.headers.get("Content-Security-Policy")).toContain(
+    "default-src 'none'",
+  );
   for (const origin of [
     "https://media.tailnet-1a49.ts.net",
     "https://evil.example",
