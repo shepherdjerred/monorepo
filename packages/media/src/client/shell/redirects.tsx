@@ -8,7 +8,7 @@ import {
 import { useUser } from "./user.ts";
 
 /** Where anything a person cannot open, or that no longer exists, lands. */
-export const HOME_PATH = "/discover";
+export const HOME_PATH = "/";
 
 /**
  * Sends an address that moved to its new home. Emails, Discord messages,

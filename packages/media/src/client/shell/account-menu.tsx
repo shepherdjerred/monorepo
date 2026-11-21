@@ -11,12 +11,14 @@ import {
 import { Link, useLocation } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { NOTIFICATION_SETTINGS_PATH } from "#client/notifications/paths.ts";
+import { MANAGE_NAV } from "./navigation.ts";
 import { chooseTheme, useThemeChoice, type ThemeChoice } from "./theme.ts";
 import { classNames } from "#client/ui/class-names.ts";
 import { useDismissal } from "#client/ui/use-dismissal.ts";
 import styles from "./account-menu.module.css";
 
 const cx = classNames(styles);
+const ManageIcon = MANAGE_NAV.icon;
 
 const THEMES: readonly {
   value: ThemeChoice;
@@ -119,6 +121,15 @@ export function AccountMenu({
           </p>
         </div>
         <ul className={cx("links")}>
+          {user.role === "owner" && (
+            // On a phone only: everywhere else Manage is in the sidebar.
+            <li className={cx("onPhone")}>
+              <Link className={cx("item")} to={MANAGE_NAV.to}>
+                <ManageIcon aria-hidden="true" />
+                {MANAGE_NAV.label}
+              </Link>
+            </li>
+          )}
           <li>
             <Link className={cx("item")} to={NOTIFICATION_SETTINGS_PATH}>
               <BellIcon aria-hidden="true" />

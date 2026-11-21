@@ -61,11 +61,26 @@ import {
 } from "#testing/fixture-api/fixtures/requests.ts";
 import { FEATURED, titleNamed } from "#testing/fixture-api/fixtures/titles.ts";
 import { KIDS, OWNER } from "#testing/fixture-api/personas.ts";
+import { FixtureFailure } from "#testing/fixture-api/scenario.ts";
 import { NOW } from "#testing/fixture-api/support.ts";
 
 function subjectOf(request: FixtureRequest): string {
   return request.query.get("subjectUserId") ?? request.user.id;
 }
+
+/**
+ * A read's usual answer, or `empty` for the household of the `new-household`
+ * scenario, which has asked for nothing and holds nothing.
+ */
+function unlessNewHousehold<Answer>(
+  request: FixtureRequest,
+  empty: Answer,
+  answer: () => Answer,
+): Answer {
+  return request.scenario === "new-household" ? empty : answer();
+}
+
+const NO_ITEMS = { items: [], nextCursor: null };
 
 /** The current month, the range the calendar page opens on. */
 const CALENDAR_RANGE = (() => {
@@ -129,7 +144,19 @@ const library: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/library",
     schema: LibraryPageSchema,
-    respond: (request) => libraryPage(request.query, request.persona),
+    respond: (request) => {
+      if (request.scenario === "library-unavailable") {
+        // What the real server answers when a read throws.
+        throw new FixtureFailure(
+          500,
+          "internal_error",
+          "The operation failed; use the request ID for investigation",
+        );
+      }
+      return unlessNewHousehold(request, NO_ITEMS, () =>
+        libraryPage(request.query, request.persona),
+      );
+    },
     samples: [
       "/library?query=&kind=all",
       "/library?query=the&kind=movie",
@@ -148,19 +175,24 @@ const requests: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/requests",
     schema: RequestListSchema,
-    respond: (request) => requestList(request.persona),
+    respond: (request) =>
+      unlessNewHousehold(request, [], () => requestList(request.persona)),
     samples: ["/requests"],
   }),
   endpoint({
     path: "/requests/imported",
     schema: ImportedPersonalClaimsSchema,
-    respond: (request) => importedClaims(request.persona),
+    respond: (request) =>
+      unlessNewHousehold(request, [], () => importedClaims(request.persona)),
     samples: ["/requests/imported"],
   }),
   endpoint({
     path: "/request-interests",
     schema: RequestInterestListSchema,
-    respond: (request) => interestList(request.query, request.persona),
+    respond: (request) =>
+      unlessNewHousehold(request, NO_ITEMS, () =>
+        interestList(request.query, request.persona),
+      ),
     samples: [
       "/request-interests",
       `/request-interests?cursor=${requestId(14)}`,
@@ -180,7 +212,12 @@ const requests: readonly FixtureEndpoint[] = [
     version: 4,
     path: "/movie-requests",
     schema: MovieEditionRequestListV4Schema,
-    respond: (request) => movieRequestList(subjectOf(request)),
+    respond: (request) =>
+      unlessNewHousehold(
+        request,
+        { schemaVersion: 4, subjectUserId: subjectOf(request), ...NO_ITEMS },
+        () => movieRequestList(subjectOf(request)),
+      ),
     belongsToRequest: (page, request) =>
       page.subjectUserId === subjectOf(request),
     samples: [
@@ -239,13 +276,17 @@ const removals: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/removals",
     schema: RemovalListSchema,
-    respond: (request) => removalList(request.persona),
+    respond: (request) =>
+      unlessNewHousehold(request, [], () => removalList(request.persona)),
     samples: ["/removals"],
   }),
   endpoint({
     path: "/removal-history",
     schema: RemovalHistoryPageSchema,
-    respond: (request) => removalHistory(request.query, request.persona),
+    respond: (request) =>
+      unlessNewHousehold(request, NO_ITEMS, () =>
+        removalHistory(request.query, request.persona),
+      ),
     samples: ["/removal-history"],
   }),
 ];

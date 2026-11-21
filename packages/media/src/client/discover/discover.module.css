@@ -1,38 +1,5 @@
 @layer pages {
-  /* One feed: its heading and "See all" on a line, then its rail. */
-  /* A rail already ends in the line it keeps for a card's note. */
-  .row {
-    margin-bottom: var(--space-5);
-  }
-  .row:last-child {
-    margin-bottom: 0;
-  }
-  .rowHead {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-4);
-    margin-bottom: var(--space-4);
-  }
-  .rowTitle {
-    margin: 0;
-    font-size: var(--text-xl);
-    overflow-wrap: anywhere;
-  }
-  .seeAll {
-    flex: none;
-    /* A target a finger can hit, without moving the heading's baseline. */
-    margin-block: -10px;
-    padding: 10px 0;
-    color: var(--text-accent);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    border-radius: 2px;
-  }
-  .seeAll:hover {
-    text-decoration: underline;
-  }
-
+  /* A feed's row and a search's results are a `Section` (`ui/section.tsx`). */
   .more {
     display: flex;
     justify-content: center;

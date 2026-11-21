@@ -300,22 +300,24 @@ export function recoveryList(persona: Persona): RecoveryList {
       title,
       reason: pick(HOLD_REASONS, index),
     })),
+    // The two states a review has: open until the owner applies it, then
+    // released (`RecoveryReview.state` in the Prisma schema).
     reviews: [
       {
         id: fixtureId(16, 1),
-        state: "awaiting_review",
+        state: "awaiting_responses",
         createdAt: ago(2 * DAY),
         titles: ["Breaking Bad", "Better Call Saul"],
       },
       {
         id: fixtureId(16, 2),
-        state: "release",
+        state: "released",
         createdAt: ago(6 * DAY),
         titles: ["The Godfather"],
       },
       {
         id: fixtureId(16, 3),
-        state: "closed",
+        state: "released",
         createdAt: ago(19 * DAY),
         titles: ["Chernobyl", "Fleabag", "Dark"],
       },

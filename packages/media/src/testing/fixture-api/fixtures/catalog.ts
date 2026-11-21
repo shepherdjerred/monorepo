@@ -165,7 +165,8 @@ function libraryAccess(
 }
 
 function asRead(item: CatalogItem, scenario: FixtureScenario): CatalogItem {
-  return libraryAccess(scenario) === "stale"
+  // Nothing is known of the library, or (`new-household`) nothing is in it.
+  return scenario === "new-household" || libraryAccess(scenario) === "stale"
     ? { ...item, library: null }
     : item;
 }

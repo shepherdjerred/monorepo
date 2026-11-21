@@ -26,6 +26,8 @@ const series = FEATURED.series;
 /** The pages both personas read; an owner sees extra controls on each. */
 function shared(persona: Persona): RouteSpec[] {
   return [
+    // Home: the owner's also lists what a restore left for them to decide.
+    { label: `${persona} /`, path: "/", heading: "Home" },
     { label: `${persona} /library`, path: "/library", heading: "Library" },
     {
       label: `${persona} /library/mine`,

@@ -6,7 +6,7 @@ import { personaUser, type Persona } from "./personas.ts";
 import { FixtureFailure, type FixtureScenario } from "./scenario.ts";
 
 type ApiError = z.infer<typeof ApiErrorSchema>;
-type FailureStatus = 400 | 403 | 404 | 501 | 502;
+type FailureStatus = 400 | 403 | 404 | 500 | 501 | 502;
 
 /** A served fixture, or the typed error body the real API would send. */
 export type FixtureOutcome =

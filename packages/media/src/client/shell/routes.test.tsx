@@ -38,6 +38,8 @@ function matched(address: string) {
 }
 
 test.each([
+  // Home is the index route: it has no path of its own.
+  ["/", ""],
   // Addresses the server writes into emails, Discord messages, and OAuth
   // returns. Each must still resolve to its own page.
   ["/media/abc", "media/:id"],
@@ -130,20 +132,60 @@ function links(html: string) {
   ];
 }
 
-test("navigation is Discover, Library, Calendar and History, with Manage for the owner", () => {
+test("navigation is Home, Discover, Library, Calendar and History, with Manage for the owner", () => {
   expect(links(renderShell(member, "/library"))).toEqual([
+    "/",
     "/discover",
     "/library",
     "/calendar",
     "/history",
   ]);
   expect(links(renderShell(owner, "/library"))).toEqual([
+    "/",
     "/discover",
     "/library",
     "/calendar",
     "/history",
     "/manage",
   ]);
+});
+
+/** The links of one of the shell's stylesheet classes, by where they lead. */
+function linksOf(html: string, className: string) {
+  return [
+    ...html.matchAll(
+      new RegExp(
+        String.raw`<a [^>]*class="[^"]*\b_?${className}_[^"]*"[^>]*href="([^"]+)"`,
+        "gu",
+      ),
+    ),
+  ].map((match) => match[1]);
+}
+
+test("the tab bar is the same five for everyone; the owner's Manage is in the sidebar and the account panel", () => {
+  const html = renderShell(owner, "/library");
+  expect(linksOf(html, "tab")).toEqual([
+    "/",
+    "/discover",
+    "/library",
+    "/calendar",
+    "/history",
+  ]);
+  expect(linksOf(html, "navItem")).toContain("/manage");
+  // The panel's link is the one a phone shows (`account-menu.module.css`).
+  expect(linksOf(html, "item")).toContain("/manage");
+  expect(linksOf(renderShell(member, "/library"), "item")).not.toContain(
+    "/manage",
+  );
+});
+
+test("Home is marked at its own address only, and the logo leads to it", () => {
+  const html = renderShell(member, "/");
+  const current = [
+    ...html.matchAll(/<a aria-current="page"[^>]*href="([^"]+)"/gu),
+  ];
+  expect(current.map((match) => match[1])).toEqual(["/", "/"]);
+  expect(linksOf(html, "brand")).toEqual(["/"]);
 });
 
 test("a segment of the Library keeps Library marked", () => {

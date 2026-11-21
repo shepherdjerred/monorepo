@@ -9,7 +9,12 @@ import {
 import type { FixtureScenario } from "#testing/fixture-api/scenario.ts";
 import { DAY, HOUR, NOW, ago } from "#testing/fixture-api/support.ts";
 import { storedArtwork } from "./artwork.ts";
-import { AIRING_EPISODES, episodeId, titleNamed } from "./titles.ts";
+import {
+  AIRING_EPISODES,
+  episodeId,
+  episodeItem,
+  titleNamed,
+} from "./titles.ts";
 
 type CalendarEvent = z.input<typeof CalendarEventSchema>;
 type CalendarPage = z.input<typeof CalendarPageSchema>;
@@ -109,10 +114,101 @@ function movieEvents(): CalendarEvent[] {
   );
 }
 
+/** A civil date some days from today, in the reader's own calendar. */
+function daysAhead(days: number): string {
+  const today = new Date(NOW);
+  const date = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() + days,
+  );
+  return `${String(date.getFullYear())}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
+}
+
+type WeekAheadSeed =
+  | readonly [
+      days: number,
+      series: string,
+      season: number,
+      episode: number,
+      name: string,
+    ]
+  | readonly [days: number, movie: string, kind: MovieReleaseKind];
+
+/**
+ * Releases in the seven days from today. The schedule above is by day of
+ * the month, so on a month's last days the week ahead would hold nothing;
+ * these keep Home's "This week" populated whatever the date is, on today
+ * and on the last day of the week at least. None is an episode the month's
+ * schedule already airs, and none is a film that has a release with no date
+ * yet, which must stay off every day.
+ */
+const WEEK_AHEAD: readonly WeekAheadSeed[] = [
+  [0, "The Last of Us", 2, 6, "The Price"],
+  [0, "Ted Lasso", 3, 10, "International Break"],
+  [1, "Andor", 2, 11, "Who Else Knows?"],
+  [1, "Princess Mononoke", "digital"],
+  [2, "Frieren: Beyond Journey's End", 2, 9, "The Height of Magic"],
+  [4, "Dark", 3, 7, "Between the Time"],
+  [6, "Frieren: Beyond Journey's End", 2, 10, "A Powerful Mage"],
+  [6, "Arrival", "physical"],
+];
+
+function weekAheadEvents(): CalendarEvent[] {
+  const busy = dayOfMonth(BUSY_DAY);
+  return WEEK_AHEAD.flatMap((seed): CalendarEvent[] => {
+    const [days, name] = seed;
+    const date = daysAhead(days);
+    // The busy day has exactly the releases the month's schedule gives it.
+    if (date === busy) return [];
+    const title = titleNamed(name);
+    const common = {
+      rootMediaId: title.id,
+      artwork: storedArtwork(title),
+      date,
+      precision: "day",
+      observedAt: ago(5 * HOUR),
+    } as const;
+    if (seed.length === 3) {
+      return [
+        {
+          ...common,
+          id: `release:${title.id}:${seed[2]}:week`,
+          mediaId: title.id,
+          title: title.title,
+          seriesTitle: null,
+          seasonNumber: null,
+          episodeNumber: null,
+          kind: seed[2],
+          region: "US",
+          availability: title.availability,
+        },
+      ];
+    }
+    // In the state the episode's own page gives it.
+    const episode = episodeItem(title, seed[2], seed[3]);
+    return [
+      {
+        ...common,
+        id: `air:${episode.id}`,
+        mediaId: episode.id,
+        title: seed[4],
+        seriesTitle: title.title,
+        seasonNumber: seed[2],
+        episodeNumber: seed[3],
+        kind: "episode",
+        region: null,
+        availability: episode.availability,
+      },
+    ];
+  });
+}
+
 /** In the order the API reads them: by date, the undated last, then by id. */
 const EVENTS: readonly CalendarEvent[] = [
   ...episodeEvents(),
   ...movieEvents(),
+  ...weekAheadEvents(),
 ].sort((left, right) => {
   if (left.date !== right.date) {
     if (left.date === null) return 1;

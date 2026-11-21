@@ -18,7 +18,11 @@ function NavList({
     <ul className={cx("navList")} aria-labelledby={labelledBy}>
       {items.map((item) => (
         <li key={item.to}>
-          <NavLink className={cx("navItem")} to={item.to}>
+          <NavLink
+            className={cx("navItem")}
+            to={item.to}
+            end={item.end === true}
+          >
             <item.icon aria-hidden="true" />
             {item.label}
           </NavLink>

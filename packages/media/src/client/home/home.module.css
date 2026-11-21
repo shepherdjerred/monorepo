@@ -1,0 +1,292 @@
+@layer pages {
+  /* Home's sections are lists, not rails, so they stand further apart than
+     Discover's rows (`ui/section.module.css`). */
+  .sections {
+    --section-gap: var(--space-7);
+  }
+
+  /*
+   * The one part of Home that asks for something. It is the only boxed
+   * section on the page, edged in the lamp's colour, so it cannot be read
+   * as one more list.
+   */
+  .attention {
+    --section-gap: 0;
+    margin-bottom: var(--space-7);
+    padding: var(--space-5);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+  /* The box is only on the page with nothing waiting in it when its read
+     failed: then what it holds is the failure, without the lamp's edge. */
+  .attention[data-waiting="false"] {
+    border-color: var(--border);
+  }
+
+  /*
+   * Items: titles as a small poster and a few lines, in as many columns as
+   * the list's own width holds. Nothing boxes them; the posters are the
+   * structure.
+   */
+  .itemsFrame {
+    container-type: inline-size;
+  }
+  .items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--space-5) var(--space-6);
+  }
+  .item {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+  /* The poster and the text beside it: one link, by the name's own anchor
+     stretched over both. */
+  .itemMain {
+    position: relative;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+    min-width: 0;
+  }
+  /* The poster's column; whatever stands in it is as wide as the column. */
+  .itemMedia {
+    min-width: 0;
+  }
+  .itemBody {
+    min-width: 0;
+  }
+  .itemTitle {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+  }
+  .itemLink::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-poster);
+  }
+  .itemLink:hover {
+    color: var(--text-accent);
+  }
+  /* The ring goes round what the link covers, not round the name alone. */
+  .itemLink:focus-visible {
+    outline: none;
+  }
+  .itemLink:focus-visible::after {
+    outline: 3px solid var(--focus);
+    outline-offset: 4px;
+  }
+  .itemDetail {
+    margin: 2px 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .itemState {
+    margin: var(--space-2) 0 0;
+  }
+  /* Under the text, clear of the poster's column. */
+  .itemAction {
+    padding-inline-start: calc(56px + var(--space-4));
+  }
+
+  /* One item to a line, each with its controls: beside it where there is
+     room, under it where there is not. */
+  .stacked {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .stacked > * + * {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+  /* Three answers need the whole line on a phone. */
+  .stacked .itemAction {
+    padding-inline-start: 0;
+  }
+  @container (min-width: 700px) {
+    .stacked > .item {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--space-5);
+    }
+    .stacked .itemAction {
+      max-width: 460px;
+    }
+    .stacked .answers {
+      justify-content: flex-end;
+    }
+  }
+
+  /* The answers to a "still watching?" check, the main one first. */
+  .answers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  /* What the reader answered, in the place the question was. */
+  .done {
+    margin: var(--space-2) 0 0;
+    color: var(--ok);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: 2px;
+  }
+  .done:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 4px;
+  }
+
+  /* Stands where a poster would, for something that is not a title. */
+  .mark {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    aspect-ratio: 1;
+    border-radius: var(--radius-poster);
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .mark svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* How far a stream has played: what it is doing, a bar, and the minutes. */
+  .played {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-2);
+  }
+  .playedText {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .meter {
+    appearance: none;
+    flex: 1 1 80px;
+    min-width: 60px;
+    max-width: 180px;
+    height: 6px;
+    border: 0 solid;
+    border-radius: var(--radius-pill);
+    overflow: clip;
+    background: var(--surface-selected);
+  }
+  .meter::-webkit-progress-bar {
+    background: transparent;
+  }
+  .meter::-webkit-progress-value {
+    background: var(--accent-strong);
+    border-radius: var(--radius-pill);
+  }
+  .meter::-moz-progress-bar {
+    background: var(--accent-strong);
+    border-radius: var(--radius-pill);
+  }
+
+  /*
+   * The week ahead, a day to a column: days are a sequence, and reading
+   * across them is reading forward in time. A day's releases are the
+   * Calendar's rows, which arrange themselves by the column's width.
+   */
+  .week {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+    gap: var(--space-5) var(--space-6);
+  }
+  .day {
+    min-width: 0;
+  }
+  .dayName {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-2);
+    margin: 0 0 var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+  .dayDate {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 400;
+  }
+  .more {
+    margin: var(--space-4) 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  /* Home with nothing on it yet: what the page is for, and where to start. */
+  .welcome {
+    max-width: 620px;
+    padding: var(--space-6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+  .welcomeTitle {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-2xl);
+    letter-spacing: -0.035em;
+    overflow-wrap: anywhere;
+  }
+  .welcomeBody {
+    margin: 0 0 var(--space-3);
+    color: var(--text-muted);
+  }
+  .welcomeActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+
+  /* A loading item: its poster in the poster's own shape, and lines no
+     longer than a name and a detail run. */
+  .itemShape > * {
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-poster);
+  }
+  .itemShape + .itemBody {
+    max-width: 320px;
+  }
+
+  @media (max-width: 760px) {
+    .sections {
+      --section-gap: var(--space-6);
+    }
+    .attention {
+      margin-bottom: var(--space-6);
+      padding: var(--space-4);
+    }
+    .welcome {
+      padding: var(--space-5);
+    }
+  }
+}

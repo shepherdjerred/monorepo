@@ -1,8 +1,6 @@
 import { CompassIcon, SearchXIcon } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
-import { LibraryPageSchema } from "#shared/household/library.ts";
-import { readApi } from "#client/api.ts";
 import {
   kindAndYear,
   libraryStatePhrase,
@@ -14,11 +12,11 @@ import { EmptyState, ErrorState } from "#client/ui/states.tsx";
 import { useCursorList } from "#client/ui/use-cursor-list.ts";
 import { LibraryList } from "./list-view.tsx";
 import styles from "./library.module.css";
+import { libraryRead } from "./reads.ts";
 import { LibraryToolbar } from "./toolbar.tsx";
 import {
   DEFAULT_VIEW,
   isFiltered,
-  libraryReadPath,
   libraryViewSearch,
   readLibraryView,
   type LibraryView,
@@ -99,11 +97,8 @@ function NothingHere({
 export function LibraryAll({ user }: { user: MediaUser }) {
   const [params, setParams] = useSearchParams();
   const view = readLibraryView(params);
-  const { layout, ...question } = view;
-  const library = useCursorList({
-    queryKey: ["library", question],
-    read: (cursor) => readApi(libraryReadPath(view, cursor), LibraryPageSchema),
-  });
+  const { layout } = view;
+  const library = useCursorList(libraryRead(view));
   const skeleton =
     layout === "grid" ? (
       <PosterGridSkeleton label="Loading titles" />

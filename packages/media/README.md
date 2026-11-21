@@ -726,11 +726,20 @@ directly) and `/api/fixture/scenario/default` to leave it:
 | `stale-library-access` | Every catalog read reports `libraryAccess: "stale"` and no title carries a `library`. |
 | `feed-unavailable`     | The `popular_series` feed answers 502 `catalog_unavailable`; the rest keep working.   |
 | `catalog-unavailable`  | Every catalog read answers 502 `catalog_unavailable`, as when TMDB is down.           |
-| `new-household`        | Nobody has asked for or watched anything: no releases, plays or notifications.        |
+| `new-household`        | A household on its first day: every list is empty and no catalog title is held.       |
+| `library-unavailable`  | `GET /library` answers 500 `internal_error`; every other read keeps working.          |
 
 A fixture answers a scenario by reading `request.scenario`, and throws
 `FixtureFailure` (`src/testing/fixture-api/scenario.ts`) for an error the real
-API sends on purpose.
+API sends. `new-household` empties the reads Home, the Library and the Calendar
+are made of (requests, interests, film requests, the library, the calendar,
+removals, what is playing, the watch history, notifications, and what a restore left held), which is how Home's
+welcome is seen; `library-unavailable` is one of Home's sections failing among
+the others.
+
+The calendar fixtures are by day of the current month, plus a few releases in
+the seven days from today (`WEEK_AHEAD` in `fixtures/calendar.ts`), so the week
+Home shows is never empty at the end of a month.
 
 The fixture API answers reads only. A write returns a typed `501`, an unknown
 path returns a typed `404` and is logged, and an owner-only route returns `403`
@@ -761,7 +770,8 @@ that moved.
 
 A spec runs in both projects, `desktop` and `mobile`, unless its name says which
 layout it is about: `*.desktop.spec.ts` (the sidebar) runs only in `desktop` and
-`*.phone.spec.ts` (the tab bar and its More sheet) only in `mobile`. Put a
+`*.phone.spec.ts` (the tab bar, and Manage in the account panel) only in
+`mobile`. Put a
 layout-specific test in one of those files instead of skipping it by viewport;
 the root quality ratchet rejects `test.skip`.
 
@@ -776,11 +786,15 @@ the session gate in `app.tsx`: the sign-in page until a session is known, then
 the shell (`shell/shell.tsx`) around the matched page. The shell is keyed by
 session generation, so a changed principal never keeps a mounted page.
 
-Everyone gets Discover, Library, Calendar, and History, in the sidebar and, on a
-phone, as tabs along the bottom. Notifications are reached from the bell in the
-top bar, which carries the unread count, and notification settings and recovery
-reviews from the account panel, because members use all three. The owner also
-gets Manage (a fifth tab on a phone), one page per topic under `/manage`:
+Everyone gets Home, Discover, Library, Calendar, and History, in the sidebar
+and, on a phone, as the five tabs along the bottom (`shell/navigation.ts`). Home
+is `/`, the index route, and the logo leads to it; its item is marked only at
+its own address, because every address starts with it. Notifications are reached
+from the bell in the top bar, which carries the unread count, and notification
+settings and recovery reviews from the account panel, because members use all
+three. The owner also gets Manage: in the sidebar, and on a phone in the account
+panel, because five tabs are what a phone's width holds. It is one page per
+topic under `/manage`:
 
 | Address                               | Page                                             |
 | ------------------------------------- | ------------------------------------------------ |
@@ -797,7 +811,8 @@ gets Manage (a fifth tab on a phone), one page per topic under `/manage`:
 | `/manage/migration`                   | Migration captures and library import            |
 
 Each Manage page is a lazy route, so its code is a separate chunk that a member
-never downloads; a member who opens a Manage address is sent to `/discover`.
+never downloads; a member who opens a Manage address is sent to Home, as is
+anyone who opens an address that does not exist.
 The whole client still ships one stylesheet (`build.cssCodeSplit` is off),
 because the cascade layer order is fixed by the first `@layer` a browser reads.
 
@@ -811,7 +826,7 @@ The Library is one page with four views, each a route beneath `/library`:
 | `/library/removed` | Removed      | What left and why, with restore for whoever may still use it.                |
 
 Addresses that moved redirect, keeping their path parameters, query string, and
-fragment: `/` to `/discover`; `/admin` to `/manage/household`,
+fragment: `/admin` to `/manage/household`,
 `/admin/migration`, `/admin/subtitle-replacements/:id?`, `/recovery/native/:id?`,
 and `/activity` to their Manage pages; `/requests` to `/library/mine`,
 `/removals` to `/library/leaving`, and `/removed` to `/library/removed`.
@@ -838,6 +853,72 @@ starting a composition drops a search that was waiting to be sent; the finished
 text is searched for when the composition ends. A typed search belongs to the address it was typed at: if the reader goes
 anywhere else before the 300 ms are up (another page, Back, "Clear search"), it
 is dropped instead of undoing what they did.
+
+### Home
+
+`/` (`src/client/home/`) answers "what is waiting on me, and what is new for
+me?". It is six sections, each from its own read, and a section whose read has
+nothing in it is not on the page:
+
+| Section            | Read                                              | Shows                                                                                                                                               |
+| ------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Needs your answer  | `GET /request-interests`; `GET /recovery` (owner) | The reader's own open "still watching?" checks with the three answers Mine gives, and for the owner each open household review and the held titles. |
+| Now playing        | `GET /playback/now-playing`                       | Current streams (the household's for the owner), each linked to its title when the session carries `media`. Nothing while the read is `stale`.      |
+| On the way         | `GET /requests`                                   | The reader's own active requests that have not all arrived, one entry per film or series, furthest along first.                                     |
+| New in the library | `GET /library?sort=added`                         | The first 20 titles as a `PosterRail`; "See all" opens the Library sorted the same way.                                                             |
+| This week          | `GET /calendar` for today and the six days after  | Dated releases a day to a column, as the Calendar's own rows; at most twelve, with the rest counted and left to the calendar.                       |
+| Leaving soon       | `GET /removals`                                   | The three titles that leave first, each with the Library's own 30-day hold, including "Keep all N episodes".                                        |
+
+`home/model.ts` turns each answer into what its section shows, as pure
+functions. Where one can fail on an answer the client does not understand (a
+removal or review state it has no words for), it runs as the query's `select`,
+so that section fails and the page does not.
+
+Each read is its own query (`home/reads.ts`), so each section loads on its own
+and fails on its own, with an `ErrorState` and "Try again" under its heading;
+the other sections are untouched. While it loads, a section that usually has
+content (On the way, New in the library, This week, Leaving soon) holds its
+place with a skeleton. Needs your answer and Now playing are empty for most
+people most of the time, so they hold none: a heading that came and went on
+every visit would say something had been there. They appear when their read
+brings something. Requests,
+interests, the library sorted by arrival and removals are read through
+`library/reads.ts`, the definitions the Library's own views use; the week's
+releases through `calendar/reads.ts`, the Calendar's read, for seven days
+instead of a month; and what is playing under History's key. So an answer
+another page has is not asked for again and a change made on one refreshes the
+other. Home asks again for requests and what is playing once a minute, and for
+removals as often as the Library does; nothing on it refreshes faster than the
+page it shares with.
+
+"This week" is built from the Calendar's own parts: `releaseDays` sorts the
+releases onto their civil dates (`calendar/events.ts`), `calendar/dates.ts`
+does the date arithmetic and wording, and each day's list is the Calendar's
+`ReleaseList` (`calendar/release.tsx`), so a release reads the same on both
+pages.
+
+"Leaving soon" is the Library's own control too: `LeavingKeep` and the
+`useKeepRuns` hook behind "Keep all N episodes" (`library/leaving.tsx`), over
+the same entries (`library/keep-run.ts`). Home lists the three titles that
+leave first and any other a run has a report on, and the page holds the runs,
+so a report stays until it is dismissed even when its title has left the list.
+
+"On the way" counts a series by its episode requests where it has them (a
+series request fans out to one per episode, and the episodes are what arrive),
+and otherwise says what the request itself says. Its steps are worded in
+`presentation/progress.ts`, finer than the Library's one "On the way".
+
+A check answered on Home stays where it was as its own confirmation, in the
+words of the button that sent it (`INTEREST_DONE_COPY`), until the reader leaves
+the page. The owner's two items link to `/recovery` and `/recovery/:id`; Home
+decides nothing about a restore. A member's recovery reviews are not listed:
+the list read does not say whether the reader has already answered one.
+
+When every read has answered and no section has anything (the `new-household`
+fixture scenario), the page is a welcome that says what it will show and leads
+to Discover. It waits for every read, the two that hold no place included: an
+absent section is not yet an empty one, and a read that failed shows its
+failure instead.
 
 ### Discover
 
@@ -959,6 +1040,7 @@ Shared building blocks live in `src/client/ui/`:
 | `poster.tsx`, `artwork.ts`   | A 2:3 poster from the artwork route, lazy unless a page opens on it, with a `srcset` of the proxy widths; no image shows the title instead. |
 | `poster-card.tsx`            | `PosterCard`, `StatePill`, and `PosterGrid`, whose column count follows its own width (container queries).                                  |
 | `poster-rail.tsx`            | `PosterRail`, a row of cards that scrolls sideways with scroll snap, and what stands in for one that failed.                                |
+| `section.tsx`                | One part of a page with several: a heading, an optional "See all" beside it, and `--section-gap` for its spacing.                           |
 | `segmented.tsx`              | A row of exclusive views that are links, so navigation and not an ARIA tablist.                                                             |
 | `choice.tsx`                 | `Choice`, a native select drawn as a chip, marked when it narrows the list it sits above.                                                   |
 | `search-field.tsx`           | `SearchField`, a search box whose text lives in the page's address.                                                                         |

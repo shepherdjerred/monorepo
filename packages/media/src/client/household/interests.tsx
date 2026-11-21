@@ -12,6 +12,7 @@ import { INTEREST_ACTION_NAMES } from "#shared/household/names.ts";
 import { RequestInterestProgress } from "./progress.tsx";
 
 type Interest = z.infer<typeof RequestInterestListSchema>["items"][number];
+type InterestAction = RequestInterestCommand["action"];
 
 /**
  * One page of the reader's request interests, with each row's artwork. The
@@ -28,19 +29,17 @@ export function readInterests(cursor: string | null) {
 }
 
 /**
- * What a person can do about their interest in something they asked for:
- * answer a "still watching?" check, keep watching, say they are done, and,
- * for the owner, change how long it is kept.
+ * Sends one of the commands a person has over their interest in something
+ * they asked for, then refreshes every list that shows it. `onDone` hears
+ * which command went through, before the lists have refreshed.
  */
-export function InterestControls({
-  user,
-  interest,
-}: {
-  user: MediaUser;
-  interest: Interest;
-}) {
-  const change = useMutation({
-    mutationFn: (action: RequestInterestCommand["action"]) =>
+export function useInterestChange(
+  user: MediaUser,
+  interest: Interest,
+  onDone?: (action: InterestAction) => void,
+) {
+  return useMutation({
+    mutationFn: (action: InterestAction) =>
       writeApi({
         actorId: user.id,
         path: `/request-interests/${encodeURIComponent(interest.requestId)}/commands`,
@@ -56,7 +55,8 @@ export function InterestControls({
         } satisfies RequestInterestCommand,
         schema: RequestInterestResultSchema,
       }),
-    onSuccess: async () => {
+    onSuccess: async (_result, action) => {
+      onDone?.(action);
       await Promise.all(
         [
           "request-interests",
@@ -68,9 +68,18 @@ export function InterestControls({
       );
     },
   });
-  const own = interest.userId === user.id;
-  const following = interest.interestState === "following";
-  const act = (action: RequestInterestCommand["action"]) => (
+}
+
+type InterestChange = ReturnType<typeof useInterestChange>;
+
+function InterestButton({
+  change,
+  action,
+}: {
+  change: InterestChange;
+  action: InterestAction;
+}) {
+  return (
     <button
       className={action === "continue" ? "button primary" : "button subtle"}
       type="button"
@@ -82,6 +91,53 @@ export function InterestControls({
       {INTEREST_ACTION_NAMES[action]}
     </button>
   );
+}
+
+/**
+ * The answers a person can give about something they asked for: keep
+ * watching it, which is the main one, and, for something kept only while
+ * they follow it, that they have finished it or want to stop following.
+ * Nobody answers for someone else, so another person's interest has none.
+ */
+export function InterestAnswers({
+  user,
+  interest,
+  change,
+}: {
+  user: MediaUser;
+  interest: Interest;
+  change: InterestChange;
+}) {
+  if (interest.userId !== user.id) return null;
+  return (
+    <>
+      <InterestButton change={change} action="continue" />
+      {interest.interestState === "following" &&
+        interest.keepingPolicy === "temporary" && (
+          <>
+            <InterestButton change={change} action="finished" />
+            <InterestButton change={change} action="drop" />
+          </>
+        )}
+    </>
+  );
+}
+
+/**
+ * What a person can do about their interest in something they asked for:
+ * answer a "still watching?" check, keep watching, say they are done, and,
+ * for the owner, change how long it is kept.
+ */
+export function InterestControls({
+  user,
+  interest,
+}: {
+  user: MediaUser;
+  interest: Interest;
+}) {
+  const change = useInterestChange(user, interest);
+  const own = interest.userId === user.id;
+  const following = interest.interestState === "following";
   return (
     <>
       {interest.noticeDeliveryState === "attention" && (
@@ -99,7 +155,9 @@ export function InterestControls({
               ? " The time to answer starts once a reminder has reached you, or when you say you have seen this one."
               : ` Answer by ${dateLabel(interest.replyBy)}.`}
           </p>
-          {own && interest.replyBy === null && act("notice_viewed")}
+          {own && interest.replyBy === null && (
+            <InterestButton change={change} action="notice_viewed" />
+          )}
         </div>
       )}
       <RequestInterestProgress
@@ -108,15 +166,13 @@ export function InterestControls({
         title={interest.title}
       />
       <div className="action-row">
-        {own && act("continue")}
-        {own && following && interest.keepingPolicy === "temporary" && (
-          <>
-            {act("finished")}
-            {act("drop")}
-          </>
+        <InterestAnswers user={user} interest={interest} change={change} />
+        {user.role === "owner" && (
+          <InterestButton
+            change={change}
+            action={interest.keepingPolicy === "keep" ? "temporary" : "keep"}
+          />
         )}
-        {user.role === "owner" &&
-          act(interest.keepingPolicy === "keep" ? "temporary" : "keep")}
       </div>
       {change.error !== null && <ErrorNotice error={change.error} />}
     </>

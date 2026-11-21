@@ -91,15 +91,25 @@ test.describe("navigation", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
   });
 
-  test("a member who opens a Manage address is sent to Discover", async ({
-    page,
-  }) => {
+  test("a member who opens a Manage address is sent Home", async ({ page }) => {
     await openAs(page, "member", "/library");
     await page.goto("/manage/quality");
-    await expect(page).toHaveURL(/\/discover$/u);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-      "Discover",
-    );
+    await expect.poll(() => address(page)).toBe("/");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Home");
+  });
+
+  test("the first item of the navigation opens Home", async ({ page }) => {
+    await openAs(page, "member", "/library");
+    const main = page.getByRole("navigation", { name: "Main" });
+    await main.getByRole("link", { name: "Home" }).click();
+    await expect.poll(() => address(page)).toBe("/");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Home" }),
+    ).toBeFocused();
+    // Home is marked at its own address and at no address beneath it.
+    await expect(main.locator("[aria-current]")).toHaveText("Home");
+    await main.getByRole("link", { name: "Library" }).click();
+    await expect(main.locator("[aria-current]")).toHaveText("Library");
   });
 });
 
@@ -334,8 +344,6 @@ for (const scheme of ["light", "dark"] as const) {
 test.describe("addresses that moved", () => {
   // Query string and fragment travel with every redirect.
   const OWNER_MOVES = [
-    ["/", "/discover"],
-    ["/?q=the#results", "/discover?q=the#results"],
     ["/admin?from=email#access", "/manage/household?from=email#access"],
     ["/admin/migration?from=email#top", "/manage/migration?from=email#top"],
     [
@@ -356,7 +364,7 @@ test.describe("addresses that moved", () => {
     ],
     ["/activity?from=email#top", "/manage/activity?from=email#top"],
     ["/manage", "/manage/household"],
-    ["/no-such-page", "/discover"],
+    ["/no-such-page", "/"],
   ] as const;
 
   for (const [from, to] of OWNER_MOVES) {
@@ -366,13 +374,13 @@ test.describe("addresses that moved", () => {
     });
   }
 
-  // A redirect alone is not a navigation the person made: arriving at the
-  // front door must not put a focus ring on the heading.
+  // A redirect alone is not a navigation the person made: arriving by an
+  // address that moved must not put a focus ring on the heading.
   test("a redirected arrival leaves focus where the browser put it", async ({
     page,
   }) => {
-    await openAs(page, "member", "/");
-    await expect.poll(() => address(page)).toBe("/discover");
+    await openAs(page, "member", "/removals");
+    await expect.poll(() => address(page)).toBe("/library/leaving");
     await expect(page.getByRole("heading", { level: 1 })).not.toBeFocused();
     await expect(page.locator("#main")).not.toBeFocused();
   });
@@ -386,14 +394,15 @@ test.describe("addresses that moved", () => {
     "/activity",
     "/manage/household",
   ]) {
-    test(`a member's ${from} opens Discover`, async ({ page }) => {
+    test(`a member's ${from} opens Home`, async ({ page }) => {
       await openAs(page, "member", from);
-      await expect.poll(() => address(page)).toBe("/discover");
+      await expect.poll(() => address(page)).toBe("/");
     });
   }
 
-  // Addresses the server still writes into messages, which did not move.
-  const KEPT = ["/library", "/recovery", "/notifications"] as const;
+  // Addresses the server still writes into messages, which did not move,
+  // and the front door, which is Home and no longer sends anyone on.
+  const KEPT = ["/", "/library", "/recovery", "/notifications"] as const;
 
   for (const kept of KEPT) {
     test(`${kept} is still its own page`, async ({ page }) => {

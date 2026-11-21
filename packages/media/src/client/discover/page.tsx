@@ -4,6 +4,7 @@ import type { CatalogFeed } from "#shared/catalog/contract.ts";
 import { PageTitle } from "#client/components.tsx";
 import { FEED_COPY } from "#client/presentation/catalog.ts";
 import { classNames } from "#client/ui/class-names.ts";
+import { Section } from "#client/ui/section.tsx";
 import { EmptyState } from "#client/ui/states.tsx";
 import { useCatalogList, type CatalogList } from "./catalog-list.ts";
 import styles from "./discover.module.css";
@@ -28,13 +29,10 @@ function SearchResults({ query }: { query: string }) {
   return (
     <>
       {list.accessStale && <AccessNotice />}
-      <section>
-        <div className={cx("rowHead")}>
-          <h2 className={cx("rowTitle")}>Results for “{query}”</h2>
-          <Link className={cx("seeAll")} to={DISCOVER_PATH}>
-            Clear search
-          </Link>
-        </div>
+      <Section
+        title={`Results for “${query}”`}
+        link={{ to: DISCOVER_PATH, text: "Clear search" }}
+      >
         <p className="sr-only" role="status">
           {resultsSummary(query, list)}
         </p>
@@ -50,7 +48,7 @@ function SearchResults({ query }: { query: string }) {
             </EmptyState>
           }
         />
-      </section>
+      </Section>
     </>
   );
 }

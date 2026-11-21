@@ -1,8 +1,6 @@
 import { useId } from "react";
 import { CalendarXIcon, SearchXIcon } from "lucide-react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
-import { CalendarPageSchema } from "#shared/household/calendar.ts";
-import { readApi } from "#client/api.ts";
 import { PageTitle } from "#client/components.tsx";
 import { classNames } from "#client/ui/class-names.ts";
 import { Segmented } from "#client/ui/segmented.tsx";
@@ -21,12 +19,12 @@ import {
 } from "./dates.ts";
 import { releaseDays, type ReleaseDays } from "./events.ts";
 import { MonthGrid } from "./month-grid.tsx";
+import { calendarRead } from "./reads.ts";
 import { ReleaseList } from "./release.tsx";
 import { CalendarSkeleton } from "./skeleton.tsx";
 import { CalendarToolbar } from "./toolbar.tsx";
 import {
   anchoredDay,
-  calendarReadPath,
   calendarSearch,
   calendarViewOnDay,
   dayAnchor,
@@ -155,19 +153,7 @@ export function CalendarPage() {
     return search(calendarViewOnDay(next, day));
   }
 
-  // The whole range, however many answers it takes: a calendar with a hole
-  // in it is wrong, not merely short.
-  const calendar = useCursorList({
-    queryKey: ["calendar", range.from, range.to, view.kind, view.status],
-    paging: "all",
-    read: async (cursor) => {
-      const page = await readApi(
-        calendarReadPath(view, range, cursor),
-        CalendarPageSchema,
-      );
-      return { items: page.events, nextCursor: page.nextCursor };
-    },
-  });
+  const calendar = useCursorList(calendarRead(view, range));
   // While another period loads, the previous answer is still held; only the
   // part of it that belongs to the days now on screen is shown.
   const releases = releaseDays(

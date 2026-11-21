@@ -47,7 +47,7 @@ export function Shell({ user }: { user: MediaUser }) {
             <Outlet />
           </main>
         </div>
-        <TabBar user={user} />
+        <TabBar />
       </div>
       <ScrollRestoration />
     </ShellUserContext>

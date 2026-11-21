@@ -162,6 +162,16 @@
   .item:focus-visible {
     outline-offset: -3px;
   }
+  /* A link the sidebar already has: it is here only where the sidebar is
+     not, at the width the tab bar takes over (`tab-bar.module.css`). */
+  .onPhone {
+    display: none;
+  }
+  @media (max-width: 760px) {
+    .onPhone {
+      display: list-item;
+    }
+  }
 
   @media (pointer: coarse) {
     .trigger {

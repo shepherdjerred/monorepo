@@ -1,27 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import type { z } from "zod";
-import { RemovalListSchema, type RemovalList } from "#shared/api.ts";
+import type { RemovalList } from "#shared/api.ts";
 import type { RemovalHistoryItemSchema } from "#shared/household/calendar.ts";
-import { readApi } from "#client/api.ts";
 import {
   removalPhase,
   type RemovalPhase,
 } from "#client/presentation/removal.ts";
+import { REMOVALS_READ } from "./reads.ts";
 
 export type Removal = RemovalList[number];
 export type RemovedItem = z.infer<typeof RemovalHistoryItemSchema>;
 
-/**
- * Removals that are pending or can still be undone. Leaving soon lists the
- * pending ones, Removed the ones already out of the library, and the page
- * header counts the first, so all three share this one read.
- */
+/** The removals read, as every view of the Library uses it. */
 export function useRemovals() {
-  return useQuery({
-    queryKey: ["removals"],
-    queryFn: () => readApi("/removals", RemovalListSchema),
-    refetchInterval: 15_000,
-  });
+  return useQuery(REMOVALS_READ);
 }
 
 export type LeavingRow = {
