@@ -82,6 +82,13 @@ export class DockerhubStack extends HomelabStack {
       'docker_hub_repository.image["golink"]',
       "shepherdjerred/golink",
     );
+    // The first CI push created flags publicly before this stack could
+    // apply; adopt it so the declared private visibility takes over.
+    importInstance(
+      this,
+      'docker_hub_repository.image["flags"]',
+      "shepherdjerred/flags",
+    );
 
     // Arcade replaced the Discord Plays Pokémon and Mario Kart deployments,
     // so their images left the registry. OpenTofu forgets the two

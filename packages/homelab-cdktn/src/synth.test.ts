@@ -127,6 +127,10 @@ describe("dockerhub", () => {
         id: "shepherdjerred/golink",
         to: 'docker_hub_repository.image["golink"]',
       },
+      {
+        id: "shepherdjerred/flags",
+        to: 'docker_hub_repository.image["flags"]',
+      },
     ]);
     expect(dockerhub.moved).toEqual([
       {
