@@ -31,6 +31,8 @@ export type ScenarioTurnEvidence = {
     readonly answer: string;
     readonly spokenAnswer?: string | undefined;
     readonly followUps: readonly string[];
+    /** Multiple-choice options the answer carried; null when it had none. */
+    readonly coachOptions?: readonly unknown[] | null | undefined;
   } | null;
   readonly trace: readonly ExploreTraceEntry[];
   /** Whether the turn's fixture image actually reached the agent. */
@@ -128,6 +130,23 @@ function toolChecks(
     });
   }
   return checks;
+}
+
+function coachOptionChecks(
+  expect: ScenarioExpectation,
+  evidence: ScenarioTurnEvidence,
+): ScenarioCheck[] {
+  if (expect.coachOptions === undefined) return [];
+  const count = evidence.answer?.coachOptions?.length ?? 0;
+  const wanted = expect.coachOptions === "required";
+  return [
+    {
+      name: `coach-options:${expect.coachOptions}`,
+      // The answer contract bounds a present list to two to four.
+      passed: wanted ? count >= 2 && count <= 4 : count === 0,
+      detail: `The answer carried ${count.toString()} coach options.`,
+    },
+  ];
 }
 
 function phraseChecks(
@@ -235,6 +254,7 @@ export function scenarioTurnChecks(input: {
     },
     ...toolChecks(expect, evidence.trace),
     ...phraseChecks(expect, evidence),
+    ...coachOptionChecks(expect, evidence),
     ...productRuleChecks(evidence),
     ...(input.hasImage
       ? [

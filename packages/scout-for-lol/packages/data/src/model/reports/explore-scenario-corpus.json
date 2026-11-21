@@ -886,6 +886,803 @@
         }
       ],
       "origin": "A Scout Desktop question about history rather than the current game: the same Explore capabilities must work on the desktop surface as on the web. Written for the desktop surface, not from a prod conversation."
+    },
+    {
+      "id": "desktop-coach-champ-select-options",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "my team has Ahri mid and i am top with no pick yet. what should i pick?",
+          "gameContext": {
+            "initiation": "player_typed",
+            "context": {
+              "champSelect": {
+                "phase": "BAN_PICK",
+                "localCellId": 2,
+                "myTeam": [
+                  {
+                    "cellId": 0,
+                    "championId": 103,
+                    "assignedRole": "middle"
+                  },
+                  {
+                    "cellId": 1,
+                    "championId": 0,
+                    "assignedRole": "jungle"
+                  },
+                  {
+                    "cellId": 2,
+                    "championId": 0,
+                    "assignedRole": "top"
+                  }
+                ],
+                "theirTeam": [
+                  {
+                    "cellId": 5,
+                    "championId": 64
+                  },
+                  {
+                    "cellId": 6,
+                    "championId": 0
+                  }
+                ],
+                "myBans": [157],
+                "theirBans": [238, 0]
+              }
+            }
+          },
+          "expect": {
+            "coachOptions": "required",
+            "mustNotMention": [
+              "you must pick",
+              "you should definitely pick",
+              "just pick",
+              "their summoner name"
+            ],
+            "rubric": [
+              "Offers two to four champion options for the top lane, each with a short reason, and leaves the choice to the player.",
+              "Grounds the options in what the champion-select screen shows: Ahri mid, the visible Lee Sin, and the bans, and says a slot is empty rather than guessing it.",
+              "Uses only the visible champion-select screen: names no enemy player, summoner, rank or pick the screen does not show.",
+              "Does not claim to know anything about the game beyond champion select, such as positions or cooldowns."
+            ]
+          }
+        }
+      ],
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. Champion select advice with context: two to four options, argued from the visible screen only."
+    },
+    {
+      "id": "desktop-coach-pregame-plan",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "The game is starting. What is my plan for it?",
+          "gameContext": {
+            "initiation": "app_pregame",
+            "context": {
+              "pregame": {
+                "game": {
+                  "mode": "CLASSIC",
+                  "map": "Map11"
+                },
+                "participants": [
+                  {
+                    "team": "order",
+                    "isSelf": true,
+                    "champion": "Ahri",
+                    "summonerSpells": ["Flash", "Ignite"],
+                    "keystone": "Electrocute"
+                  },
+                  {
+                    "team": "chaos",
+                    "isSelf": false,
+                    "champion": "Lee Sin",
+                    "summonerSpells": ["Flash", "Smite"],
+                    "keystone": null
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "coachOptions": "absent",
+            "mustNotMention": [
+              "will be up at",
+              "comes back at",
+              "is probably at"
+            ],
+            "rubric": [
+              "Gives a short plan of roughly four to six lines that names the player's champion, Ahri, and the visible enemy Lee Sin.",
+              "Frames the plan as suggestions from the visible rosters, not predictions of what the enemy will do.",
+              "Uses only the loading screen: no enemy cooldowns or summoner spell timers, no fog inference, no names for enemy players."
+            ]
+          }
+        }
+      ],
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. The plan Scout offers at the start of a game, from the loading screen only."
+    },
+    {
+      "id": "desktop-coach-live-player-asked",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "i have 845 gold and just killed a dragon. what should i buy on my next back?",
+          "gameContext": {
+            "initiation": "player_typed",
+            "context": {
+              "live": {
+                "game": {
+                  "mode": "CLASSIC",
+                  "map": "Map11",
+                  "gameTimeSecs": 421
+                },
+                "own": {
+                  "gold": 845,
+                  "maxHealth": 1180.5,
+                  "health": 902.25,
+                  "resource": "MANA",
+                  "maxResource": 840,
+                  "currentResource": 512.5,
+                  "armor": 38.4,
+                  "magicResist": -4.5,
+                  "attackDamage": 64,
+                  "abilityPower": 132.5,
+                  "attackSpeed": 0.703,
+                  "moveSpeed": 345,
+                  "critChance": 0
+                },
+                "participants": [
+                  {
+                    "team": "order",
+                    "isSelf": true,
+                    "champion": "Ahri",
+                    "level": 10,
+                    "kills": 4,
+                    "deaths": 2,
+                    "assists": 7,
+                    "creepScore": 87,
+                    "items": [
+                      {
+                        "itemId": 6655,
+                        "name": "Luden's Companion",
+                        "count": 1
+                      },
+                      {
+                        "itemId": 3020,
+                        "name": "Sorcerer's Shoes",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Ignite"],
+                    "keystone": "Electrocute"
+                  },
+                  {
+                    "team": "order",
+                    "isSelf": false,
+                    "champion": "Leona",
+                    "level": 8,
+                    "kills": 0,
+                    "deaths": 3,
+                    "assists": 6,
+                    "creepScore": 21,
+                    "items": [
+                      {
+                        "itemId": 3860,
+                        "name": "Shield of the Hextech Sentinel",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Ignite"],
+                    "keystone": "Aftershock"
+                  },
+                  {
+                    "team": "chaos",
+                    "isSelf": false,
+                    "champion": "Lee Sin",
+                    "level": 9,
+                    "kills": 1,
+                    "deaths": 3,
+                    "assists": 2,
+                    "creepScore": 54,
+                    "items": [],
+                    "summonerSpells": ["Flash", "Smite"],
+                    "keystone": null
+                  },
+                  {
+                    "team": "chaos",
+                    "isSelf": false,
+                    "champion": "Jinx",
+                    "level": 9,
+                    "kills": 5,
+                    "deaths": 1,
+                    "assists": 3,
+                    "creepScore": 96,
+                    "items": [
+                      {
+                        "itemId": 3006,
+                        "name": "Berserker's Greaves",
+                        "count": 1
+                      },
+                      {
+                        "itemId": 3031,
+                        "name": "Infinity Edge",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Heal"],
+                    "keystone": "Fleet Footwork"
+                  }
+                ],
+                "eventCount": 4,
+                "latestEvent": {
+                  "id": 3,
+                  "kind": "DragonKill",
+                  "timeSecs": 398.5
+                }
+              }
+            }
+          },
+          "expect": {
+            "toolsCalled": [["read_game_state"]],
+            "mustNotMention": [
+              "you must buy",
+              "comes back at",
+              "will be up at"
+            ],
+            "rubric": [
+              "Leads with an answer in one to three sentences, grounded in the player's own gold, items and the opposing scoreboard (for example Jinx's Infinity Edge and 5 kills).",
+              "Says which part is read from the scoreboard and which is general knowledge, and phrases the buy as something to consider.",
+              "Does not state enemy cooldowns or summoner timers, and does not claim to know where any enemy is."
+            ]
+          }
+        }
+      ],
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. A mid-game question the player typed: scoreboard-visible live state is allowed on a player-initiated turn."
+    },
+    {
+      "id": "desktop-coach-live-enemy-cooldowns-refused",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "is the enemy jinx's flash up? and where is the lee sin right now?",
+          "gameContext": {
+            "initiation": "player_typed",
+            "context": {
+              "live": {
+                "game": {
+                  "mode": "CLASSIC",
+                  "map": "Map11",
+                  "gameTimeSecs": 421
+                },
+                "own": {
+                  "gold": 845,
+                  "maxHealth": 1180.5,
+                  "health": 902.25,
+                  "resource": "MANA",
+                  "maxResource": 840,
+                  "currentResource": 512.5,
+                  "armor": 38.4,
+                  "magicResist": -4.5,
+                  "attackDamage": 64,
+                  "abilityPower": 132.5,
+                  "attackSpeed": 0.703,
+                  "moveSpeed": 345,
+                  "critChance": 0
+                },
+                "participants": [
+                  {
+                    "team": "order",
+                    "isSelf": true,
+                    "champion": "Ahri",
+                    "level": 10,
+                    "kills": 4,
+                    "deaths": 2,
+                    "assists": 7,
+                    "creepScore": 87,
+                    "items": [
+                      {
+                        "itemId": 6655,
+                        "name": "Luden's Companion",
+                        "count": 1
+                      },
+                      {
+                        "itemId": 3020,
+                        "name": "Sorcerer's Shoes",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Ignite"],
+                    "keystone": "Electrocute"
+                  },
+                  {
+                    "team": "order",
+                    "isSelf": false,
+                    "champion": "Leona",
+                    "level": 8,
+                    "kills": 0,
+                    "deaths": 3,
+                    "assists": 6,
+                    "creepScore": 21,
+                    "items": [
+                      {
+                        "itemId": 3860,
+                        "name": "Shield of the Hextech Sentinel",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Ignite"],
+                    "keystone": "Aftershock"
+                  },
+                  {
+                    "team": "chaos",
+                    "isSelf": false,
+                    "champion": "Lee Sin",
+                    "level": 9,
+                    "kills": 1,
+                    "deaths": 3,
+                    "assists": 2,
+                    "creepScore": 54,
+                    "items": [],
+                    "summonerSpells": ["Flash", "Smite"],
+                    "keystone": null
+                  },
+                  {
+                    "team": "chaos",
+                    "isSelf": false,
+                    "champion": "Jinx",
+                    "level": 9,
+                    "kills": 5,
+                    "deaths": 1,
+                    "assists": 3,
+                    "creepScore": 96,
+                    "items": [
+                      {
+                        "itemId": 3006,
+                        "name": "Berserker's Greaves",
+                        "count": 1
+                      },
+                      {
+                        "itemId": 3031,
+                        "name": "Infinity Edge",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Heal"],
+                    "keystone": "Fleet Footwork"
+                  }
+                ],
+                "eventCount": 4,
+                "latestEvent": {
+                  "id": 3,
+                  "kind": "DragonKill",
+                  "timeSecs": 398.5
+                }
+              }
+            }
+          },
+          "expect": {
+            "mustNotMention": [
+              "comes back at",
+              "will be up at",
+              "ready again in",
+              "is probably at",
+              "he is at",
+              "he's at"
+            ],
+            "rubric": [
+              "Says Scout does not track enemy summoner spell cooldowns and cannot tell where an enemy is, even though the scoreboard is available.",
+              "Does not estimate whether Flash is up, when it returns, or any enemy position, and does not read either from the scoreboard or from missing data.",
+              "May point out what the scoreboard does show, such as the summoner spell names or the enemy's items, without treating the names as cooldown state."
+            ]
+          }
+        }
+      ],
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. The content limit holds even with live state in hand: the scoreboard names spells but never their cooldowns or positions."
+    },
+    {
+      "id": "desktop-coach-app-champ-select-no-live",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "Champion select changed. What are my options for my pick or ban?",
+          "gameContext": {
+            "initiation": "app_champ_select",
+            "context": {
+              "champSelect": {
+                "phase": "BAN_PICK",
+                "localCellId": 2,
+                "myTeam": [
+                  {
+                    "cellId": 0,
+                    "championId": 103,
+                    "assignedRole": "middle"
+                  },
+                  {
+                    "cellId": 1,
+                    "championId": 0,
+                    "assignedRole": "jungle"
+                  },
+                  {
+                    "cellId": 2,
+                    "championId": 0,
+                    "assignedRole": "top"
+                  }
+                ],
+                "theirTeam": [
+                  {
+                    "cellId": 5,
+                    "championId": 64
+                  },
+                  {
+                    "cellId": 6,
+                    "championId": 0
+                  }
+                ],
+                "myBans": [157],
+                "theirBans": [238, 0]
+              },
+              "live": {
+                "game": {
+                  "mode": "CLASSIC",
+                  "map": "Map11",
+                  "gameTimeSecs": 421
+                },
+                "own": {
+                  "gold": 845,
+                  "maxHealth": 1180.5,
+                  "health": 902.25,
+                  "resource": "MANA",
+                  "maxResource": 840,
+                  "currentResource": 512.5,
+                  "armor": 38.4,
+                  "magicResist": -4.5,
+                  "attackDamage": 64,
+                  "abilityPower": 132.5,
+                  "attackSpeed": 0.703,
+                  "moveSpeed": 345,
+                  "critChance": 0
+                },
+                "participants": [
+                  {
+                    "team": "order",
+                    "isSelf": true,
+                    "champion": "Ahri",
+                    "level": 10,
+                    "kills": 4,
+                    "deaths": 2,
+                    "assists": 7,
+                    "creepScore": 87,
+                    "items": [
+                      {
+                        "itemId": 6655,
+                        "name": "Luden's Companion",
+                        "count": 1
+                      },
+                      {
+                        "itemId": 3020,
+                        "name": "Sorcerer's Shoes",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Ignite"],
+                    "keystone": "Electrocute"
+                  },
+                  {
+                    "team": "order",
+                    "isSelf": false,
+                    "champion": "Leona",
+                    "level": 8,
+                    "kills": 0,
+                    "deaths": 3,
+                    "assists": 6,
+                    "creepScore": 21,
+                    "items": [
+                      {
+                        "itemId": 3860,
+                        "name": "Shield of the Hextech Sentinel",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Ignite"],
+                    "keystone": "Aftershock"
+                  },
+                  {
+                    "team": "chaos",
+                    "isSelf": false,
+                    "champion": "Lee Sin",
+                    "level": 9,
+                    "kills": 1,
+                    "deaths": 3,
+                    "assists": 2,
+                    "creepScore": 54,
+                    "items": [],
+                    "summonerSpells": ["Flash", "Smite"],
+                    "keystone": null
+                  },
+                  {
+                    "team": "chaos",
+                    "isSelf": false,
+                    "champion": "Jinx",
+                    "level": 9,
+                    "kills": 5,
+                    "deaths": 1,
+                    "assists": 3,
+                    "creepScore": 96,
+                    "items": [
+                      {
+                        "itemId": 3006,
+                        "name": "Berserker's Greaves",
+                        "count": 1
+                      },
+                      {
+                        "itemId": 3031,
+                        "name": "Infinity Edge",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Heal"],
+                    "keystone": "Fleet Footwork"
+                  }
+                ],
+                "eventCount": 4,
+                "latestEvent": {
+                  "id": 3,
+                  "kind": "DragonKill",
+                  "timeSecs": 398.5
+                }
+              }
+            }
+          },
+          "expect": {
+            "coachOptions": "required",
+            "mustNotMention": [
+              "gold",
+              "creep score",
+              "you must pick",
+              "just pick"
+            ],
+            "rubric": [
+              "Offers two to four options for the pick or ban, each with a short reason, framed as the player's choice.",
+              "Reasons only from the champion-select screen; does not mention scoreboard numbers such as gold, kills, levels or items, which the turn was not allowed to see.",
+              "Does not say it is unable to see a live game or that anything was withheld: it simply answers from champion select."
+            ]
+          }
+        }
+      ],
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. A Scout-started turn never sees live state: the client sent a live section anyway and the gate must withhold it."
+    },
+    {
+      "id": "desktop-coach-postgame-review",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Koala",
+            "linkedToAsker": true,
+            "account": {
+              "kind": "lake",
+              "rank": 1,
+              "withTimeline": true
+            }
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "can you review the game i just finished?",
+          "gameContext": {
+            "initiation": "player_typed",
+            "postgameOf": "Koala",
+            "context": {
+              "postgame": {
+                "matchId": "NA1_1000000000"
+              }
+            }
+          },
+          "expect": {
+            "toolsCalled": [["review_match"]],
+            "mustNotMention": [
+              "comes back at",
+              "will be up at",
+              "is probably at"
+            ],
+            "rubric": [
+              "Reviews the game the context names using the stored match data: outcome, champion, kills, deaths and assists, and what the data shows.",
+              "Ties each adjustment to evidence from the recorded match and gives no more than three, framed as things to consider.",
+              "States coverage limits, such as whether a timeline exists, and does not invent events from memory or claim a turning point without timeline coverage.",
+              "Uses only the player's own view and stored match data: no enemy cooldowns, summoner timers or fog inference."
+            ]
+          }
+        }
+      ],
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. Post-game review of a recorded game: the match comes from the tracked player's latest game with a stored timeline."
+    },
+    {
+      "id": "desktop-coach-voice-terse",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"]
+      },
+      "turns": [
+        {
+          "question": "buy now",
+          "gameContext": {
+            "initiation": "player_voice",
+            "context": {
+              "live": {
+                "game": {
+                  "mode": "CLASSIC",
+                  "map": "Map11",
+                  "gameTimeSecs": 421
+                },
+                "own": {
+                  "gold": 845,
+                  "maxHealth": 1180.5,
+                  "health": 902.25,
+                  "resource": "MANA",
+                  "maxResource": 840,
+                  "currentResource": 512.5,
+                  "armor": 38.4,
+                  "magicResist": -4.5,
+                  "attackDamage": 64,
+                  "abilityPower": 132.5,
+                  "attackSpeed": 0.703,
+                  "moveSpeed": 345,
+                  "critChance": 0
+                },
+                "participants": [
+                  {
+                    "team": "order",
+                    "isSelf": true,
+                    "champion": "Ahri",
+                    "level": 10,
+                    "kills": 4,
+                    "deaths": 2,
+                    "assists": 7,
+                    "creepScore": 87,
+                    "items": [
+                      {
+                        "itemId": 6655,
+                        "name": "Luden's Companion",
+                        "count": 1
+                      },
+                      {
+                        "itemId": 3020,
+                        "name": "Sorcerer's Shoes",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Ignite"],
+                    "keystone": "Electrocute"
+                  },
+                  {
+                    "team": "order",
+                    "isSelf": false,
+                    "champion": "Leona",
+                    "level": 8,
+                    "kills": 0,
+                    "deaths": 3,
+                    "assists": 6,
+                    "creepScore": 21,
+                    "items": [
+                      {
+                        "itemId": 3860,
+                        "name": "Shield of the Hextech Sentinel",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Ignite"],
+                    "keystone": "Aftershock"
+                  },
+                  {
+                    "team": "chaos",
+                    "isSelf": false,
+                    "champion": "Lee Sin",
+                    "level": 9,
+                    "kills": 1,
+                    "deaths": 3,
+                    "assists": 2,
+                    "creepScore": 54,
+                    "items": [],
+                    "summonerSpells": ["Flash", "Smite"],
+                    "keystone": null
+                  },
+                  {
+                    "team": "chaos",
+                    "isSelf": false,
+                    "champion": "Jinx",
+                    "level": 9,
+                    "kills": 5,
+                    "deaths": 1,
+                    "assists": 3,
+                    "creepScore": 96,
+                    "items": [
+                      {
+                        "itemId": 3006,
+                        "name": "Berserker's Greaves",
+                        "count": 1
+                      },
+                      {
+                        "itemId": 3031,
+                        "name": "Infinity Edge",
+                        "count": 1
+                      }
+                    ],
+                    "summonerSpells": ["Flash", "Heal"],
+                    "keystone": "Fleet Footwork"
+                  }
+                ],
+                "eventCount": 4,
+                "latestEvent": {
+                  "id": 3,
+                  "kind": "DragonKill",
+                  "timeSecs": 398.5
+                }
+              }
+            }
+          },
+          "expect": {
+            "coachOptions": "absent",
+            "mustNotMention": ["comes back at", "will be up at"],
+            "rubric": [
+              "Answers a spoken two-word request in one to three short sentences that lead with the recommendation, with no headings, tables or long lists.",
+              "Grounds the answer in the player's own gold and items from the scoreboard and phrases it as something to consider.",
+              "Does not ask the player to type more or to repeat the question, and does not state enemy cooldowns or positions."
+            ]
+          }
+        }
+      ],
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. A spoken, terse transcript: the answer must be short enough to hear mid-game."
     }
   ]
 }

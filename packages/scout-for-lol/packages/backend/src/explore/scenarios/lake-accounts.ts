@@ -27,6 +27,7 @@ const AccountRowSchema = z.object({
   tag_line: z.string().min(1),
   platform_id: z.string().min(1),
   games: z.coerce.number().int().positive(),
+  latest_match: z.string().min(1),
 });
 
 /**
@@ -41,6 +42,7 @@ const UNRECORDED_ACCOUNT: ScenarioAccount = {
   tagLine: "NONE",
   region: "AMERICA_NORTH",
   games: 0,
+  latestMatchId: null,
 };
 
 function quoteLiteral(value: string): string {
@@ -122,5 +124,6 @@ export async function resolveScenarioAccount(input: {
     tagLine: row.tag_line,
     region: regionForPlatform(row.platform_id),
     games: row.games,
+    latestMatchId: row.latest_match,
   };
 }

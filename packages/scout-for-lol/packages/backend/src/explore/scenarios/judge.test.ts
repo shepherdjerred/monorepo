@@ -31,6 +31,7 @@ const WORLD: ScenarioWorld = {
         tagLine: "NA1",
         region: "AMERICA_NORTH",
         games: 12,
+        latestMatchId: null,
       },
       discordId: ASKER,
       feedChannelIds: [CHANNEL],

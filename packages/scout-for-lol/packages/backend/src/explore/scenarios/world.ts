@@ -31,6 +31,8 @@ export type ScenarioAccount = {
   readonly tagLine: string;
   readonly region: Region;
   readonly games: number;
+  /** The account's most recent recorded match; null when it has none. */
+  readonly latestMatchId: string | null;
 };
 
 export type ScenarioMember = {

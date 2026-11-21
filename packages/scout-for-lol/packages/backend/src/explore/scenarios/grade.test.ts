@@ -247,4 +247,42 @@ describe("scenarioTurnChecks", () => {
     expect(check(undelivered, "image-delivered").passed).toBe(false);
     expect(check(delivered, "image-delivered").passed).toBe(true);
   });
+
+  test("checks the coach options a champion-select answer carries", () => {
+    const option = { label: "Ornn", rationale: "Adds a frontline." };
+    const required: ScenarioExpectation = {
+      ...EXPECT,
+      coachOptions: "required",
+    };
+    const absent: ScenarioExpectation = { ...EXPECT, coachOptions: "absent" };
+    const withOptions = evidence({
+      answer: {
+        answer: "Consider these.",
+        followUps: [],
+        coachOptions: [option, { ...option, label: "Shen" }],
+      },
+    });
+    const withoutOptions = evidence();
+    const run = (
+      expectation: ScenarioExpectation,
+      turn: ScenarioTurnEvidence,
+    ) =>
+      scenarioTurnChecks({
+        expect: expectation,
+        evidence: turn,
+        hasImage: false,
+      });
+    expect(
+      check(run(required, withOptions), "coach-options:required").passed,
+    ).toBe(true);
+    expect(
+      check(run(required, withoutOptions), "coach-options:required").passed,
+    ).toBe(false);
+    expect(
+      check(run(absent, withoutOptions), "coach-options:absent").passed,
+    ).toBe(true);
+    expect(check(run(absent, withOptions), "coach-options:absent").passed).toBe(
+      false,
+    );
+  });
 });
