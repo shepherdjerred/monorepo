@@ -33,7 +33,7 @@ futures-util = "0.3.31"
 # pins used only by scout-desktop-ui; an upgrade is its own PR, re-checked on
 # Windows. Renovate groups them with automerge off.
 gpui = { package = "gpui-pre", version = "=0.3.12" }
-gpui-kit = "=0.9.1"
+gpui-kit = "=0.10.0"
 gpui-platform = { package = "gpui-pre-platform", version = "=0.3.12" }
 hex = "0.4.3"
 minisign-verify = "0.3.0"
