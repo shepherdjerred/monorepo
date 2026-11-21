@@ -2826,7 +2826,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "tasknotes-server/prod/2",
+      "recipeRevisionId": "tasknotes-server/prod/3",
       "configurationRevisionId": "tasknotes-server/prod/1"
     },
     {
