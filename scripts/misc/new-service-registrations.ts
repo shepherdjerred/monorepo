@@ -247,7 +247,7 @@ export function registrationEdits(
       apply: (text) =>
         insertBefore(
           text,
-          "};\n\nconst command = commands[target];",
+          "};\n\n/** The command and environment the in-image runner executes for `target`. */",
           smokeCommand(options),
           "smoke-app-in-image.ts",
         ),
