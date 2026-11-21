@@ -10,13 +10,25 @@ export function publicRedditReceiptUrl(address: string) {
   )
     throw new Error("Public verification requires a Reddit post permalink");
   url.hostname = "www.reddit.com";
+  const parts = url.pathname.split("/").filter(Boolean);
+  const commentId = parts[5];
+  if (
+    commentId !== undefined &&
+    parts.length === 6 &&
+    parts[0] === "r" &&
+    parts[2] === "comments" &&
+    /^[a-z0-9]+$/.test(commentId)
+  ) {
+    parts[4] = "comment";
+    url.pathname = `/${parts.join("/")}/`;
+  }
   url.search = "";
   url.hash = "";
   return url.href;
 }
 
 async function readRenderedRedditComment(browser: PromotionBrowser) {
-  const deadline = Date.now() + 15_000;
+  const deadline = Date.now() + 25_000;
   for (;;) {
     try {
       return await browser.readRedditCommentReceipt();

@@ -292,7 +292,7 @@ export async function readRedditCommentReceipt(browser: RedditPageReader) {
     throw new Error("Reddit reply receipt requires an exact comment permalink");
   const page = await browser.snapshot({
     selector: modern
-      ? `shreddit-comment[thingid="t1_${id}"] > [slot="comment"]`
+      ? `shreddit-comment[thingid="t1_${id}"] [slot="comment"]`
       : `.thing.comment[data-fullname="t1_${id}"] > .entry`,
   });
   const comment = z
@@ -306,5 +306,10 @@ export async function readRedditCommentReceipt(browser: RedditPageReader) {
     .parse(await browser.evaluate(redditCommentReceiptScript));
   if (comment.id !== id || (await browser.currentUrl()) !== url.href)
     throw new Error("Reddit reply receipt changed identity");
-  return { ...page, publishedAt: comment.createdAt, redditComment: comment };
+  return {
+    ...page,
+    text: comment.body,
+    publishedAt: comment.createdAt,
+    redditComment: comment,
+  };
 }

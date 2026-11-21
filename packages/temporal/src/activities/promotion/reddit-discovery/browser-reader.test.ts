@@ -1,3 +1,4 @@
+import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 import {
   assertRedditBrowserAccess,
@@ -10,6 +11,7 @@ import {
 } from "./browser-reader.ts";
 import {
   redditBrowserAccessScript,
+  redditCommentReceiptScript,
   redditFeedPageScript,
   redditRulesScript,
 } from "./browser-scripts.ts";
@@ -46,7 +48,7 @@ const post = {
 
 it("scans the exact public comment body before reading modern receipt metadata", async () => {
   const url =
-    "https://www.reddit.com/r/MinecraftServer/comments/abc123/request/xyz789/";
+    "https://www.reddit.com/r/MinecraftServer/comments/abc123/comment/xyz789/";
   const comment = {
     id: "xyz789",
     author: "the_storm_mc",
@@ -59,7 +61,7 @@ it("scans the exact public comment body before reading modern receipt metadata",
     currentUrl: async () => url,
     snapshot: async ({ selector }) => {
       events.push(selector);
-      return { url, text: comment.body, publishedAt: null };
+      return { url, text: "", publishedAt: null };
     },
     evaluate: async () => {
       events.push("read metadata");
@@ -68,13 +70,46 @@ it("scans the exact public comment body before reading modern receipt metadata",
   };
   await expect(readRedditCommentReceipt(reader)).resolves.toMatchObject({
     url,
+    text: comment.body,
     redditComment: comment,
     publishedAt: comment.createdAt,
   });
   expect(events).toEqual([
-    'shreddit-comment[thingid="t1_xyz789"] > [slot="comment"]',
+    'shreddit-comment[thingid="t1_xyz789"] [slot="comment"]',
     "read metadata",
   ]);
+});
+
+it("reads a wrapped comment body and normalizes Reddit's timestamp", () => {
+  const attributes: Record<string, string> = {
+    author: "the_storm_mc",
+    created: "2026-11-20T17:15:00.000000+0000",
+    depth: "0",
+    postid: "t3_abc123",
+  };
+  const comment = {
+    getAttribute: (name: string) => attributes[name] ?? null,
+    querySelector: () => ({
+      innerText: "Our server supports Java and Bedrock.",
+      closest: () => comment,
+      getClientRects: () => [1],
+    }),
+  };
+  expect(
+    runInNewContext(redditCommentReceiptScript, {
+      location: {
+        hostname: "www.reddit.com",
+        pathname: "/r/MinecraftServer/comments/abc123/comment/xyz789/",
+      },
+      document: { querySelector: () => comment },
+    }),
+  ).toEqual({
+    id: "xyz789",
+    author: "the_storm_mc",
+    body: "Our server supports Java and Bedrock.",
+    parentId: "t3_abc123",
+    createdAt: "2026-11-20T17:15:00.000Z",
+  });
 });
 
 function fixture(

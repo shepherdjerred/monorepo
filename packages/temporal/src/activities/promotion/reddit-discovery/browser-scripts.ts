@@ -104,11 +104,15 @@ export const redditCommentReceiptScript = `(() => {
   if (location.hostname === 'www.reddit.com') {
     const comment = document.querySelector('shreddit-comment[thingid="t1_' + id + '"]');
     if (!comment) return null;
+    const body = comment.querySelector('[slot="comment"]');
+    if (body?.closest('shreddit-comment') !== comment || !body.getClientRects().length) return null;
+    const created = comment.getAttribute('created') || comment.getAttribute('created-timestamp') || comment.querySelector(':scope time[datetime]')?.getAttribute('datetime');
+    const createdAt = Date.parse(created);
     return {
       id,
       author: comment.getAttribute('author'),
-      body: comment.querySelector(':scope > [slot="comment"]')?.textContent?.trim(),
-      createdAt: comment.getAttribute('created-timestamp') || comment.querySelector(':scope time[datetime]')?.getAttribute('datetime'),
+      body: body.innerText?.trim(),
+      createdAt: Number.isFinite(createdAt) ? new Date(createdAt).toISOString() : null,
       parentId: comment.getAttribute('parentid') || (comment.getAttribute('depth') === '0' ? comment.getAttribute('postid') : null),
     };
   }
