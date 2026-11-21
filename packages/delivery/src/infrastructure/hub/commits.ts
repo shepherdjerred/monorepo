@@ -11,6 +11,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { index } from "#infrastructure/delivery-data.ts";
 import { AWAITING_PLAN_DECISION } from "#infrastructure/selection/views.ts";
+import { advancesAcceptance } from "#infrastructure/execution/ownership.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { decodeCursor, page, PAGE_SIZE } from "./cursor.ts";
 import { buildStatus } from "./status.ts";
@@ -43,6 +44,7 @@ type DeploymentRow = Pick<
   | "platformSourceBuildId"
   | "status"
   | "recoveryRequired"
+  | "kind"
   | "createdAt"
 >;
 
@@ -53,6 +55,7 @@ const DEPLOYMENT_FIELDS = {
   platformSourceBuildId: true,
   status: true,
   recoveryRequired: true,
+  kind: true,
   createdAt: true,
 } as const;
 
@@ -152,6 +155,7 @@ function carriersOf(
       status: record.awaitingPlan.has(row.id)
         ? ("awaiting_approval" as const)
         : DeploymentStatusSchema.parse(row.status),
+      delivers: advancesAcceptance(row.kind),
     })),
   );
 }

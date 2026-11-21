@@ -49,7 +49,11 @@ describe("environmentState", () => {
           accepted: { revision: 9, lineage: "lineage-a" },
           locked: true,
         }),
-        deployment: { status: "failed", recoveryRequired: false },
+        deployment: {
+          status: "failed",
+          recoveryRequired: false,
+          delivers: true,
+        },
         sourceLive: false,
       }),
     ).toBe("superseded");
@@ -75,10 +79,54 @@ describe("environmentState", () => {
         environment: environment({
           accepted: { revision: 4, lineage: "lineage-a" },
         }),
-        deployment: { status: "succeeded", recoveryRequired: false },
+        deployment: {
+          status: "succeeded",
+          recoveryRequired: false,
+          delivers: true,
+        },
         sourceLive: false,
       }),
     ).toBe("replaced");
+  });
+
+  it("takes success as proof where the environment accepts no selection", () => {
+    // A platform apply succeeds without moving an accepted selection.
+    expect(
+      environmentState({
+        change,
+        environment: environment({ accepted: null }),
+        deployment: {
+          status: "succeeded",
+          recoveryRequired: false,
+          delivers: true,
+        },
+        sourceLive: false,
+      }),
+    ).toBe("live");
+  });
+
+  it("does not count a plan that succeeded as delivering the change", () => {
+    const planned = {
+      status: "succeeded",
+      recoveryRequired: false,
+      delivers: false,
+    } as const;
+    expect(
+      environmentState({
+        change,
+        environment: environment({ accepted: null, automatic: false }),
+        deployment: planned,
+        sourceLive: false,
+      }),
+    ).toBe("manual");
+    expect(
+      environmentState({
+        change: null,
+        environment: environment({ accepted: null }),
+        deployment: planned,
+        sourceLive: false,
+      }),
+    ).toBe("not_started");
   });
 
   it.each([
@@ -93,7 +141,7 @@ describe("environmentState", () => {
       environmentState({
         change,
         environment: environment(),
-        deployment: { status, recoveryRequired: false },
+        deployment: { status, recoveryRequired: false, delivers: true },
         sourceLive: false,
       }),
     ).toBe(expected);
@@ -104,7 +152,11 @@ describe("environmentState", () => {
       environmentState({
         change,
         environment: environment(),
-        deployment: { status: "failed", recoveryRequired: true },
+        deployment: {
+          status: "failed",
+          recoveryRequired: true,
+          delivers: true,
+        },
         sourceLive: false,
       }),
     ).toBe("recovery_required");
@@ -113,7 +165,7 @@ describe("environmentState", () => {
   it("is blocked, not deploying, while another change locked the environment", () => {
     for (const deployment of [
       null,
-      { status: "queued", recoveryRequired: false } as const,
+      { status: "queued", recoveryRequired: false, delivers: true } as const,
     ])
       expect(
         environmentState({
@@ -130,7 +182,11 @@ describe("environmentState", () => {
       environmentState({
         change: null,
         environment: environment({ locked: true }),
-        deployment: { status: "succeeded", recoveryRequired: false },
+        deployment: {
+          status: "succeeded",
+          recoveryRequired: false,
+          delivers: true,
+        },
         sourceLive: false,
       }),
     ).toBe("live");

@@ -26,6 +26,11 @@ export type EnvironmentFacts = {
 export type DeploymentFacts = {
   status: PipelineStatus;
   recoveryRequired: boolean;
+  /**
+   * Whether its success puts the change in the environment. A plan, a host
+   * adoption or a repair proves something else and delivers nothing.
+   */
+  delivers: boolean;
 };
 
 /** Whether a set revision includes a change: the same or a later revision of its lineage. */
@@ -76,12 +81,23 @@ export function environmentState(input: {
   const accepted = environment.accepted;
   if (change !== null && accepted !== null && carries(change, accepted))
     return accepted.revision === change.revision ? "live" : "superseded";
-  // A platform change has no selection to compare; success is the proof.
-  if (change === null && deployment?.status === "succeeded") return "live";
+  const succeeded = deployment?.status === "succeeded";
+  // With no selection to compare, success is the proof: a platform change has
+  // none, and an environment a platform operation applies to accepts none.
+  if (
+    succeeded &&
+    deployment.delivers &&
+    (change === null || accepted === null)
+  )
+    return "live";
   // Nothing deploys to a locked environment until an operator recovers it.
   if (environment.locked || deployment?.recoveryRequired === true)
     return "recovery_required";
-  const tried = deployment === null ? null : deploymentState(deployment.status);
+  // A plan that succeeded delivered nothing, so the environment's policy speaks.
+  const tried =
+    deployment === null || (succeeded && !deployment.delivers)
+      ? null
+      : deploymentState(deployment.status);
   if (tried !== null) return tried;
   if (environment.promotionSourceEnvironmentId !== null && !input.sourceLive)
     return "waiting";
