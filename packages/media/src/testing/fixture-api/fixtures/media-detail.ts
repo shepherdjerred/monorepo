@@ -2,6 +2,7 @@ import type { z } from "zod";
 import type { MediaDetailSchema } from "#shared/api.ts";
 import type { Availability, MediaItem } from "#shared/contract.ts";
 import type { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
+import { storedArtwork, storedOverview } from "./artwork.ts";
 import {
   CAPTIONS_MISSING,
   CAPTIONS_SATISFIED,
@@ -292,6 +293,11 @@ export function mediaDetail(
   const removed = item.availability === "removed";
   return {
     ...item,
+    // A season or episode page shows its series' art, synopsis and catalog link.
+    rootMediaId: title.id,
+    artwork: storedArtwork(title),
+    overview: storedOverview(title),
+    catalog: { kind: title.kind, externalId: title.tmdbId },
     visibility: mediaVisibility(resolved, persona),
     subtitlePolicies: featured
       ? [

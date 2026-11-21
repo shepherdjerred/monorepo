@@ -43,6 +43,7 @@ export class TmdbCatalogApplication implements CatalogApplication {
         date:
           item.media_type === "movie" ? item.release_date : item.first_air_date,
         posterPath: item.poster_path,
+        backdropPath: item.backdrop_path,
         originalLanguage: item.original_language,
       })),
     };
@@ -58,6 +59,7 @@ export class TmdbCatalogApplication implements CatalogApplication {
         overview: item.overview,
         date: item.release_date,
         posterPath: item.poster_path,
+        backdropPath: item.backdrop_path,
         originalLanguage: item.original_language,
         seasons: [],
       };
@@ -70,6 +72,7 @@ export class TmdbCatalogApplication implements CatalogApplication {
       overview: item.overview,
       date: item.first_air_date,
       posterPath: item.poster_path,
+      backdropPath: item.backdrop_path,
       originalLanguage: item.original_language,
       seasons: item.seasons.map((season) => ({
         externalId: season.id,

@@ -4,6 +4,7 @@ import type { MediaActor } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 import {
   RequestInterestCommandSchema,
+  RequestInterestIncludeSchema,
   LibraryKeepingCommandSchema,
 } from "#shared/household/interests.ts";
 import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
@@ -16,6 +17,7 @@ export type RequestInterestApplication = {
   list: (
     actor: MediaActor,
     cursor: string | null,
+    include: { artwork: boolean },
   ) => ReturnType<typeof listRequestInterests>;
   progress: (
     actor: MediaActor,
@@ -28,14 +30,19 @@ export function registerRequestInterestRoutes(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
   interest: RequestInterestApplication,
 ) {
-  app.get("/api/v1/request-interests", async (c) =>
-    c.json(
+  app.get("/api/v1/request-interests", async (c) => {
+    const include = parseInput(
+      RequestInterestIncludeSchema.optional(),
+      c.req.query("include"),
+    );
+    return c.json(
       await interest.list(
         c.get("actor"),
         parseInput(z.uuid().nullable(), c.req.query("cursor") ?? null),
+        { artwork: include === "artwork" },
       ),
-    ),
-  );
+    );
+  });
   app.get("/api/v1/request-interests/:id/progress", async (c) =>
     c.json(
       await interest.progress(

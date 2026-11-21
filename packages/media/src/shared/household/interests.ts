@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
+import { ArtworkSchema } from "#shared/artwork/contract.ts";
 
 export const KeepingPolicySchema = z.enum(["keep", "temporary"]);
 export const InterestStateSchema = z.enum([
@@ -48,7 +49,14 @@ export const RequestInterestViewSchema = z.strictObject({
   replyBy: z.iso.datetime().nullable(),
   noticeDeliveryState: z.enum(["pending", "accepted", "attention"]).nullable(),
   noticeReason: z.string().nullable(),
+  // This object is strict, and a browser tab on an earlier client rejects any
+  // key it does not know. The server therefore sends artwork only to a caller
+  // that asked for it with `?include=artwork`, which an earlier client never
+  // does. Any further addition here needs the same opt-in.
+  artwork: ArtworkSchema.optional(),
 });
+/** What a request-interest read may be asked to add to its strict rows. */
+export const RequestInterestIncludeSchema = z.enum(["artwork"]);
 export const RequestInterestListSchema = z.strictObject({
   items: z.array(RequestInterestViewSchema),
   nextCursor: z.uuid().nullable(),

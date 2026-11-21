@@ -6,6 +6,7 @@ import {
 } from "#shared/household/library.ts";
 import type { Persona } from "#testing/fixture-api/personas.ts";
 import { pick, versionOf } from "#testing/fixture-api/support.ts";
+import { storedArtwork } from "./artwork.ts";
 import { TITLES } from "./titles.ts";
 
 type LibraryPage = z.input<typeof LibraryPageSchema>;
@@ -34,6 +35,7 @@ function libraryItems(persona: Persona): LibraryItem[] {
       kind: title.kind,
       // A few provider records carry no year or no observed availability.
       year: title.index % 17 === 16 ? null : title.year,
+      artwork: storedArtwork(title),
       policy,
       myInterest: pick(INTERESTS, title.index),
       availability: title.index % 13 === 12 ? null : title.availability,

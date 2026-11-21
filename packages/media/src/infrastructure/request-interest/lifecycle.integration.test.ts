@@ -142,6 +142,38 @@ test("Finished releases acquisition authority while retaining the request histor
   ).toBe(true);
 });
 
+test("interest rows add their root title's artwork only when the caller asks for it", async () => {
+  const f = await fixture();
+  const art = { posterPath: "/kept-poster.jpg", backdropPath: null };
+  await f.db.mediaItem.update({ where: { id: f.series.id }, data: art });
+  const episodeRequest = await f.db.mediaRequest.create({
+    data: { mediaId: f.episode.id, userId: f.member.id },
+  });
+  // What every earlier client sends: no parameter, and so no new key.
+  const plain = await listRequestInterests(f.db, f.member, null);
+  expect(plain.items).toHaveLength(2);
+  expect(plain.items.some((item) => Object.hasOwn(item, "artwork"))).toBe(
+    false,
+  );
+  expect(JSON.stringify(plain)).not.toContain("artwork");
+  expect(
+    await listRequestInterests(f.db, f.member, null, { artwork: false }),
+  ).toEqual(plain);
+  const requested = await listRequestInterests(f.db, f.member, null, {
+    artwork: true,
+  });
+  expect(
+    requested.items.find((item) => item.requestId === f.request.id),
+  ).toMatchObject({ mediaId: f.series.id, artwork: art });
+  // An individually requested episode shows its series' art.
+  expect(
+    requested.items.find((item) => item.requestId === episodeRequest.id),
+  ).toMatchObject({ mediaId: f.episode.id, artwork: art });
+  expect(requested.items.map(({ artwork: _artwork, ...item }) => item)).toEqual(
+    plain.items,
+  );
+});
+
 test("another interested requester protects shared episodes after one finishes", async () => {
   const f = await fixture();
   const other = await f.db.mediaUser.create({

@@ -7,6 +7,7 @@ import {
 import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { createMediaApp, type MediaAppDependencies } from "./app.ts";
+import type { RequestInterestApplication } from "./household/interests.ts";
 
 import { verifyPlexEventHttp } from "./plex-events/http.test-support.ts";
 import { verifyExternalLibraryHttp } from "./external-library-http.test-support.ts";
@@ -26,6 +27,35 @@ test("capacity route is registered behind normal session authentication", async 
     schemaVersion: 1,
     samplingEnabled: false,
   });
+});
+
+function unusedInterestRead() {
+  return Promise.reject(new Error("Unused interest fixture"));
+}
+
+test("request interests add artwork only on an explicit include and refuse an unknown one", async () => {
+  const { dependencies } = fixture();
+  const list = vi.fn<RequestInterestApplication["list"]>(() =>
+    Promise.resolve({ items: [], nextCursor: null }),
+  );
+  dependencies.requestInterests = {
+    list,
+    progress: unusedInterestRead,
+    execute: unusedInterestRead,
+    libraryPolicy: unusedInterestRead,
+  };
+  const app = createMediaApp(dependencies);
+  const url = "/api/v1/request-interests";
+  // An earlier client never sends the parameter and must keep its strict rows.
+  const plain = await app.request(url, { headers });
+  expect(plain.status).toBe(200);
+  expect(list).toHaveBeenLastCalledWith(actor, null, { artwork: false });
+  const requested = await app.request(`${url}?include=artwork`, { headers });
+  expect(requested.status).toBe(200);
+  expect(list).toHaveBeenLastCalledWith(actor, null, { artwork: true });
+  const unknown = await app.request(`${url}?include=progress`, { headers });
+  expect(unknown.status).toBe(400);
+  expect(list).toHaveBeenCalledTimes(2);
 });
 
 test("runtime changes require a session, CSRF, idempotency, and a reviewed version", async () => {

@@ -1,9 +1,10 @@
 import type { z } from "zod";
 import type { RequestListSchema } from "#shared/api.ts";
 import type { MediaItem } from "#shared/contract.ts";
-import type {
-  RequestInterestListSchema,
-  RequestInterestViewSchema,
+import {
+  RequestInterestIncludeSchema,
+  type RequestInterestListSchema,
+  type RequestInterestViewSchema,
 } from "#shared/household/interests.ts";
 import type { RequestInterestProgressSchema } from "#shared/household/progress.ts";
 import type { ImportedPersonalClaimsSchema } from "#shared/personal-migration/contract.ts";
@@ -22,7 +23,14 @@ import {
   pick,
   sha256,
 } from "#testing/fixture-api/support.ts";
-import { episodeItem, seasonItem, titleItem, titleNamed } from "./titles.ts";
+import { storedArtwork } from "./artwork.ts";
+import {
+  episodeItem,
+  resolveMedia,
+  seasonItem,
+  titleItem,
+  titleNamed,
+} from "./titles.ts";
 
 type RequestList = z.input<typeof RequestListSchema>;
 type InterestView = z.input<typeof RequestInterestViewSchema>;
@@ -83,17 +91,26 @@ const REQUEST_SEEDS: readonly RequestSeed[] = [
 /** The signed-in person's requests, each with the item it asks for. */
 export function requestList(persona: Persona): RequestList {
   const user = personaUser(persona);
-  return REQUEST_SEEDS.map((seed) => ({
-    id: requestId(seed.sequence),
-    userId: user.id,
-    mediaId: seed.item.id,
-    active: seed.active ?? true,
-    subtitleLanguages: seed.languages ?? [],
-    includeFutureEpisodes: seed.future ?? false,
-    includeSpecials: seed.specials ?? false,
-    version: (seed.sequence % 4) + 1,
-    media: seed.item,
-  }));
+  return REQUEST_SEEDS.map((seed) => {
+    const resolved = resolveMedia(seed.item.id);
+    if (resolved === null) {
+      throw new Error(`Request fixture names an unknown item ${seed.item.id}`);
+    }
+    return {
+      id: requestId(seed.sequence),
+      userId: user.id,
+      mediaId: seed.item.id,
+      active: seed.active ?? true,
+      subtitleLanguages: seed.languages ?? [],
+      includeFutureEpisodes: seed.future ?? false,
+      includeSpecials: seed.specials ?? false,
+      version: (seed.sequence % 4) + 1,
+      media: seed.item,
+      // A requested season or episode shows its series' art.
+      rootMediaId: resolved.title.id,
+      artwork: storedArtwork(resolved.title),
+    };
+  });
 }
 
 function interest(
@@ -134,8 +151,25 @@ export function interestList(
   parameters: URLSearchParams,
   persona: Persona,
 ): InterestList {
+  const include = RequestInterestIncludeSchema.optional().parse(
+    parameters.get("include") ?? undefined,
+  );
+  const page = interestPage(parameters.get("cursor"), persona);
+  // The rows are a strict contract: like the server, add artwork only for a
+  // caller that asks for it, so an earlier client never receives the key.
+  return include === "artwork"
+    ? {
+        ...page,
+        items: page.items.map((item) => ({
+          ...item,
+          artwork: storedArtwork(titleNamed(item.title)),
+        })),
+      }
+    : page;
+}
+
+function interestPage(cursor: string | null, persona: Persona): InterestList {
   const mine = personaUser(persona).id;
-  const cursor = parameters.get("cursor");
   if (cursor === SECOND_INTEREST_PAGE) {
     return {
       items: [

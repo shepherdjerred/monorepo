@@ -162,6 +162,87 @@ test("catalog-only detail and release reads leave the target absent", async () =
   ).toMatchObject({ version: 0 });
 });
 
+test("request and removal lists carry the root title's artwork; an episode row inherits its series'", async () => {
+  const { actor, media: movie } = await fixture();
+  const db = cluster.database;
+  const art = {
+    posterPath: "/listed-poster.jpg",
+    backdropPath: "/listed-backdrop.jpg",
+  };
+  const series = await db.mediaItem.create({
+    data: { kind: "series", title: "Listed series", ...art },
+  });
+  const season = await db.mediaItem.create({
+    data: {
+      kind: "season",
+      title: "Listed season",
+      parentId: series.id,
+      seasonNumber: 1,
+    },
+  });
+  const episode = await db.mediaItem.create({
+    data: {
+      kind: "episode",
+      title: "Listed episode",
+      parentId: season.id,
+      seasonNumber: 1,
+      episodeNumber: 1,
+    },
+  });
+  const rows = [];
+  for (const mediaId of [episode.id, movie.id]) {
+    await createTestDefaultTarget(db, mediaId);
+    rows.push({
+      request: await db.mediaRequest.create({
+        data: { userId: actor.id, mediaId },
+      }),
+      decision: await db.retentionDecision.create({
+        data: {
+          mediaId,
+          generation: 1,
+          state: "grace_period",
+          evidence: { recoveryEpoch: 0 },
+        },
+      }),
+    });
+  }
+  const [inherited, own] = rows;
+  if (inherited === undefined || own === undefined)
+    throw new Error("Missing artwork list fixture");
+  // The movie's artwork has not been observed yet.
+  const none = { posterPath: null, backdropPath: null };
+  const requests = await app.listRequests(actor);
+  expect(requests.find((row) => row.id === inherited.request.id)).toMatchObject(
+    {
+      mediaId: episode.id,
+      media: { id: episode.id, kind: "episode" },
+      rootMediaId: series.id,
+      artwork: art,
+    },
+  );
+  expect(requests.find((row) => row.id === own.request.id)).toMatchObject({
+    mediaId: movie.id,
+    rootMediaId: movie.id,
+    artwork: none,
+  });
+  const removals = await app.removals(actor);
+  expect(removals.find((row) => row.id === inherited.decision.id)).toEqual({
+    id: inherited.decision.id,
+    mediaId: episode.id,
+    rootMediaId: series.id,
+    artwork: art,
+    state: "grace_period",
+    graceUntil: null,
+    purgeAfter: null,
+    media: { title: "Listed episode", kind: "episode", version: 0 },
+  });
+  expect(removals.find((row) => row.id === own.decision.id)).toMatchObject({
+    mediaId: movie.id,
+    rootMediaId: movie.id,
+    artwork: none,
+  });
+});
+
 test("Keep on orphan metadata protects without inventing lineage or acquisition authority", async () => {
   const { actor } = await fixture("owner");
   const media = await cluster.database.mediaItem.create({

@@ -5,6 +5,7 @@ import {
   AvailabilitySchema,
   UserRoleSchema,
 } from "#shared/contract.ts";
+import { RequestInterestListSchema } from "#shared/household/interests.ts";
 import { LibraryPageSchema } from "#shared/household/library.ts";
 import type { FixtureEndpoint } from "./endpoint.ts";
 import { FIXTURE_ENDPOINTS } from "./endpoints.ts";
@@ -25,6 +26,15 @@ function read(endpoint: FixtureEndpoint, sample: string, persona: Persona) {
 /** The body as a browser receives it: serialized, then read back. */
 async function overTheWire(body: unknown): Promise<unknown> {
   return Response.json(body).json();
+}
+
+async function readInterests(query: string) {
+  const outcome = routeFixture({
+    method: "GET",
+    url: new URL(`http://fixture.invalid/api/v1/request-interests${query}`),
+    persona: "member",
+  });
+  return { outcome, body: await overTheWire(outcome.body) };
 }
 
 describe("fixture endpoints", () => {
@@ -112,6 +122,44 @@ describe("fixture volume", () => {
     expect(new Set(items.map((item) => item.protection))).toEqual(
       new Set(element.protection.options),
     );
+  });
+
+  it("shows titles with a poster and a backdrop, with one of them, and with neither", async () => {
+    const outcome = routeFixture({
+      method: "GET",
+      url: new URL("http://fixture.invalid/api/v1/library?limit=50"),
+      persona: "member",
+    });
+    const { items } = LibraryPageSchema.parse(await overTheWire(outcome.body));
+    const shapes = new Set(
+      items.map(
+        ({ artwork }) =>
+          `${artwork.posterPath === null ? "no poster" : "poster"}, ${artwork.backdropPath === null ? "no backdrop" : "backdrop"}`,
+      ),
+    );
+    expect([...shapes].sort()).toEqual([
+      "no poster, backdrop",
+      "no poster, no backdrop",
+      "poster, backdrop",
+      "poster, no backdrop",
+    ]);
+    const paths = items
+      .flatMap(({ artwork }) => [artwork.posterPath, artwork.backdropPath])
+      .filter((path) => path !== null);
+    for (const path of paths) {
+      expect(path).toMatch(/^\/[0-9a-f]{27}\.jpg$/u);
+    }
+  });
+
+  it("adds artwork to request interests only for a caller that asks for it", async () => {
+    const plain = await readInterests("");
+    expect(JSON.stringify(plain.body)).not.toContain("artwork");
+    const requested = await readInterests("?include=artwork");
+    const { items } = RequestInterestListSchema.parse(requested.body);
+    expect(items.length).toBeGreaterThan(0);
+    expect(items.every((item) => item.artwork !== undefined)).toBe(true);
+    const unknown = await readInterests("?include=progress");
+    expect(unknown.outcome.status).toBe(400);
   });
 
   it("gives every quality profile rules the profile editor accepts", async () => {

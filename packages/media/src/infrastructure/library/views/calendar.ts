@@ -18,6 +18,7 @@ import {
 } from "#infrastructure/library/views/policy.ts";
 import { externalAvailableMediaIds } from "#infrastructure/external-library/availability.ts";
 import { PlexAccessSchema } from "#shared/plex-binding/contract.ts";
+import { rootArtwork } from "#infrastructure/library/views/artwork.ts";
 
 export type CalendarReadSettings = {
   serverMachineId?: string | undefined;
@@ -149,6 +150,7 @@ export class PrismaCalendarApplication {
               id: row.id,
               mediaId: media.id,
               rootMediaId: series?.id ?? media.id,
+              artwork: rootArtwork(media),
               title: media.title,
               seriesTitle: series?.title ?? null,
               seasonNumber: media.seasonNumber,
