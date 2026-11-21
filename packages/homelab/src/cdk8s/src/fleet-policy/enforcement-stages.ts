@@ -53,7 +53,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "starlight-karma-bot-beta": "open",
   "starlight-karma-bot-prod": "open",
   stash: "enforced",
-  "storm-brain": "open",
+  "storm-brain": "enforced",
   "storm-forum": "open",
   syncthing: "open",
   tasknotes: "enforced",
