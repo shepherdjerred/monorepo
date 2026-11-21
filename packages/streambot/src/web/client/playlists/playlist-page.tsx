@@ -17,18 +17,40 @@ import { usePlaylist, type PlaylistHandle } from "./use-playlist.ts";
 import "@shepherdjerred/streambot/web/client/styles/home.css";
 import "@shepherdjerred/streambot/web/client/styles/playlists.css";
 
-/** A share link names its server; the page waits until the remote is browsing it. */
-function useLinkedGuild(guild: string | null): string | null {
+type LinkedGuild =
+  | { readonly status: "waiting" }
+  | { readonly status: "ready"; readonly guildId: string }
+  /** The link names another server, and the room follows the viewer's voice channel, which is elsewhere. */
+  | {
+      readonly status: "elsewhere";
+      readonly linked: string;
+      readonly voice: string;
+    };
+
+/**
+ * A share link names its server; the page switches the remote to it and waits until the remote is
+ * browsing it. While the viewer is in voice in a different server the remote cannot switch (the
+ * room always follows the voice channel), so that case is reported instead of waited on.
+ */
+function useLinkedGuild(guild: string | null): LinkedGuild {
   const remote = useRemote();
-  const member =
-    guild !== null && remote.me.guilds.some((entry) => entry.id === guild);
-  const wanted = member ? guild : null;
+  const linked =
+    guild === null
+      ? undefined
+      : remote.me.guilds.find((entry) => entry.id === guild);
+  const wanted = linked?.id ?? null;
+  const voice = remote.room?.location?.guild ?? null;
+  const blocked = wanted !== null && voice !== null && voice.id !== wanted;
   useEffect(() => {
-    if (wanted !== null && wanted !== remote.guildId)
+    if (wanted !== null && !blocked && wanted !== remote.guildId)
       remote.chooseGuild(wanted);
-  }, [wanted, remote]);
-  if (remote.room === null) return null;
-  return wanted !== null && wanted !== remote.guildId ? null : remote.guildId;
+  }, [wanted, blocked, remote]);
+  if (remote.room === null) return { status: "waiting" };
+  if (blocked && linked !== undefined)
+    return { status: "elsewhere", linked: linked.name, voice: voice.name };
+  return wanted !== null && wanted !== remote.guildId
+    ? { status: "waiting" }
+    : { status: "ready", guildId: remote.guildId };
 }
 
 function Paging(props: { page: Page; offset: number }) {
@@ -160,17 +182,33 @@ export function PlaylistPage() {
   const location = useLocation();
   const offset = Math.max(0, Number.parseInt(params.get("offset") ?? "0", 10));
   const guild = params.get("guild");
-  const guildId = useLinkedGuild(
+  const linked = useLinkedGuild(
     guild !== null && /^\d+$/u.test(guild) ? guild : null,
   );
   const room = useRemote().room;
   const enabled = room?.capabilities.playlists === true;
   const playlist = usePlaylist(
-    guildId === null || !enabled || id === "" ? null : guildId,
+    !enabled || id === "" || linked.status !== "ready" ? null : linked.guildId,
     id,
     Number.isNaN(offset) ? 0 : offset,
   );
   const { state } = playlist;
+  if (linked.status === "elsewhere")
+    return (
+      <div className="page">
+        <Link className="playlist-back" to="/playlists">
+          ← Playlists
+        </Link>
+        <h1 className="page-heading" id="page-heading" tabIndex={-1}>
+          Playlist
+        </h1>
+        <p className="empty-note">
+          This playlist is in {linked.linked}. The remote follows your voice
+          channel, which is in {linked.voice}. Leave it, or join a voice channel
+          in {linked.linked}, and the playlist opens here.
+        </p>
+      </div>
+    );
   if (room !== null && !enabled)
     return (
       <div className="page">

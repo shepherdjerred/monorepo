@@ -7,6 +7,9 @@ import { usePageNavigation } from "./page-navigation.ts";
 
 type Remote = ReturnType<typeof useRemote>;
 
+/** Where the classic remote is served. The router strips it, so links that leave the router add it back. */
+export const CLASSIC_BASENAME = "/classic";
+
 export function App() {
   const remote = useRemote();
   const { me, snapshot } = remote;
@@ -62,7 +65,11 @@ export function App() {
               href={
                 "/api/auth/discord/start?" +
                 new URLSearchParams({
-                  returnTo: location.pathname + location.search + location.hash,
+                  returnTo:
+                    CLASSIC_BASENAME +
+                    location.pathname +
+                    location.search +
+                    location.hash,
                 }).toString()
               }
             >

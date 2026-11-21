@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./app.tsx";
+import { App, CLASSIC_BASENAME } from "./app.tsx";
 import { BrowserRouter } from "react-router";
 import "./styles.css";
 
@@ -8,7 +8,7 @@ const root = document.querySelector("#root");
 if (root === null) throw new Error("Streambot root element is missing");
 createRoot(root).render(
   <StrictMode>
-    <BrowserRouter basename="/classic">
+    <BrowserRouter basename={CLASSIC_BASENAME}>
       <App />
     </BrowserRouter>
   </StrictMode>,
