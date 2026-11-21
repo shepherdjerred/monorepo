@@ -406,7 +406,7 @@ export function buildPreviewScenarios(): PreviewScenario[] {
       legacyFrom: "alerts@sjer.red",
       legacyTo: "dependencies@sjer.red",
       legacySubject: "[Alerts] 3 critical alerts opened",
-      legacyHtml: `<h1>Alerts opened</h1><ul><li><strong>golink ignored its TS_AUTHKEY on boot</strong> <code>golink</code><br><code>GolinkAuthkeyIgnored</code></li><li><strong>ffmpeg producing &gt; 1.25x realtime sustained</strong> <code>media</code><br><code>StreambotEncoderProducerAhead</code></li></ul><p><a href="https://alerts.tailnet-1a49.ts.net/alerts">Open Alerts</a></p>`,
+      legacyHtml: `<h1>Alerts opened</h1><ul><li><strong>golink ignored its TS_AUTHKEY on boot</strong> <code>golink</code><br><code>GolinkAuthkeyIgnored</code></li><li><strong>ffmpeg producing &gt; 1.25x realtime sustained</strong> <code>media</code><br><code>StreambotEncoderProducerAhead</code></li></ul><p><a href="https://hub.tailnet-1a49.ts.net/alerts">Open Alerts</a></p>`,
       document: groupedBurst.document,
     },
     {

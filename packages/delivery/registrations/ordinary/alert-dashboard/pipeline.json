@@ -10,7 +10,7 @@
     "delivery.images.alert-dashboard": "image:alert-dashboard"
   },
   "verification": {
-    "url": "https://alerts.tailnet-1a49.ts.net/healthz",
+    "url": "https://hub.tailnet-1a49.ts.net/healthz",
     "expectedStatus": 200
   }
 }

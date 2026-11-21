@@ -1,5 +1,5 @@
 {
-  "id": "ops-dashboard/prod/2",
+  "id": "ops-dashboard/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -49,7 +49,7 @@
     "oracle": {
       "probes": [
         {
-          "url": "https://alerts.tailnet-1a49.ts.net/healthz",
+          "url": "https://hub.tailnet-1a49.ts.net/healthz",
           "expectedStatus": 200
         }
       ],

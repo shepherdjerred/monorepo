@@ -4,6 +4,7 @@ import {
 } from "@shepherdjerred/ops-model/email/alert-context.ts";
 import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
 import { renderEmailText } from "@shepherdjerred/ops-model/email/render-text.ts";
+import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { z } from "zod";
 
 import {
@@ -18,7 +19,6 @@ import {
   SuppressionStateSchema,
   type AlertmanagerSnapshotAlert,
 } from "#shared/schema";
-import { ALERTS_PUBLIC_URL } from "#domain/ops-changes";
 import {
   epochNanosecondsToInstantText,
   instantTextToEpochNanoseconds,
@@ -138,7 +138,7 @@ export function openingEmail(
       annotations: alert.annotations,
     })),
     alertmanagerTruncatedAlerts,
-    hubBaseUrl: ALERTS_PUBLIC_URL,
+    hubBaseUrl: APP_HOSTS.hub,
   });
   return {
     subject,
@@ -154,7 +154,7 @@ export function truncationEmail(truncatedAlerts: number): {
 } {
   const { subject, document } = buildAlertTruncationDocument(
     truncatedAlerts,
-    ALERTS_PUBLIC_URL,
+    APP_HOSTS.hub,
   );
   return {
     subject,

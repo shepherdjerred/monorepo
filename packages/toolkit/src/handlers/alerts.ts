@@ -77,7 +77,7 @@ export async function handleAlertsCommand(
     subcommand === "-h"
   ) {
     console.log(
-      "toolkit alerts list [filters] [--json]\ntoolkit alerts show <occurrence-id> [--json]\n\nEnvironment: ALERT_DASHBOARD_URL (defaults to the tailnet Alerts service)",
+      "toolkit alerts list [filters] [--json]\ntoolkit alerts show <occurrence-id> [--json]\n\nEnvironment: ALERT_DASHBOARD_URL (defaults to Hub at https://hub.tailnet-1a49.ts.net)",
     );
     return;
   }

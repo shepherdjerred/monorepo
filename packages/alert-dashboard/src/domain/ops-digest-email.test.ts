@@ -40,7 +40,7 @@ const weeklyAttentionReport = DigestReportSchema.parse({
       title: "Resolved: Disk full (DiskFull)",
       occurredAt: "2026-09-28T13:15:00Z",
       severity: "ok",
-      url: "https://alerts.tailnet-1a49.ts.net/alerts/alert_1",
+      url: "https://hub.tailnet-1a49.ts.net/alerts/alert_1",
     },
     {
       id: "github:pr:3066",

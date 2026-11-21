@@ -497,9 +497,7 @@ describe("rendered Alerts receiver", () => {
       expect(rendered.subject).not.toContain("\n");
       expect(rendered.html).toContain("<!DOCTYPE html>");
       expect(rendered.html).toContain("Open Hub Alerts");
-      expect(rendered.html).toContain(
-        "https://alerts.tailnet-1a49.ts.net/alerts",
-      );
+      expect(rendered.html).toContain("https://hub.tailnet-1a49.ts.net/alerts");
       expect(rendered.html).toContain("Workflow stuck after a code change");
       expect(rendered.html).toContain("Technical details");
       expect(rendered.html).toContain("runHomelabAudit");
@@ -509,7 +507,7 @@ describe("rendered Alerts receiver", () => {
       expect(rendered.html).not.toContain("http-metrics");
       expect(rendered.html).not.toContain("ZgotmplZ");
       expect(rendered.text).toContain(
-        "Open Hub Alerts: https://alerts.tailnet-1a49.ts.net/alerts",
+        "Open Hub Alerts: https://hub.tailnet-1a49.ts.net/alerts",
       );
       expect(rendered.text).toContain("Workflow stuck after a code change");
       expect(rendered.text).not.toContain("10.244.0.48:9100");

@@ -3158,7 +3158,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "ops-dashboard/prod/2",
+      "recipeRevisionId": "ops-dashboard/prod/3",
       "configurationRevisionId": "ops-dashboard/prod/1"
     },
     {
@@ -3391,7 +3391,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "prometheus/prod/1",
-      "configurationRevisionId": "prometheus/prod/5"
+      "configurationRevisionId": "prometheus/prod/6"
     },
     {
       "id": "prometheus-adapter/prod",

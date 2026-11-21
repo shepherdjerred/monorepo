@@ -62,11 +62,11 @@ describe("alert domain", () => {
     expect(result.htmlBody).toContain("Disk &lt;almost&gt; full");
     expect(result.htmlBody).not.toContain("Disk <almost> full");
     expect(result.htmlBody).toContain(
-      'href="https://alerts.tailnet-1a49.ts.net/alerts"',
+      'href="https://hub.tailnet-1a49.ts.net/alerts"',
     );
     expect(result.plainBody).toContain("Disk <almost> full");
     expect(result.plainBody).toContain(
-      "Open Hub Alerts: https://alerts.tailnet-1a49.ts.net/alerts",
+      "Open Hub Alerts: https://hub.tailnet-1a49.ts.net/alerts",
     );
   });
 
@@ -74,10 +74,10 @@ describe("alert domain", () => {
     const result = truncationEmail(3);
     expect(result.subject).toBe("Warning: Alertmanager batch was truncated");
     expect(result.htmlBody).toContain(
-      'href="https://alerts.tailnet-1a49.ts.net/alerts"',
+      'href="https://hub.tailnet-1a49.ts.net/alerts"',
     );
     expect(result.plainBody).toContain(
-      "Open Hub Alerts: https://alerts.tailnet-1a49.ts.net/alerts",
+      "Open Hub Alerts: https://hub.tailnet-1a49.ts.net/alerts",
     );
     expect(result.plainBody).toContain("Omitted alerts: 3");
   });
