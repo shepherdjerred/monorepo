@@ -94,22 +94,38 @@ export function evaluateStage(
   };
 }
 
+// A container the kubelet lost track of (`ContainerStatusUnknown`, as after a
+// node reboot) is reported terminated with `finishedAt: null`.
+const ContainerStateSchema = z
+  .object({
+    terminated: z
+      .object({ finishedAt: z.string().nullable().optional() })
+      .optional(),
+  })
+  .optional();
+
 const ContainerStatusSchema = z.object({
   name: z.string(),
   restartCount: z.number(),
-  lastState: z
-    .object({
-      terminated: z.object({ finishedAt: z.string().optional() }).optional(),
-    })
-    .optional(),
+  state: ContainerStateSchema,
+  lastState: ContainerStateSchema,
 });
 
 export const PodSchema = z.object({
-  metadata: z.object({ name: z.string() }),
+  metadata: z.object({
+    name: z.string(),
+    creationTimestamp: z.string().optional(),
+  }),
   status: z.object({
     phase: z.string().optional(),
     conditions: z
-      .array(z.object({ type: z.string(), status: z.string() }))
+      .array(
+        z.object({
+          type: z.string(),
+          status: z.string(),
+          lastTransitionTime: z.string().nullable().optional(),
+        }),
+      )
       .default([]),
     containerStatuses: z.array(ContainerStatusSchema).default([]),
     initContainerStatuses: z.array(ContainerStatusSchema).default([]),
@@ -117,51 +133,101 @@ export const PodSchema = z.object({
 });
 export type Pod = z.infer<typeof PodSchema>;
 
+function containersOf(pod: Pod) {
+  return [...pod.status.initContainerStatuses, ...pod.status.containerStatuses];
+}
+
+/**
+ * When a Failed pod terminated: the latest container finish or condition
+ * transition (a pod the kubelet refused at admission has no container
+ * statuses), else its creation. Undefined when the pod carries no time.
+ */
+export function failedAt(pod: Pod): Date | undefined {
+  const times = [
+    ...containersOf(pod).map(
+      (container) => container.state?.terminated?.finishedAt,
+    ),
+    ...pod.status.conditions.map((condition) => condition.lastTransitionTime),
+  ]
+    .filter((time) => typeof time === "string")
+    .map((time) => new Date(time).getTime());
+  if (times.length > 0) {
+    return new Date(Math.max(...times));
+  }
+  const created = pod.metadata.creationTimestamp;
+  return created === undefined ? undefined : new Date(created);
+}
+
+/** Every pod but finished Job pods: what the namespace runs, or tried to. */
+export function activePods(pods: readonly Pod[]): Pod[] {
+  // A finished Job pod is never Ready and is not a fault.
+  return pods.filter((pod) => pod.status.phase !== "Succeeded");
+}
+
 function recentRestarts(pod: Pod, since: Date): string[] {
-  return [...pod.status.initContainerStatuses, ...pod.status.containerStatuses]
+  return containersOf(pod)
     .filter((container) => {
       const finishedAt = container.lastState?.terminated?.finishedAt;
       return (
         container.restartCount > 0 &&
-        finishedAt !== undefined &&
+        typeof finishedAt === "string" &&
         new Date(finishedAt) >= since
       );
     })
     .map((container) => container.name);
 }
 
-/** Every pod Ready, and no container restarted inside the window. */
+/**
+ * Every pod Ready, and no container restarted inside the window. A Failed pod
+ * that terminated before the window (one a node reboot left behind, already
+ * replaced by its controller) is noted and not counted; one that failed inside
+ * the window, a Job's included, fails the check.
+ */
 export function evaluatePods(
   pods: readonly Pod[],
   now: Date,
   windowMinutes: number,
 ): CheckResult {
   const since = new Date(now.getTime() - windowMinutes * 60_000);
-  // A finished Job pod is never Ready and is not a fault.
-  const running = pods.filter((pod) => pod.status.phase !== "Succeeded");
-  const items = running.map((pod): Item => {
+  const window = `the last ${String(windowMinutes)}m`;
+  const earlier: string[] = [];
+  const items = activePods(pods).flatMap((pod): Item[] => {
+    const name = pod.metadata.name;
+    if (pod.status.phase === "Failed") {
+      const at = failedAt(pod);
+      if (at !== undefined && at < since) {
+        earlier.push(
+          `${name}: Failed at ${at.toISOString()}, before ${window} (not counted)`,
+        );
+        return [];
+      }
+    }
     const ready = pod.status.conditions.some(
       (condition) => condition.type === "Ready" && condition.status === "True",
     );
     if (!ready) {
-      return {
-        status: "fail",
-        detail: `${pod.metadata.name}: not Ready (${pod.status.phase ?? "no phase"})`,
-      };
+      return [
+        {
+          status: "fail",
+          detail: `${name}: not Ready (${pod.status.phase ?? "no phase"})`,
+        },
+      ];
     }
     const restarted = recentRestarts(pod, since);
-    return restarted.length > 0
-      ? {
-          status: "fail",
-          detail: `${pod.metadata.name}: ${restarted.join(", ")} restarted in the last ${String(windowMinutes)}m`,
-        }
-      : { status: "pass", detail: pod.metadata.name };
+    return [
+      restarted.length > 0
+        ? {
+            status: "fail",
+            detail: `${name}: ${restarted.join(", ")} restarted in ${window}`,
+          }
+        : { status: "pass", detail: name },
+    ];
   });
   return {
     check: "pods",
     status: worstStatus(items),
-    summary: `${String(count(items, "pass"))}/${String(items.length)} pods Ready with no restart in the last ${String(windowMinutes)}m`,
-    details: problems(items),
+    summary: `${String(count(items, "pass"))}/${String(items.length)} pods Ready with no restart in ${window}`,
+    details: [...problems(items), ...earlier],
   };
 }
 
@@ -323,6 +389,22 @@ export function evaluateUrls(
   };
 }
 
+/**
+ * A namespace scaled to zero serves its URLs from no pod, so a proxy error
+ * there says nothing about its policies: its URLs are not requested.
+ */
+export function evaluateUrlsWithoutPods(declared: number): CheckResult {
+  if (declared === 0) {
+    return evaluateUrls([], []);
+  }
+  return {
+    check: "urls",
+    status: "info",
+    summary: `namespace runs no pods; ${String(declared)} URL${declared === 1 ? "" : "s"} not checked`,
+    details: [],
+  };
+}
+
 const PrometheusVectorSchema = z.object({
   status: z.literal("success"),
   data: z.object({
@@ -403,107 +485,6 @@ export function evaluateProbes(
     status: worstStatus(items),
     summary: `${String(count(items, "pass"))}/${String(items.length)} blackbox probes succeed`,
     details: problems(items),
-  };
-}
-
-/**
- * The enforcer's denial evidence, or why there is none to read. Each line is
- * prefixed with its agent pod in brackets. `limitReached` means a Loki query
- * returned its line limit, so the count is a lower bound.
- */
-export type EnforcerLog =
-  | {
-      available: true;
-      lines: readonly string[];
-      minutes: number;
-      limitReached: boolean;
-    }
-  | { available: false; reason: string };
-
-// kube-network-policies v1.1.2 (klog text). A denial line carries only the
-// packet id; the "Evaluating packet" line logged before it, by the same agent,
-// names the pods. A deny-all policy also logs "Pod has limited all … traffic",
-// but that is logged while policies are visited, before the final verdict, so
-// it is not counted: another policy may still allow the packet.
-// https://github.com/kubernetes-sigs/kube-network-policies/blob/v1.1.2/pkg/networkpolicy/engine.go
-const DENIED = /"Packet denied by (?:egress|ingress) policy".*?\bid=(\d+)/u;
-const EVALUATING = /"Evaluating packet".*?\bid=(\d+)/u;
-const SHOWN_DENIALS = 5;
-
-/** The packet id of a denial line. */
-export function deniedPacketId(line: string): string | undefined {
-  return DENIED.exec(line)?.[1];
-}
-
-/** The `[pod]` prefix names the agent; packet ids are per agent. */
-function agentOf(line: string): string {
-  return /^\[[^\]]+\]/u.exec(line)?.[0] ?? "";
-}
-
-function field(line: string, key: string): string | undefined {
-  return new RegExp(String.raw`\b${key}="([^"]+)"`, "u").exec(line)?.[1];
-}
-
-function inNamespace(
-  reference: string | undefined,
-  namespace: string,
-): boolean {
-  return reference?.startsWith(`${namespace}/`) ?? false;
-}
-
-/**
- * Denials whose source or destination pod is in the namespace, each paired
- * with the packet description that names the pods.
- */
-export function denialsFor(
-  namespace: string,
-  lines: readonly string[],
-): string[] {
-  const evaluated = new Map<string, string>();
-  const denials: string[] = [];
-  for (const line of lines) {
-    const evaluating = EVALUATING.exec(line);
-    if (evaluating !== null) {
-      evaluated.set(`${agentOf(line)}#${evaluating[1] ?? ""}`, line);
-      continue;
-    }
-    const denied = deniedPacketId(line);
-    if (denied !== undefined) {
-      const packet = evaluated.get(`${agentOf(line)}#${denied}`);
-      if (
-        packet !== undefined &&
-        (inNamespace(field(packet, "srcPod"), namespace) ||
-          inNamespace(field(packet, "dstPod"), namespace))
-      ) {
-        denials.push(`${line} <- ${packet}`);
-      }
-    }
-  }
-  return denials;
-}
-
-/** A note, never a gate: the enforcer has no deny-only log to count from. */
-export function evaluateDenials(
-  namespace: string,
-  log: EnforcerLog,
-): CheckResult {
-  if (!log.available) {
-    return {
-      check: "denials",
-      status: "info",
-      summary: `not available: ${log.reason}`,
-      details: [],
-    };
-  }
-  const denials = denialsFor(namespace, log.lines);
-  const counted = `${String(denials.length)} denials involving this namespace in the last ${String(log.minutes)}m`;
-  return {
-    check: "denials",
-    status: "info",
-    summary: log.limitReached
-      ? `at least ${counted} (a Loki query reached its line limit)`
-      : counted,
-    details: denials.slice(0, SHOWN_DENIALS),
   };
 }
 

@@ -1,20 +1,21 @@
 import { describe, expect, test } from "vitest";
-import { probe } from "./fixtures.ts";
+import { failedPod, probe } from "./fixtures.ts";
 import {
-  denialsFor,
-  evaluateDenials,
   evaluatePods,
   evaluateProbes,
   evaluateServices,
   evaluateStage,
   evaluateUrlResponse,
   evaluateUrls,
+  evaluateUrlsWithoutPods,
+  failedAt,
   namespaceReport,
   parseProbeSuccess,
   PodSchema,
   type CheckResult,
   type Pod,
 } from "./namespace-checks.ts";
+import { denialsFor, evaluateDenials } from "./namespace-denials.ts";
 import type { UrlCheck } from "./namespace-urls.ts";
 import { renderReport, renderTable } from "./report.ts";
 
@@ -85,6 +86,94 @@ describe("pods", () => {
     ];
     expect(evaluatePods(pods, NOW, 2).status).toBe("pass");
     expect(evaluatePods(pods, NOW, 2).summary).toContain("1/1");
+  });
+
+  test("a Failed pod from before the window is noted, not counted", () => {
+    const result = evaluatePods(
+      [
+        pod("web-new"),
+        PodSchema.parse(
+          failedPod("web-old", {
+            created: "2026-11-12T14:00:00Z",
+            transitioned: "2026-11-12T15:30:00Z",
+            finished: null,
+          }),
+        ),
+      ],
+      NOW,
+      10,
+    );
+    expect(result).toEqual({
+      check: "pods",
+      status: "pass",
+      summary: "1/1 pods Ready with no restart in the last 10m",
+      details: [
+        "web-old: Failed at 2026-11-12T15:30:00.000Z, before the last 10m (not counted)",
+      ],
+    });
+  });
+
+  test("a pod that failed inside the window fails, a Job's included", () => {
+    const createdLongAgo = { created: "2026-11-12T00:00:00Z" };
+    const result = evaluatePods(
+      [
+        // A Job pod created a day ago whose container exited a minute ago.
+        PodSchema.parse(
+          failedPod("migrate-job", {
+            ...createdLongAgo,
+            transitioned: "2026-11-12T00:00:05Z",
+            finished: "2026-11-13T11:59:00Z",
+          }),
+        ),
+        // Refused at admission a minute ago: only a condition carries the time.
+        PodSchema.parse(
+          failedPod("rejected", {
+            ...createdLongAgo,
+            transitioned: "2026-11-13T11:59:00Z",
+          }),
+        ),
+      ],
+      NOW,
+      10,
+    );
+    expect(result.status).toBe("fail");
+    expect(result.details).toEqual([
+      "migrate-job: not Ready (Failed)",
+      "rejected: not Ready (Failed)",
+    ]);
+    // A window wide enough to reach an old failure counts it again.
+    const old = PodSchema.parse(
+      failedPod("web-old", { created: "2026-11-12T14:00:00Z" }),
+    );
+    expect(evaluatePods([old], NOW, 10).status).toBe("pass");
+    expect(evaluatePods([old], NOW, 24 * 60).status).toBe("fail");
+  });
+
+  test("a Failed pod's time is its latest finish or transition, else its creation", () => {
+    const created = "2026-11-12T00:00:00Z";
+    expect(failedAt(PodSchema.parse(failedPod("a", { created })))).toEqual(
+      new Date(created),
+    );
+    expect(
+      failedAt(
+        PodSchema.parse(
+          failedPod("b", {
+            created,
+            transitioned: "2026-11-12T01:00:00Z",
+            finished: "2026-11-12T02:00:00Z",
+          }),
+        ),
+      ),
+    ).toEqual(new Date("2026-11-12T02:00:00Z"));
+  });
+
+  test("a Failed pod with no time at all is counted", () => {
+    const timeless = PodSchema.parse({
+      metadata: { name: "timeless" },
+      status: { phase: "Failed" },
+    });
+    expect(failedAt(timeless)).toBeUndefined();
+    expect(evaluatePods([timeless], NOW, 10).status).toBe("fail");
   });
 });
 
@@ -207,6 +296,19 @@ describe("URL answers", () => {
       evaluateUrls([{ status: "fail", detail: "a" }], ["grpc: not HTTP"])
         .status,
     ).toBe("fail");
+  });
+
+  test("a namespace that runs no pods notes its URLs without checking them", () => {
+    expect(evaluateUrlsWithoutPods(2)).toEqual({
+      check: "urls",
+      status: "info",
+      summary: "namespace runs no pods; 2 URLs not checked",
+      details: [],
+    });
+    expect(evaluateUrlsWithoutPods(1).summary).toBe(
+      "namespace runs no pods; 1 URL not checked",
+    );
+    expect(evaluateUrlsWithoutPods(0)).toEqual(evaluateUrls([], []));
   });
 });
 

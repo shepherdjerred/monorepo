@@ -69,6 +69,46 @@ export function probe(
   };
 }
 
+/**
+ * A Failed pod as `kubectl get pods -o json` returns it. A `null` finish is
+ * the shape the kubelet leaves when it refuses a pod at admission after a node
+ * reboot (`UnexpectedAdmissionError`): its lost container has no finish time.
+ */
+export function failedPod(
+  name: string,
+  times: { created: string; transitioned?: string; finished?: string | null },
+) {
+  return {
+    metadata: { name, creationTimestamp: times.created },
+    status: {
+      phase: "Failed",
+      reason: "UnexpectedAdmissionError",
+      conditions:
+        times.transitioned === undefined
+          ? []
+          : [
+              {
+                type: "Ready",
+                status: "False",
+                lastTransitionTime: times.transitioned,
+              },
+            ],
+      containerStatuses:
+        times.finished === undefined
+          ? []
+          : [
+              {
+                name: "app",
+                restartCount: 0,
+                state: {
+                  terminated: { exitCode: 1, finishedAt: times.finished },
+                },
+              },
+            ],
+    },
+  };
+}
+
 export type Call = { command: readonly string[]; stdin: string | undefined };
 
 /**
