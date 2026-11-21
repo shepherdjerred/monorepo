@@ -165,6 +165,8 @@ extension FacetStore {
                             dueDatetime: parsed.dueDatetime,
                             dueTimezone: parsed.dueTimezone,
                             dueString: parsed.dueString,
+                            deadline: parsed.deadline,
+                            recurrenceBasis: parsed.recurrenceBasis,
                             recurrenceRule: parsed.recurrenceRule,
                             labelIds: parsed.labelIds
                         )
