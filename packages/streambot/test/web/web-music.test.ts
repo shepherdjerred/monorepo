@@ -150,7 +150,10 @@ test("external playlists add more than 100 tracks without saving a playlist", as
     }),
   );
   expect(response.status).toBe(200);
-  expect(CommandResultSchema.parse(await response.json()).message).toBeTruthy();
+  // The batch loads after this response, so only the destination is known yet.
+  expect(CommandResultSchema.parse(await response.json())).toMatchObject({
+    destination: { transport: "watch", voiceChannelName: "Movie night" },
+  });
   const read = () =>
     f.playback.deps.music?.loads.read(String(loads[0]), USER, GUILD);
   let load = read();
