@@ -121,11 +121,11 @@ The rules live in
 `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/streambot.ts`.
 Each has a minimum-volume floor, so a quiet evening cannot fire it.
 
-| Alert                                 | Fires when                                                                     | Start at                                                           |
-| ------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
-| `StreambotWebServerErrors`            | More than 5% of at least 50 requests in 15 minutes were 5xx or `unavailable`   | Step 2, filtered to `status >= 500`, then the **Error rate** panel |
-| `StreambotWebTimeToPlaybackSlow`      | p95 time to playback exceeds 20 seconds, with at least 10 starts in 30 minutes | The **Time to playback** panel and the encoder alerts              |
-| `StreambotMusicSearchProviderFailing` | A provider failed more than half of at least 20 calls in 30 minutes            | The **Music provider requests** panel, then upstream status        |
+| Alert                                 | Fires when                                                                     | Start at                                                                                   |
+| ------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `StreambotWebServerErrors`            | More than 5% of at least 50 requests in 15 minutes were 5xx or `unavailable`   | Step 2, filtered to `status >= 500` or `code="unavailable"`, then the **Error rate** panel |
+| `StreambotWebTimeToPlaybackSlow`      | p95 time to playback exceeds 20 seconds, with at least 10 starts in 30 minutes | The **Time to playback** panel and the encoder alerts                                      |
+| `StreambotMusicSearchProviderFailing` | A provider failed more than half of at least 20 calls in 30 minutes            | The **Music provider requests** panel, then upstream status                                |
 
 ## Related
 

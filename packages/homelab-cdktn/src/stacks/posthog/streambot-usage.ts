@@ -11,12 +11,12 @@ export const STREAMBOT_USAGE_DASHBOARD = {
   id: "streambot_usage",
   name: "Streambot Usage",
   description:
-    "How the Streambot web remote is used: weekly active users, plays by surface and placement, commands by action, search-to-play conversion, station starts, playlist actions, and sign-ins.",
+    "How the Streambot web remote is used: weekly active users, plays by surface and placement, commands by action, search-to-play conversion, station starts, playlist actions, and sign-ins. Insights stay empty until the Streambot analytics producer is deployed.",
 } as const;
 
 const SEARCH_TO_PLAY_WINDOW_MINUTES = 30;
 
-/** Share of searches that are followed by a play request within the window. */
+/** Share of searching users who request a play within the window (funnels count unique users). */
 const searchToPlay = {
   kind: "InsightVizNode",
   source: {
@@ -92,7 +92,7 @@ export const STREAMBOT_USAGE_INSIGHTS = {
   },
   streambot_search_to_play: {
     name: "Search to play conversion",
-    description: `Searches followed by a play request within ${SEARCH_TO_PLAY_WINDOW_MINUTES.toString()} minutes.`,
+    description: `Share of searching users who request a play within ${SEARCH_TO_PLAY_WINDOW_MINUTES.toString()} minutes. Needs the Streambot analytics producer deployed; insights are empty until it emits events.`,
     query: searchToPlay,
   },
   streambot_station_starts_by_kind: {

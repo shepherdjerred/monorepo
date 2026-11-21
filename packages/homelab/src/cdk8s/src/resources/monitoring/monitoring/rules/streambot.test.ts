@@ -281,12 +281,12 @@ describe("Streambot web remote alerts", () => {
           "20m",
           true,
         ),
-        // One failed request out of three is 33% but far below the volume floor.
+        // One failed request out of three, inside the evaluation window, is 33% but far below the volume floor.
         firing(
           "StreambotWebServerErrors",
           [
-            requests('status_class="2xx",code="ok"', "0 1 2 2x30"),
-            requests('status_class="5xx",code="other"', "0 0 1 1x30"),
+            requests('status_class="2xx",code="ok"', "0x7 1 2 2x22"),
+            requests('status_class="5xx",code="other"', "0x7 0 1 1x22"),
           ],
           "20m",
           false,
@@ -341,7 +341,7 @@ describe("Streambot web remote alerts", () => {
         // Three slow starts are not enough volume.
         firing(
           "StreambotWebTimeToPlaybackSlow",
-          histogram("listen", "0 0 0 3 3x40", "0+0x40"),
+          histogram("listen", "0x7 3 3x32", "0+0x40"),
           "35m",
           false,
         ),
@@ -378,7 +378,7 @@ describe("Streambot web remote alerts", () => {
         // One failed call on a quiet evening.
         firing(
           alert,
-          [calls("error", "0 0 1 1x40"), calls("ok", "0+0x40")],
+          [calls("error", "0x7 0 1 1x32"), calls("ok", "0+0x40")],
           "35m",
           false,
         ),

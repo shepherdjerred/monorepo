@@ -2913,7 +2913,7 @@
       },
       "streambot_usage": {
         "deleted": false,
-        "description": "How the Streambot web remote is used: weekly active users, plays by surface and placement, commands by action, search-to-play conversion, station starts, playlist actions, and sign-ins.",
+        "description": "How the Streambot web remote is used: weekly active users, plays by surface and placement, commands by action, search-to-play conversion, station starts, playlist actions, and sign-ins. Insights stay empty until the Streambot analytics producer is deployed.",
         "name": "Streambot Usage",
         "pinned": false,
         "project_id": "549883"
@@ -3653,7 +3653,7 @@
       "streambot_search_to_play": {
         "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
         "deleted": false,
-        "description": "Searches followed by a play request within 30 minutes.",
+        "description": "Share of searching users who request a play within 30 minutes. Needs the Streambot analytics producer deployed; insights are empty until it emits events.",
         "name": "Search to play conversion",
         "project_id": "549883",
         "query_json": "${jsonencode(local.insight_queries[\"streambot_search_to_play\"])}"

@@ -117,7 +117,7 @@ const ROWS: readonly RowSpec[] = [
         targets: [
           {
             query:
-              'sum by (surface) (rate(streambot_play_requests_total{outcome="ok"}[15m])) / sum by (surface) (rate(streambot_play_requests_total[15m]))',
+              '(sum by (surface) (rate(streambot_play_requests_total{outcome="ok"}[15m])) or sum by (surface) (rate(streambot_play_requests_total[15m])) * 0) / sum by (surface) (rate(streambot_play_requests_total[15m]))',
             legend: "{{surface}}",
           },
         ],
