@@ -8,6 +8,7 @@ import {
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
 import type { MusicTrack } from "@shepherdjerred/streambot/music/contracts.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import type { LibraryArtworkProvider } from "@shepherdjerred/streambot/metadata/plex.ts";
 import {
   PlaybackChannelNumberSchema,
   type PlaybackChannelNumber,
@@ -82,6 +83,32 @@ export async function seedPreviewRoom(
     queuedAt: Date.now(),
   });
 }
+
+const POSTER_TINTS = ["#2f4f46", "#3d5f8f", "#6b4f2f", "#5a3d6b", "#2f5a3d"];
+
+/**
+ * Offline stand-in for Plex artwork: a plain SVG poster named after the file, so the preview can
+ * enable the Plex posters gate (which the Library titles view needs) without any network access.
+ */
+export const PREVIEW_PLEX_ARTWORK: LibraryArtworkProvider = {
+  image: (path) => {
+    const entry = PREVIEW_LIBRARY.find((candidate) => candidate.path === path);
+    if (entry === undefined) return Promise.resolve(null);
+    const name = (entry.series ?? entry.title)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;");
+    const tint = POSTER_TINTS[name.length % POSTER_TINTS.length] ?? "#2f4f46";
+    const svg =
+      `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="300">` +
+      `<rect width="200" height="300" fill="${tint}"/>` +
+      `<text x="100" y="160" fill="#fff" text-anchor="middle" font-family="sans-serif" font-size="15">${name}</text>` +
+      `</svg>`;
+    return Promise.resolve({
+      bytes: new TextEncoder().encode(svg),
+      contentType: "image/svg+xml",
+    });
+  },
+};
 
 /** Records spans in memory so API responses carry `x-trace-id`, as they do in production. */
 export function startPreviewTracing(): void {

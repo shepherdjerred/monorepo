@@ -23,13 +23,25 @@ const TITLES: Readonly<Record<string, string>> = {
   "/playlists": "Playlists",
   "/live": "Live games",
   "/history": "History",
+  // Detail routes name their kind; the item's own title stays out of the tab title.
+  "/playlists/": "Playlist",
+  "/album/": "Album",
+  "/artist/": "Artist",
 };
+
+/** The title key for a path: the path itself, or its first segment for a detail route. */
+function titleKey(pathname: string): string {
+  const slash = pathname.indexOf("/", 1);
+  return slash === -1 ? pathname : pathname.slice(0, slash + 1);
+}
 
 function usePageTitle(query: string) {
   const { pathname } = useLocation();
   useEffect(() => {
     const name =
-      query === "" ? (TITLES[pathname] ?? "Home") : "Search: " + query;
+      query === ""
+        ? (TITLES[titleKey(pathname)] ?? "Home")
+        : "Search: " + query;
     document.title = name + " · Streambot";
   }, [pathname, query]);
 }

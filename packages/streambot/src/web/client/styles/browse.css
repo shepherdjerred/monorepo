@@ -64,8 +64,19 @@
   padding-inline: var(--space-2);
 }
 
+/* Album and artist art is square and fixed in size; the text column takes the rest. */
+.album-head > .artwork {
+  flex: none;
+  inline-size: 144px;
+  block-size: 144px;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
 .album-head-text {
   display: grid;
-  gap: var(--space-1);
+  flex: 1;
+  justify-items: start;
+  gap: var(--space-2);
   min-inline-size: 0;
 }

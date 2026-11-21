@@ -167,6 +167,7 @@
 
 /* A card stacks its parts; the row's named areas would otherwise add implicit columns. */
 .card .row-actions,
+.card .row-open,
 .card .row-status {
   grid-area: auto;
   justify-self: start;

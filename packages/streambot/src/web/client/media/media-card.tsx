@@ -20,7 +20,13 @@ export function MediaCard(props: { item: MediaItem }) {
         )}
         <span className="row-detail">{itemDetail(item)}</span>
       </div>
-      <PlayActions item={item} />
+      {item.actions.length === 0 && item.href !== undefined ? (
+        <Link className="btn btn-small row-open" to={item.href}>
+          Open <span className="visually-hidden">{item.title}</span>
+        </Link>
+      ) : (
+        <PlayActions item={item} />
+      )}
     </li>
   );
 }

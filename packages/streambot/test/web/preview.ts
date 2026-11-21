@@ -28,6 +28,7 @@ import { createMusicSearchProviders } from "@shepherdjerred/streambot/music/sear
 import { replayProvider, responses } from "#youtube-music-fixture";
 import {
   PREVIEW_LIBRARY,
+  PREVIEW_PLEX_ARTWORK,
   previewSwitch,
   seedPreviewRoom,
   startPreviewTracing,
@@ -155,6 +156,7 @@ if (import.meta.main) {
     true,
     {
       library: PREVIEW_LIBRARY,
+      plexArtwork: PREVIEW_PLEX_ARTWORK,
       history,
       music: previewMusic,
       musicEnabled: true,
@@ -296,6 +298,9 @@ if (import.meta.main) {
     },
   };
   await seedPreviewRoom(ensureSlot, fixture.primarySlot);
+  // Poster artwork on, so the Library page shows its titles view (series grouped) as it does
+  // where the Plex posters gate is enabled.
+  fixture.setPlexEnabled(true);
   fixture.playback.deps.sessions.numbered.selection.clear({
     guildId: GUILD,
     channelId: CHANNEL,
