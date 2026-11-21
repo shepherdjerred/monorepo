@@ -92,6 +92,6 @@ export class ExternalMusicQueue {
       },
     );
     // The batch loads after this response, so only the destination is known now.
-    return { ...context.playResult(load.message), loadId: load.id };
+    return context.playResult(load.message);
   }
 }

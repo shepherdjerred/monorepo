@@ -57,9 +57,6 @@ function base(
     channelId: target.channelId,
     revision,
     playbackChannel: target.legacy ? null : slot,
-    selectionVersion: null,
-    slotRevisions: {},
-    targeting: "explicit" as const,
   };
 }
 

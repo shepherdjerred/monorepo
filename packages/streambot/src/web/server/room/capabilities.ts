@@ -3,7 +3,7 @@ import type { WebSession } from "@shepherdjerred/streambot/web/server/session-st
 import type { WebRoom } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { SnapshotOwner } from "./player-state.ts";
 
-/** The music gates `/api/music/features` reports; the room reports the same three. */
+/** The music gates: the room reports them, and music routes and commands enforce them. */
 export async function musicFeatureFlags(
   deps: WebPlaybackDeps,
   session: WebSession,
@@ -28,9 +28,9 @@ export async function musicFeatureFlags(
 }
 
 /**
- * One consistent set of "may this viewer use X" answers, from the gates the old snapshot, the
- * music features endpoint and the command layer already enforce, so a client never has to click
- * to discover a 403. `channelId` is the viewer's voice channel, or null when they are in none.
+ * One consistent set of "may this viewer use X" answers, from the gates the routes and the command
+ * layer enforce, so a client never has to click to discover a 403. `channelId` is the viewer's
+ * voice channel, or null when they are in none.
  */
 export async function roomCapabilities(input: {
   owner: SnapshotOwner;

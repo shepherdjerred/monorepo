@@ -77,15 +77,6 @@ export const LibraryBrowsePageSchema = z.union([
   LibraryTitlesPageSchema,
   LibraryPageSchema,
 ]);
-export const CandidateSchema = z.strictObject({
-  id: z.string(),
-  title: z.string(),
-  provider: z.enum(["local", "history", "youtube"]),
-  channel: z.string().optional(),
-  durationSeconds: z.number().optional(),
-  artworkUrl: ArtworkUrlSchema.optional(),
-});
-export const SearchResultsSchema = z.array(CandidateSchema);
 export const MediaSelectionSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("history"), id: z.string().min(1) }),
   z.strictObject({ kind: z.literal("library"), id: z.string().min(1) }),
@@ -128,50 +119,21 @@ export const WebStationSchema = z.strictObject({
   seed: z.string().trim().min(1).max(200).optional(),
   tvPreset: WebTvPresetSchema.optional(),
 });
-export const SnapshotSchema = z.strictObject({
-  channel: GuildSchema.nullable(),
-  playbackChannel: z.number().int().positive().nullable(),
-  selectedPlaybackChannel: z.number().int().positive().nullable().default(null),
-  selectionVersion: z.string().nullable().default(null),
-  selectionMode: z.enum(["auto", "manual"]).default("manual"),
-  automaticRoutingEnabled: z.boolean().default(false),
-  playbackChannels: z.array(
-    z.strictObject({
-      number: z.number().int().positive(),
-      label: z.string(),
-      revision: z.string().nullable().default(null),
-      occupied: z.boolean().default(false),
-    }),
-  ),
-  revision: z.string().nullable(),
-  state: z.string(),
-  current: PlayerItemSchema.nullable(),
-  queue: z.array(PlayerItemSchema),
-  positionSeconds: z.number().nullable(),
-  paused: z.boolean(),
-  volume: z.number(),
-  loop: z.string(),
-  advancedControls: z.boolean(),
-  sportsEnabled: z.boolean(),
-  historyEnabled: z.boolean().default(false),
-  radioEnabled: z.boolean().default(false),
-  tvEnabled: z.boolean().default(false),
-  station: WebStationSchema.nullable().default(null),
-  restrictedLive: z.boolean(),
-});
-export type WebSnapshot = z.infer<typeof SnapshotSchema>;
+export type WebStation = z.infer<typeof WebStationSchema>;
 
+/**
+ * Every command names its target: the viewer's voice channel and the slot of the player card it
+ * came from (`playbackChannel`). `null` lets the server use the slot the action implies — Listen
+ * and Radio on 1, Watch and TV on 2 — and is the only value a legacy room's single queue accepts.
+ */
 const commandBase = {
   guildId: z.string().regex(/^\d+$/u),
   channelId: z.string().regex(/^\d+$/u),
   revision: z.string().nullable(),
   playbackChannel: z.number().int().positive().nullable().default(null),
-  selectionVersion: z.string().nullable().default(null),
-  slotRevisions: z.record(z.string(), z.string().nullable()).default({}),
-  /**
-   * `explicit` targets `playbackChannel` as given (`null` is a legacy room's single queue) instead
-   * of the viewer's personal Streambot channel selection.
-   */
+  // Ignored: accepted only so a page loaded before these were dropped keeps working until reload.
+  selectionVersion: z.string().nullable().optional(),
+  slotRevisions: z.record(z.string(), z.string().nullable()).optional(),
   targeting: z.literal("explicit").optional(),
 };
 /** Listen is voice audio everyone in the channel hears; Watch is a Go Live stream. */
@@ -193,16 +155,11 @@ export const CommandSchema = z.union([
   SimpleCommandSchema,
   z.strictObject({
     ...commandBase,
-    action: z.literal("select"),
-    number: z.number().int().positive().nullable(),
-  }),
-  z.strictObject({
-    ...commandBase,
     action: z.literal("play"),
     selection: MediaSelectionSchema,
     placement: z.enum(["queue", "next", "now"]),
-    /** Overrides personal selection and automatic routing; absent keeps both. */
-    transport: TransportSchema.optional(),
+    /** The destination: Listen plays voice audio on slot 1, Watch streams on slot 2 or higher. */
+    transport: TransportSchema,
   }),
   z.strictObject({
     ...commandBase,
@@ -248,7 +205,6 @@ export const CommandSchema = z.union([
 export type WebCommand = z.infer<typeof CommandSchema>;
 export const CommandResultSchema = z.strictObject({
   message: z.string(),
-  loadId: z.string().optional(),
   /** Where a play request went. The channel name is for the requesting viewer only. */
   destination: z
     .strictObject({

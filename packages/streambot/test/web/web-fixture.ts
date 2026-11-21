@@ -25,6 +25,7 @@ import { createFixtureSlot } from "./web-fixture-slot.ts";
 import { WebCatalog } from "@shepherdjerred/streambot/web/server/catalog.ts";
 import { WebPlayback } from "@shepherdjerred/streambot/web/server/playback.ts";
 import { createWebHandler } from "@shepherdjerred/streambot/web/server/api.ts";
+import { roomReader } from "./web-fixture-login.ts";
 import type { BugsinkReporting } from "@shepherdjerred/streambot/observability/bugsink.ts";
 import { WebSessionStore } from "@shepherdjerred/streambot/web/server/session-store.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
@@ -144,7 +145,6 @@ export function webFixture(
       title: string | undefined;
       items: readonly { title: string; url: string }[];
     }>;
-    automatic?: boolean;
     resolve?: (source: Source) => ResolvedSource;
     sports?: SportsCatalog;
     schedules?: LolPlaybackSchedules;
@@ -242,7 +242,6 @@ export function webFixture(
     tv: () => Promise.resolve(tvEnabled),
     assistantV2: () => Promise.resolve(advanced),
     history: () => Promise.resolve(options.history !== undefined),
-    automaticChannelRouting: () => Promise.resolve(options.automatic === true),
     musicOverVoice: () => Promise.resolve(search.listen()),
     sportsStreaming: () => Promise.resolve(sportsEnabled),
     lolEsports: () => Promise.resolve(options.lol === true),
@@ -384,6 +383,11 @@ export function webFixture(
   });
   const session = store.read(created.token);
   if (session === null) throw new Error("Fixture session was not persisted");
+  const cookie =
+    "streambot_session=" +
+    created.token +
+    "; streambot_csrf=" +
+    created.csrfToken;
   return {
     store,
     actor,
@@ -396,12 +400,9 @@ export function webFixture(
     revision,
     events,
     announcements,
-    cookie:
-      "streambot_session=" +
-      created.token +
-      "; streambot_csrf=" +
-      created.csrfToken,
+    cookie,
     csrf: created.csrfToken,
+    room: roomReader(handler, origin + "/api/room?guildId=" + GUILD, cookie),
     command: (action: Record<string, unknown>) =>
       new Request(origin + "/api/commands", {
         method: "POST",
@@ -411,11 +412,13 @@ export function webFixture(
           "x-csrf-token": created.csrfToken,
           "content-type": "application/json",
         },
+        // A play without a transport is a Watch, the remote's primary play button.
         body: JSON.stringify({
           guildId: GUILD,
           channelId: CHANNEL,
           revision: revision(),
           playbackChannel: selected() ?? null,
+          ...(action["action"] === "play" ? { transport: "watch" } : {}),
           ...action,
         }),
       }),

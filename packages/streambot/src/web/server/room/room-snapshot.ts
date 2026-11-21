@@ -147,8 +147,7 @@ async function roomPlayers(
 ): Promise<RoomPlayers> {
   const { deps } = owner;
   const { guildId, channelId } = room;
-  // The room shows a track's song and artists on separate lines.
-  const viewer = { guildId, session, titles: "split" } as const;
+  const viewer = { guildId, session };
   const selected = await deps.sessions.numbered.selected({
     guildId,
     channelId,

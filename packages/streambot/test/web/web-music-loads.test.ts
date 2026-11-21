@@ -1,10 +1,6 @@
-import { afterEach, expect, test } from "vitest";
-import {
-  MusicAlbumSchema,
-  QueueLoadSchema,
-} from "@shepherdjerred/streambot/music/contracts.ts";
-import { CommandResultSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { afterEach, expect, test, vi } from "vitest";
 import { fixtureMusic, ALBUM } from "#music-fixture";
+import { albumSelection, recordLoads } from "./web-fixture-music.ts";
 import { webFixture, GUILD, CHANNEL } from "./web-fixture.ts";
 
 let fixture: ReturnType<typeof webFixture> | undefined;
@@ -12,6 +8,7 @@ afterEach(() => {
   fixture?.playback.deps.music?.loads.close();
   fixture?.close();
   fixture = undefined;
+  vi.restoreAllMocks();
 });
 const URL_TO_LOAD = "https://www.youtube.com/playlist?list=PLfixture";
 const ITEMS = [
@@ -30,6 +27,7 @@ async function settle(f: ReturnType<typeof webFixture>, id: string) {
   throw new Error("Load did not settle");
 }
 async function startLoad(f: ReturnType<typeof webFixture>) {
+  const ids = recordLoads(f.playback.deps.music);
   const response = await f.handler(
     f.command({
       action: "play",
@@ -38,11 +36,11 @@ async function startLoad(f: ReturnType<typeof webFixture>) {
     }),
   );
   expect(response.status).toBe(200);
-  const result = CommandResultSchema.parse(await response.json());
-  if (result.loadId === undefined) throw new Error("Missing load ID");
-  return result.loadId;
+  const [id] = ids;
+  if (id === undefined) throw new Error("No playlist load started");
+  return id;
 }
-test.each(["cancel", "voice", "slot", "membership", "stop"] as const)(
+test.each(["voice", "membership", "stop"] as const)(
   "late playlist metadata cannot enqueue after %s",
   async (boundary) => {
     const pending = Promise.withResolvers<typeof ITEMS>();
@@ -52,30 +50,11 @@ test.each(["cancel", "voice", "slot", "membership", "stop"] as const)(
       expandPlaylist: () => pending.promise,
     });
     fixture = f;
-    if (boundary === "slot") f.enableNumbered(2);
     if (boundary === "stop") await f.seed();
     const id = await startLoad(f);
     switch (boundary) {
-      case "cancel": {
-        const response = await f.handler(
-          new Request(
-            "http://127.0.0.1:8080/api/music/load?guildId=" +
-              GUILD +
-              "&id=" +
-              id,
-            { method: "POST", headers: f.command({}).headers },
-          ),
-        );
-        expect(QueueLoadSchema.parse(await response.json()).state).toBe(
-          "cancelled",
-        );
-        break;
-      }
       case "voice":
         f.setChannel(null);
-        break;
-      case "slot":
-        f.enableNumbered(3);
         break;
       case "membership":
         f.setMember(false);
@@ -155,21 +134,13 @@ test.each(["queue", "next", "now"] as const)(
       }),
     );
     expect(previous.status).toBe(200);
-    const response = await f.handler(
-      new Request(
-        "http://127.0.0.1:8080/api/music/album?guildId=" +
-          GUILD +
-          "&album=" +
-          ALBUM,
-        { headers: { cookie: f.cookie } },
-      ),
-    );
-    const album = MusicAlbumSchema.parse(await response.json());
+    const id = await albumSelection(f, { album: ALBUM, guildId: GUILD });
     const result = await f.handler(
       f.command({
         action: "play",
         placement,
-        selection: { kind: "music", id: album.selectionId },
+        transport: "listen",
+        selection: { kind: "music", id },
       }),
     );
     expect(result.status).toBe(200);

@@ -169,7 +169,6 @@ if (import.meta.main) {
           items: youtubeTracks,
         }),
       username: "Morgan",
-      automatic: true,
       lol: true,
       schedules,
       sports: {
@@ -303,11 +302,6 @@ if (import.meta.main) {
   // Poster artwork on, so the Library page shows its titles view (series grouped) as it does
   // where the Plex posters gate is enabled.
   fixture.setPlexEnabled(true);
-  fixture.playback.deps.sessions.numbered.selection.clear({
-    guildId: GUILD,
-    channelId: CHANNEL,
-    userId: USER,
-  });
   const event = FIXTURE_EVENTS[0];
   if (event === undefined) throw new Error("Missing sports fixture");
   const recent: RecordMedia[] = [

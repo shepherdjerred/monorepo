@@ -20,9 +20,6 @@ import {
   createVoiceDecisionsRuntime,
 } from "@shepherdjerred/streambot/voice/voice-command-router.ts";
 import { DryRunVoiceCommandPort } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
-import { playerCommand } from "@shepherdjerred/streambot/web/client-classic/api.ts";
-import { formatStationBadge } from "@shepherdjerred/streambot/web/client-classic/station/station-label.ts";
-import { SnapshotSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { CuratedStationItem } from "@shepherdjerred/streambot/station/station-types.ts";
 import {
   guildId,
@@ -33,6 +30,7 @@ import {
   voiceChannelId,
 } from "#numbered-fixture";
 import { CHANNEL, GUILD, USER, webFixture } from "./web-fixture.ts";
+import { roomPlayer } from "./web-fixture-login.ts";
 
 let fixture: ReturnType<typeof webFixture> | undefined;
 
@@ -91,17 +89,13 @@ test("evaluates streambot-radio-enabled default true and explicit false", async 
   expect(await mediaFeatureGate.radio?.(scope)).toBe(false);
 });
 
-test("starts and stops Radio via Web /api/commands, projects snapshot.station, and enforces gates & revisions", async () => {
-  fixture = webFixture("http://127.0.0.1:8080", "/nonexistent", false, {
-    automatic: true,
-  });
+test("starts and stops Radio via Web /api/commands, projects the player's station, and enforces gates & revisions", async () => {
+  fixture = webFixture();
   const activeFixture = fixture;
 
-  const initial = SnapshotSchema.parse(
-    await activeFixture.playback.snapshot(activeFixture.session, GUILD),
-  );
-  expect(initial.radioEnabled).toBe(true);
-  expect(initial.station).toBeNull();
+  const initial = await activeFixture.room();
+  expect(initial.capabilities.radio).toBe(true);
+  expect(initial.players).toEqual([]);
 
   activeFixture.setRadioEnabled(false);
   const denied = await activeFixture.handler(
@@ -125,15 +119,13 @@ test("starts and stops Radio via Web /api/commands, projects snapshot.station, a
   expect(startRes.status).toBe(200);
 
   await vi.waitFor(async () => {
-    const snap = SnapshotSchema.parse(
-      await activeFixture.playback.snapshot(activeFixture.session, GUILD),
-    );
-    expect(snap.station).toEqual({
+    const player = await roomPlayer(activeFixture);
+    expect(player?.station).toEqual({
       kind: "radio",
       scope: "mine",
       seed: "dream pop",
     });
-    expect(snap.queue).toHaveLength(2);
+    expect(player?.queue).toHaveLength(2);
   });
 
   // Stopping a station names no queue position, so it applies to the current state even when
@@ -146,11 +138,9 @@ test("starts and stops Radio via Web /api/commands, projects snapshot.station, a
     }),
   );
   expect(stopRes.status).toBe(200);
-  const afterStop = SnapshotSchema.parse(
-    await activeFixture.playback.snapshot(activeFixture.session, GUILD),
-  );
-  expect(afterStop.station).toBeNull();
-  expect(afterStop.queue).toHaveLength(0);
+  const afterStop = await roomPlayer(activeFixture);
+  expect(afterStop?.station ?? null).toBeNull();
+  expect(afterStop?.queue ?? []).toHaveLength(0);
 
   const repeated = await activeFixture.handler(
     activeFixture.command({ action: "station", mode: "off" }),
@@ -159,10 +149,8 @@ test("starts and stops Radio via Web /api/commands, projects snapshot.station, a
   expect(await repeated.json()).toMatchObject({ code: "no_station" });
 });
 
-test("routes Auto-mode Web from Channel 2 onto Channel 1 and follows slot 1", async () => {
-  fixture = webFixture("http://127.0.0.1:8080", "/nonexistent", false, {
-    automatic: true,
-  });
+test("a Web Radio start without a slot lands on Channel 1 while Channel 2 keeps playing", async () => {
+  fixture = webFixture();
   const activeFixture = fixture;
   const room = await autoRadioHarness();
   activeFixture.playback.deps.sessions = room.manager;
@@ -186,36 +174,35 @@ test("routes Auto-mode Web from Channel 2 onto Channel 1 and follows slot 1", as
     expect(videoHandle?.view().state).toBe("streaming");
   });
 
-  const beforeSnap = SnapshotSchema.parse(
-    await activeFixture.playback.snapshot(activeFixture.session, GUILD),
-  );
-  expect(beforeSnap.selectionMode).toBe("auto");
-  expect(beforeSnap.playbackChannel).toBe(2);
+  const before = await activeFixture.room();
+  expect(before.players.map((player) => player.slot)).toEqual([2]);
 
   const startRes = await activeFixture.handler(
     activeFixture.command({
       action: "station",
       mode: "radio",
       scope: "room",
-      playbackChannel: beforeSnap.playbackChannel,
-      revision: beforeSnap.revision,
-      selectionVersion: beforeSnap.selectionVersion,
-      slotRevisions: Object.fromEntries(
-        beforeSnap.playbackChannels.map((s) => [String(s.number), s.revision]),
-      ),
+      playbackChannel: null,
+      revision: null,
     }),
   );
   expect(startRes.status).toBe(200);
 
   await vi.waitFor(async () => {
-    const afterSnap = SnapshotSchema.parse(
-      await activeFixture.playback.snapshot(activeFixture.session, GUILD),
-    );
-    expect(afterSnap.playbackChannel).toBe(1);
-    expect(afterSnap.station?.kind).toBe("radio");
-    expect(afterSnap.queue).toHaveLength(2);
+    const listen = await roomPlayer(activeFixture, 1);
+    expect(listen?.transport).toBe("listen");
+    expect(listen?.station?.kind).toBe("radio");
+    expect(listen?.queue).toHaveLength(2);
   });
   expect(videoHandle?.view().state).toBe("streaming");
+  // The web start leaves the viewer's personal Discord channel selection alone.
+  expect(
+    room.manager.numbered.selection.lastTarget({
+      guildId: GUILD,
+      channelId: CHANNEL,
+      userId: USER,
+    }),
+  ).toBeUndefined();
 });
 
 test("routes Auto-mode Discord /radio start|status|stop onto Channel 1", async () => {
@@ -299,7 +286,7 @@ test("routes Auto-mode Discord /radio start|status|stop onto Channel 1", async (
   expect(replies.at(-1)).toContain("Stopped Radio (shoegaze)");
 });
 
-test("routes closed voice intents radio_start & radio_stop and formats web station badges", async () => {
+test("routes closed voice intents radio_start & radio_stop", async () => {
   const dryRun = new DryRunVoiceCommandPort();
   for (const [intent, expectedAction] of [
     ["radio_start", "start"],
@@ -353,52 +340,4 @@ test("routes closed voice intents radio_start & radio_stop and formats web stati
     { name: "radio", arguments: { action: "start" } },
     { name: "radio", arguments: { action: "stop" } },
   ]);
-
-  const snapshot = SnapshotSchema.parse({
-    channel: { id: CHANNEL, name: "Lounge" },
-    playbackChannel: 1,
-    playbackChannels: [],
-    revision: "rev-1",
-    state: "streaming",
-    current: {
-      title: "Khruangbin — Time",
-      durationSeconds: 240,
-      mediaKind: "music",
-      music: true,
-    },
-    queue: [],
-    positionSeconds: 15,
-    paused: false,
-    volume: 100,
-    loop: "off",
-    advancedControls: true,
-    sportsEnabled: true,
-    radioEnabled: true,
-    station: { kind: "radio", scope: "room", seed: "chill funk" },
-    restrictedLive: false,
-  });
-
-  expect(formatStationBadge({ kind: "radio", scope: "room" })).toBe(
-    "RADIO · Room",
-  );
-  expect(formatStationBadge({ kind: "radio", scope: "mine" })).toBe(
-    "RADIO · Mine",
-  );
-  expect(
-    formatStationBadge({ kind: "radio", scope: "room", seed: "chill funk" }),
-  ).toBe("RADIO · chill funk");
-
-  const builtCmd = playerCommand(
-    { action: "station", mode: "radio", scope: "room", seed: "chill funk" },
-    GUILD,
-    snapshot,
-  );
-  expect(builtCmd).toMatchObject({
-    action: "station",
-    mode: "radio",
-    scope: "room",
-    seed: "chill funk",
-    guildId: GUILD,
-    channelId: CHANNEL,
-  });
 });

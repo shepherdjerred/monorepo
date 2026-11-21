@@ -1,7 +1,7 @@
 import path from "node:path";
 import { WebError } from "./errors.ts";
 
-/** Client-side routes of the current remote; anything else without a file extension is a 404. */
+/** Client-side routes of the remote; anything else without a file extension is a 404. */
 const CLIENT_ROUTES = [
   "/",
   "/library",
@@ -10,20 +10,16 @@ const CLIENT_ROUTES = [
   "/history",
   "/album",
   "/artist",
-  // Bookmarks from the classic remote land on the new Home instead of a 404.
+  // Discord's player cards and tips link here (`src/discord/web-link.ts`); the remote opens Home.
   "/music",
   "/plex",
-  "/search",
-  "/sports",
 ];
 
 /**
- * The HTML page that owns a browser path: the current remote, the classic remote under
- * `/classic`, or `null` for a file path. The Vite dev server uses the same mapping.
+ * The HTML page that owns a browser path: the remote's page, or `null` for a file path. The Vite
+ * dev server uses the same mapping.
  */
 export function webPage(pathname: string): string | null {
-  if (pathname === "/classic" || pathname.startsWith("/classic/"))
-    return "/client-classic/index.html";
   return CLIENT_ROUTES.some(
     (route) =>
       pathname === route || (route !== "/" && pathname.startsWith(route + "/")),
