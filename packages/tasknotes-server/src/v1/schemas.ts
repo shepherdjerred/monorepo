@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { Priority } from "../protocol/generated.ts";
+import { CommentUploadSchema } from "./comments.ts";
+import { Priority, RecurrenceBasis } from "../protocol/generated.ts";
 
 const PrioritySchema = z.enum([
   Priority.P1,
@@ -23,12 +24,19 @@ export const SyncRequestSchema = z.object({
   commands: z.array(QueuedCommandEnvelopeSchema).default([]),
 });
 
+export const DeadlineSchema = z
+  .union([z.iso.date(), z.literal(""), z.null()])
+  .optional();
+export const RecurrenceBasisSchema = z.enum(RecurrenceBasis).optional();
+
 const TaskOptionalFieldsSchema = z.object({
   description: z.string().optional(),
   priority: PrioritySchema.optional(),
   section_id: z.string().nullable().optional(),
   parent_id: z.string().nullable().optional(),
   child_order: z.number().optional(),
+  deadline: DeadlineSchema,
+  recurrence_basis: RecurrenceBasisSchema,
   due_date: z.string().nullable().optional(),
   due_datetime: z.string().nullable().optional(),
   due_timezone: z.string().nullable().optional(),
@@ -45,10 +53,24 @@ export const TaskAddArgsSchema = TaskOptionalFieldsSchema.extend({
 });
 
 export const TaskUpdateArgsSchema = TaskOptionalFieldsSchema.extend({
+  append_comment: CommentUploadSchema.optional(),
+  remove_comment_id: z.uuid().optional(),
+  remove_attachment_id: z.uuid().optional(),
+  restore_deleted: z.literal(true).optional(),
   id: z.string().min(1),
   title: z.string().optional(),
   project_id: z.string().optional(),
 });
+
+const ValidatedTaskUpdateArgsSchema = TaskUpdateArgsSchema.refine(
+  (args) =>
+    [
+      args.append_comment,
+      args.remove_comment_id,
+      args.remove_attachment_id,
+    ].filter((value) => value !== undefined).length <= 1,
+  "Use one comment operation per command",
+);
 
 const IdOnlyArgsSchema = z.object({
   id: z.string().min(1),
@@ -143,11 +165,46 @@ export const FilterUpdateArgsSchema = LabelUpdateArgsSchema.extend({
 
 export const ValidatedSyncCommandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("TaskAdd"), args: TaskAddArgsSchema }),
-  z.object({ type: z.literal("TaskUpdate"), args: TaskUpdateArgsSchema }),
+  z.object({
+    type: z.literal("TaskUpdate"),
+    args: ValidatedTaskUpdateArgsSchema,
+  }),
   z.object({ type: z.literal("TaskDelete"), args: IdOnlyArgsSchema }),
   z.object({ type: z.literal("TaskComplete"), args: TaskCompleteArgsSchema }),
   z.object({ type: z.literal("TaskUncomplete"), args: IdOnlyArgsSchema }),
   z.object({ type: z.literal("TaskReorder"), args: TaskReorderArgsSchema }),
+  z.object({
+    type: z.literal("TaskMove"),
+    args: z.object({
+      tasks: z
+        .array(
+          z.object({
+            id: z.string().min(1),
+            project_id: z.string().min(1),
+            section_id: z.string().optional(),
+            parent_id: z.string().optional(),
+            child_order: z.number(),
+          }),
+        )
+        .min(1),
+    }),
+  }),
+  z.object({
+    type: z.literal("TaskReschedule"),
+    args: z.object({
+      tasks: z
+        .array(
+          TaskUpdateArgsSchema.pick({
+            id: true,
+            due_date: true,
+            due_datetime: true,
+            due_timezone: true,
+            due_string: true,
+          }),
+        )
+        .min(1),
+    }),
+  }),
   z.object({ type: z.literal("ProjectAdd"), args: ProjectAddArgsSchema }),
   z.object({ type: z.literal("ProjectUpdate"), args: ProjectUpdateArgsSchema }),
   z.object({ type: z.literal("ProjectDelete"), args: IdOnlyArgsSchema }),

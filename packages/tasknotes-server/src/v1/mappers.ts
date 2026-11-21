@@ -7,6 +7,7 @@ import {
   type Filter,
   type Label,
   Priority,
+  RecurrenceBasis,
   type Project,
   type Reminder,
   type Section,
@@ -101,6 +102,8 @@ export function toProtocolTask(
     dueDatetime: Date | null;
     dueTimezone: string | null;
     dueString: string | null;
+    deadline: Date | null;
+    recurrenceBasis: keyof typeof RecurrenceBasis | null;
     isRecurring: boolean;
     recurrenceRule: string | null;
     completed: boolean;
@@ -129,6 +132,10 @@ export function toProtocolTask(
 
   applyTaskStrings(result, p);
   applyTaskDates(result, p);
+  if (p.deadline !== null)
+    result.deadline = p.deadline.toISOString().slice(0, 10);
+  if (p.recurrenceBasis !== null)
+    result.recurrence_basis = RecurrenceBasis[p.recurrenceBasis];
   return result;
 }
 

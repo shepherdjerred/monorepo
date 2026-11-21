@@ -1,5 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Task } from "../protocol/generated.ts";
+import { storageComment } from "./comments.ts";
 import { toProtocolTask } from "./mappers.ts";
 import type {
   BaseListFilter,
@@ -12,21 +13,34 @@ import type {
 } from "./types.ts";
 
 export const TASK_WITH_LABELS_INCLUDE = {
+  comments: {
+    select: { id: true, body: true, fileName: true, createdAt: true },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+  },
   labels: {
     where: { label: { isDeleted: false } },
     select: { labelId: true },
   },
-} as const;
+} satisfies Prisma.TaskInclude;
 
 export type PrismaTaskWithLabels = Prisma.TaskGetPayload<{
   include: typeof TASK_WITH_LABELS_INCLUDE;
 }>;
 
 export function mapPrismaTask(row: PrismaTaskWithLabels): Task {
-  return toProtocolTask(
+  const task = toProtocolTask(
     row,
     row.labels.map((entry) => entry.labelId),
   );
+  if (row.comments.length > 0) {
+    task.comments = row.comments.map((comment) => ({
+      id: comment.id,
+      body: comment.body,
+      created_at: comment.createdAt.toISOString(),
+      ...(comment.fileName === null ? {} : { file_name: comment.fileName }),
+    }));
+  }
+  return task;
 }
 
 export function sanitizeSavepointName(name: string): string {
@@ -101,6 +115,9 @@ function buildTaskUpdateDates(
   if (data.dueString !== undefined) {
     target.dueString = data.dueString;
   }
+  if (data.deadline !== undefined) target.deadline = data.deadline;
+  if (data.recurrenceBasis !== undefined)
+    target.recurrenceBasis = data.recurrenceBasis;
   if (data.isRecurring !== undefined) {
     target.isRecurring = data.isRecurring;
   }
@@ -124,6 +141,19 @@ export function buildTaskUpdateData(
   labelIds: string[] | undefined,
 ): Prisma.TaskUpdateInput {
   const updateData: Prisma.TaskUpdateInput = { syncSeq };
+  if (data.appendComment !== undefined) {
+    updateData.comments = { create: storageComment(data.appendComment) };
+  } else if (data.removeCommentId !== undefined) {
+    updateData.comments = { deleteMany: { id: data.removeCommentId } };
+  } else if (data.removeAttachmentId !== undefined) {
+    updateData.comments = {
+      deleteMany: { id: data.removeAttachmentId, body: "" },
+      updateMany: {
+        where: { id: data.removeAttachmentId, body: { not: "" } },
+        data: { attachment: null, fileName: null },
+      },
+    };
+  }
   buildTaskUpdateBasic(data, updateData);
   buildTaskUpdateDates(data, updateData);
   if (labelIds !== undefined) {

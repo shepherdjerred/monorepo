@@ -38,6 +38,21 @@ public final class FacetAPIClient: Sendable {
         return try await execute(urlRequest)
     }
 
+    /// Loads private bytes separately from task metadata, using the same service credentials.
+    public func attachment(taskID: String, commentID: String) async throws -> Data {
+        let path = "/api/v1/tasks/\(taskID)/comments/\(commentID)/file"
+        var request = makeRequest(path: path, method: "GET")
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.setValue("application/octet-stream", forHTTPHeaderField: "Accept")
+        let (data, response) = try await session.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw FacetAPIError.badServerResponse(
+                statusCode: (response as? HTTPURLResponse)?.statusCode ?? -1,
+                body: "Attachment unavailable")
+        }
+        return data
+    }
+
     // MARK: - Private Helpers
 
     private func makeURL(path: String) -> URL {

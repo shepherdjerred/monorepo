@@ -9,7 +9,7 @@ Facet is a native cross-platform task system synchronized through `/api/v1/sync`
 Read the nearest package `AGENTS.md` and README, then identify which contract
 layer owns the change.
 
-- `packages/facet-protocol` is the single source of truth for wire DTOs, the 21
+- `packages/facet-protocol` is the single source of truth for wire DTOs, the
   `SyncCommand` variants, and shared design tokens (`presentation/`). Regenerate
   Swift, TypeScript, and C# protocol files with `bun run --cwd packages/facet-protocol generate`
   and commit every generated diff; never hand-edit generated bindings.

@@ -1,5 +1,7 @@
 import { z } from "zod";
 import {
+  DeadlineSchema,
+  RecurrenceBasisSchema,
   FilterAddArgsSchema,
   FilterUpdateArgsSchema,
   LabelAddArgsSchema,
@@ -27,6 +29,8 @@ export const CreateTaskBodySchema = z.object({
   dueTimezone: z.string().optional(),
   due_string: z.string().optional(),
   dueString: z.string().optional(),
+  deadline: DeadlineSchema,
+  recurrence_basis: RecurrenceBasisSchema,
   is_recurring: z.boolean().optional(),
   recurrence_rule: z.string().optional(),
   recurrenceRule: z.string().optional(),
@@ -52,6 +56,8 @@ export const UpdateTaskBodySchema = z.object({
   dueTimezone: z.string().nullable().optional(),
   due_string: z.string().nullable().optional(),
   dueString: z.string().nullable().optional(),
+  deadline: DeadlineSchema,
+  recurrence_basis: RecurrenceBasisSchema,
   is_recurring: z.boolean().optional(),
   recurrence_rule: z.string().nullable().optional(),
   recurrenceRule: z.string().nullable().optional(),

@@ -56,6 +56,42 @@ struct FacetParsersAndHostTests {
     }
 
     @Test(
+        "Quick Add keeps the deadline separate from the date and supports completion-relative repeat"
+    )
+    func quickAddDeadline() throws {
+        let calendar = ViewerCalendar(
+            today: "2026-11-21", timeZone: .gmt,
+            instant: try #require(ViewerCalendar.parseISO8601("2026-11-21T12:00:00Z")))
+        let capture = FacetQuickCaptureParser.parse(
+            "Clean tomorrow {next week} every! 3 days", calendar: calendar)
+        #expect(capture.title == "Clean")
+        #expect(capture.dueDate == "2026-11-22")
+        #expect(capture.deadline == "2026-11-23")
+        #expect(capture.recurrenceBasis == .completion)
+        #expect(capture.recurrenceRule == "FREQ=DAILY;INTERVAL=3")
+    }
+
+    @Test("Scheduled and completion based repeat respect DST and late completion")
+    func recurringAcrossDST() throws {
+        let completion = try #require(ViewerCalendar.parseISO8601("2026-03-10T20:00:00Z"))
+        let zone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        for (basis, expected) in [
+            (RecurrenceBasis.scheduled, "2026-03-12T16:00:00Z"),
+            (.completion, "2026-03-13T16:00:00Z"),
+        ] {
+            let next = FacetRecurrenceCodec.nextOccurrence(
+                rule: "FREQ=DAILY;INTERVAL=3", dueDate: nil,
+                dueDatetime: "2026-03-06T17:00:00Z", completedAt: completion, timeZone: zone,
+                basis: basis)
+            #expect(
+                next
+                    == .advanced(
+                        nextDate: try #require(ViewerCalendar.parseISO8601(expected)),
+                        updatedRule: "FREQ=DAILY;INTERVAL=3"))
+        }
+    }
+
+    @Test(
         "FacetRecurrenceCodec parses, summarizes, and advances RFC 5545 RRULEs including COUNT exhaustion"
     )
     func recurrenceCodecRoundTripAndCount() throws {
@@ -108,6 +144,24 @@ struct FacetParsersAndHostTests {
             calendar: calendar
         )
         #expect(matches.map(\.id) == ["t1", "t2"])
+
+        let nested = FacetFilterQueryEvaluator.filterTasks(
+            fixture.tasks, query: "!(p1 | today) & (no date | completed)",
+            projects: [fixture.project],
+            sections: [], labels: [fixture.label], calendar: calendar)
+        #expect(nested.map(\.id) == ["t2"])
+        for query in ["p3 @oncall", "p3 AND @oncall", "@oncall AND NOT today"] {
+            let filtered = FacetFilterQueryEvaluator.filterTasks(
+                fixture.tasks, query: query, projects: [fixture.project],
+                sections: [], labels: [fixture.label], calendar: calendar)
+            #expect(filtered.map(\.id) == ["t2"])
+        }
+        for invalid in [
+            "(today", "p1 |", "due before: bad-date", "today && p2",
+            "due before: 2026-02-30", "deadline after: 2026-03-01oops",
+        ] {
+            #expect(FacetFilterQueryEvaluator.validationError(for: invalid) != nil)
+        }
 
         let noDateOnly = FacetFilterQueryEvaluator.filterTasks(
             fixture.tasks,

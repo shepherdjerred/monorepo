@@ -90,6 +90,8 @@ struct FacetLiveServerSyncTests {
                 description: "End-to-end check",
                 priority: .p1,
                 dueDate: "2026-06-15",
+                deadline: "2026-07-01",
+                recurrenceBasis: .completion,
                 recurrenceRule: "FREQ=WEEKLY;INTERVAL=1",
                 labelIds: [label.id]
             )
@@ -117,6 +119,8 @@ struct FacetLiveServerSyncTests {
         let syncedTask = try #require(store.tasks.first { $0.id == serverTaskId })
         #expect(syncedTask.project_id == serverProjectId)
         #expect(syncedTask.section_id == serverSectionId)
+        #expect(syncedTask.deadline == "2026-07-01")
+        #expect(syncedTask.recurrence_basis == .completion)
         #expect(syncedTask.label_ids == [serverLabelId])
         #expect(store.filters.contains { $0.id == serverFilterId })
         return serverTaskId
@@ -136,23 +140,25 @@ struct FacetLiveServerSyncTests {
         try await storeB.sync(client: client)
         #expect(storeB.tasks.contains { $0.id == serverTaskId && $0.title == "Verify SQLite sync" })
 
-        let completionInstant = try #require(ViewerCalendar.parseISO8601("2026-06-15T12:00:00Z"))
+        let completionInstant = try #require(ViewerCalendar.parseISO8601("2026-06-17T12:00:00Z"))
         storeA.completeTask(id: serverTaskId, at: completionInstant)
         try await storeA.sync(client: client)
         try await storeB.sync(client: client)
 
         let clientBRecurring = try #require(storeB.tasks.first { $0.id == serverTaskId })
         #expect(clientBRecurring.completed == false)
-        #expect(clientBRecurring.due_date == "2026-06-22")
+        #expect(clientBRecurring.due_date == "2026-06-24")
+        #expect(clientBRecurring.deadline == "2026-07-01")
 
         storeB.updateTask(
             id: serverTaskId,
-            patch: FacetTaskPatch(sectionId: .clear, recurrenceRule: .clear)
+            patch: FacetTaskPatch(sectionId: .clear, deadline: .clear, recurrenceRule: .clear)
         )
         try await storeB.sync(client: client)
         try await storeA.sync(client: client)
 
         let clearedOnA = try #require(storeA.tasks.first { $0.id == serverTaskId })
+        #expect(clearedOnA.deadline == nil)
         #expect(clearedOnA.section_id == nil)
         #expect(clearedOnA.recurrence_rule == nil)
         #expect(clearedOnA.is_recurring == false)

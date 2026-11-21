@@ -72,7 +72,9 @@ extension FacetQuickCaptureParser {
             caseInsensitive: false
         ) {
             let dateStr = substring(in: text, range: isoMatch.range(at: 1))
-            if ViewerCalendar.date(fromCivil: dateStr, timeZone: calendar.timeZone) != nil {
+            if let date = ViewerCalendar.date(fromCivil: dateStr, timeZone: calendar.timeZone),
+                ViewerCalendar.civilDateString(for: date, timeZone: calendar.timeZone) == dateStr
+            {
                 replaceRange(isoMatch.range, in: &text)
                 return DatePhraseMatch(civilDate: dateStr, label: dateStr, rawPhrase: dateStr)
             }
@@ -116,7 +118,10 @@ extension FacetQuickCaptureParser {
         let keywordPatterns: [(String, (ViewerCalendar) -> (String, String))] = [
             (#"(?:^|\s)(today|tonight)(?=\s|$)"#, { ($0.today, "Today") }),
             (#"(?:^|\s)(tomorrow|tmr)(?=\s|$)"#, { ($0.addingDays(1), "Tomorrow") }),
-            (#"(?:^|\s)(next\s+week)(?=\s|$)"#, { ($0.addingDays(7), "Next week") }),
+            (
+                #"(?:^|\s)(next\s+week)(?=\s|$)"#,
+                { (upcomingWeekday(2, forceNextWeek: false, calendar: $0), "Next week") }
+            ),
             (
                 #"(?:^|\s)(this\s+weekend)(?=\s|$)"#,
                 { (upcomingWeekday(7, forceNextWeek: false, calendar: $0), "This weekend") }

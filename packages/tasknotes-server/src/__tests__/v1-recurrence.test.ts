@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { InMemoryFacetStore } from "../v1/in-memory-store.ts";
 import { computeNextOccurrence } from "../v1/recurrence.ts";
@@ -26,6 +26,14 @@ const AUTH = {
   "x-user-id": "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
   "content-type": "application/json",
 };
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-06-01T12:00:00Z"));
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("RFC 5545 Recurrence Calculator & Completion Advancement", () => {
   test("computes DAILY, WEEKLY BYDAY, MONTHLY BYMONTHDAY/-1, YEARLY, COUNT, and UNTIL", () => {

@@ -35,7 +35,9 @@ extension FacetLocalStore {
             completed_at: nil,
             is_deleted: false,
             created_at: now,
-            updated_at: now
+            updated_at: now,
+            deadline: draft.deadline,
+            recurrence_basis: draft.recurrenceBasis
         )
     }
 
@@ -57,79 +59,9 @@ extension FacetLocalStore {
             due_timezone: draft.dueTimezone,
             due_string: draft.dueString,
             recurrence_rule: draft.recurrenceRule,
-            label_ids: draft.labelIds.isEmpty ? nil : draft.labelIds
-        )
-    }
-
-    internal static func completedState(
-        for task: Task,
-        at completionDate: Date,
-        nowISO: String
-    ) -> CompletionOutcome {
-        guard task.is_recurring, let rule = task.recurrence_rule, !rule.isEmpty else {
-            return CompletionOutcome(
-                updatedTask: task.setting(completed: true, completedAt: nowISO, updatedAt: nowISO),
-                advanced: false,
-                ended: false
-            )
-        }
-        let next = FacetRecurrenceCodec.nextOccurrence(
-            rule: rule,
-            dueDate: task.due_date,
-            dueDatetime: task.due_datetime,
-            referenceDate: completionDate
-        )
-        switch next {
-        case .ended:
-            return CompletionOutcome(
-                updatedTask: task.setting(completed: true, completedAt: nowISO, updatedAt: nowISO),
-                advanced: false,
-                ended: true
-            )
-        case .advanced(let nextDate, let updatedRule):
-            let advancedTask = buildAdvancedRecurringTask(
-                from: task,
-                nextDate: nextDate,
-                updatedRule: updatedRule,
-                nowISO: nowISO
-            )
-            return CompletionOutcome(updatedTask: advancedTask, advanced: true, ended: false)
-        }
-    }
-
-    private static func buildAdvancedRecurringTask(
-        from task: Task,
-        nextDate: Date,
-        updatedRule: String,
-        nowISO: String
-    ) -> Task {
-        let nextCivil = ViewerCalendar.civilDateString(for: nextDate, timeZone: .gmt)
-        let hasDatetime = task.due_datetime.map { !$0.isEmpty } ?? false
-        let hasDate = task.due_date.map { !$0.isEmpty } ?? false
-        let nextDueDatetime = hasDatetime ? ISO8601DateFormatter().string(from: nextDate) : nil
-        let nextDueDate = (!hasDatetime || hasDate) ? nextCivil : nil
-        return Task(
-            id: task.id,
-            user_id: task.user_id,
-            project_id: task.project_id,
-            section_id: task.section_id,
-            parent_id: task.parent_id,
-            title: task.title,
-            description: task.description,
-            priority: task.priority,
-            child_order: task.child_order,
-            due_date: nextDueDate,
-            due_datetime: nextDueDatetime,
-            due_timezone: task.due_timezone,
-            due_string: task.due_string,
-            is_recurring: true,
-            recurrence_rule: updatedRule,
-            label_ids: task.label_ids,
-            completed: false,
-            completed_at: nil,
-            is_deleted: task.is_deleted,
-            created_at: task.created_at,
-            updated_at: nowISO
+            label_ids: draft.labelIds.isEmpty ? nil : draft.labelIds,
+            deadline: draft.deadline,
+            recurrence_basis: draft.recurrenceBasis
         )
     }
 
@@ -168,13 +100,19 @@ extension FacetLocalStore {
         Self.mergeEntities(&filters, incoming: response.filters, isDeleted: \.is_deleted)
     }
 
-    internal func replayQueuedOutbox(_ queuedCommands: [QueuedCommand]) {
+    internal func replayQueuedOutbox(
+        _ queuedCommands: [QueuedCommand], retaining optimistic: [Task] = []
+    ) {
         let now = Self.nowTimestamp()
+        // Unchanged incremental resources still contain their optimistic edits, including
+        // recurrence advancement. Only rebuild tasks replaced by a server baseline.
+        let retained = Dictionary(uniqueKeysWithValues: optimistic.map { ($0.id, $0) })
         for entry in queuedCommands {
             if replayTaskMutationCommand(entry, now: now) { continue }
             if replayTaskCompletionCommand(entry, now: now) { continue }
             replaySecondaryCommand(entry, now: now)
         }
+        if !retained.isEmpty { tasks = tasks.map { retained[$0.id] ?? $0 } }
     }
 
     private func replayTaskMutationCommand(_ queued: QueuedCommand, now: String) -> Bool {
@@ -186,6 +124,12 @@ extension FacetLocalStore {
             if let index = tasks.firstIndex(where: { $0.id == args.id }) {
                 tasks[index] = Self.applyWireTaskUpdate(args, to: tasks[index], now: now)
             }
+            return true
+        case .taskMove(let args):
+            replayMove(args.tasks, now: now)
+            return true
+        case .taskReschedule(let args):
+            replaySchedules(args.tasks, now: now)
             return true
         case .taskDelete(let args):
             tasks.removeAll(where: { $0.id == args.id })
@@ -210,11 +154,11 @@ extension FacetLocalStore {
         switch queued.command {
         case .taskComplete(let args):
             if let index = tasks.firstIndex(where: { $0.id == args.id }) {
-                tasks[index] = tasks[index].setting(
-                    completed: true,
-                    completedAt: args.completed_at ?? now,
-                    updatedAt: now
-                )
+                let timestamp = args.completed_at ?? now
+                guard let instant = ViewerCalendar.parseISO8601(timestamp) else { return true }
+                tasks[index] =
+                    Self.completedState(for: tasks[index], at: instant, nowISO: timestamp)
+                    .updatedTask
             }
             return true
         case .taskUncomplete(let args):
@@ -226,7 +170,9 @@ extension FacetLocalStore {
                 )
             }
             return true
-        case .taskAdd, .taskUpdate, .taskDelete, .taskReorder, .projectAdd, .projectUpdate,
+        case .taskAdd, .taskUpdate, .taskDelete, .taskReorder, .taskReschedule, .taskMove,
+            .projectAdd,
+            .projectUpdate,
             .projectDelete, .sectionAdd, .sectionUpdate, .sectionDelete, .labelAdd, .labelUpdate,
             .labelDelete, .filterAdd, .filterUpdate, .filterDelete, .reminderAdd, .reminderUpdate,
             .reminderDelete:
@@ -261,7 +207,9 @@ extension FacetLocalStore {
                 completed_at: nil,
                 is_deleted: false,
                 created_at: now,
-                updated_at: now
+                updated_at: now,
+                deadline: args.deadline,
+                recurrence_basis: args.recurrence_basis
             )
         )
     }
@@ -304,20 +252,41 @@ extension FacetLocalStore {
             )
         case .sectionDelete(let args):
             sections.removeAll(where: { $0.id == args.id })
-        case .labelDelete, .filterDelete:
-            replayMetadataDeletes(queued.command)
+        case .projectUpdate(let args): applyProjectUpdate(args, now: now)
+        case .labelAdd, .filterAdd, .labelUpdate, .filterUpdate, .labelDelete, .filterDelete:
+            replayMetadata(queued.command, id: newId)
         case .taskAdd, .taskUpdate, .taskDelete, .taskComplete, .taskUncomplete, .taskReorder,
-            .projectAdd, .projectUpdate, .sectionAdd, .sectionUpdate, .labelAdd, .labelUpdate,
-            .filterAdd, .filterUpdate, .reminderAdd, .reminderUpdate, .reminderDelete:
+            .taskReschedule, .taskMove,
+            .projectAdd, .sectionAdd, .sectionUpdate, .reminderAdd, .reminderUpdate,
+            .reminderDelete:
             break
         }
     }
 
-    private func replayMetadataDeletes(_ command: SyncCommand) {
-        if case .labelDelete(let args) = command {
-            labels.removeAll(where: { $0.id == args.id })
-        } else if case .filterDelete(let args) = command {
-            filters.removeAll(where: { $0.id == args.id })
+    private func replayMetadata(_ command: SyncCommand, id newId: String) {
+        switch command {
+        case .labelUpdate(let args): applyLabelUpdate(args)
+        case .filterUpdate(let args): applyFilterUpdate(args)
+        case .labelAdd(let args) where !labels.contains(where: { $0.id == newId }):
+            labels.append(
+                Label(
+                    id: newId, user_id: "", name: args.name, color: args.color ?? "charcoal",
+                    item_order: args.item_order ?? Double(labels.count),
+                    is_favorite: args.is_favorite ?? false, is_deleted: false))
+        case .filterAdd(let args) where !filters.contains(where: { $0.id == newId }):
+            filters.append(
+                Filter(
+                    id: newId, user_id: "", name: args.name, query: args.query,
+                    color: args.color ?? "charcoal",
+                    item_order: args.item_order ?? Double(filters.count),
+                    is_favorite: args.is_favorite ?? false, is_deleted: false))
+        case .labelDelete(let args): labels.removeAll { $0.id == args.id }
+        case .filterDelete(let args): filters.removeAll { $0.id == args.id }
+        case .taskAdd, .taskUpdate, .taskDelete, .taskComplete, .taskUncomplete, .taskReorder,
+            .taskReschedule, .taskMove, .projectAdd, .projectDelete, .projectUpdate, .sectionAdd,
+            .sectionDelete,
+            .sectionUpdate, .labelAdd, .filterAdd, .reminderAdd, .reminderUpdate, .reminderDelete:
+            break
         }
     }
 
@@ -326,7 +295,7 @@ extension FacetLocalStore {
         to current: Task,
         now: String
     ) -> Task {
-        let patch = FacetTaskPatch(
+        var patch = FacetTaskPatch(
             title: args.title,
             description: args.description,
             priority: args.priority,
@@ -338,13 +307,18 @@ extension FacetLocalStore {
             dueDatetime: wirePatch(from: args.due_datetime),
             dueTimezone: wirePatch(from: args.due_timezone),
             dueString: wirePatch(from: args.due_string),
+            deadline: wirePatch(from: args.deadline),
+            recurrenceBasis: args.recurrence_basis,
             recurrenceRule: wirePatch(from: args.recurrence_rule),
             labelIds: args.label_ids.map(FacetFieldPatch.set) ?? .unchanged
         )
+        patch.appendComment = args.append_comment
+        patch.removeCommentID = args.remove_comment_id
+        patch.removeAttachmentID = args.remove_attachment_id
         return current.applying(patch: patch, updatedAt: now)
     }
 
-    private static func wirePatch(from raw: String?) -> FacetFieldPatch<String> {
+    internal static func wirePatch(from raw: String?) -> FacetFieldPatch<String> {
         guard let raw else { return .unchanged }
         return raw.isEmpty ? .clear : .set(raw)
     }

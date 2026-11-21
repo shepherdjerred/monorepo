@@ -281,6 +281,7 @@ extension FacetCaptureForm {
     fileprivate func iconName(for kind: FacetCaptureChip.Kind) -> String {
         switch kind {
         case .date: "calendar"
+        case .deadline: "calendar.badge.exclamationmark"
         case .recurrence: "repeat"
         case .priority: "flag.fill"
         case .project: "number"

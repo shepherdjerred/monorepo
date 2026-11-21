@@ -47,39 +47,30 @@ extension FacetLocalStore {
         name: String? = nil,
         color: String? = nil,
         isFavorite: FacetFieldPatch<Bool> = .unchanged,
+        parentId: FacetFieldPatch<String> = .unchanged,
         isArchived: FacetFieldPatch<Bool> = .unchanged
     ) {
         let now = Self.nowTimestamp()
         let wireFavorite =
             isFavorite == .set(true) ? true : (isFavorite == .set(false) ? false : nil)
+        let wireParent: String? =
+            switch parentId {
+            case .set(let id): id
+            case .clear: ""
+            case .unchanged: nil
+            }
         let wireArchived =
             isArchived == .set(true) ? true : (isArchived == .set(false) ? false : nil)
-        if let index = projects.firstIndex(where: { $0.id == id }) {
-            let current = projects[index]
-            projects[index] = Project(
-                id: current.id,
-                user_id: current.user_id,
-                name: name ?? current.name,
-                color: color ?? current.color,
-                parent_id: current.parent_id,
-                child_order: current.child_order,
-                is_inbox: current.is_inbox,
-                is_favorite: wireFavorite ?? current.is_favorite,
-                is_archived: wireArchived ?? current.is_archived,
-                is_deleted: current.is_deleted,
-                created_at: current.created_at,
-                updated_at: now
-            )
-        }
         let args = ProjectUpdateArgs(
             id: id,
             name: name,
             color: color,
-            parent_id: nil,
+            parent_id: wireParent,
             child_order: nil,
             is_favorite: wireFavorite,
             is_archived: wireArchived
         )
+        applyProjectUpdate(args, now: now)
         outbox.append(
             QueuedCommand(uuid: UUID().uuidString, temp_id: nil, command: .projectUpdate(args))
         )
@@ -223,18 +214,6 @@ extension FacetLocalStore {
     ) {
         let wireFavorite =
             isFavorite == .set(true) ? true : (isFavorite == .set(false) ? false : nil)
-        if let index = labels.firstIndex(where: { $0.id == id }) {
-            let current = labels[index]
-            labels[index] = Label(
-                id: current.id,
-                user_id: current.user_id,
-                name: name ?? current.name,
-                color: color ?? current.color,
-                item_order: current.item_order,
-                is_favorite: wireFavorite ?? current.is_favorite,
-                is_deleted: current.is_deleted
-            )
-        }
         let args = LabelUpdateArgs(
             id: id,
             name: name,
@@ -242,6 +221,7 @@ extension FacetLocalStore {
             item_order: nil,
             is_favorite: wireFavorite
         )
+        applyLabelUpdate(args)
         outbox.append(
             QueuedCommand(uuid: UUID().uuidString, temp_id: nil, command: .labelUpdate(args))
         )
