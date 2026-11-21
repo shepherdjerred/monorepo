@@ -96,29 +96,36 @@ function assessRestore(
 export function veleroRestoreSignals(
   restores: readonly VeleroRestoreStatus[],
 ): SignalInput[] {
-  return restores
-    .filter((restore) => FAILED_RESTORE_PHASES.has(restore.phase ?? ""))
-    .map((restore): SignalInput => {
-      const assessment = assessRestore(restore, restores);
-      return {
+  return restores.flatMap((restore): SignalInput[] => {
+    const { phase } = restore;
+    if (phase === undefined || !FAILED_RESTORE_PHASES.has(phase)) {
+      return [];
+    }
+    const assessment = assessRestore(restore, restores);
+    return [
+      {
         id: `maintenance:velero-restore:${restore.namespace}:${restore.name}`,
         source: "maintenance",
         section: "maintenance",
-        kind: "backup-failure",
+        // Distinct from a failed Backup (`backup-failure`) so a client can
+        // group restores without swallowing backup outcomes.
+        kind: "restore-failure",
         severity: assessment.accepted ? "info" : "warning",
         needsMe: !assessment.accepted,
-        title: `Velero restore ${restore.name}: ${restore.phase ?? "unknown"}`,
+        title: `Velero restore ${restore.name}: ${phase}`,
         detail: assessment.detail,
         since: restore.createdAt,
         attributes: {
           namespace: restore.namespace,
           restore: restore.name,
           backupName: restore.backupName ?? "",
+          phase,
           errors: restore.errors,
           classification: restore.classification,
           supersededBy: restore.supersededBy ?? "",
         },
         links: [logsLink(restore.namespace)],
-      };
-    });
+      },
+    ];
+  });
 }

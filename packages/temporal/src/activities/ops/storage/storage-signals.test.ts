@@ -26,6 +26,63 @@ test("failed restores remain actionable independently of backup success", () => 
   expect(veleroRestoreSignals([{ ...restore, phase: "Completed" }])).toEqual(
     [],
   );
+  expect(veleroRestoreSignals([{ ...restore, phase: undefined }])).toEqual([]);
+});
+
+test("a failed restore is its own kind, one signal each, and names its phase", () => {
+  const restore: VeleroRestoreStatus = {
+    name: "rehearsal",
+    namespace: "velero",
+    createdAt: "2026-10-09T00:00:00Z",
+    backupName: "completed-backup",
+    phase: "PartiallyFailed",
+    errors: 1,
+    classification: "unclassified",
+    supersededBy: undefined,
+  };
+  const signals = veleroRestoreSignals([
+    restore,
+    { ...restore, name: "rehearsal-2", phase: "Failed" },
+    { ...restore, name: "rehearsal-3", phase: "FailedValidation" },
+  ]);
+  // Never `backup-failure`: a client grouping restores must not swallow a
+  // failed Backup, which keeps that kind.
+  expect(
+    signals.map((signal) => [
+      signal.id,
+      signal.kind,
+      signal.attributes?.["phase"],
+      signal.title,
+    ]),
+  ).toEqual([
+    [
+      "maintenance:velero-restore:velero:rehearsal",
+      "restore-failure",
+      "PartiallyFailed",
+      "Velero restore rehearsal: PartiallyFailed",
+    ],
+    [
+      "maintenance:velero-restore:velero:rehearsal-2",
+      "restore-failure",
+      "Failed",
+      "Velero restore rehearsal-2: Failed",
+    ],
+    [
+      "maintenance:velero-restore:velero:rehearsal-3",
+      "restore-failure",
+      "FailedValidation",
+      "Velero restore rehearsal-3: FailedValidation",
+    ],
+  ]);
+  expect(signals[0]?.attributes).toEqual({
+    namespace: "velero",
+    restore: "rehearsal",
+    backupName: "completed-backup",
+    phase: "PartiallyFailed",
+    errors: 1,
+    classification: "unclassified",
+    supersededBy: "",
+  });
 });
 
 describe("a restore superseded by a later accepted restore", () => {

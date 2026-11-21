@@ -149,10 +149,10 @@ describe("alerts", () => {
       ["alerts:BirmelDown:birmel", "error", true, "birmel"],
       ["alerts:DiskFilling:-", "warning", false, undefined],
     ]);
-    expect(result.metrics.map((m) => [m.id, m.value])).toEqual([
-      ["alerts.firing", 2],
-      ["alerts.critical", 1],
-      ["alerts.warning", 1],
+    expect(result.metrics.map((m) => [m.id, m.value, m.severity])).toEqual([
+      ["alerts.firing", 2, "error"],
+      ["alerts.critical", 1, "error"],
+      ["alerts.warning", 1, "warning"],
     ]);
     expect(result.changes).toEqual([]);
     for (const signal of result.signals) {
@@ -224,7 +224,48 @@ describe("alerts", () => {
       ],
     ]);
     expect(result.signals[0]?.since).toBe(minutesAgo(90));
-    expect(result.metrics.find((m) => m.id === "alerts.firing")?.value).toBe(4);
+    const firing = result.metrics.find((m) => m.id === "alerts.firing");
+    expect([firing?.value, firing?.severity]).toEqual([4, "error"]);
+  });
+});
+
+describe("alerts.firing severity", () => {
+  test.each([
+    {
+      name: "a critical alert",
+      labels: ["warning", "critical"],
+      want: "error",
+    },
+    { name: "an error alert", labels: ["info", "error"], want: "error" },
+    { name: "only warnings", labels: ["warning", "info"], want: "warning" },
+    { name: "an unrecognised label", labels: ["page-me"], want: "warning" },
+    { name: "only info and none", labels: ["info", "none"], want: "info" },
+    { name: "nothing firing", labels: [], want: "ok" },
+  ])("the firing count is as severe as $name: $want", ({ labels, want }) => {
+    const result = mapAlerts(
+      [
+        // Fires by design, so it never colours the count.
+        alert({ alertname: "Watchdog", severity: "critical" }, 600),
+        ...labels.map((severity, index) =>
+          alert({ alertname: `Alert${String(index)}`, severity }, 5),
+        ),
+      ],
+      [],
+      context,
+    );
+    const firing = result.metrics.find((m) => m.id === "alerts.firing");
+    expect([firing?.value, firing?.severity]).toEqual([labels.length, want]);
+  });
+
+  test("an alert without a severity label makes the firing count a warning", () => {
+    const result = mapAlerts(
+      [alert({ alertname: "Unlabelled" }, 5)],
+      [],
+      context,
+    );
+    expect(result.metrics.find((m) => m.id === "alerts.firing")?.severity).toBe(
+      "warning",
+    );
   });
 });
 

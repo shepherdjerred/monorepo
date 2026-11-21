@@ -9,6 +9,7 @@ import {
   sources,
 } from "./ops-snapshot-fixture.ts";
 import { assembleSnapshot } from "@shepherdjerred/ops-model/assemble.ts";
+import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
 import type { Snapshot } from "@shepherdjerred/ops-model/snapshot.ts";
 
 const config: AppConfig = {
@@ -142,6 +143,41 @@ describe("collectHomelabPayload", () => {
       "2/2 nodes · 1 critical alerts · 1 warning alerts · 3 Bugsink · 3 open alerts",
     );
   });
+
+  it.each(["info", "warning", "error"] as const)(
+    "derives the same alerts tile when alerts.firing carries severity %s",
+    async (severity) => {
+      const generatedAt = new Date(NOW.getTime() - 60_000);
+      const baseline = await collectHomelabPayload(
+        config,
+        reading(homelabSnapshot(generatedAt)),
+        NOW,
+      );
+      // The collector now rates the firing count by its worst alert; the tile
+      // already took that from the section, so only the metric changes.
+      const snapshot = assembleSnapshot({
+        generatedAt,
+        sources: sources(generatedAt),
+        signals: HOMELAB_SIGNALS,
+        metrics: HOMELAB_METRICS.map((metric) =>
+          metric.id === METRIC_IDS.alertsFiring
+            ? { ...metric, severity }
+            : metric,
+        ),
+      });
+
+      const payload = await collectHomelabPayload(
+        config,
+        reading(snapshot),
+        NOW,
+      );
+
+      expect(payload.alerts.status).toBe("error");
+      expect(payload.alerts).toEqual(baseline.alerts);
+      expect(payload.status).toBe(baseline.status);
+      expect(payload.summary).toBe(baseline.summary);
+    },
+  );
 
   it("renders failed sources as unknown instead of zero", async () => {
     const generatedAt = new Date(NOW.getTime() - 60_000);
