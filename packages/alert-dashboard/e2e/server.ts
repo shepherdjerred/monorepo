@@ -1,3 +1,8 @@
+import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
+import type { OpsIngest } from "@shepherdjerred/ops-model/snapshot.ts";
+import type { Temporal } from "@js-temporal/polyfill";
+import { z } from "zod";
+
 import type { AlertLedgerRepository } from "#application/ports";
 import { AlertService } from "#application/alert-service";
 import { createApp } from "#server/app";
@@ -16,6 +21,7 @@ import {
 } from "#shared/schema";
 import { fixedClock, systemClock } from "#shared/time";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
+import { volumeOpsIngest } from "#test-fixtures/ops-snapshot-volume";
 import { createOpsFixture } from "#test-fixtures/ops-services";
 
 const alert = AlertDetailSchema.parse({
@@ -237,13 +243,41 @@ const service = new AlertService({
   clock: fixedClock("2026-08-08T20:00:00Z"),
   emailEnabled: false,
 });
+// `OPS_FIXTURE` picks the ops snapshot. Unset is the small e2e fixture the
+// Playwright specs assert against; `bun run dev:fixture` always sets it.
+const { OPS_FIXTURE: requestedOpsFixture } = z
+  .object({
+    OPS_FIXTURE: z.enum(["default", "volume", "volume-aggregate"]).optional(),
+  })
+  .parse({ OPS_FIXTURE: Bun.env["OPS_FIXTURE"] });
+
+function opsIngestBody(now: Temporal.Instant): OpsIngest {
+  const generatedAt = now.subtract({ minutes: 2 }).toString();
+  switch (requestedOpsFixture) {
+    case "volume":
+      return volumeOpsIngest(generatedAt, "per-update");
+    case "volume-aggregate":
+      return volumeOpsIngest(generatedAt, "aggregate");
+    case "default":
+    case undefined:
+      return fixtureOpsIngest(generatedAt);
+  }
+}
+
 // Ops pages render relative ages, so the ops fixture uses the real clock and
 // a snapshot generated moments before the server started.
 const opsFixture = createOpsFixture(systemClock);
 const opsNow = systemClock.now();
-await opsFixture.ops.ingest(
-  JSON.stringify(fixtureOpsIngest(opsNow.subtract({ minutes: 2 }).toString())),
-);
+await opsFixture.ops.ingest(JSON.stringify(opsIngestBody(opsNow)));
+if (requestedOpsFixture !== undefined) {
+  // A long-lived dev server would otherwise serve a stale snapshot after
+  // three intervals, so it re-ingests on the collector's cadence.
+  setInterval(() => {
+    void opsFixture.ops.ingest(
+      JSON.stringify(opsIngestBody(systemClock.now())),
+    );
+  }, OPS_POLICY.snapshotIntervalMinutes * 60_000);
+}
 opsFixture.repository.alertLedger = [
   {
     eventId: `event_${"e".repeat(32)}`,

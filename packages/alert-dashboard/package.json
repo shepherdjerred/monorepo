@@ -7,6 +7,7 @@
     "build": "vite build",
     "check:architecture": "check-architecture",
     "dev": "bun run src/dev.ts",
+    "dev:fixture": "bun run src/dev.ts --fixture",
     "email:cancel-incident": "bun run scripts/cancel-pending-incident-email.ts",
     "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/alert-dashboard:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t alert-dashboard:dev -f Dockerfile ../..",
     "generate": "prisma generate",

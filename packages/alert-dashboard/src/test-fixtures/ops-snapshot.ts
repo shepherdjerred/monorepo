@@ -14,9 +14,9 @@ import {
 
 import { toContractDate } from "#shared/time";
 
-type FixtureMetric = Metric & { section: SectionId };
+export type FixtureMetric = Metric & { section: SectionId };
 
-function metric(
+export function metric(
   placement: { section: SectionId; source: SourceId },
   id: string,
   label: string,
@@ -36,7 +36,7 @@ function metric(
   };
 }
 
-function ago(now: Temporal.Instant, hours: number): string {
+export function ago(now: Temporal.Instant, hours: number): string {
   return now.subtract({ minutes: Math.round(hours * 60) }).toString();
 }
 
@@ -395,23 +395,46 @@ function changes(now: Temporal.Instant): ChangeEventInput[] {
   ];
 }
 
+export type FixtureIngestInput = {
+  now: Temporal.Instant;
+  signals: readonly SignalInput[];
+  metrics: readonly FixtureMetric[];
+  changes: readonly ChangeEventInput[];
+  /** Sources that failed this round, with their redacted error. */
+  failedSources?: Partial<Record<SourceId, string>>;
+};
+
+/** Assemble and validate an ingest body the way the collector does. */
+export function buildFixtureIngest(input: FixtureIngestInput): OpsIngest {
+  const snapshot = assembleSnapshot({
+    generatedAt: toContractDate(input.now),
+    sources: SOURCE_IDS.map((source) => {
+      const error = input.failedSources?.[source];
+      return {
+        source,
+        ok: error === undefined,
+        observedAt: input.now.toString(),
+        durationMs: 120,
+        ...(error === undefined ? {} : { error }),
+      };
+    }),
+    signals: input.signals,
+    metrics: input.metrics,
+  });
+  return parseOpsIngest({ snapshot, changes: input.changes });
+}
+
 /**
  * A realistic, ops-model-valid ingest body: every section populated, one
  * source (PostHog) failed so the product section renders `unknown`.
  */
 export function fixtureOpsIngest(generatedAt: string): OpsIngest {
   const now = Temporal.Instant.from(generatedAt);
-  const snapshot = assembleSnapshot({
-    generatedAt: toContractDate(now),
-    sources: SOURCE_IDS.map((source) => ({
-      source,
-      ok: source !== "posthog",
-      observedAt: now.toString(),
-      durationMs: 120,
-      ...(source === "posthog" ? { error: "PostHog query timed out" } : {}),
-    })),
+  return buildFixtureIngest({
+    now,
     signals: signals(now),
     metrics: metrics(),
+    changes: changes(now),
+    failedSources: { posthog: "PostHog query timed out" },
   });
-  return parseOpsIngest({ snapshot, changes: changes(now) });
 }
