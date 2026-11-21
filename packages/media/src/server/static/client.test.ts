@@ -2,9 +2,9 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { createMediaApp } from "./app.ts";
-import { fixture, headers } from "./http.test-support.ts";
-import { HASHED_ASSET_CACHE_CONTROL, mountMediaClient } from "./static.ts";
+import { createMediaApp } from "#server/app.ts";
+import { fixture, headers } from "#server/http.test-support.ts";
+import { HASHED_ASSET_CACHE_CONTROL, mountMediaClient } from "./client.ts";
 
 const script = 'console.log("media");';
 const shell = "<!doctype html><title>Media</title>";

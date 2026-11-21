@@ -18,7 +18,7 @@ import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { PlexPinAuthentication } from "#infrastructure/plex-auth.ts";
 import { TmdbClient } from "#integrations/tmdb.ts";
 import { createMediaApp } from "./app.ts";
-import { mountMediaClient } from "./static.ts";
+import { mountMediaClient } from "./static/client.ts";
 import { PrismaNotificationApplication } from "#infrastructure/notification-service.ts";
 import { PrismaAdminApplication } from "#infrastructure/admin-service.ts";
 import { PrismaPlexAdministration } from "#infrastructure/plex-admin.ts";
