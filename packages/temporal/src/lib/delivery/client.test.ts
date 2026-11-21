@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
 import { z } from "zod";
 import {
+  DELIVERY_ERROR_MESSAGE_LIMIT,
   DeliveryApiUnavailableError,
   deliveryRequest,
   whileDeliveryApiUnavailable,
@@ -123,10 +124,55 @@ describe("deliveryRequest keeps every Delivery answer as it was", () => {
     });
   });
 
-  test("a non-JSON 4xx is an ordinary error", async () => {
-    fetchMock.mockResolvedValueOnce(new Response("nope", { status: 404 }));
+  test("a 400 INVALID names the failing path from Delivery's envelope", async () => {
+    fetchMock.mockResolvedValueOnce(
+      json(400, {
+        error: {
+          code: "INVALID",
+          message: "Invalid request: evidence.0.summary: too_big",
+          requestId: "r5",
+        },
+      }),
+    );
+    const error = await failure(read());
+    expect(error).toBeInstanceOf(ApplicationFailure);
+    expect(error).toMatchObject({
+      type: "DeliveryApi:INVALID",
+      nonRetryable: true,
+      message:
+        "Delivery API deployments/d1 returned HTTP 400 INVALID: Invalid request: evidence.0.summary: too_big (request r5)",
+    });
+  });
+
+  test("an oversized envelope message is bounded and says so", async () => {
+    fetchMock.mockResolvedValueOnce(
+      json(409, {
+        error: {
+          code: "CONFLICT",
+          message: "c".repeat(DELIVERY_ERROR_MESSAGE_LIMIT + 500),
+          requestId: "r6",
+        },
+      }),
+    );
+    const error = await failure(read());
+    if (!(error instanceof ApplicationFailure))
+      throw new TypeError("expected a non-retryable refusal");
+    const { message } = error;
+    expect(message).toContain(
+      `${"c".repeat(DELIVERY_ERROR_MESSAGE_LIMIT)}… (1500 characters) (request r6)`,
+    );
+    expect(message).not.toContain("c".repeat(DELIVERY_ERROR_MESSAGE_LIMIT + 1));
+  });
+
+  test("a non-JSON 4xx is an ordinary error that never repeats its body", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response("token=executor-token", { status: 404 }),
+    );
     const error = await failure(read());
     expect(error).not.toBeInstanceOf(DeliveryApiUnavailableError);
+    expect(error).toMatchObject({
+      message: "Delivery API deployments/d1 returned HTTP 404",
+    });
   });
 
   test("an unrelated thrown error propagates unchanged", async () => {

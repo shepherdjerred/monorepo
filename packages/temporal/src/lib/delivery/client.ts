@@ -39,25 +39,44 @@ async function errorEnvelope(response: Response) {
   }
 }
 
+/** The most characters of Delivery's own error message a failure repeats. */
+export const DELIVERY_ERROR_MESSAGE_LIMIT = 1000;
+/** Delivery's request IDs are UUIDs; anything longer is cut, not trusted. */
+const REQUEST_ID_LIMIT = 100;
+
+function bounded(text: string, limit: number) {
+  return text.length > limit
+    ? `${text.slice(0, limit)}… (${text.length.toString()} characters)`
+    : text;
+}
+
+function envelopeDetail(error: { message: string; requestId: string }) {
+  return `${bounded(error.message, DELIVERY_ERROR_MESSAGE_LIMIT)} (request ${bounded(error.requestId, REQUEST_ID_LIMIT)})`;
+}
+
 /**
  * Delivery's own answers keep their meaning: it refuses with its error
  * envelope, a paused API with HTTP 503 `PAUSED` included. A 5xx without
  * that envelope, from whatever stands in front of a pod that is not serving,
  * is the API being unavailable, as is Delivery's own `UNAVAILABLE`: a
  * dependency it reads through, such as the Kubernetes API, did not answer.
- * Never interpolate upstream bodies: configuration and credentials can be
- * echoed.
+ *
+ * A failure carries the envelope's bounded message and request ID, so a
+ * refusal names what failed: Delivery writes that message from its own
+ * refusal or from the invalid request's field paths and issue codes, never
+ * from submitted values. Never interpolate any other body: whatever stands
+ * in front of the API can echo configuration and credentials.
  */
 async function failedResponse(path: string, response: Response) {
-  const message = `Delivery API ${path} returned HTTP ${response.status.toString()}`;
+  const status = `Delivery API ${path} returned HTTP ${response.status.toString()}`;
   const parsed = await errorEnvelope(response);
   if (!parsed.success)
     return response.status >= 500
-      ? new DeliveryApiUnavailableError(message)
-      : new Error(message);
+      ? new DeliveryApiUnavailableError(status)
+      : new Error(status);
   const { code } = parsed.data.error;
-  if (code === "UNAVAILABLE")
-    return new DeliveryApiUnavailableError(`${message} (UNAVAILABLE)`);
+  const message = `${status} ${code}: ${envelopeDetail(parsed.data.error)}`;
+  if (code === "UNAVAILABLE") return new DeliveryApiUnavailableError(message);
   const refused =
     ["PAUSED", "BUSY"].includes(code) ||
     (response.status >= 400 && response.status < 500);
