@@ -39,17 +39,20 @@ export function libraryPolicy(title: Title): (typeof POLICIES)[number] {
   return pick(POLICIES, title.index);
 }
 
-/** The owner's keeping switch for a title; the title page reads the same one. */
+/**
+ * The owner's keeping switch for a title; the title page reads the same one.
+ * Every fixture title has a default target, so the owner always has a switch:
+ * an unclassified title is one whose Keep is off and that nobody follows.
+ */
 export function libraryKeeping(
   title: Title,
   persona: Persona,
 ): LibraryItem["libraryKeeping"] {
-  const policy = libraryPolicy(title);
-  return persona === "owner" && policy !== "unclassified"
+  return persona === "owner"
     ? {
         mediaVersion: versionOf(title.id),
         targetVersion: (title.index % 4) + 1,
-        keepingPolicy: policy,
+        keepingPolicy: libraryPolicy(title) === "keep" ? "keep" : "temporary",
       }
     : null;
 }

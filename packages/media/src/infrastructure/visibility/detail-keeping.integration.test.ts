@@ -225,16 +225,82 @@ test("a season and an episode report their series' keeping, and its switch chang
     });
 });
 
-test("a title the library does not list reports no keeping", async () => {
+test("a title the library has stopped listing keeps its keeping, so the owner can turn its Keep back on", async () => {
   const db = harness.database();
   await running(db);
   const { owner, member } = await household(db);
   const { media, library, interests } = applications(db);
   const tag = `unlisted-${crypto.randomUUID()}`;
+  const query = LibraryQuerySchema.parse({ query: tag });
+  // A film held by its library Keep alone: no standing request, no file.
+  const kept = await libraryTitle(db, `${tag} kept`, { keep: true });
+  expect(await listedIds(library, owner, query)).toEqual([kept.id]);
+  const before = await media.getMedia(owner, kept.id);
+  if (before.libraryKeeping === null)
+    throw new Error("The owner lost the keeping switch");
+  expect(before).toMatchObject({
+    policy: "keep",
+    libraryKeeping: { keepingPolicy: "keep" },
+  });
+  const off = await interests.libraryPolicy(owner, crypto.randomUUID(), {
+    schemaVersion: 1,
+    mediaId: kept.id,
+    edition: "default",
+    expectedMediaVersion: before.libraryKeeping.mediaVersion,
+    expectedTargetVersion: before.libraryKeeping.targetVersion,
+    keepingPolicy: "temporary",
+  });
+  // Nothing holds the film now, so the list drops it. The title page still
+  // reports the switch, at the versions the command left.
+  expect(await listedIds(library, owner, query)).toEqual([]);
+  const stranded = await media.getMedia(owner, kept.id);
+  expect(stranded).toMatchObject({
+    policy: "unclassified",
+    libraryKeeping: {
+      mediaVersion: off.mediaVersion,
+      targetVersion: off.targetVersion,
+      keepingPolicy: "temporary",
+    },
+  });
+  // A member reads the same policy and still no switch.
+  expect(await media.getMedia(member, kept.id)).toMatchObject({
+    policy: "unclassified",
+    libraryKeeping: null,
+  });
+  if (stranded.libraryKeeping === null)
+    throw new Error("The owner lost the keeping switch");
+  // The owner turns Keep back on with exactly what the detail returned.
+  const on = await interests.libraryPolicy(owner, crypto.randomUUID(), {
+    schemaVersion: 1,
+    mediaId: stranded.rootMediaId,
+    edition: "default",
+    expectedMediaVersion: stranded.libraryKeeping.mediaVersion,
+    expectedTargetVersion: stranded.libraryKeeping.targetVersion,
+    keepingPolicy: "keep",
+  });
+  expect(await listedIds(library, owner, query)).toEqual([kept.id]);
+  expect(await media.getMedia(owner, kept.id)).toMatchObject({
+    policy: "keep",
+    libraryKeeping: {
+      mediaVersion: on.mediaVersion,
+      targetVersion: on.targetVersion,
+      keepingPolicy: "keep",
+    },
+  });
+});
+
+test("a title with no default target, or one the reader may not open, reports no keeping", async () => {
+  const db = harness.database();
+  const { owner, member } = await household(db);
+  const { media, library } = applications(db);
+  const tag = `absent-${crypto.randomUUID()}`;
+  const query = LibraryQuerySchema.parse({ query: tag });
   const absent = { policy: "unclassified", libraryKeeping: null };
-  // Nothing holds this film: no Keep, no standing request, no file.
-  const unheld = await libraryTitle(db, `${tag} unheld`, {});
-  // A kept series in a Plex library the member may not open, with an episode
+  // A film with no default target has nothing for the keeping command to change.
+  const untargeted = await db.mediaItem.create({
+    data: { kind: "movie", title: `${tag} untargeted` },
+  });
+  // A kept series in a Plex library neither reader may open, with an episode
   // filed in one they may.
   const hidden = await libraryTitle(db, `${tag} hidden`, {
     kind: "series",
@@ -246,10 +312,12 @@ test("a title the library does not list reports no keeping", async () => {
     where: { id: episode.id },
     data: { externalIds: { plexSectionId: "2" } },
   });
-  const query = LibraryQuerySchema.parse({ query: tag });
   for (const actor of [owner, member]) {
     expect(await listedIds(library, actor, query)).toEqual([]);
-    expect(await media.getMedia(actor, unheld.id)).toMatchObject(absent);
+    expect(await media.getMedia(actor, untargeted.id)).toMatchObject({
+      intent: null,
+      ...absent,
+    });
     expect(await media.getMedia(actor, episode.id)).toMatchObject({
       rootMediaId: hidden.id,
       ...absent,
@@ -265,26 +333,7 @@ test("a title the library does not list reports no keeping", async () => {
     policy: "keep",
     libraryKeeping: { keepingPolicy: "keep" },
   });
-  // A film held by its Keep alone leaves the library with it, and the switch
-  // goes too: the title page offers what the library list offers.
-  const kept = await libraryTitle(db, `${tag} kept`, { keep: true });
-  const page = await media.getMedia(owner, kept.id);
-  if (page.libraryKeeping === null)
-    throw new Error("The owner lost the keeping switch");
-  expect(page).toMatchObject({
-    policy: "keep",
-    libraryKeeping: { keepingPolicy: "keep" },
-  });
-  await interests.libraryPolicy(owner, crypto.randomUUID(), {
-    schemaVersion: 1,
-    mediaId: kept.id,
-    edition: "default",
-    expectedMediaVersion: page.libraryKeeping.mediaVersion,
-    expectedTargetVersion: page.libraryKeeping.targetVersion,
-    keepingPolicy: "temporary",
-  });
-  expect(await listedIds(library, owner, query)).toEqual([hidden.id]);
-  expect(await media.getMedia(owner, kept.id)).toMatchObject(absent);
+  expect(await media.getMedia(member, episode.id)).toMatchObject(absent);
 });
 
 test("each request carries its interest, a member reads only their own, and Stop following accepts what the detail reported", async () => {

@@ -2,17 +2,17 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { VisibleMedia } from "#infrastructure/visibility/access.ts";
 import {
   libraryKeepingView,
-  libraryMemberWhere,
   libraryPolicyInclude,
 } from "#infrastructure/library/views/policy.ts";
 
 /**
- * How long the household keeps one root title, as `GET /library` would report
- * the same title to this reader. One lookup, whatever the title holds.
+ * How long the household keeps one root title, by the derivation `GET /library`
+ * uses for the titles it lists. One lookup, whatever the title holds.
  *
- * A title that list would not show the reader (not a movie or series, held by
- * nothing, or in a Plex library the reader may not open) has no keeping to
- * report: it is `unclassified`, and there is no switch to offer.
+ * This read follows the title's default target, not the list's membership: a
+ * title the list has stopped showing still reports its keeping, so an owner who
+ * turned its Keep off can turn it back on. Only a title in a Plex library the
+ * reader may not open reports nothing: `unclassified`, and no switch.
  */
 export async function readTitleKeeping(
   tx: Prisma.TransactionClient,
@@ -23,19 +23,12 @@ export async function readTitleKeeping(
     visible: (item: VisibleMedia) => boolean;
   },
 ) {
-  const title = reader.visible(root)
-    ? await tx.mediaItem.findFirst({
-        where: {
-          AND: [
-            { id: root.id, kind: { in: ["movie", "series"] } },
-            libraryMemberWhere,
-          ],
-        },
-        include: libraryPolicyInclude,
-      })
-    : null;
-  if (title === null)
+  if (!reader.visible(root))
     return { policy: "unclassified" as const, libraryKeeping: null };
+  const title = await tx.mediaItem.findUniqueOrThrow({
+    where: { id: root.id },
+    include: libraryPolicyInclude,
+  });
   const { policy, libraryKeeping } = libraryKeepingView(title, reader);
   return { policy, libraryKeeping };
 }

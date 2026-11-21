@@ -1174,17 +1174,24 @@ can offer what the Library offers:
 
 | Field            | Meaning                                                                                                                                |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `policy`         | `keep`, `temporary` or `unclassified`, exactly as the root title's item on `GET /api/v1/library` reports it.                           |
+| `policy`         | `keep`, `temporary` or `unclassified`, derived as the root title's item on `GET /api/v1/library` is.                                   |
 | `libraryKeeping` | `{ mediaVersion, targetVersion, keepingPolicy }` for the root title's default edition, for a current, unrestricted owner; else `null`. |
 
 Both describe the root title: a season or episode reports its series', and the
 versions are the series'. `libraryKeeping` is what
 `POST /api/v1/library/:id/keeping-policy` expects, sent with `rootMediaId` as
 the title. The list and this read share one derivation
-(`infrastructure/library/views/policy.ts`). A title the list would not show the
-reader (one held by no library Keep, standing request or current file, or one in
-a Plex library the reader may not open) reports `unclassified` and `null`: a
-title that leaves the library takes its switch with it.
+(`infrastructure/library/views/policy.ts`), so a title the list shows reports
+the same values in both.
+
+This read follows the title's default target, not the list. A title held by its
+library Keep alone leaves the list when the owner turns that Keep off, and its
+detail still reports `libraryKeeping`, now `temporary`, so the owner can turn it
+back on from the title page. Its `policy` is `unclassified`, as it is for any
+title that is neither kept nor followed. `libraryKeeping` is `null` only for a
+title with no default target, which the command could not change, and for
+anyone but the owner. A title in a Plex library the reader may not open reports
+`unclassified` and `null`.
 
 Each entry of `requests` carries `interestRevision` and `interestState`, named
 as `GET /api/v1/request-interests` names them, beside the request's `version`.

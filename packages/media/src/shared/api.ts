@@ -125,9 +125,10 @@ export const MediaDetailSchema = MediaItemSchema.extend({
       externalId: z.number().int(),
     })
     .nullable(),
-  // How long the household keeps the root title, exactly as its item on
-  // `GET /library` reports it: a season or episode reports its series'. A title
-  // that list does not hold reports `unclassified` and no `libraryKeeping`.
+  // How long the household keeps the root title, derived as its item on
+  // `GET /library` is: a season or episode reports its series'. They follow the
+  // title's default target, not the list: a title the list has stopped showing
+  // still reports them. `libraryKeeping` is null without a default target.
   policy: LibraryPolicySchema,
   libraryKeeping: LibraryKeepingSchema.nullable(),
   visibility: MediaVisibilitySchema,
