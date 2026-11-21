@@ -1297,3 +1297,120 @@ printf '{"type":"chat","command":{"action":"send","question":"Who counters Zed?"
     std::fs::remove_dir_all(directory)?;
     Ok(())
 }
+
+/// A frame of a game well past its plan, from the recorded `allgamedata`.
+#[cfg(scout_proactive_coach)]
+fn game_frame(
+    secs: u32,
+) -> Result<scout_client_core::live::snapshot::LiveSnapshot, Box<dyn std::error::Error>> {
+    let data: scout_client_core::live::model::AllGameData = serde_json::from_str(include_str!(
+        "../../../scout-client-core/testdata/live/allgamedata.json"
+    ))?;
+    let mut snapshot = scout_client_core::live::snapshot::project(&data)?;
+    snapshot.game.game_time_secs = secs;
+    Ok(snapshot)
+}
+
+#[cfg(scout_proactive_coach)]
+#[tokio::test]
+async fn a_scoreboard_change_asks_scout_once_and_is_recorded() -> TestResult {
+    use scout_client_core::desktop_api::CoachTrigger;
+    use scout_client_core::live::detectors::ItemCatalog;
+
+    let DetachedRelay {
+        relay,
+        mut coach,
+        items,
+        ..
+    } = ChatRelay::detached_coach();
+    items.send_replace(Some(Arc::new(ItemCatalog::default())));
+    let harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::default(),
+        |supervisor| supervisor.with_chat(relay),
+    )?;
+    let before = game_frame(600)?;
+    harness
+        .runtime_state
+        .send_modify(|state| state.live_game = Some(before.clone()));
+    harness.phase.send_replace(GameflowPhase::InProgress);
+    // Let a refresh tick see the first frame.
+    tokio::time::sleep(Duration::from_millis(1_500)).await;
+    let mut after = before.clone();
+    after.game.game_time_secs = 640;
+    for player in &mut after.participants {
+        if player.is_self {
+            player.deaths += 3;
+        }
+    }
+    harness
+        .runtime_state
+        .send_modify(|state| state.live_game = Some(after.clone()));
+
+    let CoachInput::Trigger(turn) = next_coach(&mut coach).await? else {
+        return Err("the input is a proactive turn".into());
+    };
+    assert!(matches!(
+        turn.trigger,
+        CoachTrigger::DeathStreak {
+            deaths_without_takedown: 3,
+            ..
+        }
+    ));
+    assert_eq!(turn.snapshot, after);
+    // The same frame on later ticks asks nothing more.
+    tokio::time::sleep(Duration::from_millis(2_500)).await;
+    assert!(coach.try_recv().is_err(), "one detection, one request");
+
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    assert!(
+        diagnostics.events().iter().any(|event| event.operation
+            == super::PROACTIVE_TRIGGER_OPERATION
+            && event.detail.as_deref() == Some("death_streak")),
+        "the request is in the diagnostics"
+    );
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}
+
+#[cfg(scout_proactive_coach)]
+#[tokio::test]
+async fn nothing_is_asked_without_item_facts() -> TestResult {
+    let DetachedRelay {
+        relay, mut coach, ..
+    } = ChatRelay::detached_coach();
+    let harness = start_configured(
+        sh(&window_script(""), &[]),
+        true,
+        true,
+        GameflowPhase::default(),
+        |supervisor| supervisor.with_chat(relay),
+    )?;
+    let before = game_frame(600)?;
+    harness
+        .runtime_state
+        .send_modify(|state| state.live_game = Some(before.clone()));
+    harness.phase.send_replace(GameflowPhase::InProgress);
+    tokio::time::sleep(Duration::from_millis(1_500)).await;
+    harness.runtime_state.send_modify(|state| {
+        if let Some(live) = state.live_game.as_mut() {
+            live.game.game_time_secs = 640;
+            for player in &mut live.participants {
+                if player.is_self {
+                    player.deaths += 3;
+                }
+            }
+        }
+    });
+    tokio::time::sleep(Duration::from_millis(2_500)).await;
+    assert!(coach.try_recv().is_err(), "no catalog, no detectors");
+    harness.control.send(Control::Quit)?;
+    let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
+    assert_eq!(exit, SupervisorExit::Quit);
+    std::fs::remove_dir_all(directory)?;
+    Ok(())
+}

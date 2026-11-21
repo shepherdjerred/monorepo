@@ -310,7 +310,11 @@ describe("trigger evidence", () => {
 
 describe("trigger windows and questions", () => {
   test("each kind names its event by what the evidence says, not by the client", () => {
-    expect(triggers.map((trigger) => triggerWindowKey(trigger))).toEqual([
+    // The golden keys are the shared rule: the desktop dedupes by the same.
+    expect(triggers.map((trigger) => triggerWindowKey(trigger))).toEqual(
+      fixture.windowKeys,
+    );
+    expect(fixture.windowKeys).toEqual([
       "Zed:6692",
       "Zed",
       "physical",

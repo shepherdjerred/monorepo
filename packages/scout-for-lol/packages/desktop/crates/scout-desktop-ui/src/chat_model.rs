@@ -376,6 +376,13 @@ pub struct ComposerModel {
 pub const COACH_CHAMP_SELECT_HEADING: &str = "Champion select";
 /// What the coach panel says over a game's start.
 pub const COACH_PREGAME_HEADING: &str = "Your game plan";
+/// What the coach panel says over a proactive answer. Beta profile only.
+#[cfg(scout_proactive_coach)]
+pub const COACH_PROACTIVE_HEADING: &str = "Scout noticed";
+/// Under the proactive heading: who started it. Beta profile only.
+#[cfg(scout_proactive_coach)]
+pub const COACH_PROACTIVE_NOTE: &str =
+    "Scout raised this on its own from the scoreboard. You did not ask. Beta only.";
 
 /// The coach panel above the transcript: Scout's answer for champion select
 /// or the start of a game, with its options as chips. Picking a chip sends the
@@ -384,6 +391,9 @@ pub const COACH_PREGAME_HEADING: &str = "Your game plan";
 pub struct CoachPanelModel {
     /// Which moment it is.
     pub heading: &'static str,
+    /// Who started it, when it was not the player or a moment they expect:
+    /// the panel is then drawn apart from Scout's ordinary advice.
+    pub note: Option<&'static str>,
     /// The answer's Markdown text.
     pub text: String,
     /// The answer's options, as chips with the reason for each.
@@ -409,11 +419,15 @@ fn coach_panel(parts: &ChatParts) -> Option<CoachPanelModel> {
         // The same answer's chips are not drawn twice on the page.
         option.control.id = format!("coach-{}", option.control.id);
     }
+    let (heading, note) = match coach.kind {
+        ChatCoachKind::ChampSelect => (COACH_CHAMP_SELECT_HEADING, None),
+        ChatCoachKind::Pregame => (COACH_PREGAME_HEADING, None),
+        #[cfg(scout_proactive_coach)]
+        ChatCoachKind::Proactive => (COACH_PROACTIVE_HEADING, Some(COACH_PROACTIVE_NOTE)),
+    };
     Some(CoachPanelModel {
-        heading: match coach.kind {
-            ChatCoachKind::ChampSelect => COACH_CHAMP_SELECT_HEADING,
-            ChatCoachKind::Pregame => COACH_PREGAME_HEADING,
-        },
+        heading,
+        note,
         text: message.content.clone(),
         options,
     })
@@ -1295,6 +1309,7 @@ mod tests {
         let model = conversation(&parts)?;
         let panel = model.coach.ok_or("panel")?;
         assert_eq!(panel.heading, super::COACH_CHAMP_SELECT_HEADING);
+        assert_eq!(panel.note, None, "advice the player expects has no note");
         assert_eq!(panel.options.len(), 3);
         assert_eq!(
             panel.options[0].control.action,
@@ -1315,6 +1330,27 @@ mod tests {
             message_id: Uuid::from_u128(0xdead),
         });
         assert_eq!(conversation(&parts)?.coach, None);
+        Ok(())
+    }
+
+    #[cfg(scout_proactive_coach)]
+    #[test]
+    fn a_proactive_answer_is_labelled_as_something_scout_noticed() -> TestResult {
+        use scout_desktop_ipc::{ChatCoach, ChatCoachKind};
+
+        let mut parts = golden::coach_options()?.parts();
+        parts.coach = Some(ChatCoach {
+            kind: ChatCoachKind::Proactive,
+            message_id: golden::COACH_ANSWER,
+        });
+        let panel = conversation(&parts)?.coach.ok_or("panel")?;
+        assert_eq!(panel.heading, super::COACH_PROACTIVE_HEADING);
+        assert_eq!(panel.heading, "Scout noticed");
+        assert_eq!(panel.note, Some(super::COACH_PROACTIVE_NOTE));
+        assert!(
+            super::COACH_PROACTIVE_NOTE.contains("You did not ask"),
+            "it says the player did not start it"
+        );
         Ok(())
     }
 

@@ -234,6 +234,22 @@ impl ExploreClient {
         self.call(Route::ExploreRunsStartApp, request).await
     }
 
+    /// `coach/triggers`: ask for the proactive coach turn a scoreboard
+    /// detector found. Beta profile only; Scout refuses it in production.
+    ///
+    /// # Errors
+    ///
+    /// [`ExploreClientError`] when the request fails or Scout refuses it:
+    /// spacing and the per-game cap answer `rate_limited`, and Scout answers
+    /// `feature_disabled` wherever proactive coaching is off.
+    #[cfg(scout_proactive_coach)]
+    pub async fn start_coach_trigger(
+        &self,
+        request: &scout_client_core::desktop_api::CoachTriggerRequest,
+    ) -> Result<scout_client_core::desktop_api::CoachTriggerResponse, ExploreClientError> {
+        self.call(Route::CoachTriggers, request).await
+    }
+
     /// `coach/reviews/get`: read the post-game review the server produced for
     /// a finished game this device recorded. The server starts it; the client
     /// never does.

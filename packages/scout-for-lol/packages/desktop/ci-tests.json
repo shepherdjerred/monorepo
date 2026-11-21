@@ -7,6 +7,17 @@
       "args": ["--workspace", "--all-features", "--locked"]
     },
     {
+      "name": "cargo-stable-profile",
+      "runner": "cargo",
+      "args": [
+        "--config",
+        "env.SCOUT_DESKTOP_PROFILE=\"stable\"",
+        "--workspace",
+        "--all-features",
+        "--locked"
+      ]
+    },
+    {
       "runner": "vitest",
       "args": ["scripts"]
     }

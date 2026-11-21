@@ -40,7 +40,7 @@ pub use voice::{
 };
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 11;
+pub const PROTOCOL_VERSION: u32 = 12;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -713,8 +713,27 @@ mod tests {
         };
         assert_eq!(live.summary(), "Ahri, level 10, 4/2/7, 87 CS, 7:01");
         assert_eq!(
-            PROTOCOL_VERSION, 11,
+            PROTOCOL_VERSION, 12,
             "a new message or field bumps the protocol"
+        );
+    }
+
+    /// The proactive coach panel exists on the wire only in a beta build: a
+    /// stable window cannot even decode one.
+    #[test]
+    fn a_proactive_coach_panel_exists_only_in_the_beta_profile() {
+        let line = r#"{"type":"chat_coach","coach":{"kind":"proactive","message_id":"00000000-0000-0000-0000-000000000009"}}"#;
+        let decoded = decode_line::<SupervisorMessage>(line);
+        assert_eq!(decoded.is_ok(), cfg!(scout_proactive_coach));
+        #[cfg(scout_proactive_coach)]
+        assert_eq!(
+            decoded.ok(),
+            Some(SupervisorMessage::ChatCoach {
+                coach: Some(ChatCoach {
+                    kind: ChatCoachKind::Proactive,
+                    message_id: Uuid::from_u128(9),
+                }),
+            })
         );
     }
 

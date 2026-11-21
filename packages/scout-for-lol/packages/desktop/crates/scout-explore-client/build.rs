@@ -18,6 +18,9 @@ use std::{
 
 use serde::Deserialize;
 
+#[path = "../../build-support/proactive_coach.rs"]
+mod proactive_coach;
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct DesktopContract {
@@ -458,6 +461,7 @@ pub const fn refusal_status(code: DesktopApiErrorCode) -> u16 {{
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    proactive_coach::emit()?;
     let manifest_dir = PathBuf::from(
         env::var_os("CARGO_MANIFEST_DIR")
             .ok_or_else(|| invalid_contract("CARGO_MANIFEST_DIR is not set"))?,

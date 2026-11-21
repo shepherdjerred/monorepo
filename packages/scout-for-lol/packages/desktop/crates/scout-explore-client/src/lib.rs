@@ -22,6 +22,9 @@
 //!   game context may ride on.
 //! - [`voice`]: spoken coach turns, one finished utterance up and the
 //!   answer's transcript, text and speech back.
+//! - `proactive` (beta profile only): the turns Scout asks for when the
+//!   scoreboard changes, and when Scout's answers stop them. A stable build
+//!   does not compile it.
 //!
 //! The crate has no UI dependency; the window renders the parts it publishes.
 
@@ -35,6 +38,8 @@ mod error;
 #[cfg(feature = "golden")]
 pub mod golden;
 pub mod model;
+#[cfg(scout_proactive_coach)]
+pub mod proactive;
 pub mod reducer;
 pub mod relay;
 pub mod session;

@@ -258,6 +258,20 @@ pub fn note_text(text: impl Into<SharedString>) -> impl IntoElement {
         .child(text.into())
 }
 
+/// Content set apart in a bordered card in the primary color: something the
+/// player did not ask for and should not mistake for an answer of theirs.
+#[must_use]
+pub fn callout(content: impl IntoElement) -> impl IntoElement {
+    let tokens = theme();
+    div()
+        .w_full()
+        .p_3()
+        .rounded(length(tokens.radius_medium))
+        .border(length(tokens.border_width))
+        .border_color(color(tokens.primary))
+        .child(content)
+}
+
 /// An error shown on a surface.
 #[must_use]
 pub fn error_notice(text: impl Into<SharedString>) -> impl IntoElement {

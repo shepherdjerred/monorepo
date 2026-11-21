@@ -584,6 +584,29 @@ impl CoachTrigger {
         "death_streak",
     ];
 
+    /// The event this trigger reports within its kind, as the server's
+    /// dedupe receipts identify it (`triggerWindowKey` in the backend's
+    /// `coach/proactive-triggers.ts`; the golden fixture's `windowKeys` hold
+    /// both to the same rule). A second trigger with the same kind and key is
+    /// one the server answers `duplicate`.
+    #[must_use]
+    pub fn window_key(&self) -> String {
+        match self {
+            Self::EnemyItemSpike {
+                champion, item_id, ..
+            } => format!("{champion}:{item_id}"),
+            Self::EnemyFed { champion, .. } => champion.clone(),
+            Self::DamageProfileShift { to, .. } => match to {
+                DamageProfile::Physical => "physical",
+                DamageProfile::Magic => "magic",
+                DamageProfile::Mixed => "mixed",
+            }
+            .to_owned(),
+            Self::HealingThreat { .. } => "enemy_team".to_owned(),
+            Self::DeathStreak { deaths, .. } => deaths.to_string(),
+        }
+    }
+
     /// This trigger's wire name.
     #[must_use]
     pub const fn kind(&self) -> &'static str {
@@ -1285,6 +1308,18 @@ mod tests {
             kinds.push(typed.kind());
         }
         assert_eq!(kinds, CoachTrigger::KINDS);
+        let keys: Vec<String> = fixture["triggers"]
+            .as_array()
+            .ok_or("triggers")?
+            .iter()
+            .map(|trigger| serde_json::from_value::<CoachTrigger>(trigger.clone()))
+            .map(|typed| typed.map(|typed| typed.window_key()))
+            .collect::<Result<_, _>>()?;
+        assert_eq!(
+            serde_json::to_value(keys)?,
+            fixture["windowKeys"],
+            "the server's event identity"
+        );
         assert_eq!(
             serde_json::from_value::<CoachTriggerResponse>(fixture["duplicateResponse"].clone())?,
             CoachTriggerResponse::Duplicate

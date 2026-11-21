@@ -139,6 +139,26 @@ struct CoachPanel {
     /// The champion select or game the turns were asked for.
     key: String,
     conversation: Uuid,
+    /// A proactive turn's question: the panel shows the answer to it alone,
+    /// never an answer to a question the player asked after it.
+    #[cfg(scout_proactive_coach)]
+    question: Option<Uuid>,
+}
+
+/// Whether `message` is an answer `panel` may show: a proactive panel shows
+/// only the answer to its own question.
+#[cfg(scout_proactive_coach)]
+fn panel_shows(panel: &CoachPanel, message: &ExploreMessage) -> bool {
+    panel
+        .question
+        .is_none_or(|question| message.parent_id == Some(question))
+}
+
+/// Whether `message` is an answer the panel may show: any, in a build
+/// without proactive turns.
+#[cfg(not(scout_proactive_coach))]
+const fn panel_shows(_panel: &CoachPanel, _message: &ExploreMessage) -> bool {
+    true
 }
 
 /// One desktop chat session.
@@ -359,12 +379,23 @@ impl ChatSession {
     /// Show `conversation_id`. Returns whether its transcript must be fetched.
     pub fn open(&mut self, conversation_id: Uuid) -> bool {
         self.notice = None;
+        // The player moved on: a coach turn that does not start no longer
+        // puts back what was open before it.
+        self.displaced = None;
         if self.open == Some(conversation_id) && self.transcript.is_some() {
             return false;
         }
         self.open = Some(conversation_id);
         self.transcript = None;
         true
+    }
+
+    /// The player asked for a blank conversation: like [`Self::start_new`],
+    /// and a coach turn that does not start no longer puts back what was
+    /// open before it.
+    pub fn new_chat(&mut self) {
+        self.displaced = None;
+        self.start_new();
     }
 
     /// Show a blank conversation.
@@ -665,32 +696,79 @@ impl ChatSession {
             AppInitiation::AppChampSelect => ChatCoachKind::ChampSelect,
             AppInitiation::AppPregame => ChatCoachKind::Pregame,
         };
-        let continues = self.coach.as_ref().is_some_and(|coach| {
-            coach.key == turn.game_key && Some(coach.conversation) == self.open
-        });
+        let conversation_id = self.begin_coach_turn(kind, &turn.game_key);
+        Some(AppTurnRequest {
+            conversation_id,
+            ..app_turn_request(turn)
+        })
+    }
+
+    /// Open the coach conversation for `game_key` and begin a turn in it
+    /// that has no question of the player's. The select's or game's coach
+    /// conversation continues while it is the one open; otherwise a new one
+    /// starts and what was open comes back if Scout refuses the turn.
+    fn begin_coach_turn(&mut self, kind: ChatCoachKind, game_key: &str) -> Option<Uuid> {
+        let continues = self
+            .coach
+            .as_ref()
+            .is_some_and(|coach| coach.key == game_key && Some(coach.conversation) == self.open);
         if !continues {
             self.displaced = Some((self.open, self.transcript.clone()));
             self.start_new();
         }
-        self.pending_coach = Some((kind, turn.game_key.clone()));
-        let started = self.begin_turn(None, AttachPoint::Leaf, None, Vec::new(), None);
-        Some(AppTurnRequest {
-            conversation_id: started.conversation_id,
-            ..app_turn_request(turn)
-        })
+        self.pending_coach = Some((kind, game_key.to_owned()));
+        self.begin_turn(None, AttachPoint::Leaf, None, Vec::new(), None)
+            .conversation_id
+    }
+
+    /// Begin the proactive turn a scoreboard detector asked for. Beta
+    /// profile only. Returns the `coach/triggers` body, or none when no turn
+    /// can start now or the frame breaks the coach contract.
+    ///
+    /// It lands in the game's coach conversation like the plan does, as its
+    /// own turn: the server words its question, and the panel shows its answer
+    /// as something Scout noticed, never as an answer to the player.
+    #[cfg(scout_proactive_coach)]
+    pub fn begin_proactive_turn(
+        &mut self,
+        turn: &crate::proactive::ProactiveTurn,
+    ) -> Option<scout_client_core::desktop_api::CoachTriggerRequest> {
+        if !self.can_start() {
+            return None;
+        }
+        // Checked before anything changes on screen.
+        turn.request(None)?;
+        let conversation_id = self.begin_coach_turn(ChatCoachKind::Proactive, &turn.game_key);
+        turn.request(conversation_id)
+    }
+
+    /// Scout did not start the proactive turn: it was a duplicate, refused,
+    /// or never answered. The player did not ask for it, so nothing says so
+    /// unless the failure gates chat as a whole (pair again, sign in, update,
+    /// no server). `feature_disabled` here is about proactive turns, not chat.
+    #[cfg(scout_proactive_coach)]
+    pub fn proactive_turn_not_started(&mut self, error: Option<&ExploreClientError>) {
+        self.abandon_coach_turn();
+        if let Some(error) = error
+            && matches!(
+                error.recovery(),
+                Some(
+                    Recovery::RePair
+                        | Recovery::SignInOnWeb
+                        | Recovery::UpgradeApp
+                        | Recovery::ExploreForbidden
+                )
+            )
+        {
+            self.request_failed(error);
+        }
     }
 
     /// `runs/start-app` refused the turn. It was not asked for by the player,
     /// so a coach that is off, a limit, or a busy conversation says nothing;
     /// only a refusal that gates chat as a whole shows.
     pub fn app_turn_failed(&mut self, error: &ExploreClientError) {
-        self.pending_coach = None;
-        self.turn = None;
-        // The conversation the player had open comes back.
-        if let Some((open, transcript)) = self.displaced.take() {
-            self.open = open;
-            self.transcript = transcript;
-        }
+        self.abandon_coach_turn();
         match error.recovery() {
             Some(
                 Recovery::FeatureDisabled
@@ -699,6 +777,17 @@ impl ChatSession {
                 | Recovery::ConversationBusy,
             ) => {}
             _ => self.request_failed(error),
+        }
+    }
+
+    /// Drop the coach turn that did not start; the conversation the player
+    /// had open comes back.
+    fn abandon_coach_turn(&mut self) {
+        self.pending_coach = None;
+        self.turn = None;
+        if let Some((open, transcript)) = self.displaced.take() {
+            self.open = open;
+            self.transcript = transcript;
         }
     }
 
@@ -717,11 +806,9 @@ impl ChatSession {
         if transcript.conversation.id != coach.conversation {
             return None;
         }
-        let answer = transcript
-            .messages
-            .iter()
-            .rev()
-            .find(|message| message.role == MessageRole::Assistant)?;
+        let answer = transcript.messages.iter().rev().find(|message| {
+            message.role == MessageRole::Assistant && panel_shows(coach, message)
+        })?;
         Some(ChatCoach {
             kind: coach.kind,
             message_id: answer.id,
@@ -844,6 +931,8 @@ impl ChatSession {
                 kind,
                 key,
                 conversation: run.conversation_id,
+                #[cfg(scout_proactive_coach)]
+                question: (kind == ChatCoachKind::Proactive).then_some(run.question_message_id),
             });
         }
         turn.run = Some(run);

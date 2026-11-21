@@ -5,9 +5,10 @@
 //! Riot's published policy prohibits unprompted alerts from live game state,
 //! so this module is compiled only into the beta release profile
 //! (`cfg(scout_proactive_coach)`, set by `build.rs`), and the server refuses
-//! `coach/triggers` in production whatever its flags say. Nothing sends what
-//! these detectors find yet; a later change wires them to the supervisor
-//! behind `scout_coach_proactive`.
+//! `coach/triggers` in production whatever its flags say. The supervisor feeds
+//! them each new frame of a game (`scout-client-app`'s
+//! `supervisor/proactive.rs`) and the chat relay sends what they find, until
+//! Scout's answer says to stop.
 //!
 //! Every rule reads only scoreboard fields of the allowlisted snapshot: team,
 //! champion, kills, deaths, assists and items. None reads a cooldown, a timer,
@@ -404,8 +405,9 @@ fn healing_threat(
 }
 
 /// Count the player's deaths since their last takedown, and fire once when
-/// the count reaches [`DEATH_STREAK_MIN`]. A takedown on the same frame as a
-/// death resets the count first.
+/// the count reaches [`DEATH_STREAK_MIN`]. A frame with a takedown ends the
+/// streak and counts none of its deaths: the scoreboard cannot say whether
+/// they came before or after it, and the streak must never be overstated.
 fn death_streak(
     state: DetectorState,
     before: &LiveParticipant,
@@ -413,13 +415,13 @@ fn death_streak(
 ) -> (DetectorState, Option<CoachTrigger>) {
     let takedown =
         now.kills.saturating_add(now.assists) > before.kills.saturating_add(before.assists);
-    let base = if takedown {
+    let base = state.deaths_without_takedown;
+    let died = u8::try_from(now.deaths.saturating_sub(before.deaths)).unwrap_or(u8::MAX);
+    let next = if takedown {
         0
     } else {
-        state.deaths_without_takedown
+        base.saturating_add(died)
     };
-    let died = u8::try_from(now.deaths.saturating_sub(before.deaths)).unwrap_or(u8::MAX);
-    let next = base.saturating_add(died);
     let trigger = (base < DEATH_STREAK_MIN && next >= DEATH_STREAK_MIN).then_some(
         CoachTrigger::DeathStreak {
             deaths: now.deaths,
@@ -765,6 +767,29 @@ mod tests {
                 .iter()
                 .any(|t| matches!(t, CoachTrigger::HealingThreat { .. }))
         );
+    }
+
+    #[test]
+    fn deaths_seen_with_a_takedown_never_count_toward_a_streak() -> TestResult {
+        let catalog = catalog();
+        // Two deaths, then a frame with a death and an assist (order
+        // unknown), then two more deaths: never three without a takedown.
+        let scores = [(2, 1, 3), (2, 3, 3), (2, 4, 4), (2, 6, 4)];
+        let mut state = DetectorState::default();
+        let mut fired = Vec::new();
+        for pair in scores.windows(2) {
+            let [(k0, d0, a0), (k1, d1, a1)] = pair else {
+                return Err("windows(2) yields pairs".into());
+            };
+            let before = frame(600, &[with_score(ME, *k0, *d0, *a0), ZED]);
+            let now = frame(602, &[with_score(ME, *k1, *d1, *a1), ZED]);
+            let detection = detect(&catalog, state, &before, &now);
+            state = detection.state;
+            fired.extend(detection.triggers);
+        }
+        assert_eq!(fired, []);
+        assert_eq!(state.deaths_without_takedown(), 2);
+        Ok(())
     }
 
     #[test]

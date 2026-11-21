@@ -35,6 +35,10 @@ pub enum CoachInput {
     Turn(Box<AppTurn>),
     /// The select or game is over: take the coach panel down.
     Clear,
+    /// Ask for the proactive turn a scoreboard detector found. Beta profile
+    /// only: a stable build has no way to send one.
+    #[cfg(scout_proactive_coach)]
+    Trigger(Box<crate::proactive::ProactiveTurn>),
 }
 
 /// What a champion select's pick and ban state looks like: a change in any of

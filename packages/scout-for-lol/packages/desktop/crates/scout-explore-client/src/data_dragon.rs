@@ -48,6 +48,14 @@ pub fn rune_list_url(version: &str) -> String {
     format!("{CDN}/{version}/data/en_US/runesReforged.json")
 }
 
+/// `item.json` at `version`, which the proactive coach's detectors read
+/// item facts from. Beta profile only.
+#[cfg(scout_proactive_coach)]
+#[must_use]
+pub fn item_list_url(version: &str) -> String {
+    format!("{CDN}/{version}/data/en_US/item.json")
+}
+
 #[derive(Deserialize)]
 struct ChampionList {
     data: HashMap<String, ChampionEntry>,

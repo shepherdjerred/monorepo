@@ -753,8 +753,38 @@ mod render {
             kind: ChatCoachKind::Pregame,
             message_id: golden::COACH_ANSWER,
         });
-        harness.chat(parts)?;
+        harness.chat(parts.clone())?;
         harness.capture("chat-coach-pregame")?;
+        proactive_panel(harness, parts)
+    }
+
+    /// Beta profile only: something Scout noticed on the scoreboard and
+    /// raised on its own, set apart as a "Scout noticed" card that says the
+    /// player did not ask. The question above it is the one the server words.
+    #[cfg(scout_proactive_coach)]
+    fn proactive_panel(harness: &mut Harness, mut parts: ChatParts) -> Result<(), Error> {
+        if let Some(transcript) = parts.transcript.as_mut() {
+            for message in &mut transcript.messages {
+                if message.id == golden::COACH_ANSWER {
+                    "Three deaths without a takedown: Zed is finding you alone in the river. Stay behind your wave until your jungler shows, and buy a Zhonya's Hourglass next to answer his ultimate.".clone_into(&mut message.content);
+                } else {
+                    "Scout noticed I died 3 times without a takedown. What, if anything, should I consider?".clone_into(&mut message.content);
+                }
+            }
+        }
+        parts.coach = Some(ChatCoach {
+            kind: ChatCoachKind::Proactive,
+            message_id: golden::COACH_ANSWER,
+        });
+        harness.chat(parts)?;
+        harness.capture("chat-coach-proactive")?;
+        Ok(())
+    }
+
+    /// A stable build has no proactive panel to draw.
+    #[cfg(not(scout_proactive_coach))]
+    #[expect(clippy::unnecessary_wraps, reason = "matches the beta signature")]
+    fn proactive_panel(_harness: &mut Harness, _parts: ChatParts) -> Result<(), Error> {
         Ok(())
     }
 

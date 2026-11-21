@@ -11,6 +11,9 @@ use std::{
 
 use serde::Deserialize;
 
+#[path = "../../build-support/proactive_coach.rs"]
+mod proactive_coach;
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct ProtocolContract {
@@ -445,10 +448,7 @@ fn generate_profiles(manifest_dir: &Path, output_dir: &Path) -> Result<(), Box<d
     // Proactive coach detectors exist only in the beta profile: Riot's
     // published policy prohibits unprompted alerts from live game state, so
     // a stable build does not even compile them (`live::detectors`).
-    println!("cargo::rustc-check-cfg=cfg(scout_proactive_coach)");
-    if selected == "beta" {
-        println!("cargo::rustc-cfg=scout_proactive_coach");
-    }
+    proactive_coach::emit()?;
     let mut profiles = Vec::new();
     for channel in ["stable", "beta"] {
         let path = manifest_dir.join(format!("../../release-profiles/{channel}.json"));

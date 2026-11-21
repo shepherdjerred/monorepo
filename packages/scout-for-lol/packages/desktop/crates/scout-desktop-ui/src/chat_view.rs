@@ -15,8 +15,8 @@ use crate::chat_model::{
 use crate::kit::prelude::{IntoElement, ParentElement as _, Styled as _};
 use crate::kit::{
     ButtonStyle, ComposerState, ControlHandler, Handler, Page, ScoutButton, Transcript,
-    TranscriptState, action_row, body_text, column, control_button, draft_strip, error_notice,
-    note_text, row, section_heading, status_line,
+    TranscriptState, action_row, body_text, callout, column, control_button, draft_strip,
+    error_notice, note_text, row, section_heading, status_line,
 };
 use crate::views::{Send, button};
 use crate::voice_model::VoiceTurnModel;
@@ -165,20 +165,19 @@ fn conversation(model: ConversationModel, controls: ChatControls<'_>) -> impl In
 }
 
 /// Scout's coaching for champion select or the start of a game: its answer,
-/// and the options as chips to pick from, each with its reason.
+/// and the options as chips to pick from, each with its reason. A panel with
+/// a note (something Scout raised on its own) is drawn as a bordered card,
+/// apart from advice the player expects.
 fn coach_panel(panel: CoachPanelModel, handler: &ControlHandler) -> impl IntoElement {
-    column()
-        .px_6()
-        .pb_3()
-        .gap_2()
-        .child(section_heading(panel.heading))
-        .child(body_text(panel.text))
-        .child(
-            row()
-                .gap_3()
-                .flex_wrap()
-                .items_start()
-                .children(panel.options.into_iter().map(|option| {
+    let card = panel.note.is_some();
+    let body =
+        column()
+            .gap_2()
+            .child(section_heading(panel.heading))
+            .children(panel.note.map(note_text))
+            .child(body_text(panel.text))
+            .child(row().gap_3().flex_wrap().items_start().children(
+                panel.options.into_iter().map(|option| {
                     column()
                         .max_w(gpui::px(220.))
                         .gap_1()
@@ -188,8 +187,14 @@ fn coach_panel(panel: CoachPanelModel, handler: &ControlHandler) -> impl IntoEle
                             handler,
                         ))
                         .child(note_text(option.rationale))
-                })),
-        )
+                }),
+            ));
+    let panel = column().px_6().pb_3();
+    if card {
+        panel.child(callout(body))
+    } else {
+        panel.child(body)
+    }
 }
 
 /// The latest spoken turn: what Scout heard, its answer, or why it stopped.
