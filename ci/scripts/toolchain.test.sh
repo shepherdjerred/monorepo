@@ -48,6 +48,12 @@ if ! rg -Fq 'mise_ci where node' "$TOOLCHAIN" ||
   exit 1
 fi
 
+if ! rg -Fxq 'export MISE_DOTNET_ISOLATED=1' "$TOOLCHAIN" ||
+  ! rg -Fq 'mise_ci install --yes --force dotnet' "$TOOLCHAIN"; then
+  echo "CI toolchain must keep .NET SDKs inside the install claim and repair stale records" >&2
+  exit 1
+fi
+
 if ! rg -Fq 'ln -sf "$(mise which gh)" /usr/local/bin/gh' "$CI_IMAGE" ||
   ! rg -Fq '&& gh --version' "$CI_IMAGE"; then
   echo "ci image must expose the mise-owned gh binary to login shells" >&2

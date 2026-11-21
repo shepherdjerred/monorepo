@@ -109,6 +109,13 @@ export PATH="/opt/mise/shims:$HOME/.local/bin:$HOME/.local/share/mise/shims:$PAT
 # the same 5,000/hr bucket as every other CI and agent GitHub read. Locked mode
 # fails on a tool the lockfile does not cover rather than resolving it.
 export MISE_LOCKED=1
+# mise's dotnet backend otherwise installs every SDK into one shared root under
+# MISE_DATA_DIR and records each version as a symlink to it. A stale image's
+# runtime install then leaves that symlink in the shared install claim while
+# the SDK stays in the installing pod's image layer, so later pods see the
+# version as installed without its SDK. Isolated installs keep each SDK inside
+# its own install directory, which lives in the claim.
+export MISE_DOTNET_ISOLATED=1
 # Downloads and provenance checks can still reach GitHub; unauthenticated calls
 # share the cluster egress IP's 60/hr limit, which CI exhausts immediately.
 # Scope the download-only identity to mise itself instead of exporting a
@@ -232,6 +239,13 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     if ! mise_ci where node; then
       mise_ci install --yes --force node
       mise_ci where node
+    fi
+    # A record written before isolated installs can still point at another
+    # pod's shared .NET root; reinstall when the pinned SDK is absent.
+    dotnet_version=$(mise_ci current dotnet)
+    if [ ! -d "$(mise_ci where dotnet)/sdk/$dotnet_version" ]; then
+      mise_ci install --yes --force dotnet
+      test -d "$(mise_ci where dotnet)/sdk/$dotnet_version"
     fi
     expose_postgres_tools
     # Runtime installs can add a tool without creating its executable shim on a
