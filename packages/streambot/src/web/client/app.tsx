@@ -109,7 +109,6 @@ function Remote(props: { me: Me }) {
         <Rail />
       </div>
       <footer className="footer">
-        <a href="/classic">Classic remote</a>
         <span className="footer-credit">
           <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">
             <img src="/tmdb.svg" alt="TMDB" width="46" height="20" />

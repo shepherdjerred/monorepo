@@ -86,12 +86,6 @@ export const MusicEntitySchema = z.strictObject({
   selectionId: z.string().optional(),
 });
 export type MusicEntity = z.infer<typeof MusicEntitySchema>;
-export const MusicPageSchema = z.strictObject({
-  items: z.array(MusicEntitySchema),
-  total: z.number().int().nonnegative(),
-  offset: z.number().int().nonnegative(),
-  hasMore: z.boolean().optional(),
-});
 export const MusicAlbumSchema = z.strictObject({
   id: z.uuid(),
   title: z.string(),
@@ -124,11 +118,6 @@ export const MusicMatchSchema = z.strictObject({
 });
 export const MusicMatchesSchema = z.array(MusicMatchSchema);
 export type MusicMatch = z.infer<typeof MusicMatchSchema>;
-export const MusicFeaturesSchema = z.strictObject({
-  catalog: z.boolean(),
-  spotify: z.boolean(),
-  playlists: z.boolean(),
-});
 export const QueueLoadSchema = z.strictObject({
   id: z.string(),
   state: z.enum(["loading", "ready", "cancelled", "failed"]),

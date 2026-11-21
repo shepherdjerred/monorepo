@@ -19,13 +19,13 @@ import {
 } from "@shepherdjerred/streambot/observability/usage-context.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
-import { MusicAlbumSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { MeSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { fixtureMusic, ALBUM } from "#music-fixture";
 import { LibraryPageSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { CHANNEL, GUILD, OTHER, USER, webFixture } from "./web-fixture.ts";
 import { discordLogin } from "./web-fixture-login.ts";
+import { albumSelection } from "./web-fixture-music.ts";
 
 const USERNAME = "analytics-private-username";
 const QUERY = "zzprivatequery";
@@ -95,6 +95,14 @@ async function metric(event: string, outcome: string): Promise<number> {
 async function status(request: Request): Promise<number> {
   const response = await fixture.handler(request);
   return response.status;
+}
+
+/** A unified video search for the private query: one search, counted under `candidates`. */
+function videoSearch(): string {
+  return (
+    "/api/search/v2?" +
+    new URLSearchParams({ guildId: GUILD, kind: "videos", q: QUERY }).toString()
+  );
 }
 
 async function json(request: Request): Promise<unknown> {
@@ -167,14 +175,13 @@ test("a web play, a music batch, a rejected command, a search and a slash play h
   const played = await webPlay();
   expect(played.status).toBe(200);
 
-  const album = MusicAlbumSchema.parse(
-    await json(get("/api/music/album?album=" + ALBUM + "&guildId=" + GUILD)),
-  );
+  const id = await albumSelection(fixture, { album: ALBUM, guildId: GUILD });
   const batch = await fixture.handler(
     fixture.command({
       action: "play",
-      selection: { kind: "music", id: album.selectionId },
+      selection: { kind: "music", id },
       placement: "next",
+      transport: "listen",
     }),
   );
   expect(batch.status).toBe(200);
@@ -192,8 +199,7 @@ test("a web play, a music batch, a rejected command, a search and a slash play h
   });
   expect(await status(stale)).toBe(409);
 
-  const query = new URLSearchParams({ guildId: GUILD, query: QUERY });
-  expect(await status(get("/api/search?" + query.toString()))).toBe(200);
+  expect(await status(get(videoSearch()))).toBe(200);
 
   await slashService().play({
     query: "Local Movie",
@@ -254,8 +260,7 @@ test("distinct ids are stable UUIDs per user and contain no Discord or content d
   });
   await webPlay();
   await webPlay();
-  const query = new URLSearchParams({ guildId: GUILD, query: QUERY });
-  await fixture.handler(get("/api/search?" + query.toString()));
+  await fixture.handler(get(videoSearch()));
   const service = slashService();
   await service.play({
     query: "Local Movie",

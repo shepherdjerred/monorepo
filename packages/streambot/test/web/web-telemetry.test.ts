@@ -18,8 +18,8 @@ import {
   webSearchTotal,
   webTimeToPlaybackSeconds,
 } from "@shepherdjerred/streambot/observability/web-metrics.ts";
-import { MusicAlbumSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { fixtureMusic, ALBUM } from "#music-fixture";
+import { albumSelection } from "./web-fixture-music.ts";
 import { LibraryPageSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { CHANNEL, GUILD, USER, webFixture } from "./web-fixture.ts";
 import { discordLogin } from "./web-fixture-login.ts";
@@ -128,14 +128,21 @@ async function drive(): Promise<{ traceId: string }> {
   );
   const arrival = library.items.find((item) => item.title === "Arrival");
   if (arrival === undefined) throw new Error("Expected the Arrival fixture");
-  const query = new URLSearchParams({ guildId: GUILD, query: QUERY });
-  const search = await fixture.handler(get("/api/search?" + query.toString()));
+  const query = new URLSearchParams({
+    guildId: GUILD,
+    kind: "library",
+    q: QUERY,
+  });
+  const search = await fixture.handler(
+    get("/api/search/v2?" + query.toString()),
+  );
   expect(search.status).toBe(200);
   const played = await fixture.handler(
     fixture.command({
       action: "play",
       selection: { kind: "library", id: arrival.id },
       placement: "queue",
+      transport: "watch",
     }),
   );
   expect(played.status).toBe(200);
@@ -208,12 +215,12 @@ test("requests, commands, logins and play outcomes are counted with closed label
   expect(await request("/api/auth/discord/callback", "3xx", "ok")).toBe(1);
   expect(
     await count("streambot_web_request_duration_seconds_count", {
-      route: "/api/search",
+      route: "/api/search/v2",
     }),
   ).toBe(1);
   const command = (action: string, transport: string, outcome: string) =>
     count("streambot_web_commands_total", { action, transport, outcome });
-  expect(await command("play", "unspecified", "ok")).toBe(1);
+  expect(await command("play", "watch", "ok")).toBe(1);
   expect(await command("play", "listen", "ok")).toBe(1);
   expect(await command("remove", "unspecified", "conflict")).toBe(1);
   expect(
@@ -236,7 +243,7 @@ test("request, command and login log lines have a closed shape and aborts are no
   const { traceId } = await drive();
   const requestLines = logs("web request");
   expect(
-    requestLines.find((entry) => entry["route"] === "/api/search"),
+    requestLines.find((entry) => entry["route"] === "/api/search/v2"),
   ).toMatchObject({
     level: "info",
     method: "GET",
@@ -254,7 +261,7 @@ test("request, command and login log lines have a closed shape and aborts are no
       action: "play",
       placement: "queue",
       selection_kind: "library",
-      transport: "unspecified",
+      transport: "watch",
       outcome: "ok",
       code: "ok",
       duration_ms: expect.any(Number),
@@ -336,20 +343,18 @@ test("a web music selection counts as one web play request, not one per track", 
     music: fixtureMusic(),
     musicEnabled: true,
   });
-  const album = MusicAlbumSchema.parse(
-    await json(
-      await fixture.handler(
-        get("/api/music/album?album=" + ALBUM + "&guildId=" + GUILD),
-      ),
-    ),
-  );
-  expect(album.tracks.length).toBeGreaterThan(1);
+  const id = await albumSelection(fixture, { album: ALBUM, guildId: GUILD });
   const played = await fixture.handler(
     fixture.command({
       action: "play",
-      selection: { kind: "music", id: album.selectionId },
+      selection: { kind: "music", id },
       placement: "queue",
+      transport: "listen",
     }),
+  );
+  const batch = fixture.events.find((event) => event.type === "ADD_BATCH");
+  expect(batch?.type === "ADD_BATCH" ? batch.items.length : 0).toBeGreaterThan(
+    1,
   );
   expect(played.status).toBe(200);
   expect(

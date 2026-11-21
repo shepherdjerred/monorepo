@@ -26,7 +26,7 @@ import type {
 const ItemsPageSchema = z.looseObject({ items: z.array(z.unknown()) });
 
 /** Records one search with its latency bucket; the result and any failure are untouched. */
-export async function observeSearch<T extends Response | null>(
+async function observeSearch<T extends Response | null>(
   session: WebSession,
   source: SearchSource,
   run: () => Promise<{ response: T; hadResults: boolean }>,
@@ -60,22 +60,6 @@ async function observeItemsPage(
       hadResults: page.success && page.data.items.length > 0,
     };
   });
-}
-
-/** Music catalog browsing with a query is the music search; everything else passes through. */
-export async function observeMusicSearch(
-  request: Request,
-  url: URL,
-  session: WebSession,
-  handle: () => Promise<Response | null>,
-): Promise<Response | null> {
-  const searching =
-    request.method === "GET" &&
-    url.pathname === "/api/music/catalog" &&
-    (url.searchParams.get("query") ?? "").trim() !== "";
-  return searching
-    ? await observeItemsPage(session, "music", handle)
-    : await handle();
 }
 
 /** The unified search groups that report as a search, by the source each is counted under. */

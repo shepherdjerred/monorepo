@@ -1,7 +1,6 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { waitFor } from "xstate";
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
-import { MusicAlbumSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
 import { UnsupportedVideoRequestError } from "@shepherdjerred/streambot/sources/resolve.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
@@ -9,10 +8,14 @@ import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts"
 import {
   CommandResultSchema,
   LibraryPageSchema,
-  SearchResultsSchema,
   SportsResultsSchema,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
-import { fixtureMusic, ALBUM, SONG } from "#music-fixture";
+import {
+  BrowsePageSchema,
+  SearchResponseSchema,
+} from "@shepherdjerred/streambot/web/shared/search-contracts.ts";
+import { fixtureMusic, SONG } from "#music-fixture";
+import { ALBUM_ID } from "#youtube-music-fixture";
 import { harness, number } from "#numbered-fixture";
 import { CHANNEL, GUILD, USER, webFixture } from "./web-fixture.ts";
 
@@ -93,19 +96,20 @@ async function libraryId(title: string) {
 }
 
 async function candidateId() {
-  const results = SearchResultsSchema.parse(
-    await get("/api/search?query=tiny+desk&source=youtube"),
+  const results = SearchResponseSchema.parse(
+    await get("/api/search/v2?kind=videos&q=tiny+desk"),
   );
-  const candidate = results.find((entry) => entry.provider === "youtube");
+  const candidate = results.items.find((entry) => entry.kind === "video");
   if (candidate === undefined) throw new Error("Missing YouTube candidate");
   return candidate.id;
 }
 
 async function albumSelection() {
-  const album = MusicAlbumSchema.parse(
-    await get("/api/music/album?album=" + ALBUM),
+  const album = BrowsePageSchema.parse(
+    await get("/api/music/v2/album?id=" + ALBUM_ID),
   );
-  return album.selectionId;
+  if (album.play === undefined) throw new Error("Missing album play");
+  return album.play.id;
 }
 
 function playlistSelection() {
@@ -120,7 +124,7 @@ function playlistSelection() {
 
 async function play(
   selection: Record<string, unknown>,
-  transport: "listen" | "watch" | undefined,
+  transport: "listen" | "watch",
   extra: Record<string, unknown> = {},
 ) {
   return await fixture.handler(
@@ -130,7 +134,7 @@ async function play(
       selection,
       playbackChannel: null,
       revision: null,
-      ...(transport === undefined ? {} : { transport }),
+      transport,
       ...extra,
     }),
   );
@@ -241,7 +245,7 @@ test("an explicit extra stream targets slot 3 and is refused beyond the maximum"
   expect(room.manager.getExisting(GUILD, CHANNEL, number(5))).toBeNull();
 });
 
-test("explicit targeting controls a named slot regardless of personal selection", async () => {
+test("a command controls the slot it names regardless of personal selection", async () => {
   const room = await numberedRoom();
   await ok(
     await play({ kind: "url", url: "https://example.com/clip" }, "watch"),
@@ -256,7 +260,6 @@ test("explicit targeting controls a named slot regardless of personal selection"
     fixture.command({
       action: "volume",
       percent: 40,
-      targeting: "explicit",
       playbackChannel: 2,
       revision: null,
     }),
@@ -268,7 +271,6 @@ test("explicit targeting controls a named slot regardless of personal selection"
   const missing = await fixture.handler(
     fixture.command({
       action: "stop",
-      targeting: "explicit",
       playbackChannel: null,
       revision: null,
     }),
@@ -362,24 +364,4 @@ test("destination and position describe immediate, queued, next and now placemen
     position: 0,
     destination: { transport: "watch", voiceChannelName: "Movie night" },
   });
-});
-
-test("the classic remote's request shape keeps its personal-channel destination", async () => {
-  const room = await numberedRoom();
-  room.manager.numbered.selection.select(scope, 2, 4);
-  const response = await fixture.handler(
-    fixture.command({
-      action: "play",
-      placement: "queue",
-      selection: { kind: "url", url: "https://example.com/clip" },
-      playbackChannel: 2,
-      revision: null,
-    }),
-  );
-  const result = await ok(response);
-  expect(result.destination?.transport).toBe("watch");
-  await vi.waitFor(() => {
-    expect(slotModes(room, 2)).toEqual(["video"]);
-  });
-  expect(room.manager.getExisting(GUILD, CHANNEL, number(1))).toBeNull();
 });

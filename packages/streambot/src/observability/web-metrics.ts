@@ -48,7 +48,6 @@ export const WEB_COMMAND_ACTIONS = [
   "stop",
   "clear",
   "shuffle",
-  "select",
   "play",
   "seek",
   "volume",
@@ -65,7 +64,7 @@ export function webCommandAction(action: string): WebCommandAction {
   return WEB_COMMAND_ACTIONS.find((known) => known === action) ?? "invalid";
 }
 
-/** The viewer's explicit Listen/Watch choice; the classic remote and non-play commands send none. */
+/** A play's Listen/Watch destination; every other command is `unspecified`. */
 export const WEB_TRANSPORTS = ["listen", "watch", "unspecified"] as const;
 export type WebTransportLabel = (typeof WEB_TRANSPORTS)[number];
 

@@ -1,8 +1,5 @@
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
-import {
-  PlaybackChannelNumberSchema,
-  type PlaybackChannelNumber,
-} from "@shepherdjerred/streambot/types/playback-channel.ts";
+import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
 import {
   IDLE_VIEW,
@@ -20,21 +17,17 @@ import {
 import type {
   WebCommand,
   WebCommandResult,
-  WebSnapshot,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { UnsupportedVideoRequestError } from "@shepherdjerred/streambot/sources/resolve.ts";
 import type { WebSession } from "./session-store.ts";
 import { WebError, requestInput } from "./errors.ts";
 import type { WebPlaybackDeps } from "./playback-deps.ts";
 import { WebHistory } from "./history.ts";
-import { buildWebSnapshot } from "./snapshot.ts";
-import { automaticPlaybackChannel } from "@shepherdjerred/streambot/commands/automatic-channel.ts";
 import { PlayReceipt, playEvent } from "./command/play-receipt.ts";
 import {
   expectedCurrent,
-  explicitPlaybackChannel,
-  isExplicitTarget,
   isPositional,
+  targetPlaybackChannel,
 } from "./command/targeting.ts";
 
 type WebCommandContext = {
@@ -53,11 +46,7 @@ type WebCommandContext = {
 };
 
 type ContextOptions = {
-  /** The destination automatic routing chose for a parent play command. */
-  readonly routed?: boolean;
-  /** Bind a command that is not one of the positional actions to the viewer's revision. */
-  readonly positional?: boolean;
-  /** Shared with a routed child so the parent reports where the item went. */
+  /** The play request's receipt, when the caller reports where the item went. */
   readonly receipt?: PlayReceipt;
 };
 
@@ -117,10 +106,6 @@ export class WebPlayback {
       );
   }
 
-  async snapshot(session: WebSession, guild: string): Promise<WebSnapshot> {
-    return await buildWebSnapshot(this, session, guild);
-  }
-
   async sportsEnabled(session: WebSession, guildId: string): Promise<boolean> {
     return (
       (await this.deps.featureGate.sportsStreaming?.({
@@ -145,37 +130,24 @@ export class WebPlayback {
   }
 
   /**
-   * `guard` re-checks the target (same voice channel and, for selection-based commands, the same
-   * personal selection) before every dispatch. Only positional commands also require the revision
-   * the viewer saw; everything else applies to whatever is current when it lands.
+   * The command's slot comes from the card it names or the slot its action implies. `guard`
+   * re-checks that the viewer is still in the voice channel the command names before every
+   * dispatch. Only positional commands also require the revision the viewer saw; everything else
+   * applies to whatever is current when it lands.
    */
-  private async target(
-    session: WebSession,
-    input: WebCommand,
-    options: ContextOptions = {},
-  ) {
-    const routed = options.routed === true;
+  private async target(session: WebSession, input: WebCommand) {
     await this.authorize(session, input.guildId);
     const guildId = GuildIdSchema.parse(input.guildId);
     const channelId = ChannelIdSchema.parse(input.channelId);
     const userId = UserIdSchema.parse(session.identity.userId);
     const scope = { guildId, channelId, userId };
-    const selected = await this.deps.sessions.numbered.selected(scope);
-    const explicit = isExplicitTarget(input);
-    const playbackChannel = explicit
-      ? explicitPlaybackChannel(input, selected !== undefined, () =>
-          this.deps.sessions.numbered.maximum(guildId),
-        )
-      : this.selectedChannel(input, selected, guildId);
-    const selectionVersion =
-      input.selectionVersion ??
-      this.deps.sessions.numbered.selection.version(scope);
-    const auto =
-      !explicit &&
-      selected !== undefined &&
-      !this.deps.sessions.numbered.selection.isManual(scope) &&
-      (await this.deps.featureGate.automaticChannelRouting?.(scope)) === true;
-    const positional = options.positional === true || isPositional(input);
+    // A viewer with no numbered slot is in a legacy room: one mixed queue.
+    const numbered =
+      (await this.deps.sessions.numbered.selected(scope)) !== undefined;
+    const playbackChannel = targetPlaybackChannel(input, numbered, () =>
+      this.deps.sessions.numbered.maximum(guildId),
+    );
+    const positional = isPositional(input);
     let revision = input.revision;
     const guard = () => {
       if (this.deps.bot.webVoiceChannel(guildId, userId)?.id !== channelId)
@@ -183,24 +155,6 @@ export class WebPlayback {
           409,
           "channel_changed",
           "Your voice channel changed. Refresh and try again.",
-        );
-      if (
-        !explicit &&
-        (this.deps.sessions.numbered.selection.version(scope) !==
-          selectionVersion ||
-          (!routed &&
-            (!auto || input.selectionVersion === null) &&
-            (((input.selectionVersion === null ||
-              input.playbackChannel !== null) &&
-              (selected ?? null) !== input.playbackChannel) ||
-              (selected !== undefined &&
-                this.deps.sessions.numbered.selection.get(scope) !==
-                  selected))))
-      )
-        throw new WebError(
-          409,
-          "playback_channel_changed",
-          "Your Streambot channel changed. Refresh and try again.",
         );
       if (
         positional &&
@@ -227,77 +181,8 @@ export class WebPlayback {
       userId,
       scope,
       playbackChannel,
-      auto,
       guard,
       refreshRevision,
-    };
-  }
-
-  private selectedChannel(
-    input: WebCommand,
-    selected: PlaybackChannelNumber | undefined,
-    guildId: GuildId,
-  ): PlaybackChannelNumber | undefined {
-    const playbackChannel =
-      selected === undefined || input.playbackChannel === null
-        ? selected
-        : requestInput(PlaybackChannelNumberSchema, input.playbackChannel);
-    if (
-      playbackChannel !== undefined &&
-      playbackChannel > this.deps.sessions.numbered.maximum(guildId)
-    )
-      throw new WebError(
-        400,
-        "invalid_channel",
-        "That Streambot channel is unavailable.",
-      );
-    return playbackChannel;
-  }
-
-  async selectChannel(
-    session: WebSession,
-    input: Extract<WebCommand, { action: "select" }>,
-  ) {
-    const { guildId, scope, playbackChannel, guard } = await this.target(
-      session,
-      input,
-    );
-    if (playbackChannel === undefined)
-      throw new WebError(
-        409,
-        "channels_unavailable",
-        "Numbered channels are unavailable while a legacy queue is active or the beta is disabled.",
-      );
-    const maximum = this.deps.sessions.numbered.maximum(guildId);
-    if (input.number !== null && input.number > maximum)
-      throw new WebError(
-        400,
-        "invalid_channel",
-        `Choose a Streambot channel from 1 to ${String(maximum)}.`,
-      );
-    guard();
-    if (input.number === null) {
-      if (
-        (await this.deps.featureGate.automaticChannelRouting?.(scope)) !== true
-      )
-        throw new WebError(
-          403,
-          "feature_disabled",
-          "Automatic channels are not enabled here.",
-        );
-      guard();
-      this.deps.sessions.numbered.selection.clear(scope);
-      return {
-        message:
-          "Automatic channels selected: music uses 1; Plex and sports use 2.",
-      };
-    }
-    return {
-      message: this.deps.sessions.numbered.selection.select(
-        scope,
-        input.number,
-        maximum,
-      ),
     };
   }
 
@@ -306,7 +191,6 @@ export class WebPlayback {
     input: WebCommand,
     options: ContextOptions = {},
   ): Promise<WebCommandContext> {
-    const routed = options.routed === true;
     const receipt =
       options.receipt ??
       new PlayReceipt(input.action === "play" ? input.transport : undefined);
@@ -316,10 +200,9 @@ export class WebPlayback {
       userId,
       scope,
       playbackChannel,
-      auto,
       guard,
       refreshRevision,
-    } = await this.target(session, input, options);
+    } = await this.target(session, input);
     if (
       input.action === "play" &&
       input.transport === "listen" &&
@@ -371,7 +254,6 @@ export class WebPlayback {
       refreshRevision();
       return result;
     };
-    const automatic = !routed && input.action === "play" && auto;
     guardCommand();
     const commandDeps: PlaybackCommandServiceDeps = {
       ...this.deps.commands,
@@ -389,26 +271,6 @@ export class WebPlayback {
           throw error;
         }
       },
-      ...(automatic
-        ? {
-            routePlayback: async (source, resolved, actor) => {
-              guardCommand();
-              if (actor !== userId)
-                throw new WebError(
-                  403,
-                  "requester_changed",
-                  "The requester changed while loading playback.",
-                );
-              const number = automaticPlaybackChannel(source, resolved);
-              const destination = await this.commandContext(
-                session,
-                { ...input, playbackChannel: number },
-                { routed: true, receipt },
-              );
-              return destination.commandDeps;
-            },
-          }
-        : {}),
       dispatch: (event) => {
         guarded(() => {
           if (handle === null) {
@@ -429,11 +291,6 @@ export class WebPlayback {
           if (play === null) handle.dispatch(event);
           else
             receipt.record(play, playbackChannel, handle.dispatchTracked(play));
-          if (routed && playbackChannel !== undefined)
-            this.deps.sessions.numbered.selection.follow(
-              { guildId, channelId, userId },
-              playbackChannel,
-            );
         });
       },
       view: () => boundHandle()?.view() ?? IDLE_VIEW,

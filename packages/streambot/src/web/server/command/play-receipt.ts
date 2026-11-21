@@ -48,9 +48,8 @@ function transportOf(mode: string | undefined): WebTransport | undefined {
 /** Listen and Watch fix every item's mode, including on a legacy room's single queue. */
 export function withTransport(
   sources: readonly Source[],
-  transport: WebTransport | undefined,
+  transport: WebTransport,
 ): readonly Source[] {
-  if (transport === undefined) return sources;
   const mode = transportMode(transport);
   return sources.map((source) => withMode(source, mode));
 }
