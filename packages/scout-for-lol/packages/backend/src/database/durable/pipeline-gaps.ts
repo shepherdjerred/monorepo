@@ -189,9 +189,16 @@ export type ObservationLag = {
  * threshold has to be read with that in mind: healthy p90 here is roughly the
  * game length plus a few minutes of discovery.
  *
- * Only FULL, `live` observations: a silent backfill is late on purpose, and
- * ARCHIVE_ONLY observations are never reported, so neither says anything about
- * whether reports are late. Owner is not filtered, because discovery lag is a
+ * Only FULL, `live` observations for matches that started while at least one
+ * participating `Account` was already tracked (`a."createdTime" <=
+ * o."gameCreatedAt"`): a silent backfill is late on purpose, ARCHIVE_ONLY
+ * observations are never reported, and when `initial_match_history_import` is
+ * off, onboarding a brand-new account seeds its cursor from its most recent
+ * Riot match as FULL `live` even when that game was played weeks or months
+ * before Scout watched the account. Counting pre-registration games charges
+ * discovery for the time before the account existed; an outage on an
+ * already-tracked account still has `createdTime <= gameCreatedAt` and still
+ * registers its full lag. Owner is not filtered, because discovery lag is a
  * property of discovery, whichever pipeline then processes the match.
  *
  * An empty window reads zero. That cannot distinguish "no games" from "no
@@ -200,7 +207,8 @@ export type ObservationLag = {
  * outright is therefore NOT covered here; it reads as a quiet window.
  *
  * Rides `MatchObservation(processingPolicy, observedAt)`, bounded to
- * `observedSince`.
+ * `observedSince`, with residuals on `MatchTrackedAccount`'s primary key and
+ * `Account(puuid)`.
  */
 export async function observationLag(
   db: Db,
@@ -214,7 +222,12 @@ export async function observationLag(
       FROM "MatchObservation" AS o
      WHERE o."processingPolicy" = ${FULL_POLICY_COLUMN}
        AND o."observedAt" > ${args.observedSince}::timestamp
-       AND o."deliveryMode" = ${LIVE_DELIVERY_COLUMN}`);
+       AND o."deliveryMode" = ${LIVE_DELIVERY_COLUMN}
+       AND EXISTS (SELECT 1
+                     FROM "MatchTrackedAccount" AS ta
+                     JOIN "Account" AS a ON a."puuid" = ta."puuid"
+                    WHERE ta."riotMatchId" = o."riotMatchId"
+                      AND a."createdTime" <= o."gameCreatedAt")`);
   const row = singleRow(
     z.strictObject({
       observations: z.number().int(),

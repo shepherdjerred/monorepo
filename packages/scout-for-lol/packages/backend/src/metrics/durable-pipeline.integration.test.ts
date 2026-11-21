@@ -13,6 +13,11 @@ import {
   createTestDatabase,
   dropTestDatabase,
 } from "#src/testing/test-database.ts";
+import {
+  testAccountId,
+  testGuildId,
+  testPuuid,
+} from "#src/testing/test-ids.ts";
 
 /**
  * The durable sweeps, run against a real Postgres.
@@ -100,11 +105,62 @@ async function seedRecoveryBatch(
   });
 }
 
+async function seedLaggedLiveObservation(
+  observedAt: Date,
+  lagMs: number,
+): Promise<void> {
+  const gameCreatedAt = new Date(observedAt.getTime() - lagMs);
+  const matchId = RiotMatchIdSchema.parse("NA1_9150");
+  const puuid = testPuuid("NA1_9150");
+  const accountCreatedAt = new Date(gameCreatedAt.getTime() - HOUR_MS);
+  await prisma.player.create({
+    data: {
+      alias: "NA1_9150",
+      serverId: testGuildId("9150"),
+      creatorDiscordId: testAccountId("9150"),
+      createdTime: accountCreatedAt,
+      updatedTime: accountCreatedAt,
+      accounts: {
+        create: {
+          alias: "NA1_9150",
+          puuid,
+          region: "AMERICA_NORTH",
+          serverId: testGuildId("9150"),
+          creatorDiscordId: testAccountId("9150"),
+          createdTime: accountCreatedAt,
+          updatedTime: accountCreatedAt,
+        },
+      },
+    },
+  });
+  await prisma.matchObservation.create({
+    data: {
+      riotMatchId: matchId,
+      platformRoute: "NA1",
+      processingPolicy: "FULL",
+      deliveryMode: "live",
+      pipelineOwner: "TEMPORAL_V2",
+      gameCreatedAt,
+      observedAt,
+    },
+  });
+  await prisma.matchTrackedAccount.create({
+    data: {
+      riotMatchId: matchId,
+      puuid,
+      cursorAdvancedAt: observedAt,
+    },
+  });
+}
+
 beforeEach(async () => {
   await prisma.matchNotificationIntent.deleteMany();
   await prisma.matchRecoveryBatch.deleteMany();
   await prisma.scoutWorkflowStart.deleteMany();
+  await prisma.matchTrackedAccount.deleteMany();
   await prisma.matchObservation.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.player.deleteMany();
   await prisma.botState.deleteMany();
   scoutDurableNotificationIntents.reset();
   scoutDurablePostmatchPollAge.reset();
@@ -251,18 +307,10 @@ describe("durable pipeline sweep against Postgres", () => {
       await gaugeValue(scoutDurableObservationLag, { statistic: "p90" }),
     ).toBe(0);
 
-    const observedAt = new Date(NOW - 10 * 60 * 1000);
-    await prisma.matchObservation.create({
-      data: {
-        riotMatchId: RiotMatchIdSchema.parse("NA1_9150"),
-        platformRoute: "NA1",
-        processingPolicy: "FULL",
-        deliveryMode: "live",
-        pipelineOwner: "TEMPORAL_V2",
-        gameCreatedAt: new Date(observedAt.getTime() - 3 * HOUR_MS),
-        observedAt,
-      },
-    });
+    await seedLaggedLiveObservation(
+      new Date(NOW - 10 * 60 * 1000),
+      3 * HOUR_MS,
+    );
     await collectDurablePipelineMetrics(prisma);
     for (const statistic of ["p90", "max"]) {
       expect(
