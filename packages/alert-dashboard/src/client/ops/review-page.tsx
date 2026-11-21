@@ -9,12 +9,8 @@ import {
 } from "@shepherdjerred/ops-model/digest.ts";
 
 import { reviewQuery } from "./ops-api.ts";
-import {
-  ChangeTimeline,
-  PageHeading,
-  SeverityBadge,
-  SignalList,
-} from "./ops-ui.tsx";
+import { ChangeTimeline, PageHeading, SeverityBadge } from "./ops-ui.tsx";
+import { SignalList } from "./signal-list.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { formatInstant } from "#client/time.ts";
@@ -137,7 +133,7 @@ function ReviewBody({
             <SignalList
               signals={report.newSinceLast}
               empty="Nothing new."
-              limit={10}
+              cap={10}
             />
           </section>
         </div>

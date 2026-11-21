@@ -12,6 +12,10 @@ import {
   type Signal,
 } from "@shepherdjerred/ops-model/snapshot.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
+import {
+  groupSignals,
+  type SignalEntry,
+} from "@shepherdjerred/ops-model/signals/signal-groups.ts";
 import { fetchOpsSnapshot } from "#lib/ops.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
 import { coordinationSummary, formatCoordination } from "#lib/forum.ts";
@@ -80,6 +84,30 @@ function formatSignal(signal: Signal, includeSection: boolean): string[] {
   return lines;
 }
 
+/**
+ * Signals as printed lines, with runs of same-kind signals collapsed into one
+ * counted line. `--json` still lists every signal.
+ */
+function formatEntries(
+  entries: readonly SignalEntry[],
+  includeSection: boolean,
+): string[] {
+  return entries.flatMap((entry) =>
+    entry.type === "signal"
+      ? formatSignal(entry.signal, includeSection)
+      : [
+          `  - [${label(entry.severity)}] ${includeSection ? `${entry.section}: ` : ""}${entry.label}`,
+        ],
+  );
+}
+
+function signalCount(entries: readonly SignalEntry[]): number {
+  return entries.reduce(
+    (count, entry) => count + (entry.type === "signal" ? 1 : entry.count),
+    0,
+  );
+}
+
 function header(snapshot: FreshSnapshot): string[] {
   const lines = [
     `Ops: ${label(snapshot.severity)} — ${snapshot.summary}`,
@@ -110,7 +138,7 @@ function needsMeLines(snapshot: FreshSnapshot): string[] {
   }
   return [
     `Needs you (${String(signals.length)}):`,
-    ...signals.flatMap((signal) => formatSignal(signal, true)),
+    ...formatEntries(groupSignals(signals), true),
   ];
 }
 
@@ -128,7 +156,7 @@ function sectionDetail(section: Section): string[] {
     section.signals.length === 0
       ? "Signals: none"
       : `Signals (${String(section.signals.length)}):`,
-    ...section.signals.flatMap((signal) => formatSignal(signal, false)),
+    ...formatEntries(groupSignals(section.signals), false),
   );
   return lines;
 }
@@ -159,12 +187,12 @@ export function formatOpsSummary(
   );
   const attention = attentionSignals(snapshot);
   if (attention.length > 0) {
+    // The cap counts lines; the heading still counts the signals they cover.
+    const top = groupSignals(attention).slice(0, TOP_ATTENTION);
     lines.push(
       "",
-      `Top attention (${String(Math.min(TOP_ATTENTION, attention.length))} of ${String(attention.length)}):`,
-      ...attention
-        .slice(0, TOP_ATTENTION)
-        .flatMap((signal) => formatSignal(signal, true)),
+      `Top attention (${String(signalCount(top))} of ${String(attention.length)}):`,
+      ...formatEntries(top, true),
     );
   }
   return lines.join("\n");

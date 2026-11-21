@@ -71,6 +71,15 @@ The severity scale is `ok < info < unknown < warning < error`. `unknown` sits
 above `info` on purpose. A source that failed to answer must never look
 healthy, but a known problem still sorts ahead of a blind spot.
 
+Lists of signals stay short however many signals there are. Three or more
+signals of the same kind, section, severity, and `needsMe` collapse into one
+counted row, such as "100 Renovate updates awaiting approval". Only the kinds
+allowlisted in `packages/ops-model/src/signals/signal-groups.ts` collapse. Every
+Alertmanager alert shares the kind `alert`, so alerts never hide behind a
+group, and a new kind stays visible row by row until someone adds it. The
+web pages, the digest email, and `toolkit ops summary` all group the same way.
+Each web list then shows its ten worst entries and expands in place.
+
 ## Why a scheduled snapshot, not live queries
 
 A Temporal schedule collects every five minutes and stores the result. This

@@ -15,9 +15,9 @@ import {
   PageHeading,
   RangePicker,
   SeverityBadge,
-  SignalList,
   WithSnapshot,
 } from "./ops-ui.tsx";
+import { SignalList } from "./signal-list.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { formatInstant } from "#client/time.ts";
 import { useRange } from "#client/charts/use-range.ts";
