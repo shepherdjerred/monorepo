@@ -24,10 +24,10 @@ auto-launch = "0.6.0"
 base64 = "0.23.1"
 chrono = { version = "0.4.42", default-features = false, features = ["clock", "serde"] }
 directories = "6.0.0"
-eframe = { version = "0.36.2", default-features = false, features = ["accesskit", "default_fonts", "glow", "persistence", "wayland", "x11"] }
-egui = "0.36.2"
+eframe = { version = "0.37.0", default-features = false, features = ["accesskit", "default_fonts", "glow", "persistence", "wayland", "x11"] }
+egui = "0.37.0"
 fastrand = "2.5.0"
-flate2 = "1.1.10"
+flate2 = "1.1.11"
 futures-util = "0.3.31"
 # gpui-kit pins a pre-1.0 GPUI snapshot and ships weekly. All three are exact
 # pins used only by scout-desktop-ui; an upgrade is its own PR, re-checked on
@@ -38,10 +38,10 @@ gpui-platform = { package = "gpui-pre-platform", version = "=0.3.12" }
 hex = "0.4.3"
 minisign-verify = "0.3.0"
 keyring = "4.2.0"
-open = "5.3.3"
+open = "5.4.5"
 reqwest = { version = "0.13.1", default-features = false, features = ["json", "rustls", "stream"] }
-rusqlite = { version = "0.40.2", features = ["bundled"] }
-sentry = { version = "0.49.0", default-features = false, features = [
+rusqlite = { version = "0.43.0", features = ["bundled"] }
+sentry = { version = "0.49.6", default-features = false, features = [
   "backtrace",
   "contexts",
   "panic",
@@ -50,16 +50,16 @@ sentry = { version = "0.49.0", default-features = false, features = [
 ] }
 semver = "1.0.28"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
-sha2 = "0.11.0"
+serde_json = "1.0.154"
+sha2 = "0.11.1"
 tar = { version = "0.4.46", default-features = false }
 thiserror = "2.0.21"
-tokio = { version = "1.53.2", features = ["fs", "io-util", "macros", "rt-multi-thread", "sync", "time"] }
+tokio = { version = "1.54.1", features = ["fs", "io-util", "macros", "rt-multi-thread", "sync", "time"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "fmt"] }
 tray-icon = { version = "0.26.1", default-features = false, features = ["ksni"] }
-url = "2.5.8"
-uuid = { version = "1.27.0", features = ["serde", "v4"] }
+url = "2.5.9"
+uuid = { version = "1.29.3", features = ["serde", "v4"] }
 
 [workspace.lints.rust]
 unsafe_code = "deny"

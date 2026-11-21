@@ -23,7 +23,7 @@ pub(super) fn button(ui: &mut egui::Ui, icon: Icon, label: &str, primary: bool) 
     let response = ui.add(if primary { button.fill(LILAC) } else { button });
     response.widget_info(|| {
         egui::WidgetInfo::labeled(
-            egui::WidgetType::Button,
+            egui::Role::Button,
             ui.is_enabled(),
             if label.is_empty() {
                 "Game details"

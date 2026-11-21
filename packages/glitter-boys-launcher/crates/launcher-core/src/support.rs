@@ -539,7 +539,8 @@ fn summary(input: &BundleInput<'_>, install_root: Option<&Path>) -> serde_json::
         sysinfo::RefreshKind::nothing()
             .with_memory(sysinfo::MemoryRefreshKind::nothing().with_ram())
             .with_cpu(sysinfo::CpuRefreshKind::nothing()),
-    );
+    )
+    .ok();
     let disk = |path: &Path| {
         let existing = path.ancestors().find(|p| p.exists());
         serde_json::json!({
@@ -589,11 +590,11 @@ fn summary(input: &BundleInput<'_>, install_root: Option<&Path>) -> serde_json::
             "created_unix": SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0),
         },
         "os": {
-            "name": sysinfo::System::long_os_version(),
-            "kernel": sysinfo::System::kernel_long_version(),
-            "cpu": system.cpus().first().map(|c| c.brand().to_owned()),
-            "cpus": system.cpus().len(),
-            "memory_bytes": system.total_memory(),
+            "name": sysinfo::System::long_os_version().ok(),
+            "kernel": sysinfo::System::kernel_long_version().ok(),
+            "cpu": system.as_ref().and_then(|s| s.cpus().first().map(|c| c.brand().to_owned())),
+            "cpus": system.as_ref().map(|s| s.cpus().len()),
+            "memory_bytes": system.as_ref().map(sysinfo::System::total_memory),
         },
         "disks": disks,
         "update": input.update.map(|u| serde_json::json!({
@@ -657,6 +658,10 @@ fn processes() -> serde_json::Value {
                 .with_cwd(sysinfo::UpdateKind::Always),
         ),
     );
+    let system = match system {
+        Ok(system) => system,
+        Err(error) => return serde_json::json!({ "unavailable": error.to_string() }),
+    };
     let mut found: Vec<_> = system
         .processes()
         .iter()

@@ -54,7 +54,7 @@ winit = { version = "0.30.13", default-features = false }
 
 [build-dependencies]
 serde_json.workspace = true
-winresource = "0.1.23"
+winresource = "0.1.34"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["net", "process", "test-util"] }
