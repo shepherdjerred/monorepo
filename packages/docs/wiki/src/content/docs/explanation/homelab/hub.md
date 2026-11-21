@@ -16,9 +16,9 @@ separate app, and Hub only links to it. Hub's deployed identity is still
 ```mermaid
 flowchart LR
   accTitle: Hub, its modules, and Delivery
-  accDescr: The hub, ops, and alerts tailnet hosts all reach one alert-dashboard Service. Inside it, the core module serves the operations overview and the alert ledger, and other modules mount beside it. The Temporal ops snapshot feeds the core module. Delivery is a separate app that Hub reaches only through browser links.
+  accDescr: The hub tailnet host reaches one alert-dashboard Service. Inside it, the core module serves the operations overview and the alert ledger, and other modules mount beside it. The Temporal ops snapshot feeds the core module. Delivery is a separate app that Hub reaches only through browser links.
 
-  HOSTS[Tailnet hosts\nhub, ops, alerts]
+  HOSTS[Tailnet host\nhub]
   SVC[alert-dashboard Service\none process]
   CORE[core module\nOps overview and alert ledger]
   MODS[Other modules\nunder their own path]
@@ -134,10 +134,10 @@ ledger is the only durable record of past incidents, and a rename gains nothing
 a user can see. The same reasoning keeps the webhook URL that Alertmanager
 posts to.
 
-The `hub` tailnet host sits beside the older `ops` and `alerts` hosts, and all
-three reach the same Service. Alert email, the digest, the toolkit, and the
-Delivery health probe use `hub`. The older hosts still answer for existing
-bookmarks.
+`hub` is the only tailnet host. Alert email, the digest, the toolkit, and the
+Delivery health probe all use it. The earlier `ops` and `alerts` hosts are
+retired, so a bookmark or an old email link that names one no longer resolves;
+the same path under `hub` does.
 
 ## Related
 

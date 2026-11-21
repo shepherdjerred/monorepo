@@ -274,38 +274,6 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: alert-dashboard-alert-dashboard-ingress-ingress
-  namespace: alert-dashboard
-spec:
-  defaultBackend:
-    service:
-      name: alert-dashboard-alert-dashboard-service
-      port:
-        number: 7341
-  ingressClassName: tailscale
-  tls:
-    - hosts:
-        - alerts
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: alert-dashboard-alert-dashboard-ops-ingress-ingress
-  namespace: alert-dashboard
-spec:
-  defaultBackend:
-    service:
-      name: alert-dashboard-alert-dashboard-service
-      port:
-        number: 7341
-  ingressClassName: tailscale
-  tls:
-    - hosts:
-        - ops
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
   name: alert-dashboard-alert-dashboard-hub-ingress-ingress
   namespace: alert-dashboard
 spec:
