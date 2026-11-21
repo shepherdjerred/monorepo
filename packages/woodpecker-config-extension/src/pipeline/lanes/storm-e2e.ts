@@ -5,7 +5,7 @@ import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 
 const PAPER_SERVER_IMAGE =
-  "itzg/minecraft-server:2026.10.1-java25@sha256:d12aed7e35981dfe259b60fbfee77d23a19b5898a7a31dca298d18b47b7b5776";
+  "itzg/minecraft-server:2026.11.0-java25@sha256:8d5080d8dcd0a2629c2e4f248678373a337a40537ad6ef2857c7dbcda6e3eadd";
 const REPO_ROOT = "/woodpecker/src/github.com/shepherdjerred/monorepo";
 const PAPER_WORKSPACE =
   "/woodpecker/src/github.com/shepherdjerred/monorepo/packages/the-storm/.cache/e2e/woodpecker";
