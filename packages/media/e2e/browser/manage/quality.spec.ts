@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { z } from "zod";
 import { QualityRulesSchema } from "#shared/api.ts";
 import {
@@ -11,6 +11,7 @@ import {
   overflowsSideways,
   violations,
 } from "./support.ts";
+import { test } from "#e2e/browser/support.ts";
 
 const HD = "HD 1080p — Movies";
 
