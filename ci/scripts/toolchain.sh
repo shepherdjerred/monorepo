@@ -285,7 +285,7 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
       ci_apt_install libxml2
     fi
     if ! ldconfig -p | grep -Fq 'libicuuc.so.'; then
-      apt-get update -qq && apt-get install -y -qq --no-install-recommends libicu-dev
+      ci_apt_install libicu-dev
     fi
     # Verify capabilities even when the executable exists; stale static builds
     # skip configured rules. The shared producer exports only a private runtime.
