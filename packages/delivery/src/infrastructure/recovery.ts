@@ -1,46 +1,32 @@
 import {
   applicationsOf,
   forumReleaseOf,
+  kubernetesRecipes,
   siteReleaseOf,
   trmnlPluginsOf,
   workerRolloutOf,
 } from "#shared/model/recipe-view.ts";
-import { z } from "zod";
-import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import type { z } from "zod";
+import {
+  type KubernetesStep,
+  type RecipeDefinition,
+  RecipeDefinitionSchema,
+} from "#shared/model/recipe-contract.ts";
 import { stepStageKey, subRecipeStageKey } from "#shared/model/stage-keys.ts";
 import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { DeploymentDetail, EvidenceInput } from "#shared/contract.ts";
 import { RecoverDeploymentSchema } from "#shared/contract.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
+import {
+  ArgoRecoverySchema,
+  inspectUnsyncedTarget,
+  requireKnownModelStages,
+  type SettledApplicationReadback,
+  type SyncTarget,
+} from "./argo-recovery/unsynced.ts";
 
 export const RecoveryRequestSchema = RecoverDeploymentSchema.clone();
-const ArgoRecoverySchema = z.object({
-  metadata: z.object({
-    name: z.string(),
-    resourceVersion: z.string().min(1),
-    annotations: z.record(z.string(), z.string()),
-  }),
-  operation: z.unknown().optional(),
-  status: z.object({
-    operationState: z.object({
-      phase: z.enum(["Running", "Terminating", "Succeeded", "Failed", "Error"]),
-      finishedAt: z.iso.datetime({ offset: true }).optional(),
-      operation: z.object({
-        info: z.array(z.object({ name: z.string(), value: z.string() })),
-      }),
-    }),
-    resources: z.array(
-      z.object({
-        kind: z.string(),
-        health: z.object({ status: z.string() }).optional(),
-      }),
-    ),
-  }),
-});
-
-/** One Application the deployment synced, and the stage that recorded its request (T3). */
-type SyncTarget = { application: string; stage: string };
 
 /**
  * What a recovery inspection names: the external operation an operator
@@ -97,20 +83,70 @@ function requireSettled(
   return { finishedAt: operation.finishedAt, identity };
 }
 
+/** Pre-sync Application steps that read live state without mutating external targets. */
+const READ_ONLY_PRE_SYNC_STEPS: ReadonlySet<KubernetesStep["kind"]> = new Set([
+  "players-offline",
+]);
+
+function modelSyncTarget(
+  recipe: Extract<RecipeDefinition, { kind: "kubernetes-application" }>,
+  index?: number,
+): SyncTarget {
+  const qualify = (key: string) =>
+    index === undefined ? key : subRecipeStageKey(index, key);
+  const stage = qualify(stepStageKey("step", "sync"));
+  const applySafetyStage = qualify(stepStageKey("step", "apply-safety"));
+  const readOnlyPreSync = recipe.steps
+    .filter((step) => READ_ONLY_PRE_SYNC_STEPS.has(step.kind))
+    .map((step) => qualify(stepStageKey("step", step.kind)));
+  return {
+    application: recipe.application.name,
+    stage,
+    applySafetyStage,
+    preSyncStages: [applySafetyStage, ...readOnlyPreSync],
+    declaredStages: [
+      ...recipe.steps.map((step) => qualify(stepStageKey("step", step.kind))),
+      ...recipe.oracle.tests.map((test) =>
+        qualify(stepStageKey("test", test.suite)),
+      ),
+    ],
+  };
+}
+
 /**
- * The stage whose operation identity is the Application sync's request: a
- * v1 pipeline's `reconcile`, or a model recipe's sync step, prefixed by its
- * sub-recipe's position inside a compound recipe (T3).
+ * The stage keys of a single-Application recipe: a v1 pipeline's `reconcile`
+ * (with no apply-safety stage), or a model recipe's declared steps, prefixed
+ * inside a compound recipe (T3).
  */
-function syncStageKey(definition: StoredRecipeDefinition): string {
+function singleTargetStages(
+  definition: StoredRecipeDefinition,
+  application: string,
+): SyncTarget {
   const model = RecipeDefinitionSchema.safeParse(definition);
-  if (!model.success) return "reconcile";
-  const sync = stepStageKey("step", "sync");
-  if (model.data.kind !== "compound") return sync;
+  if (!model.success) {
+    return {
+      application,
+      stage: "reconcile",
+      applySafetyStage: null,
+      preSyncStages: [],
+      declaredStages: ["reconcile"],
+    };
+  }
+  if (model.data.kind !== "compound") {
+    const recipe = kubernetesRecipes(model.data)[0];
+    if (recipe === undefined)
+      throw new Error(`Expected Application recipe for ${application}`);
+    return modelSyncTarget(recipe);
+  }
   const index = model.data.subRecipes.findIndex(
-    (sub) => sub.definition.kind === "kubernetes-application",
+    (sub) => kubernetesRecipes(sub.definition).length === 1,
   );
-  return subRecipeStageKey(index, sync);
+  const sub = model.data.subRecipes[index];
+  const recipe =
+    sub === undefined ? undefined : kubernetesRecipes(sub.definition)[0];
+  if (recipe === undefined)
+    throw new Error(`Expected Application sub-recipe for ${application}`);
+  return modelSyncTarget(recipe, index);
 }
 
 /**
@@ -121,15 +157,9 @@ function syncStageKey(definition: StoredRecipeDefinition): string {
  */
 function syncTargets(definition: StoredRecipeDefinition): SyncTarget[] | null {
   if (definition.kind === "compound") {
-    const sync = stepStageKey("step", "sync");
     const applications = definition.subRecipes.flatMap((sub, index) =>
       sub.definition.kind === "kubernetes-application"
-        ? [
-            {
-              application: sub.definition.application.name,
-              stage: subRecipeStageKey(index, sync),
-            },
-          ]
+        ? [modelSyncTarget(sub.definition, index)]
         : [],
     );
     if (applications.length === definition.subRecipes.length)
@@ -138,8 +168,43 @@ function syncTargets(definition: StoredRecipeDefinition): SyncTarget[] | null {
   const applications = applicationsOf(definition);
   const application = applications[0];
   return application !== undefined && applications.length === 1
-    ? [{ application: application.name, stage: syncStageKey(definition) }]
+    ? [singleTargetStages(definition, application.name)]
     : null;
+}
+
+async function inspectSyncedTarget(
+  readApplication: ApplicationReader,
+  detail: DeploymentDetail,
+  target: SyncTarget,
+  sync: { requestId: string; reason: string },
+): Promise<SettledApplicationReadback> {
+  const raw = await readApplication(target.application);
+  if (raw === null)
+    throw new DeliveryError(
+      "CONFLICT",
+      `Application ${target.application} does not exist; keep target ownership`,
+    );
+  const parsed = ArgoRecoverySchema.safeParse(raw);
+  if (!parsed.success)
+    throw new DeliveryError(
+      "CONFLICT",
+      `Application ${target.application} records no finished operation to inspect; keep target ownership`,
+    );
+  const current = parsed.data;
+  const { finishedAt, identity } = requireSettled(
+    current,
+    detail,
+    target,
+    sync.requestId,
+  );
+  return {
+    identity,
+    evidence: {
+      kind: "reconciliation",
+      operationId: identity,
+      summary: `Independent Application readback: ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, request ${sync.requestId}, operation ${identity}, phase ${current.status.operationState.phase}, finished ${finishedAt}. ${sync.reason}`,
+    },
+  };
 }
 
 /**
@@ -175,36 +240,23 @@ export function createRecoveryInspector(options: {
         "PAUSED",
         "TRMNL recovery requires independent exact plugin-bundle readback; native Argo settlement alone is insufficient",
       );
-    const recorded = targets.map((target) => {
+    requireKnownModelStages(detail, targets);
+    const settled: SettledApplicationReadback[] = [];
+    for (const target of targets) {
       const stage = detail.stages.find((entry) => entry.key === target.stage);
-      // A sync that was never recorded may still have written its body.
-      if (stage === undefined)
-        throw new DeliveryError(
-          "CONFLICT",
-          `Deployment has no recorded reconciliation operation for ${target.application} to inspect`,
-        );
-      return { target, requestId: stage.operationId };
-    });
-    const settled = [];
-    for (const { target, requestId } of recorded) {
-      const raw = await options.readApplication(target.application);
-      if (raw === null)
-        throw new DeliveryError(
-          "CONFLICT",
-          `Application ${target.application} does not exist; keep target ownership`,
-        );
-      const parsed = ArgoRecoverySchema.safeParse(raw);
-      if (!parsed.success)
-        throw new DeliveryError(
-          "CONFLICT",
-          `Application ${target.application} records no finished operation to inspect; keep target ownership`,
-        );
-      const current = parsed.data;
-      settled.push({
-        current,
-        requestId,
-        ...requireSettled(current, detail, target, requestId),
-      });
+      settled.push(
+        stage === undefined
+          ? await inspectUnsyncedTarget(
+              options.readApplication,
+              detail,
+              target,
+              input.reason,
+            )
+          : await inspectSyncedTarget(options.readApplication, detail, target, {
+              requestId: stage.operationId,
+              reason: input.reason,
+            }),
+      );
     }
     if (
       input.operationId !== undefined &&
@@ -218,15 +270,6 @@ export function createRecoveryInspector(options: {
       plugins !== undefined && options.inspectTrmnl !== undefined
         ? await options.inspectTrmnl(detail)
         : [];
-    return [
-      ...settled.map(
-        ({ current, requestId, identity, finishedAt }): EvidenceInput => ({
-          kind: "reconciliation",
-          operationId: identity,
-          summary: `Independent Application readback: ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, request ${requestId}, operation ${identity}, phase ${current.status.operationState.phase}, finished ${finishedAt}. ${input.reason}`,
-        }),
-      ),
-      ...pluginEvidence,
-    ];
+    return [...settled.map((entry) => entry.evidence), ...pluginEvidence];
   };
 }
