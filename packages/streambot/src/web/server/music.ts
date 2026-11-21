@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { MusicQuerySchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
 import { queueBatch } from "@shepherdjerred/streambot/commands/queue-batch.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
@@ -15,7 +14,6 @@ import { WebError, requestInput } from "./errors.ts";
 import { musicFeatureFlags } from "./room/capabilities.ts";
 import { WebPlaylists } from "./music-playlists.ts";
 import { ExternalMusicQueue } from "./music-links.ts";
-import { MusicQueueMatch } from "./music-queue-match.ts";
 import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
 
 import type {
@@ -27,7 +25,6 @@ export class WebMusic {
   private readonly selections = new Selections<MusicSelection>();
   private readonly playlists = new WebPlaylists(this);
   private readonly links = new ExternalMusicQueue(this);
-  private readonly queueMatch = new MusicQueueMatch(this);
   constructor(readonly playback: WebPlayback) {}
   owner(session: WebSession, guildId: string) {
     return session.key + ":" + guildId;
@@ -80,44 +77,22 @@ export class WebMusic {
   ): Promise<Response | null> {
     if (url.pathname === "/api/playlists")
       return await this.playlists.handle(request, url, session);
-    if (!url.pathname.startsWith("/api/music/")) return null;
+    if (
+      url.pathname !== "/api/music/matches" &&
+      url.pathname !== "/api/music/artwork"
+    )
+      return null;
     const guildId = url.searchParams.get("guildId") ?? "";
     await this.playback.authorize(session, guildId);
-    if (url.pathname === "/api/music/queue-match")
-      return await this.queueMatch.handle(request, session, guildId);
-    if (url.pathname === "/api/music/features" && request.method === "GET")
-      return Response.json(await this.features(session, guildId));
-    if (url.pathname === "/api/music/load")
-      return this.load(request, url, session, guildId);
     if (request.method !== "GET")
       throw new WebError(405, "method", "This method is not supported.");
     const signal = AbortSignal.any([
       request.signal,
       AbortSignal.timeout(30_000),
     ]);
-    if (url.pathname === "/api/music/matches")
-      return await this.matches(url, session, guildId, signal);
-    if (url.pathname === "/api/music/artwork")
-      return await musicArtwork(url.searchParams.get("id") ?? "", signal);
-    await this.require(session, guildId, "catalog");
-    return await this.catalog(url, session, guildId, signal);
-  }
-  private load(
-    request: Request,
-    url: URL,
-    session: WebSession,
-    guildId: string,
-  ) {
-    const id = requestInput(z.uuid(), url.searchParams.get("id"));
-    if (request.method === "GET")
-      return Response.json(
-        this.service().loads.read(id, session.identity.userId, guildId),
-      );
-    if (request.method === "POST")
-      return Response.json(
-        this.service().loads.cancel(id, session.identity.userId, guildId),
-      );
-    throw new WebError(405, "method", "This method is not supported.");
+    return url.pathname === "/api/music/matches"
+      ? await this.matches(url, session, guildId, signal)
+      : await musicArtwork(url.searchParams.get("id") ?? "", signal);
   }
   private async matches(
     url: URL,
@@ -147,66 +122,6 @@ export class WebMusic {
         ),
       })),
     );
-  }
-  private async catalog(
-    url: URL,
-    session: WebSession,
-    guildId: string,
-    signal: AbortSignal,
-  ) {
-    switch (url.pathname) {
-      case "/api/music/catalog": {
-        const page = await this.service().catalog.browse(
-          url.searchParams,
-          signal,
-        );
-        return Response.json({
-          ...page,
-          items: page.items.map((item) =>
-            item.track === undefined
-              ? item
-              : {
-                  ...item,
-                  selectionId: this.add(session, guildId, [
-                    musicSource(item.track),
-                  ]),
-                },
-          ),
-        });
-      }
-      case "/api/music/album": {
-        const input = requestInput(
-          MusicQuerySchema,
-          Object.fromEntries(url.searchParams),
-        );
-        if (input.album === undefined)
-          throw new WebError(400, "album_required", "Choose an album.");
-        const album = await this.service().catalog.album(
-          input.album,
-          input.release,
-          signal,
-        );
-        const all = album.tracks.map((track) => musicSource(track));
-        const tracks = album.tracks.slice(input.offset, input.offset + 50);
-        const selections = tracks.map((track) =>
-          this.add(session, guildId, [musicSource(track)]),
-        );
-        return Response.json({
-          ...album,
-          tracks,
-          offset: input.offset,
-          total: all.length,
-          selections,
-          selectionId: this.add(session, guildId, all),
-        });
-      }
-      default:
-        throw new WebError(
-          404,
-          "not_found",
-          "This music endpoint does not exist.",
-        );
-    }
   }
   async execute(
     session: WebSession,

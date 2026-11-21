@@ -19,10 +19,7 @@ const pages: Plugin = {
 const web = (path: string) =>
   fileURLToPath(new URL("src/web/" + path, import.meta.url));
 
-/**
- * One build serves two pages until the classic remote is removed: the new client at `/` and the
- * classic client at `/classic`. Both share `/assets/` and `src/web/public/`.
- */
+/** The remote's page is `client/index.html`; its bundle lands in `/assets/` beside `src/web/public/`. */
 export default defineConfig({
   root: web(""),
   publicDir: web("public"),
@@ -38,10 +35,7 @@ export default defineConfig({
     outDir: "../../dist/web",
     emptyOutDir: true,
     rollupOptions: {
-      input: {
-        client: web("client/index.html"),
-        classic: web("client-classic/index.html"),
-      },
+      input: { client: web("client/index.html") },
     },
   },
   server: {

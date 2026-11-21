@@ -64,34 +64,29 @@ therefore splits identities:
   establishes identity; live guild membership and voice state authorize each
   media request. Everyone currently in the channel can control playback through
   the web remote. Slash, voice, and card permissions keep their existing policy.
-  The Streambot channel selector shares the viewer's personal numbered channel with Discord
-  commands and controls both the displayed player/queue and the playback destination. With
+  Slash and voice commands keep their own routing: with
   `streambot-automatic-channel-routing-enabled`, `Auto` routes music to 1 and Plex, sports,
-  and other video to 2 across web, slash, and voice commands, displaying the active slot
-  (following the viewer's last routed slot while occupied, or the lowest-numbered occupied
-  slot). Manual selection switches both the displayed queue/player and command destination
-  until the viewer chooses `Auto` or `/stream select auto:true`; player-card `channel` deep
-  links select that numbered channel on load and clear the query parameter. Each slot retains
-  its own queue, and legacy sessions finish in their original mode.
-  A web `play` command may instead carry `transport: "listen" | "watch"`: Listen plays voice
-  audio on channel 1, Watch plays Go Live video on channel 2 (or an explicit
-  `playbackChannel` ≥ 2 up to the server's maximum for another stream). It ignores the
-  personal selection and `Auto`, never changes them, and in a legacy room becomes the item's
-  mode on the single queue. Other commands target a named slot with `targeting: "explicit"`;
-  a `station` start may omit the slot (Radio lands on channel 1, TV on channel 2), while
-  `station` off and the player controls name the slot of the card they came from.
+  and other video to 2, and `/stream select` sets a personal numbered channel. The web
+  remote uses neither and never changes the personal selection. Every web `play` command
+  carries `transport: "listen" | "watch"`: Listen plays voice audio on channel 1, Watch
+  plays Go Live video on channel 2 (or an explicit `playbackChannel` ≥ 2 up to the
+  server's maximum for another stream); in a legacy room it becomes the item's mode on the
+  single queue. A `station` start may omit the slot (Radio lands on channel 1, TV on
+  channel 2), while `station` off and the player controls name the slot of the card they
+  came from (`src/web/server/command/targeting.ts`). Each slot retains its own queue, and
+  legacy sessions finish in their original mode.
   Play results report `destination { transport, voiceChannelName }` (returned to the
   requesting viewer only) and `position` (0 when it starts immediately). Refusals are 409s:
   `no_video` (ffprobe found no picture for Watch), `listen_disabled`
   (`streambot-music-over-voice-enabled` off), `listen_sports`, `stream_limit`, and
   `channels_unavailable` (an extra stream in a legacy room).
-  Only `remove`, `move`, subtitle choices, and replacing a queued recording are bound to the
-  snapshot `revision`; every other command applies to the current state. `pause`, `resume`,
-  `skip`, and `seek` accept the snapshot item's opaque `token` as `expectCurrent` and
-  answer `item_finished` when a different item is playing.
-  `/plex`, `/search`, `/sports`, and `/history` preserve submitted searches, filters,
-  series, pagination, and server context in URLs. Deep links survive OAuth sign-in;
-  browser Back/Forward restores the page and its scroll position.
+  Only `remove`, `move`, and subtitle choices are bound to the room player's `revision`;
+  every other command applies to the current state. `pause`, `resume`, `skip`, and `seek`
+  accept the room item's opaque `token` as `expectCurrent` and answer `item_finished` when
+  a different item is playing. Every command is refused with `channel_changed` once the
+  viewer has left the voice channel it names.
+  The search query, Library filters, and the open playlist live in the URL; Discord's
+  `/music` and `/plex` links open Home. Sign-in returns to the page's path.
   Media paths and subtitle references stay on the server behind opaque IDs.
   The Plex poster rollout gives Plex a movie/show poster grid. A show opens
   season-grouped episodes; queue, player, and search retain compact artwork.
@@ -245,9 +240,10 @@ history search row for that item (empty when it cannot be replayed). `GET /api/s
 returns up to eight typeahead strings, and `GET /api/music/v2/album` and
 `/artist` return a header and rows. These draw on their own per-session budget
 (600 requests per minute) instead of the 120 that protect commands. A provider
-failure returns 503 `music_search_unavailable` for that group only. The older
-`/api/search`, `/api/music/*`, `/api/sports`, `/api/library`, and `/api/history`
-endpoints are otherwise unchanged. Metrics are `streambot_web_search_*` and
+failure returns 503 `music_search_unavailable` for that group only. The browse
+pages use `/api/library`, `/api/sports`, `/api/history`, and `/api/playlists`;
+`/api/music/matches` lists recordings for a playlist song and `/api/music/artwork`
+proxies Cover Art Archive images. Metrics are `streambot_web_search_*` and
 `streambot_music_provider_*`; none label a query, title, or id.
 
 Every error `code` the web API can return is listed in `WEB_API_ERROR_CODES`
@@ -256,8 +252,8 @@ Every error `code` the web API can return is listed in `WEB_API_ERROR_CODES`
 `ErrorSchema.code` stays a plain string so an older client parses a newer code.
 
 `/music search`, `/music artist`, and `/music album` browse the MusicBrainz
-catalog without consuming a streaming account. The Music page adds edition
-selection, album queues, and a YouTube recording picker. Confident matches use
+catalog without consuming a streaming account. A web playlist song offers a YouTube
+recording picker. Confident matches use
 artist, title, version, and duration; uncertain recordings require a choice.
 Catalog metadata and selected YouTube links remain separate in saved sources,
 so queue recovery and replay retain the chosen recording.
@@ -309,13 +305,13 @@ The existing idle disconnect and numbered playback transports still apply.
 
 ## Continuous Radio and TV stations
 
-Radio (`/radio start|status|stop`, voice `radio`, and the `/music` Radio banner)
-and TV Mode (`/tv start|status|stop`, voice `tv`, and the `/plex` TV Mode banner)
+Radio (`/radio start|status|stop`, voice `radio`, and the web remote's station dialog)
+and TV Mode (`/tv start|status|stop`, voice `tv`, and the same dialog)
 keep a small 2-item lookahead buffered in the room's playback queue:
 
 - **Radio** (`streambot-radio-enabled`) blends room, personal, or server music
   taste with related MusicBrainz, YouTube Mix, and LLM-curated tracks on
-  Channel 1 (microphone audio) in Automatic mode.
+  Channel 1 (microphone audio).
 - **TV Mode** (`streambot-tv-enabled`) curates Go Live video on Channel 2 (or
   the viewer's selected video slot `2+`) across five presets: `my-mix` (~40%
   continuing/unstarted series, ~30% movies, ~30% watchable YouTube videos),
@@ -336,11 +332,11 @@ Run `bun run build` before starting a process with web credentials. The producti
 server serves `dist/web` on the credential bootstrap port, separate from metrics.
 For frontend iteration, `bun run web:dev` proxies API requests to that server.
 
-One Vite build produces two pages. The current remote (`src/web/client/`) owns `/`
-and its routes; it reads the room over `/api/room/events` and searches with
-`/api/search/v2`. The classic remote (`src/web/client-classic/`) is served unchanged
-under `/classic`. `webPage()` in `src/web/server/assets.ts` maps browser paths to
-the two pages for both the server and the Vite dev server.
+The Vite build produces one page. The remote (`src/web/client/`) owns `/` and its
+routes; it reads the room over `/api/room/events`, searches with `/api/search/v2`,
+and sends every command to `POST /api/commands`. `webPage()` in
+`src/web/server/assets.ts` maps browser paths to that page for both the server and
+the Vite dev server; any other path without a file is a 404.
 
 The client is split by concern: the shell, API layer and shared controls at the top
 of `src/web/client/`, then `search/`, `media/` (the one row, card and play buttons),
@@ -370,8 +366,7 @@ The room endpoints are `GET /api/room` (the viewer's location from Discord voice
 the shared servers, one player per occupied slot, capacity — including `numbered`, false for
 a legacy room, where commands send `playbackChannel: null` — and capability booleans) and
 `GET /api/room/events` (the same `RoomSchema` pushed as `text/event-stream`). A room item
-that is a track has its song in `title` and its artists in `subtitle`; `/api/player` keeps
-the combined "Artists — Title". The stream
+that is a track has its song in `title` and its artists in `subtitle`. The stream
 sends a `room` event on connect and after every change, `: heartbeat` comments every 20 seconds
 (connection keepalive, cleared on close), a terminal `error` event carrying a closed `code`
 when authorization fails, and `retry: 3000`; a reconnect receives a fresh snapshot, with no

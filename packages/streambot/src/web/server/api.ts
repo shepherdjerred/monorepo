@@ -5,7 +5,6 @@ import {
   CommandSchema,
   type WebCommand,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
-import { GuildIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { WebAuth, type WebBootstrap } from "./auth.ts";
 import type { WebSession, WebSessionStore } from "./session-store.ts";
 import type { WebPlayback } from "./playback.ts";
@@ -43,9 +42,7 @@ import {
 } from "./telemetry.ts";
 import { usageAnalytics } from "@shepherdjerred/streambot/observability/product-analytics.ts";
 import {
-  observeMusicSearch,
   observeSearchV2,
-  observeSearch,
   recordCommandUsage,
   recordSignIn,
   runObservedCommand,
@@ -154,9 +151,7 @@ export function createWebHandler(deps: {
       search.handle(request, url, session),
     );
     if (searchResponse !== null) return searchResponse;
-    const musicResponse = await observeMusicSearch(request, url, session, () =>
-      music.handle(request, url, session),
-    );
+    const musicResponse = await music.handle(request, url, session);
     if (musicResponse !== null) return musicResponse;
     if (request.method === "POST" && url.pathname === "/api/subtitles")
       return Response.json(
@@ -197,9 +192,7 @@ export function createWebHandler(deps: {
         const outcome = failure?.outcome ?? "ok";
         const code = failure?.code ?? "ok";
         const transport =
-          input?.action === "play"
-            ? (input.transport ?? "unspecified")
-            : "unspecified";
+          input?.action === "play" ? input.transport : "unspecified";
         webCommandsTotal.inc({ action, transport, outcome });
         recordCommandUsage(session, { action, outcome, code });
         webCommandDurationSeconds.observe(
@@ -250,8 +243,6 @@ export function createWebHandler(deps: {
     session: WebSession,
   ): Promise<Response> {
     const guildId = url.searchParams.get("guildId") ?? "";
-    if (url.pathname === "/api/player")
-      return Response.json(await deps.playback.snapshot(session, guildId));
     await deps.playback.authorize(session, guildId);
     const plexEnabled =
       (url.pathname === "/api/artwork" || url.pathname === "/api/library") &&
@@ -275,29 +266,6 @@ export function createWebHandler(deps: {
       return Response.json(
         deps.playback.deps.catalog.browse(url.searchParams, plexEnabled),
       );
-    if (url.pathname === "/api/search") {
-      const channel = deps.playback.deps.bot.webVoiceChannel(
-        GuildIdSchema.parse(guildId),
-        session.identity.userId,
-      );
-      const scope = {
-        guildId,
-        channelId: channel?.id ?? "web",
-        userId: session.identity.userId,
-      };
-      return await observeSearch(session, "candidates", async () => {
-        const results = await deps.playback.deps.catalog.search(
-          url.searchParams,
-          scope,
-          session.key + ":" + guildId,
-          AbortSignal.any([request.signal, AbortSignal.timeout(30_000)]),
-        );
-        return {
-          response: Response.json(results),
-          hadResults: results.length > 0,
-        };
-      });
-    }
     if (url.pathname === "/api/history")
       return await historyResponse(deps.playback, request, session, guildId);
     throw new WebError(404, "not_found", "This endpoint does not exist.");

@@ -5,9 +5,9 @@ import { webTimeToPlaybackSeconds } from "@shepherdjerred/streambot/observabilit
 import {
   CommandResultSchema,
   LibraryPageSchema,
-  SnapshotSchema,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
-import { GUILD, USER, webFixture } from "./web-fixture.ts";
+import { CHANNEL, GUILD, USER, webFixture } from "./web-fixture.ts";
+import { roomPlayer } from "./web-fixture-login.ts";
 
 let fixture: ReturnType<typeof webFixture>;
 beforeEach(() => {
@@ -33,10 +33,11 @@ async function status(request: Request) {
   return response.status;
 }
 
+/** The room's one player: these rooms have a single queue. */
 async function snapshot() {
-  return SnapshotSchema.parse(
-    await fixture.playback.snapshot(fixture.session, GUILD),
-  );
+  const player = await roomPlayer(fixture);
+  if (player === undefined) throw new Error("Expected a player");
+  return player;
 }
 
 async function libraryId(title: string) {
@@ -230,4 +231,70 @@ test("time to playback is observed once for an immediate start and never for a q
     metric?.values.find((value) => value.labels["transport"] !== undefined)
       ?.labels,
   ).toMatchObject({ transport: "watch" });
+});
+
+/** The keys every command from a page loaded before they were dropped still carries. */
+function previousClientBase(revision: string | null) {
+  return {
+    guildId: GUILD,
+    channelId: CHANNEL,
+    revision,
+    // A legacy room: the previous client sends no slot there.
+    playbackChannel: null,
+    selectionVersion: null,
+    slotRevisions: {},
+    targeting: "explicit",
+  };
+}
+
+/** Posts `body` exactly as given, with the signed-in viewer's cookie and CSRF token. */
+async function postExact(body: Record<string, unknown>): Promise<number> {
+  return await status(
+    new Request("http://127.0.0.1:8080/api/commands", {
+      method: "POST",
+      headers: fixture.command({}).headers,
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
+test("a page loaded before the targeting fields were dropped can still play, skip and remove", async () => {
+  fixture = webFixture();
+  for (const title of ["Arrival", "Whiplash", "Spirited Away"])
+    expect(
+      await postExact({
+        ...previousClientBase(null),
+        action: "play",
+        selection: { kind: "library", id: await libraryId(title) },
+        placement: "queue",
+        transport: "watch",
+      }),
+      title,
+    ).toBe(200);
+  await waitFor(fixture.actor, (state) => state.matches("streaming"));
+  const player = await snapshot();
+  expect(player.queue).toHaveLength(2);
+  expect(
+    await postExact({
+      ...previousClientBase(player.revision),
+      action: "remove",
+      position: 1,
+    }),
+  ).toBe(200);
+  expect(
+    await postExact({
+      ...previousClientBase(player.revision),
+      action: "skip",
+      ...(player.current?.token === undefined
+        ? {}
+        : { expectCurrent: player.current.token }),
+    }),
+  ).toBe(200);
+  await waitFor(
+    fixture.actor,
+    (state) =>
+      state.matches("streaming") &&
+      state.context.current?.source.kind === "file" &&
+      state.context.current.source.path.includes("spirited-away"),
+  );
 });

@@ -2,11 +2,11 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { WebArtwork } from "@shepherdjerred/streambot/web/server/artwork.ts";
 import {
   LibraryPageSchema,
-  SnapshotSchema,
   SportsResultsSchema,
   CommandResultSchema,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { CHANNEL, GUILD, LIBRARY, USER, webFixture } from "./web-fixture.ts";
+import { roomPlayer } from "./web-fixture-login.ts";
 import { fixtureSports } from "./web-fixture-media.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
@@ -59,11 +59,8 @@ describe("web media artwork", () => {
     expect(deniedImage.status).toBe(403);
     fixture.setMember(true);
     await fixture.seed();
-    const snapshotResponse = await fixture.handler(
-      get("/api/player?guildId=" + GUILD),
-    );
-    const snapshot = SnapshotSchema.parse(await snapshotResponse.json());
-    expect(snapshot.current?.artworkUrl).toBe(arrival.artworkUrl);
+    const room = await fixture.room();
+    expect(room.players[0]?.current?.artworkUrl).toBe(arrival.artworkUrl);
   });
 
   test("episodes share one poster lookup and external metadata cannot introduce arbitrary image hosts", async () => {
@@ -240,11 +237,10 @@ describe("web live sports", () => {
       if (placement !== "now")
         expect(fixture.events.at(-1)).not.toHaveProperty("preResolved");
     }
-    const response = await fixture.handler(get("/api/player?guildId=" + GUILD));
-    const snapshot = SnapshotSchema.parse(await response.json());
-    expect(snapshot.queue.every((item) => item.title === live.title)).toBe(
-      true,
-    );
+    const player = await roomPlayer(fixture);
+    const queue = player?.queue ?? [];
+    expect(queue.length).toBeGreaterThan(0);
+    expect(queue.every((item) => item.title === live.title)).toBe(true);
   });
 
   test("upcoming games cannot allocate a userbot and selected live games still obey the sports gate", async () => {

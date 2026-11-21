@@ -2,22 +2,16 @@ import type { z } from "zod";
 import { afterEach, expect, test } from "vitest";
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { PlaylistPageSchema } from "@shepherdjerred/streambot/music/playlist-contracts.ts";
-import {
-  MusicAlbumSchema,
-  MusicPageSchema,
-  MusicMatchesSchema,
-  MusicFeaturesSchema,
-  QueueLoadSchema,
-} from "@shepherdjerred/streambot/music/contracts.ts";
+import { MusicMatchesSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
 import { musicArtworkUrl } from "@shepherdjerred/streambot/music/artwork.ts";
 import { waitFor } from "xstate";
-import {
-  CommandResultSchema,
-  SnapshotSchema,
-} from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { CommandResultSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { BrowsePageSchema } from "@shepherdjerred/streambot/web/shared/search-contracts.ts";
 import { fixtureMusic, ALBUM, SONG } from "#music-fixture";
+import { albumSelection, recordLoads } from "./web-fixture-music.ts";
 import { GUILD, CHANNEL, USER, OTHER, webFixture } from "./web-fixture.ts";
+import { roomPlayer } from "./web-fixture-login.ts";
 
 let fixture: ReturnType<typeof webFixture> | undefined;
 let history: MediaHistoryStore | undefined;
@@ -76,25 +70,21 @@ async function json<T>(
   return schema.parse(await result.json());
 }
 
-test("catalog and album browsing work without allocating a streaming account", async () => {
+test("album browsing works without allocating a streaming account", async () => {
   const f = start();
-  const page = await json(
-    get("/api/music/catalog?query=Daft+Punk", f),
-    MusicPageSchema,
-  );
-  expect(page.items[0]?.kind).toBe("artist");
+  f.setSearchProvider("musicbrainz");
   const album = await json(
-    get("/api/music/album?album=" + ALBUM, f),
-    MusicAlbumSchema,
+    get("/api/music/v2/album?id=" + ALBUM, f),
+    BrowsePageSchema,
   );
-  expect(album.tracks.map((item) => item.title)).toEqual([
+  expect(album.rows.map((row) => row.title)).toEqual([
     "Get Lucky",
     "Instant Crush",
   ]);
-  expect(album.selectionId).toBeDefined();
+  expect(album.play?.id).toBeDefined();
   expect(f.allocations()).toBe(0);
   f.setMember(false);
-  const denied = await get("/api/music/catalog?query=Daft", f);
+  const denied = await get("/api/music/v2/album?id=" + ALBUM, f);
   expect(denied.status).toBe(403);
 });
 
@@ -117,15 +107,11 @@ test("playlist API is CSRF protected and never exposes source paths", async () =
     PlaylistPageSchema,
   );
   expect(created.guildId).toBeNull();
-  const album = await json(
-    get("/api/music/album?album=" + ALBUM, f),
-    MusicAlbumSchema,
-  );
   const added = await mutate(f, {
     action: "add",
     id: created.id,
     revision: 0,
-    selectionId: album.selectionId,
+    selectionId: await albumSelection(f, { album: ALBUM, guildId: GUILD }),
   });
   const text = await added.text();
   expect(text).not.toContain("source_json");
@@ -152,6 +138,7 @@ test("playlist API is CSRF protected and never exposes source paths", async () =
 
 test("external playlists add more than 100 tracks without saving a playlist", async () => {
   const f = start();
+  const loads = recordLoads(f.playback.deps.music);
   const response = await f.handler(
     f.command({
       action: "play",
@@ -163,26 +150,28 @@ test("external playlists add more than 100 tracks without saving a playlist", as
     }),
   );
   expect(response.status).toBe(200);
-  const result = CommandResultSchema.parse(await response.json());
-  const loadId = String(result.loadId);
-  let load = await json(
-    get("/api/music/load?id=" + loadId, f),
-    QueueLoadSchema,
-  );
+  // The batch loads after this response, so only the destination is known yet.
+  expect(CommandResultSchema.parse(await response.json())).toMatchObject({
+    destination: { transport: "watch", voiceChannelName: "Movie night" },
+  });
+  const read = () =>
+    f.playback.deps.music?.loads.read(String(loads[0]), USER, GUILD);
+  let load = read();
   for (
     let attempt = 0;
-    attempt < 20 && load.state === "loading";
+    attempt < 20 && load?.state === "loading";
     attempt += 1
   ) {
     await new Promise<void>((resolve) => {
       setImmediate(resolve);
     });
-    load = await json(get("/api/music/load?id=" + loadId, f), QueueLoadSchema);
+    load = read();
   }
-  expect(load.state).toBe("ready");
-  expect(load.count).toBe(250);
-  const snapshot = await json(get("/api/player", f), SnapshotSchema);
-  expect(snapshot.queue.length + Number(snapshot.current !== null)).toBe(250);
+  expect(load?.state).toBe("ready");
+  expect(load?.count).toBe(250);
+  const player = await roomPlayer(f);
+  if (player === undefined) throw new Error("Expected a player");
+  expect(player.queue.length + Number(player.current !== null)).toBe(250);
   expect(
     history?.playlists.list(
       { userId: "100000000000000001", guildId: GUILD },
@@ -252,58 +241,6 @@ test("large saved playlists paginate without expiring the first visible selectio
   expect(queued.status).toBe(200);
 });
 
-function queueMatch(
-  f: ReturnType<typeof webFixture>,
-  playback: unknown,
-  selectionId?: string,
-) {
-  return f.handler(
-    new Request(
-      "http://127.0.0.1:8080/api/music/queue-match?guildId=" + GUILD,
-      {
-        method: "POST",
-        headers: f.command({}).headers,
-        body: JSON.stringify({ playback, position: 1, selectionId }),
-      },
-    ),
-  );
-}
-test.each([undefined, 1, 2])(
-  "recording correction preserves transport on slot %s and rejects stale queue choices",
-  async (slot) => {
-    const f = start();
-    if (slot !== undefined) f.enableNumbered(slot);
-    await f.seed();
-    const album = await json(
-      get("/api/music/album?album=" + ALBUM, f),
-      MusicAlbumSchema,
-    );
-    await f.handler(
-      f.command({
-        action: "play",
-        placement: "queue",
-        selection: { kind: "music", id: album.selectionId },
-      }),
-    );
-    const playback: unknown = await f
-      .command({ action: "volume", percent: 100 })
-      .json();
-    const matches = await json(queueMatch(f, playback), MusicMatchesSchema);
-    expect(matches[0]?.confident).toBe(true);
-    const selected = await queueMatch(f, playback, matches[0]?.selectionId);
-    expect(selected.status).toBe(200);
-    expect(f.actor.getSnapshot().context.queue[0]?.source.kind).toBe("url");
-    expect(f.actor.getSnapshot().context.queue[0]?.source.mode).toBe(
-      slot === 2 ? "video" : "music",
-    );
-    expect(
-      f.actor.getSnapshot().context.queue[0]?.source.music?.artworkId,
-    ).toBe(ALBUM);
-    const stale = await queueMatch(f, playback, matches[0]?.selectionId);
-    expect(stale.status).toBe(409);
-  },
-);
-
 test("playlist cover metadata survives save, copy, pagination, and queue presentation", async () => {
   const f = start();
   if (history === undefined) throw new Error("Missing history fixture");
@@ -338,8 +275,8 @@ test("playlist cover metadata survives save, copy, pagination, and queue present
       selection: { kind: "music", id: page.items[0]?.selectionId },
     }),
   );
-  const snapshot = await json(get("/api/player", f), SnapshotSchema);
-  expect(snapshot.queue[0]?.artworkUrl).toBe(musicArtworkUrl(SONG, GUILD));
+  const player = await roomPlayer(f);
+  expect(player?.queue[0]?.artworkUrl).toBe(musicArtworkUrl(SONG, GUILD));
 });
 
 test("play-now album order survives a pending voice join", async () => {
@@ -366,15 +303,14 @@ test("play-now album order survives a pending voice join", async () => {
     }),
   );
   expect(f.actor.getSnapshot().value).toBe("joining");
-  const album = await json(
-    get("/api/music/album?album=" + ALBUM, f),
-    MusicAlbumSchema,
-  );
   const queued = await f.handler(
     f.command({
       action: "play",
       placement: "now",
-      selection: { kind: "music", id: album.selectionId },
+      selection: {
+        kind: "music",
+        id: await albumSelection(f, { album: ALBUM, guildId: GUILD }),
+      },
     }),
   );
   expect(queued.status).toBe(200);
@@ -440,16 +376,13 @@ test("default-off music gates reject discovery, playlists, and Spotify before al
     music: fixtureMusic(),
   });
   fixture = f;
-  const features = await json(
-    get("/api/music/features", f),
-    MusicFeaturesSchema,
-  );
-  expect(features).toEqual({
-    catalog: false,
-    spotify: false,
+  const { capabilities } = await f.room();
+  expect(capabilities).toMatchObject({
+    musicCatalog: false,
+    spotifyLinks: false,
     playlists: false,
   });
-  const catalog = await get("/api/music/catalog?query=Daft", f);
+  const catalog = await get("/api/search/v2?kind=songs&q=Daft", f);
   const playlists = await get("/api/playlists", f);
   const spotify = await f.handler(
     f.command({

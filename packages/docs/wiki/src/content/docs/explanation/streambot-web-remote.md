@@ -87,13 +87,16 @@ The request that opens a stream finishes when the stream starts; its span, durat
 
 Whether media plays as audio or as a stream is the viewer's choice, made on each play request.
 Listen is voice audio that everyone in the channel hears. Watch is a Go Live stream that people open.
-Server-side `Auto` guessed the transport from metadata, so a viewer could not predict where a click would land.
+A server that guessed the transport from metadata would leave the viewer unable to predict where a click lands.
 Naming the transport makes the button the destination.
 
 The [web playback adapter](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/playback.ts)
 sends Listen to channel 1 and Watch to channel 2, or to a further slot when the viewer starts another stream.
-These requests bypass the personal channel selection and `Auto`, and never move that selection.
-The selection is shared with Discord commands, so a web click should not redirect someone's next `/play`.
+Every other command names the slot of the player card it came from, and the
+[command targeting](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/command/targeting.ts)
+resolves a command that names none to the slot its action implies: Radio on 1, TV on 2.
+Discord commands route automatically and keep a personal numbered-channel selection per member.
+The web reads neither and never moves that selection, so a web click cannot redirect someone's next `/play`.
 The response names the transport and the viewer's voice channel, so the page can say where the media went.
 Only the requesting viewer receives that channel name; logs and metrics record the transport alone.
 
@@ -103,16 +106,12 @@ probes the media and ffprobe finds no picture.
 yt-dlp metadata reports missing video inconsistently, so only the probe decides.
 Listen is refused for live sports and wherever music over voice is disabled.
 A legacy room has one mixed queue, so there Listen and Watch become the item's mode; only an extra stream is refused.
-
-Requests that name no transport keep the older routing, because Discord commands and the classic page still send them.
-The [snapshot selector](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/snapshot.ts)
-combines `Auto` with numbered channels for those requests, so the displayed queue and their destination match.
-Legacy mixed queues keep their existing behavior until they finish.
+Legacy mixed queues keep their behavior until they finish.
 
 ## A page can become stale
 
 Only an action that names a queue position depends on the state the viewer saw.
-Remove, move, replacing a queued recording, and subtitle choices carry the session revision.
+Remove, move, and subtitle choices carry the session revision.
 The [web playback adapter](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/playback.ts)
 refuses them with a refreshable conflict when the revision changed.
 After a shuffle, position 3 is a different item, so acting on it would edit something the viewer never chose.
@@ -132,8 +131,7 @@ The [session observer](https://github.com/shepherdjerred/monorepo/blob/main/pack
 carries a token across re-resolution and crash retries, so one request keeps one token until it finishes.
 Two requests for the same media get different tokens, so a stale skip cannot skip a repeat.
 
-The voice channel is rechecked before every dispatch.
-Requests without a transport also recheck the personal selection, because it chose their destination.
+The voice channel is rechecked before every dispatch, so a command from a viewer who has since moved is refused rather than played into a room they left.
 
 Subtitle choices refer to tracks actually enumerated from the current source.
 They expire and are bound to the viewer, source, and revision.
@@ -164,11 +162,6 @@ Each control in the client therefore owns its pending state and reports beside i
 A failure names its specific cause, offers Retry only when trying again can help, and shows a short reference: the first eight characters of the request's trace id.
 That reference is the link between what the viewer saw and the trace an operator opens, without the viewer sending anything identifying.
 Destructive controls such as Stop and Clear ask once more in place before acting.
-
-The previous client is served unchanged at `/classic`.
-Both are pages of one build, and
-[the asset router](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/assets.ts)
-decides which page owns a path, for the server and the development server alike.
 
 ## The browser reports shapes, not content
 
@@ -217,11 +210,11 @@ See [scheduled playback activation](/how-to/enable-streambot-lol-scheduling/) fo
 
 ## Music search returns the item that plays
 
-Music search moved to YouTube Music because its result is the playable item, not a description of one.
+Music search uses YouTube Music because its result is the playable item, not a description of one.
 MusicBrainz stays as a selectable provider for the day YouTube stops answering.
 
 MusicBrainz names recordings but says nothing about where to hear them.
-The old path therefore searched twice: the
+A MusicBrainz result therefore needs two searches: the
 [catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/catalog.ts)
 for an identity, then YouTube, then the
 [matcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/matching.ts)
@@ -257,9 +250,8 @@ Silent degradation was the risk to design against, so four layers contain it:
 A provider failure affects one result group.
 Library, video, live and history groups are separate requests, so they keep answering.
 
-The remaining facts about the music surface are unchanged.
 The [web recording picker](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/music.ts)
-still lets a playlist's owner correct a MusicBrainz or Spotify song's video.
+lets a playlist's owner correct a MusicBrainz or Spotify song's video.
 Saved sources retain catalog identity alongside the selected video, so [voice recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/voice-recovery.ts)
 can resolve a fresh audio URL. The [artwork resolver](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/artwork.ts)
 keeps album artwork with saved playlists, queues, recovery, and player cards.

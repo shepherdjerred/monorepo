@@ -654,9 +654,8 @@ test("an invalid kind or missing server is refused", async () => {
   expect(
     await statusOf("/api/search/v2?kind=songs&q=x", f, "100000000000000011"),
   ).toBe(403);
-  // The classic endpoints keep answering beside the unified ones.
+  // The library browse the Library page uses answers beside the unified search.
   expect(await statusOf("/api/library", f)).toBe(200);
-  expect(await statusOf("/api/search?query=arrival", f)).toBe(200);
 });
 
 test("search and typeahead draw on their own budget and still return the 429 shape", async () => {

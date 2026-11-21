@@ -30,8 +30,10 @@ Activate the remote only after its Discord OAuth credential and redirect are pro
 5. Build and publish through CI, then reconcile the media application through the
    [homelab release workflow](/how-to/cut-a-homelab-release/).
    Verify backend readiness and the public page independently of CI.
-6. Sign in, join a Discord voice channel, and queue a local title.
-   Verify playback in Discord, then test seek, pause/resume, queue editing, and an actual subtitle track.
+6. Sign in, join a Discord voice channel, search for a local title, and press Watch.
+   Verify that the rail shows a Watching card for your voice channel and that the stream plays in Discord.
+   Then press Listen on a song and verify that a Listening card appears beside it.
+   On the cards, test seek, pause/resume, queue editing, and an actual subtitle track.
    Open a second viewer's page and verify that a stale queue edit is rejected after the first viewer changes it.
 
 ## Related
