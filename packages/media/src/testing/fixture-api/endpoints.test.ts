@@ -283,7 +283,18 @@ describe("fixture volume", () => {
     for (const persona of ["owner", "member"] as const) {
       const removals = await readRemovals(persona);
       expect(removals.length).toBeGreaterThan(0);
-      expect(removals.every((row) => row.rootTitle === row.media.title)).toBe(
+      const whole = removals.filter((row) => row.rootMediaId === row.mediaId);
+      expect(whole.length).toBeGreaterThan(0);
+      expect(whole.every((row) => row.rootTitle === row.media.title)).toBe(
+        true,
+      );
+      // One series is losing several episodes; each names the series.
+      const episodes = removals.filter((row) => row.media.kind === "episode");
+      expect(episodes).toHaveLength(4);
+      expect(new Set(episodes.map((row) => row.rootTitle))).toEqual(
+        new Set(["The Expanse"]),
+      );
+      expect(episodes.every((row) => row.rootMediaId !== row.mediaId)).toBe(
         true,
       );
     }
