@@ -39,6 +39,10 @@ function part(item: Removed): string {
 
 /** When it left and, once known, when its files went or will go. */
 function dates(item: Removed): string {
+  // A removal that was called off never finished removing anything.
+  if (item.state === "cancelled") {
+    return `Removal started ${shortDate(item.quarantinedAt)}.`;
+  }
   const left = `Removed ${shortDate(item.quarantinedAt)}.`;
   if (item.state === "purged") {
     return item.purgedAt === null
