@@ -9,7 +9,11 @@ import {
   formatTime,
   playbackPosition,
 } from "@shepherdjerred/streambot/web/client/room/position.ts";
-import { describeFailure } from "@shepherdjerred/streambot/web/client/messages.ts";
+import {
+  API_WORDING,
+  describeFailure,
+} from "@shepherdjerred/streambot/web/client/messages.ts";
+import { WEB_API_ERROR_CODES } from "@shepherdjerred/streambot/web/shared/error-codes.ts";
 import { shortReference } from "@shepherdjerred/streambot/web/client/api.ts";
 import {
   groupState,
@@ -238,5 +242,25 @@ describe("search groups", () => {
         },
       ]),
     ).toMatchObject({ status: "failed" });
+  });
+});
+
+describe("error wording covers the shared code list", () => {
+  test("every API error code has its own sentence or uses the server's message", () => {
+    for (const code of WEB_API_ERROR_CODES) {
+      expect(API_WORDING[code]).toBeDefined();
+      // Even with no server message, every code still reads as a sentence.
+      expect(describeFailure(failure(409, code)).text).not.toBe("");
+      expect(
+        describeFailure(failure(409, code, "Server says why.")).text,
+      ).not.toBe("");
+    }
+  });
+
+  test("a code this build does not know falls back to the generic wording", () => {
+    expect(describeFailure(failure(409, "brand_new_code"))).toEqual({
+      text: "Streambot could not finish this.",
+      retry: false,
+    });
   });
 });

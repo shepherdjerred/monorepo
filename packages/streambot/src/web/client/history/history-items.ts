@@ -1,7 +1,6 @@
 import type { z } from "zod";
 import type { HistoryPageSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { HistoryProviderSchema } from "@shepherdjerred/streambot/history/provider.ts";
-import type { RowAction } from "@shepherdjerred/streambot/web/shared/search-contracts.ts";
 import type { MediaItem } from "@shepherdjerred/streambot/web/client/media/row-model.ts";
 
 export type HistoryProvider = z.infer<typeof HistoryProviderSchema>;
@@ -31,26 +30,6 @@ export const PROVIDER_FILTERS: readonly {
   { value: "lolesports", label: "LoL Esports" },
 ];
 
-/**
- * The buttons a replay offers. This repeats the server's rule (`historyActions` in
- * `web/server/search/rows.ts`) because `/api/history` does not send actions: library and live
- * items only play as video; YouTube and links offer both, the one they were recorded as first.
- * The response does not say whether an item was music (the server sends `mediaKind: null`), so
- * today every YouTube or link replay leads with Watch.
- */
-export function historyActions(input: {
-  provider: HistoryProvider;
-  music: boolean;
-  replayAvailable: boolean;
-  listenAllowed: boolean;
-}): RowAction[] {
-  if (!input.replayAvailable) return [];
-  if (input.provider !== "youtube" && input.provider !== "url")
-    return ["watch"];
-  if (!input.listenAllowed) return ["watch"];
-  return input.music ? ["listen", "watch"] : ["watch", "listen"];
-}
-
 const WHEN = new Intl.DateTimeFormat(undefined, {
   month: "short",
   day: "numeric",
@@ -59,10 +38,7 @@ const WHEN = new Intl.DateTimeFormat(undefined, {
 });
 
 /** A past play as a row: when and by whom beneath the title, replayable only when it still is. */
-export function historyItem(
-  entry: HistoryEntry,
-  listenAllowed: boolean,
-): MediaItem {
+export function historyItem(entry: HistoryEntry): MediaItem {
   const requester = entry.requester?.name;
   const detail = [
     PROVIDER_LABELS[entry.provider],
@@ -84,12 +60,10 @@ export function historyItem(
     ...(entry.sportsArtwork === undefined
       ? {}
       : { sportsArtwork: entry.sportsArtwork }),
-    actions: historyActions({
-      provider: entry.provider,
-      music: entry.music === true || entry.mediaKind === "music",
-      replayAvailable: entry.replayAvailable,
-      listenAllowed,
-    }),
+    actions: entry.actions,
+    ...(entry.menuActions === undefined
+      ? {}
+      : { menuActions: entry.menuActions }),
     selection: entry.replayAvailable ? { kind: "history", id: entry.id } : null,
   };
 }

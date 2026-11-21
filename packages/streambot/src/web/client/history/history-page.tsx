@@ -41,7 +41,6 @@ export function HistoryPage() {
         reason="Playback history is not enabled in this server."
       />
     );
-  const listen = capabilities?.listen === true;
   const total = load.state.status === "done" ? load.state.data.total : 0;
   return (
     <div className="page">
@@ -78,7 +77,7 @@ export function HistoryPage() {
         }
         load={load.state}
         onRetry={load.retry}
-        items={(data) => data.items.map((entry) => historyItem(entry, listen))}
+        items={(data) => data.items.map((entry) => historyItem(entry))}
         empty="No plays found. Try another filter, or play something."
         aside={
           load.state.status === "done" ? (

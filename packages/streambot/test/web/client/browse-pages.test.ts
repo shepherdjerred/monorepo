@@ -13,7 +13,6 @@ import {
   seasonTitle,
 } from "@shepherdjerred/streambot/web/client/library/library-query.ts";
 import {
-  historyActions,
   historyItem,
   type HistoryEntry,
 } from "@shepherdjerred/streambot/web/client/history/history-items.ts";
@@ -146,42 +145,6 @@ describe("library query", () => {
 });
 
 describe("history", () => {
-  test("only replayable items offer buttons", () => {
-    expect(
-      historyActions({
-        provider: "youtube",
-        music: false,
-        replayAvailable: false,
-        listenAllowed: true,
-      }),
-    ).toEqual([]);
-  });
-
-  test("library and live items only play as video", () => {
-    for (const provider of ["local", "streameast", "lolesports"] as const)
-      expect(
-        historyActions({
-          provider,
-          music: true,
-          replayAvailable: true,
-          listenAllowed: true,
-        }),
-      ).toEqual(["watch"]);
-  });
-
-  test("YouTube and links lead with how they were recorded", () => {
-    const base = { provider: "youtube", replayAvailable: true } as const;
-    expect(
-      historyActions({ ...base, music: true, listenAllowed: true }),
-    ).toEqual(["listen", "watch"]);
-    expect(
-      historyActions({ ...base, music: false, listenAllowed: true }),
-    ).toEqual(["watch", "listen"]);
-    expect(
-      historyActions({ ...base, music: true, listenAllowed: false }),
-    ).toEqual(["watch"]);
-  });
-
   test("a replay carries its history selection", () => {
     const entry: HistoryEntry = {
       id: "h1",
@@ -193,11 +156,12 @@ describe("history", () => {
       replayAvailable: true,
       durationSeconds: 60,
       mediaKind: null,
+      actions: ["watch"],
     };
-    const item = historyItem(entry, true);
+    const item = historyItem(entry);
     expect(item.selection).toEqual({ kind: "history", id: "h1" });
     expect(item.actions).toEqual(["watch"]);
-    const gone = historyItem({ ...entry, replayAvailable: false }, true);
+    const gone = historyItem({ ...entry, replayAvailable: false, actions: [] });
     expect(gone.selection).toBeNull();
     expect(gone.actions).toEqual([]);
   });
@@ -291,7 +255,7 @@ describe("album page", () => {
   test("play-all selects the album's music id", () => {
     const item = albumPlayItem({
       ...page,
-      play: { id: "p1", actions: ["listen", "watch"] },
+      play: { id: "p1", actions: ["listen"], menuActions: ["watch"] },
     });
     expect(item?.selection).toEqual({ kind: "music", id: "p1" });
     expect(item?.actions).toEqual(["listen"]);
