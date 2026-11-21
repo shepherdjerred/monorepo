@@ -5,10 +5,12 @@ import {
   Cpu,
   DeploymentStrategy,
   EnvValue,
+  type ISecret,
   Probe,
   Secret,
   Volume,
 } from "cdk8s-plus-31";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
@@ -26,11 +28,13 @@ import {
   kubernetesApiEgressRule,
   otlpEgress,
   postgresEgress,
+  postgresOperatorIngressRule,
   prometheusIngressRule,
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { tailnetTags } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { tailnetService } from "homelab/src/platform-model.ts";
 import { createGolinkRbac, GOLINK_TAILSCALE_STATE_SECRET } from "./rbac.ts";
@@ -134,6 +138,40 @@ function buildGolinkMigrateContainer(
   };
 }
 
+function buildTailscaleHandoverContainer(
+  image: string,
+  authSecret: ISecret,
+  expectedHost: string,
+  expectedFqdn: string,
+): FirstPartyInitContainer {
+  return {
+    name: "tailscale-handover",
+    image,
+    command: ["bun", "src/server/handover-tailscale.ts"],
+    securityContext: restrictedContainer(GOLINK_UID),
+    resources: golinkContainerResources({
+      cpuRequestMillis: 25,
+      cpuLimitMillis: 250,
+      memoryRequestMib: 64,
+      memoryLimitMib: 256,
+    }),
+    envVariables: {
+      HOME: EnvValue.fromValue("/tmp"),
+      TS_STATE_SECRET_NAME: EnvValue.fromValue(GOLINK_TAILSCALE_STATE_SECRET),
+      TS_EXPECTED_HOSTNAME: EnvValue.fromValue(expectedHost),
+      TS_EXPECTED_FQDN: EnvValue.fromValue(expectedFqdn),
+      TS_OAUTH_CLIENT_ID: EnvValue.fromSecretValue({
+        secret: authSecret,
+        key: "client_id",
+      }),
+      TS_OAUTH_CLIENT_SECRET: EnvValue.fromSecretValue({
+        secret: authSecret,
+        key: "client_secret",
+      }),
+    },
+  };
+}
+
 function buildGolinkServerContainer(
   image: string,
   dbEnv: Record<string, EnvValue>,
@@ -162,17 +200,11 @@ function buildGolinkServerContainer(
 }
 
 function buildTailscaleSidecarContainer(
-  chart: Chart,
+  authSecret: ISecret,
+  expectedHost: string,
+  tags: string,
 ): FirstPartySidecarContainer {
-  const authItem = new OnePasswordItem(
-    chart,
-    "tailscale-auth-key-onepassword",
-    {
-      spec: { itemPath: vaultItemPath("mboftvs4fyptyqvg3anrfjy6vu") },
-      metadata: { name: "tailscale-auth-key" },
-    },
-  );
-  const tags = tailnetTags(tailnetService("go"));
+  const oauthSecretRef = ["$(TS_OAUTH_CLIENT_", "SECRET)"].join("");
   return {
     name: "tailscale",
     image: `ghcr.io/tailscale/tailscale:${versions["tailscale/tailscale"]}`,
@@ -198,7 +230,8 @@ function buildTailscaleSidecarContainer(
       HOME: EnvValue.fromValue("/tmp"),
       XDG_CACHE_HOME: EnvValue.fromValue("/tmp"),
       TS_USERSPACE: EnvValue.fromValue("true"),
-      TS_HOSTNAME: EnvValue.fromValue("go"),
+      TS_AUTH_ONCE: EnvValue.fromValue("true"),
+      TS_HOSTNAME: EnvValue.fromValue(expectedHost),
       TS_KUBE_SECRET: EnvValue.fromValue(GOLINK_TAILSCALE_STATE_SECRET),
       TS_SOCKET: EnvValue.fromValue("/tmp/tailscaled.sock"),
       TS_STATE_DIR: EnvValue.fromValue("/tmp/ts-state"),
@@ -209,16 +242,44 @@ function buildTailscaleSidecarContainer(
       TS_LOCAL_ADDR_PORT: EnvValue.fromValue(
         `0.0.0.0:${String(TAILSCALE_HEALTH_PORT)}`,
       ),
-      TS_AUTHKEY: EnvValue.fromSecretValue({
-        secret: Secret.fromSecretName(
-          chart,
-          "tailscale-auth-key",
-          authItem.name,
-        ),
+      TS_OAUTH_CLIENT_SECRET: EnvValue.fromSecretValue({
+        secret: authSecret,
         key: "client_secret",
       }),
+      TS_AUTHKEY: EnvValue.fromValue(
+        `${oauthSecretRef}?ephemeral=false&preauthorized=true`,
+      ),
     },
   };
+}
+
+function createGolinkPostgreSQLNetworkPolicy(chart: Chart): void {
+  new KubeNetworkPolicy(chart, "golink-postgresql-netpol", {
+    metadata: { name: "golink-postgresql-netpol" },
+    spec: {
+      podSelector: {
+        matchLabels: postgresClusterPodLabels("golink-postgresql"),
+      },
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          from: [{ podSelector: { matchLabels: { app: "golink" } } }],
+          ports: [tcp(5432)],
+        },
+        postgresOperatorIngressRule(),
+        {
+          from: [
+            {
+              podSelector: {
+                matchLabels: postgresClusterPodLabels("golink-postgresql"),
+              },
+            },
+          ],
+          ports: [tcp(5432), tcp(8008)],
+        },
+      ],
+    },
+  });
 }
 
 export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
@@ -234,6 +295,8 @@ export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
     data: { "serve.json": TAILSCALE_SERVE_CONFIG_JSON },
   });
   const dbEnv = buildGolinkDatabaseEnv(chart);
+  const goTailnet = tailnetService("go");
+  const tags = tailnetTags(goTailnet);
 
   const webService = new FirstPartyWebService(chart, "golink-web-service", {
     name: "golink",
@@ -250,15 +313,43 @@ export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
       serviceAccount,
       automountServiceAccountToken: true,
     },
-    containers: () => ({
-      init: [buildGolinkMigrateContainer(image, dbEnv)],
-      server: buildGolinkServerContainer(image, dbEnv),
-      sidecars: [buildTailscaleSidecarContainer(chart)],
-    }),
+    containers: () => {
+      const authItem = new OnePasswordItem(
+        chart,
+        "tailscale-auth-key-onepassword",
+        {
+          spec: { itemPath: vaultItemPath("mboftvs4fyptyqvg3anrfjy6vu") },
+          metadata: { name: "tailscale-auth-key" },
+        },
+      );
+      const authSecret = Secret.fromSecretName(
+        chart,
+        "tailscale-auth-key",
+        authItem.name,
+      );
+      return {
+        init: [
+          buildGolinkMigrateContainer(image, dbEnv),
+          buildTailscaleHandoverContainer(
+            image,
+            authSecret,
+            goTailnet.host,
+            goTailnet.fqdn,
+          ),
+        ],
+        server: buildGolinkServerContainer(image, dbEnv),
+        sidecars: [
+          buildTailscaleSidecarContainer(authSecret, goTailnet.host, tags),
+        ],
+      };
+    },
     serviceName: "golink",
     policies: [
       {
-        name: "golink-app-netpol",
+        // Keep the existing resource name so non-pruning ArgoCD / Delivery
+        // syncs update the legacy namespace-wide golink-netpol in place to
+        // select only app=golink pods instead of isolating golink-postgresql.
+        name: "golink-netpol",
         selects: "app",
         ingress: [prometheusIngressRule([GOLINK_HTTP_PORT])],
         egress: [
@@ -277,6 +368,8 @@ export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
       },
     ],
   });
+
+  createGolinkPostgreSQLNetworkPolicy(chart);
 
   const tailscaleContainer = webService.deployment.containers.find(
     (container) => container.name === "tailscale",

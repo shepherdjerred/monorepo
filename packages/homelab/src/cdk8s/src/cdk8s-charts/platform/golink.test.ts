@@ -8,6 +8,7 @@ import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/co
 import { podTemplateSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
 import { synthManifests } from "@shepherdjerred/homelab/cdk8s/src/testing/synth-manifests.ts";
 import { KUBERNETES_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 
 const PINNED_GOLINK_IMAGE = `docker.io/shepherdjerred/golink@sha256:${"2".repeat(64)}`;
 
@@ -25,6 +26,7 @@ const GolinkContainerSchema = z.object({
 });
 
 const GolinkDeploymentSpecSchema = z.object({
+  strategy: z.object({ type: z.string() }),
   template: podTemplateSchema(GolinkContainerSchema).extend({
     spec: z.object({
       serviceAccountName: z.string(),
@@ -62,7 +64,7 @@ function assertDatabaseEnvOrdering(
 beforeEach(resetProbeRegistry);
 
 describe("createGolinkChart", () => {
-  test("renders FirstPartyWebService, PostgreSQL, userspace Tailscale sidecar, RBAC, and NetworkPolicy", () => {
+  test("renders FirstPartyWebService, PostgreSQL, Tailscale handover + sidecar, RBAC, and NetworkPolicies", () => {
     expect(GOLINK_FIRST_PARTY_ACTIVE).toBe(true);
     const rendered = synthManifests(
       createGolinkChart(new App(), { image: PINNED_GOLINK_IMAGE }),
@@ -80,6 +82,8 @@ describe("createGolinkChart", () => {
         "OnePasswordItem/tailscale-auth-key",
         "Service/golink",
         "ServiceMonitor/golink-service-monitor",
+        "NetworkPolicy/golink-netpol",
+        "NetworkPolicy/golink-postgresql-netpol",
       ]),
     );
 
@@ -107,6 +111,7 @@ describe("createGolinkChart", () => {
     const deploymentSpec = GolinkDeploymentSpecSchema.parse(
       rendered.of("Deployment")[0]?.["spec"],
     );
+    expect(deploymentSpec.strategy.type).toBe("Recreate");
     expect(deploymentSpec.template.metadata.labels).toMatchObject({
       app: "golink",
     });
@@ -115,19 +120,24 @@ describe("createGolinkChart", () => {
       true,
     );
 
-    const [migrateContainer] = deploymentSpec.template.spec.initContainers;
+    const [migrateContainer, handoverContainer] =
+      deploymentSpec.template.spec.initContainers;
     const [serverContainer, tailscaleContainer] =
       deploymentSpec.template.spec.containers;
     if (
       migrateContainer === undefined ||
+      handoverContainer === undefined ||
       serverContainer === undefined ||
       tailscaleContainer === undefined
     ) {
-      throw new Error("Expected migrate, golink, and tailscale containers");
+      throw new Error(
+        "Expected migrate, tailscale-handover, golink, and tailscale containers",
+      );
     }
 
     for (const container of [
       migrateContainer,
+      handoverContainer,
       serverContainer,
       tailscaleContainer,
     ]) {
@@ -145,6 +155,32 @@ describe("createGolinkChart", () => {
       "migrate",
       "deploy",
     ]);
+    expect(handoverContainer.name).toBe("tailscale-handover");
+    expect(handoverContainer.image).toBe(PINNED_GOLINK_IMAGE);
+    expect(handoverContainer.command).toEqual([
+      "bun",
+      "src/server/handover-tailscale.ts",
+    ]);
+    expect(handoverContainer.env).toEqual(
+      expect.arrayContaining([
+        { name: "TS_STATE_SECRET_NAME", value: "golink-tailscale-state" },
+        { name: "TS_EXPECTED_HOSTNAME", value: "go" },
+        { name: "TS_EXPECTED_FQDN", value: "go.tailnet-1a49.ts.net" },
+        {
+          name: "TS_OAUTH_CLIENT_ID",
+          valueFrom: {
+            secretKeyRef: { name: "tailscale-auth-key", key: "client_id" },
+          },
+        },
+        {
+          name: "TS_OAUTH_CLIENT_SECRET",
+          valueFrom: {
+            secretKeyRef: { name: "tailscale-auth-key", key: "client_secret" },
+          },
+        },
+      ]),
+    );
+
     expect(serverContainer.command).toEqual(["bun", "src/server/index.ts"]);
     expect(serverContainer.env).toContainEqual(
       expect.objectContaining({ name: "GOLINK_SEED_JSON" }),
@@ -157,12 +193,25 @@ describe("createGolinkChart", () => {
     expect(tailscaleContainer.env).toEqual(
       expect.arrayContaining([
         { name: "TS_USERSPACE", value: "true" },
+        { name: "TS_AUTH_ONCE", value: "true" },
         { name: "TS_HOSTNAME", value: "go" },
         { name: "TS_KUBE_SECRET", value: "golink-tailscale-state" },
         { name: "TS_SERVE_CONFIG", value: "/etc/tailscale/serve.json" },
         { name: "TS_ADVERTISE_TAGS", value: "tag:k8s" },
         { name: "TS_EXTRA_ARGS", value: "--advertise-tags=tag:k8s" },
+        {
+          name: "TS_AUTHKEY",
+          value: [
+            "$(TS_OAUTH_CLIENT_",
+            "SECRET)",
+            "?ephemeral=false&preauthorized=true",
+          ].join(""),
+        },
       ]),
+    );
+    const tsEnvNames = tailscaleContainer.env.map((entry) => entry.name);
+    expect(tsEnvNames.indexOf("TS_AUTHKEY")).toBeGreaterThan(
+      tsEnvNames.indexOf("TS_OAUTH_CLIENT_SECRET"),
     );
     expect(tailscaleContainer.volumeMounts).toEqual(
       expect.arrayContaining([
@@ -191,14 +240,38 @@ describe("createGolinkChart", () => {
         },
       },
     });
+  });
+});
 
-    const policy = rendered
+describe("createGolinkChart policies and validation", () => {
+  test("migrates legacy golink-netpol in place and renders golink-postgresql-netpol", () => {
+    const rendered = synthManifests(
+      createGolinkChart(new App(), { image: PINNED_GOLINK_IMAGE }),
+    );
+
+    const appPolicy = rendered
       .of("NetworkPolicy")
-      .find((candidate) => candidate.metadata.name === "golink-app-netpol");
-    expect(policy).toBeDefined();
-    expect(JSON.stringify(policy?.["spec"])).toContain(
+      .find((candidate) => candidate.metadata.name === "golink-netpol");
+    expect(appPolicy).toBeDefined();
+    expect(appPolicy?.["spec"]).toMatchObject({
+      podSelector: { matchLabels: { app: "golink" } },
+    });
+    expect(JSON.stringify(appPolicy?.["spec"])).toContain(
       KUBERNETES_API_ENDPOINT.cidr,
     );
+
+    const dbPolicy = rendered
+      .of("NetworkPolicy")
+      .find(
+        (candidate) => candidate.metadata.name === "golink-postgresql-netpol",
+      );
+    expect(dbPolicy).toBeDefined();
+    expect(dbPolicy?.["spec"]).toMatchObject({
+      podSelector: {
+        matchLabels: postgresClusterPodLabels("golink-postgresql"),
+      },
+      policyTypes: ["Ingress"],
+    });
   });
 
   test("rejects an unpinned mutable image", () => {
