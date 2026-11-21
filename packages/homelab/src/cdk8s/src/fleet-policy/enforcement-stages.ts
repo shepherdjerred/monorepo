@@ -43,7 +43,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "node-tuning": "open",
   phoenix: "enforced",
   pinchtab: "enforced",
-  postal: "open",
+  postal: "enforced",
   prometheus: "open",
   redlib: "enforced",
   relay: "enforced",
