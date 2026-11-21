@@ -38,7 +38,7 @@ export function useTelemetry(me: Load<z.infer<typeof MeSchema>>): void {
 
 /** A row's play button or `⋯` menu item started a play. */
 export function trackResultChosen(
-  item: Pick<MediaItem, "kind" | "rank">,
+  item: Pick<MediaItem, "kind" | "rank" | "actions">,
   fromMenu: boolean,
   choice: PlayChoice,
 ): void {

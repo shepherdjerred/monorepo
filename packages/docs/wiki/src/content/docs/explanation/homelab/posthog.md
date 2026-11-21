@@ -49,7 +49,10 @@ titles, search text, and catalog ids in their `href`, and PostHog records a
 clicked link's `href` whatever the attribute masking, so the remote turns
 autocapture, heatmaps, and rage and dead clicks off and sends only its own
 closed-vocabulary events, route-pattern page views, and web vitals. It also
-loads the tracker only on its registered production host.
+loads the tracker only on its registered production host. Those browser events
+feed the OpenTofu-owned **Streambot Usage** dashboard beside the server's
+usage events: Listen versus Watch on rows that offered both, errors shown by
+code, and page views by route.
 
 Input masking is not sufficient everywhere. `maskAllInputs` masks form values,
 not arbitrary text nodes, so the sites that render a signed-in identity as

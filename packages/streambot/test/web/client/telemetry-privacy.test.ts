@@ -1,10 +1,13 @@
 import { describe, expect, test } from "vitest";
 import type { CaptureResult } from "posthog-js";
 import type { ErrorEvent } from "@sentry/react";
+import { z } from "zod";
 import { WEB_API_ERROR_CODES } from "@shepherdjerred/streambot/web/shared/error-codes.ts";
+import { RowActionSchema } from "@shepherdjerred/streambot/web/shared/search-contracts.ts";
 import {
   errorCode,
   errorShownEvent,
+  offered,
   pageViewEvent,
   playButton,
   rankBucket,
@@ -125,6 +128,14 @@ describe("route patterns", () => {
 });
 
 describe("closed event properties", () => {
+  test("offered names which of Listen and Watch the row showed", () => {
+    expect(
+      [[], ["listen"], ["watch"], ["watch", "listen"]].map((actions) =>
+        offered(z.array(RowActionSchema).parse(actions)),
+      ),
+    ).toEqual(["none", "listen", "watch", "both"]);
+  });
+
   test("rank buckets and play buttons are small closed sets", () => {
     expect(
       [undefined, 0, 1, 2, 3, 4, 10, 11, 99].map((rank) => rankBucket(rank)),
@@ -191,7 +202,7 @@ describe("no private value reaches a payload", () => {
       pageViewEvent(`/?q=${QUERY}`, SITE),
       pageViewEvent(`/album/${ALBUM_ID}`, SITE),
       resultChosenEvent(
-        { kind: "song", rank: 2 },
+        { kind: "song", rank: 2, actions: ["listen"] },
         playButton(true, { transport: "watch", placement: "queue" }),
       ),
       errorShownEvent({ code: `music_query ${QUERY}` }, "search"),
@@ -208,6 +219,7 @@ describe("no private value reaches a payload", () => {
     expect(events[2]?.properties).toEqual({
       kind: "song",
       rank_bucket: "2-3",
+      offered: "listen",
       button: "watch_video",
     });
   });

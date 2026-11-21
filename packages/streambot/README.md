@@ -195,7 +195,8 @@ keeps its cookie on `streambot.sjer.red` alone, and talks only to the
 `config/analytics-sites.json` by `scripts/checks/check-analytics-sites.ts`).
 It sends only explicit events with closed properties: `$pageview` (route
 pattern only, such as `/album/:id`), `streambot_result_chosen` (`kind`,
-`rank_bucket`, `button`) and `streambot_error_shown` (`code` from the shared
+`rank_bucket`, `offered` — which of Listen and Watch the row showed — and
+`button`) and `streambot_error_shown` (`code` from the shared
 API code list or the client's own, else `other`; `surface`), plus page leave
 and web vitals. Autocapture, rage clicks, dead clicks and heatmaps are off,
 because autocapture records a clicked link's `href` whatever the masking

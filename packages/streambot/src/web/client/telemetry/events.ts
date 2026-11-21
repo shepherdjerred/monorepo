@@ -24,6 +24,7 @@ export type TelemetryEvent =
       readonly properties: {
         readonly kind: MediaItem["kind"];
         readonly rank_bucket: RankBucket;
+        readonly offered: Offered;
         readonly button: PlayButton;
       };
     }
@@ -92,13 +93,29 @@ export function playButton(fromMenu: boolean, choice: PlayChoice): PlayButton {
   }
 }
 
+/** Which play buttons the chosen row showed, so Listen and Watch compare only where both were offered. */
+export type Offered = "listen" | "watch" | "both" | "none";
+
+export function offered(actions: readonly RowAction[]): Offered {
+  const listen = actions.includes("listen");
+  const watch = actions.includes("watch");
+  if (listen && watch) return "both";
+  if (listen) return "listen";
+  return watch ? "watch" : "none";
+}
+
 export function resultChosenEvent(
-  item: Pick<MediaItem, "kind" | "rank">,
+  item: Pick<MediaItem, "kind" | "rank" | "actions">,
   button: PlayButton,
 ): TelemetryEvent {
   return {
     event: "streambot_result_chosen",
-    properties: { kind: item.kind, rank_bucket: rankBucket(item.rank), button },
+    properties: {
+      kind: item.kind,
+      rank_bucket: rankBucket(item.rank),
+      offered: offered(item.actions),
+      button,
+    },
   };
 }
 

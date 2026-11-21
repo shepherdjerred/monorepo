@@ -2478,6 +2478,118 @@
           }
         }
       },
+      "streambot_errors_by_code": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": { "breakdown": "code", "breakdown_type": "event" },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [],
+          "series": [
+            {
+              "event": "streambot_error_shown",
+              "kind": "EventsNode",
+              "name": "streambot_error_shown"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_listen_vs_watch": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "button",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [
+            {
+              "key": "offered",
+              "operator": "exact",
+              "type": "event",
+              "value": ["both"]
+            }
+          ],
+          "series": [
+            {
+              "event": "streambot_result_chosen",
+              "kind": "EventsNode",
+              "name": "streambot_result_chosen"
+            }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
+      "streambot_page_views_by_route": {
+        "kind": "InsightVizNode",
+        "source": {
+          "breakdownFilter": {
+            "breakdown": "route",
+            "breakdown_type": "event"
+          },
+          "dateRange": {
+            "date_from": "-90d",
+            "excludeIncompletePeriods": false,
+            "explicitDate": false
+          },
+          "filterTestAccounts": false,
+          "interval": "week",
+          "kind": "TrendsQuery",
+          "properties": [
+            {
+              "key": "$host",
+              "operator": "exact",
+              "type": "event",
+              "value": ["streambot.sjer.red"]
+            }
+          ],
+          "series": [
+            { "event": "$pageview", "kind": "EventsNode", "name": "$pageview" }
+          ],
+          "trendsFilter": {
+            "aggregationAxisFormat": "numeric",
+            "display": "ActionsStackedBar",
+            "showAlertThresholdLines": false,
+            "showLegend": true,
+            "showPercentStackView": false,
+            "showValuesOnSeries": false,
+            "smoothingIntervals": 1,
+            "yAxisScaleType": "linear"
+          }
+        }
+      },
       "streambot_playlist_actions": {
         "kind": "InsightVizNode",
         "source": {
@@ -2913,7 +3025,7 @@
       },
       "streambot_usage": {
         "deleted": false,
-        "description": "How the Streambot web remote is used: weekly active users, plays by surface and placement, commands by action, search-to-play conversion, station starts, playlist actions, and sign-ins. Insights stay empty until the Streambot analytics producer is deployed.",
+        "description": "How the Streambot web remote is used: weekly active users, plays by surface and placement, commands by action, search-to-play conversion, station starts, playlist actions, sign-ins, and from the browser: Listen vs Watch where both were offered, errors shown by code, and page views by route. Insights stay empty until the Streambot analytics producer is deployed.",
         "name": "Streambot Usage",
         "pinned": false,
         "project_id": "549883"
@@ -3617,6 +3729,30 @@
         "name": "Remote commands by action (weekly)",
         "project_id": "549883",
         "query_json": "${jsonencode(local.insight_queries[\"streambot_commands_by_action\"])}"
+      },
+      "streambot_errors_by_code": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Failures the web remote showed beside a control, by the shared error code (unknown codes report as `other`).",
+        "name": "Errors shown by code (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_errors_by_code\"])}"
+      },
+      "streambot_listen_vs_watch": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Which control people pressed on result rows that showed both Listen and Watch, from the browser's `streambot_result_chosen`.",
+        "name": "Listen vs Watch on rows offering both (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_listen_vs_watch\"])}"
+      },
+      "streambot_page_views_by_route": {
+        "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],
+        "deleted": false,
+        "description": "Web remote page views by route pattern; the browser never reports a concrete path or query.",
+        "name": "Page views by route (weekly)",
+        "project_id": "549883",
+        "query_json": "${jsonencode(local.insight_queries[\"streambot_page_views_by_route\"])}"
       },
       "streambot_playlist_actions": {
         "dashboard_ids": ["${tonumber(posthog_dashboard.streambot_usage.id)}"],

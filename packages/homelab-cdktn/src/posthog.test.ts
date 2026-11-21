@@ -94,6 +94,9 @@ const CREATED = [
   "posthog_insight.scout_voice_questions_by_outcome",
   "posthog_insight.storm_product_metrics",
   "posthog_insight.streambot_commands_by_action",
+  "posthog_insight.streambot_errors_by_code",
+  "posthog_insight.streambot_listen_vs_watch",
+  "posthog_insight.streambot_page_views_by_route",
   "posthog_insight.streambot_playlist_actions",
   "posthog_insight.streambot_plays_by_placement",
   "posthog_insight.streambot_plays_by_selection_kind",
@@ -323,7 +326,7 @@ describe("posthog Streambot usage dashboard", () => {
     const streambot = Object.keys(insights).filter((name) =>
       name.startsWith("streambot_"),
     );
-    expect(streambot).toHaveLength(10);
+    expect(streambot).toHaveLength(13);
     for (const name of streambot) {
       expect(insights[name]?.["dashboard_ids"], name).toEqual([
         "${tonumber(posthog_dashboard.streambot_usage.id)}",
@@ -334,9 +337,26 @@ describe("posthog Streambot usage dashboard", () => {
         return value;
       });
       for (const event of events) {
-        expect(event, name).toMatch(/^streambot_[a-z_]+$/);
+        // Page views are shared with every site, so that one insight is scoped to the host.
+        expect(event, name).toMatch(
+          name === "streambot_page_views_by_route"
+            ? /^\$pageview$/
+            : /^streambot_[a-z_]+$/,
+        );
       }
     }
+    expect(queries["streambot_page_views_by_route"]).toMatchObject({
+      source: {
+        breakdownFilter: { breakdown: "route" },
+        properties: [{ key: "$host", value: ["streambot.sjer.red"] }],
+      },
+    });
+    expect(queries["streambot_listen_vs_watch"]).toMatchObject({
+      source: {
+        breakdownFilter: { breakdown: "button" },
+        properties: [{ key: "offered", value: ["both"] }],
+      },
+    });
     expect(queries["streambot_weekly_active_users"]).toMatchObject({
       source: {
         series: [{ event: null, math: "dau" }],
