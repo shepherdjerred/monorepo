@@ -223,6 +223,92 @@ export async function recordExploreAudioSpend(
   return micros;
 }
 
+/** An audio call's hold on the monthly allowance, taken before the provider is called. */
+export type ExploreAudioReservation = {
+  readonly id: string;
+  readonly model: ExploreAudioModel;
+  readonly amount: number;
+};
+
+/**
+ * Hold the allowance for `audioMs` of audio before the provider is called, so
+ * a turn that cannot afford it never incurs the cost and concurrent calls
+ * cannot all pass against the same remaining allowance. Serialized with
+ * `reserveExploreCall` by the same lock; throws `ExploreBudgetError` when the
+ * owner's or Explore's monthly allowance cannot cover it.
+ */
+export async function reserveExploreAudio(
+  input: {
+    ownerId: string;
+    runId: string;
+    model: ExploreAudioModel;
+    audioMs: number;
+    policy?: z.infer<typeof ExploreSpendPolicySchema>;
+    now?: Date;
+  },
+  database = prisma,
+): Promise<ExploreAudioReservation> {
+  const policy = ExploreSpendPolicySchema.parse(
+    input.policy ?? DEFAULT_EXPLORE_SPEND_POLICY,
+  );
+  const amount = exploreAudioMicros(input.model, input.audioMs);
+  const month = (input.now ?? new Date()).toISOString().slice(0, 7);
+  return await database.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-explore-spend'))`;
+    const [global, user] = await Promise.all([
+      used(tx, { month }),
+      used(tx, { month, ownerId: input.ownerId }),
+    ]);
+    const remaining = Math.min(
+      policy.globalMonthlyMicros - global,
+      policy.userMonthlyMicros - user,
+    );
+    if (remaining < amount) throw new ExploreBudgetError();
+    const row = await tx.exploreSpend.create({
+      data: {
+        runId: input.runId,
+        ownerId: DiscordAccountIdSchema.parse(input.ownerId),
+        model: input.model,
+        month,
+        reservedMicros: amount,
+        budgetMicros: amount,
+      },
+    });
+    return { id: row.id, model: input.model, amount };
+  });
+}
+
+/**
+ * Settle an audio hold at the audio's actual length, optionally moving it to
+ * the run it turned out to belong to.
+ */
+export async function settleExploreAudio(
+  reservation: ExploreAudioReservation,
+  settlement: { audioMs: number; runId?: string },
+  database: Pick<Db, "exploreSpend"> = prisma,
+): Promise<void> {
+  await database.exploreSpend.updateMany({
+    where: { id: reservation.id, state: "held" },
+    data: {
+      state: "settled",
+      budgetMicros: exploreAudioMicros(reservation.model, settlement.audioMs),
+      usage: JSON.stringify({ audioMs: Math.round(settlement.audioMs) }),
+      settledAt: new Date(),
+      ...(settlement.runId === undefined ? {} : { runId: settlement.runId }),
+    },
+  });
+}
+
+/** Give back a hold whose provider call failed, so nothing was spent. */
+export async function releaseExploreAudio(
+  reservation: ExploreAudioReservation,
+  database: Pick<Db, "exploreSpend"> = prisma,
+): Promise<void> {
+  await database.exploreSpend.deleteMany({
+    where: { id: reservation.id, state: "held" },
+  });
+}
+
 const UsageSchema = z.looseObject({
   inputTokens: z.looseObject({
     total: z.number().int().nonnegative(),

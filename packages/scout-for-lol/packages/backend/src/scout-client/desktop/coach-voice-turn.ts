@@ -30,9 +30,11 @@ import { subscribeDurableExploreRun } from "#src/explore/runs/durable-runs.ts";
 import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import { classifyExploreStartError } from "#src/explore/runs/start-refusal.ts";
 import {
-  exploreSpendingStatus,
-  recordExploreAudioSpend,
-  type ExploreAudioModel,
+  ExploreBudgetError,
+  releaseExploreAudio,
+  reserveExploreAudio,
+  settleExploreAudio,
+  type ExploreAudioReservation,
 } from "#src/explore/spending/ledger.ts";
 import { loadExploreRunResult } from "#src/explore/store.ts";
 import { createLogger } from "#src/logger.ts";
@@ -155,30 +157,69 @@ export type VoiceTurnOutcome = Extract<
   { type: "done" }
 >["outcome"];
 
-/** Record audio spend; a ledger failure is reported, never the turn's end. */
-async function recordAudio(
+/**
+ * Hold the allowance for `audioMs` of audio before a provider is called.
+ * Null when the owner's or Explore's monthly allowance cannot cover it; any
+ * other ledger failure is a broken contract and propagates.
+ */
+async function holdAudio(
   ownerId: DiscordAccountId,
+  model: typeof VOICE_TRANSCRIPTION_MODEL | typeof VOICE_SPEECH_MODEL,
+  audioMs: number,
+): Promise<ExploreAudioReservation | null> {
+  try {
+    return await reserveExploreAudio({
+      ownerId,
+      runId: globalThis.crypto.randomUUID(),
+      model,
+      audioMs,
+      policy: exploreSpendPolicy(),
+    });
+  } catch (error) {
+    if (error instanceof ExploreBudgetError) return null;
+    throw error;
+  }
+}
+
+/** Settle a hold at the audio's real length; a ledger failure is reported, never the turn's end. */
+async function settleAudio(
+  reservation: ExploreAudioReservation,
   runId: string,
-  model: ExploreAudioModel,
   audioMs: number,
 ): Promise<void> {
   try {
-    await recordExploreAudioSpend({ ownerId, runId, model, audioMs });
+    await settleExploreAudio(reservation, { audioMs, runId });
   } catch (error) {
     logger.error("Voice turn audio spend was not recorded", {
       runId,
-      model,
+      model: reservation.model,
       error: error instanceof Error ? error.message : String(error),
     });
     Sentry.captureException(error, { tags: { source: "coach-voice-spend" } });
   }
 }
 
-/** Whether the owner's and Explore's monthly spend still has room. */
-async function spendRemains(ownerId: DiscordAccountId): Promise<boolean> {
-  const status = await exploreSpendingStatus(ownerId, exploreSpendPolicy());
-  return status.userRemainingMicros > 0 && status.globalRemainingMicros > 0;
+/** Give back a hold whose provider call did not complete. */
+async function releaseAudio(
+  reservation: ExploreAudioReservation,
+): Promise<void> {
+  try {
+    await releaseExploreAudio(reservation);
+  } catch (error) {
+    logger.error("Voice turn audio hold was not released", {
+      model: reservation.model,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    Sentry.captureException(error, { tags: { source: "coach-voice-spend" } });
+  }
 }
+
+/**
+ * The longest a spoken answer can take to say, per character: a deliberately
+ * slow 10 characters a second, so the hold taken before synthesis, when the
+ * audio's length is unknown, covers what the provider can bill.
+ */
+const SPEECH_MS_PER_CHARACTER = 100;
 
 type HeardQuestion =
   | {
@@ -192,8 +233,9 @@ type HeardQuestion =
 
 /**
  * Transcribe the utterance and prove from that transcript that the player
- * asked. Transcription is spent whether or not a turn follows; `spend` books
- * it against the run once there is one.
+ * asked. The allowance is held before the provider hears anything, and spent
+ * whether or not a turn follows; `spend` books it against the run once there
+ * is one.
  */
 async function hearQuestion(
   input: VoiceTurnInput,
@@ -203,9 +245,12 @@ async function hearQuestion(
     emitVoiceError(stream, code, VOICE_MESSAGES[code]);
     return { ok: false, outcome: "refused" };
   };
-  if (!(await spendRemains(input.caller.userId))) {
-    return refuse("budget_exhausted");
-  }
+  const hold = await holdAudio(
+    input.caller.userId,
+    VOICE_TRANSCRIPTION_MODEL,
+    input.utterance.durationMs,
+  );
+  if (hold === null) return refuse("budget_exhausted");
   let transcript: string;
   try {
     transcript = await transcribeVoiceQuestion({
@@ -214,6 +259,7 @@ async function hearQuestion(
       signal: voiceAudioRequestSignal(input.signal),
     });
   } catch (error) {
+    await releaseAudio(hold);
     if (input.signal.aborted) return { ok: false, outcome: null };
     const budget = isQuotaExhaustedError(error);
     logger.warn("Voice turn transcription failed", {
@@ -224,12 +270,7 @@ async function hearQuestion(
     return refuse(budget ? "budget_exhausted" : "transcription_failed");
   }
   const spend = (runId: string): Promise<void> =>
-    recordAudio(
-      input.caller.userId,
-      runId,
-      VOICE_TRANSCRIPTION_MODEL,
-      input.utterance.durationMs,
-    );
+    settleAudio(hold, runId, input.utterance.durationMs);
   const proof = proveVoiceInitiation(transcript, input.trigger);
   const turn = proof.ok
     ? ExploreTurnRequestSchema.safeParse({
@@ -306,6 +347,15 @@ async function speak(
   runId: string,
   text: string,
 ): Promise<void> {
+  const hold = await holdAudio(
+    input.caller.userId,
+    VOICE_SPEECH_MODEL,
+    text.length * SPEECH_MS_PER_CHARACTER,
+  );
+  if (hold === null) {
+    emitVoiceError(stream, "budget_exhausted", VOICE_MESSAGES.budget_exhausted);
+    return;
+  }
   let pcm: Uint8Array;
   try {
     pcm = await synthesizeVoiceAnswer({
@@ -314,6 +364,7 @@ async function speak(
       signal: voiceAudioRequestSignal(input.signal),
     });
   } catch (error) {
+    await releaseAudio(hold);
     if (input.signal.aborted) return;
     const budget = isQuotaExhaustedError(error);
     logger.warn("Voice turn speech failed", {
@@ -325,12 +376,7 @@ async function speak(
     emitVoiceError(stream, code, VOICE_MESSAGES[code]);
     return;
   }
-  await recordAudio(
-    input.caller.userId,
-    runId,
-    VOICE_SPEECH_MODEL,
-    pcm.byteLength / SPEECH_BYTES_PER_MS,
-  );
+  await settleAudio(hold, runId, pcm.byteLength / SPEECH_BYTES_PER_MS);
   const { maxChunkBytes, encoding, sampleRateHz } =
     SCOUT_DESKTOP_VOICE_TURN.speech;
   for (let offset = 0; offset < pcm.byteLength; offset += maxChunkBytes) {

@@ -4,6 +4,9 @@ import {
   dropTestDatabase,
 } from "#src/testing/test-database.ts";
 import {
+  reserveExploreAudio,
+  releaseExploreAudio,
+  settleExploreAudio,
   reserveExploreCall,
   settleExploreCall,
   ExploreBudgetError,
@@ -153,4 +156,50 @@ test("zero disables calls and invalid or expanded policies fail validation", asy
     reason: "input_limit",
   });
   expect(await db.prisma.exploreSpend.count()).toBe(0);
+});
+
+test("audio is held before the provider, refused past the allowance, and settled or released", async () => {
+  const policy = ExploreSpendPolicySchema.parse({
+    globalMonthlyMicros: 100,
+    userMonthlyMicros: 100,
+    turnMicros: 100,
+  });
+  const audio = {
+    ownerId: base.ownerId,
+    model: "gpt-4o-transcribe",
+    audioMs: 600_000,
+    policy,
+    now: base.now,
+  } as const;
+  // 10 minutes of transcription is 60_000 micros; the allowance is 100.
+  await expect(
+    reserveExploreAudio({ ...audio, runId: "a" }, db.prisma),
+  ).rejects.toBeInstanceOf(ExploreBudgetError);
+  expect(await db.prisma.exploreSpend.count()).toBe(0);
+
+  const first = await reserveExploreAudio(
+    { ...audio, runId: "a", audioMs: 600 },
+    db.prisma,
+  );
+  expect(first.amount).toBe(60);
+  await expect(
+    reserveExploreAudio({ ...audio, runId: "b", audioMs: 600 }, db.prisma),
+  ).rejects.toBeInstanceOf(ExploreBudgetError);
+
+  await settleExploreAudio(first, { audioMs: 300, runId: "run-1" }, db.prisma);
+  const settled = await db.prisma.exploreSpend.findUniqueOrThrow({
+    where: { id: first.id },
+  });
+  expect(settled).toMatchObject({
+    state: "settled",
+    runId: "run-1",
+    budgetMicros: 30,
+  });
+
+  const second = await reserveExploreAudio(
+    { ...audio, runId: "b", audioMs: 600 },
+    db.prisma,
+  );
+  await releaseExploreAudio(second, db.prisma);
+  expect(await db.prisma.exploreSpend.count()).toBe(1);
 });

@@ -1,10 +1,15 @@
 import { describe, expect, test } from "vitest";
-import { createSseWriter } from "#src/explore/http/http-route.ts";
+import {
+  createSseWriter,
+  shapeSharedTranscript,
+} from "#src/explore/http/http-route.ts";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
   ExploreAnswerSchema,
+  ExploreTranscriptSchema,
 } from "@scout-for-lol/data";
 import { clampAnswer } from "#src/explore/partial-answer.ts";
+import { redactSharedExploreTranscript } from "#src/explore/trace.ts";
 
 /**
  * A stopped turn is the one answer path that does not go through
@@ -127,5 +132,42 @@ describe("createSseWriter", () => {
 
     expect(controller.isClosed()).toBe(true);
     expect(controller.chunks).toHaveLength(1);
+  });
+});
+
+describe("shapeSharedTranscript low-effort compatibility", () => {
+  const lowEffort = redactSharedExploreTranscript(
+    ExploreTranscriptSchema.parse({
+      conversation: {
+        id: "11111111-1111-4111-8111-111111111111",
+        title: "Shared",
+        shareToken: "a".repeat(32),
+        sharedLeafId: "22222222-2222-4222-8222-222222222222",
+        createdAt: "2026-08-18T12:00:00.000Z",
+        updatedAt: "2026-08-18T12:00:00.000Z",
+      },
+      messages: [
+        {
+          id: "22222222-2222-4222-8222-222222222222",
+          role: "assistant",
+          content: "Answer",
+          generation: { model: "gpt-5", reasoningEffort: "low" },
+          createdAt: "2026-08-18T12:00:00.000Z",
+        },
+      ],
+    }),
+  );
+
+  test.each(["3", "2", "1", null])(
+    "cards=%s readers get no low-effort provenance",
+    (cards) => {
+      const body = JSON.stringify(shapeSharedTranscript(lowEffort, cards));
+      expect(body).not.toContain('"low"');
+    },
+  );
+
+  test("cards=4 readers keep the low-effort provenance", () => {
+    const body = shapeSharedTranscript(lowEffort, "4");
+    expect(JSON.stringify(body)).toContain('"reasoningEffort":"low"');
   });
 });

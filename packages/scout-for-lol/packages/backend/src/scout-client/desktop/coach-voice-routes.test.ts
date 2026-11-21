@@ -31,8 +31,9 @@ const mocks = vi.hoisted(() => ({
   settleRun: vi.fn(),
   transcribe: vi.fn(),
   synthesize: vi.fn(),
-  spendingStatus: vi.fn(),
-  recordAudio: vi.fn(),
+  reserveAudio: vi.fn(),
+  settleAudio: vi.fn(),
+  releaseAudio: vi.fn(),
   loadResult: vi.fn(),
   loadTranscript: vi.fn(),
   voiceCredential: vi.fn(),
@@ -77,8 +78,9 @@ vi.mock(
 );
 vi.mock("#src/explore/spending/ledger.ts", async (importOriginal) => ({
   ...(await importOriginal()),
-  exploreSpendingStatus: mocks.spendingStatus,
-  recordExploreAudioSpend: mocks.recordAudio,
+  reserveExploreAudio: mocks.reserveAudio,
+  settleExploreAudio: mocks.settleAudio,
+  releaseExploreAudio: mocks.releaseAudio,
 }));
 vi.mock("#src/explore/store.ts", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -95,6 +97,7 @@ const {
   resetDesktopWriteRateLimitsForTests,
 } = await import("./rate-limit.ts");
 const { DESKTOP_WRITE_LIMITS_PER_MINUTE } = await import("./rate-limit.ts");
+const { ExploreBudgetError } = await import("#src/explore/spending/ledger.ts");
 const { ExploreRunRateLimitedError } =
   await import("#src/explore/runs/run-manager.ts");
 
@@ -226,11 +229,16 @@ beforeEach(() => {
   });
   mocks.exploreAccess.mockResolvedValue([SHARED_GUILD]);
   mocks.voiceCredential.mockResolvedValue("sk-test-voice");
-  mocks.spendingStatus.mockResolvedValue({
-    userRemainingMicros: 1_000_000,
-    globalRemainingMicros: 10_000_000,
-  });
-  mocks.recordAudio.mockResolvedValue(1);
+  mocks.reserveAudio.mockImplementation(
+    (input: { model: string; audioMs: number }) =>
+      Promise.resolve({
+        id: `hold-${input.model}`,
+        model: input.model,
+        amount: 1,
+      }),
+  );
+  mocks.settleAudio.mockResolvedValue(undefined);
+  mocks.releaseAudio.mockResolvedValue(undefined);
   mocks.transcribe.mockResolvedValue("Hey Scout, what should I build next?");
   mocks.startRun.mockResolvedValue({
     runId: run.runId,
@@ -434,8 +442,9 @@ describe("coach/voice/turns proof of initiation", () => {
     expect(stream).toEqual(voiceFixture.refusals[0]?.events);
     expect(mocks.startRun).not.toHaveBeenCalled();
     // The transcription was still spent, against no run.
-    expect(mocks.recordAudio).toHaveBeenCalledWith(
-      expect.objectContaining({ model: "gpt-4o-transcribe", audioMs: 200 }),
+    expect(mocks.settleAudio).toHaveBeenCalledWith(
+      expect.objectContaining({ model: "gpt-4o-transcribe" }),
+      expect.objectContaining({ audioMs: 200 }),
     );
   });
 
@@ -503,34 +512,69 @@ describe("coach/voice/turns proof of initiation", () => {
 });
 
 describe("coach/voice/turns spend and refusals", () => {
-  test("transcription and speech are booked against the run", async () => {
+  test("transcription and speech are held first, then settled against the run", async () => {
     await drain(voiceBody());
 
-    expect(mocks.recordAudio).toHaveBeenCalledWith({
-      ownerId: OWNER_ID,
-      runId: run.runId,
-      model: "gpt-4o-transcribe",
-      audioMs: 200,
-    });
-    expect(mocks.recordAudio).toHaveBeenCalledWith({
-      ownerId: OWNER_ID,
-      runId: run.runId,
-      model: "gpt-4o-mini-tts",
-      audioMs: (48_000 * 2 + 10) / 48,
-    });
+    expect(mocks.reserveAudio).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownerId: OWNER_ID,
+        model: "gpt-4o-transcribe",
+        audioMs: 200,
+      }),
+    );
+    expect(mocks.reserveAudio).toHaveBeenCalledWith(
+      expect.objectContaining({ ownerId: OWNER_ID, model: "gpt-4o-mini-tts" }),
+    );
+    expect(mocks.settleAudio).toHaveBeenCalledWith(
+      expect.objectContaining({ model: "gpt-4o-transcribe" }),
+      { audioMs: 200, runId: run.runId },
+    );
+    expect(mocks.settleAudio).toHaveBeenCalledWith(
+      expect.objectContaining({ model: "gpt-4o-mini-tts" }),
+      { audioMs: (48_000 * 2 + 10) / 48, runId: run.runId },
+    );
   });
 
-  test("a spent allowance refuses before the provider hears anything", async () => {
-    mocks.spendingStatus.mockResolvedValue({
-      userRemainingMicros: 0,
-      globalRemainingMicros: 10_000_000,
-    });
+  test("a hold the allowance cannot cover refuses before the provider hears anything", async () => {
+    mocks.reserveAudio.mockRejectedValue(new ExploreBudgetError());
 
     const stream = await events(await send(voiceBody()));
 
     expect(stream.map((event) => event.type)).toEqual(["error", "done"]);
     expect(stream[0]).toMatchObject({ code: "budget_exhausted" });
     expect(mocks.transcribe).not.toHaveBeenCalled();
+  });
+
+  test("speech the allowance cannot cover is never synthesized", async () => {
+    mocks.reserveAudio.mockImplementation(
+      (input: { model: string; audioMs: number }) =>
+        input.model === "gpt-4o-mini-tts"
+          ? Promise.reject(new ExploreBudgetError())
+          : Promise.resolve({ id: "hold-stt", model: input.model, amount: 1 }),
+    );
+
+    const stream = await events(await send(voiceBody()));
+
+    expect(mocks.synthesize).not.toHaveBeenCalled();
+    expect(stream.map((event) => event.type)).toEqual([
+      "transcript",
+      "run",
+      "answer",
+      "error",
+      "done",
+    ]);
+    expect(stream[3]).toMatchObject({ code: "budget_exhausted" });
+  });
+
+  test("a failed provider call gives its hold back", async () => {
+    mocks.transcribe.mockRejectedValue(new Error("HTTP 500"));
+
+    await drain(voiceBody());
+
+    expect(mocks.releaseAudio).toHaveBeenCalledWith(
+      expect.objectContaining({ model: "gpt-4o-transcribe" }),
+    );
+    expect(mocks.settleAudio).not.toHaveBeenCalled();
   });
 
   test("a provider budget refusal is a typed budget event", async () => {
