@@ -80,6 +80,20 @@ test("real verified publication remains playable during a newly submitted upgrad
       association: { legacyUnverifiedItems: 0, reconciliationRequiredItems: 0 },
     });
 
+    await db.acquisitionAttempt.update({
+      where: { id: first.attempt.id },
+      data: { state: "obsolete" },
+    });
+    const obsolete = await f.service.getMedia(f.actor, f.files.media.id);
+    expect(obsolete.visibility.playback).toMatchObject({
+      playable: true,
+      currentAssetId: old.id,
+      upgradeInProgress: false,
+    });
+    expect(obsolete.visibility.attempts).toContainEqual(
+      expect.objectContaining({ id: first.attempt.id, state: "obsolete" }),
+    );
+
     f.source.providerReleaseId = crypto.randomUUID();
     f.source.title = "Example.Show.2020.S01E01.2160p.WEB-DL.H264.ENG";
     f.source.infoHash = randomBytes(20).toString("hex");

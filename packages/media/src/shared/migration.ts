@@ -30,8 +30,8 @@ const Path = z
     (value) =>
       value.startsWith("/") &&
       !value.includes("://") &&
-      !/[?#\r\n\0]/u.test(value),
-    "Expected an absolute local path without URL parameters",
+      !/[?\r\n\0]/u.test(value),
+    "Expected an absolute local path",
   );
 const ExternalIds = z.strictObject({
   tmdb: z.number().int().positive().optional(),

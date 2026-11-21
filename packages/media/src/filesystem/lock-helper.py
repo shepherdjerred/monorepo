@@ -1,9 +1,7 @@
 """Hold an OS advisory lock until the owning Node process closes its pipe."""
 
 import fcntl
-import json
 import os
-import resource
 import sys
 
 
@@ -12,6 +10,10 @@ def lock_paths() -> list[str]:
         raise SystemExit(2)
     if sys.argv[1] != "--batch":
         return [sys.argv[1]]
+
+    import json
+    import resource
+
     raw = sys.stdin.buffer.readline(8 * 1024 * 1024 + 1)
     if len(raw) > 8 * 1024 * 1024 or not raw.endswith(b"\n"):
         raise SystemExit(2)
