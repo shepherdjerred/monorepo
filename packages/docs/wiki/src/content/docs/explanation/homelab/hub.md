@@ -134,9 +134,10 @@ ledger is the only durable record of past incidents, and a rename gains nothing
 a user can see. The same reasoning keeps the webhook URL that Alertmanager
 posts to.
 
-The `hub` tailnet host is added beside `ops` and `alerts`, not in place of
-them. Alert email, the toolkit, and existing bookmarks already use the older
-hosts, and all three reach the same Service.
+The `hub` tailnet host sits beside the older `ops` and `alerts` hosts, and all
+three reach the same Service. Alert email, the digest, the toolkit, and the
+Delivery health probe use `hub`. The older hosts still answer for existing
+bookmarks.
 
 ## Related
 

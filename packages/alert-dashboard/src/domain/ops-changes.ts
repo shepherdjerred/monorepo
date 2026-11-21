@@ -1,14 +1,12 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
+import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 import type { z } from "zod";
 
 import { ChangeViewSchema, type ChangeView } from "#shared/ops-schema";
 import type { SeveritySchema } from "#shared/schema";
 import { epochNanosecondsToInstantText } from "#shared/time";
-
-/** Where alert-derived timeline entries link to. */
-export const ALERTS_PUBLIC_URL = "https://alerts.tailnet-1a49.ts.net";
 
 /** One opening or resolution from the alert ledger. */
 export type AlertLedgerChange = {
@@ -52,7 +50,7 @@ export function alertChangeView(
     title: `${opened ? "Opened" : "Resolved"}: ${change.summary} (${change.alertname})`,
     occurredAt: epochNanosecondsToInstantText(change.occurredAtNs),
     severity: opened ? ALERT_SEVERITY[change.severity] : "ok",
-    url: `${ALERTS_PUBLIC_URL}/alerts/${change.occurrenceId}`,
+    url: `${APP_HOSTS.hub}/alerts/${change.occurrenceId}`,
   });
 }
 

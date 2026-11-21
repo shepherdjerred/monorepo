@@ -1779,7 +1779,7 @@ profiles remain owned by their respective clients.
 
 | Variable              | Purpose                                     |
 | --------------------- | ------------------------------------------- |
-| `ALERT_DASHBOARD_URL` | Alerts service URL                          |
+| `ALERT_DASHBOARD_URL` | Hub URL; defaults to the `hub` tailnet host |
 | `BUGSINK_URL`         | Bugsink instance URL                        |
 | `BUGSINK_TOKEN`       | Bugsink API token                           |
 | `AWS_PROFILE`         | AWS profile for `pr asset`                  |

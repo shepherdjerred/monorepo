@@ -58,7 +58,7 @@ function signals(now: Temporal.Instant): SignalInput[] {
         {
           kind: "native",
           label: "Alert",
-          url: "https://alerts.tailnet-1a49.ts.net/alerts",
+          url: "https://hub.tailnet-1a49.ts.net/alerts",
         },
       ],
     },

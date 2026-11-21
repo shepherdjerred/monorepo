@@ -20,8 +20,8 @@ import type {
   Signal,
   SourceId,
 } from "@shepherdjerred/ops-model/snapshot.ts";
+import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 
-import { ALERTS_PUBLIC_URL } from "#domain/ops-changes";
 import { DIGEST_TIME_ZONE } from "#domain/ops-period";
 import {
   SEVERITY_LABEL,
@@ -352,7 +352,7 @@ export function buildDigestDocument(report: DigestReport): {
     sections,
     primaryAction: {
       label: "Open Hub",
-      url: `${ALERTS_PUBLIC_URL}/`,
+      url: `${APP_HOSTS.hub}/`,
     },
     details: [
       {

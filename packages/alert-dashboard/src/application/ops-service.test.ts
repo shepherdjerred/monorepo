@@ -147,7 +147,7 @@ describe("service detail join", () => {
     expect(detail.changes[0]).toMatchObject({
       service: "scout-for-lol",
       severity: "error",
-      url: `https://alerts.tailnet-1a49.ts.net/alerts/alert_${"a".repeat(32)}`,
+      url: `https://hub.tailnet-1a49.ts.net/alerts/alert_${"a".repeat(32)}`,
     });
     expect(detail.links.map((link) => link.kind)).toContain("logs");
     expect(detail.snapshotGeneratedAt).toBe(NOW);

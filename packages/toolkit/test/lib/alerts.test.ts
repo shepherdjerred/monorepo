@@ -38,6 +38,26 @@ afterEach(() => {
   else Bun.env["ALERT_DASHBOARD_URL"] = ORIGINAL_URL;
 });
 
+describe("Alerts API endpoint", () => {
+  it("queries Hub on its hub hostname when ALERT_DASHBOARD_URL is unset", async () => {
+    const requestedUrls: URL[] = [];
+    const fetchMock: typeof fetch = Object.assign(
+      async (input: FetchInput) => {
+        requestedUrls.push(fetchInputToUrl(input));
+        return Response.json({ items: [], nextCursor: null });
+      },
+      { preconnect: ORIGINAL_FETCH.preconnect },
+    );
+    globalThis.fetch = fetchMock;
+    Reflect.deleteProperty(Bun.env, "ALERT_DASHBOARD_URL");
+
+    await listAlerts({});
+
+    expect(requestedUrls[0]?.origin).toBe("https://hub.tailnet-1a49.ts.net");
+    expect(requestedUrls[0]?.pathname).toBe("/api/v1/alerts");
+  });
+});
+
 describe("Alerts API pagination", () => {
   it("follows every cursor when the caller does not set a result limit", async () => {
     const requestedUrls: URL[] = [];

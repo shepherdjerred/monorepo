@@ -1,7 +1,7 @@
 import { tailnetService } from "homelab/src/platform-model.ts";
 import { escapeHelmGoTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
 
-const HUB_ALERTS_URL = `${tailnetService("alerts").origin}/alerts`;
+const HUB_ALERTS_URL = `${tailnetService("hub").origin}/alerts`;
 
 const HUB_EDITORIAL_CSS = [
   ":root{color-scheme:light dark;--canvas:#f4f6f2;--surface:#ffffff;--subtle:#f8faf7;--ink:#17211c;--sec:#2c3832;--muted:#58655e;--border:#dce1db;--brand:#176b4d;--cta-bg:#176b4d;--cta-ink:#ffffff;--warn-bg:#fff2cf;--warn-ink:#7a4f00;--warn-bd:#f0d9a0;--crit-bg:#fde9e7;--crit-ink:#9d241e;--crit-bd:#f5c2bd;}",

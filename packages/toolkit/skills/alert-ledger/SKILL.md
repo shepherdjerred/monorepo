@@ -42,6 +42,7 @@ acknowledgement or human action from either value.
 
 ## Connection boundary
 
-`ALERT_DASHBOARD_URL` overrides the default tailnet endpoint. An unavailable
+`ALERT_DASHBOARD_URL` overrides the default endpoint, Hub at
+`https://hub.tailnet-1a49.ts.net`. An unavailable
 endpoint is an operational error, not evidence that no alerts exist. Alerts is
 the sole active alert destination; use `toolkit alerts` for the service.

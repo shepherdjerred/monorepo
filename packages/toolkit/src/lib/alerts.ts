@@ -1,3 +1,4 @@
+import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { z } from "zod";
 
 const AlertSchema = z.object({
@@ -38,9 +39,7 @@ export type AlertDetail = z.infer<typeof AlertDetailSchema>;
 function baseUrl(): string {
   return z
     .url()
-    .parse(
-      Bun.env["ALERT_DASHBOARD_URL"] ?? "https://alerts.tailnet-1a49.ts.net",
-    )
+    .parse(Bun.env["ALERT_DASHBOARD_URL"] ?? APP_HOSTS.hub)
     .replace(/\/$/u, "");
 }
 
