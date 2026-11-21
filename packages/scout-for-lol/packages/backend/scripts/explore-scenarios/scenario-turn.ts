@@ -11,6 +11,8 @@ import {
   ScenarioJudgementSchema,
   type ScenarioRubricResult,
 } from "#src/explore/scenarios/judge.ts";
+import { gameContextDigest } from "#src/explore/tools/game-state-tools.ts";
+import type { ScenarioCoachTurn } from "#src/explore/scenarios/coach-turn.ts";
 import { resolveScenarioAccount } from "#src/explore/scenarios/lake-accounts.ts";
 import type { ScenarioRunPlan } from "#src/explore/scenarios/plan.ts";
 import {
@@ -142,6 +144,9 @@ export async function gradeTurn(input: {
   readonly runtime: ReturnType<typeof createLlmRuntime> | null;
   /** Whether the turn's fixture image was attached; null without one. */
   readonly imageDelivered: boolean | null;
+  /** What the coach gate did with this turn's game context; null without one. */
+  readonly coachGate: ScenarioCoachTurn | null;
+  readonly initiation: string | null;
 }): Promise<{
   readonly summary: ScenarioRunSummary["turns"][number];
   readonly evidence: unknown;
@@ -159,6 +164,7 @@ export async function gradeTurn(input: {
               answer: answer.answer,
               spokenAnswer: answer.spokenAnswer ?? undefined,
               followUps: answer.followUps,
+              coachOptions: answer.coachOptions,
             },
       trace: observation.trace,
       imageDelivered: input.imageDelivered,
@@ -182,6 +188,23 @@ export async function gradeTurn(input: {
           spokenAnswer:
             input.surface === "voice" ? (answer?.spokenAnswer ?? null) : null,
           followUps: answer?.followUps ?? [],
+          coachOptions: answer?.coachOptions ?? null,
+          ...(input.coachGate === null || input.initiation === null
+            ? {}
+            : {
+                coachGate: {
+                  initiation: input.initiation,
+                  sent: input.coachGate.projection.present,
+                  seen: input.coachGate.projection.accepted,
+                  digest:
+                    input.coachGate.coach === null
+                      ? "(no game context reached the agent)"
+                      : gameContextDigest(input.coachGate.coach),
+                  withheld: input.coachGate.projection.withheld.map(
+                    (entry) => `${entry.section} (${entry.reason})`,
+                  ),
+                },
+              }),
           trace: observation.trace,
           payloads: observation.payloads.map((payload) => ({
             toolCallId: payload.toolCallId,

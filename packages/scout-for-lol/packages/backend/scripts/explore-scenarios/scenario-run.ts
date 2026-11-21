@@ -14,6 +14,10 @@ import { EXPLORE_JUDGE_MODEL } from "#src/explore/replay/judge.ts";
 import { flagOverridesFor } from "#src/explore/replay/profiles.ts";
 import { runReplayCase } from "#src/explore/replay/runner.ts";
 import { ReplayRuntimeProvider } from "#src/explore/replay/runtime-provider.ts";
+import {
+  gateScenarioCoachTurn,
+  scenarioCoachQuestion,
+} from "#src/explore/scenarios/coach-turn.ts";
 import { scenarioDiscordTransport } from "#src/explore/scenarios/fake-discord.ts";
 import { seedScenarioWorld } from "#src/explore/scenarios/fixtures.ts";
 import type { ScenarioRunPlan } from "#src/explore/scenarios/plan.ts";
@@ -116,7 +120,16 @@ async function runOne(input: {
 
   for (const [index, turn] of run.entry.turns.entries()) {
     try {
-      const question = renderScenarioQuestion(turn.question, world);
+      const rendered = renderScenarioQuestion(turn.question, world);
+      const question =
+        turn.gameContext === undefined
+          ? rendered
+          : scenarioCoachQuestion(rendered, turn.gameContext);
+      // The context reaches the agent only as the production gate projects it.
+      const coachTurn =
+        turn.gameContext === undefined
+          ? null
+          : gateScenarioCoachTurn(turn.gameContext, world);
       const images =
         turn.image === undefined ? [] : [await loadScenarioImage(turn.image)];
       const observation = await runReplayCase(
@@ -129,11 +142,15 @@ async function runOne(input: {
           requesterId: world.asker.id,
           guildIds: [world.guildId],
           surface: run.surface,
+          // A coach turn has no Discord channel, spoken or not.
           originChannelId:
-            run.surface === "web" || run.surface === "desktop"
+            run.surface === "web" ||
+            run.surface === "desktop" ||
+            coachTurn !== null
               ? null
               : (world.channels[0]?.id ?? null),
           images,
+          ...(coachTurn === null ? {} : { coach: coachTurn.coach }),
         },
         {
           executeAgent: streamExploreAgent,
@@ -161,6 +178,8 @@ async function runOne(input: {
                 turn.image === undefined
                   ? null
                   : images.length > 0 && run.surface !== "voice",
+              coachGate: coachTurn,
+              initiation: turn.gameContext?.initiation ?? null,
             });
       if (graded === null) {
         evidence.push({ index, question, observation });

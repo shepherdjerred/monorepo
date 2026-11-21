@@ -9,6 +9,7 @@ import {
   type ExploreLoadoutCard,
   type ExploreMessage,
   type ExploreStreamEvent,
+  type CoachGameContext,
   type ExploreTraceEntry,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
@@ -62,6 +63,12 @@ export type ReplayCaseInput = {
   readonly originChannelId: DiscordChannelId | null;
   /** Images attached to this question; scenario fixtures only. */
   readonly images?: readonly ExploreQuestionImage[];
+  /**
+   * The game context the coach policy let through for this turn, as the
+   * server's gate projected it; scenario fixtures only. Never raw client
+   * input: the caller runs `projectGameContext` first.
+   */
+  readonly coach?: CoachGameContext | null;
 };
 
 export type ReplayObservation = {
@@ -113,6 +120,7 @@ function agentParams(
     subject: { kind: "discord_user", id: input.requesterId },
     question: input.question,
     ...(input.images === undefined ? {} : { images: [...input.images] }),
+    ...(input.coach === undefined ? {} : { coach: input.coach }),
     history: [...input.history],
     guildIds: [...input.guildIds],
     requesterId: input.requesterId,

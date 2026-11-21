@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { rejectDuplicateCaseIds } from "#src/model/reports/explore-capability-corpus.ts";
+import {
+  CoachGameContextSchema,
+  COACH_APP_INITIATIONS,
+} from "#src/scout-client/coach-context.schema.ts";
 
 /**
  * Corpus for the Explore scenario eval.
@@ -129,6 +133,49 @@ export const ExploreScenarioPriorTurnSchema = z
   })
   .strict();
 
+/**
+ * How a coach turn began, as the server's gate names it
+ * (`backend/src/coach/context-policy.ts`): the player typed or spoke the
+ * question, or Scout started the turn itself. The backend pins this list to
+ * its own `CoachTurnInitiationSchema` in a test.
+ */
+export const ExploreScenarioInitiationSchema = z.enum([
+  "player_typed",
+  "player_voice",
+  ...COACH_APP_INITIATIONS,
+]);
+export type ExploreScenarioInitiation = z.infer<
+  typeof ExploreScenarioInitiationSchema
+>;
+
+/**
+ * The game a Scout Desktop turn carries, and how the turn began.
+ *
+ * The harness sends `context` through the server's real coach gate with this
+ * initiation, so a turn sees exactly what production would let through: a
+ * section the policy withholds (live state on a Scout-started turn) never
+ * reaches the agent, whatever the case wrote. `context` is held to the same
+ * strict contract the client is.
+ */
+export const ExploreScenarioGameContextSchema = z
+  .object({
+    initiation: ExploreScenarioInitiationSchema,
+    context: CoachGameContextSchema,
+    /**
+     * Replace `postgame.matchId` with the latest recorded match of this
+     * tracked player, so a post-game review runs against a game the lake
+     * holds. The context still carries a placeholder match ID, which the
+     * contract needs to validate.
+     */
+    postgameOf: NameSchema.optional(),
+    /** `scout_coach_live_answers`, the Riot kill switch; on unless a case says so. */
+    liveAnswersEnabled: z.boolean().default(true),
+  })
+  .strict();
+export type ExploreScenarioGameContext = z.infer<
+  typeof ExploreScenarioGameContextSchema
+>;
+
 /** `{ember.riotId}` or `{ember.region}`: a candidate account, resolved at run time. */
 export const SCENARIO_PLACEHOLDER = /\{([a-z][a-z0-9]*)\.(riotId|region)\}/g;
 
@@ -145,6 +192,12 @@ export const ExploreScenarioExpectationSchema = z
     mustMentionAnyOf: PhraseGroupsSchema.default([]),
     mustNotMention: z.array(PhraseSchema).max(20).default([]),
     /**
+     * Whether the answer carries multiple-choice coach options: `required`
+     * means two to four (the answer contract bounds the count), `absent`
+     * means none.
+     */
+    coachOptions: z.enum(["required", "absent"]).optional(),
+    /**
      * What a careful reader needs to see, judged by a model that is not the
      * one under test. Each criterion must be met.
      */
@@ -160,10 +213,52 @@ export const ExploreScenarioTurnSchema = z
       .string()
       .regex(/^[a-z0-9-]+\.(?:png|jpe?g|webp)$/)
       .optional(),
+    /** The game this turn carries, for a Scout Desktop coach turn. */
+    gameContext: ExploreScenarioGameContextSchema.optional(),
     /** Absent on a turn that only sets up the next one. */
     expect: ExploreScenarioExpectationSchema.optional(),
   })
   .strict();
+
+/** A game context only Scout Desktop sends, on the surface its initiation runs on, naming a post-game player the guild tracks. */
+function checkGameContexts(
+  entry: {
+    readonly id: string;
+    readonly surfaces: readonly ExploreScenarioSurface[];
+    readonly guild: { readonly players: readonly { readonly alias: string }[] };
+    readonly turns: readonly {
+      readonly gameContext?: ExploreScenarioGameContext | undefined;
+    }[];
+  },
+  context: z.RefinementCtx,
+): void {
+  const aliases = new Set(entry.guild.players.map((player) => player.alias));
+  for (const { gameContext: game } of entry.turns) {
+    if (game === undefined) continue;
+    // A spoken coach turn runs on the voice surface, like the voice route
+    // starts it; every other coach turn runs on the desktop surface.
+    const surface = game.initiation === "player_voice" ? "voice" : "desktop";
+    if (entry.surfaces.length !== 1 || entry.surfaces[0] !== surface) {
+      context.addIssue({
+        code: "custom",
+        message: `Case '${entry.id}' carries a ${game.initiation} game context, which must run on the ${surface} surface alone`,
+      });
+    }
+    if (game.postgameOf === undefined) continue;
+    if (game.context.postgame === undefined) {
+      context.addIssue({
+        code: "custom",
+        message: `Case '${entry.id}' names a post-game player but its context has no postgame section`,
+      });
+    }
+    if (!aliases.has(game.postgameOf)) {
+      context.addIssue({
+        code: "custom",
+        message: `Case '${entry.id}' takes its post-game match from unknown player '${game.postgameOf}'`,
+      });
+    }
+  }
+}
 
 export const ExploreScenarioCaseSchema = z
   .object({
@@ -234,6 +329,7 @@ export const ExploreScenarioCaseSchema = z
         }
       }
     }
+    checkGameContexts(entry, context);
     const members = new Set(
       entry.guild.members.map((member) => member.username),
     );

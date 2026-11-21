@@ -140,6 +140,22 @@ export function scenarioJudgeUserPrompt(input: {
   /** What a voice user heard; absent on other surfaces. */
   readonly spokenAnswer?: string | null | undefined;
   readonly followUps: readonly string[];
+  /** The multiple-choice options the answer carried, if any. */
+  readonly coachOptions?:
+    | readonly { readonly label: string; readonly rationale: string }[]
+    | null
+    | undefined;
+  /** What the coach gate did with this turn's game context; absent without one. */
+  readonly coachGate?:
+    | {
+        readonly initiation: string;
+        readonly sent: readonly string[];
+        readonly seen: readonly string[];
+        readonly withheld: readonly string[];
+        /** The projected context as the agent read it, values included. */
+        readonly digest: string;
+      }
+    | undefined;
   readonly trace: Parameters<typeof judgeEvidenceFromTrace>[0];
   readonly payloads: Parameters<typeof judgeEvidenceFromTrace>[1];
   readonly rubric: readonly string[];
@@ -166,6 +182,22 @@ export function scenarioJudgeUserPrompt(input: {
     input.followUps.length === 0
       ? "Suggested follow-ups: none"
       : `Suggested follow-ups: ${input.followUps.map((chip) => JSON.stringify(chip)).join(", ")}`,
+    ...(input.coachOptions === undefined || input.coachOptions === null
+      ? []
+      : [
+          `Coach options: ${input.coachOptions
+            .map((option) => `${option.label} (${option.rationale})`)
+            .join("; ")}`,
+        ]),
+    ...(input.coachGate === undefined
+      ? []
+      : [
+          "",
+          "## Game context (Scout Desktop)",
+          `The turn began as ${input.coachGate.initiation}. The client sent: ${input.coachGate.sent.join(", ") || "nothing"}. The agent was allowed to see: ${input.coachGate.seen.join(", ") || "nothing"}. Withheld by policy: ${input.coachGate.withheld.join(", ") || "nothing"}.`,
+          "What the agent was given:",
+          input.coachGate.digest,
+        ]),
     "",
     "## Tools this turn",
     toolNames.length === 0 ? "(none)" : toolNames.join(", "),
