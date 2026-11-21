@@ -134,6 +134,31 @@ export function parsePlaylistsSearch(params: URLSearchParams): PlaylistsSearch {
   };
 }
 
+/**
+ * The query parameters a share link carries, each an id of a known shape: the server (a Discord
+ * snowflake) and the playlist (every playlist id is a `crypto.randomUUID()`).
+ */
+const SHARE_LINK_PARAMETERS = {
+  guild: z.string().regex(/^\d{1,20}$/u),
+  playlist: z.uuid(),
+} as const;
+
+/**
+ * Where signing in returns to: the page's path plus only the share-link ids it carries, so a
+ * shared playlist still opens in the right server afterwards. Every other parameter is dropped,
+ * because `returnTo` travels to Discord in the OAuth `state` and a query can hold search text.
+ */
+export function signInReturnTo(pathname: string, search: string): string {
+  const params = new URLSearchParams(search);
+  const kept = new URLSearchParams();
+  for (const [key, schema] of Object.entries(SHARE_LINK_PARAMETERS)) {
+    const value = schema.safeParse(params.get(key));
+    if (value.success) kept.set(key, value.data);
+  }
+  const query = kept.toString();
+  return query === "" ? pathname : pathname + "?" + query;
+}
+
 /** The link a viewer sends to another member of the server. */
 export function shareUrl(
   origin: string,
