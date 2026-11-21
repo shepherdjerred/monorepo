@@ -140,7 +140,7 @@ export const OBSERVATION_LAG_WINDOW_MS = 2 * 60 * 60 * 1000;
 
 export const scoutDurableObservationLag = new Gauge({
   name: "scout_durable_observation_lag_seconds",
-  help: "How long after game START live FULL matches observed in the last two hours were observed, by statistic (includes the game's own length), or zero when none were.",
+  help: "How long after game START live FULL matches observed in the last two hours (for accounts already tracked at game start) were observed, by statistic (includes the game's own length), or zero when none were.",
   labelNames: ["statistic"] as const,
   registers: [registry],
 });

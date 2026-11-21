@@ -29,6 +29,7 @@ export type OwedMatch = {
   /** Last cursor advance; null leaves the match's one account unadvanced. */
   completedAt: Date | null;
   gameCreatedAt?: Date;
+  accountCreatedTime?: Date;
   policy?: "FULL" | "ARCHIVE_ONLY";
   owner?: "TEMPORAL_V2" | "LEGACY_V1";
   deliveryMode?: "live" | "silent-backfill";
@@ -42,15 +43,20 @@ export type OwedMatch = {
 
 /**
  * One observed match with one tracked account and, unless told otherwise, one
- * unmuted, unfiltered subscription created an hour before the match ended —
- * a match the real resolver would owe a report to.
+ * unmuted, unfiltered subscription created before the match started — a match
+ * the real resolver would owe a report to.
  */
 export async function seedOwedMatch(
   prisma: ExtendedPrismaClient,
   match: OwedMatch,
 ): Promise<void> {
   const puuid = testPuuid(match.matchId);
-  const earlier = new Date(match.observedAt.getTime() - 2 * HOUR_MS);
+  const gameCreatedAt =
+    match.gameCreatedAt ?? new Date(match.observedAt.getTime() - HOUR_MS);
+  const earlier = new Date(
+    Math.min(match.observedAt.getTime(), gameCreatedAt.getTime()) - 2 * HOUR_MS,
+  );
+  const accountCreatedTime = match.accountCreatedTime ?? earlier;
   await prisma.matchObservation.create({
     data: {
       riotMatchId: match.matchId,
@@ -58,8 +64,7 @@ export async function seedOwedMatch(
       processingPolicy: match.policy ?? "FULL",
       deliveryMode: match.deliveryMode ?? "live",
       pipelineOwner: match.owner ?? "TEMPORAL_V2",
-      gameCreatedAt:
-        match.gameCreatedAt ?? new Date(match.observedAt.getTime() - HOUR_MS),
+      gameCreatedAt,
       observedAt: match.observedAt,
     },
   });
@@ -70,14 +75,13 @@ export async function seedOwedMatch(
       cursorAdvancedAt: match.completedAt,
     },
   });
-  if (match.subscription === null) return;
   const player = await prisma.player.create({
     data: {
       alias: match.matchId,
       serverId: SERVER_ID,
       creatorDiscordId: CREATOR_ID,
-      createdTime: earlier,
-      updatedTime: earlier,
+      createdTime: accountCreatedTime,
+      updatedTime: accountCreatedTime,
       accounts: {
         create: {
           alias: match.matchId,
@@ -85,12 +89,13 @@ export async function seedOwedMatch(
           region: "AMERICA_NORTH",
           serverId: SERVER_ID,
           creatorDiscordId: CREATOR_ID,
-          createdTime: earlier,
-          updatedTime: earlier,
+          createdTime: accountCreatedTime,
+          updatedTime: accountCreatedTime,
         },
       },
     },
   });
+  if (match.subscription === null) return;
   await prisma.subscription.create({
     data: {
       playerId: player.id,

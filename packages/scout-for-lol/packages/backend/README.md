@@ -594,9 +594,13 @@ what it is still _holding_:
   a recovery batch policy holds, so its head is the longest-waiting send.
 - `scout_durable_observation_lag_seconds{statistic}` — `p90` and `max` of
   observation time minus game START for live FULL matches observed in the last
-  two hours. The observation row stores no game end, so this includes the
-  game's own length (healthy p90 is about 40–45 minutes). An empty window reads
-  0, so it does not detect discovery that has stopped outright.
+  two hours where at least one participating `Account` already existed at game
+  start (`Account.createdTime <= MatchObservation.gameCreatedAt`). Pre-onboarding
+  matches seeded on a newly added account's first poll are excluded so historic
+  games from before Scout watched the account do not read as discovery lag. The
+  observation row stores no game end, so this includes the game's own length
+  (healthy p90 is about 40–45 minutes). An empty window reads 0, so it does not
+  detect discovery that has stopped outright.
 - `scout_durable_postmatch_poll_age_seconds` — seconds since post-match
   discovery last closed a poll with complete evidence (`BotState`'s
   `lastSuccessfulPollAt`). It grows while discovery is stopped for any reason

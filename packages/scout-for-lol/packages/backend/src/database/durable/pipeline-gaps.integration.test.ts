@@ -348,6 +348,10 @@ describe("observationLag", () => {
       "an observation before the window",
       { observedAt: new Date(NOW - 3 * HOUR_MS) },
     ],
+    [
+      "a newly onboarded account's pre-registration seed match",
+      { accountCreatedTime: new Date(recent.getTime() - MINUTE_MS) },
+    ],
   ])("leaves out %s", async (_label, overrides) => {
     const observedAt = overrides.observedAt ?? recent;
     await seedOwedMatch(prisma, {
@@ -360,5 +364,90 @@ describe("observationLag", () => {
     });
     const lag = await observationLag(prisma, { observedSince: since });
     expect(lag.observations).toBe(0);
+  });
+
+  test("keeps real outage lag for already-tracked accounts, including shared matches with a newly added account", async () => {
+    const observedAt = new Date(NOW - 20 * MINUTE_MS);
+    const sixHoursBefore = new Date(observedAt.getTime() - 6 * HOUR_MS);
+    const twentyNineDaysBefore = new Date(
+      observedAt.getTime() - 29 * 24 * HOUR_MS,
+    );
+
+    // 1. Two newly added accounts played in the same 29-day-old game before
+    // either was tracked: excluded.
+    const onboardingMatch = RiotMatchIdSchema.parse("NA1_9701");
+    await seedOwedMatch(prisma, {
+      matchId: onboardingMatch,
+      observedAt,
+      completedAt: observedAt,
+      gameCreatedAt: twentyNineDaysBefore,
+      accountCreatedTime: new Date(observedAt.getTime() - MINUTE_MS),
+      subscription: null,
+    });
+    const secondNewPuuid = testPuuid("NA1_9701-second");
+    const baseAccount = await prisma.account.findFirstOrThrow({
+      where: { puuid: testPuuid(onboardingMatch) },
+    });
+    await prisma.account.create({
+      data: {
+        alias: "second-new-account",
+        puuid: secondNewPuuid,
+        region: baseAccount.region,
+        playerId: baseAccount.playerId,
+        serverId: baseAccount.serverId,
+        creatorDiscordId: baseAccount.creatorDiscordId,
+        createdTime: new Date(observedAt.getTime() - 30_000),
+        updatedTime: new Date(observedAt.getTime() - 30_000),
+      },
+    });
+    await prisma.matchTrackedAccount.create({
+      data: {
+        riotMatchId: onboardingMatch,
+        puuid: secondNewPuuid,
+        cursorAdvancedAt: observedAt,
+      },
+    });
+    expect(await observationLag(prisma, { observedSince: since })).toEqual({
+      observations: 0,
+      p90Seconds: 0,
+      maxSeconds: 0,
+    });
+
+    // 2. An already-tracked account suffers a 6-hour discovery stall, and the
+    // same match also contains a newly onboarded participant: still counted.
+    const outageMatch = RiotMatchIdSchema.parse("NA1_9702");
+    await seedOwedMatch(prisma, {
+      matchId: outageMatch,
+      observedAt,
+      completedAt: observedAt,
+      gameCreatedAt: sixHoursBefore,
+      accountCreatedTime: new Date(observedAt.getTime() - MINUTE_MS),
+      subscription: null,
+    });
+    const establishedPuuid = testPuuid("NA1_9702-established");
+    await prisma.account.create({
+      data: {
+        alias: "established-account",
+        puuid: establishedPuuid,
+        region: baseAccount.region,
+        playerId: baseAccount.playerId,
+        serverId: baseAccount.serverId,
+        creatorDiscordId: baseAccount.creatorDiscordId,
+        createdTime: new Date(sixHoursBefore.getTime() - 24 * HOUR_MS),
+        updatedTime: new Date(sixHoursBefore.getTime() - 24 * HOUR_MS),
+      },
+    });
+    await prisma.matchTrackedAccount.create({
+      data: {
+        riotMatchId: outageMatch,
+        puuid: establishedPuuid,
+        cursorAdvancedAt: observedAt,
+      },
+    });
+
+    const lag = await observationLag(prisma, { observedSince: since });
+    expect(lag.observations).toBe(1);
+    expect(lag.p90Seconds).toBeCloseTo(6 * 3600, 3);
+    expect(lag.maxSeconds).toBeCloseTo(6 * 3600, 3);
   });
 });
