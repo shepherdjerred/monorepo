@@ -336,7 +336,8 @@ this API. `tracker --help` lists the complete command tree.
 
 `toolkit flags` reads and writes the first-party flag service. Humans reach it
 over the tailnet, and the service takes their identity from the proxy. The
-command does not send a login header. `--machine` sends `FLAGS_MACHINE_TOKEN`
+command does not send a login header. `apply` sends the service origin so a
+human write passes the same-origin check. `--machine` sends `FLAGS_MACHINE_TOKEN`
 as a bearer and never prints that token. Evaluation stays credentialless; this
 command uses the management API.
 

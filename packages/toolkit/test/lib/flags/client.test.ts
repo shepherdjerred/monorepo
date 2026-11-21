@@ -78,6 +78,28 @@ test("get requires a deployment and a flag", async () => {
   expect(text()).toContain("Usage:");
 });
 
+test("human apply sends the service origin and no login or token", async () => {
+  let authorization: string | null = "unset";
+  let origin: string | null = null;
+  let login: string | null = null;
+  const { io, text } = capture(async (_input, init) => {
+    const headers = new Headers(init?.headers);
+    authorization = headers.get("authorization");
+    origin = headers.get("origin");
+    login = headers.get("tailscale-user-login");
+    return jsonResponse(200, { revision: 5 });
+  });
+  const code = await runFlags(["apply"], io, {
+    json: false,
+    file: "reviewed.json",
+  });
+  expect(code).toBe(0);
+  expect(authorization).toBeNull();
+  expect(origin).toBe("https://flags.example.test");
+  expect(login).toBeNull();
+  expect(text()).toBe("revised to 5");
+});
+
 test("apply conflict exits 2 and does not print the machine token", async () => {
   let authorization = "";
   const { io, text } = capture(async (_input, init) => {

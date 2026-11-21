@@ -279,7 +279,10 @@ export async function applyFlagsFile(
     `/v1/deployments/${deploymentPath(parsed.deployment)}/apply`,
     {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        origin: new URL(io.baseUrl).origin,
+      },
       body: JSON.stringify({
         expectedRevision: parsed.expectedRevision,
         flags: parsed.flags,

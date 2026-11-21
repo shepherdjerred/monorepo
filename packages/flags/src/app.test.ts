@@ -245,7 +245,7 @@ test("management requires an operator or the machine token", async () => {
     headers: machineHeaders,
   });
   expect(machineList.status).toBe(200);
-  const { app: trusted } = harness("100.64.0.1");
+  const { app: trusted, store } = harness("100.64.0.1");
   const browser = await trusted.request("/v1/deployments", {
     headers: {
       origin: "https://flags.example.test",
@@ -253,6 +253,39 @@ test("management requires an operator or the machine token", async () => {
     },
   });
   expect(browser.status).toBe(200);
+  const current = store.flag("scout/prod", "dares_enabled");
+  if (current?.flag.type !== "boolean")
+    throw new Error("dares_enabled missing");
+  const document = store.document("scout/prod");
+  if (document === undefined) throw new Error("scout/prod missing");
+  const operatorWrite = {
+    "tailscale-user-login": "operator@example.com",
+    "content-type": "application/json",
+  };
+  const bareCli = await trusted.request("/v1/deployments/scout/prod/apply", {
+    method: "POST",
+    headers: operatorWrite,
+    body: JSON.stringify({
+      expectedRevision: document.revision,
+      flags: [{ ...current.flag, default: true }],
+    }),
+  });
+  expect(bareCli.status).toBe(403);
+  expect(store.flag("scout/prod", "dares_enabled")?.flag).toMatchObject({
+    default: false,
+  });
+  const sameOrigin = await trusted.request("/v1/deployments/scout/prod/apply", {
+    method: "POST",
+    headers: { ...operatorWrite, origin: "https://flags.example.test" },
+    body: JSON.stringify({
+      expectedRevision: document.revision,
+      flags: [{ ...current.flag, default: true }],
+    }),
+  });
+  expect(sameOrigin.status).toBe(200);
+  expect(store.flag("scout/prod", "dares_enabled")?.flag).toMatchObject({
+    default: true,
+  });
   const crossSite = await trusted.request("/v1/deployments/scout/prod/apply", {
     method: "POST",
     headers: {
