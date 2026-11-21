@@ -39,7 +39,7 @@ committed).
    ```bash
    talosctl gen config --with-secrets secrets.yaml \
      --talos-version v1.14.6 \
-     --kubernetes-version 1.37.1 \
+     --kubernetes-version 1.37.2 \
      --output-types worker -o liskov-worker.yaml \
      torvalds https://192.168.1.81:6443 \
      --config-patch @patches/image.yaml \

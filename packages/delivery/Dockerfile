@@ -4,7 +4,7 @@ WORKDIR /app
 
 FROM base AS native-tools
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-ARG KUBECTL_VERSION=v1.37.1
+ARG KUBECTL_VERSION=v1.37.2
 ARG TARGETARCH
 # Bun's HTTPS client and SHA-256 implementation avoid extra unpinned build tools.
 RUN bun -e '\
