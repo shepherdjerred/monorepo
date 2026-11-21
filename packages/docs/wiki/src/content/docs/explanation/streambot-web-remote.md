@@ -29,6 +29,60 @@ Each slot keeps its own player and queue. Inspecting one does not acquire a user
 Existing slash, card, and voice permissions retain their defaults in
 the [shared controls](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/commands/playback-controls.ts).
 
+## The room is found from voice state
+
+A viewer who has to say which server and which voice channel they mean can say the wrong one.
+The remote therefore never asks.
+The room endpoint scans the voice states the gateway already caches in the
+[Discord context](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/discord/web-context.ts)
+across the servers the viewer shares with Streambot, and treats the channel that holds them as where they are.
+A server whose web remote is off, or that no longer has the viewer as a member, is skipped as if the viewer were not there.
+The search runs on the server for every snapshot, so it cannot be redirected by anything the client sends.
+
+Discord connects a member to one voice channel at a time.
+A second match can only mean a stale cache entry, so the lowest server id wins.
+That rule gives the same answer on every request, where OAuth guild order would change with the sign-in.
+
+A `guildId` query is honoured only when the viewer is in no voice channel.
+Browsing then needs some server to evaluate feature gates against, and the viewer may pick one.
+An in-voice viewer's room is never moved by it, because a client-chosen server would let a request read another room's queue.
+
+One response carries every player in the room: the Listen slot and each Watch stream, with the viewer's gates beside them.
+Putting the gates in the same response keeps the page from offering a button that will answer 403.
+A legacy room has a single mixed queue, so it is reported as one player whose transport follows its current item, and an idle one has no player.
+
+## State is pushed, not polled
+
+A page that asks for state every two seconds is always partly wrong and mostly asking nothing new.
+The room stream sends a full snapshot when a viewer connects and another whenever the room changes.
+
+A change is something that already happens in the process.
+The [session factory](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/create-session.ts)
+already subscribes to each playback actor, so the same subscription also tells a small change hub.
+A slot appearing or ending, a station starting or stopping, and the viewer joining, leaving or moving in the
+[gateway handler](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/discord/commands/command-bot.ts)
+reach it too.
+Some changes produce no actor event, so the session reports them itself.
+A successful seek or chapter jump moves the position without one, and a streamer dragged to another channel leaves a room as well as entering one, so both rooms hear about it.
+A stream subscribes before it reads its first snapshot and replays what arrived meanwhile, so a change during the connect is not lost.
+The hub names where something changed and never what, so each stream re-reads the authoritative state and no second copy can disagree with it.
+Streams ignore changes in other rooms and other members' voice moves.
+
+A stream holds one unsent snapshot at most.
+A burst of changes becomes one rebuild, and a client that has not read its last frame gets the newest state when it does, not a backlog of stale ones.
+Memory per connection is therefore one frame, regardless of how slow the client or how busy the room.
+After a reconnect the client receives a fresh full snapshot, so there is no replay log to keep consistent.
+
+Every rebuild authorizes again, so a removed member or a server that switches the remote off ends the stream with a terminal error event rather than at the next poll.
+A stream also checks the sign-in on each keepalive, which is how a sign-out from another tab is noticed within seconds.
+
+The keepalive exists because the
+[server's idle timeout](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/start.ts)
+is shorter than a quiet room, and the public path crosses a Cloudflare tunnel that also closes idle responses.
+It belongs to the connection and ends with it, so it is not scheduled work.
+Streams are capped per sign-in and per process, so a runaway client cannot hold the process's sockets.
+The request that opens a stream finishes when the stream starts; its span, duration metric and rate-limit count describe the connect, and a separate gauge and histogram describe the stream's lifetime.
+
 ## The viewer chooses Listen or Watch
 
 Whether media plays as audio or as a stream is the viewer's choice, made on each play request.

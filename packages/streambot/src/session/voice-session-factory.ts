@@ -45,7 +45,7 @@ export function createSessionVoiceAssistant(
         buildPlaybackView(session.actor.getSnapshot(), userbot.getPosition()),
       library: deps.library,
       setVolume: (percent) => userbot.setVolume(percent),
-      seek: (seconds) => userbot.seek(seconds),
+      seek: (seconds) => session.seek(seconds),
       resolvePlaySource: deps.resolvePlaySource,
       announce: (message) => deps.announce(session.statusChannelId, message),
       guildId: session.guildId,

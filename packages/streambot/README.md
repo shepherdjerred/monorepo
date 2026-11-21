@@ -273,6 +273,20 @@ The expanded browsing fixture is `bun run test/web/preview.ts` on port 5188 afte
 playlists, sports artwork, history, and attribution. An optional port argument
 (for example, `bun run test/web/preview.ts 5189`) isolates concurrent worktrees.
 
+The room endpoints are `GET /api/room` (the viewer's location from Discord voice state,
+the shared servers, one player per occupied slot, capacity and capability booleans) and
+`GET /api/room/events` (the same `RoomSchema` pushed as `text/event-stream`). The stream
+sends a `room` event on connect and after every change, `: heartbeat` comments every 20 seconds
+(connection keepalive, cleared on close), a terminal `error` event carrying a closed `code`
+when authorization fails, and `retry: 3000`; a reconnect receives a fresh snapshot, with no
+replay. Streams are capped at 4 per sign-in (`room_stream_limit`) and 200 per process
+(`room_stream_capacity`), both HTTP 429. To watch it locally, sign in to the preview with a
+cookie jar (`curl -c jar -L http://127.0.0.1:5188/api/auth/discord/start`), then
+`curl -N -b jar http://127.0.0.1:5188/api/room/events` while sending commands from a second
+shell. Room tests are `test/web/web-room.test.ts` and `test/web/web-room-events.test.ts`;
+the fixture's `multiSlotRoom` in `test/web/web-fixture-room.ts` builds Listen, Watch and extra
+slots, and `fixture.changes` is the hub the production session manager feeds.
+
 | Bootstrap               | Purpose                                               |
 | ----------------------- | ----------------------------------------------------- |
 | `WEB_PUBLIC_ORIGIN`     | Exact HTTPS origin, or HTTP localhost for development |

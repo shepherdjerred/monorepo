@@ -25,7 +25,7 @@ export type WebPlaybackDeps = {
   }>;
   sessions: Pick<
     SessionManager,
-    "getExisting" | "ensureForPlay" | "releaseUnused" | "revision"
+    "getExisting" | "ensureForPlay" | "releaseUnused" | "revision" | "changes"
   > & {
     startStation?: SessionManager["startStation"];
     stopStation?: SessionManager["stopStation"];

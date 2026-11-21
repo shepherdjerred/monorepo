@@ -12,6 +12,7 @@ import type { WebPlayback } from "./playback.ts";
 import type { WebSession } from "./session-store.ts";
 import { Selections } from "./selections.ts";
 import { WebError, requestInput } from "./errors.ts";
+import { musicFeatureFlags } from "./room/capabilities.ts";
 import { WebPlaylists } from "./music-playlists.ts";
 import { ExternalMusicQueue } from "./music-links.ts";
 import { MusicQueueMatch } from "./music-queue-match.ts";
@@ -32,23 +33,7 @@ export class WebMusic {
     return session.key + ":" + guildId;
   }
   async features(session: WebSession, guildId: string) {
-    const scope = {
-      guildId,
-      userId: session.identity.userId,
-      channelId: "web",
-    };
-    const gates = this.playback.deps.featureGate;
-    const [catalog, spotify, playlists] = await Promise.all([
-      gates.musicCatalog?.(scope),
-      gates.spotifyLinks?.(scope),
-      gates.playlists?.(scope),
-    ]);
-    return {
-      catalog: this.playback.deps.music !== undefined && catalog === true,
-      spotify: this.playback.deps.music !== undefined && spotify === true,
-      playlists:
-        this.playback.deps.commands.history !== undefined && playlists === true,
-    };
+    return await musicFeatureFlags(this.playback.deps, session, guildId);
   }
   async require(session: WebSession, guildId: string, feature: MusicFeature) {
     await this.playback.authorize(session, guildId);

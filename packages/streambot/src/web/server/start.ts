@@ -46,6 +46,7 @@ export async function startWebServer(deps: {
   const server = serveWebHandler(deps.bootstrap.port, handler);
   return {
     stop: async () => {
+      handler.closeStreams();
       await server.stop(true);
       store.close();
     },

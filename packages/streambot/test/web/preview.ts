@@ -191,6 +191,7 @@ if (import.meta.main) {
   );
   const videoSlot = PlaybackChannelNumberSchema.parse(2);
   fixture.enableNumbered(2);
+
   await fixture.seed();
   const slots = new Map<
     PlaybackChannelNumber,
@@ -203,6 +204,13 @@ if (import.meta.main) {
         guildId: GUILD,
         channelId: CHANNEL,
         resolveSource: resolvePreview,
+      });
+      entry.actor.subscribe(() => {
+        fixture.changes.notify({
+          guildId: GUILD,
+          channelId: CHANNEL,
+          userId: null,
+        });
       });
       slots.set(slot, entry);
     }
@@ -223,6 +231,11 @@ if (import.meta.main) {
         PlaybackChannelNumberSchema.parse(station.kind === "tv" ? 2 : 1);
       const entry = ensureSlot(target);
       const added = await entry.startStation(station);
+      fixture.changes.notify({
+        guildId: GUILD,
+        channelId: CHANNEL,
+        userId: null,
+      });
       return { handle: entry.handle, added };
     },
     stopStation: ({ playbackChannel, fallbackInRoom, kind }) => {
@@ -237,7 +250,13 @@ if (import.meta.main) {
         fallbackInRoom === true && !matches(direct)
           ? [...slots.values()].find((candidate) => matches(candidate))
           : direct;
-      return matches(entry) ? (entry?.stopStation() ?? null) : null;
+      const stopped = matches(entry) ? (entry?.stopStation() ?? null) : null;
+      fixture.changes.notify({
+        guildId: GUILD,
+        channelId: CHANNEL,
+        userId: null,
+      });
+      return stopped;
     },
     releaseUnused: (_guild, _channel, slot) => {
       if (slot === undefined) return;
@@ -315,6 +334,9 @@ if (import.meta.main) {
   Bun.serve({
     hostname: "127.0.0.1",
     port,
+    // The production listener's value (`serveWebHandler`); the default of 10 seconds would close
+    // an event stream between its 20-second keepalives.
+    idleTimeout: 40,
     fetch: async (request) => {
       const response = await fixture.handler(request);
       if (

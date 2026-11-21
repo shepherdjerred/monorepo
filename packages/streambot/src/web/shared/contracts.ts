@@ -323,3 +323,63 @@ export const HistoryPageSchema = z.strictObject({
     }),
   ),
 });
+
+/** One playback slot of the viewer's room: voice audio (`listen`, slot 1) or a Go Live stream. */
+export const RoomPlayerSchema = z.strictObject({
+  slot: z.number().int().positive(),
+  transport: TransportSchema,
+  revision: z.string().nullable(),
+  state: z.string(),
+  current: PlayerItemSchema.nullable(),
+  queue: z.array(PlayerItemSchema),
+  positionSeconds: z.number().nullable(),
+  /** Server epoch milliseconds at which `positionSeconds` was sampled. */
+  positionAt: z.number().int().nonnegative(),
+  paused: z.boolean(),
+  volume: z.number(),
+  loop: z.string(),
+  station: WebStationSchema.nullable(),
+  restrictedLive: z.boolean(),
+});
+export const RoomCapabilitiesSchema = z.strictObject({
+  listen: z.boolean(),
+  sports: z.boolean(),
+  history: z.boolean(),
+  radio: z.boolean(),
+  tv: z.boolean(),
+  pause: z.boolean(),
+  playNow: z.boolean(),
+  lolEsports: z.boolean(),
+  musicCatalog: z.boolean(),
+  playlists: z.boolean(),
+  spotifyLinks: z.boolean(),
+  plexPosters: z.boolean(),
+});
+/** Everything the web remote needs about where the viewer is and what is playing there. */
+export const RoomSchema = z.strictObject({
+  location: z
+    .strictObject({ guild: GuildSchema, channel: GuildSchema })
+    .nullable(),
+  guilds: z.array(GuildSchema),
+  browseGuildId: z.string(),
+  players: z.array(RoomPlayerSchema),
+  capacity: z.strictObject({
+    maxSlots: z.number().int().positive(),
+    extraStreamAvailable: z.boolean(),
+  }),
+  capabilities: RoomCapabilitiesSchema,
+  /** Server epoch milliseconds when this snapshot was built. */
+  serverTime: z.number().int().nonnegative(),
+});
+export type WebRoom = z.infer<typeof RoomSchema>;
+export type WebRoomPlayer = z.infer<typeof RoomPlayerSchema>;
+
+/** The closed `code` of a terminal `error` event on `/api/room/events`. */
+export const RoomStreamErrorSchema = z.strictObject({
+  code: z.enum([
+    "unauthorized",
+    "guild_denied",
+    "feature_disabled",
+    "unavailable",
+  ]),
+});
