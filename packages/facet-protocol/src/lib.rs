@@ -4,6 +4,13 @@ use typeshare::typeshare;
 
 #[typeshare]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum RecurrenceBasis {
+    Scheduled,
+    Completion,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Priority {
     P1, // Urgent (Red)
     P2, // High (Orange)
@@ -35,6 +42,25 @@ pub struct Task {
     pub is_deleted: bool,
     pub created_at: String,
     pub updated_at: String,
+    pub comments: Option<Vec<TaskComment>>,
+    pub deadline: Option<String>,
+    pub recurrence_basis: Option<RecurrenceBasis>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TaskComment {
+    pub id: String,
+    pub body: String,
+    pub created_at: String,
+    pub file_name: Option<String>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CommentUpload {
+    pub comment: TaskComment,
+    pub attachment_base64: Option<String>,
 }
 
 #[typeshare]
@@ -124,6 +150,8 @@ pub struct TaskAddArgs {
     pub due_string: Option<String>,
     pub recurrence_rule: Option<String>,
     pub label_ids: Option<Vec<String>>,
+    pub deadline: Option<String>,
+    pub recurrence_basis: Option<RecurrenceBasis>,
 }
 
 #[typeshare]
@@ -143,6 +171,12 @@ pub struct TaskUpdateArgs {
     pub due_string: Option<String>,
     pub recurrence_rule: Option<String>,
     pub label_ids: Option<Vec<String>>,
+    pub append_comment: Option<CommentUpload>,
+    pub remove_comment_id: Option<String>,
+    pub remove_attachment_id: Option<String>,
+    pub deadline: Option<String>,
+    pub recurrence_basis: Option<RecurrenceBasis>,
+    pub restore_deleted: Option<bool>,
 }
 
 #[typeshare]
@@ -169,6 +203,38 @@ pub struct TaskUncompleteArgs {
 pub struct TaskReorderArgs {
     pub id: String,
     pub child_order: f64,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TaskScheduleEntry {
+    pub id: String,
+    pub due_date: Option<String>,
+    pub due_datetime: Option<String>,
+    pub due_timezone: Option<String>,
+    pub due_string: Option<String>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TaskMoveEntry {
+    pub id: String,
+    pub project_id: String,
+    pub section_id: Option<String>,
+    pub parent_id: Option<String>,
+    pub child_order: f64,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TaskMoveArgs {
+    pub tasks: Vec<TaskMoveEntry>,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TaskRescheduleArgs {
+    pub tasks: Vec<TaskScheduleEntry>,
 }
 
 #[typeshare]
@@ -311,6 +377,8 @@ pub enum SyncCommand {
     TaskComplete(TaskCompleteArgs),
     TaskUncomplete(TaskUncompleteArgs),
     TaskReorder(TaskReorderArgs),
+    TaskReschedule(TaskRescheduleArgs),
+    TaskMove(TaskMoveArgs),
     ProjectAdd(ProjectAddArgs),
     ProjectUpdate(ProjectUpdateArgs),
     ProjectDelete(ProjectDeleteArgs),

@@ -8,7 +8,7 @@ import type {
 } from "../protocol/generated.ts";
 import {
   applyProjectUpdate,
-  applyTaskCreateOptions,
+  newMemoryTask,
   applyTaskUpdateDates,
   applyTaskUpdateFields,
   assertOwnedEntry,
@@ -34,7 +34,7 @@ import {
   updateInMemoryReminder,
   updateInMemorySection,
 } from "./in-memory-secondary.ts";
-import { parsePriority, recordTaskMutationMetric } from "./mappers.ts";
+import { recordTaskMutationMetric } from "./mappers.ts";
 import {
   type CreateFilterInput,
   type CreateLabelInput,
@@ -59,7 +59,13 @@ import {
   type UpdateTaskInput,
 } from "./types.ts";
 
+import { applyCommentMutation } from "./comments.ts";
+
 export class InMemoryFacetStore implements FacetStore {
+  private readonly attachments = new Map<
+    string,
+    Map<string, Uint8Array<ArrayBuffer>>
+  >();
   private readonly clock = new MonotonicClock();
   private readonly users = new Map<string, StoredUser>();
   private readonly tasks = new Map<string, StoredEntry<Task>>();
@@ -169,6 +175,7 @@ export class InMemoryFacetStore implements FacetStore {
   async runInSavepoint<T>(_name: string, fn: () => Promise<T>): Promise<T> {
     const clockSnap = this.clock.snapshot();
     const usersSnap = structuredClone(this.users);
+    const attachmentSnap = structuredClone(this.attachments);
     const tasksSnap = structuredClone(this.tasks);
     const projectsSnap = structuredClone(this.projects);
     const sectionsSnap = structuredClone(this.sections);
@@ -182,6 +189,7 @@ export class InMemoryFacetStore implements FacetStore {
       this.clock.restore(clockSnap);
       restoreMap(this.users, usersSnap);
       restoreMap(this.tasks, tasksSnap);
+      restoreMap(this.attachments, attachmentSnap);
       restoreMap(this.projects, projectsSnap);
       restoreMap(this.sections, sectionsSnap);
       restoreMap(this.labels, labelsSnap);
@@ -247,24 +255,7 @@ export class InMemoryFacetStore implements FacetStore {
     const id = data.id ?? crypto.randomUUID();
     const now = this.clock.now();
     const nowIso = now.toISOString();
-    const task: Task = {
-      id,
-      user_id: data.userId,
-      project_id: data.projectId,
-      title: data.title,
-      description: data.description ?? "",
-      priority: parsePriority(
-        typeof data.priority === "string" ? data.priority : undefined,
-      ),
-      child_order: data.childOrder ?? 0,
-      is_recurring: data.isRecurring ?? false,
-      label_ids: labelIds,
-      completed: data.completed ?? false,
-      is_deleted: false,
-      created_at: nowIso,
-      updated_at: nowIso,
-    };
-    applyTaskCreateOptions(task, data);
+    const task = newMemoryTask(data, id, nowIso, labelIds);
     this.tasks.set(id, {
       value: task,
       userId: data.userId,
@@ -290,6 +281,7 @@ export class InMemoryFacetStore implements FacetStore {
         ? data
         : { ...data, labelIds: this.validateLabelIds(userId, data.labelIds) };
     const updated = this.mutateEntry(this.tasks, id, userId, (task, nowIso) => {
+      applyCommentMutation(task, validated, this.attachments);
       applyTaskUpdateFields(task, validated);
       applyTaskUpdateDates(task, validated);
       task.updated_at = nowIso;
@@ -308,6 +300,19 @@ export class InMemoryFacetStore implements FacetStore {
       recordTaskMutationMetric("deleted");
     }
     return Promise.resolve(deleted);
+  }
+
+  getAttachment(
+    taskId: string,
+    commentId: string,
+    userId: string,
+  ): Promise<Uint8Array<ArrayBuffer> | null> {
+    const task = this.tasks.get(taskId);
+    return Promise.resolve(
+      task?.userId === userId && !task.value.is_deleted
+        ? (this.attachments.get(taskId)?.get(commentId) ?? null)
+        : null,
+    );
   }
 
   getTask(id: string, userId?: string): Promise<Task | null> {

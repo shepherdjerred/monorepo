@@ -2,9 +2,15 @@ import Foundation
 
 /// Evaluates Todoist-style filter query strings (`Protocol.Filter.query`) against local tasks.
 public enum FacetFilterQueryEvaluator {
-    private static let trimChars = CharacterSet.whitespacesAndNewlines.union(
-        CharacterSet(charactersIn: "()")
-    )
+    public static func validationError(for query: String) -> String? {
+        var parser = FacetFilterParser(query)
+        do {
+            _ = try parser.parse()
+            return nil
+        } catch {
+            return error.message
+        }
+    }
 
     public static func filterTasks(
         _ tasks: [Task],
@@ -24,15 +30,16 @@ public enum FacetFilterQueryEvaluator {
             labelsByID: Dictionary(uniqueKeysWithValues: labels.map { ($0.id, $0) }),
             calendar: calendar
         )
-        let mentionsCompleted = trimmed.lowercased().contains("completed")
-        let unionBranches = trimmed.split(separator: "|").map { String($0) }
-
-        return tasks.filter { task in
-            guard !task.is_deleted else { return false }
-            if !mentionsCompleted && task.completed { return false }
-            return unionBranches.contains { branch in
-                matchesConjunction(task: task, branch: branch, context: context)
+        var parser = FacetFilterParser(trimmed)
+        do {
+            let expression = try parser.parse()
+            let includesCompleted = expression.includesCompleted
+            return tasks.filter { task in
+                !task.is_deleted && (includesCompleted || !task.completed)
+                    && expression.evaluate { matchesAtom(task: task, atom: $0, context: context) }
             }
+        } catch {
+            return []
         }
     }
 
@@ -53,49 +60,19 @@ public enum FacetFilterQueryEvaluator {
         }
     }
 
-    private static func matchesConjunction(task: Task, branch: String, context: Context) -> Bool {
-        let unwrappedBranch = branch.trimmingCharacters(in: trimChars)
-        let rawTerms: [String]
-        if unwrappedBranch.contains("&") {
-            rawTerms = unwrappedBranch.split(separator: "&").map {
-                $0.trimmingCharacters(in: trimChars)
-            }
-        } else {
-            rawTerms = tokenizeTerms(unwrappedBranch)
-        }
-        for rawTerm in rawTerms where !rawTerm.isEmpty {
-            let negated = rawTerm.hasPrefix("!")
-            let core =
-                negated
-                ? String(rawTerm.dropFirst()).trimmingCharacters(in: trimChars)
-                : rawTerm.trimmingCharacters(in: trimChars)
-            let matched = matchesAtom(task: task, atom: core, context: context)
-            if negated ? matched : !matched {
-                return false
-            }
-        }
-        return true
-    }
-
-    private static func tokenizeTerms(_ branch: String) -> [String] {
-        let normalized = branch.trimmingCharacters(in: .whitespacesAndNewlines)
-        let lower = normalized.lowercased()
-        let multiWordKeywords = ["no date", "7 days", "next 7 days"]
-        if multiWordKeywords.contains(lower)
-            || lower.hasPrefix("due before:")
-            || lower.hasPrefix("due after:")
-        {
-            return [normalized]
-        }
-        return normalized.split(whereSeparator: \.isWhitespace).map(String.init)
-    }
-
     private static func matchesAtom(task: Task, atom: String, context: Context) -> Bool {
         let lower = atom.lowercased()
         let dueCivil = context.calendar.effectiveCivilDay(
             dueDate: task.due_date,
             dueDatetime: task.due_datetime
         )
+        if lower == "no deadline" { return task.deadline == nil }
+        if lower == "deadline" { return task.deadline != nil }
+        if lower.hasPrefix("deadline before:") || lower.hasPrefix("deadline after:") {
+            let comparison = "due" + lower.dropFirst("deadline".count)
+            return matchesRangeDateAtom(
+                lower: comparison, dueCivil: task.deadline, calendar: context.calendar) == .matched
+        }
         let dateMatch = matchesDateAtom(
             lower: lower, dueCivil: dueCivil, calendar: context.calendar)
         if dateMatch != .unhandled {
@@ -168,6 +145,7 @@ public enum FacetFilterQueryEvaluator {
         if lower == "today" {
             return .from(dueCivil == calendar.today)
         }
+        if lower == "tomorrow" { return .from(dueCivil == calendar.addingDays(1)) }
         if lower == "nodate" || lower == "no date" {
             return .from(dueCivil == nil)
         }
@@ -190,7 +168,7 @@ public enum FacetFilterQueryEvaluator {
         if lower == "7 days" || lower == "next 7 days" {
             guard let dueCivil else { return .unmatched }
             let end = calendar.addingDays(7)
-            return .from(dueCivil >= calendar.today && dueCivil <= end)
+            return .from(dueCivil >= calendar.today && dueCivil < end)
         }
         if lower.hasPrefix("due before:") {
             let limit = String(lower.dropFirst("due before:".count))

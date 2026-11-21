@@ -5,29 +5,26 @@ extension FacetRecurrenceCodec {
         rule: String,
         dueDate: String?,
         dueDatetime: String?,
-        referenceDate: Date = .now
+        referenceDate: Date = .now,
+        completedAt: Date? = nil,
+        timeZone: TimeZone = .gmt,
+        basis: RecurrenceBasis = .scheduled
     ) -> FacetNextOccurrence {
         guard let parsed = parse(rule) else { return .ended }
         if case .count(let remaining) = parsed.end, remaining <= 1 {
             return .ended
         }
-        let anchor = resolveAnchorDate(
+        let original = resolveAnchorDate(
             dueDate: dueDate,
             dueDatetime: dueDatetime,
             dtstart: parsed.dtstart,
             referenceDate: referenceDate
         )
-        let candidate: Date
-        switch parsed.frequency {
-        case .daily:
-            candidate = stepDaily(anchor: anchor, draft: parsed)
-        case .weekly:
-            candidate = stepWeekly(anchor: anchor, draft: parsed)
-        case .monthly:
-            candidate = stepMonthly(anchor: anchor, draft: parsed)
-        case .yearly:
-            candidate = stepYearly(anchor: anchor, draft: parsed)
-        }
+        guard
+            let candidate = nextLocalOccurrence(
+                parsed, original: original, timed: dueDatetime != nil,
+                completion: CompletionContext(basis: basis, timestamp: completedAt), timeZone: timeZone)
+        else { return .ended }
 
         if case .until(let untilRaw) = parsed.end,
             let untilDate = parseCompactDate(untilRaw, endOfDay: true),
@@ -43,6 +40,54 @@ extension FacetRecurrenceCodec {
             updatedRule = rule
         }
         return .advanced(nextDate: candidate, updatedRule: updatedRule)
+    }
+
+    private struct CompletionContext {
+        let basis: RecurrenceBasis
+        let timestamp: Date?
+    }
+
+    private static func nextLocalOccurrence(
+        _ parsed: FacetRecurrenceDraft, original: Date, timed: Bool,
+        completion: CompletionContext, timeZone: TimeZone
+    ) -> Date? {
+        var zone = utcCalendar()
+        zone.timeZone = timeZone
+        let utc = utcCalendar()
+        let parts: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
+        var anchor =
+            timed
+            ? utc.date(from: zone.dateComponents(parts, from: original)) ?? original : original
+        var after: Date?
+        if let completedAt = completion.timestamp {
+            after = utc.date(from: zone.dateComponents(parts, from: completedAt))
+            if completion.basis == .completion, let after {
+                guard
+                    let anchored = utc.date(
+                        bySettingHour: utc.component(.hour, from: anchor),
+                        minute: utc.component(.minute, from: anchor),
+                        second: utc.component(.second, from: anchor),
+                        of: after)
+                else { return nil }
+                anchor = anchored
+            }
+        }
+        var next = stepOccurrence(anchor, parsed)
+        while let after, next <= after {
+            let later = stepOccurrence(next, parsed)
+            guard later > next else { return nil }
+            next = later
+        }
+        return timed ? zone.date(from: utc.dateComponents(parts, from: next)) : next
+    }
+
+    private static func stepOccurrence(_ anchor: Date, _ draft: FacetRecurrenceDraft) -> Date {
+        switch draft.frequency {
+        case .daily: stepDaily(anchor: anchor, draft: draft)
+        case .weekly: stepWeekly(anchor: anchor, draft: draft)
+        case .monthly: stepMonthly(anchor: anchor, draft: draft)
+        case .yearly: stepYearly(anchor: anchor, draft: draft)
+        }
     }
 
     internal static func replaceCount(in rule: String, newCount: Int) -> String {

@@ -63,6 +63,11 @@ model Section {
   @@index([userId, syncSeq])
 }
 
+enum RecurrenceBasis {
+  Scheduled
+  Completion
+}
+
 model Task {
   id             String      @id @default(uuid())
   userId         String
@@ -82,16 +87,32 @@ model Task {
   dueString      String?
   isRecurring    Boolean     @default(false)
   recurrenceRule String?
+  deadline       DateTime? @db.Date
+  recurrenceBasis RecurrenceBasis?
   completed      Boolean     @default(false)
   completedAt    DateTime?
   isDeleted      Boolean     @default(false)
   syncSeq        BigInt      @default(0)
   labels         TaskLabel[]
+  comments       TaskComment[]
   reminders      Reminder[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
   @@index([userId, syncSeq])
+}
+
+model TaskComment {
+  id String
+  taskId String
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  body String
+  createdAt DateTime
+  fileName String?
+  attachment Bytes?
+
+  @@id([taskId, id])
+  @@index([taskId, createdAt])
 }
 
 model Label {

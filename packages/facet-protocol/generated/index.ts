@@ -6,6 +6,18 @@ export interface CommandStatus {
   status: string;
 }
 
+export interface TaskComment {
+  id: string;
+  body: string;
+  created_at: string;
+  file_name?: string;
+}
+
+export interface CommentUpload {
+  comment: TaskComment;
+  attachment_base64?: string;
+}
+
 export interface Filter {
   id: string;
   user_id: string;
@@ -111,6 +123,8 @@ export type SyncCommand =
   | { type: "TaskComplete"; args: TaskCompleteArgs }
   | { type: "TaskUncomplete"; args: TaskUncompleteArgs }
   | { type: "TaskReorder"; args: TaskReorderArgs }
+  | { type: "TaskReschedule"; args: TaskRescheduleArgs }
+  | { type: "TaskMove"; args: TaskMoveArgs }
   | { type: "ProjectAdd"; args: ProjectAddArgs }
   | { type: "ProjectUpdate"; args: ProjectUpdateArgs }
   | { type: "ProjectDelete"; args: ProjectDeleteArgs }
@@ -205,6 +219,11 @@ export enum Priority {
   P4 = "P4",
 }
 
+export enum RecurrenceBasis {
+  Scheduled = "Scheduled",
+  Completion = "Completion",
+}
+
 export interface Task {
   id: string;
   user_id: string;
@@ -227,6 +246,9 @@ export interface Task {
   is_deleted: boolean;
   created_at: string;
   updated_at: string;
+  comments?: TaskComment[];
+  deadline?: string;
+  recurrence_basis?: RecurrenceBasis;
 }
 
 export interface SyncResponse {
@@ -256,6 +278,8 @@ export interface TaskAddArgs {
   due_string?: string;
   recurrence_rule?: string;
   label_ids?: string[];
+  deadline?: string;
+  recurrence_basis?: RecurrenceBasis;
 }
 
 export interface TaskCompleteArgs {
@@ -267,9 +291,33 @@ export interface TaskDeleteArgs {
   id: string;
 }
 
+export interface TaskMoveEntry {
+  id: string;
+  project_id: string;
+  section_id?: string;
+  parent_id?: string;
+  child_order: number;
+}
+
+export interface TaskMoveArgs {
+  tasks: TaskMoveEntry[];
+}
+
 export interface TaskReorderArgs {
   id: string;
   child_order: number;
+}
+
+export interface TaskScheduleEntry {
+  id: string;
+  due_date?: string;
+  due_datetime?: string;
+  due_timezone?: string;
+  due_string?: string;
+}
+
+export interface TaskRescheduleArgs {
+  tasks: TaskScheduleEntry[];
 }
 
 export interface TaskUncompleteArgs {
@@ -291,4 +339,10 @@ export interface TaskUpdateArgs {
   due_string?: string;
   recurrence_rule?: string;
   label_ids?: string[];
+  append_comment?: CommentUpload;
+  remove_comment_id?: string;
+  remove_attachment_id?: string;
+  deadline?: string;
+  recurrence_basis?: RecurrenceBasis;
+  restore_deleted?: boolean;
 }

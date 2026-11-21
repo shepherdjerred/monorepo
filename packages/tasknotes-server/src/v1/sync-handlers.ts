@@ -24,6 +24,7 @@ import {
   resolveOptionalIdForCreate,
   resolveRequiredId,
 } from "./sync-parsers.ts";
+import { moveTasks } from "./task-move.ts";
 import { EntityNotFoundError, type FacetStore } from "./types.ts";
 
 export type CommandContext = {
@@ -95,6 +96,8 @@ async function handleTaskAdd(
     description: args.description,
     priority: args.priority,
     childOrder: args.child_order,
+    deadline: parseOptionalDateForCreate(args.deadline),
+    recurrenceBasis: args.recurrence_basis,
     dueDate: parseOptionalDateForCreate(args.due_date),
     dueDatetime: parseOptionalDateForCreate(args.due_datetime),
     dueTimezone: parseOptionalStringForCreate(args.due_timezone),
@@ -125,6 +128,10 @@ async function handleTaskUpdate(
     args.recurrence_rule === undefined ? undefined : recurrenceRule !== null;
 
   const updated = await tx.updateTask(resolvedId, userId, {
+    appendComment: args.append_comment,
+    removeCommentId: args.remove_comment_id,
+    removeAttachmentId: args.remove_attachment_id,
+    isDeleted: args.restore_deleted === true ? false : undefined,
     title: args.title,
     description: args.description,
     priority: args.priority,
@@ -132,6 +139,8 @@ async function handleTaskUpdate(
     sectionId: resolveNullableIdForUpdate(args.section_id, tempIdMapping),
     parentId: resolveNullableIdForUpdate(args.parent_id, tempIdMapping),
     childOrder: args.child_order,
+    deadline: parseNullableDateForUpdate(args.deadline),
+    recurrenceBasis: args.recurrence_basis,
     dueDate: parseNullableDateForUpdate(args.due_date),
     dueDatetime: parseNullableDateForUpdate(args.due_datetime),
     dueTimezone: parseNullableStringForUpdate(args.due_timezone),
@@ -325,6 +334,20 @@ export const commandHandlers: Record<ValidatedSyncCommand["type"], HandlerFn> =
       if (cmd.type === "TaskDelete") {
         const id = resolveRequiredId(cmd.args.id, ctx.tempIdMapping);
         assertMutated(await tx.deleteTask(id, userId), "Task", id);
+      }
+      return {};
+    },
+    TaskMove: async (tx, userId, cmd, ctx) => {
+      if (cmd.type === "TaskMove") {
+        await moveTasks(tx, userId, cmd.args.tasks, ctx.tempIdMapping);
+      }
+      return {};
+    },
+    TaskReschedule: async (tx, userId, cmd, ctx) => {
+      if (cmd.type === "TaskReschedule") {
+        for (const task of cmd.args.tasks) {
+          await handleTaskUpdate(tx, userId, task, ctx.tempIdMapping);
+        }
       }
       return {};
     },

@@ -1,3 +1,4 @@
+import { mountAttachmentRoute } from "./attachment-route.ts";
 import { Hono } from "hono";
 import type { Context } from "hono";
 import type { z } from "zod";
@@ -15,6 +16,7 @@ import {
   UpdateTaskBodySchema,
 } from "./rest-schemas.ts";
 import { SyncRequestSchema } from "./schemas.ts";
+import { parseNullableStringForUpdate } from "./sync-parsers.ts";
 import { executeSync } from "./sync.ts";
 import { EntityNotFoundError, type FacetStore } from "./types.ts";
 
@@ -68,22 +70,13 @@ function parseNullableDate(
   return dueDate === null || dueDate === "" ? null : new Date(dueDate);
 }
 
-function parseNullableStr(
-  val: string | null | undefined,
-): string | null | undefined {
-  if (val === undefined) {
-    return undefined;
-  }
-  return val === null || val === "" ? null : val;
-}
-
 function parseNullablePair(
   primary: string | null | undefined,
   fallback: string | null | undefined,
 ): string | null | undefined {
   return primary === null || primary === ""
     ? null
-    : parseNullableStr(primary ?? fallback);
+    : parseNullableStringForUpdate(primary ?? fallback);
 }
 
 async function resolveDefaultProjectId(
@@ -139,6 +132,8 @@ async function handleCreateTask(
       description: parsed.description,
       priority: parsed.priority,
       childOrder: parsed.child_order ?? parsed.childOrder,
+      deadline: parseNullableDate(parsed.deadline),
+      recurrenceBasis: parsed.recurrence_basis,
       dueDate:
         parsed.due_date !== undefined && parsed.due_date !== ""
           ? new Date(parsed.due_date)
@@ -196,6 +191,8 @@ async function handleUpdateTask(
       sectionId: parseNullablePair(parsed.section_id, parsed.sectionId),
       parentId: parseNullablePair(parsed.parent_id, parsed.parentId),
       childOrder: parsed.child_order ?? parsed.childOrder,
+      deadline: parseNullableDate(parsed.deadline),
+      recurrenceBasis: parsed.recurrence_basis,
       dueDate: parseNullableDate(parsed.due_date),
       dueDatetime: parseNullableDate(parsed.due_datetime),
       dueTimezone: parseNullablePair(parsed.due_timezone, parsed.dueTimezone),
@@ -280,6 +277,7 @@ function mountCollectionRoutes<TItem, TCreate, TUpdate>(
 
 export function v1Routes(deps: V1Dependencies): Hono {
   const app = new Hono();
+  mountAttachmentRoute(app, deps.store, getUserId);
   const { store } = deps;
 
   app.post("/api/v1/sync", async (c) => {

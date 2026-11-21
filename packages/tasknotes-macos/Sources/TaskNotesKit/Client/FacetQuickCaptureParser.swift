@@ -4,6 +4,7 @@ public import Foundation
 public struct FacetCaptureChip: Sendable, Equatable, Hashable, Identifiable {
     public enum Kind: String, Sendable, Equatable, Hashable {
         case date
+        case deadline
         case recurrence
         case priority
         case project
@@ -64,6 +65,8 @@ public struct FacetParsedCapture: Sendable, Equatable {
     public let dueDatetime: String?
     public let dueTimezone: String?
     public let dueString: String?
+    public let deadline: String?
+    public let recurrenceBasis: RecurrenceBasis?
     public let recurrenceRule: String?
     public let labelIds: [String]
     public let unmatchedLabels: [String]
@@ -89,7 +92,9 @@ public struct FacetParsedCapture: Sendable, Equatable {
             due_timezone: dueTimezone,
             due_string: dueString,
             recurrence_rule: recurrenceRule,
-            label_ids: labelIds.isEmpty ? nil : labelIds
+            label_ids: labelIds.isEmpty ? nil : labelIds,
+            deadline: deadline,
+            recurrence_basis: recurrenceBasis
         )
     }
 }
@@ -101,6 +106,8 @@ public enum FacetQuickCaptureParser {
         var projectId: String
         var sectionId: String?
         var priority: Priority = .p4
+        var deadline: String?
+        var recurrenceBasis: RecurrenceBasis?
         var labelIds: [String] = []
         var unmatchedLabels: [String] = []
         var chips: [FacetCaptureChip] = []
@@ -127,7 +134,25 @@ public enum FacetQuickCaptureParser {
             text: input,
             projectId: defaultProjectId
         )
+        if let match = findMatch(pattern: #"\{([^{}]+)\}"#, in: state.text, caseInsensitive: false)
+        {
+            var phrase = substring(in: state.text, range: match.range(at: 1))
+            if let date = extractDatePhrase(from: &phrase, calendar: calendar),
+                phrase.allSatisfy(\.isWhitespace)
+            {
+                state.deadline = date.civilDate
+                state.chips.append(
+                    FacetCaptureChip(kind: .deadline, text: "Deadline · \(date.label)"))
+                replaceRange(match.range, in: &state.text)
+            }
+        }
         let recurrence = extractRecurrence(from: &state.text)
+        if recurrence != nil {
+            let tokens = recognizedTokens(masked: state.text, input: rawInput)
+            state.recurrenceBasis =
+                tokens.contains { $0.text.lowercased().hasPrefix("every!") }
+                ? .completion : .scheduled
+        }
         let explicitTime = extractClockTime(from: &state.text)
         let dateMatch = extractDatePhrase(from: &state.text, calendar: calendar)
 
@@ -203,6 +228,8 @@ extension FacetQuickCaptureParser {
             dueTimezone: (resolvedDueDate != nil || dueDatetime != nil)
                 ? calendar.timeZone.identifier : nil,
             dueString: dateMatch?.rawPhrase,
+            deadline: state.deadline,
+            recurrenceBasis: state.recurrenceBasis,
             recurrenceRule: recurrence,
             labelIds: state.labelIds,
             unmatchedLabels: state.unmatchedLabels,
@@ -274,7 +301,7 @@ extension FacetQuickCaptureParser {
     }
 
     private static func extractLabels(into state: inout CaptureWorkingState, labels: [Label]) {
-        let pattern = #"(?:^|\s)@([A-Za-z0-9_-]+)(?=\s|$)"#
+        let pattern = #"(?:^|\s)[@%]([A-Za-z0-9_-]+)(?=\s|$)"#
         let activeLabels = labels.filter { !$0.is_deleted }
         while let match = findMatch(pattern: pattern, in: state.text, caseInsensitive: false) {
             let labelName = substring(in: state.text, range: match.range(at: 1))
@@ -308,12 +335,15 @@ extension FacetQuickCaptureParser {
 
     private static func extractFixedRecurrence(from text: inout String) -> String? {
         let fixedPatterns: [(String, String)] = [
-            (#"(?:^|\s)every\s+(?:weekday|workday)s?(?=\s|$)"#, "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"),
-            (#"(?:^|\s)every\s+weekend(?=\s|$)"#, "FREQ=WEEKLY;BYDAY=SA,SU"),
-            (#"(?:^|\s)(?:every\s+day|daily)(?=\s|$)"#, "FREQ=DAILY"),
-            (#"(?:^|\s)(?:every\s+week|weekly)(?=\s|$)"#, "FREQ=WEEKLY"),
-            (#"(?:^|\s)(?:every\s+month|monthly)(?=\s|$)"#, "FREQ=MONTHLY"),
-            (#"(?:^|\s)(?:every\s+year|yearly|annually)(?=\s|$)"#, "FREQ=YEARLY"),
+            (
+                #"(?:^|\s)every!?\s+(?:weekday|workday)s?(?=\s|$)"#,
+                "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+            ),
+            (#"(?:^|\s)every!?\s+weekend(?=\s|$)"#, "FREQ=WEEKLY;BYDAY=SA,SU"),
+            (#"(?:^|\s)(?:every!?\s+day|daily)(?=\s|$)"#, "FREQ=DAILY"),
+            (#"(?:^|\s)(?:every!?\s+week|weekly)(?=\s|$)"#, "FREQ=WEEKLY"),
+            (#"(?:^|\s)(?:every!?\s+month|monthly)(?=\s|$)"#, "FREQ=MONTHLY"),
+            (#"(?:^|\s)(?:every!?\s+year|yearly|annually)(?=\s|$)"#, "FREQ=YEARLY"),
         ]
         for (pattern, rrule) in fixedPatterns {
             if let match = findMatch(pattern: pattern, in: text, caseInsensitive: true) {
@@ -325,7 +355,7 @@ extension FacetQuickCaptureParser {
     }
 
     private static func extractParameterizedRecurrence(from text: inout String) -> String? {
-        let intervalPattern = #"(?:^|\s)every\s+(\d+)\s+(day|week|month|year)s?(?=\s|$)"#
+        let intervalPattern = #"(?:^|\s)every!?\s+(\d+)\s+(day|week|month|year)s?(?=\s|$)"#
         if let match = findMatch(pattern: intervalPattern, in: text, caseInsensitive: true),
             let count = Int(substring(in: text, range: match.range(at: 1))),
             count > 0
@@ -340,7 +370,7 @@ extension FacetQuickCaptureParser {
             "mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun|"
             + "monday|tuesday|wednesday|thursday|friday|saturday|sunday"
         let weekdayListPattern =
-            "(?:^|\\s)every\\s+((?:(?:\(dayTokens))(?:\\s*,\\s*|\\s+and\\s+|\\s+)?)+)(?=\\s|$)"
+            "(?:^|\\s)every!?\\s+((?:(?:\(dayTokens))(?:\\s*,\\s*|\\s+and\\s+|\\s+)?)+)(?=\\s|$)"
         if let match = findMatch(pattern: weekdayListPattern, in: text, caseInsensitive: true) {
             let list = substring(in: text, range: match.range(at: 1))
             let codes = parseWeekdayRRuleCodes(list)

@@ -295,7 +295,8 @@ extension FacetLocalStore {
                 )
             )
         }
-        tasks.removeAll(where: { $0.id == id || $0.parent_id == id })
+        // The server tombstones this row. Preserve child records so Undo restores their parent.
+        tasks.removeAll(where: { $0.id == id })
         let args = TaskDeleteArgs(id: id)
         outbox.append(
             QueuedCommand(uuid: UUID().uuidString, temp_id: nil, command: .taskDelete(args))
@@ -312,7 +313,19 @@ extension FacetLocalStore {
         defer { isSyncing = false }
 
         try await flushPersistence()
-        let sentCommands = outbox
+        // Split file-bearing commands across requests so offline captures cannot exceed the
+        // HTTP body limit together. Each batch keeps FIFO order and its original receipt IDs.
+        var remaining = Set(outbox.map(\.uuid))
+        repeat {
+            let sentCommands = Self.commentBoundedBatch(
+                outbox.prefix { remaining.contains($0.uuid) })
+            remaining.subtract(sentCommands.map(\.uuid))
+            try await sendBatch(sentCommands, client: client)
+            if sentCommands.isEmpty || syncError != nil { break }
+        } while !remaining.isEmpty
+    }
+
+    private func sendBatch(_ sentCommands: [QueuedCommand], client: FacetAPIClient) async throws {
         let sentUUIDs = Set(sentCommands.map(\.uuid))
 
         do {
@@ -322,28 +335,69 @@ extension FacetLocalStore {
                 commands: sentCommands
             )
             let response = try await client.sync(request: request)
-
-            outbox.removeAll(where: { sentUUIDs.contains($0.uuid) })
-            if !response.temp_id_mapping.isEmpty {
-                lastTempIdMapping = response.temp_id_mapping
-                syncedIDs.merge(response.temp_id_mapping) { _, serverID in serverID }
-                applyTempIdMapping(response.temp_id_mapping)
+            let failures = Self.extractCommandFailures(from: response.sync_status)
+            let resources: SyncResponse
+            if failures.isEmpty || response.full_sync {
+                resources = response
+            } else {
+                // A rejected command creates no delta. Fetch authoritative values before
+                // acknowledging the outbox so a failed refresh remains retryable.
+                resources = try await client.sync(
+                    request: SyncRequest(
+                        sync_token: nil, resource_types: request.resource_types, commands: []))
+                guard resources.full_sync else {
+                    throw FacetAPIError.decodingError(
+                        "Expected full workspace after rejected changes")
+                }
             }
-            applySyncResponseResources(response)
-            if !outbox.isEmpty {
-                replayQueuedOutbox(outbox)
+            reconcileBatch(response, resources: resources, sentUUIDs: sentUUIDs)
+            if !failures.isEmpty {
+                syncError = failures.joined(separator: "; ")
             }
-
-            let failedMessages = Self.extractCommandFailures(from: response.sync_status)
-            if !failedMessages.isEmpty {
-                syncError = failedMessages.joined(separator: "; ")
-            }
-            syncToken = response.sync_token
+            syncToken = resources.sync_token
             lastSyncedAt = Date()
         } catch {
             syncError = error.localizedDescription
             throw error
         }
         try await flushPersistence()
+    }
+
+    private func reconcileBatch(
+        _ response: SyncResponse, resources: SyncResponse, sentUUIDs: Set<String>
+    ) {
+        undoStack.removeAll { entry in
+            response.sync_status[entry.id].map { $0 != "ok" } == true
+        }
+        outbox.removeAll { queued in
+            guard sentUUIDs.contains(queued.uuid) else { return false }
+            if case .taskUpdate(let args) = queued.command, args.append_comment != nil {
+                // The queued upload is the user's durable copy until the server accepts it.
+                return response.sync_status[queued.uuid] == "ok"
+            }
+            return true
+        }
+        if !response.temp_id_mapping.isEmpty {
+            lastTempIdMapping = response.temp_id_mapping
+            syncedIDs.merge(response.temp_id_mapping) { _, serverID in serverID }
+            applyTempIdMapping(response.temp_id_mapping)
+        }
+        let restoredIDs = Set(
+            outbox.compactMap { entry -> String? in
+                guard case .taskUpdate(let update) = entry.command,
+                    update.restore_deleted == true
+                else { return nil }
+                return update.id
+            })
+        let restoring = tasks.filter { restoredIDs.contains($0.id) }
+        applySyncResponseResources(resources)
+        if !outbox.isEmpty {
+            let refreshed = Set(resources.tasks.map(\.id))
+            let retained = resources.full_sync ? [] : tasks.filter { !refreshed.contains($0.id) }
+            replayQueuedOutbox(outbox, retaining: retained)
+        }
+        for task in restoring where !tasks.contains(where: { $0.id == task.id }) {
+            tasks.append(task)
+        }
     }
 }

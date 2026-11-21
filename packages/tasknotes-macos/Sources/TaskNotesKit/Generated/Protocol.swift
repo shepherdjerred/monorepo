@@ -10,6 +10,30 @@ public struct CommandStatus: Codable, Sendable, Equatable, Hashable {
     }
 }
 
+public struct TaskComment: Codable, Sendable, Equatable, Hashable {
+    public let id: String
+    public let body: String
+    public let created_at: String
+    public let file_name: String?
+
+    public init(id: String, body: String, created_at: String, file_name: String?) {
+        self.id = id
+        self.body = body
+        self.created_at = created_at
+        self.file_name = file_name
+    }
+}
+
+public struct CommentUpload: Codable, Sendable, Equatable, Hashable {
+    public let comment: TaskComment
+    public let attachment_base64: String?
+
+    public init(comment: TaskComment, attachment_base64: String?) {
+        self.comment = comment
+        self.attachment_base64 = attachment_base64
+    }
+}
+
 public struct Filter: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let id: String
     public let user_id: String
@@ -234,6 +258,8 @@ public enum SyncCommand: Codable, Sendable, Equatable, Hashable {
     case taskComplete(TaskCompleteArgs)
     case taskUncomplete(TaskUncompleteArgs)
     case taskReorder(TaskReorderArgs)
+    case taskReschedule(TaskRescheduleArgs)
+    case taskMove(TaskMoveArgs)
     case projectAdd(ProjectAddArgs)
     case projectUpdate(ProjectUpdateArgs)
     case projectDelete(ProjectDeleteArgs)
@@ -257,6 +283,8 @@ public enum SyncCommand: Codable, Sendable, Equatable, Hashable {
         case taskComplete = "TaskComplete"
         case taskUncomplete = "TaskUncomplete"
         case taskReorder = "TaskReorder"
+        case taskReschedule = "TaskReschedule"
+        case taskMove = "TaskMove"
         case projectAdd = "ProjectAdd"
         case projectUpdate = "ProjectUpdate"
         case projectDelete = "ProjectDelete"
@@ -311,6 +339,16 @@ public enum SyncCommand: Codable, Sendable, Equatable, Hashable {
             case .taskReorder:
                 if let content = try? container.decode(TaskReorderArgs.self, forKey: .args) {
                     self = .taskReorder(content)
+                    return
+                }
+            case .taskReschedule:
+                if let content = try? container.decode(TaskRescheduleArgs.self, forKey: .args) {
+                    self = .taskReschedule(content)
+                    return
+                }
+            case .taskMove:
+                if let content = try? container.decode(TaskMoveArgs.self, forKey: .args) {
+                    self = .taskMove(content)
                     return
                 }
             case .projectAdd:
@@ -416,6 +454,12 @@ public enum SyncCommand: Codable, Sendable, Equatable, Hashable {
             try container.encode(content, forKey: .args)
         case .taskReorder(let content):
             try container.encode(CodingKeys.taskReorder, forKey: .type)
+            try container.encode(content, forKey: .args)
+        case .taskReschedule(let content):
+            try container.encode(CodingKeys.taskReschedule, forKey: .type)
+            try container.encode(content, forKey: .args)
+        case .taskMove(let content):
+            try container.encode(CodingKeys.taskMove, forKey: .type)
             try container.encode(content, forKey: .args)
         case .projectAdd(let content):
             try container.encode(CodingKeys.projectAdd, forKey: .type)
@@ -626,6 +670,11 @@ public enum Priority: String, Codable, Sendable, Equatable, Hashable {
     case p4 = "P4"
 }
 
+public enum RecurrenceBasis: String, Codable, Sendable, Equatable, Hashable {
+    case scheduled = "Scheduled"
+    case completion = "Completion"
+}
+
 public struct Task: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let id: String
     public let user_id: String
@@ -648,13 +697,18 @@ public struct Task: Codable, Sendable, Equatable, Hashable, Identifiable {
     public let is_deleted: Bool
     public let created_at: String
     public let updated_at: String
+    public let comments: [TaskComment]?
+    public let deadline: String?
+    public let recurrence_basis: RecurrenceBasis?
 
     public init(
         id: String, user_id: String, project_id: String, section_id: String?, parent_id: String?,
         title: String, description: String, priority: Priority, child_order: Double,
         due_date: String?, due_datetime: String?, due_timezone: String?, due_string: String?,
         is_recurring: Bool, recurrence_rule: String?, label_ids: [String], completed: Bool,
-        completed_at: String?, is_deleted: Bool, created_at: String, updated_at: String
+        completed_at: String?, is_deleted: Bool, created_at: String, updated_at: String,
+        comments: [TaskComment]? = nil, deadline: String? = nil,
+        recurrence_basis: RecurrenceBasis? = nil
     ) {
         self.id = id
         self.user_id = user_id
@@ -677,6 +731,9 @@ public struct Task: Codable, Sendable, Equatable, Hashable, Identifiable {
         self.is_deleted = is_deleted
         self.created_at = created_at
         self.updated_at = updated_at
+        self.comments = comments
+        self.deadline = deadline
+        self.recurrence_basis = recurrence_basis
     }
 }
 
@@ -724,12 +781,14 @@ public struct TaskAddArgs: Codable, Sendable, Equatable, Hashable {
     public let due_string: String?
     public let recurrence_rule: String?
     public let label_ids: [String]?
+    public let deadline: String?
+    public let recurrence_basis: RecurrenceBasis?
 
     public init(
         title: String, project_id: String, section_id: String?, parent_id: String?,
         description: String?, priority: Priority?, child_order: Double?, due_date: String?,
         due_datetime: String?, due_timezone: String?, due_string: String?, recurrence_rule: String?,
-        label_ids: [String]?
+        label_ids: [String]?, deadline: String? = nil, recurrence_basis: RecurrenceBasis? = nil
     ) {
         self.title = title
         self.project_id = project_id
@@ -744,6 +803,8 @@ public struct TaskAddArgs: Codable, Sendable, Equatable, Hashable {
         self.due_string = due_string
         self.recurrence_rule = recurrence_rule
         self.label_ids = label_ids
+        self.deadline = deadline
+        self.recurrence_basis = recurrence_basis
     }
 }
 
@@ -765,6 +826,32 @@ public struct TaskDeleteArgs: Codable, Sendable, Equatable, Hashable {
     }
 }
 
+public struct TaskMoveEntry: Codable, Sendable, Equatable, Hashable {
+    public let id: String
+    public let project_id: String
+    public let section_id: String?
+    public let parent_id: String?
+    public let child_order: Double
+
+    public init(
+        id: String, project_id: String, section_id: String?, parent_id: String?, child_order: Double
+    ) {
+        self.id = id
+        self.project_id = project_id
+        self.section_id = section_id
+        self.parent_id = parent_id
+        self.child_order = child_order
+    }
+}
+
+public struct TaskMoveArgs: Codable, Sendable, Equatable, Hashable {
+    public let tasks: [TaskMoveEntry]
+
+    public init(tasks: [TaskMoveEntry]) {
+        self.tasks = tasks
+    }
+}
+
 public struct TaskReorderArgs: Codable, Sendable, Equatable, Hashable {
     public let id: String
     public let child_order: Double
@@ -772,6 +859,33 @@ public struct TaskReorderArgs: Codable, Sendable, Equatable, Hashable {
     public init(id: String, child_order: Double) {
         self.id = id
         self.child_order = child_order
+    }
+}
+
+public struct TaskScheduleEntry: Codable, Sendable, Equatable, Hashable {
+    public let id: String
+    public let due_date: String?
+    public let due_datetime: String?
+    public let due_timezone: String?
+    public let due_string: String?
+
+    public init(
+        id: String, due_date: String?, due_datetime: String?, due_timezone: String?,
+        due_string: String?
+    ) {
+        self.id = id
+        self.due_date = due_date
+        self.due_datetime = due_datetime
+        self.due_timezone = due_timezone
+        self.due_string = due_string
+    }
+}
+
+public struct TaskRescheduleArgs: Codable, Sendable, Equatable, Hashable {
+    public let tasks: [TaskScheduleEntry]
+
+    public init(tasks: [TaskScheduleEntry]) {
+        self.tasks = tasks
     }
 }
 
@@ -798,12 +912,21 @@ public struct TaskUpdateArgs: Codable, Sendable, Equatable, Hashable {
     public let due_string: String?
     public let recurrence_rule: String?
     public let label_ids: [String]?
+    public let append_comment: CommentUpload?
+    public let remove_comment_id: String?
+    public let remove_attachment_id: String?
+    public let deadline: String?
+    public let recurrence_basis: RecurrenceBasis?
+    public let restore_deleted: Bool?
 
     public init(
         id: String, title: String?, description: String?, priority: Priority?, project_id: String?,
         section_id: String?, parent_id: String?, child_order: Double?, due_date: String?,
         due_datetime: String?, due_timezone: String?, due_string: String?, recurrence_rule: String?,
-        label_ids: [String]?
+        label_ids: [String]?, append_comment: CommentUpload? = nil,
+        remove_comment_id: String? = nil, remove_attachment_id: String? = nil,
+        deadline: String? = nil, recurrence_basis: RecurrenceBasis? = nil,
+        restore_deleted: Bool? = nil
     ) {
         self.id = id
         self.title = title
@@ -819,5 +942,11 @@ public struct TaskUpdateArgs: Codable, Sendable, Equatable, Hashable {
         self.due_string = due_string
         self.recurrence_rule = recurrence_rule
         self.label_ids = label_ids
+        self.append_comment = append_comment
+        self.remove_comment_id = remove_comment_id
+        self.remove_attachment_id = remove_attachment_id
+        self.deadline = deadline
+        self.recurrence_basis = recurrence_basis
+        self.restore_deleted = restore_deleted
     }
 }

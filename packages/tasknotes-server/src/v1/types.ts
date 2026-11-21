@@ -1,9 +1,11 @@
 import type {
+  CommentUpload,
   Filter,
   Label,
   Priority,
   Project,
   Reminder,
+  RecurrenceBasis,
   Section,
   Task,
 } from "../protocol/generated.ts";
@@ -27,6 +29,8 @@ export type ProcessedCommandRecord = {
 
 export type TaskScheduleOptions = {
   childOrder?: number | undefined;
+  deadline?: Date | null | undefined;
+  recurrenceBasis?: RecurrenceBasis | undefined;
   dueDate?: Date | null | undefined;
   dueDatetime?: Date | null | undefined;
   dueTimezone?: string | null | undefined;
@@ -50,6 +54,9 @@ export type CreateTaskInput = TaskScheduleOptions & {
 };
 
 export type UpdateTaskInput = TaskScheduleOptions & {
+  appendComment?: CommentUpload | undefined;
+  removeCommentId?: string | undefined;
+  removeAttachmentId?: string | undefined;
   title?: string | undefined;
   description?: string | undefined;
   priority?: Priority | string | undefined;
@@ -199,6 +206,11 @@ export type FacetStore = {
   ) => Promise<void>;
 
   readonly countActiveTasks: () => Promise<number>;
+  readonly getAttachment: (
+    taskId: string,
+    commentId: string,
+    userId: string,
+  ) => Promise<Uint8Array<ArrayBuffer> | null>;
 
   readonly createTask: (data: CreateTaskInput) => Promise<Task>;
   readonly updateTask: (

@@ -224,6 +224,8 @@ export class PrismaFacetStore implements V1.FacetStore {
         dueTimezone: data.dueTimezone ?? null,
         dueString: data.dueString ?? null,
         isRecurring: data.isRecurring ?? false,
+        deadline: data.deadline ?? null,
+        recurrenceBasis: data.recurrenceBasis ?? null,
         recurrenceRule: data.recurrenceRule ?? null,
         completed: data.completed ?? false,
         completedAt: data.completedAt ?? null,
@@ -280,6 +282,18 @@ export class PrismaFacetStore implements V1.FacetStore {
     });
     recordTaskMutationMetric("deleted");
     return true;
+  }
+
+  async getAttachment(
+    taskId: string,
+    commentId: string,
+    userId: string,
+  ): Promise<Uint8Array<ArrayBuffer> | null> {
+    const row = await this.prisma.taskComment.findFirst({
+      where: { taskId, id: commentId, task: { userId, isDeleted: false } },
+      select: { attachment: true },
+    });
+    return row?.attachment ?? null;
   }
 
   async getTask(id: string, userId?: string): Promise<Task | null> {

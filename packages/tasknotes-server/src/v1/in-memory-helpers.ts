@@ -1,7 +1,6 @@
 import {
   type Filter,
   type Label,
-  Priority,
   type Project,
   type Reminder,
   type Section,
@@ -19,6 +18,31 @@ import {
   type UpdateSectionInput,
   type UpdateTaskInput,
 } from "./types.ts";
+
+export function newMemoryTask(
+  data: CreateTaskInput,
+  id: string,
+  nowIso: string,
+  labelIds: string[],
+): Task {
+  const task: Task = {
+    id,
+    user_id: data.userId,
+    project_id: data.projectId,
+    title: data.title,
+    description: data.description ?? "",
+    priority: parsePriority(data.priority),
+    child_order: data.childOrder ?? 0,
+    is_recurring: data.isRecurring ?? false,
+    label_ids: labelIds,
+    completed: data.completed ?? false,
+    is_deleted: false,
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+  applyTaskCreateOptions(task, data);
+  return task;
+}
 
 export type StoredEntry<T> = {
   value: T;
@@ -173,6 +197,8 @@ export function applyTaskCreateOptions(
   data: CreateTaskInput,
 ): void {
   applyCreateTaskStrings(task, data);
+  setOrDelete(task, "deadline", formatDueDate(data.deadline));
+  setOrDelete(task, "recurrence_basis", data.recurrenceBasis);
 
   const dueDate = formatDueDate(data.dueDate);
   if (dueDate !== undefined && dueDate !== null && dueDate !== "") {
@@ -196,9 +222,7 @@ export function applyTaskUpdateFields(task: Task, data: UpdateTaskInput): void {
     task.description = data.description;
   }
   if (data.priority !== undefined) {
-    task.priority = parsePriority(
-      typeof data.priority === "string" ? data.priority : Priority.P4,
-    );
+    task.priority = parsePriority(data.priority);
   }
   if (data.projectId !== undefined) {
     task.project_id = data.projectId;
@@ -223,6 +247,8 @@ export function applyTaskUpdateFields(task: Task, data: UpdateTaskInput): void {
 }
 
 export function applyTaskUpdateDates(task: Task, data: UpdateTaskInput): void {
+  setOrDelete(task, "deadline", formatDueDate(data.deadline));
+  setOrDelete(task, "recurrence_basis", data.recurrenceBasis);
   setOrDelete(task, "due_date", formatDueDate(data.dueDate));
   setOrDelete(task, "due_datetime", formatIso(data.dueDatetime));
   setOrDelete(task, "completed_at", formatIso(data.completedAt));

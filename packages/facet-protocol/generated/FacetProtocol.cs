@@ -9,6 +9,17 @@ using System.Text.Json.Serialization;
 
 namespace TaskNotes.Protocol;
 
+/// <summary>Generated protocol enum RecurrenceBasis.</summary>
+[GeneratedCode("facet-protocol", "0.1.0")]
+[JsonConverter(typeof(JsonStringEnumConverter<RecurrenceBasis>))]
+public enum RecurrenceBasis
+{
+    /// <summary>RecurrenceBasis.Scheduled.</summary>
+    Scheduled,
+    /// <summary>RecurrenceBasis.Completion.</summary>
+    Completion,
+}
+
 /// <summary>Generated protocol enum Priority.</summary>
 [GeneratedCode("facet-protocol", "0.1.0")]
 [JsonConverter(typeof(JsonStringEnumConverter<Priority>))]
@@ -46,6 +57,9 @@ public enum Priority
 /// <param name="IsDeleted">Wire field <c>is_deleted</c>.</param>
 /// <param name="CreatedAt">Wire field <c>created_at</c>.</param>
 /// <param name="UpdatedAt">Wire field <c>updated_at</c>.</param>
+/// <param name="Comments">Wire field <c>comments</c>.</param>
+/// <param name="Deadline">Wire field <c>deadline</c>.</param>
+/// <param name="RecurrenceBasis">Wire field <c>recurrence_basis</c>.</param>
 [GeneratedCode("facet-protocol", "0.1.0")]
 public sealed record Task(
     [property: JsonPropertyName("id")] string Id,
@@ -84,7 +98,42 @@ public sealed record Task(
     string? CompletedAt,
     [property: JsonPropertyName("is_deleted")] bool IsDeleted,
     [property: JsonPropertyName("created_at")] string CreatedAt,
-    [property: JsonPropertyName("updated_at")] string UpdatedAt
+    [property: JsonPropertyName("updated_at")] string UpdatedAt,
+    [property: JsonPropertyName("comments")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<TaskComment>? Comments = null,
+    [property: JsonPropertyName("deadline")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? Deadline = null,
+    [property: JsonPropertyName("recurrence_basis")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    RecurrenceBasis? RecurrenceBasis = null
+);
+
+/// <summary>Generated protocol record TaskComment.</summary>
+/// <param name="Id">Wire field <c>id</c>.</param>
+/// <param name="Body">Wire field <c>body</c>.</param>
+/// <param name="CreatedAt">Wire field <c>created_at</c>.</param>
+/// <param name="FileName">Wire field <c>file_name</c>.</param>
+[GeneratedCode("facet-protocol", "0.1.0")]
+public sealed record TaskComment(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("body")] string Body,
+    [property: JsonPropertyName("created_at")] string CreatedAt,
+    [property: JsonPropertyName("file_name")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? FileName = null
+);
+
+/// <summary>Generated protocol record CommentUpload.</summary>
+/// <param name="Comment">Wire field <c>comment</c>.</param>
+/// <param name="AttachmentBase64">Wire field <c>attachment_base64</c>.</param>
+[GeneratedCode("facet-protocol", "0.1.0")]
+public sealed record CommentUpload(
+    [property: JsonPropertyName("comment")] TaskComment Comment,
+    [property: JsonPropertyName("attachment_base64")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? AttachmentBase64 = null
 );
 
 /// <summary>Generated protocol record Project.</summary>
@@ -220,6 +269,8 @@ public sealed record Filter(
 /// <param name="DueString">Wire field <c>due_string</c>.</param>
 /// <param name="RecurrenceRule">Wire field <c>recurrence_rule</c>.</param>
 /// <param name="LabelIds">Wire field <c>label_ids</c>.</param>
+/// <param name="Deadline">Wire field <c>deadline</c>.</param>
+/// <param name="RecurrenceBasis">Wire field <c>recurrence_basis</c>.</param>
 [GeneratedCode("facet-protocol", "0.1.0")]
 public sealed record TaskAddArgs(
     [property: JsonPropertyName("title")] string Title,
@@ -256,7 +307,13 @@ public sealed record TaskAddArgs(
     string? RecurrenceRule = null,
     [property: JsonPropertyName("label_ids")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    IReadOnlyList<string>? LabelIds = null
+    IReadOnlyList<string>? LabelIds = null,
+    [property: JsonPropertyName("deadline")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? Deadline = null,
+    [property: JsonPropertyName("recurrence_basis")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    RecurrenceBasis? RecurrenceBasis = null
 );
 
 /// <summary>Generated protocol record TaskUpdateArgs.</summary>
@@ -274,6 +331,12 @@ public sealed record TaskAddArgs(
 /// <param name="DueString">Wire field <c>due_string</c>.</param>
 /// <param name="RecurrenceRule">Wire field <c>recurrence_rule</c>.</param>
 /// <param name="LabelIds">Wire field <c>label_ids</c>.</param>
+/// <param name="AppendComment">Wire field <c>append_comment</c>.</param>
+/// <param name="RemoveCommentId">Wire field <c>remove_comment_id</c>.</param>
+/// <param name="RemoveAttachmentId">Wire field <c>remove_attachment_id</c>.</param>
+/// <param name="Deadline">Wire field <c>deadline</c>.</param>
+/// <param name="RecurrenceBasis">Wire field <c>recurrence_basis</c>.</param>
+/// <param name="RestoreDeleted">Wire field <c>restore_deleted</c>.</param>
 [GeneratedCode("facet-protocol", "0.1.0")]
 public sealed record TaskUpdateArgs(
     [property: JsonPropertyName("id")] string Id,
@@ -315,7 +378,25 @@ public sealed record TaskUpdateArgs(
     string? RecurrenceRule = null,
     [property: JsonPropertyName("label_ids")]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    IReadOnlyList<string>? LabelIds = null
+    IReadOnlyList<string>? LabelIds = null,
+    [property: JsonPropertyName("append_comment")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    CommentUpload? AppendComment = null,
+    [property: JsonPropertyName("remove_comment_id")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? RemoveCommentId = null,
+    [property: JsonPropertyName("remove_attachment_id")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? RemoveAttachmentId = null,
+    [property: JsonPropertyName("deadline")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? Deadline = null,
+    [property: JsonPropertyName("recurrence_basis")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    RecurrenceBasis? RecurrenceBasis = null,
+    [property: JsonPropertyName("restore_deleted")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    bool? RestoreDeleted = null
 );
 
 /// <summary>Generated protocol record TaskDeleteArgs.</summary>
@@ -350,6 +431,62 @@ public sealed record TaskUncompleteArgs(
 public sealed record TaskReorderArgs(
     [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("child_order")] double ChildOrder
+);
+
+/// <summary>Generated protocol record TaskScheduleEntry.</summary>
+/// <param name="Id">Wire field <c>id</c>.</param>
+/// <param name="DueDate">Wire field <c>due_date</c>.</param>
+/// <param name="DueDatetime">Wire field <c>due_datetime</c>.</param>
+/// <param name="DueTimezone">Wire field <c>due_timezone</c>.</param>
+/// <param name="DueString">Wire field <c>due_string</c>.</param>
+[GeneratedCode("facet-protocol", "0.1.0")]
+public sealed record TaskScheduleEntry(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("due_date")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? DueDate = null,
+    [property: JsonPropertyName("due_datetime")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? DueDatetime = null,
+    [property: JsonPropertyName("due_timezone")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? DueTimezone = null,
+    [property: JsonPropertyName("due_string")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? DueString = null
+);
+
+/// <summary>Generated protocol record TaskMoveEntry.</summary>
+/// <param name="Id">Wire field <c>id</c>.</param>
+/// <param name="ProjectId">Wire field <c>project_id</c>.</param>
+/// <param name="SectionId">Wire field <c>section_id</c>.</param>
+/// <param name="ParentId">Wire field <c>parent_id</c>.</param>
+/// <param name="ChildOrder">Wire field <c>child_order</c>.</param>
+[GeneratedCode("facet-protocol", "0.1.0")]
+public sealed record TaskMoveEntry(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("project_id")] string ProjectId,
+    [property: JsonPropertyName("section_id")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? SectionId,
+    [property: JsonPropertyName("parent_id")]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    string? ParentId,
+    [property: JsonPropertyName("child_order")] double ChildOrder
+);
+
+/// <summary>Generated protocol record TaskMoveArgs.</summary>
+/// <param name="Tasks">Wire field <c>tasks</c>.</param>
+[GeneratedCode("facet-protocol", "0.1.0")]
+public sealed record TaskMoveArgs(
+    [property: JsonPropertyName("tasks")] IReadOnlyList<TaskMoveEntry> Tasks
+);
+
+/// <summary>Generated protocol record TaskRescheduleArgs.</summary>
+/// <param name="Tasks">Wire field <c>tasks</c>.</param>
+[GeneratedCode("facet-protocol", "0.1.0")]
+public sealed record TaskRescheduleArgs(
+    [property: JsonPropertyName("tasks")] IReadOnlyList<TaskScheduleEntry> Tasks
 );
 
 /// <summary>Generated protocol record ProjectAddArgs.</summary>
@@ -700,6 +837,16 @@ public abstract record SyncCommand
     [GeneratedCode("facet-protocol", "0.1.0")]
     public sealed record TaskReorder(TaskReorderArgs Args) : SyncCommand;
 
+    /// <summary>SyncCommand variant TaskReschedule.</summary>
+    /// <param name="Args">Command arguments payload.</param>
+    [GeneratedCode("facet-protocol", "0.1.0")]
+    public sealed record TaskReschedule(TaskRescheduleArgs Args) : SyncCommand;
+
+    /// <summary>SyncCommand variant TaskMove.</summary>
+    /// <param name="Args">Command arguments payload.</param>
+    [GeneratedCode("facet-protocol", "0.1.0")]
+    public sealed record TaskMove(TaskMoveArgs Args) : SyncCommand;
+
     /// <summary>SyncCommand variant ProjectAdd.</summary>
     /// <param name="Args">Command arguments payload.</param>
     [GeneratedCode("facet-protocol", "0.1.0")]
@@ -841,6 +988,12 @@ public sealed class SyncCommandJsonConverter : JsonConverter<SyncCommand>
             "TaskReorder" => new SyncCommand.TaskReorder(
                 DeserializeArgs<TaskReorderArgs>(argsElement, commandType, options)
             ),
+            "TaskReschedule" => new SyncCommand.TaskReschedule(
+                DeserializeArgs<TaskRescheduleArgs>(argsElement, commandType, options)
+            ),
+            "TaskMove" => new SyncCommand.TaskMove(
+                DeserializeArgs<TaskMoveArgs>(argsElement, commandType, options)
+            ),
             "ProjectAdd" => new SyncCommand.ProjectAdd(
                 DeserializeArgs<ProjectAddArgs>(argsElement, commandType, options)
             ),
@@ -930,6 +1083,16 @@ public sealed class SyncCommandJsonConverter : JsonConverter<SyncCommand>
                 break;
             case SyncCommand.TaskReorder variant:
                 writer.WriteString("type", "TaskReorder");
+                writer.WritePropertyName("args");
+                JsonSerializer.Serialize(writer, variant.Args, options);
+                break;
+            case SyncCommand.TaskReschedule variant:
+                writer.WriteString("type", "TaskReschedule");
+                writer.WritePropertyName("args");
+                JsonSerializer.Serialize(writer, variant.Args, options);
+                break;
+            case SyncCommand.TaskMove variant:
+                writer.WriteString("type", "TaskMove");
                 writer.WritePropertyName("args");
                 JsonSerializer.Serialize(writer, variant.Args, options);
                 break;

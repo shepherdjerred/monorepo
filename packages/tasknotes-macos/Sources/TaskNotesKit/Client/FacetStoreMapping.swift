@@ -24,6 +24,8 @@ public struct FacetTaskDraft: Sendable, Equatable {
     public var dueDatetime: String?
     public var dueTimezone: String?
     public var dueString: String?
+    public var deadline: String?
+    public var recurrenceBasis: RecurrenceBasis?
     public var recurrenceRule: String?
     public var labelIds: [String]
 
@@ -39,6 +41,8 @@ public struct FacetTaskDraft: Sendable, Equatable {
         dueDatetime: String? = nil,
         dueTimezone: String? = nil,
         dueString: String? = nil,
+        deadline: String? = nil,
+        recurrenceBasis: RecurrenceBasis? = nil,
         recurrenceRule: String? = nil,
         labelIds: [String] = []
     ) {
@@ -53,6 +57,8 @@ public struct FacetTaskDraft: Sendable, Equatable {
         self.dueDatetime = dueDatetime
         self.dueTimezone = dueTimezone
         self.dueString = dueString
+        self.deadline = deadline
+        self.recurrenceBasis = recurrenceBasis
         self.recurrenceRule = recurrenceRule
         self.labelIds = labelIds
     }
@@ -60,6 +66,10 @@ public struct FacetTaskDraft: Sendable, Equatable {
 
 /// Patch descriptor for `FacetLocalStore.updateTask`, encoding `.clear` as `""` on wire nullable fields.
 public struct FacetTaskPatch: Sendable, Equatable {
+    internal var restoreDeleted = false
+    public var appendComment: CommentUpload?
+    public var removeCommentID: String?
+    public var removeAttachmentID: String?
     public var title: String?
     public var description: String?
     public var priority: Priority?
@@ -71,6 +81,8 @@ public struct FacetTaskPatch: Sendable, Equatable {
     public var dueDatetime: FacetFieldPatch<String>
     public var dueTimezone: FacetFieldPatch<String>
     public var dueString: FacetFieldPatch<String>
+    public var deadline: FacetFieldPatch<String>
+    public var recurrenceBasis: RecurrenceBasis?
     public var recurrenceRule: FacetFieldPatch<String>
     public var labelIds: FacetFieldPatch<[String]>
 
@@ -86,6 +98,8 @@ public struct FacetTaskPatch: Sendable, Equatable {
         dueDatetime: FacetFieldPatch<String> = .unchanged,
         dueTimezone: FacetFieldPatch<String> = .unchanged,
         dueString: FacetFieldPatch<String> = .unchanged,
+        deadline: FacetFieldPatch<String> = .unchanged,
+        recurrenceBasis: RecurrenceBasis? = nil,
         recurrenceRule: FacetFieldPatch<String> = .unchanged,
         labelIds: FacetFieldPatch<[String]> = .unchanged
     ) {
@@ -100,6 +114,8 @@ public struct FacetTaskPatch: Sendable, Equatable {
         self.dueDatetime = dueDatetime
         self.dueTimezone = dueTimezone
         self.dueString = dueString
+        self.deadline = deadline
+        self.recurrenceBasis = recurrenceBasis
         self.recurrenceRule = recurrenceRule
         self.labelIds = labelIds
     }
@@ -125,7 +141,13 @@ public struct FacetTaskPatch: Sendable, Equatable {
                 case .set(let values): values
                 case .clear: []
                 }
-            }()
+            }(),
+            append_comment: appendComment,
+            remove_comment_id: removeCommentID,
+            remove_attachment_id: removeAttachmentID,
+            deadline: Self.wireNullable(deadline),
+            recurrence_basis: recurrenceBasis,
+            restore_deleted: restoreDeleted ? true : nil
         )
     }
 
@@ -146,6 +168,8 @@ public struct FacetUndoEntry: Sendable, Equatable, Identifiable {
         case completeTask(taskId: String)
         case restoreTaskSnapshot(previous: Task, wasEndedRecurring: Bool)
         case recreateDeletedTask(snapshot: Task)
+        case restoreSchedules(previous: [Task])
+        case moveTasks(previous: [TaskMoveEntry])
     }
 
     public let id: String
@@ -181,6 +205,10 @@ public struct FacetUndoEntry: Sendable, Equatable, Identifiable {
             )
         case .recreateDeletedTask(let snapshot):
             mappedAction = .recreateDeletedTask(snapshot: snapshot.remapping(ids: mapping))
+        case .moveTasks(let previous):
+            mappedAction = .moveTasks(previous: previous.map { $0.remapped(using: mapping) })
+        case .restoreSchedules(let previous):
+            mappedAction = .restoreSchedules(previous: previous.map { $0.remapping(ids: mapping) })
         }
         return FacetUndoEntry(id: id, summary: summary, createdAt: createdAt, action: mappedAction)
     }
@@ -209,7 +237,10 @@ extension Task {
             completed_at: completedAt,
             is_deleted: is_deleted,
             created_at: created_at,
-            updated_at: updatedAt
+            updated_at: updatedAt,
+            comments: comments,
+            deadline: deadline,
+            recurrence_basis: recurrence_basis
         )
     }
 
@@ -240,7 +271,11 @@ extension Task {
             completed_at: completed_at,
             is_deleted: is_deleted,
             created_at: created_at,
-            updated_at: updatedAt
+            updated_at: updatedAt,
+            comments: patch.changesComments
+                ? patch.applyingCommentChanges(to: comments ?? []) : comments,
+            deadline: Self.applyNullable(patch.deadline, current: deadline),
+            recurrence_basis: patch.recurrenceBasis ?? recurrence_basis
         )
     }
 

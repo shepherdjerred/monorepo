@@ -1,4 +1,4 @@
-import type { Task } from "../protocol/generated.ts";
+import { RecurrenceBasis, type Task } from "../protocol/generated.ts";
 import {
   type ByDaySpec,
   type ParsedRRule,
@@ -12,6 +12,9 @@ export type NextOccurrenceInput = {
   dueDate?: string | undefined;
   dueDatetime?: string | undefined;
   referenceDate?: Date | undefined;
+  dueTimezone?: string | undefined;
+  basis?: RecurrenceBasis | undefined;
+  completedAt?: Date | undefined;
 };
 
 export type NextOccurrenceResult =
@@ -248,7 +251,68 @@ export function computeNextOccurrence(
     return { ended: true };
   }
 
-  const anchor = resolveAnchorDate(input, parsed);
+  const zone = input.dueTimezone ?? "UTC";
+  const timed = Boolean(input.dueDatetime);
+  const original = resolveAnchorDate(input, parsed);
+  let anchor = timed ? localClock(original, zone) : original;
+  const completed =
+    input.completedAt === undefined
+      ? undefined
+      : localClock(input.completedAt, zone);
+  if (completed !== undefined && input.basis === RecurrenceBasis.Completion) {
+    anchor = makeDateWithAnchorTime(anchor, {
+      year: completed.getUTCFullYear(),
+      month: completed.getUTCMonth(),
+      day: completed.getUTCDate(),
+    });
+  }
+  let next = stepOccurrence(anchor, parsed);
+  while (completed !== undefined && next <= completed) {
+    const later = stepOccurrence(next, parsed);
+    if (!(later > next)) return { ended: true };
+    next = later;
+  }
+  const nextDate = timed ? resolveClock(next, zone) : next;
+
+  if (
+    !Number.isFinite(nextDate.getTime()) ||
+    (parsed.until !== undefined && nextDate > parsed.until)
+  ) {
+    return { ended: true };
+  }
+  const updatedRule =
+    parsed.count === undefined
+      ? input.rule
+      : input.rule.replace(/COUNT=\d+/i, `COUNT=${String(parsed.count - 1)}`);
+  return { ended: false, nextDate, updatedRule };
+}
+
+// Calendar arithmetic uses a UTC surrogate for the task's local wall clock.
+// Temporal resolves ambiguous or skipped wall times using compatible disambiguation.
+function localClock(instant: Date, zone: string): Date {
+  const local = Temporal.Instant.fromEpochMilliseconds(
+    instant.getTime(),
+  ).toZonedDateTimeISO(zone);
+  return new Date(
+    Date.UTC(
+      local.year,
+      local.month - 1,
+      local.day,
+      local.hour,
+      local.minute,
+      local.second,
+    ),
+  );
+}
+
+function resolveClock(clock: Date, zone: string): Date {
+  const local = Temporal.Instant.fromEpochMilliseconds(clock.getTime())
+    .toZonedDateTimeISO("UTC")
+    .toPlainDateTime();
+  return new Date(local.toZonedDateTime(zone).epochMilliseconds);
+}
+
+function stepOccurrence(anchor: Date, parsed: ParsedRRule): Date {
   let nextDate: Date;
   switch (parsed.freq) {
     case "DAILY": {
@@ -269,19 +333,7 @@ export function computeNextOccurrence(
     }
   }
 
-  if (
-    parsed.until !== undefined &&
-    nextDate.getTime() > parsed.until.getTime()
-  ) {
-    return { ended: true };
-  }
-
-  const updatedRule =
-    parsed.count === undefined
-      ? input.rule
-      : input.rule.replace(/COUNT=\d+/i, `COUNT=${String(parsed.count - 1)}`);
-
-  return { ended: false, nextDate, updatedRule };
+  return nextDate;
 }
 
 function toUtcDateOnly(date: Date): Date {
@@ -307,6 +359,9 @@ export function buildTaskCompletionUpdate(
     dueDate: task.due_date,
     dueDatetime: task.due_datetime,
     referenceDate: completedAt,
+    completedAt,
+    dueTimezone: task.due_timezone,
+    basis: task.recurrence_basis,
   });
 
   if (next.ended) {
@@ -327,7 +382,9 @@ export function buildTaskCompletionUpdate(
   if (hasDueDatetime) {
     update.dueDatetime = next.nextDate;
     if (hasDueDate) {
-      update.dueDate = toUtcDateOnly(next.nextDate);
+      update.dueDate = toUtcDateOnly(
+        localClock(next.nextDate, task.due_timezone ?? "UTC"),
+      );
     }
   } else {
     update.dueDate = toUtcDateOnly(next.nextDate);

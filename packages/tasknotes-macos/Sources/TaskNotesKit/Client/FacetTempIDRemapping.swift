@@ -35,7 +35,10 @@ extension Task {
             completed_at: completed_at,
             is_deleted: is_deleted,
             created_at: created_at,
-            updated_at: updated_at
+            updated_at: updated_at,
+            comments: comments,
+            deadline: deadline,
+            recurrence_basis: recurrence_basis
         )
     }
 }
@@ -140,6 +143,17 @@ extension SyncCommand {
             return .taskAdd(Self.remapTaskAdd(args, ids: mapping))
         case .taskUpdate(let args):
             return .taskUpdate(Self.remapTaskUpdate(args, ids: mapping))
+        case .taskMove(let args):
+            return .taskMove(TaskMoveArgs(tasks: args.tasks.map { $0.remapped(using: mapping) }))
+        case .taskReschedule(let args):
+            return .taskReschedule(
+                TaskRescheduleArgs(
+                    tasks: args.tasks.map { entry in
+                        TaskScheduleEntry(
+                            id: mapping[entry.id] ?? entry.id, due_date: entry.due_date,
+                            due_datetime: entry.due_datetime, due_timezone: entry.due_timezone,
+                            due_string: entry.due_string)
+                    }))
         case .taskDelete(let args):
             return .taskDelete(TaskDeleteArgs(id: mapping[args.id] ?? args.id))
         case .taskComplete(let args):
@@ -206,6 +220,7 @@ extension SyncCommand {
         case .sectionDelete(let args):
             return .sectionDelete(SectionDeleteArgs(id: mapping[args.id] ?? args.id))
         case .taskAdd, .taskUpdate, .taskDelete, .taskComplete, .taskUncomplete, .taskReorder,
+            .taskReschedule, .taskMove,
             .labelAdd, .labelUpdate, .labelDelete, .reminderAdd, .reminderUpdate, .reminderDelete,
             .filterAdd, .filterUpdate, .filterDelete:
             return nil
@@ -233,6 +248,7 @@ extension SyncCommand {
         case .filterDelete(let args):
             return .filterDelete(FilterDeleteArgs(id: mapping[args.id] ?? args.id))
         case .taskAdd, .taskUpdate, .taskDelete, .taskComplete, .taskUncomplete, .taskReorder,
+            .taskReschedule, .taskMove,
             .projectAdd, .projectUpdate, .projectDelete, .sectionAdd, .sectionUpdate,
             .sectionDelete, .labelAdd, .labelUpdate, .labelDelete, .reminderAdd, .reminderUpdate,
             .reminderDelete:
@@ -257,6 +273,7 @@ extension SyncCommand {
         case .labelDelete(let args):
             return .labelDelete(LabelDeleteArgs(id: mapping[args.id] ?? args.id))
         case .taskAdd, .taskUpdate, .taskDelete, .taskComplete, .taskUncomplete, .taskReorder,
+            .taskReschedule, .taskMove,
             .projectAdd, .projectUpdate, .projectDelete, .sectionAdd, .sectionUpdate,
             .sectionDelete, .filterAdd, .filterUpdate, .filterDelete, .reminderAdd, .reminderUpdate,
             .reminderDelete:
@@ -288,7 +305,9 @@ extension SyncCommand {
             due_timezone: args.due_timezone,
             due_string: args.due_string,
             recurrence_rule: args.recurrence_rule,
-            label_ids: args.label_ids?.map { mapping[$0] ?? $0 }
+            label_ids: args.label_ids?.map { mapping[$0] ?? $0 },
+            deadline: args.deadline,
+            recurrence_basis: args.recurrence_basis
         )
     }
 
@@ -310,7 +329,13 @@ extension SyncCommand {
             due_timezone: args.due_timezone,
             due_string: args.due_string,
             recurrence_rule: args.recurrence_rule,
-            label_ids: args.label_ids?.map { mapping[$0] ?? $0 }
+            label_ids: args.label_ids?.map { mapping[$0] ?? $0 },
+            append_comment: args.append_comment,
+            remove_comment_id: args.remove_comment_id,
+            remove_attachment_id: args.remove_attachment_id,
+            deadline: args.deadline,
+            recurrence_basis: args.recurrence_basis,
+            restore_deleted: args.restore_deleted
         )
     }
 }
