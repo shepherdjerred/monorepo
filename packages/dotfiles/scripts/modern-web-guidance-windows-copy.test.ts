@@ -1,46 +1,71 @@
-// The Windows chezmoi source carries a real copy of the vendored
-// modern-web-guidance skill: packages/dotfiles-windows has no shared
-// skills tree, so the copy under its dot_agents/skills must match the
-// macOS/Linux source in packages/dotfiles/dot_agents/skills.
-import { readdir } from "node:fs/promises";
+// Personal agent skills live once in packages/dotfiles/dot_agents/skills and
+// are synced onto Windows as real files by run_onchange_after_sync-agent-skills.ps1.tmpl,
+// with Claude and Gemini adapter symlinks pointing at ~/.agents/skills.
 import path from "node:path";
 import { expect, test } from "vitest";
 
-const mac = path.join(
-  import.meta.dirname,
-  "../dot_agents/skills/modern-web-guidance",
+const macSkills = path.join(import.meta.dirname, "../dot_agents/skills");
+const windowsRoot = path.join(import.meta.dirname, "../../dotfiles-windows");
+const windowsSkillsDir = path.join(windowsRoot, "dot_agents/skills");
+const skillsSyncTemplate = path.join(
+  windowsRoot,
+  "run_onchange_after_sync-agent-skills.ps1.tmpl",
 );
-const windows = path.join(
-  import.meta.dirname,
-  "../../dotfiles-windows/dot_agents/skills/modern-web-guidance",
+const chezmoiShimTemplate = path.join(
+  windowsRoot,
+  "run_onchange_after_sync-chezmoi-shim.ps1.tmpl",
 );
 
-async function files(root: string): Promise<string[]> {
-  const entries = await readdir(root, { recursive: true, withFileTypes: true });
-  return entries
-    .filter((entry) => entry.isFile())
-    .map((entry) =>
-      path
-        .relative(root, path.join(entry.parentPath, entry.name))
-        .replaceAll("\\", "/"),
-    )
-    .toSorted();
-}
+test("packages/dotfiles-windows has no duplicated git copies of personal skills", () => {
+  const duplicated = [
+    ...new Bun.Glob("**/*").scanSync({
+      cwd: windowsRoot,
+      dot: true,
+    }),
+  ]
+    .map((file) => file.replaceAll("\\", "/"))
+    .filter((file) => file.startsWith("dot_agents/skills/"));
+  expect(duplicated).toEqual([]);
+  expect(
+    Bun.file(path.join(windowsSkillsDir, "modern-web-guidance/SKILL.md")).size,
+  ).toBe(0);
+});
 
-async function hashes(root: string): Promise<Map<string, string>> {
-  const result = new Map<string, string>();
-  for (const file of await files(root)) {
-    const bytes = await Bun.file(path.join(root, file)).bytes();
-    result.set(
-      file,
-      new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),
-    );
+test("canonical personal skills catalog is non-empty and synced by Windows template", async () => {
+  const canonicalSkills = [
+    ...new Bun.Glob("*/SKILL.md").scanSync({ cwd: macSkills }),
+  ];
+  expect(canonicalSkills.length).toBeGreaterThan(20);
+  expect(canonicalSkills.map((s) => s.replaceAll("\\", "/"))).toContain(
+    "modern-web-guidance/SKILL.md",
+  );
+
+  const template = await Bun.file(skillsSyncTemplate).text();
+  expect(template).toContain(
+    'joinPath (dir .chezmoi.sourceDir) "dotfiles" "dot_agents" "skills"',
+  );
+  expect(template).toContain("sha256sum");
+  expect(template).toContain(String.raw`.agents\skills`);
+});
+
+test("Windows dotfiles expose Claude and Gemini skill and guidance adapter symlinks", async () => {
+  const adapters = [
+    ["private_dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
+    ["private_dot_claude/symlink_skills", "../.agents/skills"],
+    ["private_dot_codex/symlink_AGENTS.md", "../AGENTS.md"],
+    ["dot_gemini/symlink_GEMINI.md", "../AGENTS.md"],
+    ["dot_gemini/config/symlink_skills", "../../.agents/skills"],
+  ] as const;
+
+  for (const [relativePath, expectedTarget] of adapters) {
+    const content = await Bun.file(path.join(windowsRoot, relativePath)).text();
+    expect(content.trim(), relativePath).toBe(expectedTarget);
   }
-  return result;
-}
+});
 
-test("Windows copy of modern-web-guidance matches the macOS source", async () => {
-  const expected = await hashes(mac);
-  expect(expected.size).toBeGreaterThan(0);
-  expect(await hashes(windows)).toEqual(expected);
+test("Windows chezmoi shim script keeps ~/.local/bin before WinGet Links and mirrors chezmoi.exe", async () => {
+  const template = await Bun.file(chezmoiShimTemplate).text();
+  expect(template).toContain(String.raw`Microsoft\WinGet\Links`);
+  expect(template).toContain("twpayne.chezmoi_*");
+  expect(template).toContain("chezmoi.exe");
 });

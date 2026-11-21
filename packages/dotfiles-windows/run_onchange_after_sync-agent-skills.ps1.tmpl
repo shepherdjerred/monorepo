@@ -1,0 +1,52 @@
+# Syncs all canonical personal agent skills as real files from ../dotfiles
+# into ~/.agents/skills so Claude (~/.claude/skills), Codex (~/.agents/skills),
+# and Gemini (~/.gemini/config/skills) share every skill without git duplication.
+{{- $srcRoot := joinPath (dir .chezmoi.sourceDir) "dotfiles" "dot_agents" "skills" }}
+{{- $srcPrefix := printf "%s/" ($srcRoot | replace "\\" "/") }}
+{{- $manifest := list }}
+{{- range (glob (joinPath $srcRoot "**" "*")) }}
+{{-   $info := stat . }}
+{{-   if and $info (eq $info.type "file") }}
+{{-     $manifest = append $manifest (printf "# %s %s" (trimPrefix $srcPrefix (. | replace "\\" "/")) (include . | sha256sum)) }}
+{{-   end }}
+{{- end }}
+{{- range ($manifest | sortAlpha) }}
+{{ . }}
+{{- end }}
+$ErrorActionPreference = 'Stop'
+
+$sourceRoot = '{{ $srcRoot }}'
+$targetRoot = Join-Path '{{ .chezmoi.homeDir }}' '.agents\skills'
+
+if (-not (Test-Path $sourceRoot -PathType Container)) {
+    throw "Canonical personal skills source not found: $sourceRoot"
+}
+
+New-Item -ItemType Directory -Path $targetRoot -Force | Out-Null
+
+$expected = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+Get-ChildItem -Path $sourceRoot -Recurse -File | ForEach-Object {
+    $rel = [System.IO.Path]::GetRelativePath($sourceRoot, $_.FullName)
+    [void]$expected.Add($rel)
+    $dst = Join-Path $targetRoot $rel
+    $parent = Split-Path -Parent $dst
+    if (-not (Test-Path $parent -PathType Container)) {
+        New-Item -ItemType Directory -Path $parent -Force | Out-Null
+    }
+    Copy-Item -Path $_.FullName -Destination $dst -Force
+}
+
+Get-ChildItem -Path $targetRoot -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+    $rel = [System.IO.Path]::GetRelativePath($targetRoot, $_.FullName)
+    if (-not $expected.Contains($rel)) {
+        Remove-Item -Path $_.FullName -Force
+    }
+}
+
+Get-ChildItem -Path $targetRoot -Recurse -Directory -ErrorAction SilentlyContinue |
+    Sort-Object { $_.FullName.Length } -Descending |
+    ForEach-Object {
+        if ((Get-ChildItem -Path $_.FullName -Force | Measure-Object).Count -eq 0) {
+            Remove-Item -Path $_.FullName -Force
+        }
+    }

@@ -14,20 +14,23 @@ Clone the monorepo to `~/Git/monorepo`, then from PowerShell:
 ```
 
 It installs Git, PowerShell 7, chezmoi, MSYS2 and noctty with winget, installs
-fish into MSYS2, turns on Developer Mode (one admin prompt; chezmoi needs it to
-create symlinks), applies this source, installs the Fisher plugins, and installs
-the Ubuntu WSL distro. Re-running it is safe.
+fish into MSYS2, turns on Developer Mode and Win32 long paths
+(`LongPathsEnabled = 1`), applies this source, installs the Fisher plugins, and
+installs the Ubuntu WSL distro. Re-running it is safe.
 
 ## Agent skills
 
-`dot_agents/skills/modern-web-guidance` is the first personal skill delivered
-to this PC: a real copy of
-[`../dotfiles/dot_agents/skills/modern-web-guidance`](../dotfiles/dot_agents/skills/modern-web-guidance),
-kept in sync by `packages/dotfiles/scripts/modern-web-guidance-windows-copy.test.ts`.
-Edit the macOS source, then copy the changed files here. The shared
-`AGENTS.md` Browser Support policy (Baseline Widely Available only by
-default) applies here too. Other personal skills are not yet delivered to
-Windows.
+`run_onchange_after_sync-agent-skills.ps1.tmpl` syncs the entire canonical
+personal skills catalog from
+[`../dotfiles/dot_agents/skills`](../dotfiles/dot_agents/skills) as real files
+into `~/.agents/skills`, hashing every file in the template so any edit in
+`../dotfiles` re-runs on `chezmoi apply` without duplicating files in Git.
+Relative adapter symlinks expose the same skills to Claude
+(`~/.claude/skills -> ../.agents/skills`) and Gemini
+(`~/.gemini/config/skills -> ../../.agents/skills`,
+`~/.gemini/GEMINI.md -> ../AGENTS.md`), while Codex reads `~/.agents/skills`
+directly. The shared `AGENTS.md` Browser Support policy (Baseline Widely
+Available only by default) applies here too.
 
 ## Shell
 
@@ -41,6 +44,13 @@ fish comes from MSYS2. Two settings make it behave like a native shell:
 `~/.local/bin/fish.cmd` puts `fish` on the Windows `PATH`, so it starts from
 PowerShell, cmd and other programs that search `PATH`. Herdr does not use it:
 herdr-core opens PowerShell for every terminal on Windows.
+
+`run_onchange_after_sync-chezmoi-shim.ps1.tmpl` ensures `~/.local/bin` precedes
+`%LOCALAPPDATA%\Microsoft\WinGet\Links` in the user `PATH` and mirrors the real
+`chezmoi.exe` binary from `%LOCALAPPDATA%\Microsoft\WinGet\Packages\twpayne.chezmoi_*`
+into `~/.local/bin\chezmoi.exe`. That avoids WinGet's 0-byte NTFS symlink
+failing with `No application is associated` when invoked from non-interactive
+`hc exec -- pwsh -NoProfile -Command 'chezmoi ...'` sessions.
 
 noctty, Cursor and VS Code open fish by default. The fish credential exports
 are a copy of the shared fish config; update both when they change.
@@ -83,13 +93,17 @@ add `ctrl-alt-x` to toggle exhausted agents, `ctrl-alt-o` to take over the
 focused agent session, and `ctrl-alt-left` and
 `ctrl-alt-right` for tab history.
 
-The shared files are real copies of
-[`../dotfiles/private_dot_config/herdr-app`](../dotfiles/private_dot_config/herdr-app),
-not symlinks, because Herdr on Windows loads a mod's script through a symlinked
-folder but not its SVG icons. Edit the macOS source, then copy each changed
-folder here. `packages/dotfiles/scripts/herdr-windows-copy.test.ts` fails when
-a copy differs. `herdr-app check` writes `gpui-kit.d.ts` and `jsconfig.json`
-into a mod folder; they are generated and never committed.
+`run_onchange_after_sync-herdr-app.ps1.tmpl` copies the shared layout, themes,
+and mods as real files from
+[`../dotfiles/private_dot_config/herdr-app`](../dotfiles/private_dot_config/herdr-app)
+on `chezmoi apply` (not symlinks, because Herdr on Windows loads a mod's script
+through a symlinked folder but not its SVG icons). Edit the canonical files in
+`packages/dotfiles/private_dot_config/herdr-app` only; no manual duplication in
+`packages/dotfiles-windows` is needed, and
+`packages/dotfiles/scripts/herdr-windows-copy.test.ts` fails if duplicated
+copies are re-introduced. `herdr-app check` writes `gpui-kit.d.ts` and
+`jsconfig.json` into a mod folder; they are generated, preserved during sync,
+and never committed.
 
 The `my-worktree` dialog's New worktree and `my-takeover` dialog (both
 same-machine provider takeover and cross-machine session migration via

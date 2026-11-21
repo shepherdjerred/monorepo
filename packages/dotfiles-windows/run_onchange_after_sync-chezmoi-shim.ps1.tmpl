@@ -1,0 +1,75 @@
+# Ensures ~/.local/bin precedes WinGet\Links in User PATH and keeps a real
+# chezmoi.exe copy in ~/.local/bin so `hc exec -- pwsh -NoProfile -Command 'chezmoi ...'`
+# avoids WinGet's 0-byte NTFS symlink ERROR_NO_ASSOCIATION failure.
+# Packages hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+$ErrorActionPreference = 'Stop'
+
+$localBin = Join-Path '{{ .chezmoi.homeDir }}' '.local\bin'
+$localAppData = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { Join-Path '{{ .chezmoi.homeDir }}' 'AppData\Local' }
+$wingetLinks = Join-Path $localAppData 'Microsoft\WinGet\Links'
+
+New-Item -ItemType Directory -Path $localBin -Force | Out-Null
+
+# 1. Ensure ~/.local/bin comes before WinGet\Links in User PATH.
+$currentUserPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+$entries = @()
+if ($currentUserPath) {
+    $entries = @($currentUserPath -split ';' | Where-Object { $_ -and $_.Trim().Length -gt 0 })
+}
+$norm = { param([string]$p) $p.Trim().TrimEnd('\').ToLowerInvariant() }
+$localNorm = & $norm $localBin
+$linksNorm = & $norm $wingetLinks
+
+$localIndex = -1
+$linksIndex = -1
+for ($i = 0; $i -lt $entries.Count; $i++) {
+    $entryNorm = & $norm $entries[$i]
+    if ($localIndex -eq -1 -and $entryNorm -eq $localNorm) { $localIndex = $i }
+    if ($linksIndex -eq -1 -and $entryNorm -eq $linksNorm) { $linksIndex = $i }
+}
+
+$needsPathUpdate = ($localIndex -eq -1) -or ($linksIndex -ne -1 -and $localIndex -gt $linksIndex)
+if ($needsPathUpdate) {
+    $filtered = @($entries | Where-Object { (& $norm $_) -ne $localNorm })
+    $insertAt = -1
+    for ($i = 0; $i -lt $filtered.Count; $i++) {
+        if ((& $norm $filtered[$i]) -eq $linksNorm) { $insertAt = $i; break }
+    }
+    if ($insertAt -ge 0) {
+        $before = if ($insertAt -gt 0) { $filtered[0..($insertAt - 1)] } else { @() }
+        $after = $filtered[$insertAt..($filtered.Count - 1)]
+        $updated = @($before) + @($localBin) + @($after)
+    } else {
+        $updated = @($localBin) + @($filtered)
+    }
+    $newPath = $updated -join ';'
+    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+    $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + $newPath
+}
+
+# 2. Mirror the real WinGet chezmoi.exe (non-reparse binary) into ~/.local/bin.
+$wingetPackages = Join-Path $localAppData 'Microsoft\WinGet\Packages'
+$sourceExe = Get-ChildItem -Path $wingetPackages -Directory -Filter 'twpayne.chezmoi_*' -ErrorAction SilentlyContinue |
+    ForEach-Object { Join-Path $_.FullName 'chezmoi.exe' } |
+    Where-Object { Test-Path $_ -PathType Leaf } |
+    Sort-Object { (Get-Item $_).LastWriteTimeUtc } -Descending |
+    Select-Object -First 1
+
+if ($sourceExe) {
+    $targetExe = Join-Path $localBin 'chezmoi.exe'
+    $needsCopy = $true
+    if (Test-Path $targetExe -PathType Leaf) {
+        $srcHash = (Get-FileHash -Path $sourceExe -Algorithm SHA256).Hash
+        $dstHash = (Get-FileHash -Path $targetExe -Algorithm SHA256).Hash
+        if ($srcHash -eq $dstHash) {
+            $needsCopy = $false
+        }
+    }
+    if ($needsCopy) {
+        $oldExe = "$targetExe.old"
+        if (Test-Path $oldExe) { Remove-Item -Path $oldExe -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $targetExe) { Move-Item -Path $targetExe -Destination $oldExe -Force }
+        Copy-Item -Path $sourceExe -Destination $targetExe -Force
+        if (Test-Path $oldExe) { Remove-Item -Path $oldExe -Force -ErrorAction SilentlyContinue }
+    }
+}
