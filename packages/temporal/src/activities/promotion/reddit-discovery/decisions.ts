@@ -1,21 +1,24 @@
 import { z } from "zod/v4";
-import { costForTextUsage } from "@shepherdjerred/llm-models";
+import { costForDecisionUsage } from "@shepherdjerred/llm-models";
 import {
+  createLlmRuntime,
+  DecisionApiError,
   providerCredentialsFromEnv,
   StructuredOutputUsageError,
   type AggregateLlmUsage,
+  type DecisionAnswer,
+  type DecisionRequest,
+  type DecisionResult,
+  type DecisionResultUsage,
+  type DecisionWireUsage,
   type ProviderCredentials,
 } from "@shepherdjerred/llm-runtime";
-import {
-  setLlmResponseAttributes,
-  withLlmSpan,
-} from "@shepherdjerred/llm-observability/span-helpers";
+import { temporalLlmRuntime } from "#activities/agent/synthesis-runtime.ts";
 import { assertRedditPostIdentity, RedditListingPostSchema } from "./model.ts";
 
 export const REDDIT_DECISIONS_MODEL = "gpt-6-luna";
 export const DECISIONS_MODEL = REDDIT_DECISIONS_MODEL;
 export const REDDIT_MATCH_THRESHOLD = 0.8;
-const DECISIONS_URL = "https://api.openai.com/v1/decisions";
 const Probability = z.number().min(0).max(1);
 
 export const RedditQualificationSchema = z.strictObject({
@@ -129,6 +132,7 @@ export function buildRedditDecisionRequest(
   const communityRules = z.string().trim().min(1).parse(input.communityRules);
   return {
     model: REDDIT_DECISIONS_MODEL,
+    workload: "storm.reddit-outreach.decisions",
     input: [
       {
         role: "developer",
@@ -154,74 +158,30 @@ export function buildRedditDecisionRequest(
       },
     ],
     questions: REDDIT_DECISION_QUESTIONS,
-  };
+  } satisfies DecisionRequest;
 }
 
-const AnswerSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("predicate"),
-    name: z.string().nullable(),
-    probability: Probability,
-  }),
-  z.object({
-    type: z.literal("choice"),
-    name: z.string().nullable(),
-    choice: z.union([z.string(), z.boolean()]),
-    confidence: Probability,
-    probabilities: z.array(
-      z.object({
-        value: z.union([z.string(), z.boolean()]),
-        probability: Probability,
-      }),
-    ),
-  }),
-  z.object({ type: z.literal("refusal"), name: z.string().nullable() }),
-]);
-const UsageSchema = z.object({
-  input_tokens: z.number().int().nonnegative(),
-  output_tokens: z.number().int().nonnegative(),
-  total_tokens: z.number().int().nonnegative(),
-  input_tokens_details: z.object({
-    cached_tokens: z.number().int().nonnegative(),
-    cache_write_tokens: z.number().int().nonnegative(),
-  }),
-  output_tokens_details: z.object({
-    reasoning_tokens: z.number().int().nonnegative(),
-  }),
-});
-const EnvelopeSchema = z.object({
-  model: z.string(),
-  usage: UsageSchema,
-  answers: z.array(AnswerSchema),
-});
-type Answer = z.infer<typeof AnswerSchema>;
-
-function decisionUsage(raw: unknown): AggregateLlmUsage {
-  const parsed = z.object({ usage: UsageSchema }).safeParse(raw);
-  if (!parsed.success)
-    throw new Error("Decisions returned invalid token usage");
-  const { usage } = parsed.data;
-  const cachedInput = usage.input_tokens_details.cached_tokens;
-  const cacheWrite = usage.input_tokens_details.cache_write_tokens;
-  const input = usage.input_tokens - cachedInput - cacheWrite;
+function decisionUsage(usage: DecisionResultUsage): AggregateLlmUsage {
+  const cachedInput = usage.cachedInputTokens;
+  const cacheWrite = usage.cacheWriteTokens;
+  const input = usage.inputTokens - cachedInput - cacheWrite;
   if (
     input < 0 ||
-    usage.total_tokens !== usage.input_tokens + usage.output_tokens ||
-    usage.output_tokens_details.reasoning_tokens > usage.output_tokens
+    usage.totalTokens !== usage.inputTokens + usage.outputTokens ||
+    usage.reasoningTokens > usage.outputTokens
   )
     throw new Error("Decisions returned inconsistent token usage");
   const tokens = {
     input,
-    output: usage.output_tokens,
+    output: usage.outputTokens,
     cachedInput,
     cacheWrite,
-    reasoning: usage.output_tokens_details.reasoning_tokens,
-    total: usage.total_tokens,
+    reasoning: usage.reasoningTokens,
+    total: usage.totalTokens,
   };
-  const catalogCostUsd = costForTextUsage(REDDIT_DECISIONS_MODEL, {
-    inputTokens: input,
-    outputTokens: 0,
-    cacheReadTokens: cachedInput,
+  const catalogCostUsd = costForDecisionUsage(REDDIT_DECISIONS_MODEL, {
+    inputTokens: usage.inputTokens,
+    cachedInputTokens: cachedInput,
     cacheWriteTokens: cacheWrite,
   });
   if (catalogCostUsd === undefined)
@@ -229,13 +189,27 @@ function decisionUsage(raw: unknown): AggregateLlmUsage {
   return { tokens, catalogCostUsd };
 }
 
-function namedPredicate(answers: Answer[], name: string): number {
+function billedWireUsage(usage: DecisionWireUsage): AggregateLlmUsage {
+  return decisionUsage({
+    inputTokens: usage.input_tokens,
+    cachedInputTokens: usage.input_tokens_details?.cached_tokens ?? 0,
+    cacheWriteTokens: usage.input_tokens_details?.cache_write_tokens ?? 0,
+    outputTokens: usage.output_tokens,
+    reasoningTokens: usage.output_tokens_details?.reasoning_tokens ?? 0,
+    totalTokens: usage.total_tokens,
+  });
+}
+
+function namedPredicate(
+  answers: readonly DecisionAnswer[],
+  name: string,
+): number {
   const answer = answers.find((item) => item.name === name);
   return answer?.type === "predicate" ? answer.probability : 0;
 }
 
 function allowedChoice(
-  answers: Answer[],
+  answers: readonly DecisionAnswer[],
   name: string,
   expected: string,
 ): boolean {
@@ -264,16 +238,17 @@ function allowedChoice(
   );
 }
 
-export function parseRedditDecisionResponse(raw: unknown) {
-  const usage = decisionUsage(raw);
-  const parsed = EnvelopeSchema.safeParse(raw);
-  if (!parsed.success || parsed.data.model !== REDDIT_DECISIONS_MODEL)
+export function qualifyRedditDecision(
+  result: Pick<DecisionResult, "model" | "answers" | "usage">,
+) {
+  const { model, answers } = result;
+  const usage = decisionUsage(result.usage);
+  if (model !== REDDIT_DECISIONS_MODEL)
     throw new StructuredOutputUsageError(
       "Decisions returned an invalid classification response",
       [],
       usage,
     );
-  const answers = parsed.data.answers;
   const names = answers.map((answer) => answer.name);
   const complete =
     names.length === REDDIT_DECISION_QUESTIONS.length &&
@@ -312,7 +287,9 @@ export function parseRedditDecisionResponse(raw: unknown) {
   return { qualification, usage, answers };
 }
 
-type DecisionFetch = (url: string, init: RequestInit) => Promise<Response>;
+type DecisionFetch = NonNullable<
+  Parameters<typeof createLlmRuntime>[0]["fetch"]
+>;
 
 export class DecisionHttpError extends Error {
   readonly status: number;
@@ -332,79 +309,60 @@ export class DecisionRateLimit extends DecisionHttpError {
   }
 }
 
-function decisionHttpError(response: Response) {
-  const header = response.headers.get("retry-after");
+function decisionHttpError(status: number, header: string | undefined) {
   const seconds =
-    header === null || header.trim() === "" ? Number.NaN : Number(header);
+    header === undefined || header.trim() === "" ? Number.NaN : Number(header);
   const deadline =
     Number.isFinite(seconds) && seconds >= 0
       ? Date.now() + seconds * 1000
       : Date.parse(header ?? "");
-  const retryAt = Number.isFinite(deadline)
-    ? new Date(deadline).toISOString()
-    : null;
-  return response.status === 429
+  const retryDate = new Date(deadline);
+  const retryAt = Number.isNaN(retryDate.getTime())
+    ? null
+    : retryDate.toISOString();
+  return status === 429
     ? new DecisionRateLimit(retryAt)
-    : new DecisionHttpError(response.status, retryAt);
+    : new DecisionHttpError(status, retryAt);
 }
+
+/** Keep provider diagnostics out of workflow state while retaining spend evidence. */
+function promotionDecisionError(error: DecisionApiError): Error {
+  if (error.status !== undefined)
+    return decisionHttpError(error.status, error.retryAfter);
+  if (error.usage !== undefined)
+    return new StructuredOutputUsageError(
+      "Decisions returned an invalid classification response",
+      [],
+      billedWireUsage(error.usage),
+    );
+  return new Error(
+    error.kind === "parse"
+      ? "Reddit Decisions returned an invalid response"
+      : "Reddit Decisions transport failed",
+  );
+}
+
 export async function judgeRedditRequest(
   input: RedditJudgeInput,
   options: { credentials?: ProviderCredentials; fetcher?: DecisionFetch } = {},
 ) {
-  const request = buildRedditDecisionRequest(input);
-  const apiKey = (options.credentials ?? providerCredentialsFromEnv()).openai
-    ?.apiKey;
-  if (apiKey === undefined || apiKey.trim() === "")
-    throw new Error("Reddit Decisions requires OpenAI credentials");
-  return await withLlmSpan(
-    {
-      service: "temporal",
-      callSite: "storm.reddit-outreach.decisions",
-      system: "openai",
-    },
-    {
-      model: REDDIT_DECISIONS_MODEL,
-      maxTokens: undefined,
-      temperature: undefined,
-      topP: undefined,
-      stopSequences: undefined,
-    },
-    async (span) => {
-      let response: Response;
-      try {
-        response = await (options.fetcher ?? fetch)(DECISIONS_URL, {
-          method: "POST",
-          headers: {
-            authorization: `Bearer ${apiKey}`,
-            "content-type": "application/json",
-          },
-          body: JSON.stringify(request),
-          signal: AbortSignal.any([input.signal, AbortSignal.timeout(60_000)]),
+  const runtime =
+    options.credentials === undefined && options.fetcher === undefined
+      ? temporalLlmRuntime()
+      : createLlmRuntime({
+          service: "temporal",
+          appName: "shepherdjerred-temporal",
+          credentials: options.credentials ?? providerCredentialsFromEnv(),
+          fetch: options.fetcher,
         });
-      } catch {
-        throw new Error("Reddit Decisions transport failed");
-      }
-      if (!response.ok) throw decisionHttpError(response);
-      let raw: unknown;
-      try {
-        raw = await response.json();
-      } catch {
-        throw new Error("Reddit Decisions returned invalid JSON");
-      }
-      const result = parseRedditDecisionResponse(raw);
-      setLlmResponseAttributes(span, {
-        model: REDDIT_DECISIONS_MODEL,
-        id: undefined,
-        finishReasons: undefined,
-        inputTokens:
-          result.usage.tokens.input +
-          result.usage.tokens.cachedInput +
-          result.usage.tokens.cacheWrite,
-        outputTokens: result.usage.tokens.output,
-        cacheReadInputTokens: result.usage.tokens.cachedInput,
-        cacheCreationInputTokens: result.usage.tokens.cacheWrite,
-      });
-      return result;
-    },
-  );
+  try {
+    const result = await runtime.decide({
+      ...buildRedditDecisionRequest(input),
+      abortSignal: AbortSignal.any([input.signal, AbortSignal.timeout(60_000)]),
+    });
+    return qualifyRedditDecision(result);
+  } catch (error) {
+    if (error instanceof DecisionApiError) throw promotionDecisionError(error);
+    throw error;
+  }
 }

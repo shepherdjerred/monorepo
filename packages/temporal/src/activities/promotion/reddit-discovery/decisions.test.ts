@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { costForTextUsage } from "@shepherdjerred/llm-models";
-import { StructuredOutputUsageError } from "@shepherdjerred/llm-runtime";
+import { costForDecisionUsage } from "@shepherdjerred/llm-models";
+import {
+  DecisionWireResponseSchema,
+  StructuredOutputUsageError,
+} from "@shepherdjerred/llm-runtime";
 import {
   DECISIONS_MODEL,
   REDDIT_DECISION_QUESTIONS,
@@ -8,7 +11,7 @@ import {
   DecisionRateLimit,
   buildRedditDecisionRequest,
   judgeRedditRequest,
-  parseRedditDecisionResponse,
+  qualifyRedditDecision,
   type RedditJudgeInput,
 } from "./decisions.ts";
 
@@ -87,6 +90,22 @@ function response() {
   };
 }
 
+function parseRedditDecisionResponse(raw: unknown) {
+  const { answers, model, usage } = DecisionWireResponseSchema.parse(raw);
+  return qualifyRedditDecision({
+    answers,
+    model,
+    usage: {
+      inputTokens: usage.input_tokens,
+      cachedInputTokens: usage.input_tokens_details?.cached_tokens ?? 0,
+      cacheWriteTokens: usage.input_tokens_details?.cache_write_tokens ?? 0,
+      outputTokens: usage.output_tokens,
+      reasoningTokens: usage.output_tokens_details?.reasoning_tokens ?? 0,
+      totalTokens: usage.total_tokens,
+    },
+  });
+}
+
 describe("Reddit Decisions qualification", () => {
   it("builds one classification request with independent main-fit, intent, hard-constraint and permission questions", () => {
     const request = buildRedditDecisionRequest(input());
@@ -128,10 +147,9 @@ describe("Reddit Decisions qualification", () => {
       total: 70,
     });
     expect(result.usage.catalogCostUsd).toBe(
-      costForTextUsage(DECISIONS_MODEL, {
-        inputTokens: 40,
-        outputTokens: 0,
-        cacheReadTokens: 20,
+      costForDecisionUsage(DECISIONS_MODEL, {
+        inputTokens: 70,
+        cachedInputTokens: 20,
         cacheWriteTokens: 10,
       }),
     );
@@ -280,24 +298,6 @@ describe("Reddit Decisions response validation", () => {
     );
   });
 
-  it("returns usage-bearing errors for malformed answers after a billed response", () => {
-    expect(() =>
-      parseRedditDecisionResponse({
-        ...response(),
-        answers: [
-          { type: "predicate", name: "strong_main_match", probability: 2 },
-        ],
-      }),
-    ).toThrow(StructuredOutputUsageError);
-    try {
-      parseRedditDecisionResponse({ ...response(), answers: "invalid" });
-    } catch (error) {
-      expect(error).toBeInstanceOf(StructuredOutputUsageError);
-      if (error instanceof StructuredOutputUsageError)
-        expect(error.usage.tokens.total).toBe(70);
-    }
-  });
-
   it("keeps reported output dimensions while charging only input for Decisions", () => {
     const raw = response();
     raw.usage.output_tokens = 10;
@@ -316,7 +316,8 @@ describe("Decisions HTTP adapter", () => {
     const result = await judgeRedditRequest(input(), {
       credentials: { openai: { apiKey: "fixture-key" } },
       fetcher: (url, init) => {
-        calls.push({ url, init });
+        const address = url instanceof Request ? url.url : url.toString();
+        calls.push({ url: address, init: init ?? {} });
         return Promise.resolve(Response.json(response()));
       },
     });
@@ -324,9 +325,9 @@ describe("Decisions HTTP adapter", () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]?.url).toBe("https://api.openai.com/v1/decisions");
     expect(calls[0]?.init.method).toBe("POST");
-    expect(calls[0]?.init.headers).toMatchObject({
-      authorization: "Bearer fixture-key",
-    });
+    expect(new Headers(calls[0]?.init.headers).get("authorization")).toBe(
+      "Bearer fixture-key",
+    );
     expect(calls[0]?.init.signal).toBeInstanceOf(AbortSignal);
     const body = calls[0]?.init.body;
     if (typeof body !== "string")
@@ -359,6 +360,24 @@ describe("Decisions HTTP adapter", () => {
       });
       await expect(action).rejects.not.toThrow("fixture-key");
       expect(calls).toBe(1);
+    },
+  );
+
+  it.each([
+    { answers: null },
+    { answers: [predicate("strong_main_match", 2)] },
+  ])(
+    "keeps billed usage when the shared client rejects $answers",
+    async ({ answers }) => {
+      const action = judgeRedditRequest(input(), {
+        credentials: { openai: { apiKey: "fixture-key" } },
+        fetcher: () =>
+          Promise.resolve(Response.json({ ...response(), answers })),
+      });
+      await expect(action).rejects.toBeInstanceOf(StructuredOutputUsageError);
+      await expect(action).rejects.toMatchObject({
+        usage: { tokens: { total: 70 } },
+      });
     },
   );
 
@@ -400,7 +419,7 @@ describe("Decisions HTTP adapter", () => {
           return Promise.resolve(Response.json(response()));
         },
       }),
-    ).rejects.toThrow("requires OpenAI credentials");
+    ).rejects.toThrow("no OpenAI credentials");
     expect(calls).toBe(0);
   });
 });
