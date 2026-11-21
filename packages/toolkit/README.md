@@ -1597,14 +1597,14 @@ the unsafe setting without printing its value, including for help commands.
 Option names are checked after ArgoCD-compatible quote and escape parsing;
 header values and root paths containing the same text are preserved.
 
-| Commands                                                                                                 | Registered backend        |
-| -------------------------------------------------------------------------------------------------------- | ------------------------- |
-| `woodpecker`, `pr`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal`, `bugsink` | 1Password service account |
-| `talosctl`, `kube credential`, `aws credential`, `run`                                                   | 1Password service account |
-| `discord`                                                                                                | macOS Keychain            |
-| `scout ops` (`SCOUT_OPERATIONS_TOKEN_BETA`, `SCOUT_OPERATIONS_TOKEN_PROD`)                               | 1Password service account |
-| `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                              | 1Password service account |
-| `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)              | 1Password service account |
+| Commands                                                                                                                   | Registered backend             |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `woodpecker`, `pr health`, `pr land`, `posthog`, `cf`, `argocd`, `grafana`, `prom`, `loki`, `tempo`, `temporal`, `bugsink` | 1Password service account      |
+| `talosctl`, `kube credential`, `aws credential`, `run`                                                                     | 1Password service account      |
+| `discord`                                                                                                                  | macOS Keychain / Windows DPAPI |
+| `scout ops` (`SCOUT_OPERATIONS_TOKEN_BETA`, `SCOUT_OPERATIONS_TOKEN_PROD`)                                                 | 1Password service account      |
+| `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                                                | 1Password service account      |
+| `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)                                | 1Password service account      |
 
 The registry in `src/lib/credential-registry.ts` owns the variable names and
 secret locators; `src/lib/credentials.ts` resolves them. Backend failures are errors; a missing Keychain secret does not
@@ -1616,9 +1616,25 @@ when the effective address is the exact in-cluster service; an explicit
 `--address` takes precedence over `TEMPORAL_ADDRESS` for this decision.
 
 For the 1Password backend, `OP_SERVICE_ACCOUNT_TOKEN` wins. Otherwise, on
-macOS, toolkit reads the enrolled service account from Keychain and invokes
-`op` with that token. The token is passed only to that `op` child; toolkit
-never exports it into its own environment, so no other child inherits it.
+macOS toolkit reads the enrolled service account from Keychain, and on Windows
+toolkit reads it from the CurrentUser DPAPI store under
+`%LOCALAPPDATA%\toolkit\secrets\`, then invokes `op` with that token. The token
+is passed only to that `op` child; toolkit never exports it into its own
+environment, so no other child inherits it.
+
+On Windows, enroll the 1Password service account token (or a workstation secret
+such as Discord) interactively with PowerShell:
+
+```powershell
+pwsh scripts/onepassword/enroll-service-account.ps1
+pwsh scripts/onepassword/enroll-workstation-secret.ps1 -Service <service> -Ref <op://vault/item/field>
+```
+
+Because DPAPI encrypts blobs to the Windows user rather than a code signature,
+both the installed `~/.local/bin/toolkit.exe` binary and source runs share the
+same DPAPI read cache under `%LOCALAPPDATA%\toolkit\secrets\toolkit-credential-cache\`
+and per-reference lock directory under `%LOCALAPPDATA%\toolkit\credential-locks\`.
+Never export `OP_SERVICE_ACCOUNT_TOKEN` in a shell profile.
 
 The installed binary caches each service-account read in the login Keychain
 (service `toolkit-credential-cache`, one item per `op://` reference keyed by
@@ -1688,7 +1704,7 @@ homelab-vault references never wait for 1Password desktop approval. Packages
 can also call `resolveCredentials` from `@shepherdjerred/toolkit/lib/credentials.ts`
 before spawning subprocesses, as the Temporal Worker Deployment rollout does.
 
-Outside macOS, supply `OP_SERVICE_ACCOUNT_TOKEN` through the existing secret
+Outside macOS and Windows, supply `OP_SERVICE_ACCOUNT_TOKEN` through the existing secret
 manager integration. For Discord, a missing credential error names the exact
 workstation-secret enrollment command. Never paste tokens into chat,
 CLI arguments, or the toolkit config file; the config stores locators only.

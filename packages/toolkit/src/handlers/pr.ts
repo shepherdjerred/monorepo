@@ -8,6 +8,8 @@ import {
 import { healthCommand } from "#commands/pr/health.ts";
 import { landCommand } from "#commands/pr/land.ts";
 import { parseTimeout } from "#lib/ci/arguments.ts";
+import { requiredCredentialsFor } from "#lib/credential-commands.ts";
+import { resolveCredentials } from "#lib/credentials.ts";
 
 function helpRequested(args: string[]): boolean {
   return args.includes("--help") || args.includes("-h");
@@ -62,7 +64,55 @@ async function handleHealth(args: string[]): Promise<void> {
     },
     allowPositionals: true,
   });
+  await resolveCredentials(requiredCredentialsFor("pr", "health"));
   await healthCommand(positionals[0], { json: values.json });
+}
+
+function reportLandError(
+  json: boolean,
+  message: string,
+  includeUsage: boolean,
+): void {
+  if (json) {
+    console.log(
+      JSON.stringify({ outcome: "error", ready: false, error: message }),
+    );
+  } else {
+    console.error(includeUsage ? `${message}\n${LAND_USAGE}` : message);
+  }
+  process.exitCode = 2;
+}
+
+function parseLandRequest(args: string[]): {
+  pr: string | undefined;
+  options: Parameters<typeof landCommand>[1];
+} {
+  const { values, positionals } = parseArgs({
+    args,
+    options: {
+      json: { type: "boolean", default: false },
+      head: { type: "string" },
+      timeout: { type: "string" },
+      "allow-red-main": { type: "boolean", default: false },
+    },
+    allowPositionals: true,
+  });
+  if (positionals.length > 1)
+    throw new Error("Unexpected positional arguments");
+  if (values.head !== undefined && !/^[a-f\d]{40}$/i.test(values.head))
+    throw new Error("--head must be a full 40-character commit SHA");
+  if (positionals[0] !== undefined && !/^[1-9]\d*$/.test(positionals[0]))
+    throw new Error("PR must be a positive number");
+  return {
+    pr: positionals[0],
+    options: {
+      json: values.json,
+      head: values.head?.toLowerCase(),
+      timeoutMs:
+        values.timeout === undefined ? undefined : parseTimeout(values.timeout),
+      allowRedMain: values["allow-red-main"],
+    },
+  };
 }
 
 async function handleLand(args: string[]): Promise<void> {
@@ -71,44 +121,28 @@ async function handleLand(args: string[]): Promise<void> {
     return;
   }
   const json = args.includes("--json");
-  let options: Parameters<typeof landCommand>[1];
-  let pr: string | undefined;
+  let parsed: ReturnType<typeof parseLandRequest>;
   try {
-    const { values, positionals } = parseArgs({
-      args,
-      options: {
-        json: { type: "boolean", default: false },
-        head: { type: "string" },
-        timeout: { type: "string" },
-        "allow-red-main": { type: "boolean", default: false },
-      },
-      allowPositionals: true,
-    });
-    if (positionals.length > 1)
-      throw new Error("Unexpected positional arguments");
-    if (values.head !== undefined && !/^[a-f\d]{40}$/i.test(values.head))
-      throw new Error("--head must be a full 40-character commit SHA");
-    if (positionals[0] !== undefined && !/^[1-9]\d*$/.test(positionals[0]))
-      throw new Error("PR must be a positive number");
-    pr = positionals[0];
-    options = {
-      json: values.json,
-      head: values.head?.toLowerCase(),
-      timeoutMs:
-        values.timeout === undefined ? undefined : parseTimeout(values.timeout),
-      allowRedMain: values["allow-red-main"],
-    };
+    parsed = parseLandRequest(args);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (json)
-      console.log(
-        JSON.stringify({ outcome: "error", ready: false, error: message }),
-      );
-    else console.error(`${message}\n${LAND_USAGE}`);
-    process.exitCode = 2;
+    reportLandError(
+      json,
+      error instanceof Error ? error.message : String(error),
+      true,
+    );
     return;
   }
-  await landCommand(pr, options);
+  try {
+    await resolveCredentials(requiredCredentialsFor("pr", "land"));
+  } catch (error) {
+    reportLandError(
+      json,
+      error instanceof Error ? error.message : String(error),
+      false,
+    );
+    return;
+  }
+  await landCommand(parsed.pr, parsed.options);
 }
 
 async function handleAsset(args: string[]): Promise<void> {

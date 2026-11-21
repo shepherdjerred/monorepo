@@ -35,7 +35,7 @@ function temporalCredentialsFor(
 
 export function requiredCredentialsFor(
   command: string,
-  _subcommand: string | undefined,
+  subcommand: string | undefined,
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
   args: readonly string[] = [],
 ): readonly string[] {
@@ -64,7 +64,9 @@ export function requiredCredentialsFor(
         ? ["DISCORD_USER_TOKEN"]
         : ["DISCORD_BOT_TOKEN", "DISCORD_USER_TOKEN"];
     case "pr":
-      return ["WOODPECKER_TOKEN"];
+      return subcommand === "health" || subcommand === "land"
+        ? ["WOODPECKER_TOKEN"]
+        : [];
     default:
       return [];
   }

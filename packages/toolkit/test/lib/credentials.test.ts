@@ -608,6 +608,10 @@ describe("command credential mapping", () => {
     expect(requiredCredentialsFor("pr", "health")).toEqual([
       "WOODPECKER_TOKEN",
     ]);
+    expect(requiredCredentialsFor("pr", "land")).toEqual(["WOODPECKER_TOKEN"]);
+    for (const subcommand of ["asset", "review", "--help", undefined]) {
+      expect(requiredCredentialsFor("pr", subcommand)).toEqual([]);
+    }
     expect(requiredCredentialsFor("linear", undefined)).toEqual([]);
     expect(requiredCredentialsFor("bugsink", "issues")).toEqual([
       "BUGSINK_TOKEN",

@@ -33,6 +33,26 @@ type Run = (
   extraEnvironment?: Readonly<Record<string, string>>,
 ) => Promise<{ exit: number; stdout: string; stderr: string }>;
 
+export async function defaultCredentialRun(
+  argv: string[],
+  extraEnvironment: Readonly<Record<string, string>> = {},
+): Promise<{ exit: number; stdout: string; stderr: string }> {
+  const env = { ...Bun.env };
+  delete env["OP_SERVICE_ACCOUNT_TOKEN"];
+  const child = Bun.spawn(argv, {
+    env: { ...env, ...extraEnvironment },
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [stdout, stderr, exit] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
+  return { exit, stdout, stderr };
+}
+
 /** Set on a delegated child so it never delegates back. */
 export const DELEGATED_ENVIRONMENT = "TOOLKIT_CREDENTIAL_DELEGATED";
 
@@ -255,15 +275,27 @@ export function directoryLock(options: {
   };
 }
 
-export function liveReferenceLock(): ReferenceLock {
+export function liveReferenceLockRoot(
+  platform: NodeJS.Platform = process.platform,
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+  home: string = os.homedir(),
+): string {
+  if (platform === "win32") {
+    const localAppData = env["LOCALAPPDATA"];
+    const base =
+      localAppData !== undefined && localAppData.length > 0
+        ? localAppData
+        : path.join(home, "AppData", "Local");
+    return path.join(base, "toolkit", "credential-locks");
+  }
+  return path.join(home, "Library", "Caches", "toolkit", "credential-locks");
+}
+
+export function liveReferenceLock(
+  platform: NodeJS.Platform = process.platform,
+): ReferenceLock {
   return directoryLock({
-    root: path.join(
-      os.homedir(),
-      "Library",
-      "Caches",
-      "toolkit",
-      "credential-locks",
-    ),
+    root: liveReferenceLockRoot(platform),
   });
 }
 
@@ -383,4 +415,28 @@ export function exhaustedBudget(table: string): string | null {
   return rows.length === 0
     ? null
     : `1Password budget exhausted (${rows.join("; ")}); see \`op service-account ratelimit\``;
+}
+
+/** First line of an `op` error without its log prefix; never includes a value. */
+export function opFailureDetail(stderr: string): string | null {
+  const line = stderr
+    .split("\n")
+    .map((entry) => entry.replace(/^\[ERROR\]\s+\S+\s+\S+\s+/, "").trim())
+    .find((entry) => entry.length > 0);
+  return line === undefined ? null : line.slice(0, 300);
+}
+
+/** `op`'s reason, plus which budget is exhausted when it is a rate limit. */
+export async function opFailureReason(
+  stderr: string,
+  token: string,
+  run: Run,
+): Promise<string | null> {
+  const detail = opFailureDetail(stderr);
+  if (detail?.includes("Too many requests") !== true) return detail;
+  const table = await run(["op", "service-account", "ratelimit"], {
+    OP_SERVICE_ACCOUNT_TOKEN: token,
+  });
+  const budget = table.exit === 0 ? exhaustedBudget(table.stdout) : null;
+  return budget === null ? detail : `${detail} ${budget}`;
 }
