@@ -260,12 +260,7 @@ test("separates network credentials from writable media mounts", () => {
       expect(env).not.toContain("MEDIA_CREDENTIAL_KEY");
       expect(env).not.toContain("POSTAL_API_KEY");
       expect(env).not.toContain("TMDB_API_KEY");
-    } else
-      expect(mounts.map((mount) => mount.mountPath)).toEqual(
-        deployment.metadata.name.endsWith("media-api")
-          ? ["/var/cache/media/artwork", "/tmp"]
-          : ["/tmp"],
-      );
+    } else expect(mounts.map((mount) => mount.mountPath)).toEqual(["/tmp"]);
     if (deployment.metadata.name.endsWith("media-api")) {
       expect(container?.env).toContainEqual({
         name: "PLEX_SERVER_URL",
@@ -346,60 +341,4 @@ test("grants only the network observer namespace-scoped metadata reads", () => {
   expect(binding?.subjects).toEqual([
     { kind: "ServiceAccount", name: "media-network", namespace: "media" },
   ]);
-});
-
-test("the API keeps its artwork cache on an unbacked-up single-writer claim", () => {
-  const manifests = resources();
-  expect(
-    manifests.filter(
-      (resource) =>
-        resource.kind === "PersistentVolumeClaim" &&
-        resource.metadata.name === "media-artwork-cache",
-    ),
-  ).toEqual([
-    expect.objectContaining({
-      metadata: expect.objectContaining({
-        labels: {
-          "velero.io/backup": "disabled",
-          "velero.io/exclude-from-backup": "true",
-        },
-      }),
-      spec: expect.objectContaining({
-        accessModes: ["ReadWriteOnce"],
-        storageClassName: "zfs-ssd-lz4",
-        resources: { requests: { storage: "4Gi" } },
-      }),
-    }),
-  ]);
-  const api = manifests.find(
-    (resource) =>
-      resource.kind === "Deployment" &&
-      resource.metadata.name.endsWith("media-api"),
-  );
-  expect(api?.spec).toMatchObject({
-    strategy: { type: "Recreate" },
-    template: {
-      spec: {
-        securityContext: { fsGroup: 1000 },
-        volumes: expect.arrayContaining([
-          expect.objectContaining({
-            persistentVolumeClaim: {
-              claimName: "media-artwork-cache",
-              readOnly: false,
-            },
-          }),
-        ]),
-        containers: [
-          expect.objectContaining({
-            env: expect.arrayContaining([
-              {
-                name: "MEDIA_ARTWORK_CACHE_DIR",
-                value: "/var/cache/media/artwork",
-              },
-            ]),
-          }),
-        ],
-      },
-    },
-  });
 });
