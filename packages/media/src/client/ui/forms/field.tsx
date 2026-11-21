@@ -18,6 +18,14 @@ type FieldChrome = {
   error?: string | undefined;
 };
 
+type HiddenLabel = {
+  /**
+   * Keeps the label for assistive technology only. For a control in a row
+   * of like controls under one visible column heading.
+   */
+  hideLabel?: boolean;
+};
+
 /** Messages for the control's own constraints, read by `ui/validation.ts`. */
 type RequiredMessage = { requiredMessage?: string | undefined };
 type ConstraintMessages = RequiredMessage & {
@@ -58,37 +66,46 @@ function FieldLabel({
   htmlFor,
   label,
   optional,
+  hidden,
 }: {
   htmlFor: string;
   label: string;
   optional: boolean;
+  hidden: boolean;
 }) {
   return (
-    <label className={cx("label")} htmlFor={htmlFor}>
+    <label className={hidden ? "sr-only" : cx("label")} htmlFor={htmlFor}>
       {label}
       {optional && <span className={cx("optional")}> (optional)</span>}
     </label>
   );
 }
 
-type FrameProps = FieldChrome & {
-  field: ReturnType<typeof useField>;
-  width: Width;
-  children: ReactNode;
-};
+type FrameProps = FieldChrome &
+  HiddenLabel & {
+    field: ReturnType<typeof useField>;
+    width: Width;
+    children: ReactNode;
+  };
 
 /** Label, help, the control, then its error. */
 function FieldFrame({
   label,
   description,
   optional = false,
+  hideLabel = false,
   field,
   width,
   children,
 }: FrameProps) {
   return (
     <div className={cx("field")} data-width={width}>
-      <FieldLabel htmlFor={field.id} label={label} optional={optional} />
+      <FieldLabel
+        htmlFor={field.id}
+        label={label}
+        optional={optional}
+        hidden={hideLabel}
+      />
       {description !== undefined && (
         <p className={cx("description")} id={field.descriptionId}>
           {description}
@@ -103,6 +120,7 @@ function FieldFrame({
 }
 
 type InputProps = FieldChrome &
+  HiddenLabel &
   ConstraintMessages &
   Omit<ComponentProps<"input">, "id" | "className"> & {
     /** What the number counts, shown after the control: "seconds", "GiB". */
@@ -117,6 +135,7 @@ export function TextField({
   label,
   description,
   optional = false,
+  hideLabel = false,
   error,
   requiredMessage,
   patternMessage,
@@ -144,6 +163,7 @@ export function TextField({
       label={label}
       description={description}
       optional={optional}
+      hideLabel={hideLabel}
       field={field}
       width={width ?? (input.type === "number" ? "short" : "full")}
     >
@@ -165,6 +185,7 @@ export function TextField({
 }
 
 type SelectProps = FieldChrome &
+  HiddenLabel &
   RequiredMessage &
   Omit<ComponentProps<"select">, "id" | "className"> & { width?: Width };
 
@@ -173,6 +194,7 @@ export function SelectField({
   label,
   description,
   optional = false,
+  hideLabel = false,
   error,
   requiredMessage,
   width = "full",
@@ -185,6 +207,7 @@ export function SelectField({
       label={label}
       description={description}
       optional={optional}
+      hideLabel={hideLabel}
       field={field}
       width={width}
     >
@@ -237,7 +260,10 @@ export function InlineSelect({
 
 type TextAreaProps = FieldChrome &
   RequiredMessage &
-  Omit<ComponentProps<"textarea">, "id" | "className">;
+  Omit<ComponentProps<"textarea">, "id" | "className"> & {
+    /** Set in a fixed-width face, for JSON and identifiers. */
+    code?: boolean;
+  };
 
 export function TextAreaField({
   label,
@@ -245,6 +271,7 @@ export function TextAreaField({
   optional = false,
   error,
   requiredMessage,
+  code = false,
   ...textarea
 }: TextAreaProps) {
   const field = useField(textarea.name, { description, error });
@@ -260,6 +287,7 @@ export function TextAreaField({
         {...textarea}
         className={`${cx("control")} ${cx("textarea")}`}
         id={field.id}
+        data-code={code || undefined}
         data-field-label={label}
         data-required-message={requiredMessage}
         aria-invalid={field.error !== undefined}

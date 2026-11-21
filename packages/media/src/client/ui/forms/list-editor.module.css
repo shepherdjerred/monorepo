@@ -1,0 +1,106 @@
+@layer components {
+  .editor {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    max-width: 36rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .legend {
+    padding: 0;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: var(--leading-normal);
+  }
+  .description {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .empty {
+    margin: 0;
+    padding: var(--space-3);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .items {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--field);
+  }
+  .item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  }
+  .item + .item {
+    border-top: 1px solid var(--border);
+  }
+  /* The place in the order, as a figure. The list itself is what conveys
+     the order to assistive technology. */
+  .rank {
+    flex: none;
+    min-width: 1.5ch;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+  }
+  .name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: var(--text-md);
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+  .note {
+    flex: none;
+  }
+  .note:empty {
+    display: none;
+  }
+  .actions {
+    flex: none;
+    display: flex;
+  }
+  .add {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-top: var(--space-1);
+  }
+  .add > :not(button) {
+    flex: 1 1 11rem;
+    max-width: 20rem;
+  }
+  /* Level with the controls, which sit under a one-line label. */
+  .add > button {
+    margin-top: calc(var(--text-sm) * var(--leading-normal) + var(--space-1));
+  }
+
+  /* The nearest sized ancestor: the section this list is in. A container
+     name would be private to the stylesheet that declares it. */
+  @container (max-width: 520px) {
+    .item {
+      flex-wrap: wrap;
+      row-gap: 0;
+    }
+    .name {
+      flex-basis: 8rem;
+    }
+    .actions {
+      margin-inline-start: auto;
+    }
+  }
+}

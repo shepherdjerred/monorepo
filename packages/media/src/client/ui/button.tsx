@@ -44,6 +44,27 @@ export function Button({
   );
 }
 
+/** A button that is only an icon. `label` is its accessible name. */
+export function IconButton({
+  label,
+  children,
+  ...rest
+}: Omit<ComponentProps<"button">, "className" | "aria-label"> & {
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      {...rest}
+      className={`${cx("button")} ${cx("quiet")} ${cx("iconOnly")}`}
+      aria-label={label}
+      title={label}
+    >
+      {children}
+    </button>
+  );
+}
+
 /** A link to another page that reads as an action. */
 export function ButtonLink({
   to,

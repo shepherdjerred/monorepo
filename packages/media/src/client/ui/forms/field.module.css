@@ -102,6 +102,11 @@
     padding: var(--space-2) var(--space-3);
     resize: vertical;
   }
+  .textarea[data-code] {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
 
   .selectWrap {
     position: relative;
