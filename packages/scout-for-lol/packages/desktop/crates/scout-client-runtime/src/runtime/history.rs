@@ -9,6 +9,31 @@ use std::collections::HashMap;
 
 use super::observe::{ObservationSlot, enqueue_resource_if_changed, record_post_game_read};
 
+/// The Riot match ids (`NA1_5123456789`) of the newest page of the local
+/// player's match history, as a JSON array, for the supervisor's post-game
+/// review lookup.
+pub(super) const RECENT_MATCHES_KEY: &str = "recent_match_ids";
+
+/// The Riot match id of each game in a match-history page that names both
+/// its platform and a valid game id, newest first.
+pub(super) fn recent_match_ids(history: &Value) -> Vec<String> {
+    history_games(history)
+        .into_iter()
+        .flatten()
+        .filter_map(|game| {
+            let id = game
+                .get("gameId")
+                .and_then(super::profile::scalar_id)
+                .filter(|id| GameId::parse(id).is_some())?;
+            let platform = game
+                .get("platformId")
+                .and_then(Value::as_str)
+                .filter(|platform| !platform.is_empty())?;
+            Some(format!("{}_{id}", platform.to_uppercase()))
+        })
+        .collect()
+}
+
 pub(super) async fn collect_recent_matches(
     client: &LcuClient,
     outbox: &ObservationOutbox,
@@ -31,6 +56,9 @@ pub(super) async fn collect_recent_matches(
                 );
             } else {
                 discover_page(outbox, payloads, observer, &history, diagnostics)?;
+                let recent = serde_json::to_vec(&recent_match_ids(&history))
+                    .map_err(|error| error.to_string())?;
+                payloads.insert(RECENT_MATCHES_KEY.to_owned(), recent);
             }
         }
         Ok(None) => {}
@@ -525,6 +553,22 @@ mod tests {
     use scout_client_core::protocol::ObservationEnvelope;
     use serde_json::json;
     use std::collections::HashMap;
+
+    #[test]
+    fn the_history_head_names_its_games_by_riot_match_id() {
+        let history = json!({ "games": { "games": [
+            { "gameId": 5_654_104_474_u64, "platformId": "na1" },
+            { "gameId": "5653248720", "platformId": "EUW1" },
+            { "gameId": 0, "platformId": "NA1" },
+            { "gameId": 123, "platformId": "" },
+            { "gameId": 456 }
+        ] } });
+        assert_eq!(
+            super::recent_match_ids(&history),
+            ["NA1_5654104474", "EUW1_5653248720"]
+        );
+        assert_eq!(super::recent_match_ids(&json!({})), Vec::<String>::new());
+    }
 
     #[test]
     fn malformed_history_is_distinct_from_a_valid_empty_page() {
