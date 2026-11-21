@@ -25,6 +25,14 @@ using the guarded sync command. Any other obsolete resource, including a PVC,
 fails the release. Deploy this executor before selecting the hostname-removal
 chart; root reconciliation preserves delegated Arcade selection.
 
+Hub's (`alert-dashboard`, environment `ops-dashboard/prod`) owned Argo sync
+may prune only its retired `alerts` and `ops` Tailscale Ingresses, through the
+same retired-route check on both the v1 release and the model `sync` step. The
+`hub` Ingress and the alert ledger's PVC are never candidates; any other
+obsolete resource fails the release. Deploy this executor before selecting the
+chart that drops those two Ingresses, or the sync leaves them live and the
+Application OutOfSync with prune pending.
+
 The Media cutover's owned Argo sync can prune only its seven legacy Tailscale
 Ingresses. The frozen chart must stop the nine legacy writers and route Seerr
 to Media. The guarded sync rechecks the Application UID, exact source, and
