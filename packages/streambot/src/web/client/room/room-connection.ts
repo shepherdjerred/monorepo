@@ -32,7 +32,10 @@ export type ConnectionEvent =
    * limit, which an `EventSource` cannot read); otherwise it is already reconnecting by itself.
    */
   | { readonly type: "dropped"; readonly closed: boolean }
-  /** The page reopened the stream after waiting. */
+  /**
+   * The page opened a new stream: after waiting, after a refusal (Reconnect), for another server,
+   * or for a page restored from the back/forward cache.
+   */
   | { readonly type: "reopen" }
   /** `/api/room` answered with a status that says reconnecting will not help. */
   | { readonly type: "refused"; readonly reason: StopReason };

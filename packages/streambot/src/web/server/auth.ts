@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
+import { webPage } from "./assets.ts";
 import { WebError } from "./errors.ts";
 import {
   digest,
@@ -197,16 +198,9 @@ export class WebAuth {
     )
       return "/";
     const target = new URL(value, this.deps.bootstrap.publicOrigin);
+    // Only a page either remote serves; the asset router owns that list.
     return target.origin === this.deps.bootstrap.publicOrigin &&
-      [
-        "/",
-        "/music",
-        "/playlists",
-        "/plex",
-        "/search",
-        "/sports",
-        "/history",
-      ].includes(target.pathname)
+      webPage(target.pathname) !== null
       ? target.pathname + target.search + target.hash
       : "/";
   }

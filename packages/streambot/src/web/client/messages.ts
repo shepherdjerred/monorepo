@@ -151,12 +151,23 @@ export const API_WORDING: Readonly<
 };
 
 /** Failures the page detects itself, before or instead of a server answer. */
-const ClientCodeSchema = z.enum(["no_voice", "network", "bad_response"]);
+export const CLIENT_ERROR_CODES = [
+  "no_voice",
+  "network",
+  "bad_response",
+  "queue_changed",
+] as const;
+const ClientCodeSchema = z.enum(CLIENT_ERROR_CODES);
 
 export const CLIENT_WORDING: Readonly<
   Record<z.infer<typeof ClientCodeSchema>, FailureCopy>
 > = {
   no_voice: { text: "Join a voice channel in Discord to play.", retry: false },
+  // A queue edit names a position, so it never retries: the list it was aimed at is gone.
+  queue_changed: {
+    text: "The queue changed. Nothing was moved or removed; choose again from the updated list.",
+    retry: false,
+  },
   network: {
     text: "Streambot could not be reached. Check your connection, then try again.",
     retry: true,

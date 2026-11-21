@@ -7,6 +7,10 @@ const ARMED_MS = 5000;
  * A destructive control that asks in place: the first press arms it and moves focus to a
  * confirm button beside a Keep button; the second press acts. Escape, Keep, leaving the pair, or
  * five seconds without a choice disarm it. Nothing happens on the first press.
+ *
+ * Focus comes back to the trigger after a choice and after the timeout (when it was still inside
+ * the pair). While the action is pending the trigger is `aria-disabled` rather than `disabled`,
+ * so it can hold that focus instead of dropping it to the page.
  */
 export function ConfirmButton(props: {
   /** What the control does, e.g. "Stop and clear this player". */
@@ -23,12 +27,15 @@ export function ConfirmButton(props: {
   const [armed, setArmed] = useState(false);
   const confirmButton = useRef<HTMLButtonElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const group = useRef<HTMLSpanElement>(null);
   const restore = useRef(false);
 
   useEffect(() => {
     if (armed) {
       confirmButton.current?.focus();
       const timer = setTimeout(() => {
+        restore.current =
+          group.current?.contains(document.activeElement) ?? false;
         setArmed(false);
       }, ARMED_MS);
       return () => {
@@ -56,9 +63,10 @@ export function ConfirmButton(props: {
         aria-label={props.label}
         title={props.label}
         aria-busy={props.pending}
-        disabled={props.pending || props.disabled === true}
+        aria-disabled={props.pending}
+        disabled={props.disabled === true}
         onClick={() => {
-          setArmed(true);
+          if (!props.pending) setArmed(true);
         }}
       >
         {props.children}
@@ -66,6 +74,7 @@ export function ConfirmButton(props: {
     );
   return (
     <span
+      ref={group}
       className="confirm"
       role="group"
       aria-label={props.label + "?"}

@@ -5,6 +5,11 @@
     "types": ["vite/client"],
     "jsx": "react-jsx"
   },
-  "include": ["**/*.ts", "**/*.tsx", "../shared/*.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../shared/*.ts",
+    "../../../test/web/client/dom/**/*"
+  ],
   "exclude": ["node_modules", "dist"]
 }

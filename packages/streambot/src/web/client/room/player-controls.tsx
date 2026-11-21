@@ -8,6 +8,7 @@ import { useRemote } from "@shepherdjerred/streambot/web/client/remote.tsx";
 import {
   useControl,
   useControlGroup,
+  type Control,
 } from "@shepherdjerred/streambot/web/client/use-control.ts";
 
 /** How long a slider rests before its value is sent, so a drag is one command. */
@@ -28,16 +29,30 @@ function useNow(active: boolean): number {
   return now;
 }
 
+/** Seconds a seek may differ from the room's position and still count as shown. */
+const SEEK_TOLERANCE_S = 2;
+
 /**
  * A range input whose value is sent once the viewer stops moving it. The draft stays on screen
- * until the room reports a new sample (`sample` changes), so the thumb does not jump back first.
+ * until the room shows the sent value (`shows`), so the thumb does not jump back first. A failed
+ * command drops it at once, since that value never applied; so does a new snapshot (`sample`)
+ * after the command finished, when something else changed the value in between.
  */
-function useSettledValue(sample: number, onSettle: (value: number) => void) {
+function useSettledValue(input: {
+  control: Control;
+  shows: (value: number) => boolean;
+  sample: number;
+  onSettle: (value: number) => void;
+}) {
   const [draft, setDraft] = useState<{ value: number; sent: boolean } | null>(
     null,
   );
-  const settle = useRef(onSettle);
-  settle.current = onSettle;
+  const settle = useRef(input.onSettle);
+  settle.current = input.onSettle;
+  const status = input.control.state.status;
+  const finished = useRef(false);
+  finished.current = status !== "pending";
+  const shown = draft?.sent === true && input.shows(draft.value);
   useEffect(() => {
     if (draft === null || draft.sent) return;
     const timer = setTimeout(() => {
@@ -49,8 +64,13 @@ function useSettledValue(sample: number, onSettle: (value: number) => void) {
     };
   }, [draft]);
   useEffect(() => {
-    setDraft((current) => (current?.sent === true ? null : current));
-  }, [sample]);
+    if (shown || status === "failed")
+      setDraft((current) => (current?.sent === true ? null : current));
+  }, [shown, status]);
+  useEffect(() => {
+    if (finished.current)
+      setDraft((current) => (current?.sent === true ? null : current));
+  }, [input.sample]);
   return [
     draft?.value ?? null,
     (value: number) => {
@@ -69,8 +89,14 @@ export function Timeline(props: { player: WebRoomPlayer }) {
   const clock = remote.view?.clock ?? { serverTime: now, receivedAt: now };
   const position = playbackPosition(player, clock, now);
   const duration = player.current?.durationSeconds ?? null;
-  const [draft, setDraft] = useSettledValue(player.positionAt, (seconds) => {
-    control.run(playerTask(remote, player.slot, { action: "seek", seconds }));
+  const [draft, setDraft] = useSettledValue({
+    control,
+    shows: (seconds) =>
+      position !== null && Math.abs(position - seconds) <= SEEK_TOLERANCE_S,
+    sample: player.positionAt,
+    onSettle: (seconds) => {
+      control.run(playerTask(remote, player.slot, { action: "seek", seconds }));
+    },
   });
   const shown = draft ?? position;
   const seekable = duration !== null && !player.restrictedLive;
@@ -138,11 +164,16 @@ export function PlayerControls(props: {
     volume: useControl(),
     loop: useControl(),
   });
-  const [draft, setDraft] = useSettledValue(player.positionAt, (percent) => {
-    group.start(
-      "volume",
-      playerTask(remote, player.slot, { action: "volume", percent }),
-    );
+  const [draft, setDraft] = useSettledValue({
+    control: group.controls.volume,
+    shows: (percent) => player.volume === percent,
+    sample: player.volume,
+    onSettle: (percent) => {
+      group.start(
+        "volume",
+        playerTask(remote, player.slot, { action: "volume", percent }),
+      );
+    },
   });
   const canPause = remote.room?.capabilities.pause === true;
   const idle = player.current === null;

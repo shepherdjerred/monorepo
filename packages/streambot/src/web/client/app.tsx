@@ -48,12 +48,12 @@ function usePageTitle(query: string) {
 }
 
 function SignIn() {
-  const location = useLocation();
+  const { pathname } = useLocation();
+  // Only the path: the query can hold search text, and `returnTo` travels to Discord in the
+  // OAuth `state`.
   const href =
     "/api/auth/discord/start?" +
-    new URLSearchParams({
-      returnTo: location.pathname + location.search,
-    }).toString();
+    new URLSearchParams({ returnTo: pathname }).toString();
   return (
     <main className="welcome">
       <h1 className="page-heading">Streambot</h1>

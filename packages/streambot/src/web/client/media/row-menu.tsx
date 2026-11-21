@@ -20,14 +20,17 @@ export type MenuItem = {
  * The `⋯` menu on a row. It is a plain positioned list rather than a popover: the Popover API and
  * focusgroup are not yet Baseline Widely Available, and this needs neither. Arrow keys, Home and
  * End move between items; Escape closes and returns focus to the trigger; Tab or a click outside
- * closes it.
+ * closes it. While an action chosen from it is in flight (`pending`) the trigger stays focusable
+ * but busy and does not open, so a second action cannot start unseen.
  */
 export function RowMenu(props: {
   label: string;
   items: readonly MenuItem[];
   /** Shows this word on the trigger instead of `⋯`. */
   triggerText?: string;
+  pending?: boolean;
 }) {
+  const pending = props.pending === true;
   const [open, setOpen] = useState(false);
   const enterOnOpen = useRef(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -108,6 +111,8 @@ export function RowMenu(props: {
         }
         aria-label={props.label}
         aria-haspopup="menu"
+        aria-disabled={pending}
+        aria-busy={pending}
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         onPointerDown={() => {
@@ -120,9 +125,10 @@ export function RowMenu(props: {
             return;
           }
           if (
-            event.key === "ArrowDown" ||
-            event.key === "Enter" ||
-            event.key === " "
+            !pending &&
+            (event.key === "ArrowDown" ||
+              event.key === "Enter" ||
+              event.key === " ")
           ) {
             enterOnOpen.current = true;
             if (event.key === "ArrowDown") {
@@ -136,7 +142,7 @@ export function RowMenu(props: {
           }
         }}
         onClick={() => {
-          setOpen((value) => !value);
+          setOpen((value) => !value && !pending);
         }}
       >
         {props.triggerText ?? <span aria-hidden="true">⋯</span>}

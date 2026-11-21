@@ -3,7 +3,7 @@ import { useState } from "react";
 import { SaveQueueDialog } from "@shepherdjerred/streambot/web/client/playlists/save-queue-dialog.tsx";
 import { ConfirmButton } from "./confirm-button.tsx";
 import { ControlStatus } from "@shepherdjerred/streambot/web/client/control-status.tsx";
-import { playerTask } from "./player-task.ts";
+import { playerTask, queueTask, type QueueEdit } from "./player-task.ts";
 import { formatTime } from "./position.ts";
 import { useRemote } from "@shepherdjerred/streambot/web/client/remote.tsx";
 import {
@@ -13,9 +13,13 @@ import {
 
 type QueueItem = WebRoomPlayer["queue"][number];
 
-/** One queued item with its own move and remove controls and its own feedback line. */
+/**
+ * One queued item with its own move and remove controls and its own feedback line. Each edit is
+ * pinned to the list this row was drawn from: its revision and this item's token.
+ */
 function QueueEntry(props: {
   slot: number;
+  revision: string | null;
   item: QueueItem;
   position: number;
   count: number;
@@ -23,10 +27,16 @@ function QueueEntry(props: {
   const remote = useRemote();
   const control = useControl();
   const { position, item } = props;
-  const move = (to: number) => {
+  const edit = (change: QueueEdit) => {
     control.run(
-      playerTask(remote, props.slot, { action: "move", from: position, to }),
+      queueTask(remote, props.slot, change, {
+        revision: props.revision,
+        token: item.token,
+      }),
     );
+  };
+  const move = (to: number) => {
+    edit({ action: "move", from: position, to });
   };
   const detail = [
     item.subtitle,
@@ -75,9 +85,7 @@ function QueueEntry(props: {
           aria-label={`Remove ${item.title} from the queue`}
           disabled={control.pending}
           onClick={() => {
-            control.run(
-              playerTask(remote, props.slot, { action: "remove", position }),
-            );
+            edit({ action: "remove", position });
           }}
         >
           <span aria-hidden="true">✕</span>
@@ -167,6 +175,7 @@ export function QueueList(props: { player: WebRoomPlayer }) {
             <QueueEntry
               key={item.token ?? String(index) + item.title}
               slot={player.slot}
+              revision={player.revision}
               item={item}
               position={index + 1}
               count={count}

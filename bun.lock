@@ -2243,6 +2243,7 @@
         "@vitest/coverage-istanbul": "5.0.3",
         "eslint": "^10.7.0",
         "jiti": "^2.7.0",
+        "jsdom": "^30.0.0",
         "openai": "7.32.0",
         "typescript": "^6.0.3",
         "vite": "^8.0.11",

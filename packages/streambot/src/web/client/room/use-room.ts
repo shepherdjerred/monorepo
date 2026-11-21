@@ -35,12 +35,31 @@ function parseRoom(data: string): WebRoom | null {
   return null;
 }
 
+/**
+ * Shows `room` unless the page already shows a newer snapshot. A refetch can answer after a
+ * stream event that was built later, and must not put the older room back on screen.
+ */
+function showNewer(room: WebRoom) {
+  return (current: RoomView | null): RoomView =>
+    current !== null && current.room.serverTime > room.serverTime
+      ? current
+      : {
+          room,
+          clock: { serverTime: room.serverTime, receivedAt: Date.now() },
+        };
+}
+
 async function refetchRoom(
   params: Readonly<Record<string, string>>,
+  signal: AbortSignal,
   accept: (room: WebRoom) => void,
 ): Promise<void> {
-  const result = await apiRequest(apiUrl("/api/room", params), RoomSchema);
-  if (result.ok) accept(result.data);
+  const result = await apiRequest(apiUrl("/api/room", params), RoomSchema, {
+    signal,
+  });
+  // A response for a stream this effect already closed (another server, a restored page) is
+  // dropped even when it finished before the abort.
+  if (result.ok && !signal.aborted) accept(result.data);
 }
 
 /**
@@ -58,19 +77,20 @@ export function useRoom(guildHint: string | null, enabled: boolean) {
     if (!enabled) return;
     const params = { guildId: guildHint ?? "" };
     const source = new EventSource(apiUrl("/api/room/events", params));
+    const refetch = new AbortController();
+    // Every new stream starts connecting, including after a refusal: a new server or a restored
+    // page may be allowed where the last one was not.
+    dispatch({ type: "reopen" });
     let reconnecting = false;
     const accept = (room: WebRoom) => {
-      setView({
-        room,
-        clock: { serverTime: room.serverTime, receivedAt: Date.now() },
-      });
+      setView(showNewer(room));
     };
     source.addEventListener("open", () => {
       // An automatic reconnect: the new stream's first event is a full snapshot, and the
       // refetch covers anything the page missed while the connection was down.
       if (!reconnecting) return;
       reconnecting = false;
-      void refetchRoom(params, accept);
+      void refetchRoom(params, refetch.signal, accept);
     });
     source.addEventListener("room", (event) => {
       const data: unknown = event.data;
@@ -107,6 +127,7 @@ export function useRoom(guildHint: string | null, enabled: boolean) {
     return () => {
       globalThis.removeEventListener("pagehide", hide);
       globalThis.removeEventListener("pageshow", show);
+      refetch.abort();
       source.close();
     };
   }, [enabled, guildHint, generation]);
@@ -128,12 +149,7 @@ export function useRoom(guildHint: string | null, enabled: boolean) {
         dispatch({ type: "refused", reason });
         return;
       }
-      if (result.ok)
-        setView({
-          room: result.data,
-          clock: { serverTime: result.data.serverTime, receivedAt: Date.now() },
-        });
-      dispatch({ type: "reopen" });
+      if (result.ok) setView(showNewer(result.data));
       setGeneration((value) => value + 1);
     };
     const timer = setTimeout(() => {
@@ -150,7 +166,6 @@ export function useRoom(guildHint: string | null, enabled: boolean) {
     connection,
     /** Try again after a refusal, for example once the viewer was given access. */
     reconnect: () => {
-      dispatch({ type: "reopen" });
       setGeneration((value) => value + 1);
     },
   };

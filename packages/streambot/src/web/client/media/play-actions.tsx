@@ -109,7 +109,13 @@ function menuItems(
   const extraSlot = remote.target?.extraSlot ?? null;
   const watchable =
     item.actions.includes("watch") || menuOnly.includes("watch");
-  if (extraSlot !== null && watchable)
+  // With nothing on Watch, a plain Watch already starts a stream; offering another here would
+  // leave the next plain Watch opening a second one.
+  if (
+    extraSlot !== null &&
+    watchable &&
+    destinationActive(remote.room, "watch")
+  )
     items.push({
       key: "another",
       label: "Start another stream",
@@ -145,6 +151,9 @@ export function PlayActions(props: {
   if (!playable && extras.length === 0 && props.trailing === undefined)
     return null;
   const run = (key: ControlKey, request: PlayRequest) => {
+    // One request per control at a time; the trigger shows it as pending, so nothing is dropped
+    // unseen (the menu is closed and its trigger busy while a menu action is in flight).
+    if (controls[key].pending) return;
     setLast(key);
     if (remote.target === null) {
       controls[key].explain(NO_VOICE);
@@ -190,8 +199,7 @@ export function PlayActions(props: {
                     : undefined
               }
               onClick={() => {
-                if (!control.pending)
-                  run(transport, { transport, placement: "queue" });
+                run(transport, { transport, placement: "queue" });
               }}
             >
               <span className="glyph" aria-hidden="true">
@@ -210,6 +218,7 @@ export function PlayActions(props: {
               item.title
             }
             items={items}
+            pending={controls.menu.pending}
           />
         )}
       </div>

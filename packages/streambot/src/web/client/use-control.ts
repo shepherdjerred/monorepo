@@ -31,19 +31,27 @@ function stateFor(outcome: Outcome): ControlState {
 /** How long a confirmation stays beside its control. Errors stay until the next attempt. */
 const CONFIRMATION_MS = 8000;
 
+export type Task = (signal: AbortSignal) => Promise<Outcome>;
+
 /**
  * Local feedback for one control: its own pending flag, its own confirmation and its own error.
  * There is no global busy state, so one slow request never blocks another control. `retry`
- * reruns the last task, which reads the latest room when it runs.
+ * reruns the last task as it was built (a task decides what it reads from the latest room).
+ *
+ * A started task is never cancelled: the server still applies a command whose request the page
+ * abandons, so cancelling would only hide a result that happened. Leaving the page or starting
+ * another run on the same control drops the earlier run's result instead. The signal a task gets
+ * is therefore never aborted.
  */
 export function useControl() {
   const [state, setState] = useState<ControlState>({ status: "idle" });
-  const last = useRef<((signal: AbortSignal) => Promise<Outcome>) | null>(null);
-  const controller = useRef<AbortController | null>(null);
+  const last = useRef<Task | null>(null);
+  /** The run whose result this control may still show; unmounting or a newer run moves it on. */
+  const latestRun = useRef(0);
 
   useEffect(
     () => () => {
-      controller.current?.abort();
+      latestRun.current += 1;
     },
     [],
   );
@@ -57,15 +65,14 @@ export function useControl() {
     };
   }, [state]);
 
-  const run = (task: (signal: AbortSignal) => Promise<Outcome>) => {
+  const run = (task: Task) => {
     last.current = task;
-    controller.current?.abort();
-    const current = new AbortController();
-    controller.current = current;
+    latestRun.current += 1;
+    const id = latestRun.current;
     setState({ status: "pending" });
     const settle = async () => {
-      const outcome = await task(current.signal);
-      if (current.signal.aborted) return;
+      const outcome = await task(new AbortController().signal);
+      if (id !== latestRun.current) return;
       setState(stateFor(outcome));
     };
     void settle();
@@ -101,7 +108,7 @@ export function useControlGroup<Key extends string>(
   return {
     controls,
     status: last === null ? null : controls[last],
-    start: (key: Key, task: (signal: AbortSignal) => Promise<Outcome>) => {
+    start: (key: Key, task: Task) => {
       setLast(key);
       controls[key].run(task);
     },
