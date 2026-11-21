@@ -23,6 +23,8 @@ import {
   fixtureId,
   pick,
 } from "#testing/fixture-api/support.ts";
+import { storedArtwork } from "./artwork.ts";
+import { TITLES, episodeItem, titleItem } from "./titles.ts";
 
 type Session = z.input<typeof PlaybackSessionViewSchema>;
 type History = z.input<typeof PlaybackHistorySchema>;
@@ -69,6 +71,36 @@ const WATCHABLE: readonly Watchable[] = [
   ["Review", "The Bear", "episode", 21],
   ["Parasite", null, "movie", 133],
 ];
+
+/**
+ * The library title a play links to: the movie itself, or an episode of the
+ * series. Null when the household holds no title by that name.
+ */
+function playedMedia(
+  name: string,
+  seriesTitle: string | null,
+  sequence: number,
+): Session["media"] {
+  const title = TITLES.find(
+    (candidate) => candidate.title === (seriesTitle ?? name),
+  );
+  if (title === undefined) {
+    return null;
+  }
+  const [firstSeason] = title.seasons;
+  const item =
+    firstSeason === undefined
+      ? titleItem(title)
+      : episodeItem(title, 1, (sequence % firstSeason) + 1);
+  return {
+    id: item.id,
+    rootMediaId: title.id,
+    kind: item.kind,
+    title: item.title,
+    artwork: storedArtwork(title),
+  };
+}
+
 const PLATFORMS = [
   "Apple TV",
   "LG webOS",
@@ -124,6 +156,11 @@ function historyRow(index: number, persona: Persona): Session {
     state: "stopped",
     // Older rows were imported from the previous history tool.
     source: index > 40 ? "tautulli" : "plex",
+    // Some imported plays predate the Plex item the title has today.
+    media:
+      index > 40 && index % 3 === 0
+        ? null
+        : playedMedia(title, seriesTitle, index),
   };
 }
 
@@ -237,6 +274,7 @@ function liveSession(
     progressMs: watchedMs + MINUTE,
     completed: false,
     source: "plex",
+    media: playedMedia(view.title, view.seriesTitle, sequence),
   };
 }
 

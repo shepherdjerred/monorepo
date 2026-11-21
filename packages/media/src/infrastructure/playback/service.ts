@@ -7,7 +7,7 @@ import {
   historicalManifest,
   validateFinalSnapshot,
 } from "./imports.ts";
-import type { Prisma, PlaybackSession } from "#generated/prisma/client.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
@@ -21,6 +21,11 @@ import {
   type PlaybackHandoffEvidence,
 } from "#shared/household/playback.ts";
 import { readPlaybackLegacyWriterObservation } from "./handoff-status.ts";
+import {
+  playbackSessionView,
+  readPlaybackMedia,
+  type PlaybackServer,
+} from "./session-view.ts";
 
 function scope(
   actor: MediaActor,
@@ -81,37 +86,19 @@ function rank(
   return { label, plays: row._count, watchedMs: row._sum.watchedMs ?? 0 };
 }
 
-function view(row: PlaybackSession, names: ReadonlyMap<string, string>) {
-  return PlaybackSessionViewSchema.parse({
-    id: row.id,
-    title: row.title,
-    seriesTitle: row.seriesTitle,
-    mediaType: row.mediaType,
-    userId: row.userId,
-    userName: row.userId === null ? null : (names.get(row.userId) ?? null),
-    platform: row.platform,
-    decision: row.decision,
-    startedAt: row.startedAt.toISOString(),
-    stoppedAt: row.stoppedAt?.toISOString() ?? null,
-    lastSeenAt: row.lastSeenAt.toISOString(),
-    durationMs: row.durationMs,
-    watchedMs: row.watchedMs,
-    progressMs: row.maxProgressMs,
-    completed: row.reportingCompleted,
-    state: row.state,
-    source: row.source,
-  });
-}
-
 export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
+  private readonly serverMachineId: string;
+
   constructor(
     private readonly database: Database,
-    private readonly serverMachineId: string,
+    private readonly server: PlaybackServer,
     private readonly clock = () => new Date(),
     private readonly handoffReady?: (
       actor: MediaActor,
     ) => Promise<PlaybackHandoffEvidence>,
-  ) {}
+  ) {
+    this.serverMachineId = server.serverMachineId;
+  }
 
   async people(actor: MediaActor) {
     actor = await this.currentActor(actor);
@@ -183,9 +170,16 @@ export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
         ? {}
         : { cursor: { id: query.cursor }, skip: 1 }),
     });
-    const names = await this.names(rows);
+    const page = rows.slice(0, query.limit);
+    const names = await this.names(page);
+    const media = await readPlaybackMedia(
+      this.database,
+      actor,
+      this.server,
+      page,
+    );
     return {
-      items: rows.slice(0, query.limit).map((row) => view(row, names)),
+      items: page.map((row) => playbackSessionView(row, names, media)),
       nextCursor:
         rows.length > query.limit
           ? (rows.at(query.limit - 1)?.id ?? null)
@@ -216,10 +210,16 @@ export class PrismaPlaybackHistory implements PlaybackHistoryApplication {
     // Scope validation also runs on a stale/empty observation.
     scope(actor, { limit: 100 }, false);
     const names = await this.names(rows);
+    const media = await readPlaybackMedia(
+      this.database,
+      actor,
+      this.server,
+      rows,
+    );
     return {
       observedAt: collector?.observedAt?.toISOString() ?? null,
       stale,
-      items: rows.map((row) => view(row, names)),
+      items: rows.map((row) => playbackSessionView(row, names, media)),
     };
   }
 

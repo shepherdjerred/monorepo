@@ -31,7 +31,7 @@ async function fixture() {
   const quiescedAt = new Date(time.now.getTime() - 10_000);
   const service = new PrismaPlaybackHistory(
     db,
-    server,
+    { serverMachineId: server },
     () => time.now,
     () =>
       Promise.resolve({

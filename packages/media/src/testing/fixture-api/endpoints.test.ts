@@ -15,6 +15,7 @@ import {
 } from "#shared/contract.ts";
 import { RequestInterestListSchema } from "#shared/household/interests.ts";
 import { LibraryPageSchema } from "#shared/household/library.ts";
+import { PlaybackHistorySchema } from "#shared/household/playback.ts";
 import type { FixtureEndpoint } from "./endpoint.ts";
 import { FIXTURE_ENDPOINTS } from "./endpoints.ts";
 import { TITLES } from "./fixtures/titles.ts";
@@ -285,6 +286,30 @@ describe("fixture volume", () => {
       expect(removals.every((row) => row.rootTitle === row.media.title)).toBe(
         true,
       );
+    }
+  });
+
+  it("links plays to title pages it serves, and leaves some plays unlinked", async () => {
+    const outcome = routeFixture({
+      method: "GET",
+      url: new URL("http://fixture.invalid/api/v1/playback/history?limit=100"),
+      persona: "member",
+    });
+    const { items } = PlaybackHistorySchema.parse(
+      await overTheWire(outcome.body),
+    );
+    const linked = items.flatMap((item) => item.media ?? []);
+    expect(linked.length).toBeLessThan(items.length);
+    expect(new Set(linked.map((media) => media.kind))).toEqual(
+      new Set(["movie", "episode"]),
+    );
+    for (const id of linked.flatMap((media) => [media.id, media.rootMediaId])) {
+      const page = routeFixture({
+        method: "GET",
+        url: new URL(`http://fixture.invalid/api/v1/media/${id}`),
+        persona: "member",
+      });
+      expect(page.status, id).toBe(200);
     }
   });
 

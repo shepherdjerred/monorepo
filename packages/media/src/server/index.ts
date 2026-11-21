@@ -215,7 +215,13 @@ const app = createMediaApp({
   },
   playback: new PrismaPlaybackHistory(
     database,
-    bootstrap.PLEX_SERVER_MACHINE_ID,
+    {
+      serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+      sections: {
+        movie: permittedMovieSectionId.value,
+        series: permittedTvSectionId.value,
+      },
+    },
     () => new Date(),
     playbackHandoffReady(database, (actor) =>
       plexAdministration.libraryClient(actor),

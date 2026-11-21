@@ -105,7 +105,7 @@ async function prepareExpiredPlayback(
       : [];
   const history = new PrismaPlaybackHistory(
     f.db,
-    mapping.serverMachineId,
+    { serverMachineId: mapping.serverMachineId },
     () => clock.now,
     () =>
       Promise.resolve({

@@ -45,7 +45,7 @@ export async function incompleteNativeRewatch(
   ];
   const history = new PrismaPlaybackHistory(
     f.db,
-    mapping.serverMachineId,
+    { serverMachineId: mapping.serverMachineId },
     () => clock.now,
     () =>
       Promise.resolve({
