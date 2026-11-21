@@ -255,7 +255,7 @@ function Statistics({
   return (
     <section className="panel">
       <h2>Statistics</h2>
-      <dl className="playback-summary">
+      <dl className="playback-totals">
         <div>
           <dt>Plays</dt>
           <dd>{data.plays.toLocaleString()}</dd>

@@ -13,13 +13,7 @@ import type { MediaUser } from "#shared/contract.ts";
 import { MovieRequestForm } from "./movie-editions/request.tsx";
 import { SeriesRequestOptions } from "#client/series/request-options.tsx";
 import { ApiError, queryClient, readApi, writeApi } from "./api.ts";
-import {
-  EmptyState,
-  ErrorNotice,
-  Loading,
-  PageTitle,
-  Status,
-} from "./components.tsx";
+import { EmptyState, ErrorNotice, Loading, PageTitle } from "./components.tsx";
 
 const AdoptResultSchema = z.object({ mediaId: z.string() });
 
@@ -222,7 +216,9 @@ export function CatalogPage({ user }: { user: MediaUser }) {
           {item.seasons.map((season) => (
             <div className="list-row" key={season.externalId}>
               <span>{season.title}</span>
-              <Status value={`${String(season.episodeCount)} episodes`} />
+              <span className="status">
+                {String(season.episodeCount)} episodes
+              </span>
             </div>
           ))}
         </section>

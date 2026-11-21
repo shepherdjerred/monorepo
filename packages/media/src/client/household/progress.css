@@ -1,13 +1,15 @@
-.interest-progress {
-  margin-block: 1rem;
-}
-.interest-progress-counts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
-  gap: 1rem;
-  margin-block: 1rem;
-}
-.interest-progress-counts dd {
-  margin: 0.25rem 0;
-  font-size: 1.5rem;
+@layer pages {
+  .interest-progress {
+    margin-block: var(--space-4);
+  }
+  .interest-progress-counts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    gap: var(--space-4);
+    margin-block: var(--space-4);
+  }
+  .interest-progress-counts dd {
+    margin: var(--space-1) 0;
+    font-size: var(--text-xl);
+  }
 }

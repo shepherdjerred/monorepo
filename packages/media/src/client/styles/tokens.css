@@ -1,0 +1,157 @@
+/*
+ * Media design tokens.
+ *
+ * Every color, type size, radius, and shadow in the client comes from here;
+ * no other stylesheet holds a hex color. Raw palette values are defined once
+ * and the semantic tokens pick between them with light-dark().
+ *
+ * light-dark() is Baseline Newly available, so it never reaches a browser:
+ * Vite's Lightning CSS pass rewrites it for the Baseline Widely available
+ * target into custom-property toggles that follow `color-scheme` (see
+ * `vite.config.ts`; the browser suite fails if a light-dark() survives the
+ * build). Because the toggles are generated from `color-scheme`
+ * declarations, a theme is pinned only by the two `data-theme` rules below,
+ * never by setting `color-scheme` from script.
+ *
+ * Text and status pairs meet WCAG 4.5:1 and control boundaries 3:1 in both
+ * themes. The canvas values are repeated in the `theme-color` metas in
+ * `index.html`.
+ */
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+
+    /* Raw palette. Spruce is the green-black room, Paper its daylight
+       counterpart, Lamp the amber accent. */
+    --spruce-950: #101613;
+    --spruce-900: #141918;
+    --spruce-850: #1b231e;
+    --spruce-800: #232d27;
+    --spruce-700: #303934;
+    --spruce-500: #5b6a5f;
+    --paper-50: #fbfcf8;
+    --paper-100: #f3f5ee;
+    --paper-200: #e8ece1;
+    --paper-300: #d5dccf;
+    --paper-500: #7c897f;
+    --ink: #17211c;
+    --mist: #eef0e9;
+    --lamp: #e9b878;
+    --lamp-bright: #f2ca96;
+    --lamp-soft: #f0c48d;
+    --lamp-deep: #a06c1c;
+    --ochre: #7a5110;
+
+    /* Surfaces */
+    --canvas: light-dark(var(--paper-100), var(--spruce-900));
+    --surface: light-dark(var(--paper-50), var(--spruce-850));
+    --surface-raised: light-dark(#ffffff, var(--spruce-800));
+    --surface-sunken: light-dark(var(--paper-200), var(--spruce-950));
+    --surface-selected: light-dark(#e3ead9, #29352b);
+    /* Form fields are wells in the dark room and white in daylight. */
+    --field: light-dark(#ffffff, var(--spruce-950));
+    --scrim: light-dark(#17211c66, #000000a6);
+
+    /* Text */
+    --text: light-dark(var(--ink), var(--mist));
+    --text-muted: light-dark(#55625a, #a2ada7);
+    --text-accent: light-dark(var(--ochre), var(--lamp-soft));
+    --text-on-accent: #242b22;
+
+    /* Lines. `--border` separates; `--border-strong` is the 3:1 boundary of
+       a control. */
+    --border: light-dark(var(--paper-300), var(--spruce-700));
+    --border-strong: light-dark(var(--paper-500), var(--spruce-500));
+    --focus: light-dark(var(--ochre), var(--lamp-soft));
+
+    /* Accent. The fill is the same amber in both themes. On paper it cannot
+       reach 3:1 alone, so fills take `--accent-border` and marks with no
+       edge (meter fills, checkboxes) use `--accent-strong`. */
+    --accent: var(--lamp);
+    --accent-hover: var(--lamp-bright);
+    --accent-strong: light-dark(var(--lamp-deep), var(--lamp));
+    --accent-border: var(--accent-strong);
+
+    /* Status pairs: text on its soft fill. */
+    --ok: light-dark(#2c5722, #bcdda5);
+    --ok-soft: light-dark(#dcebd2, #26342a);
+    --progress: light-dark(#1c5360, #a8d4d7);
+    --progress-soft: light-dark(#d6eaec, #1f3336);
+    --warn: light-dark(#704a0c, #f0c48d);
+    --warn-soft: light-dark(#f5e6c8, #3a301f);
+    --danger: light-dark(#8a3216, #efc2ab);
+    --danger-soft: light-dark(#f6ddd2, #3d2a22);
+    --neutral: light-dark(#4a564e, #c3ccc5);
+    --neutral-soft: light-dark(#e4e8de, #2a322d);
+
+    /* Art. The welcome card, login artwork, and catalog letter tiles are
+       pictures, not chrome: a spruce set piece with tan and moss props that
+       reads the same on paper as in the dark room. */
+    --art-pine-900: #19291f;
+    --art-pine-800: #233126;
+    --art-pine-700: #28382b;
+    --art-pine-600: #2f3e31;
+    --art-pine-edge: #3b4b3b;
+    --art-moss-500: #596e48;
+    --art-moss-400: #61784f;
+    --art-sage-400: #7d916b;
+    --art-sage-300: #9baa7c;
+    --art-clay-500: #7a6450;
+    --art-clay-300: #b99469;
+    --art-tan: #d3bb8f;
+    --art-tan-light: #e7d4b4;
+    --art-cream: #e2dac8;
+    --art-on-pine: var(--mist);
+    --art-on-pine-muted: #b6c4b3;
+    --art-shadow: #10180d55;
+
+    /* Type. Nothing below 12px. */
+    --font-body: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
+    --font-display: "Manrope Variable", "Manrope", system-ui, sans-serif;
+    --font-serif: Georgia, serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --text-xs: 0.75rem;
+    --text-sm: 0.8125rem;
+    --text-md: 0.9375rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.375rem;
+    --text-2xl: 1.75rem;
+    --text-display: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+    --leading-tight: 1.15;
+    --leading-normal: 1.5;
+    /* Tracking for the small uppercase labels. */
+    --tracking-label: 0.12em;
+
+    /* Space, radius, elevation, motion */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+    --space-8: 64px;
+    --radius-control: 8px;
+    --radius-card: 12px;
+    --radius-poster: 8px;
+    --radius-pill: 999px;
+    --shadow-raised:
+      0 1px 2px light-dark(#17211c14, #00000040),
+      0 8px 24px light-dark(#17211c1a, #00000059);
+    --ease-out: cubic-bezier(0.2, 0, 0, 1);
+    --dur-1: 120ms;
+    --dur-2: 180ms;
+    --dur-3: 260ms;
+
+    --sidebar-width: 232px;
+    --content-width: 1440px;
+  }
+
+  /* The account menu pins a theme by setting `data-theme` on the root. */
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
+}

@@ -14,6 +14,7 @@ import {
   Notice,
   PageTitle,
   Status,
+  WireStatus,
 } from "./components.tsx";
 import { MediaActionButton } from "./media-actions.tsx";
 import { ReleaseCandidates } from "./releases.tsx";
@@ -286,7 +287,7 @@ function MediaFiles({ media }: { media: MediaDetail }) {
           <div className="asset-card" key={asset.id}>
             <div className="section-heading">
               <h3>{current ? "Current version" : "Previous version"}</h3>
-              <Status value={asset.state} />
+              <WireStatus value={asset.state} />
             </div>
             <p className="muted">
               {humanize(edition)} · Added {dateLabel(asset.createdAt)}
@@ -338,7 +339,7 @@ function MediaFiles({ media }: { media: MediaDetail }) {
                           : "Quality unverified for this video"}
                       </small>
                     </span>
-                    <Status value={subtitle.state} />
+                    <WireStatus value={subtitle.state} />
                   </li>
                 ))}
               </ul>
@@ -398,7 +399,7 @@ function MediaControls({
       ))}
       {media.retention.map((decision) => (
         <div className="retention-summary" key={decision.id}>
-          <Status value={decision.state} />
+          <WireStatus value={decision.state} />
           <p>
             {decision.state === "quarantined"
               ? `Recoverable until ${dateLabel(decision.purgeAfter)}`

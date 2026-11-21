@@ -1,5 +1,5 @@
 import type { MovieTargetContextV4 } from "#shared/movie-editions/lifecycle/public-v4.ts";
-import { humanize, Status } from "#client/components.tsx";
+import { humanize, Status, WireStatus } from "#client/components.tsx";
 
 export function MovieEditionFilesV4({
   context,
@@ -17,7 +17,7 @@ export function MovieEditionFilesV4({
     <div className="asset-card">
       <div className="section-heading">
         <h4>Current edition file</h4>
-        <Status value={asset.state} />
+        <WireStatus value={asset.state} />
       </div>
       <p className="helper">
         {[

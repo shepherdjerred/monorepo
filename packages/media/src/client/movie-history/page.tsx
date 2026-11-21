@@ -7,7 +7,7 @@ import {
   Loading,
   ErrorNotice,
   dateLabel,
-  Status,
+  WireStatus,
 } from "#client/components.tsx";
 import {
   movieHistoryReviewViewV3,
@@ -75,7 +75,7 @@ function MovieHistoryReviewPageV3({
         </Link>
       </p>
       <section className="panel">
-        <Status value={review.state} />
+        <WireStatus value={review.state} />
         <p>Expires {dateLabel(review.expiresAt)}.</p>
         <p>
           A changed request, choice or Keep requires the owner to capture a

@@ -22,6 +22,7 @@ import {
   Notice,
   PageTitle,
   Status,
+  WireStatus,
 } from "./components.tsx";
 import {
   ListedMediaAction,
@@ -189,7 +190,7 @@ export function RemovalsPage({ user }: { user: MediaUser }) {
                 )}
               </p>
             </div>
-            <Status value={removal.state} />
+            <WireStatus value={removal.state} />
             <ListedMediaAction
               user={user}
               mediaId={removal.mediaId}
@@ -268,7 +269,7 @@ export function NotificationsPage({ user }: { user: MediaUser }) {
               )}
               <DeliveryActions user={user} delivery={notification} />
             </div>
-            <Status
+            <WireStatus
               value={
                 notification.event.healthState === "superseded"
                   ? "superseded"
