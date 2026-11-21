@@ -243,8 +243,10 @@ produces test and coverage evidence in one execution; the coverage thresholds
 remain unchanged.
 
 - **Browser E2E** covers the shipped Playwright consumers: `sjer.red`, the docs
-  wiki, the alert dashboard, and Scout's public/docs/app design
-  audit. The browser matrix comes from the pinned `ci-playwright` image, so the
+  wiki, the alert dashboard, Delivery, Tracker, Media, and Scout's
+  public/docs/app design audit. The
+  [target list](https://github.com/shepherdjerred/monorepo/blob/main/ci/scripts/selection/playwright-targets.ts)
+  is the authority. The browser matrix comes from the pinned `ci-playwright` image, so the
   lane is about published sites rather than about Playwright as a tool. The
   lane installs the pinned Node runtime alongside Bun so Scout's static
   Storybook preview serves the full catalog without Bun's HTTP stream failure.

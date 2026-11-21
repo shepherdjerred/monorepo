@@ -492,6 +492,50 @@ Media inspection tests also require `ffmpeg` and `ffprobe` on `PATH`; the CI and
 Temporal images install them. The repository's mise configuration supplies the
 upstream `7zz` command used for bounded subtitle archive extraction.
 
+### Fixture mode and browser tests
+
+The web client runs without Plex, PostgreSQL, or Temporal against a read-only
+fixture API in `src/testing/fixture-api`. It serves about sixty titles covering
+every availability, keeping policy, and request state, as a library owner or as
+a household member.
+
+| Command                                              | What it does                                                                                 |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `bun run dev:fixture`                                | Vite dev server over the fixture API, on a free port it prints. Runs in the foreground.      |
+| `bun run dev:fixture -- --port 7400`                 | The same on a chosen port.                                                                   |
+| `bun run dev:fixture -- --persona member`            | Signs in as the member. `MEDIA_FIXTURE_PERSONA=member` does the same.                        |
+| `bun run test:e2e`                                   | Builds the client and runs the Playwright suite in `e2e/browser` against the fixture API.    |
+| `toolkit screenshot media /library`                  | Captures one route in fixture mode. Add `--env MEDIA_FIXTURE_PERSONA=member` for the member. |
+| `bunx turbo run test --filter=@shepherdjerred/media` | Includes the fixture contract test, which needs no database.                                 |
+
+A running fixture server switches persona without a restart: open
+`/api/fixture/persona/member` or `/api/fixture/persona/owner` and the browser is
+signed in as that persona until it switches back.
+
+The fixture API answers reads only. A write returns a typed `501`, an unknown
+path returns a typed `404` and is logged, and an owner-only route returns `403`
+to the member, so a page that depends on something unstubbed shows its error
+state instead of invented data.
+
+`src/testing/fixture-api/endpoints.ts` is the single table of routes. Each entry
+names the path, the schema the client parses that response with, the fixture
+that answers it, and sample requests. The router serves only that table and
+`endpoints.test.ts` parses every sample with its schema, so a contract change
+fails the unit test rather than rendering an error notice in the browser. Add a
+fixture by adding an entry; a new client read with no entry fails the browser
+suite with a `404`.
+
+The browser suite opens every member route and the main owner routes at 1440 and
+390 pixels wide. It fails on an error notice, a console or uncaught error, a
+failed API response, or a WCAG 2.2 AA violation that
+`e2e/browser/axe-baseline.ts` does not list. That baseline records the
+violations the client ships with today, by rule and route, and is compared
+exactly: fix a violation and its entry must be deleted. It may only shrink.
+Routes the fixture API cannot answer yet are listed in `e2e/browser/routes.ts`.
+
+The suite runs in Woodpecker's browser lane with the other Playwright targets,
+not in the `ci` or `extended` Vitest tiers.
+
 ### Native subtitle tools
 
 Native caption and Workflow checks require real `media-subtitle-analysis` and
@@ -1624,7 +1668,8 @@ where the new column already exists.
 `./contract`, `./automation`, `./automation/network`, `./automation/files`,
 `./domain/*`, `./integrations/*`, and `./filesystem/*` are the public package
 subpaths. Domain policies do no I/O. Browser code must not import
-privileged application or filesystem modules.
+privileged application or filesystem modules, or the development fixture API
+in `src/testing/fixture-api`; `check-architecture` enforces both.
 
 ## Effect and ownership contracts
 

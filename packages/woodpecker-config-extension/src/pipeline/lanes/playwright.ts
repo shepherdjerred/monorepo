@@ -18,7 +18,7 @@ import {
  * The step runs a selector of its own (`run-playwright.ts`) that decides which
  * suites to execute from the changed set. That is deliberate and stays: the
  * pipeline-level guard decides whether the LANE runs at all, and the in-step
- * selector decides which of the seven Playwright projects inside it do.
+ * selector decides which of the eight Playwright projects inside it do.
  */
 export function playwrightSteps(
   images: CiImages,
@@ -94,6 +94,7 @@ export function playwrightSteps(
           "packages/sjer.red/**",
           "packages/docs/wiki/**",
           "packages/alert-dashboard/**",
+          "packages/media/**",
           "packages/tracker/**",
           "packages/scout-for-lol/**",
         ],

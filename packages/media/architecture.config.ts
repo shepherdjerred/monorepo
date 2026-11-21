@@ -36,7 +36,7 @@ export default defineArchitecture({
     {
       name: "browser-boundary",
       comment:
-        "Browser code consumes public contracts, never privileged modules.",
+        "Browser code consumes public contracts, never privileged modules or the development fixture API.",
       from: "client",
       to: [
         "automation",
@@ -46,6 +46,7 @@ export default defineArchitecture({
         "integrations",
         "filesystem",
         "server",
+        "testing/fixture-api",
       ],
     },
   ],
