@@ -277,26 +277,22 @@ public sealed partial class StandaloneProductionScenarios
             text => text.Contains("disabled", StringComparison.OrdinalIgnoreCase),
             cancellation
         );
-        OwnedKeyboardFocus.WithReservedChord(
-            0x0003,
-            'M',
-            () =>
-            {
-                session.SetValue(AutomationIds.Hotkey, "Ctrl+Alt+M");
-                session.Invoke(AutomationIds.ApplyHotkey);
-                _ = session.WaitForText(
-                    AutomationIds.HotkeyStatus,
-                    text => text.Contains("already used", StringComparison.OrdinalIgnoreCase),
-                    cancellation
-                );
-                session.Invoke(AutomationIds.ClearHotkey);
-                _ = session.WaitForText(
-                    AutomationIds.HotkeyStatus,
-                    text => text.Contains("disabled", StringComparison.OrdinalIgnoreCase),
-                    cancellation
-                );
-            }
-        );
+        OwnedKeyboardFocus.WithReservedChord(0x0003, 'M', () =>
+        {
+            session.SetValue(AutomationIds.Hotkey, "Ctrl+Alt+M");
+            session.Invoke(AutomationIds.ApplyHotkey);
+            _ = session.WaitForText(
+                AutomationIds.HotkeyStatus,
+                text => text.Contains("already used", StringComparison.OrdinalIgnoreCase),
+                cancellation
+            );
+            session.Invoke(AutomationIds.ClearHotkey);
+            _ = session.WaitForText(
+                AutomationIds.HotkeyStatus,
+                text => text.Contains("disabled", StringComparison.OrdinalIgnoreCase),
+                cancellation
+            );
+        });
         passed.Add("hotkey.rebind-collision");
         passed.Add("hotkey.invoke-cancel");
     }

@@ -52,8 +52,7 @@ namespace TaskNotes.Windows.App
                     )
                 );
             }
-            _storeDirectory =
-                _acceptance?.Descriptor.EngineDirectory
+            _storeDirectory = _acceptance?.Descriptor.EngineDirectory
                 ?? (PackageIdentity.IsPackaged ? Path.Combine(localFolder, "Facet") : localFolder);
 #else
             _storeDirectory = PackageIdentity.IsPackaged
@@ -190,27 +189,24 @@ namespace TaskNotes.Windows.App
                 if (_closing)
                     return;
                 _closing = true;
-                _uiOperations.Run(
-                    "release-sync-writer",
-                    async () =>
+                _uiOperations.Run("release-sync-writer", async () =>
+                {
+                    if (!await _window.ConfirmCloseAsync())
                     {
-                        if (!await _window.ConfirmCloseAsync())
-                        {
-                            _closing = false;
-                            return;
-                        }
-                        _window.DisableInteractions();
-                        await CloseWriterAsync();
-#if TASKNOTES_E2E
-                        if (_acceptance is null)
-#endif
-                            await FacetBackgroundRegistration.EnableAsync(
-                                _host.Services.GetRequiredService<AppSettingsService>()
-                            );
-                        _writerClosed = true;
-                        _window.Close();
+                        _closing = false;
+                        return;
                     }
-                );
+                    _window.DisableInteractions();
+                    await CloseWriterAsync();
+#if TASKNOTES_E2E
+                    if (_acceptance is null)
+#endif
+                        await FacetBackgroundRegistration.EnableAsync(
+                            _host.Services.GetRequiredService<AppSettingsService>()
+                        );
+                    _writerClosed = true;
+                    _window.Close();
+                });
             };
             _window.Activate();
             if (activation is not null)
@@ -258,9 +254,8 @@ namespace TaskNotes.Windows.App
             _ = sender;
             if (_window is not null)
             {
-                _uiOperations.Run(
-                    "redirected-activation",
-                    () => EnqueueAsync(_window.DispatcherQueue, () => RouteActivationAsync(args))
+                _uiOperations.Run("redirected-activation", () =>
+                    EnqueueAsync(_window.DispatcherQueue, () => RouteActivationAsync(args))
                 );
             }
         }

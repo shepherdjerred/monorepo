@@ -39,8 +39,7 @@ public sealed class PresentationTokens
 
     private static string Read(string name)
     {
-        using var stream =
-            typeof(PresentationTokens).Assembly.GetManifestResourceStream(name)
+        using var stream = typeof(PresentationTokens).Assembly.GetManifestResourceStream(name)
             ?? throw new InvalidDataException("The shared presentation contract is missing.");
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();

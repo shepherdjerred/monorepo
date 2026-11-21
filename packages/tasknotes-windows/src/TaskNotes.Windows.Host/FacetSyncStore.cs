@@ -471,9 +471,9 @@ public sealed partial class FacetSyncStore
     )
     {
         string priorityWire = QuickCaptureParser.ToPriorityWire(task.Priority);
-        WorkflowChoice priorityChoice =
-            DefaultPriorityChoices.FirstOrDefault(c => c.Value == priorityWire)
-            ?? DefaultPriorityChoices[3];
+        WorkflowChoice priorityChoice = DefaultPriorityChoices.FirstOrDefault(c =>
+            c.Value == priorityWire
+        ) ?? DefaultPriorityChoices[3];
         string statusWire = task.Completed ? "done" : "open";
         string statusLabel = task.Completed ? "Completed" : "Open";
 

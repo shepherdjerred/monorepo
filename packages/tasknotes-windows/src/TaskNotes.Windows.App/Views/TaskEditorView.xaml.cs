@@ -52,8 +52,8 @@ namespace TaskNotes.Windows.App.Views
             _operations = operations ?? throw new ArgumentNullException(nameof(operations));
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _confirm = confirm ?? throw new ArgumentNullException(nameof(confirm));
-            _showValidation =
-                showValidation ?? throw new ArgumentNullException(nameof(showValidation));
+            _showValidation = showValidation
+                ?? throw new ArgumentNullException(nameof(showValidation));
         }
 
         internal void Load(TaskItem task)
@@ -63,9 +63,8 @@ namespace TaskNotes.Windows.App.Views
             EditorFields.IsEnabled = true;
             EmptyInspector.Visibility = Visibility.Collapsed;
             SynchronizeDates();
-            Run(
-                "load-dependency-relationships",
-                () => RequireViewModel().LoadDependencyMetadataAsync()
+            Run("load-dependency-relationships", () =>
+                RequireViewModel().LoadDependencyMetadataAsync()
             );
         }
 
@@ -133,11 +132,9 @@ namespace TaskNotes.Windows.App.Views
             if (choice is null)
                 return;
             if (model.ApplyDependencyRelationChoice(choice, row, relationship))
-                CommitField(
-                    "blockedBy",
-                    () =>
-                        ReferenceEquals(ViewModel, model)
-                        && model.OwnsDependencyRelationChoice(choice, row)
+                CommitField("blockedBy", () =>
+                    ReferenceEquals(ViewModel, model)
+                    && model.OwnsDependencyRelationChoice(choice, row)
                 );
         }
 
@@ -152,9 +149,8 @@ namespace TaskNotes.Windows.App.Views
         {
             _ = sender;
             _ = e;
-            Run(
-                "reload-dependency-relationships",
-                () => RequireViewModel().LoadDependencyMetadataAsync()
+            Run("reload-dependency-relationships", () =>
+                RequireViewModel().LoadDependencyMetadataAsync()
             );
         }
 
@@ -212,8 +208,8 @@ namespace TaskNotes.Windows.App.Views
             if (!viewModel.IsLoaded)
                 return true;
             bool saved = false;
-            var execute =
-                _execute ?? throw new InvalidOperationException("Initialize the editor executor.");
+            var execute = _execute
+                ?? throw new InvalidOperationException("Initialize the editor executor.");
             bool executed = await execute(async () => saved = await viewModel.SaveAsync());
             return executed
                 && saved
@@ -251,26 +247,23 @@ namespace TaskNotes.Windows.App.Views
             var viewModel = RequireViewModel();
             if (!viewModel.IsLoaded || _synchronizingControls)
                 return;
-            Run(
-                "commit-editor-field",
-                async () =>
-                {
-                    if (owns is not null && !owns())
-                        return;
-                    if (!await viewModel.CommitFieldAsync(field))
-                        RequireValidation()(
-                            viewModel.CommitError
-                                ?? viewModel.ValidationError
-                                ?? "This draft needs attention before it can be saved."
-                        );
-                    if (
-                        field is "recurrence" or "scheduled" or "dateCreated"
-                        && ReferenceEquals(ViewModel, viewModel)
-                        && viewModel.IsLoaded
-                    )
-                        SynchronizeRecurrence();
-                }
-            );
+            Run("commit-editor-field", async () =>
+            {
+                if (owns is not null && !owns())
+                    return;
+                if (!await viewModel.CommitFieldAsync(field))
+                    RequireValidation()(
+                        viewModel.CommitError
+                            ?? viewModel.ValidationError
+                            ?? "This draft needs attention before it can be saved."
+                    );
+                if (
+                    field is "recurrence" or "scheduled" or "dateCreated"
+                    && ReferenceEquals(ViewModel, viewModel)
+                    && viewModel.IsLoaded
+                )
+                    SynchronizeRecurrence();
+            });
         }
 
         private void BodyDone_Click(object sender, RoutedEventArgs args)
@@ -315,9 +308,8 @@ namespace TaskNotes.Windows.App.Views
             _ = args;
             RequireViewModel().Discard();
             SynchronizeDates();
-            Run(
-                "reload-dependency-relationships",
-                () => RequireViewModel().LoadDependencyMetadataAsync()
+            Run("reload-dependency-relationships", () =>
+                RequireViewModel().LoadDependencyMetadataAsync()
             );
         }
 
@@ -468,45 +460,39 @@ namespace TaskNotes.Windows.App.Views
             _recurrenceDraft = null;
             _recurrenceOwner = null;
             EnableRecurrenceControls(false);
-            Run(
-                "project-recurrence-controls",
-                async () =>
+            Run("project-recurrence-controls", async () =>
+            {
+                var projection = await _recurrenceEditor.ProjectAsync(
+                    owner.Rule ?? "",
+                    owner.Scheduled,
+                    owner.DateCreated,
+                    DateOnly
+                        .FromDateTime(DateTime.Now)
+                        .ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)
+                );
+                if (request != _recurrenceRequest || !MatchesRecurrenceOwner(owner))
+                    return;
+                var draft = RecurrenceControlDraft.FromProjection(owner.Rule, projection);
+                _recurrenceDraft = draft;
+                _recurrenceOwner = owner;
+                _synchronizingControls = true;
+                try
                 {
-                    var projection = await _recurrenceEditor.ProjectAsync(
-                        owner.Rule ?? "",
-                        owner.Scheduled,
-                        owner.DateCreated,
-                        DateOnly
-                            .FromDateTime(DateTime.Now)
-                            .ToString(
-                                "yyyy-MM-dd",
-                                System.Globalization.CultureInfo.InvariantCulture
-                            )
-                    );
-                    if (request != _recurrenceRequest || !MatchesRecurrenceOwner(owner))
-                        return;
-                    var draft = RecurrenceControlDraft.FromProjection(owner.Rule, projection);
-                    _recurrenceDraft = draft;
-                    _recurrenceOwner = owner;
-                    _synchronizingControls = true;
-                    try
-                    {
-                        RecurrenceFrequency.SelectedItem = draft.CanEdit
-                            ? RecurrenceFrequency
-                                .Items.OfType<ComboBoxItem>()
-                                .Single(item => (string)item.Tag == FrequencyTag(draft.Frequency))
-                            : null;
-                        RecurrenceInterval.Value = draft.CanEdit ? draft.Interval : 1;
-                        foreach (var day in RecurrenceDays.Children.OfType<CheckBox>())
-                            day.IsChecked = draft.Days.Contains(WeekdayChoice((string)day.Tag));
-                        EnableRecurrenceControls(draft.CanEdit);
-                    }
-                    finally
-                    {
-                        _synchronizingControls = false;
-                    }
+                    RecurrenceFrequency.SelectedItem = draft.CanEdit
+                        ? RecurrenceFrequency
+                            .Items.OfType<ComboBoxItem>()
+                            .Single(item => (string)item.Tag == FrequencyTag(draft.Frequency))
+                        : null;
+                    RecurrenceInterval.Value = draft.CanEdit ? draft.Interval : 1;
+                    foreach (var day in RecurrenceDays.Children.OfType<CheckBox>())
+                        day.IsChecked = draft.Days.Contains(WeekdayChoice((string)day.Tag));
+                    EnableRecurrenceControls(draft.CanEdit);
                 }
-            );
+                finally
+                {
+                    _synchronizingControls = false;
+                }
+            });
         }
 
         private static string FrequencyTag(RepeatFrequency? frequency) =>
@@ -582,39 +568,36 @@ namespace TaskNotes.Windows.App.Views
                     : [];
             long request = ++_recurrenceRequest;
             EnableRecurrenceControls(false);
-            Run(
-                "apply-recurrence-controls",
-                async () =>
+            Run("apply-recurrence-controls", async () =>
+            {
+                try
                 {
-                    try
-                    {
-                        string? rule = await draft.ApplyAsync(
-                            _recurrenceEditor,
-                            frequency,
-                            interval,
-                            days
+                    string? rule = await draft.ApplyAsync(
+                        _recurrenceEditor,
+                        frequency,
+                        interval,
+                        days
+                    );
+                    if (request != _recurrenceRequest || !MatchesRecurrenceOwner(owner))
+                        return;
+                    owner.Model.Recurrence = rule;
+                    if (!await owner.Model.CommitFieldAsync("recurrence"))
+                        RequireValidation()(
+                            owner.Model.CommitError
+                                ?? owner.Model.ValidationError
+                                ?? "This draft needs attention before it can be saved."
                         );
-                        if (request != _recurrenceRequest || !MatchesRecurrenceOwner(owner))
-                            return;
-                        owner.Model.Recurrence = rule;
-                        if (!await owner.Model.CommitFieldAsync("recurrence"))
-                            RequireValidation()(
-                                owner.Model.CommitError
-                                    ?? owner.Model.ValidationError
-                                    ?? "This draft needs attention before it can be saved."
-                            );
-                    }
-                    finally
-                    {
-                        if (
-                            request == _recurrenceRequest
-                            && ReferenceEquals(ViewModel, owner.Model)
-                            && owner.Model.IsLoaded
-                        )
-                            SynchronizeRecurrence();
-                    }
                 }
-            );
+                finally
+                {
+                    if (
+                        request == _recurrenceRequest
+                        && ReferenceEquals(ViewModel, owner.Model)
+                        && owner.Model.IsLoaded
+                    )
+                        SynchronizeRecurrence();
+                }
+            });
         }
 
         private void Save_Click(object sender, RoutedEventArgs eventArgs)
@@ -626,18 +609,15 @@ namespace TaskNotes.Windows.App.Views
             {
                 return;
             }
-            Run(
-                "save-editor",
-                async () =>
+            Run("save-editor", async () =>
+            {
+                if (!await viewModel.SaveAsync())
                 {
-                    if (!await viewModel.SaveAsync())
-                    {
-                        RequireValidation()(
-                            viewModel.ValidationError ?? "Task validation failed without a message."
-                        );
-                    }
+                    RequireValidation()(
+                        viewModel.ValidationError ?? "Task validation failed without a message."
+                    );
                 }
-            );
+            });
         }
 
         private void Delete_Click(object sender, RoutedEventArgs eventArgs)
@@ -649,41 +629,34 @@ namespace TaskNotes.Windows.App.Views
             {
                 return;
             }
-            Run(
-                "delete-editor-task",
-                async () =>
+            Run("delete-editor-task", async () =>
+            {
+                string? task = viewModel.TaskId;
+                string? profile = viewModel.ProfileId;
+                if (!await FlushAsync())
+                    return;
+                if (await RequireConfirm()("Delete task?", $"Delete '{viewModel.Title}'?"))
                 {
-                    string? task = viewModel.TaskId;
-                    string? profile = viewModel.ProfileId;
-                    if (!await FlushAsync())
-                        return;
-                    if (await RequireConfirm()("Delete task?", $"Delete '{viewModel.Title}'?"))
-                    {
-                        if (viewModel.TaskId != task || viewModel.ProfileId != profile)
-                            throw new ArgumentException(
-                                "The inspector owner changed while deletion was open. Review the original task before deleting it."
-                            );
-                        await viewModel.DeleteAsync();
-                        Clear();
-                    }
+                    if (viewModel.TaskId != task || viewModel.ProfileId != profile)
+                        throw new ArgumentException(
+                            "The inspector owner changed while deletion was open. Review the original task before deleting it."
+                        );
+                    await viewModel.DeleteAsync();
+                    Clear();
                 }
-            );
+            });
         }
 
         private void Run(string operationName, Func<Task> operation)
         {
-            UiOperationQueue operations =
-                _operations
+            UiOperationQueue operations = _operations
                 ?? throw new InvalidOperationException("Initialize the editor operation queue.");
-            Func<Func<Task>, Task<bool>> execute =
-                _execute ?? throw new InvalidOperationException("Initialize the editor executor.");
-            operations.Run(
-                operationName,
-                async () =>
-                {
-                    _ = await execute(operation);
-                }
-            );
+            Func<Func<Task>, Task<bool>> execute = _execute
+                ?? throw new InvalidOperationException("Initialize the editor executor.");
+            operations.Run(operationName, async () =>
+            {
+                _ = await execute(operation);
+            });
         }
 
         private Func<string, string, Task<bool>> RequireConfirm() =>

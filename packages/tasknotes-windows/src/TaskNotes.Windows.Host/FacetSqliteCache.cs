@@ -340,8 +340,7 @@ public sealed class FacetSqliteCache : IDisposable
         using SqliteTransaction tx = connection.BeginTransaction();
 
         List<ParkedCommandRecord> parked = ReadParked(connection, tx);
-        ParkedCommandRecord target =
-            parked.FirstOrDefault(item => item.Id == parkedId)
+        ParkedCommandRecord target = parked.FirstOrDefault(item => item.Id == parkedId)
             ?? throw new FacetValidationException(
                 $"Parked mutation '{parkedId}' no longer exists."
             );
@@ -1017,8 +1016,7 @@ public sealed class FacetSqliteCache : IDisposable
         while (reader.Read())
         {
             string json = reader.GetString(0);
-            T item =
-                JsonSerializer.Deserialize<T>(json, FacetProtocolJson.Options)
+            T item = JsonSerializer.Deserialize<T>(json, FacetProtocolJson.Options)
                 ?? throw new InvalidDataException($"Corrupt JSON row in SQLite table '{table}'.");
             items.Add(item);
         }
@@ -1076,9 +1074,10 @@ public sealed class FacetSqliteCache : IDisposable
         while (reader.Read())
         {
             string json = reader.GetString(0);
-            QueuedCommand item =
-                JsonSerializer.Deserialize<QueuedCommand>(json, FacetProtocolJson.Options)
-                ?? throw new InvalidDataException("Corrupt QueuedCommand in outbox.");
+            QueuedCommand item = JsonSerializer.Deserialize<QueuedCommand>(
+                json,
+                FacetProtocolJson.Options
+            ) ?? throw new InvalidDataException("Corrupt QueuedCommand in outbox.");
             items.Add(item);
         }
         return items;
@@ -1144,11 +1143,10 @@ public sealed class FacetSqliteCache : IDisposable
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.RoundtripKind
             );
-            QueuedCommand command =
-                JsonSerializer.Deserialize<QueuedCommand>(
-                    reader.GetString(5),
-                    FacetProtocolJson.Options
-                ) ?? throw new InvalidDataException("Corrupt parked QueuedCommand.");
+            QueuedCommand command = JsonSerializer.Deserialize<QueuedCommand>(
+                reader.GetString(5),
+                FacetProtocolJson.Options
+            ) ?? throw new InvalidDataException("Corrupt parked QueuedCommand.");
             items.Add(new ParkedCommandRecord(id, errorName, message, status, failedAt, command));
         }
         return items;

@@ -108,8 +108,7 @@ public sealed class FeedbackPolicy
 
     private static string Read(string name)
     {
-        using var stream =
-            typeof(FeedbackPolicy).Assembly.GetManifestResourceStream(name)
+        using var stream = typeof(FeedbackPolicy).Assembly.GetManifestResourceStream(name)
             ?? throw new InvalidDataException("The shared feedback contract is missing.");
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();

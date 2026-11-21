@@ -132,22 +132,17 @@ namespace TaskNotes.Windows.App.Views
         private void QueuePreview()
         {
             QuickAddViewModel viewModel = RequireViewModel();
-            UiOperationQueue operations =
-                _operations
+            UiOperationQueue operations = _operations
                 ?? throw new InvalidOperationException("Initialize the Quick Add operation queue.");
-            Func<Func<Task>, Task<bool>> execute =
-                _execute
+            Func<Func<Task>, Task<bool>> execute = _execute
                 ?? throw new InvalidOperationException("Initialize the Quick Add executor.");
-            operations.Run(
-                "preview-quick-add",
-                async () =>
+            operations.Run("preview-quick-add", async () =>
+            {
+                _ = await execute(async () =>
                 {
-                    _ = await execute(async () =>
-                    {
-                        _ = await viewModel.PreviewAsync();
-                    });
-                }
-            );
+                    _ = await viewModel.PreviewAsync();
+                });
+            });
         }
 
         private QuickAddViewModel RequireViewModel() =>
