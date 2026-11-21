@@ -79,13 +79,22 @@ pub fn open_overlay_window<V: Render>(
 }
 
 /// One card. Everything around it stays transparent.
+///
+/// Every color meets WCAG AA on the card's surface: the badge is `primary`
+/// (7.4:1) or `text_muted` (9.0:1). An unprompted card is set apart by a
+/// double-width `text_muted` border (9.0:1, over the 3:1 a boundary needs),
+/// not by the `warning` token, which reaches only 2.4:1 on this surface.
 #[must_use]
 pub fn overlay_card(model: OverlayCardModel) -> impl IntoElement {
     let tokens = theme();
-    let (badge_color, border) = match model.tone {
-        CardTone::Advice => (tokens.primary, tokens.primary),
-        CardTone::Unprompted => (tokens.warning, tokens.warning),
-        CardTone::Quiet => (tokens.text_muted, tokens.border),
+    let (badge_color, border, border_width) = match model.tone {
+        CardTone::Advice => (tokens.primary, tokens.primary, tokens.border_width),
+        CardTone::Unprompted => (
+            tokens.text_muted,
+            tokens.text_muted,
+            tokens.border_width * 2,
+        ),
+        CardTone::Quiet => (tokens.text_muted, tokens.border, tokens.border_width),
     };
     let mut card = div()
         .w_full()
@@ -94,18 +103,18 @@ pub fn overlay_card(model: OverlayCardModel) -> impl IntoElement {
         .gap_1()
         .p_3()
         .rounded(length(tokens.radius_large))
-        .border(length(tokens.border_width))
+        .border(length(border_width))
         .border_color(color(border))
         // Readable over a bright game without hiding it.
         .bg(color(tokens.surface).opacity(0.9))
         .text_color(color(tokens.text))
-        .child(
+        .children(model.badge.map(|badge| {
             div()
                 .text_xs()
                 .font_weight(FontWeight::SEMIBOLD)
                 .text_color(color(badge_color))
-                .child(model.badge),
-        )
+                .child(badge)
+        }))
         .child(
             div()
                 .text_base()
