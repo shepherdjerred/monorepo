@@ -435,10 +435,13 @@ impl<C: Collector> Supervisor<C> {
     /// it decides. Nothing runs while Scout says the coach is off for this
     /// player, or with no chat to carry the turns.
     fn drive_coach(&self, coach: &mut CoachDriver, state: &StateReceiver, phase: &PhaseReceiver) {
+        let phase = phase.borrow().clone();
         let Some(chat) = self.chat.as_ref().filter(|chat| chat.coach_enabled()) else {
+            // A select or game that ends while the coach is off still ends:
+            // the next one must not inherit its key or its counts.
+            coach.follow_phase(&phase);
             return;
         };
-        let phase = phase.borrow().clone();
         // Scout cannot start a turn beside one the player has running, typed
         // or spoken; the coach waits and asks once it is over.
         let busy = chat.subscribe().borrow().turn.is_some()

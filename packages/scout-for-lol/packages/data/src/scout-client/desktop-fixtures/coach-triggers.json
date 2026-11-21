@@ -179,6 +179,8 @@
       "deathsWithoutTakedown": 3
     }
   ],
+  "windowKeys": ["Zed:6692", "Zed", "physical", "enemy_team", "4"],
+  "windowKeysNote": "The event each golden trigger reports, as the server's dedupe receipts identify it within its kind (backend triggerWindowKey) and the client's proactive driver dedupes by (CoachTrigger::window_key).",
   "invalidRequests": [
     {
       "reason": "a free-text question",

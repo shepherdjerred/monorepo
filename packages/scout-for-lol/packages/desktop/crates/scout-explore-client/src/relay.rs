@@ -542,7 +542,7 @@ impl Relay {
                     self.fetch_opened(conversation_id);
                 }
             }
-            ChatCommand::New => self.session.start_new(),
+            ChatCommand::New => self.session.new_chat(),
             ChatCommand::Send {
                 question,
                 live_game: use_live_game,

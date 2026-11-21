@@ -16,7 +16,10 @@
 //!
 //! - one request per [`SPACING`], the server's own spacing;
 //! - at most [`MAX_PER_GAME`] requests a game, the server's cap;
-//! - each trigger (kind and evidence) asked once a game.
+//! - each event asked once a game, identified as the server's dedupe
+//!   receipts identify it: its kind and window
+//!   ([`CoachTrigger::window_key`]). Scout answers a repeat `duplicate`,
+//!   which stops proactive turns for the rest of the game.
 //!
 //! A detection that arrives while the player's own turn runs, inside the
 //! spacing, or past the cap is dropped, not queued: by the time it could be
@@ -42,7 +45,13 @@ pub(super) struct ProactiveDriver {
     previous: Option<LiveSnapshot>,
     state: DetectorState,
     last_asked: Option<Instant>,
-    asked: Vec<CoachTrigger>,
+    /// The events asked for this game, by kind and window.
+    asked: Vec<(&'static str, String)>,
+}
+
+/// The event a trigger reports, as the server identifies it.
+fn event(trigger: &CoachTrigger) -> (&'static str, String) {
+    (trigger.kind(), trigger.window_key())
 }
 
 impl ProactiveDriver {
@@ -79,8 +88,8 @@ impl ProactiveDriver {
         let trigger = detection
             .triggers
             .into_iter()
-            .find(|trigger| !self.asked.contains(trigger))?;
-        self.asked.push(trigger.clone());
+            .find(|trigger| !self.asked.contains(&event(trigger)))?;
+        self.asked.push(event(&trigger));
         self.last_asked = Some(now);
         Some(ProactiveTurn {
             game_key: game_key.to_owned(),
@@ -97,12 +106,13 @@ impl ProactiveDriver {
 
 #[cfg(test)]
 mod tests {
-    use std::time::{Duration, Instant};
+    use std::time::Instant;
 
     use scout_client_core::desktop_api::CoachTrigger;
     use scout_client_core::live::detectors::ItemCatalog;
     use scout_client_core::live::model::AllGameData;
-    use scout_client_core::live::snapshot::{LiveSnapshot, project};
+    use scout_client_core::live::snapshot::{LiveSnapshot, Team, project};
+    use scout_explore_client::proactive::ProactiveTurn;
 
     use super::{MAX_PER_GAME, ProactiveDriver, SPACING};
 
@@ -117,22 +127,42 @@ mod tests {
         Ok(snapshot)
     }
 
-    /// The next frame: the local player took part in a takedown (ending any
-    /// streak), then died `deaths` more times without one, which is a new
-    /// death streak each time.
-    fn died(base: &LiveSnapshot, secs: u32, deaths: u32) -> LiveSnapshot {
+    /// The next frame, `secs` into the game, with the local player changed.
+    fn next(base: &LiveSnapshot, secs: u32, kills_assists: u32, deaths: u32) -> LiveSnapshot {
         let mut next = base.clone();
         next.game.game_time_secs = secs;
         for player in &mut next.participants {
             if player.is_self {
-                player.assists += 1;
+                player.assists += kills_assists;
                 player.deaths += deaths;
             }
         }
         next
     }
 
-    fn streak(turn: Option<&scout_explore_client::proactive::ProactiveTurn>) -> Option<u8> {
+    /// The next frame with the local player dead `deaths` more times.
+    fn died(base: &LiveSnapshot, secs: u32, deaths: u32) -> LiveSnapshot {
+        next(base, secs, 0, deaths)
+    }
+
+    /// A takedown, then three deaths without one: a new streak. Returns the
+    /// last frame and what observing it asked for.
+    fn new_streak(
+        driver: &mut ProactiveDriver,
+        now: Instant,
+        busy: bool,
+        base: &LiveSnapshot,
+        secs: u32,
+    ) -> (LiveSnapshot, Option<ProactiveTurn>) {
+        let catalog = ItemCatalog::default();
+        let after = next(base, secs, 1, 0);
+        assert!(driver.observe(now, busy, "g-1", &after, &catalog).is_none());
+        let streaked = died(&after, secs + 1, 3);
+        let turn = driver.observe(now, busy, "g-1", &streaked, &catalog);
+        (streaked, turn)
+    }
+
+    fn streak(turn: Option<&ProactiveTurn>) -> Option<u8> {
         match turn.map(|turn| &turn.trigger) {
             Some(CoachTrigger::DeathStreak {
                 deaths_without_takedown,
@@ -183,24 +213,12 @@ mod tests {
                 .is_some()
         );
         // Another streak fires inside the spacing: dropped.
-        let second = died(&first, 620, 3);
-        let soon = start + SPACING.saturating_sub(Duration::from_secs(1));
-        assert!(
-            driver
-                .observe(soon, false, "g-1", &second, &catalog)
-                .is_none()
-        );
+        let soon = start + SPACING.saturating_sub(std::time::Duration::from_secs(1));
+        let (second, dropped) = new_streak(&mut driver, soon, false, &first, 620);
+        assert!(dropped.is_none());
         // Past the spacing, the next detection goes.
-        let third = died(&second, 700, 3);
-        let later = start + SPACING;
-        assert!(
-            streak(
-                driver
-                    .observe(later, false, "g-1", &third, &catalog)
-                    .as_ref()
-            )
-            .is_some()
-        );
+        let (_, asked) = new_streak(&mut driver, start + SPACING, false, &second, 700);
+        assert_eq!(streak(asked.as_ref()), Some(3));
         Ok(())
     }
 
@@ -218,43 +236,47 @@ mod tests {
                 .is_none()
         );
         // Not counted against the spacing: the next detection goes at once.
-        let again = died(&streaked, 620, 3);
-        assert!(
-            driver
-                .observe(start, false, "g-1", &again, &catalog)
-                .is_some()
-        );
+        let (_, asked) = new_streak(&mut driver, start, false, &streaked, 620);
+        assert!(asked.is_some());
         Ok(())
     }
 
     #[test]
-    fn the_same_trigger_is_asked_once_a_game() -> TestResult {
+    fn the_same_event_is_asked_once_a_game_as_the_server_identifies_it() -> TestResult {
         let catalog = ItemCatalog::default();
-        let start = Instant::now();
+        let mut now = Instant::now();
         let mut driver = ProactiveDriver::default();
         let base = frame(600)?;
-        driver.observe(start, false, "g-1", &base, &catalog);
-        let streaked = died(&base, 610, 3);
-        assert!(
+        driver.observe(now, false, "g-1", &base, &catalog);
+        // An enemy gets fed, cools off, and gets fed again with another
+        // score: the server's event is the champion, so the second is a
+        // duplicate it would answer by stopping the game. Never asked.
+        let enemy = base
+            .participants
+            .iter()
+            .position(|player| player.team == Team::Chaos)
+            .ok_or("an enemy")?;
+        let mut score = |frame: &LiveSnapshot, secs: u32, kills: u32, deaths: u32| {
+            let mut next = frame.clone();
+            next.game.game_time_secs = secs;
+            next.participants[enemy].kills = kills;
+            next.participants[enemy].deaths = deaths;
+            now += SPACING;
             driver
-                .observe(start, false, "g-1", &streaked, &catalog)
-                .is_some()
-        );
-        // The roster reorders (a broken frame resets the detectors), then
-        // the very same streak shows up again: not asked twice.
-        let later = start + SPACING * 2;
-        let mut reset = base.clone();
-        reset.participants.reverse();
-        reset.game.game_time_secs = 620;
-        driver.observe(later, false, "g-1", &reset, &catalog);
-        driver.observe(later, false, "g-1", &base, &catalog);
-        let mut same = streaked.clone();
-        same.game.game_time_secs = 630;
-        assert!(
-            driver
-                .observe(later, false, "g-1", &same, &catalog)
-                .is_none()
-        );
+                .observe(now, false, "g-1", &next, &catalog)
+                .map(|turn| turn.trigger)
+        };
+        let calm = {
+            let mut calm = base.clone();
+            calm.participants[enemy].kills = 0;
+            calm.participants[enemy].deaths = 0;
+            calm
+        };
+        score(&base, 601, 0, 0);
+        let fed = score(&calm, 610, 5, 0);
+        assert!(matches!(fed, Some(CoachTrigger::EnemyFed { kills: 5, .. })));
+        assert_eq!(score(&calm, 620, 5, 2), None, "no longer fed");
+        assert_eq!(score(&calm, 630, 6, 2), None, "fed again: the same event");
         Ok(())
     }
 
@@ -268,12 +290,9 @@ mod tests {
         let mut asked = 0;
         for step in 1..=30_u32 {
             now += SPACING;
-            current = died(&current, 600 + step * 10, 3);
-            asked += usize::from(
-                driver
-                    .observe(now, false, "g-1", &current, &catalog)
-                    .is_some(),
-            );
+            let (last, turn) = new_streak(&mut driver, now, false, &current, 600 + step * 10);
+            current = last;
+            asked += usize::from(turn.is_some());
         }
         assert_eq!(asked, usize::from(MAX_PER_GAME));
 

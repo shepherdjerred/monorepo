@@ -95,14 +95,7 @@ impl CoachDriver {
             out.push(CoachInput::Clear);
         }
         self.showing = selecting || playing;
-        if !selecting {
-            self.watch = None;
-        }
-        if !playing {
-            self.game_key = None;
-            #[cfg(scout_proactive_coach)]
-            self.proactive.end_game();
-        }
+        self.follow_phase(phase);
         if selecting {
             out.extend(self.select_turn(now, busy, select));
         }
@@ -110,6 +103,22 @@ impl CoachDriver {
             out.extend(self.plan_turn(busy, live));
         }
         out
+    }
+
+    /// Forget a select or game that is over, whether or not the coach
+    /// could act on it, so the next one starts with its own key and counts.
+    pub(super) fn follow_phase(&mut self, phase: &GameflowPhase) {
+        if *phase != GameflowPhase::ChampSelect {
+            self.watch = None;
+        }
+        if !matches!(
+            phase,
+            GameflowPhase::GameStart | GameflowPhase::InProgress | GameflowPhase::Reconnect
+        ) {
+            self.game_key = None;
+            #[cfg(scout_proactive_coach)]
+            self.proactive.end_game();
+        }
     }
 
     /// One look at the game for the proactive coach. Beta profile only.
@@ -370,6 +379,38 @@ mod tests {
         assert_eq!(
             again.first().and_then(initiation),
             Some(AppInitiation::AppPregame)
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn a_game_that_ends_while_the_coach_is_off_is_forgotten()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let now = Instant::now();
+        let mut driver = CoachDriver::new(DEBOUNCE);
+        driver.tick(
+            now,
+            false,
+            &GameflowPhase::InProgress,
+            None,
+            Some(&game(5)?),
+        );
+        let first = driver.game_key.clone().ok_or("a key")?;
+        // The coach is off from here: only the phase is followed.
+        driver.follow_phase(&GameflowPhase::EndOfGame);
+        driver.follow_phase(&GameflowPhase::None);
+        assert_eq!(driver.game_key, None);
+        driver.tick(
+            now,
+            false,
+            &GameflowPhase::InProgress,
+            None,
+            Some(&game(5)?),
+        );
+        assert_ne!(
+            driver.game_key,
+            Some(first),
+            "the next game has its own key"
         );
         Ok(())
     }

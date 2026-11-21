@@ -379,12 +379,23 @@ impl ChatSession {
     /// Show `conversation_id`. Returns whether its transcript must be fetched.
     pub fn open(&mut self, conversation_id: Uuid) -> bool {
         self.notice = None;
+        // The player moved on: a coach turn that does not start no longer
+        // puts back what was open before it.
+        self.displaced = None;
         if self.open == Some(conversation_id) && self.transcript.is_some() {
             return false;
         }
         self.open = Some(conversation_id);
         self.transcript = None;
         true
+    }
+
+    /// The player asked for a blank conversation: like [`Self::start_new`],
+    /// and a coach turn that does not start no longer puts back what was
+    /// open before it.
+    pub fn new_chat(&mut self) {
+        self.displaced = None;
+        self.start_new();
     }
 
     /// Show a blank conversation.
@@ -731,14 +742,25 @@ impl ChatSession {
         turn.request(conversation_id)
     }
 
-    /// Scout did not start the proactive turn: it was a duplicate, or
-    /// refused. The player did not ask for it, so nothing says so unless the
-    /// refusal gates chat as a whole.
+    /// Scout did not start the proactive turn: it was a duplicate, refused,
+    /// or never answered. The player did not ask for it, so nothing says so
+    /// unless the failure gates chat as a whole (pair again, sign in, update,
+    /// no server). `feature_disabled` here is about proactive turns, not chat.
     #[cfg(scout_proactive_coach)]
     pub fn proactive_turn_not_started(&mut self, error: Option<&ExploreClientError>) {
-        match error {
-            Some(error) => self.app_turn_failed(error),
-            None => self.abandon_coach_turn(),
+        self.abandon_coach_turn();
+        if let Some(error) = error
+            && matches!(
+                error.recovery(),
+                Some(
+                    Recovery::RePair
+                        | Recovery::SignInOnWeb
+                        | Recovery::UpgradeApp
+                        | Recovery::ExploreForbidden
+                )
+            )
+        {
+            self.request_failed(error);
         }
     }
 

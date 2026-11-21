@@ -245,6 +245,22 @@ fn a_proactive_turn_scout_did_not_start_puts_the_players_conversation_back_quiet
     assert_eq!(parts.status.notice, None);
     assert_eq!(parts.coach, None);
 
+    // No answer at all (here a broken contract) says nothing either.
+    session
+        .begin_proactive_turn(&proactive_turn("g-1")?)
+        .ok_or("request")?;
+    session.proactive_turn_not_started(Some(&ExploreClientError::Unexpected {
+        status: 502,
+        detail: "bad gateway".to_owned(),
+    }));
+    assert_eq!(session.parts().status.notice, None);
+    // Nor does proactive coaching being off: chat itself stays on.
+    session
+        .begin_proactive_turn(&proactive_turn("g-1")?)
+        .ok_or("request")?;
+    session.proactive_turn_not_started(Some(&refused(Code::FeatureDisabled)));
+    assert_eq!(session.parts().status.availability, ChatAvailability::Ready);
+
     // Spacing: a refusal the player did not cause says nothing either.
     session
         .begin_proactive_turn(&proactive_turn("g-1")?)
@@ -254,5 +270,28 @@ fn a_proactive_turn_scout_did_not_start_puts_the_players_conversation_back_quiet
     assert_eq!(parts.status.open_conversation, open);
     assert_eq!(parts.status.notice, None);
     assert_eq!(parts.status.availability, ChatAvailability::Ready);
+    Ok(())
+}
+
+#[cfg(scout_proactive_coach)]
+#[test]
+fn a_conversation_the_player_opens_meanwhile_stays_open_when_the_turn_does_not_start() -> TestResult
+{
+    let mut session = golden::coach_options()?;
+    session
+        .begin_proactive_turn(&proactive_turn("g-1")?)
+        .ok_or("request")?;
+    let chosen = Uuid::from_u128(0xc0);
+    session.open(chosen);
+    session.proactive_turn_not_started(None);
+    assert_eq!(session.parts().status.open_conversation, Some(chosen));
+
+    let mut blank = golden::coach_options()?;
+    blank
+        .begin_proactive_turn(&proactive_turn("g-1")?)
+        .ok_or("request")?;
+    blank.new_chat();
+    blank.proactive_turn_not_started(None);
+    assert_eq!(blank.parts().status.open_conversation, None);
     Ok(())
 }
