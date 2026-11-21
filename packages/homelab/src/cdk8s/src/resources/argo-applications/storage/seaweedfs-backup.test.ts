@@ -14,6 +14,7 @@ import {
   BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID,
   createSeaweedfsBackup,
   SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS,
+  SEAWEEDFS_RETIRED_BACKUP_EXCLUDED_BUCKETS,
 } from "./seaweedfs-backup.ts";
 
 const SEAWEEDFS_TOFU_STACK = path.join(
@@ -99,10 +100,17 @@ describe("SeaweedFS backup to Backblaze", () => {
     ).toEqual(new Set(["scout-prod"]));
   });
 
-  test("every excluded bucket is a declared SeaweedFS bucket", async () => {
+  test("every excluded bucket is a declared SeaweedFS bucket or a retired changelog exclusion", async () => {
     const declared = await declaredBuckets();
     for (const bucket of Object.keys(SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS)) {
-      expect(declared, bucket).toContain(bucket);
+      if (SEAWEEDFS_RETIRED_BACKUP_EXCLUDED_BUCKETS.has(bucket)) {
+        expect(declared, bucket).not.toContain(bucket);
+      } else {
+        expect(declared, bucket).toContain(bucket);
+      }
+    }
+    for (const retired of SEAWEEDFS_RETIRED_BACKUP_EXCLUDED_BUCKETS) {
+      expect(Object.keys(SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS)).toContain(retired);
     }
   });
 

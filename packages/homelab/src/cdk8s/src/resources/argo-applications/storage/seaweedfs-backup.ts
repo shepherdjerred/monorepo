@@ -34,6 +34,7 @@ export const SEAWEEDFS_BACKUP_CLIENT = "backup_s3";
 export const SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS: Readonly<
   Record<string, string>
 > = {
+  "bazel-cache": "Retired Bazel remote build cache",
   "better-skill-capped": "Static site, rebuilt from the repository",
   "ci-handoff": "Ephemeral CI handoff data",
   clauderon: "Retired static site",
@@ -53,6 +54,14 @@ export const SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS: Readonly<
   webring: "Static site, rebuilt from the repository",
   "wiki-sjer-red": "Static site, rebuilt from the repository",
 };
+
+/**
+ * Excluded buckets already removed from the `seaweedfs` OpenTofu stack whose
+ * historical `/buckets/<name>` entries still appear in the filer changelog and
+ * would stall `filer.backup` replay on deleted volumes if not excluded.
+ */
+export const SEAWEEDFS_RETIRED_BACKUP_EXCLUDED_BUCKETS: ReadonlySet<string> =
+  new Set(["bazel-cache"]);
 
 /**
  * `filer.backup`'s sink. Objects land at `<bucket>/<key>`. Deletes are

@@ -343,7 +343,11 @@ template:
   # requires all four upstream entities to have values so HA coordinator blips mark
   # the bridge unavailable (covered at 15m by PetCareEntityUnavailable and
   # HomeAssistantAutomationDependencyUnavailable) instead of paging a 5m physical
-  # RoborockVacuumProblem. Enum values verified live from the Roborock
+  # RoborockVacuumProblem. Routine dock tank states (`water_empty`,
+  # `waste_water_tank_full`) are excluded here because RoborockCleanWaterTankEmpty
+  # and RoborockDirtyWaterTankFull alert on those directly, while latch-open and
+  # hardware dock faults (`dirty_tank_latch_open`, `duct_blockage`, etc.) remain
+  # in `vacuum_problem`. Enum values verified live from the Roborock
   # integration's options list.
   - binary_sensor:
       - name: "1st Floor Vacuum Problem"
@@ -358,7 +362,7 @@ template:
           {{ "{{" }} states('vacuum.1st_floor') == 'error'
              or states('sensor.1st_floor_status') in ['error', 'charging_problem']
              or states('sensor.1st_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']
-             or states('sensor.1st_floor_dock_dock_error') != 'ok' {{ "}}" }}
+             or states('sensor.1st_floor_dock_dock_error') not in ['ok', 'water_empty', 'waste_water_tank_full'] {{ "}}" }}
       - name: "2nd Floor Vacuum Problem"
         unique_id: floor_2_vacuum_problem
         device_class: problem
@@ -371,7 +375,7 @@ template:
           {{ "{{" }} states('vacuum.2nd_floor') == 'error'
              or states('sensor.2nd_floor_status') in ['error', 'charging_problem']
              or states('sensor.2nd_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']
-             or states('sensor.2nd_floor_dock_dock_error') != 'ok' {{ "}}" }}
+             or states('sensor.2nd_floor_dock_dock_error') not in ['ok', 'water_empty', 'waste_water_tank_full'] {{ "}}" }}
       - name: "3rd Floor Vacuum Problem"
         unique_id: floor_3_vacuum_problem
         device_class: problem
@@ -384,7 +388,7 @@ template:
           {{ "{{" }} states('vacuum.3rd_floor') == 'error'
              or states('sensor.3rd_floor_status') in ['error', 'charging_problem']
              or states('sensor.3rd_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']
-             or states('sensor.3rd_floor_dock_dock_error') != 'ok' {{ "}}" }}
+             or states('sensor.3rd_floor_dock_dock_error') not in ['ok', 'water_empty', 'waste_water_tank_full'] {{ "}}" }}
 
 prometheus:
   namespace: homeassistant

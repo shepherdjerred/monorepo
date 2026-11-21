@@ -329,6 +329,9 @@ describe("Home Assistant rules — environment and automation dependencies", () 
         `states('sensor.${floor}_floor_vacuum_error') not in ['none', 'low_battery', 'robot_on_carpet']`,
       );
       expect(configuration).toContain(
+        `states('sensor.${floor}_floor_dock_dock_error') not in ['ok', 'water_empty', 'waste_water_tank_full']`,
+      );
+      expect(configuration).not.toContain(
         `states('sensor.${floor}_floor_dock_dock_error') != 'ok'`,
       );
       expect(configuration).not.toContain(
