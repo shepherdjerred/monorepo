@@ -152,10 +152,31 @@ Traffic that the node itself originates as root bypasses the agent. Kubelet
 probes are the important case. A policy that forgets the kubelet does not make
 a pod unready.
 
+The bypass goes by the sending socket's owner, not by the address. A host
+process that runs as another user is checked like any client and arrives from
+the node's address on the pod bridge (`10.244.0.1` on torvalds). The API
+server runs as uid 65534, so its connections to a pod, such as a webhook call
+or a request through the Service proxy, need an `ipBlock` rule for that
+address.
+
+Kubelet probes still appear in the agent's log as connections from
+`10.244.0.1` to the probe port, and in an enforced namespace some of those
+packets are dropped, while the pod stays Ready. The probe's own packets bypass
+the agent; only stray packets of the connection reach it.
+
+Every 30 seconds the agent also re-checks established connections, logged with
+packet `id=0`. A failed re-check drops nothing by itself: it only makes the
+agent decide the connection's next packet again. The re-check also reads
+leftover connection-tracking entries of pods that have gone, and names
+whichever pod now holds the address. A replay of the log has to set those
+lines, and the probe ones, apart from real traffic.
+
 A pod on the host network shares the node's network namespace, so no policy
 selects it. Home Assistant and Scrypted run that way. A policy in their
 namespace governs only the pod-network pods beside them. Their own connections
-carry the node's address, which no namespace or pod selector matches.
+carry the node's address, which no namespace or pod selector matches. Home
+Assistant's websockets to zwave-js-ui and eufy-security-ws arrive from
+torvalds' LAN address, so those two pods admit that address on port 3000.
 
 The reverse case matters for `ipBlock` rules. A client that reaches a pod
 through a `hostPort`, or a NodePort Service with
