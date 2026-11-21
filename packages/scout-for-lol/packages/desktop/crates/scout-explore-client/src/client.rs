@@ -27,6 +27,11 @@ use crate::voice::VoiceTurnRequest;
 
 /// How long a REST call may take end to end.
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
+/// How long `coach/triggers/speech` may take end to end: the server speaks
+/// the whole answer before it replies, under its own 30-second provider
+/// deadline, then sends up to a minute of PCM.
+#[cfg(scout_proactive_coach)]
+const SPEECH_REQUEST_TIMEOUT: Duration = Duration::from_secs(45);
 /// How long opening a connection may take, for REST and the stream alike.
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 /// How long the stream may go without a byte before it counts as lost. The
@@ -155,8 +160,23 @@ impl ExploreClient {
         Request: Serialize + Sync,
         Answer: DeserializeOwned,
     {
+        self.call_within(route, body, REQUEST_TIMEOUT).await
+    }
+
+    /// [`Self::call`] with its own end-to-end timeout.
+    async fn call_within<Request, Answer>(
+        &self,
+        route: Route,
+        body: &Request,
+        timeout: Duration,
+    ) -> Result<Answer, ExploreClientError>
+    where
+        Request: Serialize + Sync,
+        Answer: DeserializeOwned,
+    {
         let response = checked(
             self.post(&self.http, route)?
+                .timeout(timeout)
                 .json(body)
                 .send()
                 .await
@@ -248,6 +268,33 @@ impl ExploreClient {
         request: &scout_client_core::desktop_api::CoachTriggerRequest,
     ) -> Result<scout_client_core::desktop_api::CoachTriggerResponse, ExploreClientError> {
         self.call(Route::CoachTriggers, request).await
+    }
+
+    /// `coach/triggers/speech`: the speech of a finished proactive turn's
+    /// answer. Beta profile only; Scout refuses it in production.
+    ///
+    /// # Errors
+    ///
+    /// [`ExploreClientError`] when the request fails, Scout refuses it, or
+    /// the speech breaks the contract's format.
+    #[cfg(scout_proactive_coach)]
+    pub async fn speak_proactive_answer(
+        &self,
+        run_id: Uuid,
+    ) -> Result<crate::proactive::ProactiveSpeech, ExploreClientError> {
+        let response: scout_client_core::desktop_api::CoachTriggerSpeechResponse = self
+            .call_within(
+                Route::CoachTriggersSpeech,
+                &scout_client_core::desktop_api::CoachTriggerSpeechRequest { run_id },
+                SPEECH_REQUEST_TIMEOUT,
+            )
+            .await?;
+        crate::proactive::ProactiveSpeech::decode(response).map_err(|detail| {
+            ExploreClientError::Unexpected {
+                status: 200,
+                detail,
+            }
+        })
     }
 
     /// `coach/reviews/get`: read the post-game review the server produced for

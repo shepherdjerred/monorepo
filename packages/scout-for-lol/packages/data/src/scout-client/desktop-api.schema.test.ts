@@ -27,6 +27,7 @@ import coachGetFixture from "./desktop-fixtures/explore-conversations-get-coach.
 import startActionsFixture from "./desktop-fixtures/explore-runs-start-actions.json" with { type: "json" };
 import voiceTurnFixture from "./desktop-fixtures/coach-voice-turns.json" with { type: "json" };
 import coachTriggersFixture from "./desktop-fixtures/coach-triggers.json" with { type: "json" };
+import coachTriggersSpeechFixture from "./desktop-fixtures/coach-triggers-speech.json" with { type: "json" };
 import { ScoutClientCreatePairingSchema } from "./protocol.schema.ts";
 import { ScoutDesktopAppTurnRequestSchema } from "./coach-context.schema.ts";
 import {
@@ -34,6 +35,8 @@ import {
   CoachTriggerSchema,
   ScoutDesktopCoachTriggerRequestSchema,
   ScoutDesktopCoachTriggerResponseSchema,
+  ScoutDesktopCoachTriggerSpeechRequestSchema,
+  ScoutDesktopCoachTriggerSpeechResponseSchema,
 } from "./coach-trigger.schema.ts";
 import {
   ExploreActiveRunSchema,
@@ -222,6 +225,11 @@ const ROUTE_SCHEMAS: Record<
     response: ScoutDesktopCoachTriggerResponseSchema,
     fixture: coachTriggersFixture,
   },
+  coach_triggers_speech: {
+    request: ScoutDesktopCoachTriggerSpeechRequestSchema,
+    response: ScoutDesktopCoachTriggerSpeechResponseSchema,
+    fixture: coachTriggersSpeechFixture,
+  },
 };
 
 const routeNames = ScoutDesktopApiRouteSchema.options;
@@ -376,6 +384,27 @@ describe("Scout desktop API contract", () => {
       "trigger",
       "snapshot",
     ]);
+  });
+
+  test("proactive speech names a run and nothing to say, and answers voice-turn PCM", () => {
+    // The body has no field a client could put words in.
+    expect(
+      Object.keys(ScoutDesktopCoachTriggerSpeechRequestSchema.shape),
+    ).toEqual(["runId"]);
+    const response = ScoutDesktopCoachTriggerSpeechResponseSchema.parse(
+      coachTriggersSpeechFixture.response,
+    );
+    expect(response.encoding).toBe(SCOUT_DESKTOP_VOICE_TURN.speech.encoding);
+    expect(response.sampleRateHz).toBe(
+      SCOUT_DESKTOP_VOICE_TURN.speech.sampleRateHz,
+    );
+    for (const chunk of response.chunks) {
+      const bytes = Buffer.from(chunk, "base64");
+      expect(bytes.byteLength).toBeLessThanOrEqual(
+        SCOUT_DESKTOP_VOICE_TURN.speech.maxChunkBytes,
+      );
+      expect(bytes.byteLength % 2).toBe(0);
+    }
   });
 
   test("the model list is the web picker's list, and a model outside it is refused", () => {

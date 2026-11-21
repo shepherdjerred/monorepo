@@ -59,14 +59,15 @@ const TriggerEnvelopeSchema = ScoutDesktopCoachTriggerRequestSchema.extend({
 
 const MESSAGE_MAX_LENGTH = 500;
 
-function proactiveDisabled(): Response {
+export function proactiveDisabled(): Response {
   return desktopErrorResponse(
     "feature_disabled",
     "Scout does not start coaching on its own here.",
   );
 }
 
-async function ownerFlags(
+/** The three flags a proactive turn needs, for the owner. */
+export async function proactiveOwnerFlags(
   userId: Parameters<typeof isOwnerFlagEnabled>[1],
   guildIds: Parameters<typeof isOwnerFlagEnabled>[2],
 ) {
@@ -98,7 +99,7 @@ const startTrigger: DesktopRouteHandler = async ({ caller, body }) => {
   if (!input.success) return invalidRequest();
   const { conversationId, gameKey, trigger, snapshot } = input.data;
 
-  const resolved = await ownerFlags(caller.userId, caller.guildIds);
+  const resolved = await proactiveOwnerFlags(caller.userId, caller.guildIds);
   if (!decideProactiveTurn(environment, resolved).admitted) {
     return proactiveDisabled();
   }

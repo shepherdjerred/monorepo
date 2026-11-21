@@ -40,6 +40,7 @@ import { DESKTOP_VOICE_ROUTES } from "./coach-voice-routes.ts";
 import { DESKTOP_ACTION_ROUTES } from "./explore-action-routes.ts";
 import { DESKTOP_COACH_ROUTES } from "./coach-review-routes.ts";
 import { DESKTOP_COACH_TRIGGER_ROUTES } from "./coach-trigger-routes.ts";
+import { DESKTOP_COACH_TRIGGER_SPEECH_ROUTES } from "./coach-trigger-speech-route.ts";
 import {
   DESKTOP_RUN_ROUTES,
   invalidRequest,
@@ -229,6 +230,10 @@ const ROUTES = new Map<string, DesktopRoute>([
         path,
         { handler, maxBodyBytes: SCOUT_DESKTOP_RUN_START_MAX_BYTES },
       ] as const,
+  ),
+  ...DESKTOP_COACH_TRIGGER_SPEECH_ROUTES.map(
+    ({ path, handler }) =>
+      [path, { handler, maxBodyBytes: MAX_READ_BODY_BYTES }] as const,
   ),
   ...DESKTOP_RUN_ROUTES.map(
     ({ path, handler, turn }) =>

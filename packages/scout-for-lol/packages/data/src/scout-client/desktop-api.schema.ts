@@ -67,8 +67,12 @@ import {
  *   asks for when a scoreboard detector fires (`coach-trigger.schema.ts`): a
  *   trigger kind, its evidence and the live snapshot, never free text. It is
  *   refused in production whatever the flags say. The server deploys first.
+ * - 11: `coach/triggers/speech`, the spoken form of a finished proactive
+ *   turn's answer for a beta build in voice conversation mode
+ *   (`coach-trigger.schema.ts`): a run id in, PCM chunks out. Refused in
+ *   production like the trigger. The server deploys first.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 10;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 11;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
 /** The first contract version whose messages may carry `coachOptions`. */
@@ -241,6 +245,12 @@ export const SCOUT_DESKTOP_API_ROUTES = {
     scope: "explore",
     response: "json",
   },
+  coach_triggers_speech: {
+    method: "POST",
+    path: "/api/scout-client/v1/coach/triggers/speech",
+    scope: "explore",
+    response: "json",
+  },
 } as const satisfies Record<
   string,
   {
@@ -274,6 +284,7 @@ export const ScoutDesktopApiRouteSchema = z.enum([
   "coach_voice_turns",
   "coach_reviews_get",
   "coach_triggers",
+  "coach_triggers_speech",
 ]);
 
 /** Every typed refusal a desktop route answers with, and its HTTP status. */

@@ -258,6 +258,12 @@ pub const CONVERSATION_MODE_LABEL: &str = "Listen for \"hey scout\" during games
 /// The push-to-talk switch's label.
 pub const PUSH_TO_TALK_LABEL: &str = "Push-to-talk";
 
+/// Above what Scout says aloud on its own, in place of the player's
+/// question: the player did not ask. Beta profile only.
+#[cfg(scout_proactive_coach)]
+pub const PROACTIVE_VOICE_LABEL: &str =
+    "Scout noticed this on the scoreboard and is saying it on its own. You did not ask.";
+
 /// The spoken turn, above the chat transcript.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VoiceTurnModel {
@@ -275,6 +281,14 @@ impl VoiceTurnModel {
     #[must_use]
     pub fn new(turn: Option<&VoiceTurnView>) -> Option<Self> {
         let turn = turn?;
+        #[cfg(scout_proactive_coach)]
+        if turn.app_initiated {
+            return Some(Self {
+                heard: Some(PROACTIVE_VOICE_LABEL.to_owned()),
+                answer: turn.answer.clone(),
+                error: turn.error.clone(),
+            });
+        }
         let waiting = turn.answer.is_none() && turn.error.is_none();
         Some(Self {
             heard: match &turn.heard {
@@ -463,6 +477,24 @@ mod tests {
         Ok(())
     }
 
+    #[cfg(scout_proactive_coach)]
+    #[test]
+    fn speech_scout_started_is_labelled_as_its_own_never_as_a_question() {
+        let spoken = VoiceTurnModel::new(Some(&VoiceTurnView {
+            answer: Some("Zed finished Eclipse.".to_owned()),
+            app_initiated: true,
+            ..VoiceTurnView::default()
+        }));
+        assert_eq!(
+            spoken.map(|model| (model.heard, model.answer)),
+            Some((
+                Some(super::PROACTIVE_VOICE_LABEL.to_owned()),
+                Some("Zed finished Eclipse.".to_owned())
+            ))
+        );
+        assert!(!super::PROACTIVE_VOICE_LABEL.contains("You asked"));
+    }
+
     #[test]
     fn the_spoken_turn_reads_as_a_question_and_its_answer() {
         assert_eq!(VoiceTurnModel::new(None), None);
@@ -480,6 +512,8 @@ mod tests {
             heard: Some("What should I build?".to_owned()),
             answer: Some("Zhonya's Hourglass.".to_owned()),
             error: None,
+            #[cfg(scout_proactive_coach)]
+            app_initiated: false,
         }));
         assert_eq!(
             answered.map(|model| (model.heard, model.answer)),

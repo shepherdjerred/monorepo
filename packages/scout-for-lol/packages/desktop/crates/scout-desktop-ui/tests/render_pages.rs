@@ -1025,15 +1025,36 @@ mod render {
                         .to_owned(),
                 ),
                 error: None,
+                #[cfg(scout_proactive_coach)]
+                app_initiated: false,
             }),
         })?;
         harness.capture("voice-speaking")?;
+        // Beta profile only: Scout saying something it noticed on its own,
+        // labelled as such rather than as the player's question.
+        #[cfg(scout_proactive_coach)]
+        {
+            harness.receive(&SupervisorMessage::VoiceTurn {
+                turn: Some(VoiceTurnView {
+                    heard: None,
+                    answer: Some(
+                        "Zed finished Eclipse, so his next all-in hits harder. A Seeker's Armguard would let you stop his ultimate."
+                            .to_owned(),
+                    ),
+                    error: None,
+                    app_initiated: true,
+                }),
+            })?;
+            harness.capture("voice-proactive")?;
+        }
         harness.receive(&voice(VoiceState::Listening))?;
         harness.receive(&SupervisorMessage::VoiceTurn {
             turn: Some(VoiceTurnView {
                 heard: None,
                 answer: None,
                 error: Some("Scout did not hear \"hey scout\" at the start.".to_owned()),
+                #[cfg(scout_proactive_coach)]
+                app_initiated: false,
             }),
         })?;
         harness.capture("voice-turn-refused")?;

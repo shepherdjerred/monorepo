@@ -1,5 +1,5 @@
 {
-  "contractVersion": 10,
+  "contractVersion": 11,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],
@@ -134,6 +134,12 @@
     "coach_triggers": {
       "method": "POST",
       "path": "/api/scout-client/v1/coach/triggers",
+      "scope": "explore",
+      "response": "json"
+    },
+    "coach_triggers_speech": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/coach/triggers/speech",
       "scope": "explore",
       "response": "json"
     }

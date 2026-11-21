@@ -218,6 +218,9 @@ pub struct ChatRelay {
     /// Data Dragon's item facts, once loaded, for the proactive detectors.
     #[cfg(scout_proactive_coach)]
     items: watch::Receiver<Option<Arc<ItemCatalog>>>,
+    /// The run of the latest proactive turn that answered, for voice to speak.
+    #[cfg(scout_proactive_coach)]
+    proactive_answers: watch::Receiver<Option<Uuid>>,
 }
 
 /// What a relay with nothing behind it hands the test that drives it.
@@ -235,6 +238,9 @@ pub struct DetachedRelay {
     /// Publishes the item facts the proactive detectors read.
     #[cfg(scout_proactive_coach)]
     pub items: watch::Sender<Option<Arc<ItemCatalog>>>,
+    /// Publishes the proactive answers voice may speak.
+    #[cfg(scout_proactive_coach)]
+    pub proactive_answers: watch::Sender<Option<Uuid>>,
 }
 
 impl ChatRelay {
@@ -251,6 +257,8 @@ impl ChatRelay {
             parts,
             #[cfg(scout_proactive_coach)]
             items,
+            #[cfg(scout_proactive_coach)]
+            proactive_answers,
             ..
         } = Self::detached_coach();
         let enabled = Arc::clone(&relay.coach_enabled);
@@ -262,6 +270,8 @@ impl ChatRelay {
                 parts,
                 #[cfg(scout_proactive_coach)]
                 items,
+                #[cfg(scout_proactive_coach)]
+                proactive_answers,
             },
             origin,
             cache_directory,
@@ -295,6 +305,8 @@ impl ChatRelay {
         let coach_enabled = Arc::new(AtomicBool::new(true));
         #[cfg(scout_proactive_coach)]
         let (items, items_watcher) = watch::channel(None);
+        #[cfg(scout_proactive_coach)]
+        let (proactive_answers, answers_watcher) = watch::channel(None);
         DetachedRelay {
             relay: Self {
                 commands,
@@ -303,6 +315,8 @@ impl ChatRelay {
                 parts: watcher,
                 #[cfg(scout_proactive_coach)]
                 items: items_watcher,
+                #[cfg(scout_proactive_coach)]
+                proactive_answers: answers_watcher,
             },
             commands: receiver,
             coach: coach_receiver,
@@ -310,6 +324,8 @@ impl ChatRelay {
             coach_enabled,
             #[cfg(scout_proactive_coach)]
             items,
+            #[cfg(scout_proactive_coach)]
+            proactive_answers,
         }
     }
 
@@ -366,6 +382,14 @@ impl ChatRelay {
     #[must_use]
     pub fn item_catalog(&self) -> Option<Arc<ItemCatalog>> {
         self.items.borrow().clone()
+    }
+
+    /// The run of each proactive turn that answers, as it does: voice speaks
+    /// it when the player has conversation mode on. Beta profile only.
+    #[cfg(scout_proactive_coach)]
+    #[must_use]
+    pub fn proactive_answers(&self) -> watch::Receiver<Option<Uuid>> {
+        self.proactive_answers.clone()
     }
 
     /// Whether Scout refused this build as too old for chat.
@@ -455,6 +479,11 @@ struct Relay {
     gate: TriggerGate,
     #[cfg(scout_proactive_coach)]
     items: watch::Sender<Option<Arc<ItemCatalog>>>,
+    /// The proactive turn being followed, until its stream ends.
+    #[cfg(scout_proactive_coach)]
+    proactive_run: Option<Uuid>,
+    #[cfg(scout_proactive_coach)]
+    proactive_answers: watch::Sender<Option<Uuid>>,
 }
 
 /// The relay task's ends of its channels.
@@ -465,6 +494,8 @@ struct Channels {
     parts: watch::Sender<ChatParts>,
     #[cfg(scout_proactive_coach)]
     items: watch::Sender<Option<Arc<ItemCatalog>>>,
+    #[cfg(scout_proactive_coach)]
+    proactive_answers: watch::Sender<Option<Uuid>>,
 }
 
 async fn run(channels: Channels, origin: String, cache_directory: PathBuf) {
@@ -475,6 +506,8 @@ async fn run(channels: Channels, origin: String, cache_directory: PathBuf) {
         parts,
         #[cfg(scout_proactive_coach)]
         items,
+        #[cfg(scout_proactive_coach)]
+        proactive_answers,
     } = channels;
     let (answers, mut answered) = mpsc::unbounded_channel();
     let session = ChatSession::with_web_origin(&origin);
@@ -491,6 +524,10 @@ async fn run(channels: Channels, origin: String, cache_directory: PathBuf) {
         gate: TriggerGate::new(),
         #[cfg(scout_proactive_coach)]
         items,
+        #[cfg(scout_proactive_coach)]
+        proactive_run: None,
+        #[cfg(scout_proactive_coach)]
+        proactive_answers,
     };
     loop {
         tokio::select! {
@@ -704,6 +741,7 @@ impl Relay {
             let run_id = run.run_id;
             self.session.started(run);
             self.follow_run(run_id);
+            self.proactive_run = Some(run_id);
         } else {
             self.session
                 .proactive_turn_not_started(result.err().as_ref());
@@ -922,14 +960,7 @@ impl Relay {
                 self.list();
             }
             Answer::Signal(signal) => self.session.signal(&signal),
-            Answer::Ended(end) => {
-                self.follow = None;
-                if let Some(conversation_id) = self.session.stream_ended(end) {
-                    self.fetch(conversation_id, Answer::Settled);
-                    // The title and order change once a turn lands.
-                    self.list();
-                }
-            }
+            Answer::Ended(end) => self.ended(end),
             Answer::Settled(Ok(transcript)) => self.session.settled(transcript),
             Answer::Settled(Err(error)) => self.session.settle_failed(&error),
             // Without the catalog, cards keep their labelled placeholders;
@@ -957,6 +988,28 @@ impl Relay {
                 };
                 self.session.image_loaded(key, image);
             }
+        }
+    }
+
+    /// The run stream ended: read the conversation back once it landed.
+    fn ended(&mut self, end: Result<StreamEnd, ExploreClientError>) {
+        self.follow = None;
+        // A proactive turn that answered may be spoken.
+        #[cfg(scout_proactive_coach)]
+        if let Some(run_id) = self.proactive_run.take()
+            && matches!(
+                end,
+                Ok(StreamEnd::Done(
+                    scout_client_core::desktop_api::RunOutcome::Succeeded
+                ))
+            )
+        {
+            self.proactive_answers.send_replace(Some(run_id));
+        }
+        if let Some(conversation_id) = self.session.stream_ended(end) {
+            self.fetch(conversation_id, Answer::Settled);
+            // The title and order change once a turn lands.
+            self.list();
         }
     }
 

@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/bun";
 import {
   ExploreTurnRequestSchema,
   SCOUT_DESKTOP_VOICE_TURN,
@@ -12,10 +11,7 @@ import {
 } from "@scout-for-lol/data";
 import { isQuotaExhaustedError } from "@shepherdjerred/voice-assistant";
 import {
-  VOICE_SPEECH_MODEL,
-  VOICE_SPEECH_SAMPLE_RATE,
   VOICE_TRANSCRIPTION_MODEL,
-  synthesizeVoiceAnswer,
   transcribeVoiceQuestion,
 } from "@shepherdjerred/voice-assistant/openai-audio.ts";
 import type { CoachTurnRecord } from "#src/coach/audit.ts";
@@ -24,22 +20,21 @@ import {
   proveVoiceInitiation,
   type VoiceUtterance,
 } from "#src/coach/voice-turn.ts";
-import { exploreSpendPolicy } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import { subscribeDurableExploreRun } from "#src/explore/runs/durable-runs.ts";
 import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import { classifyExploreStartError } from "#src/explore/runs/start-refusal.ts";
-import {
-  ExploreBudgetError,
-  releaseExploreAudio,
-  reserveExploreAudio,
-  settleExploreAudio,
-  type ExploreAudioReservation,
-} from "#src/explore/spending/ledger.ts";
 import { loadExploreRunResult } from "#src/explore/store.ts";
 import { createLogger } from "#src/logger.ts";
 import { voiceAudioRequestSignal } from "#src/voice-assistant/constants.ts";
 import type { DesktopExploreCaller } from "./auth.ts";
+import {
+  holdAudio,
+  pcmChunks,
+  releaseAudio,
+  settleAudio,
+  speakHeld,
+} from "./coach-speech.ts";
 
 /**
  * One spoken coach turn after `coach-voice-routes.ts` admitted it: hear the
@@ -55,8 +50,6 @@ import type { DesktopExploreCaller } from "./auth.ts";
 const logger = createLogger("coach-voice-turns");
 const encoder = new TextEncoder();
 const MESSAGE_MAX_LENGTH = 500;
-/** `synthesizeVoiceAnswer`'s PCM: 16-bit mono. */
-const SPEECH_BYTES_PER_MS = (VOICE_SPEECH_SAMPLE_RATE * 2) / 1000;
 
 /** What the player is told for each refusal the turn words itself. */
 export const VOICE_MESSAGES = {
@@ -156,70 +149,6 @@ export type VoiceTurnOutcome = Extract<
   ScoutDesktopVoiceTurnEvent,
   { type: "done" }
 >["outcome"];
-
-/**
- * Hold the allowance for `audioMs` of audio before a provider is called.
- * Null when the owner's or Explore's monthly allowance cannot cover it; any
- * other ledger failure is a broken contract and propagates.
- */
-async function holdAudio(
-  ownerId: DiscordAccountId,
-  model: typeof VOICE_TRANSCRIPTION_MODEL | typeof VOICE_SPEECH_MODEL,
-  audioMs: number,
-): Promise<ExploreAudioReservation | null> {
-  try {
-    return await reserveExploreAudio({
-      ownerId,
-      runId: globalThis.crypto.randomUUID(),
-      model,
-      audioMs,
-      policy: exploreSpendPolicy(),
-    });
-  } catch (error) {
-    if (error instanceof ExploreBudgetError) return null;
-    throw error;
-  }
-}
-
-/** Settle a hold at the audio's real length; a ledger failure is reported, never the turn's end. */
-async function settleAudio(
-  reservation: ExploreAudioReservation,
-  runId: string,
-  audioMs: number,
-): Promise<void> {
-  try {
-    await settleExploreAudio(reservation, { audioMs, runId });
-  } catch (error) {
-    logger.error("Voice turn audio spend was not recorded", {
-      runId,
-      model: reservation.model,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, { tags: { source: "coach-voice-spend" } });
-  }
-}
-
-/** Give back a hold whose provider call did not complete. */
-async function releaseAudio(
-  reservation: ExploreAudioReservation,
-): Promise<void> {
-  try {
-    await releaseExploreAudio(reservation);
-  } catch (error) {
-    logger.error("Voice turn audio hold was not released", {
-      model: reservation.model,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    Sentry.captureException(error, { tags: { source: "coach-voice-spend" } });
-  }
-}
-
-/**
- * The longest a spoken answer can take to say, per character: a deliberately
- * slow 10 characters a second, so the hold taken before synthesis, when the
- * audio's length is unknown, covers what the provider can bill.
- */
-const SPEECH_MS_PER_CHARACTER = 100;
 
 type HeardQuestion =
   | {
@@ -347,49 +276,25 @@ async function speak(
   runId: string,
   text: string,
 ): Promise<void> {
-  const hold = await holdAudio(
-    input.caller.userId,
-    VOICE_SPEECH_MODEL,
-    text.length * SPEECH_MS_PER_CHARACTER,
-  );
-  if (hold === null) {
-    emitVoiceError(stream, "budget_exhausted", VOICE_MESSAGES.budget_exhausted);
-    return;
-  }
-  let pcm: Uint8Array;
-  try {
-    pcm = await synthesizeVoiceAnswer({
-      apiKey: input.apiKey,
-      text,
-      signal: voiceAudioRequestSignal(input.signal),
-    });
-  } catch (error) {
-    await releaseAudio(hold);
-    if (input.signal.aborted) return;
-    const budget = isQuotaExhaustedError(error);
-    logger.warn("Voice turn speech failed", {
-      runId,
-      budget,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    const code = budget ? "budget_exhausted" : "synthesis_failed";
+  const spoken = await speakHeld({
+    ownerId: input.caller.userId,
+    apiKey: input.apiKey,
+    runId,
+    text,
+    signal: input.signal,
+  });
+  if (!spoken.ok) {
+    if (spoken.reason === "aborted") return;
+    const code =
+      spoken.reason === "budget" ? "budget_exhausted" : "synthesis_failed";
     emitVoiceError(stream, code, VOICE_MESSAGES[code]);
     return;
   }
-  await settleAudio(hold, runId, pcm.byteLength / SPEECH_BYTES_PER_MS);
   const { maxChunkBytes, encoding, sampleRateHz } =
     SCOUT_DESKTOP_VOICE_TURN.speech;
-  for (let offset = 0; offset < pcm.byteLength; offset += maxChunkBytes) {
-    stream.emit({
-      type: "audio",
-      sequence: offset / maxChunkBytes,
-      encoding,
-      sampleRateHz,
-      base64: Buffer.from(
-        pcm.subarray(offset, offset + maxChunkBytes),
-      ).toString("base64"),
-    });
-  }
+  pcmChunks(spoken.pcm, maxChunkBytes).forEach((base64, sequence) => {
+    stream.emit({ type: "audio", sequence, encoding, sampleRateHz, base64 });
+  });
 }
 
 /** Wait for the run, then send its answer and speak it. */

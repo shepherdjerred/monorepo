@@ -160,3 +160,75 @@ async fn an_invalid_snapshot_refusal_stops_the_game_too() -> TestResult {
     assert_eq!(posted, 1);
     Ok(())
 }
+
+const SPEECH_FIXTURE: &str = include_str!(
+    "../../../../../data/src/scout-client/desktop-fixtures/coach-triggers-speech.json"
+);
+
+#[tokio::test]
+async fn a_proactive_answer_is_spoken_from_its_run_id_alone() -> TestResult {
+    let fixture: Value = serde_json::from_str(SPEECH_FIXTURE)?;
+    let server = MockServer::start(vec![(
+        Route::CoachTriggersSpeech.path(),
+        vec![Reply::json(200, fixture["response"].to_string())],
+    )])
+    .await?;
+    let run_id = uuid::Uuid::parse_str(fixture["request"]["runId"].as_str().ok_or("runId")?)?;
+
+    let speech = server.client()?.speak_proactive_answer(run_id).await?;
+
+    let posted = server.requests_to(Route::CoachTriggersSpeech.path());
+    assert_eq!(posted.len(), 1);
+    let sent: Value = serde_json::from_str(&posted[0].body)?;
+    assert_eq!(sent, fixture["request"], "a run id and nothing to say");
+    assert_eq!(speech.spoken_text, fixture["response"]["spokenText"]);
+    assert_eq!(speech.sample_rate_hz, 24_000);
+    assert_eq!(speech.pcm.len(), 4_800, "the golden 100 ms of speech");
+    Ok(())
+}
+
+#[tokio::test]
+async fn speech_in_another_format_is_a_broken_contract() -> TestResult {
+    let fixture: Value = serde_json::from_str(SPEECH_FIXTURE)?;
+    let mut response = fixture["response"].clone();
+    response["sampleRateHz"] = json!(16_000);
+    let server = MockServer::start(vec![(
+        Route::CoachTriggersSpeech.path(),
+        vec![Reply::json(200, response.to_string())],
+    )])
+    .await?;
+    let result = server
+        .client()?
+        .speak_proactive_answer(uuid::Uuid::from_u128(1))
+        .await;
+    assert!(matches!(
+        result,
+        Err(scout_explore_client::ExploreClientError::Unexpected { status: 200, .. })
+    ));
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_speech_refusal_keeps_its_code() -> TestResult {
+    let server = MockServer::start(vec![(
+        Route::CoachTriggersSpeech.path(),
+        vec![Reply::json(
+            503,
+            json!({
+                "error": "feature_disabled",
+                "message": "Scout does not start coaching on its own here."
+            })
+            .to_string(),
+        )],
+    )])
+    .await?;
+    let result = server
+        .client()?
+        .speak_proactive_answer(uuid::Uuid::from_u128(1))
+        .await;
+    assert_eq!(
+        result.err().and_then(|error| error.recovery()),
+        Some(scout_explore_client::Recovery::FeatureDisabled)
+    );
+    Ok(())
+}

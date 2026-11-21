@@ -10,8 +10,8 @@
 //! - the diagnostic operation the supervisor records when it asks Scout for
 //!   a proactive turn, a string only that code path holds;
 //! - where the binary carries its own symbol table (not Windows, whose
-//!   symbols live in a separate PDB), the `start_coach_trigger` sender and
-//!   `live::detectors::detect`.
+//!   symbols live in a separate PDB), the `start_coach_trigger` sender, the
+//!   `speak_proactive_answer` speech request and `live::detectors::detect`.
 //!
 //! The beta run of the same test is the positive control: it proves the
 //! search finds them when they are there. CI runs the workspace tests in both
@@ -24,6 +24,8 @@ use std::error::Error;
 const OPERATION: &[u8] = b"proactive_coach_trigger";
 /// The sender's name, as every symbol mangling spells it.
 const SENDER: &[u8] = b"start_coach_trigger";
+/// The proactive speech request's name.
+const SPEECH: &[u8] = b"speak_proactive_answer";
 /// `live::detectors::detect`, as both Rust manglings spell its last two
 /// path segments.
 const DETECT: &[u8] = b"9detectors6detect";
@@ -57,6 +59,11 @@ fn the_binary_holds_a_trigger_sender_only_in_the_beta_profile() -> Result<(), Bo
             contains(&binary, SENDER),
             beta,
             "the coach/triggers sender is in the binary exactly when it is a beta build"
+        );
+        assert_eq!(
+            contains(&binary, SPEECH),
+            beta,
+            "the proactive speech request is in the binary exactly when it is a beta build"
         );
         assert_eq!(
             contains(&binary, DETECT),

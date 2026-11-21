@@ -305,6 +305,8 @@ fn start_voice(
             std::env::current_exe().ok(),
             scout_client_runtime::runtime::data_directory(),
         )),
+        #[cfg(scout_proactive_coach)]
+        proactive: Box::new(voice::ScoutProactiveSpeech::new(origin.clone())),
         turns: Box::new(voice::turns::ScoutTurns::new(origin)),
         speaker: Box::new(scout_voice::playback::device::CpalSpeaker::default()),
         store: Box::new(voice::FileStore(
