@@ -76,6 +76,8 @@ async function main(): Promise<void> {
     "-e",
     "FEATURE_FLAGS_MODE=disabled",
     "-e",
+    "USAGE_ANALYTICS_ENABLED=false",
+    "-e",
     "STATE_DIR=/tmp/videos",
     "--entrypoint",
     "sh",

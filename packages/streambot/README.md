@@ -177,7 +177,9 @@ Captures are counted in `streambot_analytics_events_total{event,outcome}`
 (`captured|dropped|disabled|failed`), never block or alter a request, and are
 flushed on graceful shutdown. The public project token and host come from
 `POSTHOG_PROJECT_TOKEN` and `POSTHOG_API_HOST` (set by the homelab chart);
-startup fails when the flag is on and they are absent.
+startup fails when the flag is on and they are absent. A run with no PostHog
+destination (local development, the image smoke) sets
+`USAGE_ANALYTICS_ENABLED=false`.
 
 ## Music discovery and playlists
 

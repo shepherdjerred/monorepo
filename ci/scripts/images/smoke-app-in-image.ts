@@ -293,6 +293,10 @@ const commands: Record<
       VIDEOS_DIR: "/tmp/videos",
       STATE_DIR: "/tmp/state",
       FEATURE_FLAGS_MODE: "disabled",
+      // With flags disabled the usage-capture flag falls back to this variable,
+      // which defaults on. The smoke has no PostHog destination, and Streambot
+      // refuses to start with capture on and no destination.
+      USAGE_ANALYTICS_ENABLED: "false",
     },
   },
   "tasknotes-server": {
