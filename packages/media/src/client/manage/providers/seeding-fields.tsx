@@ -9,6 +9,8 @@ import {
   TextField,
 } from "#client/ui/field.tsx";
 import { classNames } from "#client/ui/class-names.ts";
+import { DurationField } from "#client/ui/duration-field.tsx";
+import { DURATION_RULES } from "./provider-input.ts";
 import styles from "./providers.module.css";
 
 const cx = classNames(styles);
@@ -26,38 +28,27 @@ const PRIVATE_TRACKERS: ReadonlySet<string> = new Set([
 function SizeRuleFields({ rule }: { rule: PrivatePolicy["sizeRule"] }) {
   return (
     <>
-      <TextField
+      <DurationField
         label="Time for each GiB"
         name="policySecondsPerGiB"
-        type="number"
-        min="0.001"
-        step="any"
-        required
-        requiredMessage="Enter the seconds of seeding each GiB adds."
-        unit="seconds per GiB"
-        defaultValue={rule?.secondsPerGiB ?? ""}
+        rules={DURATION_RULES.policySecondsPerGiB}
+        requiredMessage="Enter the seeding time each GiB adds."
+        defaultSeconds={rule?.secondsPerGiB ?? null}
       />
-      <TextField
+      <DurationField
         label="Shortest size-based time"
         name="policySizeMinimum"
-        type="number"
-        min="0"
-        step="1"
-        required
+        rules={DURATION_RULES.policySizeMinimum}
         requiredMessage="Enter the shortest time, or 0 for none."
-        unit="seconds"
-        defaultValue={rule?.minimumSeconds ?? 0}
+        defaultSeconds={rule?.minimumSeconds ?? 0}
       />
-      <TextField
+      <DurationField
         label="Longest size-based time"
         description="Leave empty for no limit. The longer of the fixed minimum and the size-based time applies."
         optional
         name="policySizeMaximum"
-        type="number"
-        min="1"
-        step="1"
-        unit="seconds"
-        defaultValue={rule?.maximumSeconds ?? ""}
+        rules={DURATION_RULES.policySizeMaximum}
+        defaultSeconds={rule?.maximumSeconds ?? null}
       />
     </>
   );
@@ -67,16 +58,13 @@ function CustomRuleFields({ policy }: { policy: PrivatePolicy | null }) {
   const [sizeRule, setSizeRule] = useState(policy?.sizeRule != null);
   return (
     <>
-      <TextField
+      <DurationField
         label="Minimum seeding time"
         description="Leave empty if the tracker sets no fixed time."
         optional
         name="policySeconds"
-        type="number"
-        min="1"
-        step="1"
-        unit="seconds"
-        defaultValue={policy?.minimumSeconds ?? ""}
+        rules={DURATION_RULES.policySeconds}
+        defaultSeconds={policy?.minimumSeconds ?? null}
       />
       <ChoiceField
         legend="When the tracker asks for both a ratio and a time"

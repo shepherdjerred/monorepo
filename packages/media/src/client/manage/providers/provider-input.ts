@@ -4,6 +4,11 @@ import {
   type ProviderStatus,
   type SaveProvider,
 } from "#shared/admin.ts";
+import {
+  EVERY_DURATION_UNIT,
+  readDuration,
+  type DurationRules,
+} from "#client/ui/duration.ts";
 
 /**
  * Reads a provider's form into the body `PUT /admin/providers/:id` accepts.
@@ -21,6 +26,49 @@ export const CREDENTIAL_FIELDS: Readonly<Record<string, readonly string[]>> = {
   subhd: ["baseUrl", "token", "instanceId"],
 };
 
+/**
+ * The form's lengths of time, by control name. The API takes each in
+ * seconds; the limits here are the schema's, so a field can say what is
+ * wrong in the unit it was typed in.
+ */
+export const DURATION_RULES = {
+  minimumIntervalSeconds: {
+    units: ["seconds", "minutes"],
+    startUnit: "seconds",
+    min: 1,
+    max: 3600,
+  },
+  policySeconds: { units: EVERY_DURATION_UNIT, startUnit: "days", min: 1 },
+  // The one time the API takes a fraction of a second for.
+  policySecondsPerGiB: {
+    units: EVERY_DURATION_UNIT,
+    startUnit: "hours",
+    min: 0.001,
+    fractional: true,
+  },
+  policySizeMinimum: { units: EVERY_DURATION_UNIT, startUnit: "hours", min: 0 },
+  policySizeMaximum: { units: EVERY_DURATION_UNIT, startUnit: "days", min: 1 },
+} as const satisfies Record<string, DurationRules>;
+
+type DurationName = keyof typeof DURATION_RULES;
+/** A duration field in seconds; `null` when it was left empty. */
+type ReadSeconds = (name: DurationName) => number | null;
+
+/**
+ * Reads duration fields in seconds and keeps what is wrong with each. One
+ * that cannot be read comes back as `NaN`, which no schema accepts.
+ */
+function durationReader(form: FormData) {
+  const problems: Record<string, string> = {};
+  const seconds: ReadSeconds = (name) => {
+    const parsed = readDuration(form, name, DURATION_RULES[name]);
+    if (parsed.ok) return parsed.seconds;
+    problems[name] = parsed.message;
+    return Number.NaN;
+  };
+  return { problems, seconds };
+}
+
 function text(form: FormData, name: string): string {
   const field = form.get(name);
   if (typeof field !== "string") throw new TypeError(`Missing ${name}`);
@@ -33,7 +81,7 @@ function optionalNumber(form: FormData, name: string): number | null {
 }
 
 /** The seeding policy as the form states it, before the schema has checked it. */
-function seedingPolicyInput(form: FormData): unknown {
+function seedingPolicyInput(form: FormData, seconds: ReadSeconds): unknown {
   const kind = text(form, "policyKind").trim();
   if (kind === "unknown" || kind === "public") return { kind };
   const common = {
@@ -45,21 +93,23 @@ function seedingPolicyInput(form: FormData): unknown {
   if (kind === "privatehd") return common;
   return {
     ...common,
-    minimumSeconds: optionalNumber(form, "policySeconds"),
+    minimumSeconds: seconds("policySeconds"),
     combination: text(form, "policyCombination").trim(),
     sizeRule:
       form.get("policySizeRule") === "on"
         ? {
-            secondsPerGiB: Number(text(form, "policySecondsPerGiB").trim()),
-            minimumSeconds: Number(text(form, "policySizeMinimum").trim()),
-            maximumSeconds: optionalNumber(form, "policySizeMaximum"),
+            secondsPerGiB: seconds("policySecondsPerGiB"),
+            minimumSeconds: seconds("policySizeMinimum"),
+            maximumSeconds: seconds("policySizeMaximum"),
           }
         : null,
   };
 }
 
 export function readSeedingPolicy(form: FormData) {
-  return ProviderSeedingPolicySchema.parse(seedingPolicyInput(form));
+  return ProviderSeedingPolicySchema.parse(
+    seedingPolicyInput(form, durationReader(form).seconds),
+  );
 }
 
 /** Which control a schema issue belongs to, by the issue's path. */
@@ -104,19 +154,21 @@ export function readProvider(
           ]),
         )
       : undefined;
+  const durations = durationReader(form);
   const parsed = SaveProviderSchema.safeParse({
     expectedUpdatedAt: provider.updatedAt,
     enabled: form.get("enabled") === "on",
     configuration: {
       ...provider.configuration,
-      minimumIntervalSeconds: Number(text(form, "minimumIntervalSeconds")),
+      minimumIntervalSeconds: durations.seconds("minimumIntervalSeconds"),
       dailyDownloadLimit: Number(text(form, "dailyDownloadLimit")),
     },
-    seedingPolicy: seedingPolicyInput(form),
+    seedingPolicy: seedingPolicyInput(form, durations.seconds),
     ...(credential === undefined ? {} : { credential }),
   });
   if (parsed.success) return { ok: true, input: parsed.data };
-  const fields: Record<string, string> = {};
+  // A time that could not be read says so better than the schema does.
+  const fields: Record<string, string> = { ...durations.problems };
   let other = false;
   for (const issue of parsed.error.issues) {
     const path = issue.path.join(".");

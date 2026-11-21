@@ -31,6 +31,7 @@ function providerForm(fields: Record<string, string>): FormData {
   for (const [key, value] of Object.entries({
     enabled: "on",
     minimumIntervalSeconds: "45",
+    minimumIntervalSecondsUnit: "seconds",
     dailyDownloadLimit: "10",
     policyKind: "unknown",
     ...fields,
@@ -76,13 +77,17 @@ test("what the schema refuses is placed on the control it came from", () => {
       policyKind: "private",
       policyRatio: "",
       policySeconds: "",
+      policySecondsUnit: "days",
       policyCombination: "all",
       policyEvidence: "short",
       policyVerified: "on",
       policySizeRule: "on",
-      policySecondsPerGiB: "3600",
+      policySecondsPerGiB: "1",
+      policySecondsPerGiBUnit: "hours",
       policySizeMinimum: "100",
+      policySizeMinimumUnit: "minutes",
       policySizeMaximum: "10",
+      policySizeMaximumUnit: "minutes",
     }),
     tracker,
   );
@@ -93,15 +98,18 @@ test("what the schema refuses is placed on the control it came from", () => {
     "policyEvidence",
     "policySizeMaximum",
   ]);
-  expect(refused.fields["policySizeMaximum"]).toBe(
-    "The longest time cannot be shorter than the shortest time.",
-  );
+  expect(refused.fields).toMatchObject({
+    minimumIntervalSeconds: "Enter 1 second or more.",
+    policySizeMaximum:
+      "The longest time cannot be shorter than the shortest time.",
+  });
   expect(
     readProvider(
       providerForm({
         policyKind: "private",
         policyRatio: "",
         policySeconds: "",
+        policySecondsUnit: "days",
         policyCombination: "all",
         policyEvidence: "Rules page, checked today.",
         policyVerified: "on",
@@ -123,14 +131,18 @@ test("typed private inputs preserve ratio/time combination and verified evidence
   for (const [key, value] of Object.entries({
     policyKind: "private",
     policyRatio: "1.5",
-    policySeconds: "604800",
+    policySeconds: "7",
+    policySecondsUnit: "days",
     policyCombination: "all",
     policyEvidence: "Tracker rules checked for the current account",
     policyVerified: "on",
     policySizeRule: "on",
-    policySecondsPerGiB: "3600",
-    policySizeMinimum: "86400",
+    policySecondsPerGiB: "60",
+    policySecondsPerGiBUnit: "minutes",
+    policySizeMinimum: "24",
+    policySizeMinimumUnit: "hours",
     policySizeMaximum: "1209600",
+    policySizeMaximumUnit: "seconds",
   }))
     form.set(key, value);
   expect(readSeedingPolicy(form)).toEqual({
@@ -148,6 +160,69 @@ test("typed private inputs preserve ratio/time combination and verified evidence
   });
   form.set("policySizeMaximum", "1");
   expect(() => readSeedingPolicy(form)).toThrow();
+});
+
+test("a time that is not a whole number of seconds is refused on its own control, in its own words", () => {
+  const refused = readProvider(
+    providerForm({
+      minimumIntervalSeconds: "0.01",
+      minimumIntervalSecondsUnit: "minutes",
+      policyKind: "private",
+      policyRatio: "1",
+      policySeconds: "1.00001",
+      policySecondsUnit: "days",
+      policyCombination: "any",
+      policyEvidence: "Rules page, checked today.",
+      policyVerified: "on",
+      policySizeRule: "on",
+      // The one time the API takes fractions of a second for.
+      policySecondsPerGiB: "0.5",
+      policySecondsPerGiBUnit: "seconds",
+      policySizeMinimum: "0",
+      policySizeMinimumUnit: "hours",
+      policySizeMaximum: "",
+      policySizeMaximumUnit: "days",
+    }),
+    tracker,
+  );
+  expect(refused).toEqual({
+    ok: false,
+    other: false,
+    fields: {
+      minimumIntervalSeconds:
+        "Enter a whole number of seconds. 0.01 minutes is 0.6 seconds.",
+      policySeconds:
+        "Enter a whole number of seconds. 1.00001 days is 86400.864 seconds.",
+    },
+  });
+  const accepted = readProvider(
+    providerForm({
+      minimumIntervalSeconds: "1.5",
+      minimumIntervalSecondsUnit: "minutes",
+      policyKind: "private",
+      policyRatio: "1",
+      policySeconds: "1.5",
+      policySecondsUnit: "days",
+      policyCombination: "any",
+      policyEvidence: "Rules page, checked today.",
+      policyVerified: "on",
+      policySizeRule: "on",
+      policySecondsPerGiB: "0.5",
+      policySecondsPerGiBUnit: "seconds",
+      policySizeMinimum: "0",
+      policySizeMinimumUnit: "hours",
+      policySizeMaximum: "",
+      policySizeMaximumUnit: "days",
+    }),
+    tracker,
+  );
+  expect(accepted.ok && accepted.input).toMatchObject({
+    configuration: { minimumIntervalSeconds: 90 },
+    seedingPolicy: {
+      minimumSeconds: 129_600,
+      sizeRule: { secondsPerGiB: 0.5, minimumSeconds: 0, maximumSeconds: null },
+    },
+  });
 });
 test("unknown policy needs no hidden private values; unchecked verification cannot authorize cleanup", () => {
   const form = new FormData();

@@ -32,7 +32,11 @@
     margin: var(--space-2) 0 0;
     padding-inline-start: var(--space-5);
   }
+  /* A flex box's baseline is its first line, so the bullet sits beside the
+     start of a message that wraps, not beside its last line. */
   .summaryLink {
+    display: inline-flex;
+    align-items: center;
     padding: 0;
     border: 0;
     background: none;

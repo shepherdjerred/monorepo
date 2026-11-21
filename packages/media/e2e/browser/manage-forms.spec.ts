@@ -1,21 +1,14 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { MEMBER, OWNER } from "#testing/fixture-api/personas.ts";
 import {
   answerWrites,
   openManage,
+  openRow,
   overflowsSideways,
   storageContents,
   storedCommandKeys,
   violations,
 } from "./manage-support.ts";
-
-/** Opens a row that is closed until asked for, such as a provider. */
-async function openRow(page: Page, name: string) {
-  await page
-    .locator("summary")
-    .filter({ has: page.getByRole("heading", { name, exact: true }) })
-    .click();
-}
 
 test.describe("household", () => {
   test("pausing a member's requests sends the change and says what was done", async ({
@@ -231,7 +224,9 @@ test.describe("providers", () => {
     await openManage(page, "/manage/providers");
     await openRow(page, "AvistaZ");
     const form = page.getByRole("form", { name: "AvistaZ" });
-    const interval = form.getByLabel("Shortest wait between requests");
+    const interval = form.getByLabel("Shortest wait between requests", {
+      exact: true,
+    });
     const evidence = form.getByLabel("Where these rules come from");
 
     await interval.fill("0");
@@ -241,7 +236,9 @@ test.describe("providers", () => {
       "2 fields need attention",
     );
     await expect(interval).toBeFocused();
-    await expect(interval).toHaveAccessibleDescription(/Enter 1 or more\./u);
+    await expect(interval).toHaveAccessibleDescription(
+      /Enter 1 second or more\./u,
+    );
     await expect(evidence).toHaveAttribute("aria-invalid", "true");
     expect(await violations(page)).toEqual([]);
     expect(writes).toEqual([]);

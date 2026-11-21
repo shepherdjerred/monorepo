@@ -8,9 +8,15 @@ import { useUser } from "#client/shell/user.ts";
 import { Button } from "#client/ui/button.tsx";
 import { classNames } from "#client/ui/class-names.ts";
 import { ConfirmDialog } from "#client/ui/confirm-dialog.tsx";
+import { DurationField } from "#client/ui/duration-field.tsx";
+import { formatDuration } from "#client/ui/duration.ts";
 import { CheckboxField, FieldGroup, TextField } from "#client/ui/field.tsx";
 import { Form, FormFooter } from "#client/ui/form.tsx";
-import { CREDENTIAL_FIELDS, readProvider } from "./provider-input.ts";
+import {
+  CREDENTIAL_FIELDS,
+  DURATION_RULES,
+  readProvider,
+} from "./provider-input.ts";
 import { SeedingFields } from "./seeding-fields.tsx";
 import styles from "./providers.module.css";
 
@@ -109,7 +115,7 @@ function ProviderFacts({ provider }: { provider: ProviderStatus }) {
             Priority {selection.priority}. Needs at least{" "}
             {selection.minimumSeeders} seeder
             {selection.minimumSeeders === 1 ? "" : "s"}. Waits{" "}
-            {selection.delaySeconds / 60} minutes before choosing
+            {formatDuration(selection.delaySeconds)} before choosing
             {selection.bypassAtHighestQuality
               ? ", unless the release is already the best quality allowed."
               : "."}
@@ -260,17 +266,12 @@ export function ProviderForm({
           name="enabled"
           defaultChecked={provider.enabled}
         />
-        <TextField
+        <DurationField
           label="Shortest wait between requests"
           name="minimumIntervalSeconds"
-          type="number"
-          min={1}
-          max={3600}
-          step={1}
-          required
-          requiredMessage="Enter a number of seconds from 1 to 3600."
-          unit="seconds"
-          defaultValue={provider.configuration.minimumIntervalSeconds}
+          rules={DURATION_RULES.minimumIntervalSeconds}
+          requiredMessage="Enter a time from 1 second to 60 minutes."
+          defaultSeconds={provider.configuration.minimumIntervalSeconds}
         />
         {provider.kind === "subtitle" ? (
           <TextField
