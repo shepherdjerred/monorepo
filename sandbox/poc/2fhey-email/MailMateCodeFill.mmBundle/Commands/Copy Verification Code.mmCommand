@@ -1,0 +1,10 @@
+{
+    name = "Copy Verification Code";
+    uuid = "E1F874D4-CDB9-4D25-8D02-8B7B2F9B4A4E";
+    keyEquivalent = "$@e";
+    input = "canonical";
+    executionMode = "singleMessage";
+    output = "discard";
+    environment = "MM_FROM=${from}\nMM_SUBJECT=${subject}\nMM_DATE=${date}\nMM_MESSAGE_ID=${message-id.split}";
+    script = "#!/bin/sh\n\"${MM_BUNDLE_SUPPORT}/bin/ingest-otp\"\n";
+}

@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+app_path="${MAILMATE_CODEFILL_APP:-/Applications/MailMateCodeFill.app}"
+helper="$app_path/Contents/Helpers/MailMateCodeFillHelper.app/Contents/MacOS/MailMateCodeFillHelper"
+started_at=$(date +%s)
+/usr/bin/logger -t MailMateCodeFill "event=bundle_helper_started app_location=standard_or_configured"
+if [ ! -x "$helper" ]; then
+    /usr/bin/logger -t MailMateCodeFill "event=bundle_helper_finished outcome=missing_helper"
+    printf '%s\n' "MailMate CodeFill helper not found in $app_path" >&2
+    exit 1
+fi
+
+set +e
+"$helper" --mailmate
+status=$?
+set -e
+elapsed=$(( $(date +%s) - started_at ))
+/usr/bin/logger -t MailMateCodeFill "event=bundle_helper_finished outcome=completed exit_status=$status duration_s=$elapsed"
+exit "$status"
