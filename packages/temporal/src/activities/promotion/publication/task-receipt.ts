@@ -5,6 +5,14 @@ import type {
 import type { PromotionTaskResult } from "./task-contract.ts";
 import { promotionObservationText } from "./observation.ts";
 
+export type RedditCommentReceipt = {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: string;
+  parentId: string;
+};
+
 function assertFreshDiscordReceipt(
   publishedAt: string | null | undefined,
   attemptedAt: string,
@@ -22,13 +30,20 @@ export function assertPromotionTaskReceipt(input: {
   target: PromotionTarget;
   pending: PromotionAttempt;
   receipt: NonNullable<PromotionTaskResult["receipt"]>;
-  page: { url: string; text: string; publishedAt?: string | null };
+  page: {
+    url: string;
+    text: string;
+    publishedAt?: string | null;
+    redditComment?: RedditCommentReceipt;
+  };
 }): void {
   const { target, pending, receipt, page } = input;
   const text = promotionObservationText(page.text);
   if (page.url !== receipt.url || !text.includes(receipt.quote))
     throw new Error("Receipt requires exact browser readback");
-  if (target.id.startsWith("reddit-"))
+  if (target.action === "reply")
+    assertRedditCommentReceipt(target, pending, receipt, page);
+  else if (target.id.startsWith("reddit-"))
     assertRedditReceipt(pending, receipt, page, text);
   if (receipt.status !== "verified") return;
   if (target.discord !== undefined)
@@ -54,6 +69,46 @@ export function assertPromotionTaskReceipt(input: {
     )
   )
     throw new Error("Receipt confirmation was already present before this run");
+}
+
+function assertRedditCommentReceipt(
+  target: PromotionTarget,
+  pending: PromotionAttempt,
+  receipt: NonNullable<PromotionTaskResult["receipt"]>,
+  page: { url: string; redditComment?: RedditCommentReceipt },
+) {
+  const comment = page.redditComment;
+  const parts = new URL(page.url).pathname.split("/").filter(Boolean);
+  const postId = new URL(target.url).pathname.split("/").filter(Boolean)[3];
+  const published =
+    comment === undefined ? Number.NaN : Date.parse(comment.createdAt);
+  if (
+    comment === undefined ||
+    postId === undefined ||
+    parts[3] !== postId ||
+    parts[5] !== comment.id ||
+    comment.author.toLowerCase() !== "the_storm_mc" ||
+    comment.parentId !== `t3_${postId}` ||
+    !Number.isFinite(published) ||
+    published < Date.parse(pending.attemptedAt) - 60_000
+  )
+    throw new Error(
+      "Reddit reply receipt requires this account's fresh top-level comment permalink",
+    );
+  if (
+    receipt.status === "verified" &&
+    (pending.contentExcerpt === null ||
+      pending.contentExcerpt === undefined ||
+      normalized(comment.body) !== normalized(pending.contentExcerpt) ||
+      /^\[(?:removed|deleted)\]$/i.test(comment.body))
+  )
+    throw new Error(
+      "Reddit reply receipt must match the complete text entered by this occurrence",
+    );
+}
+
+function normalized(text: string) {
+  return text.replaceAll(/\s+/g, " ").trim();
 }
 
 function assertRedditReceipt(

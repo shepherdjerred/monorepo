@@ -1,8 +1,13 @@
 // Declare explicit workflow wrappers, deriving their contracts from delegates.
+import * as redditOutreach from "./promotion/reddit-outreach.ts";
 import * as promotion from "./promotion/index.ts";
+export const runStormRedditOutreach = redditOutreach.runStormRedditOutreach;
+export const reconcileStormRedditReply =
+  redditOutreach.reconcileStormRedditReply;
 export const runStormPromotion = promotion.runStormPromotion;
 export const dispatchStormPromotion = promotion.dispatchStormPromotion;
 export const manageStormPromotion = promotion.manageStormPromotion;
+export const restoreStormRedditAccount = promotion.restoreStormRedditAccount;
 export const resolveStormPromotionAbsence =
   promotion.resolveStormPromotionAbsence;
 export const allocateStormPromotionAi = promotion.allocateStormPromotionAi;
@@ -135,7 +140,6 @@ import {
   workerDeploymentCanaryWorkflow as workerDeploymentCanaryWorkflowImplementation,
   type WorkerDeploymentCanaryInput,
 } from "./worker-deployment-canary.ts";
-
 import { runLlmBilledCostReconciliation as _runLlmBilledCostReconciliation } from "./llm-billed-cost.ts";
 import {
   runOpsDigest as _runOpsDigest,
@@ -150,13 +154,11 @@ import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./ime
 import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
 import { photonAgentChatWorkflow as _photonAgentChatWorkflow } from "./photon/message.ts";
 import * as photonConversation from "./photon/conversation.ts";
-
 export const photonConversationWorkflow =
   photonConversation.photonConversationWorkflow;
 export const photonAgentChatWorkflow = (
   ...args: Parameters<typeof _photonAgentChatWorkflow>
 ) => _photonAgentChatWorkflow(...args);
-
 export async function blueBubblesIngressWorkflow(
   cursor: BlueBubblesCursor,
 ): Promise<never> {
@@ -167,14 +169,12 @@ export async function imessageAgentChatWorkflow(
 ): Promise<void> {
   return _imessageAgentChatWorkflow(command);
 }
-
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
 ): Promise<void> {
   workerDeploymentCanaryWorkflowImplementation(input);
   return Promise.resolve();
 }
-
 export const fetchSkillCappedManifest = (): Promise<void> =>
   _fetchSkillCappedManifest();
 export async function runKometaWorkflow(): Promise<void> {
@@ -204,7 +204,6 @@ export async function runTurboCacheCleanWorkflow(): Promise<void> {
 export async function runFreshRssSyncWorkflow(): Promise<void> {
   return _runFreshRssSyncWorkflow();
 }
-
 export async function runFliptFlagInventory(): Promise<
   FliptFlagInventoryResult[]
 > {

@@ -29,7 +29,7 @@ export const PromotionTargetSchema = z.strictObject({
   rulesUrl: z.url().startsWith("https://"),
   account: z.string().min(1),
   hosts: z.array(z.string().min(1)).min(1),
-  action: z.enum(["bump", "repost", "news", "inspect", "pending"]),
+  action: z.enum(["bump", "repost", "reply", "news", "inspect", "pending"]),
   content: z.enum(["directory", "reddit-mcservers", "reddit-minecraftserver"]),
   title: z.string().min(1).optional(),
   minimumIntervalSeconds: z.number().int().nonnegative(),

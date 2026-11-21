@@ -35,7 +35,26 @@ export async function capturePublicRedditReceipt(input: {
     },
   );
   try {
-    await browser.open(publicRedditReceiptUrl(input.url));
+    const publicUrl = publicRedditReceiptUrl(input.url);
+    await browser.open(
+      input.target.action === "reply"
+        ? publicUrl.replace(
+            "https://www.reddit.com/",
+            "https://old.reddit.com/",
+          )
+        : publicUrl,
+    );
+    if (input.target.action === "reply") {
+      const page = await browser.readRedditCommentReceipt();
+      if (!promotionObservationText(page.text).includes(input.expectedQuote))
+        throw new Error(
+          "Anonymous Reddit reply verification did not render the selected comment",
+        );
+      const screenshotKey = await input.saveEvidence(
+        await browser.screenshot(),
+      );
+      return { ...page, url: publicRedditReceiptUrl(page.url), screenshotKey };
+    }
     const deadline = Date.now() + 15_000;
     for (;;) {
       const page = await browser

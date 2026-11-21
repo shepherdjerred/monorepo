@@ -1,12 +1,14 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { z } from "zod/v4";
-import { promotionPublicUrl, redactPromotionUrls } from "./redaction.ts";
+import { promotionPublicUrl } from "./redaction.ts";
+import {
+  readPromotionBrowserSnapshot,
+  type SnapshotScope,
+  type AccessibleNode,
+} from "./access/browser-snapshot.ts";
 import {
   assertPromotionUrl,
   type PromotionTarget,
 } from "#shared/promotion/model.ts";
-import { reportReceiptStore } from "#activities/reports/report-object-store.ts";
-import { promotionStoragePrefix } from "./store.ts";
 import {
   captchaApplicationScript,
   captchaResponsePresent,
@@ -21,41 +23,32 @@ import {
 } from "./access/challenge-scripts.ts";
 import type { PromotionChallenge } from "./solver.ts";
 import {
+  redditBrowserRateLimit,
+  reportRedditBrowserFailure,
+  RedditBrowserAccount,
+} from "./access/reddit-account.ts";
+import {
+  readRedditListing,
+  readRedditThread,
+  readRedditCommentReceipt,
+  readRedditFeedPage,
+  readRedditRules,
+} from "./reddit-discovery/browser-reader.ts";
+import {
   PromotionBrowserProfile,
   ProfilesSchema,
   InstancesSchema,
+  BrowserIdentifierSchema as IdentifierSchema,
+  type PromotionBrowserOptions,
 } from "./access/browser-profile.ts";
 
-const IdentifierSchema = z.object({
-  id: z.string().optional(),
-  instanceId: z.string().optional(),
-  tabId: z.string().optional(),
-});
 const EvaluationSchema = z.object({ result: z.unknown() });
-const AccessibleNodeSchema = z.object({
-  ref: z.string(),
-  role: z.string(),
-  name: z.string().optional(),
-  depth: z.number().int().nonnegative().optional(),
-  tag: z.string().optional(),
-  disabled: z.boolean().optional(),
-});
-const SnapshotSchema = z.object({
-  nodes: z.array(AccessibleNodeSchema),
-  idpiNotice: z.string(),
-  untrustedContent: z.boolean(),
-  idpiWarning: z.string().optional(),
-});
 const CloudflareResultSchema = z.object({
   solver: z.literal("cloudflare"),
   solved: z.boolean(),
   attempts: z.number().int().nonnegative(),
   handoff: z.literal("paused_handoff").optional(),
 });
-type SnapshotScope = {
-  selector?: string | undefined;
-  depth?: number | undefined;
-};
 
 class PromotionBrowserHttpError extends Error {
   readonly status: number;
@@ -70,6 +63,9 @@ export class PromotionBrowser {
   private readonly baseUrl: string;
   private readonly token: string;
   private readonly signal: AbortSignal;
+  private readonly captureChallenges: boolean;
+  private readonly options: PromotionBrowserOptions;
+  private readonly reddit: RedditBrowserAccount;
   private tabId: string | undefined;
   private readonly profile: PromotionBrowserProfile;
   private instanceId: string | undefined;
@@ -78,21 +74,21 @@ export class PromotionBrowser {
   private readonly cloudflarePages = new Set<string>();
   private lastSnapshot:
     { url: string; scope: SnapshotScope | undefined } | undefined;
-  private readonly controls = new Map<
-    string,
-    z.infer<typeof AccessibleNodeSchema>
-  >();
+  private readonly controls = new Map<string, AccessibleNode>();
 
   constructor(
     target: PromotionTarget,
     baseUrl: string,
     token: string,
-    options: { signal: AbortSignal; profile?: string; temporaryProfile?: true },
+    options: PromotionBrowserOptions,
   ) {
     this.target = target;
     this.baseUrl = baseUrl.replace(/\/$/, "");
     this.token = token;
     this.signal = options.signal;
+    this.reddit = new RedditBrowserAccount(options);
+    this.options = this.reddit.options;
+    this.captureChallenges = options.captureChallenges !== false;
     this.profile = new PromotionBrowserProfile(options);
   }
 
@@ -102,6 +98,7 @@ export class PromotionBrowser {
     signal = this.signal,
     timeoutMs = 30_000,
   ): Promise<Response> {
+    this.reddit.assertRequest(suffix);
     const response = await fetch(`${this.baseUrl}${suffix}`, {
       method: body === undefined ? "GET" : "POST",
       headers: {
@@ -112,6 +109,13 @@ export class PromotionBrowser {
       signal: AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]),
     });
     if (!response.ok) {
+      if (response.status === 429 && this.options.redditAccount !== undefined) {
+        const failure = redditBrowserRateLimit(
+          response.headers.get("retry-after"),
+        );
+        await reportRedditBrowserFailure(this.options, failure);
+        throw failure;
+      }
       const detail = await response.text();
       throw new PromotionBrowserHttpError(
         suffix,
@@ -182,6 +186,8 @@ export class PromotionBrowser {
 
   async open(address: string): Promise<{ url: string }> {
     const url = assertPromotionUrl(this.target, address);
+    if (this.target.account === "reddit")
+      await this.options.beforeRedditNavigation?.();
     this.controls.clear();
     this.lastSnapshot = undefined;
     if (this.tabId === undefined) {
@@ -203,51 +209,22 @@ export class PromotionBrowser {
       if (this.tabId === undefined)
         throw new Error("Browser tab creation omitted tab ID");
     } else await this.json(`${this.tab()}/navigate`, { url: url.href });
-    await this.evaluate(installChallengeCapture);
+    if (this.captureChallenges) await this.evaluate(installChallengeCapture);
     return { url: promotionPublicUrl(await this.currentUrl()) };
   }
 
-  async snapshot(scope?: SnapshotScope): Promise<{
-    url: string;
-    text: string;
-    publishedAt: string | null;
-  }> {
+  async snapshot(scope?: SnapshotScope) {
     this.controls.clear();
     const url = await this.currentUrl();
-    // PinchTab's snapshot performs its content scanning/wrapping before data
-    // enters an agent prompt. Keep that endpoint in the observation path.
-    const parameters = new URLSearchParams({
-      format: "json",
-      ...(scope?.selector === undefined ? {} : { selector: scope.selector }),
-      ...(scope?.depth === undefined ? {} : { depth: String(scope.depth) }),
+    const { nodes, text, publishedAt } = await readPromotionBrowserSnapshot({
+      scope,
+      reddit: this.target.id.startsWith("reddit-"),
+      options: this.options,
+      readSnapshot: (parameters) =>
+        this.json(`${this.tab()}/snapshot?${parameters.toString()}`),
+      evaluate: (script) => this.evaluate(script),
     });
-    const response = await this.request(
-      `${this.tab()}/snapshot?${parameters.toString()}`,
-    );
-    const snapshot = SnapshotSchema.parse(await response.json());
-    const times = await this.evaluate(
-      "Array.from(document.querySelectorAll('time[datetime]')).map(e=>({datetime:e.getAttribute('datetime'),text:e.textContent}))",
-    );
-    const text = redactPromotionUrls(
-      JSON.stringify({ snapshot, scope: scope ?? {}, timestamps: times }),
-    );
-    if (text.length > 120_000) {
-      this.controls.clear();
-      throw new Error(
-        "Promotion page exceeds observation size limit; use a narrower page",
-      );
-    }
-    const publishedAt = this.target.id.startsWith("reddit-")
-      ? z
-          .string()
-          .nullable()
-          .parse(
-            await this.evaluate(
-              "(() => { const parts=location.pathname.split('/'); const index=parts.indexOf('comments'); const id=index<0?null:parts[index+1]; if(!id) return null; const old=document.querySelector('[data-fullname=\"t3_'+id+'\"] .tagline time[datetime]'); const modern=document.querySelector('shreddit-post[id=\"t3_'+id+'\"],shreddit-post[post-id=\"t3_'+id+'\"]'); return old?.getAttribute('datetime')||modern?.getAttribute('created-timestamp')||modern?.querySelector('time[datetime]')?.getAttribute('datetime')||null; })()",
-            ),
-          )
-      : null;
-    for (const node of snapshot.nodes) this.controls.set(node.ref, node);
+    for (const node of nodes) this.controls.set(node.ref, node);
     this.lastSnapshot = {
       url,
       scope: scope === undefined ? undefined : { ...scope },
@@ -263,9 +240,51 @@ export class PromotionBrowser {
     const result = await this.json(`${this.tab()}/action`, nativeBody);
     if ((await this.currentUrl()) !== before) {
       this.controls.clear();
-      await this.evaluate(installChallengeCapture);
+      if (this.captureChallenges) await this.evaluate(installChallengeCapture);
     }
     return result;
+  }
+
+  private redditReader() {
+    return {
+      currentUrl: () => this.currentUrl(),
+      snapshot: (scope: { selector: string; depth?: number }) =>
+        this.snapshot(scope),
+      evaluate: (expression: string) => this.evaluate(expression),
+    };
+  }
+  async readRedditListing(input: { subreddit: string; limit: number }) {
+    return await readRedditListing(this.redditReader(), input);
+  }
+  async readRedditFeedPage(input: {
+    subreddit: string;
+    limit: number;
+    account: string;
+  }) {
+    return await readRedditFeedPage(this.redditReader(), input);
+  }
+  async readRedditRules(input: { subreddit: string; account: string }) {
+    return await readRedditRules(this.redditReader(), input);
+  }
+  async readRedditThread(input: { account: string }) {
+    return await readRedditThread(this.redditReader(), input);
+  }
+  async readRedditCommentReceipt() {
+    return await readRedditCommentReceipt(this.redditReader());
+  }
+  async assertRedditReplyThread() {
+    const current = new URL(await this.currentUrl());
+    const assigned = new URL(this.target.url);
+    if (
+      this.target.action !== "reply" ||
+      current.hostname !== "old.reddit.com" ||
+      !current.pathname.startsWith(assigned.pathname) ||
+      current.pathname
+        .slice(assigned.pathname.length)
+        .split("/")
+        .filter(Boolean).length > 1
+    )
+      throw new Error("Reddit reply requires the assigned top-level thread");
   }
   async controlState(ref: string) {
     await this.accessibleControl(ref);
@@ -293,6 +312,8 @@ export class PromotionBrowser {
     address: string,
   ): Promise<unknown> {
     assertPromotionUrl(this.target, address);
+    if (this.target.account === "reddit")
+      await this.options.beforeRedditNavigation?.();
     return await this.action(body);
   }
   async attribute(selector: string, name: string): Promise<string | null> {
@@ -421,38 +442,6 @@ export class PromotionBrowser {
     return bytes;
   }
 
-  async capture(occurrenceId: string): Promise<{
-    url: string;
-    text: string;
-    screenshotKey: string;
-    publishedAt: string | null;
-  }> {
-    const page = await this.receiptSnapshot();
-    const bytes = await this.screenshot();
-    const storage = reportReceiptStore();
-    const screenshotKey = `${promotionStoragePrefix()}/evidence/${this.target.id}/${encodeURIComponent(occurrenceId)}/${crypto.randomUUID()}.png`;
-    await storage.client.send(
-      new PutObjectCommand({
-        Bucket: storage.bucket,
-        Key: screenshotKey,
-        Body: bytes,
-        ContentType: "image/png",
-        IfNoneMatch: "*",
-      }),
-    );
-    const observationKey = screenshotKey.replace(/\.png$/, ".json");
-    await storage.client.send(
-      new PutObjectCommand({
-        Bucket: storage.bucket,
-        Key: observationKey,
-        Body: JSON.stringify(page),
-        ContentType: "application/json",
-        IfNoneMatch: "*",
-      }),
-    );
-    return { ...page, screenshotKey };
-  }
-
   /** Independently reread the last successful region on this same receipt page. */
   async receiptSnapshot() {
     const url = await this.currentUrl();
@@ -472,6 +461,13 @@ export class PromotionBrowser {
     return z.array(IdentifierSchema).parse(await response.json());
   }
 
+  private keepRedditTab() {
+    return (
+      this.target.account === "reddit" &&
+      (!this.captureChallenges || this.options.redditAccount !== undefined)
+    );
+  }
+
   async close(): Promise<void> {
     if (await this.profile.close(this.baseUrl, this.token)) {
       this.tabId = undefined;
@@ -483,6 +479,7 @@ export class PromotionBrowser {
     if (this.preserveLastTab && this.instanceId !== undefined) {
       const tabs = await this.instanceTabs(cleanupSignal);
       if (tabs.length === 1 && (tabs[0]?.id ?? tabs[0]?.tabId) === this.tabId) {
+        if (this.keepRedditTab()) return;
         // Closing the last headed window leaves Chrome unable to create a
         // later tab. Keep one clean landing page, not a verification form.
         await this.request(

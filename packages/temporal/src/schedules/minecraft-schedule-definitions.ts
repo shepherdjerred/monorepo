@@ -8,6 +8,19 @@ import { schedulesInNamespace } from "./schedule-types.ts";
 
 export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
   {
+    id: "the-storm-reddit-outreach",
+    workflowType: "runStormRedditOutreach",
+    args: [],
+    timing: { kind: "interval", every: "15 minutes" },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "1 minute",
+    workflowExecutionTimeout: "15 minutes",
+    memo: "Match recent Minecraft server requests and reply within the Pacific daily limit",
+    initialPauseNote:
+      "Awaiting signed-in incremental Reddit outreach preview acceptance",
+  },
+  {
     id: "the-storm-promotion-dispatch",
     workflowType: "dispatchStormPromotion",
     args: [],

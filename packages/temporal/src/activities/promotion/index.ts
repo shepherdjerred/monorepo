@@ -21,11 +21,19 @@ import {
 import { redactSecrets } from "#shared/redact.ts";
 import { agentTaskSecretTokens } from "#activities/agent/agent-task-env.ts";
 import { runBudgetedPromotion } from "./control/budgeted-agent.ts";
+import {
+  RedditAccountBusy,
+  withRedditPromotionAccount,
+} from "./reddit-outreach/ownership.ts";
+import { restoreRedditPromotionAccountActivity } from "./reddit-outreach/restore-account.ts";
+import { sweepRedditOutreach } from "./reddit-sweep.ts";
+import { readRedditSweepDay } from "./reddit-outreach/sweep-audit.ts";
+import { reconcileRedditOutreachReply } from "./reddit-outreach/reconcile.ts";
 import type { PromotionTaskResult } from "./publication/task-contract.ts";
 import { promotionManifest, promotionTarget } from "./manifest.ts";
 import { promotionAlertFingerprint, promotionReport } from "./report.ts";
 import { recordPromotionExecutionHealth } from "./control/execution-health.ts";
-import { PromotionBudgetStop } from "./control/budget.ts";
+import { PromotionBudgetStop, promotionSpendDay } from "./control/budget.ts";
 import { promotionWindow } from "#shared/promotion/cadence.ts";
 import { trackPromotionExecution } from "./control/tracked-execution.ts";
 import { resetReconciliation } from "./control/reconciliation.ts";
@@ -211,18 +219,25 @@ async function executePromotionTask(raw: PromotionRunInput) {
     };
   });
   try {
-    const outcome = await runBudgetedPromotion(
-      {
-        ...(input.batchId === undefined ? {} : { batchId: input.batchId }),
-        ...(input.scheduled === true ? { scheduled: true } : {}),
-        target,
-        state,
-        occurrenceId,
-        mode: input.mode,
-        store,
-      },
-      { model: config.model, dailySpendUsd: config.dailySpendUsd },
-    );
+    const execute = () =>
+      runBudgetedPromotion(
+        {
+          ...(input.batchId === undefined ? {} : { batchId: input.batchId }),
+          ...(input.scheduled === true ? { scheduled: true } : {}),
+          target,
+          state,
+          occurrenceId,
+          mode: input.mode,
+          store,
+        },
+        { model: config.model, dailySpendUsd: config.dailySpendUsd },
+      );
+    const outcome = await runWithPromotionAccount({
+      target,
+      store,
+      occurrenceId,
+      execute,
+    });
     const result = outcome.result;
     const recorded = await store.put(
       `runs/${encodeURIComponent(occurrenceId)}.json`,
@@ -266,6 +281,17 @@ async function executePromotionTask(raw: PromotionRunInput) {
       summary: settled.blockedReason ?? result.summary,
     };
   } catch (error: unknown) {
+    if (error instanceof RedditAccountBusy) {
+      await updatePromotionState(store, target.id, (current) => {
+        assertPromotionOwnership(current, occurrenceId);
+        return { ...current, lock: null };
+      });
+      return {
+        targetId: target.id,
+        status: "deferred",
+        summary: error.message,
+      };
+    }
     return await failedExecution({
       store,
       target,
@@ -384,13 +410,61 @@ async function acknowledgePromotionAlert(
   );
 }
 
+async function runWithPromotionAccount(input: {
+  target: PromotionTarget;
+  store: ReturnType<typeof promotionStore>;
+  occurrenceId: string;
+  execute: () => ReturnType<typeof runBudgetedPromotion>;
+}) {
+  return input.target.account === "reddit"
+    ? await withRedditPromotionAccount(
+        input.store,
+        input.occurrenceId,
+        input.execute,
+      )
+    : await input.execute();
+}
+
 async function collectPromotionDailyReport() {
-  return promotionReport(
+  const report = promotionReport(
     await states(),
     await solverSpend(),
     undefined,
     await readPromotionSpend(),
   );
+  const day = promotionSpendDay(new Date(Date.now() - 86_400_000));
+  const sweeps = await readRedditSweepDay(promotionStore(), day);
+  const latest = sweeps.at(-1);
+  if (latest === undefined) return report;
+  const inspected = sweeps.reduce((sum, sweep) => sum + sweep.inspected, 0);
+  const assessed = sweeps.reduce((sum, sweep) => sum + sweep.assessed, 0);
+  const cached = sweeps.reduce((sum, sweep) => sum + sweep.cached, 0);
+  const replies = sweeps.flatMap((sweep) => sweep.replies);
+  const blocked =
+    sweeps.some((sweep) => sweep.failures.length > 0) ||
+    replies.some((reply) => reply.status === "blocked");
+  report.checks.push({
+    id: "reddit-outreach",
+    label: `Reddit outreach (${day} Pacific)`,
+    required: true,
+    status: blocked ? "failed" : "passed",
+    summary: `${String(inspected)} inspected, ${String(assessed)} assessed, ${String(cached)} cached, ${String(replies.length)} reply outcomes.`,
+    evidenceReceiptIds: ["reddit-outreach"],
+  });
+  report.evidence.push({
+    id: "reddit-outreach",
+    source: "Durable Reddit outreach sweep ledger",
+    observedAt: latest.completedAt,
+    status: "success",
+    excerpt: JSON.stringify({
+      replies: replies
+        .filter((reply) => reply.receiptUrl !== undefined)
+        .map(({ postId, receiptUrl }) => ({ postId, receiptUrl })),
+      blockers: sweeps.flatMap((sweep) => sweep.failures).slice(-4),
+    }).slice(0, 2000),
+  });
+  if (blocked) report.verdict = "attention";
+  return report;
 }
 
 export const promotionControlActivities = {
@@ -403,6 +477,11 @@ export const promotionControlActivities = {
   acknowledgePromotionAlert,
   collectPromotionDailyReport,
 };
-export const promotionAgentActivities = { executePromotion };
+export const promotionAgentActivities = {
+  executePromotion,
+  sweepRedditOutreach,
+  reconcileRedditOutreachReply,
+  restoreRedditPromotionAccountActivity,
+};
 export type PromotionActivities = typeof promotionControlActivities &
   typeof promotionAgentActivities;

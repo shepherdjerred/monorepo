@@ -16,11 +16,13 @@ export async function harness(
     otp?: string;
     readEmailCode?: PromotionEmailCodeReader;
     account?: string;
+    replyText?: string;
   },
 ) {
   const {
     readEmailCode,
     account: accountOverride,
+    replyText,
     ...storedLogin
   } = login ?? {};
   const target = promotionTarget("pmc"),
@@ -51,6 +53,12 @@ export async function harness(
   const action = vi
     .spyOn(browser, "action")
     .mockResolvedValue({ success: true });
+  vi.spyOn(browser, "assertRedditReplyThread").mockResolvedValue(undefined);
+  vi.spyOn(browser, "snapshot").mockResolvedValue({
+    url: target.url,
+    text: "fixture",
+    publishedAt: null,
+  });
   const open = vi.spyOn(browser, "open").mockResolvedValue({ url: target.url });
   const currentUrl = vi
     .spyOn(browser, "currentUrl")
@@ -107,6 +115,7 @@ export async function harness(
     signal: new AbortController().signal,
     heartbeat: vi.fn(),
     ...(readEmailCode === undefined ? {} : { readEmailCode }),
+    ...(replyText === undefined ? {} : { replyText }),
   });
   return {
     journal,

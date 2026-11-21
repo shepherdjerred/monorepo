@@ -38,6 +38,13 @@ const writes = proxyActivities<Pick<PromotionActivities, "executePromotion">>({
   heartbeatTimeout: "1 minute",
   retry: { maximumAttempts: 1 },
 });
+const redditRecovery = proxyActivities<
+  Pick<PromotionActivities, "restoreRedditPromotionAccountActivity">
+>({
+  taskQueue: TASK_QUEUES.PROMOTION,
+  startToCloseTimeout: "2 minutes",
+  retry: { maximumAttempts: 1 },
+});
 const reports = proxyActivities<
   Pick<ReportDeliveryActivities, "deliverReport">
 >({
@@ -123,6 +130,10 @@ export async function manageStormPromotion(
   input: Parameters<PromotionActivities["managePromotion"]>[0],
 ) {
   return await reads.managePromotion(input);
+}
+
+export async function restoreStormRedditAccount(input: { reason: string }) {
+  return await redditRecovery.restoreRedditPromotionAccountActivity(input);
 }
 
 export const resolveStormPromotionAbsence =

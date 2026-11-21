@@ -1354,6 +1354,68 @@ existed carry no `livenessChecks` and render their original report.
 
 ## The Storm promotion task
 
+### Reddit request outreach
+
+`the-storm-reddit-outreach` runs `runStormRedditOutreach` every 15 minutes in
+`prod`, on the existing workflow and promotion worker queues. Overlapping runs
+and missed schedule ticks are skipped. It uses the signed-in
+`storm-promotion-reddit` PinchTab profile to scan MinecraftServer,
+MinecraftServerFinder, MinecraftSMPs and MinecraftServers in turn. The first
+sweep starts with the last 15 minutes of posts. Later sweeps resume from
+per-community checkpoints and catch up within 24 hours.
+
+The listing ceiling is 1,500 distinct posts per sweep. The default browser
+budget is 12 listing pages, 20 first-time thread reads, and 60 page opens across
+listing, rule, thread, and reply checks. The sweep spaces page opens by at
+least two seconds and stops when it fills the remaining allowance of ten
+replies per sweep and ten per Pacific calendar day. Further conversations
+remain manual.
+
+OpenAI Decisions scores the match against community rules and the approved facts
+in `src/activities/promotion/reddit-facts.ts`. A candidate needs a fit score
+strictly above 0.80, an explicit request for a server, community permission, and
+support for every hard requirement. A separate model drafts the invite after the
+thread and account are checked. Drafts can acknowledge a soft preference the
+server only partly meets. Requests already answered by `the_storm_mc` and
+threads whose comments cannot be fully inspected are excluded. Assessments are
+cached against the request, community rules and approved facts. Edits or rule
+changes require a fresh assessment.
+
+`the-storm-reddit-outreach-enabled` and the typed JSON flag
+`the-storm-reddit-outreach-settings` control this schedule's publishing separately
+from directory promotion. They default on with the limits above, and unavailable
+or stale flag evaluation stops publishing. Decisions and drafting share the
+daily promotion spending ledger.
+
+The schedule starts paused for a signed-in preview. A workflow input of
+`{ "preview": true }` uses a separate discovery checkpoint and returns drafts
+without submitting replies. Run it again to verify incremental scanning.
+Sweep audits include listing pages, thread reads, total page opens, elapsed
+sweep time, decisions, drafts, and the stop reason.
+
+Per-post claims and Pacific daily reservations are conditional object-store
+writes. Uncertain submissions and filtered replies consume allowance and cannot
+be resent automatically. Existing Reddit promotions and outreach share the
+account lock and cooldown. A Reddit rate limit stops browser work for both.
+The worker honors an observed retry time or backs off from 30 minutes up to six
+hours. When Reddit requires login or presents a security challenge, restore
+the signed-in profile, then start `restoreStormRedditAccount` on
+`monorepo-workflows` in `prod` with `{ "reason": "..." }`. It verifies a
+signed-in read before clearing the hold.
+A crashed owner is retained for inspection, rather than
+being expired while a remote write might still settle. Comment verification
+requires the exact author, parent post, content and creation time on a public
+comment permalink; the author's signed-in view is insufficient. Sweep audits
+and reply receipts live under `storm/promotion/v1/prod/reddit-outreach/` and feed
+the existing daily promotion report.
+
+To verify an uncertain submission, start `reconcileStormRedditReply` on
+`monorepo-workflows` in `prod` with the post ID and exact comment permalink
+(`{ "postId": "...", "commentUrl": "..." }`). It reads the original send
+checkpoint and the public comment, then settles the receipt if they match.
+
+### Promotion executor
+
 The caller selects a target, action, approved content and timing before invoking
 the promotion executor. The LLM discovers the current interface, performs that
 assignment once, and records the site's actual response. Posting-policy and

@@ -86,6 +86,20 @@ function findScheduleById(id: string) {
   return schedule;
 }
 
+test("Reddit outreach is registered on a 15-minute interval and starts paused", () => {
+  const schedule = findScheduleById("the-storm-reddit-outreach");
+  expect(schedule).toMatchObject({
+    workflowType: "runStormRedditOutreach",
+    timing: { kind: "interval", every: "15 minutes" },
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+  });
+  expect(buildScheduleState(schedule, {})).toEqual({
+    paused: true,
+    note: schedule.initialPauseNote,
+  });
+});
+
 test("every declared schedule workflow is exported by the workflow bundle", () => {
   const exportedWorkflowTypes = new Set(Object.keys(workflowEntrypoint));
   const missingWorkflowTypes = [
@@ -503,6 +517,7 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
 const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
+  "runStormRedditOutreach",
   "dispatchStormPromotion",
   "reportStormPromotion",
   "deliveryDispatchWorkflow",
