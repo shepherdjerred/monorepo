@@ -25,6 +25,11 @@ import { run, requireEnv } from "../lib/run.ts";
 import { isCi } from "../lib/ci/ci-environment.ts";
 import { asRecord } from "../lib/json.ts";
 import { runMain } from "../lib/transient.ts";
+import {
+  assertNotDeliveryChannelRelease,
+  dispatchToGitHubActions,
+  normalizePackageDir,
+} from "./npm-publish-dispatch.ts";
 
 // ---------------------------------------------------------------------------
 // npm token 2FA-bypass preflight (ported faithfully from publishNpmHelper)
@@ -238,76 +243,118 @@ function defaultExpiryWarner(message: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// CLI
+// CLI & Local Publish
 // ---------------------------------------------------------------------------
 
 function usage(): never {
   console.error(
     "Usage: bun scripts/release/publish-npm.ts <package-dir> [--tag latest|dev] " +
-      "[--dev-suffix <n>] [--dry-run]",
+      "[--dev-suffix <n>] [--dry-run] [--dispatch|--no-dispatch]",
   );
   process.exit(1);
 }
 
-function parseArgs(argv: string[]): {
+export type PublishNpmArgs = {
   pkgDir: string;
   tag: "latest" | "dev";
   devSuffix: string;
   dryRun: boolean;
-} {
+  dispatch: boolean;
+};
+
+type ParsedFlags = {
+  pkgDir: string | undefined;
+  tag: "latest" | "dev" | undefined;
+  devSuffix: string;
+  dryRun: boolean;
+  dispatch: boolean | undefined;
+};
+
+function handleArg(argv: string[], i: number, state: ParsedFlags): number {
+  const a = argv[i];
+  if (a === undefined) return i;
+  if (a === "--dry-run") {
+    state.dryRun = true;
+    return i;
+  }
+  if (a === "--dispatch") {
+    state.dispatch = true;
+    return i;
+  }
+  if (a === "--no-dispatch") {
+    state.dispatch = false;
+    return i;
+  }
+  if (a === "--tag") {
+    const next = argv[i + 1];
+    if (next !== "latest" && next !== "dev") {
+      console.error(`--tag must be "latest" or "dev", got: ${String(next)}`);
+      usage();
+    }
+    state.tag = next;
+    return i + 1;
+  }
+  if (a === "--dev-suffix") {
+    const next = argv[i + 1];
+    if (next === undefined) usage();
+    state.devSuffix = next;
+    return i + 1;
+  }
+  if (a.startsWith("--")) {
+    console.error(`Unknown flag: ${a}`);
+    usage();
+  }
+  if (state.pkgDir !== undefined) {
+    console.error("Only one package dir may be given");
+    usage();
+  }
+  state.pkgDir = a;
+  return i;
+}
+
+export function parseArgs(
+  argv: string[],
+  env: Record<string, string | undefined> = Bun.env,
+): PublishNpmArgs {
   if (argv.includes("--help") || argv.includes("-h")) {
     usage();
   }
-  let pkgDir: string | undefined;
-  let tag: "latest" | "dev" | undefined;
-  let devSuffix = "";
-  let dryRun = false;
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === "--dry-run") {
-      dryRun = true;
-      continue;
-    }
-    if (a === "--tag") {
-      const v = argv[++i];
-      if (v !== "latest" && v !== "dev") {
-        console.error(`--tag must be "latest" or "dev", got: ${String(v)}`);
-        usage();
-      }
-      tag = v;
-      continue;
-    }
-    if (a === "--dev-suffix") {
-      const v = argv[++i];
-      if (v === undefined) {
-        usage();
-      }
-      devSuffix = v;
-      continue;
-    }
-    if (a?.startsWith("--")) {
-      console.error(`Unknown flag: ${a}`);
-      usage();
-    }
-    if (a !== undefined) {
-      if (pkgDir !== undefined) {
-        console.error("Only one package dir may be given");
-        usage();
-      }
-      pkgDir = a;
-    }
+  const state: ParsedFlags = {
+    pkgDir: undefined,
+    tag: undefined,
+    devSuffix: "",
+    dryRun: false,
+    dispatch: undefined,
+  };
+
+  let i = 0;
+  while (i < argv.length) {
+    i = handleArg(argv, i, state) + 1;
   }
-  if (pkgDir === undefined) {
+
+  if (state.pkgDir === undefined) {
     console.error("A package directory is required");
     usage();
   }
-  // Dev-suffix implies the dev tag unless the operator overrode it explicitly.
-  const resolvedTag = tag ?? (devSuffix === "" ? "latest" : "dev");
-  return { pkgDir, tag: resolvedTag, devSuffix, dryRun };
+
+  const resolvedTag = state.tag ?? (state.devSuffix === "" ? "latest" : "dev");
+  const token = env["NPM_TOKEN"];
+  const hasToken = typeof token === "string" && token.length > 0;
+  const resolvedDispatch = state.dispatch ?? !hasToken;
+
+  return {
+    pkgDir: state.pkgDir,
+    tag: resolvedTag,
+    devSuffix: state.devSuffix,
+    dryRun: state.dryRun,
+    dispatch: resolvedDispatch,
+  };
 }
 
 async function main(): Promise<void> {
-  const { pkgDir, tag, devSuffix, dryRun } = parseArgs(Bun.argv.slice(2));
+  const { pkgDir, tag, devSuffix, dryRun, dispatch } = parseArgs(
+    Bun.argv.slice(2),
+  );
 
   const pkgJsonPath = `${pkgDir}/package.json`;
   const pkgFile = Bun.file(pkgJsonPath);
@@ -323,6 +370,21 @@ async function main(): Promise<void> {
     typeof pkgJson["version"] === "string" ? pkgJson["version"] : "0.0.0";
 
   console.log(`--- Publish ${pkgName} (${pkgDir}) --tag ${tag}`);
+  assertNotDeliveryChannelRelease({
+    packageDir: normalizePackageDir(pkgDir),
+    tag,
+    devSuffix,
+  });
+
+  if (dispatch) {
+    await dispatchToGitHubActions({
+      packageDir: pkgDir,
+      tag,
+      devSuffix,
+      dryRun,
+    });
+    return;
+  }
 
   // For dev releases, append -dev.<suffix> to package.json (ephemeral; the
   // original text is restored in the finally below, so a failed or retried
