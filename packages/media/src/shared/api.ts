@@ -10,6 +10,10 @@ import { ManagedGuideSchema } from "./quality-guide/contract.ts";
 import { ResolvedEvidenceProtocolSchema } from "#domain/resolved-evidence.ts";
 import { ArtworkSchema } from "./artwork/contract.ts";
 import {
+  CatalogLibraryStateSchema,
+  LibraryAccessSchema,
+} from "./catalog/contract.ts";
+import {
   MediaItemSchema,
   RequestSchema,
   UserSchema,
@@ -208,13 +212,18 @@ export const CatalogItemSchema = z.object({
   posterPath: z.string().nullable(),
   backdropPath: z.string().nullable(),
   originalLanguage: z.string(),
+  // Null when the household does not have the title or the actor may not see it.
+  library: CatalogLibraryStateSchema.nullable(),
 });
+/** One page of search results or of a discover feed. */
 export const CatalogSearchSchema = z.object({
   page: z.number().int(),
   totalPages: z.number().int(),
+  libraryAccess: LibraryAccessSchema,
   results: z.array(CatalogItemSchema),
 });
 export const CatalogDetailSchema = CatalogItemSchema.extend({
+  libraryAccess: LibraryAccessSchema,
   seasons: z.array(
     z.object({
       externalId: z.number().int(),

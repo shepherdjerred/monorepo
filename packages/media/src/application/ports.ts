@@ -130,10 +130,22 @@ import type {
   IdentityPreview,
   IdentityPreviewInput,
 } from "#shared/acquisition/preview.ts";
+import type { CatalogFeed } from "#shared/catalog/contract.ts";
 
+/** Reads take the actor because each title carries what that actor may know of the household's copy. */
 export type CatalogApplication = {
-  search: (query: string) => Promise<CatalogSearch>;
+  search: (
+    actor: MediaActor,
+    query: string,
+    page: number,
+  ) => Promise<CatalogSearch>;
+  discover: (
+    actor: MediaActor,
+    feed: CatalogFeed,
+    page: number,
+  ) => Promise<CatalogSearch>;
   details: (
+    actor: MediaActor,
     kind: "movie" | "series",
     externalId: number,
   ) => Promise<CatalogDetail>;

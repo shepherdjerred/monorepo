@@ -73,6 +73,56 @@ writes current Plex watched state or authorizes retention. Household playback
 is owner-visible; members see their own sessions, and unmapped history stays
 owner-only.
 
+### Catalog discovery
+
+| Route                                      | Returns                                    |
+| ------------------------------------------ | ------------------------------------------ |
+| `GET /api/v1/catalog/search?q=&page=`      | One page of TMDB title search results.     |
+| `GET /api/v1/catalog/discover?feed=&page=` | One page of a browse feed, same shape.     |
+| `GET /api/v1/catalog/:kind/:id`            | One movie or series, with its season list. |
+
+`page` is 1 to 5 and defaults to 1; `totalPages` never exceeds 5. `feed` is one
+of:
+
+| `feed`            | TMDB list                           |
+| ----------------- | ----------------------------------- |
+| `trending`        | `trending/all/week`, people removed |
+| `popular_movies`  | `movie/popular`                     |
+| `popular_series`  | `tv/popular`                        |
+| `upcoming_movies` | `movie/upcoming` for region `US`    |
+| `on_the_air`      | `tv/on_the_air`                     |
+
+A feed page is fetched from TMDB once and held in the API process for six
+hours; expiry is checked when the page is next read. When TMDB is down,
+throttling or unreadable, all three routes answer 502 `catalog_unavailable`; a
+title TMDB does not know is 404 `catalog_title_not_found`.
+
+Every title carries `library`, which is `null` unless `GET /api/v1/library`
+would list that title for the same reader:
+
+| Field          | Meaning                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------- |
+| `mediaId`      | The household's row for the title.                                                                |
+| `availability` | A movie's lifecycle state, as the library reports it. `null` for a series.                        |
+| `episodes`     | A series' regular-season episodes: `{ available, total }`, specials left out. `null` for a movie. |
+| `requested`    | Someone in the household has a standing request for the title.                                    |
+| `myInterest`   | `following`, `released` or `none`, as the library reports it.                                     |
+
+`requested` is true when anyone in the household, the reader included, has an
+active, not excluded request with interest `following` on the title. It says
+the title is wanted, never by whom, and it is reported only on a title the
+reader may see.
+
+`episodes.available` counts Media's own lifecycle state. `episodes` is also
+`null` for a series when a registered external Plex library covers any of its
+episodes: the count is then unknown rather than zero, because proving which of
+those files are present is done per file on the title page.
+
+Responses also carry `libraryAccess`. `stale` means the reader's Plex library
+access was not verified within the last five minutes, so every `library` is
+`null` without meaning "not in the library"; the same condition makes
+`GET /api/v1/library` answer 403 `plex_library_access_required`.
+
 ## Edition scope
 
 Canonical media identity and lifecycle intent are separate. Current-state

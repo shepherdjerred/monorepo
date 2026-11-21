@@ -119,7 +119,13 @@ const auth = new MediaAuth(
   },
 );
 const tmdbClient = new TmdbClient(tmdbCredential);
-const catalogApplication = new TmdbCatalogApplication(database, tmdbClient);
+const catalogApplication = new TmdbCatalogApplication(database, tmdbClient, {
+  serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+  sections: {
+    movie: permittedMovieSectionId.value,
+    series: permittedTvSectionId.value,
+  },
+});
 const plexAdministration = new PrismaPlexAdministration(
   database,
   cipher,

@@ -7,6 +7,7 @@ import {
   RemovalListSchema,
   RequestListSchema,
 } from "#shared/api.ts";
+import { CatalogFeedSchema } from "#shared/catalog/contract.ts";
 import { UserSchema } from "#shared/contract.ts";
 import {
   CalendarPageSchema,
@@ -31,6 +32,7 @@ import {
 import { calendarPage } from "#testing/fixture-api/fixtures/calendar.ts";
 import {
   catalogDetail,
+  catalogDiscover,
   catalogSearch,
 } from "#testing/fixture-api/fixtures/catalog.ts";
 import { libraryPage } from "#testing/fixture-api/fixtures/library.ts";
@@ -85,8 +87,24 @@ const catalog: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/catalog/search",
     schema: CatalogSearchSchema,
-    respond: (request) => catalogSearch(request.query.get("q") ?? ""),
-    samples: ["/catalog/search?q=the", "/catalog/search?q=no-such-title"],
+    respond: (request) => catalogSearch(request.query),
+    samples: [
+      "/catalog/search?q=the",
+      "/catalog/search?q=the&page=2",
+      "/catalog/search?q=no-such-title",
+    ],
+  }),
+  endpoint({
+    path: "/catalog/discover",
+    schema: CatalogSearchSchema,
+    respond: (request) => catalogDiscover(request.query),
+    samples: [
+      ...CatalogFeedSchema.options.map(
+        (feed) => `/catalog/discover?feed=${feed}`,
+      ),
+      "/catalog/discover?feed=trending&page=2",
+      "/catalog/discover?feed=on_the_air&page=5",
+    ],
   }),
   endpoint({
     path: "/catalog/:kind/:id",

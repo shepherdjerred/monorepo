@@ -6,6 +6,7 @@ import { CredentialCipher } from "#application/security.ts";
 import { type WorkflowStart } from "#automation/store.ts";
 import {
   CommandResultSchema,
+  CatalogDetailSchema,
   CatalogSearchSchema,
   MediaDetailSchema,
 } from "#shared/api.ts";
@@ -106,9 +107,11 @@ test("a signed-in movie request reaches real PostgreSQL and the outbox through H
     `/api/v1/catalog/search?q=${encodeURIComponent(SYSTEM_MOVIE.title)}`,
   );
   expect(search.status).toBe(200);
-  expect(CatalogSearchSchema.parse(await search.json()).results).toMatchObject([
-    { externalId: SYSTEM_MOVIE.id },
-  ]);
+  // Nobody has asked for the title yet, so the household has nothing of it.
+  expect(CatalogSearchSchema.parse(await search.json())).toMatchObject({
+    libraryAccess: "current",
+    results: [{ externalId: SYSTEM_MOVIE.id, library: null }],
+  });
   const profile = await browser.request("/api/v1/admin/profiles", {
     key: crypto.randomUUID(),
     body: profileInput,
@@ -205,6 +208,29 @@ test("a signed-in movie request reaches real PostgreSQL and the outbox through H
       schema.parse(await view.json());
     }),
   );
+  // The same search and the title's catalog page now say it is on the way.
+  const requested = {
+    mediaId,
+    episodes: null,
+    requested: true,
+    myInterest: "following",
+  };
+  const found = await browser.request(
+    `/api/v1/catalog/search?q=${encodeURIComponent(SYSTEM_MOVIE.title)}&page=1`,
+  );
+  expect(found.status).toBe(200);
+  const [card] = CatalogSearchSchema.parse(await found.json()).results;
+  expect(card).toMatchObject({ library: requested });
+  expect(card?.library?.availability).not.toBe("available");
+  const page = await browser.request(
+    `/api/v1/catalog/movie/${String(SYSTEM_MOVIE.id)}`,
+  );
+  expect(page.status).toBe(200);
+  expect(CatalogDetailSchema.parse(await page.json())).toMatchObject({
+    externalId: SYSTEM_MOVIE.id,
+    libraryAccess: "current",
+    library: requested,
+  });
   expect(http.errors).toEqual([]);
 });
 

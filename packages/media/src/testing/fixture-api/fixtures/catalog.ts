@@ -5,14 +5,24 @@ import type {
   CatalogSearchSchema,
 } from "#shared/api.ts";
 import {
+  CATALOG_MAX_PAGE,
+  CatalogFeedSchema,
+  CatalogPageSchema,
+  type CatalogFeed,
+  type CatalogLibraryState,
+} from "#shared/catalog/contract.ts";
+import { DAY, NOW } from "#testing/fixture-api/support.ts";
+import {
   backdropPath,
   catalogArtwork,
   posterPath,
   synopsis,
 } from "./artwork.ts";
-import { TITLES } from "./titles.ts";
+import { libraryInterest, libraryPolicy } from "./library.ts";
+import { AIRINGS, TITLES, titleNamed, type Title } from "./titles.ts";
 
 type CatalogItem = z.input<typeof CatalogItemSchema>;
+type CatalogPage = z.input<typeof CatalogSearchSchema>;
 type CatalogEntry = { item: CatalogItem; seasons: readonly number[] };
 
 type OutsideLibrarySeed = readonly [
@@ -49,6 +59,55 @@ function twoDigits(value: number): string {
   return String(value).padStart(2, "0");
 }
 
+/**
+ * A series the household plays from a Plex library Media does not manage: its
+ * episode count is unknown to a list, which the API reports as null.
+ */
+const EXTERNALLY_HELD = titleNamed("The Wire");
+
+/** Episodes Media holds of a series, from the state its fixture title is in. */
+function episodeCounts(title: Title): CatalogLibraryState["episodes"] {
+  if (title.id === EXTERNALLY_HELD.id) {
+    return null;
+  }
+  const total = title.seasons.reduce((sum, count) => sum + count, 0);
+  const lastSeason = title.seasons.at(-1) ?? 0;
+  switch (title.availability) {
+    case "available": {
+      return { available: total, total };
+    }
+    // The latest season is still arriving.
+    case "downloading":
+    case "validating":
+    case "importing": {
+      return { available: total - lastSeason, total };
+    }
+    case "wanted":
+    case "searching":
+    case "quarantined":
+    case "removed": {
+      return { available: 0, total };
+    }
+  }
+}
+
+/**
+ * What the household has of one of its own titles. It agrees with the library
+ * fixture: the same interest, and a standing request wherever the library
+ * shows a title as held by somebody's interest or the viewer follows it.
+ */
+function libraryState(title: Title): CatalogLibraryState {
+  const myInterest = libraryInterest(title);
+  return {
+    mediaId: title.id,
+    availability: title.kind === "movie" ? title.availability : null,
+    episodes: title.kind === "movie" ? null : episodeCounts(title),
+    requested:
+      myInterest === "following" || libraryPolicy(title) === "temporary",
+    myInterest,
+  };
+}
+
 const CATALOG: readonly CatalogEntry[] = [
   ...TITLES.map((title) => ({
     item: {
@@ -60,6 +119,7 @@ const CATALOG: readonly CatalogEntry[] = [
       // Some provider entries have no artwork; pages must render without it.
       ...catalogArtwork(title),
       originalLanguage: title.language,
+      library: libraryState(title),
     },
     seasons: title.seasons,
   })),
@@ -73,25 +133,78 @@ const CATALOG: readonly CatalogEntry[] = [
       posterPath: posterPath(title),
       backdropPath: backdropPath(title),
       originalLanguage: "en",
+      library: null,
     },
     seasons,
   })),
 ];
 
-const SEARCH_PAGE_SIZE = 20;
+/** TMDB's page size, so paging behaves as it does against the real catalog. */
+const PAGE_SIZE = 20;
 
-export function catalogSearch(
-  query: string,
-): z.input<typeof CatalogSearchSchema> {
-  const needle = query.trim().toLowerCase();
-  const matches = CATALOG.filter((entry) =>
-    entry.item.title.toLowerCase().includes(needle),
-  );
+function pageOf(items: readonly CatalogItem[], page: number): CatalogPage {
   return {
-    page: 1,
-    totalPages: Math.max(1, Math.ceil(matches.length / SEARCH_PAGE_SIZE)),
-    results: matches.slice(0, SEARCH_PAGE_SIZE).map((entry) => entry.item),
+    page,
+    totalPages: Math.min(
+      CATALOG_MAX_PAGE,
+      Math.max(1, Math.ceil(items.length / PAGE_SIZE)),
+    ),
+    libraryAccess: "current",
+    results: items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
   };
+}
+
+export function catalogSearch(parameters: URLSearchParams): CatalogPage {
+  const needle = (parameters.get("q") ?? "").trim().toLowerCase();
+  return pageOf(
+    CATALOG.filter((entry) =>
+      entry.item.title.toLowerCase().includes(needle),
+    ).map((entry) => entry.item),
+    CatalogPageSchema.parse(parameters.get("page") ?? undefined),
+  );
+}
+
+const ITEMS = CATALOG.map((entry) => entry.item);
+const AIRING = new Set(AIRINGS.map((airing) => airing.series));
+
+/** A stable shuffle, so a feed is not the library in its listing order. */
+function mixed(items: readonly CatalogItem[], stride: number): CatalogItem[] {
+  return items
+    .map((item, index) => ({ item, rank: (index * stride) % items.length }))
+    .sort((left, right) => left.rank - right.rank)
+    .map((ranked) => ranked.item);
+}
+
+function upcomingDate(index: number): string {
+  return new Date(NOW + (index * 9 + 4) * DAY).toISOString().slice(0, 10);
+}
+
+/** What each browse row lists, as the matching TMDB list would. */
+const FEEDS: Record<CatalogFeed, readonly CatalogItem[]> = {
+  trending: mixed(ITEMS, 31),
+  popular_movies: mixed(
+    ITEMS.filter((item) => item.kind === "movie"),
+    17,
+  ),
+  popular_series: mixed(
+    ITEMS.filter((item) => item.kind === "series"),
+    13,
+  ),
+  // Not released yet: nothing the household could already hold a file of.
+  upcoming_movies: ITEMS.filter(
+    (item) =>
+      item.kind === "movie" && item.library?.availability !== "available",
+  ).map((item, index) => ({ ...item, date: upcomingDate(index) })),
+  on_the_air: ITEMS.filter(
+    (item) => item.kind === "series" && AIRING.has(item.title),
+  ),
+};
+
+export function catalogDiscover(parameters: URLSearchParams): CatalogPage {
+  return pageOf(
+    FEEDS[CatalogFeedSchema.parse(parameters.get("feed"))],
+    CatalogPageSchema.parse(parameters.get("page") ?? undefined),
+  );
 }
 
 export function catalogDetail(
@@ -107,6 +220,7 @@ export function catalogDetail(
   }
   return {
     ...entry.item,
+    libraryAccess: "current",
     seasons:
       entry.item.kind === "movie"
         ? []

@@ -26,6 +26,8 @@ export const LibraryQuerySchema = z
     }
   });
 export type LibraryQuery = z.infer<typeof LibraryQuerySchema>;
+/** `released` means the actor once asked for the title and no longer follows it. */
+export const LibraryInterestSchema = z.enum(["following", "released", "none"]);
 export const LibraryPageSchema = z.object({
   items: z
     .array(
@@ -36,7 +38,7 @@ export const LibraryPageSchema = z.object({
         year: z.int().nullable(),
         artwork: ArtworkSchema,
         policy: z.enum(["keep", "temporary", "unclassified"]),
-        myInterest: z.enum(["following", "released", "none"]),
+        myInterest: LibraryInterestSchema,
         availability: AvailabilitySchema.nullable(),
         protection: z.enum([
           "keep_indefinitely",

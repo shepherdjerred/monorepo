@@ -8,6 +8,9 @@ import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { createMediaApp, type MediaAppDependencies } from "./app.ts";
 import type { RequestInterestApplication } from "./household/interests.ts";
+import { TmdbCatalogApplication } from "#infrastructure/catalog.ts";
+import { createDatabase } from "#infrastructure/database.ts";
+import { TmdbClient } from "#integrations/tmdb.ts";
 
 import { verifyPlexEventHttp } from "./plex-events/http.test-support.ts";
 import { verifyExternalLibraryHttp } from "./external-library-http.test-support.ts";
@@ -56,6 +59,62 @@ test("request interests add artwork only on an explicit include and refuse an un
   const unknown = await app.request(`${url}?include=progress`, { headers });
   expect(unknown.status).toBe(400);
   expect(list).toHaveBeenCalledTimes(2);
+});
+
+test("catalog search and discover pass the session actor and refuse an unknown feed or a page outside 1 to 5", async () => {
+  const { dependencies } = fixture();
+  const search = vi.fn(dependencies.catalog.search);
+  const discover = vi.fn(dependencies.catalog.discover);
+  dependencies.catalog = { ...dependencies.catalog, search, discover };
+  const app = createMediaApp(dependencies);
+  const signedIn = { headers };
+  const status = async (path: string, init: RequestInit = signedIn) => {
+    const response = await app.request(`/api/v1/catalog/${path}`, init);
+    return response.status;
+  };
+  expect(await status("search?q=dune")).toBe(200);
+  expect(search).toHaveBeenLastCalledWith(actor, "dune", 1);
+  expect(await status("search?q=dune&page=5")).toBe(200);
+  expect(search).toHaveBeenLastCalledWith(actor, "dune", 5);
+  for (const page of ["0", "6", "1.5", "two", ""])
+    expect(await status(`search?q=dune&page=${page}`), page).toBe(400);
+  expect(search).toHaveBeenCalledTimes(2);
+  expect(await status("discover?feed=trending")).toBe(200);
+  expect(discover).toHaveBeenLastCalledWith(actor, "trending", 1);
+  expect(await status("discover?feed=on_the_air&page=5")).toBe(200);
+  expect(discover).toHaveBeenLastCalledWith(actor, "on_the_air", 5);
+  for (const query of [
+    "",
+    "feed=popular",
+    "feed=trending&page=0",
+    "feed=trending&page=6",
+  ])
+    expect(await status(`discover?${query}`), query).toBe(400);
+  expect(discover).toHaveBeenCalledTimes(2);
+  expect(await status("discover?feed=trending", {})).toBe(401);
+});
+
+test("a catalog that does not answer is a typed 502, not an internal error", async () => {
+  const { dependencies } = fixture();
+  dependencies.catalog = new TmdbCatalogApplication(
+    createDatabase("postgres://unused@127.0.0.1:1/unused"),
+    new TmdbClient({ kind: "bearer", token: "fixture-token" }, () =>
+      Promise.resolve(new Response("provider body", { status: 503 })),
+    ),
+  );
+  const app = createMediaApp(dependencies);
+  for (const path of ["search?q=dune", "discover?feed=trending", "movie/11"]) {
+    const response = await app.request(`/api/v1/catalog/${path}`, { headers });
+    expect(response.status, path).toBe(502);
+    expect(await response.json()).toEqual({
+      error: {
+        code: "catalog_unavailable",
+        message:
+          "The catalog is not answering right now. Try again in a moment.",
+      },
+    });
+  }
+  expect(dependencies.onError).not.toHaveBeenCalled();
 });
 
 test("runtime changes require a session, CSRF, idempotency, and a reviewed version", async () => {
