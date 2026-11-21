@@ -8,6 +8,7 @@ import { time } from "./ui.tsx";
 import { PromotionSpendSummary } from "./spend-summary.tsx";
 import { sourceTimingSummary } from "./source-timing.ts";
 import { ActivityLegend } from "./activity-strip.tsx";
+import { RedditOutreachPanel } from "./reddit-outreach.tsx";
 
 /**
  * The promotion report itself, without any app chrome: the Hub shell frames
@@ -72,6 +73,7 @@ export function PromotionContent() {
         {overview.isPending && <p role="status">Reading the latest run…</p>}
         {data && (
           <>
+            <RedditOutreachPanel data={data.redditOutreach} />
             <RunPanel summary={data.lastRun} />
             {activity.size > 0 && <ActivityLegend />}
             <SourceGroups

@@ -81,6 +81,12 @@ receive that credential.
 Production reads shared worker history; the standalone local launcher below
 reads the local SQLite ledger instead.
 
+On the hosted page, Reddit outreach shows the schedule, publishing and account
+state, today's Pacific totals, and the 12 most recent production sweeps from
+today and yesterday. Expand a sweep to see its decision counts and verified
+Reddit receipts. A later verification updates the original sweep. Open reply
+attempts and remaining daily reply slots come from the reply ledger.
+
 From the repository root, run:
 
 ```bash

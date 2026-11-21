@@ -1,4 +1,8 @@
 import { z } from "zod/v4";
+import {
+  RedditOutreachFailureCategorySchema,
+  RedditOutreachMetricsSchema,
+} from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 import { promotionSpendDay } from "#activities/promotion/control/budget.ts";
 import type { PromotionStore } from "#activities/promotion/store.ts";
 
@@ -15,6 +19,8 @@ const RedditSweepSummarySchema = z.object({
   elapsedMs: z.number().optional(),
   stopReason: z.string().optional(),
   deferUntil: z.iso.datetime().nullable().optional(),
+  metrics: RedditOutreachMetricsSchema.optional(),
+  failureCategory: RedditOutreachFailureCategorySchema.optional(),
   failures: z.array(z.object({ subreddit: z.string(), reason: z.string() })),
   replies: z.array(
     z.object({
@@ -35,12 +41,15 @@ const RedditSweepSummarySchema = z.object({
 export type SweepSummary = z.infer<typeof RedditSweepSummarySchema>;
 const DailySweeps = z.record(z.string(), RedditSweepSummarySchema);
 
+function sweepKey(occurrenceId: string) {
+  return `reddit-outreach/sweeps/${encodeURIComponent(occurrenceId)}.json`;
+}
+
 export async function recordSweep(
   store: PromotionStore,
   summary: SweepSummary,
 ) {
-  const key = `reddit-outreach/sweeps/${encodeURIComponent(summary.occurrenceId)}.json`;
-  if (!(await store.put(key, summary, undefined)))
+  if (!(await store.put(sweepKey(summary.occurrenceId), summary, undefined)))
     throw new Error("Reddit sweep audit already exists");
   if (summary.preview) return;
   const day = promotionSpendDay(new Date(summary.completedAt));
@@ -60,6 +69,17 @@ export async function recordSweep(
       return;
   }
   throw new Error("Concurrent Reddit daily sweep report update");
+}
+
+export async function readRedditSweep(
+  store: PromotionStore,
+  occurrenceId: string,
+) {
+  const result = await store.read(
+    sweepKey(occurrenceId),
+    RedditSweepSummarySchema,
+  );
+  return result?.value;
 }
 
 export async function readRedditSweepDay(store: PromotionStore, day: string) {
