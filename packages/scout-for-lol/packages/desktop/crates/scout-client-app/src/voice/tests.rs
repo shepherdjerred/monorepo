@@ -173,19 +173,13 @@ struct FakeProactiveSpeech {
 
 #[cfg(scout_proactive_coach)]
 impl super::ProactiveSpeaker for FakeProactiveSpeech {
-    fn fetch(
-        &self,
-        run_id: Uuid,
-        done: mpsc::UnboundedSender<
-            Result<scout_explore_client::proactive::ProactiveSpeech, String>,
-        >,
-    ) {
+    fn fetch(&self, run_id: Uuid, done: mpsc::UnboundedSender<super::ProactiveFetch>) {
         self.asked
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .push(run_id);
         if let Some(reply) = read(&self.reply) {
-            let _ = done.send(reply);
+            let _ = done.send((run_id, reply));
         }
     }
 }

@@ -68,7 +68,10 @@ pub enum Input {
     ProactiveAnswer(Uuid),
     /// The speech fetched for it, or why there is none. Beta profile only.
     #[cfg(scout_proactive_coach)]
-    ProactiveSpeech(Result<scout_explore_client::proactive::ProactiveSpeech, String>),
+    ProactiveSpeech(
+        Uuid,
+        Result<scout_explore_client::proactive::ProactiveSpeech, String>,
+    ),
 }
 
 /// Something the service must do.
@@ -129,6 +132,9 @@ enum Turn {
     /// then `playing` it. Beta profile only.
     #[cfg(scout_proactive_coach)]
     Announcing {
+        /// The proactive turn being said; speech fetched for any other is
+        /// stale.
+        run: Uuid,
         playing: bool,
     },
 }
@@ -333,7 +339,7 @@ impl Controller {
                     self.finish_turn(&mut effects);
                 }
                 #[cfg(scout_proactive_coach)]
-                if self.turn == (Turn::Announcing { playing: true }) {
+                if matches!(self.turn, Turn::Announcing { playing: true, .. }) {
                     // Nothing of the player's was recorded, so there is no
                     // engine turn to finish.
                     self.turn = Turn::Idle;
@@ -342,7 +348,9 @@ impl Controller {
             #[cfg(scout_proactive_coach)]
             Input::ProactiveAnswer(run_id) => self.proactive_answer(run_id, &mut effects),
             #[cfg(scout_proactive_coach)]
-            Input::ProactiveSpeech(speech) => self.proactive_speech(speech, &mut effects),
+            Input::ProactiveSpeech(run, speech) => {
+                self.proactive_speech(run, speech, &mut effects);
+            }
         }
         // Whatever changed (conversation mode turned off, consent withdrawn,
         // muted, the game over, the microphone lost), Scout says nothing on
@@ -565,7 +573,10 @@ impl Controller {
         if !self.conversation_mode_live() || self.turn != Turn::Idle || recording {
             return;
         }
-        self.turn = Turn::Announcing { playing: false };
+        self.turn = Turn::Announcing {
+            run: run_id,
+            playing: false,
+        };
         self.error = None;
         self.view = Some(VoiceTurnView {
             app_initiated: true,
@@ -574,16 +585,23 @@ impl Controller {
         effects.push(Effect::FetchProactiveSpeech(run_id));
     }
 
-    /// The proactive answer's speech arrived, or could not be had. A failure
-    /// says nothing: the answer is still in the window.
+    /// The speech fetched for proactive turn `run` arrived, or could not be
+    /// had. A failure says nothing: the answer is still in the window.
+    /// Speech for any turn but the one being fetched now is stale (cut off,
+    /// or superseded by a newer announcement) and changes nothing.
     #[cfg(scout_proactive_coach)]
     fn proactive_speech(
         &mut self,
+        run: Uuid,
         speech: Result<scout_explore_client::proactive::ProactiveSpeech, String>,
         effects: &mut Vec<Effect>,
     ) {
-        if self.turn != (Turn::Announcing { playing: false }) {
-            // Cut off, or superseded by the player's own question.
+        if self.turn
+            != (Turn::Announcing {
+                run,
+                playing: false,
+            })
+        {
             return;
         }
         let decoded = speech.and_then(|speech| {
@@ -596,7 +614,7 @@ impl Controller {
             self.view = None;
             return;
         };
-        self.turn = Turn::Announcing { playing: true };
+        self.turn = Turn::Announcing { run, playing: true };
         if let Some(view) = self.view.as_mut() {
             view.answer = Some(speech.spoken_text);
         }
@@ -661,7 +679,7 @@ impl Controller {
     /// answer.
     #[cfg(scout_proactive_coach)]
     fn saying(&self, playing: bool) -> bool {
-        self.turn == (Turn::Announcing { playing })
+        matches!(self.turn, Turn::Announcing { playing: now, .. } if now == playing)
     }
 
     /// Whether Scout is saying a proactive answer: never in a stable build.

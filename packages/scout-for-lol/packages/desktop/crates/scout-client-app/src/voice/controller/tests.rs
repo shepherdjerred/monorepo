@@ -539,7 +539,7 @@ fn a_proactive_answer_is_spoken_in_conversation_mode_labelled_as_scouts_own() {
         })
     );
     assert_eq!(
-        controller.handle(Input::ProactiveSpeech(Ok(proactive_speech(4)))),
+        controller.handle(Input::ProactiveSpeech(RUN, Ok(proactive_speech(4)))),
         [
             Effect::Play {
                 sample_rate_hz: 24_000,
@@ -623,7 +623,7 @@ fn a_proactive_answer_never_joins_a_question_of_the_players() {
 fn the_players_push_to_talk_or_mute_cuts_scout_off() {
     let mut controller = in_game();
     controller.handle(Input::ProactiveAnswer(RUN));
-    controller.handle(Input::ProactiveSpeech(Ok(proactive_speech(4))));
+    controller.handle(Input::ProactiveSpeech(RUN, Ok(proactive_speech(4))));
     let effects = controller.handle(Input::Hotkey(HotkeyEvent::PushToTalk(true)));
     assert_eq!(
         effects,
@@ -641,7 +641,7 @@ fn the_players_push_to_talk_or_mute_cuts_scout_off() {
     assert!(effects.contains(&Effect::StopPlayback));
     // Speech that arrives after being cut off is not played.
     assert_eq!(
-        muting.handle(Input::ProactiveSpeech(Ok(proactive_speech(4)))),
+        muting.handle(Input::ProactiveSpeech(RUN, Ok(proactive_speech(4)))),
         NOTHING
     );
 }
@@ -652,7 +652,7 @@ fn speech_that_could_not_be_had_says_nothing_and_listening_resumes() {
     let mut controller = in_game();
     controller.handle(Input::ProactiveAnswer(RUN));
     assert_eq!(
-        controller.handle(Input::ProactiveSpeech(Err("budget".to_owned()))),
+        controller.handle(Input::ProactiveSpeech(RUN, Err("budget".to_owned()))),
         [Effect::Engine(EngineCommand::Conversation(true))]
     );
     assert_eq!(controller.turn_view(), None);
@@ -673,8 +673,46 @@ fn turning_conversation_mode_off_while_speech_is_fetched_cancels_it() {
     assert!(effects.contains(&Effect::StopPlayback));
     // The speech that arrives afterwards is not played.
     assert_eq!(
-        controller.handle(Input::ProactiveSpeech(Ok(proactive_speech(4)))),
+        controller.handle(Input::ProactiveSpeech(RUN, Ok(proactive_speech(4)))),
         NOTHING
     );
     assert_ne!(controller.snapshot().state, VoiceState::Speaking);
+}
+
+#[cfg(scout_proactive_coach)]
+#[test]
+fn stale_speech_never_plays_or_cancels_the_announcement_being_fetched() {
+    const NEWER: Uuid = Uuid::from_u128(0xb1);
+    let mut controller = in_game();
+    controller.handle(Input::ProactiveAnswer(RUN));
+    // The first announcement is cut off by muting, and a newer one starts
+    // fetching once the player unmutes.
+    controller.handle(Input::Window(VoiceCommand::SetMuted { muted: true }));
+    controller.handle(Input::Window(VoiceCommand::SetMuted { muted: false }));
+    assert_eq!(
+        controller.handle(Input::ProactiveAnswer(NEWER)).first(),
+        Some(&Effect::FetchProactiveSpeech(NEWER))
+    );
+    // The cut-off one's speech arrives late: not played.
+    assert_eq!(
+        controller.handle(Input::ProactiveSpeech(RUN, Ok(proactive_speech(4)))),
+        NOTHING
+    );
+    // Its failure would not cancel the newer one either.
+    assert_eq!(
+        controller.handle(Input::ProactiveSpeech(RUN, Err("late".to_owned()))),
+        NOTHING
+    );
+    assert_eq!(controller.snapshot().state, VoiceState::Thinking);
+    // The newer one's own speech plays.
+    assert_eq!(
+        controller
+            .handle(Input::ProactiveSpeech(NEWER, Ok(proactive_speech(2))))
+            .first(),
+        Some(&Effect::Play {
+            sample_rate_hz: 24_000,
+            pcm: vec![0; 2]
+        })
+    );
+    assert_eq!(controller.snapshot().state, VoiceState::Speaking);
 }

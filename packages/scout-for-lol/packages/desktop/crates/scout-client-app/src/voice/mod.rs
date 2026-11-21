@@ -101,18 +101,21 @@ impl VoiceStore for FileStore {
     }
 }
 
+/// The speech fetched for a proactive turn's run, or why there is none.
+/// Beta profile only.
+#[cfg(scout_proactive_coach)]
+pub type ProactiveFetch = (
+    uuid::Uuid,
+    Result<scout_explore_client::proactive::ProactiveSpeech, String>,
+);
+
 /// Fetches the speech of a proactive turn's answer. Beta profile only.
 /// Production asks `coach/triggers/speech`; tests script it.
 #[cfg(scout_proactive_coach)]
 pub trait ProactiveSpeaker: Send + Sync {
-    /// Fetch the speech for `run_id` and report it on `done`.
-    fn fetch(
-        &self,
-        run_id: uuid::Uuid,
-        done: mpsc::UnboundedSender<
-            Result<scout_explore_client::proactive::ProactiveSpeech, String>,
-        >,
-    );
+    /// Fetch the speech for `run_id` and report it on `done`, with the run
+    /// it is for.
+    fn fetch(&self, run_id: uuid::Uuid, done: mpsc::UnboundedSender<ProactiveFetch>);
 }
 
 /// `coach/triggers/speech` on Scout, with the device credential this process
@@ -134,13 +137,7 @@ impl ScoutProactiveSpeech {
 
 #[cfg(scout_proactive_coach)]
 impl ProactiveSpeaker for ScoutProactiveSpeech {
-    fn fetch(
-        &self,
-        run_id: uuid::Uuid,
-        done: mpsc::UnboundedSender<
-            Result<scout_explore_client::proactive::ProactiveSpeech, String>,
-        >,
-    ) {
+    fn fetch(&self, run_id: uuid::Uuid, done: mpsc::UnboundedSender<ProactiveFetch>) {
         let origin = self.origin.clone();
         tokio::spawn(async move {
             // The credential store can block on the operating system.
@@ -160,7 +157,7 @@ impl ProactiveSpeaker for ScoutProactiveSpeech {
             if let Err(problem) = &speech {
                 tracing::warn!(%problem, "could not fetch the speech of a proactive answer");
             }
-            let _ = done.send(speech);
+            let _ = done.send((run_id, speech));
         });
     }
 }
@@ -297,8 +294,7 @@ struct Service {
     turn: watch::Sender<Option<VoiceTurnView>>,
     /// Where fetched proactive speech is reported.
     #[cfg(scout_proactive_coach)]
-    proactive_speech:
-        mpsc::UnboundedSender<Result<scout_explore_client::proactive::ProactiveSpeech, String>>,
+    proactive_speech: mpsc::UnboundedSender<ProactiveFetch>,
 }
 
 /// What tells voice about proactive answers: chat, when one answers, and
@@ -306,8 +302,7 @@ struct Service {
 /// one.
 struct ProactiveInputs {
     #[cfg(scout_proactive_coach)]
-    speech:
-        mpsc::UnboundedReceiver<Result<scout_explore_client::proactive::ProactiveSpeech, String>>,
+    speech: mpsc::UnboundedReceiver<ProactiveFetch>,
     #[cfg(scout_proactive_coach)]
     answers: Option<watch::Receiver<Option<uuid::Uuid>>>,
 }
@@ -318,7 +313,7 @@ impl ProactiveInputs {
     async fn next(&mut self) -> Input {
         loop {
             tokio::select! {
-                Some(speech) = self.speech.recv() => return Input::ProactiveSpeech(speech),
+                Some((run, speech)) = self.speech.recv() => return Input::ProactiveSpeech(run, speech),
                 answer = Self::answer(&mut self.answers) => {
                     if let Some(run_id) = answer {
                         return Input::ProactiveAnswer(run_id);
