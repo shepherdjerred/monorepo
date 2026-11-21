@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
+# syntax=docker/dockerfile:1-labs@sha256:36366b12c1dffb228bb25e9feffb73707b93388f084f4927d2b7686dba29e76a
 # temporal-worker image. Build context is the REPO ROOT (single Bun workspace,
 # one root bun.lock, isolated linker). Built via `bun run docker:build` in this
 # package (which passes `-f Dockerfile ../..`).
@@ -23,7 +23,7 @@
 # is arch-guarded (`dpkg --print-architecture`) so both build with native
 # binaries — no QEMU fallback needed.
 FROM public.ecr.aws/aws-cli/aws-cli:2.37.12@sha256:ce44b800602264c12298bbf3399055a4cefdb9ed4a098abe564afe26e7071bce AS aws-cli
-FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
+FROM oven/bun:1.4.5@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS base
 WORKDIR /app
 
 # ── manifests: only the install closure's workspace manifests ───────────────
@@ -215,8 +215,8 @@ ARG LYCHEE_VERSION=lychee-v0.24.2
 # Kometa is cloned at this tag and the build fails unless the clone's HEAD is
 # KOMETA_COMMIT, so the tag and its commit move together.
 # renovate: datasource=github-tags depName=Kometa-Team/Kometa extractVersion=^v(?<version>\d+\.\d+\.\d+)$
-ARG KOMETA_VERSION=2.5.1
-ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
+ARG KOMETA_VERSION=2.5.5
+ARG KOMETA_COMMIT=1ec206b4c9dd0e9f9ea7b9e7a4e2e56b349e68d0
 # Shared local/CI Postgres pin — keep in lockstep with .mise.toml's
 # "github:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
 # run against the same server binaries here as on dev/CI machines.

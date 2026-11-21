@@ -27,7 +27,7 @@
       "category": "upstream",
       "artifactType": "image",
       "management": { "managed": false },
-      "value": "6.3.2-jammy@sha256:5f846f008aa76859377d4e9dafe2826c74dde99421bbc60ae2b98d0f1daf72cf",
+      "value": "6.3.3-jammy@sha256:8346ae8fdc6f1dcd4c2b228b9eb7e55ef98743a4abead5765b806b0bcae74de5",
       "notes": [
         "Build-only SwiftLint compiler against a libc compatible with Debian Bookworm. Only its declared SourceKit/runtime libraries and licenses enter the final CI image."
       ]

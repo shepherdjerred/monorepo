@@ -22,7 +22,7 @@
 ########################
 # Matches upstream Dockerfile.ubuntu's RUST_BUILDER_VERSION=slim-bookworm.
 # renovate: datasource=docker depName=rust
-FROM rust:slim-bookworm@sha256:2c3a22f0a5533ea2dd5a16627bc841228151faa2d4de2644ac9987e4a2f1f2fa AS builder
+FROM rust:slim-bookworm@sha256:7c7d4eb4d05b7781187a327809466cfddf29753f6defdc3d19a0e291951b7a37 AS builder
 
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
@@ -35,7 +35,7 @@ RUN apt-get update \
 
 # Pinned redlib commit. Advanced by Renovate's git-refs manager (renovate.json).
 # renovate: datasource=git-refs depName=redlib-source branch=main
-ARG REDLIB_SOURCE_REF=a4d36e954cf1bd64f209cd8868c5a29edc81b374
+ARG REDLIB_SOURCE_REF=ba116c1186f6b0f9d45f0ae50c827e13eb2f5ea2
 
 WORKDIR /redlib
 RUN set -e \
@@ -53,7 +53,7 @@ RUN cargo build --release --locked --bin redlib \
 ########################
 # Renovate-managed Ubuntu 26.04 release base.
 # renovate: datasource=docker depName=ubuntu
-FROM ubuntu:26.04@sha256:f144425ff09be612d6d9ad965196e9cdc23dae1f42110a8a11a3e9a8198759f7 AS release
+FROM ubuntu:26.04@sha256:d66b366dac61b575bee2aef07e9c26e8070096fbe84a3d4d3eb0da069b5d76db AS release
 
 # wget powers both the HEALTHCHECK below and the in-image `smoke` stage's
 # /settings probe. The minimal Ubuntu image does not ship wget, so install it

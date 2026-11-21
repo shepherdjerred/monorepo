@@ -13,7 +13,7 @@
 # for large downloads. The build tests full and partial HTTP response framing.
 
 # renovate: datasource=docker depName=caddy
-FROM caddy:2.11.7-builder-alpine@sha256:aa705b1e8e4bce41a7a30de934c1e00f6821667c1d1206424465065c92cb7674 AS builder
+FROM caddy:2.11.9-builder-alpine@sha256:646fee578e680989ca5c7fd1ce6f1de574d19fd71ef2221810cc0510a9f40c86 AS builder
 
 # xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
 # import path and adds HEAD support, the 304-on-index fix, and 206/Accept-Ranges
@@ -31,7 +31,7 @@ RUN git init /tmp/caddy-s3-proxy \
   && xcaddy build --with github.com/lindenlab/caddy-s3-proxy=/tmp/caddy-s3-proxy
 
 # renovate: datasource=docker depName=caddy
-FROM caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f AS runtime
+FROM caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0 AS runtime
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 

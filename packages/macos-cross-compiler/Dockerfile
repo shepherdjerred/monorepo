@@ -8,7 +8,7 @@
 #
 # Stages: `cctools` (Apple's ld64 + libtapi, the slow part, cached across
 # tags), `image` (the published toolchain), `smoke` (builds every sample).
-ARG SWIFT_IMAGE=swift:6.4.0-noble@sha256:64bab762bc73a3fda6d9ebc559258bd6d7660c10a705bb25ecacad2f99d066f9
+ARG SWIFT_IMAGE=swift:6.4.3-noble@sha256:4ed5e0210b244aab174450e0b79014c17db60c63c6daf0709347fe50c767293a
 # The apt.llvm.org suite, so the major only. rustc's bundled LLVM governs it:
 # take a bump only when the pinned Rust needs a newer major.
 # renovate: datasource=github-releases depName=llvm/llvm-project extractVersion=^llvmorg-(?<version>\d+)\.\d+\.\d+$
@@ -22,9 +22,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG LLVM_VERSION
 # apple-libtapi (Apple's .tbd stub library) and cctools-port, pinned by commit.
 # renovate: datasource=git-refs depName=apple-libtapi packageName=https://github.com/tpoechtrager/apple-libtapi ref=HEAD
-ARG TBD_LIBRARY_COMMIT=fa9443738c1a18accef4244732ec6d6ee97a8133
+ARG TBD_LIBRARY_COMMIT=2a5705470a92691520fa2ff589482ea6c4039740
 # renovate: datasource=git-refs depName=cctools-port packageName=https://github.com/tpoechtrager/cctools-port ref=HEAD
-ARG CCTOOLS_COMMIT=904de2a71d4da6a9b30d2efaf912a10ddc7d9ddb
+ARG CCTOOLS_COMMIT=ef969083aecf77dee1814d6961a06b88af23edef
 # Unpinned on purpose: Ubuntu drops superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
 # into a build failure. LLVM is pinned by major version (LLVM_VERSION).

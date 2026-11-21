@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:63e440b412b6acba117974e793b7e7f702e58ee65e044bdff1b8d388ee0d853b
+# syntax=docker/dockerfile:1-labs@sha256:36366b12c1dffb228bb25e9feffb73707b93388f084f4927d2b7686dba29e76a
 # Cross-compiles Windows software on Linux. Build context is the REPO ROOT.
 #
 #   base      clang-cl/lld with the MSVC CRT and Windows SDK (via cargo-xwin),
@@ -12,7 +12,7 @@
 # Wine 11.0 is patched where those tools reach unimplemented APIs; see
 # wine-patches/. Nothing here signs binaries or packages.
 
-FROM ubuntu:24.04@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 AS ubuntu
+FROM ubuntu:24.04@sha256:9c7f200c07e3d4a03e7249d2c16bf66a51120fb876aa2242cf31451412543289 AS ubuntu
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 

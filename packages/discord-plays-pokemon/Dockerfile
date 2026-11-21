@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
+# syntax=docker/dockerfile:1-labs@sha256:36366b12c1dffb228bb25e9feffb73707b93388f084f4927d2b7686dba29e76a
 # Headless Discord Plays Pokémon. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
 # `bun run docker:build` in packages/discord-plays-pokemon/packages/backend
@@ -23,7 +23,7 @@
 # (LLVM, NOT emscripten): trixie's clang-19 produces a Bun-loadable binary
 # (bookworm's clang-14 does not).
 # ---------------------------------------------------------------------------
-FROM debian:trixie-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f AS wasm-builder
+FROM debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS wasm-builder
 
 # Pinned commit of ottohg/pokeemerald-wasm. Kept in sync with the OTTOHG_SHA in
 # packages/discord-plays-pokemon/scripts/build-wasm.ts (the single source of
@@ -83,7 +83,7 @@ RUN WASM_CC=clang WASM_LD=wasm-ld make wasm \
 # ---------------------------------------------------------------------------
 # Bun stages.
 # ---------------------------------------------------------------------------
-FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
+FROM oven/bun:1.4.5@sha256:3aa040e5445efa09d75bb428a64ba50db13e2b3ac9b6b0c7f145615f62b2ee18 AS base
 WORKDIR /app
 
 # ── manifests: only the install closure's workspace manifests ───────────────
