@@ -49,6 +49,42 @@ import { workerSyncPrunes } from "#lib/delivery/workers/worker-prune.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
+/** The Delivery API caps an evidence summary at 4000 chars; chunk below it. */
+const EVIDENCE_SUMMARY_BUDGET = 3500;
+
+function reconciliationEvidence(
+  proof: Extract<ReturnType<typeof applicationProgress>, { settled: true }>,
+  rendered: RenderedApplication,
+): EvidenceInput[] {
+  const base = `Owned operation ${proof.operationId} synced ${rendered.name} to ${proof.revision}; Synced and Healthy with the exact rendered source`;
+  if (proof.prunePending.length === 0)
+    return [
+      { kind: "reconciliation", operationId: proof.operationId, summary: base },
+    ];
+  const summaries: string[] = [];
+  let prefix = `${base}; prune pending (${proof.prunePending.length.toString()}): `;
+  let current = prefix;
+  for (const identity of proof.prunePending) {
+    let entry = current === prefix ? identity : `, ${identity}`;
+    if (current.length + entry.length > EVIDENCE_SUMMARY_BUDGET) {
+      summaries.push(current);
+      prefix = `Owned operation ${proof.operationId} prune pending (continued): `;
+      current = prefix;
+      entry = identity;
+    }
+    const room = EVIDENCE_SUMMARY_BUDGET - current.length;
+    current +=
+      entry.length <= room
+        ? entry
+        : `${entry.slice(0, Math.max(0, room - 1))}…`;
+  }
+  summaries.push(current);
+  return summaries.map((summary) => ({
+    kind: "reconciliation" as const,
+    operationId: proof.operationId,
+    summary,
+  }));
+}
 
 function signal() {
   return effectSignal();
@@ -470,17 +506,7 @@ async function syncOwned(
   );
   await recordStage(current, key, "succeeded", {
     operationId: requestId,
-    evidence: [
-      {
-        kind: "reconciliation",
-        operationId: proof.operationId,
-        summary: `Owned operation ${proof.operationId} synced ${rendered.name} to ${proof.revision}; Synced and Healthy with the exact rendered source${
-          proof.prunePending.length === 0
-            ? ""
-            : `; prune pending: ${proof.prunePending.join(", ")}`
-        }`,
-      },
-    ],
+    evidence: reconciliationEvidence(proof, rendered),
   });
 }
 

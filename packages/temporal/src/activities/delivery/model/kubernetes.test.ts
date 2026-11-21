@@ -388,6 +388,55 @@ describe("Kubernetes steps of a forum release", () => {
     expect(calls.events).toEqual(["read", "step-sync running"]);
   });
 
+  test("a sync settled only by prune-pending resources records bounded evidence the API accepts", async () => {
+    const { current, recipe } = fixture();
+    const synced = application(true);
+    if (!("operationState" in synced.status))
+      throw new Error("Synced fixture lost its status");
+    const names = Array.from(
+      { length: 120 },
+      (_, index) =>
+        `temporal-delivery-wf-retained-${String(index).padStart(12, "0")}`,
+    );
+    const settled = {
+      ...synced,
+      status: {
+        ...synced.status,
+        sync: { ...synced.status.sync, status: "OutOfSync" },
+        resources: names.map((name) => ({
+          group: "apps",
+          kind: "Deployment",
+          namespace: "temporal",
+          name,
+          status: "OutOfSync",
+          requiresPruning: true,
+        })),
+      },
+    };
+    calls.reads = [application(false), settled];
+    await sync(current, recipe, "step-sync");
+    const succeeded = calls.stages.find(({ status }) => status === "succeeded");
+    if (succeeded === undefined) throw new Error("Sync stage never succeeded");
+    const receipt: unknown = succeeded.receipt;
+    if (
+      typeof receipt !== "object" ||
+      receipt === null ||
+      !("evidence" in receipt) ||
+      !Array.isArray(receipt.evidence)
+    )
+      throw new Error("Sync stage recorded no evidence");
+    const evidence: { kind: string; summary: string }[] = receipt.evidence;
+    // The Delivery API caps an evidence summary at 4000 chars (AI-794): the
+    // full prune-pending list must be chunked, never one oversized summary.
+    expect(evidence.length).toBeGreaterThan(1);
+    for (const item of evidence) {
+      expect(item.kind).toBe("reconciliation");
+      expect(item.summary.length).toBeLessThanOrEqual(4000);
+    }
+    const joined = evidence.map((item) => item.summary).join("\n");
+    for (const name of names) expect(joined).toContain(name);
+  });
+
   test("a resumed sync whose lease lapsed is refused at its intent before any Argo sync (D7)", async () => {
     const { current, recipe } = fixture([
       { key: "step-sync", status: "running" },
