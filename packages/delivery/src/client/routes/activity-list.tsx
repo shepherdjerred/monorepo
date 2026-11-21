@@ -1,4 +1,7 @@
-import type { ActivityEntry } from "#shared/hub/hub-contract.ts";
+import type {
+  ActivityEntry,
+  ActivitySubject,
+} from "#shared/hub/hub-contract.ts";
 import {
   CatalogReconcileRecordSchema,
   type CatalogReconcileRecord,
@@ -7,11 +10,19 @@ import { Link } from "@tanstack/react-router";
 import { RelativeTime } from "#client/components/time.tsx";
 import { ShortSha, TargetLink } from "#client/components/links.tsx";
 import { Fact, Facts } from "#client/components/facts.tsx";
+import { Disclosure } from "#client/components/disclosure.tsx";
 import {
   Identifier,
+  Revision,
   isOpaqueIdentifier,
 } from "#client/components/identifier.tsx";
+import {
+  CatalogName,
+  catalogNames,
+  type CatalogNames,
+} from "#client/components/catalog-name.tsx";
 import { Status } from "#client/components/status.tsx";
+import type { CatalogService } from "./catalog-filter.ts";
 import {
   DecisionActivitySchema,
   PublishedActivitySchema,
@@ -20,6 +31,7 @@ import {
   foldActivity,
   outcomeOf,
 } from "./activity-fold.ts";
+import { actionLabel } from "./activity-labels.ts";
 
 /** One catalog reconcile: what the document created, renamed, rebound, retired and refused (4.1). */
 function CatalogReconcile({ result }: { result: CatalogReconcileRecord }) {
@@ -87,19 +99,83 @@ const TARGET_NAMES = {
   versionSet: "Version set",
 } as const;
 
-/** What the entry is about, linked when the app has a page for it. */
-function Entity({ entry }: { entry: ActivityEntry }) {
+/**
+ * Where an entry's deployment, build or version set belongs: its environment
+ * (or service) by name and the release it carries, when the list read them.
+ */
+function Subject({
+  subject,
+  names,
+  release,
+}: {
+  subject: ActivitySubject;
+  names: CatalogNames;
+  /** Whether to name the release here; a version set entry already shows it as its link. */
+  release: boolean;
+}) {
+  return (
+    <span className="activity-where">
+      {subject.environmentId === null ? (
+        <CatalogName
+          name={names.service(subject.serviceId)}
+          slug={subject.serviceId}
+        />
+      ) : (
+        <CatalogName
+          name={names.environment(subject.environmentId)}
+          slug={subject.environmentId}
+        />
+      )}
+      {release && subject.revision !== null && (
+        <>
+          {" · "}
+          <Revision revision={subject.revision} />
+        </>
+      )}
+    </span>
+  );
+}
+
+/**
+ * What the entry is about, linked when the app has a page for it, with the
+ * service, environment and release it belongs to beside it. A version set is
+ * named by its release number.
+ */
+function Entity({
+  entry,
+  names,
+  where = true,
+}: {
+  entry: ActivityEntry;
+  names: CatalogNames;
+  /** Whether to say where the entity belongs; a request names it itself. */
+  where?: boolean;
+}) {
+  const subject = entry.subject ?? null;
+  // A version set is named by its release number when the list read it.
+  const release =
+    entry.target?.kind === "versionSet" ? (subject?.revision ?? null) : null;
+  const asRelease = release !== null;
+  const text =
+    release === null ? (
+      <Id value={entry.entityId} />
+    ) : (
+      <Revision revision={release} />
+    );
   return (
     <span className="activity-entity">
       {entry.target === null ? (
-        <Id value={entry.entityId} />
+        text
       ) : (
         <TargetLink
           target={entry.target}
           label={`${TARGET_NAMES[entry.target.kind]} ${entry.entityId}`}
         >
-          <Id value={entry.entityId} />
+          {text}
         </TargetLink>
+      )}
+      {where && subject !== null && (
+        <Subject subject={subject} names={names} release={!asRelease} />
       )}
     </span>
   );
@@ -110,57 +186,90 @@ export function isFailure(action: string) {
   return /[._]failed$/u.test(action) || action.endsWith("recovery_required");
 }
 
-/** The action as recorded; a failure carries the failed status beside it. */
-function Action({ action }: { action: string }) {
+/**
+ * The action in plain words, its recorded code in the title; a failure
+ * carries the failed status beside it. `count` is how many times a folded
+ * run repeated it.
+ */
+function Action({ action, count }: { action: string; count?: number }) {
+  const label = actionLabel(action);
   return (
-    <span className="activity-action">
-      {isFailure(action) ? <Status value="failed" label={action} /> : action}
+    <span className="activity-action" title={action}>
+      {isFailure(action) ? <Status value="failed" label={label} /> : label}
+      {count !== undefined && count > 1 && (
+        <span className="activity-count"> ×{count}</span>
+      )}
     </span>
   );
 }
 
+/** What a request recorded: where it deploys, which release, and any override. */
+function Requested({
+  entry,
+  names,
+}: {
+  entry: ActivityEntry;
+  names: CatalogNames;
+}) {
+  const requested = RequestedActivitySchema.parse(entry.metadata);
+  const revision = entry.subject?.revision ?? null;
+  return (
+    <>
+      {requested.environmentId !== undefined && (
+        <span>
+          to{" "}
+          <Link
+            to="/environments/$"
+            params={{ _splat: requested.environmentId }}
+          >
+            <CatalogName
+              name={names.environment(requested.environmentId)}
+              slug={requested.environmentId}
+            />
+          </Link>
+        </span>
+      )}
+      {requested.versionSetRevisionId !== undefined && (
+        <span>
+          version set{" "}
+          <Link
+            to="/versions/$versionSetId"
+            params={{ versionSetId: requested.versionSetRevisionId }}
+            aria-label={`Version set ${requested.versionSetRevisionId}`}
+          >
+            {revision === null ? (
+              <Id value={requested.versionSetRevisionId} />
+            ) : (
+              <Revision revision={revision} />
+            )}
+          </Link>
+        </span>
+      )}
+      {requested.override !== undefined && (
+        <span>
+          <span className="badge badge-override">Override</span>{" "}
+          {requested.override.join("; ")}
+        </span>
+      )}
+    </>
+  );
+}
+
 /** What the common actions recorded beside their entity. */
-function Recorded({ entry }: { entry: ActivityEntry }) {
+function Recorded({
+  entry,
+  names,
+}: {
+  entry: ActivityEntry;
+  names: CatalogNames;
+}) {
   const outcome = outcomeOf(entry.action);
   // A failure already shows its status beside the action.
   if (outcome !== null)
     return outcome === "failed" ? null : <Status value={outcome} />;
   switch (entry.action) {
     case "deployment.requested": {
-      const requested = RequestedActivitySchema.parse(entry.metadata);
-      return (
-        <>
-          {requested.environmentId !== undefined && (
-            <span>
-              to{" "}
-              <Link
-                to="/environments/$"
-                params={{ _splat: requested.environmentId }}
-              >
-                {requested.environmentId}
-              </Link>
-            </span>
-          )}
-          {requested.versionSetRevisionId !== undefined && (
-            <span>
-              version set{" "}
-              <Link
-                to="/versions/$versionSetId"
-                params={{ versionSetId: requested.versionSetRevisionId }}
-                aria-label={`Version set ${requested.versionSetRevisionId}`}
-              >
-                <Id value={requested.versionSetRevisionId} />
-              </Link>
-            </span>
-          )}
-          {requested.override !== undefined && (
-            <span>
-              <span className="badge badge-override">Override</span>{" "}
-              {requested.override.join("; ")}
-            </span>
-          )}
-        </>
-      );
+      return <Requested entry={entry} names={names} />;
     }
     case "deployment.approve":
     case "deployment.reject": {
@@ -183,8 +292,11 @@ function Recorded({ entry }: { entry: ActivityEntry }) {
       const published = PublishedActivitySchema.parse(entry.metadata);
       return (
         <>
-          {published.serviceId !== undefined && (
-            <span>{published.serviceId}</span>
+          {published.serviceId !== undefined && entry.subject == null && (
+            <CatalogName
+              name={names.service(published.serviceId)}
+              slug={published.serviceId}
+            />
           )}
           {published.sourceRevision !== undefined && (
             <span>
@@ -200,34 +312,44 @@ function Recorded({ entry }: { entry: ActivityEntry }) {
   }
 }
 
-/** A run of stage writes spans more than a moment when its ends are a minute apart. */
+/** A run of entries spans more than a moment when its ends are a minute apart. */
 const SPAN_MS = 60_000;
 
-/** One deployment's consecutive stage writes: each stage and what it became, newest first. */
-function StageRun({
-  entries,
-}: {
-  entries: [ActivityEntry, ...ActivityEntry[]];
-}) {
+/** When a row happened: its clock reading and age, and where a run began. */
+function When({ entries }: { entries: [ActivityEntry, ...ActivityEntry[]] }) {
   const [newest] = entries;
   const oldest = entries.at(-1) ?? newest;
   const spans =
     Date.parse(newest.occurredAt) - Date.parse(oldest.occurredAt) >= SPAN_MS;
   return (
+    <span className="activity-when">
+      <RelativeTime value={newest.occurredAt} clock />
+      {spans && (
+        <small className="muted">
+          {" "}
+          from <RelativeTime value={oldest.occurredAt} clock />
+        </small>
+      )}
+    </span>
+  );
+}
+
+/** One deployment's consecutive stage writes: each stage and what it became, newest first. */
+function StageRun({
+  entries,
+  names,
+}: {
+  entries: [ActivityEntry, ...ActivityEntry[]];
+  names: CatalogNames;
+}) {
+  const [newest] = entries;
+  return (
     <li>
-      <span className="activity-when">
-        <RelativeTime value={newest.occurredAt} />
-        {spans && (
-          <small className="muted">
-            {" "}
-            from <RelativeTime value={oldest.occurredAt} />
-          </small>
-        )}
-      </span>
+      <When entries={entries} />
       <Action action={newest.action} />
       <span className="activity-actor">{newest.actor}</span>
       <span className="activity-subject">
-        <Entity entry={newest} />
+        <Entity entry={newest} names={names} />
         <ol className="activity-stages">
           {entries.map((entry) => {
             const recorded = StageActivitySchema.parse(entry.metadata);
@@ -244,12 +366,87 @@ function StageRun({
   );
 }
 
+/** One routine build record repeated by one actor: a count, with every entry behind it. */
+function RepeatedRun({
+  entries,
+  names,
+}: {
+  entries: [ActivityEntry, ...ActivityEntry[]];
+  names: CatalogNames;
+}) {
+  const [newest] = entries;
+  return (
+    <li>
+      <When entries={entries} />
+      <Action action={newest.action} count={entries.length} />
+      <span className="activity-actor">{newest.actor}</span>
+      <span className="activity-subject">
+        {entries.length === 1 ? (
+          <>
+            <Entity entry={newest} names={names} />
+            <Recorded entry={newest} names={names} />
+          </>
+        ) : (
+          <Disclosure summary={`${String(entries.length)} builds`}>
+            <ul className="activity-repeated">
+              {entries.map((entry) => (
+                <li key={entry.id}>
+                  <Entity entry={entry} names={names} />
+                  <Recorded entry={entry} names={names} />
+                </li>
+              ))}
+            </ul>
+          </Disclosure>
+        )}
+      </span>
+    </li>
+  );
+}
+
 /**
- * The audit trail, one row per entry or stage run: when, what, who, and what
- * it was about. The column labels are for sight; each row reads in order.
+ * The activity filter's scope: everything or only problems, and how far back.
+ * Each select is a search parameter, so the URL carries the choice.
  */
-export function ActivityList({ entries }: { entries: ActivityEntry[] }) {
+export function ActivityScope({
+  search,
+}: {
+  search: { problems?: string | undefined; within?: string | undefined };
+}) {
+  return (
+    <>
+      <label>
+        Show
+        <select name="problems" defaultValue={search.problems ?? ""}>
+          <option value="">Everything</option>
+          <option value="only">Problems only</option>
+        </select>
+      </label>
+      <label>
+        Time range
+        <select name="within" defaultValue={search.within ?? ""}>
+          <option value="hour">Last hour</option>
+          <option value="day">Last 24 hours</option>
+          <option value="">Any time</option>
+        </select>
+      </label>
+    </>
+  );
+}
+
+/**
+ * The audit trail, one row per entry or folded run: when, what, who, and
+ * what it was about. The column labels are for sight; each row reads in
+ * order. `services` names the catalog ids the entries carry.
+ */
+export function ActivityList({
+  entries,
+  services = [],
+}: {
+  entries: ActivityEntry[];
+  services?: readonly CatalogService[];
+}) {
   if (entries.length === 0) return <p className="empty">No activity yet.</p>;
+  const names = catalogNames(services);
   return (
     <div className="activity-table">
       <div className="activity-columns" aria-hidden="true">
@@ -261,7 +458,21 @@ export function ActivityList({ entries }: { entries: ActivityEntry[] }) {
       <ol className="activity">
         {foldActivity(entries).map((row) => {
           if (row.kind === "stages")
-            return <StageRun key={row.entries[0].id} entries={row.entries} />;
+            return (
+              <StageRun
+                key={row.entries[0].id}
+                entries={row.entries}
+                names={names}
+              />
+            );
+          if (row.kind === "repeated")
+            return (
+              <RepeatedRun
+                key={row.entries[0].id}
+                entries={row.entries}
+                names={names}
+              />
+            );
           const { entry } = row;
           const catalog =
             entry.action === "catalog.reconciled"
@@ -269,14 +480,16 @@ export function ActivityList({ entries }: { entries: ActivityEntry[] }) {
               : null;
           return (
             <li key={entry.id}>
-              <span className="activity-when">
-                <RelativeTime value={entry.occurredAt} />
-              </span>
+              <When entries={[entry]} />
               <Action action={entry.action} />
               <span className="activity-actor">{entry.actor}</span>
               <span className="activity-subject">
-                <Entity entry={entry} />
-                <Recorded entry={entry} />
+                <Entity
+                  entry={entry}
+                  names={names}
+                  where={entry.action !== "deployment.requested"}
+                />
+                <Recorded entry={entry} names={names} />
               </span>
               {catalog !== null && <CatalogReconcile result={catalog} />}
             </li>

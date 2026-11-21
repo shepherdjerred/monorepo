@@ -6,6 +6,7 @@ import type {
   PlatformRecoveryIntent,
 } from "#shared/contract.ts";
 import { Status } from "#client/components/status.tsx";
+import { ExactTime } from "#client/components/time.tsx";
 import { canApprove } from "./presentation.ts";
 
 export type RecoveryDecision = {
@@ -63,7 +64,9 @@ function RecoveryPlan({
         </div>
         <div>
           <dt>Expiration</dt>
-          <dd>{plan.expiresAt}</dd>
+          <dd>
+            <ExactTime value={plan.expiresAt} />
+          </dd>
         </div>
       </dl>
       {intent.planApproval === null ? (

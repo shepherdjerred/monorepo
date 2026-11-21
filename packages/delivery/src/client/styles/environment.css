@@ -49,6 +49,23 @@
   color: var(--text-muted);
   font-size: var(--text-xs);
 }
+/* Every deployment that accepted one selection, newest first, one per line. */
+.candidate-deployments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.candidate-origin .disclosure > summary {
+  font-size: var(--text-xs);
+}
+/* The builds a shared worker row stands for, each with its own details. */
+.worker-group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
 /* The older candidates continue the list above them. */
 .candidates + .disclosure > .disclosure-body {
   padding-inline-start: 0;

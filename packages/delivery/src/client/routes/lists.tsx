@@ -15,10 +15,11 @@ import {
   SECTION_EYEBROW,
 } from "#client/components/page-header.tsx";
 import { DeploymentTable } from "#client/components/deployment-table.tsx";
+import { catalogNames } from "#client/components/catalog-name.tsx";
 import { OlderLink } from "#client/components/pager.tsx";
 import { BuildTable } from "#client/artifacts.tsx";
 import { ApprovalQueue } from "#client/model/approval-queue.tsx";
-import { ActivityList } from "./activity-list.tsx";
+import { ActivityList, ActivityScope } from "./activity-list.tsx";
 import {
   boundedText,
   catalogServices,
@@ -216,6 +217,7 @@ function DeploymentsPage() {
           <DeploymentTable
             deployments={items}
             empty="No deployments match these filters."
+            names={catalogNames(services)}
           />
         )}
         <OlderLink
@@ -397,6 +399,8 @@ function activityFilters(search: Search) {
     actor: actor.id,
     action: action.id,
     entityId: entity.id,
+    problems: ActivitySearchSchema.shape.problems.parse(search["problems"]),
+    within: ActivitySearchSchema.shape.within.parse(search["within"]),
   };
   return { query, problems: problemsOf([actor, action, entity]) };
 }
@@ -405,6 +409,7 @@ function ActivityPage() {
   const search = activityRoute.useSearch();
   const navigate = useNavigate({ from: activityRoute.fullPath });
   const filters = activityFilters(search);
+  const services = useCatalog();
   const { data } = useQuery({
     ...queries.activity(filters.query),
     enabled: filters.problems.length === 0,
@@ -427,6 +432,7 @@ function ActivityPage() {
             });
           }}
         >
+          <ActivityScope search={search} />
           <label>
             Action prefix
             <input
@@ -461,7 +467,9 @@ function ActivityPage() {
           problems={filters.problems}
           clearTo="/activity"
         />
-        {items.length > 0 && <ActivityList entries={items} />}
+        {items.length > 0 && (
+          <ActivityList entries={items} services={services} />
+        )}
         <OlderLink
           to="/activity"
           search={search}

@@ -105,12 +105,17 @@ function EnvironmentPage() {
     <>
       <PageHeader
         eyebrow={
-          <Link
-            to="/pipelines/$serviceId"
-            params={{ serviceId: detail.service.id }}
-          >
-            {detail.service.title}
-          </Link>
+          // The overview's name for this environment; the heading keeps its id.
+          <>
+            <Link
+              to="/pipelines/$serviceId"
+              params={{ serviceId: detail.service.id }}
+            >
+              {detail.service.title}
+            </Link>
+            {" · "}
+            {environment.name}
+          </>
         }
         title={environment.id}
         description={

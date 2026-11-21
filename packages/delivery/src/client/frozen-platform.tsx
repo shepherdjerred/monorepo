@@ -1,4 +1,5 @@
 import type { PlatformReleaseSnapshot } from "#shared/contract.ts";
+import { ExactTime } from "#client/components/time.tsx";
 
 export function FrozenPlatform({
   snapshot,
@@ -64,7 +65,9 @@ export function FrozenPlatform({
             </div>
             <div>
               <dt>Plan expiry</dt>
-              <dd>{snapshot.plan.expiresAt}</dd>
+              <dd>
+                <ExactTime value={snapshot.plan.expiresAt} />
+              </dd>
             </div>
             <div>
               <dt>Original plan Job</dt>

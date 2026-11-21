@@ -75,7 +75,43 @@ export type KindPanel = {
   ungrouped: GridService[];
   /** Catalog groups of several services, each under its own heading. */
   groups: GridGroup[];
+  /**
+   * The services that need nobody: every environment's newest deployment
+   * succeeded (or it has none) and no attention item names the service. A
+   * phone folds them.
+   */
+  healthy: ReadonlySet<string>;
 };
+
+/**
+ * A run of tiles as a phone shows it: the services left in sight, then the
+ * healthy ones folded away. A `whole` run (a catalog group) folds only when
+ * every service in it is healthy; otherwise it stays in sight together.
+ */
+export function foldHealthy(
+  services: readonly GridService[],
+  healthy: ReadonlySet<string>,
+  whole: boolean,
+) {
+  const fine = (service: GridService) => healthy.has(service.id);
+  const folds = !whole || services.every((service) => fine(service));
+  return {
+    open: services.filter((service) => !folds || !fine(service)),
+    settled: folds ? services.filter((service) => fine(service)) : [],
+  };
+}
+
+/**
+ * Whether a service needs nobody: no attention item names it, and every
+ * environment's newest deployment succeeded, or it has no environments.
+ */
+export function isHealthy(service: GridService, flagged: ReadonlySet<string>) {
+  const standing = serviceStanding(service);
+  return (
+    !flagged.has(service.id) &&
+    (standing === "succeeded" || standing === "no_environments")
+  );
+}
 
 /** Members that hold something needing attention first; otherwise the order given. */
 function urgentFirst<T>(members: T[], urgent: (member: T) => boolean): T[] {
@@ -128,9 +164,14 @@ export function kindPanels(
       ...ungrouped,
       ...grouped.flatMap((group) => group.services),
     ];
+    const healthy = new Set(
+      services
+        .filter((service) => isHealthy(service, flagged))
+        .map((service) => service.id),
+    );
     return services.length === 0
       ? []
-      : [{ kind, title, services, ungrouped, groups: grouped }];
+      : [{ kind, title, services, ungrouped, groups: grouped, healthy }];
   });
 }
 

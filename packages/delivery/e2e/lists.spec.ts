@@ -25,7 +25,7 @@ test("a service filter by its display name keeps the page and filters by id", as
   ).toBeVisible();
   const table = page.getByRole("main").getByRole("table");
   await expect(table.locator("tbody tr").first()).toContainText(
-    "scout-for-lol/prod",
+    "Scout for LoL prod",
   );
   await expect(table).not.toContainText("minecraft/tsmc");
 
@@ -44,7 +44,7 @@ test("a service filter by its display name keeps the page and filters by id", as
       }),
     ).toBeVisible();
     await expect(table.locator("tbody tr").first()).toContainText(
-      "scout-for-lol/prod",
+      "Scout for LoL prod",
     );
   }
   // The environment suggestions name every environment of the catalog.
@@ -168,7 +168,9 @@ test("deployments say when recovery is required and name links by what they open
     row.getByRole("link", {
       name: /^Deployment to minecraft\/tsmc, deploy r\d+, /,
     }),
-  ).toHaveText("minecraft/tsmc");
+  ).toHaveText(/tsmc$/u);
+  // The overview's name in sight, the environment's id in its title.
+  await expect(row.locator('span[title="minecraft/tsmc"]')).toBeVisible();
   await expect(
     row.getByRole("link", { name: /^Version set r\d+$/u }),
   ).toHaveText(/^r\d+$/u);
@@ -216,9 +218,14 @@ test("activity labels its columns, puts the actor beside the action and marks fa
     if (action === null || actor === null) throw new Error("row is laid out");
     expect(actor.x - (action.x + action.width)).toBeLessThan(40);
   }
+  // The action reads in plain words; its recorded code stays in the title.
   await expect(
     entries.first().locator(".activity-action .status-failed"),
-  ).toHaveText(/deployment\.failed/u);
+  ).toHaveText(/Deployment failed/u);
+  await expect(entries.first().locator(".activity-action")).toHaveAttribute(
+    "title",
+    "deployment.failed",
+  );
   await expect(
     entries.first().getByRole("link", { name: /^Deployment [0-9a-f-]{36}$/u }),
   ).toBeVisible();

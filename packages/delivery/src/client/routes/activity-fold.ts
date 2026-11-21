@@ -16,29 +16,58 @@ export const StageActivitySchema = z.object({
  */
 export type ActivityRow =
   | { kind: "entry"; entry: ActivityEntry }
-  | { kind: "stages"; entries: [ActivityEntry, ...ActivityEntry[]] };
+  | { kind: "stages"; entries: [ActivityEntry, ...ActivityEntry[]] }
+  | { kind: "repeated"; entries: [ActivityEntry, ...ActivityEntry[]] };
+
+/**
+ * Routine build records that arrive in bursts, one per service a commit
+ * builds; a run of them reads as one row with a count.
+ */
+export const REPEATED_ACTIONS: ReadonlySet<string> = new Set([
+  "build.source_recorded",
+  "build.verified",
+  "build.published",
+]);
+
+/** Which run an entry joins: stage writes of one deployment, or one repeated action. */
+function runOf(entry: ActivityEntry) {
+  if (entry.action === STAGE_ACTION) return "stages" as const;
+  return REPEATED_ACTIONS.has(entry.action) ? ("repeated" as const) : null;
+}
+
+/** Whether an entry continues a run that began with `first`: same actor, and same deployment or same action. */
+function continues(
+  first: ActivityEntry,
+  run: "stages" | "repeated",
+  entry: ActivityEntry,
+) {
+  if (first.actor !== entry.actor) return false;
+  return run === "stages"
+    ? first.entityId === entry.entityId
+    : first.action === entry.action;
+}
 
 /**
  * Fold each run of consecutive stage writes of the same deployment by the
- * same actor into one row. Presentational and within one fetched page:
- * another action between two stage writes ends the run, and a run that
+ * same actor into one row, and each run of one repeated build action by the
+ * same actor into one counted row. Presentational and within one fetched
+ * page: another action between two entries ends the run, and a run that
  * crosses a page boundary reads as one row on each page.
  */
 export function foldActivity(entries: readonly ActivityEntry[]): ActivityRow[] {
   const rows: ActivityRow[] = [];
   for (const entry of entries) {
-    if (entry.action !== STAGE_ACTION) {
-      rows.push({ kind: "entry", entry });
-      continue;
-    }
+    const run = runOf(entry);
     const last = rows.at(-1);
-    if (
-      last?.kind === "stages" &&
-      last.entries[0].entityId === entry.entityId &&
-      last.entries[0].actor === entry.actor
+    if (run === null) rows.push({ kind: "entry", entry });
+    else if (
+      last !== undefined &&
+      last.kind !== "entry" &&
+      last.kind === run &&
+      continues(last.entries[0], run, entry)
     )
       last.entries.push(entry);
-    else rows.push({ kind: "stages", entries: [entry] });
+    else rows.push({ kind: run, entries: [entry] });
   }
   return rows;
 }

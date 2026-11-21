@@ -10,6 +10,7 @@ import { GRID_KEY, keysForChange } from "./change-keys.ts";
 import { AttentionPanel } from "./components/attention-panel.tsx";
 import { OverviewPanels } from "./components/overview-panels.tsx";
 import {
+  foldHealthy,
   kindPanels,
   serviceStanding,
   standingCounts,
@@ -192,6 +193,55 @@ describe("overview panels model", () => {
       { standing: "not_started", count: 1 },
       { standing: "no_environments", count: 1 },
     ]);
+  });
+});
+
+function ids(list: readonly GridService[]) {
+  return list.map((entry) => entry.id);
+}
+
+describe("folding healthy services on a phone", () => {
+  it("names the services that need nobody: every environment succeeded and no attention item", () => {
+    const [products, platform] = kindPanels(GROUPS, [attention("arcade")]);
+    // Arcade succeeded but has an attention item; Scout waits for approval.
+    expect([...(products?.healthy ?? [])].toSorted()).toEqual([
+      "resume",
+      "router",
+    ]);
+    // A service with no environments has nothing to watch; one not started
+    // needs a look.
+    expect([...(platform?.healthy ?? [])].toSorted()).toEqual([
+      "argocd",
+      "delivery",
+      "secrets",
+    ]);
+  });
+
+  it("folds healthy lone services and keeps the rest in sight", () => {
+    const [products] = kindPanels(GROUPS, []);
+    if (products === undefined) throw new Error("Expected the products panel");
+    const lone = foldHealthy(products.ungrouped, products.healthy, false);
+    expect(ids(lone.open)).toEqual(["scout"]);
+    expect(ids(lone.settled)).toEqual(["arcade"]);
+  });
+
+  it("folds a group only when all of it is healthy, and keeps a mixed group whole", () => {
+    const [products] = kindPanels(GROUPS, []);
+    if (products === undefined) throw new Error("Expected the products panel");
+    const [sites, minecraft] = products.groups;
+    const mixed = foldHealthy(sites?.services ?? [], products.healthy, true);
+    expect(ids(mixed.open)).toEqual(["resume", "webring"]);
+    expect(mixed.settled).toEqual([]);
+    const settled = foldHealthy(
+      sites?.services.filter((entry) => entry.id === "resume") ?? [],
+      products.healthy,
+      true,
+    );
+    expect(ids(settled.open)).toEqual([]);
+    expect(ids(settled.settled)).toEqual(["resume"]);
+    expect(
+      foldHealthy(minecraft?.services ?? [], products.healthy, true).settled,
+    ).toEqual([]);
   });
 });
 

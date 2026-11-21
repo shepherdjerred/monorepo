@@ -85,6 +85,19 @@ export const PipelineStageSchema = z.object({
   environmentId: IdentifierSchema.nullable(),
   transition: TransitionSchema.nullable(),
   actions: z.array(PipelineActionSchema),
+  /**
+   * An environment stage's accepted release: what Delivery recorded it runs,
+   * which `execution` (the newest deployment's release) need not be. Null
+   * before the environment accepts one; absent on other stages and on a
+   * change's path.
+   */
+  accepted: z
+    .object({
+      versionSetId: IdentifierSchema,
+      revision: z.number().int().positive(),
+    })
+    .nullable()
+    .optional(),
 });
 export type PipelineStage = z.infer<typeof PipelineStageSchema>;
 
@@ -196,8 +209,23 @@ export const ActivityEntrySchema = z.object({
   metadata: z.record(z.string(), z.unknown()),
   occurredAt: TimestampSchema,
   target: AppTargetSchema.nullable(),
+  /**
+   * The service, environment and set revision number a deployment, build or
+   * version set entry is about, read for the whole page at once. Absent
+   * where the list does not read it, null for other entities or a deleted
+   * row.
+   */
+  subject: z
+    .object({
+      serviceId: IdentifierSchema,
+      environmentId: IdentifierSchema.nullable(),
+      revision: z.number().int().positive().nullable(),
+    })
+    .nullable()
+    .optional(),
 });
 export type ActivityEntry = z.infer<typeof ActivityEntrySchema>;
+export type ActivitySubject = NonNullable<ActivityEntry["subject"]>;
 export const ActivityPageSchema = pageSchema(ActivityEntrySchema);
 
 export const HubOverviewSchema = z.object({
@@ -348,8 +376,30 @@ export const ActivityQuerySchema = z.object({
   actor: z.string().min(1).max(200).optional(),
   action: z.string().min(1).max(100).optional(),
   entityId: z.string().min(1).max(200).optional(),
+  /** Only entries that record a failure, a refusal or an alarm. */
+  problems: z.literal("only").optional(),
+  /** Only entries from the last hour or the last day, as the server's clock reads it. */
+  within: z.enum(["hour", "day"]).optional(),
 });
 export type ActivityQuery = z.infer<typeof ActivityQuerySchema>;
+
+/**
+ * How an audit action that records a problem ends: a failure, a refusal, a
+ * lapsed lease or approval, an incompatible build, or a monitor alarm.
+ */
+export const PROBLEM_ACTION_SUFFIXES = [
+  "failed",
+  "recovery_required",
+  "rejected",
+  "incompatible",
+  "expired",
+  "alarmed",
+] as const;
+
+/** Whether an audit action records a problem an on-call person looks at. */
+export function isProblemAction(action: string) {
+  return PROBLEM_ACTION_SUFFIXES.some((suffix) => action.endsWith(suffix));
+}
 
 export const ExecutionQuerySchema = z.object({
   cursor: z.string().min(1).optional(),

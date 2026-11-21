@@ -5,15 +5,32 @@ import type { Selection } from "#shared/model/contract.ts";
 import { ErrorNotice } from "#client/components/notices.tsx";
 import { selectionCoordinates } from "./view.ts";
 import { Fact, Facts } from "#client/components/facts.tsx";
-import { Identifier, Revision } from "#client/components/identifier.tsx";
+import {
+  Identifier,
+  Revision,
+  revisionLabel,
+  shortIdentifier,
+} from "#client/components/identifier.tsx";
 
 /** Version-set id to revision number, for the set revisions a page has loaded. */
 export type RevisionNumbers = ReadonlyMap<string, number>;
 
+/** The revision number a deployment page has loaded: its own set revision's. */
+export function deploymentRevisions(detail: {
+  versionSet: { id: string; revision: number };
+}): RevisionNumbers {
+  return new Map([[detail.versionSet.id, detail.versionSet.revision]]);
+}
+
+/** A set revision's name as text, for an accessible name or a title: `r274`, else its short id. */
+export function releaseName(id: string, revisions?: RevisionNumbers) {
+  const revision = revisions?.get(id);
+  return revision === undefined ? shortIdentifier(id) : revisionLabel(revision);
+}
+
 /**
- * A set revision as people say it. With the page's revision numbers it reads
- * `r274`, or a short id when the page has not loaded that set revision;
- * without them it is the id itself.
+ * A set revision as people say it: `r274` when the page has loaded its
+ * number, else the short form of its id, whole in the title.
  */
 export function SetRevision({
   id,
@@ -23,8 +40,11 @@ export function SetRevision({
   revisions?: RevisionNumbers | undefined;
 }) {
   const revision = revisions?.get(id);
-  if (revision !== undefined) return <Revision revision={revision} />;
-  return revisions === undefined ? id : <Identifier value={id} />;
+  return revision === undefined ? (
+    <Identifier value={id} />
+  ) : (
+    <Revision revision={revision} />
+  );
 }
 
 /** A set revision linked to its version page. */

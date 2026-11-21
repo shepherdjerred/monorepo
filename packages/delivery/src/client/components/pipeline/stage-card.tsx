@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import type {
   PipelineAction,
   PipelineStage,
@@ -137,7 +137,14 @@ function ActionList({
   );
 }
 
-export function StageCard({ stage }: { stage: PipelineStage }) {
+export function StageCard({
+  stage,
+  standing,
+}: {
+  stage: PipelineStage;
+  /** A line under the heading saying where the stage stands, when the page knows. */
+  standing?: ReactNode;
+}) {
   const heading = useId();
   const { inline, collapsed } = stageActionList(stage);
   return (
@@ -157,6 +164,7 @@ export function StageCard({ stage }: { stage: PipelineStage }) {
         </h3>
         <Status value={stage.status} />
       </header>
+      {standing}
       <Revision stage={stage} />
       {/* A collapsed list's own summary counts its outcomes. */}
       {collapsed === null && (

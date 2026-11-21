@@ -98,9 +98,13 @@ test("rollback candidates mark the accepted one and exclude a lowered forward-on
   await showIdle(page, PROD);
   await openEnvironment(page);
   const region = page.getByRole("region", { name: "Rollback candidates" });
-  const candidates = region.getByRole("listitem");
-  // Six accepted selections: the newest five in sight, the oldest collapsed.
-  await expect(candidates).toHaveCount(5);
+  const candidates = region.locator("ol.candidates > li");
+  // Six accepted selections; the three that restore one selection with one
+  // verdict share a row, so four rows and nothing collapsed.
+  await expect(candidates).toHaveCount(4);
+  await expect(
+    region.locator("summary", { hasText: "Older candidates" }),
+  ).toHaveCount(0);
   await expect(candidates.nth(0)).toContainText("Accepted now");
   await expect(
     candidates.nth(0).getByRole("button", { name: "Re-assert this selection" }),
@@ -109,19 +113,29 @@ test("rollback candidates mark the accepted one and exclude a lowered forward-on
   await expect(candidates.nth(1).getByRole("button", rollback)).toBeEnabled();
   const excluded =
     "would lower forwardOnly /helm/parameters/schema.version from 2 to 1";
-  for (const index of [2, 3, 4]) {
+  for (const index of [2, 3]) {
     await expect(
       candidates.nth(index).getByRole("button", rollback),
     ).toBeDisabled();
     await expect(candidates.nth(index)).toContainText(excluded);
   }
-  const older = region.locator("details", { hasText: "Older candidates" });
-  await expect(older).toHaveJSProperty("open", false);
-  await expect(older.locator("summary")).toHaveText(/^Older candidates\s*1$/u);
-  await older.locator("summary").click();
-  await expect(candidates).toHaveCount(6);
-  await expect(candidates.nth(5).getByRole("button", rollback)).toBeDisabled();
-  await expect(candidates.nth(5)).toContainText(excluded);
+  // The shared row lists every deployment that accepted it.
+  const shared = candidates.nth(3);
+  await expect(shared).toContainText("Accepted 3 times, last");
+  await shared.locator("summary").click();
+  await expect(shared.locator(".candidate-deployments > li")).toHaveCount(3);
+  for (const link of await shared.locator(".candidate-deployments a").all())
+    await expect(link).toHaveAttribute("href", /^\/deployments\//u);
+  // Every row's button has a name of its own.
+  const names = await region
+    .getByRole("button", {
+      name: /^(?:Roll back to this|Re-assert this selection)/u,
+    })
+    .evaluateAll((buttons) =>
+      buttons.map((button) => button.getAttribute("aria-label")),
+    );
+  expect(names).toHaveLength(4);
+  expect(new Set(names).size).toBe(4);
   await expectNoHorizontalOverflow(page);
 });
 
@@ -203,11 +217,10 @@ test("every confirmation asks through the page's one dialog and returns focus to
   await showIdle(page, PROD);
   await openEnvironment(page);
   const region = page.getByRole("region", { name: "Rollback candidates" });
-  await region.locator("summary", { hasText: "Older candidates" }).click();
-  // Three buttons here ask before acting; the page holds one dialog for them.
+  // Several buttons here ask before acting; the page holds one dialog for them.
   await expect(page.locator("dialog")).toHaveCount(1);
   const rollback = region
-    .getByRole("listitem")
+    .locator("ol.candidates > li")
     .nth(1)
     .getByRole("button", { name: "Roll back to this" });
   await rollback.click();
@@ -486,18 +499,21 @@ for (const scheme of ["light", "dark"] as const) {
       await expectAccessible(page, path);
   });
 
-  test(`the collapsed candidates and the open dialog meet WCAG 2.2 AA in ${scheme} mode`, async ({
+  test(`the grouped candidates and the open dialog meet WCAG 2.2 AA in ${scheme} mode`, async ({
     page,
   }) => {
     await page.emulateMedia({ colorScheme: scheme });
     await showIdle(page, PROD);
     await openEnvironment(page);
     const region = page.getByRole("region", { name: "Rollback candidates" });
-    await region.locator("summary", { hasText: "Older candidates" }).click();
-    await expect(region.getByRole("listitem")).toHaveCount(6);
-    await expectNoViolations(page, `${ENVIRONMENT} with older candidates`);
-    await region
-      .getByRole("listitem")
+    const candidates = region.locator("ol.candidates > li");
+    await candidates.nth(3).locator("summary").click();
+    await expect(region.locator(".candidate-deployments > li")).toHaveCount(3);
+    await expectNoViolations(
+      page,
+      `${ENVIRONMENT} with a grouped candidate open`,
+    );
+    await candidates
       .nth(1)
       .getByRole("button", { name: "Roll back to this" })
       .click();

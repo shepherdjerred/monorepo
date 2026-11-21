@@ -147,3 +147,43 @@
   padding: 0;
   border: 0;
 }
+/* A folded run of one build action: each build and what it recorded, one per line. */
+.activity .activity-repeated {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.activity .activity-repeated > li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-0) var(--space-3);
+  align-items: baseline;
+  margin: 0;
+  padding: var(--space-0) 0;
+  border: 0;
+}
+.activity-count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+/* Where an entity belongs: its environment or service, and its release. */
+.activity-where {
+  margin-inline-start: var(--space-2);
+  color: var(--text-muted);
+}
+/* Wide, a row's clock reading sits on its own line above its age, so rows sort by eye. */
+.activity-when .clock {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+.activity-when .clock > [aria-hidden="true"] {
+  display: none;
+}
+@media (width <= 720px) {
+  .activity-when .clock {
+    display: inline;
+  }
+  .activity-when .clock > [aria-hidden="true"] {
+    display: inline;
+  }
+}

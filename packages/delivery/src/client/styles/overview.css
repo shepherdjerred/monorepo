@@ -1,7 +1,7 @@
 /*
  * The overview: every active service as a tile, in one panel per catalog
  * kind. Tiles flow in an auto-fill grid, so a hundred services take a few
- * screens on a desktop and one column on a phone, with no table and no
+ * screens on a desktop and two narrow columns on a phone, with no table and no
  * sideways scroll.
  */
 
@@ -183,4 +183,24 @@
 .badge-queued {
   background: var(--waiting-soft);
   color: var(--waiting);
+}
+/*
+ * On a phone the tiles sit two to a row and tighten, and healthy services
+ * fold behind a counted disclosure (overview-panels.tsx), so a screen holds
+ * what needs a person instead of one long column.
+ */
+@media (width <= 600px) {
+  .overview-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-1);
+  }
+  .overview-tile {
+    padding: var(--space-1);
+  }
+  .overview-service {
+    font-size: var(--text-sm);
+  }
+  .overview-kind .disclosure {
+    margin-top: var(--space-1);
+  }
 }

@@ -1,5 +1,6 @@
 import type { DeploymentDetail } from "#shared/contract.ts";
 import { NativeIntentHeading } from "./native-intent-heading.tsx";
+import { ExactTime } from "#client/components/time.tsx";
 
 type RecoveryDetail = {
   pipeline: Pick<DeploymentDetail["pipeline"], "definition">;
@@ -67,7 +68,7 @@ export function ContentRecovery({ detail }: { detail: RecoveryDetail }) {
                 )}
               <small>
                 Requested by {intent.requestedBy} ·{" "}
-                {new Date(intent.createdAt).toLocaleString()}
+                <ExactTime value={intent.createdAt} precision="second" />
               </small>
               <details>
                 <summary>Frozen recovery operation and native receipts</summary>

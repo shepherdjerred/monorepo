@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import * as fixtures from "#testing/model-fixtures.ts";
 import { renderWithRouter } from "#client/test-router.tsx";
 import { DeploymentTable } from "./deployment-table.tsx";
+import { catalogNames } from "./catalog-name.tsx";
 import { Disclosure } from "./disclosure.tsx";
 import { Fact, Facts } from "./facts.tsx";
 import {
@@ -151,11 +152,33 @@ describe("DeploymentTable", () => {
     expect(html).toContain(
       `aria-label="Deployment to ${deployment.environmentId}, ${deployment.kind} r4, `,
     );
-    expect(html).toContain(`>${deployment.environmentId}</a>`);
+    // Without the catalog, the environment reads as its id.
+    expect(html).toContain(
+      `<span class="mono">${deployment.environmentId}</span></a>`,
+    );
     expect(html).toContain('aria-label="Version set r4"');
     // Narrow, each cell stacks under its label.
     expect(html).toContain('class="table-scroll stack-table"');
     expect(html).toContain('data-label="Requested"');
+  });
+
+  it("names an environment as the overview does, its id in the title", () => {
+    const html = renderWithRouter(
+      <DeploymentTable
+        deployments={[{ ...deployment, versionSetRevision: 4 }]}
+        empty="None"
+        names={catalogNames([
+          {
+            id: deployment.serviceId,
+            title: "Display title",
+            environments: [{ id: deployment.environmentId, name: "prod" }],
+          },
+        ])}
+      />,
+    );
+    expect(html).toContain(
+      `<span title="${deployment.environmentId}">Display title prod</span></a>`,
+    );
   });
 
   it("says a failed deployment needs recovery when its record does", () => {

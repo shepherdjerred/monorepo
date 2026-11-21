@@ -116,6 +116,13 @@
   font-size: var(--text-sm);
   margin: 0;
 }
+/* An environment's status line: what it runs and what is ready for it. */
+.stage-standing {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 .stage-summary {
   font-size: var(--text-sm);
   color: var(--text-muted);

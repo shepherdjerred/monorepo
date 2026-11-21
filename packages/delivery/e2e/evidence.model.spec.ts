@@ -162,16 +162,16 @@ test("the activity trail names each stage and folds a deployment's stage run int
   ]);
   // The whole trail of that deployment still has one entry per other action.
   await page.goto(`/activity?entity=${id}`);
-  await expect(entries.filter({ hasText: "deployment.stage" })).toHaveCount(1);
-  await expect(entries.filter({ hasText: "deployment.approve" })).toContainText(
-    "granted",
-  );
+  // Each action reads in plain words; its recorded code stays in the title.
+  const action = (code: string) =>
+    entries.filter({ has: page.locator(`.activity-action[title="${code}"]`) });
+  await expect(action("deployment.stage")).toHaveCount(1);
+  await expect(action("deployment.stage")).toContainText("Deployment steps");
+  await expect(action("deployment.approve")).toContainText("granted");
   await expect(
-    entries.filter({ hasText: "deployment.requested" }),
-  ).toContainText("arcade/prod");
-  await expect(
-    entries.filter({ hasText: "deployment.succeeded" }),
-  ).toContainText("succeeded");
+    action("deployment.requested").getByRole("link", { name: /prod/u }).first(),
+  ).toHaveAttribute("href", "/environments/arcade/prod");
+  await expect(action("deployment.succeeded")).toContainText("succeeded");
   await expectNoHorizontalOverflow(page);
 });
 

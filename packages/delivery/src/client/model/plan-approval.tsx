@@ -8,9 +8,9 @@ import { delivery } from "#client/api.ts";
 import { canApprove } from "#client/presentation.ts";
 import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
 import { ErrorNotice } from "#client/components/notices.tsx";
-import { RelativeTime } from "#client/components/time.tsx";
+import { ExactTime } from "#client/components/time.tsx";
 import { ReasonField, useReason } from "#client/forms/decision.tsx";
-import { SelectionFacts } from "./selection-facts.tsx";
+import { SelectionFacts, deploymentRevisions } from "./selection-facts.tsx";
 import { waitingPlan } from "./view.ts";
 import { Fact, Facts } from "#client/components/facts.tsx";
 
@@ -31,7 +31,7 @@ function PlanFacts({ plan }: { plan: SavedPlan }) {
         {changes.delete} · replace {changes.replace}
       </Fact>
       <Fact label="Expires">
-        <RelativeTime value={plan.expiresAt} />
+        <ExactTime value={plan.expiresAt} />
       </Fact>
     </Facts>
   );
@@ -92,7 +92,12 @@ export function PlanApproval({
         expires.
       </p>
       <PlanFacts plan={plan} />
-      {selection !== null && <SelectionFacts selection={selection} />}
+      {selection !== null && (
+        <SelectionFacts
+          selection={selection}
+          revisions={deploymentRevisions(detail)}
+        />
+      )}
       {canApprove(principal) ? (
         <>
           <form

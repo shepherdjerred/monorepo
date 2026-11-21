@@ -9,7 +9,7 @@ import {
 } from "#shared/worker-contract.ts";
 import { ConfirmDialogProvider } from "#client/components/confirm-dialog.tsx";
 import { renderWithRouter } from "#client/test-router.tsx";
-import { WorkerPoolPanel } from "./worker-pool.tsx";
+import { WorkerPoolPanel, groupWorkers } from "./worker-pool.tsx";
 
 // The hub client resolves its API origin from the page; static rendering has none.
 vi.hoisted(() => {
@@ -109,26 +109,28 @@ describe("retained workers", () => {
     expect(hosted).toHaveLength(2);
     expect(hosted[0]).toContain("1 · selected");
     expect(hosted[1]).toContain("1 · retained");
-    expect(unhosted).toHaveLength(3);
-    for (const row of unhosted) {
-      expect(row).toContain("Zero · artifact retained");
-      expect(row).not.toContain("Request retirement");
-    }
+    // Three artifacts that read the same share one row that lists each.
+    expect(unhosted).toHaveLength(1);
+    const [group = ""] = unhosted;
+    expect(group).toContain("<strong>3 builds</strong>");
+    expect(group).toContain("Zero · artifacts retained");
+    expect(group).not.toContain("Request retirement");
+    for (const digit of ["c", "d", "e"])
+      expect(group).toContain(`title="${digit.repeat(40)}"`);
     // The collapsed table has no retirement column: nothing there has a host to stop.
     expect(html.slice(artifacts)).not.toContain("<th>Retirement</th>");
     expect(html.slice(0, artifacts)).toContain("<th>Retirement</th>");
   });
 
-  test("a row shortens its build and digest and keeps every full identity behind its host line", () => {
+  test("a row shows one identifier, its build, and keeps every full identity behind its host line", () => {
     const [, retained = ""] = rows(panel({}));
     const build = "b".repeat(40);
     const digest = `sha256:${"b".repeat(64)}`;
     expect(retained).toContain(
       `<abbr class="mono identifier" title="${build}"><span aria-hidden="true">bbbbbbbbbbbb…</span><span class="visually-hidden">${build}</span></abbr>`,
     );
-    expect(retained).toContain(
-      `<abbr class="mono identifier" title="${digest}"><span aria-hidden="true">sha256:bbbbbbbbbbbb</span><span class="visually-hidden">${digest}</span></abbr>`,
-    );
+    expect(retained.match(/<abbr /gu)).toHaveLength(1);
+    expect(retained).not.toContain(`title="${digest}"`);
     expect(retained).toContain(
       '<summary><span class="disclosure-label">scout-prod-workflows · prod / scout-prod</span></summary>',
     );
@@ -156,6 +158,34 @@ describe("retained workers", () => {
       `<button type="button" class="secondary-button danger" aria-describedby="${described ?? ""}">Request retirement</button>`,
     );
     expect(panel({ permitted: false })).not.toContain("Request retirement");
+  });
+
+  test("a table where no build can be retired has no retirement column, and identical rows fold", () => {
+    const retained = ["b", "c", "d"].map((digit) => worker(digit, 1));
+    const html = panel({ versions: [SELECTED, ...retained], permitted: false });
+    expect(html).not.toContain("<th>Retirement</th>");
+    const [selected = "", group = ""] = rows(html);
+    expect(rows(html)).toHaveLength(2);
+    expect(selected).toContain("1 · selected");
+    expect(group).toContain("<strong>3 builds</strong>");
+    expect(group).toContain("1 · retained each");
+    expect(group).toContain(
+      '<span class="disclosure-label">scout-prod-workflows · prod / scout-prod</span><span class="disclosure-count">3</span>',
+    );
+    expect(group.match(/>Build details</gu)).toHaveLength(3);
+  });
+
+  test("builds that offer an action keep rows of their own", () => {
+    const retained = ["b", "c"].map((digit) => worker(digit, 1));
+    const groups = groupWorkers(
+      [SELECTED, ...retained, worker("d", 0), worker("e", 0)],
+      SELECTED.buildId,
+      (candidate) =>
+        candidate.replicas === 1 && candidate.buildId !== SELECTED.buildId,
+    );
+    expect(groups.map((group) => group.workers.length)).toEqual([1, 1, 1, 2]);
+    const passive = groupWorkers(retained, SELECTED.buildId, () => false);
+    expect(passive.map((group) => group.workers.length)).toEqual([2]);
   });
 
   test("a pool with no desired host says so above its collapsed artifacts", () => {
