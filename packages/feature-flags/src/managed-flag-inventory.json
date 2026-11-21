@@ -2974,13 +2974,6 @@
       "thresholdRollouts": [],
       "defaultOffExceptions": [
         {
-          "environment": "beta",
-          "reason": "The crawl foundation ships dark: no Flipt state exists for the flag yet, so beta is enabled by an explicit operator change once the migration is applied and the Riot budget ledger shows headroom.",
-          "issue": "AI-560",
-          "enableWhen": "The participant crawl migration is applied on beta and the Riot budget ledger observes spare crawl-class headroom; then the flag is turned on at 1k matches a day.",
-          "reviewBy": "2026-12-11"
-        },
-        {
           "environment": "prod",
           "reason": "Production crawl is gated on crawl deletion, the privacy page and the Riot declaration, and the code hard-disables it in production until then.",
           "issue": "AI-561",
@@ -5075,6 +5068,14 @@
           "key": "temporal-agent-chat-photon-owners",
           "type": "variant",
           "default": "+19154335144",
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout-participant-crawl-enabled",
+          "type": "boolean",
+          "default": true,
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
