@@ -37,7 +37,7 @@ type PageBudget = {
  *   /             1835 / 1894   2997 / 3103
  *   /flow         2399 / 2632   4354 / 4586
  *   /maintenance  3543 / 2953   7363 / 6009
- *   /ai           2991 / 2991   4640 / 4640
+ *   /ai           2311 / 2311   4443 / 4443
  *
  * Before lists were capped, /flow (then /delivery) was 9284px at desktop
  * width on the same fixture (16295px on a phone). Home's lists were then on
@@ -50,6 +50,9 @@ type PageBudget = {
  * about 1.5x that. With the lists first it started at 1379 / 1551 on /flow
  * (2696 / 2928 on a phone) and at 2999 on /maintenance; before lists were
  * capped, at 8479 on /flow (14821 on a phone).
+ *
+ * /ai was 2991 at desktop width (4640 on a phone) while its quota windows
+ * were a list of one tall row each beside a short spend panel.
  */
 const PAGES: readonly PageBudget[] = [
   {
@@ -72,7 +75,7 @@ const PAGES: readonly PageBudget[] = [
   {
     path: "/ai",
     heading: "AI usage & spend",
-    maxHeight: { desktop: 4500, phone: 6900 },
+    maxHeight: { desktop: 3500, phone: 6700 },
   },
 ];
 
@@ -252,6 +255,89 @@ test("aggregate: failed restores lead the list as one row", async ({
   await expect(first.getByRole("button")).toHaveCount(0);
   const size = await documentSize(page);
   expect(size.scrollWidth).toBeLessThanOrEqual(size.clientWidth);
+});
+
+function quotaTable(page: Page) {
+  return page.getByRole("table", { name: /^Subscription quota/u });
+}
+
+function quotaRow(page: Page, meterName: string) {
+  return quotaTable(page)
+    .getByRole("row")
+    .filter({ has: page.getByRole("meter", { name: meterName }) });
+}
+
+test("aggregate: a quota window that has reset is informational, not an error", async ({
+  page,
+}) => {
+  await page.setViewportSize(VIEWPORTS.desktop);
+  await serveVolume(page, "aggregate");
+  await page.goto("/ai");
+  await expect(quotaTable(page).locator("tbody")).toHaveCount(7);
+  await expect(quotaTable(page).getByRole("meter")).toHaveCount(14);
+
+  // Its last reading was 100%, and its reset time has passed.
+  const reset = quotaRow(page, "Claude Code 5-hour quota used");
+  await expect(reset).toContainText("reset · was 100%");
+  await expect(reset).toContainText("awaiting new reading");
+  await expect(reset).toHaveClass(/\bquota-info\b/u);
+  await expect(reset).not.toHaveClass(/\bquota-error\b/u);
+  await expect(reset).toContainText("info");
+  const meter = reset.getByRole("meter");
+  await expect(meter).toHaveClass(/\bmeter-reset\b/u);
+  await expect(meter).not.toHaveClass(/\bmeter-error\b/u);
+  await expect(meter).toHaveAttribute("aria-valuetext", "reset · was 100%");
+
+  // 91% used but resetting within the hour or so: capped, and still live.
+  const soon = quotaRow(page, "Antigravity Claude 5h quota used");
+  await expect(soon).toHaveClass(/\bquota-info\b/u);
+  await expect(soon).not.toHaveClass(/\bquota-reset\b/u);
+  await expect(soon).toContainText("91%");
+  await expect(soon).toContainText("resets in 1h");
+  await expect(soon.getByRole("meter")).toHaveClass(/\bmeter-info\b/u);
+
+  // 97% with days to go is an error in both variants.
+  const full = quotaRow(page, "Claude Code Weekly Opus quota used");
+  await expect(full).toHaveClass(/\bquota-error\b/u);
+  await expect(full).toContainText("error");
+});
+
+test("per-update: a reset quota window keeps the severity the collector reports", async ({
+  page,
+}) => {
+  await page.setViewportSize(VIEWPORTS.desktop);
+  await serveVolume(page, "per-update");
+  await page.goto("/ai");
+  // Today's collector still calls the window an error; the page does not
+  // overrule it, though its reset time shows the reading is the last one.
+  const reset = quotaRow(page, "Claude Code 5-hour quota used");
+  await expect(reset).toHaveClass(/\bquota-error\b/u);
+  await expect(reset).toContainText("error");
+  await expect(reset).toContainText("reset · was 100%");
+  await expect(reset.getByRole("meter")).toHaveClass(/\bmeter-error\b/u);
+  const soon = quotaRow(page, "Antigravity Claude 5h quota used");
+  await expect(soon).toHaveClass(/\bquota-warning\b/u);
+  await expect(soon).toContainText("91%");
+});
+
+test("the AI page ranks tools by API-equivalent spend with a total", async ({
+  page,
+}) => {
+  await page.setViewportSize(VIEWPORTS.desktop);
+  await serveVolume(page, "aggregate");
+  await page.goto("/ai");
+  const tools = page.getByRole("table", { name: "Usage by tool" });
+  await expect(tools.locator("tbody th")).toHaveText([
+    "Claude",
+    "Codex",
+    "Antigravity",
+    "Cursor",
+    "Kimi",
+  ]);
+  await expect(tools.locator("tfoot td")).toHaveText("$690.01");
+  // What is left is the budget and provider-billed signals, in one list.
+  const other = page.getByRole("region", { name: /^Other signals/u });
+  await expect(other.locator(".signal")).toHaveCount(2);
 });
 
 test("alerts are never collapsed", async ({ page }) => {

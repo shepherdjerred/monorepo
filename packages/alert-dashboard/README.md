@@ -31,7 +31,18 @@ The core module has two halves in one process:
   with every metric, then the trend charts, then a signal list per section.
   Flow was served at `/delivery`, the name of a different app; that URL
   redirects to `/flow` with its query string and fragment. A metric tile at
-  warning, error, or unknown carries an accent bar and a named icon. Trend
+  warning, error, or unknown carries an accent bar and a named icon. The AI
+  page (`src/client/ops/ai-page.tsx`) shows its status with the section
+  summary that explains it, API spend against the monthly budget beside the
+  section's other metrics, then one table of subscription quota windows
+  grouped by provider beside a table of usage by tool. Quota severity comes
+  from the snapshot: a row takes its signal's severity and the page never
+  derives one from the usage ratio, so a short window the collector reports
+  as informational because it is about to reset stays informational. A window
+  whose reset time is at or before the snapshot shows its last reading as
+  "reset · was N%". Usage by tool is API-equivalent spend: what each tool's
+  usage on the Mac this month would have cost at API prices. Most of it runs
+  on subscriptions, so it compares the tools and is not a bill. Trend
   charts read Prometheus through named presets only; the browser never sends
   PromQL. A chart's legend shows each series' newest sample until a point is
   hovered. Every signal list renders through `SignalList`

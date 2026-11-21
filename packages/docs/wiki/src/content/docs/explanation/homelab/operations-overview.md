@@ -17,7 +17,7 @@ The design starts from seven recurring questions, not from the data sources:
 | Is anything wrong right now?                         | Home: overall status, area cards, "Needs attention" list     |
 | Something broke — what changed, and where?           | Service detail with its change timeline and drill-down links |
 | What is in flight, and what is waiting on me?        | Delivery section and the "Waiting on you" filter on Home     |
-| Which subscription should I use, and am I on budget? | AI section: quota windows, spend, projection                 |
+| Which subscription should I use, and am I on budget? | AI section: quota windows, spend, projection, usage by tool  |
 | What is rotting?                                     | Maintenance section                                          |
 | Are my sites up and used?                            | Sites & product section                                      |
 | How did the week go?                                 | Review page and the weekly digest                            |
@@ -76,6 +76,12 @@ rolls up its sections the same way.
 The severity scale is `ok < info < unknown < warning < error`. `unknown` sits
 above `info` on purpose. A source that failed to answer must never look
 healthy, but a known problem still sorts ahead of a blind spot.
+
+Severity is decided once, where the fact is collected. A renderer shows that
+verdict and never derives its own. Subscription quota is the case that needs
+this. A five-hour window at 95% that resets within the hour heals itself, so
+the collector reports it as informational. A page that judged the ratio alone
+would call the same window an error.
 
 Lists of signals stay short however many signals there are. Three or more
 signals of the same kind, section, severity, and `needsMe` collapse into one
@@ -144,6 +150,10 @@ Two details make the counters trustworthy.
   decrease.
 - The first run seeds the ledger without exporting. History starts at rollout;
   it is not backfilled.
+
+Usage is priced at API rates, so the AI page shows each tool's month as
+API-equivalent spend. Most of that usage runs on fixed-price subscriptions.
+The figure compares how much each tool is used; it is not money spent.
 
 The Alloy gateway exposes a separate metrics-only receiver on the tailnet. It
 forwards only `ai_usage_*` and `ai_subscription_*` series to Prometheus. The

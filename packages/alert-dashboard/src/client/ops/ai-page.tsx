@@ -4,12 +4,11 @@ import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import type {
   Section,
-  Signal,
   SnapshotResponse,
 } from "@shepherdjerred/ops-model/snapshot.ts";
-import { Temporal } from "@js-temporal/polyfill";
-import { z } from "zod";
 
+import { QuotaPanel } from "./ai-quota-table.tsx";
+import { ToolSpendPanel } from "./ai-tool-spend.tsx";
 import {
   MetricTile,
   PageHeading,
@@ -19,83 +18,8 @@ import {
 } from "./ops-ui.tsx";
 import { SignalList } from "./signal-list.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
-import { formatInstant } from "#client/time.ts";
 import { useRange } from "#client/charts/use-range.ts";
 import { formatValue } from "#shared/ops-format";
-
-/**
- * Attributes the collector attaches to `quota-window` signals. `windowId` is
- * the stable key; `windowKind` is Brim's label for display.
- */
-const QuotaAttributesSchema = z.object({
-  provider: z.string().min(1),
-  windowId: z.string().min(1),
-  windowKind: z.string().min(1),
-  usedRatio: z.number().min(0),
-  resetsAt: z.iso.datetime({ offset: true }).optional(),
-});
-
-function quotaSeverity(ratio: number): Severity {
-  if (ratio >= OPS_POLICY.quotaErrorRatio) return "error";
-  return ratio >= OPS_POLICY.quotaWarningRatio ? "warning" : "ok";
-}
-
-function resetsIn(value: string | undefined): string {
-  if (value === undefined) return "reset time unknown";
-  const hours = Temporal.Instant.from(value)
-    .since(Temporal.Now.instant())
-    .total({ unit: "hours" });
-  if (hours <= 0) return "resetting now";
-  return hours < 48
-    ? `resets in ${String(Math.round(hours))}h`
-    : `resets in ${String(Math.round(hours / 24))}d`;
-}
-
-function QuotaMeter({
-  signal,
-}: {
-  readonly signal: Signal;
-}): React.JSX.Element {
-  const parsed = QuotaAttributesSchema.safeParse(signal.attributes);
-  if (!parsed.success)
-    return (
-      <li className="quota quota-invalid" role="alert">
-        {signal.title}: the collector sent this quota window without its
-        provider, window id, window kind, or usage attributes.
-      </li>
-    );
-  const { provider, windowId, windowKind, usedRatio, resetsAt } = parsed.data;
-  const severity = quotaSeverity(usedRatio);
-  const percent = Math.min(usedRatio, 1) * 100;
-  return (
-    <li className="quota">
-      <div className="quota-label">
-        <strong>{provider}</strong>
-        <span>
-          {windowKind === windowId ? windowId : `${windowKind} · ${windowId}`}
-        </span>
-      </div>
-      <div
-        className={`meter meter-${severity}`}
-        role="meter"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(percent)}
-        aria-label={`${provider} ${windowId} quota used`}
-      >
-        <span style={{ width: `${String(percent)}%` }} />
-      </div>
-      <div className="quota-value">
-        <strong>{formatValue(usedRatio, "ratio")}</strong>
-        <span
-          title={resetsAt === undefined ? undefined : formatInstant(resetsAt)}
-        >
-          {resetsIn(resetsAt)}
-        </span>
-      </div>
-    </li>
-  );
-}
 
 function SpendPanel({
   section,
@@ -154,6 +78,17 @@ function SpendPanel({
   );
 }
 
+/** The metrics the spend panel already shows as its figure and projection. */
+const SPEND_METRICS: ReadonlySet<string> = new Set([
+  METRIC_IDS.aiCostMonthToDateUsd,
+  METRIC_IDS.aiCostProjectedUsd,
+]);
+
+/**
+ * In reading order: the verdict and why, spend beside the other headline
+ * numbers, every quota window beside what each tool used, the trends, and
+ * last the signals that are neither a quota window nor a tool's usage.
+ */
 function AiBody({
   snapshot,
 }: {
@@ -161,52 +96,40 @@ function AiBody({
 }): React.JSX.Element {
   const [range, setRange] = useRange("30d");
   const section = findSection(snapshot, "ai");
-  const quotas = section.signals
-    .filter((signal) => signal.kind === "quota-window")
-    .toSorted((left, right) => left.id.localeCompare(right.id));
+  const quotas = section.signals.filter(
+    (signal) => signal.kind === "quota-window",
+  );
+  const tools = section.signals.filter(
+    (signal) => signal.kind === "tool-usage",
+  );
   const other = section.signals.filter(
-    (signal) => signal.kind !== "quota-window",
+    (signal) => signal.kind !== "quota-window" && signal.kind !== "tool-usage",
+  );
+  const tiles = section.metrics.filter(
+    (metric) => !SPEND_METRICS.has(metric.id),
   );
   return (
     <>
       <PageHeading eyebrow="AI budget" title="AI usage & spend">
-        <SeverityBadge severity={section.severity} large />
-      </PageHeading>
-      <div className="ai-grid">
-        <section className="panel list-panel" aria-labelledby="quota-heading">
-          <header className="panel-heading">
-            <h2 id="quota-heading">Subscription quota</h2>
-          </header>
-          {quotas.length === 0 ? (
-            <p className="list-empty">No quota windows reported.</p>
-          ) : (
-            <ul className="quota-list">
-              {quotas.map((signal) => (
-                <QuotaMeter key={signal.id} signal={signal} />
-              ))}
-            </ul>
-          )}
-        </section>
-        <div className="stack">
-          <SpendPanel section={section} />
-          <div className="metric-row">
-            {section.metrics
-              .filter(
-                (metric) =>
-                  metric.id !== METRIC_IDS.aiCostMonthToDateUsd &&
-                  metric.id !== METRIC_IDS.aiCostProjectedUsd,
-              )
-              .map((metric) => (
-                <MetricTile key={metric.id} metric={metric} />
-              ))}
-          </div>
+        <div className="page-status">
+          <SeverityBadge severity={section.severity} large />
+          {section.severity === "ok" ? null : <p>{section.summary}</p>}
         </div>
+      </PageHeading>
+      <div className="ai-row">
+        <SpendPanel section={section} />
+        {tiles.length === 0 ? null : (
+          <div className="metric-row ai-tiles">
+            {tiles.map((metric) => (
+              <MetricTile key={metric.id} metric={metric} />
+            ))}
+          </div>
+        )}
       </div>
-      {other.length === 0 ? null : (
-        <section className="panel list-panel" aria-label="Other AI signals">
-          <SignalList signals={other} empty="" />
-        </section>
-      )}
+      <div className="ai-row">
+        <QuotaPanel signals={quotas} generatedAt={snapshot.generatedAt} />
+        <ToolSpendPanel signals={tools} />
+      </div>
       <div className="charts-heading">
         <h2 className="block-heading">Usage over time</h2>
         <RangePicker value={range} onChange={setRange} />
@@ -218,6 +141,23 @@ function AiBody({
         <SeriesChart preset="ai-quota" range={range} />
         <SeriesChart preset="provider-billed-cost" range={range} />
       </div>
+      {other.length === 0 ? null : (
+        <section
+          className="panel list-panel"
+          aria-labelledby="ai-signals-heading"
+        >
+          <header className="panel-heading">
+            <h2 id="ai-signals-heading">
+              Other signals <span className="count">{other.length}</span>
+            </h2>
+          </header>
+          <SignalList
+            signals={other}
+            empty=""
+            newIds={new Set(snapshot.newSignalIds)}
+          />
+        </section>
+      )}
     </>
   );
 }

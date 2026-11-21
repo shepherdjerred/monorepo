@@ -58,6 +58,27 @@ export function SeverityBadge({
   );
 }
 
+/**
+ * A severity as an icon named for screen readers, for places too tight for a
+ * `SeverityBadge`. The icon's shape differs per severity, so it never rests
+ * on colour alone.
+ */
+export function SeverityIcon({
+  severity,
+  className,
+}: {
+  readonly severity: Severity;
+  readonly className: string;
+}): React.JSX.Element {
+  const Icon = SEVERITY_ICON[severity];
+  return (
+    <>
+      <Icon className={className} aria-hidden="true" />
+      <span className="sr-only">{SEVERITY_LABEL[severity].toLowerCase()}</span>
+    </>
+  );
+}
+
 export function PageHeading({
   eyebrow,
   title,
@@ -117,18 +138,12 @@ export function MetricTile({
   readonly metric: Metric;
 }): React.JSX.Element {
   const flagged = metric.severity !== "ok" && metric.severity !== "info";
-  const Icon = SEVERITY_ICON[metric.severity];
   return (
     <div className={`metric metric-${metric.severity}`}>
       <span>{metric.label}</span>
       <strong>{formatValue(metric.value, metric.unit)}</strong>
       {flagged ? (
-        <>
-          <Icon className="metric-flag" aria-hidden="true" />
-          <span className="sr-only">
-            {SEVERITY_LABEL[metric.severity].toLowerCase()}
-          </span>
-        </>
+        <SeverityIcon severity={metric.severity} className="metric-flag" />
       ) : null}
     </div>
   );

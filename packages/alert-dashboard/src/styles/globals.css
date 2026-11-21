@@ -1092,7 +1092,6 @@ tbody tr:hover {
 }
 .signal-list,
 .change-list,
-.quota-list,
 .service-grid {
   list-style: none;
   margin: 0;
@@ -1302,7 +1301,7 @@ tbody tr:hover {
 }
 .section-card .metric-row,
 .section-summary .metric-row,
-.stack > .metric-row,
+.ai-tiles,
 .incident-panel .metric-row {
   padding: 0;
 }
@@ -1581,35 +1580,192 @@ tbody tr:hover {
 .chart-table table {
   margin-bottom: 6px;
 }
-.quota-list {
-  padding: 0 18px 10px;
-}
-.quota {
+/* ---- AI ---- */
+/* Under the page's verdict, the summary that explains it. */
+.page-status {
   display: grid;
-  grid-template-columns: 7rem minmax(0, 1fr) 7.5rem;
-  gap: 12px;
-  align-items: center;
-  padding: 10px 0;
-  border-top: 1px solid var(--line-soft);
-}
-.quota-invalid {
-  display: block;
-  color: var(--sev-error-ink);
-}
-.quota-label strong,
-.quota-value strong {
-  display: block;
-  text-transform: capitalize;
-}
-.quota-label span,
-.quota-value span {
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-.quota-value {
+  flex: none;
+  justify-items: end;
+  gap: 6px;
+  max-width: 30rem;
   text-align: right;
 }
+.page-status p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+/* Two panels on tracks every row of the page shares, stretched to one height
+   so neither leaves a hole beside the other. */
+.ai-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.ai-row > :only-child {
+  grid-column: 1 / -1;
+}
+/* The tiles beside the spend panel stack to its height. */
+.ai-tiles {
+  grid-template-columns: 1fr;
+  grid-auto-rows: 1fr;
+}
+.ai-tiles .metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-inline: 16px;
+}
+.ai-tiles .metric strong {
+  font-size: 1.5rem;
+}
+.ai-tiles .metric-flag {
+  top: 12px;
+  right: 14px;
+}
+/* One line per window: the provider names its group from the first row. */
+.quota-table {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.8rem;
+}
+.quota-table th,
+.quota-table td {
+  padding: 6px 7px;
+}
+.quota-table thead th {
+  padding-block: 7px;
+}
+/* The outer cells line up with the panel's heading. A provider's later rows
+   start at the window, so these are named cells and not `:first-child`. */
+.quota-table thead th:first-child,
+.quota-table .quota-provider,
+.quota-table .invalid-row td {
+  padding-left: 18px;
+}
+.quota-table thead th:last-child,
+.quota-table .quota-resets,
+.quota-table .invalid-row td {
+  padding-right: 18px;
+}
+.quota-table tbody th {
+  background: transparent;
+  color: var(--ink);
+  font-size: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+.quota-provider {
+  font-weight: 650;
+  vertical-align: top;
+}
+.quota-window {
+  font-weight: 500;
+}
+/* Every column but the meter's is as wide as its text, so a label longer
+   than any Brim sends today is cut here before it can push the table past
+   its panel; the cell's title has the window's id. */
+.quota-label {
+  display: block;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.quota-window code {
+  display: block;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+/* A stronger line closes each provider's group; the last needs none. */
+.quota-table tbody > tr:last-child > *,
+.quota-table .quota-provider {
+  border-bottom-color: var(--line);
+}
+.quota-table tbody:last-child > tr:last-child > *,
+.quota-table tbody:last-child .quota-provider {
+  border-bottom: 0;
+}
+/* A provider's rows read as one block, so the group takes the hover. */
+.quota-table tbody tr:hover {
+  background: transparent;
+}
+.quota-table tbody:hover {
+  background: var(--row-hover);
+}
+/* The meter takes whatever the other columns leave. */
+.quota-used-heading,
+.quota-used {
+  width: 100%;
+}
+.quota-meter {
+  display: grid;
+  grid-template-columns: minmax(32px, 1fr) max-content 0.9rem;
+  align-items: center;
+  gap: 8px;
+}
+/* The floor is the width of "100%", so every meter ends at the same place. */
+.quota-value {
+  min-width: 2.4rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  text-align: right;
+  white-space: nowrap;
+}
+.quota-reset .quota-value {
+  color: var(--muted);
+  font-weight: 500;
+}
+.quota-flag {
+  display: flex;
+}
+.quota-flag-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--sev-unknown-ink);
+}
+.quota-info .quota-flag-icon {
+  color: var(--sev-info-ink);
+}
+.quota-warning .quota-flag-icon {
+  color: var(--sev-warning-ink);
+}
+.quota-error .quota-flag-icon {
+  color: var(--sev-error-ink);
+}
+.quota-resets {
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+.quota-resets time {
+  font-family: inherit;
+}
+.invalid-row p {
+  margin: 0;
+  color: var(--sev-error-ink);
+  overflow-wrap: anywhere;
+}
+.tool-note {
+  font-size: 0.85rem;
+}
+.tool-table th:first-child,
+.tool-table td:first-child {
+  padding-left: 18px;
+}
+.tool-table th:last-child,
+.tool-table td:last-child {
+  padding-right: 18px;
+}
+.tool-table tfoot th,
+.tool-table tfoot td {
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+  color: var(--ink);
+  font-weight: 700;
+}
 .meter {
+  --meter-fill: var(--status-good);
   position: relative;
   height: 10px;
   border-radius: 999px;
@@ -1619,16 +1775,38 @@ tbody tr:hover {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--status-good);
+  background: var(--meter-fill);
 }
-.meter-warning > span {
-  background: var(--status-warning);
+.meter-info {
+  --meter-fill: var(--status-info);
 }
-.meter-error > span {
-  background: var(--status-critical);
+.meter-unknown {
+  --meter-fill: var(--status-unknown);
 }
-.meter-unknown > span {
-  background: var(--status-unknown);
+.meter-warning {
+  --meter-fill: var(--status-warning);
+}
+.meter-error {
+  --meter-fill: var(--status-critical);
+}
+/* The last reading before a reset: hatched and grey whatever its severity,
+   so it is never taken for the window's level now. */
+.meter-reset > span {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--status-unknown) 0 2px,
+    transparent 2px 5px
+  );
+}
+/* Forced colours drop backgrounds; an outline and a system fill keep the
+   level readable. */
+@media (forced-colors: active) {
+  .meter {
+    border: 1px solid CanvasText;
+  }
+  .meter > span {
+    background: Highlight;
+  }
 }
 .meter .projection {
   position: absolute;
@@ -1658,20 +1836,13 @@ tbody tr:hover {
 .spend-meter {
   margin: 0 18px 12px;
 }
-.ai-grid,
-.review-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
-  margin-bottom: 18px;
-}
 /* The trend table beside the incident tiles, which stack to its height. The
    daily review has no trends, and its incident panel takes the row. */
 .review-grid {
+  display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 18px;
   align-items: stretch;
-  margin-bottom: 0;
 }
 .review-grid > :only-child {
   grid-column: 1 / -1;
@@ -1781,7 +1952,8 @@ tbody tr:hover {
 .table-scroll {
   overflow-x: auto;
 }
-.trend-table th[scope="row"] {
+.trend-table th[scope="row"],
+.tool-table th[scope="row"] {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-size: 0.85rem;
   font-weight: 500;
@@ -1829,12 +2001,90 @@ tbody tr:hover {
     display: none;
   }
 }
+/* The quota table's four columns need about 640px, which two thirds of a
+   narrower column is not: the AI rows stack, and the tiles go back to
+   sitting side by side. */
+@container content (max-width: 1020px) {
+  .ai-row {
+    grid-template-columns: 1fr;
+  }
+  .ai-tiles {
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  }
+}
+/* Too narrow for four columns: each window becomes two lines, its name and
+   reset over its meter, under a heading row for the provider. The column
+   headings stay for assistive technology. */
+@container content (max-width: 680px) {
+  .quota-table,
+  .quota-table tbody,
+  .quota-table th,
+  .quota-table td {
+    display: block;
+  }
+  .quota-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .quota-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "provider provider"
+      "window resets"
+      "used used";
+    column-gap: 12px;
+    padding: 7px 18px 8px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .quota-table tbody > tr:first-child {
+    border-top-color: var(--line);
+  }
+  .quota-table tbody th,
+  .quota-table tbody td {
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+  .quota-table .quota-provider {
+    grid-area: provider;
+    padding: 0 0 5px;
+    font-size: 0.9rem;
+  }
+  .quota-table .quota-resets {
+    padding: 0;
+  }
+  .quota-table .quota-window {
+    grid-area: window;
+    white-space: normal;
+  }
+  .quota-label {
+    max-width: none;
+  }
+  .quota-resets {
+    grid-area: resets;
+  }
+  .quota-used {
+    grid-area: used;
+  }
+  .quota-table .quota-used {
+    padding-top: 4px;
+  }
+  .quota-table .invalid-row {
+    display: block;
+  }
+  .quota-table .invalid-row td {
+    padding: 0;
+  }
+}
 @container content (max-width: 900px) {
   .service-layout,
   .signal-columns,
   .review-lists,
   .chart-grid,
-  .ai-grid,
   .review-grid {
     grid-template-columns: 1fr;
   }
@@ -1934,16 +2184,28 @@ tbody tr:hover {
   .panel-heading {
     padding: 14px 14px 8px;
   }
-  .quota {
-    grid-template-columns: 1fr auto;
+  .page-status {
+    justify-items: start;
+    text-align: left;
   }
-  .quota .meter {
-    grid-column: 1 / -1;
-    grid-row: 2;
+  .quota-table tbody tr {
+    padding-inline: 14px;
   }
-  .quota-value {
-    grid-row: 1;
-    grid-column: 2;
+  /* Everything in a panel starts where its heading does. */
+  .panel-summary,
+  .hero-figure {
+    padding-inline: 14px;
+  }
+  .spend-meter {
+    margin-inline: 14px;
+  }
+  .tool-table th:first-child,
+  .tool-table td:first-child {
+    padding-left: 14px;
+  }
+  .tool-table th:last-child,
+  .tool-table td:last-child {
+    padding-right: 14px;
   }
   .hero-figure {
     font-size: 2.1rem;
