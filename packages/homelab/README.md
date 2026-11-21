@@ -427,7 +427,7 @@ talosctl --nodes torvalds.tailnet-1a49.ts.net version
 ### Upgrade Kubernetes
 
 ```bash
-VERSION=1.37.1
+VERSION=1.37.2
 
 # `upgrade-k8s` discovers liskov by raw Tailscale IP, which does not match
 # its hostname-only Talos API certificate. Upgrade control-plane components,
