@@ -215,8 +215,8 @@ ARG LYCHEE_VERSION=lychee-v0.24.2
 # Kometa is cloned at this tag and the build fails unless the clone's HEAD is
 # KOMETA_COMMIT, so the tag and its commit move together.
 # renovate: datasource=github-tags depName=Kometa-Team/Kometa extractVersion=^v(?<version>\d+\.\d+\.\d+)$
-ARG KOMETA_VERSION=2.5.1
-ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
+ARG KOMETA_VERSION=2.5.5
+ARG KOMETA_COMMIT=1ec206b4c9dd0e9f9ea7b9e7a4e2e56b349e68d0
 # Shared local/CI Postgres pin — keep in lockstep with .mise.toml's
 # "github:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
 # run against the same server binaries here as on dev/CI machines.

@@ -31,8 +31,8 @@ from pathlib import Path
 from fontTools.ttLib import TTFont
 
 # renovate: datasource=github-releases depName=ryanoasis/nerd-fonts
-NERD_FONTS_VERSION = "v3.5.0"
-FONT_PATCHER_SHA256 = "bcc707177d95cfee99fcc50ac3ae01a844372a6a4b66c12b7d4423563951feef"
+NERD_FONTS_VERSION = "v3.5.1"
+FONT_PATCHER_SHA256 = "42bcb32145499a35732274c7fc48deb434ad0d2e0e118f98527c1479c6fa251a"
 FONT_PATCHER_URL = f"https://github.com/ryanoasis/nerd-fonts/releases/download/{NERD_FONTS_VERSION}/FontPatcher.zip"
 
 
