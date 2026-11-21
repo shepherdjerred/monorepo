@@ -28,7 +28,7 @@ const TOOLCHAIN_SCRIPT = "ci/scripts/toolchain.sh";
 
 const ToolRequestSchema = z.union([
   z.string(),
-  z.object({ version: z.string() }).loose(),
+  z.object({ version: z.string(), os: z.array(z.string()).optional() }).loose(),
 ]);
 const MiseTomlSchema = z.object({
   tools: z.record(z.string(), ToolRequestSchema),
@@ -51,6 +51,22 @@ function requestedVersion(request: z.infer<typeof ToolRequestSchema>): string {
   return typeof request === "string" ? request : request.version;
 }
 
+/**
+ * The runner platforms a tool must cover. A tool restricted with mise's `os`
+ * option, such as a macOS-only generator, installs nowhere else, so
+ * `mise lock` records artifacts only for the platforms its OS list allows.
+ */
+function requiredPlatforms(
+  request: z.infer<typeof ToolRequestSchema>,
+): string[] {
+  const os = typeof request === "string" ? undefined : request.os;
+  return os === undefined
+    ? [...LOCK_PLATFORMS]
+    : LOCK_PLATFORMS.filter((platform) =>
+        os.includes(platform.slice(0, platform.indexOf("-"))),
+      );
+}
+
 function platformKeys(entry: Record<string, unknown>): string[] {
   return Object.keys(entry)
     .filter((key) => key.startsWith("platforms."))
@@ -60,7 +76,8 @@ function platformKeys(entry: Record<string, unknown>): string[] {
 /**
  * Lockfile coverage violations for parsed `.mise.toml` and `mise.lock`.
  * Every configured tool needs an entry bound to its requested version. An
- * entry that records artifacts must record them for every runner platform;
+ * entry that records artifacts must record them for every runner platform its
+ * `os` option allows;
  * cargo, dotnet, and core:rust entries record only a version, which locked
  * mode accepts. Entries for tools no longer configured are stale.
  */
@@ -88,7 +105,7 @@ export function lockViolations(
     }
     const platforms = platformKeys(entry);
     if (platforms.length === 0) continue;
-    const missing = LOCK_PLATFORMS.filter(
+    const missing = requiredPlatforms(request).filter(
       (platform) => !platforms.includes(platform),
     );
     if (missing.length > 0) {

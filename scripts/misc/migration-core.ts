@@ -57,7 +57,7 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
         },
         devDependencies: {
           "@shepherdjerred/eslint-config": "workspace:*",
-          "@types/bun": "1.4.2",
+          "@types/bun": "1.4.5",
           "@typescript/native": "npm:typescript@7.0.2",
           "@vitest/coverage-istanbul": "5.0.3",
           eslint: "^10.7.0",

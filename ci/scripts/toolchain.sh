@@ -48,7 +48,7 @@ fi
 # Stale images without mise (the Playwright image) bootstrap the same release
 # ci-base pins, so both read mise.lock's format identically.
 # renovate: datasource=github-releases depName=jdx/mise
-MISE_BOOTSTRAP_VERSION="v2026.10.6"
+MISE_BOOTSTRAP_VERSION="v2026.11.11"
 # An image baked before the pin carries an older mise that rejects the
 # lockfile's format, so replace any mise older than the pin, not only a missing
 # one. The bootstrap targets ~/.local/bin, which the PATH below puts first.
@@ -65,8 +65,8 @@ mise_current() {
 # means the bootstrap neither depends on GitHub serving that manifest nor runs
 # an unpinned installer script. Asset names carry the version, so a version
 # bump without new checksums fails scripts/checks/deps/check-mise-lock-sync.ts.
-MISE_BOOTSTRAP_SHA256="63b7d112411240a3c5a8cf381d3916997de7515483eb678f08920d5c77923dc4  mise-v2026.10.6-linux-x64-musl.tar.gz
-760b274537301cf78828254b133182ea38af27df2c0606766dc650f5c0618df0  mise-v2026.10.6-linux-arm64-musl.tar.gz"
+MISE_BOOTSTRAP_SHA256="4760a05d70f8fcc2176f935705060c709bafde86e98b01a836ccd68129ccbc3d  mise-v2026.11.11-linux-x64-musl.tar.gz
+06231a655ae71c6641230f563ab45c344fbea56a19ff5e8377603f536df6088e  mise-v2026.11.11-linux-arm64-musl.tar.gz"
 install_bootstrap_mise() {
   case "$(uname -m)" in
     x86_64 | amd64) mise_arch=x64 ;;

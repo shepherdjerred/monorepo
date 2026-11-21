@@ -148,11 +148,7 @@ pub fn settings(
                     .map(|action| button(action, send)),
             ),
         )
-        .children(
-            voice
-                .map(|voice| voice_section(voice, send))
-                .unwrap_or_default(),
-        )
+        .children(voice.map_or_default(|voice| voice_section(voice, send)))
         .child(section_heading("Startup"))
         .child(ScoutToggle::new(
             "start-at-login",

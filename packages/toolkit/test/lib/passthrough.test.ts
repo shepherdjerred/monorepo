@@ -159,7 +159,7 @@ describe("passthrough registry", () => {
 
 type ToolkitResult = {
   readonly code: number;
-  readonly signalCode: NodeJS.Signals | null;
+  readonly signalCode: NodeJS.Signals | number | null;
   readonly stdout: string;
   readonly stderr: string;
 };

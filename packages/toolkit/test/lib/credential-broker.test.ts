@@ -486,6 +486,7 @@ describe("spawnForwardingSignals", () => {
 
   test("reports death by signal as 128+N", () => {
     expect(signalExitCode("SIGTERM")).toBe(128 + 15);
+    expect(signalExitCode(40)).toBe(128 + 40);
   });
 });
 

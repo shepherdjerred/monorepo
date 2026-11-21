@@ -121,7 +121,7 @@ fn visual(message: &ExploreMessage, conversation_id: Uuid) -> Option<ChatVisual>
         _ => Some(ChatVisual::Chart {
             image: chart_key(conversation_id, message.id),
             label: chart_label(chart),
-            description: preview.map(describe).unwrap_or_default(),
+            description: preview.map_or_default(describe),
         }),
     }
 }

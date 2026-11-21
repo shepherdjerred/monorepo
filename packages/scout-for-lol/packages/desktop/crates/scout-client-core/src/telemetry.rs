@@ -339,15 +339,12 @@ mod tests {
         let contract = json(CONTRACT)?;
         assert_eq!(contract["path"], USAGE_EVENTS_PATH);
         let names = |value: &Value| -> Vec<String> {
-            value
-                .as_array()
-                .map(|items| {
-                    items
-                        .iter()
-                        .filter_map(|i| i.as_str().map(str::to_owned))
-                        .collect()
-                })
-                .unwrap_or_default()
+            value.as_array().map_or_default(|items| {
+                items
+                    .iter()
+                    .filter_map(|i| i.as_str().map(str::to_owned))
+                    .collect()
+            })
         };
         let serialised = |values: &[Value]| -> Vec<String> {
             values

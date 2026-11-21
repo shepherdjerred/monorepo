@@ -4,7 +4,7 @@ set -euo pipefail
 facet_script_directory="$(cd "$(dirname "$0")" && pwd)"
 facet_repo_root="$(cd "$facet_script_directory/../../../.." && pwd)"
 # renovate: datasource=github-releases depName=jdx/mise
-mise_version="2026.7.13"
+mise_version="2026.11.11"
 localized_dir="$facet_repo_root/.cache/facet-native-tools/mise"
 export MISE_DATA_DIR="$localized_dir"
 export MISE_CONFIG_DIR="$localized_dir"
@@ -15,9 +15,9 @@ export MISE_IGNORED_CONFIG_PATHS="$HOME/.config/mise"
 facet_mise_binary="$localized_dir/mise-$mise_version"
 if [ ! -x "$facet_mise_binary" ]; then
     [ "$(uname -s)" = Darwin ] || { echo "Native Apple bootstrap requires macOS." >&2; exit 1; }
-    # Immutable release checksums from jdx/mise v2026.7.13 SHASUMS256.txt.
-    checksum_macos_x86_64="62563fe6e4799c6e499db4a328632f63499ee864581c923a7bb45bd90e8827bd"
-    checksum_macos_arm64="80dad4a76db564540be56ebd19e76165e2425e0b45f6f7aca6ac2d5efa3a6161"
+    # Immutable release checksums from jdx/mise v2026.11.11 SHASUMS256.txt.
+    checksum_macos_x86_64="7784da9fd85c77a0f0df6e6e39a6908089afc2a3f2c7ade78d362147fc4ef222"
+    checksum_macos_arm64="3a0b7a727d86bd15a64c6df9ef6531111a4741b07e6f1e2bb6f6bb5b09e2663f"
     case "$(uname -m)" in
         x86_64) facet_arch=x64; facet_checksum="$checksum_macos_x86_64" ;;
         arm64) facet_arch=arm64; facet_checksum="$checksum_macos_arm64" ;;

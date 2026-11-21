@@ -34,7 +34,7 @@
     "@scout-for-lol/backend": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@types/bun": "1.4.2",
+    "@types/bun": "1.4.5",
     "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "^10.7.0",
     "typescript": "^6.0.3",
