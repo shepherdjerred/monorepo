@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import { webErrorCode } from "@shepherdjerred/streambot/observability/web-metrics.ts";
+import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
 import { WebError } from "@shepherdjerred/streambot/web/server/errors.ts";
 import { classifyWebFailure } from "@shepherdjerred/streambot/web/server/telemetry.ts";
 import {
@@ -61,7 +62,8 @@ test("telemetry classification maps errors to closed codes and outcomes", () => 
     classifyWebFailure(new WebError(429, "rate_limit", "x"), signal),
   ).toMatchObject({ outcome: "rate_limited" });
   expect(
-    classifyWebFailure(new WebError(418, "private-user-code", "x"), signal),
+    // A `WebError` cannot carry an unlisted code; a `MusicError` code is still a plain string.
+    classifyWebFailure(new MusicError(418, "private-user-code", "x"), signal),
   ).toMatchObject({ code: "other", outcome: "invalid" });
   expect(classifyWebFailure(new Error("private"), signal)).toMatchObject({
     code: "unavailable",

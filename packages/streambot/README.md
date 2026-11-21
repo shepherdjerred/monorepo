@@ -77,7 +77,9 @@ therefore splits identities:
   audio on channel 1, Watch plays Go Live video on channel 2 (or an explicit
   `playbackChannel` ≥ 2 up to the server's maximum for another stream). It ignores the
   personal selection and `Auto`, never changes them, and in a legacy room becomes the item's
-  mode on the single queue. Other commands target a named slot with `targeting: "explicit"`.
+  mode on the single queue. Other commands target a named slot with `targeting: "explicit"`;
+  a `station` start may omit the slot (Radio lands on channel 1, TV on channel 2), while
+  `station` off and the player controls name the slot of the card they came from.
   Play results report `destination { transport, voiceChannelName }` (returned to the
   requesting viewer only) and `position` (0 when it starts immediately). Refusals are 409s:
   `no_video` (ffprobe found no picture for Watch), `listen_disabled`
@@ -177,7 +179,9 @@ Captures are counted in `streambot_analytics_events_total{event,outcome}`
 (`captured|dropped|disabled|failed`), never block or alter a request, and are
 flushed on graceful shutdown. The public project token and host come from
 `POSTHOG_PROJECT_TOKEN` and `POSTHOG_API_HOST` (set by the homelab chart);
-startup fails when the flag is on and they are absent.
+startup fails when the flag is on and they are absent. A run with no PostHog
+destination, such as `bun run smoke` or the CI in-image smoke, sets
+`USAGE_ANALYTICS_ENABLED=false`.
 
 ## Music discovery and playlists
 
@@ -196,14 +200,22 @@ and never part of CI or the image build.
 `GET /api/search/v2?guildId=&kind=&q=` returns one result group per request
 (`songs`, `albums`, `artists`, `library`, `videos`, `live`, `history`) as typed
 rows with a selection token and the actions (`listen`, `watch`) the viewer may
-take, so the client loads groups independently. `GET /api/search/v2/suggest`
+take, so the client loads groups independently. A song, and an album's whole-album `play`,
+offers `listen` with `watch` in `menuActions` (its overflow menu); without music over voice
+it offers `watch` alone. `/api/history` items carry the same `actions`/`menuActions` as the
+history search row for that item (empty when it cannot be replayed). `GET /api/search/v2/suggest`
 returns up to eight typeahead strings, and `GET /api/music/v2/album` and
 `/artist` return a header and rows. These draw on their own per-session budget
 (600 requests per minute) instead of the 120 that protect commands. A provider
 failure returns 503 `music_search_unavailable` for that group only. The older
 `/api/search`, `/api/music/*`, `/api/sports`, `/api/library`, and `/api/history`
-endpoints are unchanged. Metrics are `streambot_web_search_*` and
+endpoints are otherwise unchanged. Metrics are `streambot_web_search_*` and
 `streambot_music_provider_*`; none label a query, title, or id.
+
+Every error `code` the web API can return is listed in `WEB_API_ERROR_CODES`
+(`src/web/shared/error-codes.ts`); `WebError` only accepts a listed code and
+`test/web/web-error-codes.test.ts` holds `MusicError` to the same list. The wire
+`ErrorSchema.code` stays a plain string so an older client parses a newer code.
 
 `/music search`, `/music artist`, and `/music album` browse the MusicBrainz
 catalog without consuming a streaming account. The Music page adds edition
@@ -298,8 +310,11 @@ playlists, sports artwork, history, and attribution. An optional port argument
 (for example, `bun run test/web/preview.ts 5189`) isolates concurrent worktrees.
 
 The room endpoints are `GET /api/room` (the viewer's location from Discord voice state,
-the shared servers, one player per occupied slot, capacity and capability booleans) and
-`GET /api/room/events` (the same `RoomSchema` pushed as `text/event-stream`). The stream
+the shared servers, one player per occupied slot, capacity — including `numbered`, false for
+a legacy room, where commands send `playbackChannel: null` — and capability booleans) and
+`GET /api/room/events` (the same `RoomSchema` pushed as `text/event-stream`). A room item
+that is a track has its song in `title` and its artists in `subtitle`; `/api/player` keeps
+the combined "Artists — Title". The stream
 sends a `room` event on connect and after every change, `: heartbeat` comments every 20 seconds
 (connection keepalive, cleared on close), a terminal `error` event carrying a closed `code`
 when authorization fails, and `retry: 3000`; a reconnect receives a fresh snapshot, with no

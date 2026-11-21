@@ -8,9 +8,13 @@ import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import { SPORTS_TIME_ZONE } from "@shepherdjerred/streambot/sports/parse-events.ts";
 import { HistoryQuerySchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import { GuildIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import type { WebCatalog } from "./catalog.ts";
 import { Selections } from "./selections.ts";
 import { WebError, requestInput } from "./errors.ts";
+import type { WebPlaybackDeps } from "./playback-deps.ts";
+import type { WebSession } from "./session-store.ts";
+import { historyActions } from "./search/rows.ts";
 
 type Replay = { source: Source; title: string; playedAt: number };
 const date = (time: number) =>
@@ -47,9 +51,25 @@ export class WebHistory {
     private readonly sports: SportsCatalog | undefined,
   ) {}
 
-  async browse(options: Parameters<WebHistory["browseWithSources"]>[0]) {
+  /** One page of `/api/history`, each item carrying the replay buttons a search row would offer. */
+  async browse(
+    options: Parameters<WebHistory["browseWithSources"]>[0] & {
+      listenAllowed: boolean;
+    },
+  ) {
     const page = await this.browseWithSources(options);
-    return { total: page.total, items: page.items.map((entry) => entry.item) };
+    return {
+      total: page.total,
+      items: page.items.map(({ item, source }) => ({
+        ...item,
+        ...historyActions({
+          provider: item.provider,
+          source,
+          replayAvailable: item.replayAvailable,
+          listenAllowed: options.listenAllowed,
+        }),
+      })),
+    };
   }
 
   /** Each item beside the source it replays, for callers that need to know how it was queued. */
@@ -157,4 +177,56 @@ export class WebHistory {
     }
     return replay;
   }
+}
+
+/** What `/api/history` needs from `WebPlayback`, named here so the two modules form no cycle. */
+type HistoryOwner = {
+  readonly history: WebHistory;
+  readonly deps: Pick<WebPlaybackDeps, "bot" | "catalog" | "featureGate">;
+  historyEnabled: (session: WebSession, guildId: string) => Promise<boolean>;
+  sportsEnabled: (session: WebSession, guildId: string) => Promise<boolean>;
+  requesterName: (
+    session: WebSession,
+    guild: string,
+    user: string,
+  ) => Promise<string>;
+};
+
+/**
+ * `GET /api/history`. Listen is offered on the same gate search uses, read for the viewer's
+ * current voice channel, so a replay button never answers `listen_disabled`.
+ */
+export async function historyResponse(
+  playback: HistoryOwner,
+  request: Request,
+  session: WebSession,
+  guildId: string,
+): Promise<Response> {
+  if (!(await playback.historyEnabled(session, guildId)))
+    throw new WebError(
+      403,
+      "history_disabled",
+      "Playback history is not enabled here.",
+    );
+  const userId = session.identity.userId;
+  const channel = playback.deps.bot.webVoiceChannel(
+    GuildIdSchema.parse(guildId),
+    userId,
+  );
+  return Response.json(
+    await playback.history.browse({
+      params: new URL(request.url).searchParams,
+      userId,
+      owner: session.key + ":" + guildId,
+      catalog: playback.deps.catalog,
+      sportsEnabled: await playback.sportsEnabled(session, guildId),
+      requester: (guild, user) => playback.requesterName(session, guild, user),
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(30_000)]),
+      listenAllowed: await playback.deps.featureGate.musicOverVoice({
+        guildId,
+        channelId: channel?.id ?? "web",
+        userId,
+      }),
+    }),
+  );
 }

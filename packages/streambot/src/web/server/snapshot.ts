@@ -59,7 +59,7 @@ export async function buildWebSnapshot(
     channel === null
       ? null
       : deps.sessions.getExisting(guildId, channel.id, playbackChannel);
-  const player = await playerBody(owner, handle, guildId, session);
+  const player = await playerBody(owner, handle, { guildId, session });
   return {
     channel,
     playbackChannel: playbackChannel ?? null,

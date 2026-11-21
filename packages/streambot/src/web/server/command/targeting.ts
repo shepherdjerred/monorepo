@@ -67,7 +67,8 @@ export function explicitPlaybackChannel(
   if (transport === "listen") return listenChannel(input.playbackChannel);
   const requested = input.playbackChannel;
   if (requested === null) {
-    if (transport === "watch") return VIDEO_CHANNEL;
+    const implicit = implicitChannel(input);
+    if (implicit !== undefined) return implicit;
     throw new WebError(400, "invalid_channel", "Choose a Streambot channel.");
   }
   const slot = requestInput(PlaybackChannelNumberSchema, requested);
@@ -79,6 +80,17 @@ export function explicitPlaybackChannel(
       "That Streambot channel is unavailable.",
     );
   return slot;
+}
+
+/**
+ * The slot an explicit command without a slot lands on: Watch and TV on the first video slot, Radio
+ * on the audio slot. Stopping a station and every player control name the card they came from.
+ */
+function implicitChannel(input: WebCommand): PlaybackChannelNumber | undefined {
+  if (input.action === "play" && input.transport === "watch")
+    return VIDEO_CHANNEL;
+  if (input.action !== "station" || input.mode === "off") return;
+  return input.mode === "tv" ? VIDEO_CHANNEL : AUDIO_CHANNEL;
 }
 
 /** A legacy room has one queue, so only "no slot" or the transport's usual slot can name it. */

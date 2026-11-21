@@ -47,6 +47,8 @@ export const RowSchema = z.strictObject({
   startsAt: z.iso.datetime().optional(),
   /** What this viewer can do with the row, first entry first; empty means browse only. */
   actions: z.array(RowActionSchema),
+  /** Further actions the row offers only from its overflow menu; absent when there are none. */
+  menuActions: z.array(RowActionSchema).min(1).optional(),
   /** Open this album or artist page instead of playing. */
   browse: z
     .strictObject({ kind: z.enum(["album", "artist"]), id: z.string().min(1) })
@@ -75,9 +77,13 @@ export const BrowsePageSchema = z.strictObject({
     subtitle: z.string().optional(),
     artworkUrl: ArtworkUrlSchema.optional(),
   }),
-  /** Albums only: queues every track in order as one play request. */
+  /** Albums only: queues every track in order as one play request. Actions follow song rows. */
   play: z
-    .strictObject({ id: z.string().min(1), actions: z.array(RowActionSchema) })
+    .strictObject({
+      id: z.string().min(1),
+      actions: z.array(RowActionSchema),
+      menuActions: z.array(RowActionSchema).min(1).optional(),
+    })
     .optional(),
   rows: z.array(RowSchema),
 });

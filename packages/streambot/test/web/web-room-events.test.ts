@@ -371,6 +371,57 @@ describe("limits and cleanup", () => {
     expect(retry.response.status).toBe(200);
   });
 
+  test("a page that goes away gives its slot back at once, so a reload is never refused", async () => {
+    const pages = [];
+    for (let index = 0; index < MAX_STREAMS_PER_SESSION; index += 1) {
+      const controller = new AbortController();
+      const page = await connect(controller.signal);
+      await page.events.room();
+      pages.push({ controller, page });
+    }
+    const leaving = pages[0];
+    if (leaving === undefined) throw new Error("Expected an open page");
+    const started = performance.now();
+    leaving.controller.abort();
+    expect(await sample("streambot_web_sse_connections")).toBe(
+      MAX_STREAMS_PER_SESSION - 1,
+    );
+    const reloaded = await connect();
+    await reloaded.events.room();
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(
+      await sample("streambot_web_sse_closed_total", {
+        reason: "client_closed",
+      }),
+    ).toBe(1);
+  });
+
+  test("a write the client can no longer take ends the stream at once", async () => {
+    const { events } = await connect();
+    await events.room();
+    vi.spyOn(
+      ReadableStreamDefaultController.prototype,
+      "enqueue",
+    ).mockImplementationOnce(() => {
+      throw new TypeError("The stream is closed");
+    });
+    notifyRoom();
+    await vi.waitFor(
+      () => {
+        expect(fixture.changes.size).toBe(0);
+      },
+      { timeout: 1000 },
+    );
+    expect(await sample("streambot_web_sse_connections")).toBe(0);
+    expect(
+      await sample("streambot_web_sse_closed_total", {
+        reason: "client_closed",
+      }),
+    ).toBe(1);
+    for (let index = 0; index < MAX_STREAMS_PER_SESSION; index += 1)
+      await connect();
+  });
+
   test("the global cap has its own 429 code", async () => {
     const routes = new WebRoomRoutes(
       fixture.playback,

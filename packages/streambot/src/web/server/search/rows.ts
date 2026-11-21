@@ -44,8 +44,18 @@ export function songRow(input: {
       ? {}
       : { durationSeconds: track.durationSeconds }),
     ...(artwork === undefined ? {} : { artworkUrl: artwork }),
-    actions: bothActions("listen", input.listenAllowed),
+    ...songActions(input.listenAllowed),
   };
+}
+
+/** What a row offers as buttons and, behind them, in its overflow menu. */
+export type RowActions = Pick<Row, "actions" | "menuActions">;
+
+/** A song is something to listen to and its video is a menu choice; without listen it still plays. */
+export function songActions(listenAllowed: boolean): RowActions {
+  return listenAllowed
+    ? { actions: ["listen"], menuActions: ["watch"] }
+    : { actions: ["watch"] };
 }
 
 export function albumRow(album: MusicAlbumHit, guildId: string): Row {
@@ -84,19 +94,28 @@ const HISTORY_LABELS: Readonly<Record<SourceProvider, string>> = {
   lolesports: "Live sports",
 };
 
-/** Replay actions follow how the item was recorded: live and library items only play as video. */
+/**
+ * Replay actions follow how the item was recorded, by the rule of the search row of that kind: a
+ * catalog track is a song, live and library items only play as video, and other YouTube or link
+ * media offers both with its recorded mode first. Search history rows and `/api/history` both use
+ * this, so the two never offer different buttons.
+ */
 export function historyActions(input: {
   provider: SourceProvider;
   source: Source;
   replayAvailable: boolean;
   listenAllowed: boolean;
-}): RowAction[] {
-  if (!input.replayAvailable) return [];
+}): RowActions {
+  if (!input.replayAvailable) return { actions: [] };
   if (input.provider !== "youtube" && input.provider !== "url")
-    return ["watch"];
-  const music =
-    input.source.music !== undefined || input.source.mode === "music";
-  return bothActions(music ? "listen" : "watch", input.listenAllowed);
+    return { actions: ["watch"] };
+  if (input.source.music !== undefined) return songActions(input.listenAllowed);
+  return {
+    actions: bothActions(
+      input.source.mode === "music" ? "listen" : "watch",
+      input.listenAllowed,
+    ),
+  };
 }
 
 export function historyLabel(provider: SourceProvider): string {

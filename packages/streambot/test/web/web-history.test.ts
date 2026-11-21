@@ -50,8 +50,19 @@ test("history is sanitized and an event ending after browsing is rejected before
   expect(text).not.toContain("source_json");
   const page = HistoryPageSchema.parse(JSON.parse(text));
   expect(page.items[0]?.replayAvailable).toBe(true);
+  expect(page.items[0]?.actions).toEqual(["watch"]);
+  expect(page.items[0]).not.toHaveProperty("menuActions");
   expect(page.items[0]?.requester?.name).toBe("jerred");
   today = [];
+  // An event that is over offers no replay button at all.
+  const ended = await fixture.handler(
+    new Request("http://127.0.0.1:8080/api/history?guildId=" + GUILD, {
+      headers: { cookie: fixture.cookie },
+    }),
+  );
+  const endedPage = HistoryPageSchema.parse(await ended.json());
+  expect(endedPage.items[0]?.replayAvailable).toBe(false);
+  expect(endedPage.items[0]?.actions).toEqual([]);
   const replay = await fixture.handler(
     fixture.command({
       action: "play",

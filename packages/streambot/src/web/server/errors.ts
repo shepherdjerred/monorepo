@@ -1,9 +1,11 @@
 import type { z } from "zod";
+import type { WebApiErrorCode } from "@shepherdjerred/streambot/web/shared/error-codes.ts";
 
+/** An expected refusal; its `code` must be in the closed list the client is built against. */
 export class WebError extends Error {
   constructor(
     readonly status: number,
-    readonly code: string,
+    readonly code: WebApiErrorCode,
     message: string,
   ) {
     super(message);

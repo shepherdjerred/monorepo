@@ -39,23 +39,52 @@ export function webStation(
   };
 }
 
+type QueueItem = ReturnType<SessionHandle["view"]>["queue"][number];
+
+/** How a player names its items; the room splits a track from its artists, `/api/player` does not. */
+export type ItemTitles = "combined" | "split";
+
+/**
+ * A track's own title, with its artists as a separate line when the room asked for that. Sports
+ * titles and every item without track metadata keep the single title they always had.
+ */
+function itemTitle(
+  owner: SnapshotOwner,
+  item: QueueItem,
+  titles: ItemTitles,
+): { title: string; subtitle?: string } {
+  const sports = owner.deps.catalog.sports.title(item.source);
+  if (sports !== undefined) return { title: sports };
+  const music = item.source?.music;
+  return titles === "split" && music !== undefined
+    ? { title: music.title, subtitle: music.artists.join(", ") }
+    : { title: item.title };
+}
+
+/** Who a player is built for; `titles` defaults to the combined line `/api/player` shows. */
+export type PlayerViewer = {
+  readonly guildId: string;
+  readonly session: WebSession;
+  readonly titles?: ItemTitles;
+};
+
 export async function playerItem(
   owner: SnapshotOwner,
   entry: {
-    readonly item: ReturnType<SessionHandle["view"]>["queue"][number];
+    readonly item: QueueItem;
     readonly token: string | null;
   },
-  guildId: string,
-  session: WebSession,
+  viewer: PlayerViewer,
 ) {
   const { item, token } = entry;
+  const { guildId, session } = viewer;
   const artworkUrl = owner.deps.catalog.artwork.forSource(
     item.source,
     guildId,
     item.thumbnailUrl ?? item.provenance?.thumbnailUrl,
   );
   return {
-    title: owner.deps.catalog.sports.title(item.source) ?? item.title,
+    ...itemTitle(owner, item, viewer.titles ?? "combined"),
     music: item.source?.music !== undefined,
     requester: {
       id: item.requesterId,
@@ -85,8 +114,7 @@ export async function playerItem(
 export async function playerBody(
   owner: SnapshotOwner,
   handle: SessionHandle | null,
-  guildId: string,
-  session: WebSession,
+  viewer: PlayerViewer,
 ) {
   const view = handle?.view() ?? IDLE_VIEW;
   const tokens = handle?.itemTokens() ?? { current: null, queue: [] };
@@ -100,17 +128,11 @@ export async function playerBody(
         : await playerItem(
             owner,
             { item: view.current, token: tokens.current },
-            guildId,
-            session,
+            viewer,
           ),
     queue: await Promise.all(
       view.queue.map((item, index) =>
-        playerItem(
-          owner,
-          { item, token: tokens.queue[index] ?? null },
-          guildId,
-          session,
-        ),
+        playerItem(owner, { item, token: tokens.queue[index] ?? null }, viewer),
       ),
     ),
     positionSeconds: view.positionSeconds,

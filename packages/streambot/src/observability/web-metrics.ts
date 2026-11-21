@@ -1,5 +1,6 @@
 import { Counter, Gauge, Histogram } from "prom-client";
 import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
+import { WEB_API_ERROR_CODES } from "@shepherdjerred/streambot/web/shared/error-codes.ts";
 
 // Every label below comes from a closed set. Raw error codes, paths, actions and surfaces are
 // normalized here so Discord IDs, names, queries, titles and URLs can never reach a series.
@@ -25,92 +26,13 @@ export const WEB_STATUS_CLASSES = [
 ] as const;
 export type WebStatusClass = (typeof WEB_STATUS_CLASSES)[number];
 
-/** Codes thrown as `WebError`/`MusicError` under `src/web/server/` and `src/music/`. */
-const THROWN_WEB_ERROR_CODES = [
-  "album_edition",
-  "album_required",
-  "artwork_unavailable",
-  "busy",
-  "catalog_busy",
-  "channel_changed",
-  "channels_unavailable",
-  "csrf",
-  "discord_unavailable",
-  "event_ended",
-  "feature_disabled",
-  "guild_changed",
-  "guild_denied",
-  "guild_required",
-  "history_disabled",
-  "history_unavailable",
-  "invalid_channel",
-  "invalid_request",
-  "item_finished",
-  "join_voice",
-  "library_changed",
-  "listen_disabled",
-  "listen_sports",
-  "load_missing",
-  "lol_disabled",
-  "method",
-  "music_disabled",
-  "music_query",
-  "music_search_unavailable",
-  "no_session",
-  "no_station",
-  "no_video",
-  "not_found",
-  "not_upcoming",
-  "oauth_state",
-  "playback_changed",
-  "playback_channel_changed",
-  "playlist_busy",
-  "playlist_changed",
-  "playlist_empty",
-  "playlist_import_link",
-  "playlist_missing",
-  "playlist_name",
-  "playlist_owner",
-  "queue_empty",
-  "rate_limit",
-  "requester_changed",
-  "requester_required",
-  "room_stream_capacity",
-  "room_stream_limit",
-  "scheduling_unavailable",
-  "selection_capacity",
-  "selection_expired",
-  "selection_invalid",
-  "sign_in",
-  "sports_disabled",
-  "sports_pro_only",
-  "sports_unavailable",
-  "sports_upcoming",
-  "spotify_audio",
-  "spotify_link",
-  "spotify_metadata",
-  "spotify_unavailable",
-  "station_unavailable",
-  "stream_limit",
-  "subtitle_audio",
-  "subtitle_picker_busy",
-  "subtitles_unavailable",
-  "track_changed",
-  "track_required",
-] as const;
+/** Telemetry-only codes: a success, a client that left, and anything outside the reviewed list. */
+const TELEMETRY_ONLY_CODES = ["ok", "client_aborted", "other"] as const;
 
-/** Codes produced by the handler itself rather than by a thrown `WebError`. */
-const HANDLER_CODES = [
-  "ok",
-  "playback_denied",
-  "unavailable",
-  "client_aborted",
-  "other",
-] as const;
-
+/** Every code the web API answers with, plus the telemetry-only ones. */
 export const WEB_ERROR_CODES = [
-  ...THROWN_WEB_ERROR_CODES,
-  ...HANDLER_CODES,
+  ...WEB_API_ERROR_CODES,
+  ...TELEMETRY_ONLY_CODES,
 ] as const;
 export type WebErrorCode = (typeof WEB_ERROR_CODES)[number];
 
