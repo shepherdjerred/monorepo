@@ -124,7 +124,7 @@ for (const scheme of SCHEMES) {
       await expect(sheet.getByRole("alert")).toHaveText(
         "Choose how long to keep it.",
       );
-      await sheet.getByRole("radio", { name: /^Just for now/u }).check();
+      await sheet.getByRole("radio", { name: /^Keep just for now/u }).check();
       await expect(sheet.getByRole("alert")).toHaveCount(0);
 
       // Season choice: the whole series, or some of it.

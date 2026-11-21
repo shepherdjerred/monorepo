@@ -40,7 +40,7 @@ test("a restricted account cannot grant Keep even if its stored role says owner"
 test("an owner chooses new policy explicitly and can intentionally release a prior Keep", () => {
   const owner = { ...member, role: "owner" as const };
   expect(() => requestKeepingPolicy(owner, undefined)).toThrow(
-    "Choose Keep for good or Just for now",
+    "Choose Keep for good or Keep just for now",
   );
   expect(requestKeepingPolicy(owner, undefined, kept)).toBe("keep");
   expect(requestKeepingPolicy(owner, "temporary", kept)).toBe("temporary");

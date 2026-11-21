@@ -2,6 +2,7 @@ import { useId } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { MediaUser } from "#shared/contract.ts";
 import { PlexProfilesSchema } from "#shared/plex-admin.ts";
+import { LIBRARY_KEEPING_NAMES } from "#shared/household/names.ts";
 import { readApi } from "#client/api.ts";
 import { Choice, Note, Options, Problem, Question, Tick } from "./controls.tsx";
 import type { KeepingChoice, SheetSubject, SheetValues } from "./form.ts";
@@ -82,12 +83,12 @@ export function Keeping({
       options={[
         {
           value: "keep",
-          label: "Keep for good",
+          label: LIBRARY_KEEPING_NAMES.keep,
           detail: "It stays in the library even when nobody follows it.",
         },
         {
           value: "temporary",
-          label: "Just for now",
+          label: LIBRARY_KEEPING_NAMES.temporary,
           detail: "It stays while someone follows it, then leaves.",
         },
       ]}

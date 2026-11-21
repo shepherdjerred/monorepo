@@ -85,10 +85,7 @@ export async function openAs(page: Page, persona: Persona, path: string) {
 /** Opens `path` as a persona and waits until everything on it has loaded. */
 export async function openSettled(page: Page, persona: Persona, path: string) {
   await openAs(page, persona, path);
-  await page.waitForLoadState("networkidle");
-  await expect(
-    page.getByRole("status").filter({ hasText: "Loading" }),
-  ).toHaveCount(0);
+  await settle(page);
 }
 
 /**

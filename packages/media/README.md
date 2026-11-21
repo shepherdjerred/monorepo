@@ -1034,7 +1034,9 @@ is always just for now), and the subtitle languages, chosen from a list instead
 of typed as codes. `form.ts` maps those answers to commands and `submit.ts`
 sends them through `writeApi`, so every request carries the session's CSRF token
 and a retry key. A request whose outcome is unknown locks the sheet's answers
-and is sent again unchanged. Choosing seasons sends one command per season.
+and is sent again unchanged. Choosing seasons sends one command per season. The
+two keeping answers are named from `src/shared/household/names.ts`, as the
+Library's switch and the server's message for a request with no answer are.
 
 Two more building blocks come with it: `ui/sheet.tsx`, a native modal
 `<dialog>` (focus containment, Escape and focus return are the browser's; a

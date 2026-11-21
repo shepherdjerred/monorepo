@@ -27,7 +27,7 @@ test("current fresh owner consent still requires an explicit policy and renews i
     version: 0,
   };
   expect(() => requestKeepingPolicy(owner, undefined, null)).toThrow(
-    "Choose Keep for good or Just for now",
+    "Choose Keep for good or Keep just for now",
   );
   expect(requestKeepingPolicy(owner, "temporary", null)).toBe("temporary");
   const now = new Date("2026-11-14T00:00:00.000Z");

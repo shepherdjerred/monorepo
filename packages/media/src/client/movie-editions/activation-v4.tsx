@@ -124,10 +124,10 @@ export function ActivateMovieChoiceV4({
         }}
       >
         {mutation.isPending
-          ? "Starting saved choice…"
+          ? "Starting…"
           : pending.current === null
-            ? "Start saved edition choice"
-            : "Retry original activation"}
+            ? "Start looking for this version"
+            : "Try starting it again"}
       </button>
       <CommandError
         error={mutation.error}
@@ -138,7 +138,7 @@ export function ActivateMovieChoiceV4({
         }}
       />
       {mutation.isSuccess && (
-        <p role="status">Your saved edition choice is queued.</p>
+        <p role="status">Started. Media is looking for this version.</p>
       )}
     </>
   );
@@ -147,7 +147,7 @@ export function ActivateMovieChoiceV4({
 function activationChanged(): never {
   throw new ApiError(
     "movie_choice_changed",
-    "Review the latest saved edition choice before starting it.",
+    "Your choice of version changed. Look at it again before starting it.",
     409,
   );
 }

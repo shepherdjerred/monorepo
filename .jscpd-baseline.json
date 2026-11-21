@@ -1594,7 +1594,7 @@
     },
     "packages/media/src/client/movie-editions/protection-v4.ts|packages/media/src/client/movie-editions/protection.ts": {
       "clones": 1,
-      "tokens": 260
+      "tokens": 219
     },
     "packages/media/src/client/movie-editions/request.test.ts|packages/media/src/client/movie-editions/v4-test-support.ts": {
       "clones": 1,

@@ -81,8 +81,8 @@ export function movieProtectionAttempt(
 
 export function protectionRetryLabel(input: MovieProtectionSubmission): string {
   return input.body.action === "cancel_request"
-    ? "Retry original cancellation"
-    : "Retry original revocation";
+    ? "Try cancelling again"
+    : "Try clearing the version again";
 }
 
 export function movieProtectionMutationOptions() {

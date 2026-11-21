@@ -83,7 +83,7 @@ async function fixture() {
 test("owner must choose a keeping policy; members cannot grant permanent Keep", async () => {
   const f = await fixture();
   expect(() => requestKeepingPolicy(f.owner, undefined)).toThrow(
-    "Choose Keep for good or Just for now",
+    "Choose Keep for good or Keep just for now",
   );
   expect(requestKeepingPolicy(f.member, undefined)).toBe("temporary");
   expect(() => requestKeepingPolicy(f.member, "keep")).toThrow(
