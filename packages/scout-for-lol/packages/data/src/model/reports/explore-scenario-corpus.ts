@@ -3,6 +3,7 @@ import { rejectDuplicateCaseIds } from "#src/model/reports/explore-capability-co
 import {
   CoachGameContextSchema,
   COACH_APP_INITIATIONS,
+  COACH_SERVER_INITIATIONS,
 } from "#src/scout-client/coach-context.schema.ts";
 
 /**
@@ -136,13 +137,16 @@ export const ExploreScenarioPriorTurnSchema = z
 /**
  * How a coach turn began, as the server's gate names it
  * (`backend/src/coach/context-policy.ts`): the player typed or spoke the
- * question, or Scout started the turn itself. The backend pins this list to
- * its own `CoachTurnInitiationSchema` in a test.
+ * question, Scout Desktop started a champ-select or pre-game turn, or the
+ * server started the post-game review. The backend pins this list to its own
+ * `CoachTurnInitiationSchema` in a test, including server-only initiations
+ * the client routes cannot start.
  */
 export const ExploreScenarioInitiationSchema = z.enum([
   "player_typed",
   "player_voice",
   ...COACH_APP_INITIATIONS,
+  ...COACH_SERVER_INITIATIONS,
 ]);
 export type ExploreScenarioInitiation = z.infer<
   typeof ExploreScenarioInitiationSchema

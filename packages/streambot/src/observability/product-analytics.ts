@@ -15,6 +15,7 @@ import type {
   WebStationScopeSchema,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { PlaylistMutationSchema } from "@shepherdjerred/streambot/music/playlist-contracts.ts";
+import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import type { z } from "zod";
 
@@ -179,6 +180,23 @@ export function createPostHogTransport(destination: {
       await client.shutdown();
     },
   };
+}
+
+/**
+ * The transport `main` installs. Startup fails when usage capture is on and
+ * the PostHog destination is absent; an explicit off returns no transport.
+ */
+export function usageAnalyticsTransport(
+  analytics: Config["analytics"],
+): UsageTransport | undefined {
+  const { enabled, posthog } = analytics;
+  if (posthog !== undefined) return createPostHogTransport(posthog);
+  if (enabled) {
+    throw new Error(
+      "Usage analytics is enabled but POSTHOG_PROJECT_TOKEN and POSTHOG_API_HOST are not set",
+    );
+  }
+  return;
 }
 
 function count(event: string, outcome: AnalyticsOutcome): void {

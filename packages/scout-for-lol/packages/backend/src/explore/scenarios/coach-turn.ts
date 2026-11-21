@@ -2,7 +2,10 @@ import type {
   CoachGameContext,
   ExploreScenarioGameContext,
 } from "@scout-for-lol/data";
-import { APP_TURN_QUESTIONS } from "#src/coach/app-turns.ts";
+import {
+  APP_TURN_QUESTIONS,
+  REVIEW_TURN_QUESTION,
+} from "#src/coach/app-turns.ts";
 import {
   projectGameContext,
   type CoachContextProjection,
@@ -55,7 +58,12 @@ export function scenarioCoachQuestion(
   if (initiation === "player_typed" || initiation === "player_voice") {
     return question;
   }
-  const server = APP_TURN_QUESTIONS[initiation];
+  // App turns are worded for the client routes. The post-game review is
+  // worded by the server workflow and is not one of those routes.
+  const server =
+    initiation === "app_postgame"
+      ? REVIEW_TURN_QUESTION
+      : APP_TURN_QUESTIONS[initiation];
   if (question !== server) {
     throw new Error(
       `A ${initiation} turn asks "${server}", not "${question}".`,

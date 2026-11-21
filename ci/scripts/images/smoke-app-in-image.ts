@@ -8,24 +8,24 @@
  * continue to provide the same checks for developers, while CI invokes this
  * file from each Dockerfile's `smoke` target.
  */
-const target = Bun.env["CI_IMAGE_SMOKE_TARGET"];
 
-if (target === undefined || target.length === 0) {
-  throw new Error("CI_IMAGE_SMOKE_TARGET is required");
-}
-
-if (target === "scout-for-lol") {
-  const expectedContractHash = Bun.env["EXPECTED_CONTRACT_HASH"];
-  if (
-    expectedContractHash !== undefined &&
-    expectedContractHash.length > 0 &&
-    Bun.env["CONTRACT_HASH"] !== expectedContractHash
-  ) {
-    throw new Error(
-      `Scout contract hash mismatch: expected ${expectedContractHash}, found ${String(Bun.env["CONTRACT_HASH"])}`,
-    );
-  }
-}
+/**
+ * Environment the Streambot smoke uses to boot the production rootfs.
+ *
+ * The image has no PostHog project. Usage capture defaults on and refuses to
+ * start without a destination, so the smoke turns it off the same way it
+ * disables Flipt: the sandbox cannot reach that service. The probe still
+ * requires the process to reach Discord authentication.
+ */
+export const streambotImageSmokeEnv = {
+  BOT_TOKEN: "smoke-test-dummy",
+  USER_TOKENS: "smoke-test-dummy",
+  ADMIN_IDS: "000000000000000000",
+  VIDEOS_DIR: "/tmp/videos",
+  STATE_DIR: "/tmp/state",
+  FEATURE_FLAGS_MODE: "disabled",
+  USAGE_ANALYTICS_ENABLED: "false",
+} as const;
 
 type SmokeResult = { readonly exitCode: number; readonly output: string };
 
@@ -286,14 +286,7 @@ const commands: Record<
         discordAuthPattern +
         '"',
     ].join("\n"),
-    env: {
-      BOT_TOKEN: "smoke-test-dummy",
-      USER_TOKENS: "smoke-test-dummy",
-      ADMIN_IDS: "000000000000000000",
-      VIDEOS_DIR: "/tmp/videos",
-      STATE_DIR: "/tmp/state",
-      FEATURE_FLAGS_MODE: "disabled",
-    },
+    env: { ...streambotImageSmokeEnv },
   },
   "tasknotes-server": {
     command: [
@@ -455,13 +448,40 @@ const commands: Record<
   },
 };
 
-const command = commands[target];
-if (command === undefined) {
-  throw new Error(`no in-image smoke command exists for ${target}`);
+/** The command and environment the in-image runner executes for `target`. */
+export function imageSmokeCommand(target: string): {
+  readonly command: string;
+  readonly env: Record<string, string>;
+} {
+  const command = commands[target];
+  if (command === undefined) {
+    throw new Error(`no in-image smoke command exists for ${target}`);
+  }
+  return command;
 }
 
-assertPassed(
-  await runShell(command.command, command.env),
-  `${target} in-image smoke`,
-);
-console.log(`${target} in-image smoke passed`);
+if (import.meta.main) {
+  const target = Bun.env["CI_IMAGE_SMOKE_TARGET"];
+  if (target === undefined || target.length === 0) {
+    throw new Error("CI_IMAGE_SMOKE_TARGET is required");
+  }
+  if (target === "scout-for-lol") {
+    const expectedContractHash = Bun.env["EXPECTED_CONTRACT_HASH"];
+    if (
+      expectedContractHash !== undefined &&
+      expectedContractHash.length > 0 &&
+      Bun.env["CONTRACT_HASH"] !== expectedContractHash
+    ) {
+      throw new Error(
+        `Scout contract hash mismatch: expected ${expectedContractHash}, found ${String(Bun.env["CONTRACT_HASH"])}`,
+      );
+    }
+  }
+  const command = imageSmokeCommand(target);
+
+  assertPassed(
+    await runShell(command.command, command.env),
+    `${target} in-image smoke`,
+  );
+  console.log(`${target} in-image smoke passed`);
+}

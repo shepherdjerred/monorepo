@@ -6,7 +6,10 @@ import {
 import { DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { describe, expect, test } from "vitest";
-import { APP_TURN_QUESTIONS } from "#src/coach/app-turns.ts";
+import {
+  APP_TURN_QUESTIONS,
+  REVIEW_TURN_QUESTION,
+} from "#src/coach/app-turns.ts";
 import { CoachTurnInitiationSchema } from "#src/coach/context-policy.ts";
 import type { ExploreAgentResult } from "#src/explore/agent.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
@@ -125,6 +128,12 @@ describe("the scenario coach gate", () => {
         }),
       ).toThrow(APP_TURN_QUESTIONS[initiation]);
     }
+    expect(() =>
+      scenarioCoachQuestion("not the server wording", {
+        ...gameContextOf("desktop-coach-postgame-review"),
+        initiation: "app_postgame",
+      }),
+    ).toThrow(REVIEW_TURN_QUESTION);
     expect(
       scenarioCoachQuestion("buy now", gameContextOf("voice-coach-terse")),
     ).toBe("buy now");
