@@ -5,7 +5,13 @@ import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
 import { readCurrentPlexBindings } from "#infrastructure/plex-binding/read.ts";
 import { z } from "zod";
-import { boundRetentionFixture } from "./lifecycle.test-fixture.ts";
+import {
+  boundRetentionFixture,
+  defaultRetentionInterestSnapshot,
+} from "./lifecycle.test-fixture.ts";
+import { createRetentionActivities } from "#automation/retention.ts";
+import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
+import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { continueQuarantinedInterest } from "#infrastructure/request-interest/quarantine-release.test-fixture.ts";
 
 const harness = automationTestHarness();
@@ -135,6 +141,95 @@ test("actual quarantine observes Plex unwatch without restoring; explicit Keep w
   expect(quarantineOperation.result).toMatchObject({
     quarantinePlexReceipt: receipt,
   });
+});
+
+test("a housemate who never asked for a leaving title holds it for 30 days: the due removal cannot run, and the next one starts from a fresh notice to those who asked", async () => {
+  const f = current(),
+    db = harness.database();
+  const media = f.files.media.id;
+  const leaving = f.retention.decision;
+  const user = await db.mediaUser.create({
+    data: { plexAccountId: crypto.randomUUID(), displayName: "Housemate" },
+  });
+  await grantTestRequesterAccess(db, user.id, "fixture-server");
+  const housemate = { ...user, role: "member" as const };
+  const app = new PrismaMediaApplication(db, {
+    keepDays: 30,
+    serverMachineId: "fixture-server",
+    visibilitySections: { movie: "1", series: "2" },
+  });
+  const listed = async () => {
+    const removals = await app.removals(housemate);
+    return removals.map((row) => row.id);
+  };
+  expect(await listed()).toContain(leaving.id);
+  const context = await app.getDefaultCommandContext(housemate, media);
+  expect(context).toMatchObject({
+    access: "detail",
+    ownRequests: [],
+    allowedProtectiveActions: ["keep"],
+  });
+  const before = await defaultRetentionInterestSnapshot(db, [media]);
+  await app.executeDefaultCommand(housemate, crypto.randomUUID(), {
+    schemaVersion: 2,
+    scope: context.scope,
+    expected: context.expected,
+    command: { action: "keep" },
+  });
+  expect(
+    await db.retentionDecision.findUniqueOrThrow({ where: { id: leaving.id } }),
+  ).toMatchObject({ state: "cancelled" });
+  expect(await listed()).not.toContain(leaving.id);
+  // The removal that was already due can no longer take the files.
+  expect(await f.quarantine()).toMatchObject({ status: "protected" });
+  expect(
+    await db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
+  ).toMatchObject({ state: "published" });
+  // The hold is the housemate's. Nobody's request changed and none was made.
+  const after = await defaultRetentionInterestSnapshot(db, [media]);
+  expect(after.requests).toEqual(before.requests);
+  expect(after.requests.map((request) => request.userId)).toEqual([
+    f.files.user.id,
+  ]);
+  expect(
+    await db.retentionHold.findMany({ where: { mediaId: media } }),
+  ).toMatchObject([{ userId: user.id, isPin: false }]);
+  const generation = after.targets[0]?.generation;
+  if (generation === undefined) throw new Error("Held target is missing");
+  const evaluate = () =>
+    createRetentionActivities(f.context).evaluateMediaRetention({
+      operationId: crypto.randomUUID(),
+      mediaId: media,
+      generation,
+    });
+  expect(await evaluate()).toMatchObject({
+    status: "protected",
+    reason: "ancestor_keep_hold",
+  });
+  // The hold lapses on its own date; retention does not wait on its holder.
+  // A new removal begins with a new notice, sent to the member who asked for
+  // the title and not to the housemate who held it.
+  await db.retentionHold.updateMany({
+    where: { mediaId: media },
+    data: { until: new Date(Date.now() - 1000) },
+  });
+  const resumed = await evaluate();
+  expect(resumed).toMatchObject({ status: "warning" });
+  expect(resumed.decisionId).not.toBe(leaving.id);
+  const notified = await db.notificationDelivery.findMany({
+    where: {
+      event: {
+        kind: "retention_warning",
+        payload: { path: ["decisionId"], equals: resumed.decisionId ?? "" },
+      },
+    },
+    select: { userId: true },
+  });
+  expect([...new Set(notified.map((delivery) => delivery.userId))]).toEqual([
+    f.files.user.id,
+  ]);
+  // It is leaving again, and the whole household can see that.
+  expect(await listed()).toContain(resumed.decisionId);
 });
 
 test("a reused Part after quarantine is unknown and cannot authorize an unwatched restore", async () => {

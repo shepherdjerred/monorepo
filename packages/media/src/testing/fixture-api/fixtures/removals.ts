@@ -5,6 +5,7 @@ import {
   type RemovalHistoryItemSchema,
   type RemovalHistoryPageSchema,
 } from "#shared/household/calendar.ts";
+import type { Persona } from "#testing/fixture-api/personas.ts";
 import {
   DAY,
   ago,
@@ -25,38 +26,78 @@ type RemovalSeed = readonly [
   /** Days until the grace period ends; negative once it has passed. */
   graceDays: number | null,
   purgeDays: number | null,
+  /** Whether the signed-in member is one of those who asked for the title. */
+  asked: "viewer" | "another member",
 ];
 
 /** Titles leaving soon, one or more per retention state. */
 const REMOVALS: readonly RemovalSeed[] = [
-  ["The Expanse", "grace_period", 3, null],
-  ["Mr. Robot", "grace_period", 6, null],
-  ["Knives Out", "warning_pending", null, null],
-  ["Top Gun: Maverick", "notice_pending", null, null],
-  ["The Holdovers", "quarantined", -2, 5],
-  ["Silo", "quarantined", -5, 2],
-  ["Get Out", "grace_period", 1, null],
-  ["Cowboy Bebop", "reply_pending", 7, null],
+  ["The Expanse", "grace_period", 3, null, "viewer"],
+  ["Mr. Robot", "grace_period", 6, null, "another member"],
+  ["Knives Out", "warning_pending", null, null, "another member"],
+  ["Top Gun: Maverick", "notice_pending", null, null, "viewer"],
+  ["The Holdovers", "quarantined", -2, 5, "another member"],
+  ["Silo", "quarantined", -5, 2, "viewer"],
+  ["Get Out", "grace_period", 1, null, "viewer"],
+  ["Cowboy Bebop", "reply_pending", 7, null, "another member"],
 ];
 
-export function removalList(): RemovalList {
-  return REMOVALS.map(([name, state, graceDays, purgeDays], index) => {
-    const title = titleNamed(name);
-    return {
-      id: fixtureId(12, index + 1),
-      mediaId: title.id,
-      rootMediaId: title.id,
-      artwork: storedArtwork(title),
-      state,
-      graceUntil: graceDays === null ? null : ahead(graceDays * DAY),
-      purgeAfter: purgeDays === null ? null : ahead(purgeDays * DAY),
-      media: {
-        title: title.title,
-        kind: title.kind,
-        version: versionOf(title.id),
-      },
-    };
-  });
+/**
+ * A removal the household can still stop, as the library reports it on the
+ * title: only these two states count as leaving soon.
+ */
+export function leavingSoon(title: Title): {
+  state: "warning_pending" | "grace_period";
+  graceUntil: string | null;
+} | null {
+  for (const [name, state, graceDays] of REMOVALS) {
+    if (
+      name === title.title &&
+      (state === "warning_pending" || state === "grace_period")
+    ) {
+      return {
+        state,
+        graceUntil: graceDays === null ? null : ahead(graceDays * DAY),
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * The owner sees every removal. A member sees every title that has not left
+ * yet, whoever asked for it, and a quarantined one only when they asked for
+ * it: restoring it is theirs or the owner's to do.
+ */
+export function removalList(persona: Persona): RemovalList {
+  return REMOVALS.flatMap(
+    ([name, state, graceDays, purgeDays, asked], index) => {
+      if (
+        persona !== "owner" &&
+        state === "quarantined" &&
+        asked !== "viewer"
+      ) {
+        return [];
+      }
+      const title = titleNamed(name);
+      return [
+        {
+          id: fixtureId(12, index + 1),
+          mediaId: title.id,
+          rootMediaId: title.id,
+          artwork: storedArtwork(title),
+          state,
+          graceUntil: graceDays === null ? null : ahead(graceDays * DAY),
+          purgeAfter: purgeDays === null ? null : ahead(purgeDays * DAY),
+          media: {
+            title: title.title,
+            kind: title.kind,
+            version: versionOf(title.id),
+          },
+        },
+      ];
+    },
+  );
 }
 
 type HistorySeed = {

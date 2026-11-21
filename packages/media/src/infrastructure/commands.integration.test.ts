@@ -9,6 +9,8 @@ import { randomBytes } from "node:crypto";
 import { PrismaNotificationApplication } from "./notification-service.ts";
 import { createCoverageActivities } from "#automation/reconciliation/coverage.ts";
 import { createTestDefaultTarget } from "#testing/editions.ts";
+import { lockDefaultScopes } from "./editions/locks.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let app: PrismaMediaApplication;
@@ -241,6 +243,66 @@ test("request and removal lists carry the root title's artwork; an episode row i
     rootMediaId: movie.id,
     artwork: none,
   });
+});
+
+test("a long series' episode claims cannot push a direct request off the request list", async () => {
+  const { actor, media: movie } = await fixture();
+  const db = cluster.database;
+  const series = await db.mediaItem.create({
+    data: { kind: "series", title: "Long series" },
+  });
+  const direct = [];
+  for (const mediaId of [movie.id, series.id]) {
+    await createTestDefaultTarget(db, mediaId);
+    direct.push(
+      await db.mediaRequest.create({ data: { userId: actor.id, mediaId } }),
+    );
+  }
+  const sponsor = direct.at(-1);
+  if (sponsor === undefined) throw new Error("Missing series request");
+  // More episode claims than the list holds, every one newer than both asks.
+  const episodes = await db.mediaItem.createManyAndReturn({
+    data: Array.from({ length: 205 }, (_, index) => ({
+      kind: "episode" as const,
+      title: `Episode ${String(index + 1)}`,
+      parentId: series.id,
+      seasonNumber: 1,
+      episodeNumber: index + 1,
+    })),
+    select: { id: true },
+  });
+  await db.$transaction(
+    (tx) =>
+      lockDefaultScopes(
+        tx,
+        episodes.map((episode) => defaultScope(episode.id)),
+        { createMissing: true },
+      ),
+    { timeout: 60_000 },
+  );
+  await db.mediaRequest.updateMany({
+    where: { id: { in: direct.map((request) => request.id) } },
+    data: { updatedAt: new Date(Date.now() - 86_400_000) },
+  });
+  await db.mediaRequest.createMany({
+    data: episodes.map((episode) => ({
+      userId: actor.id,
+      mediaId: episode.id,
+      direct: false,
+      sponsorRequestId: sponsor.id,
+    })),
+  });
+  const listed = await app.listRequests(actor);
+  expect(listed).toHaveLength(200);
+  expect(
+    listed
+      .slice(0, 2)
+      .map((row) => row.id)
+      .sort(),
+  ).toEqual(direct.map((request) => request.id).sort());
+  expect(listed.slice(2).every((row) => row.media.kind === "episode")).toBe(
+    true,
+  );
 });
 
 test("Keep on orphan metadata protects without inventing lineage or acquisition authority", async () => {

@@ -3,6 +3,8 @@ import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { createTestDefaultTarget } from "#testing/editions.ts";
 import { commandFixture } from "./command-test-support.ts";
 import { DefaultCommandV2Schema } from "#shared/editions/commands.ts";
+import { z } from "zod";
+import { householdRetentionState } from "#infrastructure/request-interest/protection.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 beforeAll(async () => {
@@ -271,4 +273,179 @@ test("detail context reports changed canonical lineage without creating or repai
       where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     }),
   ).toMatchObject({ editionRootId: oldRoot.id });
+});
+
+test("leaving soon is the household's: any member who can see the title sees its removal and may hold it for 30 days, and nothing else", async () => {
+  const db = cluster.database;
+  const f = await commandFixture(db);
+  const media = f.media.id;
+  const requested = await f.service.executeDefaultCommand(
+    f.actor,
+    crypto.randomUUID(),
+    await f.command({ action: "request" }),
+  );
+  const requestId = z.uuid().parse(requested.result.requestId);
+  // A title leaves once nobody follows it: the one who asked has finished.
+  await db.mediaRequest.update({
+    where: { id: requestId },
+    data: {
+      interestState: "finished",
+      interestReleasedAt: new Date(),
+      interestReleaseReason: "watched",
+    },
+  });
+  const { actor: housemate } = await commandFixture(db);
+  // The title is a movie in section 1; this member may open only section 2.
+  const { actor: outsider } = await commandFixture(db);
+  await db.plexIdentityMapping.update({
+    where: { userId: outsider.id },
+    data: { permittedSectionIds: ["2"] },
+  });
+  const { actor: lapsed } = await commandFixture(db);
+  await db.plexIdentityMapping.update({
+    where: { userId: lapsed.id },
+    data: { verifiedAt: new Date(Date.now() - 600_000) },
+  });
+  const { actor: owner } = await commandFixture(db, "owner");
+  type Actor = typeof f.actor;
+  const act = async (actor: Actor, command: unknown) =>
+    f.service.executeDefaultCommand(
+      actor,
+      crypto.randomUUID(),
+      await f.command(command),
+    );
+  const allowed = async (actor: Actor) => {
+    const context = await f.service.getDefaultCommandContext(actor, media);
+    return context.allowedProtectiveActions;
+  };
+  const listed = async (actor: Actor) => {
+    const removals = await f.service.removals(actor);
+    return removals.map((row) => row.id);
+  };
+  const household = () =>
+    db.$transaction((tx) => householdRetentionState(tx, media));
+
+  // Nothing is leaving yet: someone else's title is not a member's to keep.
+  expect(await allowed(housemate)).toEqual([]);
+  await expect(act(housemate, { action: "keep" })).rejects.toMatchObject({
+    code: "request_required",
+  });
+  expect(await household()).toMatchObject({ reason: null });
+
+  const target = await db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: media, edition: "default" } },
+  });
+  const removal = await db.retentionDecision.create({
+    data: {
+      mediaId: media,
+      generation: target.generation,
+      state: "grace_period",
+      evidence: { recoveryEpoch: 0 },
+      graceUntil: new Date(Date.now() + 3 * 86_400_000),
+    },
+  });
+  // Everyone whose libraries hold the title sees it, the one who asked too.
+  for (const actor of [housemate, f.actor, owner])
+    expect(await listed(actor)).toContain(removal.id);
+  expect(await allowed(housemate)).toEqual(["keep"]);
+  expect(await allowed(f.actor)).toEqual(["keep", "cancel_request"]);
+  // A member must not learn of a title outside their libraries, nor act on it.
+  for (const actor of [outsider, lapsed]) {
+    expect(await listed(actor)).not.toContain(removal.id);
+    await expect(
+      f.service.getDefaultCommandContext(actor, media),
+    ).rejects.toMatchObject({ code: "forbidden" });
+    await expect(act(actor, { action: "keep" })).rejects.toMatchObject({
+      code: "request_required",
+    });
+  }
+  // Only the hold is the household's. Everything else is as it was.
+  const refused = {
+    pin: "forbidden",
+    unpin: "forbidden",
+    remove: "forbidden",
+    restore: "request_required",
+    retry: "request_required",
+  };
+  for (const [action, code] of Object.entries(refused))
+    await expect(act(housemate, { action }), action).rejects.toMatchObject({
+      code,
+    });
+  await expect(
+    act(housemate, {
+      action: "cancel_request",
+      requestId,
+      requestVersion: 0,
+    }),
+  ).rejects.toMatchObject({ status: 403 });
+
+  const claims = () => db.mediaRequest.findMany({ where: { mediaId: media } });
+  const before = await claims();
+  await act(housemate, { action: "keep" });
+  // The removal is stopped and leaves every list.
+  expect(
+    await db.retentionDecision.findUniqueOrThrow({ where: { id: removal.id } }),
+  ).toMatchObject({ state: "cancelled" });
+  expect(await listed(housemate)).not.toContain(removal.id);
+  // The hold is the housemate's own, and no request was invented for them.
+  const holds = await db.retentionHold.findMany({ where: { mediaId: media } });
+  expect(holds).toMatchObject([
+    { userId: housemate.id, edition: "default", isPin: false },
+  ]);
+  const days = ((holds[0]?.until?.getTime() ?? 0) - Date.now()) / 86_400_000;
+  expect(days).toBeGreaterThan(29.9);
+  expect(days).toBeLessThanOrEqual(30);
+  expect(await claims()).toEqual(before);
+  expect(
+    await db.applicationEvent.findMany({
+      where: { mediaId: media, kind: "media_keep" },
+    }),
+  ).toMatchObject([{ actorId: housemate.id }]);
+  // The hold protects the title for the whole household. Whoever holds it,
+  // only those who asked for the title are told about a later removal.
+  const held = await household();
+  expect(held.reason).toBe("ancestor_keep_hold");
+  expect(held.recipients.map((recipient) => recipient.userId)).toEqual([
+    f.actor.id,
+  ]);
+  // With the removal stopped there is nothing left to hold.
+  expect(await allowed(housemate)).toEqual([]);
+  await expect(act(housemate, { action: "keep" })).rejects.toMatchObject({
+    code: "request_required",
+  });
+  // The hold lapses on its own date; retention does not wait on its holder.
+  await db.retentionHold.updateMany({
+    where: { mediaId: media },
+    data: { until: new Date(Date.now() - 1000) },
+  });
+  const lapsedHold = await household();
+  expect(lapsedHold.reason).toBeNull();
+  expect(lapsedHold.recipients.map((recipient) => recipient.userId)).toEqual([
+    f.actor.id,
+  ]);
+
+  // Quarantined files have already left the library. That is not "leaving
+  // soon": restoring stays with the owner and the members following a title.
+  const current = await db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: media, edition: "default" } },
+  });
+  const gone = await db.retentionDecision.create({
+    data: {
+      mediaId: media,
+      generation: current.generation,
+      state: "quarantined",
+      evidence: { recoveryEpoch: 0 },
+      quarantinedAt: new Date(),
+      purgeAfter: new Date(Date.now() + 7 * 86_400_000),
+      manifest: { assets: [] },
+    },
+  });
+  expect(await listed(owner)).toContain(gone.id);
+  expect(await listed(housemate)).not.toContain(gone.id);
+  expect(await allowed(housemate)).toEqual([]);
+  for (const action of ["keep", "restore"])
+    await expect(act(housemate, { action }), action).rejects.toMatchObject({
+      code: "request_required",
+    });
+  expect(await db.retentionHold.count({ where: { mediaId: media } })).toBe(1);
 });

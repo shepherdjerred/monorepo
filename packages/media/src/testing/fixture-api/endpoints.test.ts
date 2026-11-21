@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
+import type { z } from "zod";
 import {
   CatalogSearchSchema,
   ProfileListSchema,
   QualityRulesSchema,
+  RemovalListSchema,
 } from "#shared/api.ts";
 import { CatalogFeedSchema } from "#shared/catalog/contract.ts";
 import {
@@ -50,6 +52,45 @@ async function readCatalog(path: string) {
   });
   const page = CatalogSearchSchema.safeParse(await overTheWire(outcome.body));
   return { status: outcome.status, results: page.data?.results, page };
+}
+
+async function readLibrary(query: string) {
+  const outcome = routeFixture({
+    method: "GET",
+    url: new URL(`http://fixture.invalid/api/v1/library?${query}`),
+    persona: "member",
+  });
+  const page = LibraryPageSchema.safeParse(await overTheWire(outcome.body));
+  return { status: outcome.status, page: page.data };
+}
+
+/** Follow `nextCursor` to the end, as the client's "load more" does. */
+async function readWholeLibrary(query: string) {
+  const items: z.infer<typeof LibraryPageSchema>["items"] = [];
+  let firstCursor: string | null = null;
+  let cursor: string | null = null;
+  do {
+    const { page } = await readLibrary(
+      cursor === null ? query : `${query}&cursor=${encodeURIComponent(cursor)}`,
+    );
+    if (page === undefined) {
+      throw new Error(`The library refused ${query}`);
+    }
+    items.push(...page.items);
+    cursor = page.nextCursor;
+    firstCursor ??= cursor;
+  } while (cursor !== null);
+  expect(new Set(items.map((item) => item.id)).size).toBe(items.length);
+  return { items, firstCursor };
+}
+
+async function readRemovals(persona: Persona) {
+  const outcome = routeFixture({
+    method: "GET",
+    url: new URL("http://fixture.invalid/api/v1/removals"),
+    persona,
+  });
+  return RemovalListSchema.parse(await overTheWire(outcome.body));
 }
 
 describe("fixture endpoints", () => {
@@ -232,5 +273,96 @@ describe("fixture volume", () => {
         profile.name,
       ).not.toThrow();
     }
+  });
+});
+
+describe("library and leaving soon fixtures", () => {
+  it("pages the library by title and by date added, and refuses a cursor from the other sort", async () => {
+    const all = await readWholeLibrary("sort=title&limit=7");
+    expect(all.items.map((item) => item.id).sort()).toEqual(
+      TITLES.map((title) => title.id).sort(),
+    );
+    const added = await readWholeLibrary("sort=added&limit=7");
+    const dates = added.items.map((item) => item.addedAt ?? "missing");
+    expect(dates).not.toContain("missing");
+    expect(dates).toEqual([...dates].sort().reverse());
+    // Only what can be played has a date, so the added order is a subset.
+    expect(added.items.length).toBeGreaterThan(0);
+    expect(added.items.length).toBeLessThan(TITLES.length);
+    expect(all.items.filter((item) => item.addedAt === null)).toHaveLength(
+      TITLES.length - added.items.length,
+    );
+    for (const { sort, cursor } of [
+      { sort: "title", cursor: added.firstCursor },
+      { sort: "added", cursor: all.firstCursor },
+    ]) {
+      if (cursor === null) {
+        throw new Error("The fixture library fit on one page");
+      }
+      const refused = await readLibrary(
+        `sort=${sort}&cursor=${encodeURIComponent(cursor)}`,
+      );
+      expect(refused.status, sort).toBe(400);
+    }
+  });
+
+  it("filters the library by policy, interest, leaving and availability, and counts each series' episodes", async () => {
+    const { items } = await readWholeLibrary("limit=50");
+    for (const policy of ["keep", "temporary", "unclassified"] as const) {
+      const page = await readWholeLibrary(`policy=${policy}&limit=50`);
+      expect(page.items.map((item) => item.id)).toEqual(
+        items.filter((item) => item.policy === policy).map((item) => item.id),
+      );
+    }
+    const mine = await readWholeLibrary("mine=following&limit=50");
+    expect(mine.items.length).toBeGreaterThan(0);
+    expect(mine.items.every((item) => item.myInterest === "following")).toBe(
+      true,
+    );
+    const leaving = await readWholeLibrary("leaving=soon");
+    expect(
+      new Set(leaving.items.map((item) => item.leavingSoon?.state)),
+    ).toEqual(new Set(["warning_pending", "grace_period"]));
+    expect(items.filter((item) => item.leavingSoon !== null)).toHaveLength(
+      leaving.items.length,
+    );
+    const available = await readWholeLibrary("availability=available&limit=50");
+    const unavailable = await readWholeLibrary(
+      "availability=unavailable&limit=50",
+    );
+    expect(available.items.length + unavailable.items.length).toBe(
+      items.length,
+    );
+    expect(unavailable.items.every((item) => item.addedAt === null)).toBe(true);
+    const series = items
+      .filter((item) => item.kind === "series")
+      .map(({ availability, episodes }) => {
+        expect(availability).toBeNull();
+        if (episodes === null) return "unknown";
+        if (episodes.available === 0) return "none";
+        return episodes.available < episodes.total ? "some" : "all";
+      });
+    expect([...new Set(series)].sort()).toEqual([
+      "all",
+      "none",
+      "some",
+      "unknown",
+    ]);
+    const movies = items.filter((item) => item.kind === "movie");
+    expect(movies.every((item) => item.episodes === null)).toBe(true);
+    expect(movies.every((item) => item.availability !== null)).toBe(true);
+  });
+
+  it("shows a member every title that is leaving soon, and a quarantined one only when they asked for it", async () => {
+    const owner = await readRemovals("owner");
+    const member = await readRemovals("member");
+    const leaving = (list: typeof owner) =>
+      list.filter((row) => row.state !== "quarantined").map((row) => row.id);
+    expect(leaving(member)).toEqual(leaving(owner));
+    expect(leaving(member).length).toBeGreaterThan(0);
+    const quarantined = (list: typeof owner) =>
+      list.filter((row) => row.state === "quarantined");
+    expect(quarantined(member).length).toBeGreaterThan(0);
+    expect(quarantined(member).length).toBeLessThan(quarantined(owner).length);
   });
 });

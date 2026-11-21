@@ -18,8 +18,8 @@ import {
   posterPath,
   synopsis,
 } from "./artwork.ts";
-import { libraryInterest, libraryPolicy } from "./library.ts";
-import { AIRINGS, TITLES, titleNamed, type Title } from "./titles.ts";
+import { libraryEpisodes, libraryInterest, libraryPolicy } from "./library.ts";
+import { AIRINGS, TITLES, type Title } from "./titles.ts";
 
 type CatalogItem = z.input<typeof CatalogItemSchema>;
 type CatalogPage = z.input<typeof CatalogSearchSchema>;
@@ -60,38 +60,6 @@ function twoDigits(value: number): string {
 }
 
 /**
- * A series the household plays from a Plex library Media does not manage: its
- * episode count is unknown to a list, which the API reports as null.
- */
-const EXTERNALLY_HELD = titleNamed("The Wire");
-
-/** Episodes Media holds of a series, from the state its fixture title is in. */
-function episodeCounts(title: Title): CatalogLibraryState["episodes"] {
-  if (title.id === EXTERNALLY_HELD.id) {
-    return null;
-  }
-  const total = title.seasons.reduce((sum, count) => sum + count, 0);
-  const lastSeason = title.seasons.at(-1) ?? 0;
-  switch (title.availability) {
-    case "available": {
-      return { available: total, total };
-    }
-    // The latest season is still arriving.
-    case "downloading":
-    case "validating":
-    case "importing": {
-      return { available: total - lastSeason, total };
-    }
-    case "wanted":
-    case "searching":
-    case "quarantined":
-    case "removed": {
-      return { available: 0, total };
-    }
-  }
-}
-
-/**
  * What the household has of one of its own titles. It agrees with the library
  * fixture: the same interest, and a standing request wherever the library
  * shows a title as held by somebody's interest or the viewer follows it.
@@ -101,7 +69,7 @@ function libraryState(title: Title): CatalogLibraryState {
   return {
     mediaId: title.id,
     availability: title.kind === "movie" ? title.availability : null,
-    episodes: title.kind === "movie" ? null : episodeCounts(title),
+    episodes: libraryEpisodes(title),
     requested:
       myInterest === "following" || libraryPolicy(title) === "temporary",
     myInterest,
