@@ -2,6 +2,8 @@
 // order, which the browser fixes at the first `@layer` it meets. Feature
 // stylesheets arrive through the routes and must come after it.
 import "./styles.css";
+// Next, before any module that builds a schema.
+import "./startup/zod.ts";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";

@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
-import { openAs, violationDetails } from "./support.ts";
+import { expect } from "@playwright/test";
+import { openAs, test, violationDetails } from "./support.ts";
 
 /*
  * Navigation on a phone: the tab bar and the More sheet. Only the mobile

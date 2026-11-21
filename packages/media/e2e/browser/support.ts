@@ -1,17 +1,82 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import {
+  expect,
+  test as base,
+  type BrowserContext,
+  type Page,
+} from "@playwright/test";
 import type { Persona } from "#testing/fixture-api/personas.ts";
 import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
 
+const POLICY_TAG = "content-security-policy:";
+
+/**
+ * Every Content-Security-Policy violation any page of the context reports,
+ * as `directive blocked what`, plus the browser's own console errors about
+ * the policy. The harness sends the production policy
+ * (`src/server/static/security-headers.ts`), so this is what a browser would
+ * refuse on the real site. A blocked `eval` is reported as an event only,
+ * never on the console, so the event is what counts.
+ */
+async function watchPolicyViolations(
+  context: BrowserContext,
+): Promise<string[]> {
+  const violations: string[] = [];
+  await context.addInitScript((tag) => {
+    globalThis.document.addEventListener("securitypolicyviolation", (event) => {
+      console.error(
+        `${tag} ${event.effectiveDirective} blocked ${event.blockedURI}`,
+      );
+    });
+  }, POLICY_TAG);
+  context.on("console", (message) => {
+    const text = message.text();
+    if (text.startsWith(POLICY_TAG)) {
+      violations.push(text.slice(POLICY_TAG.length + 1));
+    } else if (
+      message.type() === "error" &&
+      text.includes("Content Security Policy")
+    ) {
+      violations.push(`console: ${text}`);
+    }
+  });
+  return violations;
+}
+
+/**
+ * The suite's `test`: every test, whatever it does, also fails when a page
+ * it opened violated the Content-Security-Policy. A test that provokes a
+ * violation on purpose empties `policyViolations` before it ends.
+ */
+export const test = base.extend<{ policyViolations: string[] }>({
+  policyViolations: [
+    async ({ context }, use) => {
+      const violations = await watchPolicyViolations(context);
+      await use(violations);
+      // One trip to each page, so a report still on its way has arrived.
+      for (const page of context.pages()) {
+        await page.evaluate(
+          async () =>
+            new Promise((resolve) => {
+              globalThis.setTimeout(resolve, 0);
+            }),
+        );
+      }
+      expect(violations, "Content-Security-Policy violations").toEqual([]);
+    },
+    { auto: true },
+  ],
+});
+
 /** Opens `path` as a persona and waits for the shell to hold a page. */
 export async function openAs(page: Page, persona: Persona, path: string) {
-  const base = test.info().project.use.baseURL;
-  if (base === undefined) {
+  const origin = test.info().project.use.baseURL;
+  if (origin === undefined) {
     throw new Error("The Playwright project has no baseURL");
   }
   await page
     .context()
-    .addCookies([{ name: PERSONA_COOKIE, value: persona, url: base }]);
+    .addCookies([{ name: PERSONA_COOKIE, value: persona, url: origin }]);
   await page.goto(path);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 }

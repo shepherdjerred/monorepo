@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
-import { openAs } from "./support.ts";
+import { expect } from "@playwright/test";
+import { openAs, test } from "./support.ts";
 
 /*
  * Navigation on a screen wide enough for the sidebar. Only the desktop

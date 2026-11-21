@@ -529,7 +529,9 @@ The browser suite opens every member route and every Manage page that has a
 fixture at 1440 and
 390 pixels wide, in the light and the dark color scheme. It fails on an error
 notice, a console or uncaught error, a failed API response, a request to any
-other origin, a wrong document title, or a WCAG 2.2 AA violation, color contrast
+other origin, a Content-Security-Policy violation (see
+[Security headers](#security-headers)), a wrong document title, or a WCAG 2.2 AA
+violation, color contrast
 included, that `e2e/browser/axe-baseline.ts` does not list. That baseline is
 empty and compared exactly; nothing may be added to it to make a new violation
 pass. Routes the fixture API cannot answer yet are listed in
@@ -640,6 +642,57 @@ the table reads as neutral.
 
 DM Sans and Manrope are bundled from `@fontsource-variable` and served from
 `/assets`; the client requests nothing from another origin.
+
+### Security headers
+
+Every response (the application shell, its assets, and the API) carries the
+headers from `src/server/static/security-headers.ts`, the application's first
+middleware: Hono's `secureHeaders` defaults, `X-Frame-Options: DENY`, and this
+Content-Security-Policy.
+
+```text
+default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
+```
+
+| Directive                                         | What the client does that needs it                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `default-src 'none'`                              | Nothing; whatever is not listed below is refused (frames, media, workers).      |
+| `script-src 'self'`                               | The module script and its chunks under `/assets`. No inline script, no `eval`.  |
+| `style-src 'self'`                                | The one stylesheet. No `<style>` element and no `style` attribute.              |
+| `img-src 'self'`, `font-src 'self'`               | The bundled fonts, and artwork once Media serves it. No `data:` or `blob:` URL. |
+| `connect-src 'self'`                              | `fetch` to `/api`, uploads included.                                            |
+| `manifest-src 'self'`                             | Nothing yet; a web app manifest would be Media's own file.                      |
+| `form-action 'self'`                              | Forms submit through script; left alone, they would post to Media.              |
+| `base-uri 'none'`, `object-src 'none'`            | Nothing; no `<base>` and no plugin content.                                     |
+| `frame-ancestors 'none'`, `X-Frame-Options: DENY` | Nothing frames Media, the Hub included.                                         |
+
+The policy names no origin but Media's own, and that is the rule for changing
+it: a new origin, or a new kind of resource (an inline script, a `data:` image,
+a frame, a worker), needs its directive changed in that module, with the reason
+in the same change. Loosen one directive for one need; never add
+`'unsafe-inline'` or `'unsafe-eval'` to make a library work. Leaving for another
+site is not restricted: the Plex sign-in link and the Discord authorization
+redirect are navigations.
+
+Two parts of the build exist for the policy. `build.assetsInlineLimit` is `0`,
+so a small asset is a file under `/assets` and never a `data:` URL. And
+`src/client/startup/zod.ts` sets zod's `jitless` option, because zod otherwise
+tries `new Function` once to see whether it may compile parsers, which a
+browser reports as a violation; `vite.config.ts` keeps that module in zod's own
+chunk so it runs before a schema is built in any other.
+
+The policy is enforced wherever the built client is served: by the server, and
+by the browser suite, whose harness (`e2e/browser/server.ts`) puts the same
+middleware in front of `dist/`. Every browser test fails on a
+`securitypolicyviolation` event or a console error about the policy, and
+`e2e/browser/policy.spec.ts` covers the sign-in page and the two hand-offs to
+another site. The Vite dev server (`bun run dev:fixture`) sends no policy,
+because hot reload needs inline and evaluated script, so a violation shows in
+`bun run test:e2e` and not in development.
+
+Anything in front of Media that rewrites pages to add script is refused by the
+same policy. Behind Cloudflare that means Rocket Loader, email address
+obfuscation, and Web Analytics injection stay off for this host.
 
 ### Native subtitle tools
 
