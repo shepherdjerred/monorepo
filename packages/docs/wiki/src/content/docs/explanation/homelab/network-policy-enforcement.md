@@ -152,10 +152,38 @@ Traffic that the node itself originates as root bypasses the agent. Kubelet
 probes are the important case. A policy that forgets the kubelet does not make
 a pod unready.
 
+The bypass goes by the sending socket's owner, not by the address. It is the
+agent's
+[`meta skuid 0 accept` rule](https://github.com/kubernetes-sigs/kube-network-policies/blob/v1.1.2/pkg/dataplane/controller.go#L682-L698).
+A host process that runs as another user is checked like any client. It
+arrives from the node's address on the pod bridge, `10.244.0.1` on torvalds,
+and needs an `ipBlock` rule for that address.
+
+Kubelet probes still appear in the agent's log as connections from
+`10.244.0.1` to the probe port. In an enforced namespace some of those packets
+are dropped while the pod stays Ready. The probe's own packets match the
+bypass; only stray packets of the connection reach the agent.
+
+The agent also
+[re-checks established connections](https://github.com/kubernetes-sigs/kube-network-policies/blob/v1.1.2/pkg/dataplane/controller.go#L375-L455)
+at most every 30 seconds, logged with packet `id=0`. A failed re-check drops
+nothing by itself: it clears the connection's accept mark, so the agent
+decides its next queued packet again. The re-check
+[builds its packet from the connection-tracking entry](https://github.com/kubernetes-sigs/kube-network-policies/blob/v1.1.2/pkg/dataplane/conntrack.go#L23-L50),
+and entries outlive the pods that made them. A departed pod's entry is named
+after whichever pod now holds its address. A replay of the log has to set
+those lines, and the probe ones, apart from real traffic.
+
 A pod on the host network shares the node's network namespace, so no policy
-selects it. Home Assistant and Scrypted run that way. A policy in their
-namespace governs only the pod-network pods beside them. Their own connections
-carry the node's address, which no namespace or pod selector matches.
+selects it: the agent leaves host-network pods out of
+[its address index](https://github.com/kubernetes-sigs/kube-network-policies/blob/v1.1.2/pkg/podinfo/ipresolver.go#L30-L41).
+Home Assistant and Scrypted run that way. A policy in their namespace governs
+only the pod-network pods beside them. Their own connections carry the node's
+address, which no namespace or pod selector matches. Home Assistant's
+websockets to zwave-js-ui and eufy-security-ws arrive from torvalds' LAN
+address, so
+[the `home` chart](packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts) admits
+that address on port 3000.
 
 The reverse case matters for `ipBlock` rules. A client that reaches a pod
 through a `hostPort`, or a NodePort Service with

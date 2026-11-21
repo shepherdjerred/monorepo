@@ -36,6 +36,13 @@ export const PROD_NODE_HOSTNAME = "torvalds";
  * the kube-prometheus-stack `kubeEtcd.endpoints` value points at.
  */
 export const PROD_NODE_INTERNAL_IP = "100.102.88.88";
+
+/**
+ * torvalds' home-LAN address (a DHCP reservation in the asuswrt OpenTofu
+ * stack). Host-network pods on torvalds, such as Home Assistant, reach pod
+ * Services from this address.
+ */
+export const PROD_NODE_LAN_IP = "192.168.1.81";
 export const CI_NODE_HOSTNAME = "liskov";
 export const CI_TAINT_KEY = "ci";
 export const CI_TAINT_VALUE = "only";

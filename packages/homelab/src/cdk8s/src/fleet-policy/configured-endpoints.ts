@@ -109,6 +109,14 @@ export const CODE_DEFAULT_ENDPOINTS: readonly CodeDefaultEndpoint[] = [
     source: "packages/temporal/src/observability/tracing.ts",
     enabled: (env) => env.get("TELEMETRY_ENABLED") === "true",
   },
+  {
+    // The Delivery workers run the same `packages/temporal` worker code.
+    image: "delivery-control-plane",
+    env: "LOKI_OTLP_ENDPOINT",
+    value: LOKI_OTLP_LOGS,
+    source: "packages/temporal/src/observability/tracing.ts",
+    enabled: (env) => env.get("TELEMETRY_ENABLED") === "true",
+  },
 ];
 
 /** The Delivery image name a rendered first-party image reference carries. */

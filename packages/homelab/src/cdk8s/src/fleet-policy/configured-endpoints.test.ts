@@ -205,7 +205,7 @@ describe("code default endpoints", () => {
   });
 
   test.each(CODE_DEFAULT_ENDPOINTS)(
-    "$source still defaults $env to $value",
+    "$image: $source still defaults $env to $value",
     async ({ source, value }) => {
       const text = await Bun.file(`${REPOSITORY_ROOT}${source}`).text();
       expect(text).toContain(`"${value}"`);

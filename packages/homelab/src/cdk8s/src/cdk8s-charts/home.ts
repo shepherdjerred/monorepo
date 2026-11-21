@@ -16,6 +16,7 @@ import {
   tailscaleIngressRule,
   cloudflareTunnelIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { PROD_NODE_LAN_IP } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 export async function createHomeChart(app: App) {
   const chart = new Chart(app, "home", {
@@ -82,6 +83,36 @@ export async function createHomeChart(app: App) {
     },
   });
 
+  // NetworkPolicy: Home Assistant's Z-Wave JS and Eufy Security integrations
+  // hold websockets to zwave-js-ui and eufy-security-ws on 3000. Home
+  // Assistant runs on the host network, so those connections arrive from the
+  // node's LAN address, not from a pod. kube-network-policies skips queueing
+  // packets from root-owned host sockets, which is what lets them through
+  // today; this rule keeps them allowed without depending on the uid Home
+  // Assistant runs as, and stops the enforcer's periodic re-evaluation of
+  // established connections from flagging them.
+  new KubeNetworkPolicy(chart, "home-assistant-websocket-ingress-policy", {
+    metadata: { name: "home-assistant-websocket-ingress-policy" },
+    spec: {
+      podSelector: {
+        matchExpressions: [
+          {
+            key: "app",
+            operator: "In",
+            values: ["zwave-js-ui", "eufy-security-ws"],
+          },
+        ],
+      },
+      policyTypes: ["Ingress"],
+      ingress: [
+        {
+          from: [{ ipBlock: { cidr: `${PROD_NODE_LAN_IP}/32` } }],
+          ports: [tcp(3000)],
+        },
+      ],
+    },
+  });
+
   // NetworkPolicy: Allow eufy-security-ws egress to DNS and external (Eufy cloud + P2P)
   new KubeNetworkPolicy(chart, "eufy-security-ws-egress-policy", {
     metadata: { name: "eufy-security-ws-egress-policy" },
@@ -99,6 +130,13 @@ export async function createHomeChart(app: App) {
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [tcp(5228)],
+        },
+        // Station and device events also arrive over Eufy's MQTT broker
+        // (TLS on 8789, security-mqtt-*.anker.com), a long-lived connection
+        // from eufy-security-client. Anker publishes no fixed range for it.
+        {
+          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
+          ports: [tcp(8789)],
         },
         // Allow all UDP egress (any port, any destination) for Eufy P2P.
         // Eufy stations perform NAT traversal with dynamic ephemeral ports on
