@@ -545,6 +545,7 @@ COPY --parents \
   packages/homelab/scripts/argocd/argocd-child-sync-timeout.ts \
   packages/homelab/scripts/argocd/argocd-delivery-recovery.ts \
   packages/homelab/scripts/argocd/argocd-ignored-differences.ts \
+  packages/homelab/scripts/argocd/argocd-media-ingress-prunes.ts \
   packages/homelab/scripts/argocd/argocd-manifest-overrides.ts \
   packages/homelab/scripts/argocd/argocd-release-result.ts \
   packages/homelab/scripts/argocd/argocd-release-scheduling.ts \

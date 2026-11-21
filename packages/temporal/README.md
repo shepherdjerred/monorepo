@@ -25,6 +25,14 @@ using the guarded sync command. Any other obsolete resource, including a PVC,
 fails the release. Deploy this executor before selecting the hostname-removal
 chart; root reconciliation preserves delegated Arcade selection.
 
+The Media cutover's owned Argo sync can prune only its seven legacy Tailscale
+Ingresses. The frozen chart must stop the nine legacy writers and route Seerr
+to Media. The guarded sync rechecks the Application UID, exact source, and
+obsolete resource UIDs before submitting the operation. Acceptance requires
+the owned operation to settle Synced and Healthy with the legacy Ingresses
+gone from the refreshed managed inventory. Deploy this executor before
+selecting the Media cutover chart.
+
 Credential grooming uses the same guarded owned sync for the retired Recyclarr,
 ChartMuseum CI and Minecraft provider `OnePasswordItem` bindings. It requires
 their exact canonical replacements in the frozen chart and rechecks native
