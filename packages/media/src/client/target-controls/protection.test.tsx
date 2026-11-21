@@ -45,7 +45,7 @@ test.each([true, false])(
     );
     expect(html).toContain("Cancel request");
     expect(html.includes("Keep for 30 days")).toBe(effective);
-    expect(html).toContain("library details unavailable");
+    expect(html).toContain("Your request for it still stands");
     for (const forbidden of [
       "Restore to library",
       "Select release",

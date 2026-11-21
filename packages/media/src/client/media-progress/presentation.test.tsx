@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { MediaVisibility } from "#shared/visibility/detail.ts";
-import { MovieFulfillment } from "#client/movie-editions/fulfillment.tsx";
+import { movieFulfillmentLabel } from "#client/movie-editions/presentation.ts";
 import { MediaProgress } from "./panel.tsx";
 import { policyDescription } from "./presentation.ts";
 
@@ -236,18 +236,15 @@ test("verified household playback does not fulfill a personal request with no ed
       },
     },
   ];
-  const html = renderToStaticMarkup(
-    <>
-      <MediaProgress visibility={value} />
-      <MovieFulfillment requests={value.movieRequests} />
-    </>,
-  );
+  const html = renderToStaticMarkup(<MediaProgress visibility={value} />);
   expect(html).toContain("Ready to watch");
-  expect(html).toContain("Edition not selected");
-  expect(html).toContain("Your request remains protected");
-  expect(html).not.toContain("Selected edition fulfilled");
   expect(html).not.toContain(assetId);
   expect(html).not.toContain(requestId);
+  const [request] = value.movieRequests;
+  if (request === undefined) throw new Error("The fixture lost its request");
+  const label = movieFulfillmentLabel(request.fulfillment);
+  expect(label).toContain("Your request is kept until you choose");
+  expect(label).not.toContain("Ready to watch in the version");
 });
 
 test("work before a torrent exists still exposes its acquisition phase", () => {

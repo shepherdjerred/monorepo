@@ -28,21 +28,13 @@ export function readMovieContextV4(mediaId: string, subjectUserId: string) {
 export function movieRequestV4(
   context: MovieEditionContextV4,
   edition: MovieEditionKey,
-  languages: string,
+  languages: readonly string[],
   keepingPolicy?: "keep" | "temporary",
 ): MovieRequestV4 {
   const selected = context.options.find((option) => option.edition === edition);
   if (selected === undefined)
     throw new Error("Choose an edition from the current options.");
-  const subtitleLanguages = z
-    .array(LanguageSchema)
-    .max(20)
-    .parse(
-      languages
-        .split(",")
-        .map((value) => value.trim())
-        .filter((value) => value.length > 0),
-    );
+  const subtitleLanguages = z.array(LanguageSchema).max(20).parse(languages);
   return MovieRequestV4Schema.parse({
     schemaVersion: 4,
     mediaId: context.mediaId,

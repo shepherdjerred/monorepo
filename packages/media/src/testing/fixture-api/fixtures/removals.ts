@@ -110,6 +110,24 @@ export function leavingSoon(title: Title): {
   return null;
 }
 
+/** The newest removal decision of a title, in whatever state it is in. */
+export function removalOf(title: Title): {
+  state: string;
+  graceUntil: string | null;
+  purgeAfter: string | null;
+} | null {
+  const seed = REMOVALS.find(([name]) => name === title.title);
+  if (seed === undefined) {
+    return null;
+  }
+  const [, state, graceDays, purgeDays] = seed;
+  return {
+    state,
+    graceUntil: graceDays === null ? null : ahead(graceDays * DAY),
+    purgeAfter: purgeDays === null ? null : ahead(purgeDays * DAY),
+  };
+}
+
 /**
  * The owner sees every removal. A member sees every title that has not left
  * yet, whoever asked for it, and a quarantined one only when they asked for

@@ -30,7 +30,7 @@ export function requestKeepingPolicy(
     if (requested === "keep")
       throw new MediaError(
         "owner_required",
-        "Only the owner can keep media indefinitely",
+        "Only the owner can keep a title for good",
         403,
       );
     // Repeating a member request cannot revoke a permanent Keep granted by
@@ -44,7 +44,7 @@ export function requestKeepingPolicy(
     return prior.keepingPolicy;
   throw new MediaError(
     "keeping_policy_required",
-    "Choose Keep indefinitely or Temporary for this request",
+    "Choose Keep for good or Just for now for this request",
     422,
   );
 }

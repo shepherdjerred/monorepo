@@ -101,8 +101,7 @@ export function useMovieLifecycleCommandV4(actorId: string) {
   const mutation = useMutation({
     mutationFn: (input: MovieLifecycleCommandV4) =>
       writeMovieLifecycleV4(actorId, input),
-    onSuccess: (_result: unknown, input: MovieLifecycleCommandV4) =>
-      invalidateMovieTargetV4(input.scope.mediaId),
+    onSuccess: (_result, input) => invalidateMovieTargetV4(input.scope.mediaId),
   });
   const unresolved = movieLifecycleRetryV4(mutation);
   return {

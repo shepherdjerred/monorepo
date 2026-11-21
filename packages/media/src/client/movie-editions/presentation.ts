@@ -5,31 +5,32 @@ import type {
 
 export const movieEditionReasons: Record<MovieEditionReason, string> = {
   movie_edition_choice_required:
-    "Choose an edition. Your request remains protected until you choose or cancel it.",
+    "Choose a version. Your request is kept until you choose one or cancel it.",
   movie_edition_choice_changed:
-    "Your edition choice changed. Review the current request before trying again.",
+    "Your choice of version changed. Look at the request again before trying.",
   edition_acquisition_not_ready:
-    "Waiting for the requested edition. A different cut does not fulfill this request.",
+    "Waiting for the version you asked for. A different cut of the film does not count.",
   movie_edition_asset_unavailable:
-    "Waiting for a verified copy of your selected edition.",
+    "Waiting for a checked copy of the version you asked for.",
   movie_edition_asset_mismatch:
-    "The current copy has not been verified as your selected edition.",
+    "The copy in the library has not been checked to be the version you asked for.",
   edition_definition_conflict:
-    "The edition definition needs owner review before this request can proceed.",
+    "The owner needs to look at this version before the request can go ahead.",
   lineage_unresolved:
-    "The movie's existing target needs owner review before downloads can proceed.",
-  requests_restricted: "Requests are currently paused for this account.",
+    "The owner needs to look at the film’s existing copy before anything is downloaded.",
+  requests_restricted: "Requests are paused for this account.",
   plex_library_access_required:
-    "Current movie-library access is required to choose or download an edition.",
+    "Access to the film library in Plex is needed to choose or get a version.",
   plex_scope_unconfigured:
-    "Movie-library access has not been configured. The library owner needs to finish setup.",
+    "The film library is not set up yet. The library owner needs to finish that.",
   edition_candidate_incompatible:
-    "The release's cut does not match the selected edition.",
+    "The release is a different cut from the version asked for.",
   edition_evidence_ambiguous:
-    "The release's edition is unclear and needs review.",
-  edition_evidence_conflict: "The release has conflicting edition information.",
+    "It is not clear which cut the release is, so the owner needs to look.",
+  edition_evidence_conflict:
+    "The release says two different things about which cut it is.",
   edition_current_requires_classification:
-    "The current copy has named-cut evidence and needs classification before replacement.",
+    "The copy in the library looks like a named cut. The owner needs to say which before it is replaced.",
 };
 
 export function movieEditionReason(reason: MovieEditionReason): string {
@@ -39,8 +40,10 @@ export function movieEditionReason(reason: MovieEditionReason): string {
 export function movieFulfillmentLabel(
   fulfillment: MovieEditionFulfillment,
 ): string {
-  if (fulfillment.status === "fulfilled") return "Selected edition fulfilled.";
+  if (fulfillment.status === "fulfilled") {
+    return "Ready to watch in the version you asked for.";
+  }
   return fulfillment.status === "not_applicable"
-    ? "Not a movie edition request."
+    ? "This request does not ask for a version."
     : movieEditionReason(fulfillment.reason);
 }

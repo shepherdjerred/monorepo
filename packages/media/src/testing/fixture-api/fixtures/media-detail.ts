@@ -17,6 +17,7 @@ import {
 } from "#testing/fixture-api/personas.ts";
 import { PROFILE_IDS } from "./profiles.ts";
 import { libraryKeeping, libraryPolicy } from "./library.ts";
+import { leavingSoon, removalOf } from "./removals.ts";
 import { requestInterest, requestList } from "./requests.ts";
 import {
   DAY,
@@ -28,8 +29,8 @@ import {
 } from "#testing/fixture-api/support.ts";
 import {
   FEATURED,
+  ownerKeeps,
   resolveMedia,
-  titleNamed,
   type ResolvedMedia,
 } from "./titles.ts";
 import { assetId, mediaVisibility } from "./visibility.ts";
@@ -215,10 +216,18 @@ function holds(
   persona: Persona,
 ): MediaDetail["holds"] {
   const { item, title } = resolved;
-  if (title === FEATURED.movie) {
-    return [
-      { id: fixtureId(9, 7001), userId: OWNER.id, until: null, isPin: true },
-    ];
+  if (ownerKeeps(title) && item.id === title.id) {
+    // A member reads only their own holds, and this one is the owner's.
+    return persona === "owner"
+      ? [
+          {
+            id: fixtureId(9, 7000 + title.index),
+            userId: OWNER.id,
+            until: null,
+            isPin: true,
+          },
+        ]
+      : [];
   }
   if (title === FEATURED.series && item.kind === "series") {
     return [
@@ -247,18 +256,11 @@ function retention(resolved: ResolvedMedia): MediaDetail["retention"] {
       },
     ];
   }
-  if (title === titleNamed("The Expanse")) {
-    return [
-      {
-        id,
-        state: "grace_period",
-        graceUntil: ahead(3 * DAY),
-        purgeAfter: null,
-        version: 1,
-      },
-    ];
-  }
-  return [];
+  // A removal is decided for the title, not for its seasons and episodes.
+  const removal = item.id === title.id ? removalOf(title) : null;
+  return removal === null || removal.state === "quarantined"
+    ? []
+    : [{ id, ...removal, version: 1 }];
 }
 
 function requesters(
@@ -385,11 +387,16 @@ function protectiveActions(viewer: {
   owner: boolean;
   pinned: boolean;
   requested: boolean;
+  leaving: boolean;
 }): DefaultTarget["allowedProtectiveActions"] {
   if (viewer.owner) {
     return ["keep", viewer.pinned ? "unpin" : "pin", "cancel_request"];
   }
-  return viewer.requested ? ["keep", "cancel_request"] : ["keep"];
+  if (viewer.requested) {
+    return ["keep", "cancel_request"];
+  }
+  // Anyone may hold a title that is leaving soon, whoever asked for it.
+  return viewer.leaving ? ["keep"] : [];
 }
 
 /** The protective controls for a title's unmarked edition. */
@@ -414,8 +421,9 @@ export function defaultTarget(
     ownRequests,
     allowedProtectiveActions: protectiveActions({
       owner,
-      pinned: title === FEATURED.movie && owner,
+      pinned: owner && ownerKeeps(title) && item.id === title.id,
       requested: ownRequests.some((request) => request.active),
+      leaving: item.id === title.id && leavingSoon(title) !== null,
     }),
   } as const;
   if (title === FEATURED.protectionOnly) {

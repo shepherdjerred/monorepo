@@ -1,0 +1,140 @@
+@layer components {
+  .question {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .choice {
+    display: grid;
+  }
+  .legend {
+    display: block;
+    padding: 0;
+    margin-bottom: var(--space-2);
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .hint {
+    margin: 0 0 var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .choice .hint {
+    margin: var(--space-2) 0 0;
+  }
+  .select {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--field);
+    color: var(--text);
+  }
+  .select:focus-visible {
+    outline-offset: 2px;
+  }
+
+  .options {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--field);
+    cursor: pointer;
+  }
+  .option:has(input:checked) {
+    border-color: var(--accent-strong);
+    background: var(--surface-selected);
+  }
+  .option:has(input:focus-visible) {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .option input {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    accent-color: var(--accent-strong);
+  }
+  .option input:focus-visible {
+    outline: none;
+  }
+  .optionLabel {
+    display: block;
+    font-weight: 600;
+  }
+  .optionDetail {
+    display: block;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .ticks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    column-gap: var(--space-4);
+  }
+  .tick {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 40px;
+    cursor: pointer;
+  }
+  .tick input {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+  }
+  .tick input:focus-visible {
+    outline-offset: 2px;
+  }
+  .tick:has(input:disabled) {
+    color: var(--text-muted);
+    cursor: default;
+  }
+  .more {
+    margin-top: var(--space-1);
+    font-size: inherit;
+    color: inherit;
+  }
+  .more > summary {
+    padding: var(--space-2) 0;
+    color: var(--text-accent);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .more > summary:focus-visible {
+    outline-offset: 2px;
+  }
+
+  .note {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-control);
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .problem {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+    border-radius: var(--radius-control);
+    background: var(--danger-soft);
+    color: var(--danger);
+    font-size: var(--text-sm);
+  }
+}

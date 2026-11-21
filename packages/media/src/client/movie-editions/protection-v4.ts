@@ -22,10 +22,16 @@ type ProtectionResult = {
   variables: MovieProtectionSubmission | undefined;
 };
 
+/** What a cancellation or revocation names of the request it acts on. */
+type ProtectedRequest = Pick<
+  MovieEditionRequestView,
+  "scope" | "requestId" | "targetVersion" | "requestVersion" | "choiceRevision"
+>;
+
 export function movieProtectionSubmission(input: {
   actorId: string;
   subjectUserId: string;
-  request: MovieEditionRequestView;
+  request: ProtectedRequest;
   action: "cancel_request" | "revoke_choice";
 }): MovieProtectionSubmission {
   const { request, action } = input;

@@ -82,6 +82,35 @@ export async function openAs(page: Page, persona: Persona, path: string) {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 }
 
+/** Opens `path` as a persona and waits until everything on it has loaded. */
+export async function openSettled(page: Page, persona: Persona, path: string) {
+  await openAs(page, persona, path);
+  await page.waitForLoadState("networkidle");
+  await expect(
+    page.getByRole("status").filter({ hasText: "Loading" }),
+  ).toHaveCount(0);
+}
+
+/**
+ * Gives the page the CSRF cookie a signed-in session has. The fixture API is
+ * read-only, so a test that sends a command also answers it with
+ * `page.route`.
+ */
+export async function allowWrites(page: Page) {
+  await page
+    .context()
+    .addCookies([
+      { name: "media-csrf", value: "browser-test", url: page.url() },
+    ]);
+}
+
+/** How far the page scrolls sideways; zero when it fits its viewport. */
+export async function horizontalOverflow(page: Page): Promise<number> {
+  return page
+    .locator("html")
+    .evaluate((root) => root.scrollWidth - root.clientWidth);
+}
+
 /**
  * Everything a page can do wrong without failing an assertion on its text.
  * Content-Security-Policy violations are watched for every test, by the

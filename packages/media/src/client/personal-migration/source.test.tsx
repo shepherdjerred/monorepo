@@ -26,10 +26,11 @@ test("fulfilled imported requests explain source fulfillment separately from vie
       <ImportedRequestSource claim={claim} viewerUserId={claim.userId} />
     </MemoryRouter>,
   );
-  expect(html).toContain("Fulfilled at import");
+  expect(html).toContain("It was fulfilled there.");
+  expect(html).not.toContain("·");
   expect(html).toContain("Your viewing progress is tracked separately");
   expect(html).toContain(`href="/media/${claim.mediaId}"`);
-  expect(html).toContain("Choose a movie edition");
+  expect(html).toContain("Choose a version");
   expect(html).not.toContain("Watched");
 });
 test("a different account is told to await requester consent and cannot impersonate that choice", () => {

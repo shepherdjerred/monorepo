@@ -1,0 +1,104 @@
+@layer components {
+  .root {
+    position: relative;
+  }
+  .trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    border-radius: var(--radius-control);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .trigger svg {
+    flex: none;
+    width: 18px;
+    height: 18px;
+  }
+  .trigger:focus-visible {
+    outline-offset: 2px;
+  }
+  /* The overflow button: an icon with a boundary, beside the main action. */
+  .quiet {
+    min-width: 44px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text);
+  }
+  .quiet:hover:not(:disabled),
+  .quiet[aria-expanded="true"] {
+    background: var(--surface-selected);
+  }
+  /* Where the reader stands: filled, quieter than a call to act. */
+  .standing {
+    width: 100%;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--ok);
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .standing:hover:not(:disabled),
+  .standing[aria-expanded="true"] {
+    background: color-mix(in srgb, var(--ok) 12%, var(--ok-soft));
+  }
+
+  .list {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    inset-inline-start: 0;
+    z-index: 10;
+    display: grid;
+    gap: 2px;
+    width: max-content;
+    min-width: 100%;
+    max-width: min(320px, calc(100vw - 2 * var(--shell-gutter)));
+    margin: 0;
+    padding: var(--space-2);
+    list-style: none;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raised);
+  }
+  /* `display: grid` would otherwise show a hidden list. */
+  .list[hidden] {
+    display: none;
+  }
+  @media (max-width: 760px) {
+    .endOnPhone {
+      inset-inline: auto 0;
+    }
+  }
+  .item {
+    display: grid;
+    width: 100%;
+    min-height: 44px;
+    align-content: center;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text);
+    font-size: var(--text-md);
+    text-align: start;
+  }
+  .item:hover {
+    background: var(--surface-selected);
+  }
+  .item:focus-visible {
+    outline-offset: -3px;
+  }
+  .itemLabel {
+    font-weight: 600;
+  }
+  .itemDetail {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    white-space: normal;
+  }
+}

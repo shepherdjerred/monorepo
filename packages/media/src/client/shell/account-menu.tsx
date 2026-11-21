@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from "react";
+import { useId, useState } from "react";
 import {
   BellIcon,
   LogOutIcon,
@@ -12,6 +12,7 @@ import { Link, useLocation } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { chooseTheme, useThemeChoice, type ThemeChoice } from "./theme.ts";
 import { classNames } from "#client/ui/class-names.ts";
+import { useDismissal } from "#client/ui/use-dismissal.ts";
 import styles from "./account-menu.module.css";
 
 const cx = classNames(styles);
@@ -57,35 +58,7 @@ export function AccountMenu({
     setOpen(false);
   }
 
-  // While the panel is open, the document is watched for the ways out of
-  // it. React runs the ref again, and its cleanup, each time `open` changes.
-  const dismissal = useCallback(
-    (root: HTMLDivElement | null) => {
-      if (root === null || !open) return;
-      const outside = (target: EventTarget | null) =>
-        target instanceof Node && !root.contains(target);
-      const onPress = (event: PointerEvent) => {
-        if (outside(event.target)) setOpen(false);
-      };
-      const onFocus = (event: FocusEvent) => {
-        if (outside(event.target)) setOpen(false);
-      };
-      const onKey = (event: KeyboardEvent) => {
-        if (event.key !== "Escape") return;
-        setOpen(false);
-        root.querySelector("button")?.focus();
-      };
-      document.addEventListener("pointerdown", onPress);
-      document.addEventListener("focusin", onFocus);
-      document.addEventListener("keydown", onKey);
-      return () => {
-        document.removeEventListener("pointerdown", onPress);
-        document.removeEventListener("focusin", onFocus);
-        document.removeEventListener("keydown", onKey);
-      };
-    },
-    [open],
-  );
+  const dismissal = useDismissal(open, setOpen);
 
   return (
     <div className={cx("root")} ref={dismissal}>

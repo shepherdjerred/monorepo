@@ -1,0 +1,133 @@
+@layer pages {
+  /* Not clipped as a whole: the action menu opens over the card's edge. */
+  .hero {
+    margin-bottom: var(--space-6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+
+  /* A band of fixed height: the picture fills it and moves nothing. */
+  .backdrop {
+    position: relative;
+    height: clamp(132px, 19vw, 248px);
+    overflow: hidden;
+    border-radius: calc(var(--radius-card) - 1px) calc(var(--radius-card) - 1px)
+      0 0;
+    background: linear-gradient(
+      120deg,
+      var(--art-pine-700),
+      var(--art-pine-900) 55%,
+      var(--art-clay-500)
+    );
+  }
+  .backdropImage {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 25%;
+  }
+  /* The foot of the picture settles into the card it sits on. */
+  .backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 45%,
+      color-mix(in srgb, var(--surface) 88%, transparent)
+    );
+  }
+
+  .content {
+    display: grid;
+    grid-template-columns: 176px minmax(0, 1fr);
+    grid-template-areas:
+      "poster head"
+      "poster body";
+    column-gap: var(--space-5);
+    padding: 0 var(--space-5) var(--space-5);
+  }
+  .poster {
+    grid-area: poster;
+    position: relative;
+    align-self: start;
+    margin-top: -92px;
+    border-radius: var(--radius-poster);
+    box-shadow: var(--shadow-raised);
+  }
+  .head {
+    grid-area: head;
+    min-width: 0;
+    padding-top: var(--space-4);
+  }
+  .body {
+    grid-area: body;
+    min-width: 0;
+  }
+
+  .trail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-2);
+    margin: 0 0 var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .trail a {
+    color: var(--text-accent);
+    font-weight: 600;
+  }
+  .trail a:hover {
+    text-decoration: underline;
+  }
+  .title {
+    margin: 0 0 var(--space-3);
+    overflow-wrap: anywhere;
+  }
+  .title:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 4px;
+    border-radius: 2px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    list-style: none;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .overview {
+    max-width: 68ch;
+    margin: 0 0 var(--space-5);
+  }
+
+  @media (max-width: 760px) {
+    .content {
+      grid-template-columns: 104px minmax(0, 1fr);
+      grid-template-areas:
+        "poster head"
+        "body body";
+      column-gap: var(--space-4);
+      padding: 0 var(--space-4) var(--space-4);
+    }
+    .poster {
+      margin-top: -52px;
+    }
+    .head {
+      padding-top: var(--space-3);
+    }
+    .title {
+      font-size: var(--text-2xl);
+      letter-spacing: -0.035em;
+    }
+    .body {
+      padding-top: var(--space-3);
+    }
+  }
+}
