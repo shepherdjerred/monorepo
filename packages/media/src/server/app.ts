@@ -74,6 +74,7 @@ import { registerRemovalHistoryRoutes } from "./household/removals.ts";
 import type { PrismaCalendarApplication } from "#infrastructure/library/views/calendar.ts";
 import type { PrismaRemovalHistoryApplication } from "#infrastructure/library/views/removals.ts";
 import { registerLibraryRoutes } from "./household/library.ts";
+import { registerArtworkRoutes } from "./household/artwork.ts";
 import { registerCatalogRoutes } from "./catalog/routes.ts";
 import type { PrismaLibraryApplication } from "#infrastructure/library/views/library.ts";
 import {
@@ -88,6 +89,7 @@ import {
   readCookie,
   CancelSchema,
   RestrictSchema,
+  mediaErrorResponse,
 } from "./validation.ts";
 import type { NotificationApplication } from "#application/notification-ports.ts";
 import {
@@ -105,6 +107,7 @@ export type MediaAppDependencies = {
   calendar?: Pick<PrismaCalendarApplication, "list">;
   removalHistory?: Pick<PrismaRemovalHistoryApplication, "list">;
   library?: Pick<PrismaLibraryApplication, "list">;
+  artwork?: Parameters<typeof registerArtworkRoutes>[1];
   requestInterests?: RequestInterestApplication;
   qualityGuide?: Parameters<typeof registerQualityGuideRoutes>[1];
   movieLifecycle?: MovieLifecycleApplicationV4;
@@ -164,23 +167,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
       void notifyCommittedWrite(dependencies, id);
     }
   });
-  app.onError((error, c) => {
-    if (error instanceof MediaError)
-      return c.json(
-        { error: { code: error.code, message: error.message } },
-        error.status,
-      );
-    dependencies.onError(error, c.get("requestId"));
-    return c.json(
-      {
-        error: {
-          code: "internal_error",
-          message: "The operation failed; use the request ID for investigation",
-        },
-      },
-      500,
-    );
-  });
+  app.onError(mediaErrorResponse(dependencies.onError));
   app.get("/health", (c) => c.json({ status: "ok" }));
   registerPlexEventRoutes(app, dependencies.plexEvents, dependencies.onError);
 
@@ -256,6 +243,8 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
     registerRemovalHistoryRoutes(app, dependencies.removalHistory);
   if (dependencies.library !== undefined)
     registerLibraryRoutes(app, dependencies.library);
+  if (dependencies.artwork !== undefined)
+    registerArtworkRoutes(app, dependencies.artwork);
   if (dependencies.requestInterests !== undefined)
     registerRequestInterestRoutes(app, dependencies.requestInterests);
   if (dependencies.qualityGuide !== undefined)

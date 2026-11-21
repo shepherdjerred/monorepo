@@ -15,6 +15,8 @@ export const BootstrapSchema = z
     DISCORD_CLIENT_ID: z.string().min(1).optional(),
     DISCORD_CLIENT_SECRET: z.string().min(1).optional(),
     PUBLIC_ORIGIN: z.url(),
+    /** Mount point of the persistent artwork cache volume. */
+    MEDIA_ARTWORK_CACHE_DIR: z.string().startsWith("/"),
     TEMPORAL_ADDRESS: z.string().min(1),
     TEMPORAL_NAMESPACE: z.string().min(1),
     HOST: z.string().default("0.0.0.0"),
@@ -143,6 +145,16 @@ export function mediaBehaviorConfig(
         default: "2",
         names: { flag: "media-permitted-tv-section-id" },
       },
+      artworkCacheMaxBytes: {
+        schema: z.coerce
+          .number()
+          .int()
+          .min(64 * 1024 * 1024)
+          .max(1024 * 1024 * 1024 * 1024),
+        sources: ["flag", "default"],
+        default: 3 * 1024 * 1024 * 1024,
+        names: { flag: "media-artwork-cache-max-bytes" },
+      },
     },
     sources: {
       flag: createFlagConfigSource({
@@ -167,6 +179,7 @@ export function mediaBehaviorConfig(
           emailSender: "string",
           permittedMovieSectionId: "string",
           permittedTvSectionId: "string",
+          artworkCacheMaxBytes: "string",
         },
       }),
     },

@@ -109,6 +109,7 @@ async function startDisposableSmokePostgres(): Promise<{
 const database = await startDisposableSmokePostgres();
 const port = await allocateEphemeralPort();
 const origin = `http://127.0.0.1:${String(port)}`;
+const artworkCache = await mkdtemp(path.join(tmpdir(), "media-smoke-artwork-"));
 const server = Bun.spawn(["bun", "src/server/index.ts"], {
   cwd: packageRoot,
   env: {
@@ -121,6 +122,7 @@ const server = Bun.spawn(["bun", "src/server/index.ts"], {
     PLEX_OWNER_ACCOUNT_ID: "image-smoke-owner",
     TMDB_TOKEN: "image-smoke-placeholder",
     PUBLIC_ORIGIN: origin,
+    MEDIA_ARTWORK_CACHE_DIR: artworkCache,
     HOST: "127.0.0.1",
     PORT: String(port),
     ENVIRONMENT: "test",
@@ -174,4 +176,5 @@ try {
   const diagnostics = `${await output}\n${await errors}`.trim();
   if (diagnostics.length > 0) console.error(diagnostics);
   await database.close();
+  await rm(artworkCache, { recursive: true, force: true });
 }

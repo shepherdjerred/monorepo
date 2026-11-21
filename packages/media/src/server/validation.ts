@@ -1,4 +1,6 @@
+import type { ErrorHandler } from "hono";
 import { z } from "zod";
+import type { MediaActor } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 
 export const CancelSchema = z.strictObject({
@@ -40,4 +42,31 @@ export function readCookie(request: Request, name: string): string | undefined {
       return entry.slice(separator + 1).trim();
   }
   return undefined;
+}
+
+/**
+ * The application's error contract: a `MediaError` is an expected outcome and
+ * is returned as its code and status; anything else is reported with the
+ * request ID and answered without detail.
+ */
+export function mediaErrorResponse(
+  onError: (error: Error, requestId: string) => void,
+): ErrorHandler<{ Variables: { actor: MediaActor; requestId: string } }> {
+  return (error, c) => {
+    if (error instanceof MediaError)
+      return c.json(
+        { error: { code: error.code, message: error.message } },
+        error.status,
+      );
+    onError(error, c.get("requestId"));
+    return c.json(
+      {
+        error: {
+          code: "internal_error",
+          message: "The operation failed; use the request ID for investigation",
+        },
+      },
+      500,
+    );
+  };
 }

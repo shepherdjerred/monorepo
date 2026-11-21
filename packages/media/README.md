@@ -205,6 +205,59 @@ access was not verified within the last five minutes, so every `library` is
 `null` without meaning "not in the library"; the same condition makes
 `GET /api/v1/library` answer 403 `plex_library_access_required`.
 
+## Artwork route
+
+Browsers never contact TMDB. `GET /api/v1/artwork/:size/:file` serves a TMDB
+image from the Media origin to a signed-in member, and keeps the bytes on a
+persistent volume so the cache survives a deploy and keeps serving while TMDB
+is unreachable.
+
+| Part     | Contract                                                                |
+| -------- | ----------------------------------------------------------------------- |
+| `size`   | `w185`, `w342`, `w500`, `w780` or `w1280`; there is no `original`.      |
+| `file`   | 8 to 64 ASCII letters or digits, then `.jpg` or `.png`; never SVG.      |
+| Upstream | Always `https://image.tmdb.org/t/p/<size>/<file>`, with no credential.  |
+| `200`    | The image, with `Content-Type` and `Content-Length`.                    |
+| `400`    | `invalid_input`: the size or file name is outside the contract.         |
+| `404`    | `artwork_not_found`: TMDB has no such image.                            |
+| `502`    | `artwork_unavailable`: not cached, and TMDB could not supply the image. |
+
+The allow-list and file pattern live in
+[`src/shared/household/artwork.ts`](src/shared/household/artwork.ts). A success carries
+`Cache-Control: private, max-age=31536000, immutable`: `private` so a shared
+cache in front of the origin does not store an image that is only served
+behind a session. Every error keeps the application's `no-store`.
+
+An upstream response is accepted only when it is a `200` of at most 4 MiB whose
+content type is `image/jpeg` or `image/png`, matches the file extension, and
+whose leading bytes carry that format's signature. A redirect, any other status
+or type, an oversized body, a timeout (30 seconds) and a rate limit are all
+failures and are never passed through, so the route cannot be used to reach
+another host or to serve other content. A `404` is remembered in memory for ten
+minutes (at most 1024 file names; an entry expires when it is next read).
+
+The cache directory is `MEDIA_ARTWORK_CACHE_DIR`, a required bootstrap
+setting: the API refuses to start when the directory is missing or not
+writable instead of caching somewhere that does not persist. Files are stored
+as `<directory>/<size>/<file>`, written to a temporary file in the same
+directory, synced and renamed, and never expire, because a TMDB file name
+always names the same bytes. The cap is the `media-artwork-cache-max-bytes`
+flag (3 GiB by default, read when the API starts); a write that takes the
+cache past it evicts the least recently used files. Recency is held in an
+in-memory index built from one directory scan at first use, ordered by file
+modification time, so a hit never writes to disk and a restart falls back to
+oldest-written-first. Nothing runs on a timer.
+
+A cached file is served whatever state TMDB is in. A cached file that is
+missing, empty or does not start with its format's signature is logged
+(`media_artwork_cache_corrupt`), removed and fetched again rather than served.
+Concurrent requests for one image share a single upstream fetch, at most six
+fetches run at once, and once 256 more are waiting further misses answer `502`.
+`/metrics` reports `media_artwork_requests_total` and
+`media_artwork_upstream_total` by outcome, the eviction and corruption
+counters, and the cache's entry and byte gauges; upstream failures, evictions
+and corruption are also logged as JSON lines.
+
 ## Edition scope
 
 Canonical media identity and lifecycle intent are separate. Current-state
