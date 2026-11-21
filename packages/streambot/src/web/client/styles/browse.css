@@ -80,3 +80,14 @@
   gap: var(--space-2);
   min-inline-size: 0;
 }
+
+/* The heading block stacks; the row's named areas would otherwise add implicit columns. */
+.album-head-text .section-head {
+  padding-inline: 0;
+}
+
+.album-head-text .row-actions,
+.album-head-text .row-status {
+  grid-area: auto;
+  justify-self: start;
+}
