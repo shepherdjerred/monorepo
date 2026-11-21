@@ -5,6 +5,7 @@ import {
   ProfileListSchema,
   QualityRulesSchema,
   RemovalListSchema,
+  RequestListSchema,
 } from "#shared/api.ts";
 import { CatalogFeedSchema } from "#shared/catalog/contract.ts";
 import {
@@ -257,6 +258,34 @@ describe("fixture volume", () => {
     expect(items.every((item) => item.artwork !== undefined)).toBe(true);
     const unknown = await readInterests("?include=progress");
     expect(unknown.outcome.status).toBe(400);
+  });
+
+  it("names the series of a requested season or episode, and a root row by its own title", async () => {
+    const outcome = routeFixture({
+      method: "GET",
+      url: new URL("http://fixture.invalid/api/v1/requests"),
+      persona: "member",
+    });
+    const requests = RequestListSchema.parse(await overTheWire(outcome.body));
+    const named = (kind: string) =>
+      requests
+        .filter((row) => row.media.kind === kind)
+        .map((row) => [row.media.title, row.rootTitle]);
+    expect(named("season")).toEqual([
+      ["Season 2", "Andor"],
+      ["Season 2", "The Last of Us"],
+    ]);
+    expect(named("episode")).toEqual([["The Dirt Under Your Nails", "Arcane"]]);
+    const roots = requests.filter((row) => row.rootMediaId === row.mediaId);
+    expect(roots.length).toBeGreaterThan(0);
+    expect(roots.every((row) => row.rootTitle === row.media.title)).toBe(true);
+    for (const persona of ["owner", "member"] as const) {
+      const removals = await readRemovals(persona);
+      expect(removals.length).toBeGreaterThan(0);
+      expect(removals.every((row) => row.rootTitle === row.media.title)).toBe(
+        true,
+      );
+    }
   });
 
   it("gives every quality profile rules the profile editor accepts", async () => {

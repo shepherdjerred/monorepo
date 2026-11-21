@@ -8,16 +8,14 @@ import {
   type VisibilitySections,
 } from "#infrastructure/visibility/access.ts";
 import { RemovalListSchema } from "#shared/api.ts";
-import {
-  rootArtwork,
-  rootMedia,
-} from "#infrastructure/library/views/artwork.ts";
+import { rootReference } from "#infrastructure/library/views/artwork.ts";
 import { leavingSoonDecisionWhere } from "#infrastructure/library/views/leaving.ts";
 
 const LIMIT = 100;
 const node = {
   id: true,
   parentId: true,
+  title: true,
   posterPath: true,
   backdropPath: true,
   externalIds: true,
@@ -25,7 +23,6 @@ const node = {
 /** What a row needs to name its root title, show its art and be checked against Plex access. */
 const mediaSelect = {
   ...node,
-  title: true,
   kind: true,
   version: true,
   parent: { select: { ...node, parent: { select: node } } },
@@ -64,8 +61,7 @@ export function readRemovalList(
     return RemovalListSchema.parse(
       decisions.map((decision) => ({
         ...decision,
-        rootMediaId: rootMedia(decision.media).id,
-        artwork: rootArtwork(decision.media),
+        ...rootReference(decision.media),
       })),
     );
   });

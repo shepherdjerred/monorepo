@@ -164,7 +164,7 @@ test("catalog-only detail and release reads leave the target absent", async () =
   ).toMatchObject({ version: 0 });
 });
 
-test("request and removal lists carry the root title's artwork; an episode row inherits its series'", async () => {
+test("request and removal lists carry the root title's name and artwork; an episode row inherits its series'", async () => {
   const { actor, media: movie } = await fixture();
   const db = cluster.database;
   const art = {
@@ -192,7 +192,7 @@ test("request and removal lists carry the root title's artwork; an episode row i
     },
   });
   const rows = [];
-  for (const mediaId of [episode.id, movie.id]) {
+  for (const mediaId of [episode.id, movie.id, series.id]) {
     await createTestDefaultTarget(db, mediaId);
     rows.push({
       request: await db.mediaRequest.create({
@@ -208,8 +208,8 @@ test("request and removal lists carry the root title's artwork; an episode row i
       }),
     });
   }
-  const [inherited, own] = rows;
-  if (inherited === undefined || own === undefined)
+  const [inherited, own, root] = rows;
+  if (inherited === undefined || own === undefined || root === undefined)
     throw new Error("Missing artwork list fixture");
   // The movie's artwork has not been observed yet.
   const none = { posterPath: null, backdropPath: null };
@@ -217,21 +217,31 @@ test("request and removal lists carry the root title's artwork; an episode row i
   expect(requests.find((row) => row.id === inherited.request.id)).toMatchObject(
     {
       mediaId: episode.id,
-      media: { id: episode.id, kind: "episode" },
+      media: { id: episode.id, kind: "episode", title: "Listed episode" },
       rootMediaId: series.id,
+      rootTitle: "Listed series",
       artwork: art,
     },
   );
   expect(requests.find((row) => row.id === own.request.id)).toMatchObject({
     mediaId: movie.id,
     rootMediaId: movie.id,
+    rootTitle: "Example",
     artwork: none,
+  });
+  expect(requests.find((row) => row.id === root.request.id)).toMatchObject({
+    mediaId: series.id,
+    media: { id: series.id, kind: "series" },
+    rootMediaId: series.id,
+    rootTitle: "Listed series",
+    artwork: art,
   });
   const removals = await app.removals(actor);
   expect(removals.find((row) => row.id === inherited.decision.id)).toEqual({
     id: inherited.decision.id,
     mediaId: episode.id,
     rootMediaId: series.id,
+    rootTitle: "Listed series",
     artwork: art,
     state: "grace_period",
     graceUntil: null,
@@ -241,7 +251,16 @@ test("request and removal lists carry the root title's artwork; an episode row i
   expect(removals.find((row) => row.id === own.decision.id)).toMatchObject({
     mediaId: movie.id,
     rootMediaId: movie.id,
+    rootTitle: "Example",
     artwork: none,
+    media: { title: "Example", kind: "movie" },
+  });
+  expect(removals.find((row) => row.id === root.decision.id)).toMatchObject({
+    mediaId: series.id,
+    rootMediaId: series.id,
+    rootTitle: "Listed series",
+    artwork: art,
+    media: { title: "Listed series", kind: "series" },
   });
 });
 

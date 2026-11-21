@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import {
   rootArtwork,
   rootMedia,
+  rootReference,
 } from "#infrastructure/library/views/artwork.ts";
 
 type Row = {
@@ -100,4 +101,40 @@ test("a row read without its ancestry is refused instead of passing as a root", 
     },
   };
   expect(() => rootMedia(tooDeep)).toThrow(unloaded);
+});
+
+function named(id: string, parentId: string | null, title: string) {
+  return { ...row(id, parentId), title };
+}
+
+test("a list row names its root title: a movie or series itself, a season or episode its series", () => {
+  const show = { ...series, title: "The series" };
+  const reference = {
+    rootMediaId: "series",
+    rootTitle: "The series",
+    artwork: seriesArt,
+  };
+  expect(rootReference({ ...show, parent: null })).toEqual(reference);
+  expect(
+    rootReference({
+      ...named("season", "series", "Season 1"),
+      parent: { ...show, parent: null },
+    }),
+  ).toEqual(reference);
+  expect(
+    rootReference({
+      ...named("episode", "season", "Pilot"),
+      parent: { ...named("season", "series", "Season 1"), parent: show },
+    }),
+  ).toEqual(reference);
+  expect(
+    rootReference({ ...named("movie", null, "The movie"), parent: null }),
+  ).toEqual({
+    rootMediaId: "movie",
+    rootTitle: "The movie",
+    artwork: unobserved,
+  });
+  expect(() =>
+    rootReference({ ...named("episode", "season", "Pilot"), parent: null }),
+  ).toThrow(unloaded);
 });

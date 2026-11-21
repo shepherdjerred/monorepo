@@ -43,7 +43,10 @@ export const CommandResultSchema = z.object({
 export const RequestListSchema = z.array(
   RequestSchema.extend({
     media: MediaItemSchema,
+    // The movie or series the requested row belongs to; a season or episode
+    // row names its series here, and a root row repeats its own title.
     rootMediaId: z.string(),
+    rootTitle: z.string(),
     artwork: ArtworkSchema,
   }),
 );
@@ -63,6 +66,7 @@ export const RemovalListSchema = z.array(
     id: z.string(),
     mediaId: z.string(),
     rootMediaId: z.string(),
+    rootTitle: z.string(),
     artwork: ArtworkSchema,
     state: z.string(),
     graceUntil: DateTimeSchema.nullable(),
