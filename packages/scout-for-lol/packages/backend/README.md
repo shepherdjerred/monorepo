@@ -1094,6 +1094,26 @@ recorded in the Explore spend ledger by the length of audio, settled at once
 (`recordExploreAudioSpend`); a provider budget refusal is a `budget_exhausted`
 event.
 
+The post-game review is the one coach turn no client can start.
+`scoutCoachReviewWorkflow` (`packages/temporal`, started idempotently as
+`scout-<stage>-coach-review-<owner>-<matchId>`) runs once a game's
+`live_game_recording` upload and its resolved match evidence both exist, and
+whichever arrives second starts it: `consumeLiveGameRecording` on ingress and
+`projectResultEvidence` for the result. `coach/review.ts` re-checks both, the
+owner's `scout_desktop_coach` flag and Explore access, and only then starts one
+durable Explore turn under the existing quota and spend ledger. A recording
+counts as the owner's only when one of the owner's devices uploaded it, from a
+League client signed in to a Riot account the owner verified, and that account
+played the resolved match; a game the owner did not record never gets a review.
+The turn runs the Explore settings, the `game-review` skill and the
+`app_postgame` initiation (`COACH_SERVER_INITIATIONS`, deliberately outside
+`COACH_APP_INITIATIONS`, so `runs/start-app` and the desktop client do not know
+it). It carries only the `postgame` section, never `live`: the recording is
+post-game data, not fed through the live gate. The result is a
+`ScoutCoachArtifact` row (kind `review`: `pending`, `ready`, `declined` for an
+Explore quota or spend refusal, or `failed`) naming the Explore conversation,
+and the desktop reads it with `POST coach/reviews/get` (desktop contract 8).
+
 ### Raw observation archive
 
 Every persisted Scout Client observation is a durable S3 archive job, including

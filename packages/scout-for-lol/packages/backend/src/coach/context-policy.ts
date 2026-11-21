@@ -1,6 +1,8 @@
 import {
   COACH_APP_INITIATION_SECTION,
   COACH_APP_INITIATIONS,
+  COACH_SERVER_INITIATION_SECTION,
+  COACH_SERVER_INITIATIONS,
   COACH_CONTEXT_SECTIONS,
   CoachGameContextSchema,
   type CoachContextSection,
@@ -49,13 +51,18 @@ import { z } from "zod";
  * - `app_pregame`: Scout asked for the plan at the start of a game. Carries
  *   only `pregame`.
  *
- * Neither app initiation is player-initiated, so neither ever carries `live`:
+ * - `app_postgame`: the server started the post-game review once the game's
+ *   recording and resolved match were stored (`COACH_SERVER_INITIATIONS`; no
+ *   client route can start it). Carries only `postgame`.
+ *
+ * None of the app initiations is player-initiated, so neither ever carries `live`:
  * the gate withholds it, and the app route refuses a request that names it.
  */
 export const CoachTurnInitiationSchema = z.enum([
   "player_typed",
   "player_voice",
   ...COACH_APP_INITIATIONS,
+  ...COACH_SERVER_INITIATIONS,
 ]);
 export type CoachTurnInitiation = z.infer<typeof CoachTurnInitiationSchema>;
 
@@ -92,6 +99,14 @@ export type CoachContextResult =
   | { readonly ok: true; readonly projection: CoachContextProjection }
   | { readonly ok: false; readonly issues: readonly string[] };
 
+const INITIATION_SECTION = {
+  ...COACH_APP_INITIATION_SECTION,
+  ...COACH_SERVER_INITIATION_SECTION,
+} as const satisfies Record<
+  Exclude<CoachTurnInitiation, "player_typed" | "player_voice">,
+  CoachContextSection
+>;
+
 /** Why a section may not reach the agent on this turn, or null when it may. */
 function withheldReason(
   section: CoachContextSection,
@@ -104,7 +119,7 @@ function withheldReason(
   // a typed or spoken question carries any.
   return initiation !== "player_typed" &&
     initiation !== "player_voice" &&
-    COACH_APP_INITIATION_SECTION[initiation] !== section
+    INITIATION_SECTION[initiation] !== section
     ? "section_outside_initiation"
     : null;
 }

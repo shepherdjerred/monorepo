@@ -24,6 +24,9 @@ import type {
   ScoutChallengeRunRecomputeInput,
   ScoutChallengeRunRecomputePageResult,
   ScoutDuelSeriesInput,
+  ScoutCoachReviewInput,
+  ScoutCoachReviewSettleInput,
+  ScoutCoachReviewStartResult,
   ScoutDuelSeriesRefreshResult,
 } from "./contracts.ts";
 import type {
@@ -119,6 +122,19 @@ export type ScoutTemporalActivities = {
     input: ScoutDuelSeriesInput,
   ) => Promise<ScoutDuelSeriesRefreshResult>;
   markDuelSeriesOverdue: (input: ScoutDuelSeriesInput) => Promise<void>;
+  startCoachReview: (
+    input: ScoutCoachReviewInput,
+  ) => Promise<ScoutCoachReviewStartResult>;
+  /**
+   * Start the review of every recorded game whose review never began, so a
+   * failed start in either trigger is repaired by the schedule.
+   */
+  reconcileCoachReviews: (
+    input: ScoutIngestionReconciliationInput,
+  ) => Promise<void>;
+  settleCoachReview: (
+    input: ScoutCoachReviewSettleInput,
+  ) => Promise<"pending" | "ready" | "declined" | "failed">;
 };
 
 /**

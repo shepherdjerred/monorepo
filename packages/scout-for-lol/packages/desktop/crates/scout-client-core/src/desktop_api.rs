@@ -26,7 +26,7 @@ use crate::coach_context::GameContext;
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 8;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 9;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
 /// Path of the route that starts a turn Scout asks for itself.
@@ -39,6 +39,8 @@ pub const EXPLORE_RUNS_ACTIVE_PATH: &str = "/api/scout-client/v1/explore/runs/ac
 pub const EXPLORE_RUNS_OUTCOME_PATH: &str = "/api/scout-client/v1/explore/runs/outcome";
 /// Path of the `text/event-stream` route that observes a running turn.
 pub const EXPLORE_RUNS_STREAM_PATH: &str = "/api/scout-client/v1/explore/runs/stream";
+/// Path of the route that reads the post-game review the server produced.
+pub const COACH_REVIEWS_GET_PATH: &str = "/api/scout-client/v1/coach/reviews/get";
 /// Path of the pairing route that asks for `ingest` and `explore`.
 pub const PAIRINGS_V2_PATH: &str = "/api/scout-client/v1/pairings/v2";
 /// Path of the route a paired device asks its owner to add scopes through.
@@ -519,6 +521,78 @@ pub struct RunRequest {
     pub run_id: Uuid,
 }
 
+/// Request to `coach/reviews/get`: the finished game, by Riot match ID. The
+/// server starts a review itself once the game's recording and resolved match
+/// both exist; the client only reads it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(
+    rename_all = "camelCase",
+    deny_unknown_fields,
+    try_from = "RawCoachReviewRequest"
+)]
+pub struct CoachReviewRequest {
+    /// The Riot match ID, such as `NA1_5123456789`.
+    pub match_id: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct RawCoachReviewRequest {
+    match_id: String,
+}
+
+impl TryFrom<RawCoachReviewRequest> for CoachReviewRequest {
+    type Error = String;
+
+    fn try_from(raw: RawCoachReviewRequest) -> Result<Self, String> {
+        let (platform, game) = raw
+            .match_id
+            .split_once('_')
+            .ok_or_else(|| "matchId is a platform, `_` and a game id".to_owned())?;
+        let platform_ok = (2..=6).contains(&platform.len())
+            && platform
+                .bytes()
+                .all(|byte| byte.is_ascii_uppercase() || byte.is_ascii_digit());
+        let game_ok =
+            (1..=20).contains(&game.len()) && game.bytes().all(|byte| byte.is_ascii_digit());
+        if platform_ok && game_ok {
+            Ok(Self {
+                match_id: raw.match_id,
+            })
+        } else {
+            Err("matchId is a platform, `_` and a game id".to_owned())
+        }
+    }
+}
+
+/// Where a post-game review stands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CoachReviewStatus {
+    /// The turn is running.
+    Pending,
+    /// The turn finished; the review is in the conversation.
+    Ready,
+    /// Explore's quota or spend limit refused it; no review will exist.
+    Declined,
+    /// The turn ended without an answer.
+    Failed,
+}
+
+/// Response from `coach/reviews/get`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoachReviewResponse {
+    /// The game reviewed.
+    pub match_id: String,
+    /// Where the review stands.
+    pub status: CoachReviewStatus,
+    /// The conversation holding the review; none once declined.
+    pub conversation_id: Option<Uuid>,
+    /// When the server started the review.
+    pub created_at: DateTime<Utc>,
+}
+
 /// Response from `runs/stop`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -762,17 +836,17 @@ mod tests {
 
     use super::{
         ActiveRun, AppInitiation, AppTurnRequest, AssetsResponse, AttachmentDiscardRequest,
-        COACH_VOICE_TURNS_PATH, ConversationGetRequest, ConversationListResponse,
-        DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH,
-        DesktopApiContract, DesktopApiError, DeviceScope, EXPLORE_ASSETS_PATH,
-        EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH,
-        EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_APP_PATH, EXPLORE_RUNS_START_PATH,
-        EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH,
-        EXPLORE_VISUALIZATION_PATH, EmptyRequest, ExploreStatusResponse, ModelsResponse,
-        OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE, PairingV2Response, PngResponse,
-        RouteResponseKind, RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest,
-        RunStopResponse, ScopeRequest, ScopeRequestResponse, SetLeafRequest, ShareResponse,
-        VisualizationRequest,
+        COACH_REVIEWS_GET_PATH, COACH_VOICE_TURNS_PATH, CoachReviewRequest, CoachReviewResponse,
+        ConversationGetRequest, ConversationListResponse, DESKTOP_CONTRACT_HEADER,
+        DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError,
+        DeviceScope, EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH,
+        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
+        EXPLORE_RUNS_START_APP_PATH, EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH,
+        EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EXPLORE_VISUALIZATION_PATH, EmptyRequest,
+        ExploreStatusResponse, ModelsResponse, OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE,
+        PairingV2Response, PngResponse, RouteResponseKind, RunActiveResponse, RunOutcomeResponse,
+        RunRequest, RunStartRequest, RunStopResponse, ScopeRequest, ScopeRequestResponse,
+        SetLeafRequest, ShareResponse, VisualizationRequest,
     };
     use crate::protocol::CreatePairingRequest;
 
@@ -833,6 +907,8 @@ mod tests {
     );
     const VOICE_TURNS: &str =
         include_str!("../../../../data/src/scout-client/desktop-fixtures/coach-voice-turns.json");
+    const COACH_REVIEWS_GET: &str =
+        include_str!("../../../../data/src/scout-client/desktop-fixtures/coach-reviews-get.json");
     const START_ACTIONS: &str = include_str!(
         "../../../../data/src/scout-client/desktop-fixtures/explore-runs-start-actions.json"
     );
@@ -890,6 +966,7 @@ mod tests {
             paths,
             BTreeMap::from([
                 ("coach_voice_turns", COACH_VOICE_TURNS_PATH),
+                ("coach_reviews_get", COACH_REVIEWS_GET_PATH),
                 ("device_scope_requests", DEVICE_SCOPE_REQUESTS_PATH),
                 ("explore_assets", EXPLORE_ASSETS_PATH),
                 (
@@ -976,6 +1053,7 @@ mod tests {
             ATTACHMENTS_UPLOAD,
             ATTACHMENTS_DISCARD,
             VOICE_TURNS,
+            COACH_REVIEWS_GET,
         ] {
             let fixture: Value = serde_json::from_str(fixture)?;
             named.push(fixture["route"].as_str().ok_or("route name")?.to_owned());
@@ -983,6 +1061,14 @@ mod tests {
         named.sort();
         assert_eq!(named, contract.routes.keys().cloned().collect::<Vec<_>>());
         Ok(())
+    }
+
+    #[test]
+    fn coach_reviews_get_fixture_parses_strictly() -> TestResult {
+        check_route::<CoachReviewRequest, CoachReviewResponse>(
+            COACH_REVIEWS_GET,
+            "coach_reviews_get",
+        )
     }
 
     #[test]

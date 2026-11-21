@@ -1,5 +1,5 @@
 {
-  "contractVersion": 8,
+  "contractVersion": 9,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],
@@ -124,6 +124,12 @@
       "path": "/api/scout-client/v1/coach/voice/turns",
       "scope": "explore",
       "response": "event-stream"
+    },
+    "coach_reviews_get": {
+      "method": "POST",
+      "path": "/api/scout-client/v1/coach/reviews/get",
+      "scope": "explore",
+      "response": "json"
     }
   },
   "streamEvents": [

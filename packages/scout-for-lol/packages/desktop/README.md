@@ -1077,6 +1077,10 @@ screen section, never the live snapshot and never text; the server enforces the
 same limits and words the question itself. A question you type during champion
 select carries the same projection; it never carries the live snapshot.
 
+After a game you recorded, the server (never the client) reviews it once the
+recording and the match result are both stored; `ExploreClient::get_coach_review`
+reads that review's status and conversation through `coach/reviews/get`.
+
 The answer lands in its own conversation (one per select and one per game) and
 the chat page shows it in a coach panel above the transcript, with its options
 as chips; picking one sends the same follow-up turn as a transcript chip. The

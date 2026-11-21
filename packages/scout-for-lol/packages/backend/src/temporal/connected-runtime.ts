@@ -171,6 +171,9 @@ type BackgroundActivities = Pick<
   | "runReport"
   | "refreshDuelSeries"
   | "markDuelSeriesOverdue"
+  | "startCoachReview"
+  | "settleCoachReview"
+  | "reconcileCoachReviews"
   | "probeQueue"
 > &
   ScoutBackgroundActivities;

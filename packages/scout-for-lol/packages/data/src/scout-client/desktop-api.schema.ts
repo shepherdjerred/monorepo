@@ -64,11 +64,13 @@ import {
  *   coach's; an older client is sent no provenance for such an answer. The
  *   server deploys first.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 8;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 9;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
 /** The first contract version whose messages may carry `coachOptions`. */
 export const SCOUT_DESKTOP_COACH_OPTIONS_CONTRACT_VERSION = 7;
+/** The first contract version with the `coach/reviews/get` route. */
+export const SCOUT_DESKTOP_COACH_REVIEWS_CONTRACT_VERSION = 9;
 /** The first contract version that knows the `desktop` conversation origin. */
 export const SCOUT_DESKTOP_ORIGIN_CONTRACT_VERSION = 2;
 /** The first contract version that knows `low` reasoning effort. */
@@ -223,6 +225,12 @@ export const SCOUT_DESKTOP_API_ROUTES = {
     scope: "explore",
     response: "event-stream",
   },
+  coach_reviews_get: {
+    method: "POST",
+    path: "/api/scout-client/v1/coach/reviews/get",
+    scope: "explore",
+    response: "json",
+  },
 } as const satisfies Record<
   string,
   {
@@ -254,6 +262,7 @@ export const ScoutDesktopApiRouteSchema = z.enum([
   "explore_attachments_upload",
   "explore_attachments_discard",
   "coach_voice_turns",
+  "coach_reviews_get",
 ]);
 
 /** Every typed refusal a desktop route answers with, and its HTTP status. */
@@ -550,4 +559,39 @@ export const ScoutDesktopAttachmentUploadResponseSchema = z.strictObject({
 
 export const ScoutDesktopAttachmentDiscardRequestSchema = z.strictObject({
   id: z.uuid(),
+});
+
+/**
+ * `coach/reviews/get`: the post-game review the server produced (or is
+ * producing) for one finished game the owner recorded. The desktop never
+ * starts a review; the server does, once the game's recording and its resolved
+ * match are both stored. A game with no review, or one the owner did not
+ * record, is a `not_found`, the same answer for both.
+ *
+ * | Status    | Meaning                                                          |
+ * | --------- | ---------------------------------------------------------------- |
+ * | `pending` | The Explore turn is running; `conversationId` already links it.  |
+ * | `ready`   | The turn finished; read the review in `conversationId`.          |
+ * | `declined`| Explore's quota or spend limit refused it; no review will exist. |
+ * | `failed`  | The turn ended without an answer.                                |
+ */
+export const COACH_REVIEW_STATUSES = [
+  "pending",
+  "ready",
+  "declined",
+  "failed",
+] as const;
+export const CoachReviewStatusSchema = z.enum(COACH_REVIEW_STATUSES);
+export type CoachReviewStatus = z.infer<typeof CoachReviewStatusSchema>;
+
+export const ScoutDesktopCoachReviewRequestSchema = z.strictObject({
+  matchId: z.string().regex(/^[A-Z0-9]{2,6}_\d{1,20}$/),
+});
+
+export const ScoutDesktopCoachReviewResponseSchema = z.strictObject({
+  matchId: z.string().regex(/^[A-Z0-9]{2,6}_\d{1,20}$/),
+  status: CoachReviewStatusSchema,
+  /** The Explore conversation holding the review; null once declined. */
+  conversationId: z.uuid().nullable(),
+  createdAt: z.iso.datetime(),
 });

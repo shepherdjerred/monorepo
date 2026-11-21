@@ -60,3 +60,10 @@ export function appTurnAllowed(
 ): boolean {
   return started < appTurnLimit(initiation);
 }
+
+/**
+ * What the transcript shows as the question of the post-game review the server
+ * starts itself (`scoutCoachReviewWorkflow`); no client supplies it.
+ */
+export const REVIEW_TURN_QUESTION =
+  "The game is over. Review how it went and what to work on.";

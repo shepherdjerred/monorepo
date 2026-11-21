@@ -21,6 +21,7 @@ import shareFixture from "./desktop-fixtures/explore-conversations-share.json" w
 import revokeShareFixture from "./desktop-fixtures/explore-conversations-revoke-share.json" with { type: "json" };
 import uploadFixture from "./desktop-fixtures/explore-attachments-upload.json" with { type: "json" };
 import discardFixture from "./desktop-fixtures/explore-attachments-discard.json" with { type: "json" };
+import coachReviewFixture from "./desktop-fixtures/coach-reviews-get.json" with { type: "json" };
 import startAppFixture from "./desktop-fixtures/explore-runs-start-app.json" with { type: "json" };
 import coachGetFixture from "./desktop-fixtures/explore-conversations-get-coach.json" with { type: "json" };
 import startActionsFixture from "./desktop-fixtures/explore-runs-start-actions.json" with { type: "json" };
@@ -58,6 +59,8 @@ import {
   ScoutDesktopAttachmentUploadResponseSchema,
   ScoutDesktopConversationGetRequestSchema,
   ScoutDesktopConversationGetResponseSchema,
+  ScoutDesktopCoachReviewRequestSchema,
+  ScoutDesktopCoachReviewResponseSchema,
   ScoutDesktopModelsResponseSchema,
   ScoutDesktopOkResponseSchema,
   ScoutDesktopSetLeafRequestSchema,
@@ -201,6 +204,11 @@ const ROUTE_SCHEMAS: Record<
     request: ScoutDesktopVoiceTurnRequestSchema,
     response: ScoutDesktopVoiceTurnStreamResponseSchema,
     fixture: voiceTurnFixture,
+  },
+  coach_reviews_get: {
+    request: ScoutDesktopCoachReviewRequestSchema,
+    response: ScoutDesktopCoachReviewResponseSchema,
+    fixture: coachReviewFixture,
   },
 };
 

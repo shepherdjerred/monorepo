@@ -1,0 +1,19 @@
+{
+  "route": "coach_reviews_get",
+  "note": "The server starts the review once the recording and the resolved match both exist; the desktop only reads it.",
+  "request": { "matchId": "NA1_5123456789" },
+  "response": {
+    "matchId": "NA1_5123456789",
+    "status": "ready",
+    "conversationId": "7c3e5a91-2b64-4d0f-8e17-5a9c4b2d6f30",
+    "createdAt": "2026-11-14T09:52:30.000Z"
+  },
+  "invalidRequests": [
+    { "reason": "a missing match id", "body": {} },
+    { "reason": "a malformed match id", "body": { "matchId": "not a match" } },
+    {
+      "reason": "an unknown key",
+      "body": { "matchId": "NA1_5123456789", "gameKey": "g" }
+    }
+  ]
+}

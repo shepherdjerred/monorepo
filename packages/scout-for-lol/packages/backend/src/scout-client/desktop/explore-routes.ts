@@ -38,6 +38,7 @@ import {
 } from "./contract.ts";
 import { DESKTOP_VOICE_ROUTES } from "./coach-voice-routes.ts";
 import { DESKTOP_ACTION_ROUTES } from "./explore-action-routes.ts";
+import { DESKTOP_COACH_ROUTES } from "./coach-review-routes.ts";
 import {
   DESKTOP_RUN_ROUTES,
   invalidRequest,
@@ -220,6 +221,7 @@ const ROUTES = new Map<string, DesktopRoute>([
   ],
   ...DESKTOP_ACTION_ROUTES,
   ...DESKTOP_VOICE_ROUTES,
+  ...DESKTOP_COACH_ROUTES,
   ...DESKTOP_RUN_ROUTES.map(
     ({ path, handler, turn }) =>
       [

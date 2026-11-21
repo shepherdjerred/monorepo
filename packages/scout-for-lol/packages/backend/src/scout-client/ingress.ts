@@ -305,12 +305,15 @@ export async function ingestObservationBatch(
       await bindObservedMatch(observation);
       await projectObservedGameState(observation);
       const recording = liveGameRecordingOf(observation);
-      if (recording !== null && receipt.outcome === "accepted") {
-        consumeLiveGameRecording({
+      // An already-accepted retry re-runs this: starting the review is
+      // idempotent, and it is how a start that failed the first time lands.
+      if (recording !== null) {
+        await consumeLiveGameRecording({
           observationId: observation.observationId,
           deviceId: device.deviceId,
           ownerId: device.ownerId,
           gameId: observation.gameId ?? null,
+          platformId: observation.platformId ?? null,
           recording,
         });
       }

@@ -174,6 +174,23 @@ export const COACH_APP_TURN_LIMITS = {
   app_pregame: 1,
 } as const satisfies Record<CoachAppInitiation, number>;
 
+/**
+ * The turn the server starts itself once a finished game's recording and its
+ * resolved match are both stored: the post-game review
+ * (`scoutCoachReviewWorkflow`). It is deliberately not in
+ * `COACH_APP_INITIATIONS`: no client route can start it, so `runs/start-app`,
+ * the JSON contract and the Rust client do not know it. It carries only the
+ * `postgame` section (a Riot match ID) and never `live`; the recording is
+ * post-game data read through the review path, not the live gate.
+ */
+export const COACH_SERVER_INITIATIONS = ["app_postgame"] as const;
+export const CoachServerInitiationSchema = z.enum(COACH_SERVER_INITIATIONS);
+export type CoachServerInitiation = z.infer<typeof CoachServerInitiationSchema>;
+
+export const COACH_SERVER_INITIATION_SECTION = {
+  app_postgame: "postgame",
+} as const satisfies Record<CoachServerInitiation, CoachContextSection>;
+
 /** The client's opaque id for one champ select or one game; at most 64 chars. */
 export const CoachGameKeySchema = z
   .string()

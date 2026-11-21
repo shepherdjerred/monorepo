@@ -18,6 +18,8 @@ import type {
   ScoutHallBaselineInput,
   ScoutChallengeRunRecomputeInput,
   ScoutDuelSeriesInput,
+  ScoutCoachReviewInput,
+  ScoutCoachReviewResult,
 } from "#src/contracts.ts";
 import type {
   ScoutLakeProjectionInputEnvelope,
@@ -58,6 +60,7 @@ import {
   scoutDuelSeriesWorkflow as duelSeries,
   scoutHallBaselineWorkflow as hallBaseline,
 } from "./progression.ts";
+import { scoutCoachReviewWorkflow as coachReview } from "./coach/review.ts";
 import { scoutClientMatchDispatchWorkflow as clientMatchDispatch } from "./client-match-dispatch.ts";
 import {
   scoutMatchProcessingWorkflow as matchProcessing,
@@ -176,6 +179,12 @@ export async function scoutDuelSeriesWorkflow(
   input: ScoutDuelSeriesInput,
 ): Promise<ScoutWorkflowStatus> {
   return await duelSeries(input);
+}
+
+export async function scoutCoachReviewWorkflow(
+  input: ScoutCoachReviewInput,
+): Promise<ScoutCoachReviewResult> {
+  return await coachReview(input);
 }
 
 export async function scoutPostMatchDiscoveryWorkflow(

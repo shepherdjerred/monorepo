@@ -356,6 +356,72 @@ export const ScoutDuelSeriesChangeSchema = z.strictObject({
 });
 export type ScoutDuelSeriesChange = z.infer<typeof ScoutDuelSeriesChangeSchema>;
 
+/** A Riot match ID such as `NA1_5123456789`. */
+const RiotMatchIdSchema = z.string().regex(/^[A-Z0-9]{2,6}_\d{1,20}$/);
+
+/**
+ * The post-game review of one game one Scout user recorded. The identity is
+ * the owner and the match, so a trigger that arrives twice, or from both the
+ * recording and the match evidence, is the same Workflow.
+ */
+export const ScoutCoachReviewInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  ownerId: OpaqueIdentifierSchema,
+  matchId: RiotMatchIdSchema,
+});
+export type ScoutCoachReviewInput = z.infer<typeof ScoutCoachReviewInputSchema>;
+
+/** Why no review is produced, none of which a retry would change. */
+export const ScoutCoachReviewSkipReasonSchema = z.enum([
+  "coach_disabled",
+  "no_explore_access",
+  "no_recording",
+  "evidence_unresolved",
+  "not_a_participant",
+]);
+export type ScoutCoachReviewSkipReason = z.infer<
+  typeof ScoutCoachReviewSkipReasonSchema
+>;
+
+export const ScoutCoachReviewStartResultSchema = z.discriminatedUnion(
+  "outcome",
+  [
+    z.strictObject({ outcome: z.literal("started"), runId: z.uuid() }),
+    z.strictObject({
+      outcome: z.literal("skipped"),
+      reason: ScoutCoachReviewSkipReasonSchema,
+    }),
+    /** Explore's quota or spend limit refused the turn; recorded, not retried. */
+    z.strictObject({ outcome: z.literal("declined") }),
+    /** The review already reached a terminal state in an earlier execution. */
+    z.strictObject({
+      outcome: z.literal("settled"),
+      status: z.enum(["ready", "declined", "failed"]),
+    }),
+  ],
+);
+export type ScoutCoachReviewStartResult = z.infer<
+  typeof ScoutCoachReviewStartResultSchema
+>;
+
+export const ScoutCoachReviewSettleInputSchema =
+  ScoutCoachReviewInputSchema.safeExtend({
+    runId: z.uuid(),
+    /** True once the Workflow has waited as long as it will. */
+    giveUp: z.boolean(),
+  });
+export type ScoutCoachReviewSettleInput = z.infer<
+  typeof ScoutCoachReviewSettleInputSchema
+>;
+
+export const ScoutCoachReviewResultSchema = z.strictObject({
+  status: z.enum(["ready", "declined", "failed", "skipped"]),
+  reason: ScoutCoachReviewSkipReasonSchema.optional(),
+});
+export type ScoutCoachReviewResult = z.infer<
+  typeof ScoutCoachReviewResultSchema
+>;
+
 export const InitialHistoryPageResultSchema = z.object({
   nextCursor: z.string().min(1).max(512).optional(),
   nextAttemptAt: IsoInstantSchema.optional(),

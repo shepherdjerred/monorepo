@@ -38,6 +38,7 @@ export const SCOUT_WORKFLOW_NAMES = {
   hallBaseline: "scoutHallBaselineWorkflow",
   challengeRunRecompute: "scoutChallengeRunRecomputeWorkflow",
   duelSeries: "scoutDuelSeriesWorkflow",
+  coachReview: "scoutCoachReviewWorkflow",
   postMatchDiscovery: "scoutPostMatchDiscoveryWorkflow",
   matchProcessing: "scoutMatchProcessingWorkflow",
   clientMatchDispatch: "scoutClientMatchDispatchWorkflow",
@@ -418,6 +419,15 @@ export function scoutDuelSeriesWorkflowId(
   seriesId: string,
 ): string {
   return `scout-${stage}-duel-series-${seriesId}`;
+}
+
+/** One review per owner and match: the identity both triggers compute. */
+export function scoutCoachReviewWorkflowId(
+  stage: ScoutStage,
+  ownerId: string,
+  matchId: string,
+): string {
+  return `scout-${stage}-coach-review-${ownerId}-${matchId}`;
 }
 
 // ───────────────────────────────────────────────────────────────────────────

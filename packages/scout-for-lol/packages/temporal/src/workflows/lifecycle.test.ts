@@ -310,11 +310,15 @@ test("initial history drains incomplete pages across Continue-As-New and accepts
 test("ingestion reconciliation recovers detached and pending interactive work", async () => {
   const detached: string[] = [];
   const interactive: string[] = [];
+  let coachReconciliations = 0;
   const workflow = await workflowWorker();
   const background = await Worker.create({
     connection: environment.nativeConnection,
     taskQueue: "scout-dev-background",
     activities: {
+      reconcileCoachReviews: () => {
+        coachReconciliations += 1;
+      },
       reconcileIngestion: () => ({
         initialHistoryPuuids: [],
         detachedWorks: [
@@ -360,6 +364,8 @@ test("ingestion reconciliation recovers detached and pending interactive work", 
   ).resolves.toBe("completed");
   await expect.poll(() => detached).toEqual(["champion-mastery:NA1_300"]);
   await expect.poll(() => interactive).toEqual(["interactive_300"]);
+  // The post-game review repair rides every reconciliation run.
+  expect(coachReconciliations).toBe(1);
 });
 
 test(

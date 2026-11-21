@@ -10,9 +10,28 @@ import {
   resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
 import { upsertClashGameSighting } from "#src/league/clash/sighting.ts";
 import { recordClashGameIdentity } from "#src/league/clash/identity.ts";
 import { registeredResultPuuids } from "./result-accounts.ts";
+
+const logger = createLogger("result-projection");
+
+/**
+ * Match evidence is one of the two inputs of the post-game review: when a
+ * game the owner recorded gets its result, the review may start. It never
+ * fails the evidence pipeline; a failed start is logged, and the scheduled
+ * review reconciliation (`reconcileCoachReviewStarts`) starts it again.
+ */
+async function startCoachReviewsForResult(matchId: string): Promise<void> {
+  try {
+    const { onMatchEvidenceStored } =
+      await import("#src/coach/review-runtime.ts");
+    await onMatchEvidenceStored(matchId);
+  } catch (error) {
+    logger.error(`could not start the post-game review for ${matchId}`, error);
+  }
+}
 
 /** Independent result projection; no source selection, dispatch or game effects. */
 export async function projectResultEvidence(
@@ -36,6 +55,7 @@ export async function projectResultEvidence(
     },
     update: { result },
   });
+  await startCoachReviewsForResult(result.matchId);
   const queue = ClashCupQueueSchema.safeParse(
     resolveQueueTypeFromGame(result.queueId, result.gameMode, result.gameType),
   );

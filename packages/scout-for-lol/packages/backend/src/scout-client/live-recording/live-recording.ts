@@ -61,23 +61,25 @@ export type AcceptedLiveGameRecording = {
   /** The signed-in Scout user that owns the uploading device. */
   readonly ownerId: string;
   readonly gameId: string | null;
+  readonly platformId: string | null;
   readonly recording: LiveGameRecordingPayload;
 };
 
 /**
- * What happens to a recording after it is stored.
- *
- * DEFERRED: the post-game review. It needs the recording joined to the
- * resolved match, which is the next piece of the coach work. Until it exists a
- * recording is stored as evidence and nothing reads it; this stub is the one
- * place that consumer attaches, so ingress does not change when it lands.
+ * What happens to a recording after it is stored: it is one of the two inputs
+ * of the post-game review (the other is the game's resolved match evidence),
+ * so storing it may start `scoutCoachReviewWorkflow`. The recording is not
+ * read here and never reaches the agent through the live gate.
  */
-export function consumeLiveGameRecording(
+export async function consumeLiveGameRecording(
   recording: AcceptedLiveGameRecording,
-): void {
+): Promise<void> {
   logger.info(
     `stored live game recording ${recording.observationId} with ${String(recording.recording.data.samples.length)} samples`,
   );
+  const { onLiveGameRecordingStored } =
+    await import("#src/coach/review-runtime.ts");
+  await onLiveGameRecordingStored(recording);
 }
 
 /** The recording a stored observation carries, if it is one. */
