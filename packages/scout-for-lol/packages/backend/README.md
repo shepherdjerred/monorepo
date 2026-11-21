@@ -1122,7 +1122,12 @@ it). It carries only the `postgame` section, never `live`: the recording is
 post-game data, not fed through the live gate. The result is a
 `ScoutCoachArtifact` row (kind `review`: `pending`, `ready`, `declined` for an
 Explore quota or spend refusal, or `failed`) naming the Explore conversation,
-and the desktop reads it with `POST coach/reviews/get` (desktop contract 9).
+and the desktop reads it with `POST coach/reviews/get` (desktop contract 9),
+by `matchId`. Since contract 12 it may send `gameId` instead, for a game the
+client's match history never lists (an end-of-game-only game): the route names
+the match from the caller's own accepted observation of that game
+(`readCoachReviewByGame`), never another owner's, so a game id this owner did
+not capture answers `not_found` like a game with no review.
 
 #### Proactive coach triggers (beta only)
 

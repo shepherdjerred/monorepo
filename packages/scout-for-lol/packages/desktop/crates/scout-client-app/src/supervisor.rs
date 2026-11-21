@@ -369,8 +369,8 @@ impl<C: Collector> Supervisor<C> {
                     Some(Control::Quit) => break SupervisorExit::Quit,
                     None => break SupervisorExit::ControlClosed,
                 },
-                Some((match_id, answer)) = Reviews::next(&mut reviews) => {
-                    let event = reviews.as_mut().and_then(|reviews| reviews.settle(&match_id, answer));
+                Some((game_id, answer)) = Reviews::next(&mut reviews) => {
+                    let event = reviews.as_mut().and_then(|reviews| reviews.settle(&game_id, answer));
                     let windows = (&mut window, &mut quick_crashes);
                     self.review_settled(event, &mut overlay, windows, &state, &phase).await;
                 }
@@ -467,11 +467,11 @@ impl<C: Collector> Supervisor<C> {
                     host.flush(self.collector.diagnostics()).await;
                 }
             }
-            Some(ReviewEvent::Stopped { match_id, reason }) => {
+            Some(ReviewEvent::Stopped { game, reason }) => {
                 self.record(review_event(
                     DiagnosticLevel::Info,
                     DiagnosticOutcome::Skipped,
-                    format!("no review of {match_id}: {reason}"),
+                    format!("no review of {game}: {reason}"),
                 ));
             }
             None => {}
@@ -1361,14 +1361,14 @@ impl Reviews {
     /// Follow the newest finished game and ask about its review when due.
     fn tick(&mut self, state: &RuntimeState) {
         let now = Instant::now();
-        self.poller.follow(review::finished_match_id(state), now);
-        if let Some(match_id) = self.poller.due(now) {
-            self.source.fetch(match_id, self.done.clone());
+        self.poller.follow(review::finished_target(state), now);
+        if let Some(target) = self.poller.due(now) {
+            self.source.fetch(target, self.done.clone());
         }
     }
 
-    fn settle(&mut self, match_id: &str, answer: review::ReviewAnswer) -> Option<ReviewEvent> {
-        self.poller.settle(match_id, answer, Instant::now())
+    fn settle(&mut self, game_id: &str, answer: review::ReviewAnswer) -> Option<ReviewEvent> {
+        self.poller.settle(game_id, answer, Instant::now())
     }
 
     /// The next answer, or pending forever without reviews. Cancel-safe.

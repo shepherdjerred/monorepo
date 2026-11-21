@@ -1159,8 +1159,12 @@ reads that review's status and conversation through `coach/reviews/get`.
 
 The supervisor looks for it (`supervisor/review.rs`). The collector publishes
 the League game id it saw end and the Riot match ids of the newest match-history
-page; together they name the finished match (`NA1_5123456789`). The supervisor
-then asks `coach/reviews/get` 30 seconds later and again with backoff (1, 2, 4,
+page; together they name the finished match (`NA1_5123456789`), and the review
+is asked for by match. A game the history never lists, such as an
+end-of-game-only League Classic game, is asked for by game id (desktop contract
+12); the server names its match from this owner's own capture of the game. A
+game asked for by id switches to its match id if the history lists it later,
+keeping its attempts. The supervisor asks `coach/reviews/get` 30 seconds later and again with backoff (1, 2, 4,
 then every 5 minutes), at most 12 times, about 45 minutes. `not_found` (no
 review yet), `pending` and transport failures ask again; `declined`, `failed`
 and refusals such as Scout Coach being off stop asking. A newer finished game

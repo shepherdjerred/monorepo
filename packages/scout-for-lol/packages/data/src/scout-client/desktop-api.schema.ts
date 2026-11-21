@@ -71,8 +71,14 @@ import {
  *   turn's answer for a beta build in voice conversation mode
  *   (`coach-trigger.schema.ts`): a run id in, PCM chunks out. Refused in
  *   production like the trigger. The server deploys first.
+ * - 12: `coach/reviews/get` also takes `{ gameId }`, the League game id, for
+ *   a game Scout knows only from the client's end-of-game screen and that
+ *   match history never lists. The server names the match from the calling
+ *   owner's own accepted observation of that game, so a game id another owner
+ *   captured answers `not_found`. The response still names the match. The
+ *   server deploys first.
  */
-export const SCOUT_DESKTOP_CONTRACT_VERSION = 11;
+export const SCOUT_DESKTOP_CONTRACT_VERSION = 12;
 export const SCOUT_DESKTOP_MINIMUM_CONTRACT_VERSION = 1;
 export const SCOUT_DESKTOP_CONTRACT_HEADER = "X-Scout-Desktop-Contract";
 /** The first contract version whose messages may carry `coachOptions`. */
@@ -606,9 +612,18 @@ export const COACH_REVIEW_STATUSES = [
 export const CoachReviewStatusSchema = z.enum(COACH_REVIEW_STATUSES);
 export type CoachReviewStatus = z.infer<typeof CoachReviewStatusSchema>;
 
-export const ScoutDesktopCoachReviewRequestSchema = z.strictObject({
-  matchId: z.string().regex(/^[A-Z0-9]{2,6}_\d{1,20}$/),
-});
+/**
+ * The finished game whose review to read: by Riot match id, or (contract 12)
+ * by League game id when the desktop knows no platform for it. Exactly one.
+ */
+export const ScoutDesktopCoachReviewRequestSchema = z.union([
+  z.strictObject({
+    matchId: z.string().regex(/^[A-Z0-9]{2,6}_\d{1,20}$/),
+  }),
+  z.strictObject({
+    gameId: z.string().regex(/^[1-9]\d{0,19}$/),
+  }),
+]);
 
 export const ScoutDesktopCoachReviewResponseSchema = z.strictObject({
   matchId: z.string().regex(/^[A-Z0-9]{2,6}_\d{1,20}$/),

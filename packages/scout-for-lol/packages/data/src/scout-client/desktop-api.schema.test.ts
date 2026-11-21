@@ -108,6 +108,8 @@ type RouteFixture = {
   readonly request: unknown;
   readonly response: unknown;
   readonly invalidRequests: readonly { reason: string; body: unknown }[];
+  /** Other accepted request shapes, such as a review by game id. */
+  readonly alternateRequests?: readonly { reason: string; body: unknown }[];
 };
 
 /** The schemas each route's golden bodies are held to. */
@@ -491,5 +493,22 @@ describe("Scout desktop voice turn contract", () => {
         audio: { mediaType: "audio/wav", base64: tooLong },
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("alternate request shapes", () => {
+  test.each(
+    routeNames.flatMap((name) =>
+      (ROUTE_SCHEMAS[name].fixture.alternateRequests ?? []).map(
+        (alternate) => ({ name, ...alternate }),
+      ),
+    ),
+  )("$name accepts $reason", ({ name, body }) => {
+    expect(ROUTE_SCHEMAS[name].request.parse(body)).toEqual(body);
+  });
+
+  test("a review can be read by match id or, since contract 12, by game id", () => {
+    expect(coachReviewFixture.alternateRequests).toHaveLength(1);
+    expect(SCOUT_DESKTOP_CONTRACT_VERSION).toBeGreaterThanOrEqual(12);
   });
 });

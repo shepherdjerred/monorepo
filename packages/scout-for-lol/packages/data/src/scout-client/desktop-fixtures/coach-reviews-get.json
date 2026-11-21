@@ -1,7 +1,9 @@
 {
   "route": "coach_reviews_get",
-  "note": "The server starts the review once the recording and the resolved match both exist; the desktop only reads it.",
-  "request": { "matchId": "NA1_5123456789" },
+  "note": "The server starts the review once the recording and the resolved match both exist; the desktop only reads it. Since contract 12 the desktop may name the game by League game id; the server resolves the match from the caller's own observation of that game.",
+  "request": {
+    "matchId": "NA1_5123456789"
+  },
   "response": {
     "matchId": "NA1_5123456789",
     "status": "ready",
@@ -9,11 +11,49 @@
     "createdAt": "2026-11-14T09:52:30.000Z"
   },
   "invalidRequests": [
-    { "reason": "a missing match id", "body": {} },
-    { "reason": "a malformed match id", "body": { "matchId": "not a match" } },
+    {
+      "reason": "a missing match id",
+      "body": {}
+    },
+    {
+      "reason": "a malformed match id",
+      "body": {
+        "matchId": "not a match"
+      }
+    },
     {
       "reason": "an unknown key",
-      "body": { "matchId": "NA1_5123456789", "gameKey": "g" }
+      "body": {
+        "matchId": "NA1_5123456789",
+        "gameKey": "g"
+      }
+    },
+    {
+      "reason": "both a match id and a game id",
+      "body": {
+        "matchId": "NA1_5123456789",
+        "gameId": "5123456789"
+      }
+    },
+    {
+      "reason": "a game id that is not a positive integer",
+      "body": {
+        "gameId": "0"
+      }
+    },
+    {
+      "reason": "a numeric game id",
+      "body": {
+        "gameId": 5663121007
+      }
+    }
+  ],
+  "alternateRequests": [
+    {
+      "reason": "a game match history never lists, by League game id",
+      "body": {
+        "gameId": "5663121007"
+      }
     }
   ]
 }
