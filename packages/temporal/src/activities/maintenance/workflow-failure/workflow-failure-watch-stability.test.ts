@@ -77,6 +77,23 @@ function buildQueryAwareClient(input: {
   };
 }
 
+async function pollAlerts(
+  client: WorkflowVisibilityClient,
+  now: Date,
+): Promise<AlertmanagerAlert[]> {
+  const posted: AlertmanagerAlert[] = [];
+  const poster: AlertPoster = (alerts) => {
+    posted.push(...alerts);
+    return Promise.resolve();
+  };
+  await pollWorkflowFailuresOnce(client, poster, {
+    now,
+    lookbackMs: LOOKBACK_MS,
+    ttlMs: TTL_MS,
+  });
+  return posted;
+}
+
 describe("workflow failure stability tracker identity and short windows", () => {
   it("extracts schedule identity from TypedSearchAttributes, legacy searchAttributes, and workflowId prefixes", () => {
     expect(
@@ -150,17 +167,7 @@ describe("workflow failure stability tracker identity and short windows", () => 
         },
       ],
     });
-    const posted: AlertmanagerAlert[] = [];
-    const poster: AlertPoster = (alerts) => {
-      posted.push(...alerts);
-      return Promise.resolve();
-    };
-
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
+    const posted = await pollAlerts(client, NOW);
 
     expect(queries).toHaveLength(1);
     expect(posted).toHaveLength(2);
@@ -281,16 +288,7 @@ describe("workflow failure stability tracker monotonic non-resurrection", () => 
       ),
     ).toBe(true);
 
-    const posted: AlertmanagerAlert[] = [];
-    const poster: AlertPoster = (alerts) => {
-      posted.push(...alerts);
-      return Promise.resolve();
-    };
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: pollNow,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
+    const posted = await pollAlerts(client, pollNow);
 
     expect(posted).toHaveLength(1);
     expect(posted[0]?.labels).toEqual({
@@ -418,16 +416,7 @@ describe("workflow failure stability tracker Completed query caching", () => {
         ),
     ).toBe(true);
 
-    const posted: AlertmanagerAlert[] = [];
-    const poster: AlertPoster = (alerts) => {
-      posted.push(...alerts);
-      return Promise.resolve();
-    };
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: pollNow,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
+    const posted = await pollAlerts(client, pollNow);
     expect(posted).toHaveLength(1);
     expect(posted[0]?.annotations["runId"]).toBe("run-new");
     expect(posted[0]?.endsAt).toBe(

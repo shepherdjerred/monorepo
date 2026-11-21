@@ -1,124 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { ApplicationFailure, WorkflowFailedError } from "@temporalio/client";
-import {
-  RetryState,
-  TypedSearchAttributes,
-  defineSearchAttributeKey,
-} from "@temporalio/common";
-import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
-import type { WorkflowVisibilityClient } from "#shared/infra/workflow-visibility-client.ts";
 import { pollWorkflowFailuresOnce } from "./workflow-failure-watch.ts";
 import {
   workflowExecutionKey,
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
-
-const NOW = new Date("2026-07-30T18:00:00.000Z");
-const LOOKBACK_MS = 24 * 60 * 60 * 1000;
-const TTL_MS = LOOKBACK_MS + 6 * 60 * 1000 + 30 * 1000 + 5 * 60 * 1000;
-const SCHEDULED_BY_ID_KEY = defineSearchAttributeKey(
-  "TemporalScheduledById",
-  "KEYWORD",
-);
-
-type ExecutionInfo = {
-  workflowId: string;
-  runId: string;
-  type: string;
-  taskQueue: string;
-  startTime?: Date;
-  closeTime?: Date;
-  status: { name: string };
-  typedSearchAttributes?: TypedSearchAttributes;
-};
-
-function scheduledAttributes(scheduleId: string): TypedSearchAttributes {
-  return new TypedSearchAttributes([
-    { key: SCHEDULED_BY_ID_KEY, value: scheduleId },
-  ]);
-}
-
-function dayTime(hhmm: string): Date {
-  return new Date(`2026-07-30T${hhmm}:00.000Z`);
-}
-
-function ttlEndsAt(hhmm: string): string {
-  return new Date(dayTime(hhmm).getTime() + TTL_MS).toISOString();
-}
-
-function rejectWithApplicationFailure(message: string): () => Promise<unknown> {
-  return () =>
-    Promise.reject(
-      new WorkflowFailedError(
-        "workflow execution failed",
-        ApplicationFailure.nonRetryable(message, "TestFailure"),
-        RetryState.NON_RETRYABLE_FAILURE,
-      ),
-    );
-}
-
-function fakeClient(
-  executions: ExecutionInfo[],
-  results: Record<string, () => Promise<unknown>>,
-): WorkflowVisibilityClient {
-  return {
-    workflow: {
-      list() {
-        return {
-          async *[Symbol.asyncIterator]() {
-            for (const execution of executions) {
-              yield {
-                ...execution,
-                startTime:
-                  execution.startTime ?? execution.closeTime ?? new Date(0),
-              };
-            }
-          },
-        };
-      },
-      getHandle(workflowId: string, runId: string) {
-        const key = `${workflowId}/${runId}`;
-        const resolver = results[key];
-        return {
-          result: () => {
-            if (resolver === undefined) {
-              throw new Error(`no fake result configured for ${key}`);
-            }
-            return resolver();
-          },
-          fetchHistory: () => Promise.resolve({ events: [] }),
-        };
-      },
-    },
-  };
-}
-
-function clientForExecutions(
-  executions: ExecutionInfo[],
-  resolverFor: (index: number) => () => Promise<unknown>,
-): WorkflowVisibilityClient {
-  return fakeClient(
-    executions,
-    Object.fromEntries(
-      executions.map((execution, index) => [
-        `${execution.workflowId}/${execution.runId}`,
-        resolverFor(index),
-      ]),
-    ),
-  );
-}
-
-function capturingPoster(): {
-  poster: AlertPoster;
-  calls: { alerts: AlertmanagerAlert[] }[];
-} {
-  const calls: { alerts: AlertmanagerAlert[] }[] = [];
-  const poster: AlertPoster = (alerts) => {
-    calls.push({ alerts });
-    return Promise.resolve();
-  };
-  return { poster, calls };
-}
+import {
+  LOOKBACK_MS,
+  NOW,
+  TTL_MS,
+  capturingPoster,
+  clientForExecutions,
+  dayTime,
+  fakeClient,
+  rejectWithApplicationFailure,
+  scheduledAttributes,
+  ttlEndsAt,
+  type ExecutionInfo,
+} from "./workflow-failure-watch-test-fixtures.ts";
 
 describe("recurring schedule failure deduplication", () => {
   it("collapses 5 recurring schedule failures in 1h into 1 alert carrying newest run metadata and consuming 1 detail slot", async () => {
