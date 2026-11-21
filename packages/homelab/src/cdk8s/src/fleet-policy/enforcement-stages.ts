@@ -17,7 +17,7 @@ import type { EnforcementStage } from "@shepherdjerred/homelab/cdk8s/src/misc/ne
  * must lose its entry: synthesis and the fleet tests fail otherwise.
  */
 export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
-  "alert-dashboard": "open",
+  "alert-dashboard": "enforced",
   arcade: "open",
   argocd: "open",
   birmel: "open",
