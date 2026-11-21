@@ -13,7 +13,10 @@ import {
   deliveryOperationId,
   deliverySelection,
 } from "#lib/delivery/selection.ts";
-import { verifyArgoRelease } from "#lib/delivery/argocd-proof.ts";
+import {
+  isPruneOnlyOutOfSync,
+  verifyPrunePendingArgoRelease,
+} from "#lib/delivery/argocd-proof.ts";
 import {
   requireLegacyWorkerCoverage,
   verifyWorkerBaselinePods,
@@ -74,7 +77,7 @@ const StableArgo = z.object({
 
 function recoverySync(raw: unknown, operated: boolean) {
   const sync = StableArgo.parse(raw).status.sync.status;
-  if (operated && sync !== "Synced")
+  if (operated && sync !== "Synced" && !isPruneOnlyOutOfSync(raw))
     throw new Error("Operated worker recovery requires a Synced Application");
   return sync;
 }
@@ -116,7 +119,8 @@ function ownedRecoveryArgo(
     );
   const expected = selection;
   return {
-    receipt: verifyArgoRelease(before, expected, request).operationId,
+    receipt: verifyPrunePendingArgoRelease(before, expected, request)
+      .operationId,
     expected,
     request,
   };
@@ -470,8 +474,8 @@ export async function proveSettledWorkerRecovery(
   }
   if (
     owned !== undefined &&
-    verifyArgoRelease(after, owned.expected, owned.request).operationId !==
-      owned.receipt
+    verifyPrunePendingArgoRelease(after, owned.expected, owned.request)
+      .operationId !== owned.receipt
   )
     throw new Error("Owned operation changed during recovery proof");
   const receipt = classified.receipt ?? workflowId;

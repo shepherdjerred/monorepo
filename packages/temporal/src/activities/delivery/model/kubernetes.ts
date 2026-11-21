@@ -6,7 +6,6 @@ import {
 } from "#lib/delivery/model/effect-signal.ts";
 import type { DeliveryModelStepResult } from "#shared/delivery-executor.ts";
 import { createHash } from "node:crypto";
-import { z } from "zod";
 import type {
   DeploymentDetail,
   EvidenceInput,
@@ -17,6 +16,11 @@ import {
   hasLiveLegacyMediaIngresses,
   MEDIA_INGRESS_PRUNE_FLAG,
 } from "homelab/scripts/argocd/argocd-media-ingress-prunes.ts";
+import {
+  SyncedArgoHistorySchema,
+  latestArgoSyncedHistory,
+  unchangedArgoHistoryId,
+} from "#lib/delivery/argocd-proof.ts";
 import { verifyOciChart } from "./oci-chart.ts";
 import {
   createArgoApplication,
@@ -86,10 +90,6 @@ function reconciliationEvidence(
   }));
 }
 
-function signal() {
-  return effectSignal();
-}
-
 /**
  * HTTPS chart bytes must match the artifact digest, and an OCI chart's tag
  * must still resolve to it; other stores serve the recorded version. The
@@ -102,7 +102,7 @@ async function verifySourceBytes(
 ): Promise<EvidenceInput> {
   const artifact = rendered.sourceArtifact;
   if (artifact.uri.startsWith("oci://"))
-    return await verifyOciChart(artifact, operationId, signal());
+    return await verifyOciChart(artifact, operationId, effectSignal());
   if (!artifact.uri.startsWith("https://"))
     return {
       kind: "preflight",
@@ -110,7 +110,7 @@ async function verifySourceBytes(
       summary: `Source ${artifact.id} ${artifact.version} is bound by its recorded digest ${artifact.digest}; its store serves it by version`,
     };
   const response = await fetch(artifact.uri, {
-    signal: AbortSignal.any([signal(), AbortSignal.timeout(30_000)]),
+    signal: AbortSignal.any([effectSignal(), AbortSignal.timeout(30_000)]),
     redirect: "follow",
   });
   if (!response.ok)
@@ -131,30 +131,25 @@ async function verifySourceBytes(
   };
 }
 
-const OperationPhaseSchema = z
-  .object({
-    metadata: z.object({ resourceVersion: z.string().min(1) }),
-    status: z
-      .object({
-        operationState: z.object({ phase: z.string() }).optional(),
-      })
-      .optional(),
-  })
-  .loose();
+function readCandidateApplication(rendered: RenderedApplication) {
+  return getArgoApplication(rendered.name, {
+    signal: effectSignal(),
+    project: rendered.body.spec.project,
+  });
+}
 
 /** Create when absent; otherwise replace the whole body under CAS and ownership (T2). */
 async function writeBody(
   rendered: RenderedApplication,
+  onPriorRead?: (prior: unknown) => void,
 ): Promise<"created" | "updated"> {
-  const current = await getArgoApplication(rendered.name, {
-    signal: signal(),
-    project: rendered.body.spec.project,
-  });
+  const current = await readCandidateApplication(rendered);
+  onPriorRead?.(current);
   if (current === null) {
-    await createArgoApplication(rendered.body, { signal: signal() });
+    await createArgoApplication(rendered.body, { signal: effectSignal() });
     return "created";
   }
-  const observed = OperationPhaseSchema.parse(current);
+  const observed = SyncedArgoHistorySchema.parse(current);
   if (
     ["Running", "Terminating"].includes(
       observed.status?.operationState?.phase ?? "",
@@ -173,29 +168,17 @@ async function writeBody(
       },
     },
     { environmentId: rendered.environmentId },
-    { signal: signal() },
+    { signal: effectSignal() },
   );
   return "updated";
 }
 
-/** The Application's history: the source of each sync Argo performed. */
-const SyncedHistorySchema = z
-  .object({
-    metadata: z.object({ resourceVersion: z.string().min(1) }),
-    status: z
-      .object({
-        history: z
-          .array(
-            z.object({
-              id: z.number(),
-              source: z.record(z.string(), z.unknown()),
-            }),
-          )
-          .optional(),
-      })
-      .optional(),
-  })
-  .loose();
+type ApplySafetyStep = {
+  current: DeploymentDetail;
+  rendered: RenderedApplication;
+  key: string;
+  operationId: string;
+};
 
 /**
  * Undoes the apply-safety step's only effect, the body it wrote: a created
@@ -211,24 +194,18 @@ async function restoreWrittenBody(
     await deleteArgoApplication(
       rendered.name,
       { environmentId: rendered.environmentId, cascade: false },
-      { signal: signal() },
+      { signal: effectSignal() },
     );
     return "removed the Application it had created";
   }
-  const current = SyncedHistorySchema.parse(
-    await getArgoApplication(rendered.name, {
-      signal: signal(),
-      project: rendered.body.spec.project,
-    }),
+  const current = SyncedArgoHistorySchema.parse(
+    await readCandidateApplication(rendered),
   );
-  const history = current.status?.history ?? [];
-  if (history.length === 0)
+  const latest = latestArgoSyncedHistory(current.status?.history);
+  if (latest === null)
     throw new Error(
       `Application ${rendered.name} has no synced source to restore`,
     );
-  const latest = history.reduce((left, right) =>
-    left.id > right.id ? left : right,
-  );
   await updateArgoApplication(
     rendered.name,
     {
@@ -240,47 +217,29 @@ async function restoreWrittenBody(
       spec: { ...rendered.body.spec, source: latest.source },
     },
     { environmentId: rendered.environmentId },
-    { signal: signal() },
+    { signal: effectSignal() },
   );
   return `restored the source Argo last synced (history ${latest.id.toString()})`;
 }
 
 const EVIDENCE_SUMMARY_LIMIT = 4000;
 
-/**
- * The read-only assert refused (or could not run) after the body was written.
- * Nothing was synced, so the step undoes the write and records a settled,
- * failed stage with the command's own explanation: the deployment then ends
- * without an unsettled stage and holds nothing (AI-446, AI-439). Only when the
- * undo itself fails does the stage stay running for recovery.
- */
-async function refuseApplySafety(
-  step: {
-    current: DeploymentDetail;
-    rendered: RenderedApplication;
-    key: string;
-    operationId: string;
-  },
-  written: "created" | "updated",
+async function settleRefusedApplySafety(
+  step: ApplySafetyStep,
+  outcome: string,
   error: unknown,
 ): Promise<never> {
   const { current, rendered, key, operationId } = step;
-  let undone: string;
-  try {
-    undone = await restoreWrittenBody(rendered, written);
-  } catch {
-    throw error;
-  }
   const reason =
     error instanceof GuardedArgoCommandError
       ? error.output
       : error instanceof Error
         ? error.message
         : "the apply-safety preflight failed";
-  const summary = `Apply-safety refused ${rendered.name} at ${rendered.revision} before any sync; ${undone}. ${reason}`;
+  const summary = `Apply-safety refused ${rendered.name} at ${rendered.revision} before any sync; ${outcome}. ${reason}`;
   await recordStage(current, key, "failed", {
     operationId,
-    message: `${key}: refused before sync; ${undone}`,
+    message: `${key}: refused before sync; ${outcome}`,
     evidence: [
       {
         kind: "preflight",
@@ -290,9 +249,53 @@ async function refuseApplySafety(
     ],
   });
   throw ApplicationFailure.nonRetryable(
-    `Apply safety refused ${rendered.name}; ${undone}, and nothing was synced`,
+    `Apply safety refused ${rendered.name}; ${outcome}, and nothing was synced`,
     "DeliveryApplySafetyRefused",
   );
+}
+
+/**
+ * When `writeBody` itself failed before any sync, read back the Application:
+ * if it was absent beforehand and is still absent, or its full body matches
+ * `prior` and its `spec.source` still canonically matches the latest
+ * `status.history` entry with no active operation, no candidate body landed.
+ */
+async function proveUnwrittenBody(
+  rendered: RenderedApplication,
+  priorRead: { read: false } | { read: true; value: unknown },
+): Promise<string | null> {
+  if (!priorRead.read) return null;
+  let raw: unknown;
+  try {
+    raw = await readCandidateApplication(rendered);
+  } catch {
+    return null;
+  }
+  if (raw === null)
+    return priorRead.value === null
+      ? "the Application was never created"
+      : null;
+  const historyId = unchangedArgoHistoryId(raw, priorRead.value, rendered.name);
+  return historyId === null
+    ? null
+    : `Application body is unchanged and spec.source matches history ${historyId.toString()}`;
+}
+
+async function writeBodyOrRefuse(
+  step: ApplySafetyStep,
+): Promise<"created" | "updated"> {
+  let priorRead: { read: false } | { read: true; value: unknown } = {
+    read: false,
+  };
+  try {
+    return await writeBody(step.rendered, (value) => {
+      priorRead = { read: true, value };
+    });
+  } catch (error) {
+    const unchanged = await proveUnwrittenBody(step.rendered, priorRead);
+    if (unchanged === null) throw error;
+    return await settleRefusedApplySafety(step, unchanged, error);
+  }
 }
 
 /**
@@ -317,19 +320,24 @@ export async function applySafety(
   if (stageOf(current, key) === undefined)
     await forumBaselineFence(current, recipe);
   await recordStage(current, key, "running", { operationId });
-  const written = await writeBody(rendered);
+  const step = { current, rendered, key, operationId };
+  const written = await writeBodyOrRefuse(step);
   try {
     await runGuardedArgoCommand(
       ["assert-apply-safe", rendered.name, "--revision", rendered.revision],
       { operationId, application: rendered.name },
     );
   } catch (error) {
-    await refuseApplySafety(
-      { current, rendered, key, operationId },
-      written,
-      error,
-    );
+    // Nothing was synced: undo the write and settle failed (AI-446, AI-439);
+    // only if the undo itself fails does the stage stay running for recovery.
+    const undone = await restoreWrittenBody(rendered, written).catch(() => {
+      throw error;
+    });
+    await settleRefusedApplySafety(step, undone, error);
   }
+  const bodySha = createHash("sha256")
+    .update(canonicalJson(rendered.body))
+    .digest("hex");
   await recordStage(current, key, "succeeded", {
     operationId,
     evidence: [
@@ -337,13 +345,7 @@ export async function applySafety(
       {
         kind: "preflight",
         operationId,
-        summary: `Application ${rendered.name} ${written} from the recipe's full body (sha256 ${createHash(
-          "sha256",
-        )
-          .update(canonicalJson(rendered.body))
-          .digest(
-            "hex",
-          )}); managed resources at ${rendered.revision} are apply-safe`,
+        summary: `Application ${rendered.name} ${written} from the recipe's full body (sha256 ${bodySha}); managed resources at ${rendered.revision} are apply-safe`,
       },
     ],
   });
@@ -357,7 +359,9 @@ async function waitForReadback(
   let incarnation: string | undefined;
   for (let attempt = 0; attempt < READBACK_ATTEMPTS; attempt++) {
     await requireOwned(deploymentId);
-    const raw = await getArgoApplication(rendered.name, { signal: signal() });
+    const raw = await getArgoApplication(rendered.name, {
+      signal: effectSignal(),
+    });
     if (raw === null)
       throw new Error(`Application ${rendered.name} disappeared while syncing`);
     const progress = applicationProgress(raw, rendered, requestId);
@@ -446,7 +450,9 @@ async function syncOwned(
 ) {
   const rendered = renderApplication(current, recipe);
   const requestId = deliveryOperationId(current.deployment.id);
-  const raw = await getArgoApplication(rendered.name, { signal: signal() });
+  const raw = await getArgoApplication(rendered.name, {
+    signal: effectSignal(),
+  });
   if (raw === null)
     throw new Error(
       `Application ${rendered.name} is missing; the apply-safety step writes it first`,
@@ -524,6 +530,6 @@ export async function enableSelfHeal(
   return await setArgoSelfHeal(
     rendered.name,
     { environmentId: rendered.environmentId, expectedSource: rendered.source },
-    { signal: signal() },
+    { signal: effectSignal() },
   );
 }

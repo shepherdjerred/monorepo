@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import {
   DeliveryArgoSourceSchema,
   deliveryArgoParameters,
@@ -67,6 +68,44 @@ const PendingReleaseObservationSchema = OperationObservationSchema.extend({
     }),
   }),
 });
+const PrunePendingObservationSchema = ObservationSchema.extend({
+  status: ObservationSchema.shape.status.extend({
+    sync: SettledArgoStatusSchema.shape.sync.extend({
+      status: z.enum(["Synced", "OutOfSync"]),
+    }),
+  }),
+});
+const PrunePendingResourcesSchema = z.object({
+  status: z.object({
+    sync: z.object({ status: z.literal("OutOfSync") }),
+    resources: z
+      .array(
+        z.object({
+          status: z.string().optional(),
+          requiresPruning: z.boolean().optional(),
+        }),
+      )
+      .min(1),
+  }),
+});
+
+/**
+ * True when an Application is `OutOfSync` solely because one or more obsolete
+ * resources await pruning (`requiresPruning: true`). Missing or empty
+ * `status.resources`, zero `OutOfSync` entries, or any `OutOfSync` entry
+ * without `requiresPruning === true` returns false (fails closed).
+ */
+export function isPruneOnlyOutOfSync(raw: unknown): boolean {
+  const parsed = PrunePendingResourcesSchema.safeParse(raw);
+  if (!parsed.success) return false;
+  const drifting = parsed.data.status.resources.filter(
+    (resource) => resource.status === "OutOfSync",
+  );
+  return (
+    drifting.length > 0 &&
+    drifting.every((resource) => resource.requiresPruning === true)
+  );
+}
 
 function verifyObservedOperation(
   current: z.infer<typeof PendingReleaseObservationSchema>,
@@ -160,4 +199,104 @@ export function verifyArgoRelease(
     selection,
     operationId,
   );
+}
+
+/**
+ * Verifies an owned release receipt where `workerSyncPrunes` intentionally
+ * synced with `prune: false`, leaving obsolete resources prune-pending
+ * (`AI-792`). Accepts `Synced`, or `OutOfSync` only when `status.resources`
+ * proves every `OutOfSync` resource has `requiresPruning === true`.
+ */
+export function verifyPrunePendingArgoRelease(
+  input: unknown,
+  selection: DeliverySelection,
+  operationId: string,
+) {
+  const current = PrunePendingObservationSchema.parse(input);
+  if (current.status.sync.status !== "Synced" && !isPruneOnlyOutOfSync(input))
+    throw new Error("Operated worker recovery requires a Synced Application");
+  return verifyObservedOperation(current, selection, operationId);
+}
+
+const SyncedHistoryEntrySchema = z.object({
+  id: z.number(),
+  source: z.record(z.string(), z.unknown()),
+});
+export const SyncedArgoHistorySchema = z
+  .object({
+    metadata: z
+      .object({
+        name: z.string().min(1).optional(),
+        resourceVersion: z.string().min(1),
+      })
+      .loose(),
+    operation: z.null().optional(),
+    spec: z
+      .object({ source: z.record(z.string(), z.unknown()).optional() })
+      .loose()
+      .optional(),
+    status: z
+      .object({
+        operationState: z.object({ phase: z.string() }).optional(),
+        history: z.array(SyncedHistoryEntrySchema).optional(),
+      })
+      .optional(),
+  })
+  .loose();
+
+function bodySnapshot(parsed: z.infer<typeof SyncedArgoHistorySchema>) {
+  const {
+    resourceVersion: _resourceVersion,
+    managedFields: _managedFields,
+    ...metadata
+  } = parsed.metadata;
+  return { metadata, spec: parsed.spec };
+}
+
+export function latestArgoSyncedHistory(
+  history: readonly z.infer<typeof SyncedHistoryEntrySchema>[] | undefined,
+) {
+  if (history === undefined) return null;
+  const first = history[0];
+  return first === undefined
+    ? null
+    : history.reduce(
+        (left, right) => (left.id > right.id ? left : right),
+        first,
+      );
+}
+
+/**
+ * Returns the latest `status.history` entry ID when `raw` is a quiescent
+ * Application named `name` whose full body (`metadata` and `spec`, ignoring
+ * server `resourceVersion`/`managedFields`) matches `prior` and whose
+ * `spec.source` still canonically matches that latest synced entry.
+ */
+export function unchangedArgoHistoryId(
+  raw: unknown,
+  prior: unknown,
+  name: string,
+): number | null {
+  const parsed = SyncedArgoHistorySchema.safeParse(raw);
+  const previous = SyncedArgoHistorySchema.safeParse(prior);
+  if (
+    !parsed.success ||
+    !previous.success ||
+    parsed.data.metadata.name !== name
+  )
+    return null;
+  const phase = parsed.data.status?.operationState?.phase ?? "";
+  const latest = latestArgoSyncedHistory(parsed.data.status?.history);
+  const source = parsed.data.spec?.source;
+  if (
+    latest === null ||
+    source === undefined ||
+    ["Running", "Terminating"].includes(phase) ||
+    canonicalJson(bodySnapshot(parsed.data)) !==
+      canonicalJson(bodySnapshot(previous.data))
+  )
+    return null;
+  return canonicalJson(source) === canonicalJson(latest.source)
+    ? latest.id
+    : null;
 }

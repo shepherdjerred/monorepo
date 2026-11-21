@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { verifyArgoRelease, waitForArgoRelease } from "./argocd.ts";
+import {
+  isPruneOnlyOutOfSync,
+  verifyPrunePendingArgoRelease,
+} from "#lib/delivery/argocd-proof.ts";
 import { DELIVERY_ENVIRONMENT_ANNOTATION } from "homelab/src/delivery-ownership.ts";
 import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
 import { acknowledgeReconciledRelease } from "./reconcile-ack.ts";
@@ -541,5 +545,71 @@ describe("Delivery Argo operation evidence", () => {
     expect(() => verifyArgoRelease(current, selection, requestId)).toThrow(
       "exact owned",
     );
+  });
+});
+
+describe("prune-pending Argo release verification (AI-792)", () => {
+  it("accepts prune-only OutOfSync in verifyPrunePendingArgoRelease while keeping verifyArgoRelease strict", () => {
+    const pruneOnly = {
+      ...observation(),
+      status: {
+        ...observation().status,
+        sync: { status: "OutOfSync", revision: selection.revision },
+        resources: [
+          { kind: "Deployment", status: "Synced" },
+          {
+            group: "rbac.authorization.k8s.io",
+            kind: "ClusterRole",
+            name: "temporal-worker-ingress-reader",
+            status: "OutOfSync",
+            requiresPruning: true,
+          },
+        ],
+      },
+    };
+    expect(isPruneOnlyOutOfSync(pruneOnly)).toBe(true);
+    expect(() => verifyArgoRelease(pruneOnly, selection, requestId)).toThrow();
+    expect(
+      verifyPrunePendingArgoRelease(pruneOnly, selection, requestId),
+    ).toEqual({
+      requestId,
+      operationId,
+      revision: selection.revision,
+    });
+    expect(
+      verifyPrunePendingArgoRelease(observation(), selection, requestId),
+    ).toEqual({
+      requestId,
+      operationId,
+      revision: selection.revision,
+    });
+
+    for (const resources of [
+      undefined,
+      [],
+      [{ kind: "Deployment", status: "Synced" }],
+      [
+        {
+          kind: "ClusterRole",
+          status: "OutOfSync",
+          requiresPruning: true,
+        },
+        {
+          kind: "Deployment",
+          status: "OutOfSync",
+          requiresPruning: false,
+        },
+      ],
+      [{ kind: "Deployment", status: "OutOfSync" }],
+    ]) {
+      const candidate = {
+        ...pruneOnly,
+        status: { ...pruneOnly.status, resources },
+      };
+      expect(isPruneOnlyOutOfSync(candidate)).toBe(false);
+      expect(() =>
+        verifyPrunePendingArgoRelease(candidate, selection, requestId),
+      ).toThrow("Operated worker recovery requires a Synced Application");
+    }
   });
 });

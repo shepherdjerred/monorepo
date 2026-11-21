@@ -34,6 +34,8 @@ const calls = vi.hoisted(() => {
     credentialFailure: false,
     lapsed: false,
     refuse: false,
+    failCreate: false,
+    failUpdate: false,
     failRestore: false,
   };
 });
@@ -63,10 +65,14 @@ vi.mock("#lib/delivery/argo-client.ts", async (importOriginal) => ({
   },
   createArgoApplication: () => {
     calls.events.push("write");
-    return Promise.resolve();
+    return calls.failCreate
+      ? Promise.reject(new Error("Argo API returned HTTP 400"))
+      : Promise.resolve();
   },
   updateArgoApplication: (_name: string, body: unknown) => {
     calls.events.push("update");
+    if (calls.failUpdate)
+      return Promise.reject(new Error("Argo API returned HTTP 400"));
     if (calls.failRestore && calls.updates.length > 0)
       return Promise.reject(new Error("Argo API returned HTTP 409"));
     calls.updates.push(body);
@@ -171,6 +177,8 @@ afterEach(() => {
   calls.updates = [];
   calls.stages = [];
   calls.refuse = false;
+  calls.failCreate = false;
+  calls.failUpdate = false;
   calls.failRestore = false;
 });
 
@@ -540,5 +548,108 @@ describe("a refused apply-safety", () => {
     expect(error).not.toBeInstanceOf(ApplicationFailure);
     expect(error).toMatchObject({ name: "GuardedArgoCommandError" });
     expect(calls.stages.map(({ status }) => status)).toEqual(["running"]);
+  });
+});
+
+describe("a failed apply-safety body write (AI-423)", () => {
+  test("settles failed stage when writeBody throws without mutating spec.source or creating the Application", async () => {
+    const { current, recipe } = fixture();
+    calls.reads = [existingApplication(), existingApplication()];
+    calls.failUpdate = true;
+    const updateError = await refusal(
+      applySafety(current, recipe, "step-apply-safety"),
+    );
+    expect(updateError).toBeInstanceOf(ApplicationFailure);
+    expect(updateError).toMatchObject({
+      type: "DeliveryApplySafetyRefused",
+      nonRetryable: true,
+    });
+    expect(calls.stages.map(({ status }) => status)).toEqual([
+      "running",
+      "failed",
+    ]);
+    expect(calls.stages[1]?.receipt).toMatchObject({
+      evidence: [
+        {
+          kind: "preflight",
+          summary: expect.stringContaining("Argo API returned HTTP 400"),
+        },
+      ],
+    });
+
+    calls.stages = [];
+    calls.events = [];
+    calls.failUpdate = false;
+    calls.failCreate = true;
+    calls.reads = [null, null];
+    const createError = await refusal(
+      applySafety(current, recipe, "step-apply-safety"),
+    );
+    expect(createError).toMatchObject({
+      type: "DeliveryApplySafetyRefused",
+      nonRetryable: true,
+    });
+    expect(calls.stages.map(({ status }) => status)).toEqual([
+      "running",
+      "failed",
+    ]);
+  });
+
+  test("retains recovery ownership when writeBody fails and readback observes mutated spec, metadata, unsettled operation, or vanished Application", async () => {
+    const { current, recipe } = fixture();
+    const priorWithSelfHeal = {
+      ...existingApplication(),
+      metadata: {
+        ...existingApplication().metadata,
+        annotations: {
+          "delivery.shepherdjerred.com/environment": "forum/prod",
+        },
+      },
+      spec: {
+        ...existingApplication().spec,
+        syncPolicy: {
+          automated: { enabled: true, selfHeal: true, prune: false },
+        },
+      },
+    };
+    for (const afterRead of [
+      {
+        ...priorWithSelfHeal,
+        spec: { source: { chart: "storm-forum", targetRevision: "1.0.1" } },
+      },
+      {
+        // Same synced source, but full-body PUT replaced syncPolicy (disabled selfHeal).
+        ...priorWithSelfHeal,
+        metadata: { ...priorWithSelfHeal.metadata, resourceVersion: "8" },
+        spec: {
+          ...priorWithSelfHeal.spec,
+          syncPolicy: { automated: { enabled: false } },
+        },
+      },
+      {
+        ...priorWithSelfHeal,
+        metadata: {
+          ...priorWithSelfHeal.metadata,
+          annotations: { "argocd.argoproj.io/sync-options": "Prune=false" },
+        },
+      },
+      {
+        ...priorWithSelfHeal,
+        status: {
+          ...priorWithSelfHeal.status,
+          operationState: { phase: "Running" },
+        },
+      },
+      null,
+    ]) {
+      calls.stages = [];
+      calls.failUpdate = true;
+      calls.reads = [priorWithSelfHeal, afterRead];
+      const error = await refusal(
+        applySafety(current, recipe, "step-apply-safety"),
+      );
+      expect(error).not.toBeInstanceOf(ApplicationFailure);
+      expect(calls.stages.map(({ status }) => status)).toEqual(["running"]);
+    }
   });
 });
