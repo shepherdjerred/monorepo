@@ -8,6 +8,8 @@ import {
   readSearch,
   searchAddress,
 } from "#client/discover/view.ts";
+import { unreadCount } from "#client/notifications/model.ts";
+import { useNotifications } from "#client/notifications/use-notifications.ts";
 import { AccountMenu } from "./account-menu.tsx";
 import { classNames } from "#client/ui/class-names.ts";
 import styles from "./shell.module.css";
@@ -135,12 +137,45 @@ function SearchField() {
   );
 }
 
+/** A count this wide says "many"; the page has the number. */
+const COUNT_LIMIT = 99;
+
 /**
- * Search, notifications, and the account, kept in view above every page.
- *
- * The bell carries no count: the notifications the API returns are delivery
- * records with no read state, so an unread number could not be an honest one.
+ * The way to the notifications, with how many are unread. Unread means a
+ * reminder shown in Media that its reader has not marked as read, which is
+ * the one read state a notification has; a message that only went out by
+ * email or Discord is never counted. The number comes from the same read
+ * the Notifications page shows, so the two cannot disagree, and it is left
+ * off until that read has answered.
  */
+function Bell() {
+  const notifications = useNotifications();
+  const unread =
+    notifications.data === undefined ? 0 : unreadCount(notifications.data);
+  return (
+    <NavLink
+      className={cx("iconButton")}
+      to="/notifications"
+      // The settings and the two confirm pages live under this address and
+      // are not the list the bell stands for.
+      end
+      aria-label={
+        unread === 0
+          ? "Notifications"
+          : `Notifications, ${String(unread)} unread`
+      }
+    >
+      <BellIcon aria-hidden="true" />
+      {unread > 0 && (
+        <span className={cx("bellCount")} aria-hidden="true">
+          {unread > COUNT_LIMIT ? `${String(COUNT_LIMIT)}+` : unread}
+        </span>
+      )}
+    </NavLink>
+  );
+}
+
+/** Search, notifications, and the account, kept in view above every page. */
 export function TopBar({
   user,
   signingOut,
@@ -154,13 +189,7 @@ export function TopBar({
     <header className={cx("topBar")}>
       <SearchField />
       <div className={cx("topActions")}>
-        <NavLink
-          className={cx("iconButton")}
-          to="/notifications"
-          aria-label="Notifications"
-        >
-          <BellIcon aria-hidden="true" />
-        </NavLink>
+        <Bell />
         <AccountMenu
           user={user}
           signingOut={signingOut}

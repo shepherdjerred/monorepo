@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
+import { NOTIFICATION_SETTINGS_PATH } from "#client/notifications/paths.ts";
 import { chooseTheme, useThemeChoice, type ThemeChoice } from "./theme.ts";
 import { classNames } from "#client/ui/class-names.ts";
 import { useDismissal } from "#client/ui/use-dismissal.ts";
@@ -119,7 +120,7 @@ export function AccountMenu({
         </div>
         <ul className={cx("links")}>
           <li>
-            <Link className={cx("item")} to="/notifications">
+            <Link className={cx("item")} to={NOTIFICATION_SETTINGS_PATH}>
               <BellIcon aria-hidden="true" />
               Notification settings
             </Link>

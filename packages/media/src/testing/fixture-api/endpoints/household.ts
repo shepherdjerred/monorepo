@@ -260,7 +260,7 @@ const notifications: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/notifications",
     schema: NotificationListSchema,
-    respond: (request) => notificationList(request.persona),
+    respond: (request) => notificationList(request.persona, request.scenario),
     samples: ["/notifications"],
   }),
   endpoint({

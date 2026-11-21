@@ -11,9 +11,11 @@ import { LibraryLeaving } from "#client/library/leaving.tsx";
 import { LibraryMine } from "#client/library/mine.tsx";
 import { LibraryPage } from "#client/library/page.tsx";
 import { LibraryRemoved } from "#client/library/removed.tsx";
-import { NotificationsPage } from "#client/lists.tsx";
+
 import { MovieHistoryPageV3 } from "#client/movie-history/page.tsx";
-import { NotificationCallback } from "#client/preferences.tsx";
+import { NotificationCallback } from "#client/notifications/callback.tsx";
+import { NotificationsPage } from "#client/notifications/page.tsx";
+import { NotificationSettingsPage } from "#client/notifications/settings.tsx";
 import { RecoveryPage } from "#client/recovery/page.tsx";
 import { CatalogTitlePage, MediaTitlePage } from "#client/title/page.tsx";
 import { HOME_PATH, MovedTo, OwnerOnly } from "./redirects.tsx";
@@ -34,6 +36,7 @@ const History = withUser(HistoryPage);
 const Catalog = withUser(CatalogTitlePage);
 const Media = withUser(MediaTitlePage);
 const Notifications = withUser(NotificationsPage);
+const NotificationSettings = withUser(NotificationSettingsPage);
 const Recovery = withUser(RecoveryPage);
 const MovieHistory = withUser(MovieHistoryPageV3);
 
@@ -226,6 +229,12 @@ export const routes: RouteObject[] = [
           { path: "catalog/:kind/:id", element: <Catalog /> },
           { path: "media/:id", element: <Media /> },
           { path: "notifications", element: <Notifications /> },
+          {
+            path: "notifications/settings",
+            element: <NotificationSettings />,
+          },
+          // The server writes these two into verification emails and gives
+          // the second to Discord as its return address.
           { path: "notifications/email", element: <EmailCallback /> },
           { path: "notifications/discord", element: <DiscordCallback /> },
           { path: "recovery", element: <Recovery /> },

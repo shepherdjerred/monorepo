@@ -1,0 +1,374 @@
+@layer pages {
+  /* Heading on the left, the way to the settings on the right. */
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+  .header > header {
+    margin-bottom: 0;
+  }
+  .settingsLink {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .settingsLink:hover {
+    background: var(--surface-selected);
+  }
+  .settingsLink:focus-visible {
+    outline-offset: 2px;
+  }
+  .settingsLink svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+  }
+
+  /* One entry per event. */
+  .rows {
+    list-style: none;
+    max-width: 860px;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border);
+  }
+  /* Unread is a mark down the entry's edge and a word, never color alone. */
+  .row[data-unread="true"] {
+    margin-inline: calc(-1 * var(--space-3));
+    padding-inline: var(--space-3);
+    border-radius: var(--radius-card);
+    background: var(--surface-selected);
+    box-shadow: inset 3px 0 0 var(--accent-strong);
+  }
+  /* A poster, or for an event about no title a mark in a poster's shape. */
+  .art {
+    min-width: 0;
+  }
+  .mark {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-poster);
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    outline: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+    outline-offset: -1px;
+  }
+  .mark svg {
+    width: 20px;
+    height: 20px;
+  }
+  .body {
+    min-width: 0;
+  }
+  .title {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+  }
+  .title a {
+    border-radius: 2px;
+  }
+  .title a:hover {
+    color: var(--text-accent);
+  }
+  .unreadTag {
+    margin-inline-end: var(--space-2);
+    color: var(--text-accent);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .when {
+    margin: 2px 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .line {
+    max-width: 640px;
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-sm);
+  }
+  .unreadAction {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+    margin-top: var(--space-1);
+  }
+
+  /* The channels an event went out on, each with how it ended up. */
+  .channels {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+  }
+  .channel {
+    padding: 2px 10px;
+    border-radius: var(--radius-pill);
+    background: var(--neutral-soft);
+    color: var(--neutral);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .channel[data-tone="ok"] {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .channel[data-tone="progress"] {
+    background: var(--progress-soft);
+    color: var(--progress);
+  }
+  .channel[data-tone="warn"] {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .channel[data-tone="danger"] {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  /* What can be done about a delivery, one step away. */
+  .details {
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text);
+  }
+  .details > summary {
+    display: inline-block;
+    padding: var(--space-1) 0;
+    color: var(--text-accent);
+    font-weight: 500;
+    border-radius: 2px;
+  }
+  .details > summary::marker {
+    content: "";
+  }
+  .details > summary::-webkit-details-marker {
+    display: none;
+  }
+  .details > summary:hover {
+    text-decoration: underline;
+  }
+  .deliveries {
+    list-style: none;
+    display: grid;
+    gap: var(--space-3);
+    max-width: 640px;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+  }
+  .delivery {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+  }
+  .deliveryHead {
+    margin: 0;
+    font-weight: 600;
+  }
+  .deliveryNote {
+    margin: var(--space-1) 0 0;
+    color: var(--text-muted);
+  }
+  .deliveryActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+  .deliveryActions:empty {
+    display: none;
+  }
+  .receipt {
+    display: grid;
+    gap: var(--space-1);
+    flex: 1 1 240px;
+    max-width: 360px;
+    color: var(--text-muted);
+  }
+  .receipt input,
+  .textField {
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--field);
+    color: var(--text);
+    font-size: var(--text-sm);
+  }
+  .deliveryError,
+  .formError {
+    margin: var(--space-2) 0 0;
+    color: var(--danger);
+    font-size: var(--text-sm);
+  }
+  .cutOff {
+    margin: var(--space-4) 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  /* Notification settings. */
+  .settings {
+    display: grid;
+    gap: var(--space-5);
+    max-width: 720px;
+  }
+  .setting {
+    padding: var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+  .setting > h2 {
+    margin-bottom: var(--space-2);
+  }
+  .setting > .line {
+    margin-top: 0;
+    color: var(--text-muted);
+  }
+  .channelSetting {
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+  }
+  .channelSetting h3 {
+    margin-bottom: var(--space-1);
+  }
+  .channelSetting .line {
+    margin: 0 0 var(--space-3);
+    color: var(--text-muted);
+  }
+  .inlineForm {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .fieldLabel {
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .fieldRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .fieldRow .textField {
+    flex: 1 1 240px;
+  }
+  .formDone {
+    margin: var(--space-2) 0 0;
+    color: var(--ok);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .preferences {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+  .checks {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: var(--space-4);
+  }
+  .checks legend {
+    padding: 0 var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .check label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 24px;
+  }
+  .check input {
+    flex: none;
+    width: 18px;
+    height: 18px;
+  }
+  .checkHint {
+    margin: 2px 0 0;
+    /* Level with the label's words, past the box. */
+    padding-inline-start: calc(18px + var(--space-3));
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .formActions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+  }
+  .formActions .formDone {
+    margin: 0;
+  }
+
+  /* The pages a verification link and Discord's return land on. */
+  .callbackAction,
+  .callbackDone {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+  }
+  .callbackDone p {
+    margin: 0;
+    color: var(--ok);
+    font-weight: 500;
+  }
+
+  /* Loading blocks, each the size of the thing it stands for. */
+  .skeletonHeading {
+    width: 45%;
+    height: 20px;
+    margin-bottom: var(--space-4);
+  }
+  .skeletonLine {
+    width: 80%;
+    height: 14px;
+    margin-bottom: var(--space-4);
+  }
+  .skeletonField {
+    width: 100%;
+    height: 40px;
+  }
+
+  @media (pointer: coarse) {
+    .settingsLink {
+      min-height: 44px;
+    }
+    .receipt input,
+    .textField {
+      min-height: 44px;
+      /* Below 16px, iOS zooms the page when a field takes focus. */
+      font-size: 1rem;
+    }
+  }
+}

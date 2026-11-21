@@ -64,6 +64,23 @@ function shared(persona: Persona): RouteSpec[] {
       heading: "Notifications",
     },
     {
+      label: `${persona} /notifications/settings`,
+      path: "/notifications/settings",
+      heading: "Notification settings",
+    },
+    // What a verification email and Discord link to. Each waits for its
+    // reader before it writes, so opening one is only a page.
+    {
+      label: `${persona} /notifications/email`,
+      path: "/notifications/email#verify=token",
+      heading: "Confirm your email address",
+    },
+    {
+      label: `${persona} /notifications/discord`,
+      path: "/notifications/discord?code=abc&state=def",
+      heading: "Connect your Discord account",
+    },
+    {
       label: `${persona} /recovery`,
       path: "/recovery",
       heading: "Recovery protection",
@@ -123,8 +140,7 @@ function shared(persona: Persona): RouteSpec[] {
  *
  * Not covered, because the read-only fixture API cannot answer them: the
  * review pages `/recovery/:id` and `/recovery/movies/:id` (their detail
- * contracts have no fixture yet) and the `/notifications/email` and
- * `/notifications/discord` callbacks, which write as soon as they load.
+ * contracts have no fixture yet).
  */
 const MEMBER_ROUTES: readonly RouteSpec[] = [
   {
