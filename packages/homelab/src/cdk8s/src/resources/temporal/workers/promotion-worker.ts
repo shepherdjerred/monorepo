@@ -14,6 +14,7 @@ import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/impor
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   dnsEgressRule,
+  lokiOtlpEgress,
   prometheusIngressRule,
   nsPeer,
   tcp,
@@ -136,6 +137,7 @@ export function createTemporalPromotionWorker(
           to: [nsPeer(namespace)],
           ports: [tcp(port)],
         })),
+        lokiOtlpEgress(),
         { ports: [tcp(443)] },
       ],
     },

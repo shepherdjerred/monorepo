@@ -6,6 +6,7 @@ import {
   nsPeer,
   tcp,
   fliptEgress,
+  lokiOtlpEgress,
   otlpEgress,
   postgresEgress,
   postgresOperatorIngressRule,
@@ -59,6 +60,8 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
           database,
           flipt,
           telemetry,
+          // The Temporal worker image ships its logs to Loki by default.
+          lokiOtlpEgress(),
           {
             to: [
               {

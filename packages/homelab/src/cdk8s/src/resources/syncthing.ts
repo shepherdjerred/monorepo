@@ -7,6 +7,7 @@ import {
   dnsEgressRule,
   tailscaleIngressRule,
   tcp,
+  udp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -69,6 +70,11 @@ export function createSyncthingDeployment(chart: Chart) {
               // relaying silently fails and those peers never connect. See
               // the original investigation.
               tcp(22_067), // Relay data connection
+              // STUN, which Syncthing uses by default to learn its public
+              // address for QUIC hole punching. Its UPnP and NAT-PMP port
+              // mapping (UDP 1900 and 5351) stays denied: a pod cannot map a
+              // port on the home router.
+              udp(3478, 3479),
             ],
           },
         ],

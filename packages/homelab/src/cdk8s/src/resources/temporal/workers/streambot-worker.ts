@@ -12,7 +12,7 @@ import {
 import { metricsIngress } from "./worker-network-policies.ts";
 import {
   temporalTelemetryEnvironment,
-  temporalTelemetryEgressRule,
+  temporalTelemetryEgressRules,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 
 export function createStreambotWorker(chart: Chart, serverServiceName: string) {
@@ -50,7 +50,7 @@ export function createStreambotWorker(chart: Chart, serverServiceName: string) {
       ingress: metricsIngress([9464, 9465]),
       egress: [
         dnsEgressRule(),
-        temporalTelemetryEgressRule(),
+        ...temporalTelemetryEgressRules(),
         {
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
           ports: [tcp(7233)],

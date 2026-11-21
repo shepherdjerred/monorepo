@@ -8,6 +8,7 @@ import {
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  kubernetesApiEgressRule,
   nsPeer,
   cloudflareTunnelPeer,
   tcp,
@@ -131,6 +132,15 @@ function minecraftStatusEgress() {
 }
 
 /**
+ * The Kubernetes API, where the web pod's activities container reads the
+ * Minecraft StatefulSet's replicas at `https://kubernetes.default.svc`
+ * (`storm-forum/src/minecraft.ts`) under the `minecraft-status` Role above.
+ */
+function minecraftReplicasEgress() {
+  return kubernetesApiEgressRule();
+}
+
+/**
  * The Temporal frontend. Only the web pod's activities container is a Temporal
  * worker (`storm-forum/src/cli.ts worker`), and `temporal-server-netpol`
  * admits only web pods; the release Job never connects.
@@ -143,7 +153,9 @@ function forumEgress(component: "web" | "release") {
   return [
     dnsEgressRule(),
     externalHttpsEgressRule(),
-    ...(component === "web" ? [minecraftStatusEgress()] : []),
+    ...(component === "web"
+      ? [minecraftStatusEgress(), minecraftReplicasEgress()]
+      : []),
     {
       to: [
         {

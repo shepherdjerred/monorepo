@@ -7,6 +7,7 @@ import {
   dnsEgressRule,
   nsPeer,
   tcp,
+  udp,
   tailscaleIngressRule,
   blackboxProbeIngressRule,
   prometheusIngressRule,
@@ -64,6 +65,10 @@ export function createPostalChart(app: App) {
                 matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
               },
             },
+            // Seerr's email notifications, configured in its own settings.
+            // Its pods carry only the generated cdk8s address label, so the
+            // namespace and port bound this access.
+            nsPeer("media"),
           ],
           ports: [tcp(25)],
         },
@@ -142,6 +147,14 @@ export function createPostalChart(app: App) {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [tcp(587)],
         },
+        // Postal's scheduled DNS check of each sending domain asks the
+        // domain's authoritative nameservers directly
+        // (`dns.use_local_ns_for_domain_verification` defaults to false), not
+        // cluster DNS.
+        {
+          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
+          ports: [udp(53), tcp(53)],
+        },
       ],
     },
   });
@@ -173,6 +186,8 @@ export function createPostalChart(app: App) {
           ],
           ports: [tcp(3306)],
         },
+        // The mysqld exporter sidecar, scraped by Prometheus.
+        prometheusIngressRule([9104]),
       ],
     },
   });

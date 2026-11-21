@@ -22,6 +22,7 @@ import {
   nsPeer,
   tcp,
   fliptEgress,
+  lokiOtlpEgress,
   otlpEgress,
   prometheusIngressRule,
   externalHttpsEgressRule,
@@ -90,8 +91,8 @@ export function createBirmelDeployment(chart: Chart) {
           prometheusIngressRule([8080]),
         ],
       },
-      // Allow egress to DNS, Flipt, the OTLP trace gateway, PinchTab,
-      // SeaweedFS S3, and external HTTPS
+      // Allow egress to DNS, Flipt, the OTLP trace gateway, Loki's OTLP logs
+      // receiver, PinchTab, SeaweedFS S3, and external HTTPS
       {
         name: "birmel-egress-netpol",
         selects: "namespace",
@@ -100,6 +101,9 @@ export function createBirmelDeployment(chart: Chart) {
           dnsEgressRule(),
           // OTLP trace gateway (alloy-gateway.alloy-gateway.svc.cluster.local:4318)
           otlpEgress(),
+          // OTLP logs to Loki: LOKI_OTLP_ENDPOINT is unset, so the code
+          // default in packages/birmel/src/observability/tracing.ts applies
+          lokiOtlpEgress(),
           // Flipt evaluation (flipt-flipt-service.flipt.svc.cluster.local:8080)
           fliptEgress(),
           // PinchTab browser automation (pinchtab.pinchtab.svc.cluster.local:9867)
