@@ -257,15 +257,11 @@ describe("Woodpecker CI I/O informational alerts", () => {
     expect(ruleExpression(rule)).toBe(
       `${CI_POD_LIFETIME_WRITES_SEEN_24H_METRIC} > ${String(CI_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES)}`,
     );
-    expect(rule.annotations?.["description"]).toContain(
-      "Pods crossing the left boundary include earlier writes",
+    expect(rule.annotations?.["summary"]).toBe(
+      "Woodpecker CI 24-hour disk write volume exceeded 4 TiB budget",
     );
-    expect(rule.annotations?.["description"]).toContain(
-      "not an exact 24-hour write delta",
-    );
-    expect(rule.annotations?.["description"]).toContain(
-      "separate from the reporter's exact fixed-corpus 50% acceptance gate",
-    );
+    expect(rule.annotations?.["description"]).toContain("humanize1024");
+    expect(rule.annotations?.["description"]).toContain("4 TiB");
     expect(CI_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES).toBe(4 * 1024 ** 4);
     expect(rule.labels?.["severity"]).toBe("info");
   });

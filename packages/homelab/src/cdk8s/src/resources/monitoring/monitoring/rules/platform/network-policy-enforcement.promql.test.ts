@@ -60,7 +60,9 @@ test("every rule carries a severity and an explanation", () => {
   ]);
   for (const rule of rules) {
     expect(rule.labels?.["severity"]).toMatch(/^(warning|critical)$/);
+    expect(rule.annotations?.["summary"]?.length ?? 0).toBeGreaterThan(0);
     expect(rule.annotations?.["description"]?.length ?? 0).toBeGreaterThan(0);
+    expect(rule.annotations?.["message"]).toBeUndefined();
   }
 });
 

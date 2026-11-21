@@ -13,18 +13,19 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "zfs-maintenance",
       rules: [
         // Both pools are SSDs (NVMe + SATA SSD); free-space fragmentation has
-        // minimal performance impact below ~80%. The existing zfs-maintenance
+        // minimal performance impact below ~80% (where write-throughput
+        // degradation starts becoming measurable) and becomes critical above
+        // ~90% (allocator contiguous-space exhaustion). The zfs-maintenance
         // workflow (scrub + autotrim) doesn't reduce fragmentation, and real
         // defrag (zfs send/recv into a fresh dataset) is expensive per-volume.
-        // Thresholds are raised to action levels for SSD pools.
         {
           alert: "ZfsPoolHighFragmentation",
           annotations: {
             summary: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} fragmentation is high",
+              "ZFS pool {{ $labels.zpool_name }} fragmentation above 80%",
             ),
             description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} has {{ $value }}% fragmentation. SSD pools start showing measurable write-throughput degradation around 80%; consider per-volume zfs send/recv rotations or planning a pool replacement.",
+              "ZFS pool {{ $labels.zpool_name }} free-space fragmentation is {{ $value }}%, which can degrade sustained write throughput even on SSD pools. Prune old snapshots or rotate heavy datasets via zfs send/recv, or plan a pool rebuild.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -39,10 +40,10 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ZfsPoolCriticalFragmentation",
           annotations: {
             summary: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} fragmentation is critical",
+              "ZFS pool {{ $labels.zpool_name }} fragmentation above 90%",
             ),
             description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} has {{ $value }}% fragmentation. Above ~90% on an SSD pool the allocator may fail to find contiguous space; expect ENOSPC errors despite free space available. Drain workloads and rebuild the pool from Velero backups.",
+              "ZFS pool {{ $labels.zpool_name }} free-space fragmentation reached {{ $value }}%, risking allocator stalls and ENOSPC errors even when free space remains. Prune space immediately, drain workloads if writes stall, and schedule a pool rebuild from Velero backups.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -57,10 +58,10 @@ export function getZfsMaintenanceRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ZfsScrubOverdue",
           annotations: {
             summary: escapePrometheusTemplate(
-              "ZFS scrub overdue on {{ $labels.zpool_name }}",
+              "ZFS scrub overdue on pool {{ $labels.zpool_name }}",
             ),
             description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} has never completed a scrub or has not been scrubbed in over 9 days. The weekly Temporal maintenance workflow may have failed.",
+              "ZFS pool {{ $labels.zpool_name }} has not completed a scrub in over 9 days and no scrub is currently running, leaving silent data corruption undetected. Check the weekly ZFS maintenance Temporal schedule and worker logs, or trigger a manual scrub.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

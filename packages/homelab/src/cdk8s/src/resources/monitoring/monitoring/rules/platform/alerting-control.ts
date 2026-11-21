@@ -25,9 +25,9 @@ export function getAlertingControlRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "InfoInhibitor",
           annotations: {
+            summary: "Info-level alert suppression active",
             description:
-              "This alert inhibits info-level alerts only while an info-level alert is firing and stops when a warning or critical alert fires in the same namespace.",
-            summary: "Info-level alert inhibition.",
+              "This control alert suppresses info-level notifications in a namespace while no warning or critical alerts are firing there. Inspect the firing info-level alert in Alertmanager if context is needed; no operator action is required.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             INFO_INHIBITOR_EXPRESSION,

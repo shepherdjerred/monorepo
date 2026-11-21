@@ -9,9 +9,9 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "TemporalScheduleActionDelayed",
         annotations: {
-          summary: "Temporal schedule actions are starting late",
+          summary: "Temporal scheduled workflows are starting late",
           description:
-            "Temporal's schedule-action p95 delay has exceeded 60 seconds for ten minutes. Check the scheduler Workflow, server health, and Workflow pollers before changing catchup windows.",
+            "The 95th-percentile start delay for Temporal scheduled actions has exceeded 60 seconds for 10 minutes, delaying recurring jobs across the cluster. Check Temporal server health, scheduler workflows, and workflow poller availability before adjusting catchup windows.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           "histogram_quantile(0.95, sum by (le) (rate(schedule_action_delay_bucket[10m]))) > 60",
@@ -22,11 +22,9 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "TemporalWorkflowPlaneStalled",
         annotations: {
-          summary: escapePrometheusTemplate(
-            "Temporal Workflow tasks are not being picked up on {{ $labels.taskqueue }}",
-          ),
+          summary: "Temporal workflow queue is stalled",
           description: escapePrometheusTemplate(
-            "Workflow tasks have sat unclaimed on {{ $labels.taskqueue }} in {{ $labels.exported_namespace }} for over fifteen minutes. The usual cause is that the Worker Deployment's current version points at a Build ID no running pod carries, so tasks route to a queue nobody polls — pollers look healthy while nothing executes. Compare `worker deployment describe` against the Build IDs actually reporting pollers.",
+            "Workflow tasks have sat unclaimed on {{ $labels.taskqueue }} in {{ $labels.exported_namespace }} for over 15 minutes, stalling workflow execution. Run temporal worker deployment describe and compare the active build against the Build IDs currently polling.",
           ),
           runbook_url:
             "https://wiki.sjer.red/how-to/roll-out-a-temporal-worker-deployment/",
@@ -48,11 +46,9 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "TemporalWorkflowTaskFailing",
         annotations: {
-          summary: escapePrometheusTemplate(
-            "Temporal Workflow Tasks are failing on {{ $labels.task_queue }}",
-          ),
+          summary: "Temporal workflow step failed to run",
           description: escapePrometheusTemplate(
-            "Workflow Task execution failures increased for {{ $labels.workflow_type }} on {{ $labels.task_queue }}. Inspect the execution history and correlated Worker logs before restarting a poller.",
+            "Workflow task execution is failing for {{ $labels.workflow_type }} on queue {{ $labels.task_queue }}, blocking workflow progress until tasks succeed. Inspect the workflow execution history in the Temporal UI and correlated worker logs before restarting pollers.",
           ),
         },
         // SDK counters, which count every failed attempt; the server's
@@ -70,11 +66,9 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "TemporalWorkflowNondeterministic",
         annotations: {
-          summary: escapePrometheusTemplate(
-            "Temporal Workflow {{ $labels.workflow_type }} is nondeterministic",
-          ),
+          summary: "Workflow stuck after a code change",
           description: escapePrometheusTemplate(
-            "A nondeterminism failure occurred on {{ $labels.task_queue }}. Stop the rollout, retain the failing history, and replay it against the candidate bundle before changing code.",
+            "Workflow {{ $labels.workflow_type }} on queue {{ $labels.task_queue }} failed replay due to a nondeterministic code change, stalling open executions on that build. Pause the worker rollout, save the failing workflow history, and test replay against the candidate bundle before shipping a fix.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -86,11 +80,9 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
       {
         alert: "TemporalActivityRetriesExhausted",
         annotations: {
-          summary: escapePrometheusTemplate(
-            "Temporal Activity {{ $labels.activityType }} exhausted retries",
-          ),
+          summary: "Background task failed after all retries",
           description: escapePrometheusTemplate(
-            "Activity {{ $labels.activityType }} in {{ $labels.workflowType }} failed with no retries left on {{ $labels.taskqueue }}: its retry policy was exhausted or the failure was non-retryable. Inspect its execution, trace, and Activity logs.",
+            "Activity {{ $labels.activityType }} in workflow {{ $labels.workflowType }} on queue {{ $labels.taskqueue }} permanently failed after exhausting its retry policy or hitting a non-retryable error. Inspect the workflow execution in the Temporal UI, traces, and worker logs to diagnose the failure.",
           ),
         },
         // The Temporal server counts every failed attempt in

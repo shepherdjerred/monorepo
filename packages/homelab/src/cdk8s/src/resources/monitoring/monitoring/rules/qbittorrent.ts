@@ -28,9 +28,9 @@ export function getQBitTorrentRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "network",
           },
           annotations: {
-            summary: "qBittorrent is firewalled",
+            summary: "qBittorrent cannot accept incoming peer connections",
             description: escapePrometheusTemplate(
-              "qBittorrent instance is currently firewalled and cannot accept incoming connections. This may impact download speeds and connectivity.",
+              "qBittorrent ({{ $labels.server }}) has active torrents loaded but cannot receive incoming peer connections, reducing download speeds and seeding connectivity. Check the VPN tunnel, port-forwarding status, and qBittorrent listening port configuration.",
             ),
           },
         },

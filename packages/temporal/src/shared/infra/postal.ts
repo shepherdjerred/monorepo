@@ -1,5 +1,12 @@
+import {
+  MailboxAddressSchema,
+  extractEmailAddress,
+} from "@shepherdjerred/ops-model/email/mailbox.ts";
 import { z } from "zod/v4";
-import { postalAddressesConfig } from "#config/postal.ts";
+import {
+  postalAddressesConfig,
+  resolvePostalAddressesForReport,
+} from "#config/postal.ts";
 
 const PostalEnvelopeSchema = z.object({
   status: z.string(),
@@ -122,7 +129,13 @@ export async function sendPostalEmail(
   }
 
   const successData = PostalSuccessDataSchema.parse(envelope.data);
-  const recipientId = successData.messages[input.to]?.id ?? "unknown";
+  const normalizedRecipient = MailboxAddressSchema.safeParse(input.to).success
+    ? extractEmailAddress(input.to).toLowerCase()
+    : input.to.toLowerCase();
+  const recipientId =
+    successData.messages[input.to]?.id ??
+    successData.messages[normalizedRecipient]?.id ??
+    "unknown";
 
   return {
     messageId: successData.message_id,
@@ -135,9 +148,11 @@ export async function sendPostalEmail(
 /**
  * Resolve routing through typed flags at the activity boundary.
  */
-export function resolvePostalAddresses(): Promise<{
+export function resolvePostalAddresses(reportType?: string): Promise<{
   recipient: string;
   sender: string;
 }> {
-  return postalAddressesConfig();
+  return reportType === undefined
+    ? postalAddressesConfig()
+    : resolvePostalAddressesForReport(reportType);
 }

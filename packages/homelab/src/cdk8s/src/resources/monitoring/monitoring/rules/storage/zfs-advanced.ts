@@ -15,10 +15,10 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsAnonDataHigh",
           annotations: {
+            summary: "Unwritten ZFS data in memory exceeds 12 GiB",
             description: escapePrometheusTemplate(
-              "ZFS anonymous data on {{ $labels.instance }} is high: {{ $value | humanize }} bytes - may indicate poor cache efficiency",
+              "Uncommitted anonymous (dirty) ZFS data in ARC on {{ $labels.instance }} reached {{ $value | humanize1024 }}B, squeezing cached reads and signaling sustained write backpressure. Check disk write latency and heavy write workloads on the node.",
             ),
-            summary: "High ZFS anonymous data usage",
           },
           // Anonymous (dirty) data sits inside the ARC. liskov's CI pool runs
           // with an 8 GiB zfs_dirty_data_max (src/talos/liskov/patches/
@@ -34,10 +34,10 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsAccessSkipHigh",
           annotations: {
+            summary: "ZFS cache updates are skipping under lock load",
             description: escapePrometheusTemplate(
-              "ZFS access skips on {{ $labels.instance }} are high: {{ $value }}/s - potential lock contention",
+              'ZFS ARC on {{ $labels.instance }} is skipping {{ $value | printf "%.0f" }} cache header updates/s due to lock contention, which can degrade cache eviction accuracy. Check for heavy concurrent metadata operations or slow backing storage on the host.',
             ),
-            summary: "High ZFS access skips detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_zfs_arc_access_skip[5m]) > 100",
@@ -55,10 +55,10 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsL2ArcReadWriteClash",
           annotations: {
+            summary: "ZFS secondary cache had read/write collisions",
             description: escapePrometheusTemplate(
-              "ZFS L2ARC on {{ $labels.instance }} has read/write clashes: {{ $value }} clashes",
+              'ZFS L2ARC on {{ $labels.instance }} experienced {{ $value | printf "%.0f" }} read/write collision(s) in the last hour while evicting blocks being read. Check L2ARC device sizing and write-feed throughput if read latency increases.',
             ),
-            summary: "ZFS L2ARC read/write clashes detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "increase(node_zfs_arc_l2_rw_clash[1h]) > 0",
@@ -69,10 +69,10 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsL2ArcEvictLockRetries",
           annotations: {
+            summary: "ZFS secondary cache evictions are waiting on locks",
             description: escapePrometheusTemplate(
-              "ZFS L2ARC evict lock retries on {{ $labels.instance }}: {{ $value }}/s - performance impact",
+              'ZFS L2ARC eviction on {{ $labels.instance }} is retrying locks {{ $value | printf "%.1f" }} times/s, indicating cache lock contention that can add latency. Check L2ARC churn and concurrent workload I/O on the host.',
             ),
-            summary: "High ZFS L2ARC evict lock retries",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_zfs_arc_l2_evict_lock_retry[5m]) > 10",
@@ -90,10 +90,10 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsAbdSgTableRetries",
           annotations: {
+            summary: "ZFS memory scatter-gather allocations are retrying",
             description: escapePrometheusTemplate(
-              "ZFS ABD SG table retries on {{ $labels.instance }}: {{ $value }}/s - memory pressure indicator",
+              'ZFS ABD scatter-gather table allocations on {{ $labels.instance }} are retrying {{ $value | printf "%.1f" }} times/s, signaling kernel memory fragmentation or pressure. Check host memory utilization and slab fragmentation on the node.',
             ),
-            summary: "ZFS ABD SG table retries detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "rate(node_zfs_abd_scatter_sg_table_retry[5m]) > 10",
@@ -111,10 +111,10 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsDbufSizeHigh",
           annotations: {
+            summary: "ZFS open-file buffer cache exceeds 8 GiB",
             description: escapePrometheusTemplate(
-              "ZFS data buffer size on {{ $labels.instance }} is high: {{ $value | humanize }} bytes",
+              "ZFS dbuf cache on {{ $labels.instance }} is using {{ $value | humanize1024 }}B of RAM, increasing host memory overhead. Check for workloads holding large numbers of open files or datasets and monitor overall node memory.",
             ),
-            summary: "High ZFS data buffer usage",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "node_zfs_arc_dbuf_size > 8589934592", // 8GB
@@ -132,10 +132,10 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsLoanedBytesHigh",
           annotations: {
+            summary: "ZFS zero-copy memory buffers exceed 4 GiB",
             description: escapePrometheusTemplate(
-              "ZFS loaned bytes on {{ $labels.instance }} are high: {{ $value | humanize }} bytes - potential memory leak",
+              "ZFS has {{ $value | humanize1024 }}B of ARC buffers loaned out to zero-copy I/O paths on {{ $labels.instance }} for over 30 minutes, pinning ARC memory. Check for stalled ZFS send/recv streams, NFS/iSCSI consumers, or hung storage I/O.",
             ),
-            summary: "High ZFS loaned bytes detected",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "node_zfs_arc_arc_loaned_bytes > 4294967296", // 4GB
@@ -153,11 +153,11 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsPoolDegraded",
           annotations: {
-            description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} is DEGRADED - one or more drives may be faulted or missing. Immediate attention required.",
-            ),
             summary: escapePrometheusTemplate(
               "ZFS pool {{ $labels.zpool_name }} is degraded",
+            ),
+            description: escapePrometheusTemplate(
+              "ZFS pool {{ $labels.zpool_name }} on {{ $labels.instance }} is in DEGRADED state with reduced or zero fault tolerance due to a faulted or missing vdev. Run zpool status immediately, verify backups, and replace or resilver the affected drive.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -169,11 +169,11 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsPoolFaulted",
           annotations: {
-            description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} is FAULTED - data may be at risk! Immediate action required.",
-            ),
             summary: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} is faulted - DATA AT RISK",
+              "ZFS pool {{ $labels.zpool_name }} is faulted",
+            ),
+            description: escapePrometheusTemplate(
+              "ZFS pool {{ $labels.zpool_name }} on {{ $labels.instance }} is FAULTED, halting pool I/O for hosted workloads and putting unbacked-up data at risk. Inspect zpool status and kernel storage errors immediately to recover the vdevs or restore from Velero backups.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -185,11 +185,11 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsPoolCapacityHigh",
           annotations: {
-            description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} is {{ $value | humanizePercentage }} full. Consider expanding or cleaning up.",
-            ),
             summary: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} capacity over 80%",
+              "ZFS pool {{ $labels.zpool_name }} is over 80% full",
+            ),
+            description: escapePrometheusTemplate(
+              "ZFS pool {{ $labels.zpool_name }} is {{ $value | humanizePercentage }} full, where copy-on-write allocation begins to slow write performance. Prune unneeded snapshots or PVCs, or plan capacity expansion.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -201,11 +201,11 @@ export function getZfsAdvancedRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsPoolCapacityCritical",
           annotations: {
-            description: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} is {{ $value | humanizePercentage }} full. Performance degradation likely. Expand or clean up immediately.",
-            ),
             summary: escapePrometheusTemplate(
-              "ZFS pool {{ $labels.zpool_name }} capacity over 90%",
+              "ZFS pool {{ $labels.zpool_name }} is over 90% full",
+            ),
+            description: escapePrometheusTemplate(
+              "ZFS pool {{ $labels.zpool_name }} is {{ $value | humanizePercentage }} full, causing severe copy-on-write fragmentation and risking write failures across PVCs. Prune large datasets or orphaned snapshots immediately, or expand the pool.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

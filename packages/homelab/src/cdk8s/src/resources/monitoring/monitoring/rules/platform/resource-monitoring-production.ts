@@ -21,10 +21,10 @@ export function getProductionResourceMonitoringRuleGroups(): PrometheusRuleSpecG
         {
           alert: "ProductionNodeMemoryAvailableLow",
           annotations: {
+            summary: "Production node has less than 16 GiB of available memory",
             description: escapePrometheusTemplate(
-              "Production node {{ $labels.node }} has {{ $value | humanize1024 }}B available. Shared memory bursts are exhausting host headroom; check heavy workloads before eviction starts.",
+              "Production node {{ $labels.node }} is down to {{ $value | humanize1024 }}B of available memory, exhausting burst headroom for hosted workloads. Inspect top memory-consuming pods on {{ $labels.node }} before kubelet eviction begins.",
             ),
-            summary: "Production node has less than 16 GiB available",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `max by (node) (node_memory_MemAvailable_bytes{node="${PROD_NODE_HOSTNAME}"}) < 17179869184`,
@@ -35,10 +35,10 @@ export function getProductionResourceMonitoringRuleGroups(): PrometheusRuleSpecG
         {
           alert: "ProductionNodeMemoryAvailableCritical",
           annotations: {
+            summary: "Production node has less than 8 GiB of available memory",
             description: escapePrometheusTemplate(
-              "Production node {{ $labels.node }} has {{ $value | humanize1024 }}B available, below the soft eviction threshold. Check burst workloads, OOMs, and evictions immediately.",
+              "Production node {{ $labels.node }} has only {{ $value | humanize1024 }}B of available memory, below the soft eviction threshold where workloads risk OOM kills and eviction. Inspect memory-heavy pods, recent OOM events, and active evictions on {{ $labels.node }} immediately.",
             ),
-            summary: "Production node has less than 8 GiB available",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `max by (node) (node_memory_MemAvailable_bytes{node="${PROD_NODE_HOSTNAME}"}) < 8589934592`,
@@ -56,11 +56,11 @@ export function getProductionResourceMonitoringRuleGroups(): PrometheusRuleSpecG
           // them. Duplicate kube-state-metrics series are collapsed first.
           alert: "ProductionWakeCapacityInsufficient",
           annotations: {
-            description: escapePrometheusTemplate(
-              `Production node {{ $labels.node }} has {{ $value | humanize1024 }}B of unreserved memory that a waking game can use, less than the largest scale-to-zero Minecraft request (${String(WAKE_REQUEST_BYTES / GIBIBYTE)} GiB). A player joining that server would leave it Pending. Lower oversized requests or move a workload.`,
-            ),
             summary:
               "A hibernated Minecraft server cannot be scheduled on wake",
+            description: escapePrometheusTemplate(
+              `Production node {{ $labels.node }} has {{ $value | humanize1024 }}B of unreserved memory available for waking game servers, less than the largest scale-to-zero Minecraft request (${String(WAKE_REQUEST_BYTES / GIBIBYTE)} GiB). A player joining that server would leave its pod Pending. Lower oversized memory requests in cdk8s or reschedule a workload.`,
+            ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             [

@@ -141,6 +141,7 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
               occurrenceIds: newlyNotified.map((alert) => alert.id),
               subject: message.subject,
               htmlBody: message.htmlBody,
+              plainBody: message.plainBody,
             },
           });
           emailQueued = true;
@@ -216,7 +217,7 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     nowNs: bigint,
     limit: number,
   ): Promise<readonly PendingEmail[]> {
-    return this.#prisma.emailOutbox.findMany({
+    const rows = await this.#prisma.emailOutbox.findMany({
       where: {
         sentAtNs: null,
         canceledAtNs: null,
@@ -229,9 +230,14 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
         messageId: true,
         subject: true,
         htmlBody: true,
+        plainBody: true,
         attemptCount: true,
       },
     });
+    return rows.map(({ plainBody, ...row }) => ({
+      ...row,
+      ...(plainBody === null ? {} : { plainBody }),
+    }));
   }
 
   async claimPendingEmails(

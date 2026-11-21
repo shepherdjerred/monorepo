@@ -90,36 +90,33 @@ const previews: PreviewPort = {
   },
 };
 
-/** Postal when every setting is present; alert email requires it. */
-function configuredPostal(): PostalClient | null {
-  const {
-    POSTAL_API_KEY,
-    POSTAL_FROM,
-    POSTAL_HOST,
-    POSTAL_HOST_HEADER,
-    POSTAL_TO,
-  } = config;
+/** Postal when every setting for the mailbox pair is present. */
+function configuredPostal(
+  from: string | undefined,
+  to: string | undefined,
+): PostalClient | null {
+  const { POSTAL_API_KEY, POSTAL_HOST, POSTAL_HOST_HEADER } = config;
   if (
     POSTAL_API_KEY === undefined ||
-    POSTAL_FROM === undefined ||
     POSTAL_HOST === undefined ||
-    POSTAL_TO === undefined
+    from === undefined ||
+    to === undefined
   ) {
     return null;
   }
   return new PostalClient({
     apiKey: POSTAL_API_KEY,
-    from: POSTAL_FROM,
+    from,
     host: POSTAL_HOST,
-    to: POSTAL_TO,
+    to,
     ...(POSTAL_HOST_HEADER === undefined
       ? {}
       : { hostHeader: POSTAL_HOST_HEADER }),
   });
 }
 
-function postalClient(): PostalClient {
-  const postal = configuredPostal();
+function incidentPostalClient(): PostalClient {
+  const postal = configuredPostal(config.POSTAL_FROM, config.POSTAL_TO);
   if (postal === null) throw new Error("Postal configuration is incomplete");
   return postal;
 }
@@ -127,7 +124,7 @@ function postalClient(): PostalClient {
 const service = new AlertService({
   repository,
   alertmanager,
-  postal: config.EMAIL_ENABLED ? postalClient() : disabledPostal,
+  postal: config.EMAIL_ENABLED ? incidentPostalClient() : disabledPostal,
   previews,
   clock: systemClock,
   emailEnabled: config.EMAIL_ENABLED,
@@ -148,7 +145,7 @@ const digests = new DigestService({
   repository: opsRepository,
   ops,
   series,
-  mailer: configuredPostal(),
+  mailer: configuredPostal(config.POSTAL_DIGEST_FROM, config.POSTAL_DIGEST_TO),
   clock: systemClock,
 });
 const changes = new ChangeBus();

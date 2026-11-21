@@ -148,10 +148,13 @@ in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`). Postal
 uses the credential `POSTAL_API_KEY` and bootstrap connection settings
 `POSTAL_HOST` / `POSTAL_HOST_HEADER`.
 
-Incident mail uses `alert-dashboard-email-enabled` (default off). Sender and
-recipient come from `alert-dashboard-email-from` / `alert-dashboard-email-to`.
+Incident mail uses `alert-dashboard-email-enabled` (default off). Incident
+sender and recipient come from `alert-dashboard-incident-email-from` /
+`alert-dashboard-incident-email-to`, and digest sender and recipient come from
+`alert-dashboard-digest-email-from` / `alert-dashboard-digest-email-to`.
 These values are resolved through typed configuration at startup, so changing
-them requires a restart. The defaults preserve the homelab's existing routing.
+them requires a restart. The defaults route incident mail to `alerts@sjer.red`
+and digests to `digests@sjer.red`.
 
 The flag client needs its bootstrap variables: `FEATURE_FLAGS_MODE` (`flipt`
 in the cluster, `disabled` locally), plus `FLIPT_URL`, `FLIPT_NAMESPACE`

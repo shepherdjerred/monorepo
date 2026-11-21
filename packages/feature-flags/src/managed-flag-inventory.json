@@ -2581,6 +2581,54 @@
       "thresholdRollouts": []
     },
     {
+      "key": "alert-dashboard-incident-email-from",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "alert-dashboard",
+      "purpose": "RFC 5322 sender mailbox for Hub incident alert emails, resolved at startup.",
+      "type": "variant",
+      "default": "Hub Alerts <alerts@sjer.red>",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-incident-email-to",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "alert-dashboard",
+      "purpose": "Recipient address for Hub incident alert emails, resolved at startup.",
+      "type": "variant",
+      "default": "alerts@sjer.red",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-digest-email-from",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "alert-dashboard",
+      "purpose": "RFC 5322 sender mailbox for Hub daily and weekly ops digests, resolved at startup.",
+      "type": "variant",
+      "default": "Hub Digest <digests@sjer.red>",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-digest-email-to",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "alert-dashboard",
+      "purpose": "Recipient address for Hub daily and weekly ops digests, resolved at startup.",
+      "type": "variant",
+      "default": "digests@sjer.red",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "temporal-email-recipient",
       "owner": "temporal",
       "namespace": "temporal",

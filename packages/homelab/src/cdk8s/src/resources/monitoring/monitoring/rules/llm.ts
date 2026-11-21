@@ -122,9 +122,8 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           labels: { severity: "warning", category: "llm" },
           annotations: {
             summary: "Provider-billed LLM cost reconciliation is stale",
-            description: escapePrometheusTemplate(
-              "The isolated billing worker has been running for more than two hours without a successful OpenAI and Anthropic cost reconciliation, so the billed spend alerts are blind. Check its Temporal poller, both admin keys, and the provider API errors in its logs.",
-            ),
+            description:
+              "The Temporal billing worker has run for over 2 hours without reconciling both OpenAI and Anthropic billed spend, leaving provider-billed cost alerts blind. Check the temporal-billing-worker logs, Temporal poller status, and OpenAI/Anthropic admin API keys.",
           },
         },
         {
@@ -134,10 +133,9 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           labels: { severity: "warning", category: "llm" },
           annotations: {
-            summary: "Structured LLM output exhausted all semantic attempts",
-            description: escapePrometheusTemplate(
-              "generateValidatedObject exhausted its bounded semantic repair attempts. Every attempt was traced and charged; inspect the correlated workload span and archived redacted output instead of replaying an effectful workflow.",
-            ),
+            summary: "LLM structured output failed all validation retries",
+            description:
+              "An LLM structured-output call exhausted all schema validation and repair attempts in the last 15 minutes, failing the caller task after incurring token charges. Inspect the correlated trace span and redacted output archive before retrying any side-effecting workflow.",
           },
         },
         {
@@ -148,9 +146,9 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "15m",
           labels: { severity: "warning", category: "llm" },
           annotations: {
-            summary: "LLM spend over the last 24h exceeded the warning ceiling",
+            summary: `Rolling 24h LLM spend exceeded $${LLM_DAILY_SPEND_WARNING_USD.toString()} warning ceiling`,
             description: escapePrometheusTemplate(
-              "Rolling 24h LLM spend, priced from the catalog on provider-reported tokens, crossed the warning ceiling. Break the total down by workload on the AI Provider dashboard before assuming this is organic growth.",
+              `Catalog-priced 24-hour LLM token spend reached \${{ $value | humanize }}, crossing the $${LLM_DAILY_SPEND_WARNING_USD.toString()} warning threshold. Check the AI Provider Grafana dashboard by workload and model to spot unexpected usage growth.`,
             ),
           },
         },
@@ -162,10 +160,9 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "15m",
           labels: { severity: "critical", category: "llm" },
           annotations: {
-            summary:
-              "LLM spend over the last 24h exceeded the critical ceiling",
+            summary: `Rolling 24h LLM spend exceeded $${LLM_DAILY_SPEND_CRITICAL_USD.toString()} critical ceiling`,
             description: escapePrometheusTemplate(
-              "Rolling 24h LLM spend is several times the measured baseline. Identify the responsible workload before it runs another day; a runaway tool loop or a model-pin change are the usual causes. Disabling the feature flag for the offending workload is faster than rolling back an image.",
+              `Catalog-priced 24-hour LLM token spend reached \${{ $value | humanize }}, exceeding the $${LLM_DAILY_SPEND_CRITICAL_USD.toString()} critical ceiling and indicating a likely runaway loop or model-pin regression. Identify the top workload on the AI Provider dashboard and disable its Flipt feature flag to stop spend immediately.`,
             ),
           },
         },
@@ -177,10 +174,9 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "15m",
           labels: { severity: "warning", category: "llm" },
           annotations: {
-            summary:
-              "Provider-billed LLM spend today exceeded the warning ceiling",
+            summary: `Provider-billed LLM spend today exceeded $${LLM_DAILY_SPEND_WARNING_USD.toString()} warning ceiling`,
             description: escapePrometheusTemplate(
-              "OpenAI and Anthropic report more spend for the current UTC day than the warning ceiling. Billed cost includes traffic the live series cannot price, such as Codex and voice, so compare it against the live cost on the AI Provider dashboard to find which side is growing. Provider hard caps are the backstop, not this alert.",
+              `OpenAI and Anthropic report \${{ $value | humanize }} in billed spend for the current UTC day, crossing the $${LLM_DAILY_SPEND_WARNING_USD.toString()} warning threshold. Compare billed spend against live catalog spend on the AI Provider dashboard to see whether instrumented workloads or external usage like Codex and voice are driving costs.`,
             ),
           },
         },
@@ -192,10 +188,9 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "15m",
           labels: { severity: "critical", category: "llm" },
           annotations: {
-            summary:
-              "Provider-billed LLM spend today exceeded the critical ceiling",
+            summary: `Provider-billed LLM spend today exceeded $${LLM_DAILY_SPEND_CRITICAL_USD.toString()} critical ceiling`,
             description: escapePrometheusTemplate(
-              "OpenAI and Anthropic report spend for the current UTC day several times the measured baseline. Find the responsible account on the AI Provider dashboard; a project that hits its hard spend limit starts failing requests, so act before the cap does.",
+              `OpenAI and Anthropic report \${{ $value | humanize }} in billed spend for the current UTC day, exceeding the $${LLM_DAILY_SPEND_CRITICAL_USD.toString()} critical threshold and risking hard provider spend-cap failures. Identify the responsible account or workload on the AI Provider dashboard and throttle or disable it before requests start failing.`,
             ),
           },
         },
@@ -214,10 +209,10 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
             // then fails to parse `{{ \"{{\" }}` with "unexpected \\ in
             // command" and every chart render breaks.
             summary: escapePrometheusTemplate(
-              "LLM workload {{ $labels.workload }} is burning cost far above its own baseline",
+              "LLM workload {{ $labels.workload }} cost spiked above baseline",
             ),
             description: escapePrometheusTemplate(
-              "{{ $labels.service }} workload {{ $labels.workload }} is spending several times its own 24h rate and has cleared the hourly floor, so this is not a small workload tripping a ratio. Compare the request rate against the cost rate: a flat request rate with rising cost means longer prompts or a model change, not more traffic.",
+              "Workload {{ $labels.workload }} in {{ $labels.service }} is spending more than 5x its 24-hour average rate, risking unexpected LLM charges. Compare request rate against token cost on the AI Provider dashboard to check for traffic spikes, oversized prompts, or model changes.",
             ),
           },
         },
@@ -228,10 +223,9 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           labels: { severity: "warning", category: "llm" },
           annotations: {
-            summary: "Birmel admission classification is failing closed",
-            description: escapePrometheusTemplate(
-              "At least one ambiguous Birmel follow-up could not be classified in the last 15 minutes. Direct mentions, replies, sessions, and learned aliases remain deterministic; inspect the admission span and schema or provider error before widening admission.",
-            ),
+            summary: "Birmel message admission classifier is failing",
+            description:
+              "Birmel failed to classify at least one ambiguous follow-up message in the last 15 minutes, causing those messages to be ignored while direct mentions and replies still work. Inspect Birmel traces and logs for LLM provider or structured-output errors.",
           },
         },
         {
@@ -241,10 +235,9 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           labels: { severity: "warning", category: "llm" },
           annotations: {
-            summary: "Birmel post-response memory extraction is failing",
-            description: escapePrometheusTemplate(
-              "At least one delivered Birmel turn failed post-response memory extraction in the last 15 minutes. The Discord response was already delivered; inspect the correlated memory extraction span and structured-output error before treating continuity as healthy.",
-            ),
+            summary: "Birmel conversation memory extraction is failing",
+            description:
+              "Birmel failed to extract conversation memories after at least one delivered Discord reply in the last 15 minutes, degrading long-term memory continuity while live replies still succeed. Inspect the memory extraction trace span and Birmel logs for provider or schema validation errors.",
           },
         },
       ],

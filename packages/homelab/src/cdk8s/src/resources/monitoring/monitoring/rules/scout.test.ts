@@ -404,3 +404,16 @@ describe("Scout web alert holds are shorter than their lookback", () => {
     expect(hold).toBeLessThan(shortestWindow);
   });
 });
+
+describe("Scout alert annotation contract", () => {
+  test("every Scout alerting rule defines summary and description without legacy message", () => {
+    const rules = getScoutRuleGroups().flatMap((group) => group.rules ?? []);
+    expect(rules.length).toBeGreaterThan(0);
+    for (const rule of rules) {
+      if (rule.alert === undefined) continue;
+      expect(rule.annotations?.["summary"], rule.alert).toBeDefined();
+      expect(rule.annotations?.["description"], rule.alert).toBeDefined();
+      expect(rule.annotations?.["message"], rule.alert).toBeUndefined();
+    }
+  });
+});

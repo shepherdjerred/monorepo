@@ -1,3 +1,4 @@
+import { MailboxAddressSchema } from "@shepherdjerred/ops-model/email/mailbox.ts";
 import { z } from "zod";
 
 const BooleanTextSchema = z
@@ -27,10 +28,12 @@ const EnvironmentSchema = z
     PROMETHEUS_URL: z.url(),
     PORT: z.coerce.number().int().min(1).max(65_535).default(7341),
     POSTAL_API_KEY: z.string().min(1).optional(),
-    POSTAL_FROM: z.email().optional(),
+    POSTAL_FROM: MailboxAddressSchema.optional(),
+    POSTAL_TO: z.email().optional(),
+    POSTAL_DIGEST_FROM: MailboxAddressSchema.optional(),
+    POSTAL_DIGEST_TO: z.email().optional(),
     POSTAL_HOST: z.url().optional(),
     POSTAL_HOST_HEADER: z.string().min(1).optional(),
-    POSTAL_TO: z.email().optional(),
     TELEMETRY_ENABLED: BooleanTextSchema.default(false),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
     OTEL_SERVICE_NAME: z.string().min(1).default("alert-dashboard"),
@@ -62,7 +65,12 @@ const EnvironmentSchema = z
         });
       }
     }
-  });
+  })
+  .transform((value) => ({
+    ...value,
+    POSTAL_DIGEST_FROM: value.POSTAL_DIGEST_FROM ?? value.POSTAL_FROM,
+    POSTAL_DIGEST_TO: value.POSTAL_DIGEST_TO ?? value.POSTAL_TO,
+  }));
 
 export type AlertDashboardConfig = z.infer<typeof EnvironmentSchema>;
 

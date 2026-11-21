@@ -39,9 +39,9 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ScoutRiotApiErrorRateHigh",
           annotations: {
-            summary: "Riot API error rate is elevated",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is seeing {{ $value | humanize }} Riot API errors/min from source {{ $labels.source }} (status {{ $labels.http_status }}).",
+            summary: "Scout Riot API error rate is elevated",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} is seeing {{ $value | humanize }} Riot API errors/min from {{ $labels.source }} (HTTP {{ $labels.http_status }}), which can delay match discovery and player lookups. Check Riot API status and Scout logs for failing endpoints or invalid requests.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -55,9 +55,9 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ScoutRiotApiErrorRateCritical",
           annotations: {
-            summary: "Riot API error rate is critically high",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is seeing {{ $value | humanize }} Riot API errors/min from source {{ $labels.source }}. Riot API may be experiencing an outage.",
+            summary: "Scout Riot API error rate is critically high",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} is seeing {{ $value | humanize }} Riot API errors/min from {{ $labels.source }}, stalling match polling and report generation. Check Riot API status for an upstream outage and inspect Scout logs for failing routes.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -71,9 +71,9 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ScoutRiotApiAppRateLimitHigh",
           annotations: {
-            summary: "Riot API app rate limit usage is elevated",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit for the {{ $labels.window_seconds }}s window on route {{ $labels.route }}.",
+            summary: "Scout Riot API rate limit usage is elevated",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit in the {{ $labels.window_seconds }}s window on route {{ $labels.route }}, leaving little headroom for bursts. Check polling concurrency and history backfill traffic on that route.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -87,9 +87,9 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ScoutRiotApiAppRateLimitCritical",
           annotations: {
-            summary: "Riot API app rate limit usage is critically high",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit for the {{ $labels.window_seconds }}s window on route {{ $labels.route }}. Requests may start being throttled with 429s.",
+            summary: "Scout Riot API rate limit usage is critically high",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit in the {{ $labels.window_seconds }}s window on route {{ $labels.route }}, risking HTTP 429 throttling and delayed match updates. Check active history imports and polling loops driving requests on that route.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -109,10 +109,10 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutAiProviderIssueActive",
           annotations: {
             summary: escapePrometheusTemplate(
-              "Scout AI provider {{ $labels.provider }} {{ $labels.kind }} issue active",
+              "Scout AI provider {{ $labels.provider }} has an issue",
             ),
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} has an active AI provider issue from {{ $labels.source }} (provider={{ $labels.provider }}, kind={{ $labels.kind }}). Check provider billing/rate limits and Scout logs.",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} is hitting a {{ $labels.kind }} issue with AI provider {{ $labels.provider }} ({{ $labels.source }}), degrading AI-generated match and report commentary. Check provider billing, quota limits, and Scout logs.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -133,8 +133,8 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutMatchReportFailuresHigh",
           annotations: {
             summary: "Scout match-report rendering is failing",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} saw {{ $value | humanize }} match-report renders fail in the last 30m (queue {{ $labels.queue_type }}). Check Bugsink for the underlying error. Common cause: stale Data Dragon snapshot triggering a satori image-source error.",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} failed {{ $value | humanize }} match-report renders in the last 30 minutes for queue {{ $labels.queue_type }}, dropping post-match Discord reports. Check Bugsink for rendering errors and verify whether the bundled Data Dragon snapshot is stale.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -154,8 +154,8 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutItemCacheMissesSustained",
           annotations: {
             summary: "Scout Data Dragon assets may be stale",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} saw {{ $value | humanize }} item-icon cache misses in the last 6h (rendered as placeholder). Refresh Data Dragon by checking the scout-data-dragon-version-check Temporal schedule.",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} logged {{ $value | humanize }} item-icon cache misses in the last 6 hours, rendering placeholder icons on match reports. Check the scout-data-dragon-version-check Temporal schedule to refresh bundled Data Dragon assets.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -175,8 +175,8 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutScheduledReportFailuresHigh",
           annotations: {
             summary: "Scout scheduled reports are failing",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} saw {{ $value | humanize }} scheduled report failure(s) in the last 30m from {{ $labels.system_source }} reports. Check Bugsink and the report run history before enabling more schedules.",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} had {{ $value | humanize }} scheduled {{ $labels.system_source }} report failure(s) in the last 30 minutes, leaving subscribed channels without scheduled summaries. Check Bugsink and report run history before enabling additional schedules.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -190,9 +190,9 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ScoutScheduledReportRuntimeHigh",
           annotations: {
-            summary: "Scout scheduled reports are slow",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} scheduled report p95 runtime is {{ $value | humanize }}ms for {{ $labels.system_source }} reports. Check report row-scan metrics and SQLite import lag.",
+            summary: "Scout scheduled reports are running slow",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} scheduled {{ $labels.system_source }} reports have a p95 runtime of {{ $value | humanize }}ms, risking timeouts and delayed Discord delivery. Check report query scan metrics and report-lake import lag.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -221,10 +221,10 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutScheduledReportMissedDaily",
           annotations: {
             summary: escapePrometheusTemplate(
-              "Scout daily scheduled report {{ $labels.title }} has not fired",
+              "Scout daily scheduled report {{ $labels.title }} is overdue",
             ),
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not successfully run on schedule for {{ $value | humanizeDuration }}. Expected daily.",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} daily report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not completed a scheduled run for {{ $value | humanizeDuration }}, leaving subscribers without daily standings. Check the report scheduler and Temporal schedule state.",
             ),
             runbook_url:
               "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/schedule/scheduler.ts",
@@ -242,10 +242,10 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutScheduledReportMissedWeekly",
           annotations: {
             summary: escapePrometheusTemplate(
-              "Scout weekly scheduled report {{ $labels.title }} has not fired",
+              "Scout weekly scheduled report {{ $labels.title }} is overdue",
             ),
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not successfully run on schedule for {{ $value | humanizeDuration }}. Expected weekly (Sunday).",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} weekly report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not completed a scheduled run for {{ $value | humanizeDuration }}, leaving subscribers without their weekly recap. Check the report scheduler and Temporal schedule state.",
             ),
             runbook_url:
               "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/schedule/scheduler.ts",
@@ -268,8 +268,8 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutSeasonScheduleExpiring",
           annotations: {
             summary: "Scout production season metadata expires soon",
-            message:
-              "Scout production's latest bundled League season ends in 3–14 days. Review the scout-season-refresh-weekly PR and promote the resulting minted Scout release pair before autocomplete expires.",
+            description:
+              "Scout production's bundled League season metadata expires in 3 to 14 days, after which season-based competition autocomplete will stop offering the current season. Review the scout-season-refresh-weekly PR and promote the resulting Scout release pair.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             '(max by (environment) (scout_season_schedule_end_timestamp_seconds{environment="prod"}) - time() < 1209600) and (max by (environment) (scout_season_schedule_end_timestamp_seconds{environment="prod"}) - time() >= 259200)',
@@ -282,9 +282,9 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ScoutSeasonScheduleCritical",
           annotations: {
-            summary: "Scout production season metadata is critical",
-            message:
-              "Scout production's latest bundled League season ends in under 3 days or has expired. Merge the season refresh and promote its complete Scout release pair immediately; fixed-date competitions and other backend features remain available.",
+            summary: "Scout production season metadata is expired or expiring",
+            description:
+              "Scout production's bundled League season metadata expires in under 3 days or has already expired, breaking season-based competition setup and autocomplete. Merge the season refresh PR and promote its Scout release pair immediately.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'max by (environment) (scout_season_schedule_end_timestamp_seconds{environment="prod"}) - time() < 259200',
@@ -296,29 +296,16 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         },
         {
           // Whole-bot outage: if Scout drops off Discord nothing posts at all.
-          // Previously only caught indirectly (and slowly) by the report-missed
-          // alert; this pages within minutes.
           //
-          // Scoped per stage to the roles that can hold the shard during this
-          // release — beta's new `gateway` or its previous `combined` pod,
-          // and prod's `combined` pod. The gauge is a plain
-          // prom-client gauge, so every pod that never opens a shard exports it
-          // as a truthful 0; an unscoped `min by (environment)` therefore reads
-          // beta's `application` pod as a Discord outage the moment the split
-          // lands. Root sync updates Prometheus before Scout, so a stage with
-          // a rendered gateway accepts either owner through activation and
-          // retirement. `SCOUT_GATEWAY_OWNER_BY_STAGE` selects that overlap.
-          //
-          // The `absent()` half of each stage is not redundant with the
-          // threshold: scoping to gateway-owning roles means the rule goes
-          // quiet if that stage has no owner pod scheduled at all, and
-          // "nothing is holding the shard" is exactly the outage this alert
-          // exists for.
+          // Scoped per stage to gateway-owning roles via SCOUT_GATEWAY_OWNER_BY_STAGE:
+          // `discord_connection_status` is a plain prom-client gauge, so non-gateway
+          // pods export a truthful 0 that would trip an unscoped `min by (environment)`.
+          // The `absent()` half catches stages where no gateway owner pod is scheduled.
           alert: "ScoutDiscordDisconnected",
           annotations: {
             summary: "Scout is disconnected from Discord",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} has been disconnected from the Discord gateway for >5m, or has no pod holding the gateway at all. No reports, match updates, or competitions are posting. Check the gateway-owning pod for that stage and Discord status.",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} has no pod connected to the Discord gateway for over 5 minutes, so no match reports, updates, or slash commands are working. Check gateway pod health, logs, and Discord API status for that stage.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -344,8 +331,8 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutInitialHistoryImportStale",
           annotations: {
             summary: "Scout initial match history import is stalled",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} has an actionable first-run history import older than six hours. Check the import phase metrics, Riot 429s, SeaweedFS, and report-lake folding.",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} has a first-run player history import stalled for over 6 hours, delaying baseline stats and historical reports for newly tracked players. Check import phase metrics, Riot HTTP 429 throttling, SeaweedFS storage, and report-lake folding.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -357,14 +344,15 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
-          // Individual blocked guilds are a USER problem (the owner is DM'd via
-          // the backed-off escalation), so don't page on one or two. A spike in
-          // blocked guilds at once instead points at a bot-side delivery bug.
+          // Individual blocked guilds are a USER problem (deleted channels or
+          // revoked perms; the owner is DM'd via backed-off escalation), so
+          // don't page on one or two. A spike across >5 guilds at once points
+          // at a bot-side delivery bug instead.
           alert: "ScoutGuildDeliveryBlockedSpike",
           annotations: {
-            summary: "Many Scout guilds can't be delivered to",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} has {{ $value }} guilds where delivery is currently blocked. A handful is normal (deleted channels / revoked perms, owners are notified), but a spike suggests a bot-side delivery problem.",
+            summary: "Scout Discord delivery is blocked across multiple guilds",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} cannot deliver messages to {{ $value }} Discord guilds simultaneously, indicating a likely bot-side delivery regression rather than isolated channel permission issues. Check Discord gateway permissions, bot send errors in Bugsink, and recent delivery changes.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -383,9 +371,9 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ScoutWeb5xxRateHigh",
           annotations: {
-            summary: "Scout web backend is returning server errors",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is serving {{ $value | humanize }} 5xx responses in 30m on route {{ $labels.route }}. These are backend faults, not client mistakes.",
+            summary: "Scout website is returning server errors",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} returned {{ $value | humanize }} HTTP 5xx responses in 30 minutes on route {{ $labels.route }}, failing dashboard requests for users. Check Bugsink and Scout application pod logs for unhandled backend exceptions.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -403,8 +391,8 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutDiscordUpstreamFailures",
           annotations: {
             summary: "Scout cannot reach Discord to resolve user guilds",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is failing to fetch user guilds from Discord ({{ $labels.reason }}) saw {{ $value | humanize }} failures in 30m. Web users will see 'Couldn't reach Discord' and cannot manage their servers.",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} failed {{ $value | humanize }} Discord user-guild lookups ({{ $labels.reason }}) in 30 minutes, preventing web users from viewing or managing their servers. Check Discord API status, outbound network connectivity, and Scout OAuth logs.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -421,9 +409,9 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           // surface, and alerting on them would fire constantly.
           alert: "ScoutTrpcErrorRateHigh",
           annotations: {
-            summary: "Scout tRPC procedures are failing",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} procedure {{ $labels.procedure }} returned {{ $labels.code }} {{ $value | humanize }} times in 30m.",
+            summary: "Scout API requests are failing",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} tRPC procedure {{ $labels.procedure }} returned {{ $labels.code }} {{ $value | humanize }} times in 30 minutes, degrading web dashboard functionality. Check Bugsink and application logs for failures in {{ $labels.procedure }}.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -441,8 +429,8 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ScoutWebSigninFailureRate",
           annotations: {
             summary: "Scout web sign-ins are failing",
-            message: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} sign-in failures are {{ $value | humanizePercentage }} of attempts over the last 6h. Users cannot get into the dashboard.",
+            description: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} failed {{ $value | humanizePercentage }} of web sign-in attempts over the last 6 hours, blocking users from accessing the dashboard. Check Discord OAuth callback logs, redirect URI configuration, and database session writes.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

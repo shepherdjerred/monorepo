@@ -21,6 +21,7 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
       interval: "30s",
       rules: [
         // --- encoder pipeline health -------------------------------------------------
+        // Canonical stall detector per ffmpeg-user: trust out_time velocity rather than speed= alone.
         {
           alert: "StreambotEncoderStalled",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -29,12 +30,17 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "30s",
           labels: { severity: "critical", category: "streaming" },
           annotations: {
-            summary: "Streambot encoder is no longer making forward progress",
+            summary: "Stream video encoder has stalled",
             description: escapePrometheusTemplate(
-              "ffmpeg's media-time is advancing at < 0.5× realtime for at least 30 s while a stream is active. The encoder has stalled — either subprocess died, stderr/stdout deadlocked, or input demux blocked. Canonical detector per the ffmpeg-user mailing list: trust out_time velocity, never `speed=` alone.",
+              "Streambot's ffmpeg encoder is advancing media time at less than 0.5x realtime while a stream is active, stalling playback for Discord viewers. The encoder subprocess may have died, deadlocked on stdio, or blocked on input demuxing. Check Streambot pod logs and active ffmpeg processes to recover the stream.",
             ),
           },
         },
+        // Root cause of the 2026-06-14 stutter incident: without a working -readrate cap,
+        // NUT-pipe consumer buffers accumulate, V8/JSC major GC pauses exceed 200 ms, and
+        // Discord viewers see ~1 s freezes. Threshold is 1.25 (not 1.10) because bounded
+        // bursts above 1.0 are expected since PR #1542 (readrate_initial_burst pre-roll and
+        // post-dip catch-ups to wall-clock time).
         {
           alert: "StreambotEncoderProducerAhead",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -43,13 +49,15 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "1m",
           labels: { severity: "warning", category: "streaming" },
           annotations: {
-            summary:
-              "ffmpeg producing > 1.25× realtime sustained — readrate cap not holding",
+            summary: "Stream video is running ahead of audio",
             description: escapePrometheusTemplate(
-              "The root cause of the 2026-06-14 stutter incident: ffmpeg's `-readrate` cap is missing or higher than the realtime send loop can consume. NUT-pipe consumer buffers accumulate, V8/JSC major GC pauses ≥ 200 ms, Discord viewers see ~1 s freezes. Set STREAM_READRATE=1.0 (the default) on streambot's deployment if this fires. Threshold is 1.25 (not 1.10) because bounded bursts above 1.0 are LEGITIMATE since PR #1542: the readrate_initial_burst pre-roll and post-dip catch-ups to the wall-clock line both briefly exceed realtime by design.",
+              "Streambot's ffmpeg encoder is producing media faster than 1.25x realtime, causing consumer buffers to grow and triggering GC pauses that freeze playback for Discord viewers. Verify that STREAM_READRATE=1.0 is configured on the Streambot deployment and that -readrate is applied to the transcode command.",
             ),
           },
         },
+        // Direct viewer-facing stutter signal added after the 2026-07-18 investigation.
+        // Unlike speed_ratio (a production-side proxy), sustained growth here directly
+        // reflects viewer stutter; streambot_send_sync_events_total tracks sync-correction loss.
         {
           alert: "StreambotPlaybackBehindSchedule",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -58,13 +66,14 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "1m",
           labels: { severity: "critical", category: "streaming" },
           annotations: {
-            summary:
-              "Send pacer > 1 s behind schedule — viewers are experiencing stutter",
+            summary: "Stream playback is falling behind and stuttering",
             description: escapePrometheusTemplate(
-              "The direct viewer-facing stutter signal (added after the 2026-07-18 investigation): the paced send path is running more than 1 s behind its absolute schedule while a stream is active. Unlike speed_ratio (a production-side proxy), sustained growth here IS the user experience. Check the Streambot dashboard's 'Playback behind schedule' and 'Demux→pacer queue depth' panels: empty queues = producer-starved (transcode/readrate), full queues = pacer/sync-correction loss (see streambot_send_sync_events_total).",
+              "Streambot's paced send path is more than 1 second behind schedule during an active stream, causing visible stutter for Discord viewers. Check the Streambot dashboard's 'Playback behind schedule' and 'Demux→pacer queue depth' panels: empty queues point to encoder starvation, while full queues point to send-pacer lag.",
             ),
           },
         },
+        // Producer slower than consumer (Mux stream-drift pattern): the startup buffer drains
+        // without replacement until playback stalls.
         {
           alert: "StreambotEncoderFallingBehind",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -73,13 +82,14 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "2m",
           labels: { severity: "critical", category: "streaming" },
           annotations: {
-            summary:
-              "ffmpeg falling behind realtime — viewers will stall once buffer drains",
+            summary: "Stream video encoder cannot keep up",
             description: escapePrometheusTemplate(
-              "The Mux stream-drift concept applied locally: producer < consumer means startup buffer is being drained without replacement. Common causes: decoder bound on CPU, GPU contention with another tenant on /dev/dri/renderD128, or input demux source slowdown.",
+              "Streambot's ffmpeg encoder is running below 0.95x realtime during an active stream, draining the startup buffer until Discord playback stalls. Check node CPU saturation, GPU contention on /dev/dri/renderD128, and media source read throughput.",
             ),
           },
         },
+        // Stops in fluent-ffmpeg progress events usually indicate an undrained stderr buffer
+        // blocking the child write (ffmpeg-python#195 deadlock), an encoder crash, or a segfault.
         {
           alert: "StreambotProgressStalled",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -88,14 +98,14 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "30s",
           labels: { severity: "critical", category: "streaming" },
           annotations: {
-            summary:
-              "No ffmpeg progress event in > 5 s — subprocess deadlocked or died",
+            summary: "Stream video encoder stopped responding",
             description: escapePrometheusTemplate(
-              "fluent-ffmpeg's `progress` events have stopped firing. Possible causes (in order of likelihood): stderr buffer un-drained → child blocked on write (ffmpeg-python#195 deadlock), encoder context crash, segfault. Investigate `kubectl logs` and `kubectl exec -- ps` immediately.",
+              "Streambot has not received an ffmpeg progress update for over 5 seconds during an active stream, indicating the encoder subprocess has deadlocked or crashed. Inspect pod logs with kubectl logs and check running child processes in the Streambot container.",
             ),
           },
         },
         // --- voice connection loss & recovery ------------------------------------------
+        // Added after the 2026-07-03 mid-movie voice session drop investigation.
         {
           alert: "StreambotVoiceDisconnectsElevated",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -104,9 +114,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           labels: { severity: "warning", category: "streaming" },
           annotations: {
             summary:
-              "Discord dropped the streamer's voice session > 3 times in the last hour",
+              "Streambot Discord voice session is disconnecting repeatedly",
             description: escapePrometheusTemplate(
-              'Repeated Discord-side voice session losses (see the 2026-07-03 mid-movie death investigation). Occasional drops are expected and auto-recovered; a burst points at network trouble on the node, Discord voice infra issues, or the account being flagged. Check `{app="media-streambot"} |= "voice gateway websocket closed"` in Loki for the close codes.',
+              'Discord dropped Streambot voice sessions more than 3 times in the past hour, interrupting active playback even when auto-recovery succeeds. Inspect `{app="media-streambot"} |= "voice gateway websocket closed"` in Loki for gateway close codes and check node network health or Discord voice status.',
             ),
           },
         },
@@ -117,10 +127,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           labels: { severity: "critical", category: "streaming" },
           annotations: {
-            summary:
-              "Streambot gave up auto-reconnecting after a voice drop — playback stayed down",
+            summary: "Streambot failed to reconnect to Discord voice",
             description: escapePrometheusTemplate(
-              "Every reconnect attempt after a transient voice loss failed (no free userbot, join errors, or repeated immediate drops). The resume state file is preserved, so a restart or a manual /stream play resumes the movie. Investigate why rejoin failed before viewers do.",
+              "Streambot exhausted all automatic reconnect attempts after losing its Discord voice session, leaving stream playback stopped. Check Streambot logs for userbot availability or voice join errors, then restart the pod or run /stream play to resume from saved state.",
             ),
           },
         },
@@ -132,10 +141,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "2m",
           labels: { severity: "warning", category: "voice" },
           annotations: {
-            summary:
-              "An active Streambot voice receive path has been unready for two minutes",
+            summary: "Streambot cannot hear Discord voice chat",
             description: escapePrometheusTemplate(
-              "The Discord receive or required DAVE decrypt path is not ready for guild {{ $labels.guild_id }} channel {{ $labels.channel_id }}. Open the Streambot Voice dashboard and correlate the session with transport logs before restarting it.",
+              "The Discord voice receive or DAVE decryption path has been unready for 2 minutes in guild {{ $labels.guild_id }} channel {{ $labels.channel_id }}, blocking voice commands. Check the Streambot Voice dashboard and correlate the session with voice transport logs before restarting.",
             ),
           },
         },
@@ -146,10 +154,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           labels: { severity: "warning", category: "voice" },
           annotations: {
-            summary:
-              "More than 5% of Streambot voice ingress failed decrypt, decode, or validation",
+            summary: "Streambot is receiving corrupted Discord audio",
             description: escapePrometheusTemplate(
-              "At least 100 packets arrived in ten minutes and more than 5% were malformed, failed DAVE decryption, or failed Opus decoding. Inspect the ingress outcomes and correlated Loki logs before attributing the failure to wake detection.",
+              "More than 5% of incoming Discord voice packets over the last 10 minutes were malformed or failed DAVE decryption or Opus decoding, degrading voice command recognition. Inspect voice ingress error breakdowns on the Streambot Voice dashboard and check correlated Loki logs.",
             ),
           },
         },
@@ -162,7 +169,7 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Streambot exhausted its OpenAI voice quota",
             description: escapePrometheusTemplate(
-              "The voice assistant recorded quota exhaustion during the last 15 minutes. Slash commands and playback remain available; restore or raise the dedicated OpenAI project budget before expecting voice commands to work.",
+              "Streambot's voice assistant hit OpenAI quota limits in the last 15 minutes, disabling voice commands while slash commands and media playback remain available. Restore or increase the dedicated OpenAI project budget to re-enable voice interaction.",
             ),
           },
         },
@@ -173,9 +180,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           labels: { severity: "warning", category: "voice" },
           annotations: {
-            summary: "Streambot had three OpenAI voice failures in 15 minutes",
+            summary: "Streambot is failing OpenAI voice requests",
             description: escapePrometheusTemplate(
-              "Use the Streambot Voice cloud-stage panels, then follow a trace into Tempo and its correlated logs in Loki to identify the failing OpenAI stage.",
+              "Streambot recorded at least 3 OpenAI voice pipeline failures in the last 15 minutes, causing spoken assistant commands to fail. Check the Streambot Voice cloud-stage dashboard panels and follow failing traces in Tempo and Loki to identify the broken stage.",
             ),
           },
         },
@@ -186,9 +193,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           labels: { severity: "warning", category: "voice" },
           annotations: {
-            summary: "A Streambot voice reply failed delivery",
+            summary: "Streambot failed to deliver a spoken voice reply",
             description: escapePrometheusTemplate(
-              "At least one assistant response failed while draining to Discord in the last 15 minutes. Inspect reply-delivery spans and the receive/session readiness panels for a simultaneous Discord voice loss.",
+              "At least one Streambot voice assistant reply failed to play back into Discord during the last 15 minutes. Inspect reply-delivery trace spans and check the voice session readiness panels for a concurrent Discord voice disconnect.",
             ),
           },
         },
@@ -200,9 +207,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           labels: { severity: "warning", category: "voice" },
           annotations: {
             summary:
-              "Three Streambot diagnostic captures failed or were dropped",
+              "Streambot is dropping or failing voice diagnostic captures",
             description: escapePrometheusTemplate(
-              "Capture failures do not fail voice commands, but diagnostic evidence is being lost. Check SeaweedFS reachability, credentials, object upload logs, and queue capacity.",
+              "At least 3 Streambot voice diagnostic captures failed upload or were dropped in the last 15 minutes; voice commands still work, but debugging audio evidence is being lost. Check SeaweedFS reachability, S3 credentials, upload logs, and capture queue usage.",
             ),
           },
         },
@@ -214,10 +221,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "5m",
           labels: { severity: "warning", category: "voice" },
           annotations: {
-            summary:
-              "Streambot voice capture queue has retained more than 100 MiB for five minutes",
+            summary: "Streambot voice diagnostic capture queue is nearly full",
             description: escapePrometheusTemplate(
-              "The bounded 128 MiB capture queue is close to dropping new evidence. Investigate SeaweedFS upload latency and failures; do not increase the queue until the storage path is understood.",
+              "Streambot's 128 MiB diagnostic capture queue has held over 100 MiB for 5 minutes and is close to dropping new voice captures. Investigate SeaweedFS upload latency and errors in Streambot logs rather than raising the queue limit.",
             ),
           },
         },
@@ -228,9 +234,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           ),
           labels: { severity: "warning", category: "voice" },
           annotations: {
-            summary: "A Streambot voice turn is older than 35 seconds",
+            summary: "Streambot voice assistant turn is stuck",
             description: escapePrometheusTemplate(
-              "The active turn in guild {{ $labels.guild_id }} channel {{ $labels.channel_id }} exceeded the expected end-to-end budget. Follow its active trace to the verifier, OpenAI, tool, or reply stage that has not terminated.",
+              "An active voice assistant turn in guild {{ $labels.guild_id }} channel {{ $labels.channel_id }} has been running for over 35 seconds, blocking subsequent voice interaction in that session. Inspect the active trace in Tempo to find whether verification, OpenAI, tool execution, or reply playback is hung.",
             ),
           },
         },
@@ -242,10 +248,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "60s",
           labels: { severity: "critical", category: "voice" },
           annotations: {
-            summary:
-              "Streambot playback remained ducked after the voice turn ended",
+            summary: "Stream audio is stuck at low volume",
             description: escapePrometheusTemplate(
-              "Playback has stayed ducked for 60 seconds with no active turn in guild {{ $labels.guild_id }} channel {{ $labels.channel_id }}. This is a user-visible stuck state; inspect reply teardown and restore the session.",
+              "Stream audio volume in guild {{ $labels.guild_id }} channel {{ $labels.channel_id }} has remained lowered for 60 seconds after the voice assistant turn ended, leaving media muffled for viewers. Inspect voice reply teardown logs and restart or rejoin the stream session to restore normal volume.",
             ),
           },
         },
@@ -306,13 +311,15 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "1m",
           labels: { severity: "critical", category: "streaming" },
           annotations: {
-            summary: "Viewers seeing late video frames at > 0.5/sec",
+            summary: "Streambot is sending late video frames",
             description: escapePrometheusTemplate(
-              "The send path is missing the frame budget on > 0.5 frames per second sustained over a minute. With a 30 fps target that's > 1.5% of frames. Cross-reference event-loop p99 (GC pauses?) and ffmpeg_speed_ratio (producer mismatch?).",
+              "Streambot's video send loop is missing its frame deadline on more than 0.5 frames per second (>1.5% at 30 fps), causing visible playback jitter for Discord viewers. Check Streambot event-loop lag for GC pauses and encoder speed ratio on the Streambot dashboard.",
             ),
           },
         },
         // --- JS heap / queue health --------------------------------------------------
+        // Unbounded-queue signature: pair with StreambotExternalBufferHeavy (external/heap > 0.5)
+        // to distinguish buffered ffmpeg pipe output from a pure JS object leak.
         {
           alert: "StreambotHeapGrowing",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -321,12 +328,14 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "5m",
           labels: { severity: "warning", category: "streaming" },
           annotations: {
-            summary: "Streambot JS heap growing > 10 MiB/min sustained",
+            summary: "Streambot memory usage is climbing steadily",
             description: escapePrometheusTemplate(
-              "Unbounded-queue signature: the JS heap is gaining > 10 MiB per minute over 5 m. Pair with `streambot_nodejs_external_memory_bytes / streambot_nodejs_heap_size_used_bytes > 0.5` for the Buffer-heavy queue case (vs a real leak). When both fire, the consumer (RTP send) cannot drain the producer (ffmpeg pipe).",
+              "Streambot's JS heap has grown by more than 10 MiB per minute for 5 minutes, risking long GC pauses or pod OOM kills during active playback. Check whether external buffer memory is also elevated (indicating RTP send cannot drain the ffmpeg pipe) or inspect heap usage for a memory leak.",
             ),
           },
         },
+        // In Bun/Node process.memoryUsage(), `external` counts native Buffer-backed bytes;
+        // a healthy steady-state Streambot pipeline keeps external / heapUsed below 0.3.
         {
           alert: "StreambotExternalBufferHeavy",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -335,12 +344,15 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "5m",
           labels: { severity: "warning", category: "streaming" },
           annotations: {
-            summary: "external / heapUsed > 0.5 — Buffer-heavy queue signature",
+            summary: "Streambot media buffer memory is backing up",
             description: escapePrometheusTemplate(
-              "When external memory exceeds half the JS heap, the dominant retainer is almost always native Buffer instances queued in a JS-side stream. Bun/Node `process.memoryUsage()` shape: `external` counts Buffer-backed bytes; a healthy steady-state pipeline keeps this ratio < 0.3. See the streambot post-incident plan for the differentiation table.",
+              "Streambot's native Buffer memory exceeds half of its JS heap size, indicating media frames are backing up in JS stream queues and risking GC stalls. Check encoder readrate settings and RTP send-loop throughput on the Streambot dashboard.",
             ),
           },
         },
+        // Event-loop p99 stalls > 100 ms typically align with V8/JSC major GC pauses on a
+        // multi-GB heap; at 30 fps a 100 ms stall queues 3 frames, which Discord's receiver
+        // jitter buffer amplifies into a viewer-visible freeze.
         {
           alert: "StreambotEventLoopLag",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -349,9 +361,9 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "2m",
           labels: { severity: "warning", category: "streaming" },
           annotations: {
-            summary: "Streambot event-loop p99 > 100 ms — STW pauses likely",
+            summary: "Streambot main thread is lagging and freezing video",
             description: escapePrometheusTemplate(
-              "Event-loop p99 stalls of > 100 ms align with V8/JSC major GC pauses on a multi-GB heap. The RTP send loop runs on the event loop — a 100 ms pause queues 3 frames at 30 fps, which Discord's receiver jitter buffer amplifies to a viewer-visible freeze.",
+              "Streambot's p99 event-loop lag has exceeded 100 ms for 2 minutes, delaying the RTP send loop and causing video freezes for Discord viewers. Check Streambot heap size, external buffer growth, and pod CPU throttling to find what is blocking the event loop.",
             ),
           },
         },
