@@ -40,16 +40,20 @@ import {
 } from "#testing/fixture-api/fixtures/titles.ts";
 import { HOUSEHOLD } from "#testing/fixture-api/personas.ts";
 
-/** Quality profiles and recovery state, which every member can read. */
+/**
+ * Quality profiles and recovery state. Profiles are owner data: a member's
+ * list read succeeds, empty, and the defaults refuse a member.
+ */
 const shared: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/profiles",
     schema: ProfileListSchema,
-    respond: () => profileList(),
+    respond: (request) => (request.persona === "owner" ? profileList() : []),
     samples: ["/profiles"],
   }),
   endpoint({
     path: "/profile-defaults",
+    access: "owner",
     schema: ProfileDefaultsSchema,
     respond: () => profileDefaults(),
     samples: ["/profile-defaults"],

@@ -24,6 +24,7 @@ import { moviePublicTargetAssetV4 } from "./public/public-asset.ts";
 import { movieOperationalAdmissionV4 } from "./public/public-inventory.ts";
 import { readMovieTargetProgressV4 } from "./public/public-progress.ts";
 import { movieCaptionStatus } from "#infrastructure/quality-guide/movie-caption-status.ts";
+import { memberMovieTarget } from "#infrastructure/visibility/member-detail.ts";
 
 export async function readMovieTargetContextV4(
   tx: Prisma.TransactionClient,
@@ -107,7 +108,7 @@ export async function readMovieTargetContextV4(
     budget,
   );
   identity.freshness?.assertActive();
-  return MovieTargetContextV4Schema.parse({
+  const context = MovieTargetContextV4Schema.parse({
     ...common,
     access: "detail",
     title: media.title,
@@ -140,6 +141,8 @@ export async function readMovieTargetContextV4(
     ),
     progress,
   });
+  // A requester follows their edition's transfer, not how it was acquired.
+  return owner ? context : memberMovieTarget(context);
 }
 
 async function ownMovieControlsV4(

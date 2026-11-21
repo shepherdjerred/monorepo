@@ -1,6 +1,10 @@
 import { expect, test } from "vitest";
 import { MediaDetailSchema, type MediaDetail } from "#shared/api.ts";
-import { memberDetail } from "./member-detail.ts";
+import {
+  MovieTargetContextV4Schema,
+  type MovieTargetContextV4,
+} from "#shared/movie-editions/lifecycle/public-v4.ts";
+import { memberDetail, memberMovieTarget } from "./member-detail.ts";
 
 function ownerDetail(): MediaDetail {
   const torrentId = crypto.randomUUID();
@@ -143,4 +147,86 @@ test("the projection changes nothing else and stays within the existing strict c
 test("a title with no intent stays without one", () => {
   const member = memberDetail({ ...ownerDetail(), intent: null });
   expect(member.intent).toBeNull();
+});
+
+function ownerMovieTarget(
+  progress: MediaDetail["visibility"] | null,
+): MovieTargetContextV4 {
+  const mediaId = crypto.randomUUID();
+  return MovieTargetContextV4Schema.parse({
+    schemaVersion: 4,
+    scope: { rootMediaId: mediaId, mediaId, edition: "directors_cut" },
+    access: "detail",
+    expected: { mediaVersion: 8, targetVersion: 11 },
+    ownRequests: [],
+    ownHold: null,
+    allowedProtectiveActions: ["keep"],
+    title: "Projected movie",
+    year: 2020,
+    editionLabel: "Director's cut",
+    target: {
+      generation: 2,
+      availability: "downloading",
+      desiredPresence: true,
+      monitoring: true,
+      libraryMonitoring: false,
+    },
+    allowedActions: ["keep"],
+    reasons: ["acquisition_active"],
+    removalConfirmation: null,
+    currentAsset: null,
+    progress:
+      progress === null
+        ? null
+        : {
+            attempts: progress.attempts,
+            torrents: progress.torrents,
+            historyTruncated: true,
+          },
+  });
+}
+
+test("a member's movie edition keeps its transfer while acquisition detail is withheld", () => {
+  const owner = ownerMovieTarget(ownerDetail().visibility);
+  const member = memberMovieTarget(owner);
+  if (owner.access !== "detail" || member.access !== "detail")
+    throw new Error("Fixture lost its detail access");
+  expect(owner.progress?.attempts).toHaveLength(1);
+  expect(member.progress).toEqual({
+    attempts: [],
+    torrents: [
+      {
+        id: owner.progress?.torrents[0]?.id,
+        state: "downloading",
+        freshness: "fresh",
+        progress: 0.4,
+        observedAt: null,
+        ratio: null,
+        seededSeconds: null,
+        diagnostics: null,
+      },
+    ],
+    historyTruncated: true,
+  });
+  const { progress: _progress, ...rest } = member;
+  const { progress: _ownerProgress, ...ownerRest } = owner;
+  expect(rest).toEqual(ownerRest);
+  expect(MovieTargetContextV4Schema.parse(structuredClone(member))).toEqual(
+    member,
+  );
+});
+
+test("a movie edition without progress or detail access is returned as it is", () => {
+  const withoutProgress = ownerMovieTarget(null);
+  expect(memberMovieTarget(withoutProgress)).toBe(withoutProgress);
+  const protectionOnly = MovieTargetContextV4Schema.parse({
+    schemaVersion: 4,
+    scope: withoutProgress.scope,
+    access: "protection_only",
+    expected: withoutProgress.expected,
+    ownRequests: [],
+    ownHold: null,
+    allowedProtectiveActions: [],
+  });
+  expect(memberMovieTarget(protectionOnly)).toBe(protectionOnly);
 });
