@@ -1,5 +1,5 @@
 import type { Env, Hono } from "hono";
-import { serveStatic } from "hono/bun";
+import { serveStatic } from "@hono/bun";
 import { etag } from "hono/etag";
 
 /**

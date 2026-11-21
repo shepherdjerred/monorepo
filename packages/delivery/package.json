@@ -33,6 +33,7 @@
     "test:e2e": "bun --no-install --bun playwright test"
   },
   "dependencies": {
+    "@hono/bun": "^1.0.1",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "^7.10.0",
     "@prisma/client-runtime-utils": "7.10.0",

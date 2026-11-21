@@ -203,7 +203,6 @@ export function initAnalytics(): void {
     opt_out_persistence_by_default: false,
     ...analyticsPrivacySettings(activeConfig),
     before_send(event) {
-      if (event === null) return null;
       const currentUrl: unknown = event.properties["$current_url"];
       if (typeof currentUrl === "string") {
         const location = normalizedEventLocation(activeConfig, currentUrl);

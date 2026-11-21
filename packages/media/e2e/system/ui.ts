@@ -1,4 +1,4 @@
-import { serveStatic } from "hono/bun";
+import { serveStatic } from "@hono/bun";
 import type { createSystemHttpServer } from "#testing/system/http.ts";
 
 /** Serve the actual built application over the same authenticated fixture API. */
