@@ -5,9 +5,10 @@ import {
   apiRequest,
   apiUrl,
 } from "@shepherdjerred/streambot/web/client/api.ts";
-import { Artwork } from "@shepherdjerred/streambot/web/client/media/artwork.tsx";
 import { PlayActions } from "@shepherdjerred/streambot/web/client/media/play-actions.tsx";
-import { itemDetail } from "@shepherdjerred/streambot/web/client/media/row-model.ts";
+import { MediaRow } from "@shepherdjerred/streambot/web/client/media/media-row.tsx";
+import type { MenuItem } from "@shepherdjerred/streambot/web/client/media/row-menu.tsx";
+import { ConfirmButton } from "@shepherdjerred/streambot/web/client/room/confirm-button.tsx";
 import { useRemote } from "@shepherdjerred/streambot/web/client/remote.tsx";
 import {
   useControl,
@@ -66,8 +67,9 @@ function MatchPicker(props: {
 }
 
 /**
- * One saved item: the shared row with its play buttons, and for the owner Move up, Move down,
- * Remove and Choose video. Each button has its own pending state and its own status line.
+ * One saved item: the shared row with its play buttons, and for the owner Move up, Move down and
+ * Remove beside them, with Choose video in its `⋯` menu. Each has its own pending state, and the
+ * edits share one status line under the row.
  */
 export function PlaylistEntryRow(props: {
   entry: PlaylistEntry;
@@ -91,7 +93,6 @@ export function PlaylistEntryRow(props: {
   const [matches, setMatches] = useState<readonly MusicMatch[] | null>(null);
   const listen = remote.room?.capabilities.listen === true;
   const item = entryItem(entry, remote.guildId, listen);
-  const detail = itemDetail(item);
   const move = (key: "up" | "down") => {
     const position = movePosition(index, key, count);
     if (position === null || controls[key].pending) return;
@@ -128,90 +129,90 @@ export function PlaylistEntryRow(props: {
       },
     );
   };
+  const chooseVideo: readonly MenuItem[] =
+    props.owned && entry.music !== undefined && entry.selectionId !== undefined
+      ? [
+          {
+            key: "choose-video",
+            label: controls.match.pending ? "Finding videos…" : "Choose video…",
+            onSelect: findVideos,
+          },
+        ]
+      : [];
+  const edits = props.owned ? (
+    <>
+      <button
+        type="button"
+        className="btn btn-ghost btn-icon btn-small"
+        aria-label={"Move " + item.title + " up"}
+        disabled={index === 0 || controls.up.pending}
+        aria-busy={controls.up.pending}
+        onClick={() => {
+          move("up");
+        }}
+      >
+        <span aria-hidden="true">↑</span>
+      </button>
+      <button
+        type="button"
+        className="btn btn-ghost btn-icon btn-small"
+        aria-label={"Move " + item.title + " down"}
+        disabled={index === count - 1 || controls.down.pending}
+        aria-busy={controls.down.pending}
+        onClick={() => {
+          move("down");
+        }}
+      >
+        <span aria-hidden="true">↓</span>
+      </button>
+      <ConfirmButton
+        label={"Remove " + item.title + " from this playlist"}
+        confirm="Remove"
+        className="btn btn-ghost btn-icon btn-small"
+        pending={controls.remove.pending}
+        onConfirm={() => {
+          setLast("remove");
+          edit(
+            controls.remove,
+            { action: "remove", itemId: entry.id },
+            "Removed.",
+            props.onRemoved,
+          );
+        }}
+      >
+        <span aria-hidden="true">✕</span>
+      </ConfirmButton>
+    </>
+  ) : undefined;
   return (
-    <li className="row entry">
-      <Artwork item={item} shape="thumb" />
-      <div className="row-text">
-        <span className="row-title">{item.title}</span>
-        <span className="row-detail">{detail}</span>
-      </div>
-      <PlayActions item={item} />
-      {props.owned && (
-        <div className="entry-edit btn-row">
-          <button
-            type="button"
-            className="btn btn-ghost btn-icon btn-small"
-            aria-label={"Move " + item.title + " up"}
-            aria-disabled={index === 0 || controls.up.pending}
-            aria-busy={controls.up.pending}
-            onClick={() => {
-              move("up");
-            }}
-          >
-            <span aria-hidden="true">↑</span>
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost btn-icon btn-small"
-            aria-label={"Move " + item.title + " down"}
-            aria-disabled={index === count - 1 || controls.down.pending}
-            aria-busy={controls.down.pending}
-            onClick={() => {
-              move("down");
-            }}
-          >
-            <span aria-hidden="true">↓</span>
-          </button>
-          {entry.music !== undefined && entry.selectionId !== undefined && (
-            <button
-              type="button"
-              className="btn btn-ghost btn-small"
-              aria-disabled={controls.match.pending}
-              aria-busy={controls.match.pending}
-              onClick={findVideos}
-            >
-              {controls.match.pending ? "Finding…" : "Choose video"}
-              <span className="visually-hidden">: {item.title}</span>
-            </button>
-          )}
-          <button
-            type="button"
-            className="btn btn-ghost btn-small"
-            aria-disabled={controls.remove.pending}
-            aria-busy={controls.remove.pending}
-            onClick={() => {
-              if (controls.remove.pending) return;
-              setLast("remove");
-              edit(
-                controls.remove,
-                { action: "remove", itemId: entry.id },
-                "Removed.",
-                props.onRemoved,
-              );
-            }}
-          >
-            {controls.remove.pending ? "Removing…" : "Remove"}
-            <span className="visually-hidden">: {item.title}</span>
-          </button>
-        </div>
-      )}
-      <div className="entry-extra">
-        <ChangeStatus
-          control={last === null ? null : controls[last]}
-          onRefresh={playlist.refresh}
-        />
-        {matches !== null && (
-          <MatchPicker
-            title={item.title}
-            matches={matches}
-            pending={controls.pick.pending}
-            onPick={pick}
-            onClose={() => {
-              setMatches(null);
-            }}
+    <MediaRow
+      item={item}
+      actions={
+        <>
+          <PlayActions
+            item={item}
+            extraMenuItems={chooseVideo}
+            trailing={edits}
           />
-        )}
-      </div>
-    </li>
+          <div className="entry-extra">
+            <ChangeStatus
+              control={last === null ? null : controls[last]}
+              onRefresh={playlist.refresh}
+            />
+            {matches !== null && (
+              <MatchPicker
+                title={item.title}
+                matches={matches}
+                pending={controls.pick.pending}
+                onPick={pick}
+                onClose={() => {
+                  setMatches(null);
+                }}
+              />
+            )}
+          </div>
+        </>
+      }
+    />
   );
 }

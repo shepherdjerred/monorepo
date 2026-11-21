@@ -85,16 +85,16 @@ export function MediaRow(props: {
     if (event.key !== "Enter") return;
     event.preventDefault();
     const intent = enterIntent(item);
+    // The row itself holds its buttons, whether they came from PlayActions or a custom slot.
+    const row = event.currentTarget;
     switch (intent.kind) {
       case "play":
-        actions.current
-          ?.querySelector<HTMLButtonElement>(`[data-action="${intent.action}"]`)
+        row
+          .querySelector<HTMLButtonElement>(`[data-action="${intent.action}"]`)
           ?.click();
         break;
       case "focus-actions":
-        actions.current
-          ?.querySelector<HTMLButtonElement>("[data-action]")
-          ?.focus();
+        row.querySelector<HTMLButtonElement>("[data-action]")?.focus();
         break;
       case "open":
         void navigate(intent.href);

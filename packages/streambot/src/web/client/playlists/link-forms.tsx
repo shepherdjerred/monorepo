@@ -18,8 +18,17 @@ type CreateChange = PlaylistChange & { action: "create" };
 type ImportChange = PlaylistChange & { action: "import" };
 
 /** A refusal the form shows without asking the server. */
-function refusal(message: string) {
+export function refusal(message: string) {
   return { status: 0, code: "invalid_request", message, reference: null };
+}
+
+/** Why a link cannot be imported, checked before the server is asked; null when it can be. */
+export function importRefusal(url: string, spotifyOff: boolean): string | null {
+  if (!isImportablePlaylistUrl(url))
+    return "Paste a public Spotify playlist, album or track link, or a YouTube playlist link.";
+  return spotifyOff && isSpotifyLink(url)
+    ? "Spotify links are not enabled in this server."
+    : null;
 }
 
 /** A name for a new private playlist. */
@@ -83,18 +92,9 @@ export function ImportForm(props: {
       onSubmit={(event) => {
         event.preventDefault();
         if (control.pending) return;
-        if (!isImportablePlaylistUrl(url)) {
-          control.explain(
-            refusal(
-              "Paste a public Spotify playlist, album or track link, or a YouTube playlist link.",
-            ),
-          );
-          return;
-        }
-        if (spotifyOff && isSpotifyLink(url)) {
-          control.explain(
-            refusal("Spotify links are not enabled in this server."),
-          );
+        const refused = importRefusal(url, spotifyOff);
+        if (refused !== null) {
+          control.explain(refusal(refused));
           return;
         }
         const trimmed = name.trim();

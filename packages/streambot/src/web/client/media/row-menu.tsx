@@ -1,10 +1,19 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import "@shepherdjerred/streambot/web/client/styles/menu.css";
 
 export type MenuItem = {
   readonly key: string;
   readonly label: string;
   readonly onSelect: () => void;
+  /** Draws a rule above this item, to set a group of actions apart. */
+  readonly separatorBefore?: boolean;
 };
 
 /**
@@ -13,7 +22,12 @@ export type MenuItem = {
  * End move between items; Escape closes and returns focus to the trigger; Tab or a click outside
  * closes it.
  */
-export function RowMenu(props: { label: string; items: readonly MenuItem[] }) {
+export function RowMenu(props: {
+  label: string;
+  items: readonly MenuItem[];
+  /** Shows this word on the trigger instead of `⋯`. */
+  triggerText?: string;
+}) {
   const [open, setOpen] = useState(false);
   const enterOnOpen = useRef(false);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -87,7 +101,11 @@ export function RowMenu(props: { label: string; items: readonly MenuItem[] }) {
       <button
         ref={trigger}
         type="button"
-        className="btn btn-ghost btn-icon"
+        className={
+          props.triggerText === undefined
+            ? "btn btn-ghost btn-icon"
+            : "btn btn-small"
+        }
         aria-label={props.label}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -121,7 +139,7 @@ export function RowMenu(props: { label: string; items: readonly MenuItem[] }) {
           setOpen((value) => !value);
         }}
       >
-        <span aria-hidden="true">⋯</span>
+        {props.triggerText ?? <span aria-hidden="true">⋯</span>}
       </button>
       {open && (
         <div
@@ -133,19 +151,23 @@ export function RowMenu(props: { label: string; items: readonly MenuItem[] }) {
           onKeyDown={onMenuKey}
         >
           {props.items.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              role="menuitem"
-              tabIndex={-1}
-              className="menu-item"
-              onClick={() => {
-                close(true);
-                item.onSelect();
-              }}
-            >
-              {item.label}
-            </button>
+            <Fragment key={item.key}>
+              {item.separatorBefore === true && (
+                <hr className="menu-separator" />
+              )}
+              <button
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                className="menu-item"
+                onClick={() => {
+                  close(true);
+                  item.onSelect();
+                }}
+              >
+                {item.label}
+              </button>
+            </Fragment>
           ))}
         </div>
       )}

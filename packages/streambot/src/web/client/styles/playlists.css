@@ -1,4 +1,4 @@
-/* Playlist pages: forms, the page header, and the edit controls on an item row. */
+/* Playlist pages: forms, the page header, and the items' status and video picker. */
 .playlist-form {
   display: flex;
   flex-wrap: wrap;
@@ -51,54 +51,26 @@
   min-inline-size: 0;
 }
 
-.playlist-tools,
-.playlist-settings {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.playlist-tool {
-  display: grid;
-  justify-items: start;
-}
-
-.playlist-more > summary {
-  padding: var(--space-1) var(--space-2);
-  color: var(--muted);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.playlist-more[open] > summary {
-  color: var(--text);
-}
-
-.playlist-more > .playlist-form {
-  padding-block: var(--space-2);
-}
-
 .playlist-paging {
   justify-content: center;
 }
 
-/* A saved item adds its own edit controls and status below the shared row's parts. */
-.row.entry {
-  grid-template-areas:
-    "art text actions"
-    "art edit edit"
-    "art status status"
-    "art extra extra";
-}
-
-.entry-edit {
-  grid-area: edit;
-  justify-self: start;
-}
-
+/* The edit status and video picker of an item sit under the row, beside its text. */
 .entry-extra {
-  grid-area: extra;
+  grid-column: 2 / -1;
   min-inline-size: 0;
+}
+
+.add-playing {
+  display: grid;
+  justify-items: end;
+}
+
+.add-playing > .btn {
+  max-inline-size: min(100%, 20rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .match-picker {
@@ -129,15 +101,6 @@
 }
 
 @media (max-width: 640px) {
-  .row.entry {
-    grid-template-areas:
-      "art text"
-      "art actions"
-      "art edit"
-      "art status"
-      "art extra";
-  }
-
   .playlist-head {
     grid-template-columns: 44px minmax(0, 1fr);
   }

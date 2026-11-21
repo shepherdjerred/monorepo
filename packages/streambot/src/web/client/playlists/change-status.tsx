@@ -1,4 +1,5 @@
 import { ControlStatus } from "@shepherdjerred/streambot/web/client/control-status.tsx";
+import type { FailureSurface } from "@shepherdjerred/streambot/web/client/telemetry/events.ts";
 import type { Control } from "@shepherdjerred/streambot/web/client/use-control.ts";
 
 /**
@@ -10,6 +11,7 @@ export function ChangeStatus(props: {
   control: Control | null;
   onRefresh: () => void;
   className?: string;
+  surface?: FailureSurface;
 }) {
   const { control } = props;
   const state = control?.state;
@@ -44,6 +46,7 @@ export function ChangeStatus(props: {
     <ControlStatus
       control={control}
       {...(props.className === undefined ? {} : { className: props.className })}
+      {...(props.surface === undefined ? {} : { surface: props.surface })}
     />
   );
 }

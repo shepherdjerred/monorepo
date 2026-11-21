@@ -1,18 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import { FailureNotice } from "@shepherdjerred/streambot/web/client/failure-notice.tsx";
-import { Artwork } from "@shepherdjerred/streambot/web/client/media/artwork.tsx";
-import { PlayActions } from "@shepherdjerred/streambot/web/client/media/play-actions.tsx";
 import { SkeletonRows } from "@shepherdjerred/streambot/web/client/media/media-row.tsx";
 import { musicArtworkUrl } from "@shepherdjerred/streambot/music/artwork.ts";
 import { useRemote } from "@shepherdjerred/streambot/web/client/remote.tsx";
+import { AddPlaying } from "./add-playing.tsx";
 import { PlaylistEntryRow } from "./playlist-entry.tsx";
-import { PlaylistSettings } from "./playlist-settings.tsx";
-import { PlaylistTools } from "./playlist-tools.tsx";
+import { PlaylistHeader } from "./playlist-header.tsx";
 import {
   navigationNotice,
   PAGE_SIZE,
-  playlistDetail,
   playlistListItem,
   type PlaylistPage as Page,
 } from "./playlist-model.ts";
@@ -108,46 +105,45 @@ function Loaded(props: {
   const remote = useRemote();
   const listen = remote.room?.capabilities.listen === true;
   const heading = useRef<HTMLHeadingElement>(null);
-  const cover = musicArtworkUrl(page.cover, remote.guildId);
+  const [imported, setImported] = useState("");
   const whole = playlistListItem(page, listen, remote.guildId);
+  const notice = imported === "" ? props.notice : imported;
+  // What plays in the viewer's room can only be added from inside the server being browsed.
+  const playing =
+    page.owned && remote.target?.guildId === remote.guildId
+      ? (remote.room?.players.filter((player) => player.current !== null) ?? [])
+      : [];
   return (
     <>
-      <header className="playlist-head">
-        <Artwork
-          item={{
-            kind: "playlist",
-            ...(cover === undefined ? {} : { artworkUrl: cover }),
-          }}
-          shape="thumb"
-        />
-        <div className="playlist-title">
-          <h1
-            className="page-heading"
-            id="page-heading"
-            tabIndex={-1}
-            ref={heading}
-          >
-            {page.name}
-          </h1>
-          <p className="muted">{playlistDetail(page)}</p>
-        </div>
-        <PlayActions item={whole} />
-      </header>
-      {props.notice !== "" && (
-        <p className="status" role="status">
-          {props.notice}
-        </p>
-      )}
-      {page.owned && <PlaylistTools page={page} playlist={props.playlist} />}
-      <PlaylistSettings page={page} playlist={props.playlist} />
-      <Items
+      <PlaylistHeader
         page={page}
         playlist={props.playlist}
-        offset={props.offset}
-        onRemoved={() => {
-          heading.current?.focus();
-        }}
+        whole={whole}
+        artworkUrl={musicArtworkUrl(page.cover, remote.guildId)}
+        heading={heading}
+        onImported={setImported}
       />
+      {notice !== "" && (
+        <p className="status" role="status">
+          {notice}
+        </p>
+      )}
+      <section className="section" aria-labelledby="playlist-items">
+        <div className="section-head">
+          <h2 id="playlist-items" className="section-heading">
+            Items
+          </h2>
+          <AddPlaying players={playing} playlist={props.playlist} />
+        </div>
+        <Items
+          page={page}
+          playlist={props.playlist}
+          offset={props.offset}
+          onRemoved={() => {
+            heading.current?.focus();
+          }}
+        />
+      </section>
       <Paging page={page} offset={props.offset} />
     </>
   );

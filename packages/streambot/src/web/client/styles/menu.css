@@ -34,3 +34,9 @@
 .menu-item:focus-visible {
   outline-offset: -2px;
 }
+
+.menu-separator {
+  margin: var(--space-1) 0;
+  border: 0;
+  border-block-start: 1px solid var(--border);
+}

@@ -1,4 +1,4 @@
-import { useState, type Ref } from "react";
+import { useState, type ReactNode, type Ref } from "react";
 import type { RowAction } from "@shepherdjerred/streambot/web/shared/search-contracts.ts";
 import type { WebRoom } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import {
@@ -127,6 +127,10 @@ function menuItems(
 export function PlayActions(props: {
   item: MediaItem;
   actionsRef?: Ref<HTMLDivElement>;
+  /** More `⋯` items, set apart from the play items by a separator (for example, management). */
+  extraMenuItems?: readonly MenuItem[];
+  /** Controls placed after the play buttons and before the `⋯` menu. */
+  trailing?: ReactNode;
 }) {
   const { item } = props;
   const remote = useRemote();
@@ -136,7 +140,10 @@ export function PlayActions(props: {
     menu: useControl(),
   };
   const [last, setLast] = useState<ControlKey | null>(null);
-  if (item.selection === null || item.actions.length === 0) return null;
+  const extras = props.extraMenuItems ?? [];
+  const playable = item.selection !== null && item.actions.length > 0;
+  if (!playable && extras.length === 0 && props.trailing === undefined)
+    return null;
   const run = (key: ControlKey, request: PlayRequest) => {
     setLast(key);
     if (remote.target === null) {
@@ -146,9 +153,19 @@ export function PlayActions(props: {
     trackResultChosen(item, key === "menu", request);
     controls[key].run(playTask(remote, item, request));
   };
-  const items = menuItems(remote, item, (request) => {
-    run("menu", request);
-  });
+  const played = playable
+    ? menuItems(remote, item, (request) => {
+        run("menu", request);
+      })
+    : [];
+  const items = [
+    ...played,
+    ...extras.map((extra, index) =>
+      index === 0 && played.length > 0
+        ? { ...extra, separatorBefore: true }
+        : extra,
+    ),
+  ];
   const noVoice = remote.target === null;
   return (
     <>
@@ -185,8 +202,15 @@ export function PlayActions(props: {
             </button>
           );
         })}
+        {props.trailing}
         {items.length > 0 && (
-          <RowMenu label={"More ways to play " + item.title} items={items} />
+          <RowMenu
+            label={
+              (extras.length > 0 ? "More actions for " : "More ways to play ") +
+              item.title
+            }
+            items={items}
+          />
         )}
       </div>
       <ControlStatus
