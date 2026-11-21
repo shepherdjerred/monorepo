@@ -72,10 +72,11 @@ function nonEmptyEnv(
 
 function resolveUserBaseDirs(
   env: Readonly<Record<string, string | undefined>>,
+  platform: NodeJS.Platform = process.platform,
 ): { readonly cacheBase?: string; readonly dataBase?: string } {
   const home = nonEmptyEnv(env, "HOME") ?? nonEmptyEnv(env, "USERPROFILE");
   const winAppData =
-    process.platform === "win32" ? nonEmptyEnv(env, "LOCALAPPDATA") : undefined;
+    platform === "win32" ? nonEmptyEnv(env, "LOCALAPPDATA") : undefined;
   const cacheBase =
     nonEmptyEnv(env, "XDG_CACHE_HOME") ??
     winAppData ??
@@ -92,16 +93,20 @@ function resolveUserBaseDirs(
 
 export function managedPostgresDataRoots(
   env: Readonly<Record<string, string | undefined>> = Bun.env,
+  options?: {
+    readonly isRoot?: boolean;
+    readonly platform?: NodeJS.Platform;
+  },
 ): string[] {
   const major = POSTGRES_MAJOR.toString();
-  if (runsAsRoot()) {
+  if (options?.isRoot ?? runsAsRoot()) {
     const temp = tmpdir();
     return [
       path.join(temp, "monorepo-dev-pg", major),
       path.join(temp, "scout-for-lol", "postgres", major),
     ];
   }
-  const { cacheBase, dataBase } = resolveUserBaseDirs(env);
+  const { cacheBase, dataBase } = resolveUserBaseDirs(env, options?.platform);
   const home = nonEmptyEnv(env, "HOME") ?? nonEmptyEnv(env, "USERPROFILE");
   if (cacheBase === undefined && dataBase === undefined) {
     throw new Error("Neither XDG_DATA_HOME, XDG_CACHE_HOME, nor HOME is set");

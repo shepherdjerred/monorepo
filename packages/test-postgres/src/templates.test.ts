@@ -62,10 +62,20 @@ describe("cross-platform synchronous migration hashing and version reads", () =>
   });
 
   test("managedPostgresDataRoots retains home legacy paths alongside LOCALAPPDATA", () => {
-    const roots = managedPostgresDataRoots({
-      LOCALAPPDATA: String.raw`C:\Users\Jerred\AppData\Local`,
-      USERPROFILE: String.raw`C:\Users\Jerred`,
-    });
+    const roots = managedPostgresDataRoots(
+      {
+        LOCALAPPDATA: String.raw`C:\Users\Jerred\AppData\Local`,
+        USERPROFILE: String.raw`C:\Users\Jerred`,
+      },
+      { isRoot: false, platform: "win32" },
+    );
+    expect(roots).toContain(
+      path.join(
+        String.raw`C:\Users\Jerred\AppData\Local`,
+        "monorepo-dev-pg",
+        "18",
+      ),
+    );
     expect(roots).toContain(
       path.join(
         String.raw`C:\Users\Jerred`,
