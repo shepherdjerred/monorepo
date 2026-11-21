@@ -34,7 +34,7 @@
 
                     mobileTaskStack(for: .section(.today))
                         .tabItem {
-                            Label("Today", systemImage: "star.fill")
+                            Label("Today", systemImage: "calendar.badge.clock")
                         }
                         .tag(FacetMobileTab.today)
 
@@ -65,8 +65,8 @@
                             width: FacetNativeStyle.mobileCaptureDiameter,
                             height: FacetNativeStyle.mobileCaptureDiameter
                         )
-                        .background(FacetNativeStyle.brand, in: .circle)
-                        .shadow(radius: 8, y: 4)
+                        .background(FacetNativeStyle.actionFill, in: .circle)
+                        .shadow(color: .black.opacity(0.14), radius: 5, y: 2)
                 }
                 .offset(dragOffset)
                 .highPriorityGesture(captureDrag)
@@ -123,6 +123,9 @@
                     }
                 }
             }
+            .sheet(item: $store.bulkScheduleRequest) { request in
+                FacetBulkScheduleSheet(store: store, request: request)
+            }
             .sheet(isPresented: $store.showsInspector) {
                 if let id = store.selectedTaskId, let latest = store.task(for: id) {
                     NavigationStack {
@@ -131,11 +134,12 @@
                             store: store,
                             onClose: { store.showsInspector = false }
                         )
-                        .navigationTitle("Task")
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button("Done") { store.showsInspector = false }
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Done", systemImage: "xmark") {
+                                    store.showsInspector = false
+                                }
                             }
                         }
                     }
@@ -208,19 +212,29 @@
             NavigationStack(path: $browsePath) {
                 List {
                     SwiftUI.Section {
-                        Button {
-                            store.showsSettings = true
-                        } label: {
-                            Label("Settings", systemImage: "gearshape")
-                        }
+                        Button("Search", systemImage: "magnifyingglass", action: showSearch)
                     }
-                    SwiftUI.Section("Views") {
-                        NavigationLink(value: FacetDestination.board) {
-                            Label("Priority Board", systemImage: "rectangle.split.3x1")
-                        }
-
-                        NavigationLink(value: FacetDestination.section(.completed)) {
-                            Label("Completed", systemImage: "checkmark.circle")
+                    if !store.favoriteProjects.isEmpty || !store.favoriteLabels.isEmpty
+                        || !store.favoriteFilters.isEmpty
+                    {
+                        SwiftUI.Section("Favorites") {
+                            ForEach(store.favoriteProjects) { project in
+                                NavigationLink(value: FacetDestination.project(id: project.id)) {
+                                    Label(project.name, systemImage: "number")
+                                }
+                            }
+                            ForEach(store.favoriteLabels) { label in
+                                NavigationLink(value: FacetDestination.label(id: label.id)) {
+                                    Label(label.name, systemImage: "tag")
+                                }
+                            }
+                            ForEach(store.favoriteFilters) { filter in
+                                NavigationLink(value: FacetDestination.filter(id: filter.id)) {
+                                    Label(
+                                        filter.name,
+                                        systemImage: "line.3.horizontal.decrease.circle")
+                                }
+                            }
                         }
                     }
 
@@ -237,10 +251,16 @@
                                         .foregroundStyle(.secondary)
                                 }
                             }
+                            .padding(.leading, CGFloat(store.projectPath(proj).count - 1) * 12)
+                            .contextMenu {
+                                Button("Edit Project…") { onPresentModal(.editProject(proj)) }
+                                Button("Archive Project") { store.archive(proj, archived: true) }
+                            }
                         }
+                        FacetArchivedProjects(store: store)
                     } header: {
                         HStack {
-                            Text("Projects")
+                            Text("My Projects")
                             Spacer()
                             Button {
                                 onPresentModal(.addProject)
@@ -255,6 +275,9 @@
                         ForEach(store.activeLabels) { item in
                             NavigationLink(value: FacetDestination.label(id: item.id)) {
                                 Label("@\(item.name)", systemImage: "tag")
+                            }
+                            .contextMenu {
+                                Button("Edit Label…") { onPresentModal(.editLabel(item)) }
                             }
                         }
                     } header: {
@@ -278,6 +301,9 @@
                                     systemImage: "line.3.horizontal.decrease.circle"
                                 )
                             }
+                            .contextMenu {
+                                Button("Edit Filter…") { onPresentModal(.editFilter(filterItem)) }
+                            }
                         }
                     } header: {
                         HStack {
@@ -291,11 +317,23 @@
                             .accessibilityLabel("Add filter")
                         }
                     }
+                    SwiftUI.Section("Views") {
+                        NavigationLink(value: FacetDestination.board) {
+                            Label("Priority Board", systemImage: "rectangle.split.3x1")
+                        }
+                        NavigationLink(value: FacetDestination.section(.completed)) {
+                            Label("Completed", systemImage: "checkmark.circle")
+                        }
+                    }
                 }
                 .navigationDestination(for: FacetDestination.self) { target in
                     browseDestinationPage(target)
                 }
-                .toolbar { searchButton }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Settings", systemImage: "gearshape") { store.showsSettings = true }
+                    }
+                }
                 .navigationTitle("Browse")
                 .refreshable {
                     await store.syncNow()

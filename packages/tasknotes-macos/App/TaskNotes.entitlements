@@ -6,6 +6,10 @@
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 
+	<!-- Read only the files explicitly selected for a task comment. -->
+	<key>com.apple.security.files.user-selected.read-only</key>
+	<true/>
+
 	<!-- Outbound HTTPS client access to the configured Facet sync server (/api/v1/sync). -->
 	<key>com.apple.security.network.client</key>
 	<true/>

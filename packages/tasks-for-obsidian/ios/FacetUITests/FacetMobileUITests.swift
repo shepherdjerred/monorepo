@@ -167,6 +167,41 @@ final class FacetMobileUITests: XCTestCase {
 }
 
 extension FacetMobileUITests {
+    func testReviewAndReschedulePersonalBacklog() {
+        let app = launch(additionalArguments: ["--facet-personal-workspace-fixture"])
+        let count = app.staticTexts[AccessibilityIdentifier.TaskList.count]
+        XCTAssertTrue(count.waitForExistence(timeout: 8))
+        XCTAssertEqual(count.label, "35 tasks")
+        screenshot("Personal Today with overdue work", app)
+        let row = app.buttons["Complete Pick up repaired bicycle"]
+        XCTAssertTrue(row.exists)
+        app.buttons.containing(
+            NSPredicate(format: "label BEGINSWITH %@", "Pick up repaired bicycle")
+        ).firstMatch.tap()
+        let note = app.staticTexts["The workshop will call when the wheel arrives."]
+        XCTAssertTrue(note.waitForExistence(timeout: 4))
+        screenshot("Personal task sheet and comment", app)
+        app.buttons[AccessibilityIdentifier.Inspector.due].tap()
+        let tomorrow = app.buttons[AccessibilityIdentifier.Schedule.shortcut("tomorrow")]
+        XCTAssertTrue(tomorrow.waitForExistence(timeout: 4))
+        screenshot("Personal schedule editor", app)
+        app.buttons["Cancel"].tap()
+        app.navigationBars.buttons["Done"].tap()
+        XCTAssertTrue(row.isHittable)
+        app.buttons["Reschedule"].tap()
+        app.buttons["Apply"].tap()
+        XCTAssertTrue(app.buttons["Reschedule"].waitForNonExistence(timeout: 4))
+        app.buttons["Undo"].tap()
+        XCTAssertTrue(app.buttons["Reschedule"].waitForExistence(timeout: 4))
+        app.tabBars.buttons["Upcoming"].tap()
+        screenshot("Personal Upcoming with backlog", app)
+        app.buttons["Next week"].tap()
+        screenshot("Personal Upcoming with empty dates", app)
+        app.tabBars.buttons["Browse"].tap()
+        XCTAssertTrue(app.staticTexts["Favorites"].exists || app.staticTexts["FAVORITES"].exists)
+        screenshot("Personal Browse with favorite project", app)
+    }
+
     func testEditNotesAndAttachLabelFromTaskDetail() {
         let app = launch()
         app.buttons[AccessibilityIdentifier.TaskList.newTask].tap()
@@ -197,7 +232,7 @@ extension FacetMobileUITests {
         app.navigationBars["Labels"].buttons["Done"].tap()
         XCTAssertTrue(labels.waitForExistence(timeout: 5))
         XCTAssertEqual(labels.label, "Outdoors")
-        app.navigationBars["Task"].buttons["Done"].tap()
+        app.navigationBars.buttons["Done"].tap()
         row.tap()
         XCTAssertTrue(app.staticTexts["Check trail map"].waitForExistence(timeout: 5))
         XCTAssertEqual(labels.label, "Outdoors")

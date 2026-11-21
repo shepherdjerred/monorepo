@@ -96,7 +96,7 @@ internal struct FacetUpcomingWeekStripView: View {
                     )
                     .padding(.vertical, 8)
                     .background(
-                        selected ? FacetNativeStyle.brand : Color.secondary.opacity(0.08),
+                        selected ? FacetNativeStyle.actionFill : Color.secondary.opacity(0.08),
                         in: .rect(cornerRadius: 10)
                     )
                 }
@@ -106,6 +106,12 @@ internal struct FacetUpcomingWeekStripView: View {
                 .accessibilityValue(slot.taskCount == 1 ? "1 task" : "\(slot.taskCount) tasks")
                 .accessibilityAddTraits(selected ? .isSelected : [])
                 .facetCaptureTarget(.day(slot.civilDate))
+                .dropDestination(for: String.self) { ids, _ in
+                    let tasks = ids.compactMap(store.task(for:))
+                    guard !tasks.isEmpty else { return false }
+                    store.rescheduleGroup(tasks, to: slot.civilDate)
+                    return true
+                }
                 .id(slot.offset)
             }
         }

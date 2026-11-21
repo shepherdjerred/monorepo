@@ -182,10 +182,11 @@ public struct FacetCaptureForm: View {
                 if !stackControls { Spacer() }
 
                 Button(action: submitTask) {
-                    Text(saveError == nil ? "Add Task" : "Retry save")
+                    Label(saveError == nil ? "Add Task" : "Retry save", systemImage: "arrow.up")
                         .frame(maxWidth: stackControls ? .infinity : nil)
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(FacetNativeStyle.actionFill)
                 .disabled((pendingSave == nil && preview.isEmpty) || saving)
                 .keyboardShortcut(.defaultAction)
             }
@@ -199,8 +200,8 @@ public struct FacetCaptureForm: View {
         .padding(20)
         #if os(iOS)
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .tint(FacetNativeStyle.brand)
         #endif
+        .tint(FacetNativeStyle.brand)
         .onDisappear {
             if !retainedPanel {
                 store.captureSectionId = nil

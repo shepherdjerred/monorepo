@@ -56,10 +56,10 @@ struct FacetWorkspaceAndSnapshotTests {
     }
 
     private static func populateWorkspace(store: FacetStore, inboxId: String) -> SeededWorkspace {
-        let project = store.createProject(name: "Apple Cutover", color: "blue", isFavorite: true)
+        let project = store.createProject(name: "Print Studio", color: "blue", isFavorite: true)
         let readySection = store.createSection(projectId: project.id, name: "Ready")
         let progressSection = store.createSection(projectId: project.id, name: "In Progress")
-        let syncLabel = store.createLabel(name: "sqlite", color: "teal", isFavorite: true)
+        let syncLabel = store.createLabel(name: "studio", color: "teal", isFavorite: true)
         _ = store.createFilter(
             name: "High Priority Today",
             query: "p1 & (today | overdue)",
@@ -68,10 +68,10 @@ struct FacetWorkspaceAndSnapshotTests {
         )
         _ = store.localStore.addTask(
             FacetTaskDraft(
-                title: "Delete legacy UniFFI bridge",
+                title: "Change the air filter",
                 projectId: project.id,
                 sectionId: readySection.id,
-                description: "Remove `TaskNotesUniFFI` target and Rust XCFramework scripts.",
+                description: "Check the spare in the supply cabinet.",
                 priority: .p2,
                 dueDate: "2026-06-14",
                 labelIds: [syncLabel.id]
@@ -79,10 +79,10 @@ struct FacetWorkspaceAndSnapshotTests {
         )
         let inspected = store.localStore.addTask(
             FacetTaskDraft(
-                title: "Verify /api/v1/sync + SQLite WAL",
+                title: "Review the first print proof",
                 projectId: project.id,
                 sectionId: progressSection.id,
-                description: "### Acceptance\n- Atomic `BEGIN IMMEDIATE`\n- `temp_id_mapping`",
+                description: "Check the margins and paper weight before ordering the full run.",
                 priority: .p1,
                 dueDate: "2026-06-15",
                 recurrenceRule: "FREQ=WEEKLY;BYDAY=MO,WE,FR",
@@ -91,7 +91,7 @@ struct FacetWorkspaceAndSnapshotTests {
         )
         _ = store.localStore.addTask(
             FacetTaskDraft(
-                title: "Write release verification notes",
+                title: "Order new sketchbooks",
                 projectId: inboxId,
                 priority: .p3,
                 dueDate: "2026-06-17"
@@ -178,6 +178,13 @@ struct FacetWorkspaceAndSnapshotTests {
             #expect(todayShot.byteCount > 15_000)
             #expect(todayShot.distinctColors >= 8)
 
+            var context = FacetTaskPatch()
+            context.appendComment = CommentUpload(
+                comment: TaskComment(
+                    id: UUID().uuidString, body: "Waiting for the paper samples from the printer.",
+                    created_at: "2026-06-15T08:00:00Z", file_name: nil),
+                attachment_base64: nil)
+            seededToday.store.localStore.updateTask(id: seededToday.taskId, patch: context)
             let task = try #require(seededToday.store.task(for: seededToday.taskId))
             let detail = try OffscreenSnapshot.write(
                 FacetTaskInspectorView(task: task, store: seededToday.store),

@@ -5,6 +5,24 @@ import TaskNotesKit
 extension FacetStore {
     /// Keep timed tasks at their existing wall-clock time when the viewer chooses another day.
     internal func reschedule(_ task: Task, to civil: String?) {
+        guard let patch = schedulePatch(for: task, to: civil) else { return }
+        patchTask(id: task.id, patch: patch)
+    }
+
+    internal func rescheduleGroup(_ tasks: [Task], to civil: String) {
+        let changes = tasks.compactMap { task -> (id: String, patch: FacetTaskPatch)? in
+            guard let current = self.task(for: task.id), !current.completed,
+                !current.is_deleted, let patch = schedulePatch(for: current, to: civil)
+            else { return nil }
+            return (current.id, patch)
+        }
+        guard !changes.isEmpty else { return }
+        localStore.rescheduleTasks(changes)
+        presentUndoToast("Rescheduled \(changes.count) \(changes.count == 1 ? "task" : "tasks")")
+        scheduleAutoSync()
+    }
+
+    fileprivate func schedulePatch(for task: Task, to civil: String?) -> FacetTaskPatch? {
         var patch = FacetTaskPatch(
             dueDate: .clear, dueDatetime: .clear, dueTimezone: .clear, dueString: .clear)
         if let civil {
@@ -27,12 +45,12 @@ extension FacetStore {
                         [.day], from: viewer.startOfDay(for: shifted), to: day
                     ).day,
                     let moved = local.date(byAdding: .day, value: correction, to: shifted)
-                else { return }
+                else { return nil }
                 patch.dueDate = .set(ViewerCalendar.civilDateString(for: moved, timeZone: zone))
                 patch.dueDatetime = .set(moved.ISO8601Format())
             }
         }
-        patchTask(id: task.id, patch: patch)
+        return patch
     }
 }
 
@@ -43,6 +61,12 @@ internal struct FacetSchedulePopoverView: View {
 
     @Environment(\.dynamicTypeSize) private var textSize
     @State private var pickedDate: Date
+    @State private var typedDate = ""
+    @State private var hasTime: Bool
+    @State private var clock: Date
+    @State private var rule: String?
+    @State private var basis: RecurrenceBasis
+    @State private var editingRepeat = false
 
     init(task: Task, store: FacetStore, close: @escaping () -> Void) {
         self.task = task
@@ -54,6 +78,11 @@ internal struct FacetSchedulePopoverView: View {
                 ViewerCalendar.date(fromCivil: $0, timeZone: store.calendar.timeZone)
             } ?? store.calendar.instant
         _pickedDate = State(initialValue: initial)
+        let time = task.due_datetime.flatMap(ViewerCalendar.parseISO8601)
+        _clock = State(initialValue: time ?? store.calendar.instant)
+        _hasTime = State(initialValue: time != nil)
+        _rule = State(initialValue: task.recurrence_rule)
+        _basis = State(initialValue: task.recurrence_basis ?? .scheduled)
     }
 
     var body: some View {
@@ -90,6 +119,15 @@ internal struct FacetSchedulePopoverView: View {
                 .frame(width: 290)
             #endif
         }
+        .sheet(isPresented: $editingRepeat) {
+            FacetRecurrenceEditorSheet(currentRule: rule, calendar: store.calendar, basis: basis) {
+                newRule, newBasis in
+                rule = newRule
+                basis = newBasis
+            } onClear: {
+                rule = nil
+            }
+        }
         .tint(FacetNativeStyle.brand)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityIdentifier.Schedule.popover)
@@ -97,6 +135,13 @@ internal struct FacetSchedulePopoverView: View {
 
     private var scheduleContent: some View {
         VStack(alignment: .leading, spacing: 10) {
+            TextField("Type a date", text: $typedDate)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit { if let civil = typedCivil { applyDate(civil) } }
+            if !typedDate.isEmpty && typedCivil == nil {
+                Text("Enter a date, weekday, or phrase such as tomorrow.").font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) { shortcuts }
                     .fixedSize(horizontal: true, vertical: false)
@@ -116,7 +161,27 @@ internal struct FacetSchedulePopoverView: View {
                     datePicker.datePickerStyle(.graphical)
                 #endif
             }
+            Toggle("Time", isOn: $hasTime)
+            if hasTime {
+                DatePicker("Time", selection: $clock, displayedComponents: .hourAndMinute)
+                    .environment(\.timeZone, store.calendar.timeZone)
+            }
+            Button {
+                editingRepeat = true
+            } label: {
+                Label(
+                    rule.map(FacetRecurrenceCodec.summary(for:)) ?? "Repeat", systemImage: "repeat")
+            }
         }
+    }
+
+    private var typedCivil: String? {
+        guard !typedDate.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        let parsed = FacetQuickCaptureParser.parse(typedDate, calendar: store.calendar)
+        guard parsed.title.isEmpty, parsed.recurrenceRule == nil, parsed.dueDatetime == nil,
+            parsed.dueString != nil, parsed.tokens.count == 1
+        else { return nil }
+        return parsed.dueDate
     }
 
     private var datePicker: some View {
@@ -131,7 +196,9 @@ internal struct FacetSchedulePopoverView: View {
             .accessibilityIdentifier(AccessibilityIdentifier.Schedule.shortcut("today"))
         Button("Tomorrow") { applyDate(store.calendar.addingDays(1)) }
             .accessibilityIdentifier(AccessibilityIdentifier.Schedule.shortcut("tomorrow"))
-        Button("Next Week") { applyDate(store.calendar.addingDays(7)) }
+        let day = store.calendar.gregorianCalendar.component(.weekday, from: store.calendar.instant)
+        let nextMonday = store.calendar.addingDays((8 - day) % 7 + 1)
+        Button("Next Week · Mon") { applyDate(nextMonday) }
             .accessibilityIdentifier(AccessibilityIdentifier.Schedule.shortcut("nextWeek"))
     }
 
@@ -169,11 +236,13 @@ internal struct FacetSchedulePopoverView: View {
                 for: pickedDate,
                 timeZone: store.calendar.timeZone
             )
-            applyDate(civil)
+            applyDate(typedCivil ?? civil)
         } label: {
             actionLabel("Apply")
         }
         .buttonStyle(.borderedProminent)
+        .tint(FacetNativeStyle.actionFill)
+        .disabled(!typedDate.isEmpty && typedCivil == nil)
     }
 
     private func actionLabel(_ title: LocalizedStringKey) -> some View {
@@ -184,7 +253,27 @@ internal struct FacetSchedulePopoverView: View {
     }
 
     private func applyDate(_ civil: String) {
-        store.reschedule(task, to: civil)
+        guard var patch = store.schedulePatch(for: task, to: civil) else { return }
+        let previousTime = task.due_datetime.flatMap(ViewerCalendar.parseISO8601)
+        if hasTime && clock != previousTime {
+            let calendar = store.calendar.gregorianCalendar
+            guard let day = ViewerCalendar.date(fromCivil: civil, timeZone: calendar.timeZone),
+                let instant = calendar.date(
+                    bySettingHour: calendar.component(.hour, from: clock),
+                    minute: calendar.component(.minute, from: clock), second: 0, of: day)
+            else { return }
+            patch.dueDatetime = .set(instant.ISO8601Format())
+            patch.dueDate = .set(civil)
+            patch.dueTimezone = .set(calendar.timeZone.identifier)
+        } else if !hasTime {
+            patch.dueDatetime = .clear
+            patch.dueTimezone = .set(store.calendar.timeZone.identifier)
+        }
+        if task.recurrence_rule != rule {
+            patch.recurrenceRule = rule.map(FacetFieldPatch.set) ?? .clear
+        }
+        if basis != (task.recurrence_basis ?? .scheduled) { patch.recurrenceBasis = basis }
+        store.patchTask(id: task.id, patch: patch)
         close()
     }
 }
@@ -205,6 +294,7 @@ internal struct FacetUndoToastView: View {
             if canUndo {
                 Button("Undo", action: onUndo)
                     .buttonStyle(.borderedProminent)
+                    .tint(FacetNativeStyle.actionFill)
                     .controlSize(.small)
             }
             Button(action: onDismiss) {

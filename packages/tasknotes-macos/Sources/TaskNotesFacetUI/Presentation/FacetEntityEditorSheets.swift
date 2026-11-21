@@ -3,19 +3,25 @@ import SwiftUI
 import TaskNotesKit
 
 internal enum FacetPresentedEntityModal: Identifiable, Equatable {
+    case organizeTasks(String)
     case addProject
     case editProject(Project)
     case addSection(projectId: String)
     case renameSection(TaskNotesKit.Section)
     case addLabel
     case addFilter
+    case editLabel(TaskNotesKit.Label)
+    case editFilter(Filter)
 
     var id: String {
         switch self {
+        case .organizeTasks(let id): "organize.\(id)"
         case .addProject: "addProject"
         case .editProject(let project): "editProject.\(project.id)"
         case .addSection(let projectId): "addSection.\(projectId)"
         case .renameSection(let section): "renameSection.\(section.id)"
+        case .editLabel(let item): "editLabel.\(item.id)"
+        case .editFilter(let item): "editFilter.\(item.id)"
         case .addLabel: "addLabel"
         case .addFilter: "addFilter"
         }
@@ -29,6 +35,8 @@ internal struct FacetEntityModalSheet: View {
 
     var body: some View {
         switch modal {
+        case .organizeTasks(let id):
+            FacetOrganizeTasksSheet(project: id, store: store)
         case .addProject:
             FacetProjectFormSheet(existing: nil, store: store) { dismiss() }
         case .editProject(let project):
@@ -41,6 +49,10 @@ internal struct FacetEntityModalSheet: View {
                 existing: section,
                 store: store
             ) { dismiss() }
+        case .editLabel(let item):
+            FacetLabelFormSheet(existing: item, store: store) { dismiss() }
+        case .editFilter(let item):
+            FacetFilterFormSheet(existing: item, store: store) { dismiss() }
         case .addLabel:
             FacetLabelFormSheet(store: store) { dismiss() }
         case .addFilter:
@@ -56,12 +68,14 @@ private struct FacetProjectFormSheet: View {
 
     @State private var name: String
     @State private var color: String
+    @State private var parentId: String
     @State private var isFavorite: Bool
 
     init(existing: Project?, store: FacetStore, close: @escaping () -> Void) {
         self.existing = existing
         self.store = store
         self.close = close
+        _parentId = State(initialValue: existing?.parent_id ?? "")
         _name = State(initialValue: existing?.name ?? "")
         _color = State(initialValue: existing?.color ?? "blue")
         _isFavorite = State(initialValue: existing?.is_favorite ?? false)
@@ -71,6 +85,17 @@ private struct FacetProjectFormSheet: View {
         NavigationStack {
             Form {
                 TextField("Project name", text: $name)
+                Picker("Parent project", selection: $parentId) {
+                    Text("My Projects").tag("")
+                    ForEach(
+                        store.userProjects.filter {
+                            !store.projectPath($0).contains(
+                                existing.map { store.localStore.resolvedID($0.id) } ?? "")
+                        }
+                    ) { project in
+                        Text(project.name).tag(project.id)
+                    }
+                }
                 FacetColorPickerRow(selectedColor: $color)
                 Toggle("Add to Favorites", isOn: $isFavorite)
             }
@@ -89,13 +114,15 @@ private struct FacetProjectFormSheet: View {
                                 id: existing.id,
                                 name: trimmed,
                                 color: color,
-                                isFavorite: isFavorite
+                                isFavorite: isFavorite,
+                                parentId: parentId.isEmpty
+                                    ? .clear : .set(store.localStore.resolvedID(parentId))
                             )
                         } else {
                             let created = store.createProject(
                                 name: trimmed,
                                 color: color,
-                                isFavorite: isFavorite
+                                isFavorite: isFavorite, parentId: parentId.isEmpty ? nil : parentId
                             )
                             store.destination = .project(id: created.id)
                         }
@@ -161,12 +188,22 @@ private struct FacetSectionFormSheet: View {
 }
 
 private struct FacetLabelFormSheet: View {
+    let existing: TaskNotesKit.Label?
     let store: FacetStore
     let close: () -> Void
 
     @State private var name = ""
     @State private var color = "teal"
     @State private var isFavorite = false
+
+    init(existing: TaskNotesKit.Label? = nil, store: FacetStore, close: @escaping () -> Void) {
+        self.existing = existing
+        self.store = store
+        self.close = close
+        _name = State(initialValue: existing?.name ?? "")
+        _color = State(initialValue: existing?.color ?? "teal")
+        _isFavorite = State(initialValue: existing?.is_favorite ?? false)
+    }
 
     var body: some View {
         NavigationStack {
@@ -176,24 +213,31 @@ private struct FacetLabelFormSheet: View {
                 Toggle("Add to Favorites", isOn: $isFavorite)
             }
             .formStyle(.grouped)
-            .navigationTitle("New Label")
+            .navigationTitle(existing == nil ? "New Label" : "Edit Label")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: close)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
+                    Button(existing == nil ? "Create" : "Save") {
                         let trimmed =
                             name
                             .trimmingCharacters(in: .whitespacesAndNewlines)
                             .replacingOccurrences(of: "@", with: "")
                         guard !trimmed.isEmpty else { return }
-                        let created = store.createLabel(
-                            name: trimmed,
-                            color: color,
-                            isFavorite: isFavorite
-                        )
-                        store.destination = .label(id: created.id)
+                        if let existing {
+                            store.localStore.updateLabel(
+                                id: store.localStore.resolvedID(existing.id), name: trimmed,
+                                color: color, isFavorite: .set(isFavorite))
+                            store.scheduleAutoSync()
+                        } else {
+                            let created = store.createLabel(
+                                name: trimmed,
+                                color: color,
+                                isFavorite: isFavorite
+                            )
+                            store.destination = .label(id: created.id)
+                        }
                         close()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -205,6 +249,7 @@ private struct FacetLabelFormSheet: View {
 }
 
 private struct FacetFilterFormSheet: View {
+    let existing: Filter?
     let store: FacetStore
     let close: () -> Void
 
@@ -213,9 +258,19 @@ private struct FacetFilterFormSheet: View {
     @State private var color = "grape"
     @State private var isFavorite = false
 
+    init(existing: Filter? = nil, store: FacetStore, close: @escaping () -> Void) {
+        self.existing = existing
+        self.store = store
+        self.close = close
+        _name = State(initialValue: existing?.name ?? "")
+        _color = State(initialValue: existing?.color ?? "grape")
+        _isFavorite = State(initialValue: existing?.is_favorite ?? false)
+        _query = State(initialValue: existing?.query ?? "today | overdue")
+    }
+
     var body: some View {
         let previewCount = FacetFilterQueryEvaluator.filterTasks(
-            store.localStore.tasks.filter { $0.parent_id == nil },
+            store.localStore.tasks,
             query: query,
             projects: store.activeProjects,
             sections: store.activeSections,
@@ -227,35 +282,44 @@ private struct FacetFilterFormSheet: View {
             Form {
                 TextField("Filter name", text: $name)
                 TextField("Query (e.g. p1 & today, #Work | @urgent)", text: $query)
-                Text("\(previewCount) matching open tasks")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if let error = FacetFilterQueryEvaluator.validationError(for: query) {
+                    Text(error).foregroundStyle(.red)
+                } else {
+                    Text("\(previewCount) matching tasks").foregroundStyle(.secondary)
+                }
                 FacetColorPickerRow(selectedColor: $color)
                 Toggle("Add to Favorites", isOn: $isFavorite)
             }
             .formStyle(.grouped)
-            .navigationTitle("New Filter")
+            .navigationTitle(existing == nil ? "New Filter" : "Edit Filter")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: close)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
+                    Button(existing == nil ? "Create" : "Save") {
                         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
                         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
                         guard !trimmedName.isEmpty, !trimmedQuery.isEmpty else { return }
-                        let created = store.createFilter(
-                            name: trimmedName,
-                            query: trimmedQuery,
-                            color: color,
-                            isFavorite: isFavorite
-                        )
-                        store.destination = .filter(id: created.id)
+                        if let existing {
+                            store.localStore.updateFilter(
+                                id: store.localStore.resolvedID(existing.id), name: trimmedName,
+                                query: trimmedQuery, color: color, isFavorite: .set(isFavorite))
+                            store.scheduleAutoSync()
+                        } else {
+                            let created = store.createFilter(
+                                name: trimmedName,
+                                query: trimmedQuery,
+                                color: color,
+                                isFavorite: isFavorite
+                            )
+                            store.destination = .filter(id: created.id)
+                        }
                         close()
                     }
                     .disabled(
                         name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            || query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            || FacetFilterQueryEvaluator.validationError(for: query) != nil
                     )
                 }
             }

@@ -54,12 +54,12 @@
                 .font: UIFont.preferredFont(forTextStyle: .title3), .foregroundColor: UIColor.label,
             ]
             let styled = NSMutableAttributedString(string: text, attributes: base)
+            let accent = UIColor(FacetNativeStyle.brand)
             for token in tokens {
                 styled.addAttributes(
                     [
-                        .foregroundColor: field.tintColor ?? UIColor.systemIndigo,
-                        .backgroundColor: (field.tintColor ?? UIColor.systemIndigo)
-                            .withAlphaComponent(0.12),
+                        .foregroundColor: accent,
+                        .backgroundColor: accent.withAlphaComponent(0.12),
                     ], range: token.range)
             }
             guard field.attributedText != styled else { return }

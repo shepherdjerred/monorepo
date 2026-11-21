@@ -11,7 +11,8 @@ internal struct FacetRecurrenceEditorSheet: View {
 
     let currentRule: String?
     let calendar: ViewerCalendar
-    let onApply: (String) -> Void
+    let onApply: (String, RecurrenceBasis) -> Void
+    @State private var basis: RecurrenceBasis
     let onClear: () -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -25,13 +26,15 @@ internal struct FacetRecurrenceEditorSheet: View {
     init(
         currentRule: String?,
         calendar: ViewerCalendar,
-        onApply: @escaping (String) -> Void,
+        basis: RecurrenceBasis = .scheduled,
+        onApply: @escaping (String, RecurrenceBasis) -> Void,
         onClear: @escaping () -> Void
     ) {
         self.currentRule = currentRule
         self.calendar = calendar
         self.onApply = onApply
         self.onClear = onClear
+        _basis = State(initialValue: basis)
 
         let parsed = currentRule.flatMap(FacetRecurrenceCodec.parse) ?? FacetRecurrenceDraft()
         _frequency = State(initialValue: parsed.frequency)
@@ -91,6 +94,10 @@ internal struct FacetRecurrenceEditorSheet: View {
         NavigationStack {
             Form {
                 SwiftUI.Section("Cadence") {
+                    Picker("Based on", selection: $basis) {
+                        Text("Scheduled date").tag(RecurrenceBasis.scheduled)
+                        Text("Completion date").tag(RecurrenceBasis.completion)
+                    }
                     Picker("Repeat", selection: $frequency) {
                         ForEach(FacetRecurrenceFrequency.allCases, id: \.self) { item in
                             Text(item.title).tag(item)
@@ -150,9 +157,6 @@ internal struct FacetRecurrenceEditorSheet: View {
                 SwiftUI.Section("Summary") {
                     Text(FacetRecurrenceCodec.summary(for: builtDraft))
                         .font(.subheadline.weight(.medium))
-                    Text(builtDraft.rruleString)
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
                 }
 
                 if currentRule != nil {
@@ -173,14 +177,16 @@ internal struct FacetRecurrenceEditorSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Apply") {
-                        onApply(builtDraft.rruleString)
+                        onApply(builtDraft.rruleString, basis)
                         dismiss()
                     }
                     .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceApply)
                 }
             }
         }
-        .frame(minWidth: 420, minHeight: 380)
+        #if os(macOS)
+            .frame(minWidth: 420, minHeight: 380)
+        #endif
         .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceSheet)
     }
 

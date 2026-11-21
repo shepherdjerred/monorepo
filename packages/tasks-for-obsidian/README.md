@@ -20,6 +20,8 @@ First-party code is GPL-3.0-only; bundled license notices are generated from
     boards, completed tasks, and settings. Search reads the whole local workspace.
   - Floating Quick Add highlights recognized phrases and supports consecutive
     entries above the keyboard. Upcoming supplies the selected date for capture.
+    Today supports rescheduling the overdue group with one Undo. Upcoming includes empty days.
+    Tap a task for its compact detail sheet, then expand it to edit. Comments and files stay with the task.
     Swipe a task right to complete or left to reschedule, or open its detail sheet.
   - Background sync (`FacetBackgroundTasks` via `BGProcessingTaskRequest`) syncing
     with `/api/v1/sync` and refreshing widget timelines.

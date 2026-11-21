@@ -7,6 +7,9 @@ internal struct FacetTaskListView: View {
     let onSelectTask: (Task) -> Void
     let onPresentModal: (FacetPresentedEntityModal) -> Void
 
+    var inspectorDismissals = 0
+
+    @FocusState private var composingInline: Bool
     @State private var inlineComposeText = ""
     @Environment(\.dynamicTypeSize) private var textSize
     @FocusState private var keyboardFocus: FacetTaskFocusTarget?
@@ -57,8 +60,8 @@ internal struct FacetTaskListView: View {
                     FacetGroupedListSpec(
                         heading: nil,
                         subtitle: nil,
-                        groups: store.projectTaskGroups(
-                            projectId: projectId, from: store.openListPresentationTasks),
+                        groups: store.displayedProjectGroups(
+                            projectId, tasks: store.openListPresentationTasks),
                         showProjectBadge: false,
                         showWeekStrip: false,
                         projectIdForSections: projectId,
@@ -86,15 +89,30 @@ internal struct FacetTaskListView: View {
                         subtitle: filterObj?.query ?? "",
                         tasks: store.tasks(forFilter: filterId, from: store.listPresentationTasks),
                         showProjectBadge: true,
-                        emptyTitle: "No matching tasks",
-                        emptyMessage: "No open tasks currently match this filter query."
+                        emptyTitle: filterObj.flatMap {
+                            FacetFilterQueryEvaluator.validationError(for: $0.query)
+                        } == nil ? "No matching tasks" : "Invalid filter",
+                        emptyMessage: filterObj.flatMap {
+                            FacetFilterQueryEvaluator.validationError(for: $0.query)
+                        } ?? "No tasks currently match this filter query."
                     )
                 )
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityIdentifier.detail(store.destination))
         .environment(\.facetTaskListFocus, listFocus)
         #if os(macOS)
+            .onKeyPress(keys: ["q"]) { press in
+                guard press.modifiers.isEmpty, !composingInline, !store.showsInspector else {
+                    return .ignored
+                }
+                store.showsCapture = true
+                return .handled
+            }
+            .onChange(of: inspectorDismissals) {
+                if let id = store.selectedTaskId { keyboardFocus = .title(id) }
+            }
             .onChange(of: keyboardFocus) {
                 guard let keyboardFocus, !store.showsInspector else { return }
                 switch keyboardFocus {
@@ -113,7 +131,12 @@ internal struct FacetTaskListView: View {
         case .today:
             groupedListContent(todaySpec)
         case .upcoming:
-            groupedListContent(upcomingSpec)
+            #if os(iOS)
+                FacetMobileAgenda(
+                    store: store, onSelectTask: onSelectTask, onPresentModal: onPresentModal)
+            #else
+                groupedListContent(upcomingSpec)
+            #endif
         case .completed:
             flatListContent(completedSpec)
         }
@@ -121,76 +144,13 @@ internal struct FacetTaskListView: View {
 }
 
 extension FacetTaskListView {
-    fileprivate var inboxSpec: FacetFlatListSpec {
-        FacetFlatListSpec(
-            heading: "Inbox",
-            subtitle: "",
-            tasks: store.inboxTasks(from: store.openListPresentationTasks),
-            showProjectBadge: false,
-            emptyTitle: "Your Inbox is clear",
-            emptyMessage: "Capture tasks with Quick Add and organize them later."
-        )
-    }
-
-    fileprivate var todaySpec: FacetGroupedListSpec {
-        FacetGroupedListSpec(
-            heading: "Today",
-            subtitle: store.calendar.instant.formatted(
-                Date.FormatStyle(date: .complete, time: .omitted, timeZone: store.calendar.timeZone)
-            ),
-            groups: store.todayGroups(from: store.openListPresentationTasks),
-            showProjectBadge: true,
-            showWeekStrip: false,
-            projectIdForSections: nil,
-            emptyTitle: "All clear for today",
-            emptyMessage: "Enjoy your day or add a task scheduled for today."
-        )
-    }
-
-    fileprivate var upcomingSpec: FacetGroupedListSpec {
-        FacetGroupedListSpec(
-            heading: "Upcoming",
-            subtitle: "",
-            groups: store.upcomingGroups(from: store.openListPresentationTasks),
-            showProjectBadge: true,
-            showWeekStrip: true,
-            projectIdForSections: nil,
-            emptyTitle: "Nothing scheduled ahead",
-            emptyMessage: "Assign due dates to tasks to plan your week."
-        )
-    }
-
-    fileprivate var completedSpec: FacetFlatListSpec {
-        FacetFlatListSpec(
-            heading: "Completed",
-            subtitle: "Finished tasks",
-            tasks: store.completedTasks(from: store.listPresentationTasks),
-            showProjectBadge: true,
-            allowInlineCompose: false,
-            emptyTitle: "No completed tasks yet",
-            emptyMessage: "Check off a task to see your progress here."
-        )
-    }
-
-    fileprivate func boardHeader(title: String, subtitle: String) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.largeTitle.bold())
-                    .accessibilityIdentifier(AccessibilityIdentifier.TaskList.heading)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 16)
-        .padding(.bottom, 4)
-    }
-
     fileprivate func flatListContent(_ spec: FacetFlatListSpec) -> some View {
-        flatList(spec).onChange(of: focusableIDs(in: spec.tasks), listFocus.preserve)
+        let ids = focusableIDs(in: spec.tasks)
+        return flatList(spec)
+            .onChange(of: ids, listFocus.preserve)
+            #if os(macOS)
+                .environment(\.facetKeyboardTaskIDs, ids)
+            #endif
     }
 
     private func focusableIDs(in tasks: [Task]) -> [String] {
@@ -269,6 +229,7 @@ extension FacetTaskListView {
                 .onChange(of: focusable, listFocus.preserve)
         #else
             return desktopGroupedList(spec, totalTasks: totalTasks)
+                .environment(\.facetKeyboardTaskIDs, focusable)
                 .onChange(of: focusable, listFocus.preserve)
         #endif
     }
@@ -276,7 +237,14 @@ extension FacetTaskListView {
     #if os(iOS)
         private func mobileGroupedList(_ spec: FacetGroupedListSpec, totalTasks: Int) -> some View {
             List {
-                if let heading = spec.heading {
+                if spec.heading == "Today" {
+                    Text(totalTasks == 1 ? "1 task" : "\(totalTasks) tasks")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier(AccessibilityIdentifier.TaskList.count)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                        .listRowSeparator(.hidden)
+                } else if let heading = spec.heading {
                     listHeadingRow(
                         heading: heading, subtitle: spec.subtitle ?? "", count: totalTasks
                     )
@@ -290,17 +258,20 @@ extension FacetTaskListView {
                         .listRowSeparator(.hidden)
                 } else {
                     ForEach(spec.groups) { group in
-                        if group.id != "today" || spec.groups.count > 1 {
-                            FacetTaskGroupHeader(
-                                group: group, store: store, onPresentModal: onPresentModal
-                            )
-                            .listRowSeparator(.hidden)
+                        FacetMobileTaskSection(
+                            group: group, store: store, onPresentModal: onPresentModal,
+                            showHeader: group.id != "today" || spec.groups.count > 1
+                        ) {
+                            mobileRows(group.tasks, badges: spec.showProjectBadge)
                         }
-                        mobileRows(group.tasks, badges: spec.showProjectBadge)
                     }
                 }
             }
             .listStyle(.plain)
+            .navigationTitle(spec.heading == "Today" ? "Today" : "")
+            .listSectionSpacing(.compact)
+            .environment(\.defaultMinListRowHeight, 24)
+            .navigationBarTitleDisplayMode(.large)
             .contentMargins(.bottom, FacetNativeStyle.mobileListBottomMargin, for: .scrollContent)
             .accessibilityIdentifier(AccessibilityIdentifier.TaskList.list)
         }
@@ -380,6 +351,7 @@ extension FacetTaskListView {
                 text: $inlineComposeText
             )
             .textFieldStyle(.plain)
+            .focused($composingInline)
             .onSubmit { submitInlineTask(sectionId: sectionId) }
             .accessibilityIdentifier(AccessibilityIdentifier.TaskList.composeField)
 
@@ -387,6 +359,7 @@ extension FacetTaskListView {
                 Button("Add") { submitInlineTask(sectionId: sectionId) }
                     .controlSize(.small)
                     .buttonStyle(.borderedProminent)
+                    .tint(FacetNativeStyle.actionFill)
             }
         }
         .padding(.horizontal, 10)

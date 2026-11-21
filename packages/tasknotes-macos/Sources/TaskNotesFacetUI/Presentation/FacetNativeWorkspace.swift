@@ -8,6 +8,7 @@
         let onPresentModal: (FacetPresentedEntityModal) -> Void
 
         @State private var searchFieldPresented = false
+        @State private var inspectorDismissals = 0
         @State private var searchState = FacetWorkspaceSearchState()
 
         var body: some View {
@@ -21,7 +22,8 @@
                         store.selectedTaskId = task.id
                         store.showsInspector = true
                     },
-                    onPresentModal: onPresentModal
+                    onPresentModal: onPresentModal,
+                    inspectorDismissals: inspectorDismissals
                 )
                 .frame(maxWidth: listWidth)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -31,10 +33,14 @@
                         store.destination = destination
                     }
                 }
-                .sheet(isPresented: $store.showsInspector) {
-                    inspectorColumn
-                        .frame(minWidth: 420, idealWidth: 740, minHeight: 360, idealHeight: 520)
-                }
+                .sheet(
+                    isPresented: $store.showsInspector,
+                    onDismiss: { inspectorDismissals += 1 },
+                    content: {
+                        inspectorColumn
+                            .frame(minWidth: 420, idealWidth: 740, minHeight: 360, idealHeight: 520)
+                    }
+                )
                 .toolbar {
                     if searchState.isShowingCollection(in: store) {
                         ToolbarItem(placement: .navigation) {

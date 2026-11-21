@@ -13,7 +13,17 @@ private struct CaptureCreationRequest {
 
 extension FacetStore {
     public func boardColumns(forProject projectId: String) -> [FacetBoardColumn] {
-        let groups = projectTaskGroups(projectId: projectId)
+        let groups = displayedProjectGroups(projectId, tasks: topLevelOpenTasks)
+        if projectGrouping(projectId) == .priority {
+            let priorities = Dictionary(uniqueKeysWithValues: groups.map { ($0.id, $0.tasks) })
+            return Priority.allCases.map { priority in
+                FacetBoardColumn(
+                    id: "board.\(projectId).\(priority.rawValue)",
+                    title: FacetNativeStyle.priorityFullTitle(priority),
+                    target: .priority(priority),
+                    tasks: priorities[priority.rawValue, default: []])
+            }
+        }
         var columns: [FacetBoardColumn] = []
         if !groups.contains(where: { $0.sectionId == nil }) {
             columns.append(
@@ -181,25 +191,11 @@ extension FacetStore {
         guard let existing = task(for: taskId) else { return }
         switch target {
         case .projectNoSection(let projectId):
-            let maxOrder =
-                topLevelOpenTasks
-                .filter { $0.project_id == projectId && ($0.section_id ?? "").isEmpty }
-                .map(\.child_order).max() ?? 0
-            localStore.updateTask(
-                id: existing.id,
-                patch: FacetTaskPatch(projectId: projectId, sectionId: .clear)
-            )
-            localStore.reorderTask(id: existing.id, childOrder: maxOrder + 1)
+            moveTaskTrees([existing.id], to: projectId)
+            return
         case .projectSection(let projectId, let sectionId):
-            let maxOrder =
-                topLevelOpenTasks
-                .filter { $0.project_id == projectId && $0.section_id == sectionId }
-                .map(\.child_order).max() ?? 0
-            localStore.updateTask(
-                id: existing.id,
-                patch: FacetTaskPatch(projectId: projectId, sectionId: .set(sectionId))
-            )
-            localStore.reorderTask(id: existing.id, childOrder: maxOrder + 1)
+            moveTaskTrees([existing.id], to: projectId, sectionId: sectionId)
+            return
         case .priority(let newPriority):
             let maxOrder =
                 topLevelOpenTasks
@@ -207,9 +203,9 @@ extension FacetStore {
                 .map(\.child_order).max() ?? 0
             localStore.updateTask(
                 id: existing.id,
-                patch: FacetTaskPatch(priority: newPriority)
+                patch: FacetTaskPatch(priority: newPriority, childOrder: maxOrder + 1)
             )
-            localStore.reorderTask(id: existing.id, childOrder: maxOrder + 1)
+            presentUndoToast("Changed priority")
         }
         scheduleAutoSync()
     }
@@ -227,18 +223,30 @@ extension FacetStore {
     }
 
     @discardableResult
-    public func createProject(name: String, color: String, isFavorite: Bool) -> Project {
-        let project = localStore.addProject(name: name, color: color, isFavorite: isFavorite)
+    public func createProject(
+        name: String, color: String, isFavorite: Bool, parentId: String? = nil
+    ) -> Project {
+        let project = localStore.addProject(
+            name: name, color: color, parentId: parentId.map(localStore.resolvedID),
+            isFavorite: isFavorite)
         scheduleAutoSync()
         return project
     }
 
-    public func updateProject(id: String, name: String, color: String, isFavorite: Bool) {
+    public func updateProject(
+        id: String, name: String, color: String, isFavorite: Bool,
+        parentId: FacetFieldPatch<String> = .unchanged
+    ) {
+        let resolved = localStore.resolvedID(id)
+        if case .set(let next) = parentId {
+            guard let parent = project(for: next), !projectPath(parent).contains(resolved)
+            else { return }
+        }
         localStore.updateProject(
-            id: localStore.resolvedID(id),
+            id: resolved,
             name: name,
             color: color,
-            isFavorite: .set(isFavorite)
+            isFavorite: .set(isFavorite), parentId: parentId
         )
         scheduleAutoSync()
     }

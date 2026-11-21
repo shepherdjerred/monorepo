@@ -20,7 +20,7 @@ internal struct FacetKanbanBoardView: View {
                     boardColumnView(column)
                 }
 
-                if let projectId, let onAddSection {
+                if let projectId, store.projectGrouping(projectId) == .section, let onAddSection {
                     Button {
                         onAddSection(projectId)
                     } label: {
@@ -136,6 +136,7 @@ internal struct FacetKanbanBoardView: View {
             HStack {
                 Button("Add") { submitInline(to: column) }
                     .buttonStyle(.borderedProminent)
+                    .tint(FacetNativeStyle.actionFill)
                     .controlSize(.small)
                     .disabled(
                         inlineTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -161,7 +162,8 @@ internal struct FacetKanbanBoardView: View {
                 overrideSectionId: secId
             )
         case .priority(let level):
-            store.createQuickTask(rawInput: trimmed, overridePriority: level)
+            store.createQuickTask(
+                rawInput: trimmed, overrideProjectId: projectId, overridePriority: level)
         }
         inlineTitle = ""
         inlineComposeColumnId = nil

@@ -41,16 +41,42 @@ internal struct FacetTaskListFocus {
 }
 
 extension EnvironmentValues {
+    #if os(macOS)
+        @Entry internal var facetKeyboardTaskIDs: [String] = []
+    #endif
     @Entry internal var facetTaskListFocus: FacetTaskListFocus?
 }
 
 internal struct FacetTaskFocus: ViewModifier {
     @Environment(\.facetTaskListFocus) private var focus
+    #if os(macOS)
+        @Environment(\.facetKeyboardTaskIDs) private var taskIDs
+    #endif
     let target: FacetTaskFocusTarget
 
     func body(content: Content) -> some View {
         if let focus {
             content
+                #if os(macOS)
+                    .focusable()
+                    .onKeyPress(keys: [.upArrow, .downArrow]) { press in
+                        let shortcuts: EventModifiers = [.command, .control, .option, .shift]
+                        guard press.modifiers.isDisjoint(with: shortcuts), !taskIDs.isEmpty
+                        else {
+                            return .ignored
+                        }
+                        let index: Int
+                        switch target {
+                        case .heading: index = -1
+                        case .title(let id), .completion(let id):
+                            index = taskIDs.firstIndex(of: id) ?? -1
+                        }
+                        let next = max(
+                            0, min(taskIDs.count - 1, index + (press.key == .downArrow ? 1 : -1)))
+                        focus.keyboard.wrappedValue = .title(taskIDs[next])
+                        return .handled
+                    }
+                #endif
                 .focused(focus.keyboard, equals: target)
                 .accessibilityFocused(focus.accessibility, equals: target)
         } else {
