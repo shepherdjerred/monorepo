@@ -216,11 +216,27 @@ describe("createGolinkApp HTTP routes", () => {
       "https://github.com/shepherdjerred/monorepo/pull/4782",
     );
 
+    const upsertUnicode = await app.request("http://go.local/api/links", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        short: "unicode",
+        targetUrl: "https://例え.jp/日本語",
+      }),
+    });
+    expect(upsertUnicode.status).toBe(200);
+
+    const unicodeRedirect = await app.request("http://go.local/unicode");
+    expect(unicodeRedirect.status).toBe(302);
+    expect(unicodeRedirect.headers.get("Location")).toBe(
+      "https://xn--r8jz45g.jp/%E6%97%A5%E6%9C%AC%E8%AA%9E",
+    );
+
     const metricsRes = await app.request("http://go.local/metrics");
     expect(metricsRes.status).toBe(200);
     const metricsText = await metricsRes.text();
     expect(metricsText).toContain(
-      'golink_redirects_total{kind="manual",service="golink"} 1',
+      'golink_redirects_total{kind="manual",service="golink"} 2',
     );
     expect(metricsText).toContain(
       'golink_redirects_total{kind="shortcut",service="golink"} 1',

@@ -103,7 +103,7 @@ export function forwardSubpathAndQuery(
     : rawSearch;
 
   if (cleanSubpath.length === 0 && cleanSearch.length === 0) {
-    return baseTargetUrl;
+    return parsed.toString();
   }
 
   if (cleanSubpath.length > 0) {

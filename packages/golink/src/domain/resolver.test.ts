@@ -374,6 +374,24 @@ describe("5-tier golink shortcuts, query forwarding, and safety", () => {
     );
   });
 
+  it("serializes internationalized hostnames and non-ASCII paths on direct redirects", () => {
+    const manualLinks = [
+      makeManual("idn", "https://例え.jp/日本語?q=東京#見出し"),
+    ];
+    const resolved = resolveRedirect({
+      short: "idn",
+      manualLinks,
+      ingressHosts: [],
+      platformSites: [],
+      tailnetDomain: TAILNET,
+      dynamicAliasesEnabled: true,
+    });
+
+    expect(resolved?.location).toBe(
+      "https://xn--r8jz45g.jp/%E6%97%A5%E6%9C%AC%E8%AA%9E?q=%E6%9D%B1%E4%BA%AC#%E8%A6%8B%E5%87%BA%E3%81%97",
+    );
+  });
+
   it("disables Tiers 2-5 when dynamicAliasesEnabled is false while preserving Tier 1 manual links", () => {
     const manualLinks = [makeManual("docs", "https://wiki.sjer.red/")];
     const catalog = buildCatalog({
