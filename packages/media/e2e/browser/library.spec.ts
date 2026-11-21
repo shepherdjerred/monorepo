@@ -43,6 +43,18 @@ test("the grid shows posters in columns that follow its own width", async ({
   const box = await poster.boundingBox();
   if (box === null) throw new Error("The poster has no box");
   expect(box.height / box.width).toBeCloseTo(1.5, 1);
+  // The phrase is a pill in the art's top corner where a card has room for
+  // it, and a band along the foot where three cards share a phone's width.
+  const phrase = await alien.getByText("Ready to watch").boundingBox();
+  if (phrase === null) throw new Error("The state phrase has no box");
+  const fromTop = (phrase.y - box.y) / box.height;
+  if ((page.viewportSize()?.width ?? 0) > 760) {
+    expect(fromTop).toBeLessThan(0.2);
+    expect(phrase.width).toBeLessThan(box.width);
+  } else {
+    expect(fromTop).toBeGreaterThan(0.8);
+    expect(phrase.width).toBeCloseTo(box.width, 0);
+  }
 
   // A title with no stored artwork shows its name in the same frame.
   const arrival = cards.filter({ hasText: "Arrival" }).first();

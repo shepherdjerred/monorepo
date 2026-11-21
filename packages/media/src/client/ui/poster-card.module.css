@@ -99,8 +99,9 @@
   }
   /* Three posters across a phone leave no room for a pill in the corner:
      there the phrase is a band along the foot of the art, where its two or
-     three words fit on one line. */
-  @container (max-width: 150px) {
+     three words fit on one line. The narrowest card of every wider grid
+     (128px, at four columns) keeps the pill. */
+  @container (max-width: 126px) {
     .onArt {
       inset-block: auto 0;
       inset-inline: 0;

@@ -31,7 +31,7 @@
   }
   /* A narrow card carries its state along the foot of the art
      (`poster-card.module.css`), so the name moves to the head. */
-  @container (max-width: 150px) {
+  @container (max-width: 126px) {
     .placeholder {
       align-items: flex-start;
     }
