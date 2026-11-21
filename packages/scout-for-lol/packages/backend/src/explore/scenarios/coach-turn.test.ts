@@ -134,6 +134,16 @@ describe("the scenario coach gate", () => {
         initiation: "app_postgame",
       }),
     ).toThrow(REVIEW_TURN_QUESTION);
+    const proactive = {
+      ...gameContextOf("desktop-coach-postgame-review"),
+      initiation: "app_proactive" as const,
+    };
+    expect(() => scenarioCoachQuestion("buy now", proactive)).toThrow(
+      "Scout noticed",
+    );
+    expect(
+      scenarioCoachQuestion("Scout noticed the enemy Zed is 5/0/1.", proactive),
+    ).toBe("Scout noticed the enemy Zed is 5/0/1.");
     expect(
       scenarioCoachQuestion("buy now", gameContextOf("voice-coach-terse")),
     ).toBe("buy now");

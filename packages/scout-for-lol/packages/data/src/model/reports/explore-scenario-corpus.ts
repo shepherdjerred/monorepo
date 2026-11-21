@@ -147,6 +147,9 @@ export const ExploreScenarioInitiationSchema = z.enum([
   "player_voice",
   ...COACH_APP_INITIATIONS,
   ...COACH_SERVER_INITIATIONS,
+  // Beta-only proactive turn (`coach/triggers`): the server words it from the
+  // trigger's evidence, so it has no fixed question.
+  "app_proactive",
 ]);
 export type ExploreScenarioInitiation = z.infer<
   typeof ExploreScenarioInitiationSchema
