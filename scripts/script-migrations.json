@@ -738,6 +738,16 @@
       "reason": "Runs during the server image build with Bash and image-native archive tools; Bun is unavailable in this stage"
     },
     {
+      "source": "ci/scripts/apt-https.sh",
+      "disposition": "retain",
+      "reason": "Image and step-pod bootstrap boundary: switches Debian and Ubuntu apt sources to HTTPS before apt runs, because Woodpecker step pods egress only on TCP 443; runs in BuildKit stages and stale images before Bun exists."
+    },
+    {
+      "source": "ci/scripts/apt-https.test.sh",
+      "disposition": "retain",
+      "reason": "Isolated shell contract test for the HTTPS apt switch over fixture source trees, plus ordering checks for every CI apt path, without network access."
+    },
+    {
       "source": "ci/scripts/android-sdk.sh",
       "disposition": "retain",
       "reason": "Native SDK bootstrap boundary: provisions the pinned Android command-line tools, accepted SDK licenses and Linux x86_64 NDK inventory before Gradle and Rust native builds."

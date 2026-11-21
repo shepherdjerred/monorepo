@@ -66,6 +66,8 @@ env -u OP_SERVICE_ACCOUNT_TOKEN docker buildx build --builder "$swiftlint_builde
   --target swiftlint-export --output "type=local,dest=$swiftlint_build/export" \
   "$swiftlint_build/context"
 # Match the minimal runtime stage without replacing the host distribution.
+# Step pods egress only on TCP 443, so switch stale plain-HTTP sources first.
+bash "$swiftlint_scripts/../apt-https.sh"
 apt-get update -qq
 apt-get install -y -qq --no-install-recommends \
   ca-certificates libcurl4 libxml2 libstdc++6 libgcc-s1 libatomic1 \

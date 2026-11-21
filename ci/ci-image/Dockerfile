@@ -67,6 +67,13 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     && ffmpeg -version && ffprobe -version \
     && command -v ps \
     && rm -rf /var/lib/apt/lists/*
+# BuildKit can still reach the plain-HTTP mirrors above, but Woodpecker step
+# pods egress only on TCP 443. Switch apt to HTTPS now that ca-certificates is
+# installed, and prove the switched sources resolve before the image ships.
+RUN --mount=type=bind,source=ci/scripts/apt-https.sh,target=/tmp/apt-https.sh \
+    bash /tmp/apt-https.sh \
+    && apt-get update -qq \
+    && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
 COPY --from=docker:29-cli@sha256:1a4c7cb63513f349bdad01fcc6e0f3f2f67d37b9da86f14dc0d4a0942eecda00 /usr/local/bin/docker /usr/local/bin/docker

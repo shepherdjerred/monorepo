@@ -60,6 +60,7 @@ export function ciImageDefinition(name: string): CiImageDefinition {
         branch: "chore/ci-base-pin-pending",
         sourceFiles: [
           "ci/ci-image/Dockerfile",
+          "ci/scripts/apt-https.sh",
           "ci/scripts/swiftlint/pins.json",
           "ci/scripts/swiftlint/extract-source.py",
           "ci/scripts/swiftlint/producer.py",
@@ -82,7 +83,12 @@ export function ciImageDefinition(name: string): CiImageDefinition {
         digestFile: "ci/ci-playwright/DIGEST",
         stateFile: "ci/ci-playwright/STATE.json",
         branch: "chore/ci-playwright-pin-pending",
-        sourceFiles: ["ci/ci-playwright/Dockerfile", ".mise.toml", "mise.lock"],
+        sourceFiles: [
+          "ci/ci-playwright/Dockerfile",
+          "ci/scripts/apt-https.sh",
+          ".mise.toml",
+          "mise.lock",
+        ],
       };
     case "windows-cross-compiler":
     case "windows-cross-compiler-winui":

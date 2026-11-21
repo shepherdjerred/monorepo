@@ -47,24 +47,36 @@ test("defines CI images independently", () => {
   );
   expect(ciImageDefinition("ci-playwright").sourceFiles).toEqual([
     "ci/ci-playwright/Dockerfile",
+    "ci/scripts/apt-https.sh",
     ".mise.toml",
     "mise.lock",
   ]);
   expect(() => ciImageDefinition("unknown")).toThrow("Unknown CI image");
 });
 
-test("fingerprints every explicit source copied into the CI image", async () => {
-  const source = await Bun.file(
-    new URL("../../ci-image/Dockerfile", import.meta.url),
-  ).text();
-  const sources = new Set(ciImageDefinition("ci-base").sourceFiles);
-  for (const copy of source.matchAll(/^COPY (?!\s*--from=)(.+)$/gmu)) {
-    const arguments_ = copy[1]?.trim().split(/\s+/u);
-    if (arguments_ === undefined) throw new Error("Invalid Dockerfile COPY");
-    for (const input of arguments_.slice(0, -1))
+test.each([
+  ["ci-base", "../../ci-image/Dockerfile"],
+  ["ci-playwright", "../../ci-playwright/Dockerfile"],
+])(
+  "fingerprints every explicit source copied or mounted into %s",
+  async (name, dockerfile) => {
+    const source = await Bun.file(new URL(dockerfile, import.meta.url)).text();
+    const sources = new Set(ciImageDefinition(name).sourceFiles);
+    for (const copy of source.matchAll(/^COPY (?!\s*--from=)(.+)$/gmu)) {
+      const arguments_ = copy[1]?.trim().split(/\s+/u);
+      if (arguments_ === undefined) throw new Error("Invalid Dockerfile COPY");
+      for (const input of arguments_.slice(0, -1))
+        expect(sources.has(input), `Missing image input: ${input}`).toBe(true);
+    }
+    for (const mount of source.matchAll(
+      /--mount=type=bind,source=([^,\s]+)/gu,
+    )) {
+      const input = mount[1];
+      if (input === undefined) throw new Error("Invalid Dockerfile mount");
       expect(sources.has(input), `Missing image input: ${input}`).toBe(true);
-  }
-});
+    }
+  },
+);
 
 test("CI base authenticates tool downloads through a scoped BuildKit secret", async () => {
   const command = ciImageBuildCommand(
