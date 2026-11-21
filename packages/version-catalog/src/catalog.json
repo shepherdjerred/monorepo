@@ -192,7 +192,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "92.22.0",
+      "value": "93.6.1",
       "component": true
     },
     {
