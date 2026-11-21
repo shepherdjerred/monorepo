@@ -1,11 +1,20 @@
-import os from "node:os";
 import {
   CREDENTIAL_REGISTRY,
   PRIVATE_VAULT_REF,
 } from "#lib/credential-registry.ts";
 import type { CredentialSpec } from "#lib/credential-registry.ts";
 import { liveCredentialCache } from "#lib/credential-cache.ts";
-import type { CredentialCache } from "#lib/credential-cache.ts";
+import type { CredentialCache, SecretStore } from "#lib/credential-cache.ts";
+import {
+  credentialError,
+  readStoredSecret,
+  resolveWindowsSecretStore,
+  SERVICE_ACCOUNT_ENROLLMENT_MACOS,
+  SERVICE_ACCOUNT_ENROLLMENT_WINDOWS,
+  SERVICE_ACCOUNT_KEYCHAIN_SERVICE,
+  serviceAccountEnrollment,
+  workstationSecretEnrollment,
+} from "#lib/windows-secret-store.ts";
 import {
   createGuiReader,
   isUnreachableLoginKeychainError,
@@ -15,10 +24,11 @@ import {
 } from "#lib/credential-gui-bridge.ts";
 import type { GuiReader } from "#lib/credential-gui-bridge.ts";
 import {
-  exhaustedBudget,
+  defaultCredentialRun,
   liveDelegate,
   liveReadLog,
   liveReferenceLock,
+  opFailureReason,
   readDelegated,
 } from "#lib/credential-reads.ts";
 import type { ReadLog, ReferenceLock } from "#lib/credential-reads.ts";
@@ -50,12 +60,6 @@ const KEYCHAIN_ENROLL_REFS: Record<string, string> = {
   "monorepo-workstation-discord-user-token": `${PRIVATE_VAULT_REF}/sskm6skq3mwnyqnhrmqwji6dne/TOKEN`,
   "monorepo-workstation-discord-bot-token": `${PRIVATE_VAULT_REF}/ytv272dyktkeipt347f2yf5kue/BOT_TOKEN`,
 };
-
-const SERVICE_ACCOUNT_KEYCHAIN_SERVICE =
-  "monorepo-homelab-1password-service-account";
-
-const SERVICE_ACCOUNT_ENROLLMENT =
-  "swift scripts/onepassword/enroll-service-account.swift";
 
 /**
  * Subprocess seam: argv and extra environment in, exit plus captured streams
@@ -92,6 +96,10 @@ export type CredentialDeps = {
   readonly lock?: ReferenceLock | null;
   /** Attribution log; defaults to `~/.toolkit/logs/credential-reads.jsonl`. */
   readonly readLog?: ReadLog | null;
+  /** Platform override for cross-platform tests; defaults to `process.platform`. */
+  readonly platform?: NodeJS.Platform;
+  /** Windows DPAPI secret store override for tests; defaults on live `win32`. */
+  readonly secretStore?: SecretStore | null;
 };
 
 /** The environment every non-`op` child gets: never the service-account token. */
@@ -103,67 +111,23 @@ export function withoutServiceAccountToken(
   return copy;
 }
 
-async function defaultRun(
-  argv: string[],
-  extraEnvironment: Readonly<Record<string, string>> = {},
-): Promise<{ exit: number; stdout: string; stderr: string }> {
-  // Snapshot env explicitly: Bun.spawn resolves PATH from the given env, not
-  // from later Bun.env mutations. Only `op` receives the token, via extras.
-  const child = Bun.spawn(argv, {
-    env: { ...withoutServiceAccountToken(Bun.env), ...extraEnvironment },
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exit] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  return { exit, stdout, stderr };
-}
-
 /** Vars already resolved in this process; each resolves at most once. */
 const resolvedCredentials = new Set<string>();
 
 /** Service-account token once obtained; held in memory, never exported. */
 let cachedServiceAccountToken: string | undefined;
 
-function credentialError(
-  name: string,
-  description: string,
-  enrollment: string,
-): Error {
-  return new Error(
-    `toolkit: ${name} (${description}) is not set and could not be resolved. Enroll it with: ${enrollment}`,
-  );
-}
-
-async function readKeychainValue(
+function readKeychainValue(
   service: string,
   ctx: ResolutionContext,
 ): Promise<string | null> {
-  // Injected subprocess stubs stand in for `security` (hermetic tests on any
-  // host); only the live runner needs a real macOS Keychain.
-  if (ctx.liveSubprocesses && process.platform !== "darwin") {
-    throw new Error(
-      `toolkit: Keychain credential ${service} requires macOS; on other hosts set the variable or use a config op:// override.`,
-    );
-  }
-  const result = await ctx.run([
-    "security",
-    "find-generic-password",
-    "-a",
-    os.userInfo().username,
-    "-s",
+  return readStoredSecret({
     service,
-    "-w",
-  ]);
-  if (result.exit !== 0) {
-    return null;
-  }
-  const value = result.stdout.trim();
-  return value.length > 0 ? value : null;
+    platform: ctx.platform,
+    liveSubprocesses: ctx.liveSubprocesses,
+    secretStore: ctx.secretStore,
+    run: ctx.run,
+  });
 }
 
 async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
@@ -171,57 +135,44 @@ async function serviceAccountToken(ctx: ResolutionContext): Promise<string> {
   if (ambient !== undefined && ambient.length > 0) {
     return ambient;
   }
-  if (cachedServiceAccountToken !== undefined) {
+  const useModuleCache = ctx.secretStore === null || ctx.liveSubprocesses;
+  if (useModuleCache && cachedServiceAccountToken !== undefined) {
     return cachedServiceAccountToken;
   }
-  if (ctx.liveSubprocesses && process.platform !== "darwin") {
+  if (
+    ctx.liveSubprocesses &&
+    ctx.platform !== "darwin" &&
+    ctx.platform !== "win32"
+  ) {
     throw new Error(
-      "toolkit: OP_SERVICE_ACCOUNT_TOKEN is required outside macOS; export it before running this command.",
+      "toolkit: OP_SERVICE_ACCOUNT_TOKEN is required outside macOS and Windows; export it before running this command.",
     );
   }
   const token = await readKeychainValue(SERVICE_ACCOUNT_KEYCHAIN_SERVICE, ctx);
-  const enrollmentError = new Error(
-    `toolkit: no homelab 1Password service account token is available in Keychain. Enroll it with: ${SERVICE_ACCOUNT_ENROLLMENT}`,
-  );
+  const enrollmentError =
+    ctx.secretStore === null
+      ? new Error(
+          `toolkit: no homelab 1Password service account token is available in Keychain. Enroll it with: ${SERVICE_ACCOUNT_ENROLLMENT_MACOS}`,
+        )
+      : new Error(
+          `toolkit: no homelab 1Password service account token is available in the Windows DPAPI store. Enroll it with: ${SERVICE_ACCOUNT_ENROLLMENT_WINDOWS}`,
+        );
   if (token === null) {
-    throw await missingKeychainItemError(ctx.run, enrollmentError);
+    throw ctx.secretStore === null
+      ? await missingKeychainItemError(ctx.run, enrollmentError)
+      : enrollmentError;
   }
   if (token.length <= 128 || !token.startsWith("ops_")) {
     throw enrollmentError;
   }
-  cachedServiceAccountToken = token;
+  if (useModuleCache) {
+    cachedServiceAccountToken = token;
+  }
   return token;
-}
-
-/**
- * The first line of an `op` error without its log prefix: the reference and
- * reason (rate limit, missing item, denied vault), never a value.
- */
-function opFailureDetail(stderr: string): string | null {
-  const line = stderr
-    .split("\n")
-    .map((entry) => entry.replace(/^\[ERROR\]\s+\S+\s+\S+\s+/, "").trim())
-    .find((entry) => entry.length > 0);
-  return line === undefined ? null : line.slice(0, 300);
 }
 
 /** Where a service-account value came from; only "read" spent budget here. */
 type ReadSource = "cache" | "delegated" | "read";
-
-/** `op`'s reason, plus which budget is exhausted when it is a rate limit. */
-async function opFailureReason(
-  stderr: string,
-  token: string,
-  ctx: ResolutionContext,
-): Promise<string | null> {
-  const detail = opFailureDetail(stderr);
-  if (detail?.includes("Too many requests") !== true) return detail;
-  const table = await ctx.run(["op", "service-account", "ratelimit"], {
-    OP_SERVICE_ACCOUNT_TOKEN: token,
-  });
-  const budget = table.exit === 0 ? exhaustedBudget(table.stdout) : null;
-  return budget === null ? detail : `${detail} ${budget}`;
-}
 
 async function readFromOnePassword(
   name: string,
@@ -238,9 +189,13 @@ async function readFromOnePassword(
     const reason =
       result.exit === 0
         ? null
-        : await opFailureReason(result.stderr, token, ctx);
+        : await opFailureReason(result.stderr, token, ctx.run);
     throw reason === null
-      ? credentialError(name, description, SERVICE_ACCOUNT_ENROLLMENT)
+      ? credentialError(
+          name,
+          description,
+          serviceAccountEnrollment(ctx.platform),
+        )
       : new Error(
           `toolkit: ${name} (${description}) could not be read from 1Password: ${reason}`,
         );
@@ -323,6 +278,8 @@ type ResolutionContext = {
   readonly run: CredentialRun;
   /** False when tests inject a subprocess stub; skips host capability gates. */
   readonly liveSubprocesses: boolean;
+  readonly platform: NodeJS.Platform;
+  readonly secretStore: SecretStore | null;
   readonly configPath: string;
   readonly overrides: Record<string, string>;
   readonly cache: CredentialCache | null;
@@ -349,14 +306,18 @@ async function resolveOverrideValue(
     const service = override.slice(prefix.length);
     const value = await readKeychainValue(service, ctx);
     if (value === null) {
-      throw await missingKeychainItemError(
-        ctx.run,
-        credentialError(
-          name,
-          description,
-          `swift scripts/onepassword/enroll-workstation-secret.swift --service ${service} --ref op://<vault>/<item>/<field>`,
+      const enrollmentError = credentialError(
+        name,
+        description,
+        workstationSecretEnrollment(
+          service,
+          "op://<vault>/<item>/<field>",
+          ctx.platform,
         ),
       );
+      throw ctx.secretStore === null
+        ? await missingKeychainItemError(ctx.run, enrollmentError)
+        : enrollmentError;
     }
     return { value, backend: "config" };
   }
@@ -365,32 +326,49 @@ async function resolveOverrideValue(
   );
 }
 
+async function resolveKeychainRegistryValue(
+  name: string,
+  description: string,
+  service: string,
+  ctx: ResolutionContext,
+): Promise<Resolved> {
+  const value = await readKeychainValue(service, ctx);
+  if (value !== null) {
+    return { value, backend: ctx.secretStore === null ? "keychain" : "dpapi" };
+  }
+  const enrollmentError = credentialError(
+    name,
+    description,
+    workstationSecretEnrollment(
+      service,
+      KEYCHAIN_ENROLL_REFS[service] ?? "op://<vault>/<item>/<field>",
+      ctx.platform,
+    ),
+  );
+  if (ctx.secretStore !== null) throw enrollmentError;
+  const error = await missingKeychainItemError(ctx.run, enrollmentError);
+  if (
+    isUnreachableLoginKeychainError(error) &&
+    ctx.configPath === defaultToolkitConfigPath()
+  ) {
+    const guiValue = await ctx.readGui(name, null);
+    if (guiValue !== null) return { value: guiValue, backend: "delegated" };
+  }
+  throw error;
+}
+
 async function resolveRegistryValue(
   name: string,
   spec: CredentialSpec,
   ctx: ResolutionContext,
 ): Promise<Resolved> {
   if (spec.source.kind === "keychain") {
-    const value = await readKeychainValue(spec.source.service, ctx);
-    if (value === null) {
-      const error = await missingKeychainItemError(
-        ctx.run,
-        credentialError(
-          name,
-          spec.description,
-          `swift scripts/onepassword/enroll-workstation-secret.swift --service ${spec.source.service} --ref ${KEYCHAIN_ENROLL_REFS[spec.source.service] ?? "op://<vault>/<item>/<field>"}`,
-        ),
-      );
-      if (
-        isUnreachableLoginKeychainError(error) &&
-        ctx.configPath === defaultToolkitConfigPath()
-      ) {
-        const guiValue = await ctx.readGui(name, null);
-        if (guiValue !== null) return { value: guiValue, backend: "delegated" };
-      }
-      throw error;
-    }
-    return { value, backend: "keychain" };
+    return resolveKeychainRegistryValue(
+      name,
+      spec.description,
+      spec.source.service,
+      ctx,
+    );
   }
   const read = await readServiceAccountRef(
     name,
@@ -458,11 +436,36 @@ async function resolveDelegate(
     : deps.installedToolkit;
 }
 
+function resolveLock(
+  deps: CredentialDeps | undefined,
+  cache: CredentialCache | null,
+  live: boolean,
+  platform: NodeJS.Platform,
+): ReferenceLock | null {
+  if (deps?.lock !== undefined) return deps.lock;
+  return live && cache !== null ? liveReferenceLock(platform) : null;
+}
+
+function resolveReadLog(
+  deps: CredentialDeps | undefined,
+  live: boolean,
+): ReadLog | null {
+  if (deps?.readLog !== undefined) return deps.readLog;
+  return live ? liveReadLog() : null;
+}
+
 async function resolutionContext(
   deps: CredentialDeps | undefined,
 ): Promise<ResolutionContext> {
   const configPath = deps?.configPath ?? defaultToolkitConfigPath();
   const liveSubprocesses = deps?.run === undefined;
+  const platform = deps?.platform ?? process.platform;
+  const secretStore = resolveWindowsSecretStore({
+    explicitStore: deps?.secretStore,
+    explicitPlatform: deps?.platform,
+    platform,
+    liveSubprocesses,
+  });
   const cache = await resolveCache(deps, configPath, liveSubprocesses);
   const delegate = await resolveDelegate(deps, cache, liveSubprocesses);
   const guiBridge = await resolveGuiBridge({
@@ -470,29 +473,19 @@ async function resolutionContext(
     installedToolkit: deps?.installedToolkit,
     liveSubprocesses,
   });
-  const run = deps?.run ?? defaultRun;
-  const lock =
-    deps?.lock === undefined
-      ? liveSubprocesses && cache !== null
-        ? liveReferenceLock()
-        : null
-      : deps.lock;
-  const readLog =
-    deps?.readLog === undefined
-      ? liveSubprocesses
-        ? liveReadLog()
-        : null
-      : deps.readLog;
+  const run = deps?.run ?? defaultCredentialRun;
   return {
     run,
     liveSubprocesses,
+    platform,
+    secretStore,
     configPath,
     overrides: await loadCredentialOverrides(configPath),
     cache,
     delegate,
     readGui: createGuiReader(guiBridge, run),
-    lock,
-    readLog,
+    lock: resolveLock(deps, cache, liveSubprocesses, platform),
+    readLog: resolveReadLog(deps, liveSubprocesses),
   };
 }
 

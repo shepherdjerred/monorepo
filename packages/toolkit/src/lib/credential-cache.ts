@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import { createWindowsDpapiSecretStore } from "#lib/windows-secret-store.ts";
 
 /**
  * Keychain-backed cache for 1Password service-account reads.
@@ -33,8 +34,15 @@ export const CACHE_SERVICE = "toolkit-credential-cache";
 export const DEFAULT_CACHE_TTL_SECONDS = 86_400;
 
 /** Mirrors `installPaths().binary` in scripts/install-core.ts. */
-export function installedToolkitPath(): string {
-  return path.join(os.homedir(), ".local", "bin", "toolkit");
+export function installedToolkitPath(
+  platform: NodeJS.Platform = process.platform,
+): string {
+  return path.join(
+    os.homedir(),
+    ".local",
+    "bin",
+    platform === "win32" ? "toolkit.exe" : "toolkit",
+  );
 }
 
 export type CredentialCache = {
@@ -103,15 +111,24 @@ export function createCredentialCache(options: {
 }
 
 /**
- * The live cache, or null when this process must not use it: outside macOS,
- * when the TTL is zero, or when this is not the installed, Developer-ID-signed
- * toolkit binary.
+ * The live cache, or null when this process must not use it: when the TTL is
+ * zero, on Linux, or on macOS when this is not the installed, Developer-ID-
+ * signed toolkit binary. On Windows, DPAPI scopes secrets to the user rather
+ * than a code signature, so both installed and source runs share the cache.
  */
 export function liveCredentialCache(
   ttlSeconds: number,
+  platform: NodeJS.Platform = process.platform,
 ): CredentialCache | null {
-  if (process.platform !== "darwin" || ttlSeconds <= 0) return null;
-  return process.execPath === installedToolkitPath()
+  if (ttlSeconds <= 0) return null;
+  if (platform === "win32") {
+    return createCredentialCache({
+      store: createWindowsDpapiSecretStore(),
+      ttlSeconds,
+    });
+  }
+  if (platform !== "darwin") return null;
+  return process.execPath === installedToolkitPath(platform)
     ? createCredentialCache({ store: Bun.secrets, ttlSeconds })
     : null;
 }

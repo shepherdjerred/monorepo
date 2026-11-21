@@ -173,8 +173,8 @@ async function resolveCommandCredentials(
   args: readonly string[],
 ): Promise<void> {
   const subcommand = args[1];
-  // CI validates help and arguments before resolving its operational credentials.
-  if (command === "ci" || command === "deploy") {
+  // CI, deploy, and pr validate help and arguments before resolving operational credentials.
+  if (command === "ci" || command === "deploy" || command === "pr") {
     return;
   }
   if (

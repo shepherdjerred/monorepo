@@ -211,7 +211,7 @@ describe("native metadata credential boundary", () => {
       ["argocd", "app", "set", "example", "--parameter", "--help"],
       "ARGOCD_AUTH_TOKEN",
     ],
-    [["pr", "--help"], "WOODPECKER_TOKEN"],
+    [["pr", "health", "123"], "WOODPECKER_TOKEN"],
   ])("retains credential resolution for %j", async (args, credential) => {
     const result = await invokeWithCredentialSentinel(args);
     expect(result.code).toBe(1);
@@ -221,6 +221,36 @@ describe("native metadata credential boundary", () => {
     );
     expect(result.stderr).not.toContain("native error");
   });
+
+  test("pr land resolves WOODPECKER_TOKEN after argument validation", async () => {
+    const result = await invokeWithCredentialSentinel(["pr", "land", "123"]);
+    expect(result.code).toBe(2);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain(
+      "credential-resolver-sentinel:WOODPECKER_TOKEN",
+    );
+  });
+
+  test.each([
+    [["pr", "--help"], "toolkit pr - monorepo pull request workflows"],
+    [["pr", "asset", "--help"], "Usage: toolkit pr asset"],
+    [["pr", "asset", "-h"], "Usage: toolkit pr asset"],
+    [
+      ["pr", "asset", "--help", "--profile", "seaweedfs"],
+      "Usage: toolkit pr asset",
+    ],
+    [["pr", "health", "--help"], "Usage: toolkit pr health"],
+    [["pr", "land", "--help"], "Usage: toolkit pr land"],
+    [["pr", "review", "--help"], "Usage: toolkit pr review"],
+  ])(
+    "prints pr help without resolving credentials for %j",
+    async (args, expected) => {
+      const result = await invokeWithCredentialSentinel(args);
+      expect(result.code).toBe(0);
+      expect(result.stdout).toContain(expected);
+      expect(result.stderr).not.toContain("credential-resolver-sentinel");
+    },
+  );
 
   test("recognizes only complete registered native metadata invocations", () => {
     for (const args of [

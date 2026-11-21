@@ -35,7 +35,7 @@ export async function runCredentialsCommand(
   const target = cache === undefined ? await activeCache() : cache;
   if (target === null) {
     console.error(
-      "toolkit: the credential cache is not active for this binary (only the installed, signed toolkit on macOS uses it); nothing to flush.",
+      "toolkit: the credential cache is not active for this binary (active for the installed, signed toolkit on macOS and via DPAPI on Windows); nothing to flush.",
     );
     return 0;
   }
