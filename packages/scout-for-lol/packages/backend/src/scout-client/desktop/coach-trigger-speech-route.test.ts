@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   findDevice: vi.fn(),
   findUser: vi.fn(),
   findTurn: vi.fn(),
+  exploreAccess: vi.fn(),
   isPolicyEnabled: vi.fn(),
   outcome: vi.fn(),
   loadResult: vi.fn(),
@@ -39,16 +40,18 @@ vi.mock("#src/database/index.ts", () => ({
     scoutCoachTurn: { findUnique: mocks.findTurn },
   },
 }));
-vi.mock("#src/explore/access.ts", async (importOriginal) => ({
-  ...(await importOriginal()),
-  assertExploreAccess: () => Promise.resolve(["111111111111111111"]),
-}));
+// The owner's flags decide each case; Explore access is given (its rules are
+// `desktop-routes.test.ts`'s) and so is the web origin.
 vi.mock("#src/configuration/flags.ts", async (importOriginal) => ({
   ...(await importOriginal()),
   isPolicyEnabled: mocks.isPolicyEnabled,
 }));
 vi.mock("#src/trpc/auth-web-helpers.ts", () => ({
   getAppOrigin: () => "https://scout.invalid",
+}));
+vi.mock("#src/explore/access.ts", async (importOriginal) => ({
+  ...(await importOriginal()),
+  assertExploreAccess: mocks.exploreAccess,
 }));
 vi.mock("#src/explore/runs/durable-runs.ts", async (importOriginal) => ({
   ...(await importOriginal()),
@@ -167,6 +170,7 @@ beforeEach(() => {
     scopes: ["ingest", "explore"],
   });
   mocks.findUser.mockResolvedValue({ discordId: OWNER_ID });
+  mocks.exploreAccess.mockResolvedValue([SHARED_GUILD]);
   mocks.findTurn.mockResolvedValue({
     ownerId: OWNER_ID,
     deviceId: DEVICE_ID,
