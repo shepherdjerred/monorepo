@@ -152,6 +152,10 @@ export function targetHarness() {
       "1\n00:00:00,000 --> 00:00:01,000\n这是我们的国家，欢迎来到这里\n";
     const transport: FetchTransport = (url) => {
       calls.push(url.pathname);
+      if (url.pathname === "/v1/user/quota")
+        return Promise.resolve(
+          Response.json({ status: 0, user: { quota: 60 } }),
+        );
       if (searchShape === "mixed" && url.pathname === "/v1/sub/search")
         return Promise.resolve(
           Response.json({

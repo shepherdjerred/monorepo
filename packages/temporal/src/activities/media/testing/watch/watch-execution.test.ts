@@ -92,6 +92,11 @@ test("overall queue budget and monotonic elapsed time cannot be renewed by wall 
       watchCall(() => Promise.resolve()),
     ),
   ).rejects.toThrow("Watch observation failed");
+  const at = Date.now();
+  await environment(at, 90_000).run(() => {
+    expect(watchExecution().deadline.expiresAtMs).toBe(at + 90_000);
+    return Promise.resolve();
+  });
   await environment().run(() => {
     const execution = watchExecution();
     const wall = vi.spyOn(Date, "now").mockReturnValue(Date.now() - 300_000);

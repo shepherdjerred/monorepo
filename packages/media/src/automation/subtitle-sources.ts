@@ -135,7 +135,13 @@ export async function claimSubtitleDownload(
       },
     });
   });
-  input.downloadAuthority?.assertActive();
+  try {
+    input.downloadAuthority?.assertActive();
+  } catch (error) {
+    if (providerId === "assrt")
+      throw new IntegrationError(providerId, "outcome-unknown");
+    throw error;
+  }
 }
 
 export async function fromOpenSubtitles(
@@ -201,9 +207,13 @@ export async function fromOpenSubtitles(
   return null;
 }
 
+export type AssrtSubtitleSearch = SubtitleSearch & {
+  setAssrtLookupDelay?: (seconds: number) => void;
+};
+
 export async function fromAssrt(
   context: MediaAutomationContext,
-  input: SubtitleSearch,
+  input: AssrtSubtitleSearch,
   transport?: FetchTransport,
 ): Promise<SubtitleSource | null> {
   if (!["zh-Hans", "zh-CN"].includes(input.language)) return null;
@@ -212,6 +222,11 @@ export async function fromAssrt(
     .object({ token: z.string() })
     .parse(await subtitleCredential(context, "assrt"));
   const provider = new AssrtProvider(credential.token, transport);
+  const intervalSeconds = await provider.paceLookup(
+    105_000,
+    input.assrtLookupInvocation ?? context.movieManagement?.execution,
+  );
+  input.setAssrtLookupDelay?.(intervalSeconds);
   const candidates = await provider.search(input.query);
   for (const candidate of candidates.slice(0, 5)) {
     const id = "id" in candidate ? candidate.id : candidate.fileid;
@@ -224,6 +239,7 @@ export async function fromAssrt(
     const candidateId = `${String(id)}:${members[0].f}`;
     if (!subtitleProviderCandidateAllowedV1(input, "assrt", candidateId))
       continue;
+    await provider.waitForMetadataSlot();
     await claimSubtitleDownload(context, input, "assrt", candidateId);
     const bytes = await provider.downloadMember(id, members[0].f);
     return {

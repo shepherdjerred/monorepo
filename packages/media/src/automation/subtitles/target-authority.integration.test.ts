@@ -89,6 +89,7 @@ test("an ordinary language-only request queues ASSRT and installs proven Simplif
     subtitleTargetsReady(await currentSubtitleWork(f.db, f.asset.id, 0), 0),
   ).toBe(true);
   expect(calls).toEqual([
+    "/v1/user/quota",
     "/v1/sub/search",
     "/v1/sub/detail",
     "/v1/sub/detail",

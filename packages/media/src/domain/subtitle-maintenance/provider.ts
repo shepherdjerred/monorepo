@@ -17,6 +17,12 @@ export type SubtitleSource = {
   catalogEvidenceV1?: SubtitleCatalogEvidenceV1;
   declaredEncoding?: "utf8" | "utf-16le" | "utf-16be" | "gb18030";
 };
+/** Process-local capability captured before the provider ladder starts. */
+export type AssrtLookupInvocation = {
+  observed: { wall: number; monotonic: number };
+  expiresAtMs?: number;
+  signal: AbortSignal;
+};
 export type SubtitleSearch = SubtitleTarget & {
   operationId: string;
   assetIdV1?: string;
@@ -29,6 +35,7 @@ export type SubtitleSearch = SubtitleTarget & {
   excludedChecksumsV1?: readonly string[];
   excludedCandidatesV1?: readonly { providerId: string; candidateId: string }[];
   upgradeV1?: SubtitleUpgradeV1;
+  assrtLookupInvocation?: AssrtLookupInvocation;
   /** Invocation-local capability; never a Workflow payload or persisted browser state. */
   downloadAuthority?: {
     authorize: () => Promise<void>;

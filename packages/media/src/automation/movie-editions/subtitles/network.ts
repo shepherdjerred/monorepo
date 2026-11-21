@@ -310,6 +310,11 @@ export async function findMovieSubtitlesV4(
       ...(input.hearingImpaired === undefined
         ? {}
         : { hearingImpaired: input.hearingImpaired }),
+      assrtLookupInvocation: {
+        observed: execution.observed,
+        expiresAtMs: work.freshness.expiresAtMs,
+        signal: execution.signal,
+      },
       downloadAuthority: {
         assertActive: work.freshness.assertActive,
         authorize: async () => {

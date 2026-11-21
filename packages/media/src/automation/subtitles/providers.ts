@@ -3,7 +3,11 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import { validateSubtitle } from "#integrations/subtitle-validation.ts";
-import { fromAssrt, fromOpenSubtitles } from "#automation/subtitle-sources.ts";
+import {
+  fromAssrt,
+  fromOpenSubtitles,
+  type AssrtSubtitleSearch,
+} from "#automation/subtitle-sources.ts";
 import type {
   SubtitleSearch,
   SubtitleSource,
@@ -72,7 +76,16 @@ export async function withProvider(
     });
     if (downloads >= policy.dailyDownloadLimit)
       throw new IntegrationError(id, "rate-limited");
-    return await source(context, input);
+    const lookup =
+      id === "assrt"
+        ? ({
+            ...input,
+            setAssrtLookupDelay: (seconds: number) => {
+              delay = Math.max(delay, seconds);
+            },
+          } satisfies AssrtSubtitleSearch)
+        : input;
+    return await source(context, lookup);
   } catch (error) {
     if (error instanceof IntegrationError)
       delay = Math.max(delay, error.retryAfterSeconds ?? 60);
@@ -124,12 +137,14 @@ export async function searchSubtitleProviders(
     providerId: string,
   ) => Promise<LookupResult>,
 ): Promise<LookupResult> {
+  const cancellation = query.assrtLookupInvocation?.signal;
   const currentQuery = await subtitleSearchExclusionsV1(context, query);
   const providers = await context.db.mediaProvider.findMany({
     where: { id: { in: Object.keys(sources) }, enabled: true },
   });
   let failure: string | null = null;
   for (const id of ["opensubtitles", "assrt", "subhd", "zimuku", "subf2m"]) {
+    cancellation?.throwIfAborted();
     const source = sources[id];
     if (
       source === undefined ||
@@ -147,16 +162,13 @@ export async function searchSubtitleProviders(
       );
     } catch (error) {
       if (!(error instanceof IntegrationError)) throw error;
-      await context.db.mediaProvider.update({
-        where: { id },
-        data: { lastError: error.kind },
-      });
-      if (error.kind === "outcome-unknown")
-        return {
-          status: "blocked",
-          subtitleId: null,
-          reason: "subtitle_download_outcome_unknown",
-        };
+      const disposition = await subtitleProviderFailure(
+        context,
+        id,
+        error,
+        cancellation,
+      );
+      if (disposition !== null) return disposition;
       failure = error.kind;
     }
   }
@@ -169,6 +181,26 @@ export async function searchSubtitleProviders(
         ? "subtitle_providers_not_configured"
         : "matching_subtitles_not_found"),
   };
+}
+
+async function subtitleProviderFailure(
+  context: Pick<MediaAutomationContext, "db">,
+  id: string,
+  error: IntegrationError,
+  cancellation: AbortSignal | undefined,
+): Promise<LookupResult | null> {
+  if (error.kind !== "outcome-unknown") cancellation?.throwIfAborted();
+  await context.db.mediaProvider.update({
+    where: { id },
+    data: { lastError: error.kind },
+  });
+  return error.kind === "outcome-unknown"
+    ? {
+        status: "blocked",
+        subtitleId: null,
+        reason: "subtitle_download_outcome_unknown",
+      }
+    : null;
 }
 
 function subtitleProviderResult(

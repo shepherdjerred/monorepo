@@ -29,6 +29,7 @@ import {
   regularDialogueRequirement,
 } from "./subtitle-sources.ts";
 import type {
+  AssrtLookupInvocation,
   SubtitleSearch,
   SubtitleSource,
 } from "#domain/subtitle-maintenance/provider.ts";
@@ -295,14 +296,20 @@ async function search(
     recoveryEpoch: number;
     targetAuthority: string;
     upgradeV1?: SubtitleUpgradeV1;
+    assrtLookupInvocation: AssrtLookupInvocation;
   },
   sources: Readonly<Record<string, Source>>,
 ): Promise<Result> {
-  const query = searchInput(asset, input);
+  const { assrtLookupInvocation, ...selection } = input;
+  const query = searchInput(asset, selection);
   return query === null
     ? blocked("source_identity_missing")
-    : searchSubtitleProviders(context, query, sources, (source, providerId) =>
-        persist(context, asset, source, { ...input, providerId }),
+    : searchSubtitleProviders(
+        context,
+        { ...query, assrtLookupInvocation },
+        sources,
+        (source, providerId) =>
+          persist(context, asset, source, { ...selection, providerId }),
       );
 }
 
@@ -312,6 +319,13 @@ export function createSubtitleActivities(
 ): Pick<MediaNetworkActivities, "findMediaSubtitles"> {
   return {
     async findMediaSubtitles(input) {
+      const execution = context.watchExecution();
+      const assrtLookupInvocation = {
+        signal: execution.signal,
+        ...(execution.deadline ?? {
+          observed: { wall: Date.now(), monotonic: performance.now() },
+        }),
+      };
       z.string()
         .regex(/^[a-z]{2,3}(?:-[A-Za-z]{2,8})?$/u)
         .parse(input.language);
@@ -403,6 +417,7 @@ export function createSubtitleActivities(
               ...target,
               targetAuthority: work.authority,
               recoveryEpoch: runtime.recoveryEpoch,
+              assrtLookupInvocation,
             },
             sources,
           );
