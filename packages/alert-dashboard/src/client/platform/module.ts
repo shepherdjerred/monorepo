@@ -33,7 +33,18 @@ export type ModuleRoute = {
 };
 
 export type ModuleNavItem = {
+  /** The name shown under the group heading, such as "Active". */
   readonly label: string;
+  /**
+   * The full name used where the group is not shown, such as "Active alerts"
+   * in the command palette. Defaults to `label`.
+   */
+  readonly title?: string;
+  /**
+   * Heading the navigation lists the entry under. Entries of every module
+   * with the same group share one heading. Defaults to the module's `title`.
+   */
+  readonly group?: string;
   readonly icon: LucideIcon;
   /** Relative to the module's `basePath`, like a route path. */
   readonly path: string;
@@ -94,15 +105,25 @@ export type ResolvedRoute = {
 export type ResolvedNavItem = {
   readonly moduleId: string;
   readonly label: string;
+  readonly title: string;
+  readonly group: string;
   readonly icon: LucideIcon;
   /** Absolute link target. */
   readonly to: string;
 };
 
+export type ResolvedNavGroup = {
+  readonly label: string;
+  readonly items: readonly ResolvedNavItem[];
+};
+
 export type ModuleRegistry = {
   readonly modules: readonly ClientModule[];
   readonly routes: readonly ResolvedRoute[];
+  /** Every nav entry in declaration order; the command palette lists these. */
   readonly nav: readonly ResolvedNavItem[];
+  /** The same entries under their group headings, in first-appearance order. */
+  readonly navGroups: readonly ResolvedNavGroup[];
 };
 
 /** The one module allowed to own the root of the URL space. */
@@ -167,7 +188,7 @@ function checkRelativePath(module: ClientModule, path: string): void {
 /**
  * Validate a module list and flatten it into absolute routes and nav entries.
  * A broken composition fails at startup rather than as a route that silently
- * shadows another.
+ * shadows another or a nav link that leads nowhere.
  */
 export function resolveModules(
   modules: readonly ClientModule[],
@@ -176,7 +197,8 @@ export function resolveModules(
   for (const module of modules) checkIdentity(module, seenIds);
   const routes = resolveRoutes(modules);
   checkBasePaths(modules, routes);
-  return { modules, routes, nav: resolveNav(modules) };
+  const nav = resolveNav(modules, routes);
+  return { modules, routes, nav, navGroups: groupNav(nav) };
 }
 
 function resolveRoutes(modules: readonly ClientModule[]): ResolvedRoute[] {
@@ -201,18 +223,51 @@ function resolveRoutes(modules: readonly ClientModule[]): ResolvedRoute[] {
   );
 }
 
-function resolveNav(modules: readonly ClientModule[]): ResolvedNavItem[] {
+function resolveNav(
+  modules: readonly ClientModule[],
+  routes: readonly ResolvedRoute[],
+): ResolvedNavItem[] {
+  const routePaths = new Set(routes.map((route) => route.path));
+  const owners = new Map<string, string>();
   return modules.flatMap((module) =>
     module.nav.map((item) => {
       checkRelativePath(module, item.path);
+      const group = item.group ?? module.title;
+      if (group.trim() === "")
+        throw new Error(
+          `Module "${module.id}" nav entry "${item.label}" has a blank group`,
+        );
+      const to = modulePath(module.basePath, item.path);
+      if (!routePaths.has(to))
+        throw new Error(
+          `Nav entry "${to}" of "${module.id}" points at no declared route`,
+        );
+      const owner = owners.get(to);
+      if (owner !== undefined)
+        throw new Error(
+          `Nav entry "${to}" is declared by both "${owner}" and "${module.id}"`,
+        );
+      owners.set(to, module.id);
       return {
         moduleId: module.id,
         label: item.label,
+        title: item.title ?? item.label,
+        group,
         icon: item.icon,
-        to: modulePath(module.basePath, item.path),
+        to,
       };
     }),
   );
+}
+
+function groupNav(nav: readonly ResolvedNavItem[]): ResolvedNavGroup[] {
+  const groups = new Map<string, ResolvedNavItem[]>();
+  for (const item of nav) {
+    const items = groups.get(item.group) ?? [];
+    items.push(item);
+    groups.set(item.group, items);
+  }
+  return [...groups].map(([label, items]) => ({ label, items }));
 }
 
 /**

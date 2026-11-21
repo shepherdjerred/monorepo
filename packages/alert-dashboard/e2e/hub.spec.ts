@@ -7,7 +7,7 @@ async function openPalette(page: Page) {
   return palette;
 }
 
-test("the palette opens from the keyboard and the header, and closes on Escape", async ({
+test("the palette opens from the keyboard and the sidebar, and closes on Escape", async ({
   page,
 }) => {
   await page.goto("/");

@@ -55,12 +55,12 @@ test("home launches the app's pages, the other apps, and the tools", async ({
     "Services",
     "Flow",
     "AI",
-    "Promotion",
     "Maintenance",
     "Review",
-    "Alerts",
+    "Active alerts",
     "History",
     "System",
+    "Promotion",
   ]);
   await expect(
     launcher.getByRole("list", { name: "Apps" }).getByRole("link", {

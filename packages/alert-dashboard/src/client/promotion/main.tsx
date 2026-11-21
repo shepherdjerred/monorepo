@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PromotionPage } from "./page.tsx";
+import { StandalonePromotion } from "./standalone.tsx";
 import "#styles/globals.css";
 import "./promotion.css";
 
@@ -11,7 +11,7 @@ const client = new QueryClient({ defaultOptions: { queries: { retry: 1 } } });
 createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={client}>
-      <PromotionPage />
+      <StandalonePromotion />
     </QueryClientProvider>
   </StrictMode>,
 );

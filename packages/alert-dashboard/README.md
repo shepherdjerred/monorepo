@@ -46,9 +46,10 @@ manages the workload.
 
 ### The Storm promotion progress
 
-Hub includes `/promotion`. Its server forwards the
-read-only promotion API to the worker's internal status Service, authenticated
-with `OPS_INGEST_TOKEN`; browser clients never receive that credential.
+Hub includes `/promotion`, inside the shell under "The Storm" in the sidebar.
+Its server forwards the read-only promotion API to the worker's internal
+status Service, authenticated with `OPS_INGEST_TOKEN`; browser clients never
+receive that credential.
 `PROMOTION_STATUS_URL` is an optional bootstrap service-address override.
 Production reads shared worker history; the standalone local launcher below
 reads the local SQLite ledger instead.
@@ -60,7 +61,9 @@ bun packages/temporal/scripts/promotion/dashboard.ts
 ```
 
 Open `http://127.0.0.1:7342/promotion` on the Mac running the command. This
-local entry uses Hub's theme and layout without starting alert subscriptions.
+local entry (`src/client/promotion/standalone.tsx`) renders the same page
+content under a minimal bar of its own instead of the Hub shell, so it uses
+Hub's theme without starting alert subscriptions.
 It reads the promotion SQLite database and saved reports through a read-only API
 on port 7343. It needs no site credentials, Grafana, or Temporal server.
 Use `--state-dir`, `--port`, and `--api-port` to select local storage and ports.
@@ -339,6 +342,22 @@ searches catalog services and recent alerts. The router and the
 shell navigation are generated from the composition root. Only `core` may use
 an empty `basePath`; the registry refuses duplicate ids, duplicate routes, and
 a `basePath` that collides with another module or a server path, at startup.
+
+The shell (`src/client/shell.tsx`) is a grouped sidebar. Each `nav` entry is
+listed under its `group`, which defaults to the module's `title`; entries from
+different modules that name the same group share one heading, and groups
+appear in the order they are first declared. An entry's `label` is its short
+name under that heading, and its optional `title` is the full name used where
+the group is not shown: "Active" under "Alerts" is "Go to Active alerts" in
+the palette, which also matches a page by its group. The registry refuses a
+blank group, two entries with the same target, and an entry that points at no
+declared route.
+
+At 900px and narrower the sidebar gives way to a top bar whose menu button
+opens the same groups in a modal drawer. Every page renders its own `<main>`
+inside the shell's content column, which is a size container named `content`:
+page layouts respond to that column's width with `@container content (...)`
+rather than to the viewport, because the sidebar makes the two differ.
 
 A server module declares `id` and `register(app)`, plus optional `trpc`,
 `ready`, and `close`. Modules mount before the `/api/*` catch-all, so an

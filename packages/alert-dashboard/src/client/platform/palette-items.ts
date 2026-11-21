@@ -57,8 +57,9 @@ function searchSections(
 
 /**
  * Everything the palette lists for a query, in display order: search results
- * first, because a typed query is most likely a lookup, then the pages and
- * commands whose label or keywords match. Empty sections are left out.
+ * first, because a typed query is most likely a lookup, then the pages whose
+ * name or navigation group matches and the commands whose label or keywords
+ * match. Empty sections are left out.
  */
 export function paletteSections(
   registry: ModuleRegistry,
@@ -66,10 +67,17 @@ export function paletteSections(
   searched: readonly ModuleSearchResults[],
 ): PaletteSection[] {
   const pages: PaletteItem[] = registry.nav
-    .filter((item) => matches(query, [item.label, `Go to ${item.label}`]))
+    .filter((item) =>
+      matches(query, [
+        item.label,
+        item.group,
+        item.title,
+        `Go to ${item.title}`,
+      ]),
+    )
     .map((item) => ({
       id: `page:${item.to}`,
-      label: `Go to ${item.label}`,
+      label: `Go to ${item.title}`,
       icon: item.icon,
       run: ({ navigate }) => {
         navigate(item.to);

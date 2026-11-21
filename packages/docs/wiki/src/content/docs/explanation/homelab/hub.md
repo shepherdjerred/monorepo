@@ -51,6 +51,18 @@ and Home are all generated from one
 A new module is therefore findable from the palette as soon as it is
 registered.
 
+The navigation is a sidebar of named groups, not one menu per module. Each
+navigation entry names its group, and entries from different modules can share
+one. A page therefore sits beside the pages it relates to, whichever module
+serves it. A flat bar gave every page a top-level slot, and it ran out of
+width before the list of pages did. On a phone the same groups open as a
+drawer.
+
+A page that must also run outside Hub keeps its content separate from the
+shell. The Storm's promotion report is one: Hub lists it in the sidebar, and a
+[standalone entry](https://github.com/shepherdjerred/monorepo/blob/main/packages/alert-dashboard/src/client/promotion/main.tsx)
+serves the same content from a laptop without the shell.
+
 The operations overview and the alert ledger form the built-in `core` module.
 It is the only module served at the root, so every existing URL and bookmark
 still works. Other modules sit under their own path prefix.

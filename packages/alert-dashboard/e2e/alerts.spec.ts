@@ -148,11 +148,8 @@ test("semantic navigation is keyboard reachable and responsive", async ({
   await page.goto("/alerts");
   await page.keyboard.press("Tab");
   await expect(
-    page.getByRole("link", { name: "Hub", exact: true }),
+    page.getByRole("link", { name: "Skip to content" }),
   ).toBeFocused();
-  await expect(
-    page.getByRole("navigation", { name: "Primary navigation" }),
-  ).toBeVisible();
   const table = page.getByRole("table");
   await expect(table).toBeVisible();
   const tableBox = await table.boundingBox();
@@ -160,7 +157,19 @@ test("semantic navigation is keyboard reachable and responsive", async ({
     throw new Error("Responsive alert table has no bounds");
   expect(tableBox.width).toBeLessThanOrEqual(362);
   await expect(table.locator('td[data-label="Last seen"]')).toBeVisible();
-  await page.getByRole("link", { name: "System" }).click();
+  // At phone width the navigation lives in a drawer behind the top bar; its
+  // button is the next stop after the skip link.
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "Open navigation" }),
+  ).toBeFocused();
+  await page.keyboard.press("Enter");
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+  await expect(
+    drawer.getByRole("navigation", { name: "Primary navigation" }),
+  ).toBeVisible();
+  await drawer.getByRole("link", { name: "System" }).click();
+  await expect(drawer).toBeHidden();
   await expect(page).toHaveTitle("System · Hub");
   await expect(page.getByRole("heading", { name: "Database" })).toBeVisible();
   await expect(
