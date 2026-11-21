@@ -24,6 +24,7 @@ export function buildPetCareAlert(
       alertname: policy.alertName,
       severity: "warning",
       service: "pet-care",
+      category: "household",
       entity: input.entityId,
     },
     annotations: {

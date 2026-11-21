@@ -1,4 +1,7 @@
-import type { FailedWorkflowExecution } from "#shared/alerts/workflow-failure-alert.ts";
+import {
+  scheduleIdFromWorkflowId,
+  type FailedWorkflowExecution,
+} from "#shared/alerts/workflow-failure-alert.ts";
 import type { WorkflowVisibilityClient } from "#shared/infra/workflow-visibility-client.ts";
 import type { TemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 import {
@@ -6,13 +9,36 @@ import {
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
 import { MAX_DETAILED_FAILURE_ALERTS } from "./workflow-failure-watch-overflow.ts";
-import { extractScheduleIdentity } from "./workflow-failure-watch-stability.ts";
+import {
+  extractScheduleIdentity,
+  scheduleNamespaceKey,
+} from "./workflow-failure-watch-stability.ts";
 import { withWorkflowFailureRpcTimeout } from "./workflow-failure-watch-timeout.ts";
 
 const ALERT_BATCH_SIZE = 25;
 const VISIBILITY_PAGE_SIZE = 100;
 const FAILURE_STATUS_NAMES = ["FAILED", "TIMED_OUT"] as const;
 type FailureStatusName = (typeof FAILURE_STATUS_NAMES)[number];
+
+/**
+ * Delivery's PostgreSQL-backed Prometheus rules (`DeliveryRecoveryRequired`,
+ * `DeliveryQueueStalled`, `DeliveryPlatformLockStranded`, `DeliveryUnavailable`)
+ * alert 1:1 per blocked environment. Exclude per-attempt deployment and worker
+ * recovery state-machine executions here so a blocked environment never fans
+ * out into repeated `TemporalWorkflowFailed` alerts or overflow counts.
+ */
+export const EXCLUDED_WORKFLOW_FAILURE_TYPES = [
+  "deliveryDeploymentWorkflow",
+  "deliveryWorkerRecoveryWorkflow",
+] as const;
+
+const EXCLUDED_WORKFLOW_FAILURE_TYPE_SET: ReadonlySet<string> = new Set(
+  EXCLUDED_WORKFLOW_FAILURE_TYPES,
+);
+
+export function isExcludedWorkflowFailureType(workflowType: string): boolean {
+  return EXCLUDED_WORKFLOW_FAILURE_TYPE_SET.has(workflowType);
+}
 
 type ScanWorkflowFailureVisibilityOptions = {
   namespace: TemporalNamespace;
@@ -64,7 +90,11 @@ function toFailedWorkflowExecution(
   namespace: TemporalNamespace,
 ): FailedWorkflowExecution | undefined {
   const status = toFailureStatusName(info.status.name);
-  if (status === undefined || info.closeTime === undefined) {
+  if (
+    status === undefined ||
+    info.closeTime === undefined ||
+    isExcludedWorkflowFailureType(info.type)
+  ) {
     return undefined;
   }
   const scheduleIdentity = extractScheduleIdentity(info);
@@ -133,10 +163,43 @@ async function processExecution(
   }
 }
 
+function isDuplicateScheduledFailure(
+  execution: Pick<
+    FailedWorkflowExecution,
+    "temporalNamespace" | "workflowId" | "scheduleId"
+  >,
+  seenSchedules: Set<string>,
+): boolean {
+  const scheduleId =
+    execution.scheduleId ?? scheduleIdFromWorkflowId(execution.workflowId);
+  if (scheduleId === undefined) {
+    return false;
+  }
+  const key = scheduleNamespaceKey(execution.temporalNamespace, scheduleId);
+  if (seenSchedules.has(key)) {
+    return true;
+  }
+  seenSchedules.add(key);
+  return false;
+}
+
+function shouldProcessScannedExecution(
+  execution: FailedWorkflowExecution,
+  options: ScanWorkflowFailureVisibilityOptions,
+  seenSchedules: Set<string>,
+): boolean {
+  return (
+    !isDuplicateScheduledFailure(execution, seenSchedules) &&
+    (options.checkpoint === undefined ||
+      isAfterVisibilityCursor(execution, options.checkpoint))
+  );
+}
+
 export async function scanWorkflowFailureVisibility(
   client: WorkflowVisibilityClient,
   options: ScanWorkflowFailureVisibilityOptions,
 ): Promise<WorkflowFailureVisibilityScan> {
+  const seenSchedules = new Set<string>();
   const state: ScanState = {
     pendingDetails: [],
     overflowBatch: [],
@@ -175,13 +238,9 @@ export async function scanWorkflowFailureVisibility(
         continue;
       }
       options.onObservedFailure?.(execution);
-      if (
-        options.checkpoint !== undefined &&
-        !isAfterVisibilityCursor(execution, options.checkpoint)
-      ) {
-        continue;
+      if (shouldProcessScannedExecution(execution, options, seenSchedules)) {
+        await processExecution(execution, options, state);
       }
-      await processExecution(execution, options, state);
     }
     if (state.overflowBatch.length > 0) {
       state.processingBatch = true;

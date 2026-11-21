@@ -13,7 +13,10 @@ import {
   MAX_DETAILED_FAILURE_ALERTS,
   type WorkflowFailureOverflowSummary,
 } from "./workflow-failure-watch-overflow.ts";
-import { scanWorkflowFailureVisibility } from "./workflow-failure-watch-scan.ts";
+import {
+  EXCLUDED_WORKFLOW_FAILURE_TYPES,
+  scanWorkflowFailureVisibility,
+} from "./workflow-failure-watch-scan.ts";
 import { createFailureStabilityTracker } from "./workflow-failure-watch-stability.ts";
 import {
   DEFAULT_WORKFLOW_FAILURE_RPC_TIMEOUT_MS,
@@ -31,8 +34,8 @@ import type { TemporalNamespace } from "#shared/infra/temporal-namespace.ts";
  * detail batch heartbeats its last item and consumed budget. A retry scans the
  * full lookback and applies a conservative checkpoint because the public
  * visibility iterator does not expose a precision-safe page token. Safe to overlap
- * polls because Alertmanager dedups by label set
- * (identity = alertname + workflowType + taskQueue + workflowId + runId).
+ * polls because Alertmanager dedups by label set (`schedule_id` for recurring
+ * schedules, `workflowId` + `runId` for ad-hoc executions).
  */
 
 const COMPONENT = "temporal-failure-watch";
@@ -124,8 +127,12 @@ export function readTtlMs(): number {
 }
 
 export function buildVisibilityQuery(since: Date): string {
+  const excludedTypes = EXCLUDED_WORKFLOW_FAILURE_TYPES.map((type) =>
+    JSON.stringify(type),
+  ).join(", ");
   return [
     'ExecutionStatus IN ("Failed", "TimedOut")',
+    `WorkflowType NOT IN (${excludedTypes})`,
     `CloseTime > "${since.toISOString()}"`,
   ].join(" AND ");
 }

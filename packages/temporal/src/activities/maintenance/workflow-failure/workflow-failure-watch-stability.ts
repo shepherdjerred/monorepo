@@ -93,7 +93,7 @@ function typeQueueKey(
   return `${namespace}\0${workflowType}\0${taskQueue}`;
 }
 
-function scheduleNamespaceKey(
+export function scheduleNamespaceKey(
   namespace: TemporalNamespace,
   scheduleId: string,
 ): string {

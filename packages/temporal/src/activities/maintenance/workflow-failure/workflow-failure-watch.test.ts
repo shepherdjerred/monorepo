@@ -5,11 +5,9 @@ import {
   RetryState,
   TimeoutFailure,
   TimeoutType,
-  TypedSearchAttributes,
-  defineSearchAttributeKey,
 } from "@temporalio/common";
 import { historyFromJSON } from "@temporalio/common/lib/proto-utils.js";
-import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
+import type { AlertPoster } from "#lib/alertmanager.ts";
 import { classifyWorkflowTimeoutHistory } from "./workflow-failure-history.ts";
 import {
   buildVisibilityQuery,
@@ -22,10 +20,19 @@ import {
   workflowExecutionKey,
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
-
-const NOW = new Date("2026-07-30T18:00:00.000Z");
-const LOOKBACK_MS = 24 * 60 * 60 * 1000;
-const TTL_MS = LOOKBACK_MS + 6 * 60 * 1000 + 30 * 1000 + 5 * 60 * 1000;
+import {
+  LOOKBACK_MS,
+  NOW,
+  TTL_MS,
+  capturingPoster,
+  clientForExecutions,
+  dayTime,
+  fakeClient,
+  rejectWithApplicationFailure,
+  scheduledAttributes,
+  ttlEndsAt,
+  type ExecutionInfo,
+} from "./workflow-failure-watch-test-fixtures.ts";
 
 function protobufLong(value: string) {
   return {
@@ -33,76 +40,6 @@ function protobufLong(value: string) {
     high: 0,
     unsigned: false,
   };
-}
-
-type ExecutionInfo = {
-  workflowId: string;
-  runId: string;
-  type: string;
-  taskQueue: string;
-  startTime?: Date;
-  closeTime?: Date;
-  status: { name: string };
-  typedSearchAttributes?: TypedSearchAttributes;
-};
-
-const SCHEDULED_BY_ID_KEY = defineSearchAttributeKey(
-  "TemporalScheduledById",
-  "KEYWORD",
-);
-
-function scheduledAttributes(scheduleId: string): TypedSearchAttributes {
-  return new TypedSearchAttributes([
-    { key: SCHEDULED_BY_ID_KEY, value: scheduleId },
-  ]);
-}
-
-function fakeClient(
-  executions: ExecutionInfo[],
-  results: Record<string, () => Promise<unknown>>,
-  histories: Record<string, unknown> = {},
-): WorkflowVisibilityClient {
-  return {
-    workflow: {
-      list() {
-        return {
-          async *[Symbol.asyncIterator]() {
-            for (const execution of executions) {
-              yield {
-                ...execution,
-                startTime:
-                  execution.startTime ?? execution.closeTime ?? new Date(0),
-              };
-            }
-          },
-        };
-      },
-      getHandle(workflowId: string, runId: string) {
-        const key = `${workflowId}/${runId}`;
-        const resolver = results[key];
-        return {
-          result: () => {
-            if (resolver === undefined) {
-              throw new Error(`no fake result configured for ${key}`);
-            }
-            return resolver();
-          },
-          fetchHistory: () => Promise.resolve(histories[key] ?? { events: [] }),
-        };
-      },
-    },
-  };
-}
-
-function rejectWithApplicationFailure(message: string): () => Promise<unknown> {
-  return () =>
-    Promise.reject(
-      new WorkflowFailedError(
-        "workflow execution failed",
-        ApplicationFailure.nonRetryable(message, "TestFailure"),
-        RetryState.NON_RETRYABLE_FAILURE,
-      ),
-    );
 }
 
 /**
@@ -132,22 +69,6 @@ function closedExecutions(
     closeTime: new Date(NOW.getTime() - index * 1000),
     status: { name: statusName },
   }));
-}
-
-/** A visibility client that resolves every execution through `resolverFor`. */
-function clientForExecutions(
-  executions: ExecutionInfo[],
-  resolverFor: (index: number) => () => Promise<unknown>,
-): WorkflowVisibilityClient {
-  return fakeClient(
-    executions,
-    Object.fromEntries(
-      executions.map((execution, index) => [
-        `${execution.workflowId}/${execution.runId}`,
-        resolverFor(index),
-      ]),
-    ),
-  );
 }
 
 /** A promise that never settles, standing in for a hung downstream RPC. */
@@ -232,18 +153,6 @@ function rejectWithActivityTimeoutFailure(
   );
 }
 
-function capturingPoster(): {
-  poster: AlertPoster;
-  calls: { alerts: AlertmanagerAlert[] }[];
-} {
-  const calls: { alerts: AlertmanagerAlert[] }[] = [];
-  const poster: AlertPoster = (alerts) => {
-    calls.push({ alerts });
-    return Promise.resolve();
-  };
-  return { poster, calls };
-}
-
 function pollingScenario(client: WorkflowVisibilityClient) {
   const { poster, calls } = capturingPoster();
   return {
@@ -290,10 +199,10 @@ async function captureFirstFailureDescription(
 }
 
 describe("buildVisibilityQuery", () => {
-  it("filters to Failed/TimedOut closed after the lookback boundary", () => {
+  it("filters to Failed/TimedOut closed after the lookback boundary and excludes Delivery per-attempt state machines", () => {
     const since = new Date("2026-07-30T17:45:00.000Z");
     expect(buildVisibilityQuery(since)).toBe(
-      'ExecutionStatus IN ("Failed", "TimedOut") AND CloseTime > "2026-07-30T17:45:00.000Z"',
+      'ExecutionStatus IN ("Failed", "TimedOut") AND WorkflowType NOT IN ("deliveryDeploymentWorkflow", "deliveryWorkerRecoveryWorkflow") AND CloseTime > "2026-07-30T17:45:00.000Z"',
     );
   });
 });
@@ -1381,14 +1290,6 @@ describe("parseAlertTtlMs", () => {
   });
 });
 
-function dayTime(hhmm: string): Date {
-  return new Date(`2026-07-30T${hhmm}:00.000Z`);
-}
-
-function ttlEndsAt(hhmm: string): string {
-  return new Date(dayTime(hhmm).getTime() + TTL_MS).toISOString();
-}
-
 function scheduleRun(
   workflowId: string,
   hhmm: string,
@@ -1430,7 +1331,7 @@ describe("stability-gated early resolution for scheduled failures", () => {
         scheduleRun("s-workflow-2026-07-30T16:25:00Z", "16:30", "FAILED", "s"),
         scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "FAILED", "s"),
       ],
-      expectedEndsAt: [ttlEndsAt("16:30"), ttlEndsAt("14:00")],
+      expectedEndsAt: [ttlEndsAt("16:30")],
     },
     {
       name: "scheduled failure with no subsequent completion stays open",
@@ -1457,10 +1358,10 @@ describe("stability-gated early resolution for scheduled failures", () => {
         scheduleRun("s-workflow-2026-07-30T15:25:00Z", "15:30", "FAILED", "s"),
         scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "TIMED_OUT"),
       ],
-      expectedEndsAt: [NOW.toISOString(), NOW.toISOString()],
+      expectedEndsAt: [NOW.toISOString()],
     },
     {
-      name: "previously recovered failure stays resolved monotonically when a fresh failure occurs >=2h later",
+      name: "fresh failure after an earlier recovery emits only the active newest schedule alert",
       executions: [
         scheduleRun("s-workflow-2026-07-30T17:25:00Z", "17:30", "FAILED", "s"),
         scheduleRun(
@@ -1471,7 +1372,7 @@ describe("stability-gated early resolution for scheduled failures", () => {
         ),
         scheduleRun("s-workflow-2026-07-30T13:55:00Z", "14:00", "FAILED", "s"),
       ],
-      expectedEndsAt: [ttlEndsAt("17:30"), NOW.toISOString()],
+      expectedEndsAt: [ttlEndsAt("17:30")],
     },
   ])("$name", async ({ executions, expectedEndsAt }) => {
     const failures = Object.fromEntries(

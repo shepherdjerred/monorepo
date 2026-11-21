@@ -53,9 +53,12 @@ describe("buildWorkflowFailureAlert", () => {
       workflowType: "syncGolinks",
       taskQueue: "default",
       temporalNamespace: "prod",
+      exported_namespace: "prod",
       workflowId: "golink-sync-2026-07-30",
       runId: "run-abc-123",
     });
+    expect(alert.annotations["workflowId"]).toBeUndefined();
+    expect(alert.annotations["runId"]).toBeUndefined();
     expect(alert.annotations["summary"]).toBe(
       "Temporal workflow syncGolinks failed: ApplicationFailure: golink server returned 500",
     );
@@ -172,6 +175,62 @@ describe("buildWorkflowFailureAlert", () => {
     );
 
     expect(alert.annotations["description"]).not.toContain("stack ");
+  });
+
+  it("collapses recurring scheduled executions onto schedule_id labels and moves workflowId/runId to annotations", () => {
+    const byExplicitSchedule = buildWorkflowFailureAlert(
+      makeExecution({
+        temporalNamespace: "beta",
+        workflowId: "scout-poll-workflow-2026-07-30T17:45:00.000Z",
+        runId: "run-latest-99",
+        workflowType: "scoutPollWorkflow",
+        taskQueue: "scout",
+        scheduleId: "scout-poll",
+      }),
+      makeFailure(),
+      NOW,
+      TTL_MS,
+    );
+    const byInferredSchedule = buildWorkflowFailureAlert(
+      makeExecution({
+        workflowId: "golink-sync-workflow-2026-07-30T17:45:00.000Z",
+        runId: "run-inferred-7",
+      }),
+      makeFailure(),
+      NOW,
+      TTL_MS,
+    );
+
+    expect(byExplicitSchedule.labels).toEqual({
+      alertname: "TemporalWorkflowFailed",
+      severity: "warning",
+      workflowType: "scoutPollWorkflow",
+      taskQueue: "scout",
+      temporalNamespace: "beta",
+      exported_namespace: "beta",
+      schedule_id: "scout-poll",
+    });
+    expect(byExplicitSchedule.annotations["workflowId"]).toBe(
+      "scout-poll-workflow-2026-07-30T17:45:00.000Z",
+    );
+    expect(byExplicitSchedule.annotations["runId"]).toBe("run-latest-99");
+    expect(byExplicitSchedule.generatorURL).toBe(
+      "https://temporal-ui.tailnet-1a49.ts.net/namespaces/beta/workflows/scout-poll-workflow-2026-07-30T17%3A45%3A00.000Z/run-latest-99/history",
+    );
+
+    expect(byInferredSchedule.labels).toEqual({
+      alertname: "TemporalWorkflowFailed",
+      severity: "warning",
+      workflowType: "syncGolinks",
+      taskQueue: "default",
+      temporalNamespace: "prod",
+      exported_namespace: "prod",
+      schedule_id: "golink-sync",
+    });
+    expect(byInferredSchedule.annotations["workflowId"]).toBe(
+      "golink-sync-workflow-2026-07-30T17:45:00.000Z",
+    );
+    expect(byInferredSchedule.annotations["runId"]).toBe("run-inferred-7");
   });
 });
 

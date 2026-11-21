@@ -6,9 +6,16 @@ import {
   defineSearchAttributeKey,
 } from "@temporalio/common";
 import type { AlertmanagerAlert, AlertPoster } from "#lib/alertmanager.ts";
+import {
+  shouldResolveScheduledFailureEarly,
+  type FailedWorkflowExecution,
+} from "#shared/alerts/workflow-failure-alert.ts";
 import type { WorkflowVisibilityClient } from "#shared/infra/workflow-visibility-client.ts";
 import { pollWorkflowFailuresOnce } from "./workflow-failure-watch.ts";
-import { extractScheduleIdentity } from "./workflow-failure-watch-stability.ts";
+import {
+  createFailureStabilityTracker,
+  extractScheduleIdentity,
+} from "./workflow-failure-watch-stability.ts";
 
 const NOW = new Date("2026-07-30T18:00:00.000Z");
 const LOOKBACK_MS = 24 * 60 * 60 * 1000;
@@ -68,6 +75,23 @@ function buildQueryAwareClient(input: {
       },
     },
   };
+}
+
+async function pollAlerts(
+  client: WorkflowVisibilityClient,
+  now: Date,
+): Promise<AlertmanagerAlert[]> {
+  const posted: AlertmanagerAlert[] = [];
+  const poster: AlertPoster = (alerts) => {
+    posted.push(...alerts);
+    return Promise.resolve();
+  };
+  await pollWorkflowFailuresOnce(client, poster, {
+    now,
+    lookbackMs: LOOKBACK_MS,
+    ttlMs: TTL_MS,
+  });
+  return posted;
 }
 
 describe("workflow failure stability tracker identity and short windows", () => {
@@ -143,17 +167,7 @@ describe("workflow failure stability tracker identity and short windows", () => 
         },
       ],
     });
-    const posted: AlertmanagerAlert[] = [];
-    const poster: AlertPoster = (alerts) => {
-      posted.push(...alerts);
-      return Promise.resolve();
-    };
-
-    await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
+    const posted = await pollAlerts(client, NOW);
 
     expect(queries).toHaveLength(1);
     expect(posted).toHaveLength(2);
@@ -163,8 +177,8 @@ describe("workflow failure stability tracker identity and short windows", () => 
   });
 });
 
-describe("workflow failure stability tracker monotonic non-resurrection and caching", () => {
-  it("keeps an already-resolved scheduled failure closed when a new failure occurs 17.6h later inside the 24h lookback", async () => {
+describe("workflow failure stability tracker monotonic non-resurrection", () => {
+  it("keeps an already-resolved scheduled failure closed in tracker windows while poll collapses the schedule to its newest failure", async () => {
     const pollNow = new Date("2026-11-21T02:40:00.000Z");
     const oldFailureClose = new Date("2026-11-20T09:00:00.000Z");
     const completedClose = new Date("2026-11-20T09:01:00.000Z");
@@ -213,34 +227,87 @@ describe("workflow failure stability tracker monotonic non-resurrection and cach
         },
       ],
     });
-    const posted: AlertmanagerAlert[] = [];
-    const poster: AlertPoster = (alerts) => {
-      posted.push(...alerts);
-      return Promise.resolve();
-    };
 
-    await pollWorkflowFailuresOnce(client, poster, {
+    const tracker = createFailureStabilityTracker({
       now: pollNow,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
+      rpcTimeoutMs: 5000,
     });
-
-    expect(queries).toHaveLength(2);
-    expect(queries[1]).toContain(
+    const trackedExecutions: FailedWorkflowExecution[] = [
+      {
+        temporalNamespace: "prod",
+        workflowId: "delivery-dispatch-workflow-2026-11-21T02:38:00Z",
+        runId: "01a1fbf7",
+        workflowType: "deliveryDispatchWorkflow",
+        taskQueue: "delivery-workflows",
+        scheduleId: "delivery-dispatch",
+        scheduledByAttribute: true,
+        startTime: newFailureClose,
+        closeTime: newFailureClose,
+        status: "FAILED",
+      },
+      {
+        temporalNamespace: "prod",
+        workflowId: "delivery-dispatch-workflow-2026-11-20T09:00:00Z",
+        runId: "01a1f82f",
+        workflowType: "deliveryDispatchWorkflow",
+        taskQueue: "delivery-workflows",
+        scheduleId: "delivery-dispatch",
+        scheduledByAttribute: true,
+        startTime: oldFailureClose,
+        closeTime: oldFailureClose,
+        status: "FAILED",
+      },
+    ];
+    const resolved = await tracker.attachScheduleRecovery(
+      client,
+      trackedExecutions,
+    );
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toContain(
       `CloseTime > "${oldFailureClose.toISOString()}"`,
     );
-    expect(queries[1]).toContain(
+    expect(queries[0]).toContain(
       `CloseTime < "${newFailureClose.toISOString()}"`,
     );
-    const byRunId = new Map(
-      posted.map((alert) => [alert.labels["runId"], alert]),
-    );
-    expect(byRunId.get("01a1f82f")?.endsAt).toBe(pollNow.toISOString());
-    expect(byRunId.get("01a1fbf7")?.endsAt).toBe(
+    const [newestResolved, oldestResolved] = resolved;
+    if (newestResolved === undefined || oldestResolved === undefined) {
+      throw new Error("expected both executions to resolve");
+    }
+    expect(
+      shouldResolveScheduledFailureEarly(
+        newestResolved,
+        newestResolved.scheduleRecovery,
+        pollNow,
+      ),
+    ).toBe(false);
+    expect(
+      shouldResolveScheduledFailureEarly(
+        oldestResolved,
+        oldestResolved.scheduleRecovery,
+        pollNow,
+      ),
+    ).toBe(true);
+
+    const posted = await pollAlerts(client, pollNow);
+
+    expect(posted).toHaveLength(1);
+    expect(posted[0]?.labels).toEqual({
+      alertname: "TemporalWorkflowFailed",
+      severity: "warning",
+      workflowType: "deliveryDispatchWorkflow",
+      taskQueue: "delivery-workflows",
+      temporalNamespace: "prod",
+      exported_namespace: "prod",
+      schedule_id: "delivery-dispatch",
+    });
+    expect(posted[0]?.annotations["runId"]).toBe("01a1fbf7");
+    expect(posted[0]?.endsAt).toBe(
       new Date(newFailureClose.getTime() + TTL_MS).toISOString(),
     );
   });
+});
 
+describe("workflow failure stability tracker Completed query caching", () => {
   it("caches Completed visibility RPCs per schedule recovery window across 20 failed runs", async () => {
     const pollNow = new Date("2026-11-21T02:40:00.000Z");
     const burstBaseMs = new Date("2026-11-20T09:00:00.000Z").getTime();
@@ -301,27 +368,59 @@ describe("workflow failure stability tracker monotonic non-resurrection and cach
         ...burstFailures,
       ],
     });
-    const posted: AlertmanagerAlert[] = [];
-    const poster: AlertPoster = (alerts) => {
-      posted.push(...alerts);
-      return Promise.resolve();
-    };
 
-    await pollWorkflowFailuresOnce(client, poster, {
+    const tracker = createFailureStabilityTracker({
       now: pollNow,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
+      rpcTimeoutMs: 5000,
     });
-
+    const allExecutions: FailedWorkflowExecution[] = [
+      {
+        temporalNamespace: "prod",
+        workflowId: "delivery-dispatch-workflow-2026-11-21T02:38:00.000Z",
+        runId: "run-new",
+        workflowType: "deliveryDispatchWorkflow",
+        taskQueue: "delivery-workflows",
+        scheduleId: "delivery-dispatch",
+        scheduledByAttribute: true,
+        startTime: newFailureClose,
+        closeTime: newFailureClose,
+        status: "FAILED",
+      },
+      ...burstFailures.map((row): FailedWorkflowExecution => ({
+        temporalNamespace: "prod",
+        workflowId: row.workflowId,
+        runId: row.runId,
+        workflowType: row.type,
+        taskQueue: row.taskQueue,
+        scheduleId: "delivery-dispatch",
+        scheduledByAttribute: true,
+        startTime: row.startTime,
+        closeTime: row.closeTime,
+        status: "FAILED",
+      })),
+    ];
+    const resolved = await tracker.attachScheduleRecovery(
+      client,
+      allExecutions,
+    );
     expect(completedQueries).toHaveLength(1);
-    expect(posted).toHaveLength(20);
     expect(
-      posted
-        .filter((alert) => alert.labels["runId"] !== "run-new")
-        .every((alert) => alert.endsAt === pollNow.toISOString()),
+      resolved
+        .filter((item) => item.runId !== "run-new")
+        .every((item) =>
+          shouldResolveScheduledFailureEarly(
+            item,
+            item.scheduleRecovery,
+            pollNow,
+          ),
+        ),
     ).toBe(true);
-    expect(
-      posted.find((alert) => alert.labels["runId"] === "run-new")?.endsAt,
-    ).toBe(new Date(newFailureClose.getTime() + TTL_MS).toISOString());
+
+    const posted = await pollAlerts(client, pollNow);
+    expect(posted).toHaveLength(1);
+    expect(posted[0]?.annotations["runId"]).toBe("run-new");
+    expect(posted[0]?.endsAt).toBe(
+      new Date(newFailureClose.getTime() + TTL_MS).toISOString(),
+    );
   });
 });
