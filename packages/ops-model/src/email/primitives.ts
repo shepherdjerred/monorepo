@@ -149,18 +149,41 @@ export function safeHttpUrl(
   }
 }
 
+function partValue(
+  parts: readonly Intl.DateTimeFormatPart[],
+  type: Intl.DateTimeFormatPartTypes,
+): string {
+  return parts.find((part) => part.type === type)?.value ?? "";
+}
+
 /** Format an ISO-8601 timestamp in `America/Los_Angeles` (`Nov 20, 7:45 PM PST`). */
 export function formatPacificTimestamp(isoInstant: string): string {
   const epochMs = Date.parse(isoInstant);
-  return Number.isNaN(epochMs)
-    ? isoInstant
-    : PACIFIC_DATE_TIME.format(new Date(epochMs));
+  if (Number.isNaN(epochMs)) {
+    return isoInstant;
+  }
+  const parts = PACIFIC_DATE_TIME.formatToParts(new Date(epochMs));
+  const month = partValue(parts, "month");
+  const day = partValue(parts, "day");
+  const hour = partValue(parts, "hour");
+  const minute = partValue(parts, "minute");
+  const dayPeriod = partValue(parts, "dayPeriod");
+  const zone = partValue(parts, "timeZoneName");
+  const meridiem = dayPeriod === "" ? "" : ` ${dayPeriod}`;
+  const tz = zone === "" ? "" : ` ${zone}`;
+  return `${month} ${day}, ${hour}:${minute}${meridiem}${tz}`;
 }
 
 /** Compact 24-hour Pacific timestamp for timeline tables (`Nov 20 19:45`). */
 export function formatPacificShortTime(isoInstant: string): string {
   const epochMs = Date.parse(isoInstant);
-  return Number.isNaN(epochMs)
-    ? isoInstant
-    : PACIFIC_SHORT_TIME.format(new Date(epochMs));
+  if (Number.isNaN(epochMs)) {
+    return isoInstant;
+  }
+  const parts = PACIFIC_SHORT_TIME.formatToParts(new Date(epochMs));
+  const month = partValue(parts, "month");
+  const day = partValue(parts, "day");
+  const hour = partValue(parts, "hour");
+  const minute = partValue(parts, "minute");
+  return `${month} ${day} ${hour}:${minute}`;
 }

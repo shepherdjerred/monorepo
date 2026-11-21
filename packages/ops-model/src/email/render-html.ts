@@ -35,7 +35,7 @@ function buildStylesheet(p: EditorialPalette): string {
 
   return [
     `:root{color-scheme:light dark;--canvas:${p.canvasLight};--surface:${p.surfaceLight};--subtle:${p.subtleLight};--ink:${p.inkLight};--sec:${p.secondaryInkLight};--muted:${p.mutedLight};--border:${p.borderLight};--chip:${p.chipBgLight};--brand:${p.brandLight};--cta-bg:${p.ctaBgLight};--cta-ink:${p.ctaInkLight};${toneVarsLight}}`,
-    `@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${darkDecls}}}`,
+    `@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${darkDecls}} }`,
     `:root[data-theme="dark"]{color-scheme:dark;${darkDecls}}`,
     `:root[data-theme="light"]{color-scheme:light;}`,
     `.e-body{background-color:var(--canvas)!important;color:var(--ink)!important;}`,
@@ -48,7 +48,7 @@ function buildStylesheet(p: EditorialPalette): string {
       (t) =>
         `.e-pill-${t}{background-color:var(--t-${t}-bg)!important;color:var(--t-${t}-ink)!important;border-color:var(--t-${t}-bd)!important;}.e-txt-${t}{color:var(--t-${t}-ink)!important;}.e-ac-${t}{border-left-color:var(--t-${t}-ac)!important;}`,
     ),
-    `@media only screen and (max-width:520px){.e-pad{padding:20px 16px!important;}.e-h1{font-size:20px!important;}.e-outer{padding:12px 6px!important;}.e-dl-key{width:92px!important;}}`,
+    `@media only screen and (max-width:520px){.e-pad{padding:20px 16px!important;}.e-h1{font-size:20px!important;}.e-outer{padding:12px 6px!important;}.e-dl-key{width:92px!important;} }`,
   ].join("");
 }
 

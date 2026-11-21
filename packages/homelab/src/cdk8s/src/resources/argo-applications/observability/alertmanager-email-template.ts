@@ -5,7 +5,7 @@ const HUB_ALERTS_URL = `${tailnetService("alerts").origin}/alerts`;
 
 const HUB_EDITORIAL_CSS = [
   ":root{color-scheme:light dark;--canvas:#f4f6f2;--surface:#ffffff;--subtle:#f8faf7;--ink:#17211c;--sec:#2c3832;--muted:#58655e;--border:#dce1db;--brand:#176b4d;--cta-bg:#176b4d;--cta-ink:#ffffff;--warn-bg:#fff2cf;--warn-ink:#7a4f00;--warn-bd:#f0d9a0;--crit-bg:#fde9e7;--crit-ink:#9d241e;--crit-bd:#f5c2bd;}",
-  "@media (prefers-color-scheme:dark){:root{--canvas:#0f1311;--surface:#171b19;--subtle:#1d2220;--ink:#edf2ee;--sec:#d3dcd6;--muted:#9eaaa3;--border:#2d3531;--brand:#4cc393;--cta-bg:#4cc393;--cta-ink:#0b1712;--warn-bg:#3a2c0a;--warn-ink:#f7ce6d;--warn-bd:#5a4717;--crit-bg:#3d1716;--crit-ink:#f7b2ad;--crit-bd:#6b2623;}}",
+  "@media (prefers-color-scheme:dark){:root{--canvas:#0f1311;--surface:#171b19;--subtle:#1d2220;--ink:#edf2ee;--sec:#d3dcd6;--muted:#9eaaa3;--border:#2d3531;--brand:#4cc393;--cta-bg:#4cc393;--cta-ink:#0b1712;--warn-bg:#3a2c0a;--warn-ink:#f7ce6d;--warn-bd:#5a4717;--crit-bg:#3d1716;--crit-ink:#f7b2ad;--crit-bd:#6b2623;} }",
   ".e-body{background-color:var(--canvas)!important;color:var(--ink)!important;}",
   ".e-card{background-color:var(--surface)!important;border-color:var(--border)!important;border-top-color:#d03b3b!important;}",
   ".e-sub{background-color:var(--subtle)!important;border-color:var(--border)!important;}",
@@ -16,7 +16,7 @@ const HUB_EDITORIAL_CSS = [
   ".e-cta{background-color:var(--cta-bg)!important;color:var(--cta-ink)!important;}",
   ".e-pill-critical{background-color:var(--crit-bg)!important;color:var(--crit-ink)!important;border-color:var(--crit-bd)!important;}",
   ".e-pill-warning{background-color:var(--warn-bg)!important;color:var(--warn-ink)!important;border-color:var(--warn-bd)!important;}",
-  "@media only screen and (max-width:520px){.e-pad{padding:20px 16px!important;}.e-h1{font-size:20px!important;}.e-outer{padding:12px 6px!important;}.e-dl-key{width:96px!important;}}",
+  "@media only screen and (max-width:520px){.e-pad{padding:20px 16px!important;}.e-h1{font-size:20px!important;}.e-outer{padding:12px 6px!important;}.e-dl-key{width:96px!important;} }",
 ].join("");
 
 /**
@@ -35,7 +35,6 @@ export const ALERTMANAGER_EMAIL_TEMPLATE_RAW = [
   "{{- range $alerts -}}",
   '{{- if eq (index .Labels "severity") "critical" -}}{{- $hasCritical = true -}}{{- end -}}',
   "{{- end -}}",
-  "{{- if $isFallback -}}Fallback: {{- else if $hasCritical -}}Critical: {{- else -}}Warning: {{- end -}}",
   '{{- $lead := index .CommonLabels "alertname" -}}',
   "{{- if gt (len $alerts) 0 -}}",
   "{{- $first := index $alerts 0 -}}",
@@ -46,8 +45,7 @@ export const ALERTMANAGER_EMAIL_TEMPLATE_RAW = [
   "{{- end -}}",
   "{{- end -}}",
   '{{- if eq $lead "" -}}{{- $lead = "Homelab alert" -}}{{- end -}}',
-  "{{- $lead -}}",
-  "{{- if gt (len .Alerts.Firing) 1 }} (+{{ len (slice .Alerts.Firing 1) }} more){{- end -}}",
+  "{{- if $isFallback -}}Fallback: {{ else if $hasCritical -}}Critical: {{ else -}}Warning: {{ end }}{{ $lead }}{{ if gt (len .Alerts.Firing) 1 }} (+{{ len (slice .Alerts.Firing 1) }} more){{ end -}}",
   "{{- end }}",
   "",
   '{{ define "ops.email.detail_row" -}}',

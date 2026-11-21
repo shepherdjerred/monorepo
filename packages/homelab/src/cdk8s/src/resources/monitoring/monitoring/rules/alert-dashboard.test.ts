@@ -73,8 +73,14 @@ describe("AlertDashboardDown", () => {
       )?.rules ?? [];
     expect(rules.length).toBeGreaterThan(0);
     for (const rule of rules) {
-      expect(rule.annotations?.["summary"], rule.alert).toBeTruthy();
-      expect(rule.annotations?.["description"], rule.alert).toBeTruthy();
+      expect(
+        rule.annotations?.["summary"]?.trim().length ?? 0,
+        rule.alert,
+      ).toBeGreaterThan(0);
+      expect(
+        rule.annotations?.["description"]?.trim().length ?? 0,
+        rule.alert,
+      ).toBeGreaterThan(0);
       expect(rule.annotations?.["message"], rule.alert).toBeUndefined();
     }
   });

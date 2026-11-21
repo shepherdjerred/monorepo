@@ -15,7 +15,12 @@ import {
   extractSenderDisplayName,
   reportMailboxForType,
 } from "./mailbox.ts";
-import { escapeHtml, safeHttpUrl } from "./primitives.ts";
+import {
+  escapeHtml,
+  formatPacificShortTime,
+  formatPacificTimestamp,
+  safeHttpUrl,
+} from "./primitives.ts";
 import { renderEmailHtml } from "./render-html.ts";
 import { renderEmailText } from "./render-text.ts";
 
@@ -202,6 +207,14 @@ describe("alert comprehension and rendering", () => {
     );
 
     const trunc = buildAlertTruncationDocument(7);
-    expect(renderEmailHtml(trunc.document)).toContain("7");
+    const truncHtml = renderEmailHtml(trunc.document);
+    expect(truncHtml).toContain("7");
+    expect(truncHtml).not.toContain("}}");
+    expect(formatPacificTimestamp("2026-08-10T16:01:00.000Z")).toBe(
+      "Aug 10, 9:01 AM PDT",
+    );
+    expect(formatPacificShortTime("2026-11-21T03:45:00.000Z")).toBe(
+      "Nov 20 19:45",
+    );
   });
 });

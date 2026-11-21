@@ -14,7 +14,9 @@ describe("alerting control rules", () => {
     expect(rule?.annotations?.["summary"]).toBe(
       "Info-level alert suppression active",
     );
-    expect(rule?.annotations?.["description"]).toBeTruthy();
+    expect(rule?.annotations?.["description"]).toContain(
+      "suppresses info-level notifications",
+    );
     expect(rule?.annotations?.["message"]).toBeUndefined();
     expect(rule?.expr.value).toBe(INFO_INHIBITOR_EXPRESSION);
     expect(INFO_INHIBITOR_EXPRESSION).toContain(

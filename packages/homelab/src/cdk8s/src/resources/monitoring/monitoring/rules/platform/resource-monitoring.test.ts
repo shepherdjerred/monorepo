@@ -335,8 +335,10 @@ describe("feature flag provider readiness alert", () => {
       "(feature_flag_provider_ready == 0) and on (job, instance) feature_flag_provider_info",
     );
     expect(
-      alert?.annotations?.["description"] ?? alert?.annotations?.["message"],
-    ).toBeTruthy();
+      (
+        alert?.annotations?.["description"] ?? alert?.annotations?.["message"]
+      )?.trim().length ?? 0,
+    ).toBeGreaterThan(0);
   });
 });
 
@@ -355,8 +357,14 @@ describe("platform alert annotation contract", () => {
     for (const rule of alertRules) {
       const summary = rule.annotations?.["summary"];
       const description = rule.annotations?.["description"];
-      expect(summary, `${String(rule.alert)} summary`).toBeTruthy();
-      expect(description, `${String(rule.alert)} description`).toBeTruthy();
+      expect(
+        summary?.trim().length ?? 0,
+        `${String(rule.alert)} summary`,
+      ).toBeGreaterThan(0);
+      expect(
+        description?.trim().length ?? 0,
+        `${String(rule.alert)} description`,
+      ).toBeGreaterThan(0);
       expect(
         rule.annotations?.["message"],
         `${String(rule.alert)} message`,
