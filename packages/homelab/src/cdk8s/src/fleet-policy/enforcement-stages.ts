@@ -38,7 +38,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   home: "open",
   media: "open",
   "minecraft-shuxin": "enforced",
-  "minecraft-sjerred": "open",
+  "minecraft-sjerred": "enforced",
   "minecraft-tsmc": "open",
   "node-tuning": "open",
   phoenix: "enforced",
