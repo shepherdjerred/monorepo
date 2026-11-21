@@ -1,38 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
-import type { Persona } from "#testing/fixture-api/personas.ts";
-import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
 import {
-  accessibilityViolations,
   canvasColor,
   computedForm,
+  openAs,
+  violationDetails,
 } from "./support.ts";
 
-/** Opens `path` as a persona and waits for the shell to hold a page. */
-async function open(page: Page, persona: Persona, path: string) {
-  const base = test.info().project.use.baseURL;
-  if (base === undefined)
-    throw new Error("The Playwright project has no baseURL");
-  await page
-    .context()
-    .addCookies([{ name: PERSONA_COOKIE, value: persona, url: base }]);
-  await page.goto(path);
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-}
+/*
+ * The parts of the shell every screen has. What only a wide screen or only a
+ * phone has is in `shell.desktop.spec.ts` and `shell.phone.spec.ts`, which
+ * `playwright.config.ts` gives to the one project each belongs to.
+ */
 
 /** The address as the browser shows it, without the origin. */
 function address(page: Page): string {
   const url = new URL(page.url());
   return `${url.pathname}${url.search}${url.hash}`;
-}
-
-function onPhone(): boolean {
-  return test.info().project.name === "mobile";
-}
-
-/** WCAG 2.2 AA violations on the page as it stands, as `rule: selectors`. */
-async function violations(page: Page): Promise<string[]> {
-  const found = await accessibilityViolations(page);
-  return found.map((violation) => violation.detail);
 }
 
 async function themeColor(page: Page, scheme: "light" | "dark") {
@@ -46,142 +29,19 @@ async function themeColor(page: Page, scheme: "light" | "dark") {
 }
 
 test.describe("navigation", () => {
-  test("the sidebar moves between pages and marks the current one", async ({
-    page,
-  }) => {
-    test.skip(onPhone(), "A phone has the tab bar instead of the sidebar");
-    await open(page, "owner", "/discover");
-    const sidebar = page.getByRole("navigation", { name: "Main" });
-    await expect(sidebar.getByRole("link")).toHaveText([
-      "Discover",
-      "Library",
-      "My requests",
-      "Calendar",
-      "Watch history",
-      "Leaving soon",
-      "Removed",
-      "Manage",
-    ]);
-    await expect(
-      sidebar.getByRole("link", { name: "Discover" }),
-    ).toHaveAttribute("aria-current", "page");
-
-    await sidebar.getByRole("link", { name: "Library" }).click();
-    await expect(page).toHaveURL(/\/library$/u);
-    const heading = page.getByRole("heading", { level: 1, name: "Library" });
-    // Focus follows the navigation to the new page's heading.
-    await expect(heading).toBeFocused();
-    await expect(sidebar.locator('[aria-current="page"]')).toHaveText(
-      "Library",
-    );
-
-    // A page inside Manage keeps Manage marked.
-    await sidebar.getByRole("link", { name: "Manage" }).click();
-    await expect(page).toHaveURL(/\/manage\/household$/u);
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Household" }),
-    ).toBeFocused();
-    await expect(sidebar.locator('[aria-current="page"]')).toHaveText("Manage");
-    const manage = page.getByRole("navigation", { name: "Manage" });
-    await manage.getByRole("link", { name: "Quality" }).click();
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Quality" }),
-    ).toBeFocused();
-    await expect(manage.locator('[aria-current="page"]')).toHaveText("Quality");
-  });
-
   test("focus waits for the heading of a page that loads its title", async ({
     page,
   }) => {
-    await open(page, "member", "/library");
+    await openAs(page, "member", "/library");
     await page.locator("#main .media-link").first().click();
     await expect(page).toHaveURL(/\/media\//u);
     await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
   });
 
-  test("a phone has four tabs and a More sheet with the rest", async ({
+  test("a member who opens a Manage address is sent to Discover", async ({
     page,
   }) => {
-    test.skip(!onPhone(), "Wider screens have the sidebar");
-    await open(page, "owner", "/discover");
-    const tabs = page.getByRole("navigation", { name: "Main" });
-    await expect(tabs.getByRole("link")).toHaveText([
-      "Discover",
-      "Library",
-      "My requests",
-      "Calendar",
-    ]);
-    await tabs.getByRole("link", { name: "Library" }).click();
-    await expect(page).toHaveURL(/\/library$/u);
-    await expect(tabs.locator("[aria-current]")).toHaveText("Library");
-
-    const more = tabs.getByRole("button", { name: "More" });
-    const sheet = page.getByRole("dialog", { name: "More" });
-    await more.click();
-    await expect(sheet.getByRole("link")).toHaveText([
-      "Watch history",
-      "Leaving soon",
-      "Removed",
-      "Manage",
-    ]);
-
-    // Escape closes the sheet and focus returns to More.
-    await page.keyboard.press("Escape");
-    await expect(sheet).toBeHidden();
-    await expect(more).toBeFocused();
-
-    // So does a press on the backdrop, above the sheet.
-    await more.click();
-    await expect(sheet).toBeVisible();
-    await page.mouse.click(195, 80);
-    await expect(sheet).toBeHidden();
-
-    // Following a link closes it, and More stands for the page inside it.
-    await more.click();
-    await sheet.getByRole("link", { name: "Watch history" }).click();
-    await expect(page).toHaveURL(/\/history$/u);
-    await expect(sheet).toBeHidden();
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Watch history" }),
-    ).toBeFocused();
-    await expect(more).toHaveAttribute("aria-current", "true");
-  });
-
-  test("the tab bar never covers the end of a page", async ({ page }) => {
-    test.skip(!onPhone(), "Only a phone has the tab bar");
-    await open(page, "owner", "/library");
-    await page.waitForLoadState("networkidle");
-    await page.locator("html").evaluate((root) => {
-      root.scrollTop = root.scrollHeight;
-    });
-    const tabBar = await page
-      .getByRole("navigation", { name: "Main" })
-      .boundingBox();
-    const last = await page.locator("#main > :last-child").boundingBox();
-    if (tabBar === null || last === null) throw new Error("Nothing to measure");
-    expect(last.y + last.height).toBeLessThanOrEqual(tabBar.y);
-  });
-
-  test("only the owner is offered Manage, and only the owner can open it", async ({
-    page,
-  }) => {
-    await open(page, "member", "/library");
-    if (onPhone()) {
-      await page.getByRole("button", { name: "More", exact: true }).click();
-      const sheet = page.getByRole("dialog", { name: "More" });
-      await expect(sheet.getByRole("link")).toHaveText([
-        "Watch history",
-        "Leaving soon",
-        "Removed",
-      ]);
-      await page.keyboard.press("Escape");
-    } else {
-      await expect(
-        page
-          .getByRole("navigation", { name: "Main" })
-          .getByRole("link", { name: "Manage" }),
-      ).toHaveCount(0);
-    }
+    await openAs(page, "member", "/library");
     await page.goto("/manage/quality");
     await expect(page).toHaveURL(/\/discover$/u);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -192,7 +52,7 @@ test.describe("navigation", () => {
 
 test.describe("top bar", () => {
   test("search opens Discover with a linkable query", async ({ page }) => {
-    await open(page, "member", "/library");
+    await openAs(page, "member", "/library");
     const search = page.getByRole("searchbox", {
       name: "Search films and series",
     });
@@ -221,7 +81,7 @@ test.describe("top bar", () => {
   });
 
   test("the bell opens notifications", async ({ page }) => {
-    await open(page, "member", "/library");
+    await openAs(page, "member", "/library");
     const bell = page.getByRole("link", { name: "Notifications" });
     await bell.click();
     await expect(page).toHaveURL(/\/notifications$/u);
@@ -231,7 +91,7 @@ test.describe("top bar", () => {
   test("the account panel opens, closes, and returns focus", async ({
     page,
   }) => {
-    await open(page, "member", "/library");
+    await openAs(page, "member", "/library");
     const account = page.getByRole("button", { name: "Account" });
     const theme = page.getByRole("group", { name: "Theme" });
     await expect(theme).toBeHidden();
@@ -285,25 +145,17 @@ for (const scheme of ["light", "dark"] as const) {
     test.use({ colorScheme: scheme });
 
     // The route suite checks every page with the shell closed.
-    test("the open account panel and More sheet are accessible", async ({
-      page,
-    }) => {
-      await open(page, "owner", "/manage/quality");
+    test("the open account panel is accessible", async ({ page }) => {
+      await openAs(page, "owner", "/manage/quality");
       await page.getByRole("button", { name: "Account" }).click();
       await expect(page.getByRole("group", { name: "Theme" })).toBeVisible();
-      expect(await violations(page)).toEqual([]);
-      await page.keyboard.press("Escape");
-
-      if (!onPhone()) return;
-      await page.getByRole("button", { name: "More", exact: true }).click();
-      await expect(page.getByRole("dialog", { name: "More" })).toBeVisible();
-      expect(await violations(page)).toEqual([]);
+      expect(await violationDetails(page)).toEqual([]);
     });
 
     test(`pinning ${other} holds across a reload, and System gives it back`, async ({
       page,
     }) => {
-      await open(page, "member", "/library");
+      await openAs(page, "member", "/library");
       const canvas = {
         light: computedForm(await themeColor(page, "light")),
         dark: computedForm(await themeColor(page, "dark")),
@@ -375,7 +227,7 @@ test.describe("addresses that moved", () => {
 
   for (const [from, to] of OWNER_MOVES) {
     test(`the owner's ${from} opens ${to}`, async ({ page }) => {
-      await open(page, "owner", from);
+      await openAs(page, "owner", from);
       await expect.poll(() => address(page)).toBe(to);
     });
   }
@@ -385,7 +237,7 @@ test.describe("addresses that moved", () => {
   test("a redirected arrival leaves focus where the browser put it", async ({
     page,
   }) => {
-    await open(page, "member", "/");
+    await openAs(page, "member", "/");
     await expect.poll(() => address(page)).toBe("/discover");
     await expect(page.getByRole("heading", { level: 1 })).not.toBeFocused();
     await expect(page.locator("#main")).not.toBeFocused();
@@ -401,7 +253,7 @@ test.describe("addresses that moved", () => {
     "/manage/household",
   ]) {
     test(`a member's ${from} opens Discover`, async ({ page }) => {
-      await open(page, "member", from);
+      await openAs(page, "member", from);
       await expect.poll(() => address(page)).toBe("/discover");
     });
   }
@@ -416,7 +268,7 @@ test.describe("addresses that moved", () => {
 
   for (const kept of KEPT) {
     test(`${kept} is still its own page`, async ({ page }) => {
-      await open(page, "member", kept);
+      await openAs(page, "member", kept);
       await page.waitForLoadState("networkidle");
       expect(address(page)).toBe(kept);
     });

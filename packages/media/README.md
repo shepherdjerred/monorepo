@@ -534,8 +534,14 @@ included, that `e2e/browser/axe-baseline.ts` does not list. That baseline is
 empty and compared exactly; nothing may be added to it to make a new violation
 pass. Routes the fixture API cannot answer yet are listed in
 `e2e/browser/routes.ts`. `e2e/browser/shell.spec.ts` drives the shell itself:
-the sidebar, the phone tab bar and its More sheet, search, the account panel and
-theme, focus after a navigation, and every address that moved.
+search, the account panel and theme, focus after a navigation, and every address
+that moved.
+
+A spec runs in both projects, `desktop` and `mobile`, unless its name says which
+layout it is about: `*.desktop.spec.ts` (the sidebar) runs only in `desktop` and
+`*.phone.spec.ts` (the tab bar and its More sheet) only in `mobile`. Put a
+layout-specific test in one of those files instead of skipping it by viewport;
+the root quality ratchet rejects `test.skip`.
 
 The suite runs in Woodpecker's browser lane with the other Playwright targets,
 not in the `ci` or `extended` Vitest tiers.
