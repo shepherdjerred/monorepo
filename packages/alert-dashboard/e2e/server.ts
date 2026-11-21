@@ -23,6 +23,7 @@ import { fixedClock, systemClock } from "#shared/time";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import { volumeOpsIngest } from "#test-fixtures/ops-snapshot-volume";
 import { createOpsFixture } from "#test-fixtures/ops-services";
+import { promotionFixture } from "#test-fixtures/promotion";
 
 const alert = AlertDetailSchema.parse({
   id: `alert_${"a".repeat(32)}`,
@@ -315,4 +316,11 @@ const port = Number(
 if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) {
   throw new Error("ALERT_DASHBOARD_E2E_PORT must be a valid TCP port");
 }
-Bun.serve({ hostname: "127.0.0.1", port, fetch: app.fetch });
+Bun.serve({
+  hostname: "127.0.0.1",
+  port,
+  routes: {
+    "/api/v1/promotion": { GET: () => Response.json(promotionFixture) },
+  },
+  fetch: app.fetch,
+});

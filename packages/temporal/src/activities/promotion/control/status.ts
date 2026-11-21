@@ -9,6 +9,10 @@ import { promotionRunSummary } from "@shepherdjerred/ops-model/promotion/summary
 import { promotionHistoryTiming } from "@shepherdjerred/ops-model/promotion/timing.ts";
 import { promotionSourceActivity } from "@shepherdjerred/ops-model/promotion/activity.ts";
 import {
+  RedditOutreachOverviewSchema,
+  type RedditOutreachOverview,
+} from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
+import {
   PromotionStateSchema,
   initialPromotionState,
   promotionDispatchAt,
@@ -33,6 +37,33 @@ import {
 } from "./status-timing.ts";
 
 type Batch = z.infer<typeof PromotionBatchSchema>;
+type ReadRedditOutreach = (
+  store: PromotionStore,
+  now: number,
+) => Promise<RedditOutreachOverview>;
+
+async function readOutreachSafely(
+  read: ReadRedditOutreach | undefined,
+  store: PromotionStore,
+  now: number,
+): Promise<RedditOutreachOverview | undefined> {
+  if (read === undefined) return undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const deadline = new Promise<RedditOutreachOverview>((resolve) => {
+      timer = setTimeout(() => {
+        resolve({ status: "unavailable" });
+      }, 5000);
+    });
+    const overview = await Promise.race([read(store, now), deadline]);
+    return RedditOutreachOverviewSchema.parse(overview);
+  } catch {
+    return { status: "unavailable" };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function entryStatus(batch: Batch, entry: Batch["entries"][number]) {
   if (
     batch.interrupted === true &&
@@ -114,9 +145,11 @@ export async function readProductionPromotionStatus(
       states: PromotionState[],
       now: number,
     ) => Promise<PromotionPlanningObservation>;
+    readRedditOutreach?: ReadRedditOutreach;
   } = {},
 ) {
   const now = options.now ?? Date.now();
+  const outreach = readOutreachSafely(options.readRedditOutreach, store, now);
   const states = await readStates(store);
   const planning = await options.readPlanning?.(states, now);
   const batches = await readBatches(store);
@@ -242,6 +275,7 @@ export async function readProductionPromotionStatus(
     batches: presentation,
     lastRun: promotionRunSummary({ sources, batches: presentation, history }),
     spend,
+    redditOutreach: await outreach,
   });
   return { overview, history, evidence };
 }

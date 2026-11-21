@@ -23,8 +23,8 @@ const DailySchema = z.strictObject({
   reservations: z.record(z.string(), z.literal(true)),
 });
 
-function dailyReplyKey(now: Date) {
-  return `reddit-outreach/daily/${promotionSpendDay(now)}.json`;
+function dailyReplyKey(day: string) {
+  return `reddit-outreach/daily/${day}.json`;
 }
 
 export async function remainingRedditReplyAllowance(
@@ -32,11 +32,19 @@ export async function remainingRedditReplyAllowance(
   limit: number,
   now: Date,
 ) {
-  const current = await store.read(dailyReplyKey(now), DailySchema);
-  return Math.max(
-    0,
-    limit - Object.keys(current?.value.reservations ?? {}).length,
+  const reservations = await readRedditReplyReservations(
+    store,
+    promotionSpendDay(now),
   );
+  return Math.max(0, limit - reservations.length);
+}
+
+export async function readRedditReplyReservations(
+  store: PromotionStore,
+  day: string,
+) {
+  const current = await store.read(dailyReplyKey(day), DailySchema);
+  return Object.keys(current?.value.reservations ?? {});
 }
 
 export function redditReplyKey(postId: string) {
@@ -117,7 +125,7 @@ export async function reserveRedditReplyAllowance(
   now: Date,
 ): Promise<(() => Promise<void>) | null> {
   z.number().int().nonnegative().max(100).parse(maxRepliesPerDay);
-  const key = dailyReplyKey(now);
+  const key = dailyReplyKey(promotionSpendDay(now));
   for (let attempt = 0; attempt < 5; attempt++) {
     const current = await store.read(key, DailySchema);
     const reservations = current?.value.reservations ?? {};
