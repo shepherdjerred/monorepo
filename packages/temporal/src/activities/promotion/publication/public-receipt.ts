@@ -15,6 +15,22 @@ export function publicRedditReceiptUrl(address: string) {
   return url.href;
 }
 
+async function readRenderedRedditComment(browser: PromotionBrowser) {
+  const deadline = Date.now() + 15_000;
+  for (;;) {
+    try {
+      return await browser.readRedditCommentReceipt();
+    } catch (error) {
+      if (
+        !String(error).includes("selector matched no element") ||
+        Date.now() >= deadline
+      )
+        throw error;
+      await Bun.sleep(250);
+    }
+  }
+}
+
 /** A new browser profile has no account session: author-only visibility is insufficient. */
 export async function capturePublicRedditReceipt(input: {
   target: PromotionTarget;
@@ -24,6 +40,7 @@ export async function capturePublicRedditReceipt(input: {
   signal: AbortSignal;
   saveEvidence: (bytes: Uint8Array) => Promise<string>;
   expectedQuote: string;
+  beforeRedditNavigation?: (() => Promise<void>) | undefined;
 }) {
   const browser = new PromotionBrowser(
     input.target,
@@ -32,20 +49,16 @@ export async function capturePublicRedditReceipt(input: {
     {
       signal: input.signal,
       temporaryProfile: true,
+      ...(input.beforeRedditNavigation === undefined
+        ? {}
+        : { beforeRedditNavigation: input.beforeRedditNavigation }),
     },
   );
   try {
     const publicUrl = publicRedditReceiptUrl(input.url);
-    await browser.open(
-      input.target.action === "reply"
-        ? publicUrl.replace(
-            "https://www.reddit.com/",
-            "https://old.reddit.com/",
-          )
-        : publicUrl,
-    );
+    await browser.open(publicUrl);
     if (input.target.action === "reply") {
-      const page = await browser.readRedditCommentReceipt();
+      const page = await readRenderedRedditComment(browser);
       if (!promotionObservationText(page.text).includes(input.expectedQuote))
         throw new Error(
           "Anonymous Reddit reply verification did not render the selected comment",

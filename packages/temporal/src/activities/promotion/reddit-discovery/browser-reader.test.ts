@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   assertRedditBrowserAccess,
+  readRedditCommentReceipt,
   readRedditFeedPage,
   readRedditRules,
   RedditBrowserReadError,
@@ -42,6 +43,39 @@ const post = {
   archived: false,
   over18: false,
 };
+
+it("scans the exact public comment body before reading modern receipt metadata", async () => {
+  const url =
+    "https://www.reddit.com/r/MinecraftServer/comments/abc123/request/xyz789/";
+  const comment = {
+    id: "xyz789",
+    author: "the_storm_mc",
+    body: "Our server supports Java and Bedrock.",
+    parentId: "t3_abc123",
+    createdAt: "2026-11-20T17:15:00Z",
+  };
+  const events: string[] = [];
+  const reader: RedditPageReader = {
+    currentUrl: async () => url,
+    snapshot: async ({ selector }) => {
+      events.push(selector);
+      return { url, text: comment.body, publishedAt: null };
+    },
+    evaluate: async () => {
+      events.push("read metadata");
+      return comment;
+    },
+  };
+  await expect(readRedditCommentReceipt(reader)).resolves.toMatchObject({
+    url,
+    redditComment: comment,
+    publishedAt: comment.createdAt,
+  });
+  expect(events).toEqual([
+    'shreddit-comment[thingid="t1_xyz789"] > [slot="comment"]',
+    "read metadata",
+  ]);
+});
 
 function fixture(
   options: {

@@ -47,6 +47,8 @@ import {
 } from "./reddit-outreach/sweep-audit.ts";
 
 const OUTREACH_SWEEP_BUDGET_MS = 13 * 60_000;
+// Initial rules/thread checks, composer open, two rules/thread rechecks, receipt.
+const MIN_REPLY_PAGE_OPENS = 8;
 type SweepInput = {
   settings: RedditOutreachSettings;
   config: { model: string; dailySpendUsd: number };
@@ -439,7 +441,7 @@ async function publishCandidate(
   },
 ) {
   const { browser, store, signal, config, settings, summary } = services;
-  if (browser.remainingNavigations() < 4)
+  if (browser.remainingNavigations() < MIN_REPLY_PAGE_OPENS)
     throw new RedditNavigationBudget(
       "Insufficient Reddit page-open budget for posting and verification",
     );

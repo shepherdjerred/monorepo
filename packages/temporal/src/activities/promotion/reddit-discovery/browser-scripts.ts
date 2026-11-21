@@ -101,6 +101,17 @@ export const redditCommentReceiptScript = `(() => {
   const parts = location.pathname.split('/').filter(Boolean);
   const id = parts[5];
   if (!id || !/^[a-z0-9]+$/.test(id)) return null;
+  if (location.hostname === 'www.reddit.com') {
+    const comment = document.querySelector('shreddit-comment[thingid="t1_' + id + '"]');
+    if (!comment) return null;
+    return {
+      id,
+      author: comment.getAttribute('author'),
+      body: comment.querySelector(':scope > [slot="comment"]')?.textContent?.trim(),
+      createdAt: comment.getAttribute('created-timestamp') || comment.querySelector(':scope time[datetime]')?.getAttribute('datetime'),
+      parentId: comment.getAttribute('parentid') || (comment.getAttribute('depth') === '0' ? comment.getAttribute('postid') : null),
+    };
+  }
   const comment = document.querySelector('.thing.comment[data-fullname="t1_' + id + '"]');
   if (!comment) return null;
   const entry = comment.querySelector(':scope > .entry');

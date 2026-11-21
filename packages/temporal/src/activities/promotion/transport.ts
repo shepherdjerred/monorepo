@@ -131,6 +131,7 @@ export function promotionTransport(input: {
           signal: input.signal,
           saveEvidence: save,
           expectedQuote: expectedReceipt.quote,
+          beforeRedditNavigation: input.beforeRedditNavigation,
         });
       }
       const page = await browser.receiptSnapshot();
