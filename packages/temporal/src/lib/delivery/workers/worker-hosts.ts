@@ -38,6 +38,10 @@ function family(pool: WorkerPoolSnapshot) {
     : `${pool.target}-workflows`;
 }
 
+function isTerminalWorkerPod(pod: z.infer<typeof Pod>): boolean {
+  return pod.status.phase === "Succeeded" || pod.status.phase === "Failed";
+}
+
 export function requireLegacyWorkerCoverage(
   inputs: unknown[],
   pool: WorkerPoolSnapshot,
@@ -131,10 +135,12 @@ export function verifyWorkerPoolPods(
     );
     if (worker.replicas === 0) {
       if (
-        pods.some((pod) =>
-          pod.spec.containers.some((container) =>
-            container.image.endsWith(`@${worker.digest}`),
-          ),
+        pods.some(
+          (pod) =>
+            !isTerminalWorkerPod(pod) &&
+            pod.spec.containers.some((container) =>
+              container.image.endsWith(`@${worker.digest}`),
+            ),
         )
       )
         throw new Error(
