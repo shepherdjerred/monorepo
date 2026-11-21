@@ -89,7 +89,7 @@
                             store.upcomingSelectedDate = day
                         }
                     }
-                    .onChange(of: store.upcomingSelectedDate) {
+                    .onChange(of: store.upcomingSelectedDate, initial: true) {
                         let day = store.upcomingSelectedDate ?? store.calendar.today
                         if day == scrolledDay {
                             scrolledDay = nil

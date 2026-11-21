@@ -267,6 +267,7 @@ internal struct FacetSchedulePopoverView: View {
             patch.dueTimezone = .set(calendar.timeZone.identifier)
         } else if !hasTime {
             patch.dueDatetime = .clear
+            patch.dueDate = .set(civil)
             patch.dueTimezone = .set(store.calendar.timeZone.identifier)
         }
         if task.recurrence_rule != rule {
