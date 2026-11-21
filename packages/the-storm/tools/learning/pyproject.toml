@@ -1,7 +1,7 @@
 [project]
 name = "rwf-learning"
 version = "0.1.0"
-requires-python = ">=3.13,<3.15"
+requires-python = ">=3.13,<3.16"
 dependencies = ["numpy>=2.2,<3", "torch>=2.9,<3", "onnx>=1.19,<2", "onnxruntime>=1.23,<2", "onnxscript>=0.5,<1"]
 
 [dependency-groups]

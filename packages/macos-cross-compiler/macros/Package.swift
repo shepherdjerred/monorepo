@@ -25,7 +25,7 @@ let package = Package(
   name: "AppleMacros",
   platforms: [.macOS(.v15)],
   dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "603.0.2")
+    .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "604.0.0")
   ],
   targets: [
     // swift-syntax resolves a macro by matching `String(reflecting: type)`
