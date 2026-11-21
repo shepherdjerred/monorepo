@@ -119,7 +119,7 @@ final class LayeredPopulation extends BlockPopulator {
                       v.setVillagerType(villagerType(slice, p));
                       if (Math.floorMod(SkyRandom.hash(p, landscape.seed() + 2879), 7) == 0)
                         v.setBaby();
-                      v.setRemoveWhenFarAway(false);
+                      v.setPersistenceRequired(true);
                     });
         case LOOT_MINECART ->
             slice
