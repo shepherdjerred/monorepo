@@ -25,7 +25,13 @@ async function prepareBoard(page: Page, title: string) {
     name: `Move ${identifier ?? ""}`,
     exact: true,
   });
-  await handle.scrollIntoViewIfNeeded();
+  // The mobile bottom nav is fixed over the viewport's lower edge. The
+  // minimum scroll that marks the handle "in view" leaves that handle
+  // underneath the nav, so a touch there hits the nav and the card never
+  // starts dragging. Center it in the scrollport, above the nav.
+  await handle.evaluate((element) => {
+    element.scrollIntoView({ block: "center", inline: "center" });
+  });
   return { card, target, handle };
 }
 
@@ -58,12 +64,21 @@ test("board also supports desktop keyboard and mobile long-press touch", async (
   } else {
     const origin = await handle.boundingBox();
     if (origin === null) throw new Error("Touch handle is not visible");
+    const point = {
+      x: origin.x + origin.width / 2,
+      y: origin.y + origin.height / 2,
+    };
+    const onHandle = await page.evaluate(({ x, y }) => {
+      const hit = globalThis.document.elementFromPoint(x, y);
+      return hit !== null && hit.closest(".drag-handle") !== null;
+    }, point);
+    if (!onHandle) {
+      throw new Error("Touch point is not on the move handle");
+    }
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("Input.dispatchTouchEvent", {
       type: "touchStart",
-      touchPoints: [
-        { x: origin.x + origin.width / 2, y: origin.y + origin.height / 2 },
-      ],
+      touchPoints: [point],
     });
     await expect(card).toHaveClass(/dragging/u);
     await cdp.send("Input.dispatchTouchEvent", {
