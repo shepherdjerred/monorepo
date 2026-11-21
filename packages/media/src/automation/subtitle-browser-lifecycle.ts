@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PinchTabSubtitleBrowser } from "#integrations/browser-subtitles.ts";
+import { SubtitleBrowserCredentialSchema } from "#integrations/subtitle-browser-profile.ts";
 import { IntegrationError } from "#integrations/http.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { subtitleCredential } from "./subtitle-sources.ts";
@@ -24,9 +25,9 @@ export const SubtitleBrowserStateSchema = z.object({
 export type SubtitleBrowserState = z.infer<typeof SubtitleBrowserStateSchema>;
 
 export async function subtitleBrowser(context: BrowserContext) {
-  const credential = z
-    .object({ baseUrl: z.url(), token: z.string(), instanceId: z.string() })
-    .parse(await subtitleCredential(context, "subhd"));
+  const credential = SubtitleBrowserCredentialSchema.parse(
+    await subtitleCredential(context, "subhd"),
+  );
   return new PinchTabSubtitleBrowser(credential);
 }
 

@@ -66,16 +66,17 @@ export async function fromSubhd(
     );
     if (candidates.length !== 1 || candidates[0] === undefined) return null;
     const candidate = candidates[0];
-    state = {
+    const opening: SubtitleBrowserState = {
       tabId: null,
       subtitleId: candidate.id,
       phase: "opening",
       description: `${candidate.provenance} ${candidate.release}`,
       binding,
     };
-    await saveBrowserState(context, input.operationId, state);
-    const tabId = await browser.openSubhd(candidate.id);
-    state = { ...state, tabId, phase: "prepare" };
+    const tabId = await browser.openSubhd(candidate.id, undefined, async () => {
+      await saveBrowserState(context, input.operationId, opening);
+    });
+    state = { ...opening, tabId, phase: "prepare" };
     try {
       await saveBrowserState(context, input.operationId, state);
     } catch (error) {

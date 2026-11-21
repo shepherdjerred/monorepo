@@ -10,6 +10,10 @@ import {
 import { boundedBytes, sameOriginUrl } from "./providers.ts";
 import { isMachineLabelled } from "./subtitle-validation.ts";
 import { allowedSubtitleUrl } from "./subtitle-providers.ts";
+import {
+  resolveSubtitleBrowserInstance,
+  type SubtitleBrowserCredential,
+} from "./subtitle-browser-profile.ts";
 
 export type SubtitlePageCandidate = {
   id: string;
@@ -108,23 +112,29 @@ function subhdProvenance(text: string): SubtitlePageCandidate["provenance"] {
   return text.includes("其他来源") ? "other" : "unknown";
 }
 
-/** Persistent-profile instance is provisioned separately. Browser cookies/tickets never leave it. */
+/** Browser cookies and tickets remain within the dedicated browser profile. */
 export class PinchTabSubtitleBrowser {
   constructor(
-    private readonly config: {
-      baseUrl: string;
-      token: string;
-      instanceId: string;
-    },
+    private readonly config: SubtitleBrowserCredential,
     private readonly transport: FetchTransport = fetch,
   ) {}
 
-  async openSubhd(subtitleId: string, signal?: AbortSignal): Promise<string> {
+  async openSubhd(
+    subtitleId: string,
+    signal?: AbortSignal,
+    beforeOpen?: () => Promise<void>,
+  ): Promise<string> {
     z.string()
       .regex(/^[a-z\d]+$/iu)
       .parse(subtitleId);
+    const instanceId = await resolveSubtitleBrowserInstance(
+      this.config,
+      this.transport,
+      signal,
+    );
+    await beforeOpen?.();
     const result = await this.post(
-      `instances/${encodeURIComponent(this.config.instanceId)}/tabs/open`,
+      `instances/${encodeURIComponent(instanceId)}/tabs/open`,
       { url: `https://subhd.tv/a/${subtitleId}` },
       signal,
     );

@@ -33,7 +33,16 @@ async function fixture() {
     language: "zh-Hans",
   };
   const browser = {
-    openSubhd: vi.fn(async () => "owned-tab"),
+    openSubhd: vi.fn(
+      async (
+        _subtitleId: string,
+        _signal?: AbortSignal,
+        beforeOpen?: () => Promise<void>,
+      ) => {
+        await beforeOpen?.();
+        return "owned-tab";
+      },
+    ),
     prepareSubhd: vi.fn(
       async (): Promise<"loading" | "prepared"> => "prepared",
     ),
@@ -138,8 +147,11 @@ test("terminal cancellation closes a pending tab; failed close remains retriable
 });
 test("lost tab creation never blindly creates another browser tab", async () => {
   const item = await fixture();
-  item.browser.openSubhd.mockRejectedValue(
-    new IntegrationError("subtitle-browser", "outcome-unknown"),
+  item.browser.openSubhd.mockImplementation(
+    async (_subtitleId, _signal, beforeOpen) => {
+      await beforeOpen?.();
+      throw new IntegrationError("subtitle-browser", "outcome-unknown");
+    },
   );
   await expect(fromSubhd(item.context, item.input, item)).rejects.toMatchObject(
     { kind: "outcome-unknown" },
@@ -159,4 +171,26 @@ test("lost tab creation never blindly creates another browser tab", async () => 
     { kind: "outcome-unknown" },
   );
   expect(item.browser.openSubhd).toHaveBeenCalledTimes(1);
+});
+
+test("profile startup failure leaves the tab journal clear and allows a later lookup", async () => {
+  const item = await fixture();
+  item.browser.openSubhd.mockRejectedValueOnce(
+    new IntegrationError("subtitle-browser", "unavailable"),
+  );
+  await expect(fromSubhd(item.context, item.input, item)).rejects.toMatchObject(
+    { kind: "unavailable" },
+  );
+  expect(
+    await readBrowserState(item.context, item.input.operationId),
+  ).toBeUndefined();
+  await expect(fromSubhd(item.context, item.input, item)).resolves.toEqual({
+    pending: true,
+  });
+  expect(
+    await readBrowserState(item.context, item.input.operationId),
+  ).toMatchObject({
+    phase: "resolve",
+    tabId: "owned-tab",
+  });
 });

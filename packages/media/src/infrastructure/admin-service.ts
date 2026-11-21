@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import type { CredentialCipher } from "#application/security.ts";
+import { SubtitleBrowserCredentialSchema } from "#integrations/subtitle-browser-profile.ts";
 import {
   AdminProviderIdSchema,
   ProviderListSchema,
@@ -67,22 +68,7 @@ const credentials: Partial<
     })
     .strict(),
   assrt: z.object({ token: secret }).strict(),
-  subhd: z
-    .object({
-      baseUrl: z.url().refine((value) => {
-        const url = new URL(value);
-        return (
-          ["http:", "https:"].includes(url.protocol) &&
-          url.username === "" &&
-          url.password === "" &&
-          url.search === "" &&
-          url.hash === ""
-        );
-      }),
-      token: secret,
-      instanceId: secret,
-    })
-    .strict(),
+  subhd: SubtitleBrowserCredentialSchema,
 };
 
 function validateProvider(
