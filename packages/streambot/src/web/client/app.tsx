@@ -10,6 +10,7 @@ import { LivePage } from "./live/live-page.tsx";
 import { BrowsePage } from "./music/browse-page.tsx";
 import { PlaylistPage } from "./playlists/playlist-page.tsx";
 import { PlaylistsPage } from "./playlists/playlists-page.tsx";
+import { signInReturnTo } from "./playlists/playlist-model.ts";
 import { Rail } from "./room/rail.tsx";
 import { RemoteProvider, type Me } from "./remote.tsx";
 import { Results } from "./search/results.tsx";
@@ -48,12 +49,12 @@ function usePageTitle(query: string) {
 }
 
 function SignIn() {
-  const { pathname } = useLocation();
-  // Only the path: the query can hold search text, and `returnTo` travels to Discord in the
-  // OAuth `state`.
+  const { pathname, search } = useLocation();
   const href =
     "/api/auth/discord/start?" +
-    new URLSearchParams({ returnTo: pathname }).toString();
+    new URLSearchParams({
+      returnTo: signInReturnTo(pathname, search),
+    }).toString();
   return (
     <main className="welcome">
       <h1 className="page-heading">Streambot</h1>
