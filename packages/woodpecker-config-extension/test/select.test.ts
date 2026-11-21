@@ -602,20 +602,32 @@ describe("selected lane contracts", () => {
       "tofu-validate",
     );
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
-    const commands =
-      steps.find((s) => s.key === "tofu-validate")?.commands ?? [];
+    const validateStep = steps.find((s) => s.key === "tofu-validate");
+    const commands = validateStep?.commands ?? [];
     const generate = commands.indexOf(
       "bun --no-install run --cwd packages/homelab-cdktn generate",
     );
     const check = commands.indexOf(
       "bun --no-install run --cwd packages/homelab-cdktn build",
     );
+    const mktempCache = commands.findIndex((command) =>
+      command.includes("tofu-plugin-cache.XXXXXXXX"),
+    );
+    const exportCache = commands.findIndex((command) =>
+      command.includes("TOFU_VALIDATION_PLUGIN_CACHE_DIR"),
+    );
     expect(generate).toBeGreaterThan(-1);
     expect(check).toBeGreaterThan(generate);
-    // Binding generation must not write the flock-guarded plugin cache.
-    expect(check).toBeLessThan(
-      commands.findIndex((command) => command.includes("TF_PLUGIN_CACHE_DIR")),
+    // Binding generation must complete before the per-run validation plugin cache is exported.
+    expect(mktempCache).toBeGreaterThan(check);
+    expect(exportCache).toBeGreaterThan(mktempCache);
+    expect(commands.join("\n")).toContain(
+      "trap 'rm -rf \"$plugin_cache\"' EXIT",
     );
+    expect(commands.join("\n")).not.toContain("flock");
+    expect(
+      (validateStep?.volumes ?? []).map((volume) => volume.claim),
+    ).not.toContain("woodpecker-tofu-plugin-cache");
   });
 
   test("every OpenTofu stack directory is validated, including the locally built provider's", () => {

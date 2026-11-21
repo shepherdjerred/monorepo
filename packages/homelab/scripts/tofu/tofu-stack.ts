@@ -50,6 +50,7 @@ const AMBIENT_ENV_ALLOWLIST = [
   "TF_IN_AUTOMATION",
   "TF_PLUGIN_CACHE_DIR",
   "TMPDIR",
+  "TOFU_VALIDATION_PLUGIN_CACHE_DIR",
   "USER",
 ] as const;
 
@@ -71,6 +72,7 @@ export function buildTofuEnvironment(
 ): Record<string, string> {
   const definition = STACK_MANIFEST[stack];
   const env = ambientEnvironment();
+  delete env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"];
   for (const { source, target } of [
     ...STATE_CREDENTIALS,
     ...definition.credentials,
@@ -156,15 +158,27 @@ async function temporaryDirectory(
   return path;
 }
 
-async function validationEnvironment(definition: StackDefinition): Promise<{
+export async function validationEnvironment(
+  definition: StackDefinition,
+): Promise<{
   env: Record<string, string>;
   dataRoot: string;
 }> {
   const env = ambientEnvironment();
-  // PR validation is already isolated by TF_DATA_DIR. Do not reuse the shared
-  // persistent provider cache here: a stale or partially-written cached
-  // package must not turn a read-only schema check into a false failure.
+  // PR validation is already isolated by TF_DATA_DIR. Never reuse an ambient
+  // persistent provider cache across PR boundaries; only accept an explicit
+  // per-run validation cache directory for registry-backed stacks whose
+  // committed lockfiles carry h1: hashes.
   delete env["TF_PLUGIN_CACHE_DIR"];
+  const validationPluginCacheDir = env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"];
+  delete env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"];
+  if (
+    validationPluginCacheDir !== undefined &&
+    validationPluginCacheDir !== "" &&
+    definition.localProvider === undefined
+  ) {
+    env["TF_PLUGIN_CACHE_DIR"] = validationPluginCacheDir;
+  }
   const dataRoot = await temporaryDirectory("tofu-validation", env);
   env["TF_DATA_DIR"] = dataRoot;
   if (definition.encrypted === true) {

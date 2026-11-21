@@ -18,6 +18,7 @@ export type ReleasePleaseRunnerOptions = {
   readonly targetBranch: string;
   readonly resolveTarget: () => Promise<ReleasePleaseTarget>;
   readonly canUpdateDraft?: () => Promise<boolean>;
+  readonly gitRemoteUrl?: string;
 };
 
 export type ReleasePleaseRunnerResult = {
@@ -82,10 +83,21 @@ function applyExcludedPaths(
 }
 
 async function runGit(cwd: string, args: readonly string[]): Promise<void> {
-  const child = Bun.spawn(["git", ...args], { cwd });
-  const exitCode = await child.exited;
+  const child = Bun.spawn(["git", ...args], {
+    cwd,
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "pipe",
+  });
+  const [stderr, exitCode] = await Promise.all([
+    new Response(child.stderr).text(),
+    child.exited,
+  ]);
   if (exitCode !== 0) {
-    throw new Error(`git ${args.join(" ")} failed with exit code ${exitCode}`);
+    const detail = stderr.trim();
+    throw new Error(
+      `git ${args.join(" ")} failed with exit code ${String(exitCode)}${detail === "" ? "" : `: ${detail}`}`,
+    );
   }
 }
 
@@ -155,25 +167,167 @@ export function validateReleaseCandidatePaths(
   }
 }
 
+function isGitHubRepositoryUrl(repoUrl: string): boolean {
+  return new URL(repoUrl).hostname === "github.com";
+}
+
+function gitOriginUrl(
+  options: ReleasePleaseRunnerOptions,
+  repository: { readonly owner: string; readonly repo: string },
+): string {
+  if (options.gitRemoteUrl !== undefined) {
+    return options.gitRemoteUrl;
+  }
+  if (new URL(options.repoUrl).protocol === "file:") {
+    return options.repoUrl;
+  }
+  return `https://github.com/${repository.owner}/${repository.repo}.git`;
+}
+
+export async function initializePartialClone(
+  repositoryPath: string,
+  remoteUrl: string,
+  targetBranch: string,
+): Promise<void> {
+  await runGit(repositoryPath, ["init", "--quiet"]);
+  await runGit(repositoryPath, ["remote", "add", "origin", remoteUrl]);
+  await runGit(repositoryPath, ["config", "remote.origin.promisor", "true"]);
+  await runGit(repositoryPath, [
+    "config",
+    "remote.origin.partialclonefilter",
+    "blob:none",
+  ]);
+  await runGit(repositoryPath, [
+    "fetch",
+    "--filter=blob:none",
+    "--no-tags",
+    "origin",
+    `+refs/heads/${targetBranch}:refs/remotes/origin/${targetBranch}`,
+  ]);
+  await runGit(repositoryPath, [
+    "checkout",
+    "-B",
+    targetBranch,
+    `refs/remotes/origin/${targetBranch}`,
+  ]);
+}
+
+export type FetchLike = (
+  input: string,
+  init?: RequestInit,
+) => Promise<Response>;
+
+const PENDING_RELEASE_LABEL = "autorelease: pending";
+const CLOSED_PR_PAGE_SIZE = 100;
+// Matches release-please's own Manifest.findMergedReleasePullRequests() scan
+// bound (`pullRequestIterator(targetBranch, "MERGED", 200, false)`), while
+// reading GitHub's primary pulls store instead of the eventually-consistent,
+// 30-req/min Search API.
+const CLOSED_PR_MAX_PAGES = 2;
+
+function isMergedPendingReleasePullRequest(item: unknown): boolean {
+  if (typeof item !== "object" || item === null || Array.isArray(item)) {
+    throw new Error(
+      "GitHub returned an invalid pull request entry when checking release pull requests",
+    );
+  }
+  const fields = new Map(Object.entries(item));
+  const mergedAt = fields.get("merged_at");
+  if (mergedAt !== null && typeof mergedAt !== "string") {
+    throw new Error(
+      "GitHub returned an invalid merged_at field when checking release pull requests",
+    );
+  }
+  const labels = fields.get("labels");
+  if (!Array.isArray(labels)) {
+    throw new Error(
+      "GitHub returned an invalid labels list when checking release pull requests",
+    );
+  }
+  const hasPendingLabel = labels.some((label) => {
+    if (typeof label !== "object" || label === null || Array.isArray(label)) {
+      throw new Error(
+        "GitHub returned an invalid label entry when checking release pull requests",
+      );
+    }
+    const name = new Map(Object.entries(label)).get("name");
+    if (typeof name !== "string") {
+      throw new Error(
+        "GitHub returned a label without a string name when checking release pull requests",
+      );
+    }
+    return name === PENDING_RELEASE_LABEL;
+  });
+  return typeof mergedAt === "string" && mergedAt !== "" && hasPendingLabel;
+}
+
+export async function hasMergedPendingReleasePullRequest(
+  repository: { readonly owner: string; readonly repo: string },
+  token: string,
+  targetBranch: string,
+  fetchImpl?: FetchLike,
+): Promise<boolean> {
+  const fetcher = fetchImpl ?? globalThis.fetch;
+  for (let page = 1; page <= CLOSED_PR_MAX_PAGES; page += 1) {
+    const response = await fetcher(
+      `https://api.github.com/repos/${repository.owner}/${repository.repo}/pulls?state=closed&base=${encodeURIComponent(targetBranch)}&sort=updated&direction=desc&per_page=${String(CLOSED_PR_PAGE_SIZE)}&page=${String(page)}`,
+      {
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${token}`,
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      },
+    );
+    if (!response.ok) {
+      throw new Error(
+        `Could not query merged release pull requests on GitHub (${String(response.status)} ${response.statusText})`,
+      );
+    }
+    const payload: unknown = await response.json();
+    if (!Array.isArray(payload)) {
+      throw new Error(
+        "GitHub returned a non-array pulls response for merged release pull requests",
+      );
+    }
+    for (const item of payload) {
+      if (isMergedPendingReleasePullRequest(item)) {
+        return true;
+      }
+    }
+    if (payload.length < CLOSED_PR_PAGE_SIZE) {
+      return false;
+    }
+  }
+  return false;
+}
+
 async function createManifest(
   options: ReleasePleaseRunnerOptions,
+  preResolvedTarget?: ReleasePleaseTarget,
 ): Promise<CreatedManifest> {
   const repository = repositoryParts(options.repoUrl);
   const localRepositoryPath = await mkdtemp(
     path.join(tmpdir(), "release-please-"),
   );
   try {
+    await initializePartialClone(
+      localRepositoryPath,
+      gitOriginUrl(options, repository),
+      options.targetBranch,
+    );
     const github = await LocalGitHub.create({
       ...repository,
       token: options.token,
       defaultBranch: options.targetBranch,
       localRepoPath: localRepositoryPath,
     });
-    // Cloning may take minutes. Only bind eligibility and the revision after
-    // it finishes, then fetch that exact commit if main advanced during cloning.
-    const target = await options.resolveTarget();
+    // When not pre-resolved (release-pr), bind eligibility and the revision
+    // after cloning finishes, then fetch that exact commit if main advanced.
+    const target = preResolvedTarget ?? (await options.resolveTarget());
     await runGit(localRepositoryPath, [
       "fetch",
+      "--filter=blob:none",
       "--no-tags",
       "origin",
       target.targetBranchSha,
@@ -282,28 +436,49 @@ async function createPinnedPullRequests(
 export async function runReleasePlease(
   options: ReleasePleaseRunnerOptions,
 ): Promise<ReleasePleaseRunnerResult> {
-  const created = await createManifest(options);
-  try {
-    if (options.phase === "release-pr") {
+  if (options.phase === "github-release") {
+    const target = await options.resolveTarget();
+    await assertTargetBranchSha(options, target.targetBranchSha);
+    if (isGitHubRepositoryUrl(options.repoUrl)) {
+      const repository = repositoryParts(options.repoUrl);
+      const hasPending = await hasMergedPendingReleasePullRequest(
+        repository,
+        options.token,
+        options.targetBranch,
+      );
+      if (!hasPending) {
+        console.log(
+          `No merged autorelease: pending pull requests on ${options.targetBranch}; skipping local clone`,
+        );
+        return { phase: "github-release", count: 0 };
+      }
+    }
+    const created = await createManifest(options, target);
+    try {
       await assertTargetBranchSha(options, created.target.targetBranchSha);
-      const pullRequests = await createPinnedPullRequests(
+      const releases = await createValidatedReleases(
         created.manifest,
-        options.canUpdateDraft,
+        created.target.excludedPaths,
       );
       await assertTargetBranchSha(options, created.target.targetBranchSha);
-      return {
-        phase: options.phase,
-        count: pullRequests.filter(Boolean).length,
-      };
+      return { phase: options.phase, count: releases.filter(Boolean).length };
+    } finally {
+      await created.cleanup();
     }
+  }
 
+  const created = await createManifest(options);
+  try {
     await assertTargetBranchSha(options, created.target.targetBranchSha);
-    const releases = await createValidatedReleases(
+    const pullRequests = await createPinnedPullRequests(
       created.manifest,
-      created.target.excludedPaths,
+      options.canUpdateDraft,
     );
     await assertTargetBranchSha(options, created.target.targetBranchSha);
-    return { phase: options.phase, count: releases.filter(Boolean).length };
+    return {
+      phase: options.phase,
+      count: pullRequests.filter(Boolean).length,
+    };
   } finally {
     await created.cleanup();
   }
