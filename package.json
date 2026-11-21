@@ -239,7 +239,8 @@
     "sherpa-onnx-win-x64": "1.13.8",
     "socket.io-parser": "4.2.7",
     "tmp": "0.2.7",
-    "typescript-eslint": "8.71.1"
+    "typescript-eslint": "8.71.1",
+    "effect": "3.22.1"
   },
   "trustedDependencies": [
     "@lng2004/node-datachannel",
