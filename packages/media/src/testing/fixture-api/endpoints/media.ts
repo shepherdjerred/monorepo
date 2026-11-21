@@ -1,4 +1,7 @@
-import { memberDetail } from "#infrastructure/visibility/member-detail.ts";
+import {
+  memberDetail,
+  memberMovieTarget,
+} from "#infrastructure/visibility/member-detail.ts";
 import { MediaDetailSchema, ReleaseListSchema } from "#shared/api.ts";
 import {
   DEFAULT_TARGET_BATCH_LIMIT,
@@ -164,9 +167,14 @@ export const MEDIA_ENDPOINTS: readonly FixtureEndpoint[] = [
     respond: (request) => {
       const resolved = resolveMovie(request.param("id"));
       const edition = editionOf(request);
-      return resolved === null || edition === null
-        ? null
-        : movieTarget(resolved, edition, request.persona);
+      if (resolved === null || edition === null) {
+        return null;
+      }
+      const target = movieTarget(resolved, edition, request.persona);
+      // Anyone but the owner reads the server's own member projection.
+      return request.persona === "owner"
+        ? target
+        : memberMovieTarget(MovieTargetContextV4Schema.parse(target));
     },
     belongsToRequest: (context, request) =>
       context.scope.mediaId === request.param("id") &&

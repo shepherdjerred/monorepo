@@ -1109,6 +1109,13 @@ withheld field takes a value its contract already allowed (an empty list or
 applies the same line: it authorizes a requester as before and then returns
 release candidates only to an owner, and an empty list to anyone else.
 
+`GET /api/v4/media/:id/movie-editions/:edition` applies that projection to its
+`progress`: a requester of the edition keeps each download's state, progress and
+freshness, with no attempts, ratio, seeded time or observation time. Quality
+profiles are owner configuration: `GET /api/v1/profiles` returns the list to a
+current owner and an empty list to anyone else, and
+`GET /api/v1/profile-defaults` refuses anyone who is not a current owner.
+
 ## Plex association contract
 
 An availability timestamp or Plex rating key does not establish current playback.

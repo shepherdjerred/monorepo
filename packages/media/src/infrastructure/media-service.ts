@@ -17,7 +17,6 @@ import {
   RequestListSchema,
   OperationListSchema,
   NotificationListSchema,
-  ProfileListSchema,
   UserListSchema,
 } from "#shared/api.ts";
 import { ReleaseListSchema } from "#shared/api.ts";
@@ -391,17 +390,11 @@ export class PrismaMediaApplication
     );
   }
 
-  async profiles(_actor: MediaActor) {
-    return ProfileListSchema.parse(
-      await this.db.qualityProfile.findMany({ orderBy: { name: "asc" } }),
-    );
+  profiles(actor: MediaActor) {
+    return readQualityProfiles(this.db, actor);
   }
-  async profileDefaults(_actor: MediaActor) {
-    return ProfileDefaultsSchema.parse(
-      await this.db.qualityProfileDefault.findMany({
-        orderBy: { kind: "asc" },
-      }),
-    );
+  profileDefaults(actor: MediaActor) {
+    return readProfileDefaults(this.db, actor);
   }
 
   async identityPreview(
@@ -484,7 +477,10 @@ export class PrismaMediaApplication
     );
   }
 }
-import { ProfileDefaultsSchema } from "#shared/api.ts";
+import {
+  readProfileDefaults,
+  readQualityProfiles,
+} from "./quality-profiles/read.ts";
 import type { IdentityPreviewInput } from "#shared/acquisition/preview.ts";
 import { buildIdentityPreview } from "./acquisition-identity/preview.ts";
 import {

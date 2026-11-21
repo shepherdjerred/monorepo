@@ -46,21 +46,16 @@ for (const edition of MovieEditionKeySchema.options) {
         f.source.user,
         f.input.scope,
       );
+      // The reservation exists; a requester's read withholds acquisition attempts.
+      expect(
+        await db.acquisitionAttempt.findUniqueOrThrow({
+          where: { id: attemptId },
+        }),
+      ).toMatchObject({ state: "reserved", torrentId: null });
       expect(first).toMatchObject({
         access: "detail",
         currentAsset: null,
-        progress: {
-          attempts: [
-            {
-              id: attemptId,
-              state: "reserved",
-              torrentId: null,
-              currentEpoch: true,
-            },
-          ],
-          torrents: [],
-          historyTruncated: false,
-        },
+        progress: { attempts: [], torrents: [], historyTruncated: false },
       });
       expect(first).not.toHaveProperty("playback");
       expect(
@@ -90,23 +85,24 @@ for (const edition of MovieEditionKeySchema.options) {
         );
       expect(member.currentAsset).toBeNull();
       expect(member.target.availability).not.toBe("available");
-      expect(member.progress).toMatchObject({
-        attempts: [
-          { id: attemptId, torrentId: recorded.id, currentEpoch: true },
-        ],
+      // State, progress and freshness stay; attempts and seeding figures do not.
+      expect(member.progress).toEqual({
+        attempts: [],
         torrents: [
           {
             id: recorded.id,
             state: "seeding",
             progress: 1,
-            ratio: { kind: "finite", value: 0.5 },
-            seededSeconds: 60,
             freshness: "fresh",
+            observedAt: null,
+            ratio: null,
+            seededSeconds: null,
             diagnostics: null,
           },
         ],
         historyTruncated: false,
       });
+      expect(JSON.stringify(member)).not.toContain(attemptId);
       expect(member.progress).not.toHaveProperty("playback");
       expect(member.progress?.torrents[0]).not.toHaveProperty("infoHash");
       expect(member.progress?.torrents[0]).not.toHaveProperty("save_path");
@@ -184,15 +180,26 @@ for (const edition of MovieEditionKeySchema.options) {
       ).toMatchObject({
         access: "detail",
         progress: {
+          attempts: [{ id: attemptId, torrentId: recorded.id }],
           torrents: [
             {
               id: recorded.id,
               progress: 1,
+              observedAt: expect.any(String),
+              ratio: { kind: "finite", value: 0.5 },
+              seededSeconds: 60,
               diagnostics: { providerId: "knaben" },
             },
           ],
         },
       });
+      // The stored role decides, not the role a signed-in session still carries.
+      expect(
+        await service.getMovieTargetContextV4(
+          { ...f.source.user, role: "owner" },
+          f.input.scope,
+        ),
+      ).toMatchObject({ access: "detail", progress: null });
       expect(
         await db.torrent.findUniqueOrThrow({ where: { id: recorded.id } }),
       ).toEqual(recorded);
