@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { RedditOutreachOverviewSchema } from "./reddit-outreach.ts";
 
 export const PromotionHistoryEntrySchema = z.object({
   id: z.string(),
@@ -118,6 +119,7 @@ export const PromotionOverviewSchema = z.object({
   readAt: z.string(),
   scheduling: z.enum(["manual", "scheduled"]),
   lastRun: PromotionRunSummarySchema,
+  redditOutreach: RedditOutreachOverviewSchema.optional(),
   sources: z.array(
     z.object({
       id: z.string(),

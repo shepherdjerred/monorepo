@@ -103,6 +103,193 @@
   margin: 0 6px;
   color: var(--muted, #9199aa);
 }
+.p-outreach {
+  --p-outreach-line: #8884;
+  margin: 0 0 24px;
+  padding: 24px 28px;
+  border: 1px solid var(--p-outreach-line);
+  border-left: 4px solid #5099e6;
+  border-radius: 10px;
+  container-type: inline-size;
+}
+.p-outreach h2,
+.p-outreach h3 {
+  margin: 0 0 12px;
+}
+.p-outreach h2 {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+.p-outreach h3 {
+  font-size: 14px;
+}
+.p-outreach h3 > span {
+  margin-inline-start: 6px;
+  font-size: 12px;
+  font-weight: 400;
+}
+.p-outreach-status,
+.p-outreach-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 22px;
+}
+.p-outreach-status {
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--p-outreach-line);
+}
+.p-outreach-status dt,
+.p-outreach-totals dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.p-outreach-status dd,
+.p-outreach-totals dd,
+.p-outreach-run-counts dd,
+.p-outreach-breakdown dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.p-outreach-status dd {
+  margin-top: 3px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.p-outreach-totals > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--p-outreach-line);
+  border-radius: 6px;
+}
+.p-outreach-totals dd {
+  font-size: clamp(16px, 3cqi, 23px);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.p-outreach-table-wrap {
+  max-inline-size: 100%;
+  overflow: auto;
+  border: 1px solid var(--p-outreach-line);
+  border-radius: 6px;
+}
+.p-outreach-table {
+  width: 100%;
+  border-spacing: 0;
+  font: inherit;
+  font-size: 13px;
+}
+.p-outreach-table th,
+.p-outreach-table td {
+  padding: 10px 12px;
+  text-align: start;
+  vertical-align: top;
+}
+.p-outreach-table thead th {
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.p-outreach-table tbody tr + tr > * {
+  border-top: 1px solid var(--p-outreach-line);
+}
+.p-outreach-table tbody th {
+  width: 23%;
+  color: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.p-outreach-stop {
+  width: 21%;
+}
+.p-outreach-run-status {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 400;
+}
+.p-outreach-run-counts,
+.p-outreach-breakdown,
+.p-outreach-receipts,
+.p-outreach-outcomes {
+  margin: 0;
+}
+.p-outreach-run-counts {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 12px;
+}
+.p-outreach-run-counts > div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+.p-outreach-run-counts dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+.p-outreach-breakdown > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+}
+.p-outreach-detail > summary {
+  padding: 4px 0;
+}
+.p-outreach-detail p {
+  margin: 6px 0;
+}
+.p-outreach-receipts {
+  padding-inline-start: 16px;
+}
+@container (min-width: 900px) {
+  .p-outreach-totals {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+@container (max-width: 650px) {
+  .p-outreach-status,
+  .p-outreach-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .p-outreach-table,
+  .p-outreach-table tbody,
+  .p-outreach-table tr,
+  .p-outreach-table tbody th,
+  .p-outreach-table td {
+    display: block;
+    width: auto;
+  }
+  .p-outreach-table thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .p-outreach-table tbody tr {
+    padding: 10px 12px;
+  }
+  .p-outreach-table tbody tr + tr {
+    border-top: 1px solid var(--p-outreach-line);
+  }
+  .p-outreach-table tbody th,
+  .p-outreach-table td {
+    padding: 4px 0;
+  }
+  .p-outreach-table tbody tr + tr > * {
+    border: 0;
+  }
+}
 .p-intervention {
   font-size: 13px;
   margin: 14px 0 0;
@@ -548,6 +735,9 @@
   }
   .p-verdict {
     padding: 20px;
+  }
+  .p-outreach {
+    padding: 16px;
   }
   .p-verdict h2 {
     font-size: 26px;

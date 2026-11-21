@@ -78,3 +78,25 @@ it("authenticates reads and rejects mutations, invalid cursors and unknown evide
   );
   expect(evidence.status).toBe(404);
 });
+
+it("keeps the production overview available when the outreach status read fails", async () => {
+  const store = memoryPromotionStore();
+  const readRedditOutreach = vi
+    .fn()
+    .mockRejectedValue(new Error("private outreach failure"));
+  const handle = promotionStatusFetch("fixture-token", () =>
+    readProductionPromotionStatus(store, { readRedditOutreach }),
+  );
+  const response = await handle(
+    new Request("http://status/api/v1/promotion", {
+      headers: { authorization: "Bearer fixture-token" },
+    }),
+  );
+  expect(response.status).toBe(200);
+  const body: unknown = await response.json();
+  expect(body).toMatchObject({
+    scheduling: "scheduled",
+    redditOutreach: { status: "unavailable" },
+  });
+  expect(JSON.stringify(body)).not.toContain("private outreach failure");
+});

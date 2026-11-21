@@ -9,6 +9,7 @@ import {
 } from "#activities/promotion/store.ts";
 import { readProductionPromotionStatus } from "./status.ts";
 import { readPromotionPlanningObservation } from "./status-schedule.ts";
+import { readRedditOutreachOverview } from "./reddit-outreach-status.ts";
 
 const Query = z.object({
   targetId: z.string().optional(),
@@ -30,6 +31,7 @@ export function startPromotionStatusServer(token: string) {
     if (cached !== undefined && Date.now() - readAt < 5000) return cached;
     pending ??= readProductionPromotionStatus(store, {
       readPlanning: readPromotionPlanningObservation,
+      readRedditOutreach: readRedditOutreachOverview,
     });
     try {
       cached = await pending;
