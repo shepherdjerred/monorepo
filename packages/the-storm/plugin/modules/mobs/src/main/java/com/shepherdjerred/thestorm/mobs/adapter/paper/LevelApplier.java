@@ -14,6 +14,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -124,10 +125,14 @@ final class LevelApplier implements MobLevels {
   }
 
   static void preserveDespawn(LivingEntity mob, Runnable name) {
-    var removeWhenFarAway = mob.getRemoveWhenFarAway();
+    if (!(mob instanceof Mob living)) {
+      name.run();
+      return;
+    }
+    var persistent = living.isPersistenceRequired();
     name.run();
     // A level plate must not turn an ordinary natural spawn into a permanent mob.
-    mob.setRemoveWhenFarAway(removeWhenFarAway);
+    living.setPersistenceRequired(persistent);
   }
 
   @Override

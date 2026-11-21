@@ -17,6 +17,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Hoglin;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.PiglinAbstract;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.inventory.EquipmentSlot;
@@ -193,7 +194,7 @@ final class MobFactory {
 
   /** Live-server settings MockBukkit does not implement: arena mobs never despawn on their own. */
   static void quirks(LivingEntity mob) {
-    mob.setRemoveWhenFarAway(false);
+    if (mob instanceof Mob living) living.setPersistenceRequired(true);
   }
 
   private static void scale(LivingEntity mob, Attribute attribute, double factor) {

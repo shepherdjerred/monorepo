@@ -202,11 +202,14 @@ final class BlockListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onTakeBook(PlayerTakeLecternBookEvent event) {
+    var lectern = event.getLectern();
+    // Paper marks the lectern nullable; without one there is no block to protect.
+    if (lectern == null) return;
     check(
         event,
         event.getPlayer(),
         new Act(Action.OPEN_CONTAINER, Subject.LECTERN),
-        event.getLectern().getBlock());
+        lectern.getBlock());
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -220,11 +223,13 @@ final class BlockListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onTurnPage(PlayerLecternPageChangeEvent event) {
+    var lectern = event.getLectern();
+    if (lectern == null) return;
     check(
         event,
         event.getPlayer(),
         new Act(Action.USE_REDSTONE, Subject.LECTERN),
-        event.getLectern().getBlock());
+        lectern.getBlock());
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)

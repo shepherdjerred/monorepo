@@ -130,7 +130,7 @@ public final class NameGate implements Listener {
 
   private static void applyName(org.bukkit.entity.Entity entity, Component name) {
     entity.customName(name);
-    if (entity instanceof org.bukkit.entity.Mob mob) mob.setRemoveWhenFarAway(false);
+    if (entity instanceof org.bukkit.entity.Mob mob) mob.setPersistenceRequired(true);
   }
 
   private static boolean usable(
