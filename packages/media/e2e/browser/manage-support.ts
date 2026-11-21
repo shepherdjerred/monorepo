@@ -1,5 +1,5 @@
-import { expect, test, type Page, type Request } from "@playwright/test";
-import { openAs, violationDetails } from "./support.ts";
+import { expect, type Page, type Request } from "@playwright/test";
+import { openAs, test, violationDetails } from "./support.ts";
 
 /** Opens one of the owner's Manage pages and waits for its sections to load. */
 export async function openManage(page: Page, path: string) {

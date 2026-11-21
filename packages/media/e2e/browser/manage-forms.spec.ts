@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { MEMBER, OWNER } from "#testing/fixture-api/personas.ts";
 import {
   answerWrites,
@@ -9,6 +9,7 @@ import {
   storedCommandKeys,
   violations,
 } from "./manage-support.ts";
+import { test } from "./support.ts";
 
 test.describe("household", () => {
   test("pausing a member's requests sends the change and says what was done", async ({
