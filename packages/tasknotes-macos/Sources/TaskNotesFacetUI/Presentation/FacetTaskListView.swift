@@ -2,33 +2,19 @@ import Foundation
 import SwiftUI
 import TaskNotesKit
 
-internal struct FacetFlatListSpec {
-    let heading: String
-    let subtitle: String
-    let tasks: [Task]
-    let showProjectBadge: Bool
-    var allowInlineCompose: Bool = true
-    let emptyTitle: String
-    let emptyMessage: String
-}
-
-internal struct FacetGroupedListSpec {
-    let heading: String?
-    let subtitle: String?
-    let groups: [FacetTaskGroup]
-    let showProjectBadge: Bool
-    let showWeekStrip: Bool
-    let projectIdForSections: String?
-    let emptyTitle: String
-    let emptyMessage: String
-}
-
 internal struct FacetTaskListView: View {
     let store: FacetStore
     let onSelectTask: (Task) -> Void
     let onPresentModal: (FacetPresentedEntityModal) -> Void
 
     @State private var inlineComposeText = ""
+    @Environment(\.dynamicTypeSize) private var textSize
+    @FocusState private var keyboardFocus: FacetTaskFocusTarget?
+    @AccessibilityFocusState private var accessibilityFocus: FacetTaskFocusTarget?
+
+    private var listFocus: FacetTaskListFocus {
+        FacetTaskListFocus(keyboard: $keyboardFocus, accessibility: $accessibilityFocus)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -71,7 +57,8 @@ internal struct FacetTaskListView: View {
                     FacetGroupedListSpec(
                         heading: nil,
                         subtitle: nil,
-                        groups: store.projectTaskGroups(projectId: projectId),
+                        groups: store.projectTaskGroups(
+                            projectId: projectId, from: store.openListPresentationTasks),
                         showProjectBadge: false,
                         showWeekStrip: false,
                         projectIdForSections: projectId,
@@ -84,7 +71,8 @@ internal struct FacetTaskListView: View {
                     FacetFlatListSpec(
                         heading: store.destinationTitle,
                         subtitle: "Tagged tasks",
-                        tasks: store.tasks(forLabel: labelId),
+                        tasks: store.tasks(
+                            forLabel: labelId, from: store.openListPresentationTasks),
                         showProjectBadge: true,
                         emptyTitle: "No tasks with this label",
                         emptyMessage: "Tag any task with \(store.destinationTitle) to see it here."
@@ -96,7 +84,7 @@ internal struct FacetTaskListView: View {
                     FacetFlatListSpec(
                         heading: filterObj?.name ?? "Filter",
                         subtitle: filterObj?.query ?? "",
-                        tasks: store.tasks(forFilter: filterId),
+                        tasks: store.tasks(forFilter: filterId, from: store.listPresentationTasks),
                         showProjectBadge: true,
                         emptyTitle: "No matching tasks",
                         emptyMessage: "No open tasks currently match this filter query."
@@ -105,6 +93,16 @@ internal struct FacetTaskListView: View {
             }
         }
         .accessibilityIdentifier(AccessibilityIdentifier.detail(store.destination))
+        .environment(\.facetTaskListFocus, listFocus)
+        #if os(macOS)
+            .onChange(of: keyboardFocus) {
+                guard let keyboardFocus, !store.showsInspector else { return }
+                switch keyboardFocus {
+                case .title(let id), .completion(let id): store.selectedTaskId = id
+                case .heading: store.selectedTaskId = nil
+                }
+            }
+        #endif
     }
 
     @ViewBuilder
@@ -126,8 +124,8 @@ extension FacetTaskListView {
     fileprivate var inboxSpec: FacetFlatListSpec {
         FacetFlatListSpec(
             heading: "Inbox",
-            subtitle: "Unorganized tasks",
-            tasks: store.inboxTasks,
+            subtitle: "",
+            tasks: store.inboxTasks(from: store.openListPresentationTasks),
             showProjectBadge: false,
             emptyTitle: "Your Inbox is clear",
             emptyMessage: "Capture tasks with Quick Add and organize them later."
@@ -137,8 +135,10 @@ extension FacetTaskListView {
     fileprivate var todaySpec: FacetGroupedListSpec {
         FacetGroupedListSpec(
             heading: "Today",
-            subtitle: store.calendar.today,
-            groups: store.todayGroups,
+            subtitle: store.calendar.instant.formatted(
+                Date.FormatStyle(date: .complete, time: .omitted, timeZone: store.calendar.timeZone)
+            ),
+            groups: store.todayGroups(from: store.openListPresentationTasks),
             showProjectBadge: true,
             showWeekStrip: false,
             projectIdForSections: nil,
@@ -150,8 +150,8 @@ extension FacetTaskListView {
     fileprivate var upcomingSpec: FacetGroupedListSpec {
         FacetGroupedListSpec(
             heading: "Upcoming",
-            subtitle: "7-day schedule & beyond",
-            groups: store.upcomingGroups,
+            subtitle: "",
+            groups: store.upcomingGroups(from: store.openListPresentationTasks),
             showProjectBadge: true,
             showWeekStrip: true,
             projectIdForSections: nil,
@@ -164,7 +164,7 @@ extension FacetTaskListView {
         FacetFlatListSpec(
             heading: "Completed",
             subtitle: "Finished tasks",
-            tasks: store.completedTasks,
+            tasks: store.completedTasks(from: store.listPresentationTasks),
             showProjectBadge: true,
             allowInlineCompose: false,
             emptyTitle: "No completed tasks yet",
@@ -176,7 +176,7 @@ extension FacetTaskListView {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.title2.weight(.bold))
+                    .font(.largeTitle.bold())
                     .accessibilityIdentifier(AccessibilityIdentifier.TaskList.heading)
                 Text(subtitle)
                     .font(.caption)
@@ -190,99 +190,183 @@ extension FacetTaskListView {
     }
 
     fileprivate func flatListContent(_ spec: FacetFlatListSpec) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
+        flatList(spec).onChange(of: focusableIDs(in: spec.tasks), listFocus.preserve)
+    }
+
+    private func focusableIDs(in tasks: [Task]) -> [String] {
+        tasks.compactMap { store.completionRow(for: $0.id) == nil ? $0.id : nil }
+    }
+
+    private func flatList(_ spec: FacetFlatListSpec) -> some View {
+        #if os(iOS)
+            List {
                 listHeadingRow(
-                    heading: spec.heading,
-                    subtitle: spec.subtitle,
-                    count: spec.tasks.count
+                    heading: spec.heading, subtitle: spec.subtitle, count: spec.tasks.count
                 )
-
-                if spec.allowInlineCompose {
-                    inlineQuickAddBar(sectionId: nil)
-                }
-
+                .listRowSeparator(.hidden)
                 if spec.tasks.isEmpty {
                     emptyPlaceholder(title: spec.emptyTitle, message: spec.emptyMessage)
-                } else {
-                    LazyVStack(alignment: .leading, spacing: 2) {
-                        ForEach(spec.tasks) { task in
-                            FacetTaskRowView(
-                                task: task,
-                                store: store,
-                                showProjectBadge: spec.showProjectBadge,
-                                isSelected: store.selectedTaskId == task.id,
-                                onSelect: { onSelectTask(task) }
-                            )
-                            Divider()
+                        .listRowSeparator(.hidden)
+                }
+                mobileRows(spec.tasks, badges: spec.showProjectBadge)
+            }
+            .listStyle(.plain)
+            .contentMargins(.bottom, FacetNativeStyle.mobileListBottomMargin, for: .scrollContent)
+            .accessibilityIdentifier(AccessibilityIdentifier.TaskList.list)
+        #else
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    listHeadingRow(
+                        heading: spec.heading,
+                        subtitle: spec.subtitle,
+                        count: spec.tasks.count
+                    )
+
+                    if spec.tasks.isEmpty {
+                        emptyPlaceholder(title: spec.emptyTitle, message: spec.emptyMessage)
+                    } else {
+                        LazyVStack(alignment: .leading, spacing: 2) {
+                            ForEach(spec.tasks) { task in
+                                FacetTaskRowView(
+                                    task: task,
+                                    store: store,
+                                    showProjectBadge: spec.showProjectBadge,
+                                    isSelected: store.selectedTaskId == task.id,
+                                    onSelect: { onSelectTask(task) }
+                                )
+                                Divider()
+                            }
                         }
                     }
+                    if spec.allowInlineCompose {
+                        inlineQuickAddBar(sectionId: nil)
+                    }
                 }
+                .padding(20)
             }
-            .padding(20)
-            #if os(iOS)
-                .padding(.bottom, FacetNativeStyle.mobileListBottomMargin)
-            #endif
-        }
-        .accessibilityIdentifier(AccessibilityIdentifier.TaskList.list)
+            .accessibilityIdentifier(AccessibilityIdentifier.TaskList.list)
+        #endif
     }
+
+    #if os(iOS)
+        private func mobileRows(_ tasks: [Task], badges: Bool) -> some View {
+            ForEach(tasks) { task in
+                FacetTaskRowView(
+                    task: task, store: store, showProjectBadge: badges, isSelected: false
+                ) {
+                    onSelectTask(task)
+                }
+                .listRowInsets(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 12))
+            }
+        }
+    #endif
 
     fileprivate func groupedListContent(_ spec: FacetGroupedListSpec) -> some View {
         let totalTasks = spec.groups.reduce(0) { $0 + $1.tasks.count }
-        return ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+        let focusable = spec.groups.flatMap { focusableIDs(in: $0.tasks) }
+        #if os(iOS)
+            return mobileGroupedList(spec, totalTasks: totalTasks)
+                .onChange(of: focusable, listFocus.preserve)
+        #else
+            return desktopGroupedList(spec, totalTasks: totalTasks)
+                .onChange(of: focusable, listFocus.preserve)
+        #endif
+    }
+
+    #if os(iOS)
+        private func mobileGroupedList(_ spec: FacetGroupedListSpec, totalTasks: Int) -> some View {
+            List {
                 if let heading = spec.heading {
                     listHeadingRow(
-                        heading: heading,
-                        subtitle: spec.subtitle ?? "",
-                        count: totalTasks
+                        heading: heading, subtitle: spec.subtitle ?? "", count: totalTasks
                     )
+                    .listRowSeparator(.hidden)
                 }
-
                 if spec.showWeekStrip {
-                    FacetUpcomingWeekStripView(store: store)
+                    FacetUpcomingWeekStripView(store: store).listRowSeparator(.hidden)
                 }
-
-                inlineQuickAddBar(sectionId: nil)
-
-                if totalTasks == 0 && spec.projectIdForSections == nil {
+                if totalTasks == 0 && !spec.showWeekStrip && spec.projectIdForSections == nil {
                     emptyPlaceholder(title: spec.emptyTitle, message: spec.emptyMessage)
+                        .listRowSeparator(.hidden)
                 } else {
                     ForEach(spec.groups) { group in
-                        FacetTaskGroupSectionView(
-                            group: group,
-                            showProjectBadge: spec.showProjectBadge,
-                            store: store,
-                            onSelectTask: onSelectTask,
-                            onPresentModal: onPresentModal
-                        )
+                        if group.id != "today" || spec.groups.count > 1 {
+                            FacetTaskGroupHeader(
+                                group: group, store: store, onPresentModal: onPresentModal
+                            )
+                            .listRowSeparator(.hidden)
+                        }
+                        mobileRows(group.tasks, badges: spec.showProjectBadge)
                     }
                 }
             }
-            .padding(20)
-            #if os(iOS)
-                .padding(.bottom, FacetNativeStyle.mobileListBottomMargin)
-            #endif
+            .listStyle(.plain)
+            .contentMargins(.bottom, FacetNativeStyle.mobileListBottomMargin, for: .scrollContent)
+            .accessibilityIdentifier(AccessibilityIdentifier.TaskList.list)
         }
-        .accessibilityIdentifier(AccessibilityIdentifier.TaskList.list)
-    }
+    #else
+        private func desktopGroupedList(_ spec: FacetGroupedListSpec, totalTasks: Int) -> some View
+        {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    if let heading = spec.heading {
+                        listHeadingRow(
+                            heading: heading,
+                            subtitle: spec.subtitle ?? "",
+                            count: totalTasks
+                        )
+                    }
+
+                    if spec.showWeekStrip {
+                        FacetUpcomingWeekStripView(store: store)
+                    }
+
+                    if totalTasks == 0 && !spec.showWeekStrip && spec.projectIdForSections == nil {
+                        emptyPlaceholder(title: spec.emptyTitle, message: spec.emptyMessage)
+                    } else {
+                        ForEach(spec.groups) { group in
+                            FacetTaskGroupSectionView(
+                                group: group,
+                                showProjectBadge: spec.showProjectBadge,
+                                store: store,
+                                onSelectTask: onSelectTask,
+                                onPresentModal: onPresentModal
+                            )
+                        }
+                    }
+                    inlineQuickAddBar(sectionId: nil)
+                }
+                .padding(20)
+            }
+            .accessibilityIdentifier(AccessibilityIdentifier.TaskList.list)
+        }
+    #endif
 
     private func listHeadingRow(heading: String, subtitle: String, count: Int) -> some View {
-        HStack(alignment: .firstTextBaseline) {
+        let stacked = textSize.isAccessibilitySize
+        let layout =
+            stacked
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
+        return layout {
             VStack(alignment: .leading, spacing: 2) {
                 Text(heading)
                     .font(.title2.weight(.bold))
+                    .accessibilityAddTraits(.isHeader)
+                    .focusable()
+                    .modifier(FacetTaskFocus(target: .heading))
                     .accessibilityIdentifier(AccessibilityIdentifier.TaskList.heading)
                 if !subtitle.isEmpty {
                     Text(subtitle)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary.opacity(0.72))
                 }
             }
-            Spacer()
-            Text("\(count)")
+            if !stacked { Spacer() }
+            Text(count == 1 ? "1 task" : "\(count) tasks")
                 .font(.subheadline.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary.opacity(0.72))
+                .fixedSize(horizontal: true, vertical: true)
                 .accessibilityIdentifier(AccessibilityIdentifier.TaskList.count)
         }
     }
@@ -292,7 +376,7 @@ extension FacetTaskListView {
             Image(systemName: "plus")
                 .foregroundStyle(FacetNativeStyle.brand)
             TextField(
-                "Add a task… (#Project @label tomorrow p1)",
+                "Add task",
                 text: $inlineComposeText
             )
             .textFieldStyle(.plain)
@@ -307,7 +391,6 @@ extension FacetTaskListView {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(.quinary, in: .rect(cornerRadius: 8))
     }
 
     private func submitInlineTask(sectionId: String?) {

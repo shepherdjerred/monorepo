@@ -96,24 +96,6 @@ extension Label {
     }
 }
 
-extension Reminder {
-    func remapping(ids mapping: [String: String]) -> Reminder {
-        let mappedId = mapping[id] ?? id
-        let mappedTask = mapping[task_id] ?? task_id
-        guard mappedId != id || mappedTask != task_id else { return self }
-        return Reminder(
-            id: mappedId,
-            task_id: mappedTask,
-            reminder_type: reminder_type,
-            minute_offset: minute_offset,
-            due_datetime: due_datetime,
-            is_notified: is_notified,
-            is_deleted: is_deleted,
-            updated_at: updated_at
-        )
-    }
-}
-
 extension Filter {
     func remapping(ids mapping: [String: String]) -> Filter {
         guard let mappedId = mapping[id], mappedId != id else { return self }
@@ -172,7 +154,8 @@ extension SyncCommand {
             )
         case .projectAdd, .projectUpdate, .projectDelete, .sectionAdd, .sectionUpdate,
             .sectionDelete, .labelAdd, .labelUpdate, .labelDelete, .reminderAdd, .reminderUpdate,
-            .reminderDelete, .filterAdd, .filterUpdate, .filterDelete:
+            .reminderDelete,
+            .filterAdd, .filterUpdate, .filterDelete:
             return nil
         }
     }
@@ -230,8 +213,8 @@ extension SyncCommand {
     }
 
     private func remapSecondaryCommand(ids mapping: [String: String]) -> SyncCommand {
-        if let labelOrReminder = remapLabelOrReminderCommand(ids: mapping) {
-            return labelOrReminder
+        if let labelCommand = remapLabelCommand(ids: mapping) {
+            return labelCommand
         }
         switch self {
         case .filterAdd(let args):
@@ -257,7 +240,7 @@ extension SyncCommand {
         }
     }
 
-    private func remapLabelOrReminderCommand(ids mapping: [String: String]) -> SyncCommand? {
+    private func remapLabelCommand(ids mapping: [String: String]) -> SyncCommand? {
         switch self {
         case .labelAdd(let args):
             return .labelAdd(args)
@@ -273,30 +256,10 @@ extension SyncCommand {
             )
         case .labelDelete(let args):
             return .labelDelete(LabelDeleteArgs(id: mapping[args.id] ?? args.id))
-        case .reminderAdd(let args):
-            return .reminderAdd(
-                ReminderAddArgs(
-                    task_id: mapping[args.task_id] ?? args.task_id,
-                    reminder_type: args.reminder_type,
-                    minute_offset: args.minute_offset,
-                    due_datetime: args.due_datetime
-                )
-            )
-        case .reminderUpdate(let args):
-            return .reminderUpdate(
-                ReminderUpdateArgs(
-                    id: mapping[args.id] ?? args.id,
-                    reminder_type: args.reminder_type,
-                    minute_offset: args.minute_offset,
-                    due_datetime: args.due_datetime,
-                    is_notified: args.is_notified
-                )
-            )
-        case .reminderDelete(let args):
-            return .reminderDelete(ReminderDeleteArgs(id: mapping[args.id] ?? args.id))
         case .taskAdd, .taskUpdate, .taskDelete, .taskComplete, .taskUncomplete, .taskReorder,
             .projectAdd, .projectUpdate, .projectDelete, .sectionAdd, .sectionUpdate,
-            .sectionDelete, .filterAdd, .filterUpdate, .filterDelete:
+            .sectionDelete, .filterAdd, .filterUpdate, .filterDelete, .reminderAdd, .reminderUpdate,
+            .reminderDelete:
             return nil
         }
     }

@@ -15,10 +15,12 @@ First-party code is GPL-3.0-only; bundled license notices are generated from
 ## Features & Targets (`ios/project.yml`)
 
 - **`TasksForObsidian` (`ios/Facet/` + `ios/TasksForObsidian/Intents/`)**:
-  - Todoist-style mobile `TabView` (**Today**, **Inbox**, **Upcoming**, **Browse**
-    for Projects/Sections/Boards/Labels/Filters/Completed, and **Settings**),
-    floating Quick Add button with live natural-language token chips, pull-to-sync,
-    and full task inspector sheet.
+  - The app opens on **Today**. Its four tabs are **Inbox**, **Today**,
+    **Upcoming**, and **Browse**. Browse contains projects, labels, filters,
+    boards, completed tasks, and settings. Search reads the whole local workspace.
+  - Floating Quick Add highlights recognized phrases and supports consecutive
+    entries above the keyboard. Upcoming supplies the selected date for capture.
+    Swipe a task right to complete or left to reschedule, or open its detail sheet.
   - Background sync (`FacetBackgroundTasks` via `BGProcessingTaskRequest`) syncing
     with `/api/v1/sync` and refreshing widget timelines.
   - Siri & Shortcuts intents (`AddTaskIntent`, `ShowTodayIntent`,

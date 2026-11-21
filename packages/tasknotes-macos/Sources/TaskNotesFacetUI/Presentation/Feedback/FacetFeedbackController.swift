@@ -17,6 +17,16 @@ public enum FacetFeedbackEvent: String, Sendable {
     case reopened
     case undone
     case saved
+
+    /// Apple uses the shared sound palette for completion and its reversal.
+    var completionSound: String? {
+        switch self {
+        case .completed, .reopened, .undone:
+            FacetFeedbackPolicy.shared.events[rawValue]?.sound
+        case .created, .deleted, .saved:
+            nil
+        }
+    }
 }
 
 @Observable
@@ -86,24 +96,21 @@ public final class FacetFeedbackController {
     }
 
     public func trigger(_ event: FacetFeedbackEvent) {
-        guard enabledForLaunch else { return }
-        guard let effect = policy.events[event.rawValue] else { return }
+        guard enabledForLaunch, let soundName = event.completionSound else { return }
         let generation = permission.generation
-        let soundName = effect.sound
-        let soundURL = soundName.flatMap { soundURLs[$0] }
+        let soundURL = soundURLs[soundName]
         let shouldPlaySound = soundsEnabled && soundURL != nil
-        let shouldPlayHaptic = hapticsEnabled && effect.haptic != "none"
+        let shouldPlayHaptic = hapticsEnabled
         guard shouldPlaySound || shouldPlayHaptic else { return }
 
         let permissionRef = permission
         let playerRef = audioPlayer
-        let hapticStyle = effect.haptic
 
         _Concurrency.Task { @MainActor in
             await FacetSensoryDelivery.deliver(
                 soundEnabled: shouldPlaySound,
                 audio: {
-                    guard let soundName, let soundURL else { return true }
+                    guard let soundURL else { return true }
                     do {
                         return try await playerRef.play(
                             soundName,
@@ -120,8 +127,8 @@ public final class FacetFeedbackController {
                 },
                 current: { permissionRef.allows(generation) },
                 haptic: {
-                    guard shouldPlayHaptic else { return }
-                    Self.fireHaptic(hapticStyle)
+                    guard shouldPlayHaptic, self.hapticsEnabled else { return }
+                    Self.fireLightHaptic()
                 }
             )
         }
@@ -166,28 +173,11 @@ public final class FacetFeedbackController {
         }
     }
 
-    private static func fireHaptic(_ kind: String) {
+    private static func fireLightHaptic() {
         #if os(iOS)
-            if kind == "success" {
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.success)
-            } else if kind == "error" {
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.error)
-            } else if kind == "selection" {
-                let generator = UISelectionFeedbackGenerator()
-                generator.selectionChanged()
-            } else if kind == "light" {
-                let generator = UIImpactFeedbackGenerator(style: .light)
-                generator.impactOccurred()
-            }
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
         #else
-            if kind == "success" || kind == "light" {
-                NSHapticFeedbackManager.defaultPerformer.perform(
-                    .alignment,
-                    performanceTime: .default
-                )
-            }
+            NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .default)
         #endif
     }
 }

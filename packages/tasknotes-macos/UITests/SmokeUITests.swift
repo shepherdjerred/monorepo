@@ -14,6 +14,39 @@ final class SmokeUITests: XCTestCase {
         continueAfterFailure = false
     }
 
+    func testFindsAnUndatedInboxTaskFromToday() throws {
+        let app = TestApp.launch { addTeardownBlock($0) }
+        let inbox = app.buttons[AccessibilityIdentifier.sidebarSection(.inbox)]
+        XCTAssertTrue(inbox.waitForExistence(timeout: 10))
+        inbox.click()
+        app.typeKey("n", modifierFlags: .command)
+        let field = app.textFields[AccessibilityIdentifier.QuickAdd.field]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.typeText("Pick up groceries\n")
+        app.buttons[AccessibilityIdentifier.sidebarSection(.today)].click()
+        app.typeKey("f", modifierFlags: .command)
+        let query = app.textFields["facet.workspaceSearch.query"]
+        XCTAssertTrue(query.waitForExistence(timeout: 5))
+        query.typeText("groceries")
+        let result = app.buttons.matching(NSPredicate(format: "label == %@", "Pick up groceries"))
+            .firstMatch
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        app.typeKey(.return, modifierFlags: [])
+        let inspectorTitle = app.textFields[AccessibilityIdentifier.Inspector.title]
+        XCTAssertTrue(inspectorTitle.waitForExistence(timeout: 5))
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(query.waitForExistence(timeout: 5))
+        XCTAssertEqual(query.value as? String, "groceries")
+        // Space activates a focused native button. Typing it into the query would leave the
+        // search list visible, so reopening the inspector also proves result focus was restored.
+        app.typeKey(.space, modifierFlags: [])
+        XCTAssertTrue(inspectorTitle.waitForExistence(timeout: 5))
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(query.waitForExistence(timeout: 5))
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(query.waitForNonExistence(timeout: 5))
+    }
+
     func testTheAppLaunchesAndShowsItsSidebar() throws {
         let app = TestApp.launch { addTeardownBlock($0) }
 

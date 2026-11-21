@@ -2,6 +2,27 @@ import Foundation
 import SwiftUI
 import TaskNotesKit
 
+internal struct FacetFlatListSpec {
+    let heading: String
+    let subtitle: String
+    let tasks: [Task]
+    let showProjectBadge: Bool
+    var allowInlineCompose: Bool = true
+    let emptyTitle: String
+    let emptyMessage: String
+}
+
+internal struct FacetGroupedListSpec {
+    let heading: String?
+    let subtitle: String?
+    let groups: [FacetTaskGroup]
+    let showProjectBadge: Bool
+    let showWeekStrip: Bool
+    let projectIdForSections: String?
+    let emptyTitle: String
+    let emptyMessage: String
+}
+
 internal struct FacetSyncStatusBanners: View {
     let store: FacetStore
 
@@ -9,20 +30,20 @@ internal struct FacetSyncStatusBanners: View {
         if !store.hasConfiguredToken && !store.isIsolatedLaunch {
             HStack(spacing: 10) {
                 Image(systemName: "wifi.slash")
-                    .foregroundStyle(.orange)
-                Text("Working locally in SQLite. Connect your Facet server to sync across devices.")
+                    .foregroundStyle(.secondary)
+                Text("Working offline")
                     .font(.caption)
                 Spacer()
                 Button("Connect…") {
                     store.showsSettings = true
                 }
                 .controlSize(.small)
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.borderless)
                 .accessibilityIdentifier(AccessibilityIdentifier.SyncBanner.openSettings)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(.orange.opacity(0.10))
+            .background(.quinary)
             .accessibilityIdentifier(AccessibilityIdentifier.SyncBanner.banner)
         } else if let errorText = store.effectiveError {
             HStack(spacing: 10) {
@@ -57,49 +78,72 @@ internal struct FacetProjectHeaderBar: View {
 
     var body: some View {
         let proj = store.project(for: projectId)
-        let currentLayout = store.layout(forProject: projectId)
-        HStack(spacing: 12) {
-            if let proj {
-                Circle()
-                    .fill(FacetNativeStyle.swatchColor(proj.color))
-                    .frame(width: 12, height: 12)
-                Text(proj.name)
-                    .font(.title2.weight(.bold))
-                    .accessibilityIdentifier(AccessibilityIdentifier.TaskList.heading)
-            }
-
-            Spacer()
-
-            Picker(
-                "Layout",
-                selection: Binding(
-                    get: { currentLayout },
-                    set: { store.setLayout($0, forProject: projectId) }
-                )
-            ) {
-                ForEach(FacetProjectLayout.allCases, id: \.self) { mode in
-                    Label(mode.title, systemImage: mode.systemImage).tag(mode)
+        Group {
+            #if os(iOS)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        projectTitle(proj)
+                        Spacer()
+                        if let proj, !proj.is_inbox { projectOverflowMenu(proj) }
+                    }
+                    HStack {
+                        layoutPicker
+                        Spacer()
+                        addSection
+                    }
                 }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: 150)
-            .accessibilityIdentifier(AccessibilityIdentifier.TaskList.viewMode)
-
-            Button {
-                onPresentModal(.addSection(projectId: projectId))
-            } label: {
-                Label("Add Section", systemImage: "rectangle.split.3x1.fill")
-            }
-            .controlSize(.small)
-
-            if let proj, !proj.is_inbox {
-                projectOverflowMenu(proj)
-            }
+            #else
+                HStack(spacing: 12) {
+                    projectTitle(proj)
+                    Spacer()
+                    layoutPicker
+                    addSection
+                    if let proj, !proj.is_inbox { projectOverflowMenu(proj) }
+                }
+            #endif
         }
         .padding(.horizontal, 20)
         .padding(.top, 16)
         .padding(.bottom, 8)
+    }
+
+    @ViewBuilder
+    private func projectTitle(_ project: Project?) -> some View {
+        if let project {
+            Circle().fill(FacetNativeStyle.swatchColor(project.color)).frame(width: 12, height: 12)
+            Text(project.name)
+                .font(.title2.bold())
+                .focusable()
+                .modifier(FacetTaskFocus(target: .heading))
+                .accessibilityIdentifier(AccessibilityIdentifier.TaskList.heading)
+        }
+    }
+
+    private var layoutPicker: some View {
+        Picker(
+            "Layout",
+            selection: Binding(
+                get: { store.layout(forProject: projectId) },
+                set: { store.setLayout($0, forProject: projectId) }
+            )
+        ) {
+            ForEach(FacetProjectLayout.allCases, id: \.self) { mode in
+                Label(mode.title, systemImage: mode.systemImage).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(maxWidth: 150)
+        .accessibilityIdentifier(AccessibilityIdentifier.TaskList.viewMode)
+    }
+
+    private var addSection: some View {
+        Button {
+            onPresentModal(.addSection(projectId: projectId))
+        } label: {
+            Label("Add Section", systemImage: "plus")
+        }
+        .controlSize(.small)
     }
 
     private func projectOverflowMenu(_ proj: Project) -> some View {
@@ -131,31 +175,7 @@ internal struct FacetTaskGroupSectionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(group.title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(group.isOverdue ? .red : .primary)
-                Text("\(group.tasks.count)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if let secId = group.sectionId, let sectionObj = store.section(for: secId) {
-                    Menu {
-                        Button("Rename Section…") {
-                            onPresentModal(.renameSection(sectionObj))
-                        }
-                        Button("Delete Section", role: .destructive) {
-                            store.deleteSection(id: sectionObj.id)
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .foregroundStyle(.secondary)
-                    }
-                    .menuStyle(.borderlessButton)
-                    .frame(width: 24)
-                }
-            }
-            .accessibilityIdentifier(AccessibilityIdentifier.TaskList.group(group.title))
+            FacetTaskGroupHeader(group: group, store: store, onPresentModal: onPresentModal)
 
             Divider()
 
@@ -182,40 +202,56 @@ internal struct FacetTaskGroupSectionView: View {
     }
 }
 
-internal struct FacetUpcomingWeekStripView: View {
+internal struct FacetTaskGroupHeader: View {
+    let group: FacetTaskGroup
     let store: FacetStore
+    let onPresentModal: (FacetPresentedEntityModal) -> Void
 
     var body: some View {
-        HStack(spacing: 8) {
-            ForEach(store.upcomingWeekSlots) { slot in
-                let selected = store.upcomingSelectedDayOffset == slot.offset
-                Button {
-                    store.upcomingSelectedDayOffset = slot.offset
-                } label: {
-                    VStack(spacing: 4) {
-                        Text(slot.weekdayShort)
-                            .font(.caption2)
-                            .foregroundStyle(selected ? .white : .secondary)
-                        Text(slot.dayNumber)
-                            .font(.headline)
-                            .foregroundStyle(selected ? .white : .primary)
-                        Circle()
-                            .fill(
-                                slot.taskCount > 0
-                                    ? (selected ? Color.white : FacetNativeStyle.brand)
-                                    : Color.clear
-                            )
-                            .frame(width: 5, height: 5)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(
-                        selected ? FacetNativeStyle.brand : Color.secondary.opacity(0.08),
-                        in: .rect(cornerRadius: 10)
-                    )
+        HStack {
+            Text(group.title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(group.isOverdue ? .red : .primary)
+                .accessibilityAddTraits(.isHeader)
+            Text(group.tasks.count == 1 ? "1 task" : "\(group.tasks.count) tasks")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+            if group.civilDate != nil || group.sectionId != nil {
+                Button(action: openCapture) {
+                    Image(systemName: "plus")
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .accessibilityLabel("Add task")
+                .buttonStyle(.borderless)
+            }
+            if let secId = group.sectionId, let sectionObj = store.section(for: secId) {
+                Menu {
+                    Button("Rename Section…") {
+                        onPresentModal(.renameSection(sectionObj))
+                    }
+                    Button("Delete Section", role: .destructive) {
+                        store.deleteSection(id: sectionObj.id)
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .foregroundStyle(.secondary)
+                }
+                .menuStyle(.borderlessButton)
+                .frame(width: 24)
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityIdentifier.TaskList.group(group.title))
+        .facetCaptureTarget(
+            group.civilDate.map(FacetCaptureTarget.day)
+                ?? group.sectionId.map(FacetCaptureTarget.section))
+    }
+
+    private func openCapture() {
+        if let civil = group.civilDate { store.upcomingSelectedDate = civil }
+        store.captureSectionId = group.sectionId
+        store.showsCapture = true
     }
 }

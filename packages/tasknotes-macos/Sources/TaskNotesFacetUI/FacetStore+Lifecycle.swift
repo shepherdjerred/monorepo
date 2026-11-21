@@ -3,7 +3,7 @@ import OSLog
 public import TaskNotesKit
 
 extension FacetStore {
-    // MARK: - Startup, Notifications & Teardown
+    // MARK: - Startup & Teardown
 
     public func start() async {
         if let existing = startupTask {
@@ -15,6 +15,9 @@ extension FacetStore {
                 try await localStore.load()
             } catch {
                 errorBanner = error.localizedDescription
+            }
+            if !isIsolatedLaunch {
+                await FacetRetiredNotifications.clearIfNeeded()
             }
             bumpRevision()
             refreshTokenPresence()
@@ -40,56 +43,6 @@ extension FacetStore {
         await task.value
     }
 
-    public func installNotificationRouting() async {
-        guard !isIsolatedLaunch, !routingInstalled else { return }
-        routingInstalled = true
-        await reminderCenter.installRouting { [weak self] taskId in
-            await MainActor.run {
-                self?.selectedTaskId = taskId
-                self?.showsInspector = true
-            }
-        }
-    }
-
-    public func refreshReminders() async {
-        guard !isIsolatedLaunch, remindersEnabled else { return }
-        do {
-            _ = try await reminderCenter.refresh(
-                tasks: localStore.tasks,
-                reminders: localStore.reminders,
-                now: calendar.instant
-            )
-        } catch {
-            Self.logger.error(
-                "Reminder refresh failed: \(error.localizedDescription, privacy: .public)"
-            )
-        }
-    }
-
-    public func setRemindersEnabled(_ enabled: Bool) async {
-        if enabled && !isIsolatedLaunch {
-            do {
-                let granted = try await reminderCenter.requestEnable()
-                remindersEnabled = granted
-                if !granted {
-                    errorBanner =
-                        "Notification permission was declined. Enable notifications in System Settings."
-                } else {
-                    await refreshReminders()
-                }
-            } catch {
-                remindersEnabled = false
-                errorBanner = error.localizedDescription
-            }
-        } else {
-            remindersEnabled = false
-            defaults.set(false, forKey: FacetReminders.enabledDefaultsKey)
-            if !isIsolatedLaunch {
-                await reminderCenter.disable()
-            }
-        }
-    }
-
     public func runBackgroundSync() async -> Bool {
         await start()
         guard let client = makeAPIClient() else { return false }
@@ -99,7 +52,6 @@ extension FacetStore {
             return false
         }
         bumpRevision()
-        await refreshReminders()
         return localStore.lastError == nil
     }
 
@@ -129,11 +81,17 @@ extension FacetStore {
     public var canUndo: Bool { localStore.canUndo }
 
     public func undoLast() {
-        guard localStore.undoLast() != nil else { return }
+        guard let undone = localStore.undoLast() else { return }
+        completionRows = completionRows.filter { $0.value.receipt != undone.id }
         undoToastMessage = nil
         undoDismissTask?.cancel()
         feedback.trigger(.undone)
         scheduleAutoSync()
+    }
+
+    internal func undoAction(for receipt: String?) {
+        guard let receipt, receipt == localStore.latestUndoEntry?.id else { return }
+        undoLast()
     }
 
     public func dismissUndoToast() {
@@ -142,6 +100,7 @@ extension FacetStore {
     }
 
     internal func presentUndoToast(_ message: String) {
+        toastReceiptID = localStore.latestUndoEntry?.id
         undoToastMessage = message
         undoDismissTask?.cancel()
         let durationMs: UInt64 = 6_000
@@ -155,10 +114,6 @@ extension FacetStore {
                 // Cancelled by newer toast or explicit dismissal.
             }
         }
-    }
-
-    internal func recordCompletionReceipt(for taskId: String) {
-        completionReceipts[taskId] = UUID().uuidString
     }
 
     // MARK: - Deep Links, Widget & App Intents

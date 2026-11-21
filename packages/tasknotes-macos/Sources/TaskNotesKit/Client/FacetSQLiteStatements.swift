@@ -31,10 +31,6 @@ extension FacetSQLiteDatabase {
             item_order REAL NOT NULL DEFAULT 0,
             payload TEXT NOT NULL
         );
-        CREATE TABLE IF NOT EXISTS reminders (
-            id TEXT PRIMARY KEY NOT NULL,
-            payload TEXT NOT NULL
-        );
         CREATE TABLE IF NOT EXISTS filters (
             id TEXT PRIMARY KEY NOT NULL,
             item_order REAL NOT NULL DEFAULT 0,
@@ -73,6 +69,19 @@ extension FacetSQLiteDatabase {
                 try unsafe execute(on: handle, sql: "PRAGMA synchronous = NORMAL;")
             }
             try unsafe execute(on: handle, sql: schemaDDL)
+            if try unsafe readMetaValue(from: handle, key: "retired_reminders") == nil {
+                try unsafe execute(
+                    on: handle,
+                    sql: """
+                        BEGIN IMMEDIATE;
+                        DELETE FROM outbox WHERE CASE WHEN json_valid(payload)
+                            THEN json_extract(payload, '$.command.type') END
+                            IN ('ReminderAdd', 'ReminderUpdate', 'ReminderDelete');
+                        DROP TABLE IF EXISTS reminders;
+                        INSERT OR IGNORE INTO sync_meta (key, value) VALUES ('retired_reminders', '1');
+                        COMMIT;
+                        """)
+            }
             return unsafe handle
         } catch {
             _ = unsafe sqlite3_close_v2(handle)
@@ -128,9 +137,6 @@ extension FacetSQLiteDatabase {
             items: state.filters, idOf: \.id, orderOf: \.item_order
         )
         try unsafe replaceOrderedEntities(on: handle, spec: labelsSpec, encoder: encoder)
-        try unsafe replaceUnorderedEntities(
-            on: handle, table: "reminders", items: state.reminders, idOf: \.id, encoder: encoder
-        )
         try unsafe replaceOrderedEntities(on: handle, spec: filtersSpec, encoder: encoder)
         try unsafe replaceOutbox(on: handle, outbox: state.outbox, encoder: encoder)
         try unsafe writeSyncToken(on: handle, syncToken: state.syncToken)
@@ -285,45 +291,6 @@ extension FacetSQLiteDatabase {
                         code: SQLITE_ERROR,
                         message: unsafe errorMessage(from: handle)
                     )
-                }
-            }
-        }
-    }
-
-    @unsafe
-    internal static func replaceUnorderedEntities<Entity: Encodable>(
-        on handle: OpaquePointer,
-        table: String,
-        items: [Entity],
-        idOf: (Entity) -> String,
-        encoder: JSONEncoder
-    ) throws {
-        try unsafe execute(on: handle, sql: "DELETE FROM \(table);")
-        guard !items.isEmpty else { return }
-        let stmt = try unsafe prepare(
-            on: handle,
-            sql: "INSERT INTO \(table) (id, payload) VALUES (?1, ?2);"
-        )
-        defer { _ = unsafe sqlite3_finalize(stmt) }
-
-        for item in items {
-            let idValue = idOf(item)
-            guard let payload = String(data: try encoder.encode(item), encoding: .utf8) else {
-                throw FacetSQLiteError.corruptedPayload(table: table)
-            }
-            try idValue.withCString { idPtr in
-                try payload.withCString { payloadPtr in
-                    _ = unsafe sqlite3_reset(stmt)
-                    _ = unsafe sqlite3_clear_bindings(stmt)
-                    guard unsafe sqlite3_bind_text(stmt, 1, idPtr, -1, nil) == SQLITE_OK,
-                        unsafe sqlite3_bind_text(stmt, 2, payloadPtr, -1, nil) == SQLITE_OK,
-                        unsafe sqlite3_step(stmt) == SQLITE_DONE
-                    else {
-                        throw FacetSQLiteError.sqliteFailure(
-                            code: SQLITE_ERROR,
-                            message: unsafe errorMessage(from: handle)
-                        )
-                    }
                 }
             }
         }

@@ -1,7 +1,7 @@
 public import Foundation
 public import Observation
 
-/// Local observable store for tasks, projects, sections, labels, reminders, and filters
+/// Local observable store for tasks, projects, sections, labels, and filters
 /// backed by `FacetSQLiteDatabase` and `/api/v1/sync`.
 @Observable
 @MainActor
@@ -10,26 +10,38 @@ public final class FacetLocalStore {
     public var projects: [Project] = []
     public var sections: [Section] = []
     public var labels: [Label] = []
-    public var reminders: [Reminder] = []
     public var filters: [Filter] = []
     public var syncToken: String?
     public var outbox: [QueuedCommand] = []
     public var isSyncing: Bool = false
-    public var lastError: String?
+    private var syncError: String?
+    private var persistenceError: String?
+    public var lastError: String? {
+        get { persistenceError ?? syncError }
+        set {
+            syncError = newValue
+            persistenceError = nil
+        }
+    }
     public var lastSyncedAt: Date?
     public var lastTempIdMapping: [String: String] = [:]
+    private var syncedIDs: [String: String] = [:]
+
+    /// Resolves IDs held by a live window even after subsequent sync batches.
+    public func resolvedID(_ id: String) -> String {
+        syncedIDs[id] ?? id
+    }
     public internal(set) var undoStack: [FacetUndoEntry] = []
 
     @ObservationIgnored public let database: FacetSQLiteDatabase?
     @ObservationIgnored private var persistenceRevision: UInt64 = 0
-    @ObservationIgnored private var pendingPersistenceTask: _Concurrency.Task<Void, Never>?
+    @ObservationIgnored private var pendingPersistenceTask: _Concurrency.Task<Void, any Error>?
 
     public init(
         tasks: [Task] = [],
         projects: [Project] = [],
         sections: [Section] = [],
         labels: [Label] = [],
-        reminders: [Reminder] = [],
         filters: [Filter] = [],
         syncToken: String? = nil,
         outbox: [QueuedCommand] = [],
@@ -39,7 +51,6 @@ public final class FacetLocalStore {
         self.projects = projects
         self.sections = sections
         self.labels = labels
-        self.reminders = reminders
         self.filters = filters
         self.syncToken = syncToken
         self.outbox = outbox
@@ -67,7 +78,6 @@ public final class FacetLocalStore {
         projects = persisted.projects
         sections = persisted.sections
         labels = persisted.labels
-        reminders = persisted.reminders
         filters = persisted.filters
         outbox = persisted.outbox
         syncToken = persisted.syncToken
@@ -75,13 +85,23 @@ public final class FacetLocalStore {
 
     public func flushPersistence() async throws {
         if let pending = pendingPersistenceTask {
-            await pending.value
+            _ = await pending.result
         }
         guard let database else { return }
         persistenceRevision &+= 1
-        let revision = persistenceRevision
-        let snapshot = currentPersistedState()
-        try await database.saveIfNewest(revision: revision, state: snapshot)
+        try await persist(currentPersistedState(), revision: persistenceRevision, to: database)
+    }
+
+    private func persist(
+        _ snapshot: FacetPersistedState, revision: UInt64, to database: FacetSQLiteDatabase
+    ) async throws {
+        do {
+            try await database.saveIfNewest(revision: revision, state: snapshot)
+            if revision == persistenceRevision { persistenceError = nil }
+        } catch {
+            if revision == persistenceRevision { persistenceError = error.localizedDescription }
+            throw error
+        }
     }
 
     internal func currentPersistedState() -> FacetPersistedState {
@@ -90,7 +110,6 @@ public final class FacetLocalStore {
             projects: projects,
             sections: sections,
             labels: labels,
-            reminders: reminders,
             filters: filters,
             outbox: outbox,
             syncToken: syncToken
@@ -103,15 +122,11 @@ public final class FacetLocalStore {
         let revision = persistenceRevision
         let snapshot = currentPersistedState()
         let previous = pendingPersistenceTask
-        pendingPersistenceTask = _Concurrency.Task { @MainActor [weak self] in
+        pendingPersistenceTask = _Concurrency.Task { @MainActor in
             if let previous {
-                await previous.value
+                _ = await previous.result
             }
-            do {
-                try await database.saveIfNewest(revision: revision, state: snapshot)
-            } catch {
-                self?.lastError = error.localizedDescription
-            }
+            try await persist(snapshot, revision: revision, to: database)
         }
     }
 
@@ -281,7 +296,6 @@ extension FacetLocalStore {
             )
         }
         tasks.removeAll(where: { $0.id == id || $0.parent_id == id })
-        reminders.removeAll(where: { $0.task_id == id })
         let args = TaskDeleteArgs(id: id)
         outbox.append(
             QueuedCommand(uuid: UUID().uuidString, temp_id: nil, command: .taskDelete(args))
@@ -294,7 +308,7 @@ extension FacetLocalStore {
     public func sync(client: FacetAPIClient) async throws {
         guard !isSyncing else { return }
         isSyncing = true
-        lastError = nil
+        syncError = nil
         defer { isSyncing = false }
 
         try await flushPersistence()
@@ -304,7 +318,7 @@ extension FacetLocalStore {
         do {
             let request = SyncRequest(
                 sync_token: syncToken,
-                resource_types: nil,
+                resource_types: ["tasks", "projects", "sections", "labels", "filters"],
                 commands: sentCommands
             )
             let response = try await client.sync(request: request)
@@ -312,6 +326,7 @@ extension FacetLocalStore {
             outbox.removeAll(where: { sentUUIDs.contains($0.uuid) })
             if !response.temp_id_mapping.isEmpty {
                 lastTempIdMapping = response.temp_id_mapping
+                syncedIDs.merge(response.temp_id_mapping) { _, serverID in serverID }
                 applyTempIdMapping(response.temp_id_mapping)
             }
             applySyncResponseResources(response)
@@ -321,14 +336,14 @@ extension FacetLocalStore {
 
             let failedMessages = Self.extractCommandFailures(from: response.sync_status)
             if !failedMessages.isEmpty {
-                lastError = failedMessages.joined(separator: "; ")
+                syncError = failedMessages.joined(separator: "; ")
             }
             syncToken = response.sync_token
             lastSyncedAt = Date()
-            try await flushPersistence()
         } catch {
-            lastError = error.localizedDescription
+            syncError = error.localizedDescription
             throw error
         }
+        try await flushPersistence()
     }
 }

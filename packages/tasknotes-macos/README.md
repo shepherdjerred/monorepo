@@ -18,12 +18,15 @@ and Xcode:
   - `Client/FacetSQLiteDatabase.swift`: `actor` wrapping Apple's system `SQLite3`
     in WAL mode (`Application Support/Facet/facet-sync.sqlite3`) with atomic
     `BEGIN IMMEDIATE ... COMMIT` persistence for `tasks`, `projects`, `sections`,
-    `labels`, `reminders`, `filters`, FIFO `outbox`, and `sync_token`.
+    `labels`, `filters`, FIFO `outbox`, and `sync_token`.
   - `Client/FacetLocalStore.swift` & `FacetAPIClient.swift`: optimistic local
     mutations, `""` wire-sentinel clearing for nullable server columns,
     `full_sync` baseline replacement with concurrent outbox replay,
     `temp_id_mapping` ID rewriting across all collections and queued commands,
-    `sync_status` error surfacing, and reversible Undo stack.
+    `sync_status` error surfacing, and reversible Undo stack. Apple clients request
+    tasks, projects, sections, labels, and filters. Upgrading removes cached
+    reminders and unsent reminder commands from the Apple device. Reminders
+    already synced by any client remain on the server.
   - `Client/FacetQuickCaptureParser.swift`, `FacetRecurrenceCodec.swift`,
     `FacetFilterQueryEvaluator.swift`, & `Detail/MarkdownBody.swift`: pure-Swift
     Todoist-style natural-language capture (`#Project`, `@label`, `p1`–`p4`,
@@ -31,17 +34,16 @@ and Xcode:
     filter query evaluation, and GFM block parsing.
   - `Host/`: `KeychainTokenStore` (`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`),
     `FacetServerConfiguration` (default `https://tasknotes.tailnet-1a49.ts.net`),
-    `FacetReminders` (`UNUserNotificationCenter`), `FacetWidgetProjection`, and
+    `FacetWidgetProjection`, and
     `FacetIntentQueue`.
 - **`TaskNotesFacetUI`** (`@MainActor`):
   - Shared macOS & iOS SwiftUI Todoist workspace (`FacetRootView`,
-    `FacetNativeWorkspace`, `FacetMobileWorkspace`), sidebar/tabs (**Inbox**,
-    **Today** with Overdue + Today groups, **Upcoming** 7-day strip, **Completed**,
-    **Projects** with Sections & List/Board toggle, **Labels**, **Filters**, and
-    cross-project **Priority Board**), `FacetTaskInspectorView` (Markdown preview
-    & source editor, recurrence editor sheet, sub-tasks, labels, reminders),
-    `FacetCaptureForm`, `FacetSettingsAndOnboardingView`, and sensory audio/haptic
-    delivery.
+    `FacetNativeWorkspace`, `FacetMobileWorkspace`). On iPhone, **Inbox**, **Today**,
+    **Upcoming**, and **Browse** are persistent tabs. Browse contains projects,
+    labels, filters and completed tasks. The Mac sidebar adds keyboard access to
+    capture and workspace search. Search reads local tasks and notes, including
+    subtasks, with an option to include completed tasks. Task detail opens over
+    the current list. At larger widths the editor and properties sit side by side.
 - **`TaskNotesMac`** (`@MainActor`):
   - macOS `FacetMacEnvironment`, non-activating floating `QuickAddPanel` bound to
     `⌃⌥⌘Space` (`KeyboardShortcuts`), menu bar commands (`FacetMacCommands`),

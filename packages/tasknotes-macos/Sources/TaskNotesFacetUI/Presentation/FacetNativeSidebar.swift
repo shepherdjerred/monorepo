@@ -9,6 +9,28 @@
 
         var body: some View {
             List {
+                Button {
+                    store.showsCapture = true
+                } label: {
+                    Label("Add Task", systemImage: "plus.circle.fill")
+                        .foregroundStyle(FacetNativeStyle.brand)
+                        .fontWeight(.semibold)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier(AccessibilityIdentifier.TaskList.newTask)
+                Button {
+                    store.searchFocusedRequest &+= 1
+                } label: {
+                    Label("Search", systemImage: "magnifyingglass")
+                }
+                .buttonStyle(.plain)
+                SwiftUI.Section {
+                    sidebarSectionRow(.inbox, badge: store.inboxCount)
+                    sidebarSectionRow(.today, badge: store.todayCount)
+                    sidebarSectionRow(.upcoming, badge: 0)
+                }
+                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("views"))
+
                 if !store.favoriteProjects.isEmpty || !store.favoriteFilters.isEmpty
                     || !store.favoriteLabels.isEmpty
                 {
@@ -25,25 +47,6 @@
                     }
                     .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("favorites"))
                 }
-
-                SwiftUI.Section("Views") {
-                    sidebarSectionRow(.inbox, badge: store.inboxCount)
-                    sidebarSectionRow(.today, badge: store.todayCount)
-                    sidebarSectionRow(.upcoming, badge: 0)
-                    sidebarSectionRow(.completed, badge: 0)
-
-                    sidebarDestinationButton(.board) { isSelected in
-                        HStack(spacing: 8) {
-                            Image(systemName: "rectangle.split.3x1")
-                                .foregroundStyle(isSelected ? Color.accentColor : .secondary)
-                            Text("Board")
-                                .fontWeight(isSelected ? .semibold : .regular)
-                            Spacer()
-                        }
-                    }
-                    .accessibilityIdentifier(AccessibilityIdentifier.sidebarDestination(.board))
-                }
-                .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("views"))
 
                 SwiftUI.Section {
                     ForEach(store.userProjects) { proj in
@@ -77,6 +80,14 @@
                     }
                 }
                 .accessibilityIdentifier(AccessibilityIdentifier.sidebarGroup("filters"))
+
+                SwiftUI.Section("Browse") {
+                    sidebarSectionRow(.completed, badge: 0)
+                    sidebarDestinationButton(.board) { _ in
+                        Label("Priority Board", systemImage: "rectangle.split.3x1")
+                    }
+                    .accessibilityIdentifier(AccessibilityIdentifier.sidebarDestination(.board))
+                }
             }
             .listStyle(.sidebar)
             .safeAreaInset(edge: .bottom) {
@@ -112,7 +123,8 @@
             sidebarDestinationButton(.section(section)) { isSelected in
                 HStack(spacing: 8) {
                     Image(systemName: section.systemImage)
-                        .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                        .foregroundStyle(
+                            isSelected ? Color.accentColor : Color(nsColor: .secondaryLabelColor))
                     Text(section.title)
                         .fontWeight(isSelected ? .semibold : .regular)
                     Spacer()
@@ -232,7 +244,9 @@
                         ? "Syncing…"
                         : (store.pendingOutboxCount > 0
                             ? "\(store.pendingOutboxCount) pending"
-                            : (store.hasConfiguredToken ? "Synced" : "Local SQLite"))
+                            : (store.effectiveError != nil
+                                ? "Sync needs attention"
+                                : (store.hasConfiguredToken ? "Synced" : "On this Mac")))
                 )
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -247,6 +261,7 @@
                 }
                 .buttonStyle(.borderless)
                 .help("Server & Sync Settings")
+                .accessibilityLabel("Settings")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

@@ -66,7 +66,7 @@ public final class FacetMacEnvironment {
         guard let panel else { return }
         let top = panel.frame.maxY
         let maximum = panel.screen?.visibleFrame.height ?? 800
-        panel.setContentSize(CGSize(width: 560, height: min(expanded ? 360 : 170, maximum - 80)))
+        panel.setContentSize(CGSize(width: 560, height: min(expanded ? 410 : 218, maximum - 80)))
         panel.setFrameOrigin(CGPoint(x: panel.frame.minX, y: top - panel.frame.height))
     }
 }
@@ -151,11 +151,11 @@ public struct FacetMacCommands: Commands {
         SidebarCommands()
         ToolbarCommands()
         CommandGroup(after: .sidebar) {
-            Button(window?.inspectorPresented == true ? "Hide Inspector" : "Show Inspector") {
+            Button(window?.inspectorPresented == true ? "Close Task" : "Open Task") {
                 window?.toggleInspector()
             }
             .keyboardShortcut("i", modifiers: [.command, .option])
-            .disabled(window == nil)
+            .disabled(window?.hasSelection != true)
             Divider()
             Button("Inbox") { window?.navigate("inbox") }
                 .keyboardShortcut("1")

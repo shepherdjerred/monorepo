@@ -6,52 +6,61 @@ internal struct FacetInspectorLabelsSection: View {
     let task: Task
     let store: FacetStore
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Labels")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
+    @Environment(\.dismiss) private var dismiss
+    @State private var draftName = ""
 
-            if store.activeLabels.isEmpty {
-                Text("No labels yet — type @label in Quick Add or create one in the sidebar.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(store.activeLabels) { labelItem in
-                            let selected = task.label_ids.contains(labelItem.id)
-                            Button {
-                                var updated = task.label_ids
-                                if selected {
-                                    updated.removeAll { $0 == labelItem.id }
-                                } else {
-                                    updated.append(labelItem.id)
-                                }
-                                store.patchTask(
-                                    id: task.id,
-                                    patch: FacetTaskPatch(labelIds: .set(updated))
-                                )
-                            } label: {
-                                Text("@\(labelItem.name)")
-                                    .font(.caption.weight(.medium))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(
-                                        selected
-                                            ? FacetNativeStyle.swatchColor(labelItem.color)
-                                                .opacity(0.22)
-                                            : Color.secondary.opacity(0.10),
-                                        in: .capsule
-                                    )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+    private var name: String {
+        draftName.trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "@"))
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(store.activeLabels) { item in
+                    Toggle(
+                        item.name,
+                        isOn: Binding(
+                            get: { store.task(for: task.id)?.label_ids.contains(item.id) == true },
+                            set: { selected in setLabel(item.id, selected: selected) }
+                        ))
+                }
+                HStack {
+                    TextField("New label", text: $draftName)
+                        .onSubmit(addLabel)
+                    Button("Add", action: addLabel)
+                        .disabled(name.isEmpty)
+                }
+            }
+            .navigationTitle("Labels")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .keyboardShortcut(.cancelAction)
                 }
             }
         }
-        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.labels)
+        #if os(macOS)
+            .frame(minWidth: 320, minHeight: 240)
+        #endif
+    }
+
+    private func setLabel(_ id: String, selected: Bool) {
+        guard let current = store.task(for: task.id), current.label_ids.contains(id) != selected
+        else { return }
+        let updated = selected ? current.label_ids + [id] : current.label_ids.filter { $0 != id }
+        store.patchTask(id: current.id, patch: FacetTaskPatch(labelIds: .set(updated)))
+    }
+
+    private func addLabel() {
+        guard !name.isEmpty, store.task(for: task.id) != nil else { return }
+        let item =
+            store.activeLabels.first {
+                $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame
+            }
+            ?? store.createLabel(name: name, color: "teal", isFavorite: false)
+        setLabel(item.id, selected: true)
+        draftName = ""
     }
 }
 
@@ -60,22 +69,12 @@ internal struct FacetInspectorSubtasksSection: View {
     let store: FacetStore
 
     @State private var newSubtaskTitle = ""
+    @State private var openedSubtask: Task?
+    @FocusState private var editingTitle: Bool
 
     var body: some View {
         let children = store.subtasks(of: task.id)
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Sub-tasks")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if !children.isEmpty {
-                    Text("\(children.count(where: \.completed))/\(children.count)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
             ForEach(children) { child in
                 HStack(spacing: 8) {
                     Button {
@@ -83,13 +82,25 @@ internal struct FacetInspectorSubtasksSection: View {
                     } label: {
                         Image(systemName: child.completed ? "checkmark.circle.fill" : "circle")
                             .foregroundStyle(child.completed ? .green : .secondary)
+                            #if os(iOS)
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
+                            #endif
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(
+                        child.completed ? "Reopen \(child.title)" : "Complete \(child.title)")
 
-                    Text(child.title)
-                        .font(.callout)
-                        .strikethrough(child.completed)
-                        .foregroundStyle(child.completed ? .secondary : .primary)
+                    Button {
+                        openedSubtask = child
+                    } label: {
+                        Text(child.title)
+                            .font(.callout)
+                            .strikethrough(child.completed)
+                            .multilineTextAlignment(.leading)
+                            .foregroundStyle(child.completed ? .secondary : .primary)
+                    }
+                    .buttonStyle(.plain)
 
                     Spacer()
 
@@ -99,14 +110,20 @@ internal struct FacetInspectorSubtasksSection: View {
                         Image(systemName: "xmark")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
+                            #if os(iOS)
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
+                            #endif
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Delete \(child.title)")
                 }
             }
 
             HStack(spacing: 6) {
-                TextField("Add sub-task…", text: $newSubtaskTitle)
+                TextField("Add subtask", text: $newSubtaskTitle)
                     .textFieldStyle(.roundedBorder)
+                    .focused($editingTitle)
                     .controlSize(.small)
                     .onSubmit { addSubtask() }
                 Button("Add") { addSubtask() }
@@ -114,6 +131,23 @@ internal struct FacetInspectorSubtasksSection: View {
                     .disabled(
                         newSubtaskTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     )
+            }
+        }
+        .onAppear { if children.isEmpty { editingTitle = true } }
+        .sheet(item: $openedSubtask) { selected in
+            if let current = store.task(for: selected.id) {
+                NavigationStack {
+                    FacetTaskInspectorView(task: current, store: store) { openedSubtask = nil }
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { openedSubtask = nil }
+                                    .keyboardShortcut(.cancelAction)
+                            }
+                        }
+                }
+                #if os(macOS)
+                    .frame(minWidth: 420, idealWidth: 740, minHeight: 360, idealHeight: 520)
+                #endif
             }
         }
         .accessibilityIdentifier(AccessibilityIdentifier.Inspector.subtasks)
@@ -124,78 +158,5 @@ internal struct FacetInspectorSubtasksSection: View {
         guard !trimmed.isEmpty else { return }
         store.createSubtask(parentTask: task, title: trimmed)
         newSubtaskTitle = ""
-    }
-}
-
-internal struct FacetInspectorRemindersSection: View {
-    let task: Task
-    let store: FacetStore
-
-    @State private var reminderDate: Date
-
-    init(task: Task, store: FacetStore) {
-        self.task = task
-        self.store = store
-        _reminderDate = State(initialValue: store.calendar.instant.addingTimeInterval(3600))
-    }
-
-    var body: some View {
-        let taskReminders = store.reminders(for: task.id)
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Reminders")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            ForEach(taskReminders) { reminder in
-                HStack {
-                    Image(systemName: "bell.fill")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                    Text(reminderSummary(reminder))
-                        .font(.caption)
-                    Spacer()
-                    Button(role: .destructive) {
-                        store.deleteReminder(id: reminder.id)
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            HStack(spacing: 6) {
-                DatePicker(
-                    "Reminder",
-                    selection: $reminderDate,
-                    displayedComponents: [.date, .hourAndMinute]
-                )
-                .environment(\.timeZone, store.calendar.timeZone)
-                .labelsHidden()
-                .controlSize(.small)
-
-                Button("Add Reminder") {
-                    let iso = ISO8601DateFormatter().string(from: reminderDate)
-                    store.createReminder(
-                        taskId: task.id,
-                        reminderType: "absolute",
-                        dueDatetime: iso
-                    )
-                }
-                .controlSize(.small)
-                .buttonStyle(.bordered)
-            }
-        }
-        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.reminders)
-    }
-
-    private func reminderSummary(_ reminder: Reminder) -> String {
-        if let dueText = reminder.due_datetime, !dueText.isEmpty {
-            return String(dueText.prefix(16)).replacingOccurrences(of: "T", with: " ")
-        }
-        if let offset = reminder.minute_offset {
-            return "\(offset) min before due"
-        }
-        return reminder.reminder_type
     }
 }

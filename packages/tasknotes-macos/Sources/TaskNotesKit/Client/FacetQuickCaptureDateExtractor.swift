@@ -205,6 +205,9 @@ extension FacetQuickCaptureParser {
         guard range.location != NSNotFound, let swiftRange = Range(range, in: text) else {
             return
         }
-        text.replaceSubrange(swiftRange, with: " ")
+        let token = text[swiftRange].drop(while: \.isWhitespace)
+        text.replaceSubrange(
+            token.startIndex..<token.endIndex,
+            with: String(repeating: "\u{000C}", count: token.utf16.count))
     }
 }

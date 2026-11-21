@@ -25,7 +25,6 @@ public struct FacetPersistedState: Sendable, Equatable {
     public var projects: [Project]
     public var sections: [Section]
     public var labels: [Label]
-    public var reminders: [Reminder]
     public var filters: [Filter]
     public var outbox: [QueuedCommand]
     public var syncToken: String?
@@ -35,7 +34,6 @@ public struct FacetPersistedState: Sendable, Equatable {
         projects: [Project] = [],
         sections: [Section] = [],
         labels: [Label] = [],
-        reminders: [Reminder] = [],
         filters: [Filter] = [],
         outbox: [QueuedCommand] = [],
         syncToken: String? = nil
@@ -44,7 +42,6 @@ public struct FacetPersistedState: Sendable, Equatable {
         self.projects = projects
         self.sections = sections
         self.labels = labels
-        self.reminders = reminders
         self.filters = filters
         self.outbox = outbox
         self.syncToken = syncToken
@@ -132,12 +129,6 @@ public actor FacetSQLiteDatabase {
                 from: handle,
                 sql: "SELECT payload FROM labels ORDER BY item_order ASC, id ASC;",
                 table: "labels",
-                decoder: decoder
-            ),
-            reminders: Self.readEntities(
-                from: handle,
-                sql: "SELECT payload FROM reminders ORDER BY id ASC;",
-                table: "reminders",
                 decoder: decoder
             ),
             filters: Self.readEntities(

@@ -92,7 +92,6 @@ public enum AccessibilityIdentifier {
         public static let recurrenceSheet = "\(namespace).inspector.recurrence.sheet"
         public static let recurrenceApply = "\(namespace).inspector.recurrence.apply"
         public static let stopRepeating = "\(namespace).inspector.recurrence.stop"
-        public static let reminders = "\(namespace).inspector.reminders"
         public static let subtasks = "\(namespace).inspector.subtasks"
         public static let details = "\(namespace).inspector.details"
         public static let detailsSource = "\(namespace).inspector.details.source"

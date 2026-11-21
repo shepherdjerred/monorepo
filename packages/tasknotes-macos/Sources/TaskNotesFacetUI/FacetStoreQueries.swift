@@ -6,6 +6,7 @@ public struct FacetTaskGroup: Identifiable, Sendable, Equatable {
     public let id: String
     public let title: String
     public let sectionId: String?
+    public let civilDate: String?
     public let isOverdue: Bool
     public let tasks: [Task]
 
@@ -13,12 +14,14 @@ public struct FacetTaskGroup: Identifiable, Sendable, Equatable {
         id: String,
         title: String,
         sectionId: String? = nil,
+        civilDate: String? = nil,
         isOverdue: Bool = false,
         tasks: [Task]
     ) {
         self.id = id
         self.title = title
         self.sectionId = sectionId
+        self.civilDate = civilDate
         self.isOverdue = isOverdue
         self.tasks = tasks
     }
@@ -109,23 +112,28 @@ extension FacetStore {
     public var favoriteLabels: [TaskNotesKit.Label] { activeLabels.filter(\.is_favorite) }
 
     public func project(for id: String) -> Project? {
-        localStore.projects.first { $0.id == id && !$0.is_deleted }
+        let resolved = localStore.resolvedID(id)
+        return localStore.projects.first { $0.id == resolved && !$0.is_deleted }
     }
 
     public func section(for id: String) -> TaskNotesKit.Section? {
-        localStore.sections.first { $0.id == id && !$0.is_deleted }
+        let resolved = localStore.resolvedID(id)
+        return localStore.sections.first { $0.id == resolved && !$0.is_deleted }
     }
 
     public func label(for id: String) -> TaskNotesKit.Label? {
-        localStore.labels.first { $0.id == id && !$0.is_deleted }
+        let resolved = localStore.resolvedID(id)
+        return localStore.labels.first { $0.id == resolved && !$0.is_deleted }
     }
 
     public func filter(for id: String) -> Filter? {
-        localStore.filters.first { $0.id == id && !$0.is_deleted }
+        let resolved = localStore.resolvedID(id)
+        return localStore.filters.first { $0.id == resolved && !$0.is_deleted }
     }
 
     public func task(for id: String) -> Task? {
-        localStore.tasks.first { $0.id == id && !$0.is_deleted }
+        let resolved = localStore.resolvedID(id)
+        return localStore.tasks.first { $0.id == resolved && !$0.is_deleted }
     }
 
     public func sections(in projectId: String) -> [TaskNotesKit.Section] {
@@ -136,12 +144,6 @@ extension FacetStore {
         localStore.tasks
             .filter { !$0.is_deleted && $0.parent_id == parentId }
             .sorted(by: Self.sortTasks)
-    }
-
-    public func reminders(for taskId: String) -> [Reminder] {
-        localStore.reminders
-            .filter { !$0.is_deleted && $0.task_id == taskId }
-            .sorted { ($0.due_datetime ?? "") < ($1.due_datetime ?? "") }
     }
 
     // MARK: - Counts & Badges
@@ -186,21 +188,26 @@ extension FacetStore {
     }
 
     public func layout(forProject projectId: String) -> FacetProjectLayout {
-        projectLayouts[projectId] ?? .list
+        let id = localStore.resolvedID(projectId)
+        return projectLayouts[id]
+            ?? projectLayouts.first { localStore.resolvedID($0.key) == id }?.value
+            ?? .list
     }
 
     public func setLayout(_ layout: FacetProjectLayout, forProject projectId: String) {
-        projectLayouts[projectId] = layout
+        projectLayouts[localStore.resolvedID(projectId)] = layout
     }
 
     internal var topLevelOpenTasks: [Task] {
         localStore.tasks.filter { !$0.is_deleted && !$0.completed && $0.parent_id == nil }
     }
 
-    public var inboxTasks: [Task] {
+    public var inboxTasks: [Task] { inboxTasks(from: topLevelOpenTasks) }
+
+    internal func inboxTasks(from openTasks: [Task]) -> [Task] {
         let inboxIds = Set(activeProjects.filter(\.is_inbox).map(\.id))
         return
-            topLevelOpenTasks
+            openTasks
             .filter { task in
                 inboxIds.isEmpty
                     ? task.project_id.isEmpty
@@ -210,11 +217,13 @@ extension FacetStore {
             .sorted(by: Self.sortTasks)
     }
 
-    public var todayGroups: [FacetTaskGroup] {
+    public var todayGroups: [FacetTaskGroup] { todayGroups(from: topLevelOpenTasks) }
+
+    internal func todayGroups(from openTasks: [Task]) -> [FacetTaskGroup] {
         let todayKey = calendar.today
         var overdue: [Task] = []
         var dueToday: [Task] = []
-        for task in topLevelOpenTasks where matchesSearch(task) {
+        for task in openTasks where matchesSearch(task) {
             guard
                 let dueKey = calendar.effectiveCivilDay(
                     dueDate: task.due_date,
@@ -241,7 +250,7 @@ extension FacetStore {
         groups.append(
             FacetTaskGroup(
                 id: "today",
-                title: "Today · \(todayKey)",
+                title: "Due today",
                 tasks: dueToday.sorted(by: Self.sortTasks)
             )
         )
@@ -258,7 +267,9 @@ extension FacetStore {
         weekdayFormatter.locale = Locale(identifier: "en_US_POSIX")
         weekdayFormatter.dateFormat = "EEE"
 
-        for offset in 0..<7 {
+        let selected = upcomingSelectedDayOffset
+        let first = selected - (selected % 7 + 7) % 7
+        for offset in first..<(first + 7) {
             guard let day = gregorian.date(byAdding: .day, value: offset, to: start) else {
                 continue
             }
@@ -283,10 +294,12 @@ extension FacetStore {
         return slots
     }
 
-    public var upcomingGroups: [FacetTaskGroup] {
+    public var upcomingGroups: [FacetTaskGroup] { upcomingGroups(from: topLevelOpenTasks) }
+
+    internal func upcomingGroups(from openTasks: [Task]) -> [FacetTaskGroup] {
         let startCivil = calendar.addingDays(upcomingSelectedDayOffset)
-        var byDate: [String: [Task]] = [:]
-        for task in topLevelOpenTasks where matchesSearch(task) {
+        var byDate: [String: [Task]] = [startCivil: []]
+        for task in openTasks where matchesSearch(task) {
             guard
                 let dueKey = calendar.effectiveCivilDay(
                     dueDate: task.due_date,
@@ -299,21 +312,28 @@ extension FacetStore {
             FacetTaskGroup(
                 id: "upcoming.\(civil)",
                 title: humanDateHeading(for: civil),
+                civilDate: civil,
                 tasks: (byDate[civil] ?? []).sorted(by: Self.sortTasks)
             )
         }
     }
 
-    public var completedTasks: [Task] {
-        localStore.tasks
+    public var completedTasks: [Task] { completedTasks(from: localStore.tasks) }
+
+    internal func completedTasks(from allTasks: [Task]) -> [Task] {
+        allTasks
             .filter { !$0.is_deleted && $0.completed && $0.parent_id == nil }
             .filter(matchesSearch)
             .sorted { ($0.completed_at ?? $0.updated_at) > ($1.completed_at ?? $1.updated_at) }
     }
 
     public func projectTaskGroups(projectId: String) -> [FacetTaskGroup] {
+        projectTaskGroups(projectId: projectId, from: topLevelOpenTasks)
+    }
+
+    internal func projectTaskGroups(projectId: String, from openTasks: [Task]) -> [FacetTaskGroup] {
         let projectTasks =
-            topLevelOpenTasks
+            openTasks
             .filter { $0.project_id == projectId }
             .filter(matchesSearch)
             .sorted(by: Self.sortTasks)
@@ -350,16 +370,24 @@ extension FacetStore {
     }
 
     public func tasks(forLabel labelId: String) -> [Task] {
-        topLevelOpenTasks
+        tasks(forLabel: labelId, from: topLevelOpenTasks)
+    }
+
+    internal func tasks(forLabel labelId: String, from openTasks: [Task]) -> [Task] {
+        openTasks
             .filter { $0.label_ids.contains(labelId) }
             .filter(matchesSearch)
             .sorted(by: Self.sortTasks)
     }
 
     public func tasks(forFilter filterId: String) -> [Task] {
+        tasks(forFilter: filterId, from: localStore.tasks)
+    }
+
+    internal func tasks(forFilter filterId: String, from allTasks: [Task]) -> [Task] {
         guard let found = filter(for: filterId) else { return [] }
         return FacetFilterQueryEvaluator.filterTasks(
-            localStore.tasks.filter { $0.parent_id == nil },
+            allTasks.filter { $0.parent_id == nil },
             query: found.query,
             projects: activeProjects,
             sections: activeSections,
@@ -381,9 +409,14 @@ extension FacetStore {
     }
 
     public func humanDateHeading(for civil: String) -> String {
-        if civil == calendar.today { return "Today · \(civil)" }
-        if civil == calendar.addingDays(1) { return "Tomorrow · \(civil)" }
-        return civil
+        guard let date = ViewerCalendar.date(fromCivil: civil, timeZone: calendar.timeZone) else {
+            return civil
+        }
+        let style = Date.FormatStyle(timeZone: calendar.timeZone).month(.abbreviated).day()
+        let day = date.formatted(style)
+        if civil == calendar.today { return "Today · \(day)" }
+        if civil == calendar.addingDays(1) { return "Tomorrow · \(day)" }
+        return date.formatted(style.weekday(.wide))
     }
 
     internal static func sortTasks(_ lhs: Task, _ rhs: Task) -> Bool {

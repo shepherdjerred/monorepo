@@ -2,7 +2,7 @@ import Foundation
 public import SwiftUI
 import TaskNotesKit
 
-/// Facet Server Connection, Reminders, Sensory Feedback, and Appearance settings shared across macOS and iOS.
+/// Facet Server Connection, Sensory Feedback, and Appearance settings shared across macOS and iOS.
 public struct FacetSettingsAndOnboardingView: View {
     private let store: FacetStore
     private let embeddedInTab: Bool
@@ -71,18 +71,6 @@ public struct FacetSettingsAndOnboardingView: View {
                 }
 
                 connectionStatusRow
-            }
-
-            SwiftUI.Section("Notifications & Reminders") {
-                Toggle(
-                    "Schedule local task reminders",
-                    isOn: Binding(
-                        get: { store.remindersEnabled },
-                        set: { value in
-                            _Concurrency.Task { await store.setRemindersEnabled(value) }
-                        }
-                    )
-                )
             }
 
             SwiftUI.Section("Sensory Feedback") {
