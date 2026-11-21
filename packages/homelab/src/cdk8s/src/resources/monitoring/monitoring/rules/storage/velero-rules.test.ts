@@ -36,8 +36,11 @@ describe("Velero backup duration alert", () => {
     expect(expression).not.toContain("velero_backup_duration_seconds_sum");
     expect(expression).not.toMatch(/velero_backup_duration_seconds\)/u);
     expect(rule.labels).toEqual({ severity: "info", namespace: "velero" });
-    expect(rule.annotations?.["message"]).toContain('printf "%.0f"');
-    expect(rule.annotations?.["message"]).toContain("longer than 60 minutes");
+    expect(rule.annotations?.["message"]).toBeUndefined();
+    expect(rule.annotations?.["description"]).toContain('printf "%.0f"');
+    expect(rule.annotations?.["description"]).toContain(
+      "longer than 60 minutes",
+    );
   });
 });
 

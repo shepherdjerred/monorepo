@@ -11,11 +11,9 @@ export function temporalQueueTimeoutRules(): NonNullable<
     {
       alert: "TemporalActivitiesNeverStarting",
       annotations: {
-        summary: escapePrometheusTemplate(
-          "Temporal activities timing out before starting in {{ $labels.exported_namespace }}",
-        ),
+        summary: "Temporal tasks are timing out before starting",
         description: escapePrometheusTemplate(
-          "Activities hit ScheduleToStart {{ $value }} time(s) in the last hour, meaning they were queued and never picked up. Confirm the task queue has pollers with temporal task-queue describe.",
+          "{{ $value }} activities in namespace {{ $labels.exported_namespace }} timed out waiting for a worker to pick them up in the last hour. Check worker pod health and run temporal task-queue describe to confirm active activity pollers exist.",
         ),
       },
       expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

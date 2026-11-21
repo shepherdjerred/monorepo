@@ -152,7 +152,8 @@ describe("Scout durable pipeline alert rules", () => {
       expect(["warning", "critical"]).toContain(rule.labels?.["severity"]);
       expect(rule.for).toBeDefined();
       expect(rule.annotations?.["summary"]).toBeDefined();
-      expect(rule.annotations?.["message"]).toBeDefined();
+      expect(rule.annotations?.["description"]).toBeDefined();
+      expect(rule.annotations?.["message"]).toBeUndefined();
     }
   });
 

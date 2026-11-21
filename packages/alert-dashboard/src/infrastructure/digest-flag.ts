@@ -9,6 +9,10 @@ import {
   createFlagMetricsRecorder,
   type FlagMetricsRecorder,
 } from "@shepherdjerred/feature-flags/observability.ts";
+import {
+  MailboxAddressSchema,
+  OPS_MAILBOXES,
+} from "@shepherdjerred/ops-model/email/mailbox.ts";
 import { z } from "zod";
 
 const TARGETING_KEY = "alert-dashboard";
@@ -20,17 +24,29 @@ const DEFINITION = {
     default: false,
     names: { flag: "alert-dashboard-email-enabled" },
   },
-  alertEmailFrom: {
-    schema: z.email(),
+  incidentEmailFrom: {
+    schema: MailboxAddressSchema,
     sources: ["flag", "default"],
-    default: "alerts@sjer.red",
-    names: { flag: "alert-dashboard-email-from" },
+    default: OPS_MAILBOXES.alerts.from,
+    names: { flag: "alert-dashboard-incident-email-from" },
   },
-  alertEmailTo: {
+  incidentEmailTo: {
     schema: z.email(),
     sources: ["flag", "default"],
-    default: "dependencies@sjer.red",
-    names: { flag: "alert-dashboard-email-to" },
+    default: OPS_MAILBOXES.alerts.to,
+    names: { flag: "alert-dashboard-incident-email-to" },
+  },
+  digestEmailFrom: {
+    schema: MailboxAddressSchema,
+    sources: ["flag", "default"],
+    default: OPS_MAILBOXES.digests.from,
+    names: { flag: "alert-dashboard-digest-email-from" },
+  },
+  digestEmailTo: {
+    schema: z.email(),
+    sources: ["flag", "default"],
+    default: OPS_MAILBOXES.digests.to,
+    names: { flag: "alert-dashboard-digest-email-to" },
   },
 } as const;
 
@@ -42,8 +58,10 @@ function createResolver() {
         targetingKey: TARGETING_KEY,
         kinds: {
           alertEmailEnabled: "boolean",
-          alertEmailFrom: "string",
-          alertEmailTo: "string",
+          incidentEmailFrom: "string",
+          incidentEmailTo: "string",
+          digestEmailFrom: "string",
+          digestEmailTo: "string",
         },
       }),
     },
@@ -63,18 +81,23 @@ function createResolver() {
   });
 }
 
-/** Incident mail is constructed at startup; changes require a restart. */
+/** Incident and digest mail routing is constructed at startup; changes require a restart. */
 export async function alertEmailConfig() {
   const resolver = createResolver();
-  const [enabled, from, to] = await Promise.all([
-    resolver.value("alertEmailEnabled"),
-    resolver.value("alertEmailFrom"),
-    resolver.value("alertEmailTo"),
-  ]);
+  const [enabled, incidentFrom, incidentTo, digestFrom, digestTo] =
+    await Promise.all([
+      resolver.value("alertEmailEnabled"),
+      resolver.value("incidentEmailFrom"),
+      resolver.value("incidentEmailTo"),
+      resolver.value("digestEmailFrom"),
+      resolver.value("digestEmailTo"),
+    ]);
   return {
     EMAIL_ENABLED: String(enabled),
-    POSTAL_FROM: from,
-    POSTAL_TO: to,
+    POSTAL_FROM: incidentFrom,
+    POSTAL_TO: incidentTo,
+    POSTAL_DIGEST_FROM: digestFrom,
+    POSTAL_DIGEST_TO: digestTo,
   };
 }
 

@@ -16,12 +16,9 @@ export function getBuildkitdRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "BuildkitdDown",
           annotations: {
-            summary: "buildkitd metrics target is down",
-            message:
-              "Prometheus cannot scrape buildkitd's debug endpoint. Every CI " +
-              "image build depends on this single daemon (remote buildx " +
-              "driver) — if the daemon itself is down, the images step fails " +
-              "on main and PRs.",
+            summary: "BuildKit CI builder daemon is down",
+            description:
+              "Prometheus cannot scrape buildkitd, and every CI container image build depends on this single daemon. Check the buildkitd pod status, events, and container logs in the buildkitd namespace.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             '(up{namespace="buildkitd"} == 0) or absent(up{namespace="buildkitd"})',
@@ -33,14 +30,13 @@ export function getBuildkitdRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
+          // Full-fleet cold bakes previously OOM-crash-looped buildkitd at a
+          // 12 GiB memory limit (PR #1668).
           alert: "BuildkitdRestarting",
           annotations: {
-            summary: "buildkitd is restarting repeatedly",
-            message: escapePrometheusTemplate(
-              "buildkitd restarted {{ $value }} times in the last hour. A " +
-                "full-fleet cold bake previously OOM-crash-looped the daemon " +
-                "at a 12Gi limit (PR #1668); repeated restarts suggest the " +
-                "memory limit or max-parallelism needs revisiting.",
+            summary: "BuildKit CI builder is restarting repeatedly",
+            description: escapePrometheusTemplate(
+              "The buildkitd container restarted {{ $value }} times in the last hour, interrupting in-flight CI image builds. Check pod termination reasons for OOMKills and review buildkitd memory limits or max-parallelism settings.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -60,13 +56,9 @@ export function getBuildkitdRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "BuildkitdCacheVolumeFilling",
           annotations: {
-            summary: "buildkitd cache volume is filling past its GC floor",
-            message: escapePrometheusTemplate(
-              "buildkitd cache PVC {{ $labels.persistentvolumeclaim }} is " +
-                "{{ $value | humanizePercentage }} full for over an hour. " +
-                "~80% is the designed steady state (GC keeps 240Gi of " +
-                "300Gi); sustained >90% means GC is not reclaiming and the " +
-                "volume can fill, which freezes image builds.",
+            summary: "BuildKit cache volume is over 90% full",
+            description: escapePrometheusTemplate(
+              "BuildKit cache PVC {{ $labels.persistentvolumeclaim }} has been {{ $value | humanizePercentage }} full for over an hour, meaning garbage collection is failing to reclaim space and image builds risk stalling. Inspect buildkitd disk usage, GC logs, and active build locks in the buildkitd namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

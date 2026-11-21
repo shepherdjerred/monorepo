@@ -11,8 +11,8 @@ export function getTasknotesRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "TasknotesPodNotRunning",
           annotations: {
             summary: "TaskNotes pod is not running",
-            message: escapePrometheusTemplate(
-              "TaskNotes deployment has {{ $value }} available replicas (expected 1). Task management may be unavailable.",
+            description: escapePrometheusTemplate(
+              "The tasknotes deployment in namespace tasknotes has {{ $value }} available replicas (expected 1) for over 5 minutes, interrupting task sync across clients. Check pod status, events, and container logs in the tasknotes namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -26,9 +26,9 @@ export function getTasknotesRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "TasknotesPodNotRunningCritical",
           annotations: {
-            summary: "TaskNotes pod has been down for extended period",
-            message: escapePrometheusTemplate(
-              "TaskNotes has been unavailable for 30+ minutes. Task management is not functioning.",
+            summary: "TaskNotes has been down for over 30 minutes",
+            description: escapePrometheusTemplate(
+              "The tasknotes deployment in namespace tasknotes has had {{ $value }} available replicas for over 30 minutes, leaving TaskNotes sync unavailable to all clients. Inspect pod scheduling, crash logs, and database connectivity in the tasknotes namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -47,10 +47,9 @@ export function getTasknotesRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "TasknotesMetricsMissing",
           annotations: {
-            summary: "TaskNotes metrics are missing",
-            message: escapePrometheusTemplate(
-              "Prometheus has no tasknotes_uptime_seconds sample. Check the ServiceMonitor and TaskNotes /metrics endpoint.",
-            ),
+            summary: "TaskNotes Prometheus metrics are missing",
+            description:
+              "Prometheus has received no uptime metrics from TaskNotes in the last 5 minutes, blinding service health visibility even if the pod appears running. Check the TaskNotes /metrics endpoint and its ServiceMonitor in the tasknotes namespace.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'absent(tasknotes_uptime_seconds{namespace="tasknotes"})',
@@ -67,9 +66,9 @@ export function getTasknotesRuleGroups(): PrometheusRuleSpecGroups[] {
           // catching a container that is genuinely failing to stay up.
           alert: "TasknotesContainerCrashLooping",
           annotations: {
-            summary: "TaskNotes container is crash-looping",
-            message: escapePrometheusTemplate(
-              "TaskNotes container {{ $labels.container }} is in CrashLoopBackOff. Check logs and pod events.",
+            summary: "TaskNotes service is crashing repeatedly",
+            description: escapePrometheusTemplate(
+              "Container {{ $labels.container }} in pod {{ $labels.pod }} (namespace tasknotes) has been in CrashLoopBackOff for over 5 minutes, degrading or stopping TaskNotes sync. Inspect previous container logs with kubectl logs --previous and check pod events.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

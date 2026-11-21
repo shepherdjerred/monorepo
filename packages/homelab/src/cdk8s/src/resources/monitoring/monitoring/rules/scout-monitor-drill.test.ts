@@ -43,6 +43,9 @@ describe("ScoutMonitorDrill", () => {
       const [rule] = rules;
       expect(rule?.expr.value).toBe("vector(1)");
       expect(rule?.for).toBeUndefined();
+      expect(rule?.annotations?.["summary"]).toBeDefined();
+      expect(rule?.annotations?.["description"]).toBeDefined();
+      expect(rule?.annotations?.["message"]).toBeUndefined();
       const labels: Record<string, string> = {
         alertname: rule?.alert ?? "",
         ...rule?.labels,

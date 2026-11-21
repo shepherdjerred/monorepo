@@ -9,9 +9,9 @@ export function getAlertDashboardRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "AlertDashboardDown",
           annotations: {
-            summary: "Alert dashboard is down",
-            message:
-              "The Alerts service has no healthy Prometheus scrape target.",
+            summary: "Alert dashboard service is down",
+            description:
+              "Prometheus cannot scrape the alert-dashboard service, so firing alerts are not being recorded in the ledger or dispatched through normal dashboard notifications. Check pod status and logs in the alert-dashboard namespace.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             '(up{namespace="alert-dashboard",service="alert-dashboard-alert-dashboard-service"} == 0) or absent(up{namespace="alert-dashboard",service="alert-dashboard-alert-dashboard-service"})',
@@ -23,8 +23,8 @@ export function getAlertDashboardRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "AlertDashboardReconciliationStale",
           annotations: {
             summary: "Alert dashboard reconciliation is stale",
-            message:
-              "The Alerts ledger has not completed an Alertmanager reconciliation in more than one minute.",
+            description:
+              "The alert dashboard has not completed an Alertmanager reconciliation in over 1 minute, leaving dashboard state and email notifications behind live alerts. Check alert-dashboard logs and Alertmanager API connectivity.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "time() - alert_dashboard_last_reconciliation_timestamp_seconds > 60",
@@ -41,8 +41,8 @@ export function getAlertDashboardRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "AlertDashboardOutboxStuck",
           annotations: {
             summary: "Alert dashboard email outbox is stuck",
-            message:
-              "One or more alert opening emails have remained unsent for an hour.",
+            description:
+              "At least one alert notification email has remained unsent for over 1 hour while email delivery is enabled, delaying alert notifications. Check alert-dashboard sender logs and outbound email provider credentials.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "alert_dashboard_oldest_pending_email_timestamp_seconds > 0 and time() - alert_dashboard_oldest_pending_email_timestamp_seconds > 3600 and on () alert_dashboard_email_enabled == 1",
@@ -57,9 +57,10 @@ export function getAlertDashboardRuleGroups(): PrometheusRuleSpecGroups[] {
           // them trains the operator to ignore the fallback channel.
           alert: "AlertDashboardOutboxStranded",
           annotations: {
-            summary: "Alert dashboard email outbox is stranded",
-            message:
-              "Alert opening emails are queued while email delivery is disabled. They cannot drain or expire on their own; cancel them or re-enable delivery.",
+            summary:
+              "Alert dashboard has queued emails while delivery is disabled",
+            description:
+              "Alert notification emails are sitting in the outbox while email delivery is turned off, and they will not drain or expire automatically. Cancel the queued outbox rows or re-enable email delivery in alert-dashboard.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "alert_dashboard_email_outbox_depth > 0 and on () alert_dashboard_email_enabled == 0",

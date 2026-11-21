@@ -34,6 +34,12 @@ test("publication and renewal change the alert deadline without a telemetry serv
   );
   expect(warning?.labels?.["severity"]).toBe("warning");
   expect(critical?.labels?.["severity"]).toBe("critical");
+  for (const rule of [warning, critical]) {
+    expect(rule?.annotations?.["summary"]).toBeDefined();
+    expect(rule?.annotations?.["summary"]?.length).toBeLessThanOrEqual(90);
+    expect(rule?.annotations?.["description"]).toBeDefined();
+    expect(rule?.annotations?.["message"]).toBeUndefined();
+  }
   const renewed = getGlitterLauncherReleaseRuleGroups({
     ...record,
     release: { ...record.release, expires: 1_807_776_000 },

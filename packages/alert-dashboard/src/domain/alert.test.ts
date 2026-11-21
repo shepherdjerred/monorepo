@@ -50,22 +50,36 @@ describe("alert domain", () => {
     expect(occurrenceId("same", 10n)).not.toBe(occurrenceId("other", 10n));
   });
 
-  test("opening email groups alerts and escapes external metadata", () => {
+  test("opening email groups alerts, renders plainBody, and escapes external metadata", () => {
     const result = openingEmail([
       occurrence(),
       occurrence({ id: occurrenceId("second", 2n), severity: "warning" }),
     ]);
-    expect(result.subject).toBe("[Alerts] 2 critical alerts opened");
+    expect(result.subject).toBe(
+      "2 alerts: Storage disk <almost> full (+1 more)",
+    );
+    expect(result.htmlBody).toContain("<!DOCTYPE html>");
     expect(result.htmlBody).toContain("Disk &lt;almost&gt; full");
+    expect(result.htmlBody).not.toContain("Disk <almost> full");
     expect(result.htmlBody).toContain(
-      '<a href="https://alerts.tailnet-1a49.ts.net/alerts">Open Alerts</a>',
+      'href="https://alerts.tailnet-1a49.ts.net/alerts"',
+    );
+    expect(result.plainBody).toContain("Disk <almost> full");
+    expect(result.plainBody).toContain(
+      "Open Hub Alerts: https://alerts.tailnet-1a49.ts.net/alerts",
     );
   });
 
-  test("truncation email links to the alerts page, not the app root", () => {
-    expect(truncationEmail(3).htmlBody).toContain(
-      '<a href="https://alerts.tailnet-1a49.ts.net/alerts">Open Alerts</a>',
+  test("truncation email links to the alerts page in both HTML and plain text", () => {
+    const result = truncationEmail(3);
+    expect(result.subject).toBe("Warning: Alertmanager batch was truncated");
+    expect(result.htmlBody).toContain(
+      'href="https://alerts.tailnet-1a49.ts.net/alerts"',
     );
+    expect(result.plainBody).toContain(
+      "Open Hub Alerts: https://alerts.tailnet-1a49.ts.net/alerts",
+    );
+    expect(result.plainBody).toContain("Omitted alerts: 3");
   });
 
   test("opening email caps rows and reports local and upstream omissions", () => {
@@ -78,14 +92,15 @@ describe("alert domain", () => {
 
     const result = openingEmail(alerts, 7);
 
-    expect(result.htmlBody.match(/<li>/gu)).toHaveLength(25);
-    expect(result.htmlBody).toContain(
-      "5 additional accepted alerts were omitted from this email.",
-    );
-    expect(result.htmlBody).toContain(
-      "Alertmanager omitted 7 additional alerts from this webhook delivery.",
-    );
+    expect(result.htmlBody).toContain("Alert 0");
+    expect(result.htmlBody).toContain("Alert 24");
+    expect(result.htmlBody).not.toContain("Alert 25");
     expect(result.htmlBody).not.toContain("Alert 29");
+    for (const body of [result.htmlBody, result.plainBody]) {
+      expect(body).toContain(
+        "5 more alerts are open in Hub. Alertmanager omitted 7 alerts from this batch.",
+      );
+    }
   });
 
   test("unknown severities stay explicit", () => {

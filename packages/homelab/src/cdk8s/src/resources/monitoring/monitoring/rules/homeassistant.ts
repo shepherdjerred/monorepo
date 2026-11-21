@@ -106,6 +106,15 @@ function petCareUnavailableExpr(entity: string): string {
     : `(${baseUnavailableExpr}) and on() (homeassistant_entity_available{entity="vacuum.${floor}_floor"} == 1)`;
 }
 
+function friendlyEntityName(entity: string): string {
+  const withoutDomain = entity.replace(/^[a-z_]+\./u, "");
+  return withoutDomain
+    .replace(/^dockstream_2_smart_fountain_/u, "fountain_")
+    .replace(/^granary_smart_camera_feeder_(.+)_2$/u, "guest_room_feeder_$1")
+    .replace(/^granary_smart_camera_feeder_/u, "living_room_feeder_")
+    .replaceAll("_", " ");
+}
+
 function expressionAlert(options: {
   name: string;
   expression: string;
@@ -139,16 +148,16 @@ function feederRules(
       condition: "<=",
       threshold: 20,
       duration: "2h",
-      summary: `${label} PetLibro feeder backup battery low`,
-      description: `${label} PetLibro feeder D-cell backup battery is low: {{ $value }}%.`,
+      summary: `${label} PetLibro feeder backup battery is low`,
+      description: `The ${label} PetLibro feeder D-cell backup battery is at {{ $value }}%, risking missed meals during a power outage. Replace the D-cell backup batteries in the feeder.`,
     }),
     createSensorAlert({
       name: `PetLibroFeeder${id}DesiccantDue`,
       entity: `homeassistant_sensor_duration_d{entity="sensor.${prefix}_desiccant_remaining_days${suffix}"}`,
       condition: "<=",
       threshold: 0,
-      description: `${label} PetLibro feeder desiccant is due: {{ $value }} days remaining.`,
-      summary: `${label} PetLibro feeder desiccant due`,
+      description: `The ${label} PetLibro feeder desiccant pack has {{ $value }} days remaining, risking moisture buildup in stored dry food. Replace the desiccant bag and reset the timer in the PetLibro app.`,
+      summary: `${label} PetLibro feeder desiccant is due`,
       duration: "1h",
     }),
   ];
@@ -192,8 +201,8 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           condition: "<=",
           threshold: 0,
           description:
-            "PetLibro fountain cleaning is due: {{ $value }} days remaining.",
-          summary: "PetLibro fountain cleaning due",
+            "The PetLibro Dockstream 2 water fountain has {{ $value }} cleaning days remaining, risking biofilm buildup in pet drinking water. Clean the fountain tank and pump, then reset the cleaning timer in the PetLibro app.",
+          summary: "PetLibro fountain cleaning is due",
         }),
         createSensorAlert({
           name: "PetLibroFountainFilterDue",
@@ -202,8 +211,8 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           condition: "<=",
           threshold: 0,
           description:
-            "PetLibro fountain filter is due: {{ $value }} days remaining.",
-          summary: "PetLibro fountain filter due",
+            "The PetLibro Dockstream 2 water fountain filter has {{ $value }} days remaining, reducing water filtration quality. Replace the fountain filter and sponge, then reset the filter timer in the PetLibro app.",
+          summary: "PetLibro fountain filter replacement is due",
         }),
       ],
     },
@@ -222,15 +231,17 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           entity: "max by (namespace) (trmnl_petcare_litter_percent)",
           condition: "<",
           threshold: 60,
-          description: "LR5 globe litter is below 60%: {{ $value }}%.",
-          summary: "Storage LR5 globe litter low",
+          description:
+            "The storage room Litter-Robot 5 globe litter level is {{ $value }}% (below 60%), which can degrade clumping and cycle cleanliness. Refill the globe or top up the LitterHopper with fresh litter.",
+          summary: "Storage Litter-Robot 5 globe litter is low",
         }),
         expressionAlert({
           name: "LitterRobotWasteHigh",
           expression:
             "max by (namespace) (trmnl_petcare_litter_waste_percent) > 60 and max by (namespace) (trmnl_petcare_litter_waste_percent) <= 80",
-          description: "LR5 waste drawer is above 60%: {{ $value }}%.",
-          summary: "Storage LR5 waste drawer high",
+          description:
+            "The storage room Litter-Robot 5 waste drawer is {{ $value }}% full and approaching capacity. Empty the waste drawer liner soon so automatic cycling does not pause.",
+          summary: "Storage Litter-Robot 5 waste drawer is over 60% full",
           duration: "30m",
         }),
         createSensorAlert({
@@ -238,8 +249,9 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           entity: "max by (namespace) (trmnl_petcare_litter_waste_percent)",
           condition: ">",
           threshold: 80,
-          description: "LR5 waste drawer is above 80%: {{ $value }}%.",
-          summary: "Storage LR5 waste drawer critical",
+          description:
+            "The storage room Litter-Robot 5 waste drawer is {{ $value }}% full (over 80%) and about to stop automatic cleaning cycles. Replace the waste drawer bag promptly and confirm the drawer resets.",
+          summary: "Storage Litter-Robot 5 waste drawer is nearly full",
           duration: "10m",
           severity: "critical",
         }),
@@ -254,15 +266,16 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           expression:
             'max by (namespace) (trmnl_petcare_litter_hopper_status{status=~"low|empty|disconnected|unknown"}) == 1 and on (namespace) max by (namespace) (trmnl_petcare_litter_source_fresh) == 1',
           description:
-            "LR5 hopper is low, empty, disconnected, or reporting an unknown state.",
-          summary: "Storage LR5 hopper needs attention",
+            "The storage room Litter-Robot 5 LitterHopper is low, empty, disconnected, or reporting an unknown status, preventing automatic litter refills. Refill the hopper and check that it is seated and connected in the Whisker app.",
+          summary: "Storage Litter-Robot 5 hopper is low or disconnected",
         }),
         expressionAlert({
           name: "LitterRobotHopperFault",
           expression:
             'max by (namespace) (trmnl_petcare_litter_hopper_status{status=~"jammed|motor-fault|fault"}) == 1 and on (namespace) max by (namespace) (trmnl_petcare_litter_source_fresh) == 1',
-          description: "LR5 hopper reports a jam or explicit fault.",
-          summary: "Storage LR5 hopper fault",
+          description:
+            "The storage room Litter-Robot 5 LitterHopper is reporting a jam or motor fault, stopping automatic globe refills. Inspect the hopper dispense chute for obstructions, reseat the hopper, and clear the fault on the unit or Whisker app.",
+          summary: "Storage Litter-Robot 5 hopper has a fault",
           severity: "critical",
           duration: "5m",
         }),
@@ -271,17 +284,18 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           expression:
             'max by (namespace) (trmnl_petcare_litter_fault == 1 or trmnl_petcare_litter_online == 0 or trmnl_petcare_litter_hopper_installed == 0 or trmnl_petcare_litter_hopper_enabled == 0) and on (namespace) max by (namespace) (trmnl_petcare_litter_source_fresh) == 1 unless on () (max(homeassistant_binary_sensor_state{entity="binary_sensor.litter_robot_problem"}) == 1)',
           description:
-            "LR5 reports a robot fault, dirty laser, removed bonnet/drawer, offline state, or disabled/missing hopper.",
-          summary: "Storage LR5 fault",
+            "The storage room Litter-Robot 5 has reported a hardware fault, dirty laser sensor, removed bonnet or drawer, offline status, or disabled hopper for 15 minutes. Inspect the unit and Whisker app diagnostics to clear obstructions, clean the sensors, or restore Wi-Fi.",
+          summary: "Storage Litter-Robot 5 has a hardware or offline fault",
           duration: "15m",
         }),
+        // Whisker device lastSeen is not a live heartbeat, so freshness tracks successful API fetches.
         expressionAlert({
           name: "LitterRobotDiagnosticsStale",
           expression:
             'trmnl_petcare_source_up{source="whisker"} == 0 or trmnl_petcare_litter_source_fresh == 0 or absent(trmnl_petcare_litter_source_fresh) or time() - trmnl_petcare_whisker_last_success_timestamp_seconds > 900 or absent(trmnl_petcare_whisker_last_success_timestamp_seconds)',
           description:
-            "Validated Whisker diagnostics are unavailable, their last successful fetch is older than 15 minutes, or the associated HA vacuum entity is unavailable. Device lastSeen is not a heartbeat.",
-          summary: "Storage LR5 diagnostics stale",
+            "Validated Whisker API diagnostics for the storage room Litter-Robot 5 have not succeeded in over 15 minutes, blinding fault and waste-level alerts. Check the trmnl-dashboard petcare exporter logs, Whisker API credentials, and Home Assistant entity availability.",
+          summary: "Storage Litter-Robot 5 Whisker diagnostics are stale",
           duration: "10m",
         }),
         expressionAlert({
@@ -289,16 +303,19 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           expression:
             "trmnl_petcare_litter_ha_mismatch == 1 or absent(trmnl_petcare_litter_ha_mismatch)",
           description:
-            "Ordinary Home Assistant LR5 entities disagree with fresh Whisker diagnostics.",
-          summary: "Storage LR5 Home Assistant entities stale",
+            "Home Assistant's Litter-Robot 5 entities have disagreed with fresh Whisker API diagnostics for 10 minutes, leaving HA dashboards and automations with stale state. Reload the Whisker integration in Home Assistant and check Home Assistant logs for API errors.",
+          summary:
+            "Storage Litter-Robot 5 Home Assistant state disagrees with Whisker",
           duration: "10m",
         }),
         expressionAlert({
           name: "LitterRobotFilterOverdue",
           expression:
             "time() > max by (namespace) (trmnl_petcare_litter_filter_due_timestamp_seconds)",
-          description: "The LR5 filter replacement date has passed.",
-          summary: "Storage LR5 filter overdue",
+          description:
+            "The storage room Litter-Robot 5 carbon filter is past its replacement date, reducing odor control. Replace the carbon filter in the globe pocket and reset the filter timer in the Whisker app.",
+          summary:
+            "Storage Litter-Robot 5 carbon filter replacement is overdue",
           duration: "1h",
         }),
       ],
@@ -308,6 +325,7 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       name: "homeassistant-availability",
       rules: [
+        // The command actor is not inferred from Home Assistant recorder history; no automatic restart is attempted.
         {
           alert: "VacuumRunInterrupted",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -317,16 +335,17 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           labels: { severity: "info" },
           annotations: {
             summary: "Vacuum cleaning interrupted by a return command",
-            description:
-              "Cleaning was witnessed in Home Assistant recorder history, followed by a vacuum.return_to_base command. No automatic restart was attempted. The command actor is not inferred.",
+            description: escapePrometheusTemplate(
+              "A scheduled Roborock cleaning run in Temporal workflow {{ $labels.workflow }} was interrupted by a return-to-base command within the last 24 hours, leaving the floor partially cleaned. Check Home Assistant history if the return was unexpected and start a manual cleaning run if needed.",
+            ),
           },
         },
         {
           alert: "HomeAssistantMasterBathroomTemperatureUnavailable",
           annotations: {
             description:
-              "The Mysa master bathroom temperature sensor has been unavailable, or missing from Home Assistant entirely, for 15 minutes. Floor-heat decisions are degraded; the morning wake routine will continue without activating heat, but still runs its end-of-window thermostat turn-off.",
-            summary: "Master bathroom temperature unavailable",
+              "The Mysa master bathroom temperature sensor has been unavailable or missing from Home Assistant for 15 minutes, preventing the morning routine from turning on floor heat (scheduled turn-off still runs). Check the Mysa thermostat Wi-Fi connection and the Mysa/HomeKit integration in Home Assistant.",
+            summary: "Master bathroom temperature sensor is unavailable",
             runbook_url: `${tailnetService("homeassistant").origin}/history?entity_id=sensor.master_bathroom_temperature`,
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -344,8 +363,8 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         ...TEMPORAL_AUTOMATION_ENTITY_IDS.map((entity) => ({
           alert: "HomeAssistantAutomationDependencyUnavailable",
           annotations: {
-            description: `Home Assistant entity ${entity}, required by a Temporal home automation, has been unavailable or absent from metrics for 15 minutes.`,
-            summary: `Home automation dependency unavailable: ${entity}`,
+            description: `Home Assistant entity ${entity}, required by a Temporal home automation workflow, has been unavailable or missing from metrics for 15 minutes and may degrade scheduled routines. Check the device connection and its integration status in Home Assistant.`,
+            summary: `Home automation device unavailable: ${friendlyEntityName(entity)}`,
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             `homeassistant_entity_available{entity="${entity}"} == 0 or absent(homeassistant_entity_available{entity="${entity}"})`,
@@ -356,8 +375,8 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
         ...PET_CARE_ENTITY_IDS.map((entity) => ({
           alert: "PetCareEntityUnavailable",
           annotations: {
-            description: `Pet-care entity ${entity} has been unavailable or absent from Home Assistant metrics for 15 minutes.`,
-            summary: `Pet-care entity unavailable: ${entity}`,
+            description: `Home Assistant pet-care entity ${entity} has been unavailable or missing from metrics for 15 minutes, leaving pet device monitoring incomplete. Check the device power, Wi-Fi connection, and its Home Assistant integration.`,
+            summary: `Pet sensor unavailable: ${friendlyEntityName(entity)}`,
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             petCareUnavailableExpr(entity),
@@ -382,8 +401,9 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
             'min by (entity) (homeassistant_sensor_battery_percent{entity!~"sensor[.](1st|2nd|3rd)_floor_battery",entity!~"sensor[.]granary_smart_camera_feeder_battery_ac(_2)?",entity!~".*blue_pure.*filter.*"})',
           condition: "<",
           threshold: 20, // Lowered from 30 to reduce flapping - 20% is genuinely critical
-          description: "Battery low: {{ $value }}% ({{ $labels.entity }}).",
-          summary: "Home Assistant battery low",
+          description:
+            "Home Assistant entity {{ $labels.entity }} has {{ $value }}% battery remaining (below 20%), risking device drop-off. Replace or recharge the device battery.",
+          summary: "Smart home device battery is below 20%",
           duration: "2h",
         }),
       ],
@@ -407,9 +427,9 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           condition: "==",
           threshold: 1,
           description:
-            "Roborock {{ $labels.friendly_name }} reports a problem (stuck / robot error / dock error). Check the vacuum.",
+            "Roborock {{ $labels.friendly_name }} has reported a stuck state, robot error, or dock fault for 5 minutes, halting floor cleaning. Inspect the vacuum and dock physically and check the Roborock or Home Assistant app for the specific error.",
           summary: escapePrometheusTemplate(
-            "Roborock {{ $labels.friendly_name }} vacuum problem",
+            "Roborock {{ $labels.friendly_name }} reports a problem",
           ),
           duration: "5m",
         }),
@@ -420,9 +440,9 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           condition: "==",
           threshold: 1,
           description:
-            "Roborock {{ $labels.friendly_name }} dock dirty-water tank is full — empty it.",
+            "Roborock {{ $labels.friendly_name }} dock dirty-water tank is full, preventing dock mop washing and mopping runs. Empty and rinse the dirty-water tank on the dock.",
           summary: escapePrometheusTemplate(
-            "Roborock {{ $labels.friendly_name }} dirty-water tank full",
+            "Roborock {{ $labels.friendly_name }} dirty-water tank is full",
           ),
           duration: "5m",
         }),
@@ -433,9 +453,9 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           condition: "==",
           threshold: 1,
           description:
-            "Roborock {{ $labels.friendly_name }} dock clean-water tank is empty — refill it.",
+            "Roborock {{ $labels.friendly_name }} dock clean-water tank has been empty for 15 minutes, preventing mop washing and floor mopping. Refill the dock clean-water tank.",
           summary: escapePrometheusTemplate(
-            "Roborock {{ $labels.friendly_name }} clean-water tank empty",
+            "Roborock {{ $labels.friendly_name }} clean-water tank is empty",
           ),
           duration: "15m",
         }),
@@ -446,9 +466,9 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           condition: "==",
           threshold: 1,
           description:
-            "Roborock {{ $labels.friendly_name }} dock cleaning fluid is low — refill it.",
+            "Roborock {{ $labels.friendly_name }} dock cleaning solution reservoir is low, so mopping runs will use plain water once depleted. Refill the dock cleaning fluid cartridge.",
           summary: escapePrometheusTemplate(
-            "Roborock {{ $labels.friendly_name }} cleaning fluid low",
+            "Roborock {{ $labels.friendly_name }} cleaning fluid is low",
           ),
           duration: "5m",
         }),
@@ -459,9 +479,9 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           condition: "==",
           threshold: 1,
           description:
-            "Roborock {{ $labels.friendly_name }} reports a water shortage.",
+            "Roborock {{ $labels.friendly_name }} reports an onboard or dock water shortage, stopping wet mopping. Check that the dock clean-water tank is filled and properly seated.",
           summary: escapePrometheusTemplate(
-            "Roborock {{ $labels.friendly_name }} water shortage",
+            "Roborock {{ $labels.friendly_name }} has a water shortage",
           ),
           duration: "5m",
         }),
@@ -475,9 +495,9 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           condition: "<",
           threshold: 10,
           description:
-            "Roborock consumable {{ $labels.friendly_name }} has under 10h of life left ({{ $value }}h) — replace/clean it soon.",
+            "Roborock consumable {{ $labels.friendly_name }} has {{ $value | humanize }} hours of service life remaining (under 10 hours). Clean or replace the worn part and reset its consumable timer in the Roborock or Home Assistant app.",
           summary: escapePrometheusTemplate(
-            "Roborock {{ $labels.friendly_name }} consumable due",
+            "Roborock {{ $labels.friendly_name }} maintenance is due",
           ),
           duration: "1h",
         }),
@@ -489,10 +509,10 @@ function getUncategorizedHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "RoborockBatteryLowNotCharging",
           annotations: {
             description: escapePrometheusTemplate(
-              "Roborock {{ $labels.friendly_name }} battery is low and not charging: {{ $value }}%.",
+              "Roborock {{ $labels.friendly_name }} battery is at {{ $value }}% and has not gained charge over the last 30 minutes, risking the robot powering off away from its dock. Return the vacuum to its dock and clean the charging contacts if it fails to charge.",
             ),
             summary: escapePrometheusTemplate(
-              "Roborock {{ $labels.friendly_name }} battery low and not charging",
+              "Roborock {{ $labels.friendly_name }} battery is low and not charging",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

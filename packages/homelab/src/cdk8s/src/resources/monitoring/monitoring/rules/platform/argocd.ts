@@ -11,9 +11,9 @@ export function getArgoCDRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ArgoAppMissing",
           annotations: {
-            summary: "[Argo CD] No reported applications",
+            summary: "Argo CD is not reporting any applications",
             description:
-              "Argo CD has not reported any applications data for the past 15 minutes which means that it must be down or not functioning properly. This needs to be resolved for this cloud to continue to maintain state.",
+              "Argo CD has not exported application metrics for 15 minutes, so GitOps reconciliation or metrics scraping may be down and cluster state can drift undetected. Check pods and logs in the argocd namespace and verify the Argo CD ServiceMonitor target in Prometheus.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "absent(argocd_app_info) == 1",
@@ -27,10 +27,10 @@ export function getArgoCDRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ArgoAppNotSynced",
           annotations: {
             summary: escapePrometheusTemplate(
-              "[{{ $labels.name }}] Application not synchronized",
+              "Argo CD application {{ $labels.name }} is out of sync",
             ),
             description: escapePrometheusTemplate(
-              "The application [{{ $labels.name }}] has not been synchronized for over 14 days which means that the state of this cloud has drifted away from the state inside Git.",
+              "Argo CD application {{ $labels.name }} has remained out of sync for over 14 days, leaving live cluster resources drifted from Git. Inspect the application diff and sync errors in Argo CD and reconcile or fix the blocking manifest.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

@@ -1,74 +1,183 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
+import type {
+  EmailDocument,
+  EmailItemCard,
+  EmailMetricRow,
+  EmailSection,
+  EmailTimelineRow,
+  EmailTone,
+} from "@shepherdjerred/ops-model/email/primitives.ts";
+import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
+import { renderEmailText } from "@shepherdjerred/ops-model/email/render-text.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import {
   groupSignals,
   type SignalEntry,
 } from "@shepherdjerred/ops-model/signals/signal-groups.ts";
-import type { Signal } from "@shepherdjerred/ops-model/snapshot.ts";
+import type {
+  SectionId,
+  Signal,
+  SourceId,
+} from "@shepherdjerred/ops-model/snapshot.ts";
 
 import { ALERTS_PUBLIC_URL } from "#domain/ops-changes";
 import { DIGEST_TIME_ZONE } from "#domain/ops-period";
-import type { ChangeView, DigestReport, Trend } from "#shared/ops-schema";
 import {
   SEVERITY_LABEL,
   formatDelta,
   formatValue,
   trendDelta,
 } from "#shared/ops-format";
+import type { ChangeView, DigestReport, Trend } from "#shared/ops-schema";
 
 /** Rows per list. A group of same-kind signals is one row. */
 const MAX_SIGNALS = 15;
 const MAX_CHANGES = 25;
 
-/** Status colors with a text label beside them; never color alone. */
-const SEVERITY_STYLE: Record<Severity, { background: string; ink: string }> = {
-  ok: { background: "#e3f4e3", ink: "#0a5c0a" },
-  info: { background: "#e1edfb", ink: "#1c5cab" },
-  unknown: { background: "#ecebe7", ink: "#52514e" },
-  warning: { background: "#fff1cf", ink: "#7a5200" },
-  error: { background: "#fbe4e4", ink: "#9d241e" },
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+const SERVICE_TITLES = new Map(
+  SERVICE_CATALOG.services.map(
+    (service) => [service.id, service.title] as const,
+  ),
+);
+
+const SOURCE_LABELS: Record<SourceId, string> = {
+  alerts: "Alerts",
+  kubernetes: "Kubernetes",
+  argocd: "Argo CD",
+  talos: "Talos",
+  ci: "CI",
+  github: "GitHub",
+  renovate: "Renovate",
+  tracker: "Tracker",
+  bugsink: "Bugsink",
+  posthog: "PostHog",
+  probes: "Probes",
+  logs: "Logs",
+  traces: "Traces",
+  maintenance: "Maintenance",
+  temporal: "Temporal",
+  ai: "AI",
 };
 
-const FONT =
-  "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
+const SECTION_LABELS: Record<SectionId, string> = {
+  alerts: "Alerts",
+  platform: "Platform",
+  product: "Product",
+  delivery: "Delivery",
+  errors: "Errors",
+  observability: "Observability",
+  work: "Work",
+  maintenance: "Maintenance",
+  ai: "AI",
+};
 
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+const CHANGE_KIND_LABELS: Record<ChangeView["kind"], string> = {
+  deploy: "Deploy",
+  sync: "Synced",
+  merge: "PR merged",
+  "image-bump": "Image update",
+  release: "Release",
+  "alert-open": "Alert opened",
+  "alert-resolve": "Resolved",
+};
+
+function severityToTone(severity: Severity): EmailTone {
+  switch (severity) {
+    case "error":
+      return "critical";
+    case "warning":
+      return "warning";
+    case "ok":
+      return "ok";
+    case "info":
+      return "info";
+    case "unknown":
+      return "neutral";
+  }
 }
 
-/** `Sep 24 12:29` in the digest's time zone. */
-function localTime(instant: string): string {
+function plainDateInDigestZone(instant: string): Temporal.PlainDate {
   return Temporal.Instant.from(instant)
     .toZonedDateTimeISO(DIGEST_TIME_ZONE)
-    .toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    });
+    .toPlainDate();
 }
 
-function pill(severity: Severity): string {
-  const style = SEVERITY_STYLE[severity];
-  return `<span style="display:inline-block;padding:2px 8px;border-radius:999px;background:${style.background};color:${style.ink};font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">${SEVERITY_LABEL[severity]}</span>`;
+function formatShortDate(date: Temporal.PlainDate): string {
+  const month = MONTHS[date.month - 1] ?? String(date.month);
+  return `${month} ${String(date.day)}`;
 }
 
-function heading(text: string): string {
-  return `<h2 style="margin:28px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:#52514e">${escapeHtml(text)}</h2>`;
+/** Human period label (`Nov 20` for daily, `Nov 13–20` for weekly). */
+function formatPeriodLabel(report: DigestReport): string {
+  const end = plainDateInDigestZone(report.periodEnd);
+  if (report.kind === "daily") {
+    return formatShortDate(end);
+  }
+  const start = plainDateInDigestZone(report.periodStart);
+  if (Temporal.PlainDate.compare(start, end) >= 0) {
+    return formatShortDate(end);
+  }
+  if (start.month === end.month && start.year === end.year) {
+    const month = MONTHS[start.month - 1] ?? String(start.month);
+    return `${month} ${String(start.day)}–${String(end.day)}`;
+  }
+  return `${formatShortDate(start)} – ${formatShortDate(end)}`;
 }
 
-function signalLink(signal: Signal): string {
-  const link = signal.links[0];
-  const title = escapeHtml(signal.title);
-  return link === undefined
-    ? title
-    : `<a href="${escapeHtml(link.url)}" style="color:#0b0b0b">${title}</a>`;
+/** `Nov 20 19:45` in `DIGEST_TIME_ZONE`. */
+function formatLocalTime(instant: string): string {
+  const zdt =
+    Temporal.Instant.from(instant).toZonedDateTimeISO(DIGEST_TIME_ZONE);
+  const month = MONTHS[zdt.month - 1] ?? String(zdt.month);
+  const hour = String(zdt.hour).padStart(2, "0");
+  const minute = String(zdt.minute).padStart(2, "0");
+  return `${month} ${String(zdt.day)} ${hour}:${minute}`;
+}
+
+function buildDigestSubject(report: DigestReport, periodLabel: string): string {
+  const prefix = report.kind === "daily" ? "Daily digest" : "Weekly review";
+  const needsCount = report.needsMe.length;
+  if (needsCount > 0) {
+    const noun = needsCount === 1 ? "item needs" : "items need";
+    return `${prefix}: ${String(needsCount)} ${noun} your review`;
+  }
+  return report.status.severity === "ok" && !report.status.stale
+    ? `${prefix}: All clear (${periodLabel})`
+    : `${prefix}: Attention needed (${periodLabel})`;
+}
+
+function buildTopBadge(report: DigestReport): string {
+  if (report.needsMe.length > 0) {
+    return `${String(report.needsMe.length)} to review`;
+  }
+  if (report.status.severity === "ok" && !report.status.stale) {
+    return "All clear";
+  }
+  return report.status.stale && report.status.severity === "ok"
+    ? "Stale"
+    : SEVERITY_LABEL[report.status.severity];
+}
+
+function signalKicker(signal: Signal): string {
+  return signal.service === undefined
+    ? SOURCE_LABELS[signal.source]
+    : (SERVICE_TITLES.get(signal.service) ?? signal.service);
 }
 
 /**
@@ -88,175 +197,189 @@ function cappedEntries(signals: readonly Signal[]): {
   return { shown, hidden: signals.length - covered };
 }
 
-function signalRow(severity: Severity, body: string): string {
-  return `<tr><td style="width:92px;padding:8px 10px 8px 0;vertical-align:top;white-space:nowrap">${pill(severity)}</td><td style="padding:8px 0;border-bottom:1px solid #e1e0d9">${body}</td></tr>`;
-}
-
-function entryRow(entry: SignalEntry): string {
+function entryToCard(entry: SignalEntry): EmailItemCard {
   if (entry.type === "group") {
-    return signalRow(entry.severity, escapeHtml(entry.label));
+    return {
+      tone: severityToTone(entry.severity),
+      kicker: SECTION_LABELS[entry.section],
+      badge:
+        entry.severity === "error"
+          ? "Critical"
+          : SEVERITY_LABEL[entry.severity],
+      title: entry.label,
+    };
   }
   const { signal } = entry;
-  const detail =
-    signal.detail === undefined
-      ? ""
-      : `<div style="color:#52514e;font-size:13px">${escapeHtml(signal.detail)}</div>`;
-  return signalRow(signal.severity, `${signalLink(signal)}${detail}`);
+  const links = signal.links.map((link) => ({
+    label: link.label,
+    url: link.url,
+  }));
+  return {
+    tone: severityToTone(signal.severity),
+    kicker: signalKicker(signal),
+    badge:
+      signal.severity === "error"
+        ? "Critical"
+        : SEVERITY_LABEL[signal.severity],
+    title: signal.title,
+    ...(signal.detail === undefined ? {} : { body: signal.detail }),
+    ...(links.length === 0 ? {} : { links }),
+  };
 }
 
-function signalRows(signals: readonly Signal[], empty: string): string {
-  if (signals.length === 0)
-    return `<p style="margin:0;color:#52514e">${escapeHtml(empty)}</p>`;
+function buildSignalsSection(
+  heading: string,
+  signals: readonly Signal[],
+  emptyText?: string,
+): EmailSection {
   const { shown, hidden } = cappedEntries(signals);
-  const rows = shown.map((entry) => entryRow(entry)).join("");
-  const more =
-    hidden > 0
-      ? `<p style="margin:6px 0 0;color:#52514e;font-size:13px">and ${String(hidden)} more on the dashboard</p>`
-      : "";
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">${rows}</table>${more}`;
+  return {
+    kind: "items",
+    heading,
+    ...(emptyText === undefined ? {} : { emptyText }),
+    items: shown.map((entry) => entryToCard(entry)),
+    ...(hidden <= 0
+      ? {}
+      : { omittedNotice: `and ${String(hidden)} more in Hub.` }),
+  };
 }
 
-function changeRows(changes: readonly ChangeView[]): string {
-  if (changes.length === 0)
-    return `<p style="margin:0;color:#52514e">No changes recorded.</p>`;
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">${changes
-    .slice(0, MAX_CHANGES)
-    .map((change) => {
-      const time = localTime(change.occurredAt);
-      const title = escapeHtml(change.title);
-      const body =
-        change.url === undefined
-          ? title
-          : `<a href="${escapeHtml(change.url)}" style="color:#0b0b0b">${title}</a>`;
-      return `<tr><td style="padding:6px 10px 6px 0;color:#52514e;font-size:12px;white-space:nowrap;vertical-align:top;font-family:ui-monospace,Menlo,monospace">${time}</td><td style="padding:6px 10px 6px 0;font-size:12px;color:#52514e;white-space:nowrap;vertical-align:top">${escapeHtml(change.kind)}</td><td style="padding:6px 0;font-size:14px">${body}</td></tr>`;
-    })
-    .join("")}</table>`;
+function trendToMetricRow(trend: Trend): EmailMetricRow {
+  const delta = trendDelta(trend);
+  const deltaTone: EmailMetricRow["deltaTone"] =
+    delta === null || delta === 0
+      ? "neutral"
+      : delta > 0 === trend.higherIsBetter
+        ? "good"
+        : "bad";
+  return {
+    label: trend.label,
+    value: formatValue(trend.current, trend.unit),
+    delta: formatDelta(delta, trend.unit),
+    deltaTone,
+  };
 }
 
-function trendRows(trends: readonly Trend[]): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse">${trends
-    .map((trend) => {
-      const delta = trendDelta(trend);
-      const good =
-        delta === null || delta === 0
-          ? null
-          : delta > 0 === trend.higherIsBetter;
-      const color = good === null ? "#52514e" : good ? "#006300" : "#9d241e";
-      return `<tr><td style="padding:6px 0;border-bottom:1px solid #e1e0d9">${escapeHtml(trend.label)}</td><td style="padding:6px 0;border-bottom:1px solid #e1e0d9;text-align:right;font-weight:700">${formatValue(trend.current, trend.unit)}</td><td style="padding:6px 0 6px 12px;border-bottom:1px solid #e1e0d9;text-align:right;color:${color};font-size:13px;white-space:nowrap">${formatDelta(delta, trend.unit)}</td></tr>`;
-    })
-    .join("")}</table>`;
+function changeToTimelineRow(change: ChangeView): EmailTimelineRow {
+  return {
+    time: formatLocalTime(change.occurredAt),
+    kind: CHANGE_KIND_LABELS[change.kind],
+    title: change.title,
+    ...(change.url === undefined ? {} : { url: change.url }),
+  };
 }
 
-function subject(report: DigestReport): string {
-  const label = report.kind === "daily" ? "Daily" : "Weekly";
-  const needs = report.needsMe.length;
-  const suffix =
-    needs === 0
-      ? SEVERITY_LABEL[report.status.severity]
-      : `${String(needs)} waiting on you`;
-  return `[Hub] ${label} digest ${report.periodKey}: ${suffix}`;
+function formatIncidentsDetail(incidents: DigestReport["incidents"]): string {
+  const base = `${String(incidents.opened)} opened · ${String(incidents.resolved)} resolved`;
+  return incidents.medianMinutesToResolve === null
+    ? base
+    : `${base} · median ${String(Math.round(incidents.medianMinutesToResolve))} min`;
 }
 
-function htmlBody(report: DigestReport): string {
-  const incidents = report.incidents;
-  const title =
-    report.kind === "daily" ? "Daily ops digest" : "Weekly ops review";
-  const stale = report.status.stale
-    ? `<p style="margin:8px 0 0;color:#7a5200">The latest snapshot is stale; treat green as unknown.</p>`
-    : "";
-  const sections = [
-    heading("Waiting on you"),
-    signalRows(report.needsMe, "Nothing is waiting on you."),
-    heading("Needs attention"),
-    signalRows(report.attention, "Nothing needs attention."),
-    heading(
-      report.kind === "daily" ? "New since the last digest" : "New this week",
+export function buildDigestDocument(report: DigestReport): {
+  subject: string;
+  document: EmailDocument;
+} {
+  const periodLabel = formatPeriodLabel(report);
+  const subject = buildDigestSubject(report, periodLabel);
+  const heading =
+    report.kind === "daily"
+      ? `Morning check-in · ${periodLabel}`
+      : `Weekly review · ${periodLabel}`;
+  const topTone: EmailTone =
+    report.status.stale && report.status.severity === "ok"
+      ? "warning"
+      : severityToTone(report.status.severity);
+
+  const sections: EmailSection[] = [
+    buildSignalsSection(
+      "Waiting on you",
+      report.needsMe,
+      "Nothing is waiting on you.",
     ),
-    signalRows(report.newSinceLast, "Nothing new."),
-    ...(report.trends.length === 0
+    buildSignalsSection(
+      "Needs attention",
+      report.attention,
+      "Nothing needs attention.",
+    ),
+    ...(report.newSinceLast.length === 0
       ? []
-      : [heading("Trends vs. previous week"), trendRows(report.trends)]),
-    heading("Incidents"),
-    `<p style="margin:0">${String(incidents.opened)} opened · ${String(incidents.resolved)} resolved · median time to resolve ${incidents.medianMinutesToResolve === null ? "—" : `${String(Math.round(incidents.medianMinutesToResolve))} min`}</p>`,
-    heading(
-      report.kind === "daily"
-        ? "Changes in the last 24 hours"
-        : "Changes this week",
-    ),
-    changeRows(report.changes),
-  ].join("");
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapeHtml(title)}</title></head><body style="margin:0;background:#f9f9f7;font-family:${FONT};color:#0b0b0b"><div style="max-width:640px;margin:0 auto;padding:24px 16px"><div style="background:#fcfcfb;border:1px solid #e1e0d9;border-radius:12px;padding:24px"><p style="margin:0;color:#176b4d;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase">Hub · ${escapeHtml(report.periodKey)}</p><h1 style="margin:6px 0 12px;font-size:24px">${escapeHtml(title)}</h1><p style="margin:0">${pill(report.status.severity)} <span style="margin-left:6px">${escapeHtml(report.status.summary)}</span></p>${stale}${sections}<p style="margin:28px 0 0"><a href="${ALERTS_PUBLIC_URL}/" style="display:inline-block;padding:10px 14px;border-radius:7px;background:#176b4d;color:#ffffff;text-decoration:none;font-weight:700">Open Hub</a></p></div></div></body></html>`;
-}
-
-function textEntry(entry: SignalEntry): string {
-  if (entry.type === "group") {
-    return `  - [${SEVERITY_LABEL[entry.severity]}] ${entry.label}`;
-  }
-  const { signal } = entry;
-  return `  - [${SEVERITY_LABEL[signal.severity]}] ${signal.title}${signal.links[0] === undefined ? "" : ` <${signal.links[0].url}>`}`;
-}
-
-function textSignals(signals: readonly Signal[], empty: string): string {
-  if (signals.length === 0) return `  ${empty}`;
-  const { shown, hidden } = cappedEntries(signals);
-  return [
-    ...shown.map((entry) => textEntry(entry)),
-    ...(hidden > 0 ? [`  and ${String(hidden)} more on the dashboard`] : []),
-  ].join("\n");
-}
-
-function textBody(report: DigestReport): string {
-  const lines = [
-    `${report.kind === "daily" ? "Daily ops digest" : "Weekly ops review"} ${report.periodKey}`,
-    `Status: ${SEVERITY_LABEL[report.status.severity]} — ${report.status.summary}`,
-    ...(report.status.stale
-      ? ["The latest snapshot is stale; treat green as unknown."]
-      : []),
-    "",
-    "Waiting on you:",
-    textSignals(report.needsMe, "Nothing is waiting on you."),
-    "",
-    "Needs attention:",
-    textSignals(report.attention, "Nothing needs attention."),
-    "",
-    "New:",
-    textSignals(report.newSinceLast, "Nothing new."),
+      : [
+          buildSignalsSection(
+            report.kind === "daily" ? "New since last digest" : "New this week",
+            report.newSinceLast,
+          ),
+        ]),
     ...(report.trends.length === 0
       ? []
       : [
-          "",
-          "Trends vs. previous week:",
-          ...report.trends.map(
-            (trend) =>
-              `  - ${trend.label}: ${formatValue(trend.current, trend.unit)} (${formatDelta(trendDelta(trend), trend.unit)})`,
-          ),
+          {
+            kind: "metrics" as const,
+            heading: "This week vs. last week",
+            rows: report.trends.map((trend) => trendToMetricRow(trend)),
+          },
         ]),
-    "",
-    `Incidents: ${String(report.incidents.opened)} opened, ${String(report.incidents.resolved)} resolved`,
-    "",
-    "Changes:",
-    ...(report.changes.length === 0
-      ? ["  No changes recorded."]
-      : report.changes
-          .slice(0, MAX_CHANGES)
-          .map(
-            (change) =>
-              `  - ${change.occurredAt} ${change.kind}: ${change.title}`,
-          )),
-    "",
-    `Open Hub: ${ALERTS_PUBLIC_URL}/`,
+    {
+      kind: "timeline",
+      heading: "Recent activity",
+      emptyText:
+        report.kind === "daily"
+          ? "No changes recorded in the last 24 hours."
+          : "No changes recorded this week.",
+      rows: report.changes
+        .slice(0, MAX_CHANGES)
+        .map((change) => changeToTimelineRow(change)),
+    },
   ];
-  return `${lines.join("\n")}\n`;
+
+  const document: EmailDocument = {
+    eyebrow: "Hub Digest",
+    tone: topTone,
+    badge: buildTopBadge(report),
+    preheader: `${heading} — ${report.status.summary}`,
+    heading,
+    lead: report.status.summary,
+    ...(report.status.stale
+      ? {
+          callout: {
+            tone: "warning",
+            title: "Snapshot is stale",
+            text: "The latest snapshot is stale; treat green checks as unknown until ingestion recovers.",
+          },
+        }
+      : {}),
+    actionsAboveSections: false,
+    sections,
+    primaryAction: {
+      label: "Open Hub",
+      url: `${ALERTS_PUBLIC_URL}/`,
+    },
+    details: [
+      {
+        label: "Window",
+        value: `${formatLocalTime(report.periodStart)} – ${formatLocalTime(report.periodEnd)} PT`,
+        mono: false,
+      },
+      {
+        label: "Incidents",
+        value: formatIncidentsDetail(report.incidents),
+        mono: false,
+      },
+    ],
+  };
+
+  return { subject, document };
 }
 
 export function renderDigestEmail(report: DigestReport): {
   subject: string;
   htmlBody: string;
-  textBody: string;
+  plainBody: string;
 } {
+  const { subject, document } = buildDigestDocument(report);
   return {
-    subject: subject(report),
-    htmlBody: htmlBody(report),
-    textBody: textBody(report),
+    subject,
+    htmlBody: renderEmailHtml(document),
+    plainBody: renderEmailText(document),
   };
 }

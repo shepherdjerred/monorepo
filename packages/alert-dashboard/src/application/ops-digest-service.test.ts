@@ -39,10 +39,8 @@ describe("digest runs", () => {
     expect(ops.postal.sent).toHaveLength(1);
     const [message] = ops.postal.sent;
     expect(message?.messageId).toBe("<ops-digest-daily-2026-09-28@sjer.red>");
-    expect(message?.subject).toBe(
-      "[Hub] Daily digest 2026-09-28: 4 waiting on you",
-    );
-    expect(message?.plainBody).toContain("Waiting on you:");
+    expect(message?.subject).toBe("Daily digest: 4 items need your review");
+    expect(message?.plainBody).toContain("Waiting on you");
     expect(message?.tag).toBe("ops-digest-daily");
     const cursor = await ops.repository.getCursor("digest");
     expect(cursor?.seenSignalIds).toContain("github:pr:3071");

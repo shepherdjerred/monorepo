@@ -67,119 +67,119 @@ function agentTaskSubject(report: ReportEnvelopeV1): string {
     report.verdict === "inconclusive" ||
     report.verdict === "pending"
   ) {
-    return `${title} could not finish`;
+    return `${title}: Could not finish`;
   }
   return report.verdict === "attention"
-    ? `Action needed: ${title}`
-    : `${title}: report ready`;
+    ? `${title}: Action needed`
+    : `${title}: Report ready`;
 }
 
 const SUBJECT_POLICIES = {
   "agent-task": agentTaskSubject,
   "dependency-summary": (report) =>
     subjectFromCopy(report, {
-      clear: "Dependencies are up to date",
-      changed: "Dependency changes found",
-      attention: "Action needed: dependency report",
-      pending: "Dependency report is still pending",
-      inconclusive: "Dependency report could not finish",
-      partial: "Dependency report could not finish",
-      failed: "Dependency report failed",
+      clear: "Dependencies: Up to date",
+      changed: "Dependencies: Updates available",
+      attention: "Dependencies: Action needed",
+      pending: "Dependencies: Check pending",
+      inconclusive: "Dependencies: Check incomplete",
+      partial: "Dependencies: Check incomplete",
+      failed: "Dependencies: Check failed",
     }),
   "homelab-audit": (report) =>
     subjectFromCopy(report, {
-      clear: "Your homelab looks healthy",
-      changed: "Your homelab changed",
-      attention: "Action needed: homelab issues found",
-      pending: "Homelab check is still pending",
-      inconclusive: "Homelab check could not finish",
-      partial: "Homelab check could not finish",
-      failed: "Homelab check failed",
+      clear: "Homelab check: All clear",
+      changed: "Homelab check: Changes detected",
+      attention: "Homelab check: Issues need review",
+      pending: "Homelab check: Still pending",
+      inconclusive: "Homelab check: Could not finish",
+      partial: "Homelab check: Could not finish",
+      failed: "Homelab check: Run failed",
     }),
   "link-rot-scan": (report) =>
     subjectFromCopy(report, {
-      clear: "No broken links found",
-      changed: "Link changes found",
-      attention: "Broken or unreachable links found",
-      pending: "Link check is still pending",
-      inconclusive: "Link check could not finish",
-      partial: "Link check could not finish",
-      failed: "Link check failed",
+      clear: "Link check: All links reachable",
+      changed: "Link check: Link changes detected",
+      attention: "Link check: Broken links found",
+      pending: "Link check: Still pending",
+      inconclusive: "Link check: Could not finish",
+      partial: "Link check: Could not finish",
+      failed: "Link check: Run failed",
     }),
   "main-vuln-scan": (report) =>
     subjectFromCopy(report, {
-      clear: "No high-risk vulnerabilities found",
-      changed: "Vulnerability changes found",
-      attention: "Action needed: vulnerabilities found",
-      pending: "Vulnerability scan is still pending",
-      inconclusive: "Vulnerability scan could not finish",
-      partial: "Vulnerability scan could not finish",
-      failed: "Vulnerability scan failed",
+      clear: "Security scan: No high-risk issues",
+      changed: "Security scan: Advisory changes found",
+      attention: "Security scan: Vulnerabilities need review",
+      pending: "Security scan: Still pending",
+      inconclusive: "Security scan: Could not finish",
+      partial: "Security scan: Could not finish",
+      failed: "Security scan: Run failed",
     }),
   "scout-data-dragon": (report) =>
     subjectFromCopy(report, {
-      clear: "Scout data is up to date",
-      changed: "Scout Data Dragon update created",
-      attention: "Action needed: Scout Data Dragon update",
-      pending: "Scout Data Dragon check is still pending",
-      inconclusive: "Scout Data Dragon check could not finish",
-      partial: "Scout Data Dragon update needs attention",
-      failed: "Scout Data Dragon update failed",
+      clear: "Scout update: Patch data up to date",
+      changed: "Scout update: Data Dragon PR opened",
+      attention: "Scout update: Data Dragon needs review",
+      pending: "Scout update: Data Dragon check pending",
+      inconclusive: "Scout update: Data Dragon incomplete",
+      partial: "Scout update: Data Dragon needs review",
+      failed: "Scout update: Data Dragon failed",
     }),
   "scout-lane-priors": (report) =>
     subjectFromCopy(report, {
-      clear: "Scout lane data is up to date",
-      changed: "Scout lane-data update created",
-      attention: "Action needed: Scout lane-data update",
-      pending: "Scout lane-data check is still pending",
-      inconclusive: "Scout lane-data check could not finish",
-      partial: "Scout lane-data update needs attention",
-      failed: "Scout lane-data update failed",
+      clear: "Scout lane data: Up to date",
+      changed: "Scout lane data: Update PR opened",
+      attention: "Scout lane data: Needs review",
+      pending: "Scout lane data: Still pending",
+      inconclusive: "Scout lane data: Could not finish",
+      partial: "Scout lane data: Needs review",
+      failed: "Scout lane data: Update failed",
     }),
   "scout-queue-windows": (report) =>
     subjectFromCopy(report, {
-      clear: "Scout queue windows are up to date",
-      changed: "Scout queue-window changes found",
-      attention: "Action needed: Scout queue-window warnings",
-      pending: "Scout queue-window check is still pending",
-      inconclusive: "Scout queue-window check could not finish",
-      partial: "Scout queue-window update needs attention",
-      failed: "Scout queue-window check failed",
+      clear: "Scout queues: Windows up to date",
+      changed: "Scout queues: Window changes detected",
+      attention: "Scout queues: Warnings need review",
+      pending: "Scout queues: Check pending",
+      inconclusive: "Scout queues: Could not finish",
+      partial: "Scout queues: Needs review",
+      failed: "Scout queues: Check failed",
     }),
   "scout-season-refresh": (report) =>
     subjectFromCopy(report, {
-      clear: "Scout season dates are up to date",
-      changed: "Scout season-date update created",
-      attention: "Action needed: Scout season-date update",
-      pending: "Scout season-date check is still pending",
-      inconclusive: "Scout season-date check could not finish",
-      partial: "Scout season-date update needs attention",
-      failed: "Scout season-date update failed",
+      clear: "Scout season: Dates up to date",
+      changed: "Scout season: Update PR opened",
+      attention: "Scout season: Dates need review",
+      pending: "Scout season: Check pending",
+      inconclusive: "Scout season: Could not finish",
+      partial: "Scout season: Dates need review",
+      failed: "Scout season: Update failed",
     }),
   "tasknotes-canary": (report) =>
     subjectFromCopy(report, {
-      clear: "TaskNotes looks healthy",
-      changed: "TaskNotes changed",
-      attention: "Action needed: TaskNotes problem found",
-      pending: "TaskNotes check is still pending",
-      inconclusive: "TaskNotes check could not finish",
-      partial: "TaskNotes check could not finish",
-      failed: "TaskNotes check failed",
+      clear: "TaskNotes check: All clear",
+      changed: "TaskNotes check: Changes detected",
+      attention: "TaskNotes check: Issue needs review",
+      pending: "TaskNotes check: Still pending",
+      inconclusive: "TaskNotes check: Could not finish",
+      partial: "TaskNotes check: Could not finish",
+      failed: "TaskNotes check: Run failed",
     }),
 } satisfies Record<(typeof TAILORED_REPORT_TYPES)[number], SubjectPolicy>;
 
 function genericSubject(report: ReportEnvelopeV1): string {
-  if (report.execution === "failed") return `${report.title} failed`;
+  if (report.execution === "failed") return `${report.title}: Run failed`;
   if (report.execution === "partial" || report.verdict === "inconclusive") {
-    return `${report.title} could not finish`;
+    return `${report.title}: Could not finish`;
   }
   if (report.verdict === "attention") {
-    return `Action needed: ${report.title}`;
+    return `${report.title}: Action needed`;
   }
-  if (report.verdict === "pending") return `${report.title} is still pending`;
+  if (report.verdict === "pending") return `${report.title}: Still pending`;
   return report.verdict === "changed"
-    ? `${report.title}: changes found`
-    : `${report.title}: no action needed`;
+    ? `${report.title}: Changes detected`
+    : `${report.title}: All clear`;
 }
 
 export function hasTailoredReportPresentation(reportType: string): boolean {

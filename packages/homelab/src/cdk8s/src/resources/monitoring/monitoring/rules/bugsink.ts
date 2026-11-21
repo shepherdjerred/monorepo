@@ -11,8 +11,8 @@ export function getBugsinkRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "BugsinkPodNotRunning",
           annotations: {
             summary: "Bugsink pod is not running",
-            message: escapePrometheusTemplate(
-              "Bugsink deployment has {{ $value }} available replicas (expected 1). Error tracking may be unavailable.",
+            description: escapePrometheusTemplate(
+              "The bugsink deployment in namespace bugsink has {{ $value }} available replicas (expected 1) for over 5 minutes, interrupting application error ingestion and UI access. Check pod status, events, and container logs in the bugsink namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -26,9 +26,9 @@ export function getBugsinkRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "BugsinkPodNotRunningCritical",
           annotations: {
-            summary: "Bugsink pod has been down for extended period",
-            message: escapePrometheusTemplate(
-              "Bugsink has been unavailable for 30+ minutes. Error tracking is not functioning.",
+            summary: "Bugsink has been down for over 30 minutes",
+            description: escapePrometheusTemplate(
+              "The bugsink deployment in namespace bugsink has had {{ $value }} available replicas for over 30 minutes, leaving self-hosted error tracking completely offline. Inspect pod events, container crash logs, and PostgreSQL connectivity in the bugsink namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -47,9 +47,9 @@ export function getBugsinkRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "BugsinkPVCStorageHigh",
           annotations: {
-            summary: "Bugsink PostgreSQL storage usage is high",
-            message: escapePrometheusTemplate(
-              "Bugsink PostgreSQL PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full. Consider running cleanup or expanding storage.",
+            summary: "Bugsink PostgreSQL storage usage is above 85%",
+            description: escapePrometheusTemplate(
+              "Bugsink PostgreSQL volume {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full and approaching capacity. Run Bugsink event retention cleanup or expand the PersistentVolumeClaim before the database runs out of disk space.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -64,9 +64,9 @@ export function getBugsinkRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "BugsinkPVCStorageCritical",
           annotations: {
-            summary: "Bugsink PostgreSQL storage is nearly full",
-            message: escapePrometheusTemplate(
-              "Bugsink PostgreSQL PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full. Immediate action required.",
+            summary: "Bugsink PostgreSQL storage usage is above 95%",
+            description: escapePrometheusTemplate(
+              "Bugsink PostgreSQL volume {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full and at immediate risk of disk exhaustion, which will halt error ingestion and database writes. Expand the PersistentVolumeClaim or purge old Bugsink events immediately.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -86,9 +86,9 @@ export function getBugsinkRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "BugsinkPostgreSQLNotReady",
           annotations: {
-            summary: "Bugsink PostgreSQL cluster is not ready",
-            message: escapePrometheusTemplate(
-              "Bugsink PostgreSQL cluster has {{ $value }} ready pods (expected 1). Database may be unavailable.",
+            summary: "Bugsink PostgreSQL database is not ready",
+            description: escapePrometheusTemplate(
+              "The bugsink-postgresql StatefulSet in namespace bugsink has {{ $value }} ready pods (expected 1), leaving Bugsink unable to store or query error events. Check the bugsink-postgresql pod status, PVC mounts, and PostgreSQL logs.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

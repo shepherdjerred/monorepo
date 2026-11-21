@@ -203,4 +203,39 @@ describe("sendPostalEmail", () => {
       headers: { "X-Report-Run-ID": "report:run-1" },
     });
   });
+
+  it("handles RFC 5322 display-name senders with semantic @sjer.red recipients", async () => {
+    const captured = captureFetch({
+      kind: "json",
+      body: {
+        status: "success",
+        data: {
+          message_id: "msg-4",
+          messages: { "ops@sjer.red": { id: 91, token: "tok" } },
+        },
+      },
+    });
+
+    const result = await sendPostalEmail(
+      {
+        to: "ops@sjer.red",
+        from: "Homelab Audit <ops@sjer.red>",
+        subject: "Homelab check: All clear",
+        htmlBody: "<p>clear</p>",
+        tag: "homelab-audit",
+      },
+      TEST_CONFIG,
+    );
+
+    expect(result.recipientId).toBe(91);
+    const call = captured.calls[0];
+    if (call?.body === undefined) {
+      throw new TypeError("expected request body");
+    }
+    expect(JSON.parse(call.body)).toMatchObject({
+      to: ["ops@sjer.red"],
+      from: "Homelab Audit <ops@sjer.red>",
+      subject: "Homelab check: All clear",
+    });
+  });
 });

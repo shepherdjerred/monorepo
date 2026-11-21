@@ -257,11 +257,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "NVMe wear above 50% on {{ $labels.model }} (serial {{ $labels.serial }})",
-            ),
+            summary: "SSD wear has passed 50%",
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) reports SMART percentage_used at {{ $value | humanizePercentage }}. Begin replacement planning.",
+              "NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}, {{ $labels.device }}) has consumed {{ $value | humanizePercentage }} of its rated endurance, reducing remaining flash lifespan. Review write-heavy workloads on the drive and plan a replacement.",
             ),
           },
         },
@@ -276,11 +274,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "NVMe wear above 80% on {{ $labels.model }} (serial {{ $labels.serial }})",
-            ),
+            summary: "SSD wear has passed 80%",
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) reports SMART percentage_used at {{ $value | humanizePercentage }}. Replace before reaching 1.0 (end-of-life prediction).",
+              "NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}, {{ $labels.device }}) has consumed {{ $value | humanizePercentage }} of its rated endurance and is approaching end of life. Replace the drive before rated wear reaches 100%.",
             ),
           },
         },
@@ -304,11 +300,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "NVMe writes exceed the 5-year budget on {{ $labels.node }} {{ $labels.model }} (serial {{ $labels.serial }})",
-            ),
+            summary: "SSD daily writes exceeded its 5-year budget",
             description: escapePrometheusTemplate(
-              `NVMe {{ $labels.model }} (serial {{ $labels.serial }}) on {{ $labels.node }} took {{ $value | humanize }}B of physical writes in the last 24h, more than the daily budget that stretches its remaining life over ${String(WRITE_BUDGET_YEARS)} years (${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}). Find the writer in the top-datasets panel of the SMART Monitoring dashboard and cut it.`,
+              `NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}) on {{ $labels.node }} received {{ $value | humanize }}B of physical writes in the last 24h, exceeding the daily budget needed for a ${String(WRITE_BUDGET_YEARS)}-year lifespan. Inspect the top-datasets panel on the SMART Monitoring dashboard to identify and reduce the heaviest writers.`,
             ),
           },
         },
@@ -323,11 +317,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "NVMe projected to reach rated wear within a year on {{ $labels.model }} (serial {{ $labels.serial }})",
-            ),
+            summary: "SSD is projected to wear out within a year",
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}) reaches SMART percentage_used 100% in about {{ $value | humanize }} days at its 14-day wear rate. Cut writes or plan a replacement.",
+              'At its 14-day wear rate, NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}) on {{ $labels.node }} will reach 100% rated wear in about {{ $value | printf "%.0f" }} days. Review sustained write amplification or plan a drive replacement.',
             ),
           },
         },
@@ -342,11 +334,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "NVMe projected to reach rated wear within six months on {{ $labels.model }} (serial {{ $labels.serial }})",
-            ),
+            summary: "SSD is projected to wear out within 6 months",
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}) reaches SMART percentage_used 100% in about {{ $value | humanize }} days at its 14-day wear rate. Have a replacement on hand and cut writes now.",
+              'At its 14-day wear rate, NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}) on {{ $labels.node }} will reach 100% rated wear in about {{ $value | printf "%.0f" }} days, risking premature failure. Replace the drive soon and cut write-heavy workloads immediately.',
             ),
           },
         },
@@ -367,11 +357,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "NVMe available spare below firmware threshold on {{ $labels.model }} (serial {{ $labels.serial }})",
-            ),
+            summary: "SSD spare flash blocks are running low",
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) reports available_spare {{ $value | humanizePercentage }}, below the device's own warning threshold. Replace.",
+              "NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}, {{ $labels.device }}) has {{ $value | humanizePercentage }} available spare blocks remaining, below the firmware warning threshold, indicating flash block exhaustion. Replace the drive promptly after verifying critical data backups.",
             ),
           },
         },
@@ -388,11 +376,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "NVMe media errors detected on {{ $labels.model }} (serial {{ $labels.serial }})",
-            ),
+            summary: "SSD reported unrecoverable flash media errors",
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) accumulated {{ $value }} media errors in the last hour. Investigate and consider replacement.",
+              'NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}, {{ $labels.device }}) recorded {{ $value | printf "%.0f" }} uncorrectable media or data-integrity error(s) in the last hour, risking data corruption or read failures. Check kernel logs and ZFS pool status on the host, and schedule a drive replacement.',
             ),
           },
         },
@@ -402,6 +388,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
         // The smartmon collector emits temperature without a usable device label
         // for NVMe, so NVMe temperature is owned here, not in smartctl.ts (whose
         // temp alerts are now scoped to SATA via type="sat").
+        // Samsung 990 PRO rated operating max is 70°C; warn at 65°C before
+        // Dynamic Thermal Guard throttles write bandwidth (which can extend CI
+        // burst windows in a self-reinforcing loop above 70°C).
         {
           alert: "NvmeTemperatureHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -413,11 +402,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "Elevated NVMe temperature on {{ $labels.model }} (serial {{ $labels.serial }})",
-            ),
+            summary: "SSD temperature is high",
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) is {{ $value }}°C. Samsung 990 PRO rated operating max is 70°C; thermal throttling kicks in at the limit.",
+              "NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}, {{ $labels.device }}) is at {{ $value }}°C, approaching its 70°C thermal throttling limit. Check chassis airflow, heatsink contact, and sustained disk I/O on the host.",
             ),
           },
         },
@@ -432,11 +419,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
             category: "hardware",
           },
           annotations: {
-            summary: escapePrometheusTemplate(
-              "NVMe at thermal throttle limit on {{ $labels.model }} (serial {{ $labels.serial }})",
-            ),
+            summary: "SSD temperature is critically high",
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) is {{ $value }}°C — at or above Samsung 990 PRO rated operating limit. Dynamic Thermal Guard is throttling write bandwidth, extending CI burst windows in a self-reinforcing loop.",
+              "NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}, {{ $labels.device }}) is at {{ $value }}°C and actively thermal-throttling I/O bandwidth, which degrades workload and CI performance. Inspect host cooling immediately and throttle heavy write workloads until temperatures drop.",
             ),
           },
         },

@@ -11,10 +11,10 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "StaticSiteDown",
           annotations: {
             summary: escapePrometheusTemplate(
-              "[{{ $labels.site }}{{ $labels.path }}] Static site endpoint is down",
+              "Static site {{ $labels.site }}{{ $labels.path }} is unreachable",
             ),
             description: escapePrometheusTemplate(
-              "Static site endpoint {{ $labels.site }}{{ $labels.path }} ({{ $labels.endpoint }}) has been unreachable for more than 5 minutes. The probe is failing to get a successful HTTP response.",
+              "HTTP health probes to static site {{ $labels.site }}{{ $labels.path }} ({{ $labels.endpoint }}) have failed for over 5 minutes, indicating visitors cannot load the page. Check static-site hosting pods, ingress routing, DNS/CDN status, and blackbox-exporter probe logs.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -29,10 +29,10 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "StaticSiteSlowResponse",
           annotations: {
             summary: escapePrometheusTemplate(
-              "[{{ $labels.site }}{{ $labels.path }}] Static site endpoint responding slowly",
+              "Static site {{ $labels.site }}{{ $labels.path }} is responding slowly",
             ),
             description: escapePrometheusTemplate(
-              "Static site endpoint {{ $labels.site }}{{ $labels.path }} ({{ $labels.endpoint }}) is responding slowly (>3s) for more than 10 minutes. Current response time: {{ $value | humanizeDuration }}",
+              "Static site {{ $labels.site }}{{ $labels.path }} ({{ $labels.endpoint }}) has taken {{ $value | humanizeDuration }} (>3s) to respond for over 10 minutes, degrading page load times. Check probe phase durations (DNS, connect, TLS, processing) in Prometheus and inspect CDN or ingress latency.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -47,10 +47,10 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "StaticSiteSSLCertExpiringSoon",
           annotations: {
             summary: escapePrometheusTemplate(
-              "[{{ $labels.site }}] SSL certificate expiring soon",
+              "TLS certificate for {{ $labels.site }} expires in under 14 days",
             ),
             description: escapePrometheusTemplate(
-              "SSL certificate for {{ $labels.site }} will expire in less than 14 days. Days remaining: {{ $value | humanize }}",
+              "The TLS certificate serving {{ $labels.site }} expires in {{ $value | humanize }} days. Check cert-manager Certificate and Order resources or CDN edge certificate renewal before it reaches critical expiry.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -65,10 +65,10 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "StaticSiteSSLCertExpiryCritical",
           annotations: {
             summary: escapePrometheusTemplate(
-              "[{{ $labels.site }}] SSL certificate expiring very soon",
+              "TLS certificate for {{ $labels.site }} expires in under 3 days",
             ),
             description: escapePrometheusTemplate(
-              "SSL certificate for {{ $labels.site }} will expire in less than 3 days! Days remaining: {{ $value | humanize }}",
+              "The TLS certificate serving {{ $labels.site }} expires in {{ $value | humanize }} days and will soon break HTTPS access for visitors. Inspect cert-manager renewal challenges, DNS/HTTP solver logs, or edge TLS configuration immediately.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -84,7 +84,7 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Static site probes are not running",
             description:
-              "No probe_success metrics have been collected for static sites in the last 10 minutes. The blackbox-exporter or probes may be misconfigured.",
+              "Prometheus has collected no health probe metrics for any static site in the last 10 minutes, leaving static-site outages undetected. Check that prometheus-blackbox-exporter is running and inspect Probe resources and Prometheus scrape targets in the monitoring namespace.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'absent(probe_success{job=~"static-site-.*"}) == 1',
@@ -102,7 +102,7 @@ export function getStaticSitesRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "sjer.red RSS probe is not running",
             description:
-              "No probe_success metrics have been collected for https://sjer.red/rss.xml in the last 10 minutes, but other static-site probes are reporting. The RSS Probe resource or its scrape config is likely the problem.",
+              "Prometheus has received no probe metrics for https://sjer.red/rss.xml over the last 10 minutes while other static-site probes are healthy, leaving RSS feed outages unmonitored. Check the static-site-sjer.red-rss Probe resource and its Prometheus scrape target.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'absent(probe_success{job="static-site-sjer.red-rss", site="sjer.red", endpoint="rss", path="/rss.xml"}) == 1 unless on() absent(probe_success{job=~"static-site-.*"}) == 1',

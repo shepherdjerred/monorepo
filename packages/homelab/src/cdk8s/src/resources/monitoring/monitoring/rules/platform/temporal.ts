@@ -58,11 +58,9 @@ function buildCheckAndSkipOutcomeRules(): PrometheusRule[] {
       return {
         alert: "TemporalCheckAndSkipNeverExecuted",
         annotations: {
-          summary: escapePrometheusTemplate(
-            "{{ $labels.workflow }} has only skipped (anomalously) for 5 days",
-          ),
+          summary: "Automation workflow has skipped every run for 5 days",
           description: escapePrometheusTemplate(
-            "Workflow {{ $labels.workflow }} has emitted only `skipped` outcomes for 5 days with no `executed` run, excluding its expected gate reasons. The gating condition may be stuck for an anomalous reason — check the workflow in the Temporal UI and HA entity availability.",
+            "Workflow {{ $labels.workflow }} has recorded only unexpected skips with no completed execution over the last 5 days, so its automation has not run. Check the workflow history in the Temporal UI and inspect Home Assistant entity availability for a stuck gating condition.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -83,14 +81,14 @@ function buildCheckAndSkipOutcomeRules(): PrometheusRule[] {
   // would silently disable the fallback. An empty selector makes the fallback
   // cover all workflows, which is the intended behavior.
   const fallbackSelector = excluded === "" ? "" : `workflow!~"${excluded}",`;
+  // Unconfigured workflows fall back to counting all skips; add expected gate
+  // reasons to CHECK_AND_SKIP_WORKFLOWS above if normal operation triggers this.
   const fallback: PrometheusRule = {
     alert: "TemporalCheckAndSkipNeverExecuted",
     annotations: {
-      summary: escapePrometheusTemplate(
-        "{{ $labels.workflow }} has skipped every run for 5 days",
-      ),
+      summary: "Automation workflow has skipped every run for 5 days",
       description: escapePrometheusTemplate(
-        "Workflow {{ $labels.workflow }} has emitted only `skipped` outcomes for 5 days, never `executed`. Either the gating condition is permanently stuck, or this workflow needs a benign-skip-reason entry in CHECK_AND_SKIP_WORKFLOWS (monitoring/rules/temporal.ts). Check the Temporal UI and HA presence entities.",
+        "Workflow {{ $labels.workflow }} has skipped every run for 5 days without executing once, leaving its automation inactive. Check the Temporal UI and Home Assistant presence entities for a stuck gate, or register expected skip reasons if these skips are normal.",
       ),
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -112,9 +110,9 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
   {
     alert: "ScoutDataDragonUpdateFailed",
     annotations: {
-      summary: "Scout Data Dragon Temporal update failed",
+      summary: "Scout Data Dragon update failed",
       description: escapePrometheusTemplate(
-        "The Scout Data Dragon updater recorded a failure in the last 24 hours. Check the Temporal UI and worker logs for failure reason {{ $labels.reason }}.",
+        "The Scout Data Dragon updater failed in the last 24 hours (reason: {{ $labels.reason }}), leaving League static game data stale. Check the workflow run in the Temporal UI and inspect the Scout worker logs.",
       ),
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -133,9 +131,9 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
     // below covers that signal via its own dedicated counter.
     alert: "ScoutDataDragonPrAutomationFailed",
     annotations: {
-      summary: "Scout Data Dragon PR automation failed",
+      summary: "Scout Data Dragon PR creation or push failed",
       description: escapePrometheusTemplate(
-        "The Scout Data Dragon updater failed while pushing or creating a PR. Failure reason: {{ $labels.reason }}.",
+        "The Scout Data Dragon updater could not push its branch or open a pull request (reason: {{ $labels.reason }}), blocking automated static data updates. Check GitHub credentials, branch state, and worker logs in the Temporal UI.",
       ),
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -150,9 +148,8 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
     alert: "ScoutDataDragonAutoMergeFailed",
     annotations: {
       summary: "Scout Data Dragon PR auto-merge setup failed",
-      description: escapePrometheusTemplate(
-        "The Scout Data Dragon updater recorded a PR auto-merge setup failure in the last 24 hours. The PR needs a manual merge — check open chore/scout-data-dragon-* PRs.",
-      ),
+      description:
+        "The Scout Data Dragon updater opened a pull request in the last 24 hours but could not enable auto-merge, leaving the data update unmerged. Check open chore/scout-data-dragon-* pull requests in GitHub and merge or enable auto-merge manually.",
     },
     // Recency gauge (seconds since the last auto-merge failure), not a counter
     // query. A monotonic counter can't satisfy both requirements at once:
@@ -181,9 +178,9 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
   {
     alert: "ScoutDataDragonUpdaterNotRunning",
     annotations: {
-      summary: "Scout Data Dragon updater has not run",
+      summary: "Scout Data Dragon updater has not run in 36 hours",
       description:
-        "The Scout Data Dragon Temporal schedule has not recorded any run, skip, or failure in the last 36 hours.",
+        "The Scout Data Dragon scheduled workflow has not recorded any run, skip, or failure in 36 hours, so new League patch data will not be picked up. Check the schedule state in the Temporal UI and verify that the Scout worker is polling.",
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
       "absent_over_time(scout_data_dragon_last_run_timestamp[36h]) or time() - max(max_over_time(scout_data_dragon_last_run_timestamp[36h])) > 36 * 3600",
@@ -204,9 +201,9 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "TemporalUnexpectedNamespaceStartAttempted",
           annotations: {
-            summary: "A workflow start used an unexpected Temporal namespace",
+            summary: "Workflow start used unexpected Temporal namespace",
             description: escapePrometheusTemplate(
-              "Temporal received {{ $value }} workflow-start request(s) for unexpected namespace {{ $labels.exported_namespace }} in the last 15 minutes. Active workloads may start only in beta or prod; temporal-system is reserved for server internals. Inspect the operation label and the caller configuration immediately.",
+              "Temporal received {{ $value }} workflow-start requests in unexpected namespace {{ $labels.exported_namespace }} over the last 15 minutes, where no active workers run. Inspect the operation label in Temporal metrics and fix the caller to use only beta or prod.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -220,11 +217,9 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "TemporalWorkflowActivityFailing",
           annotations: {
-            summary: escapePrometheusTemplate(
-              "Temporal workflow {{ $labels.workflowType }} activities failing",
-            ),
+            summary: "Background workflow tasks are failing repeatedly",
             description: escapePrometheusTemplate(
-              "Workflow {{ $labels.workflowType }} activity {{ $labels.activityType }} has had {{ $value }} failures in the last 30 minutes. Check the Temporal UI for details.",
+              "Activity {{ $labels.activityType }} in workflow {{ $labels.workflowType }} failed {{ $value }} times in the last 30 minutes, delaying or blocking workflow completion. Inspect the failing workflow execution in the Temporal UI and check worker logs for the error.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -238,9 +233,9 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ZfsMaintenanceFailed",
           annotations: {
-            summary: "ZFS maintenance Temporal workflow failed",
+            summary: "ZFS maintenance workflow failed",
             description: escapePrometheusTemplate(
-              "The runZfsMaintenanceWorkflow Temporal activity failed {{ $value }} times in the last 24 hours. The weekly scrub or autotrim may not have run.",
+              "The ZFS maintenance workflow failed {{ $value }} activity attempts in the last 24 hours, so weekly pool scrub or autotrim tasks may not have completed. Check the runZfsMaintenanceWorkflow execution in the Temporal UI and inspect node ZFS pool health.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -257,7 +252,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Temporal worker metrics scrape is down",
             description:
-              "Prometheus is not successfully scraping the Temporal worker metrics endpoint.",
+              "One or more canonical Temporal worker metrics endpoints are missing or failing Prometheus scrapes, blinding worker health and poller alerts. Check pod status, metrics Services, and ServiceMonitors in the temporal namespace.",
           },
           // The nine canonical Temporal workers expose SDK metrics through
           // their per-worker metrics Services. cdk8s prefixes names with the
@@ -278,7 +273,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Temporal server metrics scrape is down",
             description:
-              "Prometheus is not successfully scraping the Temporal server metrics endpoint.",
+              "Prometheus cannot scrape the Temporal server metrics endpoint, blinding workflow failure, backlog, and latency alerts. Check the Temporal server pods, metrics Service, and ServiceMonitor in the temporal namespace.",
           },
           // Service name is `temporal-temporal-server-metrics-service`. See
           // TemporalWorkerMetricsDown above for the same canonical-name rule.
@@ -293,9 +288,9 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "TemporalHaEventBridgeDisconnected",
           annotations: {
-            summary: "Temporal HA event bridge is disconnected",
+            summary: "Temporal Home Assistant event bridge is disconnected",
             description:
-              "The Temporal worker has not been able to keep the Home Assistant event bridge connected. Check worker logs and ha_event_bridge_start_failures_total for the reason.",
+              "The Temporal home worker has been disconnected from the Home Assistant event stream for 30 minutes, so Home Assistant events are not triggering workflows. Check the home-worker logs and Home Assistant WebSocket reachability.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'max(ha_event_bridge_connected{namespace="temporal",service=~".*temporal-home-worker.*metrics.*"}) == 0 or absent(ha_event_bridge_connected{namespace="temporal",service=~".*temporal-home-worker.*metrics.*"})',
@@ -306,16 +301,14 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
-          // Daily homelab-audit failing twice in a row — the agent is
-          // hitting the 45-min activity wall. TemporalScheduledCurrentFailure
-          // reports the latest scheduled run's outcome, but the audit's
-          // symptom is a non-zero subprocess exit (SIGTERM at the wall),
-          // which our own counter captures directly.
+          // Daily homelab-audit failing twice in a row — the agent is hitting
+          // the 45-min activity wall. The historical subprocess exit metric
+          // name is retained across the native Claude Agent SDK cutover.
           alert: "HomelabAuditFailedTwoDays",
           annotations: {
-            summary: "homelab-audit-daily failed two days in a row",
+            summary: "Daily homelab audit failed two days in a row",
             description: escapePrometheusTemplate(
-              "The homelab-audit agent has failed {{ $value }} time(s) in the last 48h. The historical metric name is retained across the native Claude Agent SDK cutover. Check the correlated agent SDK logs and trace for the failure phase.",
+              "The daily homelab audit workflow has exited non-zero {{ $value }} times in the last 48 hours, leaving automated cluster audit reports incomplete. Check the agent worker logs, traces, and Temporal UI for timeouts or SDK errors.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -332,11 +325,9 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           // common LLM outcome metrics.
           alert: "AgentSubprocessSoftKill",
           annotations: {
-            summary: escapePrometheusTemplate(
-              "Historical agent CLI for {{ $labels.workflow_type }} was soft-killed",
-            ),
+            summary: "Background AI agent task timed out and was stopped",
             description: escapePrometheusTemplate(
-              "A pre-cutover agent CLI soft-kill series for {{ $labels.workflow_type }} increased {{ $value }} time(s) in the last 1h. Native SDK cancellation uses SDK and common LLM outcome metrics.",
+              "An agent subprocess for workflow {{ $labels.workflow_type }} was soft-killed {{ $value }} times in the last hour because an activity timed out or was cancelled. Check the workflow execution in the Temporal UI and agent worker logs to see why the run stalled.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -369,11 +360,9 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           // exists to close.
           alert: "TemporalWorkflowTasksFailing",
           annotations: {
-            summary: escapePrometheusTemplate(
-              "Temporal workflow tasks failing in {{ $labels.exported_namespace }}",
-            ),
+            summary: "Temporal workflows are failing before tasks start",
             description: escapePrometheusTemplate(
-              "Workflow tasks failed {{ $value }} time(s) in the last hour. A task that fails before its Activity usually means the worker cannot load the Workflow type — check that the Worker Deployment current version actually exports every registered Workflow.",
+              "Workflow tasks in namespace {{ $labels.exported_namespace }} failed {{ $value }} times in the last hour, stalling workflows before activities can run. Check the Temporal UI for bundle or determinism errors and verify the active worker deployment exports every registered workflow.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -388,13 +377,15 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         ...buildTemporalDomainWorkerHealthRules(),
         ...buildRetainedWorkflowWorkerHealthRules(),
         {
+          // Freshness state encoding: 2 = pending activation, 1 = fresh,
+          // 0 = stale or missing receipt, -1 = absent, paused, or unregistered.
           alert: "TemporalReportHeartbeatStale",
           annotations: {
             summary: escapePrometheusTemplate(
-              "Temporal report heartbeat is not fresh for {{ $labels.schedule_id }}",
+              "Scheduled report {{ $labels.schedule_id }} is stale or missing",
             ),
             description: escapePrometheusTemplate(
-              "The report freshness monitor recorded state {{ $value }} for {{ $labels.schedule_id }}. State 2 is pending activation, 1 is fresh, 0 is stale or missing, and -1 is an absent, paused, or unregistered schedule. Inspect accepted S3 receipts and deployed Temporal schedules; do not disable the schedule.",
+              "Report schedule {{ $labels.schedule_id }} reported freshness state {{ $value }} (below 1 means stale, missing, or paused), so expected report outputs are overdue. Inspect accepted S3 report receipts and check the schedule in the Temporal UI without disabling it.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -422,7 +413,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Glitter Discord corpus storage integrity failed",
             description:
-              "SeaweedFS returned a missing, collided, or checksum-invalid corpus object. Snapshot publication is blocked; inspect the failed Glitter corpus activity before retrying.",
+              "SeaweedFS returned a missing, collided, or checksum-invalid corpus object, blocking snapshot publication. Inspect the failed Glitter corpus activity and SeaweedFS object storage before retrying.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "increase(glitter_corpus_storage_integrity_failures_total[15m]) > 0",
@@ -437,7 +428,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Glitter Discord archival bot lost authorization",
             description:
-              "The corpus archiver received a Discord 401 or 403. Capture intentionally stopped because completeness cannot be proven with missing permissions.",
+              "The Glitter corpus archiver received a 401 or 403 response from Discord and stopped capture because archive completeness can no longer be guaranteed. Verify the Discord bot token and channel permissions, then resume the archival workflow.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'increase(glitter_corpus_discord_requests_total{outcome="auth-failure"}[15m]) > 0',
@@ -450,9 +441,9 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "GlitterCorpusRateLimitPressure",
           annotations: {
-            summary: "Glitter Discord corpus is repeatedly rate limited",
+            summary: "Glitter Discord archiver is repeatedly rate limited",
             description: escapePrometheusTemplate(
-              "The conservative one-request-per-second archiver still received {{ $value }} Discord 429 responses in the last hour. Inspect retry_after telemetry and pause the backfill if pressure persists.",
+              "The Glitter Discord archiver received {{ $value }} HTTP 429 rate-limit responses in the last hour, slowing message capture. Check Discord rate-limit headers in worker logs and pause any active backfill if pressure persists.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -468,7 +459,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Glitter Discord corpus snapshot is stale",
             description:
-              "A verified corpus snapshot exists but has not advanced for more than 30 hours. Check the glitter-corpus-daily schedule and its most recent workflow.",
+              "No verified Glitter Discord corpus snapshot has been published in over 30 hours, leaving the archive behind recent Discord activity. Check the glitter-corpus-daily schedule and its latest workflow run in the Temporal UI.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "(time() - max(glitter_corpus_last_snapshot_timestamp_seconds) > 108000) or (max(glitter_corpus_snapshot_metrics_configured) == 1 unless on() glitter_corpus_last_snapshot_timestamp_seconds)",
@@ -483,7 +474,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Glitter Discord corpus inventory scope changed",
             description: escapePrometheusTemplate(
-              "The latest Discord inventory has {{ $value }} removed or newly excluded/changed-scope channels/threads compared with the published baseline. Review the immutable inventory before accepting the new scope.",
+              "The latest Discord inventory detected {{ $value }} removed or newly excluded channels or threads compared with the published baseline, blocking automatic scope changes. Review the channel inventory diff in the Glitter corpus workflow before accepting the new baseline.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -507,9 +498,10 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "PrWebhookSignatureFailures",
           annotations: {
-            summary: "GitHub webhook is rejecting signatures",
+            summary:
+              "GitHub webhook deliveries are failing signature verification",
             description: escapePrometheusTemplate(
-              "{{ $value }} GitHub webhook deliveries failed X-Hub-Signature-256 verification in the last 30 minutes. Either the webhook secret is wrong or someone is hitting the public URL with bad payloads.",
+              "{{ $value }} GitHub webhook deliveries failed HMAC signature verification in the last 30 minutes, which drops PR merge-conflict checks and build cancellations if legitimate requests are rejected. Verify the webhook secret in 1Password matches GitHub settings and check ingress logs for unauthorized probes.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

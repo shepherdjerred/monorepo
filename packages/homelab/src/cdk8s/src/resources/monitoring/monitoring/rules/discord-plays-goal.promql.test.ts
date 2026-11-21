@@ -15,6 +15,9 @@ test("goal stream alerts ignore other live Arcade broadcasts", async () => {
     .find((rule) => rule?.alert === "PokemonGoalStreamDownMidGoal");
   if (alert === undefined) throw new Error("Missing goal stream alert");
   expect(alert.for).toBe("3m");
+  expect(alert.annotations?.["summary"]).toBeDefined();
+  expect(alert.annotations?.["description"]).toBeDefined();
+  expect(alert.annotations?.["message"]).toBeUndefined();
   await runPromtoolFixture({
     evaluation_interval: "1m",
     tests: [

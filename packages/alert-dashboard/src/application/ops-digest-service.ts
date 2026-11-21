@@ -147,7 +147,7 @@ export class DigestService {
         messageId: key.messageId,
         subject: email.subject,
         htmlBody: email.htmlBody,
-        plainBody: email.textBody,
+        plainBody: email.plainBody,
         tag: `ops-digest-${kind}`,
       });
       const sentAt = this.#clock.now();
