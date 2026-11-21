@@ -147,3 +147,34 @@ fn the_overlay_core_has_no_window_toolkit() -> Result<(), Box<dyn std::error::Er
     );
     Ok(())
 }
+
+#[test]
+fn native_window_bindings_stay_in_the_ui_crate_on_their_platform()
+-> Result<(), Box<dyn std::error::Error>> {
+    // The overlay's click-through (`src/native/`) is the only code that names
+    // a platform window. Each binding is gated to its own platform.
+    const NATIVE: &[(&str, &[&str])] = &[
+        ("objc2-app-kit", &["cfg(target_os = \"macos\")"]),
+        ("winsafe", &["cfg(windows)"]),
+        (
+            "raw-window-handle",
+            &["cfg(any(windows, target_os = \"macos\"))"],
+        ),
+    ];
+    let declared = declared_dependencies()?;
+    for (package, targets) in NATIVE {
+        let users = declared
+            .iter()
+            .filter(|(_, name, kind, _)| name == package && kind == "normal")
+            .collect::<Vec<_>>();
+        assert!(!users.is_empty(), "{UI_CRATE} should depend on {package}");
+        for (member, _, _, target) in users {
+            assert_eq!(member, UI_CRATE, "only {UI_CRATE} may depend on {package}");
+            assert!(
+                targets.contains(&target.as_str()),
+                "{package} must be gated to {targets:?}, not {target:?}"
+            );
+        }
+    }
+    Ok(())
+}

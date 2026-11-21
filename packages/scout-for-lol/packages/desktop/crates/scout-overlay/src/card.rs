@@ -8,11 +8,16 @@
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-const ID_MAX: usize = 64;
-const TITLE_MAX: usize = 80;
-const LINES_MAX: usize = 5;
-const LINE_MAX: usize = 160;
-const TTL_MAX_SECS: u32 = 600;
+/// The longest card id, in characters.
+pub const ID_MAX: usize = 64;
+/// The longest title, in characters.
+pub const TITLE_MAX: usize = 80;
+/// The most lines a card holds.
+pub const LINES_MAX: usize = 5;
+/// The longest line, in characters.
+pub const LINE_MAX: usize = 160;
+/// The longest a card may stay queued, in seconds.
+pub const TTL_MAX_SECS: u32 = 600;
 
 /// What a card is for.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

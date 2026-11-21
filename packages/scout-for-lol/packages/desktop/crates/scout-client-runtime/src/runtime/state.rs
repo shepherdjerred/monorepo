@@ -2,6 +2,7 @@
 
 use scout_client_core::backend::BackendError;
 use scout_client_core::live::champ_select::ChampSelectSnapshot;
+use scout_client_core::live::game_settings::GameWindowMode;
 use scout_client_core::live::snapshot::LiveSnapshot;
 use scout_client_core::settings::PrivacySettings;
 use tokio::sync::watch;
@@ -80,6 +81,10 @@ pub struct RuntimeState {
     /// What the champion-select screen shows, while gameflow is in champion
     /// select. It has no summoner or Riot identity.
     pub champ_select: Option<ChampSelectSnapshot>,
+    /// The window mode the game will start in, read while gameflow is in
+    /// champion select so Scout can warn that exclusive fullscreen hides the
+    /// in-game overlay. None outside champion select.
+    pub game_window_mode: Option<GameWindowMode>,
     last_runtime_error: Option<String>,
     last_replay_error: Option<String>,
 }

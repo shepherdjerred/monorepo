@@ -37,6 +37,8 @@ scout-client-core = { path = "../scout-client-core" }
 scout-client-runtime = { path = "../scout-client-runtime" }
 scout-desktop-ipc = { path = "../scout-desktop-ipc" }
 scout-explore-client = { path = "../scout-explore-client" }
+# The overlay's controller and card contract; the supervisor owns both.
+scout-overlay = { path = "../scout-overlay" }
 scout-voice = { path = "../scout-voice" }
 # Builds everywhere; it contains the gpui window only on Windows and macOS.
 scout-desktop-ui = { path = "../scout-desktop-ui" }

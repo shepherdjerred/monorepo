@@ -13,6 +13,9 @@
 //! - [`champ_select`] projects the champion-select session the same way, so
 //!   hidden champion-select identities never leave the League client call.
 //!
+//! [`game_settings`] reads only the game's window mode, so Scout can warn
+//! when exclusive fullscreen will hide the in-game overlay.
+//!
 //! [`recording`] keeps snapshots on this device. [`upload`] queues a finished
 //! game's recording as a `live_game_recording` observation.
 //!
@@ -23,6 +26,7 @@
 pub mod champ_select;
 #[cfg(scout_proactive_coach)]
 pub mod detectors;
+pub mod game_settings;
 pub mod gameflow;
 pub mod model;
 pub mod recording;
