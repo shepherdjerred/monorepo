@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
+import type { Principal } from "#shared/contract.ts";
+import type { SourceCommitReport } from "./hub/source-commit.ts";
 
 export function ciIdentity(
   ciUrl: string,
@@ -31,9 +33,16 @@ export function ciIdentity(
   };
 }
 
+/**
+ * Woodpecker serializes every field of its pipeline model, so `message` and
+ * `author` are always present; either may be the empty string. The hub's CI
+ * reader (`@shepherdjerred/ops-clients/woodpecker.ts`) requires the same two.
+ */
 const PipelineSchema = z.object({
   number: z.number().int(),
   commit: z.string(),
+  message: z.string(),
+  author: z.string(),
   branch: z.string(),
   event: z.string(),
   status: z.enum([
@@ -51,19 +60,38 @@ const PipelineSchema = z.object({
   ]),
   finished: z.number().int(),
 });
+/** One build's CI qualification: what to verify, and who asked for it. */
+export type QualificationRequest = {
+  ciUrl: string;
+  sourceRevision: string;
+  /** The build being qualified. */
+  buildId: string;
+  /** The principal that asked for the qualification. */
+  actor: Principal;
+  /** The request it asked in. */
+  requestId: string;
+};
+
 export function createQualifier(options: {
   origin: string;
   repositoryId: number;
   token: string | undefined;
+  /**
+   * Told what each exact main push pipeline says about its commit, whatever
+   * the pipeline's status, so a commit whose CI is running or failed still
+   * gets its title. Never called for a pipeline that fails the identity check.
+   * The report names the build, principal and request of the qualification, so
+   * the first record of a commit can be audited to them.
+   */
+  recordSourceCommit: (report: SourceCommitReport) => Promise<void>;
   fetch?: (
     input: string | URL | Request,
     init?: RequestInit,
   ) => Promise<Response>;
 }) {
-  return async (build: {
-    ciUrl: string;
-    sourceRevision: string;
-  }): Promise<"pending" | "verified" | "failed"> => {
+  return async (
+    build: QualificationRequest,
+  ): Promise<"pending" | "verified" | "failed"> => {
     if (options.token === undefined)
       throw new DeliveryError(
         "PAUSED",
@@ -101,6 +129,15 @@ export function createQualifier(options: {
         "INVALID",
         "Pipeline does not verify this exact main push revision",
       );
+    await options.recordSourceCommit({
+      sourceRevision: pipeline.commit,
+      message: pipeline.message,
+      author: pipeline.author,
+      pipelineNumber: pipeline.number,
+      buildId: build.buildId,
+      actor: build.actor,
+      requestId: build.requestId,
+    });
     if (["created", "pending", "blocked", "running"].includes(pipeline.status))
       return "pending";
     return pipeline.status === "success" && pipeline.finished > 0

@@ -6,6 +6,7 @@ import type {
   PipelineStage,
 } from "#shared/hub/hub-contract.ts";
 import type { CiRunIntegration } from "#shared/hub/integration-contract.ts";
+import { changeDomain } from "#shared/hub/change-contract.ts";
 import { keysForChange } from "./change-keys.ts";
 import {
   pipelineStages,
@@ -181,6 +182,26 @@ describe("change feed keys", () => {
     expect(keys).toContainEqual(["hub"]);
     expect(keys).toContainEqual(["deployment", "d1"]);
     expect(keys).toContainEqual(["integration", "runtime"]);
+  });
+
+  it("refreshes every commit page and commit for a build, release or environment change", () => {
+    // `["commits"]` prefixes both `["commits", { cursor }]` and `["commits", sha]`.
+    for (const action of [
+      "build.verified",
+      // A commit's title and author were first recorded, its build still pending.
+      "build.source_recorded",
+      "deployment.stage",
+      "environment.registered",
+      "versionSet.composed",
+    ])
+      expect(
+        keysForChange({
+          id: "a",
+          domain: changeDomain(action),
+          action,
+          entityId: "e",
+        }),
+      ).toContainEqual(["commits"]);
   });
 
   it("leaves release views alone for imported snapshots", () => {

@@ -12,6 +12,7 @@ import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy
 import { platformFixture } from "#testing/platform-fixture.ts";
 import { seedPlatformBrowser } from "./platform.ts";
 import { serveHarness } from "./harness.ts";
+import { describeSeededCommits, seedCommitHistory } from "./commits.ts";
 import {
   requestTestPlan,
   checkpointTestPlan,
@@ -37,6 +38,8 @@ async function startHarness() {
   const delivery = new Delivery(cluster.database, 1, undefined, () =>
     Promise.resolve(forumBundlePolicy),
   );
+  // Oldest first: the commit list needs a second page behind every other seed.
+  await seedCommitHistory(delivery);
   await seedDelivery(delivery);
   const forum = await seedBrowserForum(delivery);
   await seedContentRecovery(delivery, forum.id);
@@ -125,6 +128,7 @@ async function startHarness() {
     platform.delivery,
     platform.sourceBuildId,
   );
+  await describeSeededCommits(delivery);
   await serveHarness({
     cluster,
     delivery: platform.delivery,

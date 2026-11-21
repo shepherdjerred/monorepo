@@ -8,6 +8,7 @@ import {
   MODEL_ENVIRONMENTS,
   seedModelBrowser,
 } from "./model.ts";
+import { describeSeededCommits } from "./commits.ts";
 
 const harnessPort = Number(
   Bun.argv[2] ?? Bun.env["DELIVERY_MODEL_E2E_PORT"] ?? "17355",
@@ -27,6 +28,7 @@ const cluster = await createTestDatabase();
 try {
   const delivery = new Delivery(cluster.database);
   await seedModelBrowser(delivery, cluster.database);
+  await describeSeededCommits(delivery);
   await serveHarness({
     cluster,
     delivery,

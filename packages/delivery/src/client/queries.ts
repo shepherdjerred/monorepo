@@ -17,8 +17,12 @@ export const queries = {
       staleTime: Infinity,
     }),
   hub: () => queryOptions({ queryKey: ["hub"], queryFn: () => hub.hub() }),
-  commits: () =>
-    queryOptions({ queryKey: ["commits"], queryFn: () => hub.commits() }),
+  // An object key cannot collide with a commit's `["commits", sha]`.
+  commits: (cursor: string | undefined) =>
+    queryOptions({
+      queryKey: ["commits", { cursor: cursor ?? null }],
+      queryFn: () => hub.commits(cursor),
+    }),
   commit: (sha: string) =>
     queryOptions({
       queryKey: ["commits", sha],

@@ -316,7 +316,7 @@ describe("model_v2 migration", () => {
   test("backfills services, configurations, selections, approvals, locks and intents from a v1 record", async () => {
     const cluster = await v1Cluster();
     await seedV1(cluster);
-    await cluster.migrate();
+    await cluster.migrate(V2);
     expect(cluster.applied.at(-1)).toBe(V2);
     const db = cluster.database;
     const services = await expectServices(db);

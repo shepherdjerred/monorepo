@@ -1,5 +1,5 @@
 import { Link, createRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import type {
   CommitEnvironment,
   CommitEnvironmentGroup,
@@ -13,7 +13,9 @@ import { queries } from "#client/queries.ts";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { ShortSha } from "#client/components/links.tsx";
+import { OlderLink } from "#client/components/pager.tsx";
 import { SourcePanel } from "#client/components/integrations.tsx";
+import { CursorSearchSchema } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
 
 // Each verdict borrows the color of the pipeline status it resembles, so the
@@ -151,13 +153,6 @@ function EnvironmentChip({
   );
 }
 
-function Headline({ buildId }: { buildId: string }) {
-  const source = useQuery(queries.source(buildId));
-  return source.data?.state === "available" ? (
-    <span className="commit-headline">{source.data.data.headline}</span>
-  ) : null;
-}
-
 // Platform commits touch one environment per stack; the row shows the first few.
 const MAX_TALLIES = 4;
 
@@ -194,8 +189,18 @@ function CommitRow({ commit }: { commit: CommitSummary }) {
   return (
     <li className="commit-row">
       <Verdict value={commit.verdict} />
-      <Link to="/commits/$sha" params={{ sha: commit.sha }}>
-        <ShortSha sha={commit.sha} /> <Headline buildId={commit.buildId} />
+      <Link
+        to="/commits/$sha"
+        params={{ sha: commit.sha }}
+        className="commit-subject"
+      >
+        <ShortSha sha={commit.sha} />
+        {commit.title !== null && (
+          <>
+            {" "}
+            <span className="commit-headline">{commit.title}</span>
+          </>
+        )}
       </Link>
       <span className="commit-detail">
         {commit.environments.length > 0 && (
@@ -212,13 +217,19 @@ function CommitRow({ commit }: { commit: CommitSummary }) {
         )}
         {blocker !== null && <span className="muted">{blocker}</span>}
       </span>
-      {commit.seenAt !== null && <RelativeTime value={commit.seenAt} />}
+      <span className="commit-meta">
+        {commit.author !== null && (
+          <span className="commit-author">{commit.author}</span>
+        )}
+        {commit.seenAt !== null && <RelativeTime value={commit.seenAt} />}
+      </span>
     </li>
   );
 }
 
 function CommitsPage() {
-  const { data } = useSuspenseQuery(queries.commits());
+  const search = commitsRoute.useSearch();
+  const { data } = useSuspenseQuery(queries.commits(search.cursor));
   const navigate = useNavigate({ from: commitsRoute.fullPath });
   return (
     <>
@@ -270,6 +281,7 @@ function CommitsPage() {
             ))}
           </ul>
         )}
+        <OlderLink to="/commits" search={search} cursor={data.nextCursor} />
       </section>
     </>
   );
@@ -389,6 +401,12 @@ function CommitPage() {
         title={`Commit ${data.sha.slice(0, 7)}`}
         description={
           <>
+            {data.title !== null && (
+              <span className="commit-title">{data.title}</span>
+            )}
+            {data.author !== null && (
+              <span className="commit-byline">by {data.author}</span>
+            )}
             <Verdict value={data.verdict} /> {verdict.sentence}
             {data.changed.length > 0 &&
               ` ${String(live)} of ${String(data.changed.length)} changed services are live.`}
@@ -443,8 +461,13 @@ function CommitPage() {
 const commitsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/commits",
-  loader: ({ context }) =>
-    context.queryClient.query({ ...queries.commits(), staleTime: "static" }),
+  validateSearch: CursorSearchSchema,
+  loaderDeps: ({ search }) => search,
+  loader: ({ context, deps }) =>
+    context.queryClient.query({
+      ...queries.commits(deps.cursor),
+      staleTime: "static",
+    }),
   component: CommitsPage,
 });
 

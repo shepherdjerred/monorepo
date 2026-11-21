@@ -35,7 +35,8 @@ export function createHubClient(options: RequestOptions) {
   const request = createRequester(options);
   return {
     hub: () => request("/hub", HubOverviewSchema),
-    commits: () => request("/commits", CommitListSchema),
+    commits: (cursor?: string) =>
+      request(`/commits${query({ cursor })}`, CommitListSchema),
     commit: (sha: string) =>
       request(`/commits/${segment(sha)}`, CommitStatusSchema),
     pipeline: (serviceId: string) =>

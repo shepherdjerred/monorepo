@@ -63,19 +63,19 @@ The React client is the Delivery web app, the homelab's CI/CD view. Every page h
 history, new tabs and bookmarks behave like any website. Routes are code-based
 TanStack Router definitions in `src/client/router.tsx`:
 
-| URL                            | Page                                                           |
-| ------------------------------ | -------------------------------------------------------------- |
-| `/commits` (home)              | Recent commits, each with a one-line "is it deployed?" verdict |
-| `/commits/:sha`                | One commit: CI, and every changed service by environment       |
-| `/pipelines`                   | Every pipeline's newest execution, attention items, tools      |
-| `/pipelines/:id`               | Promotion: source, build, test, version set, environments      |
-| `/pipelines/:id/executions`    | Every build or composed version set and where it deployed      |
-| `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts       |
-| `/deployments/:id`             | Steps, selection, approval, a tofu plan waiting for approval   |
-| `/environments/:id`            | Selection, monitor, rollback candidates, form                  |
-| `/recovery-intents/:id`        | One unified recovery intent and its inspection evidence        |
-| `/deployments`, `/approvals`   | Deployment history; pending approvals and plans, recent ones   |
-| `/artifacts`, `/activity`      | Build qualification; the audit trail with catalog reconciles   |
+| URL                            | Page                                                         |
+| ------------------------------ | ------------------------------------------------------------ |
+| `/commits` (home)              | Commits by title and author, each with an "is it deployed?"  |
+| `/commits/:sha`                | One commit: title, CI, every changed service by environment  |
+| `/pipelines`                   | Every pipeline's newest execution, attention items, tools    |
+| `/pipelines/:id`               | Promotion: source, build, test, version set, environments    |
+| `/pipelines/:id/executions`    | Every build or composed version set and where it deployed    |
+| `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts     |
+| `/deployments/:id`             | Steps, selection, approval, a tofu plan waiting for approval |
+| `/environments/:id`            | Selection, monitor, rollback candidates, form                |
+| `/recovery-intents/:id`        | One unified recovery intent and its inspection evidence      |
+| `/deployments`, `/approvals`   | Deployment history; pending approvals and plans, recent ones |
+| `/artifacts`, `/activity`      | Build qualification; the audit trail with catalog reconciles |
 
 A commit has one build per service, but only a build that produced a version
 set (or a platform deployment) changed anything. `GET /api/v1/commits` and
@@ -89,6 +89,31 @@ released, deployed. The response also regroups the same rows by environment name
 so a commit that touches many services still answers "is it in prod?" as one
 count with its stragglers named. The pure rules live in
 `src/infrastructure/hub/commit-status.ts`.
+
+Both responses carry the commit's `title` and `author`. Qualification already
+reads each build's exact Woodpecker pipeline and proves it the main push of
+the build's revision; every such read, whether that pipeline is running,
+passed or failed, reports the commit message and pipeline author, and Delivery
+keeps the first report per commit in `SourceCommit`
+(`src/infrastructure/hub/source-commit.ts`). The title is the message's first line,
+at most 200 characters. The author is Woodpecker's: the forge account behind
+the push. Either is `null` when Delivery holds none: the commit predates
+capture, no build of it has been checked yet, or Woodpecker reported it empty.
+The list never asks GitHub, so it works with GitHub enrichment off.
+
+The report that first records a commit also writes one `build.source_recorded`
+audit row in the same transaction, for the build being qualified and in the
+name of the principal and request that asked. That row is the change event an
+open commit list or commit page refetches on, so a title appears as soon as
+the first check of any of its builds commits, while that build is still
+pending. Later reports of the same commit record and audit nothing.
+
+`GET /api/v1/commits` returns 25 commits and a `nextCursor`; `?cursor=` reads
+the next page and an invalid cursor is a 400. Commits are ordered by when
+Delivery first heard of each (its oldest CI build), then by sha. That time
+never moves while a pipeline keeps registering builds, so a page does not
+reshuffle under a reader. The page's "Older" and "Newest" links carry the
+cursor as a search parameter.
 
 Filters and pages are search parameters. Forms are native `<form>` elements
 and confirmations are native `<dialog>` elements. The server returns
@@ -229,7 +254,8 @@ gives each model route's scope and toolkit command.
 | Retire a service                                                | `POST /services/:id/retire`                                           |
 | Hub, service pipeline and paginated executions                  | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`              |
 | One change, traced from build or set revision                   | `GET /builds/:id`, `GET /versions/:id/trace`                          |
-| Paginated deployments, builds and audit activity                | `GET /deployments`, `GET /builds`, `GET /activity`                    |
+| Paginated commits, deployments, builds and audit activity       | `GET /commits`, `GET /deployments`, `GET /builds`, `GET /activity`    |
+| One commit by full sha or unambiguous prefix                    | `GET /commits/:sha`                                                   |
 | Environment detail and approval queue                           | `GET /environments/:id`, `GET /approvals`                             |
 | Woodpecker, GitHub and ArgoCD enrichment                        | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime`     |
 | Committed change stream                                         | `GET /events`                                                         |

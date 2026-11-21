@@ -1,6 +1,7 @@
 import { DeploymentStatusSchema } from "#shared/contract.ts";
 import type {
   CommitEnvironment,
+  CommitListQuery,
   CommitService,
   CommitStatus,
   CommitSummary,
@@ -9,6 +10,7 @@ import type {
 import type { Database } from "#infrastructure/database.ts";
 import { index } from "#infrastructure/delivery-data.ts";
 import { DeliveryError } from "#domain/error.ts";
+import { decodeCursor, page, PAGE_SIZE } from "./cursor.ts";
 import { buildStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
@@ -23,7 +25,6 @@ import {
 } from "./commit-status.ts";
 
 const SHA = /^[0-9a-f]{7,40}$/iu;
-const RECENT_COMMITS = 15;
 
 type Read = { status: CommitStatus };
 
@@ -62,7 +63,11 @@ async function readCommits(
     ),
   );
   const serviceIds = [...new Set(builds.map((row) => row.serviceId))];
-  const [deployments, environments] = await Promise.all([
+  const [sourceCommits, deployments, environments] = await Promise.all([
+    database.sourceCommit.findMany({
+      where: { sourceRevision: { in: shas } },
+      select: { sourceRevision: true, title: true, author: true },
+    }),
     database.deployment.findMany({
       where: {
         OR: [
@@ -105,6 +110,9 @@ async function readCommits(
     select: { id: true, revision: true, lineage: true },
   });
   const acceptedById = new Map(acceptedSets.map((row) => [row.id, row]));
+  const sourceBySha = new Map(
+    sourceCommits.map((row) => [row.sourceRevision, row]),
+  );
 
   return shas.map((sha): Read => {
     const own = builds.filter((row) => row.sourceRevision === sha);
@@ -209,6 +217,8 @@ async function readCommits(
     return {
       status: {
         sha,
+        title: sourceBySha.get(sha)?.title ?? null,
+        author: sourceBySha.get(sha)?.author ?? null,
         verdict: rollUp(parts),
         buildId: own[0]?.id ?? null,
         environments: groupByEnvironment(changed),
@@ -253,54 +263,93 @@ export async function commitStatus(
   return read.status;
 }
 
-/** The newest commits Delivery has heard of, each with its one-line answer. */
-export async function recentCommits(
-  database: Database,
-  limit = RECENT_COMMITS,
-): Promise<CommitSummary[]> {
+/** One commit's row in the list: its one-line answer and what is stuck. */
+function summary(status: CommitStatus, firstSeenAt: Date): CommitSummary {
+  if (status.buildId === null)
+    throw new Error(`Listed commit ${status.sha} has no build`);
+  const stuck = status.changed.find(
+    (entry) =>
+      entry.verdict !== "deployed" && entry.verdict !== "nothing_to_deploy",
+  );
+  const stuckEnvironment = stuck?.environments.find(
+    (entry) => !isLive(entry.state),
+  );
+  return {
+    sha: status.sha,
+    title: status.title,
+    author: status.author,
+    verdict: status.verdict,
+    seenAt: firstSeenAt.toISOString(),
+    buildId: status.buildId,
+    environments: status.environments.map(
+      ({ members: _members, ...group }) => group,
+    ),
+    changedCount: status.changed.length,
+    liveCount: status.changed.filter((entry) => entry.verdict === "deployed")
+      .length,
+    blocker:
+      stuck === undefined
+        ? null
+        : {
+            service: stuck.service.title,
+            environment: stuckEnvironment?.name ?? null,
+            state: stuck.verdict,
+          },
+  };
+}
+
+/**
+ * One page of the commits CI has published, newest first, each with its
+ * one-line answer. A commit's position is the first time Delivery heard of it:
+ * its oldest CI build. Unlike its newest build, that never moves while a
+ * pipeline keeps registering builds, so a page does not reshuffle under a
+ * reader. Only catalog services count, as in a commit read.
+ */
+export async function commitPage(database: Database, query: CommitListQuery) {
+  const cursor = decodeCursor(query.cursor);
   const groups = await database.build.groupBy({
     by: ["sourceRevision"],
-    where: { sourceKind: "ci" },
-    _max: { createdAt: true },
-    orderBy: { _max: { createdAt: "desc" } },
-    take: limit,
+    where: {
+      sourceKind: "ci",
+      serviceId: { in: index.services.map((service) => service.id) },
+    },
+    _min: { createdAt: true },
+    ...(cursor === null
+      ? {}
+      : {
+          having: {
+            OR: [
+              { createdAt: { _min: { lt: cursor.t } } },
+              {
+                createdAt: { _min: { equals: cursor.t } },
+                sourceRevision: { lt: cursor.id },
+              },
+            ],
+          },
+        }),
+    orderBy: [{ _min: { createdAt: "desc" } }, { sourceRevision: "desc" }],
+    take: PAGE_SIZE + 1,
   });
+  const selected = page(
+    groups.map((row) => {
+      if (row._min.createdAt === null)
+        throw new Error(`Commit ${row.sourceRevision} has no first build`);
+      return { id: row.sourceRevision, firstSeenAt: row._min.createdAt };
+    }),
+    PAGE_SIZE,
+    (row) => row.firstSeenAt,
+  );
   const reads = await readCommits(
     database,
-    groups.map((row) => row.sourceRevision),
+    selected.items.map((row) => row.id),
   );
-  return reads.flatMap((read): CommitSummary[] => {
-    const { status } = read;
-    if (status.buildId === null) return [];
-    const stuck = status.changed.find(
-      (entry) =>
-        entry.verdict !== "deployed" && entry.verdict !== "nothing_to_deploy",
-    );
-    const stuckEnvironment = stuck?.environments.find(
-      (entry) => !isLive(entry.state),
-    );
-    return [
-      {
-        sha: status.sha,
-        verdict: status.verdict,
-        seenAt: status.seenAt,
-        buildId: status.buildId,
-        environments: status.environments.map(
-          ({ members: _members, ...group }) => group,
-        ),
-        changedCount: status.changed.length,
-        liveCount: status.changed.filter(
-          (entry) => entry.verdict === "deployed",
-        ).length,
-        blocker:
-          stuck === undefined
-            ? null
-            : {
-                service: stuck.service.title,
-                environment: stuckEnvironment?.name ?? null,
-                state: stuck.verdict,
-              },
-      },
-    ];
-  });
+  return {
+    items: selected.items.map((row, position) => {
+      const read = reads[position];
+      if (read?.status.sha !== row.id)
+        throw new Error("A commit read returns one entry per sha, in order");
+      return summary(read.status, row.firstSeenAt);
+    }),
+    nextCursor: selected.nextCursor,
+  };
 }

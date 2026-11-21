@@ -1,8 +1,9 @@
-import { Link, createRoute, useNavigate } from "@tanstack/react-router";
+import { createRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { queries } from "#client/queries.ts";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { DeploymentTable } from "#client/components/deployment-table.tsx";
+import { OlderLink } from "#client/components/pager.tsx";
 import { BuildCatalog } from "#client/artifacts.tsx";
 import { ApprovalQueue } from "#client/model/approval-queue.tsx";
 import { ActivityList } from "./activity-list.tsx";
@@ -22,31 +23,6 @@ const STATUSES = [
   "failed",
   "canceled",
 ] as const;
-
-function OlderLink({
-  to,
-  search,
-  cursor,
-}: {
-  to: "/deployments" | "/artifacts" | "/activity";
-  search: Record<string, string | undefined>;
-  cursor: string | null;
-}) {
-  return (
-    <nav aria-label="Pages" className="pager">
-      {search["cursor"] !== undefined && (
-        <Link to={to} search={{ ...search, cursor: undefined }}>
-          Newest
-        </Link>
-      )}
-      {cursor !== null && (
-        <Link to={to} search={{ ...search, cursor }}>
-          Older
-        </Link>
-      )}
-    </nav>
-  );
-}
 
 function DeploymentsPage() {
   const search = deploymentsRoute.useSearch();
