@@ -248,6 +248,10 @@ test.each([
     }),
   ],
   ["unreadable", new Response("<html>", { status: 200 })],
+  [
+    "answering in a shape Media cannot read",
+    Response.json({ page: 1, total_pages: 1, results: [{ id: 11 }] }),
+  ],
 ])(
   "a TMDB that is %s surfaces as catalog_unavailable on every read",
   async (_label, response) => {

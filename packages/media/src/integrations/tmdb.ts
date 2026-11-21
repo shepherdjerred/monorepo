@@ -124,6 +124,18 @@ const EpisodeSchema = z.object({
 export type TmdbCredential =
   { kind: "bearer"; token: string } | { kind: "api-key"; apiKey: string };
 
+/**
+ * TMDB's JSON is an external boundary. A body Media cannot read is an upstream
+ * failure like any other, so callers see one error type for all of them.
+ */
+function readWire<T>(schema: z.ZodType<T>, wire: unknown): T {
+  const result = schema.safeParse(wire);
+  if (result.success) return result.data;
+  const failure = new IntegrationError("tmdb", "invalid-response");
+  failure.cause = result.error;
+  throw failure;
+}
+
 export class TmdbClient {
   constructor(
     private readonly credential: TmdbCredential,
@@ -134,7 +146,8 @@ export class TmdbClient {
     z.string().trim().min(1).max(200).parse(query);
     z.number().int().min(1).max(500).parse(page);
     return mixedTitles(
-      SearchSchema.parse(
+      readWire(
+        SearchSchema,
         await this.get(
           "search/multi",
           { query, page: String(page), include_adult: "false" },
@@ -155,10 +168,10 @@ export class TmdbClient {
     );
     const result =
       source.media === "mixed"
-        ? mixedTitles(SearchSchema.parse(wire))
+        ? mixedTitles(readWire(SearchSchema, wire))
         : source.media === "movie"
-          ? movieTitles(MovieListSchema.parse(wire))
-          : seriesTitles(SeriesListSchema.parse(wire));
+          ? movieTitles(readWire(MovieListSchema, wire))
+          : seriesTitles(readWire(SeriesListSchema, wire));
     // A list that ignored `page` would otherwise repeat its first page forever.
     if (result.page !== page)
       throw new IntegrationError("tmdb", "invalid-response");
@@ -167,29 +180,30 @@ export class TmdbClient {
 
   async movie(id: number, signal?: AbortSignal) {
     z.number().int().positive().parse(id);
-    return MovieSchema.extend({
-      imdb_id: z.string().nullable(),
-      runtime: z.number().nullable(),
-      release_dates: z
-        .object({
-          results: z
-            .array(
-              z.object({
-                iso_3166_1: z.string().length(2),
-                release_dates: z
-                  .array(
-                    z.object({
-                      type: z.int().min(1).max(6),
-                      release_date: z.string(),
-                    }),
-                  )
-                  .max(500),
-              }),
-            )
-            .max(300),
-        })
-        .optional(),
-    }).parse(
+    return readWire(
+      MovieSchema.extend({
+        imdb_id: z.string().nullable(),
+        runtime: z.number().nullable(),
+        release_dates: z
+          .object({
+            results: z
+              .array(
+                z.object({
+                  iso_3166_1: z.string().length(2),
+                  release_dates: z
+                    .array(
+                      z.object({
+                        type: z.int().min(1).max(6),
+                        release_date: z.string(),
+                      }),
+                    )
+                    .max(500),
+                }),
+              )
+              .max(300),
+          })
+          .optional(),
+      }),
       await this.get(
         `movie/${String(id)}`,
         { append_to_response: "release_dates" },
@@ -200,17 +214,20 @@ export class TmdbClient {
 
   async series(id: number, signal?: AbortSignal) {
     z.number().int().positive().parse(id);
-    return SeriesSchema.extend({
-      status: z.string().max(100).optional(),
-      seasons: z.array(
-        z.object({
-          id: z.number().int(),
-          season_number: z.number().int(),
-          episode_count: z.number().int(),
-          name: z.string(),
-        }),
-      ),
-    }).parse(await this.get(`tv/${String(id)}`, {}, signal));
+    return readWire(
+      SeriesSchema.extend({
+        status: z.string().max(100).optional(),
+        seasons: z.array(
+          z.object({
+            id: z.number().int(),
+            season_number: z.number().int(),
+            episode_count: z.number().int(),
+            name: z.string(),
+          }),
+        ),
+      }),
+      await this.get(`tv/${String(id)}`, {}, signal),
+    );
   }
 
   async season(seriesId: number, season: number, signal?: AbortSignal) {
