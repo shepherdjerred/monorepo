@@ -29,14 +29,14 @@ internal enum FacetNativeStyle {
     static var brand: Color {
         #if os(iOS)
             Color(
-                uiColor: UIColor { traits in
+                uiColor: UIColor { @Sendable traits in
                     traits.userInterfaceStyle == .dark
                         ? UIColor(red: 1, green: 0.43, blue: 0.37, alpha: 1)
                         : UIColor(red: 0.77, green: 0.19, blue: 0.15, alpha: 1)
                 })
         #else
             Color(
-                nsColor: NSColor(name: nil) { appearance in
+                nsColor: NSColor(name: nil) { @Sendable appearance in
                     appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
                         ? NSColor(srgbRed: 1, green: 0.43, blue: 0.37, alpha: 1)
                         : NSColor(srgbRed: 0.77, green: 0.19, blue: 0.15, alpha: 1)
