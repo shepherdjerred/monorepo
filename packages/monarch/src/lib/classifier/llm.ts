@@ -71,7 +71,7 @@ async function researchPrompt(userPrompt: string): Promise<{
   }
   const result = await generateText({
     model: llm.languageModel(modelId, ["tools", "webSearch"]),
-    system:
+    instructions:
       "Research unfamiliar merchants for a personal-finance classification task. Return concise factual evidence only; do not attempt to emit the final JSON contract.",
     prompt: userPrompt,
     tools: {

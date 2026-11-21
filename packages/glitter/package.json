@@ -13,7 +13,7 @@
     "@shepherdjerred/glitter-context": "workspace:*"
   },
   "devDependencies": {
-    "vitest": "5.0.3",
-    "@vitest/coverage-istanbul": "5.0.3"
+    "vitest": "5.0.5",
+    "@vitest/coverage-istanbul": "5.0.5"
   }
 }

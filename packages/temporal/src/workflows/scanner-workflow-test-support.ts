@@ -90,9 +90,15 @@ export async function runScannerWorkflow(
       worker: await Worker.create({
         connection: testEnv.nativeConnection,
         // Each scanner test worker registers against canonical production
-        // queues. A unique build ID keeps concurrent Vitest suites from
-        // colliding in the test server's worker registry.
-        buildId: `scanner-test-${crypto.randomUUID()}`,
+        // queues. A unique deployment build ID keeps concurrent Vitest suites
+        // from colliding in the test server's worker registry.
+        workerDeploymentOptions: {
+          version: {
+            deploymentName: "scanner-test",
+            buildId: `scanner-test-${crypto.randomUUID()}`,
+          },
+          useWorkerVersioning: false,
+        },
         taskQueue: definition.taskQueue,
         activities: definition.activities,
         ...(definition.runsWorkflow === true

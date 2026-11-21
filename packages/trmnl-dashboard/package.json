@@ -6,9 +6,6 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "imports": {
-    "#src/*": "./src/*"
-  },
   "scripts": {
     "start": "bun run src/index.ts",
     "prestart": "bun --no-install run --cwd ../home-assistant build",
@@ -41,7 +38,7 @@
     "liquidjs": "^10.29.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.3",
-    "@vitest/coverage-istanbul": "5.0.3"
+    "vitest": "5.0.5",
+    "@vitest/coverage-istanbul": "5.0.5"
   }
 }

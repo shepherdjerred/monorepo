@@ -23,8 +23,8 @@
     "obsidian": "^1.13.1",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "5.0.3",
-    "@vitest/coverage-istanbul": "5.0.3"
+    "vitest": "5.0.5",
+    "@vitest/coverage-istanbul": "5.0.5"
   },
   "dependencies": {
     "@codemirror/language": "^6.12.4",

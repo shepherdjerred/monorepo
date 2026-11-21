@@ -17,10 +17,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["dom-webcodecs"],
-    "paths": {
-      "#src/*": ["./src/*"]
-    }
+    "types": ["dom-webcodecs"]
   },
   "include": ["src", "types"],
   "references": [{ "path": "./tsconfig.node.json" }]

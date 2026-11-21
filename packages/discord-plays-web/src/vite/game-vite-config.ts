@@ -30,8 +30,10 @@ export function defineGameViteConfig({
       dedupe: ["react", "react-dom"],
     },
     optimizeDeps: {
-      esbuildOptions: {
-        target: "es2020",
+      rolldownOptions: {
+        transform: {
+          target: "es2020",
+        },
       },
     },
     server: {

@@ -236,7 +236,7 @@ async function generateStructuredAttempt<SCHEMA extends z.ZodType>(input: {
     ]),
     ...(input.request.system === undefined
       ? {}
-      : { system: input.request.system }),
+      : { instructions: input.request.system }),
     ...promptOrMessages(
       correctivePrompt(input.request.prompt, input.priorIssueSummary),
       input.request.images,

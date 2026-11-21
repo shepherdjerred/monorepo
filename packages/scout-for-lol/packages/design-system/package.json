@@ -85,7 +85,7 @@
     "@shepherdjerred/text": "workspace:*"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.0",
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "1.64.0",
     "@storybook/addon-a11y": "^10.6.0",
     "@storybook/addon-docs": "^10.6.0",
@@ -94,14 +94,14 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitest/coverage-istanbul": "5.0.3",
+    "@vitest/coverage-istanbul": "5.0.5",
     "ajv": "^8.20.0",
     "eslint": "^10.7.0",
     "prettier": "^3.9.9",
     "storybook": "^10.6.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.11",
-    "vitest": "5.0.3"
+    "vitest": "5.0.5"
   },
   "peerDependencies": {
     "react": "19.3.0",

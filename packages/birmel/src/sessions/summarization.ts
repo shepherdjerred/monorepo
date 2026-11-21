@@ -32,7 +32,7 @@ const defaultSummarizer: SessionSummarizer = async (input) => {
   const runtime = getLlmRuntime();
   const result = await generateText({
     model: runtime.languageModel(config.llm.memoryModel),
-    system:
+    instructions:
       "Summarize the durable state of this Discord work thread. Preserve decisions, unresolved work, user intent, and verified tool outcomes. Do not include reasoning or invent facts.",
     prompt: renderSessionSummaryPrompt(input),
     maxOutputTokens: 1500,

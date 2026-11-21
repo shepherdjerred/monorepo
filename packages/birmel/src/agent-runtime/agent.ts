@@ -407,7 +407,7 @@ export async function executeTurn(
         result = await agent.generate({
           messages: taskMessages(packet),
           abortSignal,
-          onStepFinish: ({ stepNumber, text, toolCalls, toolResults }) => {
+          onStepEnd: ({ stepNumber, text, toolCalls, toolResults }) => {
             completedSteps.push({ toolResults: [...toolResults] });
             // The finishing step answers with structured TurnAnswer JSON
             // and calls no tool, so its "text" is wire JSON, not the

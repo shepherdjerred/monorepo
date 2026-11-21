@@ -6,7 +6,6 @@
   "imports": {
     "#src/*": "./src/*",
     "#components/*": "./src/components/*.tsx",
-    "#hooks/*": "./src/hooks/*.ts",
     "#lib/*": "./src/lib/*.ts",
     "#styles/*": "./src/styles/*"
   },
@@ -52,10 +51,10 @@
     "jiti": "^2.7.0",
     "shadcn": "^4.14.1",
     "tailwindcss": "^4.2.4",
-    "typescript-eslint": "^8.71.1",
+    "typescript-eslint": "^8.72.2",
     "vite": "^8.0.11",
-    "vitest": "5.0.3",
-    "@vitest/coverage-istanbul": "5.0.3"
+    "vitest": "5.0.5",
+    "@vitest/coverage-istanbul": "5.0.5"
   },
   "browserslist": {
     "production": [
