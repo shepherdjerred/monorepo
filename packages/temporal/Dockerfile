@@ -188,7 +188,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_CLI_VERSION=2.96.0
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-ARG KUBECTL_VERSION=v1.37.1
+ARG KUBECTL_VERSION=v1.37.2
 # renovate: datasource=github-releases depName=github/github-mcp-server
 ARG GITHUB_MCP_SERVER_VERSION=1.3.0
 # renovate: datasource=github-releases depName=siderolabs/talos
