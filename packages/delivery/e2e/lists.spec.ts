@@ -227,7 +227,7 @@ test("activity labels its columns, puts the actor beside the action and marks fa
 test("on a phone each table row stacks under its labels without sideways scrolling", async ({
   page,
 }) => {
-  test.skip(!isPhone(page), "phone layout");
+  await page.setViewportSize({ width: 390, height: 844 });
   for (const [path, region] of [
     ["/environments/scout-for-lol/prod", "Recent deployments"],
     ["/deployments", "Deployment history"],

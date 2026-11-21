@@ -33,7 +33,7 @@ test("approvals put the waiting decisions first, named by service, environment a
 test("on a phone every destination and the waiting count are in sight", async ({
   page,
 }) => {
-  test.skip(!isPhone(page), "phone layout");
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/approvals");
   const nav = page.getByRole("navigation", { name: "Main" });
   for (const name of [
