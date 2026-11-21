@@ -13,10 +13,23 @@ export const OPS_SNAPSHOT_STALE_SECONDS = 1800;
 export const OPS_SNAPSHOT_SOURCE_STALE_SECONDS = 3600;
 
 const SCHEDULE_LABELS = "temporal_namespace, schedule_id, workflow_type";
-// Multiple infra pollers can hold gauges. Select the newest observation before
-// reducing values, so an older failed gauge cannot mask a successful successor.
+const SCHEDULE_IDENTITY_LABELS = "temporal_namespace, schedule_id";
+const SCHEDULE_LOOKBACK = "20m";
+
+// Multiple infra pollers can hold gauges, and single-replica rollouts briefly
+// leave no live series past Prometheus's 5m staleness window. Select the newest
+// observation across `[20m]` before reducing values, so rollouts never flap the
+// series and an older failed pod cannot mask a newer successful successor.
 function currentScheduleGauge(metric: string): string {
   return `${metric} and on(namespace,pod,${SCHEDULE_LABELS}) (temporal_schedule_observation_timestamp_seconds == on(${SCHEDULE_LABELS}) group_left max by(${SCHEDULE_LABELS}) (temporal_schedule_observation_timestamp_seconds))`;
+}
+
+function currentScheduleGaugeOverTime(
+  metric: string,
+  window = SCHEDULE_LOOKBACK,
+): string {
+  const observation = `last_over_time(temporal_schedule_observation_timestamp_seconds[${window}])`;
+  return `last_over_time(${metric}[${window}]) and on(namespace,pod,${SCHEDULE_LABELS}) (${observation} == on(${SCHEDULE_IDENTITY_LABELS}) group_left max by(${SCHEDULE_IDENTITY_LABELS}) (${observation}))`;
 }
 
 export function getOpsSnapshotRuleGroups(): PrometheusRuleSpecGroups[] {
@@ -61,13 +74,14 @@ export function getOpsSnapshotRuleGroups(): PrometheusRuleSpecGroups[] {
               "Scheduled workflow {{ $labels.schedule_id }} failed its latest run",
             ),
             description: escapePrometheusTemplate(
-              "The latest completed run of schedule {{ $labels.temporal_namespace }}/{{ $labels.schedule_id }} ({{ $labels.workflow_type }}) failed and has not yet succeeded on a subsequent run. Inspect the failed execution in the Temporal UI and the Ops maintenance dashboard.",
+              "The latest completed run of schedule {{ $labels.temporal_namespace }}/{{ $labels.schedule_id }} failed and has not yet succeeded on a subsequent run. Inspect the failed execution in the Temporal UI and the Ops maintenance dashboard.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `(max by (${SCHEDULE_LABELS}) (${currentScheduleGauge("temporal_schedule_last_terminal_failed")}) == 1) and on(${SCHEDULE_LABELS}) (max by (${SCHEDULE_LABELS}) (temporal_schedule_observation_timestamp_seconds) > time() - 1800)`,
+            `label_replace((max by (${SCHEDULE_IDENTITY_LABELS}) (${currentScheduleGaugeOverTime("temporal_schedule_last_terminal_failed")}) == 1) and on(${SCHEDULE_IDENTITY_LABELS}) (max by (${SCHEDULE_IDENTITY_LABELS}) (last_over_time(temporal_schedule_observation_timestamp_seconds[${SCHEDULE_LOOKBACK}])) > time() - 1800), "exported_namespace", "$1", "temporal_namespace", "(.+)")`,
           ),
           for: "10m",
+          keepFiringFor: "15m",
           labels: { severity: "warning", category: "ops" },
         },
         {

@@ -211,7 +211,7 @@ describe("Alert Dashboard deployment", () => {
     ]);
   });
 
-  test("requires the ops ingest token and wires Prometheus and Flipt", () => {
+  test("requires the ops ingest and Home Assistant tokens and wires Prometheus, Home Assistant and Flipt", () => {
     const env =
       synthesizeDeployment().spec.template.spec.containers.find(
         (container) => container.name === "alert-dashboard",
@@ -223,6 +223,18 @@ describe("Alert Dashboard deployment", () => {
     });
     expect(
       entry("OPS_INGEST_TOKEN")?.valueFrom?.secretKeyRef.optional,
+    ).not.toBe(true);
+    expect(entry("HOMEASSISTANT_URL")?.value).toBe(
+      "http://home-homeassistant-service.home.svc.cluster.local:8123",
+    );
+    expect(entry("HOMEASSISTANT_TOKEN")?.valueFrom?.secretKeyRef).toMatchObject(
+      {
+        key: "HOMEASSISTANT_TOKEN",
+        name: "alert-dashboard-alert-dashboard-ha-1p",
+      },
+    );
+    expect(
+      entry("HOMEASSISTANT_TOKEN")?.valueFrom?.secretKeyRef.optional,
     ).not.toBe(true);
     expect(entry("PROMETHEUS_URL")?.value).toBe(
       "http://prometheus-kube-prometheus-prometheus.prometheus:9090",

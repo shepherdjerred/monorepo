@@ -41,6 +41,11 @@ const ALERTMANAGER_GLOBAL = {
   smtp_tls_config: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_tls_config,
 };
 
+const INHIBITED_TEMPORAL_ACTIVITY_ALERTS = [
+  "TemporalWorkflowActivityFailing",
+  "TemporalActivityRetriesExhausted",
+].join("|");
+
 const OPERATOR_EMAIL_CONFIGS = [
   {
     send_resolved: false,
@@ -53,6 +58,22 @@ const OPERATOR_EMAIL_CONFIGS = [
   },
 ];
 
+function alertmanagerWebhookConfigs(alertDashboardSecretName: string) {
+  return [
+    {
+      send_resolved: true,
+      max_alerts: 100,
+      url: `${ALERT_DASHBOARD_SERVICE_URL}/internal/v1/alertmanager/events`,
+      http_config: {
+        authorization: {
+          type: "Bearer",
+          credentials_file: `/etc/alertmanager/secrets/${alertDashboardSecretName}/WEBHOOK_TOKEN`,
+        },
+      },
+    },
+  ];
+}
+
 function alertmanagerReceivers(alertDashboardSecretName: string) {
   return [
     {
@@ -60,25 +81,13 @@ function alertmanagerReceivers(alertDashboardSecretName: string) {
     },
     {
       name: "alerts",
-      webhook_configs: [
-        {
-          send_resolved: true,
-          max_alerts: 100,
-          url: `${ALERT_DASHBOARD_SERVICE_URL}/internal/v1/alertmanager/events`,
-          http_config: {
-            authorization: {
-              type: "Bearer",
-              credentials_file: `/etc/alertmanager/secrets/${alertDashboardSecretName}/WEBHOOK_TOKEN`,
-            },
-          },
-        },
-      ],
+      webhook_configs: alertmanagerWebhookConfigs(alertDashboardSecretName),
       // The ledger is the place to work alerts, but it is a page the operator
-      // has to remember to open. Only the null routes and the fallback matchers
-      // divert anything ahead of this receiver, so it sees exactly the critical
-      // and warning alerts worth interrupting someone for. Delivery is
-      // additive: the webhook above still records every alert whether or not
-      // the mail succeeds.
+      // has to remember to open. Only the null routes, fallback matchers, and
+      // routine warning household chores divert anything ahead of this
+      // receiver, so it sees the critical and warning alerts worth interrupting
+      // someone for. Delivery is additive: the webhook above still records
+      // every alert whether or not the mail succeeds.
       //
       // This and the dashboard's own outbox are alternatives, not layers. The
       // webhook above queues an opening email of its own whenever the dashboard
@@ -86,6 +95,13 @@ function alertmanagerReceivers(alertDashboardSecretName: string) {
       // dashboard's sender is therefore off, and re-enabling it means removing
       // this entry in the same change — see packages/alert-dashboard/README.md.
       email_configs: OPERATOR_EMAIL_CONFIGS,
+    },
+    {
+      // Routine household warnings (vacuums, litter, feeders, batteries) enter
+      // the Alerts ledger for the House tab and TRMNL display without sending
+      // email; critical household faults fall through to `alerts` above.
+      name: "alerts-ledger-only",
+      webhook_configs: alertmanagerWebhookConfigs(alertDashboardSecretName),
     },
     {
       // Reports on the webhook, so it must not depend on the webhook.
@@ -291,6 +307,25 @@ export async function createPrometheusApp(chart: Chart) {
           {
             target_matchers: ["alertname = InfoInhibitor"],
           },
+          {
+            source_matchers: ["alertname = TemporalWorkflowFailed"],
+            target_matchers: ["alertname = TemporalScheduledCurrentFailure"],
+            equal: ["exported_namespace", "schedule_id"],
+          },
+          {
+            source_matchers: ["alertname = TemporalWorkflowFailed"],
+            target_matchers: [
+              `alertname =~ ${INHIBITED_TEMPORAL_ACTIVITY_ALERTS}`,
+            ],
+            equal: ["exported_namespace", "workflowType"],
+          },
+          {
+            source_matchers: [
+              "alertname = TemporalWorkflowFailed",
+              "workflowType = runZfsMaintenanceWorkflow",
+            ],
+            target_matchers: ["alertname = ZfsMaintenanceFailed"],
+          },
         ],
         templates: ["/etc/alertmanager/config/*.tmpl"],
         receivers: alertmanagerReceivers(alertDashboardSecrets.name),
@@ -385,7 +420,13 @@ export async function createPrometheusApp(chart: Chart) {
             },
             removedAgentTaskAggregateRoute,
             {
-              // Route critical and warning alerts to the Alerts ledger.
+              // Routine household chores record in the ledger without sending
+              // email; critical household faults fall through to `alerts`.
+              receiver: "alerts-ledger-only",
+              matchers: ['category = "household"', 'severity = "warning"'],
+            },
+            {
+              // Route critical and warning alerts to the Alerts ledger and email.
               receiver: "alerts",
               matchers: ['severity =~ "critical|warning"'],
             },

@@ -125,11 +125,14 @@ function findReceiverNamed(
   );
 }
 
-function findReceiver(rendered: string, key: string): Record<string, unknown> {
-  return onlyRecord(
-    findRecords(rendered, (record) => Array.isArray(record[key])),
-    `${key} receiver`,
+function findInhibitRules(rendered: string): unknown[] {
+  const record = onlyRecord(
+    findRecords(rendered, (candidate) =>
+      Array.isArray(candidate["inhibit_rules"]),
+    ),
+    "Alertmanager inhibit_rules",
   );
+  return z.array(z.unknown()).parse(record["inhibit_rules"]);
 }
 
 function findAlertmanagerSection(rendered: string): {
@@ -155,6 +158,20 @@ function findAlertmanagerSection(rendered: string): {
   }
   return { config, opsEmailTemplate };
 }
+
+const WebhookConfigsSchema = z.array(
+  z.object({
+    send_resolved: z.boolean(),
+    max_alerts: z.number().int().positive(),
+    url: z.string(),
+    http_config: z.object({
+      authorization: z.object({
+        type: z.string(),
+        credentials_file: z.string(),
+      }),
+    }),
+  }),
+);
 
 function findAlertmanagerRoute(rendered: string): RouteNode {
   const found: RouteNode[] = [];
@@ -390,23 +407,7 @@ describe("rendered Alerts receiver", () => {
   }, 120_000);
 
   it("posts Alertmanager events to the authenticated Alerts endpoint", () => {
-    const receiver = findReceiver(renderedApps, "webhook_configs");
-    const configs = z
-      .array(
-        z.object({
-          send_resolved: z.boolean(),
-          max_alerts: z.number().int().positive(),
-          url: z.string(),
-          http_config: z.object({
-            authorization: z.object({
-              type: z.string(),
-              credentials_file: z.string(),
-            }),
-          }),
-        }),
-      )
-      .parse(receiver["webhook_configs"]);
-    expect(configs).toEqual([
+    const expectedWebhookConfigs = [
       {
         send_resolved: true,
         max_alerts: 100,
@@ -419,7 +420,13 @@ describe("rendered Alerts receiver", () => {
           },
         },
       },
-    ]);
+    ];
+    for (const receiverName of ["alerts", "alerts-ledger-only"]) {
+      const receiver = findReceiverNamed(renderedApps, receiverName);
+      expect(WebhookConfigsSchema.parse(receiver["webhook_configs"])).toEqual(
+        expectedWebhookConfigs,
+      );
+    }
     expect(renderedApps).toContain(
       "itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/alert-dashboard",
     );
@@ -454,7 +461,7 @@ describe("rendered Alerts receiver", () => {
     expect(receiver["webhook_configs"]).toBeUndefined();
   });
 
-  it("delivers ordinary alerts to both the ledger and email", () => {
+  it("delivers ordinary alerts to both the ledger and email, while ledger-only omits email", () => {
     const receiver = findReceiverNamed(renderedApps, "alerts");
     // The ledger must keep receiving everything; email is additive, not a
     // replacement, or a mail outage silently stops recording alerts.
@@ -466,6 +473,45 @@ describe("rendered Alerts receiver", () => {
       }),
     ]);
     expect(receiver["email_configs"]).toEqual([EXPECTED_EMAIL_CONFIG]);
+
+    const ledgerOnly = findReceiverNamed(renderedApps, "alerts-ledger-only");
+    expect(ledgerOnly["webhook_configs"]).toEqual([
+      expect.objectContaining({
+        url: expect.stringContaining(
+          "/internal/v1/alertmanager/events",
+        ) as unknown,
+      }),
+    ]);
+    expect(ledgerOnly["email_configs"]).toBeUndefined();
+  });
+
+  it("inhibits redundant Temporal schedule, activity, and ZFS alerts when TemporalWorkflowFailed fires", () => {
+    const activityTarget = [
+      "TemporalWorkflowActivityFailing",
+      "TemporalActivityRetriesExhausted",
+    ].join("|");
+    const inhibitRules = findInhibitRules(renderedApps);
+    expect(inhibitRules).toEqual(
+      expect.arrayContaining([
+        {
+          source_matchers: ["alertname = TemporalWorkflowFailed"],
+          target_matchers: ["alertname = TemporalScheduledCurrentFailure"],
+          equal: ["exported_namespace", "schedule_id"],
+        },
+        {
+          source_matchers: ["alertname = TemporalWorkflowFailed"],
+          target_matchers: [`alertname =~ ${activityTarget}`],
+          equal: ["exported_namespace", "workflowType"],
+        },
+        {
+          source_matchers: [
+            "alertname = TemporalWorkflowFailed",
+            "workflowType = runZfsMaintenanceWorkflow",
+          ],
+          target_matchers: ["alertname = ZfsMaintenanceFailed"],
+        },
+      ]),
+    );
   });
 
   it("renders Hub Editorial HTML, subject, and text from the post-Helm ops-email.tmpl", async () => {
@@ -651,5 +697,35 @@ describe("Alerts route selection", () => {
         severity: "warning",
       }),
     ).toBe("null");
+  });
+
+  it("routes warning household chores to alerts-ledger-only while keeping critical household and info rules on their expected paths", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "RoborockDirtyWaterTankFull",
+        category: "household",
+        severity: "warning",
+      }),
+    ).toBe("alerts-ledger-only");
+    expect(
+      resolveReceiver(route, {
+        alertname: "LitterRobotWasteCritical",
+        category: "household",
+        severity: "critical",
+      }),
+    ).toBe("alerts");
+    expect(
+      resolveReceiver(route, {
+        alertname: "VacuumRunInterrupted",
+        category: "household",
+        severity: "info",
+      }),
+    ).toBe("null");
+    expect(
+      resolveReceiver(route, {
+        alertname: "PetCareEntityUnavailable",
+        severity: "warning",
+      }),
+    ).toBe("alerts");
   });
 });

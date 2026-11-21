@@ -104,6 +104,91 @@ const stranded = (environment: string, status: string) => ({
   },
 });
 
+function recoveryIntentsPromtoolCases() {
+  return [
+    {
+      name: "orphaned recovery intents alert after an hour when recovery-required count is absent",
+      interval: "1m",
+      input_series: [
+        {
+          series: `delivery_independent_recoveries_pending{${target}}`,
+          values: "0x10 2x80",
+        },
+      ],
+      alert_rule_test: [
+        {
+          alertname: "DeliveryRecoveryIntentsPending",
+          eval_time: "60m",
+          exp_alerts: [],
+        },
+        {
+          alertname: "DeliveryRecoveryIntentsPending",
+          eval_time: "75m",
+          exp_alerts: [{ exp_labels: { severity: "warning" } }],
+        },
+      ],
+    },
+    {
+      name: "orphaned recovery intents alert after an hour when recovery-required count is zero",
+      interval: "1m",
+      input_series: [
+        {
+          series: `delivery_independent_recoveries_pending{${target}}`,
+          values: "0x10 1x80",
+        },
+        holder("delivery/prod", "delivery", true, "0x90"),
+      ],
+      alert_rule_test: [
+        {
+          alertname: "DeliveryRecoveryIntentsPending",
+          eval_time: "60m",
+          exp_alerts: [],
+        },
+        {
+          alertname: "DeliveryRecoveryIntentsPending",
+          eval_time: "75m",
+          exp_alerts: [{ exp_labels: { severity: "warning" } }],
+        },
+      ],
+    },
+    {
+      name: "recovery intents pending while a deployment is actively recovery-required stay suppressed",
+      interval: "1m",
+      input_series: [
+        {
+          series: `delivery_independent_recoveries_pending{${target}}`,
+          values: "2x90",
+        },
+        holder("woodpecker/prod", "woodpecker", false, "1x90"),
+      ],
+      alert_rule_test: [
+        {
+          alertname: "DeliveryRecoveryIntentsPending",
+          eval_time: "75m",
+          exp_alerts: [],
+        },
+      ],
+    },
+    {
+      name: "a recovery intent that settles within the hour never alerts",
+      interval: "1m",
+      input_series: [
+        {
+          series: `delivery_independent_recoveries_pending{${target}}`,
+          values: "1x40 0x50",
+        },
+      ],
+      alert_rule_test: [
+        {
+          alertname: "DeliveryRecoveryIntentsPending",
+          eval_time: "85m",
+          exp_alerts: [],
+        },
+      ],
+    },
+  ];
+}
+
 test("stalled-dispatch alerts fire on held targets, queue age and stranded platform locks, not on cleared or fresh waits", async () => {
   const start = DELIVERY_QUEUE_STALL_SECONDS - 600;
   const directory = await mkdtemp(path.join(tmpdir(), "delivery-promql-"));
@@ -179,45 +264,7 @@ test("stalled-dispatch alerts fire on held targets, queue age and stranded platf
               },
             ],
           },
-          {
-            name: "recovery intents pending past an hour alert; a recovery that settles does not",
-            interval: "1m",
-            input_series: [
-              {
-                series: `delivery_independent_recoveries_pending{${target}}`,
-                values: "0x10 2x80",
-              },
-            ],
-            alert_rule_test: [
-              {
-                alertname: "DeliveryRecoveryIntentsPending",
-                eval_time: "60m",
-                exp_alerts: [],
-              },
-              {
-                alertname: "DeliveryRecoveryIntentsPending",
-                eval_time: "75m",
-                exp_alerts: [{ exp_labels: { severity: "warning" } }],
-              },
-            ],
-          },
-          {
-            name: "a recovery intent that settles within the hour never alerts",
-            interval: "1m",
-            input_series: [
-              {
-                series: `delivery_independent_recoveries_pending{${target}}`,
-                values: "1x40 0x50",
-              },
-            ],
-            alert_rule_test: [
-              {
-                alertname: "DeliveryRecoveryIntentsPending",
-                eval_time: "85m",
-                exp_alerts: [],
-              },
-            ],
-          },
+          ...recoveryIntentsPromtoolCases(),
           {
             name: "a settled holder that keeps the platform lock alerts; running, recovering and barrier holders do not",
             interval: "1m",

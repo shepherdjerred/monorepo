@@ -227,9 +227,15 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
           },
         ]
       : [];
+    const taskTypes = definition.activityPoller
+      ? "Workflow|Activity"
+      : "Workflow";
+    const workflowP95High = `histogram_quantile(0.95, sum by (exported_namespace, task_queue, le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 10`;
+    const activityP95High = `histogram_quantile(0.95, sum by (exported_namespace, task_queue, le) (rate(temporal_worker_activity_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 10`;
+    const backlogAgeGate = `label_replace(max by (exported_namespace, taskqueue) (approximate_backlog_age_seconds{namespace="temporal",exported_namespace=~"${servedNamespaces}",taskqueue="${backlogQueue}",task_type=~"${taskTypes}"}), "task_queue", "${definition.queue}", "taskqueue", "(.*)") > 5`;
     const latencyExpression = definition.activityPoller
-      ? `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 5 or histogram_quantile(0.95, sum by (le) (rate(temporal_worker_activity_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 5`
-      : `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 5`;
+      ? `(${workflowP95High} or ${activityP95High}) and on (exported_namespace, task_queue) ${backlogAgeGate}`
+      : `(${workflowP95High}) and on (exported_namespace, task_queue) ${backlogAgeGate}`;
     return [
       ...(definition.workflowPoller === false
         ? []
@@ -264,10 +270,11 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
         alert: "TemporalDomainScheduleToStartHigh",
         annotations: {
           summary: `Temporal task pickup latency is high on ${definition.queue}`,
-          description: `The 95th-percentile wait time before a worker picks up tasks on ${definition.queue} has exceeded 5 seconds for 5 minutes, slowing workflow execution. Check worker slot utilization, CPU throttling, and poller counts in namespace ${definition.metricsNamespace}.`,
+          description: `The 95th-percentile wait time before a worker picks up tasks on ${definition.queue} has exceeded 10 seconds alongside live server backlog age above 5 seconds for 10 minutes, slowing workflow execution. Check worker slot utilization, CPU throttling, and poller counts in namespace ${definition.metricsNamespace}.`,
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(latencyExpression),
-        for: "5m",
+        for: "10m",
+        keepFiringFor: "10m",
         labels,
       },
       {

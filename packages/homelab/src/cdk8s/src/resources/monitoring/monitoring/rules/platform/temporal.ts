@@ -116,7 +116,7 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
       ),
     },
     expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-      "time() - max_over_time(scout_data_dragon_last_failure_timestamp[24h]) < 86400",
+      'time() - max_over_time(scout_data_dragon_last_failure_timestamp{reason!~"git-push-failed|pr-create-failed"}[24h]) < 86400',
     ),
     for: "15m",
     labels: {
@@ -223,7 +223,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{exported_namespace=~"prod|beta"}[30m]) > 5',
+            'increase(activity_task_fail{exported_namespace=~"prod|beta",workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow"}[30m]) > 5',
           ),
           for: "15m",
           labels: {

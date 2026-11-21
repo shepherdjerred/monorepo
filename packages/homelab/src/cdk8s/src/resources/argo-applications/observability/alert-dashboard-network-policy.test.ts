@@ -7,6 +7,7 @@ import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-chart
 import { createAppsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/apps.ts";
 import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/flipt.ts";
 import { createTrmnlDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts";
+import { PROD_NODE_INTERNAL_IP } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { createAlertDashboardApp } from "./alert-dashboard.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
@@ -25,6 +26,7 @@ const PeerSchema = z
   .object({
     namespaceSelector: SelectorSchema.optional(),
     podSelector: SelectorSchema.optional(),
+    ipBlock: z.object({ cidr: z.string() }).optional(),
   })
   .loose();
 
@@ -260,6 +262,23 @@ describe("alert dashboard network paths", () => {
         serviceName: "alert-dashboard-alert-dashboard-service",
       }),
     );
+  });
+
+  it("reaches Home Assistant on the production node's hostNetwork endpoint", () => {
+    const dashboard = findPolicy(
+      synthesize(createAlertDashboardChart, ".test-synth-alert-dashboard-ha"),
+      "alert-dashboard-app-netpol",
+    );
+
+    expect(
+      (dashboard.spec.egress ?? []).some(
+        (rule) =>
+          hasPort(rule, 8123) &&
+          (rule.to ?? []).some(
+            (peer) => peer.ipBlock?.cidr === `${PROD_NODE_INTERNAL_IP}/32`,
+          ),
+      ),
+    ).toBe(true);
   });
 
   it("uses the backup-enabled SQLite PVC without PostgreSQL resources", () => {

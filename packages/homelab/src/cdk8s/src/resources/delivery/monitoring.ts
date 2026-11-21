@@ -97,7 +97,7 @@ export function deliveryAlertRules(transition: boolean) {
       // handover even when no deployment is recovery-required any more.
       alert: "DeliveryRecoveryIntentsPending",
       expr: expr(
-        `max(delivery_independent_recoveries_pending{${DELIVERY_TARGET}}) > 0`,
+        `max(delivery_independent_recoveries_pending{${DELIVERY_TARGET}}) > 0 unless on () (max(delivery_recovery_required_deployments{${DELIVERY_TARGET}}) > 0)`,
       ),
       for: "1h",
       labels: { severity: "warning" },

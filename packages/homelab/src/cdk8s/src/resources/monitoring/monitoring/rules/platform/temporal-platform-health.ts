@@ -95,7 +95,7 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
         // namespace it was scraped in ("temporal") and the Temporal namespace
         // is `exported_namespace`.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase(activity_fail{exported_namespace=~"prod|beta"}[15m]) > 0',
+          'increase(activity_fail{exported_namespace=~"prod|beta",workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow"}[15m]) > 0',
         ),
         for: "1m",
         labels: { severity: "warning" },

@@ -1,10 +1,13 @@
+import { PROD_NODE_INTERNAL_IP } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { describe, expect, test } from "vitest";
 import type { FleetPolicyPort } from "./fleet.ts";
+import { workload } from "./fleet-fixtures.ts";
 import {
   namespaceNamedBy,
   peerNamespace,
   peerSelects,
   podsLabelled,
+  podsOf,
   portsCover,
 } from "./network-reachability.ts";
 
@@ -54,6 +57,38 @@ describe("peerSelects", () => {
       expect(peerSelects({ ipBlock }, "prometheus", pods)).toBe(expected);
     },
   );
+
+  test("hostNetwork workloads are selected by the production node's /32 ipBlock, never by namespace selectors", () => {
+    const hostPods = podsOf({
+      ...workload("home", "homeassistant", 8123),
+      hostNetwork: true,
+    });
+    expect(peerSelects(nsPeer("home"), "alert-dashboard", hostPods)).toBe(
+      false,
+    );
+    expect(peerSelects({ podSelector: {} }, "home", hostPods)).toBe(false);
+    expect(
+      peerSelects(
+        { ipBlock: { cidr: `${PROD_NODE_INTERNAL_IP}/32` } },
+        "alert-dashboard",
+        hostPods,
+      ),
+    ).toBe(true);
+    expect(
+      peerSelects(
+        { ipBlock: { cidr: "0.0.0.0/0" } },
+        "alert-dashboard",
+        hostPods,
+      ),
+    ).toBe(true);
+    expect(
+      peerSelects(
+        { ipBlock: { cidr: "192.168.1.0/24" } },
+        "alert-dashboard",
+        hostPods,
+      ),
+    ).toBe(false);
+  });
 });
 
 describe("namespaceNamedBy", () => {

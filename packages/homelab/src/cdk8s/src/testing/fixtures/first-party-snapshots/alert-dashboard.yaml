@@ -50,6 +50,13 @@ spec:
               value: http://prometheus-kube-prometheus-alertmanager.prometheus.svc.cluster.local:9093
             - name: GRAFANA_URL
               value: http://prometheus-grafana.prometheus.svc.cluster.local:80
+            - name: HOMEASSISTANT_URL
+              value: http://home-homeassistant-service.home.svc.cluster.local:8123
+            - name: HOMEASSISTANT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: HOMEASSISTANT_TOKEN
+                  name: alert-dashboard-alert-dashboard-ha-1p
             - name: PROMETHEUS_URL
               value: http://prometheus-kube-prometheus-prometheus.prometheus:9090
             - name: FEATURE_FLAGS_MODE
@@ -209,6 +216,14 @@ metadata:
 spec:
   itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/alert-dashboard
 ---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: alert-dashboard-alert-dashboard-ha-1p
+  namespace: alert-dashboard
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/42fn7x3zaemfenz35en27thw5u
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -358,6 +373,12 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: postal
+    - ports:
+        - port: 8123
+          protocol: TCP
+      to:
+        - ipBlock:
+            cidr: 100.102.88.88/32
     - ports:
         - port: 4318
           protocol: TCP

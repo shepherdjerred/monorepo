@@ -5,12 +5,14 @@ import {
   KubeNetworkPolicy,
   type NetworkPolicySpec,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { PROD_NODE_INTERNAL_IP } from "./nodes.ts";
 import {
   blackboxProbeIngressRule,
   cloudflareTunnelIngressRule,
   dnsEgressRule,
   externalHttpsEgressRule,
   fliptEgress,
+  homeAssistantEgressRule,
   intraNamespaceRule,
   nsPeer,
   otlpEgress,
@@ -103,6 +105,7 @@ describe("network policy peer library", () => {
           otlpEgress(),
           seaweedfsEgress(),
           postgresEgress("tracker-postgresql"),
+          homeAssistantEgressRule(),
           externalHttpsEgressRule(),
         ],
       }).egress,
@@ -129,12 +132,17 @@ describe("network policy peer library", () => {
         ],
         ports: [port(5432)],
       },
+      {
+        to: [{ ipBlock: { cidr: `${PROD_NODE_INTERNAL_IP}/32` } }],
+        ports: [port(8123)],
+      },
       { to: [{ ipBlock: { cidr: "0.0.0.0/0" } }], ports: [port(443)] },
     ]);
   });
 
   test("each call returns a fresh object", () => {
     expect(dnsEgressRule()).not.toBe(dnsEgressRule());
+    expect(homeAssistantEgressRule()).not.toBe(homeAssistantEgressRule());
     expect(nsPeer("flipt")).not.toBe(nsPeer("flipt"));
   });
 });

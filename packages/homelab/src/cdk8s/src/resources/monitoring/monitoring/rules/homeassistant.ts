@@ -164,22 +164,31 @@ function feederRules(
 }
 
 /**
- * Every Home Assistant alert is a household matter (pets, cleaning, devices,
- * home automations), not cluster operations. The `category` label lets the
- * alert ledger and any future route tell them apart, like the `media`,
- * `streaming` and `ci` categories on other rule files. Recording rules keep
- * their series labels unchanged.
+ * Physical household chores and appliance faults carry `category: "household"`
+ * and hold firing across brief `Recreate` pod restarts of `homeassistant` or
+ * `trmnl-dashboard`. Software, telemetry, and integration availability alerts
+ * omit `category: "household"` so they route and triage as Ops incidents.
+ * Recording rules keep their series labels unchanged.
  */
 export const HOME_ASSISTANT_ALERT_CATEGORY = "household";
+export const HOME_ASSISTANT_KEEP_FIRING_FOR = "15m";
+
+export const HOME_ASSISTANT_OPS_ALERT_NAMES: ReadonlySet<string> = new Set([
+  "HomeAssistantAutomationDependencyUnavailable",
+  "PetCareEntityUnavailable",
+  "LitterRobotDiagnosticsStale",
+  "LitterRobotEntitiesStale",
+]);
 
 export function getHomeAssistantRuleGroups(): PrometheusRuleSpecGroups[] {
   return getUncategorizedHomeAssistantRuleGroups().map((group) => ({
     ...group,
     rules: group.rules?.map((rule) =>
-      rule.alert === undefined
+      rule.alert === undefined || HOME_ASSISTANT_OPS_ALERT_NAMES.has(rule.alert)
         ? rule
         : {
             ...rule,
+            keepFiringFor: HOME_ASSISTANT_KEEP_FIRING_FOR,
             labels: {
               ...rule.labels,
               category: HOME_ASSISTANT_ALERT_CATEGORY,
