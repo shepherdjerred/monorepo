@@ -10,9 +10,12 @@ import { buildProductAnnouncementMessage } from "#src/temporal/notification/prod
 import { buildHallRecordBreakNotificationMessage } from "#src/temporal/notification/hall-record-break-notification.ts";
 import {
   readAttestedPrematchArtifact,
-  readAttestedReportArtifact,
+  readAttestedPostmatchArtifact,
 } from "#src/temporal/notification/notification-artifact.ts";
-import { buildPostmatchNotificationMessage } from "#src/temporal/notification/postmatch-notification.ts";
+import {
+  buildPostmatchNotificationMessage,
+  buildUnsupportedQueueNotificationMessage,
+} from "#src/temporal/notification/postmatch-notification.ts";
 import { buildPrematchNotificationMessage } from "#src/temporal/notification/prematch-notification.ts";
 
 /**
@@ -71,15 +74,21 @@ export async function buildAttestedMessage(
     // `text-only`, and their message is built from the intent's own payload.
     case "hall-record-break":
       return buildHallRecordBreakNotificationMessage(record);
-    case "postmatch":
-      return await freezeNotificationMessage(
-        record,
-        buildPostmatchNotificationMessage(
-          riotMatchId,
-          await readAttestedReportArtifact(riotMatchId, abortSignal),
-        ),
-        deliveryGuildId,
+    case "postmatch": {
+      const attested = await readAttestedPostmatchArtifact(
+        riotMatchId,
+        abortSignal,
       );
+      // The unsupported-queue notice is a fixed text embed: no feature tip is
+      // claimed against it, so it is not frozen as a presentation.
+      return "image" in attested
+        ? await freezeNotificationMessage(
+            record,
+            buildPostmatchNotificationMessage(riotMatchId, attested),
+            deliveryGuildId,
+          )
+        : buildUnsupportedQueueNotificationMessage(attested);
+    }
     case "prematch": {
       const saved = await prisma.notificationPresentation.findUnique({
         where: { intentKey: record.intent.key },

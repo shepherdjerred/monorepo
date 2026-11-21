@@ -40,7 +40,7 @@ const stubs = vi.hoisted(() => ({
   requireIntentRecord: vi.fn(),
   resolveScoutObservedMatchContext: vi.fn(),
   generateMatchReport: vi.fn(),
-  readAttestedReportArtifact: vi.fn(),
+  readAttestedPostmatchArtifact: vi.fn(),
   readAttestedPrematchArtifact: vi.fn(),
   resolveNotificationGate: vi.fn(),
   buildPrematchNotificationMessage: vi.fn(),
@@ -75,7 +75,7 @@ vi.mock("#src/temporal/notification/notification-artifact.ts", async () => {
     RenderReceiptViolationError: actual.RenderReceiptViolationError,
     MalformedRenderReceiptError: actual.MalformedRenderReceiptError,
     InconsistentAttestedObjectError: actual.InconsistentAttestedObjectError,
-    readAttestedReportArtifact: stubs.readAttestedReportArtifact,
+    readAttestedPostmatchArtifact: stubs.readAttestedPostmatchArtifact,
     readAttestedPrematchArtifact: stubs.readAttestedPrematchArtifact,
   };
 });
@@ -148,7 +148,7 @@ beforeEach(() => {
     ],
     embeds: [],
   });
-  stubs.readAttestedReportArtifact.mockResolvedValue(attestedReport());
+  stubs.readAttestedPostmatchArtifact.mockResolvedValue(attestedReport());
   stubs.readAttestedPrematchArtifact.mockResolvedValue({
     artifact: "image",
     bytes: ARTIFACT_BYTES,
@@ -181,7 +181,7 @@ describe("a failure before the request could have left", () => {
     {
       name: "the artifact read-back's transport",
       arrange: () => {
-        stubs.readAttestedReportArtifact.mockRejectedValue(
+        stubs.readAttestedPostmatchArtifact.mockRejectedValue(
           new Error("seaweedfs timed out"),
         );
       },
@@ -189,7 +189,7 @@ describe("a failure before the request could have left", () => {
     {
       name: "a missing render receipt",
       arrange: () => {
-        stubs.readAttestedReportArtifact.mockRejectedValue(
+        stubs.readAttestedPostmatchArtifact.mockRejectedValue(
           new Error("No postmatch render receipt stands"),
         );
       },
@@ -230,7 +230,7 @@ describe("a failure before the request could have left", () => {
       outcome: "failed",
       failure: { classification: "retryable", reason: "service-unavailable" },
     });
-    expect(stubs.readAttestedReportArtifact).not.toHaveBeenCalled();
+    expect(stubs.readAttestedPostmatchArtifact).not.toHaveBeenCalled();
     expect(stubs.send).not.toHaveBeenCalled();
     expect(stubs.sendDM).not.toHaveBeenCalled();
   });
@@ -242,7 +242,7 @@ describe("a failure before the request could have left", () => {
     // Reconciliation then re-drove the same corrupt receipt every sweep,
     // forever, because the row parses the same way on every read. A
     // deterministic contract violation is terminal.
-    stubs.readAttestedReportArtifact.mockRejectedValue(
+    stubs.readAttestedPostmatchArtifact.mockRejectedValue(
       new MalformedRenderReceiptError({
         riotMatchId: RiotMatchIdSchema.parse("NA1_9301"),
         kind: "postmatch",
@@ -275,7 +275,7 @@ describe("a failure before the request could have left", () => {
     // while it is still alive to answer.
     vi.useFakeTimers();
     try {
-      stubs.readAttestedReportArtifact.mockReturnValue(
+      stubs.readAttestedPostmatchArtifact.mockReturnValue(
         new Promise(() => {
           // The object store that never answers.
         }),
@@ -301,7 +301,7 @@ describe("a failure before the request could have left", () => {
     vi.useFakeTimers();
     try {
       let observed: AbortSignal | undefined;
-      stubs.readAttestedReportArtifact.mockImplementation(
+      stubs.readAttestedPostmatchArtifact.mockImplementation(
         (_matchId: unknown, abortSignal: AbortSignal) => {
           observed = abortSignal;
           return new Promise(() => {
@@ -325,7 +325,7 @@ describe("a failure before the request could have left", () => {
     // attested size mean the RECEIPT disagrees with itself. Deterministic:
     // every re-read reproduces it, so a retryable failure would return the
     // intent to `ready` and re-drive the same contradiction forever.
-    stubs.readAttestedReportArtifact.mockRejectedValue(
+    stubs.readAttestedPostmatchArtifact.mockRejectedValue(
       new InconsistentAttestedObjectError({
         riotMatchId: RiotMatchIdSchema.parse("NA1_9301"),
         objectKey: "games/2026/09/16/NA1_9301/report.png",
@@ -349,7 +349,7 @@ describe("a failure before the request could have left", () => {
       // The receipt stands and its bytes do not. That is a fact about
       // storage: retrying reads the same broken object, and sending a
       // freshly rendered image instead would attest bytes nobody attested.
-      stubs.readAttestedReportArtifact.mockRejectedValue(
+      stubs.readAttestedPostmatchArtifact.mockRejectedValue(
         new ArchivedObjectUnusableError({
           key: "games/2026/09/16/NA1_9301/report.png",
           reason,
@@ -430,7 +430,7 @@ describe("the prematch-shaped path", () => {
     expect(stubs.buildPrematchNotificationMessage.mock.calls[0]?.[0]).toBe(
       "NA1_9301",
     );
-    expect(stubs.readAttestedReportArtifact).not.toHaveBeenCalled();
+    expect(stubs.readAttestedPostmatchArtifact).not.toHaveBeenCalled();
     expect(stubs.generateMatchReport).not.toHaveBeenCalled();
     expect(stubs.resolveScoutObservedMatchContext).not.toHaveBeenCalled();
     const sent = SentMessageSchema.parse(stubs.send.mock.calls[0]?.[0]);
@@ -464,7 +464,7 @@ describe("a preference changed after the delivery attempt started", () => {
       const artifactRead =
         kind === "prematch"
           ? stubs.buildPrematchNotificationMessage
-          : stubs.readAttestedReportArtifact;
+          : stubs.readAttestedPostmatchArtifact;
       expect(artifactRead).toHaveBeenCalledTimes(1);
       expect(
         stubs.matchNotificationPreferenceSuppression,
@@ -535,7 +535,7 @@ describe("what the send assembles", () => {
   });
 
   test("attaches exactly one report image", async () => {
-    stubs.readAttestedReportArtifact.mockResolvedValue(attestedReport());
+    stubs.readAttestedPostmatchArtifact.mockResolvedValue(attestedReport());
 
     await deliverNotification(attemptRef());
 
