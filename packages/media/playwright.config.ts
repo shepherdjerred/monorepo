@@ -1,33 +1,35 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
-const checkout = fileURLToPath(new URL("../..", import.meta.url));
-const portScript = fileURLToPath(
-  new URL("../../scripts/lib/e2e/e2e-port.ts", import.meta.url),
-);
 const ci = Bun.env["CI"] === "true";
 
-/** A free port hashed from this checkout, so concurrent worktrees never collide. */
-function pickPort(envVar: string): {
-  port: number;
-  reuseExistingServer: boolean;
-} {
-  const proc = Bun.spawnSync([process.execPath, portScript, checkout, envVar], {
-    env: Bun.env,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  if (proc.exitCode !== 0) {
-    throw new Error(proc.stderr.toString() || `failed to resolve ${envVar}`);
-  }
-  const [portText = "", reuseFlag = "0"] = proc.stdout.toString().split(":");
-  const port = Number(portText);
-  Bun.env[`_PLAYWRIGHT_RESOLVED_${envVar}`] = String(port);
-  return { port, reuseExistingServer: reuseFlag === "1" };
+// The shared resolver picks a free port hashed from this checkout, so
+// concurrent worktrees never collide. A package config cannot import root
+// scripts, so it runs the resolver as a subprocess, as the other single-port
+// Playwright configs do.
+const harnessProbe = Bun.spawnSync(
+  [
+    process.execPath,
+    fileURLToPath(
+      new URL("../../scripts/lib/e2e/e2e-port.ts", import.meta.url),
+    ),
+    fileURLToPath(new URL("../..", import.meta.url)),
+    "MEDIA_E2E_PORT",
+  ],
+  { env: Bun.env, stdout: "pipe", stderr: "pipe" },
+);
+if (harnessProbe.exitCode !== 0) {
+  throw new Error(
+    harnessProbe.stderr.toString() || "MEDIA_E2E_PORT probe failed",
+  );
 }
-
-const server = pickPort("MEDIA_E2E_PORT");
-const baseURL = `http://127.0.0.1:${String(server.port)}`;
+const [harnessPortText = "", harnessReuse = "0"] = harnessProbe.stdout
+  .toString()
+  .split(":");
+const harnessPort = Number(harnessPortText);
+// Playwright workers re-evaluate this file; they must read the same port.
+Bun.env["_PLAYWRIGHT_RESOLVED_MEDIA_E2E_PORT"] = String(harnessPort);
+const baseURL = `http://127.0.0.1:${String(harnessPort)}`;
 
 export default defineConfig({
   // `e2e/` also holds the Docker and Plex system harnesses; only this
@@ -65,10 +67,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `bun run build && bun e2e/browser/server.ts ${String(server.port)}`,
+    command: `bun run build && bun e2e/browser/server.ts ${String(harnessPort)}`,
     url: `${baseURL}/readyz`,
     timeout: 120_000,
-    reuseExistingServer: server.reuseExistingServer,
+    reuseExistingServer: harnessReuse === "1",
     gracefulShutdown: { signal: "SIGTERM", timeout: 10_000 },
   },
 });
