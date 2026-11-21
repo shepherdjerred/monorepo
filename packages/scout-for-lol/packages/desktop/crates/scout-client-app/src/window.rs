@@ -205,7 +205,8 @@ fn receive(inbox: &Mutex<Inbox>, error_gate: &SendGate, line: &str) -> Result<()
         SupervisorMessage::Phase { phase } => inbox.phase = phase,
         SupervisorMessage::Update { update } => inbox.update = update,
         SupervisorMessage::DiagnosticsBundle { text } => inbox.bundle = Some(text),
-        SupervisorMessage::Show => inbox.show = true,
+        // The egui window has no chat page; showing it is all it can do.
+        SupervisorMessage::Show | SupervisorMessage::ShowChat => inbox.show = true,
         SupervisorMessage::Close => inbox.close = true,
         // The gpui window renders chat, voice and the live game line; the
         // egui window has none of them, and the supervisor runs no voice

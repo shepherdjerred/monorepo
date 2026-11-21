@@ -479,7 +479,8 @@ impl<C: Collector> Supervisor<C> {
     }
 
     /// Open a review's conversation in the main window and bring the window
-    /// up, starting it if it is not running.
+    /// up on its chat page, starting it if it is not running (a new window
+    /// opens on chat).
     async fn open_review(
         &self,
         conversation_id: uuid::Uuid,
@@ -489,7 +490,11 @@ impl<C: Collector> Supervisor<C> {
     ) {
         self.chat_command(ChatCommand::Open { conversation_id });
         self.chat_command(ChatCommand::Refresh);
-        self.open_window(window, quick_crashes, state, phase).await;
+        if let Some(running) = window.as_mut() {
+            self.deliver(running, &SupervisorMessage::ShowChat).await;
+        } else {
+            self.open_window(window, quick_crashes, state, phase).await;
+        }
     }
 
     /// Close the window and the overlay, stop collection, and install a

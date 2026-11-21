@@ -85,7 +85,8 @@ self-update state), the seven chat parts (`chat_status`,
 `chat_conversations`, `chat_transcript`, `chat_turn`, `chat_images`,
 `chat_composer`, `chat_coach`; see
 "Explore chat"), `voice` and `voice_turn` (see "Voice"), the
-diagnostics bundle on request, `show`, and `close`. The window sends its own
+diagnostics bundle on request, `show`, `show_chat` (show the chat page, for a
+conversation Scout opened such as a ready review), and `close`. The window sends its own
 `hello`, then `pair`, `disconnect`, `open_url` (http and https only),
 `open_log_folder`, `request_diagnostics`, `set_start_at_login`, `set_privacy`,
 `chat` (refresh, open, new, send, stop, edit, regenerate, switch version,
@@ -1164,8 +1165,8 @@ then every 5 minutes), at most 12 times, about 45 minutes. `not_found` (no
 review yet), `pending` and transport failures ask again; `declined`, `failed`
 and refusals such as Scout Coach being off stop asking. A newer finished game
 replaces the one being asked about. When the review is ready, the supervisor
-opens its conversation in the main window and brings the window up, unless a
-game is being played then, and holds a `review_ready` overlay card for the
+opens its conversation in the main window and brings the window up on its
+chat page (`show_chat`), unless a game is being played then, and holds a `review_ready` overlay card for the
 next game. The overlay's expand key (**Alt+F7**) on that card opens the review
 in the main window. Each outcome is a `coach_review` diagnostic.
 

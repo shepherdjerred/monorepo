@@ -1429,6 +1429,20 @@ exit 0"#
     )
 }
 
+/// Wait until the file at `path` holds `needle`.
+async fn file_gains(path: &Path, needle: &str) -> Result<(), Box<dyn std::error::Error>> {
+    tokio::time::timeout(PATIENCE, async {
+        while !std::fs::read_to_string(path)
+            .unwrap_or_default()
+            .contains(needle)
+        {
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    })
+    .await?;
+    Ok(())
+}
+
 /// What the overlay stub was sent so far.
 fn overlay_lines(log: &Path) -> Vec<scout_desktop_ipc::OverlayCommand> {
     std::fs::read_to_string(log)
@@ -1754,8 +1768,11 @@ async fn a_ready_review_opens_in_the_window_and_its_card_opens_it_next_game() ->
         &overlay_script(r#"printf '{"type":"ready"}\n'"#),
         &[log_argument],
     );
+    // A window stub that logs what it is sent, to see it asked for chat.
+    let window_log = scratch.join("window.log");
+    let window_log_argument = window_log.to_str().ok_or("scratch path is not Unicode")?;
     let mut harness = start_configured(
-        sh(&window_script(""), &[]),
+        sh(&overlay_script(""), &[window_log_argument]),
         true,
         true,
         GameflowPhase::EndOfGame,
@@ -1783,6 +1800,8 @@ async fn a_ready_review_opens_in_the_window_and_its_card_opens_it_next_game() ->
         }
     }
     assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    // The running window is told to show its chat page, not only to come up.
+    file_gains(&window_log, r#"{"type":"show_chat"}"#).await?;
     tokio::time::sleep(Duration::from_millis(2_500)).await;
     assert_eq!(
         asked

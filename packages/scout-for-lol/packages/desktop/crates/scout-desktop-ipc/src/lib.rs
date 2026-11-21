@@ -42,7 +42,7 @@ pub use voice::{
 };
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 14;
+pub const PROTOCOL_VERSION: u32 = 15;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -130,6 +130,9 @@ pub enum SupervisorMessage {
     },
     /// Bring the window to the front (the tray's "Open" while it is running).
     Show,
+    /// Show the chat page and bring the window to the front: Scout opened a
+    /// conversation the player asked to see, such as a ready post-game review.
+    ShowChat,
     /// Scout is quitting: close the window and exit.
     Close,
 }
@@ -718,6 +721,7 @@ mod tests {
                 }),
             },
             SupervisorMessage::Show,
+            SupervisorMessage::ShowChat,
             SupervisorMessage::Close,
         ]
         .into_iter()
@@ -744,7 +748,7 @@ mod tests {
         };
         assert_eq!(live.summary(), "Ahri, level 10, 4/2/7, 87 CS, 7:01");
         assert_eq!(
-            PROTOCOL_VERSION, 14,
+            PROTOCOL_VERSION, 15,
             "a new message or field bumps the protocol"
         );
     }
