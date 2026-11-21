@@ -16,12 +16,12 @@ export function AlertTable({
       <table>
         <thead>
           <tr>
-            <th>Severity</th>
-            <th>Alert</th>
-            <th>Namespace</th>
-            <th>State</th>
-            <th>Opened</th>
-            <th>Last seen</th>
+            <th scope="col">Severity</th>
+            <th scope="col">Alert</th>
+            <th scope="col">Namespace</th>
+            <th scope="col">State</th>
+            <th scope="col">Opened</th>
+            <th scope="col">Last seen</th>
           </tr>
         </thead>
         <tbody>

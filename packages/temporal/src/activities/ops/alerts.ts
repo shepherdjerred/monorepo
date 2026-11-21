@@ -27,6 +27,11 @@ import {
 /** Alerts that fire by design (dead-man switches) and are never a problem. */
 const ALWAYS_FIRING = new Set(["Watchdog", "InfoInhibitor"]);
 
+export type OpsAlertInput = Omit<AlertmanagerAlert, "status"> & {
+  readonly status?: AlertmanagerAlert["status"];
+  readonly receivers?: readonly { readonly name: string }[];
+};
+
 const SEVERITY_BY_LABEL: Readonly<Record<string, Severity>> = {
   critical: "error",
   error: "error",
@@ -39,15 +44,35 @@ const SEVERITY_BY_LABEL: Readonly<Record<string, Severity>> = {
  * Alert severity labels are free-form upstream data. An unrecognized label
  * still surfaces as a warning so a mislabelled alert is never hidden.
  */
-export function alertSeverity(alert: AlertmanagerAlert): Severity {
+export function alertSeverity(alert: Pick<OpsAlertInput, "labels">): Severity {
   const label = alert.labels["severity"];
   return label === undefined
     ? "warning"
     : (SEVERITY_BY_LABEL[label] ?? "warning");
 }
 
+function isNullReceiverOnly(
+  receivers: readonly { readonly name: string }[] | undefined,
+): boolean {
+  return (
+    receivers !== undefined &&
+    receivers.length > 0 &&
+    receivers.every((receiver) => receiver.name === "null")
+  );
+}
+
+function isActionableAlert(alert: OpsAlertInput): boolean {
+  if (ALWAYS_FIRING.has(alert.labels["alertname"] ?? "")) return false;
+  if (alert.labels["severity"] === "info") return false;
+  if (alert.status !== undefined && alert.status.state !== "active") {
+    return false;
+  }
+  if (isNullReceiverOnly(alert.receivers)) return false;
+  return true;
+}
+
 /** Bounded workload identity; execution IDs deliberately do not group rows. */
-function alertIdentity(alert: AlertmanagerAlert) {
+function alertIdentity(alert: OpsAlertInput) {
   return {
     alertname: alert.labels["alertname"] ?? "(unnamed alert)",
     namespace: alert.labels["namespace"],
@@ -60,11 +85,11 @@ function alertIdentity(alert: AlertmanagerAlert) {
       alert.labels["taskQueue"] ??
       alert.labels["task_queue"] ??
       alert.labels["taskqueue"],
-    state: alert.status.state,
+    state: alert.status?.state ?? "active",
   };
 }
 
-function alertGroupId(alert: AlertmanagerAlert): string {
+function alertGroupId(alert: OpsAlertInput): string {
   const identity = alertIdentity(alert);
   const qualifiers = [
     identity.temporalNamespace,
@@ -79,7 +104,7 @@ function alertGroupId(alert: AlertmanagerAlert): string {
 
 /** Repeated executions share a row only within one workload and alert state. */
 function alertGroupSignal(
-  group: readonly AlertmanagerAlert[],
+  group: readonly OpsAlertInput[],
   context: OpsContext,
 ): SignalInput {
   const [first] = group;
@@ -157,10 +182,8 @@ function alertGroupSignal(
   };
 }
 
-function groupAlerts(
-  alerts: readonly AlertmanagerAlert[],
-): AlertmanagerAlert[][] {
-  const groups = new Map<string, AlertmanagerAlert[]>();
+function groupAlerts(alerts: readonly OpsAlertInput[]): OpsAlertInput[][] {
+  const groups = new Map<string, OpsAlertInput[]>();
   for (const alert of alerts) {
     const key = JSON.stringify(alertIdentity(alert));
     const group = groups.get(key);
@@ -174,14 +197,18 @@ function groupAlerts(
 }
 
 export function mapAlerts(
-  alerts: readonly AlertmanagerAlert[],
+  alerts: readonly OpsAlertInput[],
   silences: readonly AlertmanagerSilence[],
   context: OpsContext,
 ): OpsCollection {
-  const firing = alerts.filter(
-    (alert) => !ALWAYS_FIRING.has(alert.labels["alertname"] ?? ""),
+  const active = alerts.filter((alert) => isActionableAlert(alert));
+  const houseAlerts = active.filter(
+    (alert) => alert.labels["category"] === "household",
   );
-  const signals = groupAlerts(firing).map((group) =>
+  const opsAlerts = active.filter(
+    (alert) => alert.labels["category"] !== "household",
+  );
+  const signals = groupAlerts(opsAlerts).map((group) =>
     alertGroupSignal(group, context),
   );
   if (silences.length > 0) {
@@ -209,7 +236,7 @@ export function mapAlerts(
     });
   }
   const bySeverity = (severity: Severity) =>
-    firing.filter((alert) => alertSeverity(alert) === severity).length;
+    opsAlerts.filter((alert) => alertSeverity(alert) === severity).length;
   const critical = bySeverity("error");
   const warning = bySeverity("warning");
   return {
@@ -220,11 +247,11 @@ export function mapAlerts(
         source: "alerts",
         id: METRIC_IDS.alertsFiring,
         label: "Firing alerts",
-        value: firing.length,
+        value: opsAlerts.length,
         unit: "count",
         // The count is only as healthy as its worst alert: left at the `ok`
         // default, the tile renders green with a critical alert firing.
-        severity: worstSeverity(firing.map((alert) => alertSeverity(alert))),
+        severity: worstSeverity(opsAlerts.map((alert) => alertSeverity(alert))),
       }),
       metric({
         section: "alerts",
@@ -243,6 +270,15 @@ export function mapAlerts(
         value: warning,
         unit: "count",
         severity: warning > 0 ? "warning" : "ok",
+      }),
+      metric({
+        section: "alerts",
+        source: "alerts",
+        id: METRIC_IDS.houseChoresOpen,
+        label: "House chores open",
+        value: houseAlerts.length,
+        unit: "count",
+        severity: "ok",
       }),
     ],
     // The dashboard derives alert-open/resolve timeline entries from its own

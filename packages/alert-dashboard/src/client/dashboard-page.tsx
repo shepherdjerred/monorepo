@@ -17,12 +17,22 @@ import {
   SuppressionStateSchema,
 } from "#shared/schema";
 
+function suppressionFromParam(raw: string | null): string | undefined {
+  if (raw === null || raw === "") return "none";
+  return raw === "all" ? undefined : raw;
+}
+
+function suppressionSelectValue(raw: string | null): string {
+  return raw === null || raw === "none" ? "" : raw;
+}
+
 function alertInput(params: URLSearchParams) {
   const search = params.get("q");
   return AlertListInputSchema.safeParse({
     limit: 100,
+    scope: "ops",
     severity: params.get("severity") ?? undefined,
-    suppressionState: params.get("suppression") ?? undefined,
+    suppressionState: suppressionFromParam(params.get("suppression")),
     lifecycleState: params.get("state") ?? "open",
     search: search === null || search === "" ? undefined : search,
   });
@@ -97,7 +107,7 @@ export function DashboardPage(): React.JSX.Element {
   );
   const searchValue = searchParam(locationSearch);
   const input = alertInput(params);
-  const summary = useQuery(trpc.summary.get.queryOptions());
+  const summary = useQuery(trpc.summary.get.queryOptions({ scope: "ops" }));
   const alerts = useInfiniteQuery(
     trpc.alerts.list.infiniteQueryOptions(
       input.success ? input.data : skipToken,
@@ -200,15 +210,20 @@ export function DashboardPage(): React.JSX.Element {
           <label>
             Suppression
             <select
-              value={params.get("suppression") ?? ""}
+              value={suppressionSelectValue(params.get("suppression"))}
               onChange={(event) => {
                 update("suppression", event.currentTarget.value);
               }}
             >
-              <option value="">All</option>
-              {SuppressionStateSchema.options.map((value) => (
-                <option key={value}>{value}</option>
-              ))}
+              <option value="">Active (unsuppressed)</option>
+              <option value="all">All</option>
+              {SuppressionStateSchema.options
+                .filter((value) => value !== "none")
+                .map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
             </select>
           </label>
           <label>
@@ -230,7 +245,10 @@ export function DashboardPage(): React.JSX.Element {
             <div className="loading-state">Loading alerts…</div>
           ) : (
             <>
-              <AlertTable alerts={alertItems} />
+              <AlertTable
+                alerts={alertItems}
+                empty="All clear — no operational alerts match these filters."
+              />
               {alerts.hasNextPage ? (
                 <div className="history-pagination">
                   <Button

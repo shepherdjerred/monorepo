@@ -1,6 +1,14 @@
 import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { z } from "zod";
 
+export const AlertScopeSchema = z.enum(["ops", "house", "all"]);
+export const SuppressionStateSchema = z.enum([
+  "none",
+  "silenced",
+  "inhibited",
+  "unprocessed",
+]);
+
 const AlertSchema = z.object({
   id: z.string(),
   fingerprint: z.string(),
@@ -9,7 +17,7 @@ const AlertSchema = z.object({
   severity: z.enum(["critical", "warning", "info", "unknown"]),
   summary: z.string(),
   lifecycleState: z.enum(["open", "resolved"]),
-  suppressionState: z.enum(["none", "silenced", "inhibited", "unprocessed"]),
+  suppressionState: SuppressionStateSchema,
   resolutionSource: z.enum(["webhook", "reconciled"]).nullable(),
   openedAt: z.string(),
   resolvedAt: z.string().nullable(),
@@ -57,6 +65,12 @@ async function request<T>(path: string, schema: z.ZodType<T>): Promise<T> {
 export async function listAlerts(
   query: Readonly<Record<string, string>>,
 ): Promise<readonly Alert[]> {
+  if (query["scope"] !== undefined) {
+    AlertScopeSchema.parse(query["scope"]);
+  }
+  if (query["suppressionState"] !== undefined) {
+    SuppressionStateSchema.parse(query["suppressionState"]);
+  }
   const requestedLimit =
     query["limit"] === undefined
       ? undefined

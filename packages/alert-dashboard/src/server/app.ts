@@ -20,6 +20,7 @@ import {
   AlertListInputSchema,
   AlertOccurrenceIdSchema,
   EventListInputSchema,
+  SummaryInputSchema,
 } from "#shared/schema";
 import { instantTextToEpochNanoseconds } from "#shared/time";
 
@@ -183,9 +184,10 @@ export function createApp(options: AppOptions): Hono {
     },
   );
 
-  app.get("/api/v1/summary", async (context) =>
-    context.json(await options.service.summary()),
-  );
+  app.get("/api/v1/summary", async (context) => {
+    const input = SummaryInputSchema.parse(context.req.query());
+    return context.json(await options.service.summary(input));
+  });
   app.get("/api/v1/alerts", async (context) => {
     const query = context.req.query();
     const input = AlertListInputSchema.parse({

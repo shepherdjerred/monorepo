@@ -51,6 +51,7 @@ export function volumeMetrics(readings: VolumeReadings): FixtureMetric[] {
       [m.alertsFiring, "Firing alerts", reading(15, readings.firing)],
       [m.alertsCritical, "Critical", reading(1, "error")],
       [m.alertsWarning, "Warning", reading(14, "warning")],
+      [m.houseChoresOpen, "House chores open", reading(3, "ok")],
     ]),
     ...placed("platform", "kubernetes", [
       [m.nodesReady, "Nodes ready", reading(2)],

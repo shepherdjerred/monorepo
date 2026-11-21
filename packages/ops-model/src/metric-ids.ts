@@ -6,6 +6,7 @@ export const METRIC_IDS = {
   alertsFiring: "alerts.firing",
   alertsCritical: "alerts.critical",
   alertsWarning: "alerts.warning",
+  houseChoresOpen: "house.chores.open",
 
   nodesReady: "nodes.ready",
   nodesTotal: "nodes.total",

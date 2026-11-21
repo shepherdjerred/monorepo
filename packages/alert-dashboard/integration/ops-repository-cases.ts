@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { DigestRunKey } from "#application/ports";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
+import { AlertmanagerWebhookSchema } from "#shared/schema";
 import {
   input,
   nanoseconds,
@@ -113,6 +114,34 @@ export function registerOpsRepositoryCases(): void {
       );
       await repository.ingestWebhook(
         input(webhook("fingerprint-ops", "resolved"), "2026-08-08T18:10:01Z"),
+      );
+      const houseBase = webhook("fingerprint-house-chore", "firing");
+      const houseWebhook = AlertmanagerWebhookSchema.parse({
+        ...houseBase,
+        alerts: houseBase.alerts.map((entry) => ({
+          ...entry,
+          labels: {
+            alertname: "RoborockConsumableDue",
+            category: "household",
+            severity: "warning",
+            service: "roborock",
+          },
+        })),
+      });
+      await repository.ingestWebhook(
+        input(houseWebhook, "2026-08-08T18:05:01Z", false),
+      );
+      const houseResolved = AlertmanagerWebhookSchema.parse({
+        ...houseWebhook,
+        status: "resolved",
+        alerts: houseWebhook.alerts.map((entry) => ({
+          ...entry,
+          status: "resolved",
+          endsAt: "2026-08-08T18:15:00Z",
+        })),
+      });
+      await repository.ingestWebhook(
+        input(houseResolved, "2026-08-08T18:15:01Z", false),
       );
       const changes = await opsRepository.alertChanges({
         namespaces: ["storage"],

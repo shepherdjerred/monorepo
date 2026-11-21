@@ -25,6 +25,11 @@ test("home answers what is wrong, where, and what waits on me", async ({
   await expect(firing).toHaveAttribute("href", "/alerts");
   // Severity is a badge with a word, not only the tile's border colour.
   await expect(firing).toContainText("Error");
+  const houseTile = glance.getByRole("link", { name: /House/u });
+  await expect(houseTile).toContainText("3");
+  await expect(houseTile).toContainText("home & pet care");
+  await expect(houseTile).toContainText("OK");
+  await expect(houseTile).toHaveAttribute("href", "/house");
   const waitingTile = glance.getByRole("link", { name: /Waiting on you/u });
   await expect(waitingTile).toContainText("4");
   await expect(waitingTile).toHaveAttribute("href", "/?show=waiting");

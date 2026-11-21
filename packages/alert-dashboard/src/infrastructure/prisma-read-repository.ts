@@ -10,9 +10,11 @@ import {
   type AlertDetailInput,
   type AlertListInput,
   type AlertListResponse,
+  type AlertScope,
   type EventListInput,
   type EventListResponse,
   type Summary,
+  type SummaryInput,
   type SystemStatus,
 } from "#shared/schema";
 import {
@@ -21,8 +23,21 @@ import {
   instantTextToEpochNanoseconds,
 } from "#shared/time";
 
+function scopeWhere(
+  scope: AlertScope | undefined,
+): Prisma.AlertOccurrenceWhereInput {
+  if (scope === "house") {
+    return { labelEntries: { some: { key: "category", value: "household" } } };
+  }
+  return scope === "ops"
+    ? { labelEntries: { none: { key: "category", value: "household" } } }
+    : {};
+}
+
 function alertWhere(input: AlertListInput): Prisma.AlertOccurrenceWhereInput {
   const predicates: Prisma.AlertOccurrenceWhereInput[] = [];
+  if (input.scope !== undefined && input.scope !== "all")
+    predicates.push(scopeWhere(input.scope));
   if (input.lifecycleState !== undefined)
     predicates.push({ lifecycleState: input.lifecycleState });
   if (input.suppressionState !== undefined)
@@ -76,6 +91,7 @@ function eventWhere(input: EventListInput): Prisma.AlertEventWhereInput {
     });
   predicates.push({
     occurrence: {
+      ...scopeWhere(input.scope),
       ...(input.severity === undefined ? {} : { severity: input.severity }),
       ...(input.alertname === undefined ? {} : { alertname: input.alertname }),
       ...(input.namespace === undefined ? {} : { namespace: input.namespace }),
@@ -194,7 +210,8 @@ export class PrismaReadRepository {
     });
   }
 
-  async summary(): Promise<Summary> {
+  async summary(input?: SummaryInput): Promise<Summary> {
+    const scope = scopeWhere(input?.scope);
     const [
       open,
       resolved,
@@ -206,12 +223,15 @@ export class PrismaReadRepository {
       unprocessed,
       lastRun,
     ] = await Promise.all([
-      this.#prisma.alertOccurrence.count({ where: { lifecycleState: "open" } }),
       this.#prisma.alertOccurrence.count({
-        where: { lifecycleState: "resolved" },
+        where: { ...scope, lifecycleState: "open", suppressionState: "none" },
+      }),
+      this.#prisma.alertOccurrence.count({
+        where: { ...scope, lifecycleState: "resolved" },
       }),
       this.#prisma.alertOccurrence.count({
         where: {
+          ...scope,
           lifecycleState: "open",
           severity: "critical",
           suppressionState: "none",
@@ -219,6 +239,7 @@ export class PrismaReadRepository {
       }),
       this.#prisma.alertOccurrence.count({
         where: {
+          ...scope,
           lifecycleState: "open",
           severity: "warning",
           suppressionState: "none",
@@ -226,19 +247,32 @@ export class PrismaReadRepository {
       }),
       this.#prisma.alertOccurrence.count({
         where: {
+          ...scope,
           lifecycleState: "open",
           severity: "info",
           suppressionState: "none",
         },
       }),
       this.#prisma.alertOccurrence.count({
-        where: { lifecycleState: "open", suppressionState: "silenced" },
+        where: {
+          ...scope,
+          lifecycleState: "open",
+          suppressionState: "silenced",
+        },
       }),
       this.#prisma.alertOccurrence.count({
-        where: { lifecycleState: "open", suppressionState: "inhibited" },
+        where: {
+          ...scope,
+          lifecycleState: "open",
+          suppressionState: "inhibited",
+        },
       }),
       this.#prisma.alertOccurrence.count({
-        where: { lifecycleState: "open", suppressionState: "unprocessed" },
+        where: {
+          ...scope,
+          lifecycleState: "open",
+          suppressionState: "unprocessed",
+        },
       }),
       this.#prisma.snapshotRun.findFirst({
         where: { status: "success" },

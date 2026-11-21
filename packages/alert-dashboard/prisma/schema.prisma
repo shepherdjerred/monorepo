@@ -18,6 +18,7 @@ model AlertOccurrence {
   missingSinceNs    BigInt?
   absentSnapshots   Int                         @default(0)
   firstNotifiedAtNs BigInt?
+  haNotifiedAtNs    BigInt?
   lifecycleState    String
   suppressionState  String
   resolutionSource  String?
@@ -31,6 +32,7 @@ model AlertOccurrence {
   events            AlertEvent[]
   labelEntries      AlertOccurrenceLabel[]
   occurrenceLinks   WebhookDeliveryOccurrence[]
+  haOutboxEntries   HomeAssistantOutbox[]
 
   @@unique([source, fingerprint, startedAtNs])
   @@index([lifecycleState, openedAtNs])
@@ -126,6 +128,27 @@ model EmailOutbox {
   lastError          String?
 
   @@index([sentAtNs, canceledAtNs, sendingAtNs, nextAttemptAtNs])
+}
+
+model HomeAssistantOutbox {
+  id              String          @id
+  occurrenceId    String
+  occurrence      AlertOccurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+  action          String
+  notificationId  String
+  title           String?
+  message         String?
+  createdAtNs     BigInt
+  nextAttemptAtNs BigInt
+  sentAtNs        BigInt?
+  sendingAtNs     BigInt?
+  sendClaimId     String?
+  canceledAtNs    BigInt?
+  attemptCount    Int             @default(0)
+  lastError       String?
+
+  @@index([sentAtNs, canceledAtNs, sendingAtNs, nextAttemptAtNs])
+  @@index([occurrenceId, action, sentAtNs, canceledAtNs])
 }
 
 model OpsSnapshot {

@@ -1,9 +1,12 @@
 import type { Prisma, PrismaClient } from "#generated/prisma/client/index.js";
 import type {
   AlertLedgerRepository,
+  ClaimedHomeAssistantOutboxItem,
   ClaimedPendingEmail,
   EmailSendFailureInput,
   EmailSendSuccessInput,
+  HomeAssistantSendFailureInput,
+  HomeAssistantSendSuccessInput,
   IngestWebhookInput,
   IngestWebhookResult,
   PendingEmail,
@@ -28,6 +31,11 @@ import {
   markEmailSentRow,
 } from "#infrastructure/prisma-email-claim";
 import {
+  claimPendingHaRows,
+  markHaFailedRow,
+  markHaSentRow,
+} from "#infrastructure/prisma-ha-outbox";
+import {
   cancelPendingEmails,
   type CancelPendingEmailsInput,
   type CancelPendingEmailsResult,
@@ -43,6 +51,7 @@ import {
   type EventListInput,
   type EventListResponse,
   type Summary,
+  type SummaryInput,
   type SystemStatus,
 } from "#shared/schema";
 
@@ -198,8 +207,8 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     return this.#read.listEvents(input);
   }
 
-  async summary(): Promise<Summary> {
-    return this.#read.summary();
+  async summary(input?: SummaryInput): Promise<Summary> {
+    return this.#read.summary(input);
   }
 
   async checkDatabase(): Promise<void> {
@@ -274,6 +283,38 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     await this.#writeMutex.runExclusive(() =>
       this.#prisma.$transaction((transaction) =>
         markEmailFailedRow(transaction, input),
+      ),
+    );
+  }
+
+  async claimPendingHomeAssistantNotifications(
+    nowNs: bigint,
+    limit: number,
+    sendingAtNs: bigint,
+  ): Promise<readonly ClaimedHomeAssistantOutboxItem[]> {
+    return this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        claimPendingHaRows(transaction, nowNs, limit, sendingAtNs),
+      ),
+    );
+  }
+
+  async markHomeAssistantSent(
+    input: HomeAssistantSendSuccessInput,
+  ): Promise<void> {
+    await this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        markHaSentRow(transaction, input),
+      ),
+    );
+  }
+
+  async markHomeAssistantFailed(
+    input: HomeAssistantSendFailureInput,
+  ): Promise<void> {
+    await this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        markHaFailedRow(transaction, input),
       ),
     );
   }

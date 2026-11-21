@@ -5,11 +5,17 @@ import type {
 } from "#application/ports";
 import {
   eventId,
+  isEligibleHouseAlert,
   observedLastSeenAtNs,
   occurrenceId,
+  shouldSkipLedgerAlert,
   snapshotStartNs,
   suppressionFromSnapshot,
 } from "#domain/alert";
+import {
+  enqueueHaNotifyRow,
+  resolveHaNotificationRows,
+} from "#infrastructure/prisma-ha-outbox";
 import {
   createOccurrenceLabels,
   syncOccurrenceLabels,
@@ -33,6 +39,9 @@ async function openSnapshotOccurrence(
 ): Promise<Observation> {
   const startedAtNs = snapshotStartNs(alert);
   const id = occurrenceId(alert.fingerprint, startedAtNs);
+  const suppressionState = suppressionFromSnapshot(alert);
+  const notifyHa =
+    suppressionState === "none" && isEligibleHouseAlert(alert.labels);
   await transaction.alertOccurrence.create({
     data: {
       id,
@@ -41,12 +50,22 @@ async function openSnapshotOccurrence(
       startedAtNs,
       openedAtNs: startedAtNs,
       lastSeenAtNs: completedAtNs,
+      haNotifiedAtNs: notifyHa ? completedAtNs : null,
       lifecycleState: "open",
-      suppressionState: suppressionFromSnapshot(alert),
+      suppressionState,
       ...observedFields(alert),
     },
   });
   await createOccurrenceLabels(transaction, id, alert.labels);
+  if (notifyHa) {
+    await enqueueHaNotifyRow(transaction, {
+      occurrenceId: id,
+      fingerprint: alert.fingerprint,
+      labels: alert.labels,
+      annotations: alert.annotations,
+      nowNs: completedAtNs,
+    });
+  }
   await transaction.alertEvent.create({
     data: {
       id: eventId(id, "opened", startedAtNs),
@@ -84,6 +103,11 @@ async function observeSnapshotAlert(
   const shouldReopen =
     existing.lifecycleState === "resolved" &&
     existing.resolutionSource === "reconciled";
+  const shouldNotifyHa =
+    suppressionState === "none" &&
+    isEligibleHouseAlert(alert.labels) &&
+    (existing.lifecycleState === "open" || shouldReopen) &&
+    existing.haNotifiedAtNs === null;
   const present =
     existing.lifecycleState === "open" &&
     existing.missingSinceNs === null &&
@@ -92,6 +116,7 @@ async function observeSnapshotAlert(
   const data: Prisma.AlertOccurrenceUpdateInput = {
     ...changes.data,
     ...(suppressionChanged ? { suppressionState } : {}),
+    ...(shouldNotifyHa ? { haNotifiedAtNs: completedAtNs } : {}),
     ...(present
       ? {}
       : {
@@ -110,6 +135,15 @@ async function observeSnapshotAlert(
     });
   if (changes.labelsChanged)
     await syncOccurrenceLabels(transaction, existing.id, alert.labels);
+  if (shouldNotifyHa) {
+    await enqueueHaNotifyRow(transaction, {
+      occurrenceId: existing.id,
+      fingerprint: alert.fingerprint,
+      labels: alert.labels,
+      annotations: alert.annotations,
+      nowNs: completedAtNs,
+    });
+  }
   if (shouldReopen)
     await transaction.alertEvent.create({
       data: {
@@ -141,6 +175,8 @@ async function observeSnapshotAlert(
 
 type AbsentOccurrence = {
   id: string;
+  fingerprint: string;
+  haNotifiedAtNs: bigint | null;
   lastSeenAtNs: bigint;
   missingSinceNs: bigint | null;
   absentSnapshots: number;
@@ -183,6 +219,13 @@ async function recordAbsence(
         ...lastSeen,
       },
     });
+    if (occurrence.haNotifiedAtNs !== null) {
+      await resolveHaNotificationRows(transaction, {
+        occurrenceId: occurrence.id,
+        fingerprint: occurrence.fingerprint,
+        nowNs: input.completedAtNs,
+      });
+    }
     await transaction.alertEvent.create({
       data: {
         id: eventId(occurrence.id, "resolved_reconciled", input.completedAtNs),
@@ -225,6 +268,9 @@ export async function reconcileSnapshotRows(
   transaction: Prisma.TransactionClient,
   input: ReconcileSnapshotInput,
 ): Promise<ReconcileSnapshotResult> {
+  const eligibleAlerts = input.alerts.filter(
+    (alert) => !shouldSkipLedgerAlert(alert),
+  );
   const previousRun = await transaction.snapshotRun.findFirst({
     where: { status: "success" },
     orderBy: { completedAtNs: "desc" },
@@ -233,7 +279,7 @@ export async function reconcileSnapshotRows(
   const activeIds = new Set<string>();
   let opened = 0;
   let resolved = 0;
-  for (const alert of input.alerts) {
+  for (const alert of eligibleAlerts) {
     const observation = await observeSnapshotAlert(
       transaction,
       alert,
@@ -249,6 +295,8 @@ export async function reconcileSnapshotRows(
     where: { lifecycleState: "open", lastSeenAtNs: { lte: input.startedAtNs } },
     select: {
       id: true,
+      fingerprint: true,
+      haNotifiedAtNs: true,
       lastSeenAtNs: true,
       missingSinceNs: true,
       absentSnapshots: true,
@@ -270,10 +318,10 @@ export async function reconcileSnapshotRows(
       startedAtNs: input.startedAtNs,
       completedAtNs: input.completedAtNs,
       status: "success",
-      activeCount: input.alerts.length,
+      activeCount: eligibleAlerts.length,
       openedCount: opened,
       resolvedCount: resolved,
     },
   });
-  return { active: input.alerts.length, opened, resolved };
+  return { active: eligibleAlerts.length, opened, resolved };
 }

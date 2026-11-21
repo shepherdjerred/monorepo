@@ -17,7 +17,7 @@ test("the palette opens from the keyboard and the sidebar, and closes on Escape"
   await expect(input).toBeFocused();
   await expect(
     palette.getByRole("group", { name: "Pages" }).getByRole("option"),
-  ).toHaveCount(10);
+  ).toHaveCount(11);
   await expect(
     palette.getByRole("option", { name: "Open Tracker" }),
   ).toBeVisible();
@@ -56,6 +56,14 @@ test("the palette filters pages and navigates with the keyboard", async ({
   await expect(
     reopened.getByRole("option", { name: "Use system theme" }),
   ).toHaveAttribute("aria-selected", "true");
+
+  await reopened.getByRole("combobox").fill("chores");
+  await expect(
+    reopened.getByRole("group", { name: "Pages" }).getByRole("option"),
+  ).toHaveText(["Go to House"]);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/house$/u);
+  await expect(page).toHaveTitle("House · Hub");
 });
 
 test("the palette searches catalog services and recent alerts", async ({

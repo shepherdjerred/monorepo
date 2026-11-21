@@ -42,6 +42,7 @@ export async function resetDatabase(): Promise<void> {
     prisma.alertOccurrenceLabel.deleteMany(),
     prisma.alertEvent.deleteMany(),
     prisma.emailOutbox.deleteMany(),
+    prisma.homeAssistantOutbox.deleteMany(),
     prisma.webhookDelivery.deleteMany(),
     prisma.snapshotRun.deleteMany(),
     prisma.alertOccurrence.deleteMany(),

@@ -2,20 +2,37 @@
 // no database, credentials, Grafana or Prometheus. Vite's proxy is unchanged.
 const fixture = Bun.argv.includes("--fixture");
 if (fixture) Bun.env["OPS_FIXTURE"] ??= "volume";
+const vitePort = Number(Bun.env["PORT"] ?? "7342");
+const apiPort =
+  Bun.env["API_PORT"] ??
+  (Bun.env["PORT"] === undefined ? "7341" : String(vitePort + 1));
+const baseEnv: Record<string, string | undefined> = Object.fromEntries(
+  Object.entries(Bun.env).flatMap(([key, value]) =>
+    typeof value === "string" ? [[key, value]] : [],
+  ),
+);
+const apiEnv: Record<string, string | undefined> = {
+  ...baseEnv,
+  PORT: apiPort,
+};
+const viteEnv: Record<string, string | undefined> = {
+  ...baseEnv,
+  API_PORT: apiPort,
+};
 const api = Bun.spawn(
   fixture
-    ? ["bun", "e2e/server.ts", "7341"]
+    ? ["bun", "e2e/server.ts", apiPort]
     : ["bun", "run", "src/server/index.ts"],
   {
     cwd: import.meta.dir.replace(/\/src$/u, ""),
-    env: Bun.env,
+    env: apiEnv,
     stdout: "inherit",
     stderr: "inherit",
   },
 );
 const vite = Bun.spawn(["vite"], {
   cwd: import.meta.dir.replace(/\/src$/u, ""),
-  env: Bun.env,
+  env: viteEnv,
   stdout: "inherit",
   stderr: "inherit",
 });

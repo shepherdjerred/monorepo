@@ -1,4 +1,5 @@
 import {
+  findMetric,
   findSection,
   needsMeSignals,
 } from "@shepherdjerred/ops-model/assemble.ts";
@@ -85,7 +86,7 @@ function Stat({
 }
 
 /**
- * The three numbers Home leads with. Each tile states its severity as a
+ * The headline numbers Home leads with. Each tile states its severity as a
  * badge as well as a border colour, and links to where the number is acted on.
  */
 export function GlanceTiles({
@@ -96,6 +97,7 @@ export function GlanceTiles({
   const alerts = findSection(snapshot, "alerts");
   const firing = reading(alerts, METRIC_IDS.alertsFiring);
   const critical = reading(alerts, METRIC_IDS.alertsCritical);
+  const houseMetric = findMetric(alerts, METRIC_IDS.houseChoresOpen);
   const needsMe = needsMeSignals(snapshot);
   const triage = reading(
     findSection(snapshot, "work"),
@@ -113,6 +115,15 @@ export function GlanceTiles({
         )}
         target={{ to: "/alerts" }}
       />
+      {houseMetric === undefined ? null : (
+        <Stat
+          label="House"
+          value={formatValue(houseMetric.value, houseMetric.unit)}
+          severity="ok"
+          hint={houseMetric.value === 0 ? "all caught up" : "home & pet care"}
+          target={{ to: "/house" }}
+        />
+      )}
       <Stat
         label="Waiting on you"
         value={String(needsMe.length)}

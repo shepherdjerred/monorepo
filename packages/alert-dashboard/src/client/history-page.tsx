@@ -13,9 +13,17 @@ import {
   SeveritySchema,
 } from "#shared/schema";
 
+const SCOPE_OPTIONS = [
+  ["ops", "Ops"],
+  ["house", "House"],
+  ["all", "All"],
+] as const;
+
 function historyInput(params: URLSearchParams) {
+  const rawScope = params.get("scope");
   return EventListInputSchema.safeParse({
     limit: 100,
+    scope: rawScope === null || rawScope === "" ? "ops" : rawScope,
     type: params.get("type") ?? undefined,
     severity: params.get("severity") ?? undefined,
     from: params.get("from") ?? undefined,
@@ -25,9 +33,17 @@ function historyInput(params: URLSearchParams) {
   });
 }
 
+function scopeHref(params: URLSearchParams, scope: string): string {
+  const next = new URLSearchParams(params);
+  next.set("scope", scope);
+  return `/history?${next.toString()}`;
+}
+
 export function HistoryPage(): React.JSX.Element {
   const trpc = useTRPC();
   const [params, setParams] = useSearchParams();
+  const rawScope = params.get("scope");
+  const activeScope = rawScope === null || rawScope === "" ? "ops" : rawScope;
   const input = historyInput(params);
   const events = useInfiniteQuery(
     trpc.events.list.infiniteQueryOptions(
@@ -63,6 +79,17 @@ export function HistoryPage(): React.JSX.Element {
         </div>
       </div>
       <section className="panel">
+        <nav className="scope-switch" aria-label="History scope">
+          {SCOPE_OPTIONS.map(([scope, label]) => (
+            <Link
+              key={scope}
+              to={scopeHref(params, scope)}
+              aria-current={activeScope === scope ? "page" : undefined}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
         <div className="filters history-filters">
           <label>
             Event

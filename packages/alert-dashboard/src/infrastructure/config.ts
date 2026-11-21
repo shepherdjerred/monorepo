@@ -16,6 +16,8 @@ const EnvironmentSchema = z
     GRAFANA_TEMPO_DATASOURCE_UID: z.string().min(1).default("tempo"),
     GRAFANA_API_KEY: z.string().min(1),
     GRAFANA_URL: z.url(),
+    HOMEASSISTANT_TOKEN: z.string().min(1).optional(),
+    HOMEASSISTANT_URL: z.url().optional(),
     PROMETHEUS_GENERATOR_HOSTS: z
       .string()
       .min(1)

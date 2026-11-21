@@ -60,6 +60,10 @@ const DashboardPage = lazy(async () => {
   const module = await import("./dashboard-page.tsx");
   return { default: module.DashboardPage };
 });
+const HousePage = lazy(async () => {
+  const module = await import("./house-page.tsx");
+  return { default: module.HousePage };
+});
 const AlertDetailPage = lazy(async () => {
   const module = await import("./alert-detail-page.tsx");
   return { default: module.AlertDetailPage };
@@ -98,6 +102,7 @@ export const coreModule: ClientModule = {
     { path: "review", page: ReviewPage },
     { path: "alerts", page: DashboardPage },
     { path: "alerts/:id", page: AlertDetailPage },
+    { path: "house", page: HousePage },
     { path: "history", page: HistoryPage },
     { path: "system", page: SystemPage },
   ],
@@ -116,6 +121,13 @@ export const coreModule: ClientModule = {
       group: "Alerts",
       icon: ActivityIcon,
       path: "alerts",
+    },
+    {
+      label: "House",
+      group: "Alerts",
+      icon: HouseIcon,
+      path: "house",
+      keywords: ["house", "chores", "home", "pets", "vacuum", "litter"],
     },
     { label: "History", group: "Alerts", icon: HistoryIcon, path: "history" },
     { label: "System", group: "Alerts", icon: ServerCogIcon, path: "system" },

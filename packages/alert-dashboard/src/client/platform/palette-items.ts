@@ -73,6 +73,7 @@ export function paletteSections(
         item.group,
         item.title,
         `Go to ${item.title}`,
+        ...(item.keywords ?? []),
       ]),
     )
     .map((item) => ({

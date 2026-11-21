@@ -48,6 +48,8 @@ export type ModuleNavItem = {
   readonly icon: LucideIcon;
   /** Relative to the module's `basePath`, like a route path. */
   readonly path: string;
+  /** Extra words the command palette matches besides the label and group. */
+  readonly keywords?: readonly string[];
 };
 
 export type ModuleCommandContext = {
@@ -110,6 +112,7 @@ export type ResolvedNavItem = {
   readonly icon: LucideIcon;
   /** Absolute link target. */
   readonly to: string;
+  readonly keywords?: readonly string[];
 };
 
 export type ResolvedNavGroup = {
@@ -255,6 +258,7 @@ function resolveNav(
         group,
         icon: item.icon,
         to,
+        ...(item.keywords === undefined ? {} : { keywords: item.keywords }),
       };
     }),
   );

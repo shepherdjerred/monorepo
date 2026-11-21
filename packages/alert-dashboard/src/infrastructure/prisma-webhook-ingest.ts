@@ -4,10 +4,16 @@ import {
 } from "#generated/prisma/client/index.js";
 import {
   eventId,
+  isEligibleHouseAlert,
   occurrenceId,
   severityFromLabels,
+  shouldSkipLedgerAlert,
   type AlertOccurrenceRecord,
 } from "#domain/alert";
+import {
+  enqueueHaNotifyRow,
+  resolveHaNotificationRows,
+} from "#infrastructure/prisma-ha-outbox";
 import { parseOccurrence } from "#infrastructure/prisma-mappers";
 import {
   findWebhookOccurrence,
@@ -53,6 +59,8 @@ async function createOccurrence(input: {
   const { transaction, alert, id, startedAtNs, receivedAtNs } = input;
   const alertResolvedAtNs = resolvedAt(alert);
   const eligible = isEligible(alert);
+  const notifyHa =
+    alert.status === "firing" && isEligibleHouseAlert(alert.labels);
   const occurrence = await transaction.alertOccurrence.create({
     data: {
       id,
@@ -63,6 +71,7 @@ async function createOccurrence(input: {
       resolvedAtNs: alertResolvedAtNs,
       lastSeenAtNs: receivedAtNs,
       firstNotifiedAtNs: eligible ? receivedAtNs : null,
+      haNotifiedAtNs: notifyHa ? receivedAtNs : null,
       lifecycleState: alert.status === "resolved" ? "resolved" : "open",
       suppressionState: "none",
       resolutionSource: alert.status === "resolved" ? "webhook" : null,
@@ -70,6 +79,15 @@ async function createOccurrence(input: {
     },
   });
   await createOccurrenceLabels(transaction, id, alert.labels);
+  if (notifyHa) {
+    await enqueueHaNotifyRow(transaction, {
+      occurrenceId: id,
+      fingerprint: alert.fingerprint,
+      labels: alert.labels,
+      annotations: alert.annotations,
+      nowNs: receivedAtNs,
+    });
+  }
   await transaction.alertEvent.create({
     data: {
       id: eventId(id, "opened", startedAtNs),
@@ -121,6 +139,53 @@ function shouldReopenOccurrence(
   );
 }
 
+function shouldQueueWebhookHaNotify(
+  alert: WebhookAlert,
+  existing: AlertOccurrence,
+  shouldReopen: boolean,
+): boolean {
+  return (
+    alert.status === "firing" &&
+    isEligibleHouseAlert(alert.labels) &&
+    (existing.lifecycleState === "open" || shouldReopen) &&
+    existing.haNotifiedAtNs === null
+  );
+}
+
+async function syncWebhookHaNotification(options: {
+  transaction: Prisma.TransactionClient;
+  alert: WebhookAlert;
+  existing: AlertOccurrence;
+  shouldNotifyHa: boolean;
+  shouldResolve: boolean;
+  receivedAtNs: bigint;
+}): Promise<void> {
+  const {
+    transaction,
+    alert,
+    existing,
+    shouldNotifyHa,
+    shouldResolve,
+    receivedAtNs,
+  } = options;
+  if (shouldNotifyHa) {
+    await enqueueHaNotifyRow(transaction, {
+      occurrenceId: existing.id,
+      fingerprint: alert.fingerprint,
+      labels: alert.labels,
+      annotations: alert.annotations,
+      nowNs: receivedAtNs,
+    });
+  }
+  if (shouldResolve && existing.haNotifiedAtNs !== null) {
+    await resolveHaNotificationRows(transaction, {
+      occurrenceId: existing.id,
+      fingerprint: existing.fingerprint,
+      nowNs: receivedAtNs,
+    });
+  }
+}
+
 type UpdateOccurrenceInput = {
   transaction: Prisma.TransactionClient;
   alert: WebhookAlert;
@@ -149,6 +214,11 @@ async function updateOccurrence(
     isEligible(alert) &&
     (existing.lifecycleState === "open" || shouldReopen) &&
     existing.firstNotifiedAtNs === null;
+  const shouldNotifyHa = shouldQueueWebhookHaNotify(
+    alert,
+    existing,
+    shouldReopen,
+  );
   const shouldResolve =
     alertResolvedAtNs !== null && existing.lifecycleState !== "resolved";
   const changes = observedChanges(existing, alert);
@@ -163,6 +233,7 @@ async function updateOccurrence(
       absentSnapshots: 0,
       ...changes.data,
       ...(shouldNotify ? { firstNotifiedAtNs: receivedAtNs } : {}),
+      ...(shouldNotifyHa ? { haNotifiedAtNs: receivedAtNs } : {}),
       ...(shouldReopen
         ? {
             lifecycleState: "open",
@@ -182,6 +253,14 @@ async function updateOccurrence(
   });
   if (changes.labelsChanged)
     await syncOccurrenceLabels(transaction, existing.id, alert.labels);
+  await syncWebhookHaNotification({
+    transaction,
+    alert,
+    existing,
+    shouldNotifyHa,
+    shouldResolve,
+    receivedAtNs,
+  });
   if (shouldResolve)
     await transaction.alertEvent.create({
       data: {
@@ -216,6 +295,9 @@ export async function ingestWebhookAlert(
   alert: WebhookAlert,
   receivedAtNs: bigint,
 ): Promise<IngestedAlert> {
+  if (shouldSkipLedgerAlert({ labels: alert.labels })) {
+    return { opened: 0, resolved: 0, notified: null };
+  }
   const startedAtNs = instantTextToEpochNanoseconds(alert.startsAt);
   const alertResolvedAtNs = resolvedAt(alert);
   const id = occurrenceId(alert.fingerprint, startedAtNs);
