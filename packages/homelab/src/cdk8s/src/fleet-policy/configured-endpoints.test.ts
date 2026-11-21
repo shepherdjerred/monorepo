@@ -1,7 +1,14 @@
 import { describe, expect, test } from "vitest";
-import type { FleetNetworkPolicy, FleetService } from "./fleet.ts";
+import { fileURLToPath } from "node:url";
+import type {
+  FleetContainerSpec,
+  FleetNetworkPolicy,
+  FleetService,
+  FleetWorkload,
+} from "./fleet.ts";
 import {
   blockedConfiguredConnections,
+  CODE_DEFAULT_ENDPOINTS,
   configuredConnections,
 } from "./configured-endpoints.ts";
 import {
@@ -133,4 +140,75 @@ describe("blockedConfiguredConnections", () => {
       "frontend/web -> seaweedfs/seaweedfs-s3:8333 (egress)",
     ]);
   });
+});
+
+const REPOSITORY_ROOT = fileURLToPath(
+  new URL("../../../../../../", import.meta.url),
+);
+const BIRMEL_IMAGE =
+  '{{ required `Delivery requires image:birmel` (get (get (.Values.delivery | default dict) "images" | default dict) "birmel") }}';
+const LOKI = "loki/loki-gateway:80";
+
+/** A Birmel container: an image with a declared Loki logs default. */
+function birmel(
+  env: Readonly<Record<string, string>> = {},
+  spec: Partial<FleetContainerSpec> = {},
+): FleetWorkload {
+  const base = workload("birmel", "birmel", 8080, env);
+  return {
+    ...base,
+    containers: base.containers.map((container) => ({
+      ...container,
+      spec: { ...container.spec, image: BIRMEL_IMAGE, ...spec },
+    })),
+  };
+}
+
+function targetsOf(client: FleetWorkload) {
+  return configuredConnections(fleetOf({ workloads: [client] })).map(
+    ({ env, target }) => [env, target],
+  );
+}
+
+describe("code default endpoints", () => {
+  test("an image's default counts as configured while its env leaves it unset", () => {
+    expect(targetsOf(birmel())).toEqual([
+      ["LOKI_OTLP_ENDPOINT (code default)", LOKI],
+    ]);
+  });
+
+  test.each([
+    ["the env sets the variable", birmel({ LOKI_OTLP_ENDPOINT: "off" })],
+    ["the code path is off", birmel({ TELEMETRY_ENABLED: "false" })],
+    [
+      "the container overrides the image's command",
+      birmel({}, { command: ["/bin/sh", "-c"] }),
+    ],
+  ])("no default applies when %s", (_, client) => {
+    expect(targetsOf(client)).toEqual([]);
+  });
+
+  test("an egress policy that leaves out the default's destination blocks it", () => {
+    const fleet = fleetOf({
+      workloads: [birmel()],
+      networkPolicies: [
+        policy("birmel", "birmel", {
+          egress: [
+            { peers: [namespacePeer("alloy-gateway")], ports: [tcpPort(4318)] },
+          ],
+        }),
+      ],
+    });
+    expect(blockedConfiguredConnections(fleet)).toEqual([
+      `birmel/birmel -> ${LOKI} (egress)`,
+    ]);
+  });
+
+  test.each(CODE_DEFAULT_ENDPOINTS)(
+    "$source still defaults $env to $value",
+    async ({ source, value }) => {
+      const text = await Bun.file(`${REPOSITORY_ROOT}${source}`).text();
+      expect(text).toContain(`"${value}"`);
+    },
+  );
 });

@@ -11,6 +11,7 @@ import {
   cloudflareTunnelIngressRule,
   blackboxProbeIngressRule,
   fliptEgress,
+  lokiOtlpEgress,
   otlpEgress,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
@@ -162,6 +163,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         temporalServerEgress(),
         fliptPodEgress(),
         otlpEgress(),
+        lokiOtlpEgress(),
       ],
     },
   });
@@ -188,6 +190,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
           temporalServerEgress(),
           { ports: [tcp(443)] },
           { ports: [tcp(4318)] },
+          lokiOtlpEgress(),
         ],
       },
     });

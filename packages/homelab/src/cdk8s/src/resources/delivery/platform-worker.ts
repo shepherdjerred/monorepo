@@ -16,7 +16,7 @@ import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/re
 import { createDeliveryJobs } from "./jobs.ts";
 import {
   temporalTelemetryEnvironment,
-  temporalTelemetryEgressRule,
+  temporalTelemetryEgressRules,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 const ports = (...numbers: number[]) => numbers.map((port) => tcp(port));
 
@@ -80,7 +80,7 @@ export function createDeliveryPlatformWorker(
       ingress: [prometheusIngressRule([9464, 9465])],
       egress: [
         dnsEgressRule(),
-        temporalTelemetryEgressRule(),
+        ...temporalTelemetryEgressRules(),
         { ports: ports(443) },
         kubernetesApiEgressRule(),
         {

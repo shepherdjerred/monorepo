@@ -148,26 +148,30 @@ describe("central Temporal Workflow boundary", () => {
       "worker-family": "central-workflows",
     });
     expect(spec.ingress).toHaveLength(1);
-    // TCP:8080 is Flipt only (this role's own temporal-call-graph-tracing
-    // check) — still no general TCP:443 egress.
+    // TCP:8080 is Flipt (this role's own temporal-call-graph-tracing check)
+    // and Loki's gateway (the image's default OTLP logs endpoint) — still no
+    // general TCP:443 egress.
     expect(ports).toEqual([
       "TCP:4318",
       "TCP:53",
       "TCP:7233",
       "TCP:8080",
+      "TCP:8080",
       "UDP:53",
     ]);
     expect(ports).not.toContain("TCP:443");
-    const fliptRule = spec.egress.find((rule) =>
+    const port8080Rules = spec.egress.filter((rule) =>
       rule.ports.some((port) => port.port === 8080),
     );
-    expect(fliptRule?.to).toEqual([
-      {
-        namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+    expect(port8080Rules.map((rule) => rule.to)).toEqual(
+      ["flipt", "loki"].map((namespace) => [
+        {
+          namespaceSelector: {
+            matchLabels: { "kubernetes.io/metadata.name": namespace },
+          },
         },
-      },
-    ]);
+      ]),
+    );
     const otlpRule = spec.egress.find((rule) =>
       rule.ports.some((port) => port.port === 4318),
     );

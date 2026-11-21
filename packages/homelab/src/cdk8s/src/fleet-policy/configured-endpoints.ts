@@ -1,6 +1,7 @@
 import {
   selectorMatches,
   type Fleet,
+  type FleetContainerSpec,
   type FleetPolicyPort,
   type FleetService,
   type FleetWorkload,
@@ -49,7 +50,69 @@ const UPSTREAM_BACKENDS: readonly UpstreamBackend[] = [
       "app.kubernetes.io/component": "s3",
     },
   },
+  {
+    namespace: "loki",
+    service: "loki-gateway",
+    ports: new Map([[80, 8080]]),
+    labels: {
+      "app.kubernetes.io/name": "loki",
+      "app.kubernetes.io/instance": "loki",
+      "app.kubernetes.io/component": "gateway",
+    },
+  },
 ];
+
+/** Loki's OTLP/HTTP logs receiver, through its gateway. */
+const LOKI_OTLP_LOGS = "http://loki-gateway.loki/otlp/v1/logs";
+
+/**
+ * An endpoint a first-party image connects to when its rendered environment
+ * leaves `env` unset: a default in the application's code, which no env value
+ * shows. `image` is the Delivery image name the container renders, `enabled`
+ * whether the code that opens the connection runs under the container's
+ * environment, and `source` the repository file that holds the default, which
+ * a test reads to keep the two in step.
+ */
+export type CodeDefaultEndpoint = {
+  image: string;
+  env: string;
+  value: string;
+  source: string;
+  enabled: (env: ReadonlyMap<string, string>) => boolean;
+};
+
+/**
+ * Code defaults that name an in-cluster Service. Declare one here when an
+ * application gains a default endpoint, so the policies on both ends are
+ * checked as they are for a configured one.
+ */
+export const CODE_DEFAULT_ENDPOINTS: readonly CodeDefaultEndpoint[] = [
+  {
+    image: "birmel",
+    env: "LOKI_OTLP_ENDPOINT",
+    value: LOKI_OTLP_LOGS,
+    source: "packages/birmel/src/observability/tracing.ts",
+    // `config.telemetry.enabled` defaults to true.
+    enabled: (env) => env.get("TELEMETRY_ENABLED") !== "false",
+  },
+  {
+    image: "streambot",
+    env: "LOKI_OTLP_ENDPOINT",
+    value: LOKI_OTLP_LOGS,
+    source: "packages/streambot/src/config/schema.ts",
+    enabled: (env) => env.get("TELEMETRY_ENABLED") === "true",
+  },
+  {
+    image: "temporal-worker",
+    env: "LOKI_OTLP_ENDPOINT",
+    value: LOKI_OTLP_LOGS,
+    source: "packages/temporal/src/observability/tracing.ts",
+    enabled: (env) => env.get("TELEMETRY_ENABLED") === "true",
+  },
+];
+
+/** The Delivery image name a rendered first-party image reference carries. */
+const DELIVERY_IMAGE = /Delivery requires image:([a-z0-9-]+)`/u;
 
 const DEFAULT_PORT_OF_SCHEME: Readonly<Record<string, number>> = {
   http: 80,
@@ -152,7 +215,7 @@ function backendsOf(
 /** A connection one workload is configured to open to a Service. */
 export type ConfiguredConnection = {
   client: FleetWorkload;
-  /** The env variable that names the endpoint. */
+  /** The env variable that names the endpoint, or whose code default does. */
   env: string;
   /** `<namespace>/<service>:<port>`, the Service port as configured. */
   target: string;
@@ -160,18 +223,42 @@ export type ConfiguredConnection = {
 };
 
 /**
- * Every connection the fleet's literal env values configure to a Service
- * whose backend pods are known: synthesized here, or listed in
- * `UPSTREAM_BACKENDS`. Values from Secrets and ConfigMaps, endpoints built in
- * application code, and a host whose port lives in a separate variable are
- * not visible here.
+ * The values a container connects with: its literal env values, and the
+ * declared code default of each variable its image reads and its env leaves
+ * unset, named `<variable> (code default)`. A container that overrides the
+ * image's command, such as a firewall init container, does not run the
+ * application and takes no code default.
+ */
+function endpointValues(
+  spec: FleetContainerSpec,
+): { name: string; value: string }[] {
+  const env = spec.env ?? [];
+  const literal = env.map(({ name, value = "" }) => ({ name, value }));
+  const image = DELIVERY_IMAGE.exec(spec.image ?? "")?.[1];
+  if (image === undefined || spec.command !== undefined) return literal;
+  const values = new Map(literal.map(({ name, value }) => [name, value]));
+  const defaults = CODE_DEFAULT_ENDPOINTS.filter(
+    (endpoint) =>
+      endpoint.image === image &&
+      !env.some(({ name }) => name === endpoint.env) &&
+      endpoint.enabled(values),
+  ).map(({ env: name, value }) => ({ name: `${name} (code default)`, value }));
+  return [...literal, ...defaults];
+}
+
+/**
+ * Every connection the fleet's literal env values and declared code defaults
+ * (`CODE_DEFAULT_ENDPOINTS`) configure to a Service whose backend pods are
+ * known: synthesized here, or listed in `UPSTREAM_BACKENDS`. Values from
+ * Secrets and ConfigMaps, undeclared endpoints built in application code, and
+ * a host whose port lives in a separate variable are not visible here.
  */
 export function configuredConnections(fleet: Fleet): ConfiguredConnection[] {
   return fleet.workloads
     .filter((workload) => !workload.hostNetwork)
     .flatMap((client) =>
       client.containers.flatMap(({ spec }) =>
-        (spec.env ?? []).flatMap(({ name, value = "" }) =>
+        endpointValues(spec).flatMap(({ name, value }) =>
           endpointsIn(value).flatMap(({ host, port }) => {
             const target = serviceNamedBy(host, client.namespace);
             if (target === undefined) return [];

@@ -112,6 +112,26 @@ export function otlpEgress() {
   return { to: [nsPeer("alloy-gateway")], ports: [tcp(4318)] };
 }
 
+/**
+ * OTLP/HTTP logs to Loki's gateway (`loki-gateway.loki/otlp/v1/logs`). The
+ * Service publishes port 80; the policy names the gateway pods' 8080. Birmel,
+ * Streambot and the Temporal worker image send logs here by default whenever
+ * telemetry is on.
+ */
+export function lokiOtlpEgress() {
+  return {
+    to: [
+      {
+        ...nsPeer("loki"),
+        podSelector: {
+          matchLabels: { "app.kubernetes.io/component": "gateway" },
+        },
+      },
+    ],
+    ports: [tcp(8080)],
+  };
+}
+
 /** The SeaweedFS S3 gateway (`seaweedfs-s3.seaweedfs`, 8333). */
 export function seaweedfsEgress() {
   return { to: [nsPeer("seaweedfs")], ports: [tcp(8333)] };

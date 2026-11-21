@@ -22,7 +22,7 @@ import { createPlayersOfflineGrant } from "./players-offline-grant.ts";
 import { deliveryTrmnlEnvironment } from "./trmnl-bootstrap.ts";
 import {
   temporalTelemetryEnvironment,
-  temporalTelemetryEgressRule,
+  temporalTelemetryEgressRules,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 
 export function createDeliveryWorker(
@@ -191,7 +191,7 @@ export function createDeliveryWorker(
       ingress: [prometheusIngressRule([9464, 9465])],
       egress: [
         dnsEgressRule(),
-        temporalTelemetryEgressRule(),
+        ...temporalTelemetryEgressRules(),
         externalHttpsEgressRule(),
         ...(activation.workerRegistryItemId === undefined
           ? []

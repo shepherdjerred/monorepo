@@ -24,6 +24,8 @@ const ProbeSchema = z.looseObject({});
 
 const ContainerSchema = z.looseObject({
   name: z.string(),
+  image: z.string().optional(),
+  command: z.array(z.string()).optional(),
   ports: z
     .array(
       z.looseObject({

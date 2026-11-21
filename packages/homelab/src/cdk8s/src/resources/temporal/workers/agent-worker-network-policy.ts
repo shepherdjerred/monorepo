@@ -4,6 +4,7 @@ import {
   dnsEgressRule,
   nsPeer,
   tcp,
+  lokiOtlpEgress,
   otlpEgress,
   seaweedfsEgress,
   prometheusIngressRule,
@@ -45,6 +46,7 @@ export function createTemporalAgentWorkerNetworkPolicy(chart: Chart): void {
           ports: [tcp(7341)],
         },
         otlpEgress(),
+        lokiOtlpEgress(),
         seaweedfsEgress(),
         // Flipt egress (8080, for temporalFeatureFlagEnvironment()'s
         // temporal-call-graph-tracing check) is granted by the shared

@@ -111,8 +111,9 @@ wrong rule.
 
 They prove that the declared topology is consistent with itself:
 
-- a Service endpoint named in a workload's literal environment is allowed by
-  the policies on both ends;
+- a Service endpoint named in a workload's literal environment, or in a code
+  default declared in `CODE_DEFAULT_ENDPOINTS` that the environment leaves
+  unset, is allowed by the policies on both ends;
 - a rule naming pods on one side has its counterpart on the other, whether
   those pods are in another namespace or the rule's own, such as an app and
   its database;
@@ -128,8 +129,11 @@ They cannot prove that the declared topology is the real one. A test reads
 manifests, not traffic.
 
 An endpoint that comes from a Secret is invisible, because synthesis never
-sees the value. So is an endpoint the application builds in code, or reads
-from a database row, or follows from a redirect. Address rules are only partly
+sees the value. So is an endpoint the application builds in code without a
+declaration, or reads from a database row, or follows from a redirect. A
+default such as Birmel's Loki logs URL is visible only once it is declared in
+[`configured-endpoints.ts`](packages/homelab/src/cdk8s/src/fleet-policy/configured-endpoints.ts),
+whose test also checks the value is still in the named source file. Address rules are only partly
 checked, since no pod or node address exists at synthesis time. The tests
 resolve an `ipBlock` only when it covers every address.
 

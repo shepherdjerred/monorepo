@@ -473,6 +473,16 @@ spec:
       to:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: loki
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: gateway
+    - ports:
+        - port: 8080
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: flipt
     - ports:
         - port: 9867
