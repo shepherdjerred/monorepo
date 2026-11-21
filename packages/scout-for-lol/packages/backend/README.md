@@ -1471,6 +1471,16 @@ its build is the observed match's. Builds are compared part by part as numbers,
 because a replay header zero-pads the revision (`16.19.823.0722`) where the match
 states it bare (`16.19.823.722`).
 
+The chunk table is read as each chunk's 17-byte header (id, next id, kind,
+uncompressed and compressed sizes) followed by its body. From patch 16.21 a
+one-byte tag, always `4` so far, sits between the two; the header's own game
+version decides which layout applies. A player who left carries the result
+`LeaverFail`, which matches evidence as a loss. `replay/container.test.ts`
+checks both against `patch-16.23-remake.fixture.json`, a minimized and
+redacted real replay. A container rejection is `REJECTED` and final; when the
+validator itself was wrong, a data migration returns those rows to `FAILED`
+so the next offer asks for the file and checks it again.
+
 The verified file is then streamed to object storage. The shared S3 client
 (`storage/s3-client.ts`) checksums only when an operation requires it; the
 SDK's default per-request checksum cannot hash a streamed body and failed every
