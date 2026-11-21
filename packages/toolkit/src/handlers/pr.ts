@@ -29,7 +29,7 @@ failed after readiness. After a fix and push, run pr land again.`;
 
 function printAssetUsage(): void {
   console.log(
-    "Usage: toolkit pr asset <PR> <FILE|DIR...> [--markdown] [--profile <name>]",
+    "Usage: toolkit pr asset [PR] <FILE|DIR...> [--markdown] [--profile <name>]",
   );
 }
 
@@ -201,10 +201,11 @@ Subcommands:
   health [PR_NUMBER]         Check PR health (conflicts, CI, approval)
   land [PR]                  Wait for exact-head readiness, then squash-merge
                              with git-spice (only when merging is authorized)
-  asset <PR> <FILE|DIR...>   Upload PR media (images, video, asciinema .cast,
-                             static demo-site dirs) to public.sjer.red and
-                             print URLs. Dirs need a root index.html; .cast
-                             files get a generated HTML player page and an
+  asset [PR] <FILE|DIR...>   Upload PR media (images, video, asciinema .cast,
+                             HTML files, static demo-site dirs) to
+                             public.sjer.red; omitting PR infers the current
+                             branch's open PR. Dirs need a root index.html;
+                             .cast files get a generated HTML player page and an
                              agg-rendered GIF preview (requires agg).
 
   review list [PR]    Current feedback from every reviewer, including author,

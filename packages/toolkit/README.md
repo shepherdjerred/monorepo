@@ -835,9 +835,11 @@ includes author, provider, nullable priority, full contents, path/line,
 resolution state, and a `toolkit gh api` command for the original surface.
 Omitting PR infers the current branch; `--all` includes resolved/outdated items.
 `resolve` and `harvest` retain the existing provider finding handles.
-`toolkit pr asset <PR> <file|dir...> [--markdown]` uploads
-the lightest useful review artifact to `public.sjer.red`; directories require
-a root `index.html`. An asciinema `.cast` file also uploads a self-contained
+`toolkit pr asset [PR] <file|dir...> [--markdown]` uploads PR demo media
+(before/after screenshots, recordings, HTML previews, static directories, and
+casts; omitting `PR` infers the current branch's open PR) to `public.sjer.red`;
+directories require a root `index.html`. An asciinema `.cast` file also uploads
+a self-contained
 player page (`<name>.cast.html`, the printed URL) and a GIF preview
 (`<name>.cast.gif`) rendered locally with
 [`agg`](https://docs.asciinema.org/manual/agg/); `--markdown` emits the GIF

@@ -52,7 +52,7 @@ Monorepo workflows:
   brim [--provider <id>] [--dry-run]  Start a session on the least-used AI subscription
   pr health [PR_NUMBER]        Check merge, exact-head Woodpecker CI, and review
   pr land [PR]                 Wait for exact-head readiness, then squash-merge
-  pr asset <PR> <FILE|DIR...>  Upload review media to public.sjer.red
+  pr asset [PR] <FILE|DIR...>  Upload review media to public.sjer.red
   pr review <ACTION> <PR>      Inspect or resolve review-provider findings
   deployed [SELECTOR]          Trace a commit or service to the live homelab
   deploy <COMMAND>            Select, promote, approve, and inspect releases

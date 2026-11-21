@@ -154,24 +154,27 @@ itself, open it locally. Load `tailscale-helper` for anything beyond this.
   `SJ` issue only when the task identifies it). Proactively file `AI` issues for
   inefficiency, automation candidates, repeated friction, poor architecture, and
   tech debt — search first and vote on a match; filing never blocks the task.
-- Ship visual and interactive changes with the smallest proof embedded in the PR
-  body before marking ready (screenshot, short recording, asciinema cast for
-  CLI/TUI, or rendered asset), captured during verification and linked in the
-  final report; without it, the work is not done.
+- Give every PR a `Demo` section before marking ready (linked in the final
+  report; without it, the work is not done) so a human skimming sees what
+  changed and that it works: **before and after** side-by-side for UI, site,
+  doc, and report changes whenever a prior state exists (screenshots, short
+  recording for flows, or HTML preview); an asciinema `.cast` or before/after
+  output for CLI/TUI; and concrete evidence for backend, data, or infra changes
+  (before/after payload or plan diff, `duckdb -markdown` table, `uplot` chart,
+  or `mermaid`/`mmdc` diagram — test counts stay in `Verification`; only purely
+  mechanical chores write `None — <reason>`).
 - Resolve P0/P1 review findings; fix cheap in-scope P2s, or dismiss with a
   reason or file in `AI`. Do not chase repeated rounds of lower-priority nits.
 
 ## Browser support
 
-- **Browser Support:** Baseline Widely Available only by default. Newly
-  Available features only with feature detection and graceful degradation,
-  a fallback of at most 20 lines, no new dependencies, and no polyfills.
-  Limited Availability features (Chrome/Edge-only, such as the Built-in AI
-  APIs, `fetchLater`, and Interest Invokers) only when Jerred explicitly
-  asks for that feature. When the `modern-web-guidance` skill suggests a
-  non-Widely-Available API, state its Baseline status and fallback before
-  using it. A project `AGENTS.md` may override this policy for its own
-  audience; this is the personal default.
+- **Browser Support:** Baseline Widely Available by default. Newly Available
+  features require feature detection, graceful degradation, a `<= 20`-line
+  fallback, no new dependencies, and no polyfills. Limited Availability features
+  (Chrome/Edge-only, e.g. Built-in AI, `fetchLater`, Interest Invokers) require
+  Jerred's explicit request. State Baseline status and fallback before using a
+  non-Widely-Available API from `modern-web-guidance`. A project `AGENTS.md` may
+  override this default.
 
 ## Guidance architecture
 
