@@ -62,6 +62,42 @@ export function libraryInterest(
     : "none";
 }
 
+const standingClaim = { active: true, excluded: false } as const;
+const keptWhere = {
+  OR: [
+    { intents: { some: { edition: "default", libraryKeep: true } } },
+    { requests: { some: { ...standingClaim, keepingPolicy: "keep" } } },
+  ],
+} satisfies Prisma.MediaItemWhereInput;
+const householdFollowingWhere = {
+  requests: { some: { ...standingClaim, interestState: "following" } },
+} satisfies Prisma.MediaItemWhereInput;
+
+/**
+ * `libraryViewPolicy` as a filter, exact for a movie or series: a root title
+ * has no ancestors and one default target, so its own target and claims decide
+ * it. Do not apply it to a season or episode, whose policy is inherited.
+ */
+export function libraryPolicyWhere(
+  policy: "keep" | "temporary" | "unclassified",
+): Prisma.MediaItemWhereInput {
+  if (policy === "keep") return keptWhere;
+  return policy === "temporary"
+    ? { AND: [{ NOT: keptWhere }, householdFollowingWhere] }
+    : { NOT: { OR: [keptWhere, householdFollowingWhere] } };
+}
+
+/** The root titles on which `libraryViewPolicy` reports the actor `following`. */
+export function libraryFollowingWhere(
+  actorId: string,
+): Prisma.MediaItemWhereInput {
+  return {
+    requests: {
+      some: { ...standingClaim, userId: actorId, interestState: "following" },
+    },
+  };
+}
+
 /** A title is in the household library while something holds it there. */
 export const libraryMemberWhere = {
   OR: [

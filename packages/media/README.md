@@ -49,15 +49,16 @@ and seven days of recoverable quarantine before purge.
 The authenticated read APIs are bounded and do not create acquisition or
 removal authority:
 
-| Route                              | Purpose                                                                |
-| ---------------------------------- | ---------------------------------------------------------------------- |
-| `GET /api/v1/library`              | Current visible library, keeping policy and personal interest.         |
-| `GET /api/v1/calendar`             | TV air dates and US theatrical, digital and physical movie dates.      |
-| `GET /api/v1/removal-history`      | Committed quarantine/removal history, retained after purge.            |
-| `GET /api/v1/playback/now-playing` | Separate whole-library playback observations, with explicit freshness. |
-| `GET /api/v1/playback/history`     | Searchable session history, separate from current Plex watched truth.  |
-| `GET /api/v1/playback/statistics`  | Plays, watch time, rankings and playback decisions.                    |
-| `GET /api/v1/request-interests`    | Personal interest state, notice and revision context.                  |
+| Route                              | Purpose                                                                 |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| `GET /api/v1/library`              | Current visible library, keeping policy and personal interest.          |
+| `GET /api/v1/calendar`             | TV air dates and US theatrical, digital and physical movie dates.       |
+| `GET /api/v1/removals`             | Titles that are leaving soon, and quarantined titles still recoverable. |
+| `GET /api/v1/removal-history`      | Committed quarantine/removal history, retained after purge.             |
+| `GET /api/v1/playback/now-playing` | Separate whole-library playback observations, with explicit freshness.  |
+| `GET /api/v1/playback/history`     | Searchable session history, separate from current Plex watched truth.   |
+| `GET /api/v1/playback/statistics`  | Plays, watch time, rankings and playback decisions.                     |
+| `GET /api/v1/request-interests`    | Personal interest state, notice and revision context.                   |
 
 `POST /api/v1/request-interests/:id/commands` applies revision-checked,
 idempotent interest actions. `POST /api/v1/library/:id/keeping-policy` changes
@@ -72,6 +73,87 @@ completion threshold. Neither historical import nor statistical completion
 writes current Plex watched state or authorizes retention. Household playback
 is owner-visible; members see their own sessions, and unmapped history stays
 owner-only.
+
+### Library
+
+`GET /api/v1/library` lists the movies and series the household holds: every
+title with a library Keep, a standing request or a current file, in a Plex
+library the reader may open. A reader whose Plex access was not verified in the
+last five minutes gets 403 `plex_library_access_required`.
+
+| Parameter      | Values                                       | Default |
+| -------------- | -------------------------------------------- | ------- |
+| `query`        | Text the title contains, ignoring case.      | empty   |
+| `kind`         | `all`, `movie`, `series`                     | `all`   |
+| `sort`         | `title`, `added`                             | `title` |
+| `policy`       | `all`, `keep`, `temporary`, `unclassified`   | `all`   |
+| `mine`         | `all`, `following`                           | `all`   |
+| `leaving`      | `all`, `soon`                                | `all`   |
+| `availability` | `all`, `available`, `unavailable`            | `all`   |
+| `limit`        | 1 to 50                                      | 25      |
+| `cursor`       | The previous page's `nextCursor`, unchanged. | none    |
+
+An unknown value, or a cursor that the chosen `sort` did not issue, is 400
+`invalid_input`.
+
+- `sort=title` lists every matching title, A to Z.
+- `sort=added` lists newest first by `addedAt`, and lists only titles that have
+  something to play: a title with no current file has no date and is left out.
+- `policy` and `mine` match the `policy` and `myInterest` each row reports.
+  `mine=following` keeps the titles the reader has a standing request for.
+- `leaving=soon` keeps the titles that report `leavingSoon`.
+- `availability=available` keeps a movie whose `availability` is `available`
+  and a series whose `episodes` counts at least one available episode. A series
+  whose `episodes` is `null` also counts as available, because an external
+  library holds some of it. `availability=unavailable` is every other title.
+
+A page holds at most `limit` titles and may hold fewer, or none, while
+`nextCursor` is still set: what a reader may see and whether an external file
+is really present are settled after the page is read. Keep following
+`nextCursor` until it is `null`.
+
+Each title carries, besides its `policy`, `myInterest` and `artwork`:
+
+| Field          | Meaning                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| `availability` | A movie's lifecycle state. Always `null` for a series.                                        |
+| `episodes`     | A series' regular-season episodes, `{ available, total }`, as the catalog reports them.       |
+| `addedAt`      | When the newest part of the title that can be played now first arrived. `null` when none can. |
+| `leavingSoon`  | `{ state, graceUntil }` for the soonest removal anywhere in the title, or `null`.             |
+
+`addedAt` is derived, not stored. For each movie or episode that has a current
+file, Media takes the first file it ever recorded for that item; the title's
+date is the latest of those. An upgrade keeps the earlier file's record, so it
+does not move the title, and a series moves up when a new episode lands. A file
+in a registered external library counts from when Media first recorded it.
+
+`leavingSoon.state` is `warning_pending` while the title's requesters are being
+told and no date is set, or `grace_period` once the files are due to leave at
+`graceUntil`. A series reports its first episode to go. A quarantined title has
+already left and is not leaving soon.
+
+### Leaving soon
+
+Leaving soon belongs to the whole household. `GET /api/v1/removals` and
+`leavingSoon` show a member every title that is `warning_pending` or in its
+`grace_period` and sits in a Plex library that member may currently open,
+whoever asked for it. Any such member may place the 30-day hold on it (`keep`
+through `POST /api/v2/media/:id/commands`); `GET /api/v2/media/:id/targets/default`
+lists `keep` in `allowedProtectiveActions` for them while the removal is open.
+
+Only that is shared. The hold is the holder's own: it protects the title for
+30 days, cancels the open removal, and creates no request. When it lapses,
+retention does not wait on the holder; a later removal starts again from a fresh
+notice, which goes to the members who asked for the title and not to the one
+who held it. Pinning, permanent keeping, removal, retry, cancelling a request
+and restoring a quarantined title are unchanged: they stay with the owner and
+with the members who have their own request, and a quarantined title is listed
+only for them. A member whose Plex access is stale or does not cover the
+title's library sees only their own titles and gets no hold on anyone else's.
+
+`GET /api/v1/requests` returns at most 200 rows. Direct requests come first, so
+the per-episode claims a long series fans out into cannot push them off the
+list.
 
 ### Catalog discovery
 

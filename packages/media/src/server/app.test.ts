@@ -9,6 +9,7 @@ import { z } from "zod";
 import { createMediaApp, type MediaAppDependencies } from "./app.ts";
 import type { RequestInterestApplication } from "./household/interests.ts";
 import { TmdbCatalogApplication } from "#infrastructure/catalog.ts";
+import type { PrismaLibraryApplication } from "#infrastructure/library/views/library.ts";
 import { createDatabase } from "#infrastructure/database.ts";
 import { TmdbClient } from "#integrations/tmdb.ts";
 
@@ -58,6 +59,69 @@ test("request interests add artwork only on an explicit include and refuse an un
   expect(list).toHaveBeenLastCalledWith(actor, null, { artwork: true });
   const unknown = await app.request(`${url}?include=progress`, { headers });
   expect(unknown.status).toBe(400);
+  expect(list).toHaveBeenCalledTimes(2);
+});
+
+test("library passes its sort and filters through and answers 400 for an unknown value or another sort's cursor", async () => {
+  const { dependencies } = fixture();
+  const list = vi.fn<PrismaLibraryApplication["list"]>(() =>
+    Promise.resolve({ items: [], nextCursor: null }),
+  );
+  dependencies.library = { list };
+  const app = createMediaApp(dependencies);
+  const read = (query: string) =>
+    app.request(`/api/v1/library${query}`, { headers });
+  const status = async (query: string) => {
+    const response = await read(query);
+    return response.status;
+  };
+  const everything = {
+    query: "",
+    kind: "all",
+    sort: "title",
+    policy: "all",
+    mine: "all",
+    leaving: "all",
+    availability: "all",
+    cursor: null,
+    limit: 25,
+  };
+  // An earlier client sends only `query`, `kind` and its title cursor.
+  expect(await status("?query=&kind=all")).toBe(200);
+  expect(list).toHaveBeenLastCalledWith(actor, everything);
+  const titleCursor = JSON.stringify({ title: "Dune", id: "media-1" });
+  const addedCursor = JSON.stringify({
+    addedAt: "2026-11-01T12:00:00.000Z",
+    id: "media-1",
+  });
+  const filtered = `?sort=added&policy=temporary&mine=following&leaving=soon&availability=available&cursor=${encodeURIComponent(addedCursor)}`;
+  expect(await status(filtered)).toBe(200);
+  expect(list).toHaveBeenLastCalledWith(actor, {
+    ...everything,
+    sort: "added",
+    policy: "temporary",
+    mine: "following",
+    leaving: "soon",
+    availability: "available",
+    cursor: addedCursor,
+  });
+  for (const query of [
+    "?sort=newest",
+    "?policy=kept",
+    "?mine=me",
+    "?leaving=later",
+    "?availability=maybe",
+    `?sort=added&cursor=${encodeURIComponent(titleCursor)}`,
+    `?sort=title&cursor=${encodeURIComponent(addedCursor)}`,
+    `?cursor=${encodeURIComponent(addedCursor)}`,
+    "?sort=added&cursor=not-json",
+  ]) {
+    const refused = await read(query);
+    expect(refused.status, query).toBe(400);
+    expect(await refused.json(), query).toMatchObject({
+      error: { code: "invalid_input" },
+    });
+  }
   expect(list).toHaveBeenCalledTimes(2);
 });
 

@@ -197,7 +197,11 @@ export class PrismaMediaCommands extends MovieLifecycleCommands {
         movieChoiceAccess: options.movieChoiceAccess,
       });
     assertOwnerAction(currentActor, input.action);
-    await validateAction(db, currentActor, mediaId, input);
+    await validateAction(db, currentActor, {
+      mediaId,
+      input,
+      visibility: this.settings,
+    });
     const updated = await db.mediaItem.updateMany({
       where: { id: mediaId, version: input.expectedVersion },
       data: { version: { increment: 1 } },

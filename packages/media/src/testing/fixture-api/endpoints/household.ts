@@ -129,6 +129,11 @@ const library: readonly FixtureEndpoint[] = [
       "/library?query=the&kind=movie",
       "/library?query=&kind=series&limit=50",
       `/library?query=&kind=all&cursor=${encodeURIComponent(JSON.stringify({ title: "Dune", id: titleNamed("Dune").id }))}`,
+      "/library?sort=added&limit=12",
+      `/library?sort=added&cursor=${encodeURIComponent(JSON.stringify({ addedAt: "2026-01-01T00:00:00.000Z", id: titleNamed("Dune").id }))}`,
+      "/library?leaving=soon",
+      "/library?mine=following&policy=temporary",
+      "/library?availability=unavailable&kind=series",
     ],
   }),
 ];
@@ -224,7 +229,7 @@ const removals: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/removals",
     schema: RemovalListSchema,
-    respond: () => removalList(),
+    respond: (request) => removalList(request.persona),
     samples: ["/removals"],
   }),
   endpoint({

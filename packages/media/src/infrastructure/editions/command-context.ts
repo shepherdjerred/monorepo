@@ -9,6 +9,7 @@ import {
   visibilityAncestry,
   type VisibilitySections,
 } from "#infrastructure/visibility/access.ts";
+import { isLeavingSoon } from "#infrastructure/library/views/leaving-hold.ts";
 import { targetWhere } from "./targets.ts";
 import { canonicalRootId } from "./locks.ts";
 
@@ -58,7 +59,11 @@ export async function readDefaultCommandContext(
     })),
     allowedProtectiveActions: protectiveActions({
       owner,
-      effective: effective > 0,
+      // Anyone who can see a title that is leaving soon may hold it for 30 days.
+      mayKeep:
+        owner ||
+        effective > 0 ||
+        (detail && (await isLeavingSoon(tx, mediaId))),
       targetExists: target !== null,
       ownActiveRequest: ownRequests.some((request) => request.active),
     }),
@@ -87,12 +92,12 @@ export async function readDefaultCommandContext(
 
 function protectiveActions(input: {
   owner: boolean;
-  effective: boolean;
+  mayKeep: boolean;
   targetExists: boolean;
   ownActiveRequest: boolean;
 }) {
   return [
-    ...(input.owner || input.effective ? ["keep"] : []),
+    ...(input.mayKeep ? ["keep"] : []),
     ...(input.owner ? ["pin", ...(input.targetExists ? ["unpin"] : [])] : []),
     ...((input.owner && input.targetExists) || input.ownActiveRequest
       ? ["cancel_request"]

@@ -1,4 +1,5 @@
 import type { MediaActor } from "#application/auth.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
 import { requireOwner } from "#application/errors.ts";
 import type { MediaApplication } from "#application/ports.ts";
 import type { MovieLifecycleApplicationV4 } from "#application/movie-lifecycle-ports-v4.ts";
@@ -39,6 +40,17 @@ import {
   readMovieEditionRequests,
 } from "./movie-editions/view.ts";
 import { captureMovieActionAccessV4 } from "./movie-editions/lifecycle/public/public-access.ts";
+
+/**
+ * A series request fans out into one claim per episode, and the list holds 200
+ * rows. What a person asked for comes first, so a long series' episode claims
+ * can never push a direct request off the list; each group is newest first.
+ */
+const requestListOrder = [
+  { direct: "desc" },
+  { updatedAt: "desc" },
+  { id: "desc" },
+] satisfies Prisma.MediaRequestOrderByWithRelationInput[];
 
 export class PrismaMediaApplication
   extends PrismaMediaCommands
@@ -160,7 +172,7 @@ export class PrismaMediaApplication
     const selected = await this.db.mediaRequest.findMany({
       where: actor.role === "owner" ? {} : { userId: actor.id },
       select: { mediaId: true },
-      orderBy: { updatedAt: "desc" },
+      orderBy: requestListOrder,
       take: 200,
     });
     const candidates = await this.db.assetCoverage.findMany({
@@ -199,7 +211,7 @@ export class PrismaMediaApplication
       const requests = await tx.mediaRequest.findMany({
         where: actor.role === "owner" ? {} : { userId: actor.id },
         include: { media: { include: visibilityAncestry } },
-        orderBy: { updatedAt: "desc" },
+        orderBy: requestListOrder,
         take: 200,
       });
       const projected = await projectExternalRequests(tx, actor, requests, {
@@ -299,7 +311,10 @@ export class PrismaMediaApplication
   }
 
   removals(actor: MediaActor) {
-    return readRemovalList(this.db, actor);
+    return readRemovalList(this.db, actor, {
+      serverMachineId: this.settings.serverMachineId,
+      sections: this.visibilitySections ?? this.settings.sections,
+    });
   }
 
   async notifications(actor: MediaActor) {

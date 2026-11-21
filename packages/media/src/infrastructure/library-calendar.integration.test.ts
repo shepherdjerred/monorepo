@@ -11,6 +11,15 @@ import {
 import { LibraryQuerySchema } from "#shared/household/library.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
+import type { MediaActor } from "#application/auth.ts";
+import {
+  daysAgo,
+  libraryEpisode,
+  libraryHousehold,
+  libraryMember,
+  librarySeason,
+  libraryTitle,
+} from "#infrastructure/library/views/library.test-support.ts";
 
 const harness = automationTestHarness();
 const settings = {
@@ -104,6 +113,16 @@ test("library and calendar show proved external presence without taking ownershi
   expect(await db.libraryAsset.findMany({ orderBy: { id: "asc" } })).toEqual(
     before,
   );
+  // The availability filter follows the proof, not the title's own state.
+  const filtered = async (availability: string) => {
+    const page = await library.list(
+      fixture.owner,
+      LibraryQuerySchema.parse({ query: fixture.media.title, availability }),
+    );
+    return page.items.map((row) => row.id);
+  };
+  expect(await filtered("available")).toEqual([fixture.media.id]);
+  expect(await filtered("unavailable")).toEqual([]);
   await db.plexIdentityMapping.update({
     where: { userId: fixture.owner.id },
     data: { verifiedAt: new Date(Date.now() - 301_000) },
@@ -367,4 +386,293 @@ test("calendar and removal history episodes retain their followed series identit
     rootMediaId: series.id,
     artwork: art,
   });
+});
+
+type LibraryItems = Awaited<
+  ReturnType<PrismaLibraryApplication["list"]>
+>["items"];
+
+/** Follow `nextCursor` until the library runs out, as "load more" does. */
+async function readLibrary(
+  actor: MediaActor,
+  query: Record<string, string | number>,
+) {
+  const library = new PrismaLibraryApplication(harness.database(), settings);
+  const sizes: number[] = [];
+  const items: LibraryItems = [];
+  let cursor: string | null = null;
+  do {
+    const page: Awaited<ReturnType<typeof library.list>> = await library.list(
+      actor,
+      LibraryQuerySchema.parse({ ...query, cursor }),
+    );
+    sizes.push(page.items.length);
+    items.push(...page.items);
+    cursor = page.nextCursor;
+  } while (cursor !== null);
+  return { sizes, items, ids: items.map((item) => item.id) };
+}
+
+async function libraryIds(
+  actor: MediaActor,
+  query: Record<string, string | number>,
+) {
+  const read = await readLibrary(actor, query);
+  return read.ids;
+}
+
+function ids(...rows: { id: string }[]) {
+  return rows.map((row) => row.id);
+}
+
+test("the library pages by title and by date added, an upgrade does not move a title, and a cursor pages only the sort that issued it", async () => {
+  const db = harness.database();
+  const tag = crypto.randomUUID();
+  const reader = await libraryMember(db, { sections: ["1", "2"] });
+  const recorded = {
+    alpha: daysAgo(30),
+    bravo: daysAgo(50),
+    episode: daysAgo(1),
+    tied: daysAgo(10),
+  };
+  const playing = { availability: "available" } as const;
+  const alpha = await libraryTitle(db, `${tag} Alpha`, {
+    ...playing,
+    keep: true,
+    files: [{ recordedAt: recorded.alpha, current: true }],
+  });
+  // Upgraded two days ago; the file it replaced was recorded fifty days ago.
+  const bravo = await libraryTitle(db, `${tag} Bravo`, {
+    ...playing,
+    followers: [reader.id],
+    files: [
+      { recordedAt: recorded.bravo, current: false },
+      { recordedAt: daysAgo(2), current: true },
+    ],
+  });
+  // Asked for, nothing yet.
+  const charlie = await libraryTitle(db, `${tag} Charlie`, {
+    followers: [reader.id],
+  });
+  // A series is as new as its newest playable episode.
+  const delta = await libraryTitle(db, `${tag} Delta`, {
+    kind: "series",
+    followers: [reader.id],
+  });
+  const season = await librarySeason(db, delta.id, 1);
+  await libraryEpisode(db, delta.id, {
+    ...playing,
+    season: 1,
+    number: 1,
+    files: [{ recordedAt: daysAgo(40), current: true }],
+  });
+  await libraryEpisode(db, season.id, {
+    ...playing,
+    season: 1,
+    number: 2,
+    files: [{ recordedAt: recorded.episode, current: true }],
+  });
+  await libraryEpisode(db, season.id, { season: 1, number: 3 });
+  // Its only file was removed: nothing to play, so no date.
+  const echo = await libraryTitle(db, `${tag} Echo`, {
+    keep: true,
+    files: [{ recordedAt: daysAgo(5), current: false }],
+  });
+  const tied = [];
+  for (const name of ["Foxtrot", "Golf"])
+    tied.push(
+      await libraryTitle(db, `${tag} ${name}`, {
+        ...playing,
+        keep: true,
+        files: [{ recordedAt: recorded.tied, current: true }],
+      }),
+    );
+  const [foxtrot, golf] = tied;
+  if (foxtrot === undefined || golf === undefined)
+    throw new Error("Missing tied titles");
+
+  const byTitle = await readLibrary(reader, { query: tag, limit: 3 });
+  expect(byTitle.sizes).toEqual([3, 3, 1]);
+  expect(byTitle.ids).toEqual(
+    [alpha, bravo, charlie, delta, echo, foxtrot, golf].map((row) => row.id),
+  );
+  expect(
+    Object.fromEntries(byTitle.items.map((item) => [item.id, item.addedAt])),
+  ).toEqual({
+    [alpha.id]: recorded.alpha.toISOString(),
+    [bravo.id]: recorded.bravo.toISOString(),
+    [charlie.id]: null,
+    [delta.id]: recorded.episode.toISOString(),
+    [echo.id]: null,
+    [foxtrot.id]: recorded.tied.toISOString(),
+    [golf.id]: recorded.tied.toISOString(),
+  });
+
+  // Newest first, ties by id, and only what can be played.
+  const newestFirst = [
+    delta,
+    ...[foxtrot, golf].sort((left, right) => (left.id < right.id ? 1 : -1)),
+    alpha,
+    bravo,
+  ].map((row) => row.id);
+  const byAdded = await readLibrary(reader, {
+    query: tag,
+    sort: "added",
+    limit: 1,
+  });
+  expect(byAdded.sizes).toEqual([1, 1, 1, 1, 1]);
+  expect(byAdded.ids).toEqual(newestFirst);
+  expect(byAdded.items.map((item) => item.addedAt)).toEqual(
+    [
+      recorded.episode,
+      recorded.tied,
+      recorded.tied,
+      recorded.alpha,
+      recorded.bravo,
+    ].map((date) => date.toISOString()),
+  );
+  expect(
+    await libraryIds(reader, { query: tag, sort: "added", limit: 50 }),
+  ).toEqual(newestFirst);
+
+  const library = new PrismaLibraryApplication(db, settings);
+  const cursors = {
+    title: await library.list(
+      reader,
+      LibraryQuerySchema.parse({ query: tag, limit: 1 }),
+    ),
+    added: await library.list(
+      reader,
+      LibraryQuerySchema.parse({ query: tag, sort: "added", limit: 1 }),
+    ),
+  };
+  expect(JSON.parse(cursors.title.nextCursor ?? "null")).toEqual({
+    title: alpha.title,
+    id: alpha.id,
+  });
+  expect(JSON.parse(cursors.added.nextCursor ?? "null")).toEqual({
+    addedAt: recorded.episode.toISOString(),
+    id: delta.id,
+  });
+  for (const mismatch of [
+    { sort: "added", cursor: cursors.title.nextCursor },
+    { sort: "title", cursor: cursors.added.nextCursor },
+    { cursor: cursors.added.nextCursor },
+  ])
+    expect(
+      LibraryQuerySchema.safeParse({ query: tag, ...mismatch }).success,
+    ).toBe(false);
+});
+
+test("library filters, episode counts and leaving soon agree with what each row reports, for the reader who may see it", async () => {
+  const db = harness.database();
+  const tag = crypto.randomUUID();
+  const { reader, housemate, owner, title, leavesAt } = await libraryHousehold(
+    db,
+    tag,
+  );
+  const { a, b, c, d, e, f, g, h, i, j, k, l, m, n } = title;
+  const everything = await readLibrary(reader, { query: tag, limit: 50 });
+  // H sits in a Plex library the reader may not open.
+  expect(everything.ids).toEqual(ids(a, b, c, d, e, f, g, i, j, k, l, m, n));
+  const shown = (id: string) => {
+    const item = everything.items.find((row) => row.id === id);
+    if (item === undefined) throw new Error("Title missing from the library");
+    return item;
+  };
+
+  const byPolicy = {
+    keep: ids(a, b, k, l, m, n),
+    temporary: ids(c, d, i),
+    unclassified: ids(e, f, g, j),
+  };
+  for (const [policy, expected] of Object.entries(byPolicy)) {
+    const page = await readLibrary(reader, { query: tag, policy, limit: 50 });
+    expect(page.ids, policy).toEqual(expected);
+    expect(page.items.every((item) => item.policy === policy)).toBe(true);
+  }
+  expect(
+    await libraryIds(owner, { query: tag, policy: "keep", limit: 50 }),
+  ).toEqual(ids(a, b, h, k, l, m, n));
+
+  const following = { query: tag, mine: "following", limit: 50 };
+  expect(await libraryIds(reader, following)).toEqual(ids(c, i));
+  expect(await libraryIds(housemate, following)).toEqual(ids(b, d));
+  expect(shown(e.id).myInterest).toBe("released");
+
+  // Leaving soon is the household's to see, whoever asked for the title.
+  const leaving = { query: tag, leaving: "soon", limit: 50 };
+  expect(await libraryIds(reader, leaving)).toEqual(ids(f, j));
+  expect(await libraryIds(owner, leaving)).toEqual(ids(f, h, j));
+  expect(shown(f.id).leavingSoon).toEqual({
+    state: "grace_period",
+    graceUntil: leavesAt.f.toISOString(),
+  });
+  // Three episodes are leaving; the series reports the first to go.
+  expect(shown(j.id).leavingSoon).toEqual({
+    state: "grace_period",
+    graceUntil: leavesAt.j.toISOString(),
+  });
+  // G has already left: quarantined is not leaving soon.
+  expect(shown(g.id).leavingSoon).toBeNull();
+  expect(
+    everything.items.filter((item) => item.leavingSoon !== null),
+  ).toHaveLength(2);
+  await db.retentionDecision.updateMany({
+    where: {
+      media: { OR: [{ parentId: j.id }, { parent: { parentId: j.id } }] },
+    },
+    data: { state: "warning_pending", graceUntil: null },
+  });
+  const waiting = await readLibrary(reader, { query: `${tag} J` });
+  expect(waiting.items[0]?.leavingSoon).toEqual({
+    state: "warning_pending",
+    graceUntil: null,
+  });
+
+  expect(
+    Object.fromEntries(
+      everything.items.map((item) => [item.id, item.episodes]),
+    ),
+  ).toEqual({
+    ...Object.fromEntries(ids(a, b, c, d, e, f, g, n).map((id) => [id, null])),
+    [i.id]: { available: 1, total: 2 },
+    [j.id]: { available: 3, total: 3 },
+    // A special is not part of the regular run.
+    [k.id]: { available: 0, total: 0 },
+    [l.id]: { available: 0, total: 0 },
+    // Held in an external library: unknown, not zero.
+    [m.id]: null,
+  });
+  expect(ids(i, j, k, l, m).map((id) => shown(id).availability)).toEqual(
+    Array.from({ length: 5 }, () => null),
+  );
+
+  const available = { query: tag, availability: "available" };
+  const unavailable = { query: tag, availability: "unavailable" };
+  expect(await libraryIds(reader, { ...available, limit: 50 })).toEqual(
+    ids(a, d, e, f, i, j, m),
+  );
+  expect(await libraryIds(reader, { ...unavailable, limit: 50 })).toEqual(
+    ids(b, c, g, k, l, n),
+  );
+  // One title a page: H is hidden and N's external file is unproved, so two
+  // pages come back empty and still lead to the next.
+  const paged = await readLibrary(reader, { ...available, limit: 1 });
+  expect(paged.sizes).toEqual([1, 1, 1, 1, 0, 1, 1, 1, 0]);
+  expect(paged.ids).toEqual(ids(a, d, e, f, i, j, m));
+  const newest = await readLibrary(reader, {
+    ...available,
+    sort: "added",
+    limit: 1,
+  });
+  expect(newest.sizes).toEqual([0, 1, 1, 1, 1, 1, 0, 1, 1]);
+  expect(newest.ids).toEqual(ids(m, d, j, i, a, f, e));
+  // M may be there, so it counts as available; K and L have nothing.
+  const series = await readLibrary(reader, {
+    ...unavailable,
+    kind: "series",
+    limit: 1,
+  });
+  expect(series.sizes).toEqual([1, 1, 0]);
 });

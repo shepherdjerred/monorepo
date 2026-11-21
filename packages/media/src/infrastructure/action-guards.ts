@@ -7,6 +7,10 @@ import { effectiveRequestWhere } from "./request-claims.ts";
 import { authorizeRequester } from "./requester-authorization.ts";
 import { defaultScope, assertDefaultEdition } from "#shared/editions/scope.ts";
 import { readDefaultTarget } from "./editions/targets.ts";
+import {
+  mayHoldLeavingTitle,
+  type LeavingHoldSettings,
+} from "./library/views/leaving-hold.ts";
 
 export function assertOwnerAction(
   actor: MediaActor,
@@ -43,12 +47,21 @@ export async function authorizeRenewal(
   return current;
 }
 
+/**
+ * A member acts on a title through their own active request. The one
+ * exception is the 30-day hold: a title that is leaving soon may be kept by
+ * any member who can see it, whoever asked for it.
+ */
 export async function validateAction(
   db: Prisma.TransactionClient,
   actor: MediaActor,
-  mediaId: string,
-  input: MediaAction,
+  command: {
+    mediaId: string;
+    input: MediaAction;
+    visibility: LeavingHoldSettings;
+  },
 ): Promise<void> {
+  const { mediaId, input } = command;
   const media = await db.mediaItem.findUnique({ where: { id: mediaId } });
   if (media === null)
     throw new MediaError("media_not_found", "Media item does not exist", 404);
@@ -56,7 +69,13 @@ export async function validateAction(
     const claim = await db.mediaRequest.findFirst({
       where: { userId: actor.id, mediaId, ...effectiveRequestWhere },
     });
-    if (claim?.active !== true)
+    if (
+      claim?.active !== true &&
+      !(
+        input.action === "keep" &&
+        (await mayHoldLeavingTitle(db, actor, mediaId, command.visibility))
+      )
+    )
       throw new MediaError(
         "request_required",
         "An active request is required for this action",

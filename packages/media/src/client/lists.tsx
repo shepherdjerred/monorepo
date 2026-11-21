@@ -99,14 +99,15 @@ export function RemovalsPage({ user }: { user: MediaUser }) {
       <PageTitle title="Leaving soon">
         <p>
           Titles leave when no one is following and no permanent Keep remains.
-          You’ll have time to change your mind before Media removes the files.
+          Everyone in the household sees what is leaving, and there is time to
+          keep a title before Media removes the files.
         </p>
       </PageTitle>
       <Notice>
         Use My requests to keep watching, or Library to change permanent
         keeping. Titles have seven days in Leaving Soon and another seven days
-        in recoverable quarantine. A 30-day protection hold remains available
-        here.
+        in recoverable quarantine. Anyone can place a 30-day protection hold
+        here, whoever asked for the title.
       </Notice>
       {removals.isPending && <Loading />}
       {removals.error !== null && <ErrorNotice error={removals.error} />}
