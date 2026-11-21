@@ -7,7 +7,9 @@ import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/comm
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   MEDIA_APPLICATION_LABEL,
+  MEDIA_ARTWORK_CACHE,
   MEDIA_PUBLIC_ORIGIN,
+  mediaArtworkCacheEnvironment,
   mediaDatabaseEnvironment,
   mediaFeatureFlagEnvironment,
 } from "./environment.ts";
@@ -47,6 +49,12 @@ export function createMediaApi(
       },
       securityContext: { fsGroup: 1000 },
     },
+    // Recreate stops the old pod before the new one mounts the single-writer claim.
+    data: {
+      id: MEDIA_ARTWORK_CACHE.claim,
+      storage: Size.gibibytes(MEDIA_ARTWORK_CACHE.gibibytes),
+      path: MEDIA_ARTWORK_CACHE.path,
+    },
     containers: () => ({
       init: [
         {
@@ -68,6 +76,7 @@ export function createMediaApi(
         envVariables: {
           ...database,
           ...mediaFeatureFlagEnvironment(),
+          ...mediaArtworkCacheEnvironment(),
           ...Object.fromEntries(
             [
               "MEDIA_CREDENTIAL_KEY",

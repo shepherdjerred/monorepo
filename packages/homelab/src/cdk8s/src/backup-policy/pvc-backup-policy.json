@@ -331,6 +331,12 @@
   },
   {
     "namespace": "media",
+    "name": "media-artwork-cache",
+    "backup": "disabled",
+    "reason": "Rebuildable TMDB artwork cache for the Media API - refetched on demand"
+  },
+  {
+    "namespace": "media",
     "name": "pgdata-media-postgresql-0",
     "backup": "enabled",
     "reason": "Media requests, library ownership, runtime authority and durable recovery receipts"
