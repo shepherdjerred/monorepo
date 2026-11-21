@@ -5,6 +5,41 @@ import { createCatalogActivities } from "./catalog.ts";
 
 const { database, context } = automationTestHarness();
 
+const seriesArtwork = {
+  posterPath: "/series-poster.jpg",
+  backdropPath: "/series-backdrop.jpg",
+  overview: "A series synopsis.",
+  artworkObservedAt: expect.any(Date),
+};
+
+/** A title that predates artwork: only a later refresh can observe it. */
+async function forgetArtwork(mediaId: string) {
+  await database().mediaItem.update({
+    where: { id: mediaId },
+    data: {
+      posterPath: null,
+      backdropPath: null,
+      overview: null,
+      artworkObservedAt: null,
+    },
+  });
+}
+
+/** Seasons and episodes carry no artwork of their own. */
+function childrenWithArtwork() {
+  return database().mediaItem.count({
+    where: {
+      kind: { in: ["season", "episode"] },
+      OR: [
+        { posterPath: { not: null } },
+        { backdropPath: { not: null } },
+        { overview: { not: null } },
+        { artworkObservedAt: { not: null } },
+      ],
+    },
+  });
+}
+
 test("series adoption queues bounded refresh with exact runtime and language evidence", async () => {
   let seasonCalls = 0;
   const ctx = context(async (url) => {
@@ -26,9 +61,10 @@ test("series adoption queues bounded refresh with exact runtime and language evi
         id: 123,
         name: "Series",
         original_name: "Series",
-        overview: "",
+        overview: "A series synopsis.",
         first_air_date: "2020-01-01",
-        poster_path: null,
+        poster_path: "/series-poster.jpg",
+        backdrop_path: "/series-backdrop.jpg",
         original_language: "ja",
         status: "Ended",
         seasons: [
@@ -94,6 +130,10 @@ test("series adoption queues bounded refresh with exact runtime and language evi
     operationId: operation.id,
     cursor: null,
   };
+  expect(
+    await db.mediaItem.findUniqueOrThrow({ where: { id: adopted.mediaId } }),
+  ).toMatchObject(seriesArtwork);
+  await forgetArtwork(adopted.mediaId);
   const worker = createCatalogActivities(ctx);
   expect(await worker.refreshMediaCatalog(input)).toEqual({
     processed: 25,
@@ -105,7 +145,9 @@ test("series adoption queues bounded refresh with exact runtime and language evi
     seriesStatus: "ended",
     seriesStatusObservedAt: expect.any(Date),
     catalogCompletedAt: null,
+    ...seriesArtwork,
   });
+  expect(await childrenWithArtwork()).toBe(0);
   expect(await db.mediaItem.count({ where: { kind: "episode" } })).toBe(25);
   // Completion lost after commit: the database cursor resumes without refetch.
   expect(await worker.refreshMediaCatalog(input)).toEqual({

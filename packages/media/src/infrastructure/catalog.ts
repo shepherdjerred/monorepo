@@ -7,7 +7,10 @@ import {
   loadMovieCatalogIdentity,
   loadSeriesCatalogIdentity,
 } from "./catalog-identity/catalog.ts";
-import { persistCatalogMedia } from "./catalog-identity/persist.ts";
+import {
+  catalogArtwork,
+  persistCatalogMedia,
+} from "./catalog-identity/persist.ts";
 import {
   normalizeMovieReleases,
   seriesLifecycleStatus,
@@ -92,6 +95,7 @@ export class TmdbCatalogApplication implements CatalogApplication {
           runtimeMinutes: movie.runtime,
           originalLanguage: movie.original_language,
           identity,
+          artwork: catalogArtwork(movie),
           releaseDates: normalizeMovieReleases(
             movie.release_dates?.results ?? [],
           ),
@@ -112,6 +116,7 @@ export class TmdbCatalogApplication implements CatalogApplication {
         originalLanguage: series.original_language,
         runtimeMinutes: null,
         identity,
+        artwork: catalogArtwork(series),
         seriesStatus: seriesLifecycleStatus(series.status),
       });
       await queueOperation(db, {

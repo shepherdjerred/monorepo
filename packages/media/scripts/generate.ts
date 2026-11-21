@@ -53,6 +53,10 @@ const householdFields = new Set([
   "seriesStatusObservedAt",
   "catalogCompletedAt",
   "releaseDates",
+  "posterPath",
+  "backdropPath",
+  "overview",
+  "artworkObservedAt",
 ]);
 const historicalSource = source
   .replaceAll(

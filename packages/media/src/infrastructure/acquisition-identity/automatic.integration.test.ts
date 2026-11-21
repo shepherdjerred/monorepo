@@ -156,6 +156,7 @@ async function automaticFixture(
           originalLanguage: "en",
           runtimeMinutes: 120,
           identity: { ...identity, evidenceDigest: identityHash(identity) },
+          artwork: { posterPath: null, backdropPath: null, overview: null },
         }),
     );
   }

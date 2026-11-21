@@ -542,6 +542,10 @@ model MediaItem {
   seriesStatus String?
   seriesStatusObservedAt DateTime?
   catalogCompletedAt DateTime?
+  posterPath String?
+  backdropPath String?
+  overview String?
+  artworkObservedAt DateTime?
   releaseDates MediaReleaseDate[]
   subtitlePolicies MediaSubtitlePolicyVersion[]
   recoveryHolds RecoveryHold[]

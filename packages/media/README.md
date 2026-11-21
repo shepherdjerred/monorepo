@@ -1564,6 +1564,22 @@ establish upstream identifier support. Rediscovery with changed attribution
 cannot rewrite an existing candidate snapshot, even before it has an attempt.
 Historical primary-title-only sources keep their original bytes and hashes.
 
+The same adoption and refresh writes store a movie's or series' TMDB poster
+path, backdrop path and synopsis with the time they were observed; seasons and
+episodes have none. Artwork is presentation, not command state: it is written
+in the catalog transaction under the canonical lock but never advances the
+media `version` that commands compare against. A kept or followed title is
+refreshed every six-hour due sweep. Any other owned title is queued for the same
+`refresh_catalog` only until its artwork has been observed once, which is how
+existing titles are backfilled; an empty observation counts, so a title TMDB has
+no images for is not asked about again. Each 50-row due page queues at most ten
+titles for artwork alone, so a first backfill adds at most one refresh for every
+five rows a sweep visits. That budget rotates with the six-hour period: the page
+is scanned as a ring from a start that advances ten rows each period, so every
+waiting title is tried at least once in any five consecutive periods. A title
+whose refresh keeps failing, such as one TMDB has removed, stays unobserved and
+is retried on its turn, but it cannot keep the titles after it from theirs.
+
 The owner numbering API reads `GET /api/v1/admin/numbering/series/:id/groups`
 and `GET /api/v1/admin/numbering/series/:id/groups/:groupId`. Only a listed TMDB
 Absolute group can produce `POST .../series/:id/group-preview`. The owner chooses

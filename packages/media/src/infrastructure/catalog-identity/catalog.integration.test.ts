@@ -13,6 +13,15 @@ test("movie and series catalog namespaces retain aliases and refresh without era
   const id = ++nextId;
   let alternate = "Initial alias";
   let movieImdb = "tt0004000";
+  let artwork: {
+    overview: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
+  } = {
+    overview: "First synopsis.",
+    poster_path: "/first-poster.jpg",
+    backdrop_path: "/first-backdrop.jpg",
+  };
   const ctx = harness.context((url) => {
     if (url.pathname.endsWith("alternative_titles"))
       return Promise.resolve(
@@ -36,12 +45,7 @@ test("movie and series catalog namespaces retain aliases and refresh without era
       return Promise.resolve(
         Response.json({ id, tvdb_id: 765, imdb_id: "tt0005000" }),
       );
-    const common = {
-      id,
-      overview: "",
-      poster_path: null,
-      original_language: "ja",
-    };
+    const common = { id, ...artwork, original_language: "ja" };
     return Promise.resolve(
       Response.json(
         url.pathname.includes("/movie/")
@@ -70,6 +74,16 @@ test("movie and series catalog namespaces retain aliases and refresh without era
   const movieRow = await db.mediaItem.findUniqueOrThrow({
     where: { id: movie.mediaId },
   });
+  const stored = {
+    posterPath: "/first-poster.jpg",
+    backdropPath: "/first-backdrop.jpg",
+    overview: "First synopsis.",
+    artworkObservedAt: expect.any(Date),
+  };
+  expect(movieRow).toMatchObject({ version: 0, ...stored });
+  expect(
+    await db.mediaItem.findUniqueOrThrow({ where: { id: series.mediaId } }),
+  ).toMatchObject({ version: 0, ...stored });
   const ids = z.record(z.string(), z.json()).parse(movieRow.externalIds);
   await db.mediaItem.update({
     where: { id: movie.mediaId },
@@ -113,10 +127,26 @@ test("movie and series catalog namespaces retain aliases and refresh without era
       },
     },
   });
+  // Only the artwork changes here, and artwork is not command state: the
+  // version every media command compares against must not move.
+  artwork = {
+    overview: "",
+    poster_path: "/second-poster.jpg",
+    backdrop_path: null,
+  };
   await app.adopt("movie", id);
-  expect(
-    await db.mediaItem.findUniqueOrThrow({ where: { id: movie.mediaId } }),
-  ).toMatchObject({ version: 1 });
+  const repainted = await db.mediaItem.findUniqueOrThrow({
+    where: { id: movie.mediaId },
+  });
+  expect(repainted).toMatchObject({
+    version: 1,
+    posterPath: "/second-poster.jpg",
+    backdropPath: null,
+    overview: null,
+  });
+  expect(repainted.artworkObservedAt?.getTime()).toBeGreaterThanOrEqual(
+    refreshed.artworkObservedAt?.getTime() ?? Number.NaN,
+  );
   movieImdb = "tt0009999";
   await expect(app.adopt("movie", id)).rejects.toThrow(
     "conflicts with existing mapping",
@@ -192,6 +222,7 @@ test.each([
             originalLanguage: "en",
             runtimeMinutes: 90,
             identity: variant === "stored-wrong-kind" ? valid : changed,
+            artwork: { posterPath: null, backdropPath: null, overview: null },
           }),
         { isolationLevel: "Serializable" },
       ),

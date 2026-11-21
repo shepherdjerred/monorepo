@@ -22,6 +22,7 @@ export function futureSeriesCatalog(title: string, tmdbId: number) {
             overview: "",
             first_air_date: "2020-01-01",
             poster_path: null,
+            backdrop_path: null,
             original_language: "en",
             seasons: [
               {

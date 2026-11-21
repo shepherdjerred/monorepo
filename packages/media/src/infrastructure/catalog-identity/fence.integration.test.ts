@@ -191,6 +191,7 @@ test.each(["manual", "group", "catalog"] as const)(
               original_language: "en",
               overview: "",
               poster_path: null,
+              backdrop_path: null,
               first_air_date: "2020-01-01",
               seasons: [],
             }),

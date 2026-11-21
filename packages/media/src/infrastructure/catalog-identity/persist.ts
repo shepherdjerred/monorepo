@@ -10,20 +10,67 @@ import {
   type MovieReleaseDate,
 } from "#shared/household/calendar.ts";
 
+export type CatalogArtwork = {
+  posterPath: string | null;
+  backdropPath: string | null;
+  overview: string | null;
+};
+
+/** TMDB sends an empty synopsis for a title that has none; that is absence. */
+export function catalogArtwork(details: {
+  poster_path: string | null;
+  backdrop_path: string | null;
+  overview: string;
+}): CatalogArtwork {
+  return {
+    posterPath: details.poster_path,
+    backdropPath: details.backdrop_path,
+    overview: details.overview === "" ? null : details.overview,
+  };
+}
+
+type CatalogMediaInput = {
+  kind: "movie" | "series";
+  tmdbId: number;
+  title: string;
+  year: number | null;
+  originalLanguage: string;
+  runtimeMinutes: number | null;
+  identity: CatalogIdentity;
+  artwork: CatalogArtwork;
+  seriesStatus?: z.infer<typeof SeriesStatusSchema>;
+  releaseDates?: MovieReleaseDate[];
+  observedAt?: Date;
+};
+
+/**
+ * Artwork is presentation and never command state. It is written after the
+ * versioned catalog fields, in the same transaction and under the same
+ * canonical lock, and deliberately leaves `version` alone: that number is the
+ * optimistic-concurrency token of every media command, and a changed poster
+ * must not invalidate one.
+ */
 export async function persistCatalogMedia(
   tx: Prisma.TransactionClient,
-  input: {
-    kind: "movie" | "series";
-    tmdbId: number;
-    title: string;
-    year: number | null;
-    originalLanguage: string;
-    runtimeMinutes: number | null;
-    identity: CatalogIdentity;
-    seriesStatus?: z.infer<typeof SeriesStatusSchema>;
-    releaseDates?: MovieReleaseDate[];
-    observedAt?: Date;
-  },
+  input: CatalogMediaInput,
+) {
+  const observedAt = input.observedAt ?? new Date();
+  const item = await persistVersionedCatalog(tx, input, observedAt);
+  return await tx.mediaItem.update({
+    where: { id: item.id },
+    data: {
+      posterPath: input.artwork.posterPath,
+      backdropPath: input.artwork.backdropPath,
+      overview: input.artwork.overview,
+      artworkObservedAt: observedAt,
+    },
+  });
+}
+
+async function persistVersionedCatalog(
+  tx: Prisma.TransactionClient,
+  input: CatalogMediaInput,
+  observedAt: Date,
 ) {
   const existing = await tx.mediaItem.findUnique({
     where: { kind_tmdbId: { kind: input.kind, tmdbId: input.tmdbId } },
@@ -57,7 +104,6 @@ export async function persistCatalogMedia(
         ...(input.kind === "series" ? { catalogState: "pending" } : {}),
       },
     }));
-  const observedAt = input.observedAt ?? new Date();
   if (input.seriesStatus !== undefined)
     await tx.mediaItem.update({
       where: { id: item.id },

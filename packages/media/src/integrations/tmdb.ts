@@ -22,6 +22,7 @@ const MovieSchema = z.object({
   overview: z.string(),
   release_date: z.union([z.literal(""), z.iso.date()]),
   poster_path: z.string().nullable(),
+  backdrop_path: z.string().nullable(),
   original_language: z.string(),
 });
 const SeriesSchema = z.object({
@@ -31,6 +32,7 @@ const SeriesSchema = z.object({
   overview: z.string(),
   first_air_date: z.union([z.literal(""), z.iso.date()]),
   poster_path: z.string().nullable(),
+  backdrop_path: z.string().nullable(),
   original_language: z.string(),
 });
 const SearchSchema = z.object({

@@ -9,6 +9,7 @@ export const SYSTEM_MOVIE = {
   overview: "Generated media used only in the isolated system harness.",
   release_date: "2020-01-01",
   poster_path: null,
+  backdrop_path: null,
   original_language: "en",
   imdb_id: "tt987654321",
   runtime: 1,
