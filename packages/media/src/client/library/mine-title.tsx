@@ -43,7 +43,7 @@ function what(ask: MineAsk): string {
   const { request, movie, interest } = ask;
   if (movie?.access === "detail") {
     if (movie.fulfillment.status === "pending_choice") {
-      return "The film, edition not chosen yet";
+      return "The film, version not chosen yet";
     }
     // The default edition is the film as released; only a named cut is
     // worth naming.

@@ -5,7 +5,7 @@ import type { Copy } from "./copy.ts";
 /** Where a film request for a particular edition stands. */
 export const MOVIE_FULFILLMENT_COPY = {
   not_applicable: { label: "Asked for", tone: "neutral" },
-  pending_choice: { label: "Needs your edition choice", tone: "warn" },
+  pending_choice: { label: "Choose a version", tone: "warn" },
   pending_edition: { label: "Waiting for that edition", tone: "progress" },
   pending_asset: { label: "Waiting for a copy", tone: "progress" },
   protected: { label: "On hold", tone: "warn" },
