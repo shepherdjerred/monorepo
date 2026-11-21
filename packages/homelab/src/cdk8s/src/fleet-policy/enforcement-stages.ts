@@ -21,7 +21,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   arcade: "open",
   argocd: "open",
   birmel: "enforced",
-  bugsink: "open",
+  bugsink: "enforced",
   buildkitd: "open",
   ddns: "open",
   delivery: "open",
