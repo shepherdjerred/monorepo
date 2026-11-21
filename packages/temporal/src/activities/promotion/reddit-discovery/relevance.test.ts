@@ -150,11 +150,26 @@ describe("Reddit draft evidence contract", () => {
     expect(guardRedditInviteDraft(invite, input)).toEqual(invite);
   });
 
+  it("accepts a plain paragraph with the bare invite on its own line", () => {
+    const draft = {
+      ...invite,
+      reply:
+        "hi! our server supports Java and Bedrock with towns.\nhttps://join.ts-mc.net/",
+    };
+    expect(guardRedditInviteDraft(draft, input)).toEqual(draft);
+  });
+
   it.each([
     { reply: "our server: https://other.example/" },
     { reply: "our server: https://join.ts-mc.net/ and https://other.example/" },
     { reply: "our server: https://join.ts-mc.net/ https://join.ts-mc.net/" },
     { reply: "I play here and love it: https://join.ts-mc.net/" },
+    { reply: "hi, **our server** supports that!\nhttps://join.ts-mc.net/" },
+    { reply: "> our server supports that!\nhttps://join.ts-mc.net/" },
+    { reply: "1. our server supports that!\nhttps://join.ts-mc.net/" },
+    {
+      reply: "our server supports Java &amp; Bedrock.\nhttps://join.ts-mc.net/",
+    },
     {
       reply:
         "hi! our server has quests. we have towns. come join. https://join.ts-mc.net/",
