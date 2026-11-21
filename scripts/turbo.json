@@ -55,7 +55,12 @@
         "$TURBO_ROOT$/packages/version-catalog/src/image-registry.json",
         "$TURBO_ROOT$/packages/homelab/src/delivery-target-policy.ts",
         "$TURBO_ROOT$/packages/homelab/src/cdk8s/helm/*/Chart.yaml",
-        "$TURBO_ROOT$/packages/delivery/registrations/v2/**/recipe.json"
+        "$TURBO_ROOT$/packages/delivery/registrations/v2/**/recipe.json",
+        // tools/knip.test.ts reads the root Knip graph and every workspace
+        // Prisma schema, so a new client producer must rerun that test.
+        "$TURBO_ROOT$/turbo.json",
+        "$TURBO_ROOT$/packages/**/prisma/schema.prisma",
+        "$TURBO_ROOT$/packages/**/package.json"
       ]
     },
     "test:ci": {
