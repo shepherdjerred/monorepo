@@ -194,6 +194,9 @@ ARG CONTRACT_HASH=dev
 ENV VERSION=${VERSION}
 ENV GIT_SHA=${GIT_SHA}
 ENV CONTRACT_HASH=${CONTRACT_HASH}
+# The Prisma CLI runs at container start (migrations); keep its update-check
+# telemetry (checkpoint.prisma.io) off so it never attempts denied egress.
+ENV CHECKPOINT_DISABLE=1
 
 # scout serves an HTTP health/metrics server on PORT (default 3000).
 EXPOSE 3000

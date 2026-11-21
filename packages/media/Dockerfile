@@ -42,6 +42,9 @@ WORKDIR /app/packages/media
 RUN bunx --no-install --trust prisma generate \
     && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 ENV NODE_ENV=production HOME=/tmp
+# The Prisma CLI runs at container start (migrations); keep its update-check
+# telemetry (checkpoint.prisma.io) off so it never attempts denied egress.
+ENV CHECKPOINT_DISABLE=1
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 EXPOSE 7352
 USER 1000:1000

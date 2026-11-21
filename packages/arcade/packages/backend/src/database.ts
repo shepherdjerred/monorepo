@@ -14,6 +14,9 @@ export async function initializeDatabase(databasePath: string): Promise<void> {
     cwd: backend,
     env: {
       ...runtimeEnvironment(),
+      // The child gets an allowlisted environment, so an image-level ENV would
+      // not reach it: disable the CLI's checkpoint.prisma.io telemetry here.
+      CHECKPOINT_DISABLE: "1",
       DATABASE_URL: `file:${path.resolve(databasePath)}`,
     },
     stdout: "inherit",

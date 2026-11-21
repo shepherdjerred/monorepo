@@ -65,6 +65,9 @@ RUN cd packages/tasknotes-server && CHECKPOINT_DISABLE=1 bunx --no-install --tru
   && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 
 ENV NODE_ENV=production
+# The Prisma CLI runs at container start (migrations); keep its update-check
+# telemetry (checkpoint.prisma.io) off so it never attempts denied egress.
+ENV CHECKPOINT_DISABLE=1
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
 # tasknotes-server serves on PORT (default 3000) with no external auth at boot.
