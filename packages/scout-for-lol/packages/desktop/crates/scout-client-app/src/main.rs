@@ -308,7 +308,9 @@ fn with_chat_and_voice(
         origin.clone(),
         scout_client_runtime::runtime::explore_cache_directory(),
     );
-    let supervisor = supervisor.with_chat(chat.clone());
+    let supervisor = supervisor
+        .with_chat(chat.clone())
+        .with_reviews(Box::new(supervisor::ScoutReviews::new(origin.clone())));
     let inputs = VoiceInputs {
         chat: Some(chat),
         ..voice_inputs

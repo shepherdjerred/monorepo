@@ -85,6 +85,12 @@ pub struct RuntimeState {
     /// champion select so Scout can warn that exclusive fullscreen hides the
     /// in-game overlay. None outside champion select.
     pub game_window_mode: Option<GameWindowMode>,
+    /// The League game id of the game this device last saw end, while this
+    /// collector runs. Paired devices only.
+    pub ended_game_id: Option<String>,
+    /// The Riot match ids of the newest match-history page, newest first.
+    /// Paired devices only.
+    pub recent_match_ids: Vec<String>,
     last_runtime_error: Option<String>,
     last_replay_error: Option<String>,
 }

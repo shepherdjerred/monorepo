@@ -405,6 +405,9 @@ fn remember_game_timing(
 }
 
 pub(super) const IN_PROGRESS_GAME_KEY: &str = "in_progress_game";
+/// The game this device last saw end, by League game id; the supervisor looks
+/// for its post-game review once the match history names its platform.
+pub(super) const ENDED_GAME_KEY: &str = "ended_game";
 
 /// Record the gameflow transition out of `InProgress` as an end witness.
 ///
@@ -444,6 +447,7 @@ pub(super) fn witness_game_end(
         return Ok(());
     };
     let game_id = String::from_utf8(previous).map_err(|error| error.to_string())?;
+    payloads.insert(ENDED_GAME_KEY.to_owned(), game_id.clone().into_bytes());
     outbox
         .remember_game_end(observer, &game_id, observed_at_millis)
         .map_err(|error| error.to_string())
@@ -639,6 +643,11 @@ mod tests {
         witness_game_end(&outbox, &mut payloads, "puuid", 9_000)?;
         let timing = outbox.pending_game_timing("puuid", "5653248720")?;
         assert_eq!(timing.map(|timing| timing.ended_at_millis), Some(9_000));
+        assert_eq!(
+            payloads.get(ENDED_GAME_KEY).map(Vec::as_slice),
+            Some(b"5653248720".as_slice()),
+            "the ended game is kept for its post-game review"
+        );
 
         // A later end-of-game observation must not move the witness later.
         outbox.remember_game_end("puuid", "5653248720", 20_000)?;

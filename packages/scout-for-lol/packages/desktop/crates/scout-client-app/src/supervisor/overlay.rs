@@ -13,6 +13,10 @@
 //! overlay that cannot start, reports itself unavailable, or dies is recorded
 //! and left down until the next game; nothing moves back.
 //!
+//! A post-game review that becomes ready after the game is held for the next
+//! game's overlay as a `review_ready` card; the expand key on that card opens
+//! the review in the main window.
+//!
 //! Proactive cards follow the build split: [`proactive_policy`] admits them
 //! only in the beta profile, and a stable build has no proactive coach panel
 //! to make one from.
@@ -38,6 +42,7 @@ use scout_overlay::{
 use sha2::{Digest as _, Sha256};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader, Lines};
 use tokio::process::{Child, ChildStdin, ChildStdout};
+use uuid::Uuid;
 
 use super::WindowLauncher;
 use crate::hotkeys::{OverlayKey, OverlayKeyPort, overlay_accelerator};
@@ -51,6 +56,7 @@ const WRITE_TIMEOUT: Duration = Duration::from_secs(5);
 const PLAN_TTL_SECS: u32 = 120;
 const ANSWER_TTL_SECS: u32 = 60;
 const STATUS_TTL_SECS: u32 = 30;
+const REVIEW_TTL_SECS: u32 = 120;
 #[cfg(scout_proactive_coach)]
 const PROACTIVE_TTL_SECS: u32 = 30;
 
@@ -167,6 +173,29 @@ pub(super) fn voice_card(state: VoiceState, turn: Option<&VoiceTurnView>) -> Opt
     })
 }
 
+/// The `review_ready` card for `match_id`'s review.
+#[must_use]
+pub(super) fn review_card(match_id: &str) -> OverlayCard {
+    OverlayCard {
+        id: format!("review-{match_id}"),
+        kind: CardKind::ReviewReady,
+        title: "Your last game's review is ready".to_owned(),
+        lines: vec![format!(
+            "Press {} to open it in Scout.",
+            overlay_accelerator(OverlayKey::Expand)
+        )],
+        priority: CardPriority::Normal,
+        ttl_secs: REVIEW_TTL_SECS,
+    }
+}
+
+/// A ready review waiting for, or shown on, the overlay.
+struct ReadyReview {
+    card: OverlayCard,
+    conversation_id: Uuid,
+    offered: bool,
+}
+
 /// What the overlay process said or did.
 pub(super) enum OverlayEvent {
     Report(OverlayReport),
@@ -199,6 +228,8 @@ pub(super) struct OverlayHost {
     offered: HashMap<String, OverlayCard>,
     /// The card the running overlay draws; a new overlay draws none.
     sent: Option<OverlayFrame>,
+    /// The newest ready review, until a game's overlay has shown it.
+    review: Option<ReadyReview>,
 }
 
 impl OverlayHost {
@@ -215,6 +246,7 @@ impl OverlayHost {
             keys_bound: false,
             offered: HashMap::new(),
             sent: None,
+            review: None,
         }
     }
 
@@ -230,11 +262,38 @@ impl OverlayHost {
         if playing && !self.playing {
             self.playing = true;
             self.start(diagnostics).await;
+            self.offer_review();
         } else if !playing && self.playing {
             self.playing = false;
             self.stop();
             self.offered.clear();
             self.down = false;
+            // A review the last game showed is not raised again.
+            self.review.take_if(|review| review.offered);
+        }
+    }
+
+    /// A post-game review is ready: raise its card now if a game is being
+    /// played, or at the start of the next one.
+    pub(super) fn review_ready(&mut self, match_id: &str, conversation_id: Uuid) {
+        self.review = Some(ReadyReview {
+            card: review_card(match_id),
+            conversation_id,
+            offered: false,
+        });
+        self.offer_review();
+    }
+
+    fn offer_review(&mut self) {
+        if !self.playing {
+            return;
+        }
+        let now = self.now_ms();
+        if let Some(review) = self.review.as_mut().filter(|review| !review.offered) {
+            review.offered = true;
+            if let Err(refused) = self.controller.offer(review.card.clone(), now) {
+                tracing::info!(%refused, "the overlay did not queue the review card");
+            }
         }
     }
 
@@ -264,15 +323,29 @@ impl OverlayHost {
         }
     }
 
-    /// Apply an overlay key.
-    pub(super) fn hotkey(&mut self, key: OverlayKey) {
+    /// Apply an overlay key. On a `review_ready` card the expand key opens
+    /// the review instead: the card goes, and the conversation to open in the
+    /// main window comes back.
+    pub(super) fn hotkey(&mut self, key: OverlayKey) -> Option<Uuid> {
+        let now = self.now_ms();
+        self.controller.tick(now);
+        let shown = self.controller.view().card.map(|card| card.id.clone());
+        if key == OverlayKey::Expand
+            && let Some(review) = self.review.as_ref()
+            && shown.as_deref() == Some(review.card.id.as_str())
+        {
+            let conversation_id = review.conversation_id;
+            self.controller.handle(HotkeyEvent::Dismiss, now);
+            self.review = None;
+            return Some(conversation_id);
+        }
         let event = match key {
             OverlayKey::Dismiss => HotkeyEvent::Dismiss,
             OverlayKey::Next => HotkeyEvent::Next,
             OverlayKey::Expand => HotkeyEvent::Expand,
         };
-        let now = self.now_ms();
         self.controller.handle(event, now);
+        None
     }
 
     /// Expire cards on the clock.
@@ -430,12 +503,17 @@ impl OverlayHost {
         matches!(written, Ok(Ok(())))
     }
 
-    /// Apply an overlay key and redraw.
-    pub(super) async fn press(host: &mut Option<Self>, key: OverlayKey, diagnostics: &Diagnostics) {
-        if let Some(host) = host.as_mut() {
-            host.hotkey(key);
-            host.flush(diagnostics).await;
-        }
+    /// Apply an overlay key and redraw. Returns the review to open, when the
+    /// key opened one.
+    pub(super) async fn press(
+        host: &mut Option<Self>,
+        key: OverlayKey,
+        diagnostics: &Diagnostics,
+    ) -> Option<Uuid> {
+        let host = host.as_mut()?;
+        let open = host.hotkey(key);
+        host.flush(diagnostics).await;
+        open
     }
 
     /// Act on what the overlay said or did, and redraw.
@@ -699,6 +777,14 @@ pub(super) mod tests {
             None
         );
         assert_eq!(voice_card(VoiceState::Thinking, None), None);
+    }
+
+    #[test]
+    fn the_review_card_fits_the_contract_and_names_the_open_key() {
+        let card = review_card("NA1_5654104474");
+        assert!(card.validate().is_ok());
+        assert_eq!(card.kind, CardKind::ReviewReady);
+        assert_eq!(card.lines, ["Press Alt+F7 to open it in Scout."]);
     }
 
     #[test]
