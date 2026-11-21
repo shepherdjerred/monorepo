@@ -28,7 +28,7 @@ export async function startWebServer(deps: {
   plexPostersEnabled?: (guildId: string, userId: string) => Promise<boolean>;
 }) {
   const assetsDir = path.resolve(import.meta.dirname, "../../..", "dist/web");
-  if (!(await Bun.file(path.join(assetsDir, "index.html")).exists()))
+  if (!(await Bun.file(path.join(assetsDir, "client/index.html")).exists()))
     throw new Error("Streambot web assets are missing. Run bun run build.");
   const store = new WebSessionStore(
     path.join(deps.stateDir, "streambot-web.sqlite"),

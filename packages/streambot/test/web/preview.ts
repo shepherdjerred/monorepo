@@ -26,6 +26,12 @@ import { SpotifyMetadata } from "@shepherdjerred/streambot/music/spotify.ts";
 import { MusicBrainzProvider } from "@shepherdjerred/streambot/music/musicbrainz-provider.ts";
 import { createMusicSearchProviders } from "@shepherdjerred/streambot/music/search-instrumentation.ts";
 import { replayProvider, responses } from "#youtube-music-fixture";
+import {
+  PREVIEW_LIBRARY,
+  previewSwitch,
+  seedPreviewRoom,
+  startPreviewTracing,
+} from "./preview-room.ts";
 
 class PreviewSpotify extends SpotifyMetadata {
   override load(value: string) {
@@ -77,6 +83,7 @@ class PreviewSpotify extends SpotifyMetadata {
   }
 }
 if (import.meta.main) {
+  startPreviewTracing();
   const port = Number(Bun.argv[2] ?? 5188);
   const origin = "http://127.0.0.1:" + String(port);
   const history = new MediaHistoryStore(":memory:");
@@ -111,7 +118,7 @@ if (import.meta.main) {
     chapters: [],
     ffmpegInput: "fixture",
     mediaKind: source.mode === "music" ? "music" : "video",
-    durationSeconds: 10_871,
+    durationSeconds: source.music?.durationSeconds ?? 10_871,
   });
   const baseMusic = fixtureMusic();
   const previewMusic = new MusicService(
@@ -144,8 +151,10 @@ if (import.meta.main) {
   const fixture = webFixture(
     origin,
     fileURLToPath(new URL("../../dist/web", import.meta.url)),
-    false,
+    // A second shared server, so the not-in-voice state shows the server switcher.
+    true,
     {
+      library: PREVIEW_LIBRARY,
       history,
       music: previewMusic,
       musicEnabled: true,
@@ -286,6 +295,7 @@ if (import.meta.main) {
       return entry === undefined ? null : sessionRevision(entry);
     },
   };
+  await seedPreviewRoom(ensureSlot, fixture.primarySlot);
   fixture.playback.deps.sessions.numbered.selection.clear({
     guildId: GUILD,
     channelId: CHANNEL,
@@ -319,6 +329,16 @@ if (import.meta.main) {
       provider: event.provider,
       source: { kind: "url", url: event.pageUrl, sportsEvent: event },
     },
+    {
+      title: "Daft Punk — Get Lucky (Official Video)",
+      provider: "youtube",
+      source: {
+        kind: "url",
+        url: "https://www.youtube.com/watch?v=5NV6Rdv1a3I",
+      },
+      thumbnailUrl: "https://i.ytimg.com/vi/5NV6Rdv1a3I/hqdefault.jpg",
+      durationSeconds: 369,
+    },
   ];
   for (const [index, media] of recent.entries()) {
     const scope = {
@@ -349,6 +369,8 @@ if (import.meta.main) {
     // an event stream between its 20-second keepalives.
     idleTimeout: 40,
     fetch: async (request) => {
+      const preview = previewSwitch(fixture, new URL(request.url));
+      if (preview !== null) return preview;
       const response = await fixture.handler(request);
       if (
         new URL(request.url).pathname !== "/api/auth/discord/start" ||

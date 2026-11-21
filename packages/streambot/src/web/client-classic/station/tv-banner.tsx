@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from "react";
 import type { WebSnapshot } from "@shepherdjerred/streambot/web/shared/contracts.ts";
-import type { RemoteAction } from "@shepherdjerred/streambot/web/client/api.ts";
+import type { RemoteAction } from "@shepherdjerred/streambot/web/client-classic/api.ts";
 import {
   scopeDisplayLabel,
   tvPresetDisplayLabel,

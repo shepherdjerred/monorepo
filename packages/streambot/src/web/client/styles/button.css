@@ -1,0 +1,102 @@
+/*
+ * One button system. Two filled verbs (Listen, Watch) carry the color; every other control is a
+ * neutral outline or a quiet ghost, so the play destinations always read first.
+ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-block-size: var(--control);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.btn:hover {
+  background: var(--hover);
+}
+
+.btn[aria-disabled="true"],
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn[aria-busy="true"] {
+  cursor: progress;
+}
+
+.btn-listen,
+.btn-watch {
+  min-inline-size: 5.5rem;
+  border-color: transparent;
+}
+
+.btn-listen {
+  background: var(--listen);
+  color: var(--listen-ink);
+}
+
+.btn-watch {
+  background: var(--watch);
+  color: var(--watch-ink);
+}
+
+.btn-listen:hover,
+.btn-watch:hover {
+  filter: brightness(1.08);
+}
+
+.btn-listen:hover {
+  background: var(--listen);
+}
+
+.btn-watch:hover {
+  background: var(--watch);
+}
+
+.btn-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+}
+
+.btn-icon {
+  inline-size: var(--control);
+  padding: 0;
+}
+
+.btn-small {
+  --control: 28px;
+  padding-inline: var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.btn-icon.btn-small {
+  padding: 0;
+}
+
+.btn .glyph {
+  font-size: 0.95em;
+  line-height: 1;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}

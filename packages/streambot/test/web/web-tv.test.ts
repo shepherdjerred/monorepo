@@ -23,7 +23,7 @@ import {
   createVoiceDecisionsRuntime,
 } from "@shepherdjerred/streambot/voice/voice-command-router.ts";
 import { DryRunVoiceCommandPort } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
-import { formatStationBadge } from "@shepherdjerred/streambot/web/client/station/station-label.ts";
+import { formatStationBadge } from "@shepherdjerred/streambot/web/client-classic/station/station-label.ts";
 import { SnapshotSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import {
   guildId,

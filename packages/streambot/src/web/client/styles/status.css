@@ -1,0 +1,46 @@
+.status {
+  font-size: var(--text-sm);
+}
+
+/* Empty, the region takes no space but stays in the accessibility tree so changes are announced. */
+.status > * {
+  margin-block-start: var(--space-1);
+}
+
+.status-ok {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.status-error {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.status-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.status-reference {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.status-reference code {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}

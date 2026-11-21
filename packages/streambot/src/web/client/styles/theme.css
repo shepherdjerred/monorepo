@@ -1,0 +1,80 @@
+/*
+ * The remote's only tokens. The classic remote's palette is the base; the additions are one type
+ * scale, one spacing scale, and the two destination colors: green is Listen (audio in the voice
+ * channel), blue is Watch (a stream people open). A Listen button and the Listening card share a
+ * color so the button says where its media lands.
+ */
+:root {
+  color-scheme: light dark;
+  --background: #f4f5f1;
+  --surface: #fdfefa;
+  --text: #1c2a26;
+  --muted: #5f6d67;
+  --border: #dfe5df;
+  --tint: #edf3eb;
+  --hover: #edf1e9;
+  --accent: #bce5a4;
+  --accent-strong: #477e3b;
+  --accent-text: #1c361b;
+  --error: #a33a34;
+  --error-bg: #fff1ed;
+  --shadow: 0 8px 30px #1b3a2010;
+
+  --listen: #3d7334;
+  --listen-ink: #ffffff;
+  --listen-soft: #e3f0dc;
+  --watch: #34588c;
+  --watch-ink: #ffffff;
+  --watch-soft: #e1e9f5;
+  --focus: #34588c;
+  --skeleton: #e6ebe4;
+
+  --font:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.25rem;
+  --line: 1.4;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --control: 32px;
+  --rail: 380px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #101816;
+    --surface: #17221e;
+    --text: #e5ede4;
+    --muted: #94a399;
+    --border: #2b3a32;
+    --tint: #203126;
+    --hover: #22332a;
+    --accent: #bce5a4;
+    --accent-strong: #b0d797;
+    --accent-text: #1c361b;
+    --error: #ffb4a8;
+    --error-bg: #442822;
+    --shadow: 0 8px 30px #0003;
+
+    --listen: #bce5a4;
+    --listen-ink: #1c361b;
+    --listen-soft: #203a24;
+    --watch: #a9c3ee;
+    --watch-ink: #13233d;
+    --watch-soft: #1d2b40;
+    --focus: #a9c3ee;
+    --skeleton: #22302a;
+  }
+}

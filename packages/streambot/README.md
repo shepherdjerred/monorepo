@@ -298,6 +298,12 @@ Run `bun run build` before starting a process with web credentials. The producti
 server serves `dist/web` on the credential bootstrap port, separate from metrics.
 For frontend iteration, `bun run web:dev` proxies API requests to that server.
 
+One Vite build produces two pages. The current remote (`src/web/client/`) owns `/`
+and its routes; it reads the room over `/api/room/events` and searches with
+`/api/search/v2`. The classic remote (`src/web/client-classic/`) is served unchanged
+under `/classic` until it is removed. `webPage()` in `src/web/server/assets.ts` maps
+browser paths to the two pages for both the server and the Vite dev server.
+
 `bun run e2e/web-local.ts` serves a credential-free acceptance fixture on
 `http://127.0.0.1:8080`. Its sign-in simulates Discord and its media I/O is simulated;
 the routes, session storage, command service, and playback actor are real. This
@@ -308,6 +314,11 @@ The expanded browsing fixture is `bun run test/web/preview.ts` on port 5188 afte
 `bun run build`; it includes simulated OAuth, music browsing, private/server
 playlists, sports artwork, history, and attribution. An optional port argument
 (for example, `bun run test/web/preview.ts 5189`) isolates concurrent worktrees.
+The preview's room has a Listening and a Watching player with queues, and responses
+carry `x-trace-id`. Two preview-only switches change state an open page then
+receives over the room stream: `/preview/voice?in=0` (or `1`) leaves or rejoins the
+voice channel, and `/preview/listen?enabled=0` (or `1`) turns Listen off so an
+already-rendered Listen button shows the server's `listen_disabled` error.
 
 The room endpoints are `GET /api/room` (the viewer's location from Discord voice state,
 the shared servers, one player per occupied slot, capacity — including `numbered`, false for

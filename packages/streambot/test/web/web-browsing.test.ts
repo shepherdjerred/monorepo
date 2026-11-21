@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "vitest";
 import { GUILD, CHANNEL, USER, webFixture } from "./web-fixture.ts";
 import { SnapshotSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { harness, number } from "#numbered-fixture";
-import { elapsed } from "@shepherdjerred/streambot/web/client/api.ts";
+import { elapsed } from "@shepherdjerred/streambot/web/client-classic/api.ts";
 
 let fixture: ReturnType<typeof webFixture> | undefined;
 afterEach(() => {
@@ -132,7 +132,7 @@ test("duration uses clock fields through hour boundaries", () => {
   expect(elapsed(null)).toBe("—");
 });
 
-import { selectedGuildId } from "@shepherdjerred/streambot/web/client/route-state.ts";
+import { selectedGuildId } from "@shepherdjerred/streambot/web/client-classic/route-state.ts";
 test("stale or unauthorized server deep links recover to an available guild", () => {
   const guilds = [{ id: "available" }, { id: "second" }];
   expect(selectedGuildId(guilds, "stale")).toBe("available");

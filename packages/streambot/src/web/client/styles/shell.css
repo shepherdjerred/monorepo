@@ -1,0 +1,232 @@
+:root {
+  /* The sticky header's height, which the sticky rail sits below. */
+  --header-h: 100px;
+  --page: 1440px;
+}
+
+.skip-link {
+  position: absolute;
+  z-index: 50;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* Header */
+.header {
+  position: sticky;
+  z-index: 10;
+  inset-block-start: 0;
+  border-block-end: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.header-inner {
+  display: grid;
+  grid-template-columns: 8rem minmax(16rem, 40rem) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "brand search context account"
+    ". nav . .";
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  max-inline-size: var(--page);
+  margin-inline: auto;
+  padding: var(--space-3) var(--space-5) var(--space-2);
+}
+
+.brand {
+  grid-area: brand;
+  color: var(--text);
+  font-size: var(--text-xl);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+.search {
+  grid-area: search;
+}
+
+.context {
+  grid-area: context;
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.context-dot {
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--listen);
+}
+
+.context-off {
+  background: var(--muted);
+}
+
+.context-switch select {
+  min-block-size: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.account {
+  grid-area: account;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: end;
+  gap: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.account-status {
+  flex-basis: 100%;
+}
+
+.nav {
+  grid-area: nav;
+  display: flex;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.nav-link {
+  padding-block: var(--space-1);
+  border-block-end: 2px solid transparent;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.nav-link:hover {
+  color: var(--text);
+}
+
+.nav-link[aria-current="page"] {
+  border-color: var(--accent-strong);
+  color: var(--text);
+}
+
+/* Page body: content and the now-playing rail */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rail);
+  align-items: start;
+  gap: var(--space-6);
+  max-inline-size: var(--page);
+  margin-inline: auto;
+  padding: var(--space-5);
+}
+
+.content {
+  display: grid;
+  gap: var(--space-5);
+  min-inline-size: 0;
+}
+
+.content:focus {
+  outline: none;
+}
+
+.layout > .rail {
+  position: sticky;
+  inset-block-start: calc(var(--header-h) + var(--space-4));
+  max-block-size: calc(100dvh - var(--header-h) - var(--space-6));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.legend {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.legend-verb {
+  font-weight: 700;
+}
+
+.legend-listen {
+  color: var(--listen);
+}
+
+.legend-watch {
+  color: var(--watch);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  max-inline-size: var(--page);
+  margin-inline: auto;
+  padding: var(--space-4) var(--space-5) var(--space-6);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.footer-credit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.welcome {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+  max-inline-size: 32rem;
+  margin: 15vh auto;
+  padding: var(--space-5);
+}
+
+@media (max-width: 1100px) {
+  .header {
+    position: static;
+  }
+
+  .header-inner {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand context account"
+      "search search search"
+      "nav nav nav";
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .layout > .rail {
+    position: static;
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-inner,
+  .layout {
+    padding-inline: var(--space-4);
+  }
+
+  .context .muted {
+    display: none;
+  }
+}
