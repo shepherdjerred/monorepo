@@ -73,11 +73,15 @@ test("select an immutable release, inspect queued execution, and cancel safely",
   ).toBeVisible();
   await expect(main).toContainText("No runtime observation");
   await expect(main).toContainText("Unknown");
-  // Nothing is released here yet, and the release action leads the page.
+  // Nothing is released here yet: the state leads the page, then the release action.
   await expect(main.locator(".page-header")).toContainText(
     "Nothing accepted yet · Deploys automatically · generation 0 · Nothing in flight",
   );
+  await expect(main.locator(".environment-notice")).toHaveCount(0);
   await expect(main.getByRole("region").first()).toHaveAccessibleName(
+    "Release state",
+  );
+  await expect(main.getByRole("region").nth(2)).toHaveAccessibleName(
     "Request a release",
   );
   await main

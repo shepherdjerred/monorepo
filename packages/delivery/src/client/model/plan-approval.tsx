@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Principal } from "#shared/contract.ts";
 import type {
@@ -10,6 +9,7 @@ import { canApprove } from "#client/presentation.ts";
 import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
 import { ErrorNotice } from "#client/components/notices.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
+import { ReasonField, useReason } from "#client/forms/decision.tsx";
 import { SelectionFacts } from "./selection-facts.tsx";
 import { waitingPlan } from "./view.ts";
 import { Fact, Facts } from "#client/components/facts.tsx";
@@ -37,6 +37,13 @@ function PlanFacts({ plan }: { plan: SavedPlan }) {
   );
 }
 
+/** What each decision on a saved plan did, as the page states it afterwards. */
+export const PLAN_OUTCOMES = {
+  approved: "Plan approved. Apply runs this exact plan.",
+  rejected:
+    "Plan rejected. The saved plan is discarded and the deployment ends without applying it.",
+} as const;
+
 /**
  * The approve step of a model `tofu` recipe (section 5): the saved plan the
  * plan step produced, and the deployment's one decision on it (4.13). An
@@ -46,31 +53,31 @@ function PlanFacts({ plan }: { plan: SavedPlan }) {
 export function PlanApproval({
   detail,
   principal,
+  onDecided,
 }: {
   detail: DeploymentDetailV2;
   principal: Principal;
+  /** Runs once a decision is recorded, with what it did in words. */
+  onDecided?: (outcome: string) => void;
 }) {
   const queryClient = useQueryClient();
-  const [reason, setReason] = useState("");
-  const [problem, setProblem] = useState<string | null>(null);
+  const reason = useReason();
   const decide = useMutation({
     mutationFn: (input: ApproveTofuPlan) =>
       delivery.approvePlan(detail.deployment.id, input),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: async (_result, input) => {
+      onDecided?.(PLAN_OUTCOMES[input.decision]);
+      await queryClient.invalidateQueries();
+    },
   });
   const plan = waitingPlan(detail);
   if (plan === null) return null;
-  const submit = (decision: ApproveTofuPlan["decision"]) => {
-    if (reason.trim() === "") {
-      setProblem(
-        decision === "approved"
-          ? "Record why this plan is safe to apply"
-          : "Record why this plan must not be applied",
-      );
-      return;
-    }
-    setProblem(null);
-    decide.mutate({ decision, planDigest: plan.planDigest, reason });
+  const send = (decision: ApproveTofuPlan["decision"]) => {
+    decide.mutate({
+      decision,
+      planDigest: plan.planDigest,
+      reason: reason.value,
+    });
   };
   const { selection } = detail.deployment;
   return (
@@ -92,34 +99,23 @@ export function PlanApproval({
             className="approval-form"
             onSubmit={(event) => {
               event.preventDefault();
-              submit("approved");
+              if (
+                !decide.isPending &&
+                reason.require("Record why this plan is safe to apply")
+              )
+                send("approved");
             }}
           >
-            <label>
-              Reason
-              <textarea
-                name="reason"
-                required
-                maxLength={4000}
-                rows={3}
-                value={reason}
-                onChange={(event) => {
-                  setReason(event.currentTarget.value);
-                }}
-                placeholder="Record why this plan is safe to apply, or why it must not be"
-              />
-            </label>
-            {problem !== null && (
-              <p className="notice error" role="alert">
-                {problem}
-              </p>
-            )}
+            <ReasonField
+              reason={reason}
+              placeholder="Record why this plan is safe to apply, or why it must not be"
+            />
             {decide.error !== null && <ErrorNotice error={decide.error} />}
             <div className="button-row">
               <button
                 type="submit"
                 className="primary-button"
-                disabled={decide.isPending}
+                aria-disabled={decide.isPending ? true : undefined}
               >
                 Approve plan
               </button>
@@ -135,8 +131,11 @@ export function PlanApproval({
               confirmLabel="Reject and discard plan"
               danger
               pending={decide.isPending}
+              check={() =>
+                reason.require("Record why this plan must not be applied")
+              }
               onConfirm={() => {
-                submit("rejected");
+                send("rejected");
               }}
             >
               <p>

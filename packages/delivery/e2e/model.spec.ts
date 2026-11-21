@@ -11,6 +11,7 @@ import {
   expectNoHorizontalOverflow,
   expectNoViolations,
 } from "./helpers.ts";
+import { showIdle } from "./model-environment.ts";
 
 // Served by e2e/model-server.ts: Arcade's catalog, releases, monitor, restore
 // hold and a quarantined beta deploy, recorded through Delivery's own APIs.
@@ -55,7 +56,7 @@ test("the environment shows its monitor and binding", async ({ page }) => {
     name: "Evidence against threshold",
   });
   await expect(evidence.getByRole("row", { name: /requests/u })).toContainText(
-    "40 of 100",
+    "40.26 of 100",
   );
   await expect(evidence.getByRole("row", { name: /requests/u })).toContainText(
     "Below threshold",
@@ -94,6 +95,7 @@ test("rollback candidates mark the accepted one and exclude a lowered forward-on
     RollbackCandidatesSchema,
   );
   expect(seeded.candidates).toHaveLength(6);
+  await showIdle(page, PROD);
   await openEnvironment(page);
   const region = page.getByRole("region", { name: "Rollback candidates" });
   const candidates = region.getByRole("listitem");
@@ -157,35 +159,34 @@ test("a rollback candidate reads as its revision number, recipe, configuration a
   ).toBeVisible();
 });
 
-test("the page leads with what runs here, what is in flight and the release action", async ({
+test("the page leads with what runs here and what is in flight, then the release action", async ({
   page,
 }) => {
   await openEnvironment(page);
   const main = page.getByRole("main");
-  // The summary ends with the deployment in flight, behind its status glyph.
+  // The summary ends with the deployment in flight, named with its state.
   await expect(main.locator(".page-header")).toContainText(
-    /Accepted r3 · Approval required · generation 6 · \Sdeploy r4 awaiting approval/u,
+    /Accepted r3 · Approval required · generation 6 · In flight: \Sdeploy r4 awaiting approval/u,
+  );
+  await expect(main.locator(".environment-notice")).toContainText(
+    /^In flight: deployment \S+ is awaiting approval\. New requests wait until it finishes or is canceled\.$/u,
   );
   expect(
     await main.getByRole("heading", { level: 2 }).allTextContents(),
   ).toEqual([
-    "Request a release",
     "Release state",
     "Live runtime",
+    "Request a release",
     "Selection",
     "Monitor",
     "Rollback candidates",
     "Recent deployments",
   ]);
-  if ((page.viewportSize()?.width ?? 0) >= 1280) {
-    // On a desktop screen the release action and the release state need no scrolling.
-    await expect(
-      main.getByRole("button", { name: "Request deployment" }),
-    ).toBeInViewport({ ratio: 1 });
+  if ((page.viewportSize()?.width ?? 0) >= 1280)
+    // On a desktop screen the state needs no scrolling.
     await expect(
       main.getByRole("heading", { name: "Release state" }),
     ).toBeInViewport({ ratio: 1 });
-  }
   // The deployment in flight is one click from the summary.
   await main.getByRole("link", { name: "deploy r4 awaiting approval" }).click();
   await expect(
@@ -199,6 +200,7 @@ test("the page leads with what runs here, what is in flight and the release acti
 test("every confirmation asks through the page's one dialog and returns focus to its button", async ({
   page,
 }) => {
+  await showIdle(page, PROD);
   await openEnvironment(page);
   const region = page.getByRole("region", { name: "Rollback candidates" });
   await region.locator("summary", { hasText: "Older candidates" }).click();
@@ -267,6 +269,7 @@ test("rolling back to a candidate requests its exact selection", async ({
   );
   const target = candidates[1];
   if (target === undefined) throw new Error("seeded candidates");
+  await showIdle(page, PROD);
   await openEnvironment(page);
   await page
     .getByRole("region", { name: "Rollback candidates" })
@@ -287,6 +290,7 @@ test("rolling back to a candidate requests its exact selection", async ({
 test("rebind requests only the declared coordinate that moved", async ({
   page,
 }) => {
+  await showIdle(page, PROD);
   await openEnvironment(page);
   await page
     .getByRole("region", { name: "Selection", exact: true })
@@ -301,29 +305,6 @@ test("rebind requests only the declared coordinate that moved", async ({
     expectedGeneration: 6,
   });
   expect(request.configurationRevisionId).toBeUndefined();
-});
-
-test("a deploy can ask for an override approval", async ({ page }) => {
-  await openEnvironment(page);
-  const form = page.getByRole("region", { name: "Request a release" });
-  await form.getByLabel("Action").selectOption("deploy");
-  const version = form.getByLabel("Version set");
-  await version.selectOption({ index: 1 });
-  const chosen = await version.inputValue();
-  const override = form.getByRole("checkbox", {
-    name: /Ask for an override approval/u,
-  });
-  await override.check();
-  await expect(override).toBeChecked();
-  const sent = await captureDeploymentRequest(page);
-  await form.getByRole("button", { name: "Request deployment" }).click();
-  expect(await sent()).toMatchObject({
-    environmentId: PROD,
-    kind: "deploy",
-    versionSetRevisionId: chosen,
-    override: true,
-    expectedGeneration: 6,
-  });
 });
 
 test("an accepted promotion shows its steps, selection, previous selection and approval", async ({
@@ -493,6 +474,8 @@ for (const scheme of ["light", "dark"] as const) {
     for (const path of [
       "/",
       ENVIRONMENT,
+      "/environments/arcade/beta",
+      "/environments/tofu-cloudflare/prod",
       `/deployments/${z.string().parse(view.acceptedDeploymentId)}`,
       `/deployments/${await quarantined(page)}`,
       "/recovery-intents/argo/model/beta/recovery",
@@ -507,6 +490,7 @@ for (const scheme of ["light", "dark"] as const) {
     page,
   }) => {
     await page.emulateMedia({ colorScheme: scheme });
+    await showIdle(page, PROD);
     await openEnvironment(page);
     const region = page.getByRole("region", { name: "Rollback candidates" });
     await region.locator("summary", { hasText: "Older candidates" }).click();

@@ -365,7 +365,10 @@ export async function seedModelBrowser(delivery: Delivery, database: Database) {
   await approve(delivery, rebind.id, "Schema 2 migration reviewed");
   await execute(delivery, rebind);
   await delivery.observeMonitor(rebind.id, observation(120), testExecutor);
-  await release(delivery, database, third, { requests: 40, critical: true });
+  await release(delivery, database, third, {
+    requests: 40.256,
+    critical: true,
+  });
   await delivery.reconcileCatalog(document(base, 3), testOperator);
   // Never accepted in beta, so only an override approval admits it (H4).
   await delivery.createDeployment(

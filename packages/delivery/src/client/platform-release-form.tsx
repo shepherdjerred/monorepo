@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from "react";
+import { useId, useState, type SubmitEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { delivery } from "./api.ts";
 import type {
@@ -7,13 +7,20 @@ import type {
   Principal,
   CreatePlatformDeployment,
 } from "#shared/contract.ts";
-import { ErrorNotice } from "#client/components/notices.tsx";
+import type { Blocker } from "#client/model/environment-status.ts";
+import {
+  BlockedReason,
+  RequestError,
+} from "#client/model/environment-notices.tsx";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 
 type Props = {
   environment: Environment;
   overview: Overview;
   principal: Principal;
+  /** What stops this environment from taking a request now. */
+  blocker: Blocker | null;
+  planWaiting: boolean;
   onDeployment: (id: string) => Promise<void>;
 };
 
@@ -35,8 +42,11 @@ function TofuReleaseForm({
   environment,
   overview,
   principal,
+  blocker,
+  planWaiting,
   onDeployment,
 }: Props) {
+  const blockedId = useId();
   const stack = TofuStackSchema.parse(
     environment.id.slice("gitops/tofu:".length),
   );
@@ -84,7 +94,13 @@ function TofuReleaseForm({
         uses the existing native state lock, exact state identity and plan
         digest; it never replans.
       </p>
-      {request.error !== null && <ErrorNotice error={request.error} />}
+      {request.error !== null && (
+        <RequestError
+          error={request.error}
+          blocker={blocker}
+          planWaiting={planWaiting}
+        />
+      )}
       <form onSubmit={submit}>
         <label>
           Operation
@@ -133,13 +149,20 @@ function TofuReleaseForm({
             Deployment access is required to request platform operations.
           </p>
         )}
+        {blocker !== null && (
+          <p className="notice" id={blockedId}>
+            <BlockedReason blocker={blocker} planWaiting={planWaiting} />
+          </p>
+        )}
         <button
           className="primary-button"
           disabled={
             request.isPending ||
             selected === "" ||
+            blocker !== null ||
             !principal.scopes.includes("deploy")
           }
+          aria-describedby={blocker === null ? undefined : blockedId}
         >
           Request exact operation
         </button>

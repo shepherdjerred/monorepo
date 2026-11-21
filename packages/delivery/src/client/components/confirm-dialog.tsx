@@ -140,6 +140,7 @@ export function ConfirmButton({
   disabled = false,
   pending = false,
   describedBy,
+  check,
   onConfirm,
 }: {
   label: string;
@@ -153,6 +154,12 @@ export function ConfirmButton({
   pending?: boolean;
   /** The id of text that tells this button apart from others with its label. */
   describedBy?: string;
+  /**
+   * Runs on the press, before the question opens; false keeps the dialog
+   * closed, as when an input the action needs is missing and the check has
+   * pointed at it.
+   */
+  check?: () => boolean;
   onConfirm: () => void;
 }) {
   const host = useContext(ConfirmDialogContext);
@@ -180,7 +187,7 @@ export function ConfirmButton({
         aria-disabled={pending ? true : undefined}
         aria-describedby={describedBy}
         onClick={() => {
-          if (!pending) ask(id, onConfirm);
+          if (!pending && (check?.() ?? true)) ask(id, onConfirm);
         }}
       >
         {label}

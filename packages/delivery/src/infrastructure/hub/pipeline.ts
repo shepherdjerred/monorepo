@@ -193,8 +193,13 @@ export function deploymentActions(
       status: stageStatus(stage.status),
       detail: stage.message === "" ? null : stage.message,
       startedAt: iso(stage.startedAt),
+      // A step still recorded as running when its deployment ended was
+      // interrupted: its clock stops at the deployment's end, and a running
+      // action with a finish reads as interrupted, its outcome unknown.
       finishedAt:
-        stage.status === "running" ? null : stage.updatedAt.toISOString(),
+        stage.status === "running"
+          ? iso(deployment.finishedAt)
+          : stage.updatedAt.toISOString(),
       target: { kind: "deployment" as const, id: deployment.id },
       links: [],
     })),

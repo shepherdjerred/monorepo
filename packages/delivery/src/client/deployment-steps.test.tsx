@@ -5,7 +5,14 @@ import * as fixtures from "#testing/model-fixtures.ts";
 import type { DeploymentDetail } from "#shared/contract.ts";
 import { renderWithRouter } from "#client/test-router.tsx";
 import { DeploymentRecord } from "./deployment-detail.tsx";
-import { DeploymentEvidence, StepTimeline } from "./deployment-steps.tsx";
+import {
+  DeploymentEvidence,
+  StepTimeline,
+  interrupted,
+  noStepsMessage,
+  stepEnd,
+} from "./deployment-steps.tsx";
+import { WhyItFailed, failureStory } from "./model/deployment-outcome.tsx";
 
 // The hub client resolves its API origin from the page; static rendering has none.
 vi.hoisted(() => {
@@ -300,5 +307,131 @@ describe("the deployment record", () => {
     expect(inputs).toMatch(
       /Pinned pipeline and configuration<\/span><\/summary>.*<pre class="receipt-json"><code>/su,
     );
+  });
+});
+
+const finishedAt = "2026-11-20T09:00:00.000Z";
+/** The fixture deployment, ended failed while its sync step was still running. */
+const ended = {
+  ...base,
+  deployment: {
+    ...base.deployment,
+    status: "failed" as const,
+    finishedAt,
+    message: "The sync outlived the executor; its result is unknown",
+  },
+  stages: [
+    stage("step-plan", "succeeded", "plan completed"),
+    stage("step-sync", "running", "ArgoCD sync operation 7 running"),
+  ],
+  evidence: [
+    evidence("stage/step-sync/0", "Application still Progressing"),
+    evidence("finish/0", "No acceptance was attempted", "reconciliation"),
+  ],
+};
+
+describe("a step its deployment outlived", () => {
+  const html = render(<StepTimeline detail={ended} />);
+
+  it("reads as interrupted with its outcome unknown, not as running", () => {
+    const sync = step(html, "step-sync");
+    expect(sync).toMatch(/^step-interrupted"/u);
+    expect(sync).toContain("interrupted · outcome unknown");
+    expect(sync).not.toContain("status-running");
+    expect(step(html, "step-plan")).toContain("status-succeeded");
+  });
+
+  it("stops its clock at the deployment's end", () => {
+    const [plan, sync] = ended.stages;
+    if (plan === undefined || sync === undefined) throw new Error("stages");
+    expect(stepEnd(sync, ended.deployment)).toBe(finishedAt);
+    expect(stepEnd(plan, ended.deployment)).toBe(plan.updatedAt);
+    // While the deployment runs, a running step's clock keeps going.
+    expect(stepEnd(sync, base.deployment)).toBeNull();
+    expect(interrupted(sync, base.deployment)).toBe(false);
+  });
+
+  it("says what an empty step list means for the deployment's state", () => {
+    expect(noStepsMessage({ status: "succeeded" })).toBe(
+      "No step history was recorded for this deployment.",
+    );
+    expect(noStepsMessage({ status: "failed" })).toBe(
+      "The deployment ended before any step started.",
+    );
+    expect(noStepsMessage({ status: "queued" })).toBe(
+      "No stages have started.",
+    );
+  });
+});
+
+function record(value: DeploymentDetail) {
+  return render(
+    <DeploymentRecord
+      detail={value}
+      principal={fixtures.operator}
+      pending={false}
+      onRecoveryDecision={vi.fn()}
+    />,
+  );
+}
+
+describe("why a deployment failed", () => {
+  it("names the message, the interrupted step, its last evidence and what to do", () => {
+    expect(failureStory(ended)).toMatchObject({
+      heading: "Why it failed",
+      message: "The sync outlived the executor; its result is unknown",
+      step: {
+        key: "step-sync",
+        outcome: "interrupted",
+        message: "ArgoCD sync operation 7 running",
+      },
+      evidence: { from: "step-sync", text: "Application still Progressing" },
+      locked: false,
+      next: "retry",
+    });
+    const html = render(<WhyItFailed detail={ended} />);
+    expect(html).toContain('<h2 id="failure-heading">Why it failed</h2>');
+    expect(html).toContain(
+      "was still running when the deployment ended, so its outcome is unknown",
+    );
+    expect(html).toContain("Last evidence from step-sync");
+    expect(html).toContain('href="/environments/scout-for-lol/prod"');
+  });
+
+  it("explains a recovery lock in plain words and links its recovery intent", () => {
+    const locked = fixtures.deploymentDetails.find(
+      (entry) => entry.deployment.recoveryRequired,
+    );
+    if (locked === undefined) throw new Error("fixture has a quarantine");
+    const story = failureStory(locked);
+    expect(story).toMatchObject({
+      locked: true,
+      next: "recover",
+      intent: { id: "scout-prod-37/recovery/2", sequence: 2 },
+    });
+    const html = render(<WhyItFailed detail={locked} />);
+    expect(html).toContain(
+      "A change may still be running outside Delivery. It must be checked before this environment unlocks.",
+    );
+    expect(html).toContain('href="/recovery-intents/scout-prod-37/recovery/2"');
+    expect(html).toContain("Recovery intent 2</a> is pending");
+  });
+
+  it("says nothing for a deployment that did not fail", () => {
+    expect(failureStory(base)).toBeNull();
+    expect(render(<WhyItFailed detail={base} />)).toBe("");
+  });
+
+  it("the record does not repeat the message the summary or the approval already shows", () => {
+    expect(record(ended)).not.toContain("The sync outlived the executor");
+    const approved = {
+      ...base,
+      deployment: { ...base.deployment, message: "Reviewed the release" },
+      approval:
+        base.approval === null
+          ? null
+          : { ...base.approval, reason: "Reviewed the release" },
+    };
+    expect(record(approved)).not.toContain("Reviewed the release");
   });
 });

@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   CreateDeploymentV2Request,
@@ -8,12 +8,12 @@ import type {
   EnvironmentSelection,
   RollbackCandidate,
 } from "#shared/model/contract.ts";
+import { DeliveryClientError } from "#shared/client.ts";
 import { delivery } from "#client/api.ts";
 import { queries } from "#client/queries.ts";
 import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
 import { Identifier } from "#client/components/identifier.tsx";
-import { ErrorNotice } from "#client/components/notices.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { MonitorPanel } from "./monitor-panel.tsx";
 import {
@@ -25,6 +25,8 @@ import {
   type RevisionNumbers,
 } from "./selection-facts.tsx";
 import { rebindChanges, splitCandidates } from "./view.ts";
+import type { Blocker } from "./environment-status.ts";
+import { BlockedReason, RequestError } from "./environment-notices.tsx";
 import { Fact, Facts } from "#client/components/facts.tsx";
 
 type Requested = Awaited<ReturnType<ModelRoutes["createDeployment"]>>;
@@ -33,11 +35,17 @@ type Actions = {
   permitted: boolean;
   /** The revision number of each set revision the page has loaded. */
   revisions: RevisionNumbers;
+  /** What stops this environment from taking a request now. */
+  blocker: Blocker | null;
+  planWaiting: boolean;
   onDeployment: (deploymentId: string) => Promise<void>;
 };
 
-/** Request a model deployment, then open it with every view refreshed. */
-function useRequest(onDeployment: Actions["onDeployment"]) {
+/**
+ * Request a model deployment, then open it with every view refreshed. A
+ * conflict refreshes the environment, so the page names what is in the way.
+ */
+function useRequest({ environmentId, onDeployment }: Actions) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateDeploymentV2Request) =>
@@ -45,6 +53,12 @@ function useRequest(onDeployment: Actions["onDeployment"]) {
     onSuccess: async (deployment: Requested) => {
       await queryClient.invalidateQueries();
       await onDeployment(deployment.id);
+    },
+    onError: async (error) => {
+      if (error instanceof DeliveryClientError && error.code === "CONFLICT")
+        await queryClient.invalidateQueries({
+          queryKey: queries.environment(environmentId).queryKey,
+        });
     },
   });
 }
@@ -55,23 +69,39 @@ function approvalNote(view: EnvironmentSelection) {
     : "The request starts once its gates pass.";
 }
 
-function refusal(view: EnvironmentSelection, permitted: boolean) {
+/** Why a rebind or rollback cannot be requested now, or null when it can. */
+function refusal(
+  view: EnvironmentSelection,
+  { permitted, blocker, planWaiting }: Actions,
+): ReactNode {
   if (!permitted) return "Your identity has read-only access.";
-  return view.lifecycle === "active"
-    ? null
-    : `A ${view.lifecycle} environment admits no deployments.`;
+  if (view.lifecycle !== "active")
+    return `A ${view.lifecycle} environment admits no deployments.`;
+  return blocker === null ? null : (
+    <BlockedReason blocker={blocker} planWaiting={planWaiting} />
+  );
+}
+
+/** A request this panel sent, refused in words that name what is in the way. */
+function Refused({ error, actions }: { error: unknown; actions: Actions }) {
+  return (
+    <RequestError
+      error={error}
+      blocker={actions.blocker}
+      planWaiting={actions.planWaiting}
+    />
+  );
 }
 
 function SelectionPanel({
   view,
-  environmentId,
-  permitted,
-  revisions,
-  onDeployment,
+  ...actions
 }: Actions & { view: EnvironmentSelection }) {
+  const { environmentId, revisions } = actions;
   const changes = rebindChanges(view);
-  const request = useRequest(onDeployment);
-  const refused = refusal(view, permitted);
+  const request = useRequest(actions);
+  const refused = refusal(view, actions);
+  const refusedId = useId();
   return (
     <>
       <Facts>
@@ -111,7 +141,9 @@ function SelectionPanel({
           )}
         </Fact>
       </Facts>
-      {request.error !== null && <ErrorNotice error={request.error} />}
+      {request.error !== null && (
+        <Refused error={request.error} actions={actions} />
+      )}
       <div className="form-footer">
         <p>
           {changes === null
@@ -125,6 +157,7 @@ function SelectionPanel({
           title={`Rebind ${environmentId}?`}
           confirmLabel="Request rebind"
           disabled={changes === null || refused !== null}
+          {...(refused === null ? {} : { describedBy: refusedId })}
           pending={request.isPending}
           onConfirm={() => {
             if (changes === null) return;
@@ -151,7 +184,11 @@ function SelectionPanel({
           <p>{approvalNote(view)}</p>
         </ConfirmButton>
       </div>
-      {refused !== null && <p className="notice">{refused}</p>}
+      {refused !== null && (
+        <p className="notice" id={refusedId}>
+          {refused}
+        </p>
+      )}
     </>
   );
 }
@@ -161,7 +198,7 @@ function Candidate({
   view,
   environmentId,
   revisions,
-  disabled,
+  refusedId,
   pending,
   onRollback,
 }: {
@@ -169,7 +206,8 @@ function Candidate({
   view: EnvironmentSelection | undefined;
   environmentId: string;
   revisions: RevisionNumbers;
-  disabled: boolean;
+  /** The id of the reason no rollback can be requested now, or null when one can. */
+  refusedId: string | null;
   pending: boolean;
   onRollback: (deploymentId: string) => void;
 }) {
@@ -208,8 +246,8 @@ function Candidate({
             label={action}
             title={`Roll back ${environmentId}?`}
             confirmLabel="Request rollback"
-            describedBy={label}
-            disabled={disabled}
+            describedBy={refusedId === null ? label : `${label} ${refusedId}`}
+            disabled={refusedId !== null}
             pending={pending}
             onConfirm={() => {
               onRollback(candidate.deploymentId);
@@ -252,15 +290,14 @@ function Candidate({
 function RollbackCandidates({
   candidates,
   view,
-  environmentId,
-  permitted,
-  revisions,
-  onDeployment,
+  ...actions
 }: Actions & {
   candidates: RollbackCandidate[];
   view: EnvironmentSelection | undefined;
 }) {
-  const request = useRequest(onDeployment);
+  const { environmentId, revisions } = actions;
+  const request = useRequest(actions);
+  const refusedId = useId();
   if (candidates.length === 0)
     return (
       <p className="empty">No previously accepted selection to restore.</p>
@@ -268,7 +305,7 @@ function RollbackCandidates({
   const refused =
     view === undefined
       ? "The binding generation is unavailable, so a rollback cannot be requested."
-      : refusal(view, permitted);
+      : refusal(view, actions);
   const { shown, older } = splitCandidates(
     candidates,
     view?.acceptedDeploymentId,
@@ -282,7 +319,7 @@ function RollbackCandidates({
           view={view}
           environmentId={environmentId}
           revisions={revisions}
-          disabled={refused !== null}
+          refusedId={refused === null ? null : refusedId}
           pending={request.isPending}
           onRollback={(selectionDeploymentId) => {
             if (view === undefined) return;
@@ -306,14 +343,20 @@ function RollbackCandidates({
         excluded when restoring it would lower a forward-only configuration key
         or cross a point-of-no-return step.
       </p>
-      {request.error !== null && <ErrorNotice error={request.error} />}
+      {refused !== null && (
+        <p className="notice" id={refusedId}>
+          {refused}
+        </p>
+      )}
+      {request.error !== null && (
+        <Refused error={request.error} actions={actions} />
+      )}
       {list(shown, 1)}
       {older.length > 0 && (
         <Disclosure summary="Older candidates" count={older.length}>
           {list(older, shown.length + 1)}
         </Disclosure>
       )}
-      {refused !== null && <p className="notice">{refused}</p>}
     </>
   );
 }

@@ -1,8 +1,8 @@
-import { DeliveryClientError } from "#shared/client.ts";
-
+/**
+ * An error in the words a person reads. A Delivery API error is its message
+ * alone: the code (`CONFLICT`, `INVALID`) is for programs, not for people.
+ */
 export function errorMessage(error: unknown) {
-  if (error instanceof DeliveryClientError)
-    return `${error.message} (${error.code})`;
   return error instanceof Error ? error.message : String(error);
 }
 
