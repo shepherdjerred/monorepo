@@ -123,8 +123,14 @@ export function NotFound() {
   );
 }
 
+/** The server's words for a failure, or a plain fallback when it gave none. */
+function errorText(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message === "" ? "Delivery could not load this page." : message;
+}
+
 /** A request the server refused as asked; asking again cannot change that. */
-function refused(error: Error) {
+function refused(error: unknown) {
   return (
     error instanceof DeliveryClientError &&
     error.status >= 400 &&
@@ -143,7 +149,7 @@ export function RouteError({
   error,
   recovery,
 }: {
-  error: Error;
+  error: unknown;
   recovery?: ReactNode;
 }) {
   const router = useRouter();
@@ -157,9 +163,7 @@ export function RouteError({
         takeFocus
       />
       <div className="notice error" role="alert">
-        {error.message === ""
-          ? "Delivery could not load this page."
-          : error.message}
+        {errorText(error)}
       </div>
       <p>
         {final ? (

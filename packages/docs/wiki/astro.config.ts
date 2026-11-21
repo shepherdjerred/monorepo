@@ -10,6 +10,9 @@ import { wikiRedirects } from "./src/lib/wiki-redirects.ts";
 const wikiRoot = new URL("./", import.meta.url).pathname;
 
 export default defineConfig({
+  // Starlight 0.43 stopped forcing `:where()` scoping; keep the specificity
+  // these overrides and custom styles were written against.
+  scopedStyleStrategy: "where",
   build: {
     format: "directory",
     inlineStylesheets: "never",

@@ -19,8 +19,8 @@
     "@shepherdjerred/discord-plays-web": "workspace:*",
     "@shepherdjerred/discord-plays-core": "workspace:*",
     "@tanstack/react-query": "^5.70.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "socket.io-client": "^4.8.1",
     "zod": "^4.4.3"
   },

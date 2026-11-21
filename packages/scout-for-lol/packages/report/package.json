@@ -30,7 +30,7 @@
     "@scout-for-lol/design-system": "workspace:*",
     "chroma-js": "^3.2.0",
     "echarts": "^6.0.0",
-    "react": "19.3.0",
+    "react": "19.3.1",
     "remeda": "^2.21.2",
     "satori": "^0.47.0",
     "ts-pattern": "^5.7.0",
