@@ -105,7 +105,12 @@ function context(detail: DeploymentDetail) {
 /** The worker Application as Argo left it: synced by `request`, or holding `source`. */
 function application(
   detail: DeploymentDetail,
-  input: { request: string; source?: unknown; sync?: "Synced" | "OutOfSync" },
+  input: {
+    request: string;
+    source?: unknown;
+    sync?: "Synced" | "OutOfSync";
+    resources?: unknown[];
+  },
 ) {
   const { selection } = modelWorkerChartSelection(detail);
   const synced = {
@@ -128,6 +133,7 @@ function application(
     status: {
       sync: { status: input.sync ?? "Synced", revision: selection.revision },
       health: { status: "Healthy" },
+      ...(input.resources === undefined ? {} : { resources: input.resources }),
       operationState: {
         phase: "Succeeded",
         finishedAt: timestamp,
@@ -604,5 +610,100 @@ describe("retire-host worker recovery", () => {
       CANDIDATE,
     ]);
     expect(polledBuilds).toEqual([[CANDIDATE]]);
+  });
+
+  test("operated rollout and retire-host settle when OutOfSync resources only await pruning, and fail closed otherwise (AI-792)", async () => {
+    const pruneOnlyResources = [
+      { kind: "Deployment", status: "Synced" },
+      {
+        group: "rbac.authorization.k8s.io",
+        kind: "ClusterRole",
+        name: "temporal-worker-ingress-reader",
+        status: "OutOfSync",
+        requiresPruning: true,
+      },
+      {
+        group: "apps",
+        kind: "Deployment",
+        namespace: "temporal",
+        name: "temporal-delivery-wf-retained-000e10e1eec2",
+        status: "OutOfSync",
+        requiresPruning: true,
+      },
+    ];
+
+    const rolloutDetail = failed(midRollout, [plan()]);
+    const rolloutProof = await proveSettledWorkerRecovery(
+      context(rolloutDetail),
+      boundary(rolloutDetail, {
+        application: application(rolloutDetail, {
+          request: REQUEST,
+          sync: "OutOfSync",
+          resources: pruneOnlyResources,
+        }),
+        hosts: [STABLE, CANDIDATE],
+        prod: CANDIDATE,
+      }),
+    );
+    expect(rolloutProof.evidence).toContainEqual(
+      expect.objectContaining({
+        kind: "reconciliation",
+        operationId: OPERATION,
+        summary: expect.stringContaining("Argo comparison OutOfSync/OutOfSync"),
+      }),
+    );
+
+    const retireDetail = retiringStable(failed(stoppedInSync, []));
+    const retireProof = await proveSettledWorkerRecovery(
+      context(retireDetail),
+      boundary(retireDetail, {
+        application: application(retireDetail, {
+          request: REQUEST,
+          sync: "OutOfSync",
+          resources: pruneOnlyResources,
+        }),
+        hosts: [CANDIDATE],
+        prod: CANDIDATE,
+        beta: CANDIDATE,
+        forbidCandidateReferencesCheck: true,
+      }),
+    );
+    expect(retireProof.evidence).toContainEqual(
+      expect.objectContaining({
+        kind: "reconciliation",
+        operationId: OPERATION,
+        summary: expect.stringContaining("Argo comparison OutOfSync/OutOfSync"),
+      }),
+    );
+
+    for (const resources of [
+      undefined,
+      [],
+      [{ kind: "Deployment", status: "Synced" }],
+      [
+        ...pruneOnlyResources,
+        { kind: "Deployment", status: "OutOfSync", requiresPruning: false },
+      ],
+      [...pruneOnlyResources, { kind: "Deployment", status: "OutOfSync" }],
+    ]) {
+      await expect(
+        proveSettledWorkerRecovery(
+          context(retireDetail),
+          boundary(retireDetail, {
+            application: application(retireDetail, {
+              request: REQUEST,
+              sync: "OutOfSync",
+              ...(resources === undefined ? {} : { resources }),
+            }),
+            hosts: [CANDIDATE],
+            prod: CANDIDATE,
+            beta: CANDIDATE,
+            forbidCandidateReferencesCheck: true,
+          }),
+        ),
+      ).rejects.toThrow(
+        "Operated worker recovery requires a Synced Application",
+      );
+    }
   });
 });
