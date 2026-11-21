@@ -119,7 +119,7 @@ export function renderPmsReproduction(
     })),
     componentAcceptanceOnly: true,
     policy: {
-      backendVersion: "3.19.0",
+      backendVersion: "3.20.1",
       namespace: "woodpecker-ci",
       node: "liskov",
       queue: "default",

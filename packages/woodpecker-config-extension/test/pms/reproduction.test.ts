@@ -6,6 +6,7 @@ import {
   renderPmsReproduction,
   PmsReproductionProtocol,
 } from "#src/reproduction/media-pms.ts";
+import catalog from "@shepherdjerred/version-catalog/catalog.json" with { type: "json" };
 import { TEST_IMAGES } from "#test-identity";
 import {
   ORDINARY_CLONE_IMAGE,
@@ -108,6 +109,35 @@ test("PMS preview retains both actual containers and requires separate execution
       jobImagePullSecrets: ["dockerhub-pull-woodpecker-ci", "unapproved"],
     }).success,
   ).toBe(false);
+});
+
+test("PMS runner pins the Woodpecker backend the cluster's agents run", async () => {
+  const agent = z
+    .object({
+      entries: z.array(z.object({ name: z.string(), value: z.string() })),
+    })
+    .parse(catalog)
+    .entries.find((entry) => entry.name === "woodpeckerci/woodpecker-agent");
+  const tag = agent?.value.split("@")[0];
+  expect(tag).toMatch(/^v\d+\.\d+\.\d+$/);
+  const result = renderPmsReproduction(
+    {
+      source: "a".repeat(40),
+      branch: "feature/media",
+      requestId: "d10ddcc4-2245-4774-b49a-a4a51abcfaf8",
+    },
+    TEST_IMAGES,
+  );
+  expect(`v${result.plan.policy.backendVersion}`).toBe(tag);
+  const goMod = await Bun.file(
+    new URL("../../reproduction/pms-runner/go.mod", import.meta.url),
+  ).text();
+  expect(goMod).toContain(`go.woodpecker-ci.org/woodpecker/v3 ${tag ?? ""}\n`);
+  const runner = await Bun.file(
+    new URL("../../reproduction/pms-runner/main.go", import.meta.url),
+  ).text();
+  expect(runner).toContain(`dep.Version == "${tag ?? ""}"`);
+  expect(runner).toContain(`Version: "${result.plan.policy.backendVersion}"`);
 });
 
 test("PMS preview refuses symbolic source identities before emitting a workflow", () => {

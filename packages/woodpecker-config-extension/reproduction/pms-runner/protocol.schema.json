@@ -142,7 +142,7 @@
             "workspaceSize"
           ],
           "properties": {
-            "backendVersion": { "const": "3.19.0" },
+            "backendVersion": { "const": "3.20.1" },
             "namespace": { "const": "woodpecker-ci" },
             "node": { "const": "liskov" },
             "queue": { "const": "default" },

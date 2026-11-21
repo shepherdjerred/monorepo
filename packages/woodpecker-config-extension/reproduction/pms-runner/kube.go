@@ -35,7 +35,7 @@ func newKubeResources(ctx context.Context, p Plan) (*kubeResources, error) {
 	if path == "" {
 		path = os.Getenv("HOME") + "/.kube/config"
 	}
-	// This is the same public config loader and path rule as pinned backend 3.19.
+	// This is the same public config loader and path rule as pinned backend 3.20.
 	config, err := clientcmd.BuildConfigFromFlags("", path)
 	if err != nil {
 		return nil, err

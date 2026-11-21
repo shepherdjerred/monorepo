@@ -114,7 +114,7 @@
         "registryUrl": "https://1password.github.io/connect-helm-charts/",
         "versioning": "semver"
       },
-      "value": "2.4.2",
+      "value": "2.4.3",
       "component": true
     },
     {
@@ -127,7 +127,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.10.2",
+      "value": "10.18.2",
       "component": true
     },
     {
@@ -140,7 +140,7 @@
         "registryUrl": "https://charts.jetstack.io",
         "versioning": "semver-coerced"
       },
-      "value": "v1.21.2",
+      "value": "v1.21.3",
       "component": true
     },
     {
@@ -179,7 +179,7 @@
         "registryUrl": "https://kubernetes-sigs.github.io/node-feature-discovery/charts",
         "versioning": "semver"
       },
-      "value": "0.19.0",
+      "value": "0.20.1",
       "component": true
     },
     {
@@ -231,7 +231,7 @@
         "registryUrl": "https://pkgs.tailscale.com/helmcharts",
         "versioning": "semver"
       },
-      "value": "1.102.4",
+      "value": "1.104.7",
       "component": true
     },
     {
@@ -429,7 +429,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2026.10.0@sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07"
+      "value": "2026.11.1@sha256:e613aadbc2d9511785d2e67a86b0c8ac18dd63a3f9af0d06faf04cbfdcb35f2d"
     },
     {
       "name": "tailscale/golink",
@@ -899,7 +899,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v3.19.0@sha256:6ca167a3c58b50c5a3c903dd8db92b39cfc30c560a47052cff7dd0235123a9cb"
+      "value": "v3.20.1@sha256:0f31560e29d67ec4a06d6eeee4bac38d2a2697a6a741b8a0db3998180f3a3517"
     },
     {
       "name": "woodpeckerci/woodpecker-agent",
@@ -911,7 +911,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v3.19.0@sha256:f85f163e09494ace3377a3f3a6043f131fb47e3e627f7438de42417ee06ca56d"
+      "value": "v3.20.1@sha256:a7d7299a13add0b3936fa0ac9ed23507fe283a7fc7d9596c4289d7e8206541eb"
     },
     {
       "name": "woodpecker-ci/plugin-git",
@@ -963,7 +963,7 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.20.1@sha256:909f655fee23166bfe112b2e0fd18193d10e463e1f7287ff99c285060da87981",
+      "value": "0.20.7@sha256:f39b8bede7a69fa500f3e0b1e72697be73579396f5b7dbd063bdce4a86c7484a",
       "component": true
     },
     {
@@ -1034,7 +1034,7 @@
         "registryUrl": "https://vmware-tanzu.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "12.2.1",
+      "value": "12.2.5",
       "component": true
     },
     {
@@ -1276,7 +1276,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.3.1"
+      "value": "28.3.12"
     },
     {
       "name": "seaweedfs",
@@ -1288,7 +1288,7 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.48.0",
+      "value": "4.54.0",
       "component": true
     },
     {
@@ -1301,7 +1301,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d",
+      "value": "4.54@sha256:4b42c212543a0acd4c0e675215ecdcaf62a186ef98def76c7e12701871222d15",
       "notes": [
         "Runs weed filer.backup beside the seaweedfs chart, whose servers use the chart's own image.",
         "renovate.json groups both so filer.backup tracks the server version."
@@ -1317,7 +1317,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.1.1"
+      "value": "28.1.6"
     },
     {
       "name": "bitnami/mariadb",
@@ -1353,7 +1353,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "3.3.7@sha256:e54b4a7eb106ee15eda5664311c4b9415546d4196f5c4336d23a78d6ce57b819"
+      "value": "3.4.0@sha256:7eb37cdce9fdeeeadd21b3ffb7b426564e5a1c0d2ade6fe0d62af5b618938bd3"
     },
     {
       "name": "library/php",
@@ -1498,7 +1498,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.6.1@sha256:c5e3657451f4ba1ddb145a5118a4347314206cc5ba98f40e5f268c6c0975963e"
+      "value": "2.6.3@sha256:d19378dc3ad8fac46b2d554019540e84d607c176b3e0774a10c55458f1288fa0"
     },
     {
       "name": "arizephoenix/phoenix",
@@ -1539,7 +1539,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.32.1@sha256:acecbab5b0b8ae9cf4012b508866ca97feda3709577bf157b537239f40029049"
+      "value": "1.32.2@sha256:7bf69188a6232fea14869b9cef3d94aa82a1601d99517f7e86c71f22da4e0670"
     },
     {
       "name": "temporalio/ui",
@@ -1551,7 +1551,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.55.0@sha256:3899d5cf749b5555c9f798d46f2423b1d6190ea391ca713db5d1bba961759e58"
+      "value": "2.58.1@sha256:ac3c13eddb4547d830991bb5eee93a5d97140134522b7297fdb2be1fe25ef925"
     },
     {
       "name": "temporalio/admin-tools",
@@ -1563,7 +1563,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.32.1@sha256:9ef0dc5b063bf4ffd5c1512de72e0e73e225bd2c7006a18ce69bd592a8862a83"
+      "value": "1.32.2@sha256:4a95866efba29d7e17ab012df5232795e8b0ad0f7d5f9d1ec4df321f7792a754"
     },
     {
       "name": "flipt-io/flipt",
@@ -1576,7 +1576,7 @@
         "versioning": "semver",
         "packageName": "flipt/flipt"
       },
-      "value": "v2.13.1@sha256:3118adad2f21d2d4793765265e9eb1c99b547019f062ce438430089ba7cea89b",
+      "value": "v2.14.2@sha256:121830e237c3a0d2b875f73905944d6ff301fdd7881c5abdec5f24f5549537e8",
       "notes": [
         "Feature flag server. Fair Core License; the free tier covers the UI, local git storage, and evaluation.",
         "A bump requires re-capturing packages/feature-flags/src/providers/fixtures/flipt-snapshot.default.json,",

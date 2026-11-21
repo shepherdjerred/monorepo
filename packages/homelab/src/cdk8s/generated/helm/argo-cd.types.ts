@@ -136,7 +136,7 @@ export type ArgocdHelmValuesGlobal = {
   /**
    * Toggle and define pod-level security context.
    *
-   * @default {}
+   * @default {"seccompProfile":{"type":"RuntimeDefault"}}
    */
   securityContext?: ArgocdHelmValuesGlobalSecurityContext;
   hostAliases?: unknown[];
@@ -239,7 +239,19 @@ export type ArgocdHelmValuesGlobalPodAnnotations = object;
 
 export type ArgocdHelmValuesGlobalPodLabels = object;
 
-export type ArgocdHelmValuesGlobalSecurityContext = object;
+export type ArgocdHelmValuesGlobalSecurityContext = {
+  /**
+   * @default {"type":"RuntimeDefault"}
+   */
+  seccompProfile?: ArgocdHelmValuesGlobalSecurityContextSeccompProfile;
+};
+
+export type ArgocdHelmValuesGlobalSecurityContextSeccompProfile = {
+  /**
+   * @default "RuntimeDefault"
+   */
+  type?: string;
+};
 
 export type ArgocdHelmValuesGlobalDualStack = {
   /**
@@ -987,6 +999,12 @@ export type ArgocdHelmValuesController = {
    */
   containerPorts?: ArgocdHelmValuesControllerContainerPorts;
   /**
+   * Application controller headless service configuration
+   *
+   * @default {"annotations":{},"labels":{}}
+   */
+  service?: ArgocdHelmValuesControllerService;
+  /**
    * Host Network for application controller pods
    *
    * @default false
@@ -1255,6 +1273,37 @@ export type ArgocdHelmValuesControllerContainerPorts = {
    * @default 8082
    */
   metrics?: number;
+};
+
+export type ArgocdHelmValuesControllerService = {
+  /**
+   * Application controller service annotations
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesControllerServiceAnnotations;
+  /**
+   * Application controller service labels
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesControllerServiceLabels;
+};
+
+export type ArgocdHelmValuesControllerServiceAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesControllerServiceLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
 };
 
 export type ArgocdHelmValuesControllerDnsConfig = object;
@@ -1732,6 +1781,17 @@ export type ArgocdHelmValuesDex = {
    */
   runtimeClassName?: string;
   /**
+   * The number of Dex server pods to run
+   * Values above 1 need a persistent storage backend in `configs.cm."dex.config"`, the in-memory default does not share state.
+   *
+   * @default 1
+   */
+  replicas?: number;
+  /**
+   * @default {"type":""}
+   */
+  storage?: ArgocdHelmValuesDexStorage;
+  /**
    * @default {"enabled":false,"service":{"annotations":{},"labels":{},"portName":"http-metrics"},"serviceMonitor":{"enabled":false,"interval":"30s","honorLabels":false,"relabelings":[],"metricRelabelings":[],"selector":{},"scheme":"","tlsConfig":{},"namespace":"","additionalLabels":{},"annotations":{}}}
    */
   metrics?: ArgocdHelmValuesDexMetrics;
@@ -1752,7 +1812,7 @@ export type ArgocdHelmValuesDex = {
   /**
    * Dex image
    *
-   * @default {"repository":"ghcr.io/dexidp/dex","tag":"v2.46.0","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/dexidp/dex","tag":"v2.46.1","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesDexImage;
   imagePullSecrets?: unknown[];
@@ -1931,6 +1991,21 @@ export type ArgocdHelmValuesDex = {
   networkPolicy?: ArgocdHelmValuesDexNetworkPolicy;
 };
 
+export type ArgocdHelmValuesDexStorage = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+  /**
+   * Dex storage type. Renders the RBAC for `kubernetes` storage and validates `dex.replicas`.
+   * Only set it when `configs.cm.create` is false, so the chart cannot read `configs.cm."dex.config"`.
+   *
+   * @default ""
+   */
+  type?: string;
+};
+
 export type ArgocdHelmValuesDexMetrics = {
   /**
    * Deploy metrics service
@@ -2085,7 +2160,7 @@ export type ArgocdHelmValuesDexPdb = {
    */
   minAvailable?: string;
   /**
-   * Number of pods that are unavailble after eviction as number or percentage (eg.: 50%).
+   * Number of pods that are unavailable after eviction as number or percentage (eg.: 50%).
    * Has higher precedence over `dex.pdb.minAvailable`
    *
    * @default ""
@@ -2186,7 +2261,7 @@ export type ArgocdHelmValuesDexImage = {
   /**
    * Dex image tag
    *
-   * @default "v2.46.0"
+   * @default "v2.46.1"
    */
   tag?: string;
   /**
@@ -2604,6 +2679,13 @@ export type ArgocdHelmValuesRedis = {
    */
   existingSecret?: string;
   /**
+   * TLS for the single node Redis deployment
+   * Ref: https://redis.io/docs/latest/operate/oss_and_stack/management/security/encryption/
+   *
+   * @default {...} (5 keys)
+   */
+  tls?: ArgocdHelmValuesRedisTls;
+  /**
    * Redis Pod Disruption Budget
    * Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
@@ -2772,6 +2854,42 @@ export type ArgocdHelmValuesRedis = {
   networkPolicy?: ArgocdHelmValuesRedisNetworkPolicy;
 };
 
+export type ArgocdHelmValuesRedisTls = {
+  /**
+   * Serve Redis over TLS only, and connect the Argo CD server, repo server and application controller to it over TLS.
+   * Only applies to the single node Redis deployment.
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Name of the Secret holding the Redis server certificate and key, such as one cert-manager creates.
+   * The certificate must name the Redis Service, which the Argo CD components connect to.
+   *
+   * @default ""
+   */
+  secretName?: string;
+  /**
+   * Key of the server certificate in that Secret
+   *
+   * @default "tls.crt"
+   */
+  certFile?: string;
+  /**
+   * Key of the server private key in that Secret
+   *
+   * @default "tls.key"
+   */
+  keyFile?: string;
+  /**
+   * Key of the CA certificate in that Secret, which the Argo CD components verify Redis with.
+   * Leave empty to verify Redis against the system CAs.
+   *
+   * @default "ca.crt"
+   */
+  caCertFile?: string;
+};
+
 export type ArgocdHelmValuesRedisPdb = {
   /**
    * Deploy a [PodDisruptionBudget] for the Redis
@@ -2798,7 +2916,7 @@ export type ArgocdHelmValuesRedisPdb = {
    */
   minAvailable?: string;
   /**
-   * Number of pods that are unavailble after eviction as number or percentage (eg.: 50%).
+   * Number of pods that are unavailable after eviction as number or percentage (eg.: 50%).
    * Has higher precedence over `redis.pdb.minAvailable`
    *
    * @default ""
@@ -2922,7 +3040,7 @@ export type ArgocdHelmValuesRedisExporter = {
   /**
    * Prometheus redis-exporter image
    *
-   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.93.0","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.97.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisExporterImage;
   /**
@@ -2961,7 +3079,7 @@ export type ArgocdHelmValuesRedisExporterImage = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.93.0"
+   * @default "v1.97.0"
    */
   tag?: string;
   /**
@@ -3469,7 +3587,7 @@ export type ArgocdHelmValuesRedisha = {
   /**
    * Prometheus redis-exporter sidecar
    *
-   * @default {"enabled":false,"image":"ghcr.io/oliver006/redis_exporter","tag":"v1.93.0"}
+   * @default {"enabled":false,"image":"ghcr.io/oliver006/redis_exporter","tag":"v1.97.0"}
    */
   exporter?: ArgocdHelmValuesRedishaExporter;
   /**
@@ -3579,7 +3697,7 @@ export type ArgocdHelmValuesRedishaExporter = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.93.0"
+   * @default "v1.97.0"
    */
   tag?: string;
 };
@@ -3876,7 +3994,7 @@ export type ArgocdHelmValuesRedisSecretInit = {
   /**
    * Redis secret-init Job pod-level security context
    *
-   * @default {}
+   * @default {"seccompProfile":{"type":"RuntimeDefault"}}
    */
   securityContext?: ArgocdHelmValuesRedisSecretInitSecurityContext;
   /**
@@ -3986,7 +4104,19 @@ export type ArgocdHelmValuesRedisSecretInitContainerSecurityContextSeccompProfil
     type?: string;
   };
 
-export type ArgocdHelmValuesRedisSecretInitSecurityContext = object;
+export type ArgocdHelmValuesRedisSecretInitSecurityContext = {
+  /**
+   * @default {"type":"RuntimeDefault"}
+   */
+  seccompProfile?: ArgocdHelmValuesRedisSecretInitSecurityContextSeccompProfile;
+};
+
+export type ArgocdHelmValuesRedisSecretInitSecurityContextSeccompProfile = {
+  /**
+   * @default "RuntimeDefault"
+   */
+  type?: string;
+};
 
 export type ArgocdHelmValuesRedisSecretInitServiceAccount = {
   /**
@@ -4294,8 +4424,8 @@ export type ArgocdHelmValuesServer = {
   /**
    * NOTE: Gateway API support is in EXPERIMENTAL status
    * ListenerSet allows attaching additional listeners to an existing Gateway
-   * Requires Gateway API v1alpha2 and a controller that supports ListenerSet
-   * Refer to https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io/v1alpha2.ListenerSet
+   * Requires Gateway API v1.5+ and a controller that supports ListenerSet
+   * Refer to https://gateway-api.sigs.k8s.io/reference/api-spec/1.5/spec/#listenerset
    *
    * @default {...} (11 keys)
    */
@@ -5750,7 +5880,7 @@ export type ArgocdHelmValuesServerListenerset = {
    */
   hostname?: string;
   /**
-   * Name of the synthesized listener. Also used as sectionName in auto-derived httproute parentRefs.
+   * Name of the synthesized listener. Also used as sectionName in auto-derived httproute parentRefs. When `listeners` is set, sectionName is only kept if one of the listeners has this name.
    *
    * @default "https"
    */
@@ -7895,7 +8025,7 @@ export type ArgocdHelmValuesApplicationSetListenerset = {
    */
   hostname?: string;
   /**
-   * Name of the synthesized listener. Also used as sectionName in auto-derived httproute parentRefs.
+   * Name of the synthesized listener. Also used as sectionName in auto-derived httproute parentRefs. When `listeners` is set, sectionName is only kept if one of the listeners has this name.
    *
    * @default "https"
    */
@@ -9449,18 +9579,18 @@ export type ArgocdHelmValues = {
    * Argo Configs
    * background: linear-gradient(to bottom, #999, #777, #333, #222, #111);
    * }
-   * Array of extra K8s manifests to deploy
+   * (list) Extra K8s manifests to deploy, as a list or a map. A map can be split over several values files, because Helm merges maps but replaces lists.
    * Note: Supports use of custom Helm templates
    *
    * @default {...} (14 keys)
    */
   configs?: ArgocdHelmValuesConfigs;
-  extraObjects?: unknown[];
+  extraObjects?: unknown;
   /**
    * Specific implementation for ingress controller. One of `generic`, `aws` or `gke`
    * Additional configuration might be required in related configuration sections
    *
-   * @default {...} (45 keys)
+   * @default {...} (46 keys)
    */
   controller?: ArgocdHelmValuesController;
   /**
@@ -9470,13 +9600,13 @@ export type ArgocdHelmValues = {
    * Dex log level. One of: `debug`, `info`, `warn`, `error`
    * Redis
    *
-   * @default {...} (45 keys)
+   * @default {...} (47 keys)
    */
   dex?: ArgocdHelmValuesDex;
   /**
    * Redis container port
    *
-   * @default {...} (41 keys)
+   * @default {...} (42 keys)
    */
   redis?: ArgocdHelmValuesRedis;
   /**
@@ -9547,6 +9677,7 @@ export type ArgocdHelmParameters = {
   "global.logging.format"?: string;
   "global.logging.level"?: string;
   "global.addPrometheusAnnotations"?: string;
+  "global.securityContext.seccompProfile.type"?: string;
   "global.hostAliases"?: string;
   "global.dualStack.ipFamilyPolicy"?: string;
   "global.dualStack.ipFamilies"?: string;
@@ -9692,6 +9823,8 @@ export type ArgocdHelmParameters = {
   "dex.name"?: string;
   "dex.extraArgs"?: string;
   "dex.runtimeClassName"?: string;
+  "dex.replicas"?: string;
+  "dex.storage.type"?: string;
   "dex.metrics.enabled"?: string;
   "dex.metrics.service.portName"?: string;
   "dex.metrics.serviceMonitor.enabled"?: string;
@@ -9785,6 +9918,11 @@ export type ArgocdHelmParameters = {
   "redis.name"?: string;
   "redis.runtimeClassName"?: string;
   "redis.existingSecret"?: string;
+  "redis.tls.enabled"?: string;
+  "redis.tls.secretName"?: string;
+  "redis.tls.certFile"?: string;
+  "redis.tls.keyFile"?: string;
+  "redis.tls.caCertFile"?: string;
   "redis.pdb.enabled"?: string;
   "redis.pdb.minAvailable"?: string;
   "redis.pdb.maxUnavailable"?: string;
@@ -9920,6 +10058,7 @@ export type ArgocdHelmParameters = {
   "redisSecretInit.containerSecurityContext.readOnlyRootFilesystem"?: string;
   "redisSecretInit.containerSecurityContext.runAsNonRoot"?: string;
   "redisSecretInit.containerSecurityContext.seccompProfile.type"?: string;
+  "redisSecretInit.securityContext.seccompProfile.type"?: string;
   "redisSecretInit.serviceAccount.create"?: string;
   "redisSecretInit.serviceAccount.name"?: string;
   "redisSecretInit.serviceAccount.automountServiceAccountToken"?: string;

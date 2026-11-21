@@ -62,10 +62,10 @@ export type NodefeaturediscoveryHelmValuesMaster = {
   enable?: boolean;
   /**
    * @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.api.core.v1.Container/properties/args
-   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/master-commandline-reference) to pass to nfd-master.
+   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/master-commandline-reference) to pass to nfd-master.
    * -- NFD-Master
    *
-   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/master-commandline-reference) to pass to nfd-master.
+   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/master-commandline-reference) to pass to nfd-master.
    *
    * @default []
    */
@@ -112,10 +112,10 @@ export type NodefeaturediscoveryHelmValuesMaster = {
   dnsPolicy?: string;
   /**
    * @schema type: [object, null]
-   * NFD master [configuration](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/master-configuration-reference).
+   * (object) NFD master [configuration](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/master-configuration-reference).
    * -- NFD-Master
    *
-   * NFD master [configuration](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/master-configuration-reference).
+   * NFD master [configuration](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/master-configuration-reference).
    *
    * @default null
    */
@@ -143,7 +143,7 @@ export type NodefeaturediscoveryHelmValuesMaster = {
    */
   instance?: string | null;
   /**
-   * (int) NFD API controller resync period. Time duration string (e.g. "5m", "1h", "2h45m").
+   * (string) NFD API controller resync period. Time duration string (e.g. "5m", "1h", "2h45m").
    * -- NFD-Master
    * @schema item: string
    *
@@ -317,25 +317,25 @@ export type NodefeaturediscoveryHelmValuesMaster = {
    */
   affinity?: NodefeaturediscoveryHelmValuesMasterAffinity;
   /**
-   * Startup probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-startup-probes).
+   * Startup probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes).
    * -- NFD-Master
    *
-   * Startup probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-startup-probes).
+   * Startup probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-startup-probes).
    *
    * @default {...} (4 keys)
    */
   startupProbe?: NodefeaturediscoveryHelmValuesMasterStartupProbe;
   /**
-   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-liveness-probes).
+   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request).
    * -- NFD-Master
    *
-   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-liveness-probes).
+   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request).
    *
    * @default {...} (4 keys)
    */
   livenessProbe?: NodefeaturediscoveryHelmValuesMasterLivenessProbe;
   /**
-   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-readiness-probes).
+   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes).
    *
    * @default {...} (5 keys)
    */
@@ -671,12 +671,12 @@ export type NodefeaturediscoveryHelmValuesMasterLivenessProbe = {
    */
   periodSeconds?: number | null;
   /**
-   * (int) Minimum consecutive successes for the probe before considering the pod as ready.
+   * (int) The number of consecutive failures for the probe before considering the container as failed and restarting it.
    * -- NFD-Master
-   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-readiness-probes).
+   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes).
    * -- NFD-Master
    *
-   * Minimum consecutive successes for the probe before considering the pod as ready.
+   * The number of consecutive failures for the probe before considering the container as failed and restarting it.
    *
    * @default null
    */
@@ -755,10 +755,10 @@ export type NodefeaturediscoveryHelmValuesWorker = {
   ownerRefs?: "node" | "pod" | "ds"[];
   /**
    * @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.api.core.v1.Container/properties/args
-   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/worker-commandline-reference) to pass to nfd-worker.
+   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/worker-commandline-reference) to pass to nfd-worker.
    * -- NFD-Worker
    *
-   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/worker-commandline-reference) to pass to nfd-worker.
+   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/worker-commandline-reference) to pass to nfd-worker.
    *
    * @default []
    */
@@ -795,17 +795,17 @@ export type NodefeaturediscoveryHelmValuesWorker = {
   hostUsers?: boolean | null;
   /**
    * @enum: [Default, ClusterFirst, ClusterFirstWithHostNet, None]
-   * NFD worker pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-policy).
+   * NFD worker pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy).
    * -- NFD-Worker
    *
-   * NFD worker pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-policy).
+   * NFD worker pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy).
    *
    * @default "ClusterFirstWithHostNet"
    */
   dnsPolicy?: string;
   /**
    * @schema type: [object, null]
-   * NFD worker [configuration](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/worker-configuration-reference).
+   * (object) NFD worker [configuration](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/worker-configuration-reference).
    * -- NFD-Worker
    * The following features demonstreate label templating capabilities
    * ID: {op: InRegexp, value: ["^open.*"]}
@@ -817,7 +817,7 @@ export type NodefeaturediscoveryHelmValuesWorker = {
    * Port on which to serve http for metrics and healthz endpoints.
    * -- NFD-Worker
    *
-   * NFD worker [configuration](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/worker-configuration-reference).
+   * NFD worker [configuration](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/worker-configuration-reference).
    *
    * @default null
    */
@@ -869,16 +869,16 @@ export type NodefeaturediscoveryHelmValuesWorker = {
    */
   securityContext?: NodefeaturediscoveryHelmValuesWorkerSecurityContext;
   /**
-   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-liveness-probes).
+   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request).
    * -- NFD-Worker
    *
-   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-liveness-probes).
+   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request).
    *
    * @default {...} (4 keys)
    */
   livenessProbe?: NodefeaturediscoveryHelmValuesWorkerLivenessProbe;
   /**
-   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-readiness-probes).
+   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes).
    *
    * @default {...} (5 keys)
    */
@@ -900,10 +900,10 @@ export type NodefeaturediscoveryHelmValuesWorker = {
   /**
    * Allow users to mount the hostPath /usr/src, useful for RHCOS on s390x
    * Does not work on systems without /usr/src AND a read-only /usr, such as Talos
-   * Mount host path /user/src inside the container. Does not work on systems without /usr/src AND a read-only /usr.
+   * Mount host path /usr/src inside the container. Does not work on systems without /usr/src AND a read-only /usr.
    * -- NFD-Worker
    *
-   * Mount host path /user/src inside the container. Does not work on systems without /usr/src AND a read-only /usr.
+   * Mount host path /usr/src inside the container. Does not work on systems without /usr/src AND a read-only /usr.
    *
    * @default false
    */
@@ -966,17 +966,17 @@ export type NodefeaturediscoveryHelmValuesWorker = {
   affinity?: NodefeaturediscoveryHelmValuesWorkerAffinity;
   /**
    * @schema type: [string, null]
-   * The name of the PriorityClass to be used for the nfd-worker pods.
+   * The name of the PriorityClass to be used for the nfd-worker pods. Takes precedence over the top-level `priorityClassName`.
    * -- NFD-Worker
    * @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.api.apps.v1.DaemonSetUpdateStrategy
    *
-   * The name of the PriorityClass to be used for the nfd-worker pods.
+   * The name of the PriorityClass to be used for the nfd-worker pods. Takes precedence over the top-level `priorityClassName`.
    *
    * @default null
    */
   priorityClassName?: string | null;
   /**
-   * Update strategy for the nfd-worker DaemonSet. Defaults to a rolling update with `maxUnavailable: "10%"` so upgrades complete in a bounded number of waves on clusters of any size (the Kubernetes default of `maxUnavailable: 1` rolls one node at a time and makes Helm wait and Flux HelmRelease timeouts likely on large clusters). nfd-worker is stateless and node labels persist while a worker pod restarts, so a faster roll is safe. Set `maxUnavailable: 1` to restore the Kubernetes default. To use `type: OnDelete`, also set `rollingUpdate: null` (Helm deep-merges maps). [More info](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set)
+   * Update strategy for the nfd-worker DaemonSet. The default updates multiple nodes in parallel on large clusters, so upgrades finish within Helm and Flux HelmRelease timeouts. Set `maxUnavailable: 1` to update one node at a time. To use `type: OnDelete`, also set `rollingUpdate: null` (Helm deep-merges maps). [More info](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set)
    *
    * @default {"rollingUpdate":{"maxUnavailable":"10%"}}
    */
@@ -1057,12 +1057,12 @@ export type NodefeaturediscoveryHelmValuesWorkerLivenessProbe = {
    */
   periodSeconds?: number | null;
   /**
-   * (int) Minimum consecutive successes for the probe before considering the pod as ready.
+   * (int) The number of consecutive failures for the probe before considering the container as failed and restarting it.
    * -- NFD-Worker
-   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-readiness-probes).
+   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes).
    * -- NFD-Worker
    *
-   * Minimum consecutive successes for the probe before considering the pod as ready.
+   * The number of consecutive failures for the probe before considering the container as failed and restarting it.
    *
    * @default null
    */
@@ -1236,14 +1236,10 @@ export type NodefeaturediscoveryHelmValuesWorkerAffinity = object;
 
 export type NodefeaturediscoveryHelmValuesWorkerUpdateStrategy = {
   /**
-   * Update strategy for the nfd-worker DaemonSet. Defaults to a rolling
-   * update with `maxUnavailable: "10%"` so upgrades complete in a bounded
-   * number of waves on clusters of any size (the Kubernetes default of
-   * `maxUnavailable: 1` rolls one node at a time and makes Helm wait and
-   * Flux HelmRelease timeouts likely on large clusters). nfd-worker is
-   * stateless and node labels persist while a worker pod restarts, so a
-   * faster roll is safe. Set `maxUnavailable: 1` to restore the Kubernetes
-   * default. To use `type: OnDelete`, also set `rollingUpdate: null`
+   * Update strategy for the nfd-worker DaemonSet. The default updates
+   * multiple nodes in parallel on large clusters, so upgrades finish within
+   * Helm and Flux HelmRelease timeouts. Set `maxUnavailable: 1` to update one
+   * node at a time. To use `type: OnDelete`, also set `rollingUpdate: null`
    * (Helm deep-merges maps).
    * [More info](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set)
    * -- NFD-Worker
@@ -1296,12 +1292,12 @@ export type NodefeaturediscoveryHelmValuesWorkerNetworkPolicy = {
 
 export type NodefeaturediscoveryHelmValuesTopologyUpdater = {
   /**
-   * *: [hugepages-2Mi]
+   * '*': [hugepages-2Mi]
    * <NFD-TOPOLOGY-UPDATER-CONF-END-DO-NOT-REMOVE>
    * Specifies whether nfd-topology-updater should be deployed.
    * -- NFD-Topology-Updater
    *
-   * Configuration for the topology updater. See the [configuration reference](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/topology-updater-configuration-reference) for details.
+   * Configuration for the topology updater. See the [configuration reference](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/topology-updater-configuration-reference) for details.
    *
    * @default null
    */
@@ -1316,20 +1312,21 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdater = {
    * Create the NodeResourceTopology CRD. This MUST be set to true when
    * 'enable' is true, unless the CRD is installed separately (e.g., by another
    * Helm release or external tool). If the CRD is missing, the topology-updater
-   * pods will fail with "NodeResourceTopology CRD is not installed" error.
+   * pods keep running but publish nothing; they log "waiting for
+   * NodeResourceTopology CRD to be created" and retry indefinitely.
    * -- NFD-Topology-Updater
    *
-   * Create the NodeResourceTopology CRD. This MUST be set to true when 'enable' is true, unless the CRD is installed separately (e.g., by another Helm release or external tool). If the CRD is missing, the topology-updater pods will fail with "NodeResourceTopology CRD is not installed" error.
+   * Create the NodeResourceTopology CRD. This MUST be set to true when 'enable' is true, unless the CRD is installed separately (e.g., by another Helm release or external tool). If the CRD is missing, the topology-updater pods keep running but publish nothing; they log "waiting for NodeResourceTopology CRD to be created" and retry indefinitely.
    *
    * @default false
    */
   createCRDs?: boolean;
   /**
    * @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.api.core.v1.Container/properties/args
-   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/topology-updater-commandline-reference) to pass to nfd-topology-updater.
+   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/topology-updater-commandline-reference) to pass to nfd-topology-updater.
    * -- NFD-Topology-Updater
    *
-   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/topology-updater-commandline-reference) to pass to nfd-topology-updater.
+   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/topology-updater-commandline-reference) to pass to nfd-topology-updater.
    *
    * @default []
    */
@@ -1366,10 +1363,10 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdater = {
   hostUsers?: boolean | null;
   /**
    * @enum: [Default, ClusterFirst, ClusterFirstWithHostNet, None]
-   * NFD topology updater pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-policy).
+   * NFD topology updater pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy).
    * -- NFD-Topology-Updater
    *
-   * NFD topology updater pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-policy).
+   * NFD topology updater pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy).
    *
    * @default "ClusterFirstWithHostNet"
    */
@@ -1379,11 +1376,19 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdater = {
    */
   serviceAccount?: NodefeaturediscoveryHelmValuesTopologyUpdaterServiceAccount;
   /**
+   * @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.api.apps.v1.DaemonSetUpdateStrategy
+   *
    * Specifies the number of old history for the DaemonSet to retain to allow rollback.
    *
    * @default null
    */
   revisionHistoryLimit?: number | null;
+  /**
+   * Update strategy for the nfd-topology-updater DaemonSet. The default updates multiple nodes in parallel on large clusters, so upgrades finish within Helm and Flux HelmRelease timeouts. Set `maxUnavailable: 1` to update one node at a time. To use `type: OnDelete`, also set `rollingUpdate: null` (Helm deep-merges maps). [More info](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set)
+   *
+   * @default {"rollingUpdate":{"maxUnavailable":"10%"}}
+   */
+  updateStrategy?: NodefeaturediscoveryHelmValuesTopologyUpdaterUpdateStrategy;
   /**
    * @default {"create":true}
    */
@@ -1476,16 +1481,16 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdater = {
    */
   securityContext?: NodefeaturediscoveryHelmValuesTopologyUpdaterSecurityContext;
   /**
-   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-liveness-probes).
+   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request).
    * -- NFD-Topology-Updater
    *
-   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-liveness-probes).
+   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request).
    *
    * @default {...} (4 keys)
    */
   livenessProbe?: NodefeaturediscoveryHelmValuesTopologyUpdaterLivenessProbe;
   /**
-   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-readiness-probes).
+   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes).
    *
    * @default {...} (5 keys)
    */
@@ -1617,6 +1622,31 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdaterServiceAccountAnnotatio
     [key: string]: unknown;
   };
 
+export type NodefeaturediscoveryHelmValuesTopologyUpdaterUpdateStrategy = {
+  /**
+   * Update strategy for the nfd-topology-updater DaemonSet. The default
+   * updates multiple nodes in parallel on large clusters, so upgrades finish
+   * within Helm and Flux HelmRelease timeouts. Set `maxUnavailable: 1` to
+   * update one node at a time. To use `type: OnDelete`, also set
+   * `rollingUpdate: null` (Helm deep-merges maps).
+   * [More info](https://kubernetes.io/docs/tasks/manage-daemon/update-daemon-set)
+   * -- NFD-Topology-Updater
+   *
+   * @default {"maxUnavailable":"10%"}
+   */
+  rollingUpdate?: NodefeaturediscoveryHelmValuesTopologyUpdaterUpdateStrategyRollingUpdate;
+};
+
+export type NodefeaturediscoveryHelmValuesTopologyUpdaterUpdateStrategyRollingUpdate =
+  {
+    /**
+     * @schema type: [string, integer]
+     *
+     * @default "10%"
+     */
+    maxUnavailable?: string | number;
+  };
+
 export type NodefeaturediscoveryHelmValuesTopologyUpdaterRbac = {
   /**
    * Create [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) configuration for nfd-topology-updater.
@@ -1697,12 +1727,12 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdaterLivenessProbe = {
    */
   periodSeconds?: number | null;
   /**
-   * (int) Minimum consecutive successes for the probe before considering the pod as ready.
+   * (int) The number of consecutive failures for the probe before considering the container as failed and restarting it.
    * -- NFD-Topology-Updater
-   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-readiness-probes).
+   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes).
    * -- NFD-Topology-Updater
    *
-   * Minimum consecutive successes for the probe before considering the pod as ready.
+   * The number of consecutive failures for the probe before considering the container as failed and restarting it.
    *
    * @default null
    */
@@ -1866,10 +1896,10 @@ export type NodefeaturediscoveryHelmValuesGc = {
   enable?: boolean;
   /**
    * @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.api.core.v1.Container/properties/args
-   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/gc-commandline-reference) to pass to nfd-gc.
+   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/gc-commandline-reference) to pass to nfd-gc.
    * -- NFD-GC
    *
-   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/gc-commandline-reference) to pass to nfd-gc.
+   * Additional [command line arguments](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/gc-commandline-reference) to pass to nfd-gc.
    *
    * @default []
    */
@@ -1915,10 +1945,10 @@ export type NodefeaturediscoveryHelmValuesGc = {
   replicaCount?: number;
   /**
    * @enum: [Default, ClusterFirst, ClusterFirstWithHostNet, None]
-   * NFD gc pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-policy).
+   * NFD gc pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy).
    * -- NFD-GC
    *
-   * NFD gc pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-policy).
+   * NFD gc pod [dnsPolicy](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-s-dns-policy).
    *
    * @default "ClusterFirstWithHostNet"
    */
@@ -1961,16 +1991,26 @@ export type NodefeaturediscoveryHelmValuesGc = {
    */
   initContainers?: unknown[];
   /**
-   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-liveness-probes).
+   * @schema $ref: $k8s/_definitions.json#/definitions/io.k8s.api.core.v1.SecurityContext
+   * [SecurityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container) of the nfd-gc container.
    * -- NFD-GC
    *
-   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-liveness-probes).
+   * [SecurityContext](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container) of the nfd-gc container.
+   *
+   * @default {...} (4 keys)
+   */
+  securityContext?: NodefeaturediscoveryHelmValuesGcSecurityContext;
+  /**
+   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request).
+   * -- NFD-GC
+   *
+   * Liveness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request).
    *
    * @default {...} (4 keys)
    */
   livenessProbe?: NodefeaturediscoveryHelmValuesGcLivenessProbe;
   /**
-   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-readiness-probes).
+   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes).
    *
    * @default {...} (5 keys)
    */
@@ -2126,6 +2166,37 @@ export type NodefeaturediscoveryHelmValuesGcRbac = {
 
 export type NodefeaturediscoveryHelmValuesGcPodSecurityContext = object;
 
+export type NodefeaturediscoveryHelmValuesGcSecurityContext = {
+  /**
+   * @schema hidden
+   *
+   * @default false
+   */
+  allowPrivilegeEscalation?: boolean;
+  /**
+   * @schema hidden
+   *
+   * @default {"drop":["ALL"]}
+   */
+  capabilities?: NodefeaturediscoveryHelmValuesGcSecurityContextCapabilities;
+  /**
+   * @schema hidden
+   *
+   * @default true
+   */
+  readOnlyRootFilesystem?: boolean;
+  /**
+   * @schema hidden
+   *
+   * @default true
+   */
+  runAsNonRoot?: boolean;
+};
+
+export type NodefeaturediscoveryHelmValuesGcSecurityContextCapabilities = {
+  drop?: string[];
+};
+
 export type NodefeaturediscoveryHelmValuesGcLivenessProbe = {
   /**
    * @schema type: [integer, null]
@@ -2159,12 +2230,12 @@ export type NodefeaturediscoveryHelmValuesGcLivenessProbe = {
    */
   periodSeconds?: number | null;
   /**
-   * (int) Minimum consecutive successes for the probe before considering the pod as ready.
+   * (int) The number of consecutive failures for the probe before considering the container as failed and restarting it.
    * -- NFD-GC
-   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#configure-readiness-probes).
+   * Readiness probe configuration. [More information](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes).
    * -- NFD-GC
    *
-   * Minimum consecutive successes for the probe before considering the pod as ready.
+   * The number of consecutive failures for the probe before considering the container as failed and restarting it.
    *
    * @default null
    */
@@ -2285,10 +2356,10 @@ export type NodefeaturediscoveryHelmValuesGcAffinity = object;
 
 export type NodefeaturediscoveryHelmValuesGcPodDisruptionBudget = {
   /**
-   * Configure PodDisruptionBudget for the nfd-master Deployment.
+   * Configure PodDisruptionBudget for the nfd-gc Deployment.
    * -- NFD-GC
    *
-   * Configure PodDisruptionBudget for the nfd-master Deployment.
+   * Configure PodDisruptionBudget for the nfd-gc Deployment.
    *
    * @default false
    */
@@ -2425,10 +2496,10 @@ export type NodefeaturediscoveryHelmValues = {
   namespaceOverride?: string;
   /**
    * @schema patternProperties: {"^[a-zA-Z]$": {type: string}}
-   * [Feature gates](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/feature-gates) to enable/disable specific features.
+   * [Feature gates](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/feature-gates) to enable/disable specific features.
    * -- General
    *
-   * [Feature gates](https://kubernetes-sigs.github.io/node-feature-discovery/v0.19/reference/feature-gates) to enable/disable specific features.
+   * [Feature gates](https://kubernetes-sigs.github.io/node-feature-discovery/v0.20/reference/feature-gates) to enable/disable specific features.
    *
    * @default {}
    */
@@ -2482,13 +2553,13 @@ export type NodefeaturediscoveryHelmValues = {
   /**
    * NFD-Topology-Updater configuration
    *
-   * @default {...} (31 keys)
+   * @default {...} (32 keys)
    */
   topologyUpdater?: NodefeaturediscoveryHelmValuesTopologyUpdater;
   /**
    * NFD-GC configuration
    *
-   * @default {...} (25 keys)
+   * @default {...} (26 keys)
    */
   gc?: NodefeaturediscoveryHelmValuesGc;
   /**
@@ -2610,6 +2681,7 @@ export type NodefeaturediscoveryHelmParameters = {
   "topologyUpdater.serviceAccount.create"?: string;
   "topologyUpdater.serviceAccount.name"?: string;
   "topologyUpdater.revisionHistoryLimit"?: string;
+  "topologyUpdater.updateStrategy.rollingUpdate.maxUnavailable"?: string;
   "topologyUpdater.rbac.create"?: string;
   "topologyUpdater.port"?: string;
   "topologyUpdater.kubeletConfigPath"?: string;
@@ -2651,6 +2723,10 @@ export type NodefeaturediscoveryHelmParameters = {
   "gc.rbac.create"?: string;
   "gc.interval"?: string;
   "gc.initContainers"?: string;
+  "gc.securityContext.allowPrivilegeEscalation"?: string;
+  "gc.securityContext.capabilities.drop"?: string;
+  "gc.securityContext.readOnlyRootFilesystem"?: string;
+  "gc.securityContext.runAsNonRoot"?: string;
   "gc.livenessProbe.initialDelaySeconds"?: string;
   "gc.livenessProbe.timeoutSeconds"?: string;
   "gc.livenessProbe.periodSeconds"?: string;

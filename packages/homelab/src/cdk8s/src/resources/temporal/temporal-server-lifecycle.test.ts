@@ -9,6 +9,7 @@ import {
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 import { createTemporalDataChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal-data.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const ResourceSchema = z
   .object({
@@ -126,7 +127,14 @@ describe("Temporal server lifecycle", () => {
     const container = firstContainer(job.spec, "Schema migration");
     const command = container.args?.join("\n") ?? "";
 
-    expect(container.image).toContain("temporalio/admin-tools:1.32.1@sha256:");
+    expect(container.image).toBe(
+      `temporalio/admin-tools:${versions["temporalio/admin-tools"]}`,
+    );
+    // The hook migrates the schema the server release expects, so both pins
+    // must name the same Temporal release.
+    expect(versions["temporalio/admin-tools"].split("@")[0]).toBe(
+      versions["temporalio/server"].split("@")[0],
+    );
     expect(command).toContain(
       "update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned",
     );
@@ -229,7 +237,9 @@ describe("Temporal server lifecycle", () => {
     const deployment = findResource("Deployment", "temporal-temporal-server");
     const container = firstContainer(deployment.spec, "Temporal server");
 
-    expect(container.image).toContain("temporalio/server:1.32.1@sha256:");
+    expect(container.image).toBe(
+      `temporalio/server:${versions["temporalio/server"]}`,
+    );
     expect(container.args?.join(" ") ?? "").not.toContain("autosetup");
     expect(container.securityContext.readOnlyRootFilesystem).toBe(true);
     expect(container.volumeMounts).toEqual(

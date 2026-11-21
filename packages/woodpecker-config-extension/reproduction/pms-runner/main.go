@@ -33,7 +33,7 @@ func compilePlan(p Plan, yaml []byte) (*backend.Config, error) {
 	m := metadata.Metadata{
 		Repo: metadata.Repo{Name: "monorepo", Owner: "shepherdjerred", Branch: "main", CloneURL: "https://github.com/shepherdjerred/monorepo.git"},
 		Curr: metadata.Pipeline{Event: "manual", Status: "success", Commit: metadata.Commit{Sha: p.Source, Branch: p.Branch, Ref: "refs/heads/" + p.Branch}},
-		Sys:  metadata.System{Name: "pms-component-reproduction", Platform: "linux/amd64", Version: "3.19.0"},
+		Sys:  metadata.System{Name: "pms-component-reproduction", Platform: "linux/amd64", Version: "3.20.1"},
 	}
 	b := builder.PipelineBuilder{
 		Yamls:               []*builder.YamlFile{{Name: "media-pms-wire", Data: yaml}},
@@ -171,11 +171,11 @@ func run(ctx context.Context, args []string) (result error) {
 	pinned := false
 	for _, dep := range info.Deps {
 		if dep.Path == "go.woodpecker-ci.org/woodpecker/v3" {
-			pinned = dep.Version == "v3.19.0" && dep.Replace == nil
+			pinned = dep.Version == "v3.20.1" && dep.Replace == nil
 		}
 	}
 	if !pinned {
-		return errors.New("runner backend is not pinned Woodpecker v3.19.0")
+		return errors.New("runner backend is not pinned Woodpecker v3.20.1")
 	}
 	config, err := compilePlan(p, yaml)
 	if err != nil {

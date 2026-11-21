@@ -46,7 +46,7 @@ const selection = {
   },
 };
 
-// Argo CD v3.5.4 util/helm/cmd.go cleanSetParameters preserves escaped commas.
+// Argo CD v3.6.2 util/helm/cmd.go cleanSetParameters preserves escaped commas.
 function argoCleanSetParameters(value: string) {
   return value.startsWith("{") && value.endsWith("}")
     ? value
