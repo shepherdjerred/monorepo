@@ -94,7 +94,7 @@ describe("anthropic-federation", () => {
     expect(terraform.required_providers).toEqual({
       anthropic: {
         source: "registry.terraform.io/ippontech/anthropic",
-        version: "1.60.0",
+        version: "1.95.1",
       },
       onepassword: { source: "1password/onepassword", version: "~> 3.0" },
     });

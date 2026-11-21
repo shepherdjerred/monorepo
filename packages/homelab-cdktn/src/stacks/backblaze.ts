@@ -77,8 +77,7 @@ export class BackblazeStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "backblaze", {
       requiredVersion: ">= 1.11.0",
-      // 0.14.1's published signature returns 504, so the lock stays on 0.14.0.
-      providerConstraints: { b2: "0.14.0", onepassword: "~> 3.0" },
+      providerConstraints: { b2: "0.14.1", onepassword: "~> 3.0" },
     });
     encryptStateAndPlans(this, {
       description: "Passphrase encrypting Backblaze state and plans.",

@@ -158,7 +158,7 @@ describe("dockerhub", () => {
     ]);
     expect(dockerhub.terraform.required_providers["docker"]).toEqual({
       source: "docker/docker",
-      version: "0.7.0",
+      version: "0.8.0",
     });
     expect(dockerhub.terraform.encryption).toMatchObject({
       state: { method: "method.aes_gcm.encrypted", enforced: true },

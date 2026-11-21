@@ -24,26 +24,23 @@ provider "registry.opentofu.org/1password/onepassword" {
 }
 
 provider "registry.terraform.io/ippontech/anthropic" {
-  version     = "1.60.0"
-  constraints = "1.60.0"
+  version     = "1.95.1"
+  constraints = "1.95.1"
   hashes = [
-    "h1:7IdbGvLvD659usUaSXih739rKHvbm0jvYoRqqI789Zc=",
-    "h1:BM9m8AoVNOofA2tsBkmNP8A2vSQdIOeqSvpQC1cXDwg=",
-    "h1:D+saz1yw6Wi6NLUthdgNeE7wik49qMPFWYtPwVD7eGg=",
-    "h1:r2MEosfHRP96jdpd4DeOqOwgV1LvLQKAs1N4XEBCTYU=",
-    "zh:07f512645dc65b554abee523a7c84b657949c9203a1539482baa929a9453665a",
-    "zh:2e320e2f916496d86c6868d77d050e98450921d776cd395bb24d104e79e51025",
-    "zh:6a7ef4b7288be8f015b46a4a0e8ad81bd1a827eab79700878a63f8f7d4d567ed",
-    "zh:7b4ab39ff1848f255cf0baa15098b3384bc32848efef24db1838470961986d0e",
-    "zh:7cbd7960be44cd895c5e0cdf698932db10e97990d7acc4c7b64b12270cc51d83",
-    "zh:87d6fd4dda527e0d72e54f9820b3da2d0b2815f7073365cc22dfd3e0d7e49331",
-    "zh:8828c84269ae4db7710cb861348612cd665702d19d94e2000ee6c530f7378947",
+    "h1:yYJPdt+NOF0H1tt5i7qYrnL4EZEN1CvP5NXQFD30olQ=",
+    "zh:09ecf33b989eb554d29779206be3fa6e26f2d4d009c9904fc24c077f77308c1a",
+    "zh:0b251c1ee3fa42f1574adae4fe4823a3e82af363e87fe5d7e1897f12bcf3d07c",
+    "zh:1bffc9e7c099891059b746471ff411d5919db30e98c0511d414b79587a2855da",
+    "zh:3a1204a03c8aab050b9fa35d899f04e88a0f5673d0db75dc1e869edeb53a9157",
+    "zh:5153867cf59c6bfb661e6d208d3988ed5443378aab3e01f272cec562097d42e2",
+    "zh:527e36af246bed513e3f7c28e5841d36ce8e37ac5ffd905355fcf24bae871269",
+    "zh:6a14e3031d1c53ce195586a853acd4fa5799ee81405270f5ff9bd9798e67e926",
+    "zh:791d78a715dc0b6abdc3ae1e15fcf4b5a8dfb83d06518a07d447f8b60dc7ba76",
     "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
-    "zh:ab212ce113542cee716278c475dc811d240339c0696afb08e5e87e0c3d0853ef",
-    "zh:ad42597b3708ea8acebd765cb745ab76d48eb55ad79fc9abea73280c61af5cc7",
-    "zh:ad4920e9f0f12d86bc45abac17d65e159fddb457c6d918a07ea22410e15d8251",
-    "zh:d08613b9ed711464952aa6fa9446e852c1707f65113f43dd03c1fd34a6f48a79",
-    "zh:ec5519a0ad4056b65dcef1e5fcf21b99404bfaf034d0dd3b7c477f3e51cafb3b",
-    "zh:efb858364ad37ee4da18860555ad9114a05b3ca5cdff766ab0573a2acffe1793",
+    "zh:c032d27d1d3f38109e38e71410bf7af0ad8eff569e8df9d30ff6872a134d2240",
+    "zh:cbacc80367787514945031fe723aabbdd178eba4f41734bfdbdebfd04ce5daf3",
+    "zh:e8f33045ac5237282a19176713c3f1640baf596cd4343eb28ec4985aa09009fa",
+    "zh:ef4f3ec1b8576f2e3e5d44096004140c60c339bee490e7c987644497cfdb2806",
+    "zh:f74fbf5a876fd02de41103dcf06ea71aca71d1f10dc6e1278db16737717f673a",
   ]
 }
