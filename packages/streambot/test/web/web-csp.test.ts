@@ -96,21 +96,24 @@ describe("content security policy", () => {
     expect(csp).not.toContain(DSN_KEY);
   });
 
-  test("the built pages / and /classic carry the same policy as the API", async () => {
+  test("the built page carries the same policy as the API; /classic is not a page", async () => {
     assets = await mkdtemp(path.join(tmpdir(), "streambot-csp-"));
-    for (const page of ["client", "client-classic"]) {
-      await mkdir(path.join(assets, page));
-      await writeFile(
-        path.join(assets, page, "index.html"),
-        "<!doctype html><title>Streambot</title>",
-      );
-    }
+    await mkdir(path.join(assets, "client"));
+    await writeFile(
+      path.join(assets, "client", "index.html"),
+      "<!doctype html><title>Streambot</title>",
+    );
     const opened = open(PRODUCTION, PUBLIC, assets);
     const { csp } = await me(opened, PRODUCTION);
-    for (const page of ["/", "/classic"]) {
+    for (const page of ["/", "/library", "/plex"]) {
       const response = await opened.handler(new Request(PRODUCTION + page));
       expect(response.status, page).toBe(200);
       expect(await response.text(), page).toContain("<title>Streambot");
+      expect(response.headers.get("content-security-policy"), page).toBe(csp);
+    }
+    for (const page of ["/classic", "/classic/plex", "/sports", "/search"]) {
+      const response = await opened.handler(new Request(PRODUCTION + page));
+      expect(response.status, page).toBe(404);
       expect(response.headers.get("content-security-policy"), page).toBe(csp);
     }
   });

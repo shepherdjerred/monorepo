@@ -116,7 +116,6 @@ describe("row to command", () => {
       action: "play",
       transport: "listen",
       placement: "queue",
-      targeting: "explicit",
       playbackChannel: null,
       guildId: "10",
       channelId: "20",

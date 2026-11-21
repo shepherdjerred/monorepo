@@ -27,14 +27,6 @@ export function isPositional(input: WebCommand): boolean {
   return POSITIONAL_ACTIONS.has(input.action);
 }
 
-/** Listen/Watch and `targeting: "explicit"` bypass the personal channel selection and Auto. */
-export function isExplicitTarget(input: WebCommand): boolean {
-  return (
-    input.targeting === "explicit" ||
-    (input.action === "play" && input.transport !== undefined)
-  );
-}
-
 /** The item token a transport control was aimed at, when the client sent one. */
 export function expectedCurrent(input: WebCommand): string | undefined {
   return input.action === "pause" ||
@@ -50,11 +42,11 @@ function transportOf(input: WebCommand): WebTransport | undefined {
 }
 
 /**
- * The slot an explicit command targets. `numbered` is false while a legacy queue holds the room or
+ * The slot a command targets. `numbered` is false while a legacy queue holds the room or
  * numbered channels are off; that room has one mixed queue, so Listen and Watch become the item's
  * mode there and only a named extra slot is refused.
  */
-export function explicitPlaybackChannel(
+export function targetPlaybackChannel(
   input: WebCommand,
   numbered: boolean,
   maximum: () => number,
@@ -83,7 +75,7 @@ export function explicitPlaybackChannel(
 }
 
 /**
- * The slot an explicit command without a slot lands on: Watch and TV on the first video slot, Radio
+ * The slot a command without a slot lands on: Watch and TV on the first video slot, Radio
  * on the audio slot. Stopping a station and every player control name the card they came from.
  */
 function implicitChannel(input: WebCommand): PlaybackChannelNumber | undefined {

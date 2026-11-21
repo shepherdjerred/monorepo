@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { z } from "zod";
 import {
+  ErrorSchema,
   RoomSchema,
-  SnapshotSchema,
   type WebRoom,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { ChannelIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
@@ -203,13 +202,6 @@ describe("players", () => {
     const watch = playerOf(value, 2)?.current;
     expect(watch?.title).toBe("Arrival");
     expect(watch).not.toHaveProperty("subtitle");
-    // The classic snapshot keeps the one combined line it always showed.
-    fixture.enableNumbered(1);
-    const classic = await fixture.handler(
-      getRequest(fixture, "/api/player?guildId=" + GUILD),
-    );
-    const snapshot = SnapshotSchema.parse(await classic.json());
-    expect(snapshot.current?.title).toBe("Room Test Artist — Room Test Song");
   });
 
   test("Radio and TV start on their own slot without naming one; stopping still needs the slot", async () => {
@@ -220,7 +212,6 @@ describe("players", () => {
         fixture.command({
           action: "station",
           mode,
-          targeting: "explicit",
           playbackChannel,
         }),
       );
@@ -237,7 +228,6 @@ describe("players", () => {
       fixture.command({
         action: "station",
         mode: "off",
-        targeting: "explicit",
         playbackChannel: null,
       }),
     );
@@ -246,7 +236,6 @@ describe("players", () => {
     const pause = await fixture.handler(
       fixture.command({
         action: "pause",
-        targeting: "explicit",
         playbackChannel: null,
       }),
     );
@@ -340,38 +329,27 @@ describe("capabilities and the legacy snapshot", () => {
     });
   });
 
-  test("/api/player keeps exactly its fields", async () => {
+  test("the room is the only playback read; retired player, search and music routes are not found", async () => {
     setup();
     await fixture.seed();
-    const response = await fixture.handler(
-      getRequest(fixture, "/api/player?guildId=" + GUILD),
-    );
-    const body = z.record(z.string(), z.unknown()).parse(await response.json());
-    expect(Object.keys(body)).toEqual([
-      "channel",
-      "playbackChannel",
-      "selectedPlaybackChannel",
-      "selectionVersion",
-      "selectionMode",
-      "automaticRoutingEnabled",
-      "playbackChannels",
-      "revision",
-      "state",
-      "current",
-      "queue",
-      "positionSeconds",
-      "paused",
-      "volume",
-      "loop",
-      "advancedControls",
-      "sportsEnabled",
-      "historyEnabled",
-      "radioEnabled",
-      "tvEnabled",
-      "station",
-      "restrictedLive",
-    ]);
-    expect(SnapshotSchema.parse(body).current?.title).toBe("Arrival");
-    expect(JSON.stringify(body)).not.toContain("positionAt");
+    for (const path of [
+      "/api/player",
+      "/api/search",
+      "/api/music/features",
+      "/api/music/catalog",
+      "/api/music/album",
+      "/api/music/load",
+      "/api/music/queue-match",
+    ]) {
+      const response = await fixture.handler(
+        getRequest(fixture, path + "?guildId=" + GUILD),
+      );
+      expect(response.status, path).toBe(404);
+      expect(ErrorSchema.parse(await response.json()).code, path).toBe(
+        "not_found",
+      );
+    }
+    const { players } = await room();
+    expect(players[0]?.current?.title).toBe("Arrival");
   });
 });

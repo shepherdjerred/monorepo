@@ -12,7 +12,6 @@ import type {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   AUDIO_CHANNEL,
-  VIDEO_CHANNEL,
   type PlaybackChannelNumber,
 } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type { WebCommand } from "@shepherdjerred/streambot/web/shared/contracts.ts";
@@ -24,19 +23,14 @@ function stopWebStation(
   playback: WebPlayback,
   guildId: GuildId,
   channelId: ChannelId,
-  options: {
-    readonly playbackChannel: PlaybackChannelNumber | undefined;
-    readonly auto: boolean;
-  },
+  playbackChannel: PlaybackChannelNumber | undefined,
 ): { message: string } {
   const stopped =
     playback.deps.sessions.stopStation?.({
       guildId,
       voiceChannelId: channelId,
-      ...(options.playbackChannel === undefined
-        ? {}
-        : { playbackChannel: options.playbackChannel }),
-      fallbackInRoom: options.auto || options.playbackChannel === undefined,
+      ...(playbackChannel === undefined ? {} : { playbackChannel }),
+      fallbackInRoom: playbackChannel === undefined,
     }) ?? null;
   if (stopped === null) {
     throw new WebError(
@@ -48,42 +42,27 @@ function stopWebStation(
   return { message: `Stopped ${formatStationDisplayName(stopped)}.` };
 }
 
-function assertManualStationChannel(
+/**
+ * Radio is voice audio on slot 1 and TV a stream on slot 2 or higher. Starting or stopping a
+ * station applies to the slot's current state, not a viewed revision.
+ */
+function assertStationChannel(
   kind: StationKind,
   targetSlot: PlaybackChannelNumber | undefined,
-  auto: boolean,
 ): void {
-  if (auto || targetSlot === undefined) {
-    return;
-  }
-  if (kind === "radio" && targetSlot !== AUDIO_CHANNEL) {
+  if (targetSlot === undefined) return;
+  if (kind === "radio" && targetSlot !== AUDIO_CHANNEL)
     throw new WebError(
       400,
       "invalid_channel",
-      "Radio plays on channel 1 (audio) or in Auto mode.",
+      "Radio plays on Streambot channel 1.",
     );
-  }
-  if (kind === "tv" && targetSlot === AUDIO_CHANNEL) {
+  if (kind === "tv" && targetSlot === AUDIO_CHANNEL)
     throw new WebError(
       400,
       "invalid_channel",
-      "TV mode requires a video channel (2+) or Auto mode.",
+      "TV plays on Streambot channel 2 or higher.",
     );
-  }
-}
-
-/** Starting or stopping a station applies to the slot's current state, not a viewed revision. */
-function resolveStationTargetSlot(
-  target: {
-    readonly playbackChannel: PlaybackChannelNumber | undefined;
-    readonly auto: boolean;
-  },
-  kind: StationKind,
-): PlaybackChannelNumber | undefined {
-  const defaultSlot = kind === "tv" ? VIDEO_CHANNEL : AUDIO_CHANNEL;
-  const targetSlot = target.auto ? defaultSlot : target.playbackChannel;
-  assertManualStationChannel(kind, targetSlot, target.auto);
-  return targetSlot;
 }
 
 async function assertWebStationEnabled(
@@ -121,15 +100,18 @@ export async function executeWebStationCommand(
   const target = await playback.resolveTarget(session, input);
   if (input.mode === "off") {
     target.guard();
-    return stopWebStation(playback, target.guildId, target.channelId, {
-      playbackChannel: target.playbackChannel,
-      auto: target.auto,
-    });
+    return stopWebStation(
+      playback,
+      target.guildId,
+      target.channelId,
+      target.playbackChannel,
+    );
   }
   const kind: StationKind = input.mode;
   await assertWebStationEnabled(playback, kind, target.scope);
   target.guard();
-  const targetSlot = resolveStationTargetSlot(target, kind);
+  const targetSlot = target.playbackChannel;
+  assertStationChannel(kind, targetSlot);
   if (playback.deps.sessions.startStation === undefined) {
     throw new WebError(
       503,
@@ -168,9 +150,6 @@ export async function executeWebStationCommand(
       ...(targetSlot === undefined ? {} : { playbackChannel: targetSlot }),
     });
     throw new WebError(404, "not_found", emptyWebStationMessage(kind));
-  }
-  if (targetSlot !== undefined && target.auto) {
-    playback.deps.sessions.numbered.selection.follow(target.scope, targetSlot);
   }
   return {
     message: formatStationStartMessage(station, started.added).replaceAll(

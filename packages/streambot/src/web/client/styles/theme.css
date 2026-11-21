@@ -1,8 +1,8 @@
 /*
- * The remote's only tokens. The classic remote's palette is the base; the additions are one type
- * scale, one spacing scale, and the two destination colors: green is Listen (audio in the voice
- * channel), blue is Watch (a stream people open). A Listen button and the Listening card share a
- * color so the button says where its media lands.
+ * The remote's only tokens: one palette, one type scale, one spacing scale, and the two
+ * destination colors. Green is Listen (audio in the voice channel), blue is Watch (a stream people
+ * open). A Listen button and the Listening card share a color so the button says where its media
+ * lands.
  */
 :root {
   color-scheme: light dark;

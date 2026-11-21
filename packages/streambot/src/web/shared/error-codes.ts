@@ -8,7 +8,6 @@ import { z } from "zod";
  */
 export const WEB_API_ERROR_CODES = [
   "album_edition",
-  "album_required",
   "artwork_unavailable",
   "busy",
   "catalog_busy",
@@ -44,7 +43,6 @@ export const WEB_API_ERROR_CODES = [
   "not_upcoming",
   "oauth_state",
   "playback_changed",
-  "playback_channel_changed",
   "playback_denied",
   "playlist_busy",
   "playlist_changed",
@@ -55,8 +53,6 @@ export const WEB_API_ERROR_CODES = [
   "playlist_owner",
   "queue_empty",
   "rate_limit",
-  "requester_changed",
-  "requester_required",
   "room_stream_capacity",
   "room_stream_limit",
   "scheduling_unavailable",

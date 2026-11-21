@@ -36,7 +36,6 @@ export const API_WORDING: Readonly<
   Record<WebApiErrorCode, FailureCopy | ServerWorded>
 > = {
   album_edition: SERVER,
-  album_required: SERVER,
   artwork_unavailable: SERVER,
   busy: {
     text: "Streambot is busy right now. Wait a moment, then try again.",
@@ -99,7 +98,6 @@ export const API_WORDING: Readonly<
     text: "The queue changed before this applied. Check the queue, then try again.",
     retry: true,
   },
-  playback_channel_changed: SERVER,
   playback_denied: SERVER,
   playlist_busy: SERVER_RETRYABLE,
   playlist_changed: {
@@ -113,8 +111,6 @@ export const API_WORDING: Readonly<
   playlist_owner: SERVER,
   queue_empty: SERVER,
   rate_limit: TOO_MANY,
-  requester_changed: SERVER,
-  requester_required: SERVER,
   room_stream_capacity: TOO_MANY,
   room_stream_limit: TOO_MANY,
   scheduling_unavailable: SERVER_RETRYABLE,

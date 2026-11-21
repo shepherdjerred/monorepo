@@ -1,19 +1,16 @@
 import type { WebPlaybackDeps } from "@shepherdjerred/streambot/web/server/playback-deps.ts";
 import type { WebSession } from "@shepherdjerred/streambot/web/server/session-store.ts";
-import type { WebSnapshot } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import type { WebStation } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
 import { IDLE_VIEW } from "@shepherdjerred/streambot/session/session-types.ts";
-import {
-  PlaybackChannelNumberSchema,
-  playbackChannelLabel,
-} from "@shepherdjerred/streambot/types/playback-channel.ts";
+import { PlaybackChannelNumberSchema } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type {
   ChannelId,
   GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 
-/** What building a player needs from `WebPlayback`; both `/api/player` and `/api/room` use it. */
+/** What building a room's players needs from `WebPlayback`. */
 export type SnapshotOwner = {
   deps: WebPlaybackDeps;
   authorize: (session: WebSession, guild: string) => Promise<void>;
@@ -26,9 +23,7 @@ export type SnapshotOwner = {
   ) => Promise<string>;
 };
 
-export function webStation(
-  handle: SessionHandle | null,
-): WebSnapshot["station"] {
+export function webStation(handle: SessionHandle | null): WebStation | null {
   const raw = handle?.station?.() ?? null;
   if (raw === null) return null;
   return {
@@ -41,31 +36,26 @@ export function webStation(
 
 type QueueItem = ReturnType<SessionHandle["view"]>["queue"][number];
 
-/** How a player names its items; the room splits a track from its artists, `/api/player` does not. */
-export type ItemTitles = "combined" | "split";
-
 /**
- * A track's own title, with its artists as a separate line when the room asked for that. Sports
- * titles and every item without track metadata keep the single title they always had.
+ * A track's own title, with its artists as a separate line. Sports titles and every item without
+ * track metadata keep the single title they always had.
  */
 function itemTitle(
   owner: SnapshotOwner,
   item: QueueItem,
-  titles: ItemTitles,
 ): { title: string; subtitle?: string } {
   const sports = owner.deps.catalog.sports.title(item.source);
   if (sports !== undefined) return { title: sports };
   const music = item.source?.music;
-  return titles === "split" && music !== undefined
-    ? { title: music.title, subtitle: music.artists.join(", ") }
-    : { title: item.title };
+  return music === undefined
+    ? { title: item.title }
+    : { title: music.title, subtitle: music.artists.join(", ") };
 }
 
-/** Who a player is built for; `titles` defaults to the combined line `/api/player` shows. */
+/** Who a player is built for. */
 export type PlayerViewer = {
   readonly guildId: string;
   readonly session: WebSession;
-  readonly titles?: ItemTitles;
 };
 
 export async function playerItem(
@@ -84,7 +74,7 @@ export async function playerItem(
     item.thumbnailUrl ?? item.provenance?.thumbnailUrl,
   );
   return {
-    ...itemTitle(owner, item, viewer.titles ?? "combined"),
+    ...itemTitle(owner, item),
     music: item.source?.music !== undefined,
     requester: {
       id: item.requesterId,
@@ -160,7 +150,6 @@ export function slots(
       const view = handle?.view();
       return {
         number,
-        label: playbackChannelLabel(number),
         revision: deps.sessions.revision(guildId, channelId, number),
         occupied:
           (handle?.station?.() ?? null) !== null ||

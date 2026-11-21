@@ -23,8 +23,6 @@ import {
   createVoiceDecisionsRuntime,
 } from "@shepherdjerred/streambot/voice/voice-command-router.ts";
 import { DryRunVoiceCommandPort } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
-import { formatStationBadge } from "@shepherdjerred/streambot/web/client-classic/station/station-label.ts";
-import { SnapshotSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import {
   guildId,
   harness,
@@ -34,6 +32,7 @@ import {
   voiceChannelId,
 } from "#numbered-fixture";
 import { CHANNEL, GUILD, USER, webFixture } from "./web-fixture.ts";
+import { roomPlayer } from "./web-fixture-login.ts";
 
 let activeWeb: ReturnType<typeof webFixture> | undefined;
 
@@ -143,36 +142,32 @@ test("evaluates streambot-tv-enabled default true, explicit false, and gates res
   ).toBeUndefined();
 });
 
-test("starts and stops Web TV Mode across presets, formats badges, rejects Slot 1, and routes Auto onto Slot 2", async () => {
-  activeWeb = webFixture("http://127.0.0.1:8080", "/nonexistent", false, {
-    automatic: true,
-  });
+test("starts and stops Web TV Mode across presets on Slot 2 without naming it, and rejects Slot 1", async () => {
+  activeWeb = webFixture();
   const web = activeWeb;
   const room = await dualStationHarness();
   web.playback.deps.sessions = room.manager;
-
-  const initial = SnapshotSchema.parse(
-    await web.playback.snapshot(web.session, GUILD),
-  );
-  expect(initial.tvEnabled).toBe(true);
-  expect(initial.station).toBeNull();
-
-  web.setTvEnabled(false);
-  const forbidden = await web.handler(
+  const tv = (extra: Record<string, unknown>) =>
     web.command({
       action: "station",
       mode: "tv",
-      tvPreset: "sitcoms",
-      scope: "room",
-      playbackChannel: initial.playbackChannel,
-      revision: initial.revision,
-      selectionVersion: initial.selectionVersion,
-    }),
+      playbackChannel: null,
+      revision: null,
+      ...extra,
+    });
+
+  const initial = await web.room();
+  expect(initial.capabilities.tv).toBe(true);
+  expect(initial.players).toEqual([]);
+
+  web.setTvEnabled(false);
+  const forbidden = await web.handler(
+    tv({ tvPreset: "sitcoms", scope: "room" }),
   );
   expect(forbidden.status).toBe(403);
   web.setTvEnabled(true);
 
-  // Start audio on Slot 1 first so Auto starts while viewing Slot 1.
+  // Audio already plays on Slot 1; TV takes Slot 2 beside it.
   const audioSlot = room.manager.ensureForPlay({
     guildId: GUILD,
     voiceChannelId: CHANNEL,
@@ -192,12 +187,6 @@ test("starts and stops Web TV Mode across presets, formats badges, rejects Slot 
     expect(audioSlot?.view().state).toBe("streaming");
   });
 
-  const beforeTv = SnapshotSchema.parse(
-    await web.playback.snapshot(web.session, GUILD),
-  );
-  expect(beforeTv.selectionMode).toBe("auto");
-  expect(beforeTv.playbackChannel).toBe(1);
-
   for (const preset of [
     "my-mix",
     "continue-series",
@@ -205,35 +194,19 @@ test("starts and stops Web TV Mode across presets, formats badges, rejects Slot 
     "movies",
     "youtube",
   ] as const) {
-    const snap = SnapshotSchema.parse(
-      await web.playback.snapshot(web.session, GUILD),
-    );
     const res = await web.handler(
-      web.command({
-        action: "station",
-        mode: "tv",
+      tv({
         tvPreset: preset,
         scope: "mine",
-        seed: preset === "sitcoms" ? "The Bear" : undefined,
-        playbackChannel: snap.playbackChannel,
-        revision: snap.revision,
-        selectionVersion: snap.selectionVersion,
-        slotRevisions: Object.fromEntries(
-          snap.playbackChannels.map((slot) => [
-            String(slot.number),
-            slot.revision,
-          ]),
-        ),
+        ...(preset === "sitcoms" ? { seed: "The Bear" } : {}),
       }),
     );
     expect(res.status).toBe(200);
 
     await vi.waitFor(async () => {
-      const updated = SnapshotSchema.parse(
-        await web.playback.snapshot(web.session, GUILD),
-      );
-      expect(updated.playbackChannel).toBe(2);
-      expect(updated.station).toEqual({
+      const watch = await roomPlayer(web, 2);
+      expect(watch?.transport).toBe("watch");
+      expect(watch?.station).toEqual({
         kind: "tv",
         scope: "mine",
         tvPreset: preset,
@@ -243,67 +216,20 @@ test("starts and stops Web TV Mode across presets, formats badges, rejects Slot 
   }
   expect(audioSlot?.view().state).toBe("streaming");
 
-  expect(
-    formatStationBadge({ kind: "tv", scope: "room", tvPreset: "my-mix" }),
-  ).toBe("TV · My Mix");
-  expect(
-    formatStationBadge({
-      kind: "tv",
-      scope: "room",
-      tvPreset: "continue-series",
-    }),
-  ).toBe("TV · Continue Series");
-  expect(
-    formatStationBadge({
-      kind: "tv",
-      scope: "mine",
-      tvPreset: "sitcoms",
-      seed: "The Bear",
-    }),
-  ).toBe("TV · Sitcoms · The Bear");
-
-  // Stop TV on Slot 2 via mode: "off".
-  const activeSnap = SnapshotSchema.parse(
-    await web.playback.snapshot(web.session, GUILD),
-  );
+  // Stopping names the card's slot.
   const stopRes = await web.handler(
     web.command({
       action: "station",
       mode: "off",
-      playbackChannel: activeSnap.playbackChannel,
-      revision: activeSnap.revision,
-      selectionVersion: activeSnap.selectionVersion,
+      playbackChannel: 2,
+      revision: null,
     }),
   );
   expect(stopRes.status).toBe(200);
 
-  // Explicitly lock viewer onto Channel 1 (audio) and verify TV Mode is rejected with 400.
-  const preSelect = SnapshotSchema.parse(
-    await web.playback.snapshot(web.session, GUILD),
-  );
-  const selectRes = await web.handler(
-    web.command({
-      action: "select",
-      number: 1,
-      playbackChannel: preSelect.playbackChannel,
-      revision: preSelect.revision,
-      selectionVersion: preSelect.selectionVersion,
-    }),
-  );
-  expect(selectRes.status).toBe(200);
-
-  const manualSlot1 = SnapshotSchema.parse(
-    await web.playback.snapshot(web.session, GUILD),
-  );
+  // TV on the audio slot is refused.
   const rejectedOnAudio = await web.handler(
-    web.command({
-      action: "station",
-      mode: "tv",
-      tvPreset: "movies",
-      playbackChannel: manualSlot1.playbackChannel,
-      revision: manualSlot1.revision,
-      selectionVersion: manualSlot1.selectionVersion,
-    }),
+    tv({ tvPreset: "movies", playbackChannel: 1 }),
   );
   expect(rejectedOnAudio.status).toBe(400);
 });

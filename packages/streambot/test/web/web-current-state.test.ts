@@ -5,9 +5,9 @@ import { webTimeToPlaybackSeconds } from "@shepherdjerred/streambot/observabilit
 import {
   CommandResultSchema,
   LibraryPageSchema,
-  SnapshotSchema,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { GUILD, USER, webFixture } from "./web-fixture.ts";
+import { roomPlayer } from "./web-fixture-login.ts";
 
 let fixture: ReturnType<typeof webFixture>;
 beforeEach(() => {
@@ -33,10 +33,11 @@ async function status(request: Request) {
   return response.status;
 }
 
+/** The room's one player: these rooms have a single queue. */
 async function snapshot() {
-  return SnapshotSchema.parse(
-    await fixture.playback.snapshot(fixture.session, GUILD),
-  );
+  const player = await roomPlayer(fixture);
+  if (player === undefined) throw new Error("Expected a player");
+  return player;
 }
 
 async function libraryId(title: string) {

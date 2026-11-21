@@ -31,7 +31,7 @@ const summary: PlaylistSummary = {
 const ITEM = "0b0c7e3e-2c1c-4a63-9c8e-0a3f6f1c9d11";
 
 describe("share and legacy links", () => {
-  test("reads the classic share link", () => {
+  test("reads a share link", () => {
     const params = new URLSearchParams("guild=123&playlist=abc");
     expect(parsePlaylistsSearch(params)).toEqual({
       playlist: "abc",

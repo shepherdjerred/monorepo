@@ -66,7 +66,6 @@ const ENDPOINTS = new Set([
   "/api/me",
   "/api/commands",
   "/api/subtitles",
-  "/api/player",
   "/api/room",
   "/api/room/events",
   "/api/artwork",
@@ -74,20 +73,14 @@ const ENDPOINTS = new Set([
   "/api/sports/schedules",
   "/api/sports/schedules/cancel",
   "/api/library",
-  "/api/search",
   "/api/search/v2",
   "/api/search/v2/suggest",
   "/api/music/v2/album",
   "/api/music/v2/artist",
   "/api/history",
   "/api/playlists",
-  "/api/music/features",
-  "/api/music/catalog",
-  "/api/music/album",
   "/api/music/matches",
-  "/api/music/queue-match",
   "/api/music/artwork",
-  "/api/music/load",
 ]);
 
 export function webFailureEndpoint(request: Request): string {

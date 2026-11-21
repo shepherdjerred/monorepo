@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { WebDiscordContext } from "@shepherdjerred/streambot/discord/web-context.ts";
 import { GUILD, USER, webFixture } from "./web-fixture.ts";
+import { roomPlayer } from "./web-fixture-login.ts";
 
 let fixture: ReturnType<typeof webFixture> | undefined;
 async function status(request: Request) {
@@ -104,9 +105,9 @@ test("a snapshot captures the queue and revision after asynchronous feature chec
     });
     return Promise.resolve(true);
   });
-  const snapshot = await fixture.playback.snapshot(fixture.session, GUILD);
-  expect(snapshot.queue).toHaveLength(1);
-  expect(snapshot.revision).toBe(fixture.revision());
+  const player = await roomPlayer(fixture);
+  expect(player?.queue).toHaveLength(1);
+  expect(player?.revision).toBe(fixture.revision());
 });
 
 function membershipFixture() {

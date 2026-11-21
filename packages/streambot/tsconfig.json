@@ -21,7 +21,6 @@
     "node_modules",
     "dist",
     "src/web/client/**/*",
-    "src/web/client-classic/**/*",
     "test/web/client/dom/**/*"
   ]
 }

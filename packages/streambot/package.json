@@ -41,7 +41,7 @@
     "voice:verifier:package": "bun run scripts/voice-verifier-package.ts",
     "voice:keywords:generate": "bun run scripts/voice-keywords-generate.ts",
     "e2e:local": "bun run e2e/local.ts",
-    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && PATH=node_modules/@typescript/native/bin:$PATH tsc --project src/web/client/tsconfig.json --noEmit && PATH=node_modules/@typescript/native/bin:$PATH tsc --project src/web/client-classic/tsconfig.json --noEmit",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && PATH=node_modules/@typescript/native/bin:$PATH tsc --project src/web/client/tsconfig.json --noEmit",
     "lint": "eslint . && check-architecture",
     "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/streambot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t streambot:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",

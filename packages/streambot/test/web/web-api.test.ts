@@ -7,7 +7,6 @@ import {
   CommandResultSchema,
   IdentitySchema,
   LibraryPageSchema,
-  SnapshotSchema,
   SubtitleMenuSchema,
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
@@ -174,11 +173,9 @@ describe("authenticated web playback", () => {
     const before = fixture.events.length;
     expect(await status(stale)).toBe(409);
     expect(fixture.events).toHaveLength(before);
-    const snapshot = SnapshotSchema.parse(
-      await fixture.playback.snapshot(fixture.session, GUILD),
-    );
-    expect(snapshot.queue[0]?.title).toBe("Arrival");
-    expect(JSON.stringify(snapshot)).not.toContain("/media/");
+    const room = await fixture.room();
+    expect(room.players[0]?.queue[0]?.title).toBe("Arrival");
+    expect(JSON.stringify(room)).not.toContain("/media/");
   });
 
   test("voice moves during resolution reject play without dispatching it", async () => {

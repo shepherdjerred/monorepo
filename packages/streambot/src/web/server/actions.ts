@@ -34,8 +34,6 @@ export class WebActions {
     input: WebCommand,
     signal: AbortSignal,
   ): Promise<WebCommandResult> {
-    if (input.action === "select")
-      return await this.playback.selectChannel(session, input);
     if (input.action === "station")
       return await executeWebStationCommand(
         this.playback,
@@ -50,7 +48,7 @@ export class WebActions {
 
   private async control(
     session: WebSession,
-    input: Exclude<WebCommand, { action: "select" | "station" | "play" }>,
+    input: Exclude<WebCommand, { action: "station" | "play" }>,
   ): Promise<{ message: string }> {
     const context = await this.playback.commandContext(session, input);
     const { service, userId, handle } = context;
@@ -150,12 +148,8 @@ export class WebActions {
         spoken: false,
         surface: "web",
         signal,
-        ...(input.transport === undefined
-          ? {}
-          : {
-              mode: transportMode(input.transport),
-              probeFiles: input.transport === "watch",
-            }),
+        mode: transportMode(input.transport),
+        probeFiles: input.transport === "watch",
       });
       return context.playResult(result.message);
     } catch (error) {

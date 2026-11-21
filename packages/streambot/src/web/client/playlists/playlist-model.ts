@@ -109,7 +109,7 @@ export function copyName(name: string): string {
 }
 
 export type PlaylistsSearch = {
-  /** A playlist the address asks to open (classic share links and `?playlist=`). */
+  /** A playlist the address asks to open (share links and `?playlist=`). */
   readonly playlist: string | null;
   /** The server the link was made for. */
   readonly guild: string | null;
@@ -118,8 +118,8 @@ export type PlaylistsSearch = {
 };
 
 /**
- * Reads the addresses the classic remote made: `/playlists?guild=<id>&playlist=<id>` share links and
- * `/playlists?import=<url>` from a search result.
+ * Reads playlist addresses: `/playlists?guild=<id>&playlist=<id>` links (from `shareUrl` and
+ * Discord's playlist replies) and `/playlists?import=<url>` from a search result.
  */
 export function parsePlaylistsSearch(params: URLSearchParams): PlaylistsSearch {
   const playlist = params.get("playlist");
