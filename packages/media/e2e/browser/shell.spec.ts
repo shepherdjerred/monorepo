@@ -1,7 +1,11 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import type { Persona } from "#testing/fixture-api/personas.ts";
 import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
+import {
+  accessibilityViolations,
+  canvasColor,
+  computedForm,
+} from "./support.ts";
 
 /** Opens `path` as a persona and waits for the shell to hold a page. */
 async function open(page: Page, persona: Persona, path: string) {
@@ -25,31 +29,10 @@ function onPhone(): boolean {
   return test.info().project.name === "mobile";
 }
 
-async function canvasColor(page: Page): Promise<string> {
-  return page
-    .locator("html")
-    .evaluate((root) => globalThis.getComputedStyle(root).backgroundColor);
-}
-
-/** `#rrggbb` as the `rgb(r, g, b)` string a computed style reports. */
-function computedForm(hex: string): string {
-  const channels = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/iu.exec(hex);
-  if (channels === null) throw new Error(`Not a six-digit hex color: ${hex}`);
-  return `rgb(${channels
-    .slice(1)
-    .map((channel) => String(Number.parseInt(channel, 16)))
-    .join(", ")})`;
-}
-
 /** WCAG 2.2 AA violations on the page as it stands, as `rule: selectors`. */
 async function violations(page: Page): Promise<string[]> {
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .analyze();
-  return results.violations.map(
-    (violation) =>
-      `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`,
-  );
+  const found = await accessibilityViolations(page);
+  return found.map((violation) => violation.detail);
 }
 
 async function themeColor(page: Page, scheme: "light" | "dark") {

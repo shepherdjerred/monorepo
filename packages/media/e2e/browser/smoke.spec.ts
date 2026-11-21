@@ -1,10 +1,14 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
 import { KNOWN_VIOLATIONS } from "./axe-baseline.ts";
 import { ROUTES, type RouteCase } from "./routes.ts";
+import {
+  accessibilityViolations,
+  canvasColor,
+  computedForm,
+} from "./support.ts";
 
 const SCHEMES = ["light", "dark"] as const;
 const DIST_ASSETS = path.resolve(import.meta.dir, "../../dist/assets");
@@ -58,28 +62,11 @@ function knownRules(route: RouteCase): string[] {
     .sort((left, right) => left.localeCompare(right));
 }
 
-/** The computed background of the page canvas, as the browser serializes it. */
-async function canvasColor(page: Page): Promise<string> {
-  return page
-    .locator("html")
-    .evaluate((root) => globalThis.getComputedStyle(root).backgroundColor);
-}
-
 /** Pins a theme the way the account menu will: `data-theme` on the root. */
 async function pinTheme(page: Page, theme: (typeof SCHEMES)[number]) {
   await page.locator("html").evaluate((root, pinned) => {
     root.dataset["theme"] = pinned;
   }, theme);
-}
-
-/** `#rrggbb` as the `rgb(r, g, b)` string a computed style reports. */
-function computedForm(hex: string): string {
-  const channels = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/iu.exec(hex);
-  if (channels === null) throw new Error(`Not a six-digit hex color: ${hex}`);
-  return `rgb(${channels
-    .slice(1)
-    .map((channel) => String(Number.parseInt(channel, 16)))
-    .join(", ")})`;
 }
 
 test("the axe baseline names only routes this suite visits", () => {
@@ -149,18 +136,13 @@ for (const scheme of SCHEMES) {
         expect(failures).toEqual([]);
         await expect(page).toHaveTitle(route.title);
 
-        const results = await new AxeBuilder({ page })
-          .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-          .analyze();
-        const found = results.violations
-          .map((violation) => violation.id)
+        const violations = await accessibilityViolations(page);
+        const found = violations
+          .map((violation) => violation.rule)
           .sort((left, right) => left.localeCompare(right));
         // On a mismatch, the selectors say where to look.
-        const detail = results.violations
-          .map(
-            (violation) =>
-              `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(" | ")}`,
-          )
+        const detail = violations
+          .map((violation) => violation.detail)
           .join("\n");
         expect(found, detail).toEqual(knownRules(route));
       });
