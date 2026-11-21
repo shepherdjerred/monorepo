@@ -117,7 +117,7 @@ describe("hasMergedPendingReleasePullRequest", () => {
     });
   });
 
-  test("paginates up to 200 closed PRs and returns true when a merged autorelease: pending PR is on page 2", async () => {
+  test("paginates across pages and returns true when a merged autorelease: pending PR is on page 2", async () => {
     const capturedUrls: string[] = [];
     const ordinaryMergedPage = Array.from({ length: 100 }, (_, index) => ({
       number: index + 1,
@@ -145,6 +145,132 @@ describe("hasMergedPendingReleasePullRequest", () => {
     expect(result).toBe(true);
     expect(capturedUrls).toHaveLength(2);
     expect(capturedUrls[1]).toContain("&page=2");
+  });
+
+  test("counts merged PRs rather than unmerged closed PRs toward the 200-PR scan limit", async () => {
+    const capturedUrls: string[] = [];
+    const page1 = [
+      {
+        number: 1,
+        merged_at: null,
+        labels: [],
+      },
+      ...Array.from({ length: 99 }, (_, index) => ({
+        number: index + 2,
+        merged_at: "2026-11-21T10:00:00Z",
+        labels: [],
+      })),
+    ];
+    const page2 = Array.from({ length: 100 }, (_, index) => ({
+      number: index + 101,
+      merged_at: "2026-11-21T09:30:00Z",
+      labels: [],
+    }));
+    const page3 = [
+      {
+        number: 201,
+        merged_at: "2026-11-21T09:00:00Z",
+        labels: [{ name: "autorelease: pending" }],
+      },
+    ];
+
+    const result = await hasMergedPendingReleasePullRequest(
+      repository,
+      "secret-token",
+      "main",
+      async (url) => {
+        capturedUrls.push(url);
+        if (url.endsWith("&page=1")) return Response.json(page1);
+        if (url.endsWith("&page=2")) return Response.json(page2);
+        return Response.json(page3);
+      },
+    );
+
+    expect(result).toBe(true);
+    expect(capturedUrls).toHaveLength(3);
+    expect(capturedUrls[2]).toContain("&page=3");
+  });
+
+  test("stops right at 200 merged PRs without inspecting the 201st merged PR or fetching another page", async () => {
+    const capturedUrls: string[] = [];
+    const page1 = [
+      {
+        number: 1,
+        merged_at: null,
+        labels: [],
+      },
+      ...Array.from({ length: 99 }, (_, index) => ({
+        number: index + 2,
+        merged_at: "2026-11-21T10:00:00Z",
+        labels: [],
+      })),
+    ];
+    const page2 = Array.from({ length: 100 }, (_, index) => ({
+      number: index + 101,
+      merged_at: "2026-11-21T09:30:00Z",
+      labels: [],
+    }));
+    const page3 = [
+      {
+        number: 201,
+        merged_at: "2026-11-21T09:15:00Z",
+        labels: [],
+      },
+      {
+        number: 202,
+        merged_at: "2026-11-21T09:00:00Z",
+        labels: [{ name: "autorelease: pending" }],
+      },
+    ];
+
+    const result = await hasMergedPendingReleasePullRequest(
+      repository,
+      "secret-token",
+      "main",
+      async (url) => {
+        capturedUrls.push(url);
+        if (url.endsWith("&page=1")) return Response.json(page1);
+        if (url.endsWith("&page=2")) return Response.json(page2);
+        return Response.json(page3);
+      },
+    );
+
+    expect(result).toBe(false);
+    expect(capturedUrls).toHaveLength(3);
+  });
+
+  test("honors GitHub Link rel=next header across short pages and stops without rel=next", async () => {
+    const capturedUrls: string[] = [];
+    const result = await hasMergedPendingReleasePullRequest(
+      repository,
+      "secret-token",
+      "main",
+      async (url) => {
+        capturedUrls.push(url);
+        if (url.endsWith("&page=1")) {
+          return Response.json([{ number: 1, merged_at: null, labels: [] }], {
+            headers: {
+              Link: '<https://api.github.com/repositories/1/pulls?page=2>; rel="next", <https://api.github.com/repositories/1/pulls?page=2>; rel="last"',
+            },
+          });
+        }
+        return Response.json(
+          Array.from({ length: 100 }, (_, index) => ({
+            number: index + 2,
+            merged_at: null,
+            labels: [],
+          })),
+          {
+            headers: {
+              Link: '<https://api.github.com/repositories/1/pulls?page=1>; rel="prev", <https://api.github.com/repositories/1/pulls?page=1>; rel="first"',
+            },
+          },
+        );
+      },
+    );
+
+    expect(result).toBe(false);
+    expect(capturedUrls).toHaveLength(2);
   });
 
   test("fails closed on non-2xx GitHub API responses", async () => {

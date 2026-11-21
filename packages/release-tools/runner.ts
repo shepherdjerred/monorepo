@@ -220,12 +220,17 @@ export type FetchLike = (
 const PENDING_RELEASE_LABEL = "autorelease: pending";
 const CLOSED_PR_PAGE_SIZE = 100;
 // Matches release-please's own Manifest.findMergedReleasePullRequests() scan
-// bound (`pullRequestIterator(targetBranch, "MERGED", 200, false)`), while
-// reading GitHub's primary pulls store instead of the eventually-consistent,
-// 30-req/min Search API.
-const CLOSED_PR_MAX_PAGES = 2;
+// bound (`pullRequestIterator(targetBranch, "MERGED", 200, false)`), which
+// counts merged PRs (`merged_at` present) rather than unmerged closed PRs
+// while reading GitHub's primary pulls store instead of the Search API.
+const MERGED_PR_SCAN_LIMIT = 200;
 
-function isMergedPendingReleasePullRequest(item: unknown): boolean {
+type ClosedPullRequestInspection = {
+  readonly merged: boolean;
+  readonly pendingRelease: boolean;
+};
+
+function inspectClosedPullRequest(item: unknown): ClosedPullRequestInspection {
   if (typeof item !== "object" || item === null || Array.isArray(item)) {
     throw new Error(
       "GitHub returned an invalid pull request entry when checking release pull requests",
@@ -258,7 +263,22 @@ function isMergedPendingReleasePullRequest(item: unknown): boolean {
     }
     return name === PENDING_RELEASE_LABEL;
   });
-  return typeof mergedAt === "string" && mergedAt !== "" && hasPendingLabel;
+  const merged = typeof mergedAt === "string" && mergedAt !== "";
+  return { merged, pendingRelease: merged && hasPendingLabel };
+}
+
+function hasMoreClosedPullRequestPages(
+  response: Response,
+  pageLength: number,
+): boolean {
+  if (pageLength === 0) {
+    return false;
+  }
+  const linkHeader = response.headers.get("link");
+  if (linkHeader !== null) {
+    return /<[^<>]+>;\s*rel="next"/i.test(linkHeader);
+  }
+  return pageLength >= CLOSED_PR_PAGE_SIZE;
 }
 
 export async function hasMergedPendingReleasePullRequest(
@@ -268,7 +288,8 @@ export async function hasMergedPendingReleasePullRequest(
   fetchImpl?: FetchLike,
 ): Promise<boolean> {
   const fetcher = fetchImpl ?? globalThis.fetch;
-  for (let page = 1; page <= CLOSED_PR_MAX_PAGES; page += 1) {
+  let mergedInspected = 0;
+  for (let page = 1; mergedInspected < MERGED_PR_SCAN_LIMIT; page += 1) {
     const response = await fetcher(
       `https://api.github.com/repos/${repository.owner}/${repository.repo}/pulls?state=closed&base=${encodeURIComponent(targetBranch)}&sort=updated&direction=desc&per_page=${String(CLOSED_PR_PAGE_SIZE)}&page=${String(page)}`,
       {
@@ -291,11 +312,19 @@ export async function hasMergedPendingReleasePullRequest(
       );
     }
     for (const item of payload) {
-      if (isMergedPendingReleasePullRequest(item)) {
+      const inspection = inspectClosedPullRequest(item);
+      if (!inspection.merged) {
+        continue;
+      }
+      if (inspection.pendingRelease) {
         return true;
       }
+      mergedInspected += 1;
+      if (mergedInspected >= MERGED_PR_SCAN_LIMIT) {
+        return false;
+      }
     }
-    if (payload.length < CLOSED_PR_PAGE_SIZE) {
+    if (!hasMoreClosedPullRequestPages(response, payload.length)) {
       return false;
     }
   }
