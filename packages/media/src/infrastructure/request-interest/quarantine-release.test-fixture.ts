@@ -353,7 +353,7 @@ async function readyEmptyPlayback(context: MediaAutomationContext) {
       checkpoint?.importSourceInstanceId ?? "synthetic-quarantine-history";
     const history = new PrismaPlaybackHistory(
       context.db,
-      server,
+      { serverMachineId: server },
       () => now,
       () =>
         Promise.resolve({
