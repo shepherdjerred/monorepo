@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ExploreActiveRunSchema } from "#src/model/reports/explore.ts";
 import { CoachGameKeySchema, CoachLiveSchema } from "./coach-context.schema.ts";
+import { SCOUT_DESKTOP_VOICE_TURN } from "./desktop-voice.schema.ts";
 
 /**
  * `coach/triggers`: a proactive coach turn Scout Desktop asks for because one
@@ -135,4 +136,60 @@ export const ScoutDesktopCoachTriggerResponseSchema = z.discriminatedUnion(
 );
 export type ScoutDesktopCoachTriggerResponse = z.infer<
   typeof ScoutDesktopCoachTriggerResponseSchema
+>;
+
+/**
+ * `coach/triggers/speech` (contract 11): the spoken form of a finished
+ * proactive turn's answer, for a beta build whose player has voice
+ * conversation mode on and not muted. Beta only, like the trigger itself:
+ * production refuses it before the body or any flag is read.
+ *
+ * The request names a run and nothing else, so no client can choose what is
+ * said: the server speaks the saved answer of a finished `app_proactive` turn
+ * the calling device started for its own owner. It needs `scout_desktop_voice`
+ * and every flag a trigger needs, holds the owner's audio allowance before the
+ * speech provider is called, and answers with the speech as ordered PCM
+ * chunks in the voice turn's speech format.
+ */
+export const COACH_PROACTIVE_SPEECH_MAX_CHARACTERS = 600;
+
+/**
+ * The most chunks an answer at the character cap can take: speech is held at
+ * a deliberately slow 10 characters a second, 100 ms each.
+ */
+export const COACH_PROACTIVE_SPEECH_MAX_CHUNKS = Math.ceil(
+  (COACH_PROACTIVE_SPEECH_MAX_CHARACTERS *
+    100 *
+    ((SCOUT_DESKTOP_VOICE_TURN.speech.sampleRateHz * 2) / 1000)) /
+    SCOUT_DESKTOP_VOICE_TURN.speech.maxChunkBytes,
+);
+
+export const ScoutDesktopCoachTriggerSpeechRequestSchema = z.strictObject({
+  runId: z.uuid(),
+});
+export type ScoutDesktopCoachTriggerSpeechRequest = z.infer<
+  typeof ScoutDesktopCoachTriggerSpeechRequestSchema
+>;
+
+export const ScoutDesktopCoachTriggerSpeechResponseSchema = z.strictObject({
+  /** The answer spoken: the proactive turn's saved answer. */
+  messageId: z.uuid(),
+  /** What was said. */
+  spokenText: z.string().min(1).max(COACH_PROACTIVE_SPEECH_MAX_CHARACTERS),
+  encoding: z.literal(SCOUT_DESKTOP_VOICE_TURN.speech.encoding),
+  sampleRateHz: z.literal(SCOUT_DESKTOP_VOICE_TURN.speech.sampleRateHz),
+  /** The speech, in order, each at most `maxChunkBytes` once decoded. */
+  chunks: z
+    .array(
+      z
+        .string()
+        .min(4)
+        .max(4 * Math.ceil(SCOUT_DESKTOP_VOICE_TURN.speech.maxChunkBytes / 3))
+        .regex(/^[A-Z0-9+/]+={0,2}$/i),
+    )
+    .min(1)
+    .max(COACH_PROACTIVE_SPEECH_MAX_CHUNKS),
+});
+export type ScoutDesktopCoachTriggerSpeechResponse = z.infer<
+  typeof ScoutDesktopCoachTriggerSpeechResponseSchema
 >;

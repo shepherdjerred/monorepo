@@ -250,6 +250,32 @@ impl ExploreClient {
         self.call(Route::CoachTriggers, request).await
     }
 
+    /// `coach/triggers/speech`: the speech of a finished proactive turn's
+    /// answer. Beta profile only; Scout refuses it in production.
+    ///
+    /// # Errors
+    ///
+    /// [`ExploreClientError`] when the request fails, Scout refuses it, or
+    /// the speech breaks the contract's format.
+    #[cfg(scout_proactive_coach)]
+    pub async fn speak_proactive_answer(
+        &self,
+        run_id: Uuid,
+    ) -> Result<crate::proactive::ProactiveSpeech, ExploreClientError> {
+        let response: scout_client_core::desktop_api::CoachTriggerSpeechResponse = self
+            .call(
+                Route::CoachTriggersSpeech,
+                &scout_client_core::desktop_api::CoachTriggerSpeechRequest { run_id },
+            )
+            .await?;
+        crate::proactive::ProactiveSpeech::decode(response).map_err(|detail| {
+            ExploreClientError::Unexpected {
+                status: 200,
+                detail,
+            }
+        })
+    }
+
     /// `coach/reviews/get`: read the post-game review the server produced for
     /// a finished game this device recorded. The server starts it; the client
     /// never does.

@@ -162,6 +162,34 @@ impl VoiceStore for MemoryStore {
     }
 }
 
+/// Records the runs it was asked to speak and answers each with what the
+/// test scripted. Beta profile only.
+#[cfg(scout_proactive_coach)]
+#[derive(Clone, Default)]
+struct FakeProactiveSpeech {
+    asked: Arc<Mutex<Vec<Uuid>>>,
+    reply: Arc<Mutex<Option<Result<scout_explore_client::proactive::ProactiveSpeech, String>>>>,
+}
+
+#[cfg(scout_proactive_coach)]
+impl super::ProactiveSpeaker for FakeProactiveSpeech {
+    fn fetch(
+        &self,
+        run_id: Uuid,
+        done: mpsc::UnboundedSender<
+            Result<scout_explore_client::proactive::ProactiveSpeech, String>,
+        >,
+    ) {
+        self.asked
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .push(run_id);
+        if let Some(reply) = read(&self.reply) {
+            let _ = done.send(reply);
+        }
+    }
+}
+
 #[derive(Clone, Default)]
 struct FakeHotkeys(Arc<Mutex<Vec<HotkeyBindings>>>);
 
@@ -189,6 +217,10 @@ struct Harness {
     turn: watch::Receiver<Option<VoiceTurnView>>,
     state: watch::Sender<RuntimeState>,
     _parts: watch::Sender<ChatParts>,
+    #[cfg(scout_proactive_coach)]
+    proactive_answers: watch::Sender<Option<Uuid>>,
+    #[cfg(scout_proactive_coach)]
+    proactive: FakeProactiveSpeech,
 }
 
 fn live_snapshot() -> LiveSnapshot {
@@ -243,7 +275,10 @@ fn start(stored: VoiceSettings) -> Harness {
     let (state, state_receiver) = watch::channel(runtime);
     let (keys, key_receiver) = mpsc::unbounded_channel();
     let (control_sender, control) = mpsc::unbounded_channel();
-    let (relay, relayed, parts) = ChatRelay::detached();
+    let detached = ChatRelay::detached_coach();
+    let (relay, relayed, parts) = (detached.relay, detached.commands, detached.parts);
+    #[cfg(scout_proactive_coach)]
+    let proactive = FakeProactiveSpeech::default();
     let mut open = ChatParts::default();
     open.status.open_conversation = Some(CONVERSATION);
     parts.send_replace(open);
@@ -254,6 +289,8 @@ fn start(stored: VoiceSettings) -> Harness {
             speaker: Box::new(speaker.clone()),
             store: Box::new(store.clone()),
             hotkeys: Some(Box::new(hotkeys.clone())),
+            #[cfg(scout_proactive_coach)]
+            proactive: Box::new(proactive.clone()),
         },
         VoiceInputs {
             phase: phase_receiver,
@@ -278,6 +315,10 @@ fn start(stored: VoiceSettings) -> Harness {
         relayed,
         state,
         _parts: parts,
+        #[cfg(scout_proactive_coach)]
+        proactive_answers: detached.proactive_answers,
+        #[cfg(scout_proactive_coach)]
+        proactive,
     }
 }
 
@@ -489,6 +530,8 @@ async fn answer_and_play(harness: &mut Harness) -> TestResult {
             heard: Some("What should I build?".to_owned()),
             answer: Some("Zhonya's Hourglass.".to_owned()),
             error: None,
+            #[cfg(scout_proactive_coach)]
+            app_initiated: false,
         })
     );
     // The turn ends only once the answer has played out.
@@ -590,5 +633,94 @@ async fn the_mute_key_closes_the_microphone_mid_game() -> TestResult {
                 ]
         })
         .await?;
+    Ok(())
+}
+
+#[cfg(scout_proactive_coach)]
+#[tokio::test]
+async fn a_proactive_answer_chat_reports_is_fetched_once_and_spoken_as_scouts_own() -> TestResult {
+    let mut harness = start(agreed());
+    harness.until(|| read(&harness.engine.starts) == 1).await?;
+    harness.engine.emit(EngineEvent::Ready)?;
+    harness.phase.send_replace(GameflowPhase::InProgress);
+    harness
+        .until(|| harness.engine_commands() == [EngineCommand::Conversation(true)])
+        .await?;
+    *harness
+        .proactive
+        .reply
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner) =
+        Some(Ok(scout_explore_client::proactive::ProactiveSpeech {
+            message_id: Uuid::from_u128(3),
+            spoken_text: "Zed finished Eclipse.".to_owned(),
+            sample_rate_hz: 24_000,
+            pcm: vec![1, 0, 255, 255],
+        }));
+    *harness
+        .speaker
+        .pending
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner) = Duration::from_millis(400);
+    let run = Uuid::from_u128(0xa1);
+    harness.proactive_answers.send_replace(Some(run));
+
+    harness
+        .until_snapshot(|s| s.state == VoiceState::Speaking)
+        .await?;
+    assert_eq!(read(&harness.proactive.asked), [run]);
+    assert_eq!(read(&harness.speaker.played), [(24_000, vec![1, -1])]);
+    let view = harness.turn.borrow().clone();
+    assert_eq!(
+        view,
+        Some(VoiceTurnView {
+            heard: None,
+            answer: Some("Zed finished Eclipse.".to_owned()),
+            error: None,
+            app_initiated: true,
+        })
+    );
+    // Nothing was asked of the voice route, and the microphone closed while
+    // Scout spoke, then opened again once it had played out.
+    assert_eq!(read(&harness.turns.asked), [] as [Asked; 0]);
+    *harness
+        .speaker
+        .pending
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner) = Duration::ZERO;
+    harness
+        .until(|| {
+            harness.engine_commands()
+                == [
+                    EngineCommand::Conversation(true),
+                    EngineCommand::Conversation(false),
+                    EngineCommand::Conversation(true),
+                ]
+        })
+        .await?;
+    assert!(
+        !harness
+            .engine_commands()
+            .contains(&EngineCommand::FinishTurn),
+        "no engine turn was held for it"
+    );
+    Ok(())
+}
+
+#[cfg(scout_proactive_coach)]
+#[tokio::test]
+async fn a_proactive_answer_while_muted_stays_in_the_window() -> TestResult {
+    let mut harness = start(agreed());
+    harness.until(|| read(&harness.engine.starts) == 1).await?;
+    harness.engine.emit(EngineEvent::Ready)?;
+    harness.phase.send_replace(GameflowPhase::InProgress);
+    harness.voice.send(VoiceCommand::SetMuted { muted: true });
+    harness.until_snapshot(|s| s.muted).await?;
+    harness
+        .proactive_answers
+        .send_replace(Some(Uuid::from_u128(0xa1)));
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert_eq!(read(&harness.proactive.asked), [] as [Uuid; 0]);
+    assert_eq!(read(&harness.speaker.played), [] as [(u32, Vec<i16>); 0]);
     Ok(())
 }

@@ -272,6 +272,8 @@ fn a_spoken_turn_runs_from_the_utterance_to_the_end_of_the_answer() {
             heard: Some("What should I build next?".to_owned()),
             answer: Some("Zhonya's Hourglass: their Zed has two items.".to_owned()),
             error: None,
+            #[cfg(scout_proactive_coach)]
+            app_initiated: false,
         })
     );
 }
@@ -500,4 +502,159 @@ fn an_unreadable_settings_file_keeps_voice_off_and_unbound() {
         snapshot.detail.as_deref(),
         Some("Voice is off: Scout could not read its settings (settings file is not valid).")
     );
+}
+
+/// A proactive answer's speech: `samples` 16-bit samples of silence.
+#[cfg(scout_proactive_coach)]
+fn proactive_speech(samples: usize) -> scout_explore_client::proactive::ProactiveSpeech {
+    scout_explore_client::proactive::ProactiveSpeech {
+        message_id: Uuid::from_u128(0xa2),
+        spoken_text: "Zed finished Eclipse.".to_owned(),
+        sample_rate_hz: 24_000,
+        pcm: vec![0; samples * 2],
+    }
+}
+
+#[cfg(scout_proactive_coach)]
+const RUN: Uuid = Uuid::from_u128(0xa1);
+
+#[cfg(scout_proactive_coach)]
+#[test]
+fn a_proactive_answer_is_spoken_in_conversation_mode_labelled_as_scouts_own() {
+    let mut controller = in_game();
+    // The microphone closes while Scout says it.
+    assert_eq!(
+        controller.handle(Input::ProactiveAnswer(RUN)),
+        [
+            Effect::FetchProactiveSpeech(RUN),
+            Effect::Engine(EngineCommand::Conversation(false))
+        ]
+    );
+    assert_eq!(controller.snapshot().state, VoiceState::Thinking);
+    assert_eq!(
+        controller.turn_view(),
+        Some(VoiceTurnView {
+            app_initiated: true,
+            ..VoiceTurnView::default()
+        })
+    );
+    assert_eq!(
+        controller.handle(Input::ProactiveSpeech(Ok(proactive_speech(4)))),
+        [
+            Effect::Play {
+                sample_rate_hz: 24_000,
+                pcm: vec![0; 4]
+            },
+            Effect::AwaitDrain
+        ]
+    );
+    assert_eq!(controller.snapshot().state, VoiceState::Speaking);
+    let view = controller.turn_view();
+    assert_eq!(
+        view.as_ref().and_then(|view| view.answer.as_deref()),
+        Some("Zed finished Eclipse.")
+    );
+    assert!(view.is_some_and(|view| view.app_initiated && view.heard.is_none()));
+    // Once it has played, listening resumes; no engine turn was held.
+    assert_eq!(
+        controller.handle(Input::Drained),
+        [Effect::Engine(EngineCommand::Conversation(true))]
+    );
+}
+
+#[cfg(scout_proactive_coach)]
+#[test]
+fn a_proactive_answer_is_not_spoken_muted_or_outside_conversation_mode() {
+    let mut muted = in_game();
+    muted.handle(Input::Window(VoiceCommand::SetMuted { muted: true }));
+    assert_eq!(muted.handle(Input::ProactiveAnswer(RUN)), NOTHING);
+
+    let (mut off, _) = Controller::new(Ok(VoiceSettings {
+        conversation_mode: false,
+        ..agreed()
+    }));
+    off.handle(Input::Engine(EngineEvent::Ready));
+    off.handle(Input::Phase(GameflowPhase::InProgress));
+    assert_eq!(off.handle(Input::ProactiveAnswer(RUN)), NOTHING);
+
+    let (mut declined, _) = Controller::new(Ok(VoiceSettings {
+        consent: Some(false),
+        ..VoiceSettings::default()
+    }));
+    declined.handle(Input::Phase(GameflowPhase::InProgress));
+    assert_eq!(declined.handle(Input::ProactiveAnswer(RUN)), NOTHING);
+
+    let mut after = in_game();
+    after.handle(Input::Phase(GameflowPhase::EndOfGame));
+    assert_eq!(after.handle(Input::ProactiveAnswer(RUN)), NOTHING);
+    assert_eq!(after.turn_view(), None);
+}
+
+#[cfg(scout_proactive_coach)]
+#[test]
+fn a_proactive_answer_never_joins_a_question_of_the_players() {
+    let mut controller = in_game();
+    controller.handle(Input::Engine(EngineEvent::Utterance(utterance(
+        Trigger::Wake,
+    ))));
+    assert_eq!(controller.snapshot().state, VoiceState::Thinking);
+    // The player's turn is running: Scout keeps its note to the window.
+    assert_eq!(controller.handle(Input::ProactiveAnswer(RUN)), NOTHING);
+    assert!(
+        controller
+            .turn_view()
+            .is_some_and(|view| !view.app_initiated)
+    );
+
+    // While the player is talking, too.
+    let mut talking = in_game();
+    talking.handle(Input::Engine(EngineEvent::State {
+        state: scout_voice::VoiceState::Capturing {
+            trigger: Trigger::Wake,
+            verified: true,
+        },
+        microphone_open: true,
+    }));
+    assert_eq!(talking.handle(Input::ProactiveAnswer(RUN)), NOTHING);
+}
+
+#[cfg(scout_proactive_coach)]
+#[test]
+fn the_players_push_to_talk_or_mute_cuts_scout_off() {
+    let mut controller = in_game();
+    controller.handle(Input::ProactiveAnswer(RUN));
+    controller.handle(Input::ProactiveSpeech(Ok(proactive_speech(4))));
+    let effects = controller.handle(Input::Hotkey(HotkeyEvent::PushToTalk(true)));
+    assert_eq!(
+        effects,
+        [
+            Effect::StopPlayback,
+            Effect::Engine(EngineCommand::PushToTalk(true)),
+            Effect::Engine(EngineCommand::Conversation(true))
+        ]
+    );
+    assert_eq!(controller.snapshot().state, VoiceState::Listening);
+
+    let mut muting = in_game();
+    muting.handle(Input::ProactiveAnswer(RUN));
+    let effects = muting.handle(Input::Window(VoiceCommand::SetMuted { muted: true }));
+    assert!(effects.contains(&Effect::StopPlayback));
+    // Speech that arrives after being cut off is not played.
+    assert_eq!(
+        muting.handle(Input::ProactiveSpeech(Ok(proactive_speech(4)))),
+        NOTHING
+    );
+}
+
+#[cfg(scout_proactive_coach)]
+#[test]
+fn speech_that_could_not_be_had_says_nothing_and_listening_resumes() {
+    let mut controller = in_game();
+    controller.handle(Input::ProactiveAnswer(RUN));
+    assert_eq!(
+        controller.handle(Input::ProactiveSpeech(Err("budget".to_owned()))),
+        [Effect::Engine(EngineCommand::Conversation(true))]
+    );
+    assert_eq!(controller.turn_view(), None);
+    assert_eq!(controller.snapshot().state, VoiceState::Listening);
 }

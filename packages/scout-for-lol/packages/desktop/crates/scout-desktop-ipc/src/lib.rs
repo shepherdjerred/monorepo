@@ -40,7 +40,7 @@ pub use voice::{
 };
 
 /// The version both ends must announce in their `hello`.
-pub const PROTOCOL_VERSION: u32 = 12;
+pub const PROTOCOL_VERSION: u32 = 13;
 
 /// A message from the supervisor to the window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -684,6 +684,8 @@ mod tests {
                     heard: Some("What should I build next?".to_owned()),
                     answer: Some("Zhonya's Hourglass.".to_owned()),
                     error: None,
+                    #[cfg(scout_proactive_coach)]
+                    app_initiated: false,
                 }),
             },
             SupervisorMessage::Show,
@@ -713,7 +715,7 @@ mod tests {
         };
         assert_eq!(live.summary(), "Ahri, level 10, 4/2/7, 87 CS, 7:01");
         assert_eq!(
-            PROTOCOL_VERSION, 12,
+            PROTOCOL_VERSION, 13,
             "a new message or field bumps the protocol"
         );
     }

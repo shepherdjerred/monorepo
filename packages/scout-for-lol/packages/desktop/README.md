@@ -1058,6 +1058,7 @@ stays in memory on the device to time the game start.
 | A spoken question                                            | Yes, to the Scout API                                             | Only as a finished utterance: one WAV per question, after "hey scout" or while push-to-talk is held, sent to `coach/voice/turns` once you stop speaking; the microphone never streams                                                                                                                     | Voice consent, mute                                                                                                                   |
 | Spoken answers                                               | No, they arrive                                                   | Played on this computer as they stream in; nothing is kept                                                                                                                                                                                                                                                | Voice consent                                                                                                                         |
 | Proactive coach trigger (beta build only)                    | Yes, to the Scout API                                             | During a game, when a detector fires: the trigger kind, its scoreboard evidence (champion names, K/D/A, item ids and names, item counts) and the same allowlisted live snapshot a question carries, to `coach/triggers`; never text, never in a stable build, at most one per 105 seconds and 10 per game | Scout Coach and proactive coaching on for your account; refused in production                                                         |
+| Proactive answer speech request (beta build only)            | Yes, to the Scout API                                             | After a proactive turn answers, only with voice conversation mode on and unmuted during a game: the turn's run id, nothing else, to `coach/triggers/speech`; the speech arrives and plays on this computer, labelled as Scout's own                                                                       | Voice consent, conversation mode, mute; refused in production                                                                         |
 | Data Dragon `item.json` (beta build only)                    | No, it arrives                                                    | Downloaded once per Data Dragon version from `ddragon.leagueoflegends.com` into the picture cache, for the detectors                                                                                                                                                                                      | Not applicable                                                                                                                        |
 
 The live game snapshot reaches Scout only as a chat question's game context
@@ -1132,6 +1133,20 @@ IPC protocol 12) and the card are all behind the same cfg, and
 `crates/scout-client-app/tests/proactive_boundary.rs` reads the built binary
 to check that only a beta build contains the sender, the detectors and the
 request path. CI runs the workspace tests and Clippy in both profiles.
+
+Voice can say a proactive answer too, in the beta build, until the overlay
+exists. When a proactive turn's stream ends with an answer, the relay
+publishes its run (`ChatRelay::proactive_answers`). The voice service asks
+`coach/triggers/speech` for that run's speech only when conversation mode is
+on, a game is live, voice is not muted, and no question of the player's is
+being recorded or answered. The request carries the run id alone; the server
+chooses what is said from the saved answer. The microphone closes while Scout
+speaks and opens again after. The voice strip labels it "Scout noticed this on
+the scoreboard and is saying it on its own. You did not ask." (`VoiceTurnView`
+gains `app_initiated`, IPC protocol 13). Push-to-talk or mute cuts it off. It
+never becomes a spoken turn of the player's: no engine turn is held and the
+voice route is not called. A request Scout refuses, or speech that cannot be
+had, says nothing; the card is still in the window.
 
 ## Diagnostics
 

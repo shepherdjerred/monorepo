@@ -1147,6 +1147,20 @@ plus a server-derived window, unique per owner and game) is admitted once and a
 retry answers `duplicate`; admitted triggers are at least 90 seconds apart per
 owner and at most 10 per game, answered `rate_limited` otherwise.
 
+`coach/triggers/speech` (desktop contract 11) speaks a proactive answer for a
+beta build whose player has voice conversation mode on and not muted. It is
+held the same way: production refuses it before reading anything, and
+elsewhere it needs the three proactive flags and `scout_desktop_voice`. It
+also counts against the device's voice write limit. The body is a run id
+alone. The run must be a succeeded `app_proactive` turn that the calling
+device started for its own owner (its `ScoutCoachTurn` row says so). The
+server speaks that turn's saved answer, its spoken summary if it has one,
+otherwise the answer with Markdown marks removed, and refuses one longer than
+600 characters. Speech goes through `scout-client/desktop/coach-speech.ts`,
+shared with spoken turns: the owner's audio allowance is held before the
+provider is called and settled at the speech's real length. The answer is PCM
+chunks in the voice turn's speech format.
+
 ### Raw observation archive
 
 Every persisted Scout Client observation is a durable S3 archive job, including

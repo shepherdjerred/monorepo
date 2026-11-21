@@ -87,6 +87,11 @@ pub struct VoiceTurnView {
     pub answer: Option<String>,
     /// Why the turn stopped short, safe to show.
     pub error: Option<String>,
+    /// Scout started this one: it is speaking something it noticed on the
+    /// scoreboard, not answering a question. Beta profile only.
+    #[cfg(scout_proactive_coach)]
+    #[serde(default)]
+    pub app_initiated: bool,
 }
 
 /// A voice choice from the window.

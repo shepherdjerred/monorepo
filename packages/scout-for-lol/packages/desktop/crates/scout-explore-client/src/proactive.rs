@@ -20,13 +20,16 @@
 //! [`ExploreClient::start_coach_trigger`]: crate::ExploreClient::start_coach_trigger
 //! [`CoachInput::Trigger`]: crate::app_turns::CoachInput::Trigger
 
+use base64::Engine as _;
+use base64::engine::general_purpose::STANDARD;
 use scout_client_core::coach_context::GameContext;
 use scout_client_core::desktop_api::{
-    ActiveRun, CoachTrigger, CoachTriggerRequest, CoachTriggerResponse,
+    ActiveRun, CoachTrigger, CoachTriggerRequest, CoachTriggerResponse, CoachTriggerSpeechResponse,
 };
 use scout_client_core::live::snapshot::LiveSnapshot;
 use uuid::Uuid;
 
+use crate::contract::{SPEECH_ENCODING, SPEECH_MAX_CHUNK_BYTES, SPEECH_SAMPLE_RATE_HZ};
 use crate::error::{ExploreClientError, Recovery};
 
 /// One proactive coach turn the supervisor's detectors asked for. It carries
@@ -57,6 +60,71 @@ impl ProactiveTurn {
             game_key: self.game_key.clone(),
             trigger: self.trigger.clone(),
             snapshot,
+        })
+    }
+}
+
+/// A proactive answer's speech, from `coach/triggers/speech`, checked against
+/// the voice turn's speech format.
+#[derive(Clone, PartialEq, Eq)]
+pub struct ProactiveSpeech {
+    /// The answer spoken.
+    pub message_id: Uuid,
+    /// What is said.
+    pub spoken_text: String,
+    /// Samples per second.
+    pub sample_rate_hz: u32,
+    /// Little-endian 16-bit mono PCM.
+    pub pcm: Vec<u8>,
+}
+
+impl std::fmt::Debug for ProactiveSpeech {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("ProactiveSpeech")
+            .field("message_id", &self.message_id)
+            .field("sample_rate_hz", &self.sample_rate_hz)
+            .field("bytes", &self.pcm.len())
+            .finish_non_exhaustive()
+    }
+}
+
+impl ProactiveSpeech {
+    /// Decode the route's answer.
+    ///
+    /// # Errors
+    ///
+    /// A message when the speech breaks the contract's format: another
+    /// encoding or rate, a chunk that is not base64, larger than a chunk may
+    /// be, or not whole samples.
+    pub fn decode(response: CoachTriggerSpeechResponse) -> Result<Self, String> {
+        if response.encoding != SPEECH_ENCODING || response.sample_rate_hz != SPEECH_SAMPLE_RATE_HZ
+        {
+            return Err(format!(
+                "speech is {} at {} Hz, not {SPEECH_ENCODING} at {SPEECH_SAMPLE_RATE_HZ} Hz",
+                response.encoding, response.sample_rate_hz
+            ));
+        }
+        if response.chunks.is_empty() {
+            return Err("speech has no audio".to_owned());
+        }
+        let mut pcm = Vec::new();
+        for chunk in &response.chunks {
+            let bytes = STANDARD
+                .decode(chunk.as_bytes())
+                .map_err(|error| format!("a speech chunk is not base64: {error}"))?;
+            let too_large =
+                u32::try_from(bytes.len()).map_or(true, |len| len > SPEECH_MAX_CHUNK_BYTES);
+            if too_large || bytes.len() % 2 != 0 {
+                return Err(format!("a speech chunk of {} bytes", bytes.len()));
+            }
+            pcm.extend_from_slice(&bytes);
+        }
+        Ok(Self {
+            message_id: response.message_id,
+            spoken_text: response.spoken_text,
+            sample_rate_hz: response.sample_rate_hz,
+            pcm,
         })
     }
 }

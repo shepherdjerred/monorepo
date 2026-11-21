@@ -15,6 +15,10 @@
 //!   and never while muted.
 //! - The microphone is closed while an answer is fetched and spoken; the
 //!   engine holds the utterance's turn until the controller finishes it.
+//! - In the beta profile only, Scout may speak a proactive answer it noticed
+//!   on the scoreboard: only in conversation mode, during a game, unmuted,
+//!   with nothing else running, and labelled as Scout's own. The microphone
+//!   closes while it plays, and the player's push-to-talk or mute cuts it off.
 
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD;
@@ -59,6 +63,12 @@ pub enum Input {
     Turn(TurnUpdate),
     /// The spoken answer finished playing.
     Drained,
+    /// A proactive turn answered; its run may be spoken. Beta profile only.
+    #[cfg(scout_proactive_coach)]
+    ProactiveAnswer(Uuid),
+    /// The speech fetched for it, or why there is none. Beta profile only.
+    #[cfg(scout_proactive_coach)]
+    ProactiveSpeech(Result<scout_explore_client::proactive::ProactiveSpeech, String>),
 }
 
 /// Something the service must do.
@@ -89,6 +99,9 @@ pub enum Effect {
     ShowWindow,
     /// Show this conversation, which now holds the spoken turn.
     OpenConversation(Uuid),
+    /// Fetch the speech of this proactive turn's answer. Beta profile only.
+    #[cfg(scout_proactive_coach)]
+    FetchProactiveSpeech(Uuid),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -111,6 +124,12 @@ enum Turn {
     /// The answer is playing; `done` says whether the stream has ended.
     Speaking {
         done: bool,
+    },
+    /// Scout is saying a proactive answer on its own: fetching its speech,
+    /// then `playing` it. Beta profile only.
+    #[cfg(scout_proactive_coach)]
+    Announcing {
+        playing: bool,
     },
 }
 
@@ -241,12 +260,39 @@ impl Controller {
 
     /// Whether hands-free listening should be on now.
     fn wants_listening(&self) -> bool {
+        self.conversation_mode_live() && !self.announcing()
+    }
+
+    /// Conversation mode is on and may listen: agreed, ready, in a game,
+    /// unmuted and working.
+    fn conversation_mode_live(&self) -> bool {
         self.agreed()
             && self.engine == EngineStatus::Ready
             && self.settings.conversation_mode
             && self.in_game
             && !self.muted
             && !self.microphone.failed
+    }
+
+    /// Whether Scout is saying a proactive answer. Never in a stable build.
+    #[cfg(scout_proactive_coach)]
+    const fn announcing(&self) -> bool {
+        matches!(self.turn, Turn::Announcing { .. })
+    }
+
+    /// Whether Scout is saying a proactive answer. Never in a stable build.
+    #[cfg(not(scout_proactive_coach))]
+    #[expect(clippy::unused_self, reason = "the beta build reads the turn")]
+    const fn announcing(&self) -> bool {
+        false
+    }
+
+    /// Cut off a proactive answer being said; the microphone may open again.
+    fn stop_announcing(&mut self, effects: &mut Vec<Effect>) {
+        if self.announcing() {
+            effects.push(Effect::StopPlayback);
+            self.turn = Turn::Idle;
+        }
     }
 
     /// Tell the engine about any change in what it should be doing.
@@ -286,7 +332,17 @@ impl Controller {
                 if self.turn == (Turn::Speaking { done: true }) {
                     self.finish_turn(&mut effects);
                 }
+                #[cfg(scout_proactive_coach)]
+                if self.turn == (Turn::Announcing { playing: true }) {
+                    // Nothing of the player's was recorded, so there is no
+                    // engine turn to finish.
+                    self.turn = Turn::Idle;
+                }
             }
+            #[cfg(scout_proactive_coach)]
+            Input::ProactiveAnswer(run_id) => self.proactive_answer(run_id, &mut effects),
+            #[cfg(scout_proactive_coach)]
+            Input::ProactiveSpeech(speech) => self.proactive_speech(speech, &mut effects),
         }
         self.sync(&mut effects);
         effects
@@ -297,6 +353,9 @@ impl Controller {
         if in_game != self.in_game {
             self.in_game = in_game;
             self.microphone.failed = false;
+        }
+        if !in_game {
+            self.stop_announcing(effects);
         }
         if in_game && self.settings.conversation_mode {
             self.ask_for_consent(effects);
@@ -323,6 +382,8 @@ impl Controller {
         if self.muted || self.engine != EngineStatus::Ready || self.turn == Turn::Thinking {
             return;
         }
+        // The player's question comes before anything Scout says on its own.
+        self.stop_announcing(effects);
         if matches!(self.turn, Turn::Speaking { .. }) {
             // Talking over the answer cuts it off and asks again.
             effects.push(Effect::StopPlayback);
@@ -341,6 +402,7 @@ impl Controller {
         self.muted = muted;
         if muted {
             self.release_push_to_talk(effects);
+            self.stop_announcing(effects);
         } else {
             self.microphone.failed = false;
         }
@@ -429,7 +491,8 @@ impl Controller {
     }
 
     fn turn(&mut self, update: TurnUpdate, effects: &mut Vec<Effect>) {
-        if self.turn == Turn::Idle {
+        // Only a question of the player's has a stream to follow.
+        if self.turn == Turn::Idle || self.announcing() {
             return;
         }
         let view = self.view.get_or_insert_with(VoiceTurnView::default);
@@ -483,6 +546,61 @@ impl Controller {
         }
     }
 
+    /// A proactive turn answered. Say it only in conversation mode, during a
+    /// game, unmuted, with no turn of the player's running or being
+    /// recorded; otherwise it stays a card in the window.
+    #[cfg(scout_proactive_coach)]
+    fn proactive_answer(&mut self, run_id: Uuid, effects: &mut Vec<Effect>) {
+        let recording = self.told.push_to_talk
+            || matches!(
+                self.microphone.state,
+                scout_voice::VoiceState::Capturing { .. }
+            );
+        if !self.conversation_mode_live() || self.turn != Turn::Idle || recording {
+            return;
+        }
+        self.turn = Turn::Announcing { playing: false };
+        self.error = None;
+        self.view = Some(VoiceTurnView {
+            app_initiated: true,
+            ..VoiceTurnView::default()
+        });
+        effects.push(Effect::FetchProactiveSpeech(run_id));
+    }
+
+    /// The proactive answer's speech arrived, or could not be had. A failure
+    /// says nothing: the answer is still in the window.
+    #[cfg(scout_proactive_coach)]
+    fn proactive_speech(
+        &mut self,
+        speech: Result<scout_explore_client::proactive::ProactiveSpeech, String>,
+        effects: &mut Vec<Effect>,
+    ) {
+        if self.turn != (Turn::Announcing { playing: false }) {
+            // Cut off, or superseded by the player's own question.
+            return;
+        }
+        let decoded = speech.and_then(|speech| {
+            pcm_s16le(&speech.pcm)
+                .map(|pcm| (speech, pcm))
+                .map_err(|error| error.to_string())
+        });
+        let Ok((speech, pcm)) = decoded else {
+            self.turn = Turn::Idle;
+            self.view = None;
+            return;
+        };
+        self.turn = Turn::Announcing { playing: true };
+        if let Some(view) = self.view.as_mut() {
+            view.answer = Some(speech.spoken_text);
+        }
+        effects.push(Effect::Play {
+            sample_rate_hz: speech.sample_rate_hz,
+            pcm,
+        });
+        effects.push(Effect::AwaitDrain);
+    }
+
     /// What the window shows.
     #[must_use]
     pub fn snapshot(&self) -> VoiceSnapshot {
@@ -504,9 +622,9 @@ impl Controller {
             VoiceState::Error
         } else if !self.agreed() {
             VoiceState::Off
-        } else if matches!(self.turn, Turn::Speaking { .. }) {
+        } else if matches!(self.turn, Turn::Speaking { .. }) || self.saying(true) {
             VoiceState::Speaking
-        } else if self.turn == Turn::Thinking {
+        } else if self.turn == Turn::Thinking || self.saying(false) {
             VoiceState::Thinking
         } else if self.muted {
             VoiceState::Muted
@@ -531,6 +649,20 @@ impl Controller {
             settings: Some(wire_settings(&self.settings)),
             detail,
         }
+    }
+
+    /// Whether Scout is fetching (`false`) or playing (`true`) a proactive
+    /// answer.
+    #[cfg(scout_proactive_coach)]
+    fn saying(&self, playing: bool) -> bool {
+        self.turn == (Turn::Announcing { playing })
+    }
+
+    /// Whether Scout is saying a proactive answer: never in a stable build.
+    #[cfg(not(scout_proactive_coach))]
+    #[expect(clippy::unused_self, reason = "the beta build reads the turn")]
+    const fn saying(&self, _playing: bool) -> bool {
+        false
     }
 
     /// The spoken turn the window shows.

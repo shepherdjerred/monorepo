@@ -26,13 +26,15 @@ use crate::coach_context::{GameContext, LiveContext};
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 10;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 11;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
 /// Path of the route that starts a turn Scout asks for itself.
 pub const EXPLORE_RUNS_START_APP_PATH: &str = "/api/scout-client/v1/explore/runs/start-app";
 /// Path of the beta-only route that asks for a proactive coach turn.
 pub const COACH_TRIGGERS_PATH: &str = "/api/scout-client/v1/coach/triggers";
+/// Path of the beta-only route that speaks a finished proactive turn's answer.
+pub const COACH_TRIGGERS_SPEECH_PATH: &str = "/api/scout-client/v1/coach/triggers/speech";
 /// Path of the route that stops a running turn.
 pub const EXPLORE_RUNS_STOP_PATH: &str = "/api/scout-client/v1/explore/runs/stop";
 /// Path of the route that lists the owner's running turns.
@@ -678,6 +680,33 @@ pub enum CoachTriggerResponse {
     Duplicate,
 }
 
+/// Request to `coach/triggers/speech`: the run of a finished proactive turn
+/// this device started. Nothing else: the server decides what is said, from
+/// that turn's saved answer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoachTriggerSpeechRequest {
+    /// The proactive turn's run.
+    pub run_id: Uuid,
+}
+
+/// Response from `coach/triggers/speech`: the answer's speech as ordered PCM
+/// chunks, in the voice turn's speech format.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CoachTriggerSpeechResponse {
+    /// The answer spoken.
+    pub message_id: Uuid,
+    /// What was said.
+    pub spoken_text: String,
+    /// The sample encoding, `pcm_s16le`.
+    pub encoding: String,
+    /// Samples per second.
+    pub sample_rate_hz: u32,
+    /// Base64 PCM, in order.
+    pub chunks: Vec<String>,
+}
+
 /// A turn the server is answering: the answer to `runs/start`, and each entry
 /// of `runs/active`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1020,18 +1049,20 @@ mod tests {
 
     use super::{
         ActiveRun, AppInitiation, AppTurnRequest, AssetsResponse, AttachmentDiscardRequest,
-        COACH_REVIEWS_GET_PATH, COACH_TRIGGERS_PATH, COACH_VOICE_TURNS_PATH, CoachReviewRequest,
-        CoachReviewResponse, CoachTrigger, CoachTriggerRequest, CoachTriggerResponse,
-        ConversationGetRequest, ConversationListResponse, DESKTOP_CONTRACT_HEADER,
-        DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH, DesktopApiContract, DesktopApiError,
-        DeviceScope, EXPLORE_ASSETS_PATH, EXPLORE_CONVERSATIONS_GET_PATH,
-        EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH, EXPLORE_RUNS_OUTCOME_PATH,
-        EXPLORE_RUNS_START_APP_PATH, EXPLORE_RUNS_START_PATH, EXPLORE_RUNS_STOP_PATH,
-        EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH, EXPLORE_VISUALIZATION_PATH, EmptyRequest,
-        ExploreStatusResponse, ModelsResponse, OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE,
-        PairingV2Response, PngResponse, RouteResponseKind, RunActiveResponse, RunOutcomeResponse,
-        RunRequest, RunStartRequest, RunStopResponse, ScopeRequest, ScopeRequestResponse,
-        SetLeafRequest, ShareResponse, VisualizationRequest,
+        COACH_REVIEWS_GET_PATH, COACH_TRIGGERS_PATH, COACH_TRIGGERS_SPEECH_PATH,
+        COACH_VOICE_TURNS_PATH, CoachReviewRequest, CoachReviewResponse, CoachTrigger,
+        CoachTriggerRequest, CoachTriggerResponse, CoachTriggerSpeechRequest,
+        CoachTriggerSpeechResponse, ConversationGetRequest, ConversationListResponse,
+        DESKTOP_CONTRACT_HEADER, DESKTOP_CONTRACT_VERSION, DEVICE_SCOPE_REQUESTS_PATH,
+        DesktopApiContract, DesktopApiError, DeviceScope, EXPLORE_ASSETS_PATH,
+        EXPLORE_CONVERSATIONS_GET_PATH, EXPLORE_CONVERSATIONS_LIST_PATH, EXPLORE_RUNS_ACTIVE_PATH,
+        EXPLORE_RUNS_OUTCOME_PATH, EXPLORE_RUNS_START_APP_PATH, EXPLORE_RUNS_START_PATH,
+        EXPLORE_RUNS_STOP_PATH, EXPLORE_RUNS_STREAM_PATH, EXPLORE_STATUS_PATH,
+        EXPLORE_VISUALIZATION_PATH, EmptyRequest, ExploreStatusResponse, ModelsResponse,
+        OkResponse, PAIRINGS_V2_PATH, PNG_CONTENT_TYPE, PairingV2Response, PngResponse,
+        RouteResponseKind, RunActiveResponse, RunOutcomeResponse, RunRequest, RunStartRequest,
+        RunStopResponse, ScopeRequest, ScopeRequestResponse, SetLeafRequest, ShareResponse,
+        VisualizationRequest,
     };
     use crate::protocol::CreatePairingRequest;
 
@@ -1096,6 +1127,9 @@ mod tests {
         include_str!("../../../../data/src/scout-client/desktop-fixtures/coach-reviews-get.json");
     const COACH_TRIGGERS: &str =
         include_str!("../../../../data/src/scout-client/desktop-fixtures/coach-triggers.json");
+    const COACH_TRIGGERS_SPEECH: &str = include_str!(
+        "../../../../data/src/scout-client/desktop-fixtures/coach-triggers-speech.json"
+    );
     const START_ACTIONS: &str = include_str!(
         "../../../../data/src/scout-client/desktop-fixtures/explore-runs-start-actions.json"
     );
@@ -1155,6 +1189,7 @@ mod tests {
                 ("coach_voice_turns", COACH_VOICE_TURNS_PATH),
                 ("coach_reviews_get", COACH_REVIEWS_GET_PATH),
                 ("coach_triggers", COACH_TRIGGERS_PATH),
+                ("coach_triggers_speech", COACH_TRIGGERS_SPEECH_PATH),
                 ("device_scope_requests", DEVICE_SCOPE_REQUESTS_PATH),
                 ("explore_assets", EXPLORE_ASSETS_PATH),
                 (
@@ -1243,6 +1278,7 @@ mod tests {
             VOICE_TURNS,
             COACH_REVIEWS_GET,
             COACH_TRIGGERS,
+            COACH_TRIGGERS_SPEECH,
         ] {
             let fixture: Value = serde_json::from_str(fixture)?;
             named.push(fixture["route"].as_str().ok_or("route name")?.to_owned());
@@ -1296,6 +1332,23 @@ mod tests {
     #[test]
     fn coach_triggers_fixture_parses_strictly() -> TestResult {
         check_route::<CoachTriggerRequest, CoachTriggerResponse>(COACH_TRIGGERS, "coach_triggers")
+    }
+
+    #[test]
+    fn coach_triggers_speech_fixture_parses_strictly_and_takes_no_text() -> TestResult {
+        check_route::<CoachTriggerSpeechRequest, CoachTriggerSpeechResponse>(
+            COACH_TRIGGERS_SPEECH,
+            "coach_triggers_speech",
+        )?;
+        let fixture: Value = serde_json::from_str(COACH_TRIGGERS_SPEECH)?;
+        for case in fixture["invalidRequests"].as_array().ok_or("invalid")? {
+            let reason = case["reason"].as_str().unwrap_or("?");
+            assert!(
+                serde_json::from_value::<CoachTriggerSpeechRequest>(case["body"].clone()).is_err(),
+                "{reason}"
+            );
+        }
+        Ok(())
     }
 
     #[test]

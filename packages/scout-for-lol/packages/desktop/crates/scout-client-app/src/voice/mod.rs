@@ -101,6 +101,70 @@ impl VoiceStore for FileStore {
     }
 }
 
+/// Fetches the speech of a proactive turn's answer. Beta profile only.
+/// Production asks `coach/triggers/speech`; tests script it.
+#[cfg(scout_proactive_coach)]
+pub trait ProactiveSpeaker: Send + Sync {
+    /// Fetch the speech for `run_id` and report it on `done`.
+    fn fetch(
+        &self,
+        run_id: uuid::Uuid,
+        done: mpsc::UnboundedSender<
+            Result<scout_explore_client::proactive::ProactiveSpeech, String>,
+        >,
+    );
+}
+
+/// `coach/triggers/speech` on Scout, with the device credential this process
+/// holds. Beta profile only.
+#[cfg(scout_proactive_coach)]
+#[derive(Debug, Clone)]
+pub struct ScoutProactiveSpeech {
+    origin: String,
+}
+
+#[cfg(scout_proactive_coach)]
+impl ScoutProactiveSpeech {
+    /// Speech from `origin`.
+    #[must_use]
+    pub const fn new(origin: String) -> Self {
+        Self { origin }
+    }
+}
+
+#[cfg(scout_proactive_coach)]
+impl ProactiveSpeaker for ScoutProactiveSpeech {
+    fn fetch(
+        &self,
+        run_id: uuid::Uuid,
+        done: mpsc::UnboundedSender<
+            Result<scout_explore_client::proactive::ProactiveSpeech, String>,
+        >,
+    ) {
+        let origin = self.origin.clone();
+        tokio::spawn(async move {
+            // The credential store can block on the operating system.
+            let client = tokio::task::spawn_blocking(move || {
+                scout_explore_client::ExploreClient::from_credential_store(&origin)
+            })
+            .await
+            .map_err(|join| join.to_string())
+            .and_then(|client| client.map_err(|error| error.to_string()));
+            let speech = match client {
+                Ok(client) => client
+                    .speak_proactive_answer(run_id)
+                    .await
+                    .map_err(|error| error.to_string()),
+                Err(problem) => Err(problem),
+            };
+            if let Err(problem) = &speech {
+                tracing::warn!(%problem, "could not fetch the speech of a proactive answer");
+            }
+            let _ = done.send(speech);
+        });
+    }
+}
+
 /// What voice acts through.
 pub struct VoicePorts {
     /// The microphone engine.
@@ -113,6 +177,9 @@ pub struct VoicePorts {
     pub store: Box<dyn VoiceStore>,
     /// The global keys, when the platform event loop could create them.
     pub hotkeys: Option<Box<dyn HotkeyPort>>,
+    /// Proactive answers' speech. Beta profile only.
+    #[cfg(scout_proactive_coach)]
+    pub proactive: Box<dyn ProactiveSpeaker>,
 }
 
 /// What voice listens to.
@@ -166,6 +233,8 @@ pub fn spawn(ports: VoicePorts, inputs: VoiceInputs) -> VoiceHandle {
     let (turn, turn_receiver) = watch::channel(controller.turn_view());
     let (engine_events, engine_receiver) = mpsc::unbounded_channel();
     let (turn_updates, turn_receiver_updates) = mpsc::unbounded_channel();
+    #[cfg(scout_proactive_coach)]
+    let (proactive_speech, proactive_speech_receiver) = mpsc::unbounded_channel();
     let mut service = Service {
         controller,
         ports,
@@ -180,9 +249,29 @@ pub fn spawn(ports: VoicePorts, inputs: VoiceInputs) -> VoiceHandle {
         control: inputs.control.clone(),
         snapshot,
         turn,
+        #[cfg(scout_proactive_coach)]
+        proactive_speech,
     };
     service.apply(effects);
-    tokio::spawn(service.run(inputs, receiver, engine_receiver, turn_receiver_updates));
+    let proactive = ProactiveInputs {
+        #[cfg(scout_proactive_coach)]
+        speech: proactive_speech_receiver,
+        #[cfg(scout_proactive_coach)]
+        answers: inputs.chat.as_ref().map(|chat| {
+            let mut answers = chat.proactive_answers();
+            // Only answers from now on: one that landed before voice started
+            // is not news.
+            answers.borrow_and_update();
+            answers
+        }),
+    };
+    tokio::spawn(service.run(
+        inputs,
+        receiver,
+        engine_receiver,
+        turn_receiver_updates,
+        proactive,
+    ));
     VoiceHandle {
         commands,
         snapshot: snapshot_receiver,
@@ -206,6 +295,59 @@ struct Service {
     control: mpsc::UnboundedSender<Control>,
     snapshot: watch::Sender<VoiceSnapshot>,
     turn: watch::Sender<Option<VoiceTurnView>>,
+    /// Where fetched proactive speech is reported.
+    #[cfg(scout_proactive_coach)]
+    proactive_speech:
+        mpsc::UnboundedSender<Result<scout_explore_client::proactive::ProactiveSpeech, String>>,
+}
+
+/// What tells voice about proactive answers: chat, when one answers, and
+/// the speech fetched for it. Empty in a stable build, which never hears of
+/// one.
+struct ProactiveInputs {
+    #[cfg(scout_proactive_coach)]
+    speech:
+        mpsc::UnboundedReceiver<Result<scout_explore_client::proactive::ProactiveSpeech, String>>,
+    #[cfg(scout_proactive_coach)]
+    answers: Option<watch::Receiver<Option<uuid::Uuid>>>,
+}
+
+impl ProactiveInputs {
+    /// The next input: pending forever in a stable build. Cancel-safe.
+    #[cfg(scout_proactive_coach)]
+    async fn next(&mut self) -> Input {
+        loop {
+            tokio::select! {
+                Some(speech) = self.speech.recv() => return Input::ProactiveSpeech(speech),
+                answer = Self::answer(&mut self.answers) => {
+                    if let Some(run_id) = answer {
+                        return Input::ProactiveAnswer(run_id);
+                    }
+                }
+            }
+        }
+    }
+
+    /// The next input: pending forever in a stable build.
+    #[cfg(not(scout_proactive_coach))]
+    async fn next(&mut self) -> Input {
+        std::future::pending().await
+    }
+
+    /// The next run chat reports; none when it reported no run or stopped.
+    #[cfg(scout_proactive_coach)]
+    async fn answer(
+        answers: &mut Option<watch::Receiver<Option<uuid::Uuid>>>,
+    ) -> Option<uuid::Uuid> {
+        let Some(receiver) = answers.as_mut() else {
+            return std::future::pending().await;
+        };
+        if receiver.changed().await.is_err() {
+            *answers = None;
+            return None;
+        }
+        *receiver.borrow_and_update()
+    }
 }
 
 impl Service {
@@ -215,6 +357,7 @@ impl Service {
         mut commands: mpsc::UnboundedReceiver<VoiceCommand>,
         mut engine: mpsc::UnboundedReceiver<EngineEvent>,
         mut turns: mpsc::UnboundedReceiver<TurnUpdate>,
+        mut proactive: ProactiveInputs,
     ) {
         let VoiceInputs {
             mut phase,
@@ -231,6 +374,7 @@ impl Service {
                 biased;
                 Some(event) = engine.recv() => Input::Engine(event),
                 Some(update) = turns.recv() => Input::Turn(update),
+                input = proactive.next() => input,
                 Ok(()) = phase.changed() => Input::Phase(phase.borrow_and_update().clone()),
                 Some(event) = hotkeys.recv() => Input::Hotkey(event),
                 command = commands.recv() => match command {
@@ -374,6 +518,12 @@ impl Service {
                     chat.send(ChatCommand::Open { conversation_id });
                     chat.send(ChatCommand::Refresh);
                 }
+            }
+            #[cfg(scout_proactive_coach)]
+            Effect::FetchProactiveSpeech(run_id) => {
+                self.ports
+                    .proactive
+                    .fetch(run_id, self.proactive_speech.clone());
             }
         }
     }
