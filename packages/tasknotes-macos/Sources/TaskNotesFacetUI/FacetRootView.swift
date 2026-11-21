@@ -6,6 +6,7 @@ public struct FacetRootView: View {
     @State private var store: FacetStore
     @State private var presentedModal: FacetPresentedEntityModal?
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let afterStart: (@MainActor () async -> Void)?
 
     public init(
@@ -30,30 +31,29 @@ public struct FacetRootView: View {
                 )
             #endif
 
-            if let toastMessage = store.undoToastMessage {
-                FacetUndoToastView(
-                    message: toastMessage,
-                    canUndo: store.canUndo,
-                    onUndo: { store.undoLast() },
-                    onDismiss: { store.dismissUndoToast() }
-                )
-                .padding(.bottom, 18)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+            if !store.showsCapture {
+                FacetUndoNotice(store: store)
+                    #if os(iOS)
+                        .padding(.bottom, 136)
+                    #else
+                        .padding(.bottom, 18)
+                    #endif
             }
         }
-        .animation(.snappy(duration: 0.2), value: store.undoToastMessage)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.2), value: store.undoToastMessage)
         .task {
             await store.start()
-            await store.installNotificationRouting()
             await afterStart?()
         }
-        .task(id: store.dataRevision) {
-            await store.refreshReminders()
-        }
         .onChange(of: scenePhase) {
-            if scenePhase == .active, store.hasConfiguredToken, !store.isIsolatedLaunch {
+            guard scenePhase == .active, !store.isIsolatedLaunch else { return }
+            store.calendar = ViewerCalendar()
+            if store.hasConfiguredToken {
                 _Concurrency.Task { await store.syncNow() }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+            if !store.isIsolatedLaunch { store.calendar = ViewerCalendar() }
         }
         .onOpenURL { url in
             store.handleURL(url)
@@ -66,7 +66,6 @@ public struct FacetRootView: View {
             #if os(macOS)
                 .frame(minWidth: 500, minHeight: 170)
             #else
-                .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
             #endif
         }
@@ -82,5 +81,22 @@ public struct FacetRootView: View {
             FacetEntityModalSheet(modal: modal, store: store)
         }
         .modifier(FacetAppearanceScope())
+    }
+}
+
+internal struct FacetUndoNotice: View {
+    let store: FacetStore
+
+    var body: some View {
+        if let message = store.undoToastMessage {
+            let receipt = store.toastReceiptID
+            FacetUndoToastView(
+                message: message,
+                canUndo: receipt != nil && receipt == store.localStore.latestUndoEntry?.id,
+                onUndo: { store.undoAction(for: receipt) },
+                onDismiss: { store.dismissUndoToast() }
+            )
+            .transition(.opacity)
+        }
     }
 }

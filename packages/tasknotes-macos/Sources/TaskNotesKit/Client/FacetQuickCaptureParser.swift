@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// Visual chip emitted by `FacetQuickCaptureParser` for live preview strips.
 public struct FacetCaptureChip: Sendable, Equatable, Hashable, Identifiable {
@@ -21,6 +21,39 @@ public struct FacetCaptureChip: Sendable, Equatable, Hashable, Identifiable {
     }
 }
 
+/// Location of a recognized phrase in the original text field.
+public struct FacetCaptureToken: Sendable, Hashable {
+    public let range: NSRange
+    public let text: String
+
+    /// Preserve a correction when an edit occurs before or after the phrase. An edit inside
+    /// the phrase lets the parser evaluate the new wording again.
+    public static func reposition(_ tokens: Set<Self>, afterEditing old: String, to new: String)
+        -> Set<Self>
+    {
+        guard !tokens.isEmpty else { return [] }
+        let before = Array(old.utf16)
+        let after = Array(new.utf16)
+        var prefix = 0
+        while prefix < min(before.count, after.count), before[prefix] == after[prefix] {
+            prefix += 1
+        }
+        var suffix = 0
+        while suffix < min(before.count, after.count) - prefix,
+            before[before.count - suffix - 1] == after[after.count - suffix - 1]
+        { suffix += 1 }
+        return Set(
+            tokens.compactMap { token in
+                if NSMaxRange(token.range) <= prefix { return token }
+                guard token.range.location >= before.count - suffix else { return nil }
+                let shiftedRange = NSRange(
+                    location: token.range.location + after.count - before.count,
+                    length: token.range.length)
+                return Self(range: shiftedRange, text: token.text)
+            })
+    }
+}
+
 /// Complete parsed quick-capture result ready for previewing and task creation.
 public struct FacetParsedCapture: Sendable, Equatable {
     public let title: String
@@ -35,6 +68,7 @@ public struct FacetParsedCapture: Sendable, Equatable {
     public let labelIds: [String]
     public let unmatchedLabels: [String]
     public let chips: [FacetCaptureChip]
+    public let tokens: [FacetCaptureToken]
 
     public var isEmpty: Bool {
         title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -78,10 +112,19 @@ public enum FacetQuickCaptureParser {
         sections: [Section] = [],
         labels: [Label] = [],
         defaultProjectId: String = "",
-        calendar: ViewerCalendar = ViewerCalendar()
+        calendar: ViewerCalendar = ViewerCalendar(),
+        defaultDueDate: String? = nil,
+        literalTokens: Set<FacetCaptureToken> = []
     ) -> FacetParsedCapture {
+        var input = rawInput
+        for token in literalTokens.sorted(by: { $0.range.location > $1.range.location }) {
+            if let range = Range(token.range, in: input), input[range] == token.text {
+                input.replaceSubrange(
+                    range, with: String(repeating: "·", count: token.range.length))
+            }
+        }
         var state = CaptureWorkingState(
-            text: rawInput.trimmingCharacters(in: .whitespacesAndNewlines),
+            text: input,
             projectId: defaultProjectId
         )
         let recurrence = extractRecurrence(from: &state.text)
@@ -97,23 +140,37 @@ public enum FacetQuickCaptureParser {
 
         return finalizeCapture(
             state: state,
-            dateMatch: dateMatch,
-            explicitTime: explicitTime,
-            recurrence: recurrence,
+            rawInput: rawInput,
+            defaultDueDate: defaultDueDate,
+            schedule: SchedulePhrases(date: dateMatch, time: explicitTime, recurrence: recurrence),
             calendar: calendar
         )
     }
 
+    private struct SchedulePhrases {
+        let date: DatePhraseMatch?
+        let time: ClockTime?
+        let recurrence: String?
+    }
+}
+
+extension FacetQuickCaptureParser {
     private static func finalizeCapture(
         state: CaptureWorkingState,
-        dateMatch: DatePhraseMatch?,
-        explicitTime: ClockTime?,
-        recurrence: String?,
+        rawInput: String,
+        defaultDueDate: String?,
+        schedule: SchedulePhrases,
         calendar: ViewerCalendar
     ) -> FacetParsedCapture {
+        let dateMatch = schedule.date
+        let explicitTime = schedule.time
+        let recurrence = schedule.recurrence
         var chips = state.chips
-        let resolvedDueDate = dateMatch?.civilDate ?? (recurrence != nil ? calendar.today : nil)
-        let resolvedDueLabel = dateMatch?.label ?? (recurrence != nil ? "Today" : nil)
+        let resolvedDueDate =
+            dateMatch?.civilDate ?? defaultDueDate
+            ?? ((recurrence != nil || explicitTime != nil) ? calendar.today : nil)
+        let resolvedDueLabel =
+            dateMatch?.label ?? resolvedDueDate.map { $0 == calendar.today ? "Today" : $0 }
         var dueDatetime: String?
         if let civil = resolvedDueDate, let clock = explicitTime {
             dueDatetime = buildDueDatetime(
@@ -131,8 +188,13 @@ public enum FacetQuickCaptureParser {
                 FacetCaptureChip(kind: .recurrence, text: FacetRecurrenceCodec.summary(for: rule))
             )
         }
+        let tokens = recognizedTokens(masked: state.text, input: rawInput)
+        var title = rawInput
+        for token in tokens.reversed() {
+            if let range = Range(token.range, in: title) { title.replaceSubrange(range, with: " ") }
+        }
         return FacetParsedCapture(
-            title: collapseSpaces(state.text),
+            title: collapseSpaces(title),
             projectId: state.projectId,
             sectionId: state.sectionId,
             priority: state.priority,
@@ -144,8 +206,17 @@ public enum FacetQuickCaptureParser {
             recurrenceRule: recurrence,
             labelIds: state.labelIds,
             unmatchedLabels: state.unmatchedLabels,
-            chips: chips
+            chips: chips,
+            tokens: tokens
         )
+    }
+
+    private static func recognizedTokens(masked: String, input: String) -> [FacetCaptureToken] {
+        masked.ranges(of: /\u{000C}+/).compactMap { span in
+            let location = NSRange(span, in: masked)
+            guard let original = Range(location, in: input) else { return nil }
+            return FacetCaptureToken(range: location, text: String(input[original]))
+        }
     }
 
     private static func collapseSpaces(_ text: String) -> String {

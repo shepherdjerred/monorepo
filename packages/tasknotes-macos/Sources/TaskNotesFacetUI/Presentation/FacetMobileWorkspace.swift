@@ -8,30 +8,35 @@
         case inbox
         case upcoming
         case browse
-        case settings
     }
 
     internal struct FacetMobileWorkspace: View {
         @Bindable var store: FacetStore
         let onPresentModal: (FacetPresentedEntityModal) -> Void
 
+        @State private var captureRegions = FacetCaptureDropRegions()
+        @GestureState private var dragOffset = CGSize.zero
         @State private var selectedTab: FacetMobileTab = .today
-        @State private var inspectedTask: Task?
+        @State private var browsePath: [FacetDestination] = []
+        @State private var searching = false
+        @State private var searchState = FacetWorkspaceSearchState()
+        @State private var searchOriginTab = FacetMobileTab.today
+        @State private var searchOriginPath: [FacetDestination] = []
 
         var body: some View {
             ZStack(alignment: .bottomTrailing) {
                 TabView(selection: $selectedTab) {
-                    mobileTaskStack(for: .section(.today))
-                        .tabItem {
-                            Label("Today", systemImage: "star.fill")
-                        }
-                        .tag(FacetMobileTab.today)
-
                     mobileTaskStack(for: .section(.inbox))
                         .tabItem {
                             Label("Inbox", systemImage: "tray.fill")
                         }
                         .tag(FacetMobileTab.inbox)
+
+                    mobileTaskStack(for: .section(.today))
+                        .tabItem {
+                            Label("Today", systemImage: "star.fill")
+                        }
+                        .tag(FacetMobileTab.today)
 
                     mobileTaskStack(for: .section(.upcoming))
                         .tabItem {
@@ -44,36 +49,34 @@
                             Label("Browse", systemImage: "square.grid.2x2")
                         }
                         .tag(FacetMobileTab.browse)
-
-                    NavigationStack {
-                        FacetSettingsAndOnboardingView(store: store, embeddedInTab: true)
-                    }
-                    .tabItem {
-                        Label("Settings", systemImage: "gearshape.fill")
-                    }
-                    .tag(FacetMobileTab.settings)
                 }
 
-                if selectedTab != .settings {
-                    Button {
-                        store.showsCapture = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.title2.weight(.semibold))
-                            .foregroundStyle(.white)
-                            .frame(
-                                width: FacetNativeStyle.mobileCaptureDiameter,
-                                height: FacetNativeStyle.mobileCaptureDiameter
-                            )
-                            .background(FacetNativeStyle.brand, in: .circle)
-                            .shadow(radius: 8, y: 4)
-                    }
-                    .padding(.trailing, FacetNativeStyle.mobileCapturePadding)
-                    .padding(.bottom, 68)
-                    .accessibilityLabel("Quick Add Task")
-                    .accessibilityIdentifier(AccessibilityIdentifier.TaskList.newTask)
+                Button {
+                    store.captureDestination =
+                        selectedTab == .browse && browsePath.isEmpty
+                        ? .section(.inbox) : store.destination
+                    store.captureSectionId = nil
+                    store.showsCapture = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(
+                            width: FacetNativeStyle.mobileCaptureDiameter,
+                            height: FacetNativeStyle.mobileCaptureDiameter
+                        )
+                        .background(FacetNativeStyle.brand, in: .circle)
+                        .shadow(radius: 8, y: 4)
                 }
+                .offset(dragOffset)
+                .highPriorityGesture(captureDrag)
+                .padding(.trailing, FacetNativeStyle.mobileCapturePadding)
+                .padding(.bottom, 68)
+                .accessibilityLabel("Quick Add Task")
+                .accessibilityIdentifier(AccessibilityIdentifier.TaskList.newTask)
             }
+            .environment(\.facetCaptureRegions, captureRegions)
+            .tint(FacetNativeStyle.brand)
             .onChange(of: selectedTab) {
                 switch selectedTab {
                 case .today:
@@ -82,11 +85,16 @@
                     store.destination = .section(.inbox)
                 case .upcoming:
                     store.destination = .section(.upcoming)
-                case .browse, .settings:
-                    break
+                case .browse:
+                    if let target = browsePath.last { store.destination = target }
                 }
             }
-            .onChange(of: store.destination) {
+            .onChange(of: store.searchFocusedRequest) { showSearch() }
+            .onChange(of: store.destination) { previous, current in
+                guard store.resolvedDestination(previous) != current else { return }
+                if !searchState.isShowingCollection(in: store) {
+                    searchState.openedCollection = nil
+                }
                 switch store.destination {
                 case .section(.today):
                     selectedTab = .today
@@ -95,27 +103,63 @@
                 case .section(.upcoming):
                     selectedTab = .upcoming
                 case .section(.completed), .board, .project, .label, .filter:
+                    if browsePath.last.map(store.resolvedDestination) != store.destination {
+                        browsePath = [store.destination]
+                    }
                     selectedTab = .browse
                 }
             }
-            .sheet(item: $inspectedTask) { selected in
-                if let latest = store.task(for: selected.id) {
+            .sheet(isPresented: $searching) {
+                FacetWorkspaceSearch(store: store, session: searchState) { destination in
+                    searchOriginTab = selectedTab
+                    searchOriginPath = browsePath
+                    searching = false
+                    store.destination = destination
+                    if ![.section(.today), .section(.upcoming), .section(.inbox)].contains(
+                        destination)
+                    {
+                        browsePath = [destination]
+                        selectedTab = .browse
+                    }
+                }
+            }
+            .sheet(isPresented: $store.showsInspector) {
+                if let id = store.selectedTaskId, let latest = store.task(for: id) {
                     NavigationStack {
                         FacetTaskInspectorView(
                             task: latest,
                             store: store,
-                            onClose: { inspectedTask = nil }
+                            onClose: { store.showsInspector = false }
                         )
                         .navigationTitle("Task")
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
-                                Button("Done") { inspectedTask = nil }
+                                Button("Done") { store.showsInspector = false }
                             }
                         }
                     }
                 }
             }
+        }
+
+        private var captureDrag: some Gesture {
+            DragGesture(minimumDistance: 12, coordinateSpace: .global)
+                .updating($dragOffset) { drag, offset, _ in offset = drag.translation }
+                .onChanged { drag in
+                    captureRegions.highlighted = captureRegions.target(at: drag.location)
+                }
+                .onEnded { drag in
+                    captureRegions.highlighted = nil
+                    guard let target = captureRegions.target(at: drag.location) else { return }
+                    store.captureDestination = store.destination
+                    store.captureSectionId = nil
+                    switch target {
+                    case .day(let civil): store.upcomingSelectedDate = civil
+                    case .section(let id): store.captureSectionId = id
+                    }
+                    store.showsCapture = true
+                }
         }
 
         private func mobileTaskStack(for target: FacetDestination) -> some View {
@@ -124,11 +168,11 @@
                     store: store,
                     onSelectTask: { task in
                         store.selectedTaskId = task.id
-                        inspectedTask = task
+                        store.showsInspector = true
                     },
                     onPresentModal: onPresentModal
                 )
-                .searchable(text: $store.searchQuery, prompt: "Search tasks")
+                .toolbar { searchButton }
                 .refreshable {
                     await store.syncNow()
                 }
@@ -138,28 +182,51 @@
             }
         }
 
-        private var mobileBrowseTab: some View {
-            NavigationStack {
+        fileprivate var searchButton: some ToolbarContent {
+            ToolbarItem(placement: .topBarTrailing) {
+                if searchState.isShowingCollection(in: store) {
+                    Button("Back to Search", systemImage: "arrow.uturn.backward") { showSearch() }
+                } else {
+                    Button("Search", systemImage: "magnifyingglass") { showSearch() }
+                }
+            }
+        }
+
+        private func showSearch() {
+            if searchState.isShowingCollection(in: store), let origin = searchState.origin {
+                searchState.openedCollection = nil
+                browsePath = searchOriginPath
+                selectedTab = searchOriginTab
+                if selectedTab != .browse || !browsePath.isEmpty { store.destination = origin }
+            }
+            searching = true
+        }
+    }
+
+    extension FacetMobileWorkspace {
+        fileprivate var mobileBrowseTab: some View {
+            NavigationStack(path: $browsePath) {
                 List {
-                    SwiftUI.Section("Views") {
-                        NavigationLink {
-                            browseDestinationPage(.board, title: "Priority Board")
+                    SwiftUI.Section {
+                        Button {
+                            store.showsSettings = true
                         } label: {
+                            Label("Settings", systemImage: "gearshape")
+                        }
+                    }
+                    SwiftUI.Section("Views") {
+                        NavigationLink(value: FacetDestination.board) {
                             Label("Priority Board", systemImage: "rectangle.split.3x1")
                         }
 
-                        NavigationLink {
-                            browseDestinationPage(.section(.completed), title: "Completed")
-                        } label: {
+                        NavigationLink(value: FacetDestination.section(.completed)) {
                             Label("Completed", systemImage: "checkmark.circle")
                         }
                     }
 
                     SwiftUI.Section {
                         ForEach(store.userProjects) { proj in
-                            NavigationLink {
-                                browseDestinationPage(.project(id: proj.id), title: proj.name)
-                            } label: {
+                            NavigationLink(value: FacetDestination.project(id: proj.id)) {
                                 HStack {
                                     Circle()
                                         .fill(FacetNativeStyle.swatchColor(proj.color))
@@ -180,14 +247,13 @@
                             } label: {
                                 Image(systemName: "plus")
                             }
+                            .accessibilityLabel("Add project")
                         }
                     }
 
                     SwiftUI.Section {
                         ForEach(store.activeLabels) { item in
-                            NavigationLink {
-                                browseDestinationPage(.label(id: item.id), title: "@\(item.name)")
-                            } label: {
+                            NavigationLink(value: FacetDestination.label(id: item.id)) {
                                 Label("@\(item.name)", systemImage: "tag")
                             }
                         }
@@ -200,17 +266,13 @@
                             } label: {
                                 Image(systemName: "plus")
                             }
+                            .accessibilityLabel("Add label")
                         }
                     }
 
                     SwiftUI.Section {
                         ForEach(store.activeFilters) { filterItem in
-                            NavigationLink {
-                                browseDestinationPage(
-                                    .filter(id: filterItem.id),
-                                    title: filterItem.name
-                                )
-                            } label: {
+                            NavigationLink(value: FacetDestination.filter(id: filterItem.id)) {
                                 Label(
                                     filterItem.name,
                                     systemImage: "line.3.horizontal.decrease.circle"
@@ -226,9 +288,14 @@
                             } label: {
                                 Image(systemName: "plus")
                             }
+                            .accessibilityLabel("Add filter")
                         }
                     }
                 }
+                .navigationDestination(for: FacetDestination.self) { target in
+                    browseDestinationPage(target)
+                }
+                .toolbar { searchButton }
                 .navigationTitle("Browse")
                 .refreshable {
                     await store.syncNow()
@@ -237,18 +304,18 @@
         }
 
         private func browseDestinationPage(
-            _ target: FacetDestination,
-            title: String
+            _ target: FacetDestination
         ) -> some View {
             FacetTaskListView(
                 store: store,
                 onSelectTask: { task in
                     store.selectedTaskId = task.id
-                    inspectedTask = task
+                    store.showsInspector = true
                 },
                 onPresentModal: onPresentModal
             )
-            .navigationTitle(title)
+            .toolbar { searchButton }
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 store.destination = target
             }

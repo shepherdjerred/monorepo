@@ -29,11 +29,6 @@ struct FacetSQLiteAndSyncTests {
                 labelIds: [label.id]
             )
         )
-        let reminder = store.addReminder(
-            taskId: task.id,
-            reminderType: "absolute",
-            dueDatetime: "2026-11-20T17:00:00Z"
-        )
         let filter = store.addFilter(
             name: "Urgent Work",
             query: "p1 & #Engineering",
@@ -51,10 +46,9 @@ struct FacetSQLiteAndSyncTests {
         #expect(relaunchedStore.sections == [section])
         #expect(relaunchedStore.labels == [label])
         #expect(relaunchedStore.tasks == [task])
-        #expect(relaunchedStore.reminders == [reminder])
         #expect(relaunchedStore.filters == [filter])
         #expect(relaunchedStore.syncToken == "seq:42")
-        #expect(relaunchedStore.outbox.count == 6)
+        #expect(relaunchedStore.outbox.count == 5)
         await relaunchedDB.close()
     }
 
@@ -251,7 +245,13 @@ struct FacetSQLiteAndSyncTests {
             ],
             sections: [],
             labels: [],
-            reminders: [],
+            reminders: [
+                Reminder(
+                    id: "existing-reminder", task_id: "srv-task-1", reminder_type: "relative",
+                    minute_offset: 15, due_datetime: nil, is_notified: false, is_deleted: false,
+                    updated_at: "2026-06-15T00:00:00Z"
+                )
+            ],
             filters: []
         )
     }

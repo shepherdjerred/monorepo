@@ -11,7 +11,6 @@ struct FacetLiveServerSyncTests {
         let labelId: String
         let filterId: String
         let taskId: String
-        let reminderId: String
     }
 
     @Test("End-to-end /api/v1/sync round-trip: auth, temp_id_mapping, nullable clear, recurrence")
@@ -39,13 +38,37 @@ struct FacetLiveServerSyncTests {
         #expect(storeA.lastError == nil)
 
         let serverTaskId = try Self.verifyMappedEntities(in: storeA, local: localIDs)
+        let reminder = try await Self.createReminderFromOlderClient(
+            client: client, taskID: serverTaskId)
         try await Self.verifySecondClientDeltaAndClearing(
             scratch: scratch,
             storeA: storeA,
             client: client,
             serverTaskId: serverTaskId
         )
+        let legacyBaseline = try await client.sync(
+            request: SyncRequest(sync_token: nil, resource_types: ["reminders"], commands: [])
+        )
+        #expect(legacyBaseline.reminders == [reminder])
         await dbA.close()
+    }
+
+    private static func createReminderFromOlderClient(
+        client: FacetAPIClient, taskID: String
+    ) async throws -> Reminder {
+        let add = QueuedCommand(
+            uuid: UUID().uuidString, temp_id: "tmp-reminder",
+            command: .reminderAdd(
+                ReminderAddArgs(
+                    task_id: taskID, reminder_type: "relative", minute_offset: 15, due_datetime: nil
+                )
+            )
+        )
+        let response = try await client.sync(
+            request: SyncRequest(sync_token: nil, resource_types: ["reminders"], commands: [add])
+        )
+        #expect(response.sync_status[add.uuid] == "ok")
+        return try #require(response.reminders.first)
     }
 
     @MainActor
@@ -71,18 +94,12 @@ struct FacetLiveServerSyncTests {
                 labelIds: [label.id]
             )
         )
-        let reminder = store.addReminder(
-            taskId: task.id,
-            reminderType: "absolute",
-            dueDatetime: "2026-06-15T09:00:00Z"
-        )
         return SeededIDs(
             projectId: project.id,
             sectionId: section.id,
             labelId: label.id,
             filterId: filter.id,
-            taskId: task.id,
-            reminderId: reminder.id
+            taskId: task.id
         )
     }
 
@@ -96,14 +113,12 @@ struct FacetLiveServerSyncTests {
         let serverLabelId = try #require(store.lastTempIdMapping[local.labelId])
         let serverFilterId = try #require(store.lastTempIdMapping[local.filterId])
         let serverTaskId = try #require(store.lastTempIdMapping[local.taskId])
-        let serverReminderId = try #require(store.lastTempIdMapping[local.reminderId])
 
         let syncedTask = try #require(store.tasks.first { $0.id == serverTaskId })
         #expect(syncedTask.project_id == serverProjectId)
         #expect(syncedTask.section_id == serverSectionId)
         #expect(syncedTask.label_ids == [serverLabelId])
         #expect(store.filters.contains { $0.id == serverFilterId })
-        #expect(store.reminders.contains { $0.id == serverReminderId })
         return serverTaskId
     }
 

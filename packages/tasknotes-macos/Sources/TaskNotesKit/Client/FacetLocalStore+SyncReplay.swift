@@ -147,7 +147,6 @@ extension FacetLocalStore {
         projects = projects.map { $0.remapping(ids: mapping) }
         sections = sections.map { $0.remapping(ids: mapping) }
         labels = labels.map { $0.remapping(ids: mapping) }
-        reminders = reminders.map { $0.remapping(ids: mapping) }
         filters = filters.map { $0.remapping(ids: mapping) }
         outbox = outbox.map { $0.remapping(ids: mapping) }
         undoStack = undoStack.map { $0.remapping(ids: mapping) }
@@ -159,7 +158,6 @@ extension FacetLocalStore {
             projects = response.projects.filter { !$0.is_deleted }
             sections = response.sections.filter { !$0.is_deleted }
             labels = response.labels.filter { !$0.is_deleted }
-            reminders = response.reminders.filter { !$0.is_deleted }
             filters = response.filters.filter { !$0.is_deleted }
             return
         }
@@ -167,7 +165,6 @@ extension FacetLocalStore {
         Self.mergeEntities(&projects, incoming: response.projects, isDeleted: \.is_deleted)
         Self.mergeEntities(&sections, incoming: response.sections, isDeleted: \.is_deleted)
         Self.mergeEntities(&labels, incoming: response.labels, isDeleted: \.is_deleted)
-        Self.mergeEntities(&reminders, incoming: response.reminders, isDeleted: \.is_deleted)
         Self.mergeEntities(&filters, incoming: response.filters, isDeleted: \.is_deleted)
     }
 
@@ -203,8 +200,8 @@ extension FacetLocalStore {
             return true
         case .taskComplete, .taskUncomplete, .projectAdd, .projectUpdate, .projectDelete,
             .sectionAdd, .sectionUpdate, .sectionDelete, .labelAdd, .labelUpdate, .labelDelete,
-            .reminderAdd, .reminderUpdate, .reminderDelete, .filterAdd, .filterUpdate,
-            .filterDelete:
+            .filterAdd, .filterUpdate, .filterDelete, .reminderAdd, .reminderUpdate,
+            .reminderDelete:
             return false
         }
     }
@@ -231,8 +228,8 @@ extension FacetLocalStore {
             return true
         case .taskAdd, .taskUpdate, .taskDelete, .taskReorder, .projectAdd, .projectUpdate,
             .projectDelete, .sectionAdd, .sectionUpdate, .sectionDelete, .labelAdd, .labelUpdate,
-            .labelDelete, .reminderAdd, .reminderUpdate, .reminderDelete, .filterAdd,
-            .filterUpdate, .filterDelete:
+            .labelDelete, .filterAdd, .filterUpdate, .filterDelete, .reminderAdd, .reminderUpdate,
+            .reminderDelete:
             return false
         }
     }
@@ -307,11 +304,11 @@ extension FacetLocalStore {
             )
         case .sectionDelete(let args):
             sections.removeAll(where: { $0.id == args.id })
-        case .labelDelete, .reminderDelete, .filterDelete:
+        case .labelDelete, .filterDelete:
             replayMetadataDeletes(queued.command)
         case .taskAdd, .taskUpdate, .taskDelete, .taskComplete, .taskUncomplete, .taskReorder,
             .projectAdd, .projectUpdate, .sectionAdd, .sectionUpdate, .labelAdd, .labelUpdate,
-            .reminderAdd, .reminderUpdate, .filterAdd, .filterUpdate:
+            .filterAdd, .filterUpdate, .reminderAdd, .reminderUpdate, .reminderDelete:
             break
         }
     }
@@ -319,8 +316,6 @@ extension FacetLocalStore {
     private func replayMetadataDeletes(_ command: SyncCommand) {
         if case .labelDelete(let args) = command {
             labels.removeAll(where: { $0.id == args.id })
-        } else if case .reminderDelete(let args) = command {
-            reminders.removeAll(where: { $0.id == args.id })
         } else if case .filterDelete(let args) = command {
             filters.removeAll(where: { $0.id == args.id })
         }

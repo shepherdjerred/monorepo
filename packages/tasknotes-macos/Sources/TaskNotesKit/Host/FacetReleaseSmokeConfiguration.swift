@@ -77,10 +77,11 @@
                 attributes: [.posixPermissions: 0o700]
             )
             let marker = stateDirectory.appendingPathComponent("started.\(processID)")
-            try Data((runID.uuidString.lowercased() + "\n").utf8).write(
-                to: marker,
-                options: .atomic
-            )
+            let receipt = Data("\(runID.uuidString.lowercased()) \(processID)\n".utf8)
+            try receipt.write(to: marker, options: .atomic)
+            // The verifier may lack permission to read this app's sandbox container.
+            // Launch Services supplies a private stdout descriptor for this process.
+            try FileHandle.standardOutput.write(contentsOf: Data(contentsOf: marker))
         }
     }
 #endif

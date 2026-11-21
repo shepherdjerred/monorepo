@@ -8,6 +8,7 @@
         let onPresentModal: (FacetPresentedEntityModal) -> Void
 
         @State private var searchFieldPresented = false
+        @State private var searchState = FacetWorkspaceSearchState()
 
         var body: some View {
             NavigationSplitView {
@@ -22,25 +23,28 @@
                     },
                     onPresentModal: onPresentModal
                 )
-                .searchable(
-                    text: $store.searchQuery,
-                    isPresented: $searchFieldPresented,
-                    prompt: "Filter tasks…"
-                )
-                .inspector(isPresented: $store.showsInspector) {
+                .frame(maxWidth: listWidth)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .sheet(isPresented: $searchFieldPresented) {
+                    FacetWorkspaceSearch(store: store, session: searchState) { destination in
+                        searchFieldPresented = false
+                        store.destination = destination
+                    }
+                }
+                .sheet(isPresented: $store.showsInspector) {
                     inspectorColumn
-                        .inspectorColumnWidth(min: 290, ideal: 340, max: 440)
+                        .frame(minWidth: 420, idealWidth: 740, minHeight: 360, idealHeight: 520)
                 }
                 .toolbar {
-                    ToolbarItemGroup(placement: .primaryAction) {
-                        Button {
-                            store.showsCapture = true
-                        } label: {
-                            Label("Quick Add", systemImage: "plus")
+                    if searchState.isShowingCollection(in: store) {
+                        ToolbarItem(placement: .navigation) {
+                            Button("Back to Search", systemImage: "chevron.backward") {
+                                showSearch()
+                            }
+                            .keyboardShortcut(.cancelAction)
                         }
-                        .help("Add Task (⌘N)")
-                        .accessibilityIdentifier(AccessibilityIdentifier.TaskList.newTask)
-
+                    }
+                    ToolbarItemGroup(placement: .primaryAction) {
                         Button {
                             _Concurrency.Task { await store.syncNow() }
                         } label: {
@@ -54,19 +58,19 @@
                         .disabled(store.isSyncing || !store.hasConfiguredToken)
                         .help("Sync Now (⌘R)")
                         .accessibilityIdentifier(AccessibilityIdentifier.TaskList.refresh)
-
-                        Button {
-                            store.showsInspector.toggle()
-                        } label: {
-                            Label("Inspector", systemImage: "sidebar.trailing")
-                        }
-                        .help("Toggle Inspector (⌥⌘I)")
-                        .accessibilityIdentifier(AccessibilityIdentifier.Inspector.toggle)
                     }
                 }
             }
             .onChange(of: store.searchFocusedRequest) {
-                searchFieldPresented = true
+                showSearch()
+            }
+            .onChange(of: store.destination) { previous, current in
+                guard store.resolvedDestination(previous) != current else { return }
+                if !searchState.isShowingCollection(in: store) {
+                    searchState.openedCollection = nil
+                }
+                store.selectedTaskId = nil
+                store.showsInspector = false
             }
             .background(
                 FacetWindowCloseGuard {
@@ -77,28 +81,36 @@
             .focusedSceneValue(\.facetWindowCommands, windowCommandActions)
         }
 
+        private func showSearch() {
+            if searchState.isShowingCollection(in: store), let origin = searchState.origin {
+                store.destination = origin
+                searchState.openedCollection = nil
+            }
+            searchFieldPresented = true
+        }
+
+        private var listWidth: CGFloat {
+            switch store.destination {
+            case .board: .infinity
+            case .project(let id) where store.layout(forProject: id) == .board: .infinity
+            case .section, .project, .filter, .label: 800
+            }
+        }
+
         @ViewBuilder
         private var inspectorColumn: some View {
             if let selectedId = store.selectedTaskId, let task = store.task(for: selectedId) {
-                FacetTaskInspectorView(task: task, store: store)
-            } else {
-                VStack(spacing: 10) {
-                    Image(systemName: "sidebar.trailing")
-                        .font(.title)
-                        .foregroundStyle(.tertiary)
-                    Text("No Task Selected")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-                    Text(
-                        "Select any task to edit Markdown notes, recurrence, labels, sub-tasks, and reminders."
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
+                VStack(alignment: .trailing) {
+                    Button("Done") { store.showsInspector = false }
+                        .keyboardShortcut(.cancelAction)
+                        .padding([.top, .trailing])
+                    FacetTaskInspectorView(task: task, store: store) {
+                        store.showsInspector = false
+                    }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .accessibilityIdentifier(AccessibilityIdentifier.Inspector.empty)
+            } else {
+                Button("Close") { store.showsInspector = false }
+                    .keyboardShortcut(.cancelAction)
             }
         }
 
@@ -118,8 +130,8 @@
                         store.toggleTaskCompletion(selectedTask)
                     }
                 },
-                find: { searchFieldPresented = true },
-                toggleInspector: { store.showsInspector.toggle() },
+                find: showSearch,
+                toggleInspector: { if selectedTask != nil { store.showsInspector.toggle() } },
                 navigate: { target in
                     if target == "inbox" {
                         store.destination = .section(.inbox)

@@ -75,6 +75,8 @@ const appPath = join(
 );
 const crashReports = join(homedir(), "Library/Logs/DiagnosticReports");
 const smokeRunID = randomUUID();
+const evidenceDirectory = join(packageRoot, ".build/release-smoke", smokeRunID);
+const receiptPath = join(evidenceDirectory, "startup.txt");
 const stateDirectory = join(
   homedir(),
   "Library/Containers/red.sjer.tasknotes.mac/Data/Library/Application Support/FacetReleaseSmoke",
@@ -87,7 +89,11 @@ export function requireStartupMarker(
   pid: number,
   contents: string,
 ): void {
-  if (!Number.isSafeInteger(pid) || pid <= 0 || contents !== `${runID}\n`) {
+  if (
+    !Number.isSafeInteger(pid) ||
+    pid <= 0 ||
+    contents !== `${runID} ${String(pid)}\n`
+  ) {
     throw new Error("Release startup marker does not belong to this run/PID");
   }
 }
@@ -473,6 +479,8 @@ async function main(
   }
   const beforeCrashes = await crashReportNames();
   const frontBefore = await frontmostBundleId();
+  await mkdir(join(packageRoot, ".build/release-smoke"), { recursive: true });
+  await mkdir(evidenceDirectory, { mode: 0o700 });
 
   console.log(`verify-launch: launching ${appPath} in the background`);
   // `-g` does not bring it to the foreground, `-j` launches it hidden, `-n`
@@ -510,16 +518,10 @@ async function main(
   const pid = pids[0];
   if (pid === undefined) fail("missing owned Release smoke process");
   const markerPath = join(stateDirectory, `started.${pid.toString()}`);
-  const marker = Bun.file(markerPath);
-  if (!(await marker.exists()))
-    fail(`startup did not complete: missing ${markerPath}`);
-  requireStartupMarker(smokeRunID, pid, await marker.text());
-  const evidenceDirectory = join(
-    packageRoot,
-    ".build/release-smoke",
-    smokeRunID,
-  );
-  await mkdir(evidenceDirectory, { recursive: true });
+  const receipt = Bun.file(receiptPath);
+  if (!(await receipt.exists()) || receipt.size === 0)
+    fail(`startup did not complete: missing receipt for ${markerPath}`);
+  requireStartupMarker(smokeRunID, pid, await receipt.text());
   await Bun.write(
     join(evidenceDirectory, "provenance.json"),
     `${JSON.stringify(
@@ -529,6 +531,7 @@ async function main(
         appPath,
         stateDirectory,
         markerPath,
+        receiptPath,
         executableSHA256: new Bun.CryptoHasher("sha256")
           .update(
             await Bun.file(`${appPath}/Contents/MacOS/TaskNotes`).arrayBuffer(),
@@ -604,6 +607,8 @@ async function execute(): Promise<void> {
         "-g",
         "-j",
         "-n",
+        "--stdout",
+        receiptPath,
         appPath,
         "--args",
         "--facet-release-smoke",

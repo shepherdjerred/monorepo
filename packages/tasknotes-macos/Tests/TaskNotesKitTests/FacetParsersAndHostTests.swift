@@ -35,6 +35,27 @@ struct FacetParsersAndHostTests {
     }
 
     @Test(
+        "Quick Add corrections preserve literal text, default dates, and neighboring tokens across edits"
+    )
+    func correctCaptureTokens() throws {
+        let line = "🎨 Book studio tomorrow p1"
+        let recognized = FacetQuickCaptureParser.parse(line)
+        let tomorrow = try #require(recognized.tokens.first { $0.text == "tomorrow" })
+        let edited = "New " + line
+        let literals = FacetCaptureToken.reposition([tomorrow], afterEditing: line, to: edited)
+        let corrected = FacetQuickCaptureParser.parse(
+            edited, defaultDueDate: "2026-11-30", literalTokens: literals)
+        #expect(corrected.title == "New 🎨 Book studio tomorrow")
+        #expect(corrected.dueDate == "2026-11-30")
+        #expect(corrected.priority == .p1)
+        #expect(corrected.tokens.map(\.text) == ["p1"])
+        #expect(
+            FacetCaptureToken.reposition(
+                literals, afterEditing: edited, to: "New 🎨 Book studio today p1"
+            ).isEmpty)
+    }
+
+    @Test(
         "FacetRecurrenceCodec parses, summarizes, and advances RFC 5545 RRULEs including COUNT exhaustion"
     )
     func recurrenceCodecRoundTripAndCount() throws {

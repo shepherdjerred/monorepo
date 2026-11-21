@@ -3,6 +3,7 @@ public import TaskNotesKit
 
 private struct CaptureCreationRequest {
     let rawInput: String
+    var prepared: FacetParsedCapture?
     let description: String
     let overrideProjectId: String?
     let overrideSectionId: String?
@@ -73,11 +74,13 @@ extension FacetStore {
         description: String = "",
         overrideProjectId: String? = nil,
         overrideSectionId: String? = nil,
-        overridePriority: Priority? = nil
+        overridePriority: Priority? = nil,
+        prepared: FacetParsedCapture? = nil
     ) -> Task? {
         createCapturedTask(
             CaptureCreationRequest(
                 rawInput: rawInput,
+                prepared: prepared,
                 description: description,
                 overrideProjectId: overrideProjectId,
                 overrideSectionId: overrideSectionId,
@@ -103,31 +106,36 @@ extension FacetStore {
 
     private func createCapturedTask(_ request: CaptureCreationRequest) -> Task? {
         let defaultProjId = request.overrideProjectId ?? defaultProjectIdForCurrentDestination()
-        let parsed = FacetQuickCaptureParser.parse(
-            request.rawInput,
-            projects: activeProjects,
-            sections: activeSections,
-            labels: activeLabels,
-            defaultProjectId: defaultProjId,
-            calendar: calendar
-        )
+        let parsed =
+            request.prepared
+            ?? FacetQuickCaptureParser.parse(
+                request.rawInput,
+                projects: activeProjects,
+                sections: activeSections,
+                labels: activeLabels,
+                defaultProjectId: defaultProjId,
+                calendar: calendar,
+                defaultDueDate: defaultDueDateForCurrentDestination()
+            )
         guard !parsed.isEmpty else { return nil }
 
-        var resolvedLabelIds = parsed.labelIds
+        var resolvedLabelIds = parsed.labelIds.map(localStore.resolvedID)
         for labelName in parsed.unmatchedLabels {
             let createdLabel = localStore.addLabel(name: labelName)
             resolvedLabelIds.append(createdLabel.id)
         }
 
         let cleanDesc = request.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        let projectId = localStore.resolvedID(request.overrideProjectId ?? parsed.projectId)
+        let sectionId = (parsed.sectionId ?? request.overrideSectionId).flatMap { section(for: $0) }
         let draft = FacetTaskDraft(
             title: parsed.title,
-            projectId: request.overrideProjectId ?? parsed.projectId,
-            sectionId: request.overrideSectionId ?? parsed.sectionId,
-            parentId: request.parentId,
+            projectId: projectId,
+            sectionId: sectionId?.project_id == projectId ? sectionId?.id : nil,
+            parentId: request.parentId.map(localStore.resolvedID),
             description: cleanDesc,
             priority: request.overridePriority ?? parsed.priority,
-            dueDate: parsed.dueDate ?? defaultDueDateForCurrentDestination(),
+            dueDate: parsed.dueDate,
             dueDatetime: parsed.dueDatetime,
             dueTimezone: parsed.dueTimezone,
             dueString: parsed.dueString,
@@ -141,14 +149,16 @@ extension FacetStore {
         return task
     }
 
-    public func toggleTaskCompletion(_ task: Task) {
-        recordCompletionReceipt(for: task.id)
+    public func toggleTaskCompletion(_ task: Task, animateListRemoval: Bool = false) {
+        guard let current = self.task(for: task.id), current.completed == task.completed,
+            current.due_date == task.due_date, current.due_datetime == task.due_datetime
+        else { return }
         if task.completed {
-            localStore.uncompleteTask(id: task.id)
+            localStore.uncompleteTask(id: current.id)
             feedback.trigger(.reopened)
             presentUndoToast("Reopened \"\(task.title)\"")
         } else {
-            localStore.completeTask(id: task.id, at: calendar.instant)
+            localStore.completeTask(id: current.id, at: calendar.instant)
             feedback.trigger(.completed)
             presentUndoToast(
                 task.is_recurring
@@ -156,11 +166,12 @@ extension FacetStore {
                     : "Completed \"\(task.title)\""
             )
         }
+        acknowledgeCompletion(of: current, animateRemoval: animateListRemoval)
         scheduleAutoSync()
     }
 
     public func patchTask(id: String, patch: FacetTaskPatch) {
-        localStore.updateTask(id: id, patch: patch)
+        localStore.updateTask(id: localStore.resolvedID(id), patch: patch)
         scheduleAutoSync()
     }
 
@@ -202,10 +213,12 @@ extension FacetStore {
     }
 
     public func deleteTask(_ task: Task) {
-        if selectedTaskId == task.id {
+        guard let current = self.task(for: task.id) else { return }
+        if selectedTaskId == current.id {
             selectedTaskId = nil
+            showsInspector = false
         }
-        localStore.deleteTask(id: task.id)
+        localStore.deleteTask(id: current.id)
         feedback.trigger(.deleted)
         presentUndoToast("Deleted \"\(task.title)\"")
         scheduleAutoSync()
@@ -220,7 +233,7 @@ extension FacetStore {
 
     public func updateProject(id: String, name: String, color: String, isFavorite: Bool) {
         localStore.updateProject(
-            id: id,
+            id: localStore.resolvedID(id),
             name: name,
             color: color,
             isFavorite: .set(isFavorite)
@@ -230,34 +243,35 @@ extension FacetStore {
 
     public func toggleProjectFavorite(_ project: Project) {
         localStore.updateProject(
-            id: project.id,
+            id: localStore.resolvedID(project.id),
             isFavorite: .set(!project.is_favorite)
         )
         scheduleAutoSync()
     }
 
     public func deleteProject(id: String) {
-        if destination == .project(id: id) {
+        let resolved = localStore.resolvedID(id)
+        if destination == .project(id: resolved) {
             destination = .section(.today)
         }
-        localStore.deleteProject(id: id)
+        localStore.deleteProject(id: resolved)
         scheduleAutoSync()
     }
 
     @discardableResult
     public func createSection(projectId: String, name: String) -> TaskNotesKit.Section {
-        let section = localStore.addSection(projectId: projectId, name: name)
+        let section = localStore.addSection(projectId: localStore.resolvedID(projectId), name: name)
         scheduleAutoSync()
         return section
     }
 
     public func renameSection(id: String, name: String) {
-        localStore.updateSection(id: id, name: name)
+        localStore.updateSection(id: localStore.resolvedID(id), name: name)
         scheduleAutoSync()
     }
 
     public func deleteSection(id: String) {
-        localStore.deleteSection(id: id)
+        localStore.deleteSection(id: localStore.resolvedID(id))
         scheduleAutoSync()
     }
 
@@ -269,10 +283,11 @@ extension FacetStore {
     }
 
     public func deleteLabel(id: String) {
-        if destination == .label(id: id) {
+        let resolved = localStore.resolvedID(id)
+        if destination == .label(id: resolved) {
             destination = .section(.today)
         }
-        localStore.deleteLabel(id: id)
+        localStore.deleteLabel(id: resolved)
         scheduleAutoSync()
     }
 
@@ -290,44 +305,27 @@ extension FacetStore {
     }
 
     public func deleteFilter(id: String) {
-        if destination == .filter(id: id) {
+        let resolved = localStore.resolvedID(id)
+        if destination == .filter(id: resolved) {
             destination = .section(.today)
         }
-        localStore.deleteFilter(id: id)
+        localStore.deleteFilter(id: resolved)
         scheduleAutoSync()
     }
 
-    @discardableResult
-    public func createReminder(
-        taskId: String,
-        reminderType: String,
-        dueDatetime: String? = nil,
-        minuteOffset: Int32? = nil
-    ) -> Reminder {
-        let reminder = localStore.addReminder(
-            taskId: taskId,
-            reminderType: reminderType,
-            minuteOffset: minuteOffset,
-            dueDatetime: dueDatetime
-        )
-        scheduleAutoSync()
-        return reminder
-    }
-
-    public func deleteReminder(id: String) {
-        localStore.deleteReminder(id: id)
-        scheduleAutoSync()
-    }
-
-    public func defaultProjectIdForCurrentDestination() -> String {
-        if case .project(let projectId) = destination {
+    public func defaultProjectIdForCurrentDestination(_ target: FacetDestination? = nil) -> String {
+        if case .project(let projectId) = resolvedDestination(target ?? destination) {
             return projectId
         }
         return inboxProject?.id ?? ""
     }
 
-    private func defaultDueDateForCurrentDestination() -> String? {
-        if case .section(.today) = destination {
+    internal func defaultDueDateForCurrentDestination(_ target: FacetDestination? = nil) -> String?
+    {
+        if case .section(.upcoming) = target ?? destination {
+            return upcomingSelectedDate ?? calendar.today
+        }
+        if case .section(.today) = target ?? destination {
             return calendar.today
         }
         return nil

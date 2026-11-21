@@ -107,10 +107,13 @@ function fixture(
 
 describe("Release startup attribution", () => {
   test("requires the exact run UUID and a valid owned process", () => {
-    expect(() => requireStartupMarker("run-a", 123, "run-a\n")).not.toThrow();
-    expect(() => requireStartupMarker("run-a", 123, "run-b\n")).toThrow();
-    expect(() => requireStartupMarker("run-a", 123, "run-a")).toThrow();
-    expect(() => requireStartupMarker("run-a", 0, "run-a\n")).toThrow();
+    expect(() =>
+      requireStartupMarker("run-a", 123, "run-a 123\n"),
+    ).not.toThrow();
+    expect(() => requireStartupMarker("run-a", 123, "run-b 123\n")).toThrow();
+    expect(() => requireStartupMarker("run-a", 123, "run-a 456\n")).toThrow();
+    expect(() => requireStartupMarker("run-a", 123, "run-a 123")).toThrow();
+    expect(() => requireStartupMarker("run-a", 0, "run-a 0\n")).toThrow();
   });
 
   test("parses full argv, UID and start time without trimming argument bytes", () => {

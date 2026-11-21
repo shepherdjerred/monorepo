@@ -81,22 +81,46 @@ public final class FacetStore {
     public let feedback: FacetFeedbackController
     public let isIsolatedLaunch: Bool
 
-    public var destination: FacetDestination = .section(.today)
-    public var selectedTaskId: String?
+    private var navigationTarget: FacetDestination = .section(.today)
+    public var destination: FacetDestination {
+        get { resolvedDestination(navigationTarget) }
+        set { navigationTarget = newValue }
+    }
+    private var inspectorTaskId: String?
+    public var selectedTaskId: String? {
+        get { inspectorTaskId.map(localStore.resolvedID) }
+        set { inspectorTaskId = newValue }
+    }
     public var searchQuery: String = ""
     public var searchFocusedRequest: Int = 0
-    public var showsInspector: Bool = true
+    public var showsInspector: Bool = false
     public var showsCapture: Bool = false
     public var showsSettings: Bool = false
-    public var upcomingSelectedDayOffset: Int = 0
+    public var upcomingSelectedDate: String?
+    internal var captureDestination: FacetDestination?
+    internal var captureSectionId: String?
+    public var upcomingSelectedDayOffset: Int {
+        get {
+            guard let upcomingSelectedDate,
+                let date = ViewerCalendar.date(
+                    fromCivil: upcomingSelectedDate, timeZone: calendar.timeZone)
+            else { return 0 }
+            return calendar.gregorianCalendar.dateComponents(
+                [.day], from: calendar.gregorianCalendar.startOfDay(for: calendar.instant), to: date
+            ).day ?? 0
+        }
+        set { upcomingSelectedDate = calendar.addingDays(newValue) }
+    }
     public var projectLayouts: [String: FacetProjectLayout] = [:]
 
     public internal(set) var serverURLString: String
     public internal(set) var hasConfiguredToken: Bool = false
     public internal(set) var errorBanner: String?
     public internal(set) var undoToastMessage: String?
-    public internal(set) var remindersEnabled: Bool
-    public internal(set) var completionReceipts: [String: String] = [:]
+    internal var toastReceiptID: String?
+    internal var completionRows: [String: FacetCompletionRow] = [:]
+    @ObservationIgnored internal var completionCollapseTask: _Concurrency.Task<Void, Never>?
+    public var completionReceipts: [String: String] { completionRows.mapValues(\.receipt) }
     public internal(set) var dataRevision: UInt64 = 0
 
     public var calendar: ViewerCalendar
@@ -105,9 +129,7 @@ public final class FacetStore {
     internal let tokenStore: any ServerTokenStore
     internal let defaults: UserDefaults
     internal let urlSession: URLSession
-    internal let reminderCenter: FacetReminders
     @ObservationIgnored internal var startupTask: _Concurrency.Task<Void, Never>?
-    @ObservationIgnored internal var routingInstalled = false
     @ObservationIgnored internal var undoDismissTask: _Concurrency.Task<Void, Never>?
 
     public convenience init() {
@@ -148,8 +170,6 @@ public final class FacetStore {
         self.calendar = calendar
         self.isIsolatedLaunch = isIsolatedLaunch
         self.serverURLString = serverConfig.baseURLString()
-        self.remindersEnabled = defaults.bool(forKey: FacetReminders.enabledDefaultsKey)
-        self.reminderCenter = FacetReminders()
         self.feedback = FacetFeedbackController(
             defaults: defaults,
             enabledForLaunch: !isIsolatedLaunch
@@ -245,7 +265,6 @@ public final class FacetStore {
             // `localStore.lastError` records the sync failure message.
         }
         bumpRevision()
-        await refreshReminders()
     }
 
     internal func scheduleAutoSync() {

@@ -1,11 +1,12 @@
 import AppKit
 import Foundation
 import SwiftUI
-import TaskNotesFacetUI
 import TaskNotesKit
 import TaskNotesMac
 import TaskNotesTestSupport
 import Testing
+
+@testable import TaskNotesFacetUI
 
 @Suite("Facet Todoist Workspace & Visual Snapshots")
 @MainActor
@@ -97,8 +98,42 @@ struct FacetWorkspaceAndSnapshotTests {
             )
         )
         store.selectedTaskId = inspected.id
-        store.showsInspector = true
         return SeededWorkspace(store: store, projectId: project.id, taskId: inspected.id)
+    }
+
+    @Test("Workspace search includes undated tasks and subtask notes from other lists")
+    func searchFromToday() throws {
+        let store = try Self.seededStore().store
+        store.destination = .section(.inbox)
+        let task = try #require(store.createQuickTask(rawInput: "Pick up groceries"))
+        let child = try #require(store.createSubtask(parentTask: task, title: "Buy milk"))
+        store.patchTask(id: child.id, patch: FacetTaskPatch(description: "Grocery list"))
+        store.destination = .section(.today)
+        #expect(
+            store.workspaceTasks(matching: "groceries", includeCompleted: false).map(\.id) == [
+                task.id
+            ])
+        #expect(
+            store.workspaceTasks(matching: "grocery list", includeCompleted: false).map(\.id) == [
+                child.id
+            ])
+        store.toggleTaskCompletion(child)
+        #expect(store.workspaceTasks(matching: "milk", includeCompleted: false).isEmpty)
+        #expect(
+            store.workspaceTasks(matching: "milk", includeCompleted: true).map(\.id) == [child.id])
+    }
+
+    @Test("A stale Undo notice cannot reverse an intervening task change")
+    func undoUsesPresentedReceipt() throws {
+        let store = try Self.seededStore().store
+        let task = try #require(store.createQuickTask(rawInput: "Buy milk"))
+        let receipt = try #require(store.toastReceiptID)
+        store.patchTask(id: task.id, patch: FacetTaskPatch(priority: .p1))
+        store.undoAction(for: receipt)
+        #expect(store.task(for: task.id)?.priority == .p1)
+        store.toggleTaskCompletion(task)
+        store.undoAction(for: store.toastReceiptID)
+        #expect(store.task(for: task.id)?.completed == false)
     }
 
     @Test("Todoist views, Kanban board moves, Undo, and deep links update state cleanly")
@@ -143,6 +178,31 @@ struct FacetWorkspaceAndSnapshotTests {
             #expect(todayShot.byteCount > 15_000)
             #expect(todayShot.distinctColors >= 8)
 
+            let task = try #require(seededToday.store.task(for: seededToday.taskId))
+            let detail = try OffscreenSnapshot.write(
+                FacetTaskInspectorView(task: task, store: seededToday.store),
+                named: "facet-macos-task-detail",
+                size: CGSize(width: 740, height: 520),
+                appearance: appearance
+            )
+            #expect(detail.byteCount > 12_000)
+
+            let upcoming = try Self.seededStore().store
+            upcoming.destination = .section(.upcoming)
+            let schedule = try OffscreenSnapshot.write(
+                FacetRootView(store: upcoming),
+                named: "facet-macos-upcoming",
+                size: CGSize(width: 1180, height: 740),
+                appearance: appearance
+            )
+            #expect(schedule.byteCount > 15_000)
+        }
+    }
+
+    @Test("Renders the board, capture panel and settings in both appearances")
+    func rendersSecondarySurfaces() throws {
+        for appearance in SnapshotAppearance.allCases {
+            let store = try Self.seededStore().store
             let seededBoard = try Self.seededStore()
             seededBoard.store.destination = .project(id: seededBoard.projectId)
             seededBoard.store.setLayout(.board, forProject: seededBoard.projectId)
@@ -157,16 +217,16 @@ struct FacetWorkspaceAndSnapshotTests {
             #expect(boardShot.distinctColors >= 6)
 
             let captureShot = try OffscreenSnapshot.write(
-                FacetCaptureForm(store: seededToday.store, close: {}),
+                FacetCaptureForm(store: store, close: {}),
                 named: "facet-macos-quick-add",
-                size: CGSize(width: 560, height: 190),
+                size: CGSize(width: 560, height: 218),
                 appearance: appearance
             )
             #expect(captureShot.byteCount > 3_000)
 
             let settingsShot = try OffscreenSnapshot.write(
                 NavigationStack {
-                    FacetSettingsAndOnboardingView(store: seededToday.store, embeddedInTab: true)
+                    FacetSettingsAndOnboardingView(store: store, embeddedInTab: true)
                 },
                 named: "facet-macos-settings",
                 size: CGSize(width: 560, height: 480),
