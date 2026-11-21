@@ -125,6 +125,9 @@ export const DELETED_SCHEDULE_IDS = [
   // Velero moved to Backblaze and the R2 `homelab` bucket was retired, so the
   // R2 orphan-prefix audit has nothing left to inspect.
   "velero-r2-orphan-audit",
+  // Replaced by first-party `@shepherdjerred/golink`, which discovers Tailscale
+  // ingresses and platform-model sites in-process without a sync workflow.
+  "golink-sync",
 ] as const;
 
 /**
@@ -181,6 +184,8 @@ const RETIRED_WORKFLOW_TYPES: readonly RetiredWorkflowType[] = [
   { workflowType: "backupStormForumWorkflow", namespace: "prod" },
   // Drain the retired R2 orphan-prefix audit.
   { workflowType: "runVeleroR2OrphanAuditWorkflow", namespace: "prod" },
+  // Drain the retired golink-sync workflow replaced by first-party golink.
+  { workflowType: "syncGolinks", namespace: "prod" },
 ] as const;
 
 export async function terminateRetiredWorkflowExecutions(

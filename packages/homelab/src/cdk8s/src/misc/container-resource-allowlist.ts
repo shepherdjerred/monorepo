@@ -19,7 +19,6 @@ export const BEST_EFFORT_CONTAINER_ALLOWLIST: ReadonlySet<string> = new Set([
   "ddns/main",
   "freshrss/main",
   "gickup/main",
-  "golink/main",
   "media-prowlarr/main",
   "media-recyclarr/main",
   "media-tautulli/main",

@@ -20,20 +20,26 @@
     "scout-prod": "scout-for-lol/prod",
     "storm-forum": "storm-forum/prod",
     "minecraft-tsmc": "minecraft/tsmc",
-    "glitter-boys-launcher": "glitter-boys-launcher/prod"
+    "glitter-boys-launcher": "glitter-boys-launcher/prod",
+    "golink": "golink/prod"
   },
   "platformDeliveryDelegated": true,
   "services": [
     {
       "id": "delivery",
-      "rootReleaseExclusions": { "delivery": "inactive" },
       "title": "Delivery",
       "kind": "platform",
       "package": "delivery",
-      "images": ["delivery"],
-      "charts": ["delivery"],
+      "aliases": [],
       "namespaces": ["delivery"],
       "argoApps": ["delivery"],
+      "charts": ["delivery"],
+      "rootReleaseExclusions": { "delivery": "inactive" },
+      "images": ["delivery"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
       "deploy": []
     },
     {
@@ -41,17 +47,31 @@
       "title": "Delivery data layer",
       "kind": "platform",
       "package": "homelab",
+      "aliases": [],
       "namespaces": [],
-      "argoApps": ["delivery-data"]
+      "argoApps": ["delivery-data"],
+      "charts": [],
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "arcade",
-      "images": ["arcade"],
       "title": "Arcade",
       "kind": "product",
       "package": "arcade",
+      "aliases": [],
       "namespaces": ["arcade"],
       "argoApps": ["arcade"],
+      "charts": [],
+      "images": ["arcade"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
       "deploy": [
         {
           "name": "default",
@@ -62,13 +82,15 @@
     },
     {
       "id": "scout-for-lol",
-      "images": ["scout-for-lol"],
       "title": "Scout for LoL",
       "kind": "product",
       "package": "scout-for-lol",
       "aliases": ["scout"],
       "namespaces": ["scout-beta", "scout-prod"],
       "argoApps": ["scout-beta", "scout-prod"],
+      "charts": [],
+      "images": ["scout-for-lol"],
+      "bootstrapImages": [],
       "bugsinkProjects": ["scout-for-lol", "sentinel"],
       "analyticsSites": ["scout-prod", "scout-beta"],
       "grafanaDashboards": ["scout-for-lol-durable"],
@@ -87,13 +109,18 @@
     },
     {
       "id": "birmel",
-      "images": ["birmel"],
       "title": "Birmel",
       "kind": "product",
       "package": "birmel",
+      "aliases": [],
       "namespaces": ["birmel"],
       "argoApps": ["birmel"],
+      "charts": [],
+      "images": ["birmel"],
+      "bootstrapImages": [],
       "bugsinkProjects": ["birmel"],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
       "deploy": [
         {
           "name": "default",
@@ -104,14 +131,17 @@
     },
     {
       "id": "tasknotes-server",
-      "images": ["tasknotes-server"],
       "title": "TaskNotes",
       "kind": "product",
       "package": "tasknotes-server",
       "aliases": ["tasknotes"],
       "namespaces": ["tasknotes"],
       "argoApps": ["tasknotes"],
+      "charts": [],
+      "images": ["tasknotes-server"],
+      "bootstrapImages": [],
       "bugsinkProjects": ["tasknotes-api", "tasknotes-app"],
+      "analyticsSites": [],
       "grafanaDashboards": ["tasknotes-dashboard"],
       "deploy": [
         {
@@ -123,14 +153,18 @@
     },
     {
       "id": "starlight-karma-bot",
-      "images": ["starlight-karma-bot"],
       "title": "Starlight Karma Bot",
       "kind": "product",
       "package": "starlight-karma-bot",
       "aliases": ["karma", "starlight"],
       "namespaces": ["starlight-karma-bot-beta", "starlight-karma-bot-prod"],
       "argoApps": ["starlight-karma-bot-beta", "starlight-karma-bot-prod"],
+      "charts": [],
+      "images": ["starlight-karma-bot"],
+      "bootstrapImages": [],
       "bugsinkProjects": ["starlight"],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
       "deploy": [
         {
           "name": "beta",
@@ -146,12 +180,15 @@
     },
     {
       "id": "streambot",
-      "images": ["streambot", "media"],
       "title": "Streambot & media",
       "kind": "product",
       "package": "streambot",
+      "aliases": [],
       "namespaces": ["media"],
       "argoApps": ["media"],
+      "charts": [],
+      "images": ["streambot", "media"],
+      "bootstrapImages": [],
       "bugsinkProjects": ["streambot"],
       "analyticsSites": ["streambot"],
       "grafanaDashboards": ["streambot", "streambot-voice"],
@@ -165,12 +202,15 @@
     },
     {
       "id": "static-sites",
-      "images": ["caddy-s3proxy"],
       "title": "Static sites",
       "kind": "product",
       "package": "homelab",
+      "aliases": ["caddy-s3proxy"],
       "namespaces": ["s3-static-sites"],
       "argoApps": ["s3-static-sites"],
+      "charts": [],
+      "images": ["caddy-s3proxy"],
+      "bootstrapImages": [],
       "bugsinkProjects": ["sjerred", "better-skill-capped"],
       "analyticsSites": [
         "sjer-red",
@@ -190,31 +230,14 @@
           "versionKey": "shepherdjerred/caddy-s3proxy",
           "argoApp": "s3-static-sites"
         }
-      ],
-      "aliases": ["caddy-s3proxy"]
+      ]
     },
     {
       "id": "minecraft",
-      "package": "the-storm",
-      "rootReleaseExclusions": {
-        "mc-router": "upstream",
-        "minecraft": "upstream",
-        "minecraft-shuxin": "upstream",
-        "minecraft-shuxin-companion": "inactive",
-        "minecraft-sjerred": "upstream",
-        "minecraft-sjerred-companion": "inactive",
-        "minecraft-tsmc": "upstream",
-        "minecraft-tsmc-companion": "inactive"
-      },
-      "charts": [
-        "minecraft-shuxin-companion",
-        "minecraft-sjerred-companion",
-        "minecraft",
-        "minecraft-tsmc-companion"
-      ],
-      "images": ["the-storm-server"],
       "title": "Minecraft",
       "kind": "product",
+      "package": "the-storm",
+      "aliases": [],
       "namespaces": [
         "minecraft-shuxin",
         "minecraft-sjerred",
@@ -229,7 +252,27 @@
         "mc-router",
         "mc-sandbox"
       ],
+      "charts": [
+        "minecraft-shuxin-companion",
+        "minecraft-sjerred-companion",
+        "minecraft",
+        "minecraft-tsmc-companion"
+      ],
+      "rootReleaseExclusions": {
+        "minecraft-shuxin": "upstream",
+        "minecraft-shuxin-companion": "inactive",
+        "minecraft-sjerred": "upstream",
+        "minecraft-sjerred-companion": "inactive",
+        "minecraft": "upstream",
+        "minecraft-tsmc": "upstream",
+        "minecraft-tsmc-companion": "inactive",
+        "mc-router": "upstream"
+      },
+      "images": ["the-storm-server"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
       "analyticsSites": ["ts-mc", "ts-mc-docs"],
+      "grafanaDashboards": [],
       "deploy": [
         {
           "name": "tsmc",
@@ -240,12 +283,18 @@
     },
     {
       "id": "tracker",
-      "images": ["tracker"],
       "title": "Tracker",
       "kind": "product",
       "package": "tracker",
+      "aliases": [],
       "namespaces": ["tracker"],
       "argoApps": ["tracker"],
+      "charts": [],
+      "images": ["tracker"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
       "deploy": [
         {
           "name": "default",
@@ -255,26 +304,57 @@
       ]
     },
     {
+      "id": "golink",
+      "title": "Golink",
+      "kind": "product",
+      "package": "golink",
+      "aliases": ["go"],
+      "namespaces": ["golink"],
+      "argoApps": ["golink"],
+      "charts": [],
+      "images": ["golink"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/golink",
+          "argoApp": "golink"
+        }
+      ]
+    },
+    {
       "id": "storm-forum",
-      "rootReleaseExclusions": { "storm-forum-beta": "inactive" },
-      "images": ["storm-forum"],
-      "charts": ["storm-forum-beta"],
       "title": "The Storm forum",
       "kind": "product",
       "package": "storm-forum",
       "aliases": ["xenforo"],
       "namespaces": ["storm-forum"],
-      "argoApps": ["storm-forum"]
+      "argoApps": ["storm-forum"],
+      "charts": ["storm-forum-beta"],
+      "rootReleaseExclusions": { "storm-forum-beta": "inactive" },
+      "images": ["storm-forum"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "glitter-boys-launcher",
-      "images": ["glitter-boys-launcher"],
-      "charts": ["glitter-boys-launcher"],
       "title": "Glitter Boys launcher",
       "kind": "product",
       "package": "glitter-boys-launcher",
+      "aliases": [],
       "namespaces": ["glitter-boys-launcher"],
       "argoApps": ["glitter-boys-launcher"],
+      "charts": ["glitter-boys-launcher"],
+      "images": ["glitter-boys-launcher"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
       "grafanaDashboards": ["glitter-boys-launcher"],
       "deploy": [
         {
@@ -286,14 +366,17 @@
     },
     {
       "id": "temporal",
-      "images": ["temporal-worker"],
       "title": "Temporal",
       "kind": "workload",
       "package": "temporal",
       "aliases": ["temporal-worker", "worker"],
       "namespaces": ["temporal"],
       "argoApps": ["temporal"],
+      "charts": [],
+      "images": ["temporal-worker"],
+      "bootstrapImages": [],
       "bugsinkProjects": ["temporal"],
+      "analyticsSites": [],
       "grafanaDashboards": ["temporal-dashboard"],
       "deploy": [
         {
@@ -305,47 +388,77 @@
     },
     {
       "id": "cluster-admission",
-      "rootReleaseExclusions": { "cluster-admission": "inactive" },
       "title": "Cluster admission policies",
       "kind": "platform",
       "package": "homelab",
+      "aliases": [],
       "namespaces": [],
       "argoApps": [],
-      "charts": ["cluster-admission"]
+      "charts": ["cluster-admission"],
+      "rootReleaseExclusions": { "cluster-admission": "inactive" },
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "cluster-platform",
-      "rootReleaseExclusions": { "cluster-platform": "inactive" },
       "title": "Cluster platform baseline",
       "kind": "platform",
       "package": "homelab",
+      "aliases": [],
       "namespaces": [],
       "argoApps": [],
-      "charts": ["cluster-platform"]
+      "charts": ["cluster-platform"],
+      "rootReleaseExclusions": { "cluster-platform": "inactive" },
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "cluster-observability",
-      "rootReleaseExclusions": { "cluster-observability": "inactive" },
       "title": "Cluster observability baseline",
       "kind": "platform",
       "package": "homelab",
+      "aliases": [],
       "namespaces": [],
       "argoApps": [],
-      "charts": ["cluster-observability"]
+      "charts": ["cluster-observability"],
+      "rootReleaseExclusions": { "cluster-observability": "inactive" },
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "temporal-data",
       "title": "Temporal data layer",
       "kind": "platform",
       "package": "homelab",
+      "aliases": [],
       "namespaces": [],
-      "argoApps": ["temporal-data"]
+      "argoApps": ["temporal-data"],
+      "charts": [],
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "delivery-control-plane",
       "title": "Delivery execution control plane",
       "kind": "platform",
       "package": "temporal",
+      "aliases": [],
       "namespaces": [
         "delivery-tsmc-controller",
         "delivery-platform-jobs",
@@ -353,19 +466,29 @@
         "minecraft-tsmc-delivery-validation"
       ],
       "argoApps": ["delivery-control-plane"],
+      "charts": [],
+      "rootReleaseExclusions": { "delivery-control-plane": "inactive" },
+      "images": [],
       "bootstrapImages": ["temporal-worker"],
-      "rootReleaseExclusions": { "delivery-control-plane": "inactive" }
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "trmnl-dashboard",
-      "images": ["trmnl-dashboard"],
       "title": "TRMNL dashboard",
       "kind": "workload",
       "package": "trmnl-dashboard",
       "aliases": ["trmnl"],
       "namespaces": ["trmnl-dashboard"],
       "argoApps": ["trmnl-dashboard"],
+      "charts": [],
+      "images": ["trmnl-dashboard"],
+      "bootstrapImages": [],
       "bugsinkProjects": ["trmnl-dashboard"],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
       "deploy": [
         {
           "name": "default",
@@ -376,13 +499,17 @@
     },
     {
       "id": "ops-dashboard",
-      "images": ["alert-dashboard"],
       "title": "Hub",
       "kind": "workload",
       "package": "alert-dashboard",
       "aliases": ["alert-dashboard", "ops"],
       "namespaces": ["alert-dashboard"],
       "argoApps": ["alert-dashboard"],
+      "charts": [],
+      "images": ["alert-dashboard"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
       "grafanaDashboards": ["alert-dashboard"],
       "deploy": [
         {
@@ -394,12 +521,18 @@
     },
     {
       "id": "storm-brain",
-      "images": ["storm-brain"],
       "title": "Storm brain",
       "kind": "workload",
       "package": "storm-brain",
+      "aliases": [],
       "namespaces": ["storm-brain"],
       "argoApps": ["storm-brain"],
+      "charts": [],
+      "images": ["storm-brain"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
       "deploy": [
         {
           "name": "default",
@@ -412,19 +545,25 @@
       "id": "home",
       "title": "Home Assistant",
       "kind": "workload",
+      "aliases": [],
       "namespaces": ["home"],
       "argoApps": ["home"],
-      "bugsinkProjects": ["home-assistant-workflows"]
+      "charts": [],
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": ["home-assistant-workflows"],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "self-hosted-apps",
-      "package": "homelab",
-      "images": ["golink", "redlib"],
       "title": "Self-hosted apps",
       "kind": "workload",
+      "package": "homelab",
+      "aliases": [],
       "namespaces": [
         "freshrss",
-        "golink",
         "redlib",
         "relay",
         "stash",
@@ -433,13 +572,18 @@
       ],
       "argoApps": [
         "freshrss",
-        "golink",
         "redlib",
         "relay",
         "stash",
         "syncthing",
         "pinchtab"
       ],
+      "charts": [],
+      "images": ["redlib"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
       "deploy": [
         {
           "name": "redlib",
@@ -450,45 +594,30 @@
     },
     {
       "id": "gitops",
+      "title": "GitOps & charts",
+      "kind": "platform",
+      "aliases": [],
+      "namespaces": ["argocd", "chartmuseum"],
+      "argoApps": ["apps", "argocd", "chartmuseum"],
+      "charts": ["argocd-companion", "chartmuseum-companion"],
       "rootReleaseExclusions": {
         "argocd": "upstream",
         "argocd-companion": "inactive",
         "chartmuseum": "upstream",
         "chartmuseum-companion": "inactive"
       },
-      "charts": ["argocd-companion", "chartmuseum-companion"],
-      "title": "GitOps & charts",
-      "kind": "platform",
-      "namespaces": ["argocd", "chartmuseum"],
-      "argoApps": ["apps", "argocd", "chartmuseum"]
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "observability",
-      "rootReleaseExclusions": {
-        "alloy": "upstream",
-        "alloy-gateway": "upstream",
-        "alloy-gateway-companion": "inactive",
-        "blackbox-exporter": "upstream",
-        "loki": "upstream",
-        "loki-companion": "inactive",
-        "prometheus": "upstream",
-        "prometheus-adapter": "upstream",
-        "prometheus-companion": "inactive",
-        "promtail": "upstream",
-        "pyroscope": "upstream",
-        "pyroscope-companion": "inactive",
-        "tempo": "upstream",
-        "tempo-companion": "inactive"
-      },
-      "charts": [
-        "prometheus-companion",
-        "loki-companion",
-        "tempo-companion",
-        "pyroscope-companion",
-        "alloy-gateway-companion"
-      ],
       "title": "Observability stack",
       "kind": "platform",
+      "aliases": [],
       "namespaces": [
         "prometheus",
         "loki",
@@ -512,32 +641,57 @@
         "alloy-gateway",
         "promtail",
         "phoenix"
-      ]
+      ],
+      "charts": [
+        "prometheus-companion",
+        "loki-companion",
+        "tempo-companion",
+        "pyroscope-companion",
+        "alloy-gateway-companion"
+      ],
+      "rootReleaseExclusions": {
+        "prometheus": "upstream",
+        "prometheus-companion": "inactive",
+        "prometheus-adapter": "upstream",
+        "blackbox-exporter": "upstream",
+        "loki": "upstream",
+        "loki-companion": "inactive",
+        "tempo": "upstream",
+        "tempo-companion": "inactive",
+        "pyroscope": "upstream",
+        "pyroscope-companion": "inactive",
+        "alloy": "upstream",
+        "alloy-gateway": "upstream",
+        "alloy-gateway-companion": "inactive",
+        "promtail": "upstream"
+      },
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "bugsink",
       "title": "Bugsink",
       "kind": "platform",
+      "aliases": [],
       "namespaces": ["bugsink"],
-      "argoApps": ["bugsink"]
+      "argoApps": ["bugsink"],
+      "charts": [],
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "ci",
-      "rootReleaseExclusions": {
-        "kueue": "upstream",
-        "kueue-queues": "inactive"
-      },
-      "charts": ["kueue-queues"],
-      "images": [
-        "ci-base",
-        "ci-playwright",
-        "macos-cross-compiler",
-        "windows-cross-compiler",
-        "windows-cross-compiler-winui",
-        "woodpecker-config-extension"
-      ],
       "title": "CI (Woodpecker)",
       "kind": "platform",
+      "aliases": [],
       "namespaces": [
         "woodpecker",
         "woodpecker-ci",
@@ -553,23 +707,30 @@
         "gradle-build-cache",
         "kueue"
       ],
-      "grafanaDashboards": ["ci-capacity-dashboard", "buildkitd-dashboard"]
+      "charts": ["kueue-queues"],
+      "rootReleaseExclusions": {
+        "kueue": "upstream",
+        "kueue-queues": "inactive"
+      },
+      "images": [
+        "ci-base",
+        "ci-playwright",
+        "macos-cross-compiler",
+        "windows-cross-compiler",
+        "windows-cross-compiler-winui",
+        "woodpecker-config-extension"
+      ],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": ["ci-capacity-dashboard", "buildkitd-dashboard"],
+      "deploy": []
     },
     {
       "id": "storage",
-      "rootReleaseExclusions": {
-        "openebs": "upstream",
-        "postgres-operator": "upstream",
-        "seaweedfs": "upstream",
-        "seaweedfs-companion": "inactive",
-        "velero": "upstream",
-        "velero-companion": "inactive",
-        "velero-schedules": "inactive"
-      },
-      "charts": ["seaweedfs-companion", "velero-companion", "velero-schedules"],
-      "images": ["velero-plugin", "zfs-driver"],
       "title": "Storage & backups",
       "kind": "platform",
+      "aliases": [],
       "namespaces": [
         "openebs",
         "seaweedfs",
@@ -584,25 +745,28 @@
         "postgres-operator",
         "gickup"
       ],
-      "grafanaDashboards": ["zfs-dashboard", "gitckup-dashboard"]
+      "charts": ["seaweedfs-companion", "velero-companion", "velero-schedules"],
+      "rootReleaseExclusions": {
+        "openebs": "upstream",
+        "seaweedfs": "upstream",
+        "seaweedfs-companion": "inactive",
+        "velero": "upstream",
+        "velero-companion": "inactive",
+        "velero-schedules": "inactive",
+        "postgres-operator": "upstream"
+      },
+      "images": ["velero-plugin", "zfs-driver"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": ["zfs-dashboard", "gitckup-dashboard"],
+      "deploy": []
     },
     {
       "id": "networking",
-      "rootReleaseExclusions": {
-        "cert-manager": "upstream",
-        "cloudflare-operator": "upstream",
-        "cloudflare-operator-companion": "inactive",
-        "tailscale": "upstream",
-        "tailscale-companion": "inactive",
-        "argocd-tunnel": "inactive"
-      },
-      "charts": [
-        "tailscale-companion",
-        "cloudflare-operator-companion",
-        "argocd-tunnel"
-      ],
       "title": "Networking & edge",
       "kind": "platform",
+      "aliases": [],
       "namespaces": [
         "tailscale",
         "cloudflare-tunnel",
@@ -616,26 +780,48 @@
         "cloudflare-operator",
         "cert-manager",
         "ddns"
-      ]
+      ],
+      "charts": [
+        "tailscale-companion",
+        "cloudflare-operator-companion",
+        "argocd-tunnel"
+      ],
+      "rootReleaseExclusions": {
+        "tailscale": "upstream",
+        "tailscale-companion": "inactive",
+        "cloudflare-operator": "upstream",
+        "cloudflare-operator-companion": "inactive",
+        "argocd-tunnel": "inactive",
+        "cert-manager": "upstream"
+      },
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "mail",
-      "rootReleaseExclusions": { "postal-mariadb": "upstream" },
       "title": "Postal mail",
       "kind": "platform",
+      "aliases": [],
       "namespaces": ["postal"],
-      "argoApps": ["postal", "postal-mariadb"]
+      "argoApps": ["postal", "postal-mariadb"],
+      "charts": [],
+      "rootReleaseExclusions": { "postal-mariadb": "upstream" },
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     },
     {
       "id": "platform-services",
-      "rootReleaseExclusions": {
-        "1password": "upstream",
-        "intel-device-plugin-operator": "upstream",
-        "intel-gpu-device-plugin": "upstream",
-        "nfd": "upstream"
-      },
       "title": "Platform services",
       "kind": "platform",
+      "aliases": [],
       "namespaces": [
         "1password",
         "flipt",
@@ -648,7 +834,20 @@
         "intel-device-plugin-operator",
         "intel-gpu-device-plugin",
         "nfd"
-      ]
+      ],
+      "charts": [],
+      "rootReleaseExclusions": {
+        "1password": "upstream",
+        "intel-device-plugin-operator": "upstream",
+        "intel-gpu-device-plugin": "upstream",
+        "nfd": "upstream"
+      },
+      "images": [],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": []
     }
   ]
 }

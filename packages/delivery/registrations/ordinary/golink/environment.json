@@ -1,0 +1,10 @@
+{
+  "id": "golink/prod",
+  "serviceId": "golink",
+  "name": "prod",
+  "application": "golink",
+  "pipelineRevisionId": "golink/prod/1",
+  "configurationRevision": "golink/prod/1",
+  "configuration": {},
+  "automatic": true
+}

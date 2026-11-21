@@ -159,11 +159,11 @@ groups:
           description: "TaskNotes container {{ "{{" }} $labels.container {{ "}}" }} has logged {{ "{{" }} $value {{ "}}" }} errors in the last 5 minutes."
 `;
 
-// Loki alerting rules for golink's embedded tsnet.
-// "node not found" indicates the persisted tsnet device was deleted from the
-// tailnet — pod is up but unreachable. The fix is to wipe the PVC state under
-// /home/nonroot/.config/tsnet-golink and bounce the pod so TS_AUTHKEY is used
-// for fresh registration. See plans/what-is-golink-down-jazzy-quokka.md.
+// Loki alerting rules for golink's userspace Tailscale sidecar.
+// "node not found" indicates the persisted Tailscale state in
+// Secret/golink-tailscale-state references a deleted/expired tailnet node —
+// delete Secret/golink-tailscale-state in namespace golink and restart the pod
+// so containerboot re-authenticates via TS_AUTHKEY.
 const golinkAlertRules = `
 groups:
   - name: golink-tsnet
@@ -175,8 +175,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: "golink tsnet device is unregistered from the tailnet"
-          description: "golink is logging 'PollNetMap: initial fetch failed 404: node not found' ({{ "{{" }} $value {{ "}}" }} matches in 10m). The persisted tsnet node was deleted/expired; wipe /home/nonroot/.config/tsnet-golink on the PVC and bounce the pod."
+          summary: "golink tailscale device is unregistered from the tailnet"
+          description: "golink is logging 'PollNetMap: initial fetch failed 404: node not found' ({{ "{{" }} $value {{ "}}" }} matches in 10m). The persisted Tailscale node was deleted/expired; delete Secret/golink-tailscale-state in namespace golink and restart Deployment/golink."
       - alert: GolinkAuthkeyIgnored
         expr: |
           count_over_time({namespace="golink"} |~ "Ignoring authkey" [10m]) > 0
@@ -185,7 +185,7 @@ groups:
           severity: critical
         annotations:
           summary: "golink ignored its TS_AUTHKEY on boot"
-          description: "tsnet found persisted state and refused to re-auth. Followed by 'node not found' loops, the device is orphaned — recover via the runbook."
+          description: "containerboot found persisted state in Secret/golink-tailscale-state and skipped re-auth. If followed by 'node not found' loops, delete Secret/golink-tailscale-state in namespace golink and restart Deployment/golink."
       - alert: GolinkErrorLogs
         expr: |
           sum(count_over_time({namespace="golink"} |~ "(?i)(error|panic|fatal)" [10m])) > 20

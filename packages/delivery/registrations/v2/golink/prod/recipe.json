@@ -1,5 +1,5 @@
 {
-  "id": "golink/prod/1",
+  "id": "golink/prod/2",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -12,7 +12,7 @@
         },
         "finalizers": []
       },
-      "project": "workloads",
+      "project": "cluster",
       "destination": {
         "server": "https://kubernetes.default.svc",
         "namespace": "golink"
@@ -21,24 +21,18 @@
         "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
         "chart": "golink"
       },
-      "syncOptions": [
-        "ApplyOutOfSyncOnly=true",
-        "RespectIgnoreDifferences=true"
-      ],
-      "ignoreDifferences": [
-        {
-          "group": "",
-          "kind": "PersistentVolumeClaim",
-          "name": "golink-pvc",
-          "namespace": "golink",
-          "jsonPointers": ["/spec/volumeName"]
-        }
-      ],
+      "syncOptions": ["CreateNamespace=true", "ApplyOutOfSyncOnly=true"],
+      "ignoreDifferences": [],
       "revisionHistoryLimit": 5,
       "lifecycle": "retain"
     },
     "chartComponent": "chart:golink",
-    "artifactParameters": {},
+    "artifactParameters": {
+      "delivery.images.golink": {
+        "component": "image:golink",
+        "format": "reference"
+      }
+    },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [
       {
@@ -52,6 +46,14 @@
         "pointOfNoReturn": false
       }
     ],
-    "oracle": { "probes": [], "tests": [] }
+    "oracle": {
+      "probes": [
+        {
+          "url": "https://go.tailnet-1a49.ts.net/readyz",
+          "expectedStatus": 200
+        }
+      ],
+      "tests": []
+    }
   }
 }

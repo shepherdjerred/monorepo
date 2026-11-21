@@ -236,38 +236,6 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
-          alert: "GolinkSyncFailing",
-          annotations: {
-            summary: "golink-sync workflow is failing",
-            description: escapePrometheusTemplate(
-              "The syncGolinks Temporal workflow has had {{ $value }} activity failures in the last 30 minutes. Check golink server health and the Temporal UI.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{exported_namespace="prod",workflowType="syncGolinks"}[30m]) > 3',
-          ),
-          for: "15m",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
-          alert: "GolinkSyncFailingCritical",
-          annotations: {
-            summary: "golink-sync workflow has been failing for over 2 hours",
-            description: escapePrometheusTemplate(
-              "syncGolinks has had {{ $value }} activity failures in the last 2h. golink is likely unreachable on the tailnet — check Loki for the golink namespace and follow the recovery runbook.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{exported_namespace="prod",workflowType="syncGolinks"}[2h]) > 20',
-          ),
-          for: "30m",
-          labels: {
-            severity: "critical",
-          },
-        },
-        {
           alert: "ZfsMaintenanceFailed",
           annotations: {
             summary: "ZFS maintenance Temporal workflow failed",

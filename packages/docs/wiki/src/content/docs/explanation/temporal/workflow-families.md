@@ -185,9 +185,6 @@ still running or terminating can lose its claim. Every delete carries the
 listed UID as a precondition. The grant lives on the infra worker, so the CI
 namespace's own maintenance pod stays without an API token.
 
-`golink-sync` reconciles only links owned by the worker's own tag identity.
-Hand-curated links belong to human owners and are never touched.
-
 `temporal-failure-watch` runs every five minutes and backstops the
 hand-maintained Prometheus rules, so **every** workflow type pages on failure —
 not only those with a bespoke threshold. It is stateless, and a 15-minute

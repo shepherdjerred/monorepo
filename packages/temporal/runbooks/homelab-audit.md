@@ -269,7 +269,7 @@ Flag: projects with no recent releases (SDK may not be reporting), large gap bet
 
 ## Section 10: Temporal Workflows
 
-Temporal runs in the Kubernetes `temporal` namespace (server + UI + canonical workers + PostgreSQL). The UI is at `https://temporal-ui.tailnet-1a49.ts.net`. Workflow source is in `packages/temporal/` (`good-night`, `good-morning`, `golink-sync`, `fetcher`, `dns-audit`, `deps-summary`). Application workloads use the Temporal `beta` and `prod` namespaces.
+Temporal runs in the Kubernetes `temporal` namespace (server + UI + canonical workers + PostgreSQL). The UI is at `https://temporal-ui.tailnet-1a49.ts.net`. Workflow source is in `packages/temporal/` (`good-night`, `good-morning`, `fetcher`, `dns-audit`, `deps-summary`). Application workloads use the Temporal `beta` and `prod` namespaces.
 
 The scheduled audit worker has the Temporal CLI installed and `TEMPORAL_ADDRESS`
 points at `temporal-temporal-server-service:7233`, so run Temporal commands
@@ -560,7 +560,7 @@ observability, ingress, or child-resource signal.
 | `flipt`                        | `flipt`                        | Deployment ready; Tailscale ingress proxy ready; flag-evaluation clients (Temporal, Scout, alert dashboard) report no evaluation errors; Flipt down is Red for gated behavior.                          |
 | `freshrss`                     | `freshrss`                     | Deployment ready; Tailscale/Cloudflare ingress proxy ready; FreshRSS HTTP endpoint responds; repeated feed update/login errors are Yellow or Red by impact.                                             |
 | `gickup`                       | `gickup`                       | Deployment and ServiceMonitor ready; check Gitckup alerts for job not running, failed jobs, incomplete sources/destinations, low repo success, or stuck duration.                                       |
-| `golink`                       | `golink`                       | Deployment ready; Temporal `syncGolinks` workflow has no recent failures; service/logs show normal redirect/sync behavior.                                                                              |
+| `golink`                       | `golink`                       | `golink` deployment (`golink` + `tailscale` containers) and `golink-postgresql` ready; `/readyz` and ServiceMonitor scrape pass; `go.tailnet-1a49.ts.net` responds over Tailscale.                      |
 | `grafana`                      | `prometheus`                   | Grafana StatefulSet ready; Grafana ingress proxy ready; dashboards and datasource provisioning succeed; Section 6 alert queries work.                                                                   |
 | `grafana-db`                   | `prometheus`                   | Grafana PostgreSQL StatefulSet ready; PVC below warning thresholds; Grafana can read/write dashboards and alert state.                                                                                  |
 | `home`                         | `home`                         | Home Assistant and Eufy websocket deployments ready; Home Assistant ingress proxy ready; Home Assistant entity and HA workflow alerts are clear.                                                        |

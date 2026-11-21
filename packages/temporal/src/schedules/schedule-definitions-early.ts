@@ -171,7 +171,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     id: "homelab-crd-imports-daily",
     workflowType: "runHomelabCrdImportsRefresh",
     args: [],
-    // 05:30 PT — between fetcher/golink (05:00) and dns-audit (06:00). CRD
+    // 05:30 PT — between fetcher (05:00) and dns-audit (06:00). CRD
     // drift is time-coupled (operator chart bumps ArgoCD-synced after
     // Renovate merges land), so only a schedule can see it — no CI gate runs
     // when the cluster changes.
@@ -189,7 +189,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     id: "dpp-pokeemerald-data-daily",
     workflowType: "runPokeemeraldDataRefresh",
     args: [],
-    // 04:30 PT — between scout-image-gc (04:00) and fetcher/golink (05:00).
+    // 04:30 PT — between scout-image-gc (04:00) and fetcher (05:00).
     // Steady state is no-diff; the job opens a regen PR after a pinned
     // pokeemerald or knowledge source advances (hosted Renovate cannot run
     // the generators inside its own PR).

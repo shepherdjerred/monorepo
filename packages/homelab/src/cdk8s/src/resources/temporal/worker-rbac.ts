@@ -1,8 +1,6 @@
 import type { Chart } from "cdk8s";
 import { ServiceAccount } from "cdk8s-plus-31";
 import {
-  KubeClusterRole,
-  KubeClusterRoleBinding,
   KubeRole,
   KubeRoleBinding,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
@@ -13,36 +11,6 @@ export function createTemporalWorkerServiceAccount(
 ): ServiceAccount {
   return new ServiceAccount(chart, props.constructId ?? "temporal-worker-sa", {
     metadata: { name: props.name ?? "temporal-worker" },
-  });
-}
-
-export function createTemporalWorkerIngressReaderRbac(
-  chart: Chart,
-  serviceAccounts: readonly ServiceAccount[],
-): void {
-  new KubeClusterRole(chart, "temporal-worker-ingress-reader", {
-    metadata: { name: "temporal-worker-ingress-reader" },
-    rules: [
-      {
-        apiGroups: ["networking.k8s.io"],
-        resources: ["ingresses"],
-        verbs: ["get", "list", "watch"],
-      },
-    ],
-  });
-
-  new KubeClusterRoleBinding(chart, "temporal-worker-ingress-reader-binding", {
-    metadata: { name: "temporal-worker-ingress-reader" },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "ClusterRole",
-      name: "temporal-worker-ingress-reader",
-    },
-    subjects: serviceAccounts.map((serviceAccount) => ({
-      kind: "ServiceAccount",
-      name: serviceAccount.name,
-      namespace: serviceAccount.metadata.namespace ?? "temporal",
-    })),
   });
 }
 

@@ -329,7 +329,7 @@ test("the full catalog publication preserves the smaller coordinated root invent
     ["delivery-data", "temporal-data"].includes(name),
   ).length;
   expect([0, 2]).toContain(dataLayers);
-  expect(rootInventory).toHaveLength(22 + dataLayers);
+  expect(rootInventory).toHaveLength(21 + dataLayers);
   expect(result.charts).toEqual(charts);
   expect(result.rootInventory).toEqual(rootInventory);
 });

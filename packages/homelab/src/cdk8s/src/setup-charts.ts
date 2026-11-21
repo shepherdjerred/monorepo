@@ -100,7 +100,7 @@ export async function setupCharts(app: App): Promise<void> {
   await createHomeChart(app);
   createPostalChart(app);
   createSyncthingChart(app);
-  createGolinkChart(app);
+  createGolinkChart(app, { image: firstPartyImageRecipe("golink") });
   await createFreshRssChart(app);
   createPinchtabChart(app);
   createFliptChart(app);

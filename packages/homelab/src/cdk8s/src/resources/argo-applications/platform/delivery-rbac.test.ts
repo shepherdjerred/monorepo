@@ -489,7 +489,7 @@ const registrations = await Promise.all(
 test("registered release inventory includes all reviewed application/controller destinations", () => {
   // Shared-site and root registrations are retired (X4, X6); their
   // successors come from the catalog document.
-  expect(registrationFiles).toHaveLength(18);
+  expect(registrationFiles).toHaveLength(19);
 });
 test.each(
   registrations

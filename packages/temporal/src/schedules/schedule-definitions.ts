@@ -397,20 +397,6 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     memo: "Daily Velero orphan ZFS snapshot and ZFSBackup-CR detection — emits Prometheus metrics for both orphan pathologies.",
   },
   {
-    id: "golink-sync",
-    workflowType: "syncGolinks",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "0 5 * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "4 minutes",
-    memo: "Sync Tailscale ingresses to golink aliases (daily 5 AM PT)",
-  },
-  {
     id: "vacuum-9am",
     workflowType: "runVacuumIfNotHome",
     args: [],

@@ -422,6 +422,7 @@ describe("Flipt network policy", () => {
     ],
     ["Citizens companions to read their gameplay gate", "minecraft-tsmc"],
     ["Tracker to read its managed flags", "tracker"],
+    ["Golink to read its dynamic-alias and manual-edit flags", "golink"],
   ])("allows %s", (_label, namespace) => {
     const policy = z
       .object({

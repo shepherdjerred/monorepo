@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "golink",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "golink",
+  "chartComponent": "chart:golink",
+  "namespace": "golink",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.golink": "image:golink"
+  },
+  "verification": {
+    "url": "https://go.tailnet-1a49.ts.net/readyz",
+    "expectedStatus": 200
+  }
+}

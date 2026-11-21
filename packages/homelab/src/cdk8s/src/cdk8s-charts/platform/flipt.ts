@@ -45,6 +45,8 @@ const CONSUMER_NAMESPACES = [
   "woodpecker",
   // Tracker reads its managed flags through the shared config source.
   "tracker",
+  // Golink evaluates dynamic ingress, site-alias, and manual-edit gates.
+  "golink",
 ] as const;
 
 export function createFliptChart(app: App) {
