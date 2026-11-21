@@ -86,6 +86,29 @@ const commands: Record<
       PUBLIC_ORIGIN: "http://127.0.0.1:17353",
     },
   },
+  golink: {
+    command: [
+      "set -eu",
+      "cd /app/packages/golink",
+      "bun src/server/index.ts >/tmp/golink-smoke.log 2>&1 &",
+      "pid=$!",
+      "trap 'if kill -0 $pid; then kill $pid; wait $pid || test $? -eq 143; fi' EXIT",
+      "for _ in $(seq 1 30); do",
+      String.raw`  if bun -e 'const health = await fetch("http://127.0.0.1:17352/healthz"); const page = await fetch("http://127.0.0.1:17352/"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1);'; then exit 0; fi`,
+      "  if ! kill -0 $pid; then cat /tmp/golink-smoke.log; exit 1; fi",
+      "  sleep 1",
+      "done",
+      "cat /tmp/golink-smoke.log",
+      "exit 1",
+    ].join("\n"),
+    env: {
+      DATABASE_URL: "postgresql://smoke:smoke@127.0.0.1:15432/golink",
+      HOST: "127.0.0.1",
+      PORT: "17352",
+      ENVIRONMENT: "test",
+      FEATURE_FLAGS_MODE: "disabled",
+    },
+  },
   media: {
     command:
       'export PATH="$(pg_config --bindir):$PATH"\ncd /app/packages/media\nbun scripts/image-smoke.ts',

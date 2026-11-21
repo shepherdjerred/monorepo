@@ -1,0 +1,22 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ManualLink {
+  short         String    @id
+  targetUrl     String    @map("target_url")
+  createdBy     String    @default("") @map("created_by")
+  clicks        Int       @default(0)
+  lastClickedAt DateTime? @map("last_clicked_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("manual_links")
+}

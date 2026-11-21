@@ -76,6 +76,15 @@
         "*.ts"
       ]
     },
+    "packages/golink": {
+      "entry": ["src/**/*.test.ts", "architecture-fixtures/**/*.ts"],
+      "project": [
+        "src/**/*.{ts,tsx,css}",
+        "architecture-fixtures/**/*.ts",
+        "prisma/**/*.prisma",
+        "*.ts"
+      ]
+    },
     "packages/media": {
       "entry": [
         "architecture.config.ts",

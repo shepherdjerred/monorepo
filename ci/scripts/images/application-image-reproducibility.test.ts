@@ -81,7 +81,7 @@ describe("application image reproducibility", () => {
 
   test("every application install sees only its projected closure", async () => {
     const dockerfiles = await applicationDockerfiles();
-    expect(dockerfiles).toHaveLength(15);
+    expect(dockerfiles).toHaveLength(16);
     expect(dockerfiles).toContain("packages/media/Dockerfile");
     for (const file of dockerfiles) {
       const stages = dockerStages(await read(file));

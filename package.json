@@ -126,6 +126,7 @@
     "packages/glitter-boys",
     "packages/glitter-boys-launcher",
     "packages/glitter-context",
+    "packages/golink",
     "packages/hkctl",
     "packages/home-assistant",
     "packages/homelab",

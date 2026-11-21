@@ -307,6 +307,7 @@ describe("Flipt chart", () => {
             "storm",
             "the-storm",
             "tracker",
+            "golink",
           ].map((namespace) => `${environment}.${namespace}.yaml`),
         )
         .toSorted(),

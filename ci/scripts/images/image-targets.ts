@@ -8,6 +8,7 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
 > = {
   arcade: { owner: "@arcade/backend" },
   delivery: { owner: "@shepherdjerred/delivery" },
+  golink: { owner: "@shepherdjerred/golink" },
   tracker: {
     owner: "@shepherdjerred/tracker",
   },

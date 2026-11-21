@@ -11,6 +11,7 @@ hold only scoped invariants that agents must keep in context.
 | [arcade](arcade/)                                               | Multi-game Discord arcade with dedicated streaming accounts, browser controllers, and per-game statistics |
 | [tracker](tracker/)                                             | Issue tracker — teams, projects, board, session actors, votes, attachments and audit history              |
 | [delivery](delivery/)                                           | Deployment catalog, immutable version sets, approvals, and durable release execution                      |
+| [golink](golink/)                                               | Tailnet shortlink service with live cluster/platform dynamic aliases and manual overrides                 |
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                                           |
 | [glitter-boys-launcher](glitter-boys-launcher/)                 | Native Rust/egui game installer and launcher for Windows x64                                              |
 | [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                                  |

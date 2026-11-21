@@ -89,6 +89,7 @@ group "app" {
     "alert-dashboard",
     "tracker",
     "delivery",
+    "golink",
     "media",
     "birmel",
     "tasknotes-server",
@@ -268,6 +269,14 @@ target "storm-forum" {
   tags       = imagetags("storm-forum")
   cache-from = cachefrom("storm-forum")
   cache-to   = cacheto("storm-forum")
+}
+
+target "golink" {
+  inherits   = ["_app"]
+  dockerfile = "packages/golink/Dockerfile"
+  tags       = imagetags("golink")
+  cache-from = cachefrom("golink")
+  cache-to   = cacheto("golink")
 }
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────
