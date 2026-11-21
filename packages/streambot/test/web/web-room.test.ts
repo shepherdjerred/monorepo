@@ -7,7 +7,13 @@ import {
 } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { ChannelIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { PlaybackChannelNumberSchema } from "@shepherdjerred/streambot/types/playback-channel.ts";
-import { CHANNEL, GUILD, SECOND_GUILD, webFixture } from "./web-fixture.ts";
+import {
+  CHANNEL,
+  GUILD,
+  SECOND_GUILD,
+  USER,
+  webFixture,
+} from "./web-fixture.ts";
 import {
   MOVIE_SOURCE,
   multiSlotRoom,
@@ -18,6 +24,7 @@ import {
 import { getRequest, playerOf } from "./web-room-harness.ts";
 
 const SECOND_CHANNEL = ChannelIdSchema.parse("100000000000000021");
+const SLOT = (number: number) => PlaybackChannelNumberSchema.parse(number);
 let fixture: ReturnType<typeof webFixture>;
 
 afterEach(() => {
@@ -77,6 +84,7 @@ describe("location", () => {
     expect(value.browseGuildId).toBe(GUILD);
     expect(value.capacity).toEqual({
       maxSlots: 1,
+      numbered: false,
       extraStreamAvailable: false,
     });
     expect(value.capabilities.pause).toBe(false);
@@ -167,7 +175,93 @@ describe("players", () => {
     expect(listen?.revision).toEqual(expect.any(String));
     expect(listen?.positionAt).toBeGreaterThan(0);
     expect(listen?.volume).toBe(100);
-    expect(value.capacity).toEqual({ maxSlots: 3, extraStreamAvailable: true });
+    expect(value.capacity).toEqual({
+      maxSlots: 3,
+      numbered: true,
+      extraStreamAvailable: true,
+    });
+  });
+
+  test("a track names its song and artists apart; other items keep one title", async () => {
+    setup();
+    const slots = multiSlotRoom(fixture);
+    await slots.play(1, SONG_SOURCE);
+    slots.ensure(SLOT(1)).actor.send({
+      type: "ADD",
+      source: SONG_SOURCE,
+      requesterId: USER,
+      queuedAt: Date.now(),
+    });
+    await slots.play(2, MOVIE_SOURCE);
+    const value = await room();
+    const listen = playerOf(value, 1);
+    for (const item of [listen?.current, listen?.queue[0]])
+      expect(item).toMatchObject({
+        title: "Room Test Song",
+        subtitle: "Room Test Artist",
+      });
+    const watch = playerOf(value, 2)?.current;
+    expect(watch?.title).toBe("Arrival");
+    expect(watch).not.toHaveProperty("subtitle");
+    // The classic snapshot keeps the one combined line it always showed.
+    fixture.enableNumbered(1);
+    const classic = await fixture.handler(
+      getRequest(fixture, "/api/player?guildId=" + GUILD),
+    );
+    const snapshot = SnapshotSchema.parse(await classic.json());
+    expect(snapshot.current?.title).toBe("Room Test Artist — Room Test Song");
+  });
+
+  test("Radio and TV start on their own slot without naming one; stopping still needs the slot", async () => {
+    setup();
+    const slots = multiSlotRoom(fixture);
+    const station = async (mode: string, playbackChannel: number | null) => {
+      const response = await fixture.handler(
+        fixture.command({
+          action: "station",
+          mode,
+          targeting: "explicit",
+          playbackChannel,
+        }),
+      );
+      return response.status;
+    };
+    expect(await station("radio", null)).toBe(200);
+    expect(await station("tv", null)).toBe(200);
+    expect(slots.slots.get(SLOT(1))?.station?.kind).toBe("radio");
+    expect(slots.slots.get(SLOT(2))?.station?.kind).toBe("tv");
+    const value = await room();
+    expect(playerOf(value, 1)?.station?.kind).toBe("radio");
+    expect(playerOf(value, 2)?.station?.kind).toBe("tv");
+    const unnamed = await fixture.handler(
+      fixture.command({
+        action: "station",
+        mode: "off",
+        targeting: "explicit",
+        playbackChannel: null,
+      }),
+    );
+    expect(unnamed.status).toBe(400);
+    expect(await unnamed.json()).toMatchObject({ code: "invalid_channel" });
+    const pause = await fixture.handler(
+      fixture.command({
+        action: "pause",
+        targeting: "explicit",
+        playbackChannel: null,
+      }),
+    );
+    expect(pause.status).toBe(400);
+    expect(await station("off", 2)).toBe(200);
+    expect(slots.slots.get(SLOT(2))?.station).toBeUndefined();
+    expect(slots.slots.get(SLOT(1))?.station?.kind).toBe("radio");
+  });
+
+  test("a numbered room says so even before anything plays", async () => {
+    setup();
+    multiSlotRoom(fixture);
+    const value = await room();
+    expect(value.players).toEqual([]);
+    expect(value.capacity.numbered).toBe(true);
   });
 
   test("a third stream is returned and uses up the extra capacity", async () => {
@@ -201,6 +295,7 @@ describe("players", () => {
     expect(value.players[0]).toMatchObject({ slot: 1, transport: "watch" });
     expect(value.capacity).toEqual({
       maxSlots: 1,
+      numbered: false,
       extraStreamAvailable: false,
     });
   });

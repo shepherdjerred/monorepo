@@ -1,6 +1,9 @@
 import { waitFor } from "xstate";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
-import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import {
+  sourceLabel,
+  type Source,
+} from "@shepherdjerred/streambot/sources/source.ts";
 import { sessionRevision } from "@shepherdjerred/streambot/session/session-revision.ts";
 import {
   PlaybackChannelNumberSchema,
@@ -13,11 +16,16 @@ import { createFixtureSlot } from "./web-fixture-slot.ts";
 type Fixture = ReturnType<typeof webFixture>;
 type Slot = ReturnType<typeof createFixtureSlot>;
 
-/** Audio-only for `mode: "music"` sources, video for everything else. */
+/**
+ * Audio-only for `mode: "music"` sources, video for everything else. A track is titled
+ * "Artists — Title" the way the production resolver labels music.
+ */
 export function resolveByMode(source: Source): ResolvedSource {
   return {
     title:
-      source.music?.title ?? (source.kind === "file" ? source.title : "Live"),
+      source.music !== undefined || source.kind === "file"
+        ? sourceLabel(source)
+        : "Live",
     chapters: [],
     ffmpegInput: "fixture",
     mediaKind: source.mode === "music" ? "music" : "video",

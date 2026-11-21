@@ -44,8 +44,17 @@ export function songRow(input: {
       ? {}
       : { durationSeconds: track.durationSeconds }),
     ...(artwork === undefined ? {} : { artworkUrl: artwork }),
-    actions: bothActions("listen", input.listenAllowed),
+    ...songActions(input.listenAllowed),
   };
+}
+
+/** A song is something to listen to and its video is a menu choice; without listen it still plays. */
+function songActions(
+  listenAllowed: boolean,
+): Pick<Row, "actions" | "menuActions"> {
+  return listenAllowed
+    ? { actions: ["listen"], menuActions: ["watch"] }
+    : { actions: ["watch"] };
 }
 
 export function albumRow(album: MusicAlbumHit, guildId: string): Row {

@@ -124,13 +124,31 @@ function occupied(handle: SessionHandle): boolean {
   );
 }
 
+type RoomPlayers = {
+  players: WebRoomPlayer[];
+  maxSlots: number;
+  /** The command path's own test: the viewer has a selected slot, so the room is numbered. */
+  numbered: boolean;
+  extra: boolean;
+};
+
+/** No players and one mixed queue: a legacy room, or no voice room at all. */
+const LEGACY_EMPTY: RoomPlayers = {
+  players: [],
+  maxSlots: 1,
+  numbered: false,
+  extra: false,
+};
+
 async function roomPlayers(
   owner: SnapshotOwner,
   session: WebSession,
   room: { guildId: GuildId; channelId: ChannelId },
-): Promise<{ players: WebRoomPlayer[]; maxSlots: number; extra: boolean }> {
+): Promise<RoomPlayers> {
   const { deps } = owner;
   const { guildId, channelId } = room;
+  // The room shows a track's song and artists on separate lines.
+  const viewer = { guildId, session, titles: "split" } as const;
   const selected = await deps.sessions.numbered.selected({
     guildId,
     channelId,
@@ -139,14 +157,8 @@ async function roomPlayers(
   if (selected === undefined) {
     // A legacy queue (or numbered channels being off) is one mixed room: at most one player.
     const handle = deps.sessions.getExisting(guildId, channelId);
-    if (handle === null || !occupied(handle))
-      return { players: [], maxSlots: 1, extra: false };
-    const { positionAt, ...body } = await playerBody(
-      owner,
-      handle,
-      guildId,
-      session,
-    );
+    if (handle === null || !occupied(handle)) return LEGACY_EMPTY;
+    const { positionAt, ...body } = await playerBody(owner, handle, viewer);
     return {
       players: [
         {
@@ -158,6 +170,7 @@ async function roomPlayers(
         },
       ],
       maxSlots: 1,
+      numbered: false,
       extra: false,
     };
   }
@@ -168,8 +181,7 @@ async function roomPlayers(
     const body = await playerBody(
       owner,
       deps.sessions.getExisting(guildId, channelId, slot.number),
-      guildId,
-      session,
+      viewer,
     );
     players.push({
       slot: slot.number,
@@ -181,6 +193,7 @@ async function roomPlayers(
   return {
     players,
     maxSlots: numbered.length,
+    numbered: true,
     // A third or later stream needs a numbered slot beyond Listen and Watch that nothing holds.
     extra: numbered.some(
       (slot) =>
@@ -227,9 +240,7 @@ export async function buildRoom(
       channelId: room?.channelId ?? null,
       plexPostersEnabled: owner.plexPostersEnabled,
     }),
-    room === null
-      ? { players: [], maxSlots: 1, extra: false }
-      : roomPlayers(owner, session, room),
+    room === null ? LEGACY_EMPTY : roomPlayers(owner, session, room),
   ]);
   return {
     location:
@@ -244,6 +255,7 @@ export async function buildRoom(
     players: player.players,
     capacity: {
       maxSlots: player.maxSlots,
+      numbered: player.numbered,
       extraStreamAvailable: player.extra,
     },
     capabilities,

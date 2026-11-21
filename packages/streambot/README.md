@@ -77,7 +77,9 @@ therefore splits identities:
   audio on channel 1, Watch plays Go Live video on channel 2 (or an explicit
   `playbackChannel` ≥ 2 up to the server's maximum for another stream). It ignores the
   personal selection and `Auto`, never changes them, and in a legacy room becomes the item's
-  mode on the single queue. Other commands target a named slot with `targeting: "explicit"`.
+  mode on the single queue. Other commands target a named slot with `targeting: "explicit"`;
+  a `station` start may omit the slot (Radio lands on channel 1, TV on channel 2), while
+  `station` off and the player controls name the slot of the card they came from.
   Play results report `destination { transport, voiceChannelName }` (returned to the
   requesting viewer only) and `position` (0 when it starts immediately). Refusals are 409s:
   `no_video` (ffprobe found no picture for Watch), `listen_disabled`
@@ -196,7 +198,8 @@ and never part of CI or the image build.
 `GET /api/search/v2?guildId=&kind=&q=` returns one result group per request
 (`songs`, `albums`, `artists`, `library`, `videos`, `live`, `history`) as typed
 rows with a selection token and the actions (`listen`, `watch`) the viewer may
-take, so the client loads groups independently. `GET /api/search/v2/suggest`
+take, so the client loads groups independently. A song offers `listen` with `watch`
+in `menuActions` (its overflow menu); without music over voice it offers `watch` alone. `GET /api/search/v2/suggest`
 returns up to eight typeahead strings, and `GET /api/music/v2/album` and
 `/artist` return a header and rows. These draw on their own per-session budget
 (600 requests per minute) instead of the 120 that protect commands. A provider
@@ -298,8 +301,11 @@ playlists, sports artwork, history, and attribution. An optional port argument
 (for example, `bun run test/web/preview.ts 5189`) isolates concurrent worktrees.
 
 The room endpoints are `GET /api/room` (the viewer's location from Discord voice state,
-the shared servers, one player per occupied slot, capacity and capability booleans) and
-`GET /api/room/events` (the same `RoomSchema` pushed as `text/event-stream`). The stream
+the shared servers, one player per occupied slot, capacity — including `numbered`, false for
+a legacy room, where commands send `playbackChannel: null` — and capability booleans) and
+`GET /api/room/events` (the same `RoomSchema` pushed as `text/event-stream`). A room item
+that is a track has its song in `title` and its artists in `subtitle`; `/api/player` keeps
+the combined "Artists — Title". The stream
 sends a `room` event on connect and after every change, `: heartbeat` comments every 20 seconds
 (connection keepalive, cleared on close), a terminal `error` event carrying a closed `code`
 when authorization fails, and `retry: 3000`; a reconnect receives a fresh snapshot, with no

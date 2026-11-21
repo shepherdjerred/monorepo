@@ -167,7 +167,7 @@ function record(
   history.recordPlaybackStart({ scope, media, requestId });
 }
 
-test("songs are directly playable rows that name Listen first and Watch second", async () => {
+test("songs are directly playable rows that offer Listen, with Watch in the menu", async () => {
   const f = start();
   const result = await rows(f, "songs", "get lucky");
   expect(result.kind).toBe("songs");
@@ -179,7 +179,8 @@ test("songs are directly playable rows that name Listen first and Watch second",
     subtitle:
       "Daft Punk, Pharrell Williams, Nile Rodgers · Random Access Memories",
     durationSeconds: 370,
-    actions: ["listen", "watch"],
+    actions: ["listen"],
+    menuActions: ["watch"],
   });
   expect(row?.artworkUrl).toMatch(/^https:\/\/yt3\.googleusercontent\.com\//u);
   expect(new Set(result.items.map((item) => item.id)).size).toBe(
@@ -311,7 +312,10 @@ test("history rows follow how the item was recorded", async () => {
 test("a capability that is off removes its action or its group instead of failing the click", async () => {
   const f = start();
   f.setMusicOverVoice(false);
-  expect(await firstActions(f, "songs", "get lucky")).toEqual(["watch"]);
+  // A song without Listen is still playable: Watch becomes its button and the menu is empty.
+  const song = await firstRow(f, "songs", "get lucky");
+  expect(song?.actions).toEqual(["watch"]);
+  expect(song).not.toHaveProperty("menuActions");
   expect(await firstActions(f, "videos", "khruangbin")).toEqual(["watch"]);
   f.setSportsEnabled(false);
   const live = await request("/api/search/v2?kind=live&q=", f);
@@ -486,7 +490,10 @@ test("an album page lists its tracks and plays whole as one request", async () =
     "The Game of Love",
     "Giorgio by Moroder",
   ]);
-  expect(page.rows.every((row) => row.actions[0] === "listen")).toBe(true);
+  for (const row of page.rows) {
+    expect(row.actions).toEqual(["listen"]);
+    expect(row.menuActions).toEqual(["watch"]);
+  }
   expect(page.play?.actions).toEqual(["listen", "watch"]);
   if (page.play === undefined)
     throw new Error("Expected a whole-album selection");
@@ -554,7 +561,8 @@ test("MusicBrainz can still answer music search when it is the selected provider
   expect(songs.items[0]).toMatchObject({
     kind: "song",
     title: "Get Lucky",
-    actions: ["listen", "watch"],
+    actions: ["listen"],
+    menuActions: ["watch"],
   });
   expect(songs.items[0]?.artworkUrl).toContain("/api/music/artwork?");
 });
@@ -673,8 +681,12 @@ test("what the room says is available is exactly what search serves", async () =
     const videos = await firstActions(f, "videos", "khruangbin");
     expect(videos?.includes("listen")).toBe(capabilities.listen);
     if (capabilities.musicCatalog) {
-      const songs = await firstActions(f, "songs", "get lucky");
-      expect(songs?.includes("listen")).toBe(capabilities.listen);
+      // Songs always have exactly one button; Watch sits in the menu only when Listen is the button.
+      const song = await firstRow(f, "songs", "get lucky");
+      expect(song?.actions).toEqual([capabilities.listen ? "listen" : "watch"]);
+      expect(song?.menuActions).toEqual(
+        capabilities.listen ? ["watch"] : undefined,
+      );
     }
   }
 });

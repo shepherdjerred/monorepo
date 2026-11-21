@@ -269,7 +269,9 @@ class RoomConnection {
     try {
       this.controller?.enqueue(frame);
     } catch {
-      // The stream was cancelled between the check and the write.
+      // The response can no longer be written, so the client is gone: give its slot back now
+      // rather than when the abort signal or `cancel()` catches up. A no-op while closing.
+      this.close("client_closed");
       return;
     }
     this.sent += 1;

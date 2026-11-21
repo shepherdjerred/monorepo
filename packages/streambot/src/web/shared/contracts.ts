@@ -324,14 +324,22 @@ export const HistoryPageSchema = z.strictObject({
   ),
 });
 
+/**
+ * A room queue entry. For a track with its own artists, `title` is the track alone and `subtitle`
+ * the artist line; otherwise `subtitle` is absent and `title` is the item's full label.
+ */
+export const RoomPlayerItemSchema = PlayerItemSchema.extend({
+  subtitle: z.string().min(1).optional(),
+});
+
 /** One playback slot of the viewer's room: voice audio (`listen`, slot 1) or a Go Live stream. */
 export const RoomPlayerSchema = z.strictObject({
   slot: z.number().int().positive(),
   transport: TransportSchema,
   revision: z.string().nullable(),
   state: z.string(),
-  current: PlayerItemSchema.nullable(),
-  queue: z.array(PlayerItemSchema),
+  current: RoomPlayerItemSchema.nullable(),
+  queue: z.array(RoomPlayerItemSchema),
   positionSeconds: z.number().nullable(),
   /** Server epoch milliseconds at which `positionSeconds` was sampled. */
   positionAt: z.number().int().nonnegative(),
@@ -365,6 +373,11 @@ export const RoomSchema = z.strictObject({
   players: z.array(RoomPlayerSchema),
   capacity: z.strictObject({
     maxSlots: z.number().int().positive(),
+    /**
+     * False in a legacy room (one mixed queue, or numbered channels off) and when the viewer is in
+     * no voice channel; commands there send `playbackChannel: null`.
+     */
+    numbered: z.boolean(),
     extraStreamAvailable: z.boolean(),
   }),
   capabilities: RoomCapabilitiesSchema,
