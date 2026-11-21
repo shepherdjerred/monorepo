@@ -231,6 +231,14 @@ export async function stagePlugins(
     path.join(pluginsDir, "TheStorm.jar"),
     Bun.file(options.stormJar),
   );
+  // CoreProtect's update check and usage stats are hard-coded plain-HTTP
+  // requests to coreprotect.net, and CI step egress allows only HTTPS. A
+  // disposable server never acts on either; CoreProtect fills in every other
+  // default.
+  await Bun.write(
+    path.join(pluginsDir, "CoreProtect", "config.yml"),
+    "check-updates: false\n",
+  );
   if (options.ownedConfigDir !== undefined) {
     await cp(options.ownedConfigDir, path.join(pluginsDir, "TheStorm"), {
       recursive: true,
