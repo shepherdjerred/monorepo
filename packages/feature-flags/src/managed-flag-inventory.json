@@ -75,6 +75,11 @@
       "key": "storm",
       "name": "Storm",
       "description": "The Storm Minecraft server feature flags."
+    },
+    {
+      "key": "golink",
+      "name": "Golink",
+      "description": "Tailnet shortlink service feature flags."
     }
   ],
   "flags": [
@@ -1003,6 +1008,42 @@
       "purpose": "Maximum attachment size, validated on each upload.",
       "type": "variant",
       "default": "26214400",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "golink-dynamic-aliases-enabled",
+      "owner": "golink",
+      "namespace": "golink",
+      "source": "golink",
+      "purpose": "Resolve automatic Tailscale ingress, platform-model site, suffix-stripped shorthand, and parameterized shortcut aliases beneath manual overrides.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "golink-writes-enabled",
+      "owner": "golink",
+      "namespace": "golink",
+      "source": "golink",
+      "purpose": "Allow creating, updating, and deleting manual golink overrides through the web UI and API.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "golink-telemetry-enabled",
+      "owner": "golink",
+      "namespace": "golink",
+      "source": "golink",
+      "purpose": "Enable golink OpenTelemetry tracing at process startup.",
+      "type": "boolean",
+      "default": true,
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

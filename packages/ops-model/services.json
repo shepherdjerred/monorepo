@@ -418,7 +418,7 @@
     {
       "id": "self-hosted-apps",
       "package": "homelab",
-      "images": ["redlib"],
+      "images": ["golink", "redlib"],
       "title": "Self-hosted apps",
       "kind": "workload",
       "namespaces": [

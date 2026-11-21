@@ -293,6 +293,7 @@ describe("ManagedFlagInventorySchema", () => {
       "alert-dashboard",
       "the-storm",
       "storm",
+      "golink",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(
@@ -700,4 +701,34 @@ describe("The Storm two-stage chat moderation rollout", () => {
       ).toBe(true);
     },
   );
+});
+
+describe("Golink first-party rollout", () => {
+  test.each([
+    "golink-dynamic-aliases-enabled",
+    "golink-writes-enabled",
+    "golink-telemetry-enabled",
+  ] as const)("enables %s globally in beta and prod", (key) => {
+    for (const environment of ["beta", "prod"]) {
+      const flag = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        "golink",
+      ).find((candidate) => candidate.key === key);
+      if (flag?.type !== "boolean") throw new Error(`${key} missing`);
+      expect(flag).toMatchObject({
+        owner: "golink",
+        namespace: "golink",
+        source: "golink",
+        type: "boolean",
+        default: true,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+      expect(classifyManagedBoolean(flag)).toBe("on");
+      expect(managedBooleanDefault(key, environment)).toBe(true);
+      expect(flag.defaultOffExceptions ?? []).toEqual([]);
+    }
+  });
 });

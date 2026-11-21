@@ -1,0 +1,29 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/golink",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": [
+        "src/domain",
+        "src/server/app.test.ts",
+        "--testTimeout",
+        "30000",
+        "--hookTimeout",
+        "30000"
+      ]
+    },
+    {
+      "runner": "vitest",
+      "name": "postgres-integration",
+      "tier": "extended",
+      "args": [
+        "src/server/postgres.integration.test.ts",
+        "--testTimeout",
+        "60000",
+        "--hookTimeout",
+        "60000"
+      ]
+    }
+  ]
+}

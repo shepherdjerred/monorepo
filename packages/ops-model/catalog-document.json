@@ -1359,6 +1359,10 @@
       "group": "self-hosted-apps",
       "components": [
         {
+          "name": "image:golink",
+          "producer": "first-party"
+        },
+        {
           "name": "chart:golink",
           "producer": "first-party"
         }
