@@ -12,6 +12,12 @@ import type { WebPlayback } from "./playback.ts";
 import { WebActions } from "./actions.ts";
 import { WebMusic } from "./music.ts";
 import { WebRoomRoutes } from "./room/index.ts";
+import { WebSearch } from "./search/web-search.ts";
+import {
+  REQUEST_BUDGETS,
+  requestBudget,
+  type RequestBudget,
+} from "./search/request-budget.ts";
 import { WebError, requestInput } from "./errors.ts";
 import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -37,6 +43,7 @@ import {
 import { usageAnalytics } from "@shepherdjerred/streambot/observability/product-analytics.ts";
 import {
   observeMusicSearch,
+  observeSearchV2,
   observeSearch,
   recordCommandUsage,
   recordSignIn,
@@ -88,9 +95,10 @@ export function createWebHandler(deps: {
     async (guildId, userId) =>
       (await deps.plexPostersEnabled?.(guildId, userId)) ?? false,
   );
+  const search = new WebSearch(deps.playback, music);
   const requests = new Map<
     string,
-    { count: number; artwork: number; resets: number }
+    { count: number; artwork: number; search: number; resets: number }
   >();
 
   async function authenticated(
@@ -98,10 +106,7 @@ export function createWebHandler(deps: {
     url: URL,
     session: WebSession,
   ): Promise<Response> {
-    limitRequests(
-      session.key,
-      url.pathname === "/api/artwork" || url.pathname === "/api/music/artwork",
-    );
+    limitRequests(session.key, requestBudget(url.pathname));
     if (request.method === "POST") auth.mutation(request, session);
     if (
       ["/api/sports/schedules", "/api/sports/schedules/cancel"].includes(
@@ -127,6 +132,10 @@ export function createWebHandler(deps: {
       auth.session(request),
     );
     if (roomResponse !== null) return roomResponse;
+    const searchResponse = await observeSearchV2(request, url, session, () =>
+      search.handle(request, url, session),
+    );
+    if (searchResponse !== null) return searchResponse;
     const musicResponse = await observeMusicSearch(request, url, session, () =>
       music.handle(request, url, session),
     );
@@ -297,21 +306,21 @@ export function createWebHandler(deps: {
     throw new WebError(404, "not_found", "This endpoint does not exist.");
   }
 
-  function limitRequests(key: string, artwork: boolean): void {
+  function limitRequests(key: string, budget: RequestBudget): void {
     const now = Date.now();
     for (const [entryKey, entry] of requests)
       if (entry.resets <= now) requests.delete(entryKey);
     const entry = requests.get(key) ?? {
       count: 0,
       artwork: 0,
+      search: 0,
       resets: now + 60_000,
     };
-    if (artwork) entry.artwork += 1;
-    else entry.count += 1;
+    entry[budget] += 1;
     if (requests.size >= 2000 && !requests.has(key))
       throw new WebError(429, "busy", "The remote is busy. Try again shortly.");
     requests.set(key, entry);
-    if (artwork ? entry.artwork > 600 : entry.count > 120)
+    if (entry[budget] > REQUEST_BUDGETS[budget])
       throw new WebError(
         429,
         "rate_limit",

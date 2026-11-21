@@ -23,6 +23,9 @@ import {
   musicSource,
 } from "@shepherdjerred/streambot/music/service.ts";
 import { SpotifyMetadata } from "@shepherdjerred/streambot/music/spotify.ts";
+import { MusicBrainzProvider } from "@shepherdjerred/streambot/music/musicbrainz-provider.ts";
+import { createMusicSearchProviders } from "@shepherdjerred/streambot/music/search-instrumentation.ts";
+import { replayProvider, responses } from "#youtube-music-fixture";
 
 class PreviewSpotify extends SpotifyMetadata {
   override load(value: string) {
@@ -170,6 +173,14 @@ if (import.meta.main) {
       },
       resolve: resolvePreview,
     },
+  );
+  // Recorded YouTube Music responses answer any query, so the preview works offline.
+  fixture.playback.deps.musicSearch = createMusicSearchProviders(
+    {
+      "youtube-music": replayProvider(responses(), [], { lenient: true }),
+      musicbrainz: new MusicBrainzProvider(previewMusic.catalog),
+    },
+    () => Promise.resolve("youtube-music"),
   );
   history.playlists.create(
     { userId: USER, guildId: GUILD },

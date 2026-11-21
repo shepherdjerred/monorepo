@@ -3,7 +3,7 @@ import { isRemoteArtworkUrl } from "@shepherdjerred/streambot/metadata/public-ar
 import { SportsArtworkSchema } from "@shepherdjerred/streambot/sports/artwork.ts";
 import { HistoryProviderSchema } from "@shepherdjerred/streambot/history/provider.ts";
 
-const ArtworkUrlSchema = z
+export const ArtworkUrlSchema = z
   .string()
   .refine(
     (value) =>

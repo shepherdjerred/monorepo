@@ -11,19 +11,18 @@ import {
   webCommandsTotal,
   webLoginsTotal,
   webRequestDurationSeconds,
+  musicProviderDroppedItemsTotal,
+  musicProviderRequestsTotal,
   webRequestsTotal,
+  webSearchDurationSeconds,
+  webSearchTotal,
   webTimeToPlaybackSeconds,
 } from "@shepherdjerred/streambot/observability/web-metrics.ts";
 import { MusicAlbumSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { fixtureMusic, ALBUM } from "#music-fixture";
 import { LibraryPageSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
-import {
-  CHANNEL,
-  GUILD,
-  USER,
-  discordLogin,
-  webFixture,
-} from "./web-fixture.ts";
+import { CHANNEL, GUILD, USER, webFixture } from "./web-fixture.ts";
+import { discordLogin } from "./web-fixture-login.ts";
 import { fixtureSports } from "./web-fixture-media.ts";
 
 const USERNAME = "telemetry-private-username";
@@ -62,6 +61,10 @@ beforeEach(() => {
     webLoginsTotal,
     webTimeToPlaybackSeconds,
     playRequestsTotal,
+    webSearchTotal,
+    webSearchDurationSeconds,
+    musicProviderRequestsTotal,
+    musicProviderDroppedItemsTotal,
   ])
     metric.reset();
   vi.spyOn(process.stdout, "write").mockImplementation((chunk: unknown) => {
@@ -356,4 +359,157 @@ test("a web music selection counts as one web play request, not one per track", 
     }),
   ).toBe(1);
   fixture.playback.deps.music?.loads.close();
+});
+
+/** Everything a search could leak: the typed and corrected queries and what the provider returned. */
+const SEARCH_PRIVATE = [
+  USERNAME,
+  QUERY,
+  "get lucky",
+  "Get Lucky",
+  "bohemian",
+  "rapsody",
+  "rhapsody",
+  "Random Access Memories",
+  "Daft Punk",
+  "Pharrell",
+  "Giorgio",
+  "4D7u5KF7SP8",
+  "MPREb_K8qWMWVqXGi",
+  "UCRr1xG_2WIDs18a6cIiCxeA",
+  "Arrival",
+  "music.youtube.com",
+];
+
+async function statusOf(request: Request): Promise<number> {
+  const response = await fixture.handler(request);
+  return response.status;
+}
+
+async function driveSearch() {
+  fixture = webFixture("http://127.0.0.1:8080", "/nonexistent", false, {
+    music: fixtureMusic(),
+    musicEnabled: true,
+    username: USERNAME,
+  });
+  const searches: [string, string][] = [
+    ["songs", "get lucky"],
+    ["songs", "bohemian rapsody"],
+    ["albums", "daft punk"],
+    ["artists", "daft punk"],
+    ["library", "arrival"],
+    ["videos", "get lucky"],
+    ["live", ""],
+    ["songs", QUERY],
+  ];
+  const statuses: number[] = [];
+  for (const [kind, q] of searches) {
+    const query = new URLSearchParams({ guildId: GUILD, kind, q });
+    statuses.push(await statusOf(get("/api/search/v2?" + query.toString())));
+  }
+  for (const path of [
+    "/api/search/v2/suggest?q=get+lu",
+    "/api/music/v2/album?guildId=" + GUILD + "&id=MPREb_K8qWMWVqXGi",
+    "/api/music/v2/artist?guildId=" + GUILD + "&id=UCRr1xG_2WIDs18a6cIiCxeA",
+  ])
+    statuses.push(await statusOf(get(path)));
+  return statuses;
+}
+
+test("search is counted, traced and logged with closed labels, one line per group", async () => {
+  const statuses = await driveSearch();
+  // The last typed query has no recording, so that group fails like an unreachable provider would.
+  expect(statuses).toEqual([
+    200, 200, 200, 200, 200, 200, 200, 503, 200, 200, 200,
+  ]);
+  const sample = (kind: string, provider: string, outcome: string) =>
+    count("streambot_web_search_total", { kind, provider, outcome });
+  expect(await sample("songs", "youtube-music", "results")).toBe(2);
+  expect(await sample("songs", "youtube-music", "unavailable")).toBe(1);
+  expect(await sample("albums", "youtube-music", "results")).toBe(1);
+  expect(await sample("library", "local", "results")).toBe(1);
+  expect(await sample("videos", "youtube", "results")).toBe(1);
+  expect(await sample("live", "sports", "results")).toBe(1);
+  expect(
+    await count("streambot_web_search_duration_seconds_count", {
+      kind: "songs",
+      provider: "youtube-music",
+    }),
+  ).toBe(3);
+  const operation = (name: string, outcome: string) =>
+    count("streambot_music_provider_requests_total", {
+      provider: "youtube-music",
+      operation: name,
+      outcome,
+    });
+  expect(await operation("search_song", "ok")).toBe(2);
+  expect(await operation("search_song", "unavailable")).toBe(1);
+  expect(await operation("suggest", "ok")).toBe(1);
+  expect(await operation("album", "ok")).toBe(1);
+  expect(await operation("artist", "ok")).toBe(1);
+
+  const searchLines = logs("web search");
+  expect(searchLines).toHaveLength(8);
+  expect(searchLines).toContainEqual(
+    expect.objectContaining({
+      level: "info",
+      kind: "songs",
+      provider: "youtube-music",
+      results: "1-5",
+      outcome: "results",
+      duration_ms: expect.any(Number),
+    }),
+  );
+  for (const entry of searchLines)
+    expect(Object.keys(entry).toSorted()).toEqual(
+      [
+        "duration_ms",
+        "kind",
+        "level",
+        "message",
+        "module",
+        "outcome",
+        "provider",
+        "results",
+        "timestamp",
+        ...("traceId" in entry ? ["spanId", "traceId"] : []),
+      ].toSorted(),
+    );
+
+  const spans = finishedSpans();
+  const groups = spans.filter((span) => span.name === "streambot.web.search");
+  expect(groups).toHaveLength(8);
+  const provider = spans.find(
+    (span) =>
+      span.name === "streambot.web.search.provider" &&
+      span.attributes["streambot.music.operation"] === "search_song",
+  );
+  expect(provider?.attributes).toMatchObject({
+    "streambot.music.provider": "youtube-music",
+    "streambot.music.outcome": "ok",
+  });
+  expect(
+    groups.some(
+      (span) =>
+        span.spanContext().spanId === provider?.parentSpanContext?.spanId,
+    ),
+  ).toBe(true);
+});
+
+test("no search log line, metric label or span attribute carries a query or a result", async () => {
+  await driveSearch();
+  const all = await register.getMetricsAsJSON();
+  const haystack = JSON.stringify({
+    logs: lines,
+    metrics: all
+      .filter((metric) => /^streambot_(?:web|play|music)_/u.test(metric.name))
+      .flatMap((metric) => metric.values.map((value) => value.labels)),
+    spans: finishedSpans().map((span) => ({
+      name: span.name,
+      attributes: span.attributes,
+      events: span.events,
+      status: span.status,
+    })),
+  });
+  for (const value of SEARCH_PRIVATE) expect(haystack).not.toContain(value);
 });

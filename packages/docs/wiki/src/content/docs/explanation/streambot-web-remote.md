@@ -171,19 +171,55 @@ Completion and cancellation act only on that owned item, preserving replacement 
 
 See [scheduled playback activation](/how-to/enable-streambot-lol-scheduling/) for the operator procedure.
 
-## Music separates catalog identity from playback
+## Music search returns the item that plays
 
-MusicBrainz identifies artists, album editions, and recordings without requiring a listener's streaming-service account.
-The [catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/catalog.ts)
-provides those entities; the [Streambot service](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/index.ts)
-searches YouTube for playback sources. The [matcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/matching.ts)
-uses artist, title, version, and duration to rank recordings.
+Music search moved to YouTube Music because its result is the playable item, not a description of one.
+MusicBrainz stays as a selectable provider for the day YouTube stops answering.
+
+MusicBrainz names recordings but says nothing about where to hear them.
+The old path therefore searched twice: the
+[catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/catalog.ts)
+for an identity, then YouTube, then the
+[matcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/matching.ts)
+to guess which video was the song.
+The catalog queues every request behind one 1.1 second gap shared by all viewers and makes three sequential calls per query.
+It ranks by text score alone, so a popular song has no advantage over a cover, and it answers only after the viewer submits.
+
+A YouTube Music result carries its video id.
+The adapter turns that id into the track's canonical `music.youtube.com` watch URL, and
+[`musicSource`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/service.ts)
+makes it a URL source that yt-dlp resolves like any other link.
+There is no search-and-match step to get wrong, and typeahead needs only a second call to the same provider.
+The persisted identity is the existing
+[music track contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/contracts.ts),
+so queues, history and saved playlists written by either provider read back unchanged.
+
+The cost is an unofficial API.
+`youtubei.js` speaks YouTube's private InnerTube protocol, which can change without notice and reports unknown nodes by logging a warning rather than failing.
+Silent degradation was the risk to design against, so four layers contain it:
+
+- **One adapter.** Only `youtube-music.ts` in the
+  [music directory](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/music)
+  imports the library. It never builds a stream URL, so playback depends on yt-dlp alone.
+- **Strict validation.** Each item is re-parsed against a strict schema in `search-provider.ts` and `youtube-music-items.ts` beside it.
+  An item that fails is dropped and counted. A response where nothing validates is a typed error, never an empty list that looks like no results.
+- **A flag.** An operator switches the provider per request through the Flipt flag read in
+  [media feature gates](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/config/media-features.ts).
+  An unknown value throws instead of choosing a provider.
+- **Metrics.** The
+  [web metrics](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/observability/web-metrics.ts)
+  count provider calls by outcome, dropped items and unreadable parser nodes. None of them label a query, a title or an id.
+
+A provider failure affects one result group.
+Library, video, live and history groups are separate requests, so they keep answering.
+
+The remaining facts about the music surface are unchanged.
 The [web recording picker](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/music.ts)
-lets listeners correct a queued or saved song.
+still lets listeners correct a MusicBrainz or Spotify song's video.
 Saved sources retain catalog identity alongside the selected video, so [voice recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/voice-recovery.ts)
 can resolve a fresh audio URL. The [artwork resolver](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/artwork.ts)
 keeps album artwork with saved playlists, queues, recovery, and player cards.
-MusicBrainz covers come from the Cover Art Archive, and [Spotify links](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/spotify.ts)
+MusicBrainz covers come from the Cover Art Archive, YouTube Music covers from a short list of YouTube image hosts, and [Spotify links](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/spotify.ts)
 retain their public album cover. Saved playlist covers represent their first track.
 
 `/play` and `!play` accept a title or supported link and share playback routing and playlist loading.

@@ -7,6 +7,14 @@ import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { YtdlpSearchResult } from "@shepherdjerred/streambot/sources/youtube-search-result.ts";
 
 export function musicSource(track: MusicTrack, youtubeUrl?: string): Source {
+  // A YouTube Music track is already the playable item: yt-dlp resolves its watch page directly.
+  if (youtubeUrl === undefined && track.provider === "youtube-music")
+    return {
+      kind: "url",
+      url: track.canonicalUrl,
+      mode: "music",
+      music: track,
+    };
   return youtubeUrl === undefined
     ? {
         kind: "search",

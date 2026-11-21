@@ -45,6 +45,23 @@ export async function observeSearch<T extends Response | null>(
   return response;
 }
 
+/** A search whose response is a page of `items`: reports whether it had any. */
+async function observeItemsPage(
+  session: WebSession,
+  source: SearchSource,
+  handle: () => Promise<Response | null>,
+): Promise<Response | null> {
+  return await observeSearch(session, source, async () => {
+    const response = await handle();
+    if (response === null) return { response, hadResults: false };
+    const page = ItemsPageSchema.safeParse(await response.clone().json());
+    return {
+      response,
+      hadResults: page.success && page.data.items.length > 0,
+    };
+  });
+}
+
 /** Music catalog browsing with a query is the music search; everything else passes through. */
 export async function observeMusicSearch(
   request: Request,
@@ -56,16 +73,38 @@ export async function observeMusicSearch(
     request.method === "GET" &&
     url.pathname === "/api/music/catalog" &&
     (url.searchParams.get("query") ?? "").trim() !== "";
-  if (!searching) return await handle();
-  return await observeSearch(session, "music", async () => {
-    const response = await handle();
-    if (response === null) return { response, hadResults: false };
-    const page = ItemsPageSchema.safeParse(await response.clone().json());
-    return {
-      response,
-      hadResults: page.success && page.data.items.length > 0,
-    };
-  });
+  return searching
+    ? await observeItemsPage(session, "music", handle)
+    : await handle();
+}
+
+/** The unified search groups that report as a search, by the source each is counted under. */
+const SEARCH_V2_SOURCES: Readonly<Record<string, SearchSource>> = {
+  songs: "music",
+  albums: "music",
+  artists: "music",
+  library: "library",
+  videos: "candidates",
+};
+
+/**
+ * A unified search with a query is one search. Only the closed source and result presence are
+ * reported: never the query, its correction or any row.
+ */
+export async function observeSearchV2(
+  request: Request,
+  url: URL,
+  session: WebSession,
+  handle: () => Promise<Response | null>,
+): Promise<Response | null> {
+  const source = SEARCH_V2_SOURCES[url.searchParams.get("kind") ?? ""];
+  const searching =
+    request.method === "GET" &&
+    url.pathname === "/api/search/v2" &&
+    (url.searchParams.get("q") ?? "").trim() !== "";
+  return searching && source !== undefined
+    ? await observeItemsPage(session, source, handle)
+    : await handle();
 }
 
 /** The signed-in user is whoever owns the session the callback just created. */

@@ -24,14 +24,8 @@ import { MeSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { fixtureMusic, ALBUM } from "#music-fixture";
 import { LibraryPageSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
-import {
-  CHANNEL,
-  GUILD,
-  OTHER,
-  USER,
-  discordLogin,
-  webFixture,
-} from "./web-fixture.ts";
+import { CHANNEL, GUILD, OTHER, USER, webFixture } from "./web-fixture.ts";
+import { discordLogin } from "./web-fixture-login.ts";
 
 const USERNAME = "analytics-private-username";
 const QUERY = "zzprivatequery";
@@ -385,4 +379,70 @@ test("the web selection kind is scoped to its own request under concurrency", as
   expect(kinds).toEqual(
     expect.arrayContaining(["library", "music", undefined]),
   );
+});
+
+function searchStatus(kind: string, q: string) {
+  return status(
+    get(
+      "/api/search/v2?" +
+        new URLSearchParams({ guildId: GUILD, kind, q }).toString(),
+    ),
+  );
+}
+
+test("unified search with a query is one search event carrying no query or result text", async () => {
+  fixture = webFixture("http://127.0.0.1:8080", "/nonexistent", false, {
+    music: fixtureMusic(),
+    musicEnabled: true,
+    username: USERNAME,
+  });
+  expect(await searchStatus("songs", "get lucky")).toBe(200);
+  expect(await searchStatus("library", "arrival")).toBe(200);
+  expect(await searchStatus("videos", "khruangbin")).toBe(200);
+  expect(await searchStatus("library", QUERY)).toBe(200);
+  // An empty query, live and history are not searches.
+  expect(await searchStatus("live", "")).toBe(200);
+  expect(await searchStatus("songs", "")).toBe(200);
+  const searches = events("streambot_search_performed");
+  expect(searches.map((message) => message.properties)).toEqual([
+    {
+      surface: "web",
+      source: "music",
+      had_results: true,
+      latency_bucket: "<250ms",
+      app: "streambot",
+    },
+    {
+      surface: "web",
+      source: "library",
+      had_results: true,
+      latency_bucket: "<250ms",
+      app: "streambot",
+    },
+    {
+      surface: "web",
+      source: "candidates",
+      had_results: true,
+      latency_bucket: "<250ms",
+      app: "streambot",
+    },
+    {
+      surface: "web",
+      source: "library",
+      had_results: false,
+      latency_bucket: "<250ms",
+      app: "streambot",
+    },
+  ]);
+  const payload = JSON.stringify(sent);
+  for (const value of [
+    "get lucky",
+    "Get Lucky",
+    "arrival",
+    "Arrival",
+    "khruangbin",
+    QUERY,
+    "Daft",
+  ])
+    expect(payload).not.toContain(value);
 });

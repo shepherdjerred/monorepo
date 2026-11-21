@@ -1,4 +1,5 @@
-import { isEnabled } from "@shepherdjerred/feature-flags";
+import { isEnabled, stringValue } from "@shepherdjerred/feature-flags";
+import { DEFAULT_MUSIC_SEARCH_PROVIDER } from "@shepherdjerred/streambot/music/search-provider.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import type { StreambotBooleanFlagKey } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
@@ -68,6 +69,21 @@ export const mediaFeatureGate: MediaFeatureGate = {
   voiceDecisionsRouter: (scope) =>
     enabled("streambot-voice-decisions-router-enabled", scope),
 };
+
+/**
+ * Which provider answers music search: `youtube-music` or `musicbrainz`. Read per request so a flag
+ * flip applies at once. The provider registry rejects any other value instead of defaulting it.
+ */
+export async function musicSearchProviderName(
+  scope: DiscoveryScope,
+): Promise<string> {
+  const result = await stringValue("streambot-music-search-provider", {
+    default: DEFAULT_MUSIC_SEARCH_PROVIDER,
+    targetingKey: scope.userId,
+    attributes: { server: scope.guildId, user: scope.userId },
+  });
+  return result.value;
+}
 
 export async function webUiEnabled(
   guildId: string,

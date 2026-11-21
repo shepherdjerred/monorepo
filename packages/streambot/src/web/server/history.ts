@@ -47,7 +47,13 @@ export class WebHistory {
     private readonly sports: SportsCatalog | undefined,
   ) {}
 
-  async browse(options: {
+  async browse(options: Parameters<WebHistory["browseWithSources"]>[0]) {
+    const page = await this.browseWithSources(options);
+    return { total: page.total, items: page.items.map((entry) => entry.item) };
+  }
+
+  /** Each item beside the source it replays, for callers that need to know how it was queued. */
+  async browseWithSources(options: {
     params: URLSearchParams;
     userId: string;
     owner: string;
@@ -88,7 +94,7 @@ export class WebHistory {
       }
     }
     const names = new Map<string, Promise<string>>();
-    const items = await Promise.all(
+    const entries = await Promise.all(
       page.items.map(async (run) => {
         const replay = {
           source: run.source,
@@ -106,7 +112,7 @@ export class WebHistory {
           name = requester(run.guild_id, run.user_id);
           names.set(key, name);
         }
-        return {
+        const item = {
           id: this.selections.add(owner, replay),
           title: run.title,
           provider: run.provider,
@@ -124,9 +130,10 @@ export class WebHistory {
             ? {}
             : { sportsArtwork: run.source.sportsEvent.artwork }),
         };
+        return { item, source: run.source };
       }),
     );
-    return { total: page.total, items };
+    return { total: page.total, items: entries };
   }
 
   async select(

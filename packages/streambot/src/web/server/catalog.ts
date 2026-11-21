@@ -182,6 +182,21 @@ export class WebCatalog {
     }));
   }
 
+  /** Library files matching a query, each behind a viewer-bound `candidate` selection token. */
+  searchFiles(query: string, owner: string, guildId: string, limit: number) {
+    return searchLibrary(this.library(), query, limit).map((entry) => ({
+      id: this.candidates.add(owner, {
+        kind: "file",
+        path: entry.path,
+        title: entry.title,
+      }),
+      title: entry.title,
+      library: entry.library,
+      ...(entry.year === undefined ? {} : { year: entry.year }),
+      ...this.image(this.artwork.forEntry(entry, guildId)),
+    }));
+  }
+
   select(
     selection: Extract<WebCommand, { action: "play" }>["selection"],
     owner: string,
