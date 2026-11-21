@@ -27,7 +27,7 @@ import {
   type VisibilitySections,
 } from "./visibility/access.ts";
 import { readMediaDetail } from "./visibility/media-detail.ts";
-import { rootArtwork, rootMedia } from "./library/views/artwork.ts";
+import { rootReference } from "./library/views/artwork.ts";
 import { readRemovalList } from "./library/views/removal-list.ts";
 import { projectExternalRequests } from "./external-library/availability.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
@@ -232,8 +232,7 @@ export class PrismaMediaApplication
       return RequestListSchema.parse(
         projected.map((request) => ({
           ...request,
-          rootMediaId: rootMedia(request.media).id,
-          artwork: rootArtwork(request.media),
+          ...rootReference(request.media),
         })),
       );
     });

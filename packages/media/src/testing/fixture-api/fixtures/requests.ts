@@ -106,8 +106,9 @@ export function requestList(persona: Persona): RequestList {
       includeSpecials: seed.specials ?? false,
       version: (seed.sequence % 4) + 1,
       media: seed.item,
-      // A requested season or episode shows its series' art.
+      // A requested season or episode names its series and shows its art.
       rootMediaId: resolved.title.id,
+      rootTitle: resolved.title.title,
       artwork: storedArtwork(resolved.title),
     };
   });

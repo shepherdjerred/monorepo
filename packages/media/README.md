@@ -1938,10 +1938,16 @@ until the title has been observed or when TMDB has no image. Library items,
 calendar events, removal history, the request and removal lists and media
 detail carry it, with `rootMediaId` where the row did not already name its
 root; detail adds the root's `overview` and its TMDB identity as `catalog`, and
-catalog search and detail add `backdropPath`. Request interests are a strict
-contract, so `GET /api/v1/request-interests` adds `artwork` only for a caller
-that sends `?include=artwork`: a browser tab on an earlier client rejects any
-key it does not know, and never sends the parameter.
+catalog search and detail add `backdropPath`. The rows of `GET /api/v1/requests`
+and `GET /api/v1/removals` also carry `rootTitle`, that movie's or series' own
+title, read from the same ancestry: a season or episode row names its series
+without a second read, and a movie or series row repeats its own title.
+Removal history names an episode's series as `seriesTitle` instead. Request
+interests are a strict contract, so `GET /api/v1/request-interests` adds
+`artwork` only for a caller that sends `?include=artwork`: a browser tab on an
+earlier client rejects any key it does not know, and never sends the
+parameter. Their `title` is the requested row's own, and they carry neither
+`rootMediaId` nor `rootTitle`.
 
 The owner numbering API reads `GET /api/v1/admin/numbering/series/:id/groups`
 and `GET /api/v1/admin/numbering/series/:id/groups/:groupId`. Only a listed TMDB
