@@ -29,6 +29,7 @@ function QueueEntry(props: {
     );
   };
   const detail = [
+    item.subtitle,
     item.requester?.name,
     item.durationSeconds === null
       ? undefined

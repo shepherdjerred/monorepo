@@ -116,12 +116,19 @@ export function PlayerCard(props: {
             shape="thumb"
           />
           <div className="now-text">
-            <span className="now-title">{current.title}</span>
-            {current.requester !== undefined && (
-              <span className="now-detail">
-                Added by {current.requester.name}
-              </span>
-            )}
+            <span className="now-title" title={current.title}>
+              {current.title}
+            </span>
+            <span className="now-detail">
+              {[
+                current.subtitle,
+                current.requester === undefined
+                  ? undefined
+                  : "Added by " + current.requester.name,
+              ]
+                .filter((part) => part !== undefined)
+                .join(" · ")}
+            </span>
           </div>
         </div>
       )}

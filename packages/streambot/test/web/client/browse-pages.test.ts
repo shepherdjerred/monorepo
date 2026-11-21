@@ -294,7 +294,8 @@ describe("album page", () => {
       play: { id: "p1", actions: ["listen", "watch"] },
     });
     expect(item?.selection).toEqual({ kind: "music", id: "p1" });
-    expect(item?.actions).toEqual(["listen", "watch"]);
+    expect(item?.actions).toEqual(["listen"]);
+    expect(item?.menuActions).toEqual(["watch"]);
   });
 
   test("no play-all without an offer", () => {

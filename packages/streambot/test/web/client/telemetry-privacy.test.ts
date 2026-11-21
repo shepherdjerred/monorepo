@@ -149,6 +149,9 @@ describe("closed event properties", () => {
     expect(playButton(true, { transport: "watch", placement: "queue" })).toBe(
       "watch_video",
     );
+    expect(playButton(true, { transport: "listen", placement: "queue" })).toBe(
+      "listen_only",
+    );
     expect(
       playButton(true, {
         transport: "watch",

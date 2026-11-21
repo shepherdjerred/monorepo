@@ -24,6 +24,8 @@ export type MediaItem = {
   readonly startsAt?: string;
   /** The play buttons, first first. Empty for items that only open a page. */
   readonly actions: readonly RowAction[];
+  /** Destinations offered only from the overflow menu (for a song, Watch the video). */
+  readonly menuActions?: readonly RowAction[];
   readonly selection: MediaSelection | null;
   /** In-app page this item opens instead of, or as well as, playing. */
   readonly href?: string;
@@ -47,6 +49,7 @@ export function rowItem(row: Row): MediaItem {
     ...(row.status === undefined ? {} : { status: row.status }),
     ...(row.startsAt === undefined ? {} : { startsAt: row.startsAt }),
     actions: row.actions,
+    ...(row.menuActions === undefined ? {} : { menuActions: row.menuActions }),
     selection: selectionForRow(row),
     ...(row.browse === undefined
       ? {}

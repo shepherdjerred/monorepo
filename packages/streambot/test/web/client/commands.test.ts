@@ -58,7 +58,7 @@ function room(overrides: Partial<WebRoom> = {}): WebRoom {
     guilds: [{ id: "10", name: "Guild" }],
     browseGuildId: "10",
     players: [player(1, "listen"), player(2, "watch")],
-    capacity: { maxSlots: 4, extraStreamAvailable: true },
+    capacity: { maxSlots: 4, extraStreamAvailable: true, numbered: true },
     capabilities: CAPABILITIES,
     serverTime: 1000,
     ...overrides,
@@ -85,14 +85,18 @@ describe("roomTarget", () => {
 
   test("offers no extra slot when the server says none is available", () => {
     const target = roomTarget(
-      room({ capacity: { maxSlots: 3, extraStreamAvailable: false } }),
+      room({
+        capacity: { maxSlots: 3, extraStreamAvailable: false, numbered: true },
+      }),
     );
     expect(target?.extraSlot).toBeNull();
   });
 
-  test("treats a single-slot room as a legacy shared queue", () => {
+  test("treats a room the server reports as not numbered as one shared queue", () => {
     const target = roomTarget(
-      room({ capacity: { maxSlots: 1, extraStreamAvailable: false } }),
+      room({
+        capacity: { maxSlots: 1, extraStreamAvailable: false, numbered: false },
+      }),
     );
     expect(target?.legacy).toBe(true);
   });
@@ -163,16 +167,16 @@ describe("row to command", () => {
     ).toMatchObject({ playbackChannel: null });
   });
 
-  test("Radio plays on Listen, TV on Watch, and Stop names its card", () => {
+  test("the server picks the station slot; Stop names its card", () => {
     expect(
       stationCommand(target, { mode: "radio", scope: "room", seed: "  " }),
-    ).toMatchObject({ mode: "radio", playbackChannel: 1, scope: "room" });
+    ).toMatchObject({ mode: "radio", playbackChannel: null, scope: "room" });
     expect(
       stationCommand(target, { mode: "radio", scope: "room", seed: "  " }),
     ).not.toHaveProperty("seed");
     expect(
       stationCommand(target, { mode: "tv", scope: "mine", tvPreset: "movies" }),
-    ).toMatchObject({ playbackChannel: 2, tvPreset: "movies" });
+    ).toMatchObject({ playbackChannel: null, tvPreset: "movies" });
     expect(stationCommand(target, { mode: "off", slot: 3 })).toMatchObject({
       mode: "off",
       playbackChannel: 3,

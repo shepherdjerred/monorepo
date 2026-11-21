@@ -65,6 +65,12 @@ function playTask(
   };
 }
 
+/** A destination the server offers only from the menu, such as a song's music video. */
+const MENU_LABEL: Readonly<Record<RowAction, string>> = {
+  watch: "Watch the video",
+  listen: "Listen only",
+};
+
 function menuItems(
   remote: Remote,
   item: MediaItem,
@@ -91,20 +97,18 @@ function menuItems(
           play({ transport, placement: "now" });
         },
       });
-  const songVideo =
-    item.kind === "song" &&
-    item.actions.includes("listen") &&
-    !item.actions.includes("watch");
-  if (songVideo)
+  const menuOnly = item.menuActions ?? [];
+  for (const transport of menuOnly)
     items.push({
-      key: "song-video",
-      label: "Watch the video",
+      key: "menu-" + transport,
+      label: MENU_LABEL[transport],
       onSelect: () => {
-        play({ transport: "watch", placement: "queue" });
+        play({ transport, placement: "queue" });
       },
     });
   const extraSlot = remote.target?.extraSlot ?? null;
-  const watchable = songVideo || item.actions.includes("watch");
+  const watchable =
+    item.actions.includes("watch") || menuOnly.includes("watch");
   if (extraSlot !== null && watchable)
     items.push({
       key: "another",

@@ -25,12 +25,11 @@ export type RoomTarget = {
   readonly extraSlot: number | null;
 };
 
-const AUDIO_SLOT = 1;
 const VIDEO_SLOT = 2;
 
 export function roomTarget(room: WebRoom): RoomTarget | null {
   if (room.location === null) return null;
-  const legacy = room.capacity.maxSlots === 1;
+  const legacy = !room.capacity.numbered;
   const occupied = new Set(room.players.map((player) => player.slot));
   let extraSlot: number | null = null;
   if (!legacy && room.capacity.extraStreamAvailable)
@@ -132,7 +131,7 @@ export type StationRequest =
     }
   | { mode: "off"; slot: number };
 
-/** Radio plays on the Listen slot and TV on the Watch slot; Stop names the card's own slot. */
+/** The server puts Radio on the Listen slot and TV on the Watch slot; Stop names the card's slot. */
 export function stationCommand(
   target: RoomTarget,
   request: StationRequest,
@@ -144,7 +143,7 @@ export function stationCommand(
       mode: "off",
     };
   return {
-    ...base(target, request.mode === "radio" ? AUDIO_SLOT : VIDEO_SLOT, null),
+    ...base(target, null, null),
     action: "station",
     mode: request.mode,
     scope: request.scope,

@@ -63,7 +63,8 @@ export type PlayButton =
   | "listen_now"
   | "watch_now"
   | "another_stream"
-  | "watch_video";
+  | "watch_video"
+  | "listen_only";
 
 /** The play request a row's button or `⋯` menu item sends. */
 export type PlayChoice = {
@@ -73,8 +74,8 @@ export type PlayChoice = {
 };
 
 /**
- * Which control started a play. The menu's "Watch the video" is the only menu item that queues a
- * plain watch, so a queued watch from the menu is that item.
+ * Which control started a play. A plain queue from the menu is one of the row's menu-only
+ * destinations: "Watch the video" or "Listen only".
  */
 export function playButton(fromMenu: boolean, choice: PlayChoice): PlayButton {
   if (choice.anotherStream === true) return "another_stream";
@@ -84,9 +85,8 @@ export function playButton(fromMenu: boolean, choice: PlayChoice): PlayButton {
     case "now":
       return choice.transport === "listen" ? "listen_now" : "watch_now";
     case "queue":
-      return fromMenu && choice.transport === "watch"
-        ? "watch_video"
-        : choice.transport;
+      if (!fromMenu) return choice.transport;
+      return choice.transport === "watch" ? "watch_video" : "listen_only";
   }
 }
 

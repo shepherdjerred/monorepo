@@ -94,7 +94,19 @@ export function useRoom(guildHint: string | null, enabled: boolean) {
       reconnecting = !closed;
       dispatch({ type: "dropped", closed });
     });
+    // Leaving the page (including into the back/forward cache) releases the stream at once rather
+    // than when the server next writes to it; a restored page opens a fresh one.
+    const hide = () => {
+      source.close();
+    };
+    const show = (event: PageTransitionEvent) => {
+      if (event.persisted) setGeneration((value) => value + 1);
+    };
+    globalThis.addEventListener("pagehide", hide);
+    globalThis.addEventListener("pageshow", show);
     return () => {
+      globalThis.removeEventListener("pagehide", hide);
+      globalThis.removeEventListener("pageshow", show);
       source.close();
     };
   }, [enabled, guildHint, generation]);
