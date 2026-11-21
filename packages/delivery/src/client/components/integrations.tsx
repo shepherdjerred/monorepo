@@ -12,6 +12,8 @@ import { Status } from "./status.tsx";
 import { Duration, RelativeTime } from "./time.tsx";
 import { ShortSha, ToolLinks } from "./links.tsx";
 import { ErrorNotice } from "./notices.tsx";
+import { Fact, Facts } from "./facts.tsx";
+import { Disclosure } from "./disclosure.tsx";
 
 const REASONS: Record<UnavailableReason, string> = {
   "not-configured": "Not configured",
@@ -163,10 +165,9 @@ export function SourcePanel({
             </p>
           )}
           {source.data.data.body !== "" && (
-            <details>
-              <summary>Commit message</summary>
+            <Disclosure summary="Commit message">
               <pre className="commit-body">{source.data.data.body}</pre>
-            </details>
+            </Disclosure>
           )}
           <ToolLinks links={source.data.links} />
         </>
@@ -187,34 +188,22 @@ export function RuntimePanel({ environmentId }: { environmentId: string }) {
       )}
       {runtime.data?.state === "available" && (
         <>
-          <dl className="facts">
-            <div>
-              <dt>Sync</dt>
-              <dd>{runtime.data.data.syncStatus}</dd>
-            </div>
-            <div>
-              <dt>Health</dt>
-              <dd>{runtime.data.data.healthStatus}</dd>
-            </div>
-            <div>
-              <dt>Revision</dt>
-              <dd className="mono">{runtime.data.data.syncRevision ?? "—"}</dd>
-            </div>
-            <div>
-              <dt>Last operation</dt>
-              <dd>
-                {runtime.data.data.operationPhase ?? "None"}
-                {runtime.data.data.operationFinishedAt !== null && (
-                  <>
-                    {" · "}
-                    <RelativeTime
-                      value={runtime.data.data.operationFinishedAt}
-                    />
-                  </>
-                )}
-              </dd>
-            </div>
-          </dl>
+          <Facts>
+            <Fact label="Sync">{runtime.data.data.syncStatus}</Fact>
+            <Fact label="Health">{runtime.data.data.healthStatus}</Fact>
+            <Fact label="Revision" mono>
+              {runtime.data.data.syncRevision ?? "—"}
+            </Fact>
+            <Fact label="Last operation">
+              {runtime.data.data.operationPhase ?? "None"}
+              {runtime.data.data.operationFinishedAt !== null && (
+                <>
+                  {" · "}
+                  <RelativeTime value={runtime.data.data.operationFinishedAt} />
+                </>
+              )}
+            </Fact>
+          </Facts>
           {runtime.data.data.reconciledAt !== null && (
             <p className="muted">
               ArgoCD reconciled{" "}

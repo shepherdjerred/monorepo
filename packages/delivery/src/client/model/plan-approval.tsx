@@ -12,37 +12,28 @@ import { ErrorNotice } from "#client/components/notices.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { SelectionFacts } from "./selection-facts.tsx";
 import { waitingPlan } from "./view.ts";
+import { Fact, Facts } from "#client/components/facts.tsx";
 
 type SavedPlan = NonNullable<ReturnType<typeof waitingPlan>>;
 
 function PlanFacts({ plan }: { plan: SavedPlan }) {
   const { changes } = plan;
   return (
-    <dl className="facts">
-      <div>
-        <dt>Plan digest</dt>
-        <dd className="mono">{plan.planDigest}</dd>
-      </div>
-      <div>
-        <dt>Stack</dt>
-        <dd>
-          {plan.stack} · state serial {plan.state.serial}
-        </dd>
-      </div>
-      <div>
-        <dt>Changes</dt>
-        <dd>
-          Create {changes.create} · update {changes.update} · delete{" "}
-          {changes.delete} · replace {changes.replace}
-        </dd>
-      </div>
-      <div>
-        <dt>Expires</dt>
-        <dd>
-          <RelativeTime value={plan.expiresAt} />
-        </dd>
-      </div>
-    </dl>
+    <Facts>
+      <Fact label="Plan digest" mono>
+        {plan.planDigest}
+      </Fact>
+      <Fact label="Stack">
+        {plan.stack} · state serial {plan.state.serial}
+      </Fact>
+      <Fact label="Changes">
+        Create {changes.create} · update {changes.update} · delete{" "}
+        {changes.delete} · replace {changes.replace}
+      </Fact>
+      <Fact label="Expires">
+        <RelativeTime value={plan.expiresAt} />
+      </Fact>
+    </Facts>
   );
 }
 

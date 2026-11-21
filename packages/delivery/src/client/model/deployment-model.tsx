@@ -14,6 +14,7 @@ import {
   QueryPanel,
   SelectionFacts,
 } from "./selection-facts.tsx";
+import { Fact, Facts } from "#client/components/facts.tsx";
 
 function FrozenSelection({ detail }: { detail: DeploymentDetailV2 }) {
   const { deployment } = detail;
@@ -88,28 +89,19 @@ function ApprovalRecord({ approval }: { approval: ApprovalV2 }) {
           <span className="badge badge-override">Override</span>
         )}
       </p>
-      <dl className="facts">
-        <div>
-          <dt>Approver</dt>
-          <dd>{approval.actor ?? "Not decided"}</dd>
-        </div>
-        <div>
-          <dt>Requested</dt>
-          <dd>
-            <RelativeTime value={approval.createdAt} />
-          </dd>
-        </div>
-        <div>
-          <dt>Settled</dt>
-          <dd>
-            {approval.decidedAt === null ? (
-              "Pending"
-            ) : (
-              <RelativeTime value={approval.decidedAt} />
-            )}
-          </dd>
-        </div>
-      </dl>
+      <Facts>
+        <Fact label="Approver">{approval.actor ?? "Not decided"}</Fact>
+        <Fact label="Requested">
+          <RelativeTime value={approval.createdAt} />
+        </Fact>
+        <Fact label="Settled">
+          {approval.decidedAt === null ? (
+            "Pending"
+          ) : (
+            <RelativeTime value={approval.decidedAt} />
+          )}
+        </Fact>
+      </Facts>
       {approval.reason !== null && <p>{approval.reason}</p>}
       {approval.status === "expired" && (
         <p className="notice">

@@ -147,6 +147,32 @@ fresh or stale state. The runtime panel is the live read.
 A notice is amber when it asks for a decision or flags a risk, red for a
 failure, neutral for plain information and green for a positive outcome.
 
+The client's styles are plain CSS under `src/client/styles/`, with no
+framework. `tokens.css` holds every color (resolved for both schemes through
+`light-dark()`), the type scale (`--text-2xs` to `--text-xl`, `--text-mono`,
+line heights and weights) and the density tokens: control height, table row
+padding, panel padding and page gap. The other stylesheets take sizes and
+colors from those tokens. The status colors mean a state and nothing else; the
+brand mark, the current page and the primary action use `--accent`. One
+viewport breakpoint, `(width <= 720px)`, is the phone layout, and a coarse
+pointer raises every control to a 44px target.
+
+Pages share these components from `src/client/components/`:
+
+| Component    | Renders                                                                 |
+| ------------ | ----------------------------------------------------------------------- |
+| `Status`     | A state as glyph, words and color; `label` gives a page its own words   |
+| `Facts`      | A definition list of labelled values, one `Fact` each                   |
+| `Disclosure` | A native `<details>` with an optional count                             |
+| `Identifier` | A UUID or digest in a short form, its full value in `title` and text    |
+| `Revision`   | A set revision as its r-number (`r274`); `revisionLabel` gives the text |
+
+`GET /api/v1/deployments` returns each deployment with `versionSetRevision`,
+the number of the set revision it deploys, read for the whole page in one
+query. The environment page reads the same field on its recent deployments
+through `EnvironmentPageDetailSchema`. `EnvironmentDetailSchema`, which the
+toolkit parses, is unchanged.
+
 ## Public contracts
 
 `@shepherdjerred/delivery/contract` exports browser-safe Zod schemas and domain

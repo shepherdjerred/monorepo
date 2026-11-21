@@ -11,71 +11,66 @@ import type {
 } from "#shared/hub/hub-contract.ts";
 import { queries } from "#client/queries.ts";
 import { PageHeader } from "#client/components/page-header.tsx";
+import { Status } from "#client/components/status.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { ShortSha } from "#client/components/links.tsx";
 import { OlderLink } from "#client/components/pager.tsx";
 import { SourcePanel } from "#client/components/integrations.tsx";
 import { CursorSearchSchema } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
+import { revisionLabel } from "#client/components/identifier.tsx";
+import { Disclosure } from "#client/components/disclosure.tsx";
 
-// Each verdict borrows the color of the pipeline status it resembles, so the
-// same green, red and amber mean the same thing everywhere in the hub.
+// Each verdict borrows the pipeline status it resembles and keeps its own
+// words, so one `Status` draws the same glyph, green, red and amber everywhere
+// in the hub.
 const VERDICT: Record<
   CommitVerdict,
-  { status: string; glyph: string; label: string; sentence: string }
+  { status: string; label: string; sentence: string }
 > = {
   deployed: {
     status: "succeeded",
-    glyph: "✓",
     label: "Deployed",
     sentence: "Live in every environment that tracks it.",
   },
   deploying: {
     status: "running",
-    glyph: "◐",
     label: "Deploying",
     sentence: "On its way: some environments do not have it yet.",
   },
   awaiting_approval: {
     status: "awaiting_approval",
-    glyph: "⏸",
     label: "Needs approval",
     sentence: "A deployment is waiting for someone to approve it.",
   },
   failed: {
     status: "failed",
-    glyph: "✕",
     label: "Deploy failed",
     sentence: "A deployment of this commit failed.",
   },
   build_failed: {
     status: "failed",
-    glyph: "✕",
     label: "CI failed",
     sentence: "CI failed, so nothing from this commit was published.",
   },
   building: {
     status: "running",
-    glyph: "◐",
     label: "CI running",
     sentence: "CI has not finished, so nothing is deployed yet.",
   },
   waiting: {
     status: "pending",
-    glyph: "○",
     label: "Not released",
     sentence:
       "Nothing is in flight: an environment needs a manual release, or its deployment was canceled.",
   },
   nothing_to_deploy: {
     status: "not_started",
-    glyph: "–",
     label: "Nothing to deploy",
     sentence: "This commit changed nothing that Delivery deploys.",
   },
   unknown: {
-    status: "not_started",
-    glyph: "?",
+    status: "unknown",
     label: "Not seen yet",
     sentence:
       "Delivery has not heard of this commit. CI may not have published it yet.",
@@ -87,32 +82,24 @@ const isLiveState = (state: CommitEnvironmentState) =>
 
 const ENVIRONMENT: Record<
   CommitEnvironmentState,
-  { status: string; glyph: string; label: string }
+  { status: string; label: string }
 > = {
-  live: { status: "succeeded", glyph: "✓", label: "live" },
-  superseded: { status: "succeeded", glyph: "✓", label: "live (newer)" },
-  deploying: { status: "running", glyph: "◐", label: "deploying" },
+  live: { status: "succeeded", label: "live" },
+  superseded: { status: "succeeded", label: "live (newer)" },
+  deploying: { status: "running", label: "deploying" },
   awaiting_approval: {
     status: "awaiting_approval",
-    glyph: "⏸",
     label: "needs approval",
   },
-  failed: { status: "failed", glyph: "✕", label: "failed" },
-  canceled: { status: "canceled", glyph: "⊘", label: "canceled" },
-  manual: { status: "pending", glyph: "○", label: "needs release" },
-  waiting: { status: "pending", glyph: "○", label: "waiting" },
+  failed: { status: "failed", label: "failed" },
+  canceled: { status: "canceled", label: "canceled" },
+  manual: { status: "pending", label: "needs release" },
+  waiting: { status: "pending", label: "waiting" },
 };
 
 function Verdict({ value }: { value: CommitVerdict }) {
   const verdict = VERDICT[value];
-  return (
-    <span className={`status status-${verdict.status}`}>
-      <span className="status-glyph" aria-hidden="true">
-        {verdict.glyph}
-      </span>
-      <span className="status-label">{verdict.label}</span>
-    </span>
-  );
+  return <Status value={verdict.status} label={verdict.label} />;
 }
 
 function EnvironmentChip({
@@ -125,12 +112,7 @@ function EnvironmentChip({
   const state = ENVIRONMENT[entry.state];
   const content = (
     <>
-      <span className={`status status-${state.status}`}>
-        <span className="status-glyph" aria-hidden="true">
-          {state.glyph}
-        </span>
-        <span className="status-label">{state.label}</span>
-      </span>
+      <Status value={state.status} label={state.label} />
       <span className="env-name">{label}</span>
     </>
   );
@@ -164,16 +146,15 @@ function Tally({
     "name" | "verdict" | "liveCount" | "total"
   >;
 }) {
-  const verdict = VERDICT[group.verdict];
   return (
-    <span className={`status status-${verdict.status} tally`}>
-      <span className="status-glyph" aria-hidden="true">
-        {verdict.glyph}
-      </span>
-      <span className="status-label">
-        {group.name} {group.liveCount}/{group.total}
-      </span>
-    </span>
+    <Status
+      value={VERDICT[group.verdict].status}
+      label={
+        <>
+          {group.name} {group.liveCount}/{group.total}
+        </>
+      }
+    />
   );
 }
 
@@ -298,7 +279,9 @@ function ServiceRow({ entry }: { entry: CommitService }) {
           {entry.service.title}
         </Link>
         {entry.versionSet !== null && (
-          <small className="muted">r{entry.versionSet.revision}</small>
+          <small className="muted">
+            {revisionLabel(entry.versionSet.revision)}
+          </small>
         )}
       </th>
       <td data-label="Status">
@@ -372,8 +355,7 @@ function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
         </ul>
       )}
       {live.length > 0 && (
-        <details>
-          <summary>{live.length} live</summary>
+        <Disclosure summary={<>{live.length} live</>}>
           <ul className="environment-strip">
             {live.map((member) => (
               <li key={member.environmentId}>
@@ -381,7 +363,7 @@ function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
               </li>
             ))}
           </ul>
-        </details>
+        </Disclosure>
       )}
     </section>
   );

@@ -27,6 +27,7 @@ import { retryable as offersRetry } from "#client/model/view.ts";
 import type { RecoveryDecision } from "#client/platform-recovery.tsx";
 import { canApprove, canDeploy, isTerminal } from "#client/presentation.ts";
 import { Route as rootRoute } from "./root.tsx";
+import { revisionLabel } from "#client/components/identifier.tsx";
 
 type Action =
   | { kind: "cancel" | "retry" }
@@ -109,7 +110,7 @@ function DeploymentPage() {
               params={{ versionSetId: detail.versionSet.id }}
             >
               {sourceLabel(detail) === detail.versionSet.id
-                ? `Version set r${String(detail.versionSet.revision)}`
+                ? `Version set ${revisionLabel(detail.versionSet.revision)}`
                 : sourceLabel(detail)}
             </Link>
             <span>

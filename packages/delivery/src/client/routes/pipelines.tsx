@@ -19,6 +19,7 @@ import { ShortSha, TargetLink, ToolLinks } from "#client/components/links.tsx";
 import { filterPipelines, lastExecuted } from "./pipeline-list-model.ts";
 import { PipelineSearchSchema, formSearch } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
+import { revisionLabel } from "#client/components/identifier.tsx";
 
 const ATTENTION: Record<Attention["kind"], string> = {
   approval: "Approval",
@@ -66,7 +67,7 @@ function ExecutionCell({ execution }: { execution: ExecutionSummary | null }) {
           to="/versions/$versionSetId"
           params={{ versionSetId: versionSet.id }}
         >
-          Composed r{versionSet.revision}
+          Composed {revisionLabel(versionSet.revision)}
         </Link>
       )}
     </span>

@@ -256,3 +256,23 @@ test("committed changes appear live without a reload", async ({
     page.locator(`tr:has(a[href="/deployments/${deployment.id}"])`),
   ).toContainText("canceled");
 });
+
+test("deployment lists name a release by its revision number", async ({
+  page,
+}) => {
+  const revision = /^r\d+$/u;
+  const uuid = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/u;
+  await page.goto("/deployments?environment=scout-for-lol%2Fprod");
+  const list = page.getByRole("main").getByRole("table");
+  await expect(
+    list.getByRole("link", { name: revision }).first(),
+  ).toBeVisible();
+  await expect(list).not.toContainText(uuid);
+  await page.goto("/environments/scout-for-lol/prod");
+  const recent = page.getByRole("region", { name: "Recent deployments" });
+  await expect(recent.getByRole("table")).not.toContainText(uuid);
+  await recent.getByRole("link", { name: revision }).first().click();
+  await expect(
+    page.getByRole("heading", { level: 1, name: /^Version set r\d+$/u }),
+  ).toBeVisible();
+});

@@ -8,6 +8,7 @@ import {
   monitorPolicyLabel,
   type EvidenceRow,
 } from "./view.ts";
+import { Fact, Facts } from "#client/components/facts.tsx";
 
 function EvidenceTable({ rows }: { rows: EvidenceRow[] }) {
   return (
@@ -121,41 +122,29 @@ export function MonitorPanel({ status }: { status: MonitorStatus }) {
   const latest = status.latestObservation;
   return (
     <>
-      <dl className="facts">
-        <div>
-          <dt>State</dt>
-          <dd>
-            <Status value={status.state} />
-          </dd>
-        </div>
-        <div>
-          <dt>Policy</dt>
-          <dd>{monitorPolicyLabel(status.policy)}</dd>
-        </div>
-        <div>
-          <dt>Latest observation</dt>
-          <dd>
-            {latest === null ? (
-              "None yet"
-            ) : (
-              <>
-                <RelativeTime value={latest.observedAt} /> · window{" "}
-                {latest.window}
-              </>
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt>Watching</dt>
-          <dd>
-            {status.deploymentId === null ? (
-              "No accepted deployment"
-            ) : (
-              <DeploymentLink id={status.deploymentId} />
-            )}
-          </dd>
-        </div>
-      </dl>
+      <Facts>
+        <Fact label="State">
+          <Status value={status.state} />
+        </Fact>
+        <Fact label="Policy">{monitorPolicyLabel(status.policy)}</Fact>
+        <Fact label="Latest observation">
+          {latest === null ? (
+            "None yet"
+          ) : (
+            <>
+              <RelativeTime value={latest.observedAt} /> · window{" "}
+              {latest.window}
+            </>
+          )}
+        </Fact>
+        <Fact label="Watching">
+          {status.deploymentId === null ? (
+            "No accepted deployment"
+          ) : (
+            <DeploymentLink id={status.deploymentId} />
+          )}
+        </Fact>
+      </Facts>
       <Outcome status={status} />
       {status.monitor === null ? (
         <p className="muted">

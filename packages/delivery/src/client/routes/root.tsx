@@ -83,7 +83,7 @@ function Identity() {
 function RootLayout() {
   const { feed } = Route.useRouteContext();
   return (
-    <div className="app-shell">
+    <div>
       <a className="skip-link" href="#main">
         Skip to content
       </a>

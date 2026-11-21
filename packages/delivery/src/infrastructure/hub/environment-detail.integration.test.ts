@@ -25,5 +25,12 @@ describe("environment detail", () => {
     });
     expect(detail.releaseKind).toBe("deploy");
     expect(detail.deployments.map((row) => row.id)).toEqual([deployment.id]);
+    // Each recent deployment carries the number of the set revision it deploys.
+    const set = await context.cluster.database.versionSet.findUniqueOrThrow({
+      where: { id: deployment.versionSetRevisionId },
+    });
+    expect(detail.deployments.map((row) => row.versionSetRevision)).toEqual([
+      set.revision,
+    ]);
   });
 });

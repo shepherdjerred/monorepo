@@ -38,13 +38,17 @@ export async function confirm(page: Page, label: string) {
   await expect(dialog).toBeHidden();
 }
 
+/**
+ * The page is no wider than the device. A phone grows its layout viewport,
+ * and so `innerWidth`, to fit content that overflows, so the content is
+ * measured against the document's own client width.
+ */
 export async function expectNoHorizontalOverflow(page: Page) {
   expect(
-    await page.evaluate(
-      () =>
-        globalThis.document.documentElement.scrollWidth <=
-        globalThis.innerWidth,
-    ),
+    await page.evaluate(() => {
+      const root = globalThis.document.documentElement;
+      return root.scrollWidth <= root.clientWidth;
+    }),
   ).toBe(true);
 }
 

@@ -7,6 +7,7 @@ import { CiRunPanel, SourcePanel } from "#client/components/integrations.tsx";
 import { PipelineGraph } from "#client/components/pipeline/pipeline-graph.tsx";
 import { traceStages } from "#client/components/pipeline/trace-view-model.ts";
 import { artifactToolLinks } from "#shared/hub/artifact-links.ts";
+import { revisionLabel } from "#client/components/identifier.tsx";
 
 function Artifacts({ trace }: { trace: ExecutionTrace }) {
   return (
@@ -103,7 +104,7 @@ export function TracePage({
             to="/versions/$versionSetId"
             params={{ versionSetId: trace.versionSet.id }}
           >
-            Version set r{trace.versionSet.revision}
+            Version set {revisionLabel(trace.versionSet.revision)}
           </Link>{" "}
           selects these artifacts for deployment.
         </p>

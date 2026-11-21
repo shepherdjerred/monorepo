@@ -1,11 +1,13 @@
+/* Status: a glyph, words and a color, so no channel carries it alone. */
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 1px 8px 1px 6px;
-  border-radius: 999px;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  font-weight: var(--weight-semibold);
+  padding: 1px var(--space-2) 1px var(--row-pad-y);
+  border-radius: var(--radius-pill);
   white-space: nowrap;
   background: var(--neutral-soft);
   color: var(--neutral);
@@ -44,6 +46,16 @@
     transform: rotate(360deg);
   }
 }
+/* Where the pill shows its glyph only, a screen reader still reads its words. */
+.env-pill .status-label,
+.action .status-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 @media (forced-colors: active) {
   .status {
     border-color: CanvasText;
@@ -56,17 +68,17 @@
 .primary-button,
 .secondary-button {
   border-radius: var(--radius-small);
-  padding: 6px 14px;
-  min-height: 34px;
-  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  min-height: var(--control-height);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
   border: 1px solid var(--border-strong);
   background: var(--surface);
 }
 .primary-button {
-  background: var(--running);
-  border-color: var(--running);
-  color: light-dark(#ffffff, #0b1220);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-solid);
 }
 .primary-button.danger {
   background: var(--failed);
@@ -81,7 +93,7 @@ button:disabled {
   cursor: not-allowed;
 }
 .text-button {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .button-row {
   display: flex;
@@ -96,7 +108,7 @@ button:disabled {
 .notice {
   border-left: 4px solid var(--waiting);
   background: var(--waiting-soft);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--row-pad-y) var(--space-3);
   border-radius: var(--radius-small);
   overflow-wrap: anywhere;
 }
@@ -116,7 +128,8 @@ button:disabled {
   color: var(--text-muted);
   font-style: italic;
 }
-.pending {
+.pending,
+.integration-unavailable {
   color: var(--text-muted);
 }
 .tool-links {
@@ -126,26 +139,28 @@ button:disabled {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 .tool-link {
   white-space: nowrap;
   display: inline-block;
-  min-height: 24px;
-  line-height: 24px;
+  min-height: var(--target-min);
+  line-height: var(--target-min);
 }
 .detail-summary {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2) var(--space-3);
+  gap: var(--space-1) var(--space-3);
 }
-.pipeline-table th[scope="row"] {
-  font-weight: 600;
+/* A duration, a count or a revision keeps its width as its digits change. */
+.duration,
+.revision,
+.status-label {
+  font-variant-numeric: tabular-nums;
 }
-.pipeline-table th[scope="row"] small {
-  display: block;
-  font-weight: 400;
+.revision {
+  white-space: nowrap;
 }
 .pipeline-table td {
   vertical-align: middle;
@@ -164,27 +179,27 @@ button:disabled {
   flex-wrap: wrap;
   gap: var(--space-1);
 }
+/* An environment as a link: its state as a glyph, then its name. */
 .env-pill {
   display: inline-flex;
   gap: var(--space-1);
   align-items: center;
+  min-height: var(--target-min);
   border: 1px solid var(--border);
   border-radius: var(--radius-small);
-  padding: 2px 6px 2px 2px;
+  padding: 1px var(--row-pad-y) 1px var(--space-0);
   text-decoration: none;
   color: var(--text);
-  font-size: 0.8rem;
-}
-.env-pill .status-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
 }
 .env-pill .status {
-  padding: 1px 5px;
+  padding: 0 var(--space-1);
+  /* Contains the hidden label, so it scrolls with a scrolling table. */
+  position: relative;
+}
+.env-name {
+  overflow-wrap: anywhere;
 }
 .attention ul,
 .activity,
@@ -193,10 +208,27 @@ button:disabled {
 .steps,
 .inline-list,
 .image-checks,
-.artifact-list {
+.artifact-list,
+.alarms,
+.candidates,
+.intents,
+.diff ul,
+.commit-list {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+/* One row treatment for every list of records. */
+.attention li,
+.activity li,
+.evidence li,
+.alarms li,
+.candidates > li,
+.intents li,
+.commit-row {
+  padding: var(--row-pad-y) 0;
+  border-bottom: 1px solid var(--border);
+  line-height: var(--leading-snug);
 }
 .image-checks ul {
   margin: var(--space-1) 0 0;
@@ -205,17 +237,16 @@ button:disabled {
 .attention li {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
+  gap: var(--space-1) var(--space-3);
   align-items: baseline;
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--border);
 }
 .badge {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--text-2xs);
+  line-height: var(--leading-snug);
+  font-weight: var(--weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 0 6px;
+  letter-spacing: var(--tracking-label);
+  padding: 1px var(--row-pad-y);
   border-radius: var(--radius-small);
   background: var(--failed-soft);
   color: var(--failed);
@@ -224,13 +255,20 @@ button:disabled {
   background: var(--waiting-soft);
   color: var(--waiting);
 }
+.badge-override {
+  background: var(--running-soft);
+  color: var(--running);
+}
+.badge-current {
+  background: var(--succeeded-soft);
+  color: var(--succeeded);
+  margin-inline-start: var(--space-2);
+}
 .activity li {
   display: grid;
-  grid-template-columns: 9rem minmax(10rem, 14rem) minmax(0, 1fr) auto;
+  grid-template-columns: 7.5rem minmax(10rem, 14rem) minmax(0, 1fr) auto;
   gap: var(--space-3);
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 .activity-action {
   font-family: var(--font-mono);
@@ -241,33 +279,70 @@ button:disabled {
 .catalog-result {
   grid-column: 1 / -1;
 }
-.catalog-result .facts {
-  margin: 0;
-}
-@media (width <= 720px) {
-  .activity li {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-}
 .inline-list li {
   margin-bottom: var(--space-1);
 }
+/* Facts: a definition list of labelled values (components/facts.tsx). */
 .facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--space-3);
-  margin: 0 0 var(--space-3);
-}
-.facts dt {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: var(--space-2) var(--space-4);
+  margin: 0 0 var(--space-2);
 }
 .facts dd {
   margin: 0;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   overflow-wrap: anywhere;
+}
+.catalog-result .facts,
+.candidates .facts {
+  margin: 0;
+}
+/* Disclosure: a native details with a chevron and a count (components/disclosure.tsx). */
+.disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  font-weight: var(--weight-medium);
+}
+.disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+/* The chevron is drawn, so it is the same shape in every font. */
+.disclosure > summary::before {
+  content: "";
+  flex: none;
+  margin-inline: var(--space-1);
+  border-block: 4px solid transparent;
+  border-inline-start: 6px solid var(--text-muted);
+}
+.disclosure[open] > summary::before {
+  transform: rotate(90deg);
+}
+/* A long summary wraps beside its chevron instead of pushing the count out. */
+.disclosure-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.disclosure-count {
+  padding: 0 var(--row-pad-y);
+  border-radius: var(--radius-pill);
+  background: var(--neutral-soft);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  font-variant-numeric: tabular-nums;
+}
+.disclosure-body {
+  padding: var(--space-1) 0 var(--space-2) var(--space-5);
+}
+/* Identifier: a short id that keeps its full value (components/identifier.tsx). */
+.identifier {
+  /* Contains the hidden full value, so it scrolls with a scrolling table. */
+  position: relative;
+  white-space: nowrap;
 }
 .stages {
   list-style: none;
@@ -276,14 +351,14 @@ button:disabled {
   border-left: 2px solid var(--border);
 }
 .stages li {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--row-pad-y) var(--space-3);
   position: relative;
 }
 .stages li::before {
   content: "";
   position: absolute;
   left: -6px;
-  top: 14px;
+  top: 12px;
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -304,18 +379,18 @@ button:disabled {
   gap: var(--space-2);
   align-items: center;
 }
-.evidence li {
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--border);
-}
 .component-list {
   display: grid;
   gap: var(--space-2);
+  margin: var(--space-2) 0;
 }
 .component-list > div {
   display: grid;
   grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr);
   gap: var(--space-3);
+}
+.component-list dt {
+  color: var(--text-muted);
 }
 .component-list dd {
   margin: 0;
@@ -339,26 +414,30 @@ button:disabled {
   display: flex;
   gap: var(--space-2);
   align-items: center;
-  padding: 2px 0 2px var(--space-4);
-  font-size: 0.85rem;
+  padding: var(--space-0) 0 var(--space-0) var(--space-4);
+  font-size: var(--text-sm);
 }
 .ci-group h3 {
   margin: var(--space-3) 0 var(--space-1);
 }
-.integration-unavailable {
-  color: var(--text-muted);
+/* The commit's first line, above who wrote it. */
+.source-headline {
+  font-size: var(--text-md);
+  margin-bottom: var(--space-1);
 }
 .commit-body {
   white-space: pre-wrap;
 }
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
   gap: var(--space-3);
   align-items: end;
 }
 .input-readonly {
-  padding: 6px 10px;
+  margin: 0;
+  min-height: var(--control-height);
+  padding: var(--space-1) var(--control-pad-x);
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius-small);
 }
@@ -370,13 +449,12 @@ button:disabled {
   gap: var(--space-3);
   margin-top: var(--space-3);
 }
-.diff ul {
-  list-style: none;
-  padding: 0;
+.form-footer p {
+  margin: 0;
 }
 .diff li {
   display: grid;
-  gap: 2px;
+  gap: var(--space-0);
   padding: var(--space-1) 0;
 }
 .approval-form {
@@ -385,7 +463,7 @@ button:disabled {
   background: var(--waiting-soft);
   border: 1px solid var(--waiting);
   border-radius: var(--radius);
-  padding: var(--space-4);
+  padding: var(--panel-pad-y) var(--panel-pad-x);
 }
 .approval-form .button-row {
   justify-content: flex-start;
@@ -397,19 +475,6 @@ button:disabled {
 .digest abbr {
   white-space: nowrap;
 }
-.badge-override {
-  background: var(--running-soft);
-  color: var(--running);
-}
-.badge-current {
-  background: var(--succeeded-soft);
-  color: var(--succeeded);
-  margin-inline-start: var(--space-2);
-}
-.panel h3 {
-  font-size: 0.9rem;
-  margin: var(--space-4) 0 var(--space-2);
-}
 .evidence-meter {
   display: grid;
   gap: var(--space-1);
@@ -418,25 +483,9 @@ button:disabled {
   inline-size: 100%;
   min-inline-size: 0;
 }
-.alarms li,
-.candidates > li,
-.intents li {
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--border);
-}
-.alarms,
-.candidates,
-.intents {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
 .candidates > li {
   display: grid;
-  gap: var(--space-2);
-}
-.candidates .facts {
-  margin: 0;
+  gap: var(--space-1);
 }
 .candidate-heading {
   display: flex;
@@ -450,29 +499,18 @@ button:disabled {
 }
 .candidate-reason {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 .differs {
   color: var(--waiting);
-  font-weight: 600;
-}
-.panel-attention {
-  border-color: var(--failed);
-}
-.panel-waiting {
-  border-color: var(--waiting);
-}
-/* A command to copy wraps at phone width instead of scrolling. */
-pre.command {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  font-weight: var(--weight-semibold);
 }
 label.checkbox {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-weight: 400;
-  margin-block: var(--space-3);
+  font-weight: var(--weight-regular);
+  margin-block: var(--space-2);
 }
 label.checkbox input {
   min-height: 0;
@@ -480,88 +518,80 @@ label.checkbox input {
   block-size: 18px;
   flex: none;
 }
-
-.commit-list {
-  display: grid;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
+/* Commits: a verdict, the commit, where it stands, and who and when. */
 .commit-row {
-  align-items: baseline;
-  border-top: 1px solid var(--border, currentColor);
-  column-gap: 1rem;
   display: grid;
-  grid-template-columns: 11rem minmax(0, 2fr) minmax(0, 1.5fr) auto;
-  padding: 0.6rem 0;
+  grid-template-columns: 9.5rem minmax(0, 2fr) minmax(0, 1.5fr) auto;
+  column-gap: var(--space-4);
+  align-items: baseline;
 }
-
-.commit-row:first-child {
-  border-top: 0;
+/* The verdict is a pill as wide as its words, not as its column. */
+.commit-row > .status {
+  justify-self: start;
 }
-
 /* A title is free text: one long token must wrap, not widen the page. */
 .commit-subject,
-.commit-title {
+.commit-title,
+.commit-author,
+.commit-byline {
   overflow-wrap: anywhere;
 }
-
 .commit-headline {
-  margin-left: 0.2rem;
+  margin-inline-start: var(--space-1);
 }
-
+.commit-detail {
+  display: grid;
+  gap: var(--space-0);
+  font-size: var(--text-sm);
+}
+.tallies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  align-items: center;
+}
 .commit-meta {
   color: var(--text-muted);
+  font-size: var(--text-sm);
   display: flex;
   flex-wrap: wrap;
   gap: 0 var(--space-2);
   justify-content: flex-end;
 }
-
-.commit-author {
-  overflow-wrap: anywhere;
-}
-
 .commit-title {
   color: var(--text);
   display: block;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
-
 .commit-byline {
   display: block;
   margin-block-end: var(--space-1);
-  overflow-wrap: anywhere;
 }
-
+.commit-row:last-child {
+  border-bottom: 0;
+}
 .commit-list + .pager:not(:empty) {
   border-top: 1px solid var(--border);
-  padding-top: var(--space-3);
+  padding-top: var(--space-2);
 }
-
-@media (max-width: 48rem) {
+/* The environment groups stack under their own heading, outside a panel. */
+.env-group {
+  margin-top: var(--space-2);
+}
+.env-group h3 {
+  margin-top: 0;
+  margin-bottom: var(--space-2);
+}
+@media (width <= 720px) {
+  .activity li {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
   .commit-row {
     grid-template-columns: 1fr;
-    row-gap: 0.15rem;
+    row-gap: var(--space-0);
   }
-
   .commit-meta {
     justify-content: flex-start;
   }
-}
-
-.tallies {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.2rem 0.9rem;
-}
-
-.commit-detail {
-  display: grid;
-  gap: 0.15rem;
-}
-
-.env-group h3 {
-  margin-bottom: 0.5rem;
 }
