@@ -93,6 +93,12 @@
         "e2e/**/*.ts",
         "prisma/**/*.prisma",
         "*.ts"
+      ],
+      // src/client/styles/fonts.css loads these woff2 package paths through
+      // url(), which knip cannot see as imports.
+      "ignoreDependencies": [
+        "@fontsource-variable/dm-sans",
+        "@fontsource-variable/manrope"
       ]
     },
     "packages/architecture": {
