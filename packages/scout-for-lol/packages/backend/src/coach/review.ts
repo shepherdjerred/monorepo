@@ -451,3 +451,53 @@ export async function readCoachReview(
     createdAt: row.createdAt.toISOString(),
   };
 }
+
+/**
+ * The one query naming a game's match from the caller's own capture of it:
+ * an accepted observation of that League game id, from a device the owner
+ * paired, that states its platform. Prisma's delegate satisfies it.
+ */
+export type CoachReviewGameClient = {
+  readonly scoutClientObservation: {
+    findFirst: (args: {
+      where: {
+        gameId: string;
+        disposition: "ACCEPTED";
+        platformId: { not: null };
+        device: { ownerId: DiscordAccountId };
+      };
+      select: { platformId: true };
+      orderBy: { capturedAt: "asc" };
+    }) => Promise<{ platformId: string | null } | null>;
+  };
+};
+
+/**
+ * The review of a game named by its League game id (desktop contract 12),
+ * for a game the desktop knows only from the client's end-of-game screen.
+ * The match is named from the caller's own accepted observation of that
+ * game, never from another owner's, so a game id this owner did not capture
+ * answers null exactly like a game with no review.
+ */
+export async function readCoachReviewByGame(
+  client: Pick<CoachReviewClient, "scoutCoachArtifact"> & CoachReviewGameClient,
+  ownerId: DiscordAccountId,
+  gameId: string,
+): Promise<Awaited<ReturnType<typeof readCoachReview>>> {
+  const observation = await client.scoutClientObservation.findFirst({
+    where: {
+      gameId,
+      disposition: "ACCEPTED",
+      platformId: { not: null },
+      device: { ownerId },
+    },
+    select: { platformId: true },
+    orderBy: { capturedAt: "asc" },
+  });
+  const platform = observation?.platformId?.toUpperCase();
+  if (platform === undefined || platform === "") return null;
+  const matchId = RiotMatchIdSchema.safeParse(`${platform}_${gameId}`);
+  return matchId.success
+    ? readCoachReview(client, ownerId, matchId.data)
+    : null;
+}

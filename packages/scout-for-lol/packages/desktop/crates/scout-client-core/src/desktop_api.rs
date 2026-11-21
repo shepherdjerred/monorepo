@@ -26,7 +26,7 @@ use crate::coach_context::{GameContext, LiveContext};
 /// Request header carrying the client's desktop contract version.
 pub const DESKTOP_CONTRACT_HEADER: &str = "X-Scout-Desktop-Contract";
 /// Desktop contract version this build speaks.
-pub const DESKTOP_CONTRACT_VERSION: u32 = 11;
+pub const DESKTOP_CONTRACT_VERSION: u32 = 12;
 /// Path of the route that starts an Explore turn.
 pub const EXPLORE_RUNS_START_PATH: &str = "/api/scout-client/v1/explore/runs/start";
 /// Path of the route that starts a turn Scout asks for itself.
@@ -734,32 +734,43 @@ pub struct RunRequest {
     pub run_id: Uuid,
 }
 
-/// Request to `coach/reviews/get`: the finished game, by Riot match ID. The
-/// server starts a review itself once the game's recording and resolved match
-/// both exist; the client only reads it.
+/// Request to `coach/reviews/get`: the finished game, by Riot match ID, or
+/// (contract 12) by League game ID when match history never names the game's
+/// platform. The server starts a review itself once the game's recording and
+/// resolved match both exist; the client only reads it. A game ID is resolved
+/// from the calling owner's own capture of that game.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(
-    rename_all = "camelCase",
-    deny_unknown_fields,
-    try_from = "RawCoachReviewRequest"
-)]
-pub struct CoachReviewRequest {
+#[serde(try_from = "RawCoachReviewRequest", into = "RawCoachReviewRequest")]
+pub enum CoachReviewRequest {
     /// The Riot match ID, such as `NA1_5123456789`.
-    pub match_id: String,
+    Match(String),
+    /// The League game ID, such as `5663121007`.
+    Game(String),
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct RawCoachReviewRequest {
-    match_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    match_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    game_id: Option<String>,
 }
 
-impl TryFrom<RawCoachReviewRequest> for CoachReviewRequest {
-    type Error = String;
+/// A positive decimal game ID of at most 20 digits.
+fn valid_game_id(game: &str) -> bool {
+    (1..=20).contains(&game.len())
+        && game.bytes().all(|byte| byte.is_ascii_digit())
+        && !game.starts_with('0')
+}
 
-    fn try_from(raw: RawCoachReviewRequest) -> Result<Self, String> {
-        let (platform, game) = raw
-            .match_id
+impl CoachReviewRequest {
+    /// The review of the Riot match `match_id`.
+    ///
+    /// # Errors
+    /// When `match_id` is not a platform, `_` and a game ID.
+    pub fn for_match(match_id: &str) -> Result<Self, String> {
+        let (platform, game) = match_id
             .split_once('_')
             .ok_or_else(|| "matchId is a platform, `_` and a game id".to_owned())?;
         let platform_ok = (2..=6).contains(&platform.len())
@@ -769,11 +780,48 @@ impl TryFrom<RawCoachReviewRequest> for CoachReviewRequest {
         let game_ok =
             (1..=20).contains(&game.len()) && game.bytes().all(|byte| byte.is_ascii_digit());
         if platform_ok && game_ok {
-            Ok(Self {
-                match_id: raw.match_id,
-            })
+            Ok(Self::Match(match_id.to_owned()))
         } else {
             Err("matchId is a platform, `_` and a game id".to_owned())
+        }
+    }
+
+    /// The review of League game `game_id`.
+    ///
+    /// # Errors
+    /// When `game_id` is not a positive decimal of at most 20 digits.
+    pub fn for_game(game_id: &str) -> Result<Self, String> {
+        if valid_game_id(game_id) {
+            Ok(Self::Game(game_id.to_owned()))
+        } else {
+            Err("gameId is a positive decimal of at most 20 digits".to_owned())
+        }
+    }
+}
+
+impl TryFrom<RawCoachReviewRequest> for CoachReviewRequest {
+    type Error = String;
+
+    fn try_from(raw: RawCoachReviewRequest) -> Result<Self, String> {
+        match (raw.match_id, raw.game_id) {
+            (Some(match_id), None) => Self::for_match(&match_id),
+            (None, Some(game_id)) => Self::for_game(&game_id),
+            _ => Err("exactly one of matchId and gameId".to_owned()),
+        }
+    }
+}
+
+impl From<CoachReviewRequest> for RawCoachReviewRequest {
+    fn from(request: CoachReviewRequest) -> Self {
+        match request {
+            CoachReviewRequest::Match(match_id) => Self {
+                match_id: Some(match_id),
+                game_id: None,
+            },
+            CoachReviewRequest::Game(game_id) => Self {
+                match_id: None,
+                game_id: Some(game_id),
+            },
         }
     }
 }
@@ -1154,6 +1202,11 @@ mod tests {
         assert_eq!(fixture["route"], route);
         round_trip::<Request>(&fixture["request"])?;
         round_trip::<Response>(&fixture["response"])?;
+        if let Some(alternates) = fixture["alternateRequests"].as_array() {
+            for case in alternates {
+                round_trip::<Request>(&case["body"])?;
+            }
+        }
         let invalid = fixture["invalidRequests"]
             .as_array()
             .ok_or("invalid requests")?;
@@ -1293,7 +1346,15 @@ mod tests {
         check_route::<CoachReviewRequest, CoachReviewResponse>(
             COACH_REVIEWS_GET,
             "coach_reviews_get",
-        )
+        )?;
+        let fixture: Value = serde_json::from_str(COACH_REVIEWS_GET)?;
+        assert_eq!(
+            serde_json::from_value::<CoachReviewRequest>(
+                fixture["alternateRequests"][0]["body"].clone()
+            )?,
+            CoachReviewRequest::Game("5663121007".to_owned())
+        );
+        Ok(())
     }
 
     #[test]

@@ -4,7 +4,7 @@ import {
   ScoutDesktopCoachReviewResponseSchema,
 } from "@scout-for-lol/data";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import { readCoachReview } from "#src/coach/review.ts";
+import { readCoachReview, readCoachReviewByGame } from "#src/coach/review.ts";
 import { prisma } from "#src/database/index.ts";
 import { isOwnerFlagEnabled } from "./auth.ts";
 import { desktopErrorResponse, desktopJsonResponse } from "./contract.ts";
@@ -19,7 +19,9 @@ import {
  * this owner recorded. The server starts it (`scoutCoachReviewWorkflow`); the
  * desktop only reads. A game with no review, and a game another user recorded,
  * answer the same `not_found`. Under `scout_desktop_coach` like every coach
- * surface.
+ * surface. Since contract 12 the game may be named by League game id, for a
+ * game match history never lists; the match is then named from this owner's
+ * own capture of it (`readCoachReviewByGame`).
  */
 const getCoachReview: DesktopRouteHandler = async ({ caller, body }) => {
   const input = ScoutDesktopCoachReviewRequestSchema.safeParse(body);
@@ -36,11 +38,14 @@ const getCoachReview: DesktopRouteHandler = async ({ caller, body }) => {
       "Scout Coach is turned off for you.",
     );
   }
-  const review = await readCoachReview(
-    prisma,
-    caller.userId,
-    RiotMatchIdSchema.parse(input.data.matchId),
-  );
+  const review =
+    "gameId" in input.data
+      ? await readCoachReviewByGame(prisma, caller.userId, input.data.gameId)
+      : await readCoachReview(
+          prisma,
+          caller.userId,
+          RiotMatchIdSchema.parse(input.data.matchId),
+        );
   return review === null
     ? desktopErrorResponse("not_found", "No review for this game.")
     : desktopJsonResponse(ScoutDesktopCoachReviewResponseSchema.parse(review));

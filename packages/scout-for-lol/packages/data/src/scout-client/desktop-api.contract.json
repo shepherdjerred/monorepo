@@ -1,5 +1,5 @@
 {
-  "contractVersion": 11,
+  "contractVersion": 12,
   "minimumContractVersion": 1,
   "header": "X-Scout-Desktop-Contract",
   "scopes": ["ingest", "explore"],

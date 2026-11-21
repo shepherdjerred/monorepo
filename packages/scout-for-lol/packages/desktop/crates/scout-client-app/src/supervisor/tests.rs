@@ -1718,15 +1718,21 @@ async fn overlay_on_screen() -> TestResult {
 /// the requests.
 struct FakeReviews {
     answers: Mutex<Vec<super::review::ReviewAnswer>>,
-    asked: Arc<Mutex<Vec<String>>>,
+    asked: Arc<Mutex<Vec<scout_client_core::desktop_api::CoachReviewRequest>>>,
 }
 
 impl super::ReviewSource for FakeReviews {
-    fn fetch(&self, match_id: String, done: mpsc::UnboundedSender<super::review::ReviewFetch>) {
-        self.asked
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner)
-            .push(match_id.clone());
+    fn fetch(
+        &self,
+        target: super::review::ReviewTarget,
+        done: mpsc::UnboundedSender<super::review::ReviewFetch>,
+    ) {
+        if let Ok(request) = target.request() {
+            self.asked
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .push(request);
+        }
         let mut answers = self.answers.lock().unwrap_or_else(PoisonError::into_inner);
         let answer = if answers.len() > 1 {
             answers.remove(0)
@@ -1736,7 +1742,7 @@ impl super::ReviewSource for FakeReviews {
                 .cloned()
                 .unwrap_or(super::review::ReviewAnswer::NotYet)
         };
-        let _ = done.send((match_id, answer));
+        let _ = done.send((target.game_id, answer));
     }
 }
 
@@ -1760,7 +1766,10 @@ async fn a_ready_review_opens_in_the_window_and_its_card_opens_it_next_game() ->
         answers: Mutex::new(vec![
             ReviewAnswer::NotYet,
             ReviewAnswer::Pending,
-            ReviewAnswer::Ready(review),
+            ReviewAnswer::Ready {
+                match_id: "NA1_5654104474".to_owned(),
+                conversation_id: review,
+            },
         ]),
         asked: Arc::clone(&asked),
     };
@@ -1784,10 +1793,11 @@ async fn a_ready_review_opens_in_the_window_and_its_card_opens_it_next_game() ->
         },
     )?;
     harness.wait_for(|status| status.running).await?;
-    // The collector saw game 5654104474 end; the history names its platform.
+    // The collector saw game 5654104474 end, an end-of-game-only game the
+    // match history never lists, so it is asked for by game id.
     harness.runtime_state.send_modify(|state| {
         state.ended_game_id = Some("5654104474".to_owned());
-        state.recent_match_ids = vec!["NA1_5654104475".to_owned(), "NA1_5654104474".to_owned()];
+        state.recent_match_ids = vec!["NA1_5654104475".to_owned()];
     });
     // Not yet, pending, then ready: one request per refresh, then none.
     loop {
@@ -1808,8 +1818,9 @@ async fn a_ready_review_opens_in_the_window_and_its_card_opens_it_next_game() ->
             .lock()
             .unwrap_or_else(PoisonError::into_inner)
             .as_slice(),
-        ["NA1_5654104474"; 3],
-        "asked until ready, then stopped"
+        vec![scout_client_core::desktop_api::CoachReviewRequest::Game("5654104474".to_owned()); 3]
+            .as_slice(),
+        "asked by game id until ready, then stopped"
     );
     assert!(!log.exists(), "no overlay outside a game");
 

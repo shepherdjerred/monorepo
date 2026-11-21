@@ -11,6 +11,7 @@ import {
 import type { ExploreActiveRun } from "@scout-for-lol/data";
 import {
   readCoachReview,
+  readCoachReviewByGame,
   readReviewEvidence,
   reviewReady,
   settleCoachReview,
@@ -358,4 +359,65 @@ test("the desktop reads the review by owner and match, nothing else's", async ()
       matchId,
     ),
   ).toBeNull();
+});
+
+test("a review read by game id is named only from the caller's own capture", async () => {
+  const state = world();
+  const deps = dependencies(state);
+  await startCoachReview(deps, input);
+  const other = DiscordAccountIdSchema.parse("999999999999999999");
+  // Accepted observations of game 5123456789: the owner's, and another
+  // owner's, who played the same game.
+  const observations = [
+    { ownerId: owner, gameId: "5123456789", platformId: "na1" },
+    { ownerId: other, gameId: "5123456789", platformId: "NA1" },
+  ];
+  const queries: unknown[] = [];
+  const client = {
+    scoutCoachArtifact: deps.client.scoutCoachArtifact,
+    scoutClientObservation: {
+      findFirst: (query: {
+        where: { gameId: string; device: { ownerId: string } };
+      }) => {
+        queries.push(query);
+        const row = observations.find(
+          (observation) =>
+            observation.gameId === query.where.gameId &&
+            observation.ownerId === query.where.device.ownerId,
+        );
+        return Promise.resolve(
+          row === undefined ? null : { platformId: row.platformId },
+        );
+      },
+    },
+  };
+  expect(await readCoachReviewByGame(client, owner, "5123456789")).toEqual({
+    matchId: MATCH,
+    status: "pending",
+    conversationId: RUN.conversationId,
+    createdAt: "2026-11-19T00:00:00.000Z",
+  });
+  expect(queries[0]).toEqual({
+    where: {
+      gameId: "5123456789",
+      disposition: "ACCEPTED",
+      platformId: { not: null },
+      device: { ownerId: owner },
+    },
+    select: { platformId: true },
+    orderBy: { capturedAt: "asc" },
+  });
+  // Another owner who captured the same game names the same match from their
+  // own capture, but reads nothing: the review is this owner's.
+  expect(await readCoachReviewByGame(client, other, "5123456789")).toBeNull();
+  // An owner with no capture of the game reads nothing either.
+  expect(
+    await readCoachReviewByGame(
+      client,
+      DiscordAccountIdSchema.parse("888888888888888888"),
+      "5123456789",
+    ),
+  ).toBeNull();
+  // A game this owner never captured answers like a game with no review.
+  expect(await readCoachReviewByGame(client, owner, "42")).toBeNull();
 });
