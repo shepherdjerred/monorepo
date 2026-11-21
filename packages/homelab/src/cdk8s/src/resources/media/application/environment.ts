@@ -21,3 +21,21 @@ export function mediaDatabaseEnvironment(
 export function mediaFeatureFlagEnvironment(): Record<string, EnvValue> {
   return fliptEnv({ namespace: "media", environment: "prod" });
 }
+
+/**
+ * Where the API keeps the artwork it fetches from TMDB. The claim is a
+ * rebuildable cache, excluded from backups, and sized above the API's cache
+ * cap (3 GiB by default). The API requires the directory once it serves
+ * artwork; an image from before that ignores the mount and the variable.
+ */
+export const MEDIA_ARTWORK_CACHE = {
+  claim: "media-artwork-cache",
+  gibibytes: 4,
+  path: "/var/cache/media/artwork",
+} as const;
+
+export function mediaArtworkCacheEnvironment(): Record<string, EnvValue> {
+  return {
+    MEDIA_ARTWORK_CACHE_DIR: EnvValue.fromValue(MEDIA_ARTWORK_CACHE.path),
+  };
+}
