@@ -174,7 +174,7 @@ covered by the play event), `streambot_web_signed_in`,
 random UUID minted per Discord user and stored only in
 `$STATE_DIR/streambot-analytics.sqlite`; the mapping never leaves the process,
 and no Discord id, name, guild, channel, title, query or URL is ever sent.
-`/api/me` exposes the same UUID as `analyticsId` for a later browser tracker.
+`/api/me` exposes the same UUID as `analyticsId` for the browser tracker.
 Captures are counted in `streambot_analytics_events_total{event,outcome}`
 (`captured|dropped|disabled|failed`), never block or alter a request, and are
 flushed on graceful shutdown. The public project token and host come from
@@ -182,6 +182,32 @@ flushed on graceful shutdown. The public project token and host come from
 startup fails when the flag is on and they are absent. A run with no PostHog
 destination, such as `bun run smoke` or the CI in-image smoke, sets
 `USAGE_ANALYTICS_ENABLED=false`.
+
+### Browser telemetry
+
+The web remote (`src/web/client/telemetry/`) loads `posthog-js` only after
+`/api/me` returns a non-null `analyticsId` and the browser sends neither Do Not
+Track nor Global Privacy Control; otherwise nothing is downloaded or sent. It
+identifies with that `analyticsId`, keeps its cookie on `streambot.sjer.red`
+alone, and talks only to the `j.sjer.red` proxy, whose public identity lives in
+`src/web/shared/analytics-site.json` (checked against
+`config/analytics-sites.json` by `scripts/checks/check-analytics-sites.ts`).
+Events are `$pageview` (route pattern only, such as `/album/:id`),
+`streambot_result_chosen` (`kind`, `rank_bucket`, `button`) and
+`streambot_error_shown` (`code`, `surface`), plus PostHog autocapture, heatmaps,
+dead clicks and web vitals with text and attributes masked. `before_send`
+rewrites every URL to origin plus route pattern (other sites keep only their
+origin) and drops titles. Session replay masks every text node, input and
+non-layout attribute.
+
+Browser errors go to the server's own Bugsink project: `/api/me` carries the
+DSN the server initialised with (`bugsinkDsn`, `null` when Bugsink is off), and
+the client starts `@sentry/react` after sign-in, independent of the analytics
+flag. Reports drop query strings, map page URLs to route patterns, keep only
+the category of click breadcrumbs, and carry the last API Reference as the
+`reference` tag. The Content-Security-Policy (`src/web/server/http/csp.ts`) allows
+the PostHog proxy for scripts and connections and the DSN's origin for
+connections only when a DSN is configured.
 
 ## Music discovery and playlists
 

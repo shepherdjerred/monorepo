@@ -128,7 +128,7 @@ export function StationDialog(props: { kind: Kind; onClose: () => void }) {
             </label>
           ))}
         </fieldset>
-        <ControlStatus control={start} />
+        <ControlStatus surface="dialog" control={start} />
         <div className="dialog-actions btn-row">
           <button
             type="button"

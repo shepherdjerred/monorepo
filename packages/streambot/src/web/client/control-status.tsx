@@ -1,4 +1,5 @@
 import { FailureNotice } from "./failure-notice.tsx";
+import type { FailureSurface } from "./telemetry/events.ts";
 import type { Control } from "./use-control.ts";
 import "./styles/status.css";
 
@@ -9,6 +10,8 @@ import "./styles/status.css";
 export function ControlStatus(props: {
   control: Control | null;
   className?: string;
+  /** Where the line is shown, for the error-shown analytics event only. */
+  surface?: FailureSurface;
 }) {
   const { control } = props;
   const state = control?.state;
@@ -25,6 +28,7 @@ export function ControlStatus(props: {
           failure={state.failure}
           onRetry={control.retry}
           onDismiss={control.dismiss}
+          {...(props.surface === undefined ? {} : { surface: props.surface })}
         />
       )}
     </div>

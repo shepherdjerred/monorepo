@@ -55,7 +55,11 @@ function StationBadge(props: { player: WebRoomPlayer }) {
       >
         Stop {name}
       </button>
-      <ControlStatus className="station-status" control={control} />
+      <ControlStatus
+        surface="rail"
+        className="station-status"
+        control={control}
+      />
     </div>
   );
 }

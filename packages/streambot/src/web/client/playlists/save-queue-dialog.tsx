@@ -94,7 +94,7 @@ export function SaveQueueDialog(props: { slot: number; onClose: () => void }) {
             }}
           />
         </label>
-        <ControlStatus control={save} />
+        <ControlStatus surface="dialog" control={save} />
         <div className="dialog-actions btn-row">
           {saved === null ? (
             <>

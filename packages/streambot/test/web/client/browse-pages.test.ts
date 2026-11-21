@@ -1,3 +1,4 @@
+import type { BrowsePage } from "@shepherdjerred/streambot/web/shared/search-contracts.ts";
 import { describe, expect, test } from "vitest";
 import {
   applyChanges,
@@ -282,10 +283,10 @@ describe("live games", () => {
 });
 
 describe("album page", () => {
-  const page = {
+  const page: BrowsePage = {
     header: { kind: "album", id: "a", title: "Album" },
     rows: [],
-  } as const;
+  };
 
   test("play-all selects the album's music id", () => {
     const item = albumPlayItem({

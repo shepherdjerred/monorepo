@@ -22,6 +22,8 @@ export function serveWebHandler(
 
 export async function startWebServer(deps: {
   bootstrap: WebBootstrap;
+  /** The server's own Bugsink DSN, handed to signed-in browsers; `null` when Bugsink is off. */
+  bugsinkDsn: string | null;
   stateDir: string;
   playback: WebPlaybackDeps;
   applicationId: () => string;
@@ -35,6 +37,7 @@ export async function startWebServer(deps: {
   );
   const handler = createWebHandler({
     bootstrap: deps.bootstrap,
+    bugsinkDsn: deps.bugsinkDsn,
     store,
     playback: new WebPlayback(deps.playback),
     applicationId: deps.applicationId,

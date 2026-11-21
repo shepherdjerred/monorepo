@@ -6,8 +6,8 @@ description: Privacy configuration, public-token setup, and production verificat
 PostHog Cloud US provides analytics for `sjer.red`, `resume.sjer.red`,
 `webring.sjer.red`, `better-skill-capped.com`, `scout-for-lol.com`,
 `beta.scout-for-lol.com`, `ts-mc.net`, `docs.ts-mc.net`, `ppl.glitter-boys.com`,
-`cook.sjer.red`, `stocks.sjer.red`, `wiki.sjer.red`, and `public.ts-mc.net`.
-Scout's `/docs/` pages share the Scout host identity and tracker. PostHog is a
+`cook.sjer.red`, `stocks.sjer.red`, `wiki.sjer.red`, `public.ts-mc.net`, and
+`streambot.sjer.red`. Scout's `/docs/` pages share the Scout host identity and tracker. PostHog is a
 managed external service: the cluster has no PostHog namespace, database,
 volume, DNS record, secret, or readiness dependency.
 
@@ -47,8 +47,11 @@ Do Not Track, so a DNT browser sends nothing at all.
 Input masking is not sufficient everywhere. `maskAllInputs` masks form values,
 not arbitrary text nodes, so the sites that render a signed-in identity as
 ordinary text mask every text node instead (`maskTextSelector: "*"`): The Storm
-forum and the whole Scout web app, whose workspace shows guild names, Discord
-display names, Riot accounts, player aliases, and channel names. An element-level allowlist was rejected because it
+forum, the whole Scout web app, whose workspace shows guild names, Discord
+display names, Riot accounts, player aliases, and channel names, and the
+Streambot web remote, which shows titles, Discord names, and channel names.
+Streambot also blanks every non-layout attribute in replay, because its labels
+name the item. An element-level allowlist was rejected because it
 fails open the first time a new component renders a name. Replay still captures
 layout, navigation, and rage or dead clicks. See PostHog's
 [JavaScript configuration](https://posthog.com/docs/libraries/js/config) and

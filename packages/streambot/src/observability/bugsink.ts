@@ -13,12 +13,16 @@ const log = logger.child("observability:bugsink");
  * dev). VERSION is baked into the image (buildImageHelper) and ENVIRONMENT is
  * provided by the homelab deployment; both surface as the Bugsink
  * release/environment so issues are attributable to a deploy.
+ *
+ * Returns the DSN it initialised with, or `null` when disabled. The web remote hands the same
+ * DSN to signed-in browsers (a browser DSN is public by design), so this is the one place it is
+ * read; the value itself is never logged.
  */
-export function initializeBugsink(): void {
+export function initializeBugsink(): string | null {
   const dsn = Bun.env["BUGSINK_DSN"];
   if (dsn === undefined || dsn === "") {
     log.info("Bugsink disabled: BUGSINK_DSN not set");
-    return;
+    return null;
   }
 
   Sentry.init({
@@ -35,4 +39,5 @@ export function initializeBugsink(): void {
   });
 
   log.info("Bugsink initialized");
+  return dsn;
 }

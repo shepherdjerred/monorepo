@@ -153,6 +153,7 @@
       "namespaces": ["media"],
       "argoApps": ["media"],
       "bugsinkProjects": ["streambot"],
+      "analyticsSites": ["streambot"],
       "grafanaDashboards": ["streambot", "streambot-voice"],
       "deploy": [
         {

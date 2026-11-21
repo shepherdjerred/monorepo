@@ -15,6 +15,7 @@ import { RemoteProvider, type Me } from "./remote.tsx";
 import { Results } from "./search/results.tsx";
 import { useQuery } from "./search/search-box.tsx";
 import { useLoad } from "./use-load.ts";
+import { useTelemetry } from "./telemetry/track.ts";
 import { useRoom } from "./room/use-room.ts";
 import "./styles/shell.css";
 
@@ -123,6 +124,7 @@ function Remote(props: { me: Me }) {
 /** Sign-in gate, then the remote: header, the current page, and the now-playing rail. */
 export function App() {
   const me = useLoad("/api/me", MeSchema);
+  useTelemetry(me.state);
   if (me.state.status === "loading")
     return (
       <main className="welcome" aria-busy="true">

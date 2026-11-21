@@ -25,6 +25,8 @@ export const MeSchema = z.strictObject({
   csrfToken: z.string(),
   /** Random pseudonym for usage analytics; `null` only when the id store is full. */
   analyticsId: z.uuid().nullable(),
+  /** Public Bugsink DSN for browser error reports; `null` when the server has Bugsink off. */
+  bugsinkDsn: z.url().nullable(),
 });
 export const LibraryItemSchema = z.strictObject({
   id: z.string(),

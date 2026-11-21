@@ -13,6 +13,7 @@ import {
   useRemote,
   type Remote,
 } from "@shepherdjerred/streambot/web/client/remote.tsx";
+import { trackResultChosen } from "@shepherdjerred/streambot/web/client/telemetry/track.ts";
 import { RowMenu, type MenuItem } from "./row-menu.tsx";
 import type { MediaItem } from "./row-model.ts";
 import {
@@ -138,6 +139,7 @@ export function PlayActions(props: {
       controls[key].explain(NO_VOICE);
       return;
     }
+    trackResultChosen(item, key === "menu", request);
     controls[key].run(playTask(remote, item, request));
   };
   const items = menuItems(remote, item, (request) => {
@@ -184,6 +186,7 @@ export function PlayActions(props: {
         )}
       </div>
       <ControlStatus
+        surface="row"
         className="row-status"
         control={last === null ? null : controls[last]}
       />

@@ -50,7 +50,7 @@ import {
   recordSignIn,
   runObservedCommand,
 } from "./usage/observation.ts";
-import { ARTWORK_HOSTS } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
+import { contentSecurityPolicy } from "./http/csp.ts";
 import {
   webFailureDiagnostic,
   webFailureEndpoint,
@@ -76,6 +76,8 @@ async function readCommand(request: Request) {
 
 export function createWebHandler(deps: {
   bootstrap: WebBootstrap;
+  /** Public Bugsink DSN for signed-in browsers and the CSP's connect-src; `null` when off. */
+  bugsinkDsn: string | null;
   store: WebSessionStore;
   playback: WebPlayback;
   applicationId: () => string;
@@ -97,6 +99,7 @@ export function createWebHandler(deps: {
       (await deps.plexPostersEnabled?.(guildId, userId)) ?? false,
   );
   const search = new WebSearch(deps.playback, music);
+  const csp = contentSecurityPolicy(deps.bugsinkDsn);
   const requests = new Map<
     string,
     { count: number; artwork: number; search: number; resets: number }
@@ -127,6 +130,7 @@ export function createWebHandler(deps: {
         csrfToken: auth.csrfToken(request, session),
         analyticsId:
           usageAnalytics().analyticsId(session.identity.userId) ?? null,
+        bugsinkDsn: deps.bugsinkDsn,
       });
     }
     const roomResponse = await room.handle(request, url, session, () =>
@@ -392,12 +396,7 @@ export function createWebHandler(deps: {
     }
     response.headers.set("x-content-type-options", "nosniff");
     response.headers.set("referrer-policy", "same-origin");
-    response.headers.set(
-      "content-security-policy",
-      "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' " +
-        ARTWORK_HOSTS.map((host) => "https://" + host).join(" ") +
-        "; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-    );
+    response.headers.set("content-security-policy", csp);
     if (
       new URL(request.url).pathname.startsWith("/api/") &&
       !response.headers.has("cache-control")

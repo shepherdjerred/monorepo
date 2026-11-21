@@ -3723,7 +3723,8 @@
           "https://stocks.sjer.red",
           "https://public.ts-mc.net",
           "https://join.ts-mc.net",
-          "https://wiki.sjer.red"
+          "https://wiki.sjer.red",
+          "https://streambot.sjer.red"
         ],
         "autocapture_web_vitals_opt_in": true,
         "capture_performance_opt_in": true,
@@ -3744,7 +3745,8 @@
           "https://stocks.sjer.red",
           "https://public.ts-mc.net",
           "https://join.ts-mc.net",
-          "https://wiki.sjer.red"
+          "https://wiki.sjer.red",
+          "https://streambot.sjer.red"
         ],
         "session_recording_opt_in": true,
         "test_account_filters": "${jsonencode([{\"key\" = \"id\", \"operator\" = \"not_in\", \"type\" = \"cohort\", \"value\" = posthog_cohort.internal_test_users.id}])}"

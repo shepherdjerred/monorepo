@@ -36,7 +36,11 @@ function Group(props: {
           {props.title}
         </h2>
         <p className="status">
-          <FailureNotice failure={state.failure} onRetry={props.onRetry} />
+          <FailureNotice
+            failure={state.failure}
+            onRetry={props.onRetry}
+            surface="search"
+          />
         </p>
       </section>
     );
@@ -59,8 +63,8 @@ function Group(props: {
         )}
       </h2>
       <ul className="rows">
-        {state.items.map((item) => (
-          <MediaRow key={item.key} item={item} />
+        {state.items.map((item, index) => (
+          <MediaRow key={item.key} item={{ ...item, rank: index + 1 }} />
         ))}
       </ul>
     </section>

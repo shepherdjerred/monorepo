@@ -1,13 +1,20 @@
 import type { ApiFailure } from "./api.ts";
 import { describeFailure } from "./messages.ts";
+import type { FailureSurface } from "./telemetry/events.ts";
+import { useErrorShown } from "./telemetry/track.ts";
 import "./styles/status.css";
 
-/** A specific error, with Retry when it can help and the Reference an operator searches for. */
+/**
+ * A specific error, with Retry when it can help and the Reference an operator searches for.
+ * `surface` says where it is shown, for analytics only.
+ */
 export function FailureNotice(props: {
   failure: ApiFailure;
   onRetry?: () => void;
   onDismiss?: () => void;
+  surface?: FailureSurface;
 }) {
+  useErrorShown(props.failure, props.surface ?? "page");
   const copy = describeFailure(props.failure);
   return (
     <span className="status-error">

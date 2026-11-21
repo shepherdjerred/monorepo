@@ -58,7 +58,11 @@ export function ScheduleRow(props: {
               <span className="visually-hidden">: {item.title}</span>
             </button>
           </div>
-          <ControlStatus className="row-status" control={control} />
+          <ControlStatus
+            surface="row"
+            className="row-status"
+            control={control}
+          />
         </>
       }
     />

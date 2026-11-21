@@ -82,7 +82,11 @@ function QueueEntry(props: {
           <span aria-hidden="true">✕</span>
         </button>
       </span>
-      <ControlStatus className="queue-status" control={control} />
+      <ControlStatus
+        surface="rail"
+        className="queue-status"
+        control={control}
+      />
     </li>
   );
 }
@@ -145,7 +149,7 @@ export function QueueList(props: { player: WebRoomPlayer }) {
           </ConfirmButton>
         )}
       </div>
-      <ControlStatus control={group.status} />
+      <ControlStatus surface="rail" control={group.status} />
       {saving && (
         <SaveQueueDialog
           slot={player.slot}

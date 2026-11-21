@@ -97,7 +97,11 @@ export function Timeline(props: { player: WebRoomPlayer }) {
         </span>
       )}
       <span className="numeric">{formatTime(duration)}</span>
-      <ControlStatus className="timeline-status" control={control} />
+      <ControlStatus
+        surface="rail"
+        className="timeline-status"
+        control={control}
+      />
     </div>
   );
 }
@@ -237,7 +241,7 @@ export function PlayerControls(props: {
           </button>
         )}
       </div>
-      <ControlStatus control={group.status} />
+      <ControlStatus surface="rail" control={group.status} />
     </div>
   );
 }

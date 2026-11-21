@@ -27,6 +27,8 @@ export type MediaItem = {
   readonly selection: MediaSelection | null;
   /** In-app page this item opens instead of, or as well as, playing. */
   readonly href?: string;
+  /** 1-based position in the result group that listed it; analytics reports only a bucket. */
+  readonly rank?: number;
 };
 
 export function rowItem(row: Row): MediaItem {

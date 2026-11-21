@@ -121,6 +121,7 @@ export function SubtitlesDialog(props: {
         {failure !== null && (
           <p className="status">
             <FailureNotice
+              surface="dialog"
               failure={failure}
               onRetry={() => {
                 setAttempt((value) => value + 1);
@@ -153,7 +154,7 @@ export function SubtitlesDialog(props: {
             ))}
           </fieldset>
         )}
-        <ControlStatus control={apply} />
+        <ControlStatus surface="dialog" control={apply} />
         <div className="dialog-actions btn-row">
           <button
             type="button"

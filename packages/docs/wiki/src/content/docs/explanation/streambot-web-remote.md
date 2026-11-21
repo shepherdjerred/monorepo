@@ -170,6 +170,20 @@ Both are pages of one build, and
 [the asset router](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/assets.ts)
 decides which page owns a path, for the server and the development server alike.
 
+## The browser reports shapes, not content
+
+Everything the remote displays is personal: titles, searches, Discord names and channels.
+So the browser reports only the shape of what happened.
+A page view is the route pattern, such as `/album/:id`, never the path or the query.
+A chosen result is its kind, a rank bucket, and which button was pressed; a shown error is its code and where it appeared.
+The client's `telemetry/` module in the
+[browser client](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/web/client)
+builds those payloads from closed vocabularies and rewrites every URL PostHog would record to its route pattern, and a unit test runs them against identifying fixture text.
+Nothing loads until the server hands the page its random analytics id, and nothing loads at all under Do Not Track or Global Privacy Control.
+Session replay masks every text node and every non-layout attribute, because the labels name the item; see [PostHog](/explanation/homelab/posthog/) for the shared privacy rules.
+
+Browser errors go to the same Bugsink project as the server, tagged with the last request reference, so one reference finds both the trace and the error.
+
 ## Discovery shares media metadata
 
 Library, queue, and player images use TMDB posters with the existing server-side credential.
@@ -178,7 +192,7 @@ does not delay browsing or playback. YouTube search results carry their provider
 Only supported public image CDNs can reach the browser; local paths and credentials stay on the server.
 TMDB attribution appears in the remote's artwork credits.
 
-The Live sports tab combines StreamEast, TVSportsLive, and official LoL Esports listings.
+The Live page combines StreamEast, TVSportsLive, and official LoL Esports listings.
 Its event selections are short-lived and bound to the viewer.
 Upcoming games remain visible but cannot be queued. Live selections enter the shared
 playback service, which checks the sports gate and resolves the provider's stream.
@@ -245,7 +259,7 @@ Library, video, live and history groups are separate requests, so they keep answ
 
 The remaining facts about the music surface are unchanged.
 The [web recording picker](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/web/server/music.ts)
-still lets listeners correct a MusicBrainz or Spotify song's video.
+still lets a playlist's owner correct a MusicBrainz or Spotify song's video.
 Saved sources retain catalog identity alongside the selected video, so [voice recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/session/voice-recovery.ts)
 can resolve a fresh audio URL. The [artwork resolver](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/music/artwork.ts)
 keeps album artwork with saved playlists, queues, recovery, and player cards.

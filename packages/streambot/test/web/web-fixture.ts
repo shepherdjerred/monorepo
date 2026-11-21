@@ -108,6 +108,11 @@ function resolved(source: Source): ResolvedSource {
   };
 }
 
+/** Bugsink is off unless a test opts in with a fake DSN. */
+function fixtureBugsinkDsn(options: { bugsinkDsn?: string }): string | null {
+  return options.bugsinkDsn ?? null;
+}
+
 /** Real actor, command service, catalog and auth; only Discord/media I/O is simulated. */
 export function webFixture(
   origin = "http://127.0.0.1:8080",
@@ -142,6 +147,7 @@ export function webFixture(
     schedules?: LolPlaybackSchedules;
     lol?: boolean;
     username?: string;
+    bugsinkDsn?: string;
   } = {},
 ) {
   const library = options.library ?? LIBRARY;
@@ -346,6 +352,7 @@ export function webFixture(
       clientSecret: "fixture-only",
       port: 8080,
     },
+    bugsinkDsn: fixtureBugsinkDsn(options),
     store,
     playback,
     assetsDir,

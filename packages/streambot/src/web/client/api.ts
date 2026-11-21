@@ -20,6 +20,13 @@ export function shortReference(traceId: string | null): string | null {
     : null;
 }
 
+let lastReference: string | null = null;
+
+/** The Reference of the most recent API response, so a crash report can name the request before it. */
+export function lastApiReference(): string | null {
+  return lastReference;
+}
+
 function failure(
   status: number,
   code: string,
@@ -56,6 +63,7 @@ export async function apiRequest<T>(
       : failure(0, "network", "Streambot could not be reached.");
   }
   const reference = shortReference(response.headers.get("x-trace-id"));
+  if (reference !== null) lastReference = reference;
   const body = await readJson(response);
   if (!response.ok) {
     const parsed = ErrorSchema.safeParse(body);

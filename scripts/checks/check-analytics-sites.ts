@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { parseAnalyticsRegistry } from "../lib/scout/scout-analytics-config.ts";
 
 const root = new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
@@ -173,6 +174,7 @@ const expectedHostnames = new Set([
   "stocks.sjer.red",
   "wiki.sjer.red",
   "public.ts-mc.net",
+  "streambot.sjer.red",
 ]);
 const actualHostnames = new Set(registry.sites.map((site) => site.hostname));
 if (
@@ -363,6 +365,70 @@ for (const requiredSetting of [
       `${scoutDocsConfigPath} must configure Scout docs PostHog setting ${requiredSetting}`,
     );
   }
+}
+
+// The Streambot web remote bundles posthog-js and loads it only for a signed-in
+// viewer with an analytics id. Its public identity is a JSON file the client and
+// the server's CSP both read; its configuration renders Discord names and titles,
+// so it masks every text node, input and non-layout attribute, and sanitizes URLs.
+const streambotSitePath =
+  "packages/streambot/src/web/shared/analytics-site.json";
+const streambotSite = z
+  .strictObject({
+    projectToken: z.string(),
+    proxyHost: z.string(),
+    siteKey: z.string(),
+    hostname: z.string(),
+  })
+  .parse(await Bun.file(`${root}/${streambotSitePath}`).json());
+const streambotRegistered = registry.sites.find(
+  (site) => site.key === streambotSite.siteKey,
+);
+if (
+  streambotRegistered?.hostname !== streambotSite.hostname ||
+  streambotSite.projectToken !== registry.projectToken ||
+  streambotSite.proxyHost !== registry.proxyHost
+) {
+  throw new Error(
+    `${streambotSitePath} must match the registry's ${streambotSite.siteKey} site, project token and proxy host`,
+  );
+}
+const streambotConfigPath =
+  "packages/streambot/src/web/client/telemetry/posthog-config.ts";
+const streambotConfig = await Bun.file(`${root}/${streambotConfigPath}`).text();
+for (const requiredSetting of [
+  "api_host: ANALYTICS_SITE.proxyHost",
+  "asset_host: ANALYTICS_SITE.proxyHost",
+  "autocapture: true",
+  "capture_pageleave: true",
+  "capture_heatmaps: true",
+  "capture_dead_clicks: true",
+  "capture_performance: { web_vitals: true, network_timing: false }",
+  "respect_dnt: true",
+  'person_profiles: "always"',
+  "mask_all_text: true",
+  "mask_all_element_attributes: true",
+  "maskAllInputs: true",
+  'maskTextSelector: "*"',
+  "maskAttributeFn: replayAttribute",
+  "maskCapturedNetworkRequestFn:",
+  "before_send: (result) => sanitizeCapture(result, siteOrigin)",
+  "disable_session_recording: false",
+]) {
+  if (!streambotConfig.includes(requiredSetting)) {
+    throw new Error(
+      `${streambotConfigPath} must configure Streambot PostHog setting ${requiredSetting}`,
+    );
+  }
+}
+// `before_send` is required here: it is what rewrites URLs to route patterns.
+const forbiddenStreambotSetting = FORBIDDEN_SETTINGS.filter(
+  (setting) => setting.key !== "before_send",
+).find((setting) => setting.pattern.test(streambotConfig))?.key;
+if (forbiddenStreambotSetting !== undefined) {
+  throw new Error(
+    `${streambotConfigPath} must not set ${forbiddenStreambotSetting}`,
+  );
 }
 
 if (registry.projectToken === "phc_REPLACEWITHEXISTINGPROJECTTOKEN") {
