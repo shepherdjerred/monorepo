@@ -11,7 +11,7 @@ import { defaultScope } from "#shared/editions/scope.ts";
 
 const harness = legacyClaimsHarness();
 
-async function fixture(status = 5) {
+async function fixture(status = 5, requesters: "mapped" | "mixed" = "mapped") {
   const f = await harness.setup();
   const record: MigrationRecord = {
     kind: "request",
@@ -28,7 +28,14 @@ async function fixture(status = 5) {
   };
   const capture = await new PrismaMigrationAdministration(f.db).upload(
     f.owner,
-    { snapshot: captureFixture("seerr", [record]) },
+    {
+      snapshot: captureFixture(
+        "seerr",
+        requesters === "mapped"
+          ? [record]
+          : [record, { ...record, sourceId: "2", requesterSourceId: "8" }],
+      ),
+    },
   );
   await f.bind(capture.captureId);
   const service = new PrismaPersonalMigration(f.db, {
@@ -190,6 +197,137 @@ test("a changed binding identity or native state invalidates the exact preview b
   expect(changed.claims[0]?.reason).toBe(
     "exact_plex_requester_binding_required",
   );
+});
+
+test("an exact reviewed Seerr selection imports only its own claim and keeps an omitted requester protected", async () => {
+  const f = await fixture(5, "mixed");
+  await establishCurrentMovieTarget(f);
+  await holdCurrentLibrary(
+    f,
+    true,
+    "migration_household_intent_review_required",
+  );
+  const full = await f.service.preview(f.owner, f.selection);
+  expect(full.blocked).toBe(true);
+  expect(full).not.toHaveProperty("selectedSeerrRequests");
+  const matched = full.claims.find((claim) => claim.sourceId === "1");
+  const unmapped = full.claims.find((claim) => claim.sourceId === "2");
+  if (matched === undefined || unmapped === undefined)
+    throw new Error("Fixture needs two captured Seerr requesters");
+  expect(matched.disposition).toBe("import");
+  expect(unmapped.reason).toBe("exact_plex_requester_binding_required");
+  const approved = {
+    captureId: matched.captureId,
+    provenanceKey: matched.provenanceKey,
+  };
+  const blocked = {
+    captureId: unmapped.captureId,
+    provenanceKey: unmapped.provenanceKey,
+  };
+  const completeSelection = await f.service.preview(f.owner, {
+    ...f.selection,
+    selectedSeerrRequests: [approved, blocked],
+  });
+  expect(completeSelection.claims).toEqual(full.claims);
+  expect(completeSelection.previewHash).not.toBe(full.previewHash);
+  const acknowledgement = {
+    acknowledgeExistingLibraryKeep: true as const,
+    acknowledgeTemporaryFollowingClaims: true as const,
+  };
+  const key = crypto.randomUUID();
+  await expect(
+    f.service.apply(f.owner, key, {
+      ...f.selection,
+      ...acknowledgement,
+      previewHash: full.previewHash,
+    }),
+  ).rejects.toMatchObject({ code: "personal_migration_blocked" });
+
+  await expect(
+    f.service.preview(f.owner, {
+      ...f.selection,
+      selectedSeerrRequests: [{ ...approved, provenanceKey: "a".repeat(64) }],
+    }),
+  ).rejects.toMatchObject({ code: "invalid_input" });
+  await expect(
+    f.service.preview(f.owner, {
+      ...f.selection,
+      selectedSeerrRequests: [approved, approved],
+    }),
+  ).rejects.toThrow("Select each exact Seerr request only once");
+  await expect(
+    f.service.preview(f.owner, {
+      ...f.selection,
+      historyOnly: [blocked.provenanceKey],
+      selectedSeerrRequests: [approved],
+    }),
+  ).rejects.toMatchObject({ code: "invalid_input" });
+
+  const selectedInput = { ...f.selection, selectedSeerrRequests: [approved] };
+  const selected = await f.service.preview(f.owner, selectedInput);
+  expect(selected).toMatchObject({
+    selectedSeerrRequests: [approved],
+    blocked: false,
+    claims: [matched],
+    captures: full.captures,
+  });
+  const blockedInput = { ...f.selection, selectedSeerrRequests: [blocked] };
+  await expect(
+    f.service.apply(f.owner, crypto.randomUUID(), {
+      ...blockedInput,
+      ...acknowledgement,
+      previewHash: selected.previewHash,
+    }),
+  ).rejects.toMatchObject({ code: "personal_migration_stale" });
+  const blockedPreview = await f.service.preview(f.owner, blockedInput);
+  await expect(
+    f.service.apply(f.owner, crypto.randomUUID(), {
+      ...blockedInput,
+      ...acknowledgement,
+      previewHash: blockedPreview.previewHash,
+    }),
+  ).rejects.toMatchObject({ code: "personal_migration_blocked" });
+
+  const input = {
+    ...selectedInput,
+    ...acknowledgement,
+    previewHash: selected.previewHash,
+  };
+  const selectedKey = crypto.randomUUID();
+  const applied = await f.service.apply(f.owner, selectedKey, input);
+  expect(await f.service.apply(f.owner, selectedKey, input)).toEqual(applied);
+  const receipt = await f.db.applicationEvent.findUniqueOrThrow({
+    where: { id: applied.eventId },
+  });
+  const stored = await f.db.migrationRecord.findMany({
+    where: { captureId: approved.captureId, kind: "request" },
+  });
+  expect(stored.map((record) => record.provenanceKey).sort()).toEqual(
+    [approved.provenanceKey, blocked.provenanceKey].sort(),
+  );
+  expect(receipt.payload).toMatchObject({
+    captures: full.captures,
+    claims: [matched],
+    sourceRecords: [
+      {
+        ...approved,
+        observationHash: stored.find(
+          (record) => record.provenanceKey === approved.provenanceKey,
+        )?.observationHash,
+      },
+    ],
+    imports: [{ ...approved, userId: f.subject.id }],
+  });
+  expect(
+    await f.db.mediaRequest.findMany({
+      where: { mediaId: f.movie.id },
+      select: { userId: true, active: true },
+    }),
+  ).toEqual([{ userId: f.subject.id, active: true }]);
+  const hold = await f.db.recoveryHold.findUniqueOrThrow({
+    where: { mediaId_edition: defaultScope(f.movie.id) },
+  });
+  expect(hold.releasedAt).toBeNull();
 });
 
 test("declined source requests remain visible history and never create active native interest", async () => {

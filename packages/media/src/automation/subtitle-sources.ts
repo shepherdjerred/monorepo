@@ -214,28 +214,18 @@ export async function fromAssrt(
   const provider = new AssrtProvider(credential.token, transport);
   const candidates = await provider.search(input.query);
   for (const candidate of candidates.slice(0, 5)) {
-    if (!("id" in candidate)) continue;
-    const detail = await provider.detail(candidate.id);
+    const id = "id" in candidate ? candidate.id : candidate.fileid;
+    const detail = await provider.detail(id);
     const members =
       detail.filelist?.filter((file) =>
         subtitleVersionMatches(file.f, input.sourceFilename),
       ) ?? [];
     if (members.length !== 1 || members[0] === undefined) continue;
-    if (
-      !subtitleProviderCandidateAllowedV1(
-        input,
-        "assrt",
-        `${String(candidate.id)}:${members[0].f}`,
-      )
-    )
+    const candidateId = `${String(id)}:${members[0].f}`;
+    if (!subtitleProviderCandidateAllowedV1(input, "assrt", candidateId))
       continue;
-    await claimSubtitleDownload(
-      context,
-      input,
-      "assrt",
-      `${String(candidate.id)}:${members[0].f}`,
-    );
-    const bytes = await provider.downloadMember(candidate.id, members[0].f);
+    await claimSubtitleDownload(context, input, "assrt", candidateId);
+    const bytes = await provider.downloadMember(id, members[0].f);
     return {
       filename: members[0].f,
       description: `${detail.videoname ?? ""} ${detail.producer?.source ?? ""}`,

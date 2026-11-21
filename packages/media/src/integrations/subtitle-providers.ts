@@ -195,8 +195,9 @@ export class OpenSubtitlesProvider {
   }
 }
 
+const AssrtSubtitleIdSchema = z.int().positive();
 const AssrtSubtitleSchema = z.object({
-  id: z.number().int().positive(),
+  id: AssrtSubtitleIdSchema,
   videoname: z.string().optional(),
   native_name: z.union([z.string(), z.array(z.string())]).optional(),
   title: z.string().optional(),
@@ -236,7 +237,14 @@ export class AssrtProvider {
             z.union([
               AssrtSubtitleSchema,
               z.object({
-                fileid: z.number().int().positive(),
+                fileid: z.union([
+                  AssrtSubtitleIdSchema,
+                  z
+                    .string()
+                    .regex(/^\d+$/u)
+                    .transform(Number)
+                    .pipe(AssrtSubtitleIdSchema),
+                ]),
                 filename: z.string().optional(),
               }),
             ]),
@@ -247,7 +255,7 @@ export class AssrtProvider {
   }
 
   async detail(id: number, signal?: AbortSignal) {
-    z.number().int().positive().parse(id);
+    AssrtSubtitleIdSchema.parse(id);
     const data = await this.get("sub/detail", { id: String(id) }, signal);
     const parsed = z
       .object({

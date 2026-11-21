@@ -289,6 +289,57 @@ describe("subtitle provider boundaries", () => {
     ]);
   });
 
+  it("ASSRT accepts numeric and decimal-string file IDs and verifies detail identity", async () => {
+    const calls: string[] = [];
+    const provider = new AssrtProvider("fixture-token", async (url) => {
+      calls.push(url.pathname);
+      if (url.pathname === "/v1/sub/search") {
+        expect(url.searchParams.get("is_file")).toBe("1");
+        expect(url.searchParams.get("cnt")).toBe("15");
+        return Response.json({
+          status: 0,
+          sub: { subs: [{ id: 41 }, { fileid: "42" }, { fileid: 43 }] },
+        });
+      }
+      expect(url.pathname).toBe("/v1/sub/detail");
+      expect(url.searchParams.get("id")).toBe("42");
+      return Response.json({ status: 0, sub: { subs: [{ id: 43 }] } });
+    });
+    const results = await provider.search("Fixture");
+    expect(results).toEqual([{ id: 41 }, { fileid: 42 }, { fileid: 43 }]);
+    const raw = results[1];
+    if (raw === undefined || !("fileid" in raw))
+      throw new Error("Missing raw ASSRT search record");
+    await expect(
+      provider.downloadMember(raw.fileid, "Fixture.srt"),
+    ).rejects.toMatchObject({ kind: "invalid-response" });
+    expect(calls).toEqual(["/v1/sub/search", "/v1/sub/detail"]);
+  });
+
+  it("ASSRT rejects malformed and unsafe raw file IDs during search", async () => {
+    for (const fileid of [
+      true,
+      0,
+      -42,
+      4.2,
+      Number.MAX_SAFE_INTEGER + 1,
+      "",
+      " 42",
+      "42\n",
+      "+42",
+      "4e2",
+      "4.2",
+      "0x2a",
+      "9007199254740992",
+    ]) {
+      const provider = new AssrtProvider("fixture-token", async (url) => {
+        expect(url.pathname).toBe("/v1/sub/search");
+        return Response.json({ status: 0, sub: { subs: [{ fileid }] } });
+      });
+      await expect(provider.search("Fixture")).rejects.toThrow();
+    }
+  });
+
   it("ASSRT keeps auth out of URLs and selects one exact pack member", async () => {
     const provider = new AssrtProvider("fixture-token", async (url, init) => {
       expect(url.search).not.toContain("token");

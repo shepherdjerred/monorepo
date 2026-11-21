@@ -97,6 +97,7 @@ export class PrismaPersonalMigration extends MediaCommandBase {
       captureIds: input.captureIds,
       movieEditions: input.movieEditions,
       historyOnly: input.historyOnly,
+      selectedSeerrRequests: input.selectedSeerrRequests,
     });
     const current = await this.db.mediaUser.findUniqueOrThrow({
       where: { id: actor.id },
@@ -170,10 +171,16 @@ export class PrismaPersonalMigration extends MediaCommandBase {
             },
             data: { libraryKeep: true, version: { increment: 1 } },
           });
-        // Retain every source disposition, including declined/obsolete history.
+        // Retain each approved source disposition, including declined/obsolete history.
         // This receipt does not assert playback completion or transfer authority.
         const sourceRecords = await tx.migrationRecord.findMany({
-          where: { captureId: { in: selection.captureIds }, kind: "request" },
+          where: {
+            captureId: { in: selection.captureIds },
+            kind: "request",
+            ...(preview.selectedSeerrRequests === undefined
+              ? {}
+              : { OR: preview.selectedSeerrRequests }),
+          },
           select: {
             captureId: true,
             provenanceKey: true,
@@ -184,6 +191,13 @@ export class PrismaPersonalMigration extends MediaCommandBase {
         });
         if (sourceRecords.length > 1000)
           throw new Error("Personal source receipt exceeds bounded claims");
+        if (
+          preview.selectedSeerrRequests !== undefined &&
+          sourceRecords.length !== preview.selectedSeerrRequests.length
+        )
+          throw new Error(
+            "An exact selected Seerr source record is unavailable",
+          );
         const event = await tx.applicationEvent.create({
           data: {
             actorId: actor.id,
