@@ -7,7 +7,8 @@
  *   bun scripts/network-policy/check-namespace.ts --all-staged [--json]
  *   bun scripts/network-policy/check-namespace.ts --coverage [--allow-unstaged <name-or-prefix>]... [--json]
  *
- * Flags: `--since-minutes <n>` (restart and denial window, default 10),
+ * Flags: `--since-minutes <n>` (the window in which a restart or a Failed pod
+ * counts, and denials are read; default 10),
  * `--expect-stage open|enforced` (fail when the live stage differs) and
  * `--allow-break-glass` (a live break-glass policy otherwise fails the gate).
  * Exits non-zero when any check of any namespace fails.
@@ -33,23 +34,24 @@ import {
 } from "./coverage.ts";
 import { readEnforcerLog } from "./enforcer-log.ts";
 import {
+  activePods,
   EndpointSliceSchema,
-  evaluateDenials,
   evaluatePods,
   evaluateProbes,
   evaluateServices,
   evaluateStage,
   evaluateUrlResponse,
   evaluateUrls,
+  evaluateUrlsWithoutPods,
   namespaceReport,
   parseProbeSuccess,
   PodSchema,
   ServiceSchema,
-  type EnforcerLog,
   type HttpResponse,
   type NamespaceReport,
   type ProbeSuccess,
 } from "./namespace-checks.ts";
+import { evaluateDenials, type EnforcerLog } from "./namespace-denials.ts";
 import { renderReport, renderTable } from "./report.ts";
 import {
   IngressSchema,
@@ -252,9 +254,13 @@ export async function checkNamespace(
     probes: cluster.probes,
     ingresses: cluster.ingresses,
   });
-  const answers = await Promise.all(
-    urls.checks.map((check) => answer(check, dependencies.fetchUrl)),
-  );
+  // A namespace scaled to zero has nothing behind its URLs to answer them.
+  const runsPods = activePods(pods.items).length > 0;
+  const answers = runsPods
+    ? await Promise.all(
+        urls.checks.map((check) => answer(check, dependencies.fetchUrl)),
+      )
+    : [];
   const stage = stageOf(stagingPolicyOf(cluster.policies, namespace));
   const breakGlass = breakGlassState(cluster.policies, namespace);
   return namespaceReport(namespace, stage, breakGlass, [
@@ -264,7 +270,9 @@ export async function checkNamespace(
     }),
     evaluatePods(pods.items, dependencies.now(), options.sinceMinutes),
     evaluateServices(services.items, slices.items),
-    evaluateUrls(answers, urls.unchecked),
+    runsPods
+      ? evaluateUrls(answers, urls.unchecked)
+      : evaluateUrlsWithoutPods(urls.checks.length + urls.unchecked.length),
     evaluateProbes(
       probesOfNamespace(namespace, hostnames, cluster.probes),
       cluster.probeSuccess,

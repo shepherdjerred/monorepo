@@ -79,8 +79,9 @@ bun run netpol:check NAMESPACE --expect-stage open
 No check may fail. Fix anything that does now. A namespace that is unhealthy before the cutover cannot be judged after
 it.
 
-Read the `urls` and `probes` lines. A URL listed as not checked, or a
-namespace with no URL and no probe, has less evidence behind it. Decide what
+Read the `urls` and `probes` lines. A URL listed as not checked, a namespace
+that runs no pods, or a namespace with no URL and no probe, has less evidence
+behind it. Decide what
 you will do by hand in step 4 to make up for it.
 
 ## 3. Flip the stage entry
@@ -129,6 +130,13 @@ The staging policy ships with the namespace's own release. `argocd` and
 
    The restart and denial window is ten minutes. Widen it with
    `--since-minutes` when the sync landed earlier than that.
+
+   A `Failed` pod counts against `pods` only when it failed inside that
+   window. One that failed earlier, such as a pod a node reboot left behind
+   after its controller replaced it, is listed as `(not counted)`. A
+   namespace scaled to zero has no pod to answer its URLs, so `urls` reports
+   `namespace runs no pods` as INFO instead of requesting them. Scale the
+   workload up first if its URLs are part of the evidence you need.
 
 3. Exercise the namespace's own user flow. Sign in, load the page that calls
    its database, send the message, start the job. The gate only sees

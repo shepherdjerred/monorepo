@@ -12,7 +12,7 @@ import {
   type CommandResult,
   type CommandRunner,
 } from "./command.ts";
-import { deniedPacketId, type EnforcerLog } from "./namespace-checks.ts";
+import { deniedPacketId, type EnforcerLog } from "./namespace-denials.ts";
 
 const ENFORCER_NAMESPACE = "kube-system";
 const ENFORCER_DAEMONSET = "kube-flannel";

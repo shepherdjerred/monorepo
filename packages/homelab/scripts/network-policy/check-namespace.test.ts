@@ -13,13 +13,14 @@ import {
 } from "./enforcer-log.ts";
 import {
   breakGlassPolicy,
+  failedPod,
   fakeRunner,
   items,
   otherPolicy,
   probe,
   stagingPolicy,
 } from "./fixtures.ts";
-import { denialsFor } from "./namespace-checks.ts";
+import { denialsFor } from "./namespace-denials.ts";
 
 const daemonSet = (...containers: string[]) => ({
   stdout: JSON.stringify({
@@ -584,5 +585,65 @@ describe("the gate", () => {
     );
     expect(result.exitCode).toBe(1);
     expect(result.output).toContain("nothing was checked");
+  });
+});
+
+describe("what the gate does not count", () => {
+  test("a namespace scaled to zero does not request its URLs", async () => {
+    const requested: string[] = [];
+    const badGateway = (url: string) => {
+      requested.push(url);
+      return Promise.resolve({ status: 502, body: "" });
+    };
+    const policies = [stagingPolicy("minecraft-shuxin", "open")];
+    const finishedJob = { ...readyPod, status: { phase: "Succeeded" } };
+    const scaledToZero = await runCheck(
+      parseCheckArguments(["minecraft-shuxin"]),
+      {
+        ...dependencies(cluster(policies, [finishedJob]).run),
+        fetchUrl: badGateway,
+      },
+    );
+    expect(scaledToZero.exitCode).toBe(0);
+    expect(scaledToZero.output).toMatch(
+      /^INFO\s+urls\s+namespace runs no pods; 2 URLs not checked$/mu,
+    );
+    expect(requested).toEqual([]);
+
+    const running = await runCheck(parseCheckArguments(["minecraft-shuxin"]), {
+      ...dependencies(cluster(policies, [readyPod]).run),
+      fetchUrl: badGateway,
+    });
+    expect(running.exitCode).toBe(1);
+    expect(running.output).toMatch(/^FAIL\s+urls\s+0\/2 URLs/mu);
+    expect(requested).toEqual(["https://shuxin-bluemap.sjer.red/"]);
+  });
+
+  test("an old Failed pod is noted; one that failed in the window fails the gate", async () => {
+    const policies = [stagingPolicy("media", "open")];
+    const stale = failedPod("plex-old", {
+      created: "2026-11-19T10:00:00Z",
+      transitioned: "2026-11-19T10:00:01Z",
+      finished: null,
+    });
+    const passing = await runCheck(
+      parseCheckArguments(["media"]),
+      dependencies(cluster(policies, [readyPod, stale]).run),
+    );
+    expect(passing.exitCode).toBe(0);
+    expect(passing.output).toContain(
+      "    - plex-old: Failed at 2026-11-19T10:00:01.000Z, before the last 10m (not counted)",
+    );
+
+    const job = failedPod("backup-job", {
+      created: "2026-11-20T05:00:00Z",
+      finished: "2026-11-20T06:58:00Z",
+    });
+    const failing = await runCheck(
+      parseCheckArguments(["media"]),
+      dependencies(cluster(policies, [readyPod, stale, job]).run),
+    );
+    expect(failing.exitCode).toBe(1);
+    expect(failing.output).toContain("    - backup-job: not Ready (Failed)");
   });
 });
