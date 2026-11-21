@@ -11,7 +11,10 @@ import {
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import {
+  onePasswordSecret,
+  vaultItemPath,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   dnsEgressRule,
   lokiOtlpEgress,
@@ -41,6 +44,12 @@ export function createTemporalPromotionWorker(
     chart,
     "temporal-promotion-credential-secret",
     credentials.name,
+  );
+  onePasswordSecret(
+    chart,
+    "temporal-promotion-anti-captcha-1p",
+    "xopb2rmxjbgsxcl6vbq6yu2e24",
+    { name: "temporal-promotion-anti-captcha" },
   );
   const browser = new OnePasswordItem(chart, "temporal-promotion-pinchtab-1p", {
     metadata: { name: "temporal-promotion-pinchtab" },
