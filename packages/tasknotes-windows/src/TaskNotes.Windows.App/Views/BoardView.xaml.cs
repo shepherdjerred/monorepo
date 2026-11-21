@@ -87,9 +87,8 @@ namespace TaskNotes.Windows.App.Views
                 }
             }
             string targetColumn = columns[(index + 1) % columns.Count].Value;
-            Run(
-                "advance-board-task",
-                () => RequireViewModel().MoveBoardTaskAsync(task, targetColumn)
+            Run("advance-board-task", () =>
+                RequireViewModel().MoveBoardTaskAsync(task, targetColumn)
             );
         }
 
@@ -105,33 +104,26 @@ namespace TaskNotes.Windows.App.Views
             }
 
             _draggedTask = null;
-            Run(
-                "board-drop",
-                async () =>
-                {
-                    string taskId = await eventArgs.DataView.GetTextAsync();
-                    if (taskId != task.Id)
-                        return;
-                    await RequireViewModel().MoveBoardTaskAsync(task, status);
-                    eventArgs.AcceptedOperation = DataPackageOperation.Move;
-                }
-            );
+            Run("board-drop", async () =>
+            {
+                string taskId = await eventArgs.DataView.GetTextAsync();
+                if (taskId != task.Id)
+                    return;
+                await RequireViewModel().MoveBoardTaskAsync(task, status);
+                eventArgs.AcceptedOperation = DataPackageOperation.Move;
+            });
         }
 
         private void Run(string operationName, Func<Task> operation)
         {
-            UiOperationQueue operations =
-                _operations
+            UiOperationQueue operations = _operations
                 ?? throw new InvalidOperationException("Initialize the board operation queue.");
-            Func<Func<Task>, Task<bool>> execute =
-                _execute ?? throw new InvalidOperationException("Initialize the board executor.");
-            operations.Run(
-                operationName,
-                async () =>
-                {
-                    _ = await execute(operation);
-                }
-            );
+            Func<Func<Task>, Task<bool>> execute = _execute
+                ?? throw new InvalidOperationException("Initialize the board executor.");
+            operations.Run(operationName, async () =>
+            {
+                _ = await execute(operation);
+            });
         }
 
         private ShellViewModel RequireViewModel() =>

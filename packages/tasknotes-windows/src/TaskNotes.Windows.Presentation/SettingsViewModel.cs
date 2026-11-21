@@ -26,8 +26,8 @@ namespace TaskNotes.Windows.Presentation
         )
         {
             _store = store ?? throw new ArgumentNullException(nameof(store));
-            _configuration =
-                configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _configuration = configuration
+                ?? throw new ArgumentNullException(nameof(configuration));
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
             _state = store.State;
             _store.StateChanged += StoreStateChanged;
@@ -114,8 +114,8 @@ namespace TaskNotes.Windows.Presentation
             await _store.ReconfigureAsync(serverUrl, Token, cancellationToken);
             if (_store.State.SyncState != TaskNotesSyncState.Connected)
             {
-                ValidationError =
-                    _store.State.UserFacingError ?? "TaskNotes could not connect to this server.";
+                ValidationError = _store.State.UserFacingError
+                    ?? "TaskNotes could not connect to this server.";
                 if (previous.ServerUrl is string restoredUrl)
                 {
                     await _store.ReconfigureAsync(restoredUrl, previous.Token, cancellationToken);

@@ -53,8 +53,8 @@ namespace TaskNotes.Windows.App
             _quickAdd = quickAdd ?? throw new ArgumentNullException(nameof(quickAdd));
             _inlineQuickAdd = new QuickAddViewModel(store);
             _taskEditor = taskEditor ?? throw new ArgumentNullException(nameof(taskEditor));
-            _settingsViewModel =
-                settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
+            _settingsViewModel = settingsViewModel
+                ?? throw new ArgumentNullException(nameof(settingsViewModel));
             _globalHotkey = globalHotkey ?? throw new ArgumentNullException(nameof(globalHotkey));
             _reminders = new FacetReminderDelivery(Store);
             InitializeComponent();
@@ -247,8 +247,7 @@ namespace TaskNotes.Windows.App
                 case "diagnostics":
                     if (activation.Value == "reset")
                     {
-                        string nonce =
-                            QueryParameter(uri, "nonce")
+                        string nonce = QueryParameter(uri, "nonce")
                             ?? throw new ArgumentException(
                                 "The E2E reset route requires a nonce.",
                                 nameof(uri)
@@ -436,45 +435,38 @@ namespace TaskNotes.Windows.App
             SearchCancellation?.Dispose();
             SearchCancellation = new CancellationTokenSource();
             CancellationToken cancellationToken = SearchCancellation.Token;
-            _uiOperations.Run(
-                "search",
-                async () =>
+            _uiOperations.Run("search", async () =>
+            {
+                try
                 {
-                    try
-                    {
-                        await Task.Delay(200, cancellationToken);
-                        await ApplyQueryAsync(_query with { Search = search });
-                    }
-                    catch (OperationCanceledException)
-                        when (cancellationToken.IsCancellationRequested)
-                    {
-                        return;
-                    }
+                    await Task.Delay(200, cancellationToken);
+                    await ApplyQueryAsync(_query with { Search = search });
                 }
-            );
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+            });
         }
 
         private void SearchBox_QuerySubmitted(string search)
         {
-            _uiOperations.Run(
-                "submit-search",
-                () => ApplyQueryAsync(_query with { Search = search })
+            _uiOperations.Run("submit-search", () =>
+                ApplyQueryAsync(_query with { Search = search })
             );
         }
 
         private void SortComboBox_SelectionChanged(string raw)
         {
-            _uiOperations.Run(
-                "change-sort",
-                () => ApplyQueryAsync(_query with { Sort = Enum.Parse<TaskSortChoice>(raw) })
+            _uiOperations.Run("change-sort", () =>
+                ApplyQueryAsync(_query with { Sort = Enum.Parse<TaskSortChoice>(raw) })
             );
         }
 
         private void GroupComboBox_SelectionChanged(string raw)
         {
-            _uiOperations.Run(
-                "change-group",
-                () => ApplyQueryAsync(_query with { Group = Enum.Parse<TaskGroupChoice>(raw) })
+            _uiOperations.Run("change-group", () =>
+                ApplyQueryAsync(_query with { Group = Enum.Parse<TaskGroupChoice>(raw) })
             );
         }
 
@@ -495,10 +487,8 @@ namespace TaskNotes.Windows.App
                 checkbox.IsChecked = task?.IsCompleted;
                 if (task is not null)
                 {
-                    _uiOperations.Run(
-                        "set-completion",
-                        () =>
-                            RunUiOperationAsync(() => Store.SetCompletionAsync(task.Id, completed))
+                    _uiOperations.Run("set-completion", () =>
+                        RunUiOperationAsync(() => Store.SetCompletionAsync(task.Id, completed))
                     );
                 }
             }
@@ -511,12 +501,10 @@ namespace TaskNotes.Windows.App
             TaskItem[] rows = TaskWorkspace.SelectedTaskRows();
             if (rows.Length > 0)
             {
-                _uiOperations.Run(
-                    "complete-selected",
-                    () =>
-                        RunUiOperationAsync(() =>
-                            Store.CompleteTasksAsync(rows.Select(r => r.Id).ToArray())
-                        )
+                _uiOperations.Run("complete-selected", () =>
+                    RunUiOperationAsync(() =>
+                        Store.CompleteTasksAsync(rows.Select(r => r.Id).ToArray())
+                    )
                 );
             }
         }
@@ -526,26 +514,23 @@ namespace TaskNotes.Windows.App
             _ = sender;
             _ = e;
             TaskItem[] rows = TaskWorkspace.SelectedTaskRows();
-            _uiOperations.Run(
-                "schedule-selected",
-                async () =>
+            _uiOperations.Run("schedule-selected", async () =>
+            {
+                CalendarDatePicker input = new()
                 {
-                    CalendarDatePicker input = new()
-                    {
-                        Header = "Due date",
-                        PlaceholderText = "Choose a date; empty clears it",
-                    };
-                    if (await ShowInputDialogAsync("Schedule selected tasks", input, "Apply"))
-                    {
-                        _ = await RunUiOperationAsync(() =>
-                            Store.ScheduleTasksAsync(
-                                rows.Select(r => r.Id).ToArray(),
-                                input.Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
-                            )
-                        );
-                    }
+                    Header = "Due date",
+                    PlaceholderText = "Choose a date; empty clears it",
+                };
+                if (await ShowInputDialogAsync("Schedule selected tasks", input, "Apply"))
+                {
+                    _ = await RunUiOperationAsync(() =>
+                        Store.ScheduleTasksAsync(
+                            rows.Select(r => r.Id).ToArray(),
+                            input.Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                        )
+                    );
                 }
-            );
+            });
         }
 
         private void PrioritizeSelected_Click(object sender, RoutedEventArgs e)
@@ -553,34 +538,31 @@ namespace TaskNotes.Windows.App
             _ = sender;
             _ = e;
             TaskItem[] rows = TaskWorkspace.SelectedTaskRows();
-            _uiOperations.Run(
-                "prioritize-selected",
-                async () =>
+            _uiOperations.Run("prioritize-selected", async () =>
+            {
+                ComboBox input = new() { Header = "Priority", SelectedIndex = 3 };
+                foreach (
+                    string priorityOption in Store.State.PriorityChoices.Select(choice =>
+                        choice.Value
+                    )
+                )
                 {
-                    ComboBox input = new() { Header = "Priority", SelectedIndex = 3 };
-                    foreach (
-                        string priorityOption in Store.State.PriorityChoices.Select(choice =>
-                            choice.Value
-                        )
-                    )
-                    {
-                        input.Items.Add(priorityOption);
-                    }
-                    ContentDialog dialog = Dialog("Prioritize selected tasks", input, "Apply");
-                    if (
-                        await dialog.ShowAsync() == ContentDialogResult.Primary
-                        && input.SelectedItem is string selectedPriority
-                    )
-                    {
-                        _ = await RunUiOperationAsync(() =>
-                            Store.PrioritizeTasksAsync(
-                                rows.Select(r => r.Id).ToArray(),
-                                selectedPriority
-                            )
-                        );
-                    }
+                    input.Items.Add(priorityOption);
                 }
-            );
+                ContentDialog dialog = Dialog("Prioritize selected tasks", input, "Apply");
+                if (
+                    await dialog.ShowAsync() == ContentDialogResult.Primary
+                    && input.SelectedItem is string selectedPriority
+                )
+                {
+                    _ = await RunUiOperationAsync(() =>
+                        Store.PrioritizeTasksAsync(
+                            rows.Select(r => r.Id).ToArray(),
+                            selectedPriority
+                        )
+                    );
+                }
+            });
         }
 
         private void DeleteSelected_Click(object sender, RoutedEventArgs e)
@@ -588,36 +570,31 @@ namespace TaskNotes.Windows.App
             _ = sender;
             _ = e;
             TaskItem[] rows = TaskWorkspace.SelectedTaskRows();
-            _uiOperations.Run(
-                "delete-selected",
-                async () =>
-                {
-                    if (
-                        rows.Length > 0
-                        && await ConfirmAsync(
-                            "Delete tasks?",
-                            $"Delete {rows.Length} selected task(s)?"
-                        )
+            _uiOperations.Run("delete-selected", async () =>
+            {
+                if (
+                    rows.Length > 0
+                    && await ConfirmAsync(
+                        "Delete tasks?",
+                        $"Delete {rows.Length} selected task(s)?"
                     )
-                    {
-                        _ = await RunUiOperationAsync(() =>
-                            Store.DeleteTasksAsync(rows.Select(r => r.Id).ToArray())
-                        );
-                    }
+                )
+                {
+                    _ = await RunUiOperationAsync(() =>
+                        Store.DeleteTasksAsync(rows.Select(r => r.Id).ToArray())
+                    );
                 }
-            );
+            });
         }
 
         private void Undo_Click(object sender, RoutedEventArgs e)
         {
             _ = sender;
             _ = e;
-            _uiOperations.Run(
-                "undo-completion",
-                () =>
-                    RunUiOperationAsync(() =>
-                        Store.UndoCurrentSavedAsync((sender as FrameworkElement)?.Tag as string)
-                    )
+            _uiOperations.Run("undo-completion", () =>
+                RunUiOperationAsync(() =>
+                    Store.UndoCurrentSavedAsync((sender as FrameworkElement)?.Tag as string)
+                )
             );
         }
 
@@ -655,38 +632,32 @@ namespace TaskNotes.Windows.App
         {
             _ = sender;
             _ = e;
-            _uiOperations.Run(
-                "inline-add",
-                async () =>
+            _uiOperations.Run("inline-add", async () =>
+            {
+                _ = await RunUiOperationAsync(async () =>
                 {
-                    _ = await RunUiOperationAsync(async () =>
-                    {
-                        TaskWorkspace.Composer.CommitTokens();
-                        if (!await _inlineQuickAdd.SaveAsync(true))
-                            ShowValidationMessage(
-                                _inlineQuickAdd.ValidationError ?? "Enter a task to add it."
-                            );
-                        TaskWorkspace.Composer.FocusInput();
-                    });
-                }
-            );
+                    TaskWorkspace.Composer.CommitTokens();
+                    if (!await _inlineQuickAdd.SaveAsync(true))
+                        ShowValidationMessage(
+                            _inlineQuickAdd.ValidationError ?? "Enter a task to add it."
+                        );
+                    TaskWorkspace.Composer.FocusInput();
+                });
+            });
         }
 
         private void Inspector_Click(object sender, RoutedEventArgs e)
         {
             _ = sender;
             _ = e;
-            _uiOperations.Run(
-                "toggle-inspector",
-                async () =>
-                {
-                    if (
-                        !TaskWorkspace.InspectorVisible
-                        || await TaskWorkspace.Editor.ConfirmDiscardAsync()
-                    )
-                        TaskWorkspace.InspectorVisible = !TaskWorkspace.InspectorVisible;
-                }
-            );
+            _uiOperations.Run("toggle-inspector", async () =>
+            {
+                if (
+                    !TaskWorkspace.InspectorVisible
+                    || await TaskWorkspace.Editor.ConfirmDiscardAsync()
+                )
+                    TaskWorkspace.InspectorVisible = !TaskWorkspace.InspectorVisible;
+            });
         }
 
         private void ScheduleTask_Click(object sender, RoutedEventArgs e)
@@ -697,24 +668,21 @@ namespace TaskNotes.Windows.App
                 || TaskFromElement(element) is not TaskItem task
             )
                 return;
-            _uiOperations.Run(
-                "schedule-task",
-                async () =>
+            _uiOperations.Run("schedule-task", async () =>
+            {
+                CalendarDatePicker input = new()
                 {
-                    CalendarDatePicker input = new()
-                    {
-                        Header = "Due date",
-                        PlaceholderText = "Choose a date; empty clears it",
-                    };
-                    if (await ShowInputDialogAsync("Schedule task", input, "Apply"))
-                        _ = await RunUiOperationAsync(() =>
-                            Store.ScheduleTasksAsync(
-                                [task.Id],
-                                input.Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
-                            )
-                        );
-                }
-            );
+                    Header = "Due date",
+                    PlaceholderText = "Choose a date; empty clears it",
+                };
+                if (await ShowInputDialogAsync("Schedule task", input, "Apply"))
+                    _ = await RunUiOperationAsync(() =>
+                        Store.ScheduleTasksAsync(
+                            [task.Id],
+                            input.Date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                        )
+                    );
+            });
         }
 
         private void DeleteTask_Click(object sender, RoutedEventArgs e)
@@ -722,14 +690,11 @@ namespace TaskNotes.Windows.App
             _ = e;
             if (sender is FrameworkElement element && TaskFromElement(element) is TaskItem task)
             {
-                _uiOperations.Run(
-                    "delete-task",
-                    async () =>
-                    {
-                        if (await ConfirmAsync("Delete task?", $"Delete '{task.Title}'?"))
-                            _ = await RunUiOperationAsync(() => Store.DeleteTaskAsync(task.Id));
-                    }
-                );
+                _uiOperations.Run("delete-task", async () =>
+                {
+                    if (await ConfirmAsync("Delete task?", $"Delete '{task.Title}'?"))
+                        _ = await RunUiOperationAsync(() => Store.DeleteTaskAsync(task.Id));
+                });
             }
         }
 
@@ -738,34 +703,29 @@ namespace TaskNotes.Windows.App
             _ = e;
             if (sender is FrameworkElement element && TaskFromElement(element) is TaskItem task)
             {
-                _uiOperations.Run(
-                    "move-status",
-                    async () =>
+                _uiOperations.Run("move-status", async () =>
+                {
+                    ComboBox choices = new()
                     {
-                        ComboBox choices = new()
-                        {
-                            ItemsSource = Store.State.StatusChoices,
-                            DisplayMemberPath = "Label",
-                            SelectedValuePath = "Value",
-                            SelectedValue = task.Status,
-                        };
-                        ContentDialog dialog = new()
-                        {
-                            XamlRoot = RootGrid.XamlRoot,
-                            Title = "Move task to status",
-                            Content = choices,
-                            PrimaryButtonText = "Move",
-                            CloseButtonText = "Cancel",
-                        };
-                        if (
-                            await dialog.ShowAsync() == ContentDialogResult.Primary
-                            && choices.SelectedValue is string status
-                        )
-                            _ = await RunUiOperationAsync(() =>
-                                Store.SetStatusAsync(task.Id, status)
-                            );
-                    }
-                );
+                        ItemsSource = Store.State.StatusChoices,
+                        DisplayMemberPath = "Label",
+                        SelectedValuePath = "Value",
+                        SelectedValue = task.Status,
+                    };
+                    ContentDialog dialog = new()
+                    {
+                        XamlRoot = RootGrid.XamlRoot,
+                        Title = "Move task to status",
+                        Content = choices,
+                        PrimaryButtonText = "Move",
+                        CloseButtonText = "Cancel",
+                    };
+                    if (
+                        await dialog.ShowAsync() == ContentDialogResult.Primary
+                        && choices.SelectedValue is string status
+                    )
+                        _ = await RunUiOperationAsync(() => Store.SetStatusAsync(task.Id, status));
+                });
             }
         }
 
@@ -834,9 +794,8 @@ namespace TaskNotes.Windows.App
             _ = e;
             if (sender is FrameworkElement element && element.Tag is string id)
             {
-                _uiOperations.Run(
-                    "duplicate-saved-view",
-                    () => RunUiOperationAsync(() => Store.DuplicateSavedViewAsync(id))
+                _uiOperations.Run("duplicate-saved-view", () =>
+                    RunUiOperationAsync(() => Store.DuplicateSavedViewAsync(id))
                 );
             }
         }
@@ -851,12 +810,10 @@ namespace TaskNotes.Windows.App
                 );
                 if (view is not null)
                 {
-                    _uiOperations.Run(
-                        "move-saved-view",
-                        () =>
-                            RunUiOperationAsync(() =>
-                                Store.MoveSavedViewAsync(id, Math.Max(0, view.Order - 1))
-                            )
+                    _uiOperations.Run("move-saved-view", () =>
+                        RunUiOperationAsync(() =>
+                            Store.MoveSavedViewAsync(id, Math.Max(0, view.Order - 1))
+                        )
                     );
                 }
             }
@@ -867,14 +824,11 @@ namespace TaskNotes.Windows.App
             _ = e;
             if (sender is FrameworkElement element && element.Tag is string id)
             {
-                _uiOperations.Run(
-                    "delete-saved-view",
-                    async () =>
-                    {
-                        if (await ConfirmAsync("Delete saved view?", "Tasks are not deleted."))
-                            _ = await RunUiOperationAsync(() => Store.DeleteSavedViewAsync(id));
-                    }
-                );
+                _uiOperations.Run("delete-saved-view", async () =>
+                {
+                    if (await ConfirmAsync("Delete saved view?", "Tasks are not deleted."))
+                        _ = await RunUiOperationAsync(() => Store.DeleteSavedViewAsync(id));
+                });
             }
         }
 
@@ -882,19 +836,16 @@ namespace TaskNotes.Windows.App
         {
             _ = sender;
             _ = e;
-            _uiOperations.Run(
-                "restore-saved-views",
-                async () =>
-                {
-                    if (
-                        await ConfirmAsync(
-                            "Restore default saved views?",
-                            "This restores the default saved views while preserving your custom views."
-                        )
+            _uiOperations.Run("restore-saved-views", async () =>
+            {
+                if (
+                    await ConfirmAsync(
+                        "Restore default saved views?",
+                        "This restores the default saved views while preserving your custom views."
                     )
-                        _ = await RunUiOperationAsync(() => Store.RestoreDefaultSavedViewsAsync());
-                }
-            );
+                )
+                    _ = await RunUiOperationAsync(() => Store.RestoreDefaultSavedViewsAsync());
+            });
         }
 
         private void SaveSettings_Click(object sender, RoutedEventArgs e)
@@ -903,41 +854,35 @@ namespace TaskNotes.Windows.App
             _reminders.FenceAccountChange();
             _ = sender;
             _ = e;
-            _uiOperations.Run(
-                "save-settings",
-                async () =>
+            _uiOperations.Run("save-settings", async () =>
+            {
+                try
                 {
-                    try
+                    _ = await RunUiOperationAsync(async () =>
                     {
-                        _ = await RunUiOperationAsync(async () =>
-                        {
-                            bool ok = await _settingsViewModel.SaveAndSyncAsync();
-                            SettingsDestination.ConnectionStatus = _settingsViewModel.StatusMessage;
-                            if (!ok && _settingsViewModel.ValidationError is string validation)
-                                TaskWorkspace.ShowError(validation);
-                        });
-                    }
-                    finally
-                    {
-                        _reminders.AccountChangeObserved();
-                    }
+                        bool ok = await _settingsViewModel.SaveAndSyncAsync();
+                        SettingsDestination.ConnectionStatus = _settingsViewModel.StatusMessage;
+                        if (!ok && _settingsViewModel.ValidationError is string validation)
+                            TaskWorkspace.ShowError(validation);
+                    });
                 }
-            );
+                finally
+                {
+                    _reminders.AccountChangeObserved();
+                }
+            });
         }
 
         private void EnableReminders_Click(object sender, RoutedEventArgs args)
         {
             _ = sender;
             _ = args;
-            _uiOperations.Run(
-                "enable-reminders",
-                () =>
-                {
-                    _reminders.Enable();
-                    SettingsDestination.SetReminderStatus(FacetReminderDelivery.Status);
-                    return Task.CompletedTask;
-                }
-            );
+            _uiOperations.Run("enable-reminders", () =>
+            {
+                _reminders.Enable();
+                SettingsDestination.SetReminderStatus(FacetReminderDelivery.Status);
+                return Task.CompletedTask;
+            });
         }
 
         private void EnableBackgroundSync_Click(object sender, RoutedEventArgs args) =>
@@ -950,30 +895,24 @@ namespace TaskNotes.Windows.App
         {
             _ = sender;
             _ = args;
-            _uiOperations.Run(
-                "background-sync-preference",
-                () =>
-                {
-                    FacetBackgroundRegistration.SetSyncRequested(enabled);
-                    SettingsDestination.SetBackgroundStatus(FacetBackgroundRegistration.Status);
-                    return Task.CompletedTask;
-                }
-            );
+            _uiOperations.Run("background-sync-preference", () =>
+            {
+                FacetBackgroundRegistration.SetSyncRequested(enabled);
+                SettingsDestination.SetBackgroundStatus(FacetBackgroundRegistration.Status);
+                return Task.CompletedTask;
+            });
         }
 
         private void DisableReminders_Click(object sender, RoutedEventArgs args)
         {
             _ = sender;
             _ = args;
-            _uiOperations.Run(
-                "disable-reminders",
-                () =>
-                {
-                    _reminders.Disable();
-                    SettingsDestination.SetReminderStatus(FacetReminderDelivery.Status);
-                    return Task.CompletedTask;
-                }
-            );
+            _uiOperations.Run("disable-reminders", () =>
+            {
+                _reminders.Disable();
+                SettingsDestination.SetReminderStatus(FacetReminderDelivery.Status);
+                return Task.CompletedTask;
+            });
         }
 
         private void RetryParked_Click(object sender, RoutedEventArgs e)
@@ -981,9 +920,8 @@ namespace TaskNotes.Windows.App
             _ = e;
             if (sender is Button button && button.Tag is string mutationId)
             {
-                _uiOperations.Run(
-                    "retry-parked",
-                    () => RunUiOperationAsync(() => _settingsViewModel.RetryParkedAsync(mutationId))
+                _uiOperations.Run("retry-parked", () =>
+                    RunUiOperationAsync(() => _settingsViewModel.RetryParkedAsync(mutationId))
                 );
             }
         }
@@ -993,52 +931,43 @@ namespace TaskNotes.Windows.App
             _ = e;
             if (sender is Button button && button.Tag is string mutationId)
             {
-                _uiOperations.Run(
-                    "discard-parked",
-                    async () =>
-                    {
-                        if (
-                            await ConfirmAsync(
-                                "Discard parked change?",
-                                "This failed local mutation will be removed permanently."
-                            )
+                _uiOperations.Run("discard-parked", async () =>
+                {
+                    if (
+                        await ConfirmAsync(
+                            "Discard parked change?",
+                            "This failed local mutation will be removed permanently."
                         )
-                        {
-                            _ = await RunUiOperationAsync(() =>
-                                _settingsViewModel.DiscardParkedAsync(mutationId)
-                            );
-                        }
+                    )
+                    {
+                        _ = await RunUiOperationAsync(() =>
+                            _settingsViewModel.DiscardParkedAsync(mutationId)
+                        );
                     }
-                );
+                });
             }
         }
 
         private void InitializeGlobalHotkey(string binding)
         {
             nint windowHandle = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            _globalHotkey.Attach(
-                new GlobalHotkeyService(
-                    windowHandle,
-                    () =>
-                    {
-                        if (
-                            !DispatcherQueue.TryEnqueue(() =>
-                            {
-                                Activate();
-                                _uiOperations.Run(
-                                    "global-quick-add",
-                                    () => ShowQuickAddAsync(string.Empty)
-                                );
-                            })
-                        )
+            _globalHotkey.Attach(new GlobalHotkeyService(windowHandle, () =>
+                {
+                    if (
+                        !DispatcherQueue.TryEnqueue(() =>
                         {
-                            throw new InvalidOperationException(
-                                "The UI dispatcher rejected the global Quick Add command."
+                            Activate();
+                            _uiOperations.Run("global-quick-add", () =>
+                                ShowQuickAddAsync(string.Empty)
                             );
-                        }
+                        })
+                    )
+                    {
+                        throw new InvalidOperationException(
+                            "The UI dispatcher rejected the global Quick Add command."
+                        );
                     }
-                )
-            );
+                }));
             if (!string.IsNullOrWhiteSpace(binding))
             {
                 _globalHotkey.Register(binding);
@@ -1124,9 +1053,8 @@ namespace TaskNotes.Windows.App
         {
             _ = sender;
             args.Handled = true;
-            _uiOperations.Run(
-                "refresh-accelerator",
-                () => RunUiOperationAsync(() => ViewModel.RefreshCommand.ExecuteAsync(null))
+            _uiOperations.Run("refresh-accelerator", () =>
+                RunUiOperationAsync(() => ViewModel.RefreshCommand.ExecuteAsync(null))
             );
         }
 
@@ -1155,9 +1083,8 @@ namespace TaskNotes.Windows.App
                 focused = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(focused);
             }
             args.Handled = true;
-            _uiOperations.Run(
-                "undo-accelerator",
-                () => RunUiOperationAsync(() => Store.UndoCurrentSavedAsync())
+            _uiOperations.Run("undo-accelerator", () =>
+                RunUiOperationAsync(() => Store.UndoCurrentSavedAsync())
             );
         }
 

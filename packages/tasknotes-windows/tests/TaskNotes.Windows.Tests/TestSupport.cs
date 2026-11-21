@@ -72,8 +72,7 @@ namespace TaskNotes.Windows.Tests
         /// <summary>Gets a sibling package directory inside the same workspace.</summary>
         internal static string SiblingPackage(string name)
         {
-            string packages =
-                Path.GetDirectoryName(PackageRoot())
+            string packages = Path.GetDirectoryName(PackageRoot())
                 ?? throw new InvalidOperationException("The package root has no parent directory.");
             return Path.Combine(packages, name);
         }

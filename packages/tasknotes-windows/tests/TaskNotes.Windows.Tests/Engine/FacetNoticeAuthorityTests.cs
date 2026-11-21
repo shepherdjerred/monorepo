@@ -25,19 +25,13 @@ public sealed class FacetNoticeAuthorityTests
             TaskCreationOptions.RunContinuationsAsynchronously
         );
         using var release = new ManualResetEventSlim();
-        Task publication = Task.Run(() =>
-            authority.PublishIfOwned(
-                owner,
-                "p",
-                () =>
-                {
-                    publishing.SetResult();
-                    Assert.IsTrue(release.Wait(TimeSpan.FromSeconds(5)));
-                    visible = "Saved";
-                    shell = visible;
-                }
-            )
-        );
+        Task publication = Task.Run(() => authority.PublishIfOwned(owner, "p", () =>
+            {
+                publishing.SetResult();
+                Assert.IsTrue(release.Wait(TimeSpan.FromSeconds(5)));
+                visible = "Saved";
+                shell = visible;
+            }));
         await publishing.Task.WaitAsync(TestContext.CancellationToken);
         Task admission = Task.Run(() =>
         {

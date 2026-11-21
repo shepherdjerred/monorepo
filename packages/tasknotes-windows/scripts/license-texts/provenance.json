@@ -3,15 +3,15 @@
   "licenses": [
     {
       "repository": "https://github.com/dotnet/dotnet",
-      "commit": "95017c711e6afc1085133d440e42b4bd78155701",
-      "source": "https://raw.githubusercontent.com/dotnet/dotnet/95017c711e6afc1085133d440e42b4bd78155701/LICENSE.TXT",
+      "commit": "8e0f8ed2312954727f8919d7d1c2f78b483b4ee7",
+      "source": "https://raw.githubusercontent.com/dotnet/dotnet/8e0f8ed2312954727f8919d7d1c2f78b483b4ee7/LICENSE.TXT",
       "file": "upstream-0.txt",
       "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b"
     },
     {
       "repository": "https://github.com/microsoft/vs-threading",
-      "commit": "adf10d816ce09a6abec7b6c3156b0b8597d0bc99",
-      "source": "https://raw.githubusercontent.com/microsoft/vs-threading/adf10d816ce09a6abec7b6c3156b0b8597d0bc99/LICENSE",
+      "commit": "816950dca421b07df18e26aa75adcf09a35a0db6",
+      "source": "https://raw.githubusercontent.com/microsoft/vs-threading/816950dca421b07df18e26aa75adcf09a35a0db6/LICENSE",
       "file": "upstream-1.txt",
       "sha256": "492ad816c18066132e6153dbecb698d97ee54f916b24908f3346b6118bd8c4eb"
     },
@@ -43,48 +43,48 @@
       "sourceFile": "publisher-windows-sdk-buildtools.rtf"
     },
     {
-      "dependency": "SQLitePCLRaw.bundle_e_sqlite3/2.1.12",
-      "packageSha512": "mAgscpQMLw5/nfA1Q5oJVAT29yROUo1ifZGbbTpx/lwZpSxMUGoYbKfmvdm8oXER+RzxqBmmQzeBEVKfeHv2nw==",
-      "nuspecSha256": "2faa9f418c3b8831efdf92df6aca8322ffa9f7a556e915b46e5daa8e1f8e3233",
+      "dependency": "SQLitePCLRaw.bundle_e_sqlite3/2.1.13",
+      "packageSha512": "NlDixlC7uHmo+ojXRgkNvN0tQtVGpLDZ3x2OpgNj+G07VHh5cXSszFDrAiC4BpUiPwkcaeuQkMV9WQ123xVtmQ==",
+      "nuspecSha256": "f04f469c99056d21b928d6677ae2cd6db582fa0228ce934741ecefa2fae3c09d",
       "licenseUrl": "https://licenses.nuget.org/Apache-2.0",
       "source": "https://raw.githubusercontent.com/ericsink/SQLitePCL.raw/ca835d21508bff43121c65081035840ac5006c4c/LICENSE.TXT",
       "sourceSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "file": "publisher-sqlitepclraw-2.1.12.txt",
+      "file": "publisher-sqlitepclraw-2.1.13.txt",
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "sourceFile": "publisher-sqlitepclraw-2.1.12.txt"
+      "sourceFile": "publisher-sqlitepclraw-2.1.13.txt"
     },
     {
-      "dependency": "SQLitePCLRaw.core/2.1.12",
-      "packageSha512": "ETpNw9DY3ckWLgRRAeCHj+GKOuPi61aeczkXhgHexUvqoZBAYg8RYESE2J7O1M7+o6QbdSEZwrw9bfqztUVWXg==",
-      "nuspecSha256": "8ab9189071aef856b12a9a3d68ac055a01ec6f8fc51b85ac1029e7c5ba12eecc",
+      "dependency": "SQLitePCLRaw.core/2.1.13",
+      "packageSha512": "2joofoinuHBFs0nMX3nKuXgxpXryRkCOdM2Ua6HBqQLLy6IW+5f28ZI+HAvMyF8vG7XfNz/lwfBfE6V4juru8Q==",
+      "nuspecSha256": "8e410ff52c26114c7c3124cf3e77d663abbd9ec49801324ed1bc1aa7ea1c91ae",
       "licenseUrl": "https://licenses.nuget.org/Apache-2.0",
       "source": "https://raw.githubusercontent.com/ericsink/SQLitePCL.raw/ca835d21508bff43121c65081035840ac5006c4c/LICENSE.TXT",
       "sourceSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "file": "publisher-sqlitepclraw-2.1.12.txt",
+      "file": "publisher-sqlitepclraw-2.1.13.txt",
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "sourceFile": "publisher-sqlitepclraw-2.1.12.txt"
+      "sourceFile": "publisher-sqlitepclraw-2.1.13.txt"
     },
     {
-      "dependency": "SQLitePCLRaw.lib.e_sqlite3/2.1.12",
-      "packageSha512": "fWi8Dbknuhgg72fWinIdjXVaqO1hHL4YBBwVLnr7e1c9TAZwJ0QE38j9syW1hwx6HaqEVTwI+O07WPdZn8Rp0w==",
-      "nuspecSha256": "0e82e5cda14ccb8c546596d39393a6a9ba94146ffeeac86069df29ce9d57a731",
+      "dependency": "SQLitePCLRaw.lib.e_sqlite3/2.1.13",
+      "packageSha512": "D2UAuiGxFYBqeRXjjjGgvJ5UQifzn6wefmSqeKU7XcNGKLbJRP6X7kcPZ6opOBJGdCIlgbSxTvDpBbLvsN594A==",
+      "nuspecSha256": "5e0800665aeb09107c3b45e1162109efb9b83dbaad987a4eca5d686d34769e86",
       "licenseUrl": "https://licenses.nuget.org/Apache-2.0",
       "source": "https://raw.githubusercontent.com/ericsink/SQLitePCL.raw/ca835d21508bff43121c65081035840ac5006c4c/LICENSE.TXT",
       "sourceSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "file": "publisher-sqlitepclraw-2.1.12.txt",
+      "file": "publisher-sqlitepclraw-2.1.13.txt",
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "sourceFile": "publisher-sqlitepclraw-2.1.12.txt"
+      "sourceFile": "publisher-sqlitepclraw-2.1.13.txt"
     },
     {
-      "dependency": "SQLitePCLRaw.provider.e_sqlite3/2.1.12",
-      "packageSha512": "W3oH4XIfCzFrgUSDKHhN6N+dgzA5YHOR2VxX8GB6Qy7CyrJJgxPEG8NirgYWlPQC5P2jz2knSsexWu4tDUL33g==",
-      "nuspecSha256": "7e5b604b8ad8121fa75f01eec61f56989b717fadfd530188a57d35759d93f573",
+      "dependency": "SQLitePCLRaw.provider.e_sqlite3/2.1.13",
+      "packageSha512": "ZU60dSqoSNRe49KcQDUmOVgdRtjITOssVXFtiISs+zJXDI4D2Sndwpn2NOtzDQNPu0ZAvpoLPQ+GLKv6iEZn8Q==",
+      "nuspecSha256": "d31fbb24bed1097f15170bc81b1de4832213f9d50deab423ec8c7aa16995b1c7",
       "licenseUrl": "https://licenses.nuget.org/Apache-2.0",
       "source": "https://raw.githubusercontent.com/ericsink/SQLitePCL.raw/ca835d21508bff43121c65081035840ac5006c4c/LICENSE.TXT",
       "sourceSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "file": "publisher-sqlitepclraw-2.1.12.txt",
+      "file": "publisher-sqlitepclraw-2.1.13.txt",
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
-      "sourceFile": "publisher-sqlitepclraw-2.1.12.txt"
+      "sourceFile": "publisher-sqlitepclraw-2.1.13.txt"
     }
   ]
 }
