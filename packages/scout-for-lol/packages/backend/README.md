@@ -1101,9 +1101,15 @@ event.
 The post-game review is the one coach turn no client can start.
 `scoutCoachReviewWorkflow` (`packages/temporal`, started idempotently as
 `scout-<stage>-coach-review-<owner>-<matchId>`) runs once a game's
-`live_game_recording` upload and its resolved match evidence both exist, and
-whichever arrives second starts it: `consumeLiveGameRecording` on ingress and
-`projectResultEvidence` for the result. `coach/review.ts` re-checks both, the
+`live_game_recording` upload, its resolved match evidence and its archived
+canonical match document all exist, and whichever arrives second starts it:
+`consumeLiveGameRecording` on ingress and `projectResultEvidence` for the
+result, with the one-minute ingestion reconciliation
+(`reconcileCoachReviewStarts`) starting any the triggers missed. The archived
+document may be complete or a frozen end-of-game record
+(`coach/review-match.ts`); an end-of-game record is archived only after its
+deadline froze it, so the review never pre-empts a history bundle that arrives
+in that window. `coach/review.ts` re-checks both, the
 owner's `scout_desktop_coach` flag and Explore access, and only then starts one
 durable Explore turn under the existing quota and spend ledger. A recording
 counts as the owner's only when one of the owner's devices uploaded it, from a
@@ -1398,6 +1404,17 @@ never a failure:
   objective"). The MVP vote is omitted, since its roster orders by participant
   number. Effects that need Riot's whole document take `completeMatchOf`, which
   is `null` for the record.
+- Explore's `review_match` gives the record its own scoped review
+  (`explore/analysis/end-of-game-review.ts`): the asker's end-of-game stats,
+  the roster's totals, each team's stated objectives, and checkpoints of the
+  asker's own level, KDA and CS from their `live_game_recording` when their
+  device uploaded one. It is labelled `coverage.record: "end_of_game"` and
+  `riotTimeline: false`, marks every null fact `unknown` instead of zero, and
+  is only for a player in the game: when none of the asker's verified or
+  tracked accounts played, it refuses. The `game-review` skill forbids
+  timeline claims (laning-phase gold diffs, objective timing, death positions)
+  on such a game. The match card applies; the loadout card does not, since it
+  keys its build path on participant numbers.
 
 Timeline selection is independent of result selection. Riot supplies its
 timeline when available; accepted client timeline observations can fill a

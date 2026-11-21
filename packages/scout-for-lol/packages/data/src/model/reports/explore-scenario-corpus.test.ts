@@ -12,9 +12,11 @@ describe("the Explore scenario corpus", () => {
     expect(desktop.map((entry) => entry.id).toSorted()).toEqual([
       "desktop-coach-app-champ-select-no-live",
       "desktop-coach-champ-select-options",
+      "desktop-coach-end-of-game-timeline-question",
       "desktop-coach-live-enemy-cooldowns-refused",
       "desktop-coach-live-player-asked",
       "desktop-coach-postgame-review",
+      "desktop-coach-postgame-review-end-of-game",
       "desktop-coach-pregame-plan",
       "desktop-enemy-cooldowns",
       "desktop-fog-inference",
@@ -57,9 +59,11 @@ describe("the Explore scenario corpus", () => {
       expect(turnsWithContext.map((entry) => entry.id).toSorted()).toEqual([
         "desktop-coach-app-champ-select-no-live",
         "desktop-coach-champ-select-options",
+        "desktop-coach-end-of-game-timeline-question",
         "desktop-coach-live-enemy-cooldowns-refused",
         "desktop-coach-live-player-asked",
         "desktop-coach-postgame-review",
+        "desktop-coach-postgame-review-end-of-game",
         "desktop-coach-pregame-plan",
         "voice-coach-terse",
       ]);
@@ -81,6 +85,7 @@ describe("the Explore scenario corpus", () => {
           "player_voice",
           "app_champ_select",
           "app_pregame",
+          "app_postgame",
         ]),
       );
     });
@@ -93,6 +98,26 @@ describe("the Explore scenario corpus", () => {
       const context = entry?.turn.gameContext?.context;
       expect(context?.champSelect).toBeDefined();
       expect(context?.live).toBeDefined();
+    });
+
+    test("the end-of-game review cases run on an end-of-game-only game and judge timeline claims", () => {
+      for (const id of [
+        "desktop-coach-postgame-review-end-of-game",
+        "desktop-coach-end-of-game-timeline-question",
+      ]) {
+        const entry = parsed.cases.find((candidate) => candidate.id === id);
+        const [player] = entry?.guild.players ?? [];
+        expect(player?.linkedToAsker, id).toBe(true);
+        expect(player?.account, id).toMatchObject({
+          kind: "lake",
+          latestEndOfGame: true,
+          withTimeline: false,
+        });
+        const turn = entry?.turns[0];
+        expect(turn?.gameContext?.postgameOf, id).toBe(player?.alias);
+        expect(turn?.expect?.toolsCalled, id).toEqual([["review_match"]]);
+        expect(turn?.expect?.rubric.join(" "), id).toMatch(/timeline/);
+      }
     });
 
     const base = parsed.cases.find(

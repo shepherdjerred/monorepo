@@ -1543,6 +1543,101 @@
       "origin": "Written for the Scout Desktop coach, not from a prod conversation. Post-game review of a recorded game: the match comes from the tracked player's latest game with a stored timeline."
     },
     {
+      "id": "desktop-coach-postgame-review-end-of-game",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Koala",
+            "linkedToAsker": true,
+            "account": {
+              "kind": "lake",
+              "rank": 1,
+              "latestEndOfGame": true
+            }
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "The game is over. Review how it went and what to work on.",
+          "gameContext": {
+            "initiation": "app_postgame",
+            "postgameOf": "Koala",
+            "context": {
+              "postgame": {
+                "matchId": "NA1_1000000000"
+              }
+            }
+          },
+          "expect": {
+            "toolsCalled": [["review_match"]],
+            "rubric": [
+              "Reviews the game the context names from its end-of-game stats: outcome, champion, kills, deaths and assists, farm, damage and vision.",
+              "Says plainly that Scout has no timeline for this game, so the review covers end-of-game totals rather than when things happened.",
+              "Makes no timeline claim: no laning-phase gold or CS difference, no objective timing or order, no death positions, killers or death sequence, and no turning point.",
+              "Treats what the record marks unknown, such as bans, patch, Rift Herald or Voidgrubs, as not recorded, never as zero or none.",
+              "Gives no more than three adjustments, each tied to an end-of-game total, framed as things to consider."
+            ]
+          }
+        }
+      ],
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. The server-started post-game review of a game Scout recorded only from the League client's end-of-game screen (League Classic without match history): a scoped review with no timeline claims."
+    },
+    {
+      "id": "desktop-coach-end-of-game-timeline-question",
+      "surfaces": ["desktop"],
+      "asker": {
+        "username": "koa",
+        "displayName": "koa"
+      },
+      "guild": {
+        "name": "Night Market",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Koala",
+            "linkedToAsker": true,
+            "account": {
+              "kind": "lake",
+              "rank": 1,
+              "latestEndOfGame": true
+            }
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "how far ahead in gold was i at 10 minutes, and when did we take the first dragon?",
+          "gameContext": {
+            "initiation": "player_typed",
+            "postgameOf": "Koala",
+            "context": {
+              "postgame": {
+                "matchId": "NA1_1000000000"
+              }
+            }
+          },
+          "expect": {
+            "toolsCalled": [["review_match"]],
+            "rubric": [
+              "Says Scout recorded this game only from the end-of-game screen, so it has no timeline: neither gold at 10 minutes nor the first dragon's time was recorded.",
+              "Does not invent a gold difference, a gold value at 10 minutes, or a dragon time, and does not estimate one from end-of-game totals.",
+              "Offers what the record does show instead, such as final gold, the team's dragon count, or who took the first dragon when the record states it.",
+              "Does not treat an objective the record marks unknown as zero."
+            ]
+          }
+        }
+      ],
+      "origin": "Written for the Scout Desktop coach, not from a prod conversation. A player asks a timeline question about a game Scout knows only from its end-of-game screen: the answer must say the timing was not recorded rather than guess it."
+    },
+    {
       "id": "voice-coach-terse",
       "surfaces": ["voice"],
       "asker": {

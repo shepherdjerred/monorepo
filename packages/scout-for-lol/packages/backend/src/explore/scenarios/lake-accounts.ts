@@ -86,6 +86,11 @@ export async function resolveScenarioAccount(input: {
           `latest_match in (select match_id from read_parquet(${coverage}, hive_partitioning = true))`,
         ]
       : []),
+    ...(selector.latestEndOfGame
+      ? [
+          `latest_match in (select match_id from read_parquet(${matches}, hive_partitioning = true) where coverage = 'end_of_game')`,
+        ]
+      : []),
   ];
   const excluded =
     conditions.length === 0 ? "" : `where ${conditions.join(" and ")}`;

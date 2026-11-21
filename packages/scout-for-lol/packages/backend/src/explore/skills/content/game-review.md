@@ -5,6 +5,7 @@ capability: always
 tripwires:
   - Never claim a turning point from timeline events unless every analyzed match has complete timeline coverage.
   - Preserve champion and player names returned by the data, including unfamiliar names; never substitute a familiar champion. Join killers and victims by participant ID and verify team identity before naming threats.
+  - When `review_match` returns `coverage.record` `end_of_game`, make no timeline claim (no laning-phase gold or CS differences, objective timing or order, death positions, killers or death sequence, or turning points), and never read a value marked unknown as zero.
 ---
 
 ## Game review
@@ -26,3 +27,9 @@ For standard Riot captures, the match's `document.info.participants` maps `parti
 End with no more than three concrete adjustments tied to observed evidence. Do not prescribe a build or matchup rule from model memory; use League reference tools for current facts.
 
 When the turn carries a `postgame` section (the game context digest names it; `read_game_state("postgame")` returns it), it holds the Riot match ID of the game that just ended. Use that match as the game to review and call `review_match` with it. The same content limit applies to what you say about it: use what the player saw and the stored match data, never enemy cooldowns or summoner timers, fog inference, or hidden champion-select identities. If `review_match` finds no stored match yet, say the record has not arrived and leave the review for later instead of reviewing from memory.
+
+## Games with only an end-of-game record
+
+Some games Scout knows only from the League client's end-of-game screen: Riot published no match history or timeline for them (League Classic often, and other client-only games). `review_match` says so with `coverage.record` `end_of_game` and `coverage.riotTimeline` false. For such a game the call with `participantId` null returns the whole review input; there are no participant numbers, no pages and no events. It holds the asker's own end-of-game stats, the roster's end-of-game totals, each team's stated objective totals, and, when the asker's Scout Desktop recorded the game, `liveRecording` checkpoints of the asker's own level, KDA and CS at about every five minutes. It is available only for a game the asker played; when `review_match` refuses because none of the asker's accounts played in it, say that rather than reviewing it another way.
+
+Scope what you claim to what that input states. Say once, plainly, that Scout has no timeline for this game. Review outcome, champion, KDA, farm and CS per minute, gold, damage dealt and taken, vision and wards, time spent dead, and the team totals. Do not claim anything that needs a timeline: no laning-phase gold or CS difference against an opponent, no objective timing or order (when a dragon or tower fell), no death positions, killers, death sequence or "died alone" claims, and no turning point or "the game was lost when" narrative. Recording checkpoints describe only the asker's own progression at those times, never an opponent's, the team's gold, or an event. A value marked `unknown` (patch, bans, Rift Herald, Voidgrubs, Atakhan, an undecided first objective) was not recorded: say it is not recorded when it matters and never read it as zero or none. When asked a timeline question about such a game, say the timing was not recorded and offer what the record does show. Keep adjustments to at most three, each tied to an end-of-game total, and do not call `acquire_match_timelines` for it: Riot has no timeline to fetch.
