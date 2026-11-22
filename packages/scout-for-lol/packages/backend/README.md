@@ -1439,10 +1439,10 @@ HistoryMatch`.
 - Derived: the start is the stated creation and the end is creation plus
   duration, since the row states neither.
 - `null`, never zero: `HISTORY_UNSTATED_PARTICIPANT_FIELDS` (pings, casts,
-  time played and dead, a player's own baron and dragon kills, positions and
-  the other Match-V5 fields the row lacks). Their lake columns are
-  `HISTORY_NULLABLE_LAKE_COLUMNS`; readers that need a per-minute denominator
-  or a position read `PLAYED_SECONDS_SQL` and `TEAM_POSITION_SQL`.
+  time played and dead, a player's own baron and dragon kills and the other
+  Match-V5 fields the row lacks). Their lake columns are
+  `HISTORY_NULLABLE_LAKE_COLUMNS`; readers that need a per-minute
+  denominator read `PLAYED_SECONDS_SQL`.
 - Arena is refused, since Riot publishes it, and so is a one-player list row.
 
 `resolveCanonicalMatch` reaches a history record last: only when there is no

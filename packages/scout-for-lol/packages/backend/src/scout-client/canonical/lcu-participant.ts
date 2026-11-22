@@ -97,6 +97,9 @@ function positionFrom(
   const parsed = PositionSchema.safeParse(explicit);
   if (parsed.success) return parsed.data;
   const lane = normalizedLane(timeline?.lane);
+  // The League client states "no lane" as NONE (every ARAM and ARAM: Mayhem
+  // player); Match-V5 states no position as "".
+  if (lane === "NONE") return "";
   const role = normalizedRole(timeline?.role);
   const candidate =
     lane === "BOTTOM" && (role === "SUPPORT" || role === "DUO_SUPPORT")

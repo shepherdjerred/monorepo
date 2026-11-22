@@ -74,6 +74,8 @@ describe("convertHistoryMatch", () => {
     const [first] = match.info.participants;
     expect(first?.puuid).toBe(observer);
     expect(first?.kills).toBe(11);
+    // The client states "no lane" for Mayhem: Match-V5's "no position".
+    expect(first?.teamPosition).toBe("");
     // Unstated is null, never zero.
     for (const participant of match.info.participants) {
       for (const field of HISTORY_UNSTATED_PARTICIPANT_FIELDS) {

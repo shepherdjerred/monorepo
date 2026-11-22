@@ -130,10 +130,7 @@ export function participantToChampion(
       participant.totalMinionsKilled + participant.neutralMinionsKilled,
     visionScore: participant.visionScore,
     damage: participant.totalDamageDealtToChampions,
-    lane:
-      participant.teamPosition === null
-        ? undefined
-        : parseLane(participant.teamPosition),
+    lane: parseLane(participant.teamPosition),
   };
 }
 

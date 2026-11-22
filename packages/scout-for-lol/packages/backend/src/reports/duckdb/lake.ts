@@ -278,12 +278,6 @@ function participantSource(
 export const PLAYED_SECONDS_SQL =
   "COALESCE(time_played, game_duration_seconds)";
 
-/**
- * A participant's position, with a history record's unstated position read
- * as Riot's own "no position" (`''`, as Riot states it for ARAM).
- */
-export const TEAM_POSITION_SQL = "COALESCE(team_position, '')";
-
 export function buildMatchesSource(
   files: LakeFiles,
   predicate: SqlFragment,

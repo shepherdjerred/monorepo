@@ -31,9 +31,7 @@ import { RawTeamSchema } from "./raw-team.schema.ts";
  * Match-V5 participant fields the League client's match-history row does not
  * state. Measured against the ARAM: Mayhem, ranked, bot-custom and Arena
  * history fixtures (`testdata/lcu/lcu-game-*.json`): these are exactly the
- * fields `RawParticipantSchema` requires that none of them carry. The two
- * positions are stated for Summoner's Rift and absent where the mode has
- * none.
+ * fields `RawParticipantSchema` requires that none of them carry.
  */
 export const HISTORY_UNSTATED_PARTICIPANT_FIELDS = [
   "allInPings",
@@ -53,7 +51,6 @@ export const HISTORY_UNSTATED_PARTICIPANT_FIELDS = [
   "enemyVisionPings",
   "getBackPings",
   "holdPings",
-  "individualPosition",
   "inhibitorTakedowns",
   "inhibitorsLost",
   "itemsPurchased",
@@ -74,7 +71,6 @@ export const HISTORY_UNSTATED_PARTICIPANT_FIELDS = [
   "summoner1Casts",
   "summoner2Casts",
   "summonerLevel",
-  "teamPosition",
   "timePlayed",
   "totalAllyJungleMinionsKilled",
   "totalDamageShieldedOnTeammates",
@@ -107,7 +103,6 @@ export const HistoryParticipantSchema = RawParticipantSchema.extend({
   enemyVisionPings: shape.enemyVisionPings.nullable(),
   getBackPings: shape.getBackPings.nullable(),
   holdPings: shape.holdPings.nullable(),
-  individualPosition: shape.individualPosition.nullable(),
   inhibitorTakedowns: shape.inhibitorTakedowns.nullable(),
   inhibitorsLost: shape.inhibitorsLost.nullable(),
   itemsPurchased: shape.itemsPurchased.nullable(),
@@ -128,7 +123,6 @@ export const HistoryParticipantSchema = RawParticipantSchema.extend({
   summoner1Casts: shape.summoner1Casts.nullable(),
   summoner2Casts: shape.summoner2Casts.nullable(),
   summonerLevel: shape.summonerLevel.nullable(),
-  teamPosition: shape.teamPosition.nullable(),
   timePlayed: shape.timePlayed.nullable(),
   totalAllyJungleMinionsKilled: shape.totalAllyJungleMinionsKilled.nullable(),
   totalDamageShieldedOnTeammates:
@@ -188,8 +182,6 @@ export type HistoryParticipant = z.infer<typeof HistoryParticipantSchema>;
  * judged on such a game.
  */
 export const HISTORY_NULLABLE_LAKE_COLUMNS: readonly string[] = [
-  "team_position",
-  "individual_position",
   "total_heals_on_teammates",
   "detector_wards_placed",
   "all_in_pings",

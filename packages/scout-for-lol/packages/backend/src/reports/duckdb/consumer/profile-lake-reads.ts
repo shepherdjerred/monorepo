@@ -31,7 +31,6 @@ import {
   scalarParam,
   type BoundParam,
   type SqlFragment,
-  TEAM_POSITION_SQL,
 } from "#src/reports/duckdb/lake.ts";
 import type { LakePopulation } from "#src/reports/duckdb/lake/population.ts";
 
@@ -138,7 +137,7 @@ export async function fetchFullMatch(options: {
           `puuid, participant_id, team_id, player_subteam_id, placement, subteam_placement, ` +
           `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
           `riot_id_game_name, riot_id_tagline, ` +
-          `champion_id, champion_name, ${TEAM_POSITION_SQL} AS team_position, win, kills, deaths, assists, creep_score, ` +
+          `champion_id, champion_name, team_position, win, kills, deaths, assists, creep_score, ` +
           `gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills, ` +
           `inhibitor_kills, baron_kills, dragon_kills, ${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
           `FROM (${source.sql}) ` +

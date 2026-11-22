@@ -96,8 +96,8 @@ export const MatchLakeRowSchema = z.object({
   // Champion / position
   champion_id: z.number(),
   champion_name: z.string(),
-  team_position: z.string().nullable(),
-  individual_position: z.string().nullable(),
+  team_position: z.string(),
+  individual_position: z.string(),
   lane: z.string().nullable(),
   role: z.string().nullable(),
   // End-of-game loadout. Rune fields are collectively NULL for modes whose
