@@ -233,7 +233,7 @@ impl Default for ReviewPoller {
 
 impl ReviewPoller {
     /// A poller that asks on every tick, so a supervisor test does not wait.
-    #[cfg(test)]
+    #[cfg(all(test, unix))]
     pub(super) fn immediate() -> Self {
         Self {
             watch: None,

@@ -306,8 +306,8 @@ impl<C: Collector> Supervisor<C> {
     }
 
     /// Ask about reviews on every refresh, so a test does not sit through
-    /// the backoff.
-    #[cfg(test)]
+    /// the backoff. Only the Unix window tests use it.
+    #[cfg(all(test, unix))]
     #[must_use]
     pub fn with_immediate_reviews(mut self, source: Box<dyn ReviewSource>) -> Self {
         let mut reviews = Reviews::new(source);

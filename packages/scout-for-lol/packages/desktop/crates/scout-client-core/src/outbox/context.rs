@@ -99,6 +99,8 @@ mod tests {
         );
         let reopened = ObservationOutbox::open(&path)?;
         assert_eq!(reopened.pending_end_of_game("one", "123")?, None);
+        // Windows refuses to delete a file that is still open.
+        drop(connection);
         std::fs::remove_file(path)?;
         Ok(())
     }

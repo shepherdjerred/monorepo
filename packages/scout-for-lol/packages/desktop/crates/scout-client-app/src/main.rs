@@ -282,7 +282,10 @@ fn supervise(arguments: &[String], toolkit: WindowToolkit) -> ExitCode {
                     } else {
                         supervisor
                     };
-                    supervisor.run().await
+                    // The supervisor's loop holds every service's state; on
+                    // Windows its future is about 16 KiB, so it lives on the
+                    // heap rather than this thread's stack.
+                    Box::pin(supervisor.run()).await
                 })
             }))
             .unwrap_or(SupervisorExit::Panicked)
