@@ -25,6 +25,7 @@ import { PlexHistoricalViewsSchema } from "#shared/household/plex-history.ts";
 import { RequestInterestProgressSchema } from "#shared/household/progress.ts";
 import { MovieEditionRequestListV4Schema } from "#shared/movie-editions/lifecycle/public-v4.ts";
 import { ImportedPersonalClaimsSchema } from "#shared/personal-migration/contract.ts";
+import { ImportedRequestHistorySchema } from "#shared/personal-migration/history.ts";
 import {
   endpoint,
   type FixtureEndpoint,
@@ -61,6 +62,7 @@ import {
   requestId,
   requestList,
 } from "#testing/fixture-api/fixtures/requests.ts";
+import { seerrRequestHistory } from "#testing/fixture-api/fixtures/seerr-history.ts";
 import { FEATURED, titleNamed } from "#testing/fixture-api/fixtures/titles.ts";
 import { KIDS, OWNER } from "#testing/fixture-api/personas.ts";
 import { FixtureFailure } from "#testing/fixture-api/scenario.ts";
@@ -187,6 +189,15 @@ const requests: readonly FixtureEndpoint[] = [
     respond: (request) =>
       unlessNewHousehold(request, [], () => importedClaims(request.persona)),
     samples: ["/requests/imported"],
+  }),
+  endpoint({
+    path: "/requests/imported-history",
+    schema: ImportedRequestHistorySchema,
+    respond: (request) =>
+      unlessNewHousehold(request, [], () =>
+        seerrRequestHistory(request.persona),
+      ),
+    samples: ["/requests/imported-history"],
   }),
   endpoint({
     path: "/requests/plex-history",

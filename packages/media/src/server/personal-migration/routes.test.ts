@@ -52,6 +52,10 @@ test("personal migration routes pass validated owner selection, exact hash and i
       return { status: "completed", version: 1, eventId, next: null };
     },
     imported: async () => [],
+    importedHistory: async (current) => {
+      calls.push({ history: current });
+      return [];
+    },
     passive: async () => [],
     reconcile: async (current, actualKey, input) => {
       calls.push({ current, key: actualKey, input });
@@ -60,6 +64,9 @@ test("personal migration routes pass validated owner selection, exact hash and i
   });
   const imported = await app.request("/api/v1/requests/imported");
   expect(imported.status).toBe(200);
+  const history = await app.request("/api/v1/requests/imported-history");
+  expect(history.status).toBe(200);
+  expect(await history.json()).toEqual([]);
   const passive = await app.request(
     `/api/v1/admin/migration/personal/passive?${new URLSearchParams({ bundleReviewId: crypto.randomUUID(), bundleReviewVersion: "0", provenanceKey: "a".repeat(64) }).toString()}`,
   );
@@ -96,6 +103,7 @@ test("personal migration routes pass validated owner selection, exact hash and i
   );
   expect(reconciled.status).toBe(200);
   expect(calls).toEqual([
+    { history: actor },
     { current: actor, input: selection },
     { current: actor, key, input },
     { current: actor, key, input: reconciliation },

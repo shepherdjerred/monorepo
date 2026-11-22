@@ -3,11 +3,13 @@ import { legacyClaimsHarness } from "#infrastructure/recovery/legacy-claims/test
 import { PrismaMigrationAdministration } from "#migration/persistence.ts";
 import { captureFixture } from "#migration/bundle-test-fixtures.ts";
 import type { MigrationRecord } from "#shared/migration.ts";
+import { recordKey } from "#migration/capture/capture-validation.ts";
 import { PrismaPersonalMigration } from "./service.ts";
 import { buildMovieRecoveryClaimsV3 } from "#infrastructure/recovery/legacy-claims/movie/projection.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
+import { grantTestRequesterAccess } from "#testing/authority.ts";
 
 const harness = legacyClaimsHarness();
 
@@ -346,6 +348,186 @@ test("declined source requests remain visible history and never create active na
   expect(await f.db.mediaIntent.count({ where: { mediaId: f.movie.id } })).toBe(
     0,
   );
+});
+
+test("imported history shows exact prior requests to their verified member or the owner without creating an active request", async () => {
+  const f = await harness.setup();
+  const serverMachineId = "binding-fixture-server";
+  await grantTestRequesterAccess(f.db, f.owner.id, serverMachineId);
+  const service = new PrismaPersonalMigration(f.db, {
+    keepDays: 30,
+    serverMachineId,
+    sections: { movie: "1", series: "2" },
+  });
+  const initialArchive = await service.importedHistory(f.owner);
+  const initialIds = new Set(initialArchive.map(({ id }) => id));
+  const admin = new PrismaMigrationAdministration(f.db);
+  const pending: Extract<MigrationRecord, { kind: "request" }> = {
+    kind: "request",
+    sourceId: "1",
+    requesterSourceId: "7",
+    plexAccountId: null,
+    requesterMappingEvidenceHash: null,
+    externalIds: { tmdb: f.movie.tmdbId ?? 1 },
+    scope: "movie",
+    seasons: [],
+    sourceStatus: 1,
+    active: false,
+  };
+  const removed = {
+    ...pending,
+    sourceId: "5",
+    requesterSourceId: "8",
+    sourceStatus: 5,
+    active: true,
+  };
+  const prior = captureFixture("seerr", [pending, removed]);
+  const newerRequest = { ...pending, sourceStatus: 2, active: true };
+  const declined = {
+    ...pending,
+    sourceId: "2",
+    sourceStatus: 3,
+    requestedAt: "2021-06-02T09:10:11.000Z",
+  };
+  const failed = {
+    ...pending,
+    sourceId: "3",
+    requesterSourceId: "8",
+    sourceStatus: 4,
+    requestedAt: "2021-06-01T09:10:11.000Z",
+  };
+  const unresolved = {
+    ...pending,
+    sourceId: "4",
+    requesterSourceId: "8",
+    externalIds: { ...pending.externalIds, tvdb: 234 },
+    sourceStatus: 4,
+  };
+  const declinedSeason: Extract<MigrationRecord, { kind: "request" }> = {
+    ...pending,
+    sourceId: "6",
+    requesterSourceId: "8",
+    externalIds: { tmdb: f.series.tmdbId ?? 1 },
+    scope: "season",
+    sourceStatus: 3,
+    seasonStatuses: [
+      { season: 1, status: 3 },
+      { season: 2, status: 4 },
+    ],
+  };
+  const final = {
+    ...captureFixture("seerr", [
+      newerRequest,
+      declined,
+      failed,
+      unresolved,
+      declinedSeason,
+    ]),
+    sourceInstanceId: prior.sourceInstanceId,
+    startedAt: "2026-10-18T01:00:00Z",
+    completedAt: "2026-10-18T01:01:00Z",
+  };
+  const oldCapture = await admin.upload(f.owner, { snapshot: prior });
+  const newCapture = await admin.upload(f.owner, { snapshot: final });
+  await f.bind(newCapture.captureId);
+
+  async function apply(selection: Parameters<typeof service.preview>[1]) {
+    const preview = await service.preview(f.owner, selection);
+    expect(preview.blocked).toBe(false);
+    await service.apply(f.owner, crypto.randomUUID(), {
+      ...selection,
+      previewHash: preview.previewHash,
+      acknowledgeExistingLibraryKeep: true,
+      acknowledgeTemporaryFollowingClaims: true,
+    });
+  }
+
+  await apply({
+    captureIds: [newCapture.captureId],
+    movieEditions: [{ mediaId: f.movie.id, edition: "default" }],
+    historyOnly: [],
+  });
+  await apply({
+    captureIds: [oldCapture.captureId],
+    movieEditions: [],
+    historyOnly: [recordKey(prior, removed)],
+  });
+
+  const mapped = {
+    id: recordKey(final, declined),
+    sourceKind: "seerr",
+    scope: "movie",
+    seasonNumbers: [],
+    title: f.movie.title,
+    requestedAt: declined.requestedAt,
+    sourceStatus: 3,
+  };
+  expect(await service.importedHistory(f.subject)).toEqual([mapped]);
+  const ownerArchive = await service.importedHistory(f.owner);
+  expect(ownerArchive.filter(({ id }) => initialIds.has(id))).toEqual(
+    initialArchive,
+  );
+  const archive = ownerArchive.filter(({ id }) => !initialIds.has(id));
+  expect(archive).toHaveLength(5);
+  expect(archive[0]).toEqual(mapped);
+  expect(archive[1]).toEqual({
+    ...mapped,
+    id: recordKey(final, failed),
+    requestedAt: failed.requestedAt,
+    sourceStatus: 4,
+  });
+  expect(archive).toContainEqual({
+    ...mapped,
+    id: recordKey(final, unresolved),
+    requestedAt: null,
+    title: null,
+    sourceStatus: 4,
+  });
+  expect(archive).toContainEqual({
+    ...mapped,
+    id: recordKey(prior, removed),
+    requestedAt: null,
+    sourceStatus: 5,
+  });
+  expect(archive).toContainEqual({
+    ...mapped,
+    id: recordKey(final, declinedSeason),
+    scope: "season",
+    seasonNumbers: [1, 2],
+    title: f.series.title,
+    requestedAt: null,
+  });
+  expect(archive.map(({ id }) => id)).not.toContain(recordKey(prior, pending));
+  expect(
+    await f.db.mediaRequest.count({ where: { mediaId: f.movie.id } }),
+  ).toBe(1);
+
+  await f.db.plexIdentityMapping.update({
+    where: { userId: f.subject.id },
+    data: { permittedSectionIds: ["2"] },
+  });
+  expect(await service.importedHistory(f.subject)).toEqual([
+    { ...mapped, title: null },
+  ]);
+  await f.db.plexIdentityMapping.update({
+    where: { userId: f.subject.id },
+    data: { verifiedAt: new Date(0) },
+  });
+  expect(await service.importedHistory(f.subject)).toEqual([]);
+
+  await grantTestRequesterAccess(f.db, f.subject.id, serverMachineId);
+  expect(await service.importedHistory(f.subject)).toEqual([mapped]);
+  const replacement = await f.db.mediaUser.create({
+    data: {
+      plexAccountId: String(crypto.getRandomValues(new Uint32Array(1))[0]),
+      displayName: "Reassigned requester",
+    },
+  });
+  await grantTestRequesterAccess(f.db, replacement.id, serverMachineId);
+  await f.bind(newCapture.captureId, replacement.id);
+  expect(await service.importedHistory(f.subject)).toEqual([]);
+  expect(await service.importedHistory(replacement)).toEqual([]);
+  expect(await service.importedHistory(f.owner)).toEqual(ownerArchive);
 });
 
 test.each(["migration_household_intent_review_required", "manual_owner_hold"])(

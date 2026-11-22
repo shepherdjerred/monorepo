@@ -18,7 +18,12 @@ export type MigrationAdministration = Pick<
 > & {
   personal?: Pick<
     PrismaMigrationAdministration["personal"],
-    "preview" | "apply" | "imported" | "reconcile" | "passive"
+    | "preview"
+    | "apply"
+    | "imported"
+    | "importedHistory"
+    | "reconcile"
+    | "passive"
   >;
   bundles: Pick<
     PrismaMigrationAdministration["bundles"],
