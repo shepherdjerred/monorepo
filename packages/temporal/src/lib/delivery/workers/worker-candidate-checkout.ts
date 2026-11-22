@@ -129,6 +129,10 @@ export function workerCandidateEnvironment(namespace: string) {
     PATH: Bun.env["PATH"],
     HOME: Bun.env["HOME"],
     TMPDIR: Bun.env["TMPDIR"],
+    // The job workspace is mode 0777, which @swc/core rejects as a cache
+    // ancestor. The child keeps a private cache under the job home.
+    SWC_NATIVE_BINDING_CACHE: `${Bun.env["HOME"] ?? "/workspace/home"}/.cache`,
+    SWC_NATIVE_BINDING_CACHE_SKIP_SECURITY_CHECK: "1",
     MISE_DATA_DIR: Bun.env["MISE_DATA_DIR"],
     MISE_LOCKED: "1",
     // The checkout installs its own bun and node first. Without this, the first

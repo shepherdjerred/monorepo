@@ -281,6 +281,8 @@ describe("candidate child environment", () => {
         "PATH",
         "HOME",
         "TMPDIR",
+        "SWC_NATIVE_BINDING_CACHE",
+        "SWC_NATIVE_BINDING_CACHE_SKIP_SECURITY_CHECK",
         "MISE_DATA_DIR",
         "MISE_LOCKED",
         "MISE_EXEC_AUTO_INSTALL",
