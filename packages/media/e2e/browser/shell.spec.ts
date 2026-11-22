@@ -20,13 +20,29 @@ function address(page: Page): string {
 }
 
 /**
+ * Runs `act` with the page's clock held still. The search field waits for a
+ * pause in the typing before it searches; with the clock held, what `act`
+ * does "before the field has searched" is before it on any machine, however
+ * slow, and `page.clock.runFor` inside `act` is what lets a pause run out.
+ * The clock runs again afterwards whether or not `act` succeeded.
+ */
+async function withClockHeld<Result>(
+  page: Page,
+  act: () => Promise<Result>,
+): Promise<Result> {
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
+  try {
+    return await act();
+  } finally {
+    await page.clock.resume();
+  }
+}
+
+/**
  * Types over the search on screen, then leaves by `leave` before the field
  * has sent it, and expects the leaving to stand once the field's pause has
  * run out: the browse rows, an empty field, and nothing searched for.
- *
- * The page's clock is held still meanwhile, so "before the field has sent
- * it" is so on any machine, however slow; it runs again afterwards whether
- * or not the steps inside succeeded.
  */
 async function leaveBeforeTypedSearchIsSent(
   page: Page,
@@ -35,18 +51,14 @@ async function leaveBeforeTypedSearchIsSent(
   const search = page.getByRole("searchbox", {
     name: "Search films and series",
   });
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
-  try {
+  await withClockHeld(page, async () => {
     await search.fill("dune part");
     await leave();
     await expect.poll(() => address(page)).toBe("/discover");
     await expect(search).toHaveValue("");
     // The pause runs out.
     await page.clock.runFor(1000);
-  } finally {
-    await page.clock.resume();
-  }
+  });
   expect(address(page)).toBe("/discover");
   await expect(search).toHaveValue("");
   await expect(
@@ -166,6 +178,40 @@ test.describe("top bar", () => {
     await leaveBeforeTypedSearchIsSent(page, async () => {
       await page.goBack();
     });
+  });
+
+  test("opening an input method drops the search typed before it, and the finished text is searched for", async ({
+    page,
+  }) => {
+    await openAs(page, "member", "/discover");
+    const search = page.getByRole("searchbox", {
+      name: "Search films and series",
+    });
+    // The browser's own input-method composition, as a keyboard for
+    // Japanese, Chinese or Korean drives it.
+    const keyboard = await page.context().newCDPSession(page);
+    const whileComposing = await withClockHeld(page, async () => {
+      // Typed, and then a composition begun before the field's pause ran out.
+      await search.fill("du");
+      await keyboard.send("Input.imeSetComposition", {
+        text: "ね",
+        selectionStart: 1,
+        selectionEnd: 1,
+      });
+      await expect(search).toHaveValue("duね");
+      await page.clock.runFor(1000);
+      const shown = address(page);
+      // The composition is confirmed; the pause after it runs out too.
+      await keyboard.send("Input.insertText", { text: "ね" });
+      await page.clock.runFor(1000);
+      return shown;
+    });
+    // Nothing was searched for while the text was unfinished.
+    expect(whileComposing).toBe("/discover");
+    await expect
+      .poll(() => address(page))
+      .toBe(`/discover?q=${encodeURIComponent("duね")}`);
+    await expect(search).toHaveValue("duね");
   });
 
   test("the bell opens notifications", async ({ page }) => {

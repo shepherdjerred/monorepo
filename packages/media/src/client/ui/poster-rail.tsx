@@ -57,15 +57,21 @@ export function PosterRail({
     );
   }, []);
 
-  // The ends depend on the row's width, which the list reports itself.
+  // The ends depend on the row's width and on how many cards it holds, and
+  // the list reports both itself. A feed that is read again can come back
+  // longer or shorter while the row stays on the page: that changes neither
+  // the list's own size nor where it is scrolled to, only its children.
   const attach = useCallback(
     (element: HTMLUListElement | null) => {
       list.current = element;
       if (element === null) return;
-      const observer = new ResizeObserver(settle);
-      observer.observe(element);
+      const resized = new ResizeObserver(settle);
+      resized.observe(element);
+      const cards = new MutationObserver(settle);
+      cards.observe(element, { childList: true });
       return () => {
-        observer.disconnect();
+        resized.disconnect();
+        cards.disconnect();
       };
     },
     [settle],

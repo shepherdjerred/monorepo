@@ -826,8 +826,9 @@ The top bar holds the client's one search field. From any page, Enter opens
 `/discover?q=` with the search. While Discover is the page open, the field also
 searches as it is typed in, 300 ms after the last keystroke: the first search
 adds a history entry, so Back returns to the browse rows, and each refinement
-rewrites it. Text an input method is still composing is not searched for. A
-typed search belongs to the address it was typed at: if the reader goes
+rewrites it. Text an input method is still composing is not searched for, and
+starting a composition drops a search that was waiting to be sent; the finished
+text is searched for when the composition ends. A typed search belongs to the address it was typed at: if the reader goes
 anywhere else before the 300 ms are up (another page, Back, "Clear search"), it
 is dropped instead of undoing what they did.
 
@@ -871,9 +872,11 @@ A title that is not out yet shows the day it arrives in place of its year.
 
 When any page read answers `libraryAccess: "stale"`, the page says once, above
 the titles, that Media could not confirm the reader's Plex access, and offers
-"Check again", which re-reads every catalog list. Each title keeps the access of
-the page it arrived on, because a later page can come back stale after an
-earlier one was current.
+"Check again", which re-reads every catalog list. The access is the page's own
+(`useCursorList` keeps every page as it was answered, in `pages`), so it is said
+over a search or a feed that came back with no titles too. Each title also keeps
+the access of the page it arrived on, because a later page can come back stale
+after an earlier one was current.
 
 A feed that answers 502 `catalog_unavailable` fails in its own row, in the room
 its rail would have taken, with "Try again"; the other rows and search are

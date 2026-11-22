@@ -1,10 +1,18 @@
 import { useInfiniteQuery, type QueryKey } from "@tanstack/react-query";
 
-/** One page of a cursor-paged read. A null `nextCursor` is the last page. */
+/**
+ * One page of a cursor-paged read. A null `nextCursor` is the last page. A
+ * read may answer with more than this (how far its answer can be trusted,
+ * say); the list keeps each page whole, so nothing a page says is lost when
+ * it has no rows to say it on.
+ */
 export type CursorPage<Item> = {
   items: readonly Item[];
   nextCursor: string | null;
 };
+
+/** The rows of a page. */
+type ItemOf<Page extends CursorPage<unknown>> = Page["items"][number];
 
 /**
  * `more` shows the first page and reads another each time the reader asks.
@@ -21,16 +29,20 @@ function firstCursor(): string | null {
   return null;
 }
 
-/** Follows `nextCursor` from the first page to the last. */
-export async function readEveryPage<Item>(
-  read: (cursor: string | null) => Promise<CursorPage<Item>>,
-): Promise<CursorPage<Item>> {
-  const items: Item[] = [];
+/**
+ * Follows `nextCursor` from the first page to the last, and answers with one
+ * page of every row. Whatever else a page says, the answer says what the
+ * last page did.
+ */
+export async function readEveryPage<Page extends CursorPage<unknown>>(
+  read: (cursor: string | null) => Promise<Page>,
+): Promise<Page> {
+  const items: ItemOf<Page>[] = [];
   let cursor: string | null = null;
   for (let page = 0; page < ALL_PAGES_LIMIT; page += 1) {
-    const next: CursorPage<Item> = await read(cursor);
+    const next: Page = await read(cursor);
     items.push(...next.items);
-    if (next.nextCursor === null) return { items, nextCursor: null };
+    if (next.nextCursor === null) return { ...next, items, nextCursor: null };
     cursor = next.nextCursor;
   }
   throw new Error(
@@ -54,10 +66,10 @@ export const EMPTY_PAGES_PER_LOOK = 5;
  * cursor on; one that hands back the cursor it was read with would be read
  * for ever, so it is an error.
  */
-export async function readPastEmptyPages<Item>(
-  read: (cursor: string | null) => Promise<CursorPage<Item>>,
+export async function readPastEmptyPages<Page extends CursorPage<unknown>>(
+  read: (cursor: string | null) => Promise<Page>,
   cursor: string | null,
-): Promise<CursorPage<Item>> {
+): Promise<Page> {
   let from = cursor;
   let page = await read(from);
   for (let looked = 1; looked < EMPTY_PAGES_PER_LOOK; looked += 1) {
@@ -84,10 +96,13 @@ export async function readPastEmptyPages<Item>(
  * (`readPastEmptyPages`). A list can then still be empty with `hasMore` set,
  * which means a whole look found nothing; the page says so and offers
  * another look.
+ *
+ * `pages` is every page read so far, as the read answered it, for what a
+ * page says beyond its rows; a page with no rows is still in it.
  */
-export function useCursorList<Item>(options: {
+export function useCursorList<Page extends CursorPage<unknown>>(options: {
   queryKey: QueryKey;
-  read: (cursor: string | null) => Promise<CursorPage<Item>>;
+  read: (cursor: string | null) => Promise<Page>;
   paging?: Paging;
   emptyPages?: "show" | "skip";
   refetchInterval?: number;
@@ -106,8 +121,10 @@ export function useCursorList<Item>(options: {
       ? {}
       : { refetchInterval: options.refetchInterval }),
   });
+  const pages: readonly Page[] = query.data?.pages ?? [];
   return {
-    items: query.data?.pages.flatMap((page) => page.items) ?? [],
+    items: pages.flatMap((page): readonly ItemOf<Page>[] => page.items),
+    pages,
     /** Nothing to show yet: the first answer has not arrived. */
     pending: query.isPending,
     /** The rows shown answer an earlier question; the new answer is loading. */

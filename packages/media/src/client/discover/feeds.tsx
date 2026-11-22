@@ -97,17 +97,22 @@ export function DiscoverFeeds() {
       />
     );
   }
+  // Said whether or not any row has a title to show it on.
+  const notice = lists.some((list) => list.accessStale) && <AccessNotice />;
   if (lists.every((list) => answeredEmpty(list))) {
     return (
-      <EmptyState icon={CompassIcon} title="Nothing to browse right now">
-        The lists of popular titles are empty at the moment. Search above for a
-        film or series by name.
-      </EmptyState>
+      <>
+        {notice}
+        <EmptyState icon={CompassIcon} title="Nothing to browse right now">
+          The lists of popular titles are empty at the moment. Search above for
+          a film or series by name.
+        </EmptyState>
+      </>
     );
   }
   return (
     <>
-      {lists.some((list) => list.accessStale) && <AccessNotice />}
+      {notice}
       {FEED_ORDER.map((feed) => (
         <FeedRow key={feed} feed={feed} list={feeds[feed]} />
       ))}
